@@ -627,24 +627,97 @@ ${backTicks}
                         })),
                     },
                     {
-                        title: "Break text to start a new paragraph (Shift-Enter)",
-                        func: () => this.editor!.paragraphClicked(),
-                        name: "Paragraph break",
+                        title: "Breaks",
+                        items: [
+                            {
+                                title: "Break text to start a new paragraph (Shift-Enter)",
+                                func: () => this.editor!.paragraphClicked(),
+                                name: "Paragraph break",
+                            },
+                            {
+                                title: "Forces line to end at cursor position (Ctrl-Enter)",
+                                func: () => this.editor!.endLineClicked(),
+                                name: "End line",
+                            },
+                            {
+                                title: "Creates a page break for web printing",
+                                func: () => this.editor!.pageBreakClicked(),
+                                name: "Page break",
+                            },
+                        ],
                     },
                     {
-                        title: "Forces line to end at cursor position (Ctrl-Enter)",
-                        func: () => this.editor!.endLineClicked(),
-                        name: "End line",
+                        title: "Numbering",
+                        items: [
+                            {
+                                name: "c_",
+                                title: "General counter",
+                                func: () =>
+                                    this.editor!.surroundClicked(
+                                        '%%"',
+                                        '"|c_("")%%'
+                                    ),
+                            },
+                            {
+                                name: "c_eq",
+                                title: "Equation counter for LaTeX",
+                                func: () =>
+                                    this.editor!.surroundClicked(
+                                        '%%"',
+                                        '"|c_eq%%'
+                                    ),
+                            },
+                            {
+                                name: "c_tag",
+                                title: "Equation counter for LaTeX for line end",
+                                func: () =>
+                                    this.editor!.surroundClicked(
+                                        '%%"',
+                                        '"|c_tag%%\\\\'
+                                    ),
+                            },
+                            {
+                                name: "c_fig",
+                                title: "Figure counter",
+                                func: () =>
+                                    this.editor!.surroundClicked(
+                                        '%%"',
+                                        '"|c_fig%%'
+                                    ),
+                            },
+                            {
+                                name: "c_task",
+                                title: "Task counter",
+                                func: () =>
+                                    this.editor!.surroundClicked(
+                                        '%%"',
+                                        '"|c_task%%'
+                                    ),
+                            },
+                            {
+                                name: "ref",
+                                title: "Reference to counter",
+                                func: () =>
+                                    this.editor!.surroundClicked(
+                                        '%%"',
+                                        '"|ref%%'
+                                    ),
+                            },
+                            {
+                                name: "equation",
+                                title: "LaTeX equation with tag-counter and label",
+                                func: () =>
+                                    this.editor!.surroundClicked(
+                                        '%%"equation" | c_begin("',
+                                        '")%%\nf\n%%""|c_end%%\n'
+                                    ),
+                            },
+                        ],
                     },
                     {
                         title: "Creates a comment block or sets the line to a comment (Ctrl-Y)",
                         func: () => this.editor!.commentClicked(),
                         name: "Comment",
-                    },
-                    {
-                        title: "Creates a page break for web printing",
-                        func: () => this.editor!.pageBreakClicked(),
-                        name: "Page break",
                     },
                 ],
                 name: "Insert",
@@ -718,8 +791,7 @@ ${backTicks}
                     },
                     {
                         title: "",
-                        func: ($event) =>
-                            this.editor!.charClicked($event, "&#173;"),
+                        func: ($event) => this.editor!.insertTemplate("&shy;"),
                         name: "Soft hyphen",
                     },
                     {

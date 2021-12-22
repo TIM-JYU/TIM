@@ -26,7 +26,7 @@ from timApp.markdown.markdownconverter import (
     par_list_to_html_list,
     expand_macros,
     format_heading,
-    Counters,
+    AutoCounters,
 )
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 from timApp.timtypes import DocumentType
@@ -1309,7 +1309,7 @@ def add_heading_numbers(
     heading_format: dict,
     heading_ref_format: dict = None,
     jump_name: str = None,
-    counters: Counters = None,
+    counters: AutoCounters = None,
 ):
     d = ctx.doc
     macro_cache_file = f"/tmp/tim_auto_macros_{ctx.doc.doc_id}"

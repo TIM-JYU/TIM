@@ -403,6 +403,7 @@ def get_setting_and_counters_par(doc):
 
 @print_blueprint.get("/numbering2/<path:doc_path>")
 def get_numbering2(doc_path):
+    # TODO: remove this when numbering works
     doc = g.doc_entry
     json = doc.document.export_raw_data()
     settings = doc.document.get_settings()
@@ -427,7 +428,7 @@ def get_numbering2(doc_path):
         expand_macros(par["md"], macroinfo.macro_map, settings, env)
 
     new_counter_macro_values = (
-        "macros:\n" + env.filters["counters_object"].get_counters()
+        "macros:\n" + env.filters["counters_object"].get_counter_macros()
     )
     if counters_par:
         doc.document.modify_paragraph(counters_par["id"], new_counter_macro_values)
@@ -454,7 +455,7 @@ def get_numbering(doc_path):
 
     # TODO: following does not work!
     # new_counter_macro_values = "´´´\n" + counters.get_counters() + "´´´"
-    new_counter_macro_values = "macros:\n" + counters.get_counters()
+    new_counter_macro_values = "macros:\n" + counters.get_counter_macros()
 
     settings_par, counters_par = get_setting_and_counters_par(doc)
 

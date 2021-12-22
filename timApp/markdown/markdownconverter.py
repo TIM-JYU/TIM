@@ -14,6 +14,12 @@ from sqlalchemy.orm import load_only, lazyload
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
+from timApp.markdown.autocounters import (
+    AutoCounters,
+    TimSandboxedEnvironment,
+    HEADING_TAGS,
+    add_h_values,
+)
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.util.utils import get_error_html, title_to_id
 from timApp.util.utils import widen_fields
@@ -22,28 +28,6 @@ from tim_common.html_sanitize import sanitize_html, presanitize_html_body
 if TYPE_CHECKING:
     from timApp.document.docparagraph import DocParagraph
     from timApp.document.docsettings import DocSettings
-
-
-class TimSandboxedEnvironment(SandboxedEnvironment):
-    def __init__(self, macro_delimiter: str):
-        super().__init__(
-            variable_start_string=macro_delimiter,
-            variable_end_string=macro_delimiter,
-            comment_start_string="{!!!",
-            comment_end_string="!!!}",
-            block_start_string="{%",
-            block_end_string="%}",
-            lstrip_blocks=True,
-            trim_blocks=True,
-        )
-        self.counters: Counters or None = None
-
-    def set_counters(self, counters: Counters):
-        self.counters = counters
-        counters.set_env_filters(self)
-
-    def get_counters(self) -> Counters:
-        return self.counters
 
 
 def has_macros(text: str, env: SandboxedEnvironment):
@@ -401,257 +385,6 @@ def get_document_path(doc_id: Any) -> str:
     return doc.path if doc else ""
 
 
-LABEL_PRFIX = "c:"
-
-
-@dataclass
-class Counters:
-    macros: dict
-
-    def __post_init__(self):
-        self.renumbering = False
-        self.counters = {}
-        self.c = self.macros.get("c", {})
-        self.heading_vals_def = {
-            1: 0,
-            2: 0,
-            3: 0,
-            4: 0,
-            5: 0,
-            6: 0,
-        }
-        self.heading_vals = None
-        self.autocounters_fmt_def = {
-            "eq": {
-                "show": "{n}",
-                "pure": "{n}",
-                "ref": "({n})",
-                "long": "({n})",
-            },
-            "chap": {
-                "reset": -1,
-            },
-            "all": {
-                "reset": -1,
-                "show": "{n}",
-                "ref": "{n}",
-                "long": "{n}",
-                "pure": "{n}",
-            },
-        }
-
-    def show_ref_value(self, name, text="", showtype=""):
-        from_macros = self.c.get(
-            name, {"v": name, "s": name, "r": name, "p": name, "l": name}
-        )
-        p = showtype or "p"
-        r = showtype or "r"
-        if text:
-            s = str(text) + " " + str(from_macros.get(p, ""))
-        else:
-            s = str(from_macros.get(r, ""))
-        return "[" + s + "](#" + from_macros.get("h", name) + ")"
-
-    def show_lref_value(self, name, text="", showtype="l"):
-        return self.show_ref_value(name, text, showtype)
-
-    def show_eqref_value(self, name, text=""):
-        return self.show_ref_value(name, text)
-
-    def get_counter_type(self, ctype: str):
-        counter_type = self.counters.get(ctype)
-        if not counter_type:  # first of this type
-            counter_type = {"value": 0}
-            self.counters[ctype] = counter_type
-        return counter_type
-
-    def add_counter(self, ctype: str, name: str, show_val: str, long_val: str = None):
-        if self.renumbering:
-            counter_type = self.get_counter_type(ctype)
-            show = self.get_type_text(ctype, name, show_val, "chap")
-            counter = {
-                "v": show_val,
-                "s": show,
-                "r": show_val,
-                "l": long_val,
-                "p": show_val,
-                "h": str(name),
-                "n": str(name),
-            }
-            counter_type[name] = counter
-
-    def new_counter(self, name, ctype):
-        if self.renumbering:
-            counter_type: dict = self.get_counter_type(ctype)
-            counter: dict = counter_type.get(name)
-            value = counter_type["value"] + 1
-            counter_type["value"] = value
-            if counter:  # shold not be
-                counter["s"] = "Dublicate " + name
-            else:
-                show = self.get_type_text(ctype, name, value, "show")
-                pure = self.get_type_text(ctype, name, value, "pure")
-                ref = self.get_type_text(ctype, name, value, "ref")
-                long = self.get_type_text(ctype, name, value, "long")
-                counter = {
-                    "v": value,  # just value, most numeric
-                    "s": show,  # show in place of counter
-                    "r": ref,  # normal refence format
-                    "l": long,  # long format, mostly for section header
-                    "p": pure,  # formated value
-                    "h": LABEL_PRFIX + str(name),  # Jump address
-                    "n": str(name),  # name of counter
-                }
-                counter_type[name] = counter
-        from_macros = self.c.get(name, {"s": "?" + str(name) + "?"})
-        return from_macros["s"]
-
-    def new_label_counter(self, name, ctype):
-        s = str(self.new_counter(name, ctype))
-        if self.macros.get("tex"):
-            return " \\label{" + LABEL_PRFIX + name + "}" + s
-        return '<a id="' + LABEL_PRFIX + name + '"></a>' + s
-
-    def eq_counter(self, name):
-        return self.new_counter(name, "eq")
-
-    def tag_counter(self, name):
-        return "\\tag{" + str(self.new_counter(name, "eq")) + "}"
-
-    def begin_counter(self, what, name):
-        if self.macros.get("tex"):
-            return (
-                "\\begin{"
-                + what
-                + "}"
-                + " \\label{"
-                + LABEL_PRFIX
-                + name
-                + "}"
-                + self.tag_counter(name)
-            )
-        return (
-            '<a id="'
-            + LABEL_PRFIX
-            + name
-            + '"></a>\\begin{'
-            + what
-            + "}"
-            + self.tag_counter(name)
-        )
-
-    def fig_counter(self, name):
-        return self.new_label_counter(name, "fig")
-
-    def tbl_counter(self, name):
-        return self.new_label_counter(name, "tbl")
-
-    def ex_counter(self, name):
-        return self.new_label_counter(name, "ex")
-
-    def task_counter(self, name):
-        return self.new_label_counter(name, "task")
-
-    def get_counters(self, _dummy=0):
-        result = "  c:\n"
-        for ctype in self.counters:
-            counter_type = self.counters[ctype]
-            for name in counter_type:
-                if name == "value":
-                    continue
-                counter = counter_type[name]
-                jso = json.dumps(counter)
-                result += "    " + name + ": " + jso + "\n"
-        return result
-
-    def set_counter(self, ctype: str, value: int):
-        counter_type = self.counters.get(ctype)
-        if not counter_type:
-            return
-        counter_type["value"] = value
-        return ""
-
-    def get_type_text(
-        self,
-        ctype: str,
-        name: str,
-        value: str,
-        showtype: str,
-    ) -> str:
-        """
-        Get how to show counter with type name ctype
-        :param ctype: countres type name
-        :param value: value of counter to show
-        :param showtype: for what purpose value is formated
-        :return: formated show value
-        """
-        vals = self.heading_vals
-        if vals is None:
-            vals = self.heading_vals_def
-        autocounters = self.macros.get("autocounters", {})
-        fmt_all = self.autocounters_fmt_def["all"]
-        fmt_def = self.autocounters_fmt_def.get(ctype, fmt_all)
-
-        counter_fmt = autocounters.get(ctype, fmt_def)
-        if not counter_fmt:  # should not occur!
-            return str(value)
-        showformat = counter_fmt.get(showtype, fmt_all.get(showtype, None))
-        s = showformat
-        if s is None or not isinstance(s, str):
-            return str(value)
-        values = {"v": value, "n": name}
-        add_h_values(vals, values)
-        text = s.format(**values)
-        return text
-
-    def reset_counters(self, n: int):
-        """
-        Reset all counters that should be reset when n heading level n
-        cahenges
-        :param n: what heading level to check
-        :return: None
-        """
-        # TODO: throw exception if error in counters
-        autocounters = self.macros.get("autocounters", None)
-        if not autocounters:
-            return
-        for counter_type_name in autocounters:
-            counter = autocounters[counter_type_name]
-            counter_type = self.counters.get(counter_type_name, None)
-            if not counter or not counter_type:
-                continue
-            reset = counter.get("reset", None)
-            if not reset or n != reset:
-                continue
-            counter_type["value"] = 0
-
-    def set_heading_vals(self, vals: dict):
-        oldvals = self.heading_vals
-        if oldvals is None:
-            oldvals = self.heading_vals_def
-        self.heading_vals = vals
-        if not oldvals:
-            return
-        for n in vals:
-            if oldvals[n] != vals[n]:
-                self.reset_counters(n)
-
-    def set_env_filters(self, env: TimSandboxedEnvironment):
-        env.filters["lref"] = self.show_lref_value
-        env.filters["ref"] = self.show_ref_value
-        env.filters["eqref"] = self.show_eqref_value
-        env.filters["c_"] = self.new_counter
-        env.filters["c_label"] = self.new_label_counter
-        env.filters["c_eq"] = self.eq_counter
-        env.filters["c_tag"] = self.tag_counter
-        env.filters["c_begin"] = self.begin_counter
-        env.filters["c_fig"] = self.fig_counter
-        env.filters["c_tbl"] = self.tbl_counter
-        env.filters["c_ex"] = self.ex_counter
-        env.filters["c_task"] = self.task_counter
-        env.filters["c_set"] = self.set_counter
-
-
 tim_filters = {
     "Pz": Pz,
     "gfields": genfields,
@@ -686,7 +419,7 @@ def create_environment(
     env.filters["isview"] = view_ctx.isview
 
     if macros:
-        counters = Counters(macros)
+        counters = AutoCounters(macros)
         env.set_counters(counters)  # used in print.py
 
     if user_ctx:
@@ -954,21 +687,6 @@ def insert_heading_numbers(
     return final_html
 
 
-def add_h_values(counts: dict, values: dict):
-    """
-    Add all non-zero h-value from counts to values
-    :param counts: where to finds h-values
-    :param values: where to add h-values
-    :return: None
-    """
-    for last_non_zero in range(6, 0, -1):
-        if counts[last_non_zero] != 0:
-            break
-    # noinspection PyUnboundLocalVariable
-    for i in range(1, last_non_zero + 1):
-        values[HEADING_TAGS[i - 1]] = counts[i]
-
-
 def format_heading(
     text,
     level,
@@ -976,7 +694,7 @@ def format_heading(
     heading_format,
     heading_ref_format: dict = None,
     jump_name: str = None,
-    counters: Counters = None,
+    counters: AutoCounters = None,
 ):
     counts[level] += 1
     for i in range(level + 1, 7):
@@ -992,6 +710,3 @@ def format_heading(
     except (KeyError, ValueError, IndexError):
         formatted = "[ERROR] " + text
     return formatted
-
-
-HEADING_TAGS = ["h1", "h2", "h3", "h4", "h5", "h6"]

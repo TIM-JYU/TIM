@@ -218,6 +218,8 @@ class DocumentPrinter:
         view_ctx = default_view_ctx
         if texmacros:
             view_ctx = copy_of_default_view_ctx(texmacros)
+        if tformat == PrintFormat.LATEX:  # ensure tex macro is set
+            view_ctx = copy_of_default_view_ctx({"tex": True})
 
         # Process areas to determine what is visible to the user who is printing
         # TODO: We don't need to process all the areas, just need to find the IDs of the visible items
@@ -431,7 +433,7 @@ class DocumentPrinter:
 
         self._macros = pdoc_macros
         counters = pdoc_macro_env.get_counters()
-        counters.renumbering = True
+        counters.set_renumbering(True)
 
         # Remove paragraphs that are not to be printed and replace plugin pars,
         # that have a defined 'texprint' block in their yaml, with the 'texprint'-blocks content
