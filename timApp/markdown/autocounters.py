@@ -130,31 +130,19 @@ class AutoCounters:
     def eq_counter(self, name):
         return self.new_counter(name, "eq")
 
-    def tag_counter(self, name):
-        return "\\tag{" + str(self.new_counter(name, "eq")) + "}"
+    def tag_counter(self, name, ctype="eq"):
+        return "\\tag{" + str(self.new_counter(name, ctype)) + "}"
 
-    def begin_counter(self, what, name):
+    def begin_counter(self, name, what="align*", ctype="eq"):
         self.counter_stack.append(what)
+        cnt = ""
+        if name:
+            cnt = self.tag_counter(name, ctype)
         if self.macros.get("tex"):
             return (
-                "\\begin{"
-                + what
-                + "}"
-                + " \\label{"
-                + LABEL_PRFIX
-                + name
-                + "}"
-                + self.tag_counter(name)
+                "\\begin{" + what + "}" + " \\label{" + LABEL_PRFIX + name + "}" + cnt
             )
-        return (
-            '<a id="'
-            + LABEL_PRFIX
-            + name
-            + '"></a>\\begin{'
-            + what
-            + "}"
-            + self.tag_counter(name)
-        )
+        return '<a id="' + LABEL_PRFIX + name + '"></a>\\begin{' + what + "}" + cnt
 
     def end_counter(self, _dummy=""):
         if len(self.counter_stack) == 0:
