@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 # from timApp.markdown.markdownconverter import TimSandboxedEnvironment, add_h_values
 from jinja2.sandbox import SandboxedEnvironment
-from trio import sleep_forever
 
 """
 Class for autocounters to be used as Jinja2 filters
@@ -157,7 +156,7 @@ class AutoCounters:
             + self.tag_counter(name)
         )
 
-    def end_counter(self, what=""):
+    def end_counter(self, _dummy=""):
         if len(self.counter_stack) == 0:
             return ""
         what = self.counter_stack.pop()
