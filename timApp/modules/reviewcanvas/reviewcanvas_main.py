@@ -50,6 +50,13 @@ class ReviewCanvasHtmlModel(GenericHtmlModel[ReviewCanvasInputModel, ReviewCanva
     def get_static_html(self) -> str:
         return render_static_reviewcanvas(self)
 
+    def get_review(self) -> str:
+        if not self.state.uploadedfile.type:
+            return '<pre>ei kuvaa</pre>'
+        # https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs#syntax
+
+        return 'imageurl:' + self.state.uploadedfile.path
+
 
 @dataclass
 class ReviewCanvasAnswerModel(GenericAnswerModel[ReviewCanvasInputModel, ReviewCanvasMarkupModel, ReviewCanvasStateModel]):

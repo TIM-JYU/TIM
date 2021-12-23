@@ -931,10 +931,33 @@ export class AnswerBrowserController
                 }
             }
             if (this.review) {
-                this.imageReview =
-                    r.result.data.reviewHtml.startsWith("data:image");
+
+                let newReviewHtml = r.result.data.reviewHtml;
+
+                this.imageReview = newReviewHtml.startsWith("data:image");
+
+                // Check if we're reviewing an uploaded image that can be found from a specific URL
+                if (!this.imageReview) {
+                    this.imageReview = newReviewHtml.startsWith(
+                        "imageurl:"
+                    );
+
+                    if (this.imageReview) {
+                        // Extract URL, load image from URL and assign it as review HTML
+
+                        const imageUrl = newReviewHtml.substring(9);
+
+                        await fetch(imageUrl)
+                            .then(resp => resp.blob())
+                            .then(async blob =>  {
+                               const base64Data = await this.readAsDataUrl(blob);
+                               newReviewHtml = base64Data as string;
+                            });
+                    }
+                }
+
                 if (this.selectedAnswer) {
-                    let newReviewHtml = r.result.data.reviewHtml;
+
                     if (newReviewHtml === this.reviewHtml) {
                         // It's possible that the user was changed but the user has exactly the same
                         // answer as the current one. In that case, we still want to refresh the DOM
@@ -968,6 +991,25 @@ export class AnswerBrowserController
             }
         }
         this.isAndSetShowNewTask();
+    }
+
+
+    readAsDataUrl(input: Blob) {
+
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onerror = () => {
+                reader.abort();
+                reject(new DOMException("Problem parsing input blob."));
+            };
+
+            reader.onload = () => {
+                resolve(reader.result);
+            };
+
+            reader.readAsDataURL(input);
+        });
     }
 
     /**
