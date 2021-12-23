@@ -29,8 +29,10 @@ class AutoCounters:
         self.renumbering = False
         self.counter_stack = []
         self.c = {}
+        self.tex = False
         if self.macros:
             self.c = self.macros.get("c", {})
+            self.tex = self.macros.get("tex", False)
         self.autocounters_fmt_def = {
             "eq": {
                 "pure": "{v}",
@@ -123,9 +125,17 @@ class AutoCounters:
 
     def new_label_counter(self, name, ctype):
         s = str(self.new_counter(name, ctype))
-        if self.macros.get("tex"):
+        if self.tex:
             return " \\label{" + LABEL_PRFIX + name + "}" + s
         return '<a id="' + LABEL_PRFIX + name + '"></a>' + s
+
+    def labels(self, names: list):
+        result = ""
+        for name in names:
+            if self.tex:
+                result += " \\label{" + LABEL_PRFIX + name + "}"
+            result += '<a id="' + LABEL_PRFIX + name + '"></a>'
+        return result
 
     def eq_counter(self, name):
         return self.new_counter(name, "eq")
@@ -138,11 +148,14 @@ class AutoCounters:
         cnt = ""
         if name:
             cnt = self.tag_counter(name, ctype)
-        if self.macros.get("tex"):
-            return (
-                "\\begin{" + what + "}" + " \\label{" + LABEL_PRFIX + name + "}" + cnt
-            )
-        return '<a id="' + LABEL_PRFIX + name + '"></a>\\begin{' + what + "}" + cnt
+        label = ""
+        if self.tex:
+            if name:
+                label = " \\label{" + LABEL_PRFIX + name + "}"
+            return "\\begin{" + what + "}" + label + cnt
+        if name:
+            label = '<a id="' + LABEL_PRFIX + name + '"></a>'
+        return label + "\\begin{" + what + "}" + cnt
 
     def end_counter(self, _dummy=""):
         if len(self.counter_stack) == 0:
@@ -254,6 +267,7 @@ class AutoCounters:
             env.filters["lref"] = self.show_lref_value
             env.filters["ref"] = self.show_ref_value
             env.filters["eqref"] = self.show_eqref_value
+            env.filters["labels"] = self.labels
             env.filters["c_"] = self.new_counter
             env.filters["c_label"] = self.new_label_counter
             env.filters["c_eq"] = self.eq_counter
