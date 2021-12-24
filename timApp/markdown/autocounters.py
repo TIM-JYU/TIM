@@ -1,7 +1,4 @@
 import json
-from dataclasses import dataclass
-
-# from timApp.markdown.markdownconverter import TimSandboxedEnvironment, add_h_values
 from jinja2.sandbox import SandboxedEnvironment
 
 """
@@ -11,7 +8,6 @@ Class for autocounters to be used as Jinja2 filters
 LABEL_PRFIX = "c:"
 
 
-@dataclass
 class AutoCounters:
     def __init__(self, macros: dict or None):
         """
@@ -30,7 +26,6 @@ class AutoCounters:
         }
         self.macros = macros
         self.counters = {}
-        self.renumbering = False
         self.counter_stack = []
         self.c = {}
         self.tex = False
@@ -59,7 +54,7 @@ class AutoCounters:
             },
         }
 
-    def set_auto_number_headings(self, n: int):
+    def set_auto_number_headings(self, n: int) -> None:
         """
         Set from what level the headings are numbered.
         Make also the dafault counter number template for that level
@@ -93,10 +88,10 @@ class AutoCounters:
             s = str(from_macros.get(r, ""))
         return "[" + s + "](#" + from_macros.get("h", name) + ")"
 
-    def show_lref_value(self, name, text="", showtype="l") -> str:
+    def show_lref_value(self, name: str or int, text="", showtype="l") -> str:
         return self.show_ref_value(name, text, showtype)
 
-    def show_eqref_value(self, name, text="") -> str:
+    def show_eqref_value(self, name: str or int, text="") -> str:
         return self.show_ref_value(name, text)
 
     def get_counter_type(self, ctype: str) -> dict:
@@ -108,7 +103,7 @@ class AutoCounters:
 
     def add_counter(
         self, ctype: str, name: str, show_val: str, long_val: str = ""
-    ) -> dict:
+    ) -> dict or None:
         if self.renumbering:
             counter_type = self.get_counter_type(ctype)
             show = self.get_type_text(ctype, name, show_val, "chap", str(show_val))
@@ -124,6 +119,7 @@ class AutoCounters:
             }
             counter_type[name] = counter
             return counter
+        return None
 
     def new_counter(self, name: int or str, ctype: str) -> str:
         if self.renumbering:
@@ -205,7 +201,7 @@ class AutoCounters:
     def task_counter(self, name: int or str) -> str:
         return self.new_label_counter(name, "task")
 
-    def get_counter_macros(self, _dummy: str = 0) -> str:
+    def get_counter_macros(self, _dummy: int or str = 0) -> str:
         result = "  use_autonumbering: true\n"
         result += "  c:\n"
         for ctype in self.counters:
@@ -245,7 +241,7 @@ class AutoCounters:
         if vals is None:
             vals = self.heading_vals_def
         autocounters = self.macros.get("autocounters", {})
-        # fmt_all = self.autocounters_fmt_def["all"]
+
         fmt_def = {
             **self.autocounters_fmt_def["all"],
             **self.autocounters_fmt_def.get(ctype, {}),
