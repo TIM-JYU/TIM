@@ -669,7 +669,7 @@ ${backTicks}
                             },
                             {
                                 name: "c_tag",
-                                title: "Equation counter for LaTeX for line end",
+                                title: "Equation counter for LaTeX for for one line",
                                 func: () =>
                                     this.editor!.surroundClicked(
                                         '%%"',
@@ -704,12 +704,21 @@ ${backTicks}
                                     ),
                             },
                             {
-                                name: "equation",
-                                title: "LaTeX equation with tag-counter and label",
+                                name: "begin/end",
+                                title: "LaTeX begin align* / end with tag-counter and label",
                                 func: () =>
                                     this.editor!.surroundClicked(
-                                        '%%"equation" | c_begin("',
-                                        '")%%\nf\n%%""|c_end%%\n'
+                                        '%%"',
+                                        ' "| c_begin("align *")%%\nf\n%%""|c_end%%\n'
+                                    ),
+                            },
+                            {
+                                name: "labels",
+                                title: "List of counter names that can be hyperlink targets",
+                                func: () =>
+                                    this.editor!.surroundClicked(
+                                        '%%["',
+                                        ' "]| labels%%\n'
                                     ),
                             },
                         ],

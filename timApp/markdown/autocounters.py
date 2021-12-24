@@ -14,6 +14,10 @@ LABEL_PRFIX = "c:"
 @dataclass
 class AutoCounters:
     def __init__(self, macros: dict or None):
+        """
+        Initialize autonumber counters to use macros
+        :param macros: macros to use for these counters
+        """
         self.renumbering = False
         self.heading_vals = None
         self.heading_vals_def = {
@@ -30,13 +34,14 @@ class AutoCounters:
         self.counter_stack = []
         self.c = {}
         self.tex = False
+        self.auto_number_headings = 0
+        self.pure_reset_formats = ["{v}", "{v}", "{v}", "{v}", "{v}", "{v}", "{v}"]
         if self.macros:
             self.c = self.macros.get("c", {})
             self.tex = self.macros.get("tex", False)
+
         self.autocounters_fmt_def = {
             "eq": {
-                "pure": "{v}",
-                "show": "{p}",
                 "ref": "({p})",
                 "long": "({p})",
                 "text": "({p})",
@@ -54,7 +59,29 @@ class AutoCounters:
             },
         }
 
-    def show_ref_value(self, name, text="", showtype=""):
+    def set_auto_number_headings(self, n: int):
+        """
+        Set from what level the headings are numbered.
+        Make also the dafault counter number template for that level
+        like "{h2}.{v}" if counting start from level 2.
+        :param n: from what level to start heading counting
+        :return: none
+        """
+        self.auto_number_headings = n
+        if n < 1:
+            return
+
+        self.pure_reset_formats = ["{v}"]
+        for reset in range(1, 6 + 1):
+            pfmt = ""
+            for i in range(self.auto_number_headings, reset + 1):
+                pfmt += "{h" + str(i) + "}."
+            pfmt += "{v}"
+            self.pure_reset_formats.append(pfmt)
+
+    def show_ref_value(
+        self, name: str or int, text: str = "", showtype: str = ""
+    ) -> str:
         from_macros = self.c.get(
             name, {"v": name, "s": name, "r": name, "p": name, "l": name, "t": name}
         )
@@ -66,20 +93,22 @@ class AutoCounters:
             s = str(from_macros.get(r, ""))
         return "[" + s + "](#" + from_macros.get("h", name) + ")"
 
-    def show_lref_value(self, name, text="", showtype="l"):
+    def show_lref_value(self, name, text="", showtype="l") -> str:
         return self.show_ref_value(name, text, showtype)
 
-    def show_eqref_value(self, name, text=""):
+    def show_eqref_value(self, name, text="") -> str:
         return self.show_ref_value(name, text)
 
-    def get_counter_type(self, ctype: str):
+    def get_counter_type(self, ctype: str) -> dict:
         counter_type = self.counters.get(ctype)
         if not counter_type:  # first of this type
             counter_type = {"value": 0}
             self.counters[ctype] = counter_type
         return counter_type
 
-    def add_counter(self, ctype: str, name: str, show_val: str, long_val: str = None):
+    def add_counter(
+        self, ctype: str, name: str, show_val: str, long_val: str = ""
+    ) -> dict:
         if self.renumbering:
             counter_type = self.get_counter_type(ctype)
             show = self.get_type_text(ctype, name, show_val, "chap", str(show_val))
@@ -94,8 +123,9 @@ class AutoCounters:
                 "n": str(name),
             }
             counter_type[name] = counter
+            return counter
 
-    def new_counter(self, name, ctype):
+    def new_counter(self, name: int or str, ctype: str) -> str:
         if self.renumbering:
             counter_type: dict = self.get_counter_type(ctype)
             counter: dict = counter_type.get(name)
@@ -123,13 +153,13 @@ class AutoCounters:
         from_macros = self.c.get(name, {"s": "?" + str(name) + "?"})
         return from_macros["s"]
 
-    def new_label_counter(self, name, ctype):
+    def new_label_counter(self, name: int or str, ctype: str) -> str:
         s = str(self.new_counter(name, ctype))
         if self.tex:
             return " \\label{" + LABEL_PRFIX + name + "}" + s
         return '<a id="' + LABEL_PRFIX + name + '"></a>' + s
 
-    def labels(self, names: list):
+    def labels(self, names: list) -> str:
         result = ""
         for name in names:
             if self.tex:
@@ -137,13 +167,13 @@ class AutoCounters:
             result += '<a id="' + LABEL_PRFIX + name + '"></a>'
         return result
 
-    def eq_counter(self, name):
+    def eq_counter(self, name: int or str) -> str:
         return self.new_counter(name, "eq")
 
-    def tag_counter(self, name, ctype="eq"):
+    def tag_counter(self, name: int or str, ctype="eq") -> str:
         return "\\tag{" + str(self.new_counter(name, ctype)) + "}"
 
-    def begin_counter(self, name, what="align*", ctype="eq"):
+    def begin_counter(self, name: int or str, what="align*", ctype="eq") -> str:
         self.counter_stack.append(what)
         cnt = ""
         if name:
@@ -157,25 +187,25 @@ class AutoCounters:
             label = '<a id="' + LABEL_PRFIX + name + '"></a>'
         return label + "\\begin{" + what + "}" + cnt
 
-    def end_counter(self, _dummy=""):
+    def end_counter(self, _dummy: str = "") -> str:
         if len(self.counter_stack) == 0:
             return ""
         what = self.counter_stack.pop()
         return "\\end{" + what + "}"
 
-    def fig_counter(self, name):
+    def fig_counter(self, name: int or str) -> str:
         return self.new_label_counter(name, "fig")
 
-    def tbl_counter(self, name):
+    def tbl_counter(self, name: int or str) -> str:
         return self.new_label_counter(name, "tbl")
 
-    def ex_counter(self, name):
+    def ex_counter(self, name: int or str) -> str:
         return self.new_label_counter(name, "ex")
 
-    def task_counter(self, name):
+    def task_counter(self, name: int or str) -> str:
         return self.new_label_counter(name, "task")
 
-    def get_counter_macros(self, _dummy=0):
+    def get_counter_macros(self, _dummy: str = 0) -> str:
         result = "  use_autonumbering: true\n"
         result += "  c:\n"
         for ctype in self.counters:
@@ -188,14 +218,14 @@ class AutoCounters:
                 result += "    " + name + ": " + jso + "\n"
         return result
 
-    def set_counter(self, ctype: str, value: int):
+    def set_counter(self, ctype: str, value: int) -> str:
         counter_type = self.counters.get(ctype)
         if not counter_type:
             return ""
         counter_type["value"] = value
         return ""
 
-    def set_renumbering(self, value: bool):
+    def set_renumbering(self, value: bool) -> None:
         self.renumbering = value
         self.macros["use_autonumbering"] = value
 
@@ -215,13 +245,25 @@ class AutoCounters:
         if vals is None:
             vals = self.heading_vals_def
         autocounters = self.macros.get("autocounters", {})
-        fmt_all = self.autocounters_fmt_def["all"]
-        fmt_def = self.autocounters_fmt_def.get(ctype, fmt_all)
+        # fmt_all = self.autocounters_fmt_def["all"]
+        fmt_def = {
+            **self.autocounters_fmt_def["all"],
+            **self.autocounters_fmt_def.get(ctype, {}),
+            **autocounters.get("all", {}),
+        }
 
         counter_fmt = autocounters.get(ctype, fmt_def)
         if not counter_fmt:  # should not occur!
             return str(value)
-        showformat = counter_fmt.get(showtype, fmt_all.get(showtype, None))
+
+        reset = counter_fmt.get("reset", 0)
+        if reset > 0:
+            counter_type = autocounters.get(ctype, autocounters.get("all", {}))
+            pfmt = counter_type.get("pure", self.pure_reset_formats[reset])
+            counter_fmt["pure"] = pfmt
+
+        # showformat = counter_fmt.get(showtype, fmt_all.get(showtype, None))
+        showformat = counter_fmt.get(showtype, None)
         s = showformat
         if s is None or not isinstance(s, str):
             return str(value)
@@ -230,10 +272,10 @@ class AutoCounters:
         text = s.format(**values)
         return text
 
-    def reset_counters(self, n: int):
+    def reset_counters(self, n: int) -> None:
         """
-        Reset all counters that should be reset when n heading level n
-        cahenges
+        Reset all counters that should be reset when heading level n
+        changes
         :param n: what heading level to check
         :return: None
         """
@@ -251,7 +293,7 @@ class AutoCounters:
                 continue
             counter_type["value"] = 0
 
-    def set_heading_vals(self, vals: dict):
+    def set_heading_vals(self, vals: dict) -> None:
         oldvals = self.heading_vals
         if oldvals is None:
             oldvals = self.heading_vals_def
@@ -262,7 +304,7 @@ class AutoCounters:
             if oldvals[n] != vals[n]:
                 self.reset_counters(n)
 
-    def set_env_filters(self, env: SandboxedEnvironment):
+    def set_env_filters(self, env: SandboxedEnvironment) -> None:
         if self.macros and self.macros.get("use_autonumbering"):
             env.filters["lref"] = self.show_lref_value
             env.filters["ref"] = self.show_ref_value
@@ -295,7 +337,7 @@ class TimSandboxedEnvironment(SandboxedEnvironment):
         )
         self.counters: AutoCounters or None = None
 
-    def set_counters(self, counters: AutoCounters):
+    def set_counters(self, counters: AutoCounters) -> None:
         self.counters = counters
         counters.set_env_filters(self)
 
@@ -306,16 +348,20 @@ class TimSandboxedEnvironment(SandboxedEnvironment):
 HEADING_TAGS = ["h1", "h2", "h3", "h4", "h5", "h6"]
 
 
-def add_h_values(counts: dict, values: dict):
+def add_h_values(counts: dict, values: dict) -> None:
     """
     Add all non-zero h-value from counts to values
     :param counts: where to finds h-values
     :param values: where to add h-values
     :return: None
     """
+    """
     for last_non_zero in range(6, 0, -1):
         if counts[last_non_zero] != 0:
             break
+    """
     # noinspection PyUnboundLocalVariable
-    for i in range(1, last_non_zero + 1):
+    # for i in range(1, last_non_zero + 1):
+
+    for i in range(1, len(HEADING_TAGS) + 1):
         values[HEADING_TAGS[i - 1]] = counts[i]

@@ -434,6 +434,9 @@ class DocumentPrinter:
         self._macros = pdoc_macros
         counters = pdoc_macro_env.get_counters()
         counters.set_renumbering(True)
+        counters.set_auto_number_headings(
+            self._doc_entry.document.get_settings().auto_number_headings()
+        )
 
         # Remove paragraphs that are not to be printed and replace plugin pars,
         # that have a defined 'texprint' block in their yaml, with the 'texprint'-blocks content
