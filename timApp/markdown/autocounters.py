@@ -74,8 +74,22 @@ class AutoCounters:
             pfmt += "{v}"
             self.pure_reset_formats.append(pfmt)
 
-    def error(self, s: str):
+    @staticmethod
+    def error(s: str):
         return "[" + s + "]{.red}"
+
+    @staticmethod
+    def get_texts_and_name(name: str or int):
+        sname = str(name)
+        text1 = ""
+        text2 = ""
+        if sname.find("|") >= 0:
+            params = sname.split("|")
+            sname = params[1].strip()
+            text1 = params[0].lstrip()
+            if len(params) > 2:
+                text2 = params[2]
+        return text1, sname, text2
 
     def get_show_params(self, name: str or int, showtype="r"):
         sname = str(name)
@@ -84,11 +98,13 @@ class AutoCounters:
         if sname.find("|") >= 0:
             params = sname.split("|")
             sname = params[1].strip()
-            text1 = params[0]
+            text1 = params[0].strip()
             if len(params) > 2:
                 text2 = params[2]
             if len(params) > 3 and not showtype:
                 showtype = params[3]
+            if text2 and not showtype:
+                showtype = "t"
 
         from_macros = self.c.get(
             sname,
@@ -145,17 +161,24 @@ class AutoCounters:
         return None
 
     def new_counter(self, name: int or str, ctype: str) -> str:
+        text1, name, text2 = self.get_texts_and_name(name)
         if self.renumbering:
             counter_type: dict = self.get_counter_type(ctype)
+            use_counter_type = counter_type
             # TODO: join to
-            counter: dict = counter_type.get(name)
-            value = counter_type["value"] + 1
-            counter_type["value"] = value
+            link = self.macros.get("autocounters", {}).get(ctype, {}).get("link", None)
+            if link is not None:
+                use_counter_type = self.get_counter_type(link)
+            counter: dict = use_counter_type.get(name)
+            value = use_counter_type["value"] + 1
+            use_counter_type["value"] = value
             if counter:  # shold not be
                 counter["s"] = self.error("Dublicate " + name)
             else:
                 pure = self.get_type_text(ctype, name, value, "pure", str(value))
-                show = self.get_type_text(ctype, name, value, "show", pure)
+                show = (
+                    text1 + self.get_type_text(ctype, name, value, "show", pure) + text2
+                )
                 ref = self.get_type_text(ctype, name, value, "ref", pure)
                 text = self.get_type_text(ctype, name, value, "text", pure)
                 long = self.get_type_text(ctype, name, value, "long", pure)
