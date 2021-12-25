@@ -74,34 +74,47 @@ class AutoCounters:
             pfmt += "{v}"
             self.pure_reset_formats.append(pfmt)
 
-    def show_pref_value(self, name: str or int, text="", showtype="r") -> str:
+    def error(self, s: str):
+        return "[" + s + "]{.red}"
+
+    def get_show_params(self, name: str or int, showtype="r"):
+        sname = str(name)
+        text1 = ""
+        text2 = ""
+        if sname.find("|") >= 0:
+            params = sname.split("|")
+            sname = params[1].strip()
+            text1 = params[0]
+            if len(params) > 2:
+                text2 = params[2]
+            if len(params) > 3 and not showtype:
+                showtype = params[3]
+
         from_macros = self.c.get(
-            name, {"v": name, "s": name, "r": name, "p": name, "l": name, "t": name}
+            sname,
+            {"v": sname, "s": sname, "r": sname, "p": sname, "l": sname, "t": sname},
         )
         t = showtype or "t"
         r = showtype or "r"
-        if text:
-            s = str(text) + "&nbsp;" + str(from_macros.get(t, ""))
+
+        if text1:
+            s = str(text1) + "&nbsp;" + str(from_macros.get(t, ""))
         else:
             s = str(from_macros.get(r, ""))
+        if text2:
+            s += text2.replace(" ", "&nbsp;", 1)
+        return sname, s, from_macros
+
+    def show_pref_value(self, name: str or int, showtype: str = "") -> str:
+        _, s, _ = self.get_show_params(name, showtype)
         return s
 
-    def show_ref_value(
-        self, name: str or int, text: str = "", showtype: str = ""
-    ) -> str:
-        from_macros = self.c.get(
-            name, {"v": name, "s": name, "r": name, "p": name, "l": name, "t": name}
-        )
-        t = showtype or "t"
-        r = showtype or "r"
-        if text:
-            s = str(text) + "&nbsp;" + str(from_macros.get(t, ""))
-        else:
-            s = str(from_macros.get(r, ""))
-        return "[" + s + "](#" + from_macros.get("h", name) + ")"
+    def show_ref_value(self, name: str or int, showtype: str = "") -> str:
+        sname, s, from_macros = self.get_show_params(name, showtype)
+        return "[" + s + "](#" + from_macros.get("h", sname) + ")"
 
-    def show_lref_value(self, name: str or int, text="", showtype="l") -> str:
-        return self.show_ref_value(name, text, showtype)
+    def show_lref_value(self, name: str or int, showtype: str = "l") -> str:
+        return self.show_ref_value(name, showtype)
 
     def get_counter_type(self, ctype: str) -> dict:
         counter_type = self.counters.get(ctype)
@@ -125,6 +138,7 @@ class AutoCounters:
                 "l": long_val,
                 "h": str(name),
                 "n": str(name),
+                "y": ctype,
             }
             counter_type[name] = counter
             return counter
@@ -133,11 +147,12 @@ class AutoCounters:
     def new_counter(self, name: int or str, ctype: str) -> str:
         if self.renumbering:
             counter_type: dict = self.get_counter_type(ctype)
+            # TODO: join to
             counter: dict = counter_type.get(name)
             value = counter_type["value"] + 1
             counter_type["value"] = value
             if counter:  # shold not be
-                counter["s"] = "Dublicate " + name
+                counter["s"] = self.error("Dublicate " + name)
             else:
                 pure = self.get_type_text(ctype, name, value, "pure", str(value))
                 show = self.get_type_text(ctype, name, value, "show", pure)
@@ -153,6 +168,7 @@ class AutoCounters:
                     "l": long,  # long format, mostly for section header
                     "h": LABEL_PRFIX + str(name),  # Jump address
                     "n": str(name),  # name of counter
+                    "y": ctype,
                 }
                 counter_type[name] = counter
         from_macros = self.c.get(name, {"s": "?" + str(name) + "?"})
@@ -274,8 +290,11 @@ class AutoCounters:
             return str(value)
         values = {"v": value, "n": name, "p": pure}
         add_h_values(vals, values)
-        text = s.format(**values)
-        return text
+        try:
+            text = s.format(**values)
+            return text
+        except Exception as ex:
+            return self.error(str(ex) + " " + s)
 
     def reset_counters(self, n: int) -> None:
         """
