@@ -15,7 +15,7 @@ class AutoCounters:
         :param macros: macros to use for these counters
         """
         self.renumbering = False
-        self.heading_vals = None
+        self.heading_vals: dict or None = None
         self.heading_vals_def = {
             1: 0,
             2: 0,
@@ -74,6 +74,18 @@ class AutoCounters:
             pfmt += "{v}"
             self.pure_reset_formats.append(pfmt)
 
+    def show_pref_value(self, name: str or int, text="", showtype="r") -> str:
+        from_macros = self.c.get(
+            name, {"v": name, "s": name, "r": name, "p": name, "l": name, "t": name}
+        )
+        t = showtype or "t"
+        r = showtype or "r"
+        if text:
+            s = str(text) + "&nbsp;" + str(from_macros.get(t, ""))
+        else:
+            s = str(from_macros.get(r, ""))
+        return s
+
     def show_ref_value(
         self, name: str or int, text: str = "", showtype: str = ""
     ) -> str:
@@ -90,9 +102,6 @@ class AutoCounters:
 
     def show_lref_value(self, name: str or int, text="", showtype="l") -> str:
         return self.show_ref_value(name, text, showtype)
-
-    def show_eqref_value(self, name: str or int, text="") -> str:
-        return self.show_ref_value(name, text)
 
     def get_counter_type(self, ctype: str) -> dict:
         counter_type = self.counters.get(ctype)
@@ -304,10 +313,10 @@ class AutoCounters:
         if self.macros and self.macros.get("use_autonumbering"):
             env.filters["lref"] = self.show_lref_value
             env.filters["ref"] = self.show_ref_value
-            env.filters["eqref"] = self.show_eqref_value
+            env.filters["pref"] = self.show_pref_value
             env.filters["labels"] = self.labels
-            env.filters["c_"] = self.new_counter
-            env.filters["c_label"] = self.new_label_counter
+            env.filters["c_"] = self.new_label_counter
+            env.filters["c_n"] = self.new_counter
             env.filters["c_eq"] = self.eq_counter
             env.filters["c_tag"] = self.tag_counter
             env.filters["c_begin"] = self.begin_counter
