@@ -709,7 +709,7 @@ ${backTicks}
                                 func: () =>
                                     this.editor!.surroundClicked(
                                         '%%"',
-                                        ' "| c_begin("align *")%%\nf\n%%""|c_end%%\n'
+                                        ' "| c_begin("align*")%%\nf\n%%""|c_end%%\n'
                                     ),
                             },
                             {

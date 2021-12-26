@@ -6,8 +6,6 @@ from dataclasses import dataclass, field
 from html import escape
 from typing import TYPE_CHECKING, Any, Mapping
 
-from jinja2.sandbox import SandboxedEnvironment
-
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.markdown.markdownconverter import (

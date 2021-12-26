@@ -1,13 +1,11 @@
 """Provides functions for converting markdown-formatted text to HTML."""
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING, Iterable, Any
 
 from jinja2 import TemplateSyntaxError
-from jinja2.sandbox import SandboxedEnvironment
 from lxml import html, etree
 from sqlalchemy.orm import load_only, lazyload
 
@@ -30,7 +28,7 @@ if TYPE_CHECKING:
     from timApp.document.docsettings import DocSettings
 
 
-def has_macros(text: str, env: SandboxedEnvironment):
+def has_macros(text: str, env: TimSandboxedEnvironment):
     return (
         env.variable_start_string in text
         or env.comment_start_string in text
@@ -307,7 +305,7 @@ def expand_macros(
     text: str,
     macros,
     settings: DocSettings | None,
-    env: SandboxedEnvironment,
+    env: TimSandboxedEnvironment,
     ignore_errors: bool = False,
 ):
     # return text  # comment out when want to take time if this slows things
@@ -338,7 +336,11 @@ def expand_macros(
                 local_macros_yaml = text[beg + len(startstr) : end]
                 local_macros = YamlBlock.from_markdown(local_macros_yaml).values
                 macros = {**macros, **local_macros}
+        # TODO: should local macros be used in counters???
+        env.counters.start_of_block()
         conv = env.from_string(text).render(macros)
+        if env.counters.label_count:
+            conv = env.counters.update_labels(conv)
         return conv
     except TemplateSyntaxError as e:
         if not ignore_errors:

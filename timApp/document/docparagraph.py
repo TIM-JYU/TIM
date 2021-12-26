@@ -10,7 +10,6 @@ from typing import Any, TYPE_CHECKING
 import commonmark
 import filelock
 from commonmark.node import Node
-from jinja2.sandbox import SandboxedEnvironment
 
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
@@ -21,6 +20,7 @@ from timApp.document.preloadoption import PreloadOption
 from timApp.document.prepared_par import PreparedPar
 from timApp.document.randutils import random_id, hashfunc
 from timApp.document.viewcontext import ViewContext, default_view_ctx
+from timApp.markdown.autocounters import TimSandboxedEnvironment
 from timApp.markdown.dumboclient import DumboOptions, MathType, InputFormat
 from timApp.markdown.markdownconverter import (
     par_list_to_html_list,
@@ -42,7 +42,7 @@ if TYPE_CHECKING:
 SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "settings"}
 
 
-se = SandboxedEnvironment(autoescape=True)
+se = TimSandboxedEnvironment(autoescape=True)
 
 
 # TODO: Make this a dataclass as soon as __slots__ is supported for dataclasses (coming in Python 3.10 maybe).
@@ -742,7 +742,7 @@ class DocParagraph:
     def get_auto_macro_values(
         self,
         macros,
-        env: SandboxedEnvironment,
+        env: TimSandboxedEnvironment,
         auto_macro_cache,
         heading_cache,
         auto_number_start,
