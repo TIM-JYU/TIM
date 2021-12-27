@@ -138,7 +138,7 @@ class AutoCounters:
         for reset in range(1, 6 + 1):
             pfmt = ""
             for i in range(self.auto_number_headings, reset + 1):
-                pfmt += "{h" + str(i) + "}."
+                pfmt += f"{{h{i}}}."
             pfmt += "{v}"
             self.pure_reset_formats.append(pfmt)
 
@@ -149,7 +149,7 @@ class AutoCounters:
         :param s: string to show as red
         :return: s surrounded be []{.red}
         """
-        return "[" + s + "]{.red}"
+        return f"[{s}]{{.red}}"
 
     @staticmethod
     def get_texts_and_name(name: str or int) -> (str, str, str):
@@ -224,7 +224,8 @@ class AutoCounters:
         :return: string for reference
         """
         sname, s, from_macros = self.get_show_params(name, showtype)
-        return "[" + s + "](#" + from_macros.get("h", sname) + ")"
+        anchor = from_macros.get("h", sname)
+        return f"[{s}](#{anchor})"
 
     def show_lref_value(self, name: str or int, showtype: str = "l") -> str:
         """
@@ -380,7 +381,7 @@ class AutoCounters:
         :param name: counter's name
         :return:  tag counter
         """
-        return "\\tag{" + str(self.new_counter(name, ctype)) + "}"
+        return f"\\tag{{{self.new_counter(name, ctype)}}}"
 
     def reset_current_labels(self):
         """

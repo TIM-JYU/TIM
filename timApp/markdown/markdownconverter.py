@@ -655,8 +655,8 @@ def change_class(
 def insert_heading_numbers(
     html_str: str,
     heading_info,
-    auto_number_headings: int or bool = True,
-    heading_format: dict = None,
+    auto_number_headings: int | bool = True,
+    heading_format: dict | None = None,
 ):
     """Applies the given heading_format to the HTML if it is a heading, based on the given heading_info. Additionally
     corrects the id attribute of the heading in case it has been used earlier.
