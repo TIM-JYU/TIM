@@ -537,10 +537,10 @@ def change_alias(alias: str, new_name: str, public: bool = True) -> Response:
     verify_manage_access(doc)
 
     if alias != new_alias:
-        src_f = Folder.find_first_existing(alias)
-        if not get_current_user_object().can_write_to_folder(src_f):
+        dst_f = Folder.find_first_existing(new_alias)
+        if not get_current_user_object().can_write_to_folder(dst_f):
             raise AccessDenied(
-                "You don't have permission to write to the source folder."
+                "You don't have permission to write to the destination folder."
             )
         validate_item_and_create_intermediate_folders(
             new_alias, BlockType.Document, get_current_user_group_object()
