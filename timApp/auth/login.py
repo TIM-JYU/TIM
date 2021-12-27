@@ -162,7 +162,7 @@ def set_single_user_to_session(user: User) -> None:
 
 
 """Sent passwords are stored here when running tests."""
-test_pws = []
+test_pws: list[str] = []
 
 
 @login_page.post("/checkTempPass")
