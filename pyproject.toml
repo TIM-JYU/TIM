@@ -5,3 +5,211 @@ marshmallow_dataclass|
 celery_sqlalchemy_scheduler|
 vendor
 '''
+
+[tool.mypy]
+python_version = 3.9
+ignore_missing_imports = false
+mypy_path = "timApp/modules/fields"
+disallow_untyped_calls = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+show_column_numbers = true
+namespace_packages = true
+show_error_codes = true
+exclude = '''
+timApp/modules/cs/static
+timApp/tim_files
+mailman/
+tools/
+oiko/
+python_docs/
+'''
+
+# Some modules have their own internal type checking, so we will always need to follow their imports
+[[tool.mypy.overrides]]
+module = [
+    "flask.*",
+    "marshmallow.*",
+    "jinja2.*",
+    "werkzeug.*",
+    "bcrypt"
+]
+follow_imports = "normal"
+
+# Rewrite above comment using the TOML syntax
+[[tool.mypy.overrides]]
+module = [
+    # Ignore errors in tests
+    "timApp.tests.*",
+    # Migrations mostly have generated code
+    "timApp.migrations.*",
+    "timApp.modules.cs.*",
+    "timApp.modules.imagex.*",
+    "timApp.modules.svn.*",
+    "tim_common.fileParams",
+    "tim_common.marshmallow_dataclass",
+    "tim_common.tim_server",
+    "timApp.celery_sqlalchemy_scheduler.*",
+    "tim_common.vendor.*"
+]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = [
+    "sass",
+    "authlib.*",
+    "psycogreen.*",
+    "alembic",
+    "html5lib",
+    "html5lib.*",
+    "celery.schedules",
+    "lxml",
+    "lxml.*",
+    "sqlalchemy",
+    "sqlalchemy.dialects",
+    "sqlalchemy.exc",
+    "sqlalchemy.orm",
+    "webargs.flaskparser",
+    "flask_wtf",
+    "isodate",
+    "bs4",
+    "sqlalchemy.dialects.postgresql",
+    "mailmanclient",
+    "mailmanclient.*",
+    "httpagentparser"
+]
+ignore_missing_imports = true
+
+# The modules below should be gradually removed as the code is fixed.
+[[tool.mypy.overrides]]
+module = [
+    # Right now flask.cli.command is not annotated properly, wait until it is
+    "timApp.admin.*",
+    "timApp.admin.migrate_to_postgre",
+    "timApp.answer.answer",
+    "timApp.answer.answer_models",
+    "timApp.answer.feedbackanswer",
+    "timApp.answer.routes",
+    "timApp.auth.accesshelper",
+    "timApp.auth.auth_models",
+    "timApp.auth.saml",
+    "timApp.auth.sessioninfo",
+    "timApp.bookmark.bookmarks",
+    "timApp.bookmark.routes",
+    "timApp.defaultconfig",
+    "timApp.document.attributeparser",
+    "timApp.document.changelog",
+    "timApp.document.changelogentry",
+    "timApp.document.create_item",
+    "timApp.document.docinfo",
+    "timApp.document.docparagraph",
+    "timApp.document.docsettings",
+    "timApp.document.document",
+    "timApp.document.documentparser",
+    "timApp.document.documentparseroptions",
+    "timApp.document.documents",
+    "timApp.document.documentversion",
+    "timApp.document.documentwriter",
+    "timApp.document.editing.clipboard",
+    "timApp.document.editing.documenteditresult",
+    "timApp.document.editing.editrequest",
+    "timApp.document.editing.proofread",
+    "timApp.document.editing.routes",
+    "timApp.document.editing.routes_clipboard",
+    "timApp.document.exceptions",
+    "timApp.document.post_process",
+    "timApp.document.randutils",
+    "timApp.document.routes",
+    "timApp.document.timjsonencoder",
+    "timApp.document.translation.routes",
+    "timApp.document.translation.synchronize_translations",
+    "timApp.document.translation.translation",
+    "timApp.document.validationresult",
+    "timApp.document.version",
+    "timApp.document.yamlblock",
+    "timApp.errorhandlers",
+    "timApp.folder.folder",
+    "timApp.folder.folder_view",
+    "timApp.gamification.gamificationdata",
+    "timApp.gamification.generateMap",
+    "timApp.item.block",
+    "timApp.item.copy_rights",
+    "timApp.item.item",
+    "timApp.item.manage",
+    "timApp.item.partitioning",
+    "timApp.item.routes",
+    "timApp.item.routes_tags",
+    "timApp.item.tag",
+    "timApp.item.validation",
+    "timApp.lecture.askedjson",
+    "timApp.lecture.askedquestion",
+    "timApp.lecture.lecture",
+    "timApp.lecture.lectureanswer",
+    "timApp.lecture.message",
+    "timApp.lecture.routes",
+    "timApp.lecture.useractivity",
+    "timApp.markdown.dumboclient",
+    "timApp.markdown.markdownconverter",
+    "timApp.note.notes",
+    "timApp.note.usernote",
+    "timApp.notification.notification",
+    "timApp.notification.notify",
+    "timApp.notification.pending_notification",
+    "timApp.plugin.plugin",
+    "timApp.plugin.pluginControl",
+    "timApp.plugin.routes",
+    "timApp.plugin.taskid",
+    "timApp.plugin.timtable.row_owner_info",
+    "timApp.plugin.timtable.timTable",
+    "timApp.plugin.timtable.timTableLatex",
+    "timApp.plugin.qst.qst",
+    "timApp.printing.documentprinter",
+    "timApp.printing.pandoc_headernumberingfilter",
+    "timApp.printing.pandoc_imagefilepathsfilter",
+    "timApp.printing.pandoc_inlinestylesfilter",
+    "timApp.printing.print",
+    "timApp.printing.printeddoc",
+    "timApp.readmark.readings",
+    "timApp.readmark.readmarkcollection",
+    "timApp.readmark.readparagraph",
+    "timApp.readmark.readparagraphtype",
+    "timApp.readmark.routes",
+    "timApp.slide.routes",
+    "timApp.slide.slidestatus",
+    "timApp.tim",
+    "timApp.tim_app",
+    "timApp.tim_celery",
+    "timApp.timdb.init",
+    "timApp.timdb.sqa",
+    "timApp.timdb.timdb",
+    "timApp.timtypes",
+    "timApp.upload.upload",
+    "timApp.upload.uploadedfile",
+    "timApp.user.consentchange",
+    "timApp.user.groups",
+    "timApp.user.hakaorganization",
+    "timApp.user.newuser",
+    "timApp.user.personaluniquecode",
+    "timApp.user.preferences",
+    "timApp.user.scimentity",
+    "timApp.user.user",
+    "timApp.user.usergroup",
+    "timApp.user.usergroupmember",
+    "timApp.user.users",
+    "timApp.util.flask.ReverseProxied",
+    "timApp.util.flask.cache",
+    "timApp.util.flask.filters",
+    "timApp.util.flask.responsehelper",
+    "timApp.util.flask.search",
+    "timApp.util.get_fields",
+    "timApp.util.pdftools",
+    "timApp.velp.annotation_model",
+    "timApp.velp.annotations",
+    "timApp.velp.velp",
+    "timApp.velp.velp_folders",
+    "timApp.velp.velp_models",
+    "timApp.velp.velpgroups",
+    "timApp.velp.velps"
+]
+ignore_errors = true
