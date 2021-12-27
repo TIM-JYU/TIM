@@ -412,7 +412,7 @@ class DocumentPrinter:
     def get_autocounters(
         self,
         user_ctx: UserContext,
-    ) -> str:
+    ) -> AutoCounters:
         """
         Gets the content of the DocEntry assigned for this
         DocumentPrinter object. Builds autonumber counters
