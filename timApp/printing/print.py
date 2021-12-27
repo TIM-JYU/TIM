@@ -7,16 +7,17 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
-from flask import Blueprint, send_file
+from flask import Blueprint, send_file, Response
 from flask import current_app
 from flask import g
 from flask import make_response
 from flask import request
 
 from timApp.auth import sessioninfo
-from timApp.auth.accesshelper import verify_view_access
+from timApp.auth.accesshelper import verify_view_access, verify_edit_access
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
 from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTeXError
@@ -384,13 +385,14 @@ def get_printed_document(doc_path):
     return response
 
 
-def get_setting_and_counters_par(doc):
+def get_setting_and_counters_par(
+    doc_info: DocInfo,
+) -> tuple[Optional[DocParagraph], Optional[DocParagraph]]:
     # TODO: Make this more efective!
-    json = doc.document.export_raw_data()
-    settings_par = None
-    counters_par = None
-    for par in json:
-        s = par["attrs"].get("settings", None)
+    settings_par: Optional[DocParagraph] = None
+    counters_par: Optional[DocParagraph] = None
+    for par in doc_info.document:  # type: DocParagraph
+        s = par.get_attr("settings", None)
         if s is not None:
             if s == "":
                 settings_par = par
@@ -401,52 +403,22 @@ def get_setting_and_counters_par(doc):
     return settings_par, counters_par
 
 
-@print_blueprint.get("/numbering2/<path:doc_path>")
-def get_numbering2(doc_path):
-    # TODO: remove this when numbering works
-    doc = g.doc_entry
-    json = doc.document.export_raw_data()
-    settings = doc.document.get_settings()
-    macroinfo = settings.get_macroinfo(default_view_ctx)
-    env = macroinfo.jinja_env
-    settings_par = None
-    counters_par = None
-    for par in json:
-        s = par["attrs"].get("settings", None)
-        if s is not None:
-            if s == "":
-                settings_par = par
-                continue
-            if s == "counters":
-                counters_par = par
-                continue
-        nomacros = par["attrs"].get("nomacros", None)
-        if nomacros is not None:
-            continue
-        from timApp.markdown.markdownconverter import expand_macros
+@print_blueprint.post("/numbering/<path:doc_path>")
+def get_numbering(doc_path: str) -> Response:
+    """
+    renumber autocounters
+    :param doc_path: from what document
+    :return: ok-response
+    """
+    # TODO: check is GET the best method? Should it be PUT?
+    # TODO: check user has Edit-rights
 
-        expand_macros(par["md"], macroinfo.macro_map, settings, env)
+    doc_entry = DocEntry.find_by_path(doc_path)
+    if doc_entry is None:
+        raise NotExist(doc_path)
+    verify_edit_access(doc_entry)  # throws exception
 
-    new_counter_macro_values = (
-        "macros:\n" + env.filters["counters_object"].get_counter_macros()
-    )
-    if counters_par:
-        doc.document.modify_paragraph(counters_par["id"], new_counter_macro_values)
-    else:
-        doc.document.insert_paragraph(
-            new_counter_macro_values,
-            insert_after_id=settings_par["id"],
-            attrs={"settings": "counters"},
-        )
-
-    return json_response({"ok": "ok"})
-
-
-@print_blueprint.get("/numbering/<path:doc_path>")
-def get_numbering(doc_path):
-    doc = g.doc_entry
-
-    printer = DocumentPrinter(doc, template_to_use=None, urlroot="")
+    printer = DocumentPrinter(doc_entry, template_to_use=None, urlroot="")
 
     try:
         counters = printer.get_autocounters(UserContext.from_one_user(g.user))
@@ -454,17 +426,17 @@ def get_numbering(doc_path):
         raise PrintingError(str(err))
 
     # TODO: following does not work!
-    # new_counter_macro_values = "´´´\n" + counters.get_counters() + "´´´"
-    new_counter_macro_values = "macros:\n" + counters.get_counter_macros()
+    new_counter_macro_values = "```\nmacros:\n" + counters.get_counter_macros() + "```"
+    # new_counter_macro_values = "macros:\n" + counters.get_counter_macros()
 
-    settings_par, counters_par = get_setting_and_counters_par(doc)
+    settings_par, counters_par = get_setting_and_counters_par(doc_entry)
 
     if counters_par:
-        doc.document.modify_paragraph(counters_par["id"], new_counter_macro_values)
+        doc_entry.document.modify_paragraph(counters_par.id, new_counter_macro_values)
     else:
-        doc.document.insert_paragraph(
+        doc_entry.document.insert_paragraph(
             new_counter_macro_values,
-            insert_after_id=settings_par["id"],
+            insert_after_id=settings_par.id,
             attrs={"settings": "counters"},
         )
 

@@ -116,10 +116,11 @@ const DEFAULT_PIECE_SIZE = 20;
                     (click)="markDocumentUnread()"
                     i18n>Delete all read marks
             </button>
-            <a      title="Refresh numbering" i18n-title
-                    (click)="refreshNumbering()"
-                    i18n>Refresh numbering
+            <a *ngIf="item.rights.editable" title="Refresh numbering" i18n-title
+               (click)="refreshNumbering()"
+               i18n>Refresh numbering
             </a>
+            <tim-loading *ngIf="isAutoCounterNumbering"></tim-loading>
         </ng-container>
         <ng-container *ngIf="lctrl.lectureSettings.inLecture">
             <h5 i18n>Lecture settings</h5>
@@ -258,6 +259,7 @@ export class SettingsTabComponent implements OnInit {
     item?: DocumentOrFolder;
     docSettings?: IDocSettings;
     memoMinutesSettings?: IMeetingMemoSettings;
+    isAutoCounterNumbering: boolean = false;
     private currentViewRange?: IViewRange;
     private documentMemoMinutes: string | undefined;
 
@@ -416,12 +418,17 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
+        this.isAutoCounterNumbering = true;
         const r = await toPromise(
-            this.http.get<ITemplateParams>(`/print/numbering/${this.item.path}`)
+            this.http.post<ITemplateParams>(
+                `/print/numbering/${this.item.path}`,
+                {}
+            )
         );
         if (r.ok) {
             location.reload();
         }
+        this.isAutoCounterNumbering = false;
     }
 
     /**

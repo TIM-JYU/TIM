@@ -28,6 +28,7 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx, copy_of_default_view_ctx
 from timApp.document.yamlblock import strip_code_block
 from timApp.folder.folder import Folder
+from timApp.markdown.autocounters import AutoCounters
 from timApp.markdown.markdownconverter import (
     expand_macros,
     create_environment,

@@ -5,11 +5,12 @@ import os
 import shelve
 from collections import defaultdict
 from copy import copy
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import commonmark
 import filelock
 from commonmark.node import Node
+from jinja2.sandbox import SandboxedEnvironment
 
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
@@ -41,8 +42,8 @@ if TYPE_CHECKING:
 
 SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "settings"}
 
-
-se = TimSandboxedEnvironment(autoescape=True)
+# TODO: a bit short name for global variable
+se = SandboxedEnvironment(autoescape=True)
 
 
 # TODO: Make this a dataclass as soon as __slots__ is supported for dataclasses (coming in Python 3.10 maybe).
@@ -1313,6 +1314,7 @@ def add_heading_numbers(
 ):
     d = ctx.doc
     macro_cache_file = f"/tmp/tim_auto_macros_{ctx.doc.doc_id}"
+    # TODO: Cache sould be picked up only once and used as a paramter
     ps = commonmark.Parser()
     parsed = ps.parse(s)
     with shelve.open(macro_cache_file) as cache:

@@ -265,6 +265,19 @@ class DocSettings:
     def auto_number_start(self) -> int:
         return self.__dict.get(self.auto_number_start_key, 0)
 
+    def heading_format_ret(self, defaults, format_key):
+        hformat = self.__dict.get(format_key)
+        if hformat is None:
+            return defaults
+        return {
+            1: hformat.get(1, defaults[1]),
+            2: hformat.get(2, defaults[2]),
+            3: hformat.get(3, defaults[3]),
+            4: hformat.get(4, defaults[4]),
+            5: hformat.get(5, defaults[5]),
+            6: hformat.get(6, defaults[6]),
+        }
+
     def heading_format(self) -> dict:
         level = self.auto_number_headings()
         defaults = {
@@ -302,17 +315,7 @@ class DocSettings:
                 5: "{h4}.{h5} {text}",
                 6: "{h4}.{h5}.{h6} {text}",
             }
-        hformat = self.__dict.get(self.heading_format_key)
-        if hformat is None:
-            return defaults
-        return {
-            1: hformat.get(1, defaults[1]),
-            2: hformat.get(2, defaults[2]),
-            3: hformat.get(3, defaults[3]),
-            4: hformat.get(4, defaults[4]),
-            5: hformat.get(5, defaults[5]),
-            6: hformat.get(6, defaults[6]),
-        }
+        return self.heading_format_ret(defaults, self.heading_format_key)
 
     def heading_ref_format(self) -> dict:
         level = self.auto_number_headings()
@@ -351,17 +354,7 @@ class DocSettings:
                 5: "{h4}.{h5}",
                 6: "{h4}.{h5}.{h6}",
             }
-        hformat = self.__dict.get(self.heading_ref_format_key)
-        if hformat is None:
-            return defaults
-        return {
-            1: hformat.get(1, defaults[1]),
-            2: hformat.get(2, defaults[2]),
-            3: hformat.get(3, defaults[3]),
-            4: hformat.get(4, defaults[4]),
-            5: hformat.get(5, defaults[5]),
-            6: hformat.get(6, defaults[6]),
-        }
+        return self.heading_format_ret(defaults, self.heading_ref_format_key)
 
     def show_task_summary(self, default=False) -> bool:
         return self.__dict.get(self.show_task_summary_key, default)
