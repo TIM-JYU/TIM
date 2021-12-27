@@ -1,7 +1,7 @@
 import smtplib
 from email.mime.text import MIMEText
 from threading import Thread
-from typing import Optional, Union
+from typing import Optional, Union, Any
 
 from flask import Flask
 
@@ -9,7 +9,7 @@ from timApp.tim_app import app
 from timApp.util.flask.requesthelper import is_testing, is_localhost
 from timApp.util.logger import log_error
 
-sent_mails_in_testing = []
+sent_mails_in_testing: list[dict[str, Any]] = []
 
 
 def send_email(

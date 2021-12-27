@@ -4,6 +4,7 @@ import signal
 import subprocess
 import sys
 from types import FrameType
+from typing import Optional
 
 import timApp.tim
 from timApp.admin.routes import gunicorn_pid_path
@@ -13,7 +14,7 @@ from timApp.util.logger import log_info
 from timApp.util.utils import pycharm_running
 
 
-def quit_fast(_sig: signal.Signals, _frame: FrameType) -> None:
+def quit_fast(_sig: int, _frame: Optional[FrameType]) -> None:
     sys.exit(0)
 
 

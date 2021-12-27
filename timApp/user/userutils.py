@@ -16,12 +16,12 @@ from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERN
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import get_current_time
 
-ANON_USER_ID = None
-LOGGED_USER_ID = None
-ANON_GROUP_ID = None
-LOGGED_GROUP_ID = None
-ADMIN_GROUP_ID = None
-KORPPI_GROUP_ID = None
+ANON_USER_ID: Optional[int] = None
+LOGGED_USER_ID: Optional[int] = None
+ANON_GROUP_ID: Optional[int] = None
+LOGGED_GROUP_ID: Optional[int] = None
+ADMIN_GROUP_ID: Optional[int] = None
+KORPPI_GROUP_ID: Optional[int] = None
 DOC_DEFAULT_RIGHT_NAME = "DefaultDocumentRights"
 FOLDER_DEFAULT_RIGHT_NAME = "DefaultFolderRights"
 
