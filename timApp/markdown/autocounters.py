@@ -69,6 +69,7 @@ class AutoCounters:
     auto_name_counter: int = 0
     auto_name_ctype: str = "eq"
     need_auto_name_reset: bool = True
+    auto_name_plugin: bool = False
 
     # counters for label cache to be replaced after block is ready
     label_cache: list[list[str]] = attr.Factory(list)
@@ -85,6 +86,7 @@ class AutoCounters:
         self.__attrs_init__()  # type: ignore[attr-defined]
         self.counters: TCounters = {}
         self.macros: dict
+        self.task_id: Optional[str] = None
         if macros:
             self.macros = macros
             self.c = macros.get("c", {})
@@ -138,16 +140,23 @@ class AutoCounters:
         """
         if self.need_auto_name_reset:
             self.set_auto_names(None)
+        self.auto_name_plugin: bool = False
         self.auto_name_counter += 1
         if name:
             if not ctype:
                 ctype = self.auto_name_ctype
             return name, ctype, None
 
-        if not self.auto_name_base:
-            return "", "", self.error("Missing base name, use c_auto")
         if not ctype:
-            ctype = self.auto_name_ctype
+            if self.task_id:
+                ctype = "task"
+            else:
+                ctype = self.auto_name_ctype
+        if not self.auto_name_base:
+            if self.task_id is None:
+                return "", "", self.error("Missing base name, use c_auto")
+            self.auto_name_plugin: bool = True
+            return self.task_id, ctype, None
         return self.auto_name_base + str(self.auto_name_counter), ctype, None
 
     def set_auto_number_headings(self, n: int) -> None:
@@ -343,6 +352,9 @@ class AutoCounters:
                 ref = self.get_type_text(ctype, sname, value, "ref", pure)
                 text = self.get_type_text(ctype, sname, value, "text", pure)
                 long = self.get_type_text(ctype, sname, value, "long", pure)
+                prefix = LABEL_PRFIX
+                if self.auto_name_plugin:
+                    prefix = ""
                 counter = {
                     "v": value,  # just value, mostly numeric
                     "p": pure,  # formated value
@@ -350,7 +362,7 @@ class AutoCounters:
                     "r": ref,  # normal refence format
                     "t": text,  # with text
                     "l": long,  # long format, mostly for section header
-                    "h": LABEL_PRFIX + sname.replace(" ", "_"),  # Jump address
+                    "h": prefix + sname.replace(" ", "_"),  # Jump address
                     "n": sname,  # name of counter
                     "y": ctype,
                 }
@@ -381,6 +393,8 @@ class AutoCounters:
         :return: counter as text with label where to jump
         """
         s, name = self.create_new_counter(name, ctype)
+        if self.auto_name_plugin:
+            return s
         if self.tex:
             return " \\label{" + LABEL_PRFIX + name + "}" + s
         return '<a id="' + LABEL_PRFIX + name + '"></a>' + s

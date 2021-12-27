@@ -451,7 +451,7 @@ class DocumentPrinter:
         view_ctx = default_view_ctx
 
         for par in pars:
-
+            counters.task_id = None
             # do not count document settings pars
             if par.is_setting():
                 continue
@@ -467,6 +467,7 @@ class DocumentPrinter:
             # of their yaml as the md content of the replacement par
             if par.is_plugin():
                 try:
+                    counters.task_id = par.attrs.get("taskId", None)
                     plugin_yaml = parse_plugin_values_macros(
                         par=par,
                         global_attrs=pdoc_plugin_attrs,

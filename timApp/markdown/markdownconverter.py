@@ -337,9 +337,10 @@ def expand_macros(
                 local_macros = YamlBlock.from_markdown(local_macros_yaml).values
                 macros = {**macros, **local_macros}
         # TODO: should local macros be used in counters???
-        env.counters.start_of_block()
+        if env.counters:
+            env.counters.start_of_block()
         conv = env.from_string(text).render(macros)
-        if env.counters.label_count:
+        if env.counters and env.counters.label_count:
             conv = env.counters.update_labels(conv)
         return conv
     except TemplateSyntaxError as e:

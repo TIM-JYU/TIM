@@ -418,6 +418,10 @@ def get_numbering(doc_path: str) -> Response:
         raise NotExist(doc_path)
     verify_edit_access(doc_entry)  # throws exception
 
+    settings_par, counters_par = get_setting_and_counters_par(doc_entry)
+    if not settings_par:
+        raise NotExist("Add settings par first")
+
     printer = DocumentPrinter(doc_entry, template_to_use=None, urlroot="")
 
     try:
@@ -428,8 +432,6 @@ def get_numbering(doc_path: str) -> Response:
     # TODO: following does not work!
     new_counter_macro_values = "```\nmacros:\n" + counters.get_counter_macros() + "```"
     # new_counter_macro_values = "macros:\n" + counters.get_counter_macros()
-
-    settings_par, counters_par = get_setting_and_counters_par(doc_entry)
 
     if counters_par:
         doc_entry.document.modify_paragraph(counters_par.id, new_counter_macro_values)
