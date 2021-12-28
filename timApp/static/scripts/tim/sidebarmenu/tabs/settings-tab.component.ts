@@ -420,10 +420,7 @@ export class SettingsTabComponent implements OnInit {
         }
         this.isAutoCounterNumbering = true;
         const r = await toPromise(
-            this.http.post<IOkResponse>(
-                `/print/numbering/${this.item.path}`,
-                {}
-            )
+            this.http.post(`/print/numbering/${this.item.path}`, {})
         );
         if (r.ok) {
             location.reload();

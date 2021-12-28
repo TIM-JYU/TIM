@@ -35,6 +35,7 @@ from timApp.util.flask.responsehelper import (
     json_response,
     add_no_cache_headers,
     add_csp_header,
+    ok_response,
 )
 
 TEXPRINTTEMPLATE_KEY = "texprinttemplate"
@@ -410,8 +411,6 @@ def get_numbering(doc_path: str) -> Response:
     :param doc_path: from what document
     :return: ok-response
     """
-    # TODO: check is GET the best method? Should it be PUT?
-    # TODO: check user has Edit-rights
 
     doc_entry = DocEntry.find_by_path(doc_path)
     if doc_entry is None:
@@ -429,9 +428,7 @@ def get_numbering(doc_path: str) -> Response:
     except PrintingError as err:
         raise PrintingError(str(err))
 
-    # TODO: following does not work!
-    new_counter_macro_values = "```\nmacros:\n" + counters.get_counter_macros() + "```"
-    # new_counter_macro_values = "macros:\n" + counters.get_counter_macros()
+    new_counter_macro_values = f"```\nmacros:\n{counters.get_counter_macros()}```"
 
     if counters_par:
         doc_entry.document.modify_paragraph(counters_par.id, new_counter_macro_values)
@@ -442,7 +439,7 @@ def get_numbering(doc_path: str) -> Response:
             attrs={"settings": "counters"},
         )
 
-    return json_response({"ok": "ok"})
+    return ok_response()
 
 
 @print_blueprint.get("/templates/<path:doc_path>")

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass, field
+from typing import Optional, Union
 
 import attr
 from jinja2.sandbox import SandboxedEnvironment
-from typing import Optional, Union
 
 """
 Class for autocounters to be used as Jinja2 filters
@@ -35,10 +36,10 @@ TMacroCounter = dict[str, TAttrib]
 TMacroCounters = dict[str, TMacroCounter]
 
 
+@dataclass
 class TOneCounterType:
-    def __init__(self) -> None:
-        self.count: int = 0
-        self.counters: dict[str, TCounter] = {}
+    count: int = 0
+    counters: dict[str, TCounter] = field(default_factory=dict)
 
 
 TCounters = dict[str, TOneCounterType]
@@ -58,7 +59,9 @@ class AutoCounters:
             6: 0,
         }
     )
-    pure_reset_formats = ["{v}", "{v}", "{v}", "{v}", "{v}", "{v}", "{v}"]
+    pure_reset_formats = attr.Factory(
+        lambda: ["{v}", "{v}", "{v}", "{v}", "{v}", "{v}", "{v}"]
+    )
     counter_stack: list[str] = attr.Factory(list)
     c: TMacroCounters = attr.Factory(dict)
     tex: bool = False
