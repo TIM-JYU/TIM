@@ -116,6 +116,11 @@ const DEFAULT_PIECE_SIZE = 20;
                     (click)="markDocumentUnread()"
                     i18n>Delete all read marks
             </button>
+            <a *ngIf="item.rights.editable" title="Refresh numbering" i18n-title
+               (click)="refreshNumbering()"
+               i18n>Refresh numbering
+            </a>
+            <tim-loading *ngIf="isAutoCounterNumbering"></tim-loading>
         </ng-container>
         <ng-container *ngIf="lctrl.lectureSettings.inLecture">
             <h5 i18n>Lecture settings</h5>
@@ -150,7 +155,6 @@ const DEFAULT_PIECE_SIZE = 20;
                     (click)="cssPrint()"
                     i18n>Browser print
             </button>
-
             <div>
                 <h5 class="same-line" i18n>Document tags</h5>
                 <a class="same-line spaced" href="https://tim.jyu.fi/view/tim/ohjeita/opettajan-ohje#kurssikoodi">
@@ -255,6 +259,7 @@ export class SettingsTabComponent implements OnInit {
     item?: DocumentOrFolder;
     docSettings?: IDocSettings;
     memoMinutesSettings?: IMeetingMemoSettings;
+    isAutoCounterNumbering: boolean = false;
     private currentViewRange?: IViewRange;
     private documentMemoMinutes: string | undefined;
 
@@ -407,6 +412,22 @@ export class SettingsTabComponent implements OnInit {
 
     cssPrint() {
         window.print();
+    }
+
+    async refreshNumbering() {
+        if (!this.item) {
+            return;
+        }
+        this.isAutoCounterNumbering = true;
+        const r = await toPromise(
+            this.http.post(`/print/numbering/${this.item.path}`, {})
+        );
+        if (r.ok) {
+            location.reload();
+        } else {
+            this.isAutoCounterNumbering = false;
+            await showMessageDialog(r.result.error.error);
+        }
     }
 
     /**

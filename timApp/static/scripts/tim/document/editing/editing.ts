@@ -373,14 +373,18 @@ This will delete the whole ${
         );
     }
 
-    findSettingsPars() {
+    findSettingsPars(ignores: string[] = []) {
         const pars = enumDocParts(
             PreambleIteration.Exclude,
             getParContainerElem()
         );
         const found = [];
         for (const p of pars) {
-            if (p instanceof Paragraph && p.isSetting()) {
+            if (
+                p instanceof Paragraph &&
+                p.isSetting() &&
+                !ignores.includes(p.attrs.settings)
+            ) {
                 found.push(p);
             } else if (
                 p instanceof ReferenceParagraph &&
@@ -403,14 +407,12 @@ This will delete the whole ${
     }
 
     hasNonSettingsPars() {
-        let has = false;
         for (const p of enumPars(DerefOption.Deref)) {
             if (!p.isSetting()) {
-                has = true;
-                break;
+                return true;
             }
         }
-        return has;
+        return false;
     }
 
     async insertHelpPar() {
@@ -432,7 +434,7 @@ This will delete the whole ${
     }
 
     async editSettingsPars() {
-        const pars = this.findSettingsPars();
+        const pars = this.findSettingsPars(["counters"]);
         if (!pars) {
             const iter = enumDocParts(
                 PreambleIteration.Exclude,

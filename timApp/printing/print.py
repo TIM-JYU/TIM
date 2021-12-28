@@ -7,16 +7,17 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
-from flask import Blueprint, send_file
+from flask import Blueprint, send_file, Response
 from flask import current_app
 from flask import g
 from flask import make_response
 from flask import request
 
 from timApp.auth import sessioninfo
-from timApp.auth.accesshelper import verify_view_access
+from timApp.auth.accesshelper import verify_view_access, verify_edit_access
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
 from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTeXError
@@ -34,6 +35,7 @@ from timApp.util.flask.responsehelper import (
     json_response,
     add_no_cache_headers,
     add_csp_header,
+    ok_response,
 )
 
 TEXPRINTTEMPLATE_KEY = "texprinttemplate"
@@ -382,6 +384,62 @@ def get_printed_document(doc_path):
     add_no_cache_headers(response)
     db.session.commit()
     return response
+
+
+def get_setting_and_counters_par(
+    doc_info: DocInfo,
+) -> tuple[Optional[DocParagraph], Optional[DocParagraph]]:
+    # TODO: Make this more efective!
+    settings_par: Optional[DocParagraph] = None
+    counters_par: Optional[DocParagraph] = None
+    for par in doc_info.document:  # type: DocParagraph
+        s = par.get_attr("settings", None)
+        if s is not None:
+            if s == "":
+                settings_par = par
+                continue
+            if s == "counters":
+                counters_par = par
+                break
+    return settings_par, counters_par
+
+
+@print_blueprint.post("/numbering/<path:doc_path>")
+def get_numbering(doc_path: str) -> Response:
+    """
+    renumber autocounters
+    :param doc_path: from what document
+    :return: ok-response
+    """
+
+    doc_entry = DocEntry.find_by_path(doc_path)
+    if doc_entry is None:
+        raise NotExist(doc_path)
+    verify_edit_access(doc_entry)  # throws exception
+
+    settings_par, counters_par = get_setting_and_counters_par(doc_entry)
+    if not settings_par:
+        raise NotExist("Add settings par first")
+
+    printer = DocumentPrinter(doc_entry, template_to_use=None, urlroot="")
+
+    try:
+        counters = printer.get_autocounters(UserContext.from_one_user(g.user))
+    except PrintingError as err:
+        raise PrintingError(str(err))
+
+    new_counter_macro_values = f"```\nmacros:\n{counters.get_counter_macros()}```"
+
+    if counters_par:
+        doc_entry.document.modify_paragraph(counters_par.id, new_counter_macro_values)
+    else:
+        doc_entry.document.insert_paragraph(
+            new_counter_macro_values,
+            insert_after_id=settings_par.id,
+            attrs={"settings": "counters"},
+        )
+
+    return ok_response()
 
 
 @print_blueprint.get("/templates/<path:doc_path>")

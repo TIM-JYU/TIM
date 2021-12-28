@@ -6,11 +6,12 @@ from dataclasses import dataclass, field
 from html import escape
 from typing import TYPE_CHECKING, Any, Mapping
 
-from jinja2.sandbox import SandboxedEnvironment
-
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
-from timApp.markdown.markdownconverter import create_environment
+from timApp.markdown.markdownconverter import (
+    create_environment,
+    TimSandboxedEnvironment,
+)
 from timApp.util.rndutils import get_rands_as_dict
 from timApp.util.utils import cached_property
 
@@ -83,8 +84,10 @@ class MacroInfo:
         return self.macro_delimiter
 
     @cached_property
-    def jinja_env(self) -> SandboxedEnvironment:
-        return create_environment(self.macro_delimiter, self.user_ctx, self.view_ctx)
+    def jinja_env(self) -> TimSandboxedEnvironment:
+        return create_environment(
+            self.macro_delimiter, self.user_ctx, self.view_ctx, self.macro_map
+        )
 
     def get_macros_preserving_user(self) -> dict[str, object]:
         """Gets the macros and defines user-specific variables in such a way that the macro replacement for user

@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Optional
 
 from flask import current_app
-from jinja2.sandbox import SandboxedEnvironment
 from pypandoc import _as_unicode, _validate_formats
 from pypandoc.py3compat import string_types, cast_bytes
 
@@ -29,7 +28,12 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx, copy_of_default_view_ctx
 from timApp.document.yamlblock import strip_code_block
 from timApp.folder.folder import Folder
-from timApp.markdown.markdownconverter import expand_macros, create_environment
+from timApp.markdown.autocounters import AutoCounters
+from timApp.markdown.markdownconverter import (
+    expand_macros,
+    create_environment,
+    TimSandboxedEnvironment,
+)
 from timApp.plugin.plugin import get_value, PluginWrap
 from timApp.plugin.plugin import parse_plugin_values_macros
 from timApp.plugin.pluginControl import pluginify
@@ -89,17 +93,23 @@ def add_nonumber(md: str) -> str:
 
 
 def get_tex_settings_and_macros(
-    d: Document, user_ctx: UserContext, template_doc: Optional[DocEntry] = None
+    d: Document,
+    user_ctx: UserContext,
+    template_doc: Optional[DocEntry] = None,
+    tformat: PrintFormat = PrintFormat.PLAIN,
 ):
     settings = d.get_settings()
     pdoc_plugin_attrs = settings.global_plugin_attrs()
     pdoc_macroinfo = settings.get_macroinfo(default_view_ctx, user_ctx)
     pdoc_macro_delimiter = pdoc_macroinfo.get_macro_delimiter()
     pdoc_macros = pdoc_macroinfo.get_macros()
+    if tformat == PrintFormat.LATEX:
+        pdoc_macros["tex"] = True
     pdoc_macro_env = create_environment(
         pdoc_macro_delimiter,
         user_ctx,
         default_view_ctx,
+        pdoc_macros,
     )
 
     if template_doc:
@@ -129,7 +139,10 @@ def get_tex_macros(d: Document):
 
 class DocumentPrinter:
     def __init__(
-        self, doc_entry: DocInfo, template_to_use: Optional[DocInfo], urlroot: str
+        self,
+        doc_entry: DocInfo,
+        template_to_use: Optional[DocInfo],
+        urlroot: str,
     ):
         self._doc_entry = doc_entry
         self._template_to_use = template_to_use
@@ -165,6 +178,10 @@ class DocumentPrinter:
                  print="false"
         """
 
+        tformat = target_format
+        if target_format in (PrintFormat.PDF, PrintFormat.JSON):
+            tformat = PrintFormat.LATEX
+
         if self._content is not None:
             return self._content
 
@@ -175,7 +192,7 @@ class DocumentPrinter:
             pdoc_macros,
             pdoc_macro_delimiter,
         ) = get_tex_settings_and_macros(
-            self._doc_entry.document, user_ctx, self._template_to_use
+            self._doc_entry.document, user_ctx, self._template_to_use, tformat
         )
 
         self._macros = pdoc_macros
@@ -202,6 +219,8 @@ class DocumentPrinter:
         view_ctx = default_view_ctx
         if texmacros:
             view_ctx = copy_of_default_view_ctx(texmacros)
+        if tformat == PrintFormat.LATEX:  # ensure tex macro is set
+            view_ctx = copy_of_default_view_ctx({"tex": True})
 
         # Process areas to determine what is visible to the user who is printing
         # TODO: We don't need to process all the areas, just need to find the IDs of the visible items
@@ -219,12 +238,12 @@ class DocumentPrinter:
             )
         )
 
-        par_infos: list[
+        par_infos: [  # TODO: Why this was list[]
             tuple[
                 DocParagraph,
                 DocSettings,
                 dict,
-                SandboxedEnvironment,
+                TimSandboxedEnvironment,
                 dict[str, object],
                 str,
             ]
@@ -239,7 +258,7 @@ class DocumentPrinter:
                 continue
 
             p_info = par, *get_tex_settings_and_macros(
-                par.doc, user_ctx, self._template_to_use
+                par.doc, user_ctx, self._template_to_use, tformat
             )
             _, _, pdoc_plugin_attrs, env, pdoc_macros, pdoc_macro_delimiter = p_info
 
@@ -290,10 +309,6 @@ class DocumentPrinter:
             else:
                 par_infos.append(p_info)
                 pars_to_print.append(ppar)
-
-        tformat = target_format
-        if target_format in (PrintFormat.PDF, PrintFormat.JSON):
-            tformat = PrintFormat.LATEX
 
         # render markdown for plugins
         presult = pluginify(
@@ -395,6 +410,110 @@ class DocumentPrinter:
         self._content = content
         return content
 
+    def get_autocounters(
+        self,
+        user_ctx: UserContext,
+    ) -> AutoCounters:
+        """
+        Gets the content of the DocEntry assigned for this
+        DocumentPrinter object. Builds autonumber counters
+        from %%"name"|c_????%% filters.
+
+        :return: counters for autonumbering
+        """
+
+        (
+            settings,
+            _,
+            pdoc_macro_env,
+            pdoc_macros,
+            pdoc_macro_delimiter,
+        ) = get_tex_settings_and_macros(
+            self._doc_entry.document, user_ctx, self._template_to_use
+        )
+
+        self._macros = pdoc_macros
+        counters = pdoc_macro_env.get_counters()
+        counters.set_renumbering(True)
+        counters.set_auto_number_headings(
+            self._doc_entry.document.get_settings().auto_number_headings()
+        )
+
+        # Remove paragraphs that are not to be printed and replace plugin pars,
+        # that have a defined 'texprint' block in their yaml, with the 'texprint'-blocks content
+        # TODO: Check if this needs to be checked also for autonumbering
+        pars = self._doc_entry.document.get_paragraphs(include_preamble=True)
+        self._doc_entry.document.preload_option = PreloadOption.all
+        pars = dereference_pars(
+            pars, context_doc=self._doc_entry.document, view_ctx=default_view_ctx
+        )
+
+        view_ctx = default_view_ctx
+
+        for par in pars:
+            counters.task_id = None
+            # do not count document settings pars
+            if par.is_setting():
+                continue
+
+            p_info = par, *get_tex_settings_and_macros(
+                par.doc, user_ctx, self._template_to_use
+            )
+            _, _, pdoc_plugin_attrs, env, pdoc_macros, pdoc_macro_delimiter = p_info
+            env.set_counters(counters)
+
+            # Replace plugin- and question pars with regular docpars
+            # with the md defined in the 'print' block
+            # of their yaml as the md content of the replacement par
+            if par.is_plugin():
+                try:
+                    counters.task_id = par.attrs.get("taskId", None)
+                    plugin_yaml = parse_plugin_values_macros(
+                        par=par,
+                        global_attrs=pdoc_plugin_attrs,
+                        macros=pdoc_macros,
+                        env=env,
+                    )
+                except PluginException:
+                    pass
+                continue
+
+            # Get the markdown
+            p = par
+
+            md = p.prepare(view_ctx, use_md=True).output
+
+            jump_name = p.attrs.get("taskId", None)
+            if settings.auto_number_headings():
+                md = add_heading_numbers(
+                    md,
+                    p,
+                    settings.heading_format(),
+                    settings.heading_ref_format(),
+                    jump_name,
+                    counters,
+                )
+
+            if not p.is_plugin() and not p.is_question():
+                if not p.get_nomacros():
+                    md = expand_macros(
+                        text=md,
+                        macros=pdoc_macros,
+                        settings=settings,
+                        env=env,
+                        ignore_errors=False,
+                    )
+                classes = p.classes
+
+                if classes:
+                    for cls in classes:
+                        if cls == "nonumber":
+                            md = add_nonumber(md)
+                        else:
+                            pass
+
+        return counters
+
     def write_to_format(
         self,
         user_ctx: UserContext,
@@ -438,6 +557,7 @@ class DocumentPrinter:
                 plugins_user_print=plugins_user_print,
                 target_format=target_format,
             )
+
             # see: https://regex101.com/r/latest
             # src = re.sub(r'\{width=[^ }]* +([^}]*scale=[^%]*%[^}]*\})',                         r'{\1', src)
 

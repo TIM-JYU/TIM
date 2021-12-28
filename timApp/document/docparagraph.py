@@ -5,7 +5,7 @@ import os
 import shelve
 from collections import defaultdict
 from copy import copy
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import commonmark
 import filelock
@@ -21,11 +21,13 @@ from timApp.document.preloadoption import PreloadOption
 from timApp.document.prepared_par import PreparedPar
 from timApp.document.randutils import random_id, hashfunc
 from timApp.document.viewcontext import ViewContext, default_view_ctx
+from timApp.markdown.autocounters import TimSandboxedEnvironment
 from timApp.markdown.dumboclient import DumboOptions, MathType, InputFormat
 from timApp.markdown.markdownconverter import (
     par_list_to_html_list,
     expand_macros,
     format_heading,
+    AutoCounters,
 )
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 from timApp.timtypes import DocumentType
@@ -40,7 +42,7 @@ if TYPE_CHECKING:
 
 SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "settings"}
 
-
+# TODO: a bit short name for global variable
 se = SandboxedEnvironment(autoescape=True)
 
 
@@ -741,7 +743,7 @@ class DocParagraph:
     def get_auto_macro_values(
         self,
         macros,
-        env: SandboxedEnvironment,
+        env: TimSandboxedEnvironment,
         auto_macro_cache,
         heading_cache,
         auto_number_start,
@@ -1293,9 +1295,26 @@ def create_final_par(
     return final_par
 
 
-def add_heading_numbers(s: str, ctx: DocParagraph, heading_format):
+def get_heading_counts(ctx: DocParagraph):
+    d = ctx.doc
+    macro_cache_file = f"/tmp/tim_auto_macros_{d.doc_id}"
+    ps = commonmark.Parser()
+    with shelve.open(macro_cache_file) as cache:
+        vals = cache.get(str((ctx.get_id(), d.get_version())), {}).get("h")
+        return vals
+
+
+def add_heading_numbers(
+    s: str,
+    ctx: DocParagraph,
+    heading_format: dict,
+    heading_ref_format: dict = None,
+    jump_name: str = None,
+    counters: AutoCounters = None,
+):
     d = ctx.doc
     macro_cache_file = f"/tmp/tim_auto_macros_{ctx.doc.doc_id}"
+    # TODO: Cache sould be picked up only once and used as a paramter
     ps = commonmark.Parser()
     parsed = ps.parse(s)
     with shelve.open(macro_cache_file) as cache:
@@ -1316,10 +1335,21 @@ def add_heading_numbers(s: str, ctx: DocParagraph, heading_format):
             if heading_line.startswith(heading_start + " "):
                 line = heading_line[level + 1 :]
                 if not line.endswith("{.unnumbered}"):
+                    # TODO: add heading counters to counter macros
                     lines[line_idx] = (
                         heading_start
                         + " "
-                        + format_heading(line, level, vals, heading_format)
+                        + format_heading(
+                            line,
+                            level,
+                            vals,
+                            heading_format,
+                            heading_ref_format,
+                            jump_name,
+                            counters,
+                        )
                     )
+                    if counters:
+                        counters.set_heading_vals(vals)
         curr = curr.nxt
     return "\n".join(lines)

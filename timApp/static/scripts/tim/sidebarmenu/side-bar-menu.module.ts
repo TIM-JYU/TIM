@@ -6,6 +6,7 @@ import {FormsModule} from "@angular/forms";
 import {CollapseModule} from "ngx-bootstrap/collapse";
 import {SidebarMenuComponent} from "tim/sidebarmenu/sidebar-menu.component";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BookmarksTabComponent} from "./tabs/bookmarks-tab.component";
 import {MenuTabDirective} from "./menu-tab.directive";
 import {TabContainerComponent} from "./tab-container.component";
@@ -44,6 +45,7 @@ import {ScoreInfoTabComponent} from "./tabs/score-info-tab.component";
         CollapseModule.forRoot() as ModuleWithProviders<
             Record<string, unknown>
         >,
+        TimUtilityModule,
     ],
     entryComponents: [
         BookmarksTabComponent,
