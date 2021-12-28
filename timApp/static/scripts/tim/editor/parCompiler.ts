@@ -4,7 +4,7 @@ import {$compile, $injector, $log, $timeout} from "tim/util/ngimport";
 import {timLogTime} from "tim/util/timTiming";
 import {MathDocument} from "mathjax-full/js/core/MathDocument";
 import {ViewCtrl} from "../document/viewctrl";
-import {injectStyle, ModuleArray} from "../util/utils";
+import {injectStyle, ModuleArray, timeout} from "../util/utils";
 
 export interface IPluginInfoResponse {
     js: string[];
@@ -141,9 +141,8 @@ export class ParagraphCompiler {
     }
 
     public async processAllMathDelayed($elem: JQuery, delay?: number) {
-        await $timeout(() => {
-            this.processAllMath($elem);
-        }, delay ?? 300);
+        await timeout(delay ?? 300);
+        await this.processAllMath($elem);
     }
 
     public async processAllMath($elem: JQuery) {
