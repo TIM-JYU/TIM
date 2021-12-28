@@ -1,4 +1,5 @@
 from dataclasses import field, dataclass
+from io import StringIO
 from os.path import getmtime
 from pathlib import Path
 from typing import Optional
@@ -155,6 +156,26 @@ def get_style_name(theme_docs: list[DocEntry]) -> str:
     return f"compiled-style-{hashfunc(m)}"
 
 
+def export_scss_variables() -> str:
+    """Generates CSS that exports all SCSS variables in variables.scss as CSS properties.
+
+    :return: A CSS string that exports all SCSS variables as CSS properties.
+    """
+    variables_path = stylesheets_folder / "variables.scss"
+    if not variables_path.exists():
+        return ""
+    result = StringIO()
+    result.write(":root {\n")
+    with variables_path.open("r", encoding="utf-8") as f:
+        for line in f:
+            if line.startswith("$"):
+                name = line.split(":")[0].strip()[1:]
+                result.write(f"--{name}: #{{inspect(${name})}};\n")
+    result.write("}\n")
+    res = result.getvalue()
+    return res
+
+
 def generate_style(
     theme_docs: list[DocEntry],
     gen_dir: Optional[Path] = None,
@@ -218,13 +239,14 @@ def generate_style(
 {% for theme_id, _ in themes %}
 @include post-variables-{{ theme_id }};
 {% endfor %}
-@include export-variables;
+{{ css_props }}
 @import "stylesheets/all.scss";
 {% for theme_id, _ in themes %}
 @include post-all-{{ theme_id }};
 {% endfor %}
 """,
         themes=theme_paths,
+        css_props=export_scss_variables(),
     )
 
     try:
