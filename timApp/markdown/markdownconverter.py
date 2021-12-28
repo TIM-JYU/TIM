@@ -6,13 +6,18 @@ from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING, Iterable, Any
 
 from jinja2 import TemplateSyntaxError
-from jinja2.sandbox import SandboxedEnvironment
 from lxml import html, etree
 from sqlalchemy.orm import load_only, lazyload
 
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
+from timApp.markdown.autocounters import (
+    AutoCounters,
+    TimSandboxedEnvironment,
+    HEADING_TAGS,
+    add_h_values,
+)
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.util.utils import get_error_html, title_to_id
 from timApp.util.utils import widen_fields
@@ -23,7 +28,7 @@ if TYPE_CHECKING:
     from timApp.document.docsettings import DocSettings
 
 
-def has_macros(text: str, env: SandboxedEnvironment):
+def has_macros(text: str, env: TimSandboxedEnvironment):
     return (
         env.variable_start_string in text
         or env.comment_start_string in text
@@ -161,14 +166,14 @@ class Belongs:
         return b
 
 
-def week_to_date(week_nr, daynr=1, year=None, fmt=None):
+def week_to_date(week_nr, daynr=1, year=None, frmt=None):
     """
     date object for week
     see: timApp/tests/unit/test_datefilters.py
     :param week_nr:  week number to get the date object
     :param daynr: day of week to get date
     :param year: year to get date
-    :param fmt: extended format string
+    :param frmt: extended format string
     :return: date object or formated string
     """
     if week_nr <= 0:
@@ -181,9 +186,9 @@ def week_to_date(week_nr, daynr=1, year=None, fmt=None):
     else:
         year = int(year)
     d = date.fromisocalendar(year, week_nr, daynr)
-    if fmt == None:
+    if frmt is None:
         return d
-    return fmt_date(d, fmt)
+    return fmt_date(d, frmt)
 
 
 def month_to_week(month, daynr=1, year=None):
@@ -208,43 +213,43 @@ def month_to_week(month, daynr=1, year=None):
     return d.isocalendar()[1]
 
 
-def now(fmt=0):
+def now(frmt=0):
     """
     Used in Jinja macros like tomorrow: %%1 | now%%
     Or this week %% "%w" | now %%
-    :param fmt: fromat for curent date or delta for current date
+    :param frmt: format for current date or delta for current date
     :return: current date + (fmt as int) if fmt is int, otherwise current timestamp formated
     """
-    if isinstance(fmt, int):
-        return datetime.now() + timedelta(days=fmt)
-    return fmt_date(datetime.now(), fmt)
+    if isinstance(frmt, int):
+        return datetime.now() + timedelta(days=frmt)
+    return fmt_date(datetime.now(), str(frmt))
 
 
-def fmt_date(d, fmt=""):
+def fmt_date(d, frmt=""):
     """
     Format date using extended %d1 and %m1 for one number values
     see: timApp/tests/unit/test_datefilters.py
     :param d: date to format
-    :param fmt: Python format
+    :param frmt: Python format
     :return: string from d an format
     """
     ds = "" + str(d.day)
     ms = "" + str(d.month)
-    if fmt == "":
+    if frmt == "":
         return str(ds) + "." + str(ms)
-    fmt = fmt.replace("%d1", ds).replace("%m1", ms)
-    return d.strftime(fmt)
+    frmt = frmt.replace("%d1", ds).replace("%m1", ms)
+    return d.strftime(frmt)
 
 
 def week_to_text(
-    week_nr, year=None, fmt=" %d1.%m1|", days="ma|ti|ke|to|pe|", first_day=1
+    week_nr, year=None, frmt=" %d1.%m1|", days="ma|ti|ke|to|pe|", first_day=1
 ):
     """
     Convert week to clendar header format
     see: timApp/tests/unit/test_datefilters.py
     :param week_nr: what week to convert
     :param year: what year
-    :param fmt: extended Python  date format
+    :param frmt: extended Python  date format
     :param days: pipe separated list of day names
     :param first_day: from what weekday to start
     :return: string suitable for calandar header
@@ -268,7 +273,7 @@ def week_to_text(
         if end < 0:
             s += days[beg:]
             break
-        ds = fmt_date(week_to_date(week_nr, daynr, year), fmt)
+        ds = fmt_date(week_to_date(week_nr, daynr, year), frmt)
         s += days[beg:end] + ds
         beg = end + 1
         daynr += 1
@@ -300,7 +305,7 @@ def expand_macros(
     text: str,
     macros,
     settings: DocSettings | None,
-    env: SandboxedEnvironment,
+    env: TimSandboxedEnvironment,
     ignore_errors: bool = False,
 ):
     # return text  # comment out when want to take time if this slows things
@@ -331,7 +336,12 @@ def expand_macros(
                 local_macros_yaml = text[beg + len(startstr) : end]
                 local_macros = YamlBlock.from_markdown(local_macros_yaml).values
                 macros = {**macros, **local_macros}
+        # TODO: should local macros be used in counters???
+        if env.counters:
+            env.counters.start_of_block()
         conv = env.from_string(text).render(macros)
+        if env.counters and env.counters.label_count:
+            conv = env.counters.update_labels(conv)
         return conv
     except TemplateSyntaxError as e:
         if not ignore_errors:
@@ -343,7 +353,7 @@ def expand_macros(
         return text
 
 
-def belongs_placeholder(s):
+def belongs_placeholder(_s):
     return get_error_html("The belongs filter requires nocache=true attribute.")
 
 
@@ -394,6 +404,10 @@ tim_filters = {
     "fmt": fmt,
     "docid": get_document_id,
     "docpath": get_document_path,
+    "ref": belongs_placeholder,
+    "c_": belongs_placeholder,
+    "c_eq": belongs_placeholder,
+    "counters": belongs_placeholder,
 }
 
 
@@ -401,19 +415,15 @@ def create_environment(
     macro_delimiter: str,
     user_ctx: UserContext | None,
     view_ctx: ViewContext,
-) -> SandboxedEnvironment:
-    env = SandboxedEnvironment(
-        variable_start_string=macro_delimiter,
-        variable_end_string=macro_delimiter,
-        comment_start_string="{!!!",
-        comment_end_string="!!!}",
-        block_start_string="{%",
-        block_end_string="%}",
-        lstrip_blocks=True,
-        trim_blocks=True,
-    )
+    macros: dict | None,
+) -> TimSandboxedEnvironment:
+    env = TimSandboxedEnvironment(macro_delimiter)
     env.filters.update(tim_filters)
     env.filters["isview"] = view_ctx.isview
+
+    if macros:
+        counters = AutoCounters(macros)
+        env.set_counters(counters)  # used in print.py
 
     if user_ctx:
         env.filters["belongs"] = Belongs(user_ctx).belongs_to_group
@@ -436,13 +446,15 @@ def md_to_html(
         text,
         macros,
         settings=None,
-        env=create_environment("%%", user_ctx=None, view_ctx=default_view_ctx),
+        env=create_environment(
+            "%%", user_ctx=None, view_ctx=default_view_ctx, macros=macros
+        ),
     )
 
     raw = call_dumbo([text])
 
     if sanitize:
-        return sanitize_html(raw[0])
+        return sanitize_html(str(raw[0]))
     else:
         return raw[0]
 
@@ -500,7 +512,7 @@ def par_list_to_html_list(
                 final_html = insert_heading_numbers(
                     pre_html,
                     m,
-                    settings.auto_number_headings(),
+                    settings.auto_number_headings() > 0,
                     settings.heading_format(),
                 )
             processed.append(final_html)
@@ -644,8 +656,8 @@ def change_class(
 def insert_heading_numbers(
     html_str: str,
     heading_info,
-    auto_number_headings: bool = True,
-    heading_format: str = "",
+    auto_number_headings: int | bool = True,
+    heading_format: dict | None = None,
 ):
     """Applies the given heading_format to the HTML if it is a heading, based on the given heading_info. Additionally
     corrects the id attribute of the heading in case it has been used earlier.
@@ -678,22 +690,26 @@ def insert_heading_numbers(
     return final_html
 
 
-def format_heading(text, level, counts, heading_format):
+def format_heading(
+    text,
+    level,
+    counts,
+    heading_format,
+    heading_ref_format: dict = None,
+    jump_name: str = None,
+    counters: AutoCounters = None,
+):
     counts[level] += 1
     for i in range(level + 1, 7):
         counts[i] = 0
-    for i in range(6, 0, -1):
-        if counts[i] != 0:
-            break
     values = {"text": text}
-    # noinspection PyUnboundLocalVariable
-    for i in range(1, i + 1):
-        values["h" + str(i)] = counts[i]
+    add_h_values(counts, values)
     try:
         formatted = heading_format[level].format(**values)
+
+        if heading_ref_format and jump_name and counters:
+            formatted_ref = heading_ref_format[level].format(**values)
+            counters.add_counter("chap", jump_name, formatted_ref, formatted)
     except (KeyError, ValueError, IndexError):
         formatted = "[ERROR] " + text
     return formatted
-
-
-HEADING_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"}

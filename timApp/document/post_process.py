@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import DefaultDict, Optional
 
 import pytz
-from jinja2.sandbox import SandboxedEnvironment
 
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object
@@ -21,6 +20,7 @@ from timApp.document.par_basic_data import ParBasicData
 from timApp.document.prepared_par import PreparedPar
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
+from timApp.markdown.autocounters import TimSandboxedEnvironment
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.note.notes import get_notes, UserNoteAndUser
 from timApp.plugin.plugin import Plugin
@@ -262,7 +262,7 @@ def process_areas(
     pars: list[DocParagraph],
     macros,
     delimiter,
-    env: SandboxedEnvironment,
+    env: TimSandboxedEnvironment,
     view_ctx: ViewContext,
     use_md: bool = False,
     cache: bool = True,

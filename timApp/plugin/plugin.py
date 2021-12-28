@@ -8,7 +8,6 @@ from typing import Optional, Union, Iterable, Generator, Match, Any
 
 import yaml
 from jinja2 import Environment, BaseLoader
-from jinja2.sandbox import SandboxedEnvironment
 from marshmallow import missing, ValidationError
 
 from timApp.answer.answer import Answer
@@ -21,6 +20,7 @@ from timApp.document.macroinfo import MacroInfo
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.document.yamlblock import strip_code_block, YamlBlock, merge
+from timApp.markdown.autocounters import TimSandboxedEnvironment
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
@@ -637,7 +637,7 @@ def parse_plugin_values_macros(
     par: DocParagraph,
     global_attrs: dict[str, str],
     macros: dict[str, object],
-    env: SandboxedEnvironment,
+    env: TimSandboxedEnvironment,
 ) -> dict:
     """
     Parses the markup values for a plugin paragraph, taking document attributes and macros into account.
@@ -652,13 +652,14 @@ def parse_plugin_values_macros(
     return load_markup_from_yaml(yaml_str, global_attrs, par.get_attr("plugin"))
 
 
-def expand_macros_for_plugin(par: DocParagraph, macros, env: SandboxedEnvironment):
+def expand_macros_for_plugin(par: DocParagraph, macros, env: TimSandboxedEnvironment):
     par_md = par.get_markdown()
     rnd_macros = par.get_rands()
     if rnd_macros:
         macros = {**macros, **rnd_macros}
     yaml_str = strip_code_block(par_md)
     if not par.get_nomacros():
+        env.counters.task_id = par.attrs.get("taskId", None)
         yaml_str = expand_macros(
             yaml_str,
             macros=macros,
