@@ -1,13 +1,15 @@
 @charset "UTF-8";
 
-$basic-color: exportable(#004494, basic-color) !default;
+// Note: Mark all variables as !default so that any user styles can override them more easily.
+
+$basic-color: #004494 !default;
 // primary-color is basically for h2-h6 font colors
-$primary-color:  exportable(black, primary-color) !default;
-$h1-color:  exportable(navy, primary-color) !default;
-$basic-color-inverse: exportable(invert($basic-color), basic-color-inverse) !default;
-$button-bg-color: exportable($basic-color, button-bg-color) !default;
+$primary-color:  black !default;
+$h1-color:  navy !default;
+$basic-color-inverse: invert($basic-color) !default;
+$button-bg-color: $basic-color !default;
 $button-toggle-color: black !default;
-$answer-color: exportable(blue, answer-color) !default;
+$answer-color: blue !default;
 $editline-bg-color: $basic-color !default;
 $areacollapse-color: $basic-color !default;
 $tab-bg-color: $basic-color !default;
@@ -19,13 +21,13 @@ $timbutton-bg-color: $button-bg-color !default;
 $viewlogin-link-color: $basic-color !default;
 $draghandle-bg-color: $basic-color !default;
 $draghandle-attached-color: #FFF !default;
-$basic-border-color: exportable(#B7B7B7, basic-border-color) !default;
-$bg-color: exportable(white, bg-color) !default;
+$basic-border-color: #B7B7B7 !default;
+$bg-color: white !default;
 $material-shadow: none !default;
-$material-bg:  exportable(white, material-bg) !default;
-$table-header-bg: exportable(lightgray, table-header-bg) !default;
-$table-header-color: exportable(black, table-header-color) !default;
-$note-bg:  exportable($material-bg, note-bg) !default;
+$material-bg:  white !default;
+$table-header-bg: lightgray !default;
+$table-header-color: black !default;
+$note-bg:  $material-bg !default;
 $body-margin-left: 250px !default;
 $material-border: none !default;
 $material-border-radius: 0 !default;
@@ -34,9 +36,9 @@ $body-text-align-xs: left !default;
 $asset-path: ".." !default;
 
 // Used by Angular
-$footer-height: exportable(60px, footer-height) !default;
-$footer-z: exportable(-1, footer-z) !default;
-$header-footer-border: exportable(1px solid #e5e5e5, header-footer-border) !default;
+$footer-height: 60px !default;
+$footer-z: -1 !default;
+$header-footer-border: 1px solid #e5e5e5 !default;
 
 $editline-width: 3em !default;
 $editline-extra: 1.5em !default;
@@ -45,23 +47,23 @@ $readline-width: 10em !default;
 $readline-color: #F60 !default;
 $note-width: 30% !default;
 $heading-outdent: -1em !default;
-$icon-color: exportable($basic-color, icon-color) !default;
-$icon-hover-color: exportable(darken($basic-color, 10%), icon-hover-color) !default;
-$link-visited-color: exportable(#5242CE, link-visited-color) !default;
+$icon-color: $basic-color !default;
+$icon-hover-color: darken($basic-color, 10%) !default;
+$link-visited-color: #5242CE !default;
 // Width was 57.4 before (about 800 pxl) but when basic font is 16 it should be smaller
-// $paragraph-preferred-width: exportable(57.4em, paragraph-preferred-width) !default;
-$paragraph-preferred-width: exportable(801px, paragraph-preferred-width) !default;
+// $paragraph-preferred-width: 57.4em !default;
+$paragraph-preferred-width: 801px !default;
 $inline-code-size: 110% !default;
 $block-code-size: 110% !default;
 $pre-overflow: visible !default; // TODO: Default is supposed to be "auto", but it breaks velp annotations in pre blocks.
 $pre-left-border: 4px solid $basic-color !default;
 $pre-background: white !default;
 $container-xs-padding: 0.2em !default;
-$focus-bar-color: exportable(lightblue, focus-bar-color) !default;
-$focus-bar-width: exportable(3px, focus-bar-width) !default;
-$lightselect-color: exportable(#fcfcfc, lightselect-color) !default;
-// $parselect-color: exportable(lightgray, parselect-color);
-$parselect-color: exportable(#fcfcfc, parselect-color) !default;
+$focus-bar-color: lightblue !default;
+$focus-bar-width: 3px !default;
+$lightselect-color: #fcfcfc !default;
+// $parselect-color: lightgray;
+$parselect-color: #fcfcfc !default;
 
 // TODO decide if these two are necessary
 $left-side-columns: 2 !default;
@@ -75,22 +77,22 @@ $gray: lighten($gray-base, 33.5%) !default;
 $brand-primary: $basic-color !default;
 $text-color: black !default;
 $input-color: black !default;
-$link-color: exportable($basic-color, link-color) !default; // likely of interest
-$link-hover-color: exportable(darken($link-color, 15%), link-hover-color) !default; // likely of interest
+$link-color: $basic-color !default; // likely of interest
+$link-hover-color: darken($link-color, 15%) !default; // likely of interest
 $input-color-placeholder: $gray !default;
 $headings-font-weight: 700 !default;
-$font-size-base: exportable(14px, font-size-base) !default; // this should probably not be changed from default 14px
-$font_size-normal: exportable(floor(($font-size-base * 16.00/14.00)), font_size-normal) !default; // this should probably not be changed from default 14px
-$font-size-h1: exportable(floor(($font_size-normal * 2.00)), font-size-h1) !default; // default factor is 2.6
-$font-size-h2: exportable(floor(($font_size-normal * 1.5)), font-size-h2) !default; // default factor is 2.15
-$font-size-h3: exportable(floor(($font_size-normal * 1.3125)), font-size-h3) !default; // default factor is 1.7
-$font-family-base: exportable((Verdana, Arial, sans-serif), font-family-base) !default;              // likely of interest for custom CSS
-$font-family-monospace: exportable(("Courier New", Courier, serif), font-family-monospace) !default; // likely of interest for custom CSS
+$font-size-base: 14px !default; // this should probably not be changed from default 14px
+$font_size-normal: floor(($font-size-base * 16.00/14.00)) !default; // this should probably not be changed from default 14px
+$font-size-h1: floor(($font_size-normal * 2.00)) !default; // default factor is 2.6
+$font-size-h2: floor(($font_size-normal * 1.5)) !default; // default factor is 2.15
+$font-size-h3: floor(($font_size-normal * 1.3125)) !default; // default factor is 1.7
+$font-family-base: Verdana, Arial, sans-serif !default;              // likely of interest for custom CSS
+$font-family-monospace: "Courier New", Courier, serif; // likely of interest for custom CSS
 $code-color: inherit !default;
 $code-bg: inherit !default;
 $pre-color: black !default;
 $pre-bg: inherit !default;
-$font-family-sans-serif: exportable((Verdana, Arial, sans-serif), font-family-sans-serif) !default;  // likely of interest for custom CSS
+$font-family-sans-serif: Verdana, Arial, sans-serif !default;  // likely of interest for custom CSS
 $icon-font-path: "/js/bootstrap-fonts/" !default;
 $label-visited-color: white !default;
 
