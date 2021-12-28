@@ -3,16 +3,30 @@
  * Defines the client-side implementation of the JSAV animations plugin.
  * Originally programmed by Mikko Merikivi with help from the GeoGebra plugin by Vesa Lappalainen
  */
-import angular from "angular";
 import * as t from "io-ts";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+    ViewChild,
+} from "@angular/core";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http, $sce, $timeout} from "tim/util/ngimport";
-import {defaultTimeout, to} from "tim/util/utils";
-
-const jsavApp = angular.module("jsavApp", ["ngSanitize"]);
-export const moduleDefs = [jsavApp];
+import {timeout} from "tim/util/utils";
+import {BrowserModule} from "@angular/platform-browser";
+import {HttpClientModule} from "@angular/common/http";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
+import {
+    createDowngradedModule,
+    doDowngrade,
+} from "../../../static/scripts/tim/downgrade";
+import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
+import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
+import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
+import {Iframesettings} from "./jsframe";
 
 /**
  * This is the "state" of the plugin, used through this.attrs.
@@ -59,7 +73,7 @@ interface JSAVExercise {
  * Methods and properties inside the sandboxed iframe that we want to be able to use remotely
  */
 interface JSFrameWindow extends Window {
-    getData(): string;
+    getData?(): {message?: string};
     exercise: JSAVExercise;
 }
 
@@ -73,13 +87,63 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
 /**
  * The high-level operational logic behind this plugin
  */
-class JsavController extends PluginBase<
+@Component({
+    selector: "tim-cs-jsav-runner",
+    template: `
+<tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+<div class="csRunDiv no-popup-menu">
+    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
+    <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
+    <p *ngIf="!isOpen" class="stem" [innerHtml]="beforeOpen | purify"></p>
+
+    <!-- The JSAV plugin itself in a sandbox -->
+    <div *ngIf="isOpen && iframesettings" id="output" class="jsFrameContainer jsavOutput">
+        <iframe #frame
+                style="border: none;"
+                id="sxFrame-jsav-div1"
+                class="jsavFrame"
+                [style.width.px]="iframesettings.width"
+                [style.height.px]="iframesettings.height"
+                [sandbox]="iframesettings.sandbox"
+                [attr.allow]="iframesettings.allow"
+                [src]="iframesettings.src">
+        </iframe>
+    </div>
+
+    <p class="csRunMenu">
+        <!-- The save button -->
+        <button *ngIf="isOpen"
+                [disabled]="isRunning"
+                title="(Ctrl-S)"
+                class="timButton btn-sm"
+                (click)="getData(false)"
+                [innerHtml]="button | purify"></button>
+        <!-- The model answer button -->
+        <button *ngIf="isOpen && userCode"
+                [disabled]="isRunning"
+                title="(Ctrl-M)"
+                class="timButton btn-sm"
+                (click)="modelAnswer()"
+                [innerHtml]="modelAnswerButton | purify"></button>
+        <!-- User-specified messages -->
+        <span class="jsav message"
+              *ngIf="message"
+              [innerHtml]="message | purify"></span>
+        <!-- Plugin's messages -->
+        <span class="jsav message"
+              *ngIf="console"
+              [innerHtml]="console | purify"></span>
+    </p>
+</div>
+`,
+})
+export class JsavPluginComponent extends AngularPluginBase<
     t.TypeOf<typeof JsavMarkup>,
     t.TypeOf<typeof JsavAll>,
     typeof JsavAll
 > {
     get english() {
-        return this.attrs.lang === "en";
+        return this.markup.lang === "en";
     }
 
     /**
@@ -102,22 +166,47 @@ class JsavController extends PluginBase<
 
     public viewCtrl!: ViewCtrl;
     private error: string = "";
-    private isRunning: boolean = false;
-    private isOpen: boolean = true;
-    private button: string = "";
-    private modelAnswerButton: string = "";
-    private console: string = "";
-    private message: string = "";
-    private userCode: string = "";
+    isRunning: boolean = false;
+    isOpen: boolean = true;
+    button: string = "";
+    modelAnswerButton: string = "";
+    console: string = "";
+    message: string = "";
+    userCode: string = "";
+    beforeOpen: string = "";
+    iframesettings?: Iframesettings;
+    @ViewChild("frame") private iframe?: ElementRef<CustomFrame<JSFrameWindow>>;
 
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
+        this.viewCtrl = vctrlInstance!;
         this.button = this.buttonText();
         this.modelAnswerButton = this.modelAnswerButtonText();
-        this.isOpen = this.attrs.open ?? true;
+        this.isOpen = this.markup.open ?? true;
         const aa = this.attrsall;
         this.userCode = aa.usercode ?? "";
-        this.message = this.attrs.message ?? "";
+        this.message = this.markup.message ?? "";
+        this.beforeOpen = this.markup.beforeOpen ?? "";
+        this.loadIFrame();
+    }
+
+    private loadIFrame() {
+        const tid = this.pluginMeta.getTaskId()!;
+        const taskId = tid.docTask();
+        const ab = this.viewCtrl.getAnswerBrowser(taskId.toString());
+        const selectedUser = this.viewCtrl.selectedUser;
+        this.iframesettings = {
+            allow: null,
+            sandbox: "allow-scripts allow-same-origin allow-popups",
+            width: (this.markup.width ?? 800) + 2,
+            height: (this.markup.height ?? 600) + 2,
+            src: this.domSanitizer.bypassSecurityTrustResourceUrl(
+                this.pluginMeta.getIframeHtmlUrl(
+                    selectedUser,
+                    ab?.selectedAnswer
+                )
+            ),
+        };
     }
 
     /**
@@ -132,7 +221,6 @@ class JsavController extends PluginBase<
         }
         this.error = "";
         this.isRunning = true;
-        const url = this.pluginMeta.getAnswerUrl();
         data.type = "jsav";
         if (answerChecked) {
             data.model = "y";
@@ -148,42 +236,28 @@ class JsavController extends PluginBase<
 
         this.console = "";
 
-        const r = await to(
-            $http<{
-                web: {error?: string; console?: string};
-            }>({method: "PUT", url: url, data: params, timeout: defaultTimeout})
-        );
+        const r = await this.postAnswer<{
+            web: {error?: string; console?: string};
+        }>(params);
         this.isRunning = false;
 
         if (!r.ok) {
-            this.error = r.result.data.error;
+            this.error = r.result.error.error;
             return;
         }
-        if (!r.result.data.web) {
+        if (!r.result.web) {
             this.error = "No web reply from csPlugin!";
             return;
         }
-        if (r.result.data.web.error) {
-            this.error = r.result.data.web.error;
+        if (r.result.web.error) {
+            this.error = r.result.web.error;
             return;
         }
 
-        if (r.result.data.web.console) {
-            this.console = r.result.data.web.console;
+        if (r.result.web.console) {
+            this.console = r.result.web.console;
             return;
         }
-    }
-
-    /**
-     * Return IFrame window
-     */
-    getIFrame(): CustomFrame<JSFrameWindow> {
-        // const frameElem = this.element.find(".jsFrameContainer")[0];
-        // const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
-        // return f;  // TODO:  Miksi tämä ei toimi?
-        return this.element
-            .find(".jsFrameContainer")
-            .children()[0] as CustomFrame<JSFrameWindow>;
     }
 
     /**
@@ -191,11 +265,14 @@ class JsavController extends PluginBase<
      * @param answerChecked Whether the user has looked at the model answer
      */
     async getData(answerChecked: boolean) {
-        const f = this.getIFrame();
+        if (!this.iframe) {
+            return;
+        }
+        const f = this.iframe.nativeElement;
         if (!f.contentWindow.getData) {
             return;
         }
-        const s: any = f.contentWindow.getData();
+        const s = f.contentWindow.getData();
         if (s.message) {
             this.message = s.message;
         }
@@ -207,9 +284,8 @@ class JsavController extends PluginBase<
      */
     async modelAnswer() {
         this.console = "";
-        const f = this.getIFrame();
-
-        if (f.contentWindow.exercise) {
+        const f = this.iframe?.nativeElement;
+        if (f?.contentWindow.exercise) {
             await this.getData(true);
             f.contentWindow.exercise.showModelanswer();
         } else {
@@ -226,26 +302,15 @@ class JsavController extends PluginBase<
     /**
      * This outputs the code for the JSAV plugin itself in a sandbox
      */
-    outputAsHtml(): string {
-        $timeout(0);
+    async outputAsHtml() {
+        await timeout();
         const tid = this.pluginMeta.getTaskId()!;
         const taskId = tid.docTask();
         const ab = this.viewCtrl.getAnswerBrowser(taskId.toString());
         const selectedUser = this.viewCtrl.selectedUser;
-        const w = (this.attrs.width ?? 800) + 2;
-        const h = (this.attrs.height ?? 600) + 2;
-        // noinspection CssInvalidPropertyValue
-        const jsavOutput = `
-<iframe style="width: ${w}px; height:${h}px; border: none;"
-        id="sxFrame-jsav-div1"
-        sandbox="allow-scripts allow-same-origin  allow-popups"
-        class="jsavFrame"
-        src="${this.pluginMeta.getIframeHtmlUrl(
-            selectedUser,
-            ab?.selectedAnswer
-        )}"</iframe>`;
-
-        return $sce.trustAsHtml(jsavOutput);
+        return this.domSanitizer.bypassSecurityTrustResourceUrl(
+            this.pluginMeta.getIframeHtmlUrl(selectedUser, ab?.selectedAnswer)
+        );
     }
 
     getAttributeType() {
@@ -253,50 +318,20 @@ class JsavController extends PluginBase<
     }
 }
 
-/**
- * This is the HTML code that is placed when the JSAV plugin is used in a TIM document.
- */
-jsavApp.component("csJsavRunner", {
-    bindings: pluginBindings,
-    controller: JsavController,
-    require: {
-        viewCtrl: "^timView",
-    },
-    template: `
-<tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
-<div class="csRunDiv no-popup-menu">
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
-    <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen"></p>
+@NgModule({
+    declarations: [JsavPluginComponent],
+    imports: [BrowserModule, HttpClientModule, TimUtilityModule, PurifyModule],
+})
+export class JsavModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
 
-    <!-- The JSAV plugin itself in a sandbox -->
-    <div ng-cloak id="output" class="jsFrameContainer jsavOutput" ng-bind-html="::$ctrl.outputAsHtml()">
-    </div>
-
-    <p class="csRunMenu">
-        <!-- The save button -->
-        <button ng-if="$ctrl.isOpen"
-                ng-disabled="$ctrl.isRunning"
-                title="(Ctrl-S)"
-                class="timButton btn-sm"
-                ng-click="$ctrl.getData(false)"
-                ng-bind-html="::$ctrl.button"></button>
-        <!-- The model answer button -->
-        <button ng-if="$ctrl.isOpen && $ctrl.userCode"
-                ng-disabled="$ctrl.isRunning"
-                title="(Ctrl-M)"
-                class="timButton btn-sm"
-                ng-click="$ctrl.modelAnswer()"
-                ng-bind-html="::$ctrl.modelAnswerButton"></button>
-        <!-- User-specified messages -->
-        <span class="jsav message"
-              ng-if="$ctrl.message"
-              ng-bind-html="$ctrl.message"></span>
-        <!-- Plugin's messages -->
-        <span class="jsav message"
-              ng-if="$ctrl.console"
-              ng-bind-html="$ctrl.console"></span>
-    </p>
-</div>
-`,
-});
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(JsavModule)
+        ),
+        "csJsavRunner",
+        JsavPluginComponent
+    ),
+];
