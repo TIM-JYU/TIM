@@ -206,17 +206,3 @@ tim-alert {
     }
 }
 
-// TODO: var did not work even here???
-.timTableTable .headers {
-   // background-color: var(--table-header-bg);
-   background-color: $table-header-bg;
-   font-weight: bold;
-   // color: var(--table-header-color);
-   color: $table-header-color;
-}
-
-.timTableTable .fixedColor {
-   // background-color: var(--table-header-bg);
-   background-color: $table-header-bg;
-}
-

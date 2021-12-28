@@ -128,4 +128,14 @@ td.cbColumn.charRow {
   width: 25px;
 }
 
+.timTableTable .headers {
+   background-color: var(--table-header-bg);
+   font-weight: bold;
+   color: var(--table-header-color);
+}
+
+.timTableTable .fixedColor {
+   background-color: var(--table-header-bg);
+}
+
 
