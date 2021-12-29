@@ -795,6 +795,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         :param remove: If True, removes emails not present in emails list.
         """
 
+        if not emails:
+            return
+
         with db.session.no_autoflush:
             # Get emails for the current origin
             # We use self.contacts for now because the only contacts we save are email contacts and because it allows

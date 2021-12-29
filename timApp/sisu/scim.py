@@ -86,6 +86,19 @@ class SCIMMemberModel:
     def emails(self) -> list[str]:
         return [s for s in (self.workEmail, self.email) if s]
 
+    @cached_property
+    def has_active_email(self) -> bool:
+        """Return True if user has any active emails, False otherwise.
+
+        ..note::
+        An active email is one that messages can be sent to.
+        Right now Sisu SCIM sets a "nobody+username" email if the user has no valid active emails.
+        These emails should not be set as primary unless the user has no other primary emails at that moment.
+
+        :return: True if the email is valid, False otherwise.
+        """
+        return not self.primary_email.startswith("nobody+")
+
 
 @dataclass(frozen=True)
 class SCIMCommonModel:
@@ -422,7 +435,9 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                     ),
                 )
                 prev_email = user.email
-                user.set_emails(u.emails, ContactOrigin.Sisu, can_update_primary=True)
+                user.set_emails(
+                    u.emails, ContactOrigin.Sisu, can_update_primary=u.has_active_email
+                )
                 email_updates.append((prev_email, u.email))
             else:
                 user = existing_accounts_by_email_dict.get(u.primary_email)
@@ -442,7 +457,9 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                     )
                     prev_email = user.email
                     user.set_emails(
-                        u.emails, ContactOrigin.Sisu, can_update_primary=True
+                        u.emails,
+                        ContactOrigin.Sisu,
+                        can_update_primary=u.has_active_email,
                     )
                     email_updates.append((prev_email, user.email))
                 else:
@@ -456,7 +473,9 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                         )
                     )
                     user.set_emails(
-                        u.emails, ContactOrigin.Sisu, can_update_primary=True
+                        u.emails,
+                        ContactOrigin.Sisu,
+                        can_update_primary=u.has_active_email,
                     )
             added = user.add_to_group(ug, added_by=scimuser, sync_mailing_lists=False)
             if added:
