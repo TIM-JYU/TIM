@@ -432,7 +432,6 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                             422,
                             f"Key (email)=({user.email}) already exists. Conflicting username is: {u.value}",
                         )
-                    email_updates.append((user.email, u.primary_email))
                     user.update_info(
                         UserInfo(
                             username=u.value,
@@ -445,7 +444,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                     user.set_emails(
                         u.emails, ContactOrigin.Sisu, can_update_primary=True
                     )
-                    email_updates.append((prev_email, u.email))
+                    email_updates.append((prev_email, user.email))
                 else:
                     user, _ = User.create_with_group(
                         UserInfo(

@@ -902,7 +902,6 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                         self.contacts.append(new_primary)
 
                 new_primary.primary = PrimaryContact.true
-                # self.primary_email_contact = new_primary
                 self._email = new_primary.contact
 
     def set_unique_codes(self, codes: list[SchacPersonalUniqueCode]):
