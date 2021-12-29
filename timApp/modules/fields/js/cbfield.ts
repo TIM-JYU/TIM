@@ -1,8 +1,15 @@
 /**
  * Defines the client-side implementation of cbfield/label plugin.
  */
-import angular from "angular"; // , {INgModelOptions}
 import * as t from "io-ts";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+    NgZone,
+} from "@angular/core";
 import {
     ChangeType,
     FormModeOption,
@@ -16,13 +23,21 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http} from "tim/util/ngimport";
-import {to, valueOr} from "tim/util/utils";
+import {getFormBehavior} from "tim/plugin/util";
+import {valueOr} from "tim/util/utils";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {FormsModule} from "@angular/forms";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
+import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
+import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
+import {
+    createDowngradedModule,
+    doDowngrade,
+} from "../../../static/scripts/tim/downgrade";
 import {FieldBasicData} from "./textfield";
-
-const cbfieldApp = angular.module("cbfieldApp", ["ngSanitize"]);
-export const moduleDefs = [cbfieldApp];
 
 const CbfieldMarkup = t.intersection([
     t.partial({
@@ -51,8 +66,37 @@ const CbfieldAll = t.intersection([
     }),
 ]);
 
-class CbfieldController
-    extends PluginBase<
+@Component({
+    selector: "tim-cbfield-runner",
+    template: `
+<div class="textfieldNoSaveDiv" [ngStyle]="cols">
+    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <h4 *ngIf="header" [innerHtml]="header"></h4>
+    <p class="stem" *ngIf="stem">{{stem}}</p>
+     <span style="width: 100%">
+      <span class="inputstem" [innerHtml]="inputstem"></span>
+      <span  *ngIf="!isPlainText()" [ngClass]="{warnFrame: (isUnSaved() )  }">
+        <!-- <span *ngIf="isUnSaved()"  [ngClass]="{warnFrame: (isUnSaved() )  }">&nbsp;</span> -->
+        <input type="checkbox"
+               *ngIf="!isPlainText()"
+               [ngStyle]="cbStyle"
+               class="form-control"
+               [(ngModel)]="userword"
+               (ngModelChange)="autoSave()"
+               [disabled]="readonly"
+               [tooltip]="errormessage"
+               [isOpen]="errormessage !== undefined"
+               triggers="mouseenter"
+               >
+         </span>
+         <span *ngIf="isPlainText()" style="">{{userword}}</span>
+         </span>
+    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+</div>
+`,
+})
+export class CbfieldPluginComponent
+    extends AngularPluginBase<
         t.TypeOf<typeof CbfieldMarkup>,
         t.TypeOf<typeof CbfieldAll>,
         typeof CbfieldAll
@@ -61,17 +105,25 @@ class CbfieldController
 {
     private result?: string;
     private isRunning = false;
-    private userword: boolean = false;
-    // private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
+    userword: boolean = false;
     private vctrl!: ViewCtrl;
     private initialValue: boolean = false;
-    private errormessage?: string;
-    private hideSavedText = true;
+    errormessage?: string;
+    hideSavedText = true;
     private saveResponse: {saved: boolean; message: string | undefined} = {
         saved: false,
         message: undefined,
     };
     private preventedAutosave = false;
+
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private zone: NgZone
+    ) {
+        super(el, http, domSanitizer);
+    }
 
     getDefaultMarkup() {
         return {};
@@ -100,21 +152,22 @@ class CbfieldController
         return true;
     }
 
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
+        this.vctrl = vctrlInstance!;
         const uw = valueOr(
             this.attrsall.state?.c,
-            this.attrs.initword ?? ""
+            this.markup.initword ?? ""
         ).toString();
-        this.userword = CbfieldController.makeBoolean(uw);
+        this.userword = CbfieldPluginComponent.makeBoolean(uw);
 
-        if (this.attrs.tag) {
-            this.vctrl.addTimComponent(this, this.attrs.tag);
+        if (this.markup.tag) {
+            this.vctrl.addTimComponent(this, this.markup.tag);
         } else {
             this.vctrl.addTimComponent(this);
         }
         this.initialValue = this.userword;
-        if (this.attrs.showname) {
+        if (this.markup.showname) {
             this.initCode();
         }
     }
@@ -140,13 +193,12 @@ class CbfieldController
     }
 
     formBehavior(): FormModeOption {
-        return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
+        return getFormBehavior(this.markup.form, FormModeOption.IsForm);
     }
 
     resetChanges(): void {
         this.userword = this.initialValue;
         this.updateListeners(ChangeType.Saved);
-        this.scope.$digest();
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
@@ -154,24 +206,26 @@ class CbfieldController
         this.errormessage = undefined;
         let message;
         let ok = true;
-        // TODO: should receiving empty answer reset to defaultnumber or clear field?
-        if (Object.keys(content).length == 0) {
-            this.resetField();
-        } else {
-            try {
-                this.userword = CbfieldController.makeBoolean(
-                    content.c as string
-                );
-            } catch (e) {
-                this.userword = false;
-                ok = false;
-                message = `Couldn't find related content ("c") from ${JSON.stringify(
-                    content
-                )}`;
-                this.errormessage = message;
+        // TODO: Remove once Answerbrowser is Angular as well
+        this.zone.run(() => {
+            if (Object.keys(content).length == 0) {
+                this.resetField();
+            } else {
+                try {
+                    this.userword = CbfieldPluginComponent.makeBoolean(
+                        content.c as string
+                    );
+                } catch (e) {
+                    this.userword = false;
+                    ok = false;
+                    message = `Couldn't find related content ("c") from ${JSON.stringify(
+                        content
+                    )}`;
+                    this.errormessage = message;
+                }
             }
-        }
-        this.initialValue = this.userword;
+            this.initialValue = this.userword;
+        });
         return {ok: ok, message: message};
     }
 
@@ -179,20 +233,19 @@ class CbfieldController
      * Returns (user) set inputstem (textfeed before userinput box).
      */
     get inputstem() {
-        return this.attrs.inputstem ?? "";
+        return this.markup.inputstem ?? "";
     }
 
     /**
      * Returns (user) set col size (size of the field).
      */
     get cols() {
-        if (!this.attrs.cols) {
+        if (!this.markup.cols) {
             return {};
         }
-        return {width: this.attrs.cols + "em", display: "inline-block"};
+        return {width: this.markup.cols + "em", display: "inline-block"};
     }
 
-    // noinspection JSUnusedGlobalSymbols
     get cbStyle() {
         if (!this.inputstem && (this.stem || this.header)) {
             return {};
@@ -207,8 +260,8 @@ class CbfieldController
      * Initialize content.
      */
     initCode() {
-        this.userword = CbfieldController.makeBoolean(
-            this.attrs.initword ?? ""
+        this.userword = CbfieldPluginComponent.makeBoolean(
+            this.markup.initword ?? ""
         );
         this.initialValue = this.userword;
         this.result = undefined;
@@ -217,7 +270,7 @@ class CbfieldController
 
     /**
      * Redirects save request to actual save method.
-     * Used as e.g. timButton ng-click event.
+     * Used as e.g. timButton (click) event.
      */
     async saveText() {
         if (this.isUnSaved()) {
@@ -230,7 +283,6 @@ class CbfieldController
         }
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true value, if label is set to plaintext.
      * Used to define readOnlyStyle in angular, either input or span.
@@ -238,19 +290,18 @@ class CbfieldController
      */
     isPlainText() {
         return (
-            this.attrs.readOnlyStyle == "plaintext" &&
+            this.markup.readOnlyStyle == "plaintext" &&
             window.location.pathname.startsWith("/view/")
         );
     }
 
     isReadOnly() {
-        return this.attrs.readOnlyStyle == "box" &&
+        return this.markup.readOnlyStyle == "box" &&
             window.location.pathname.startsWith("/view/")
             ? "disable"
             : "";
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Checking if input has been changed since the last Save or initialization.
      * Displays a red thick marker at the right side of the inputfield to notify users
@@ -264,13 +315,13 @@ class CbfieldController
         return this.initialValue != this.userword;
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Autosaver used by ng-blur in cbfieldApp component.
      * Needed to seperate from other save methods because of the if-structure.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     autoSave() {
+        this.errormessage = undefined;
         if (this.preventedAutosave) {
             this.preventedAutosave = false;
             return;
@@ -278,7 +329,7 @@ class CbfieldController
         this.updateListeners(
             this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved
         );
-        if (this.attrs.autosave || this.attrs.autosave === undefined) {
+        if (this.markup.autosave || this.markup.autosave === undefined) {
             this.saveText();
         }
     }
@@ -310,13 +361,12 @@ class CbfieldController
         if (nosave) {
             params.input.nosave = true;
         }
-        const url = this.pluginMeta.getAnswerUrl();
-        const r = await to(
-            $http.put<{web: {result: string; error?: string}}>(url, params)
-        );
+        const r = await this.postAnswer<{
+            web: {result: string; error?: string};
+        }>(params);
         this.isRunning = false;
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             // TODO: Make angular to show tooltip even without user having to move cursor out and back into the input
             // (Use premade bootstrap method / add listener for enter?)
             this.errormessage = data.web.error;
@@ -328,7 +378,7 @@ class CbfieldController
             this.saveResponse.message = this.errormessage;
         } else {
             this.errormessage =
-                r.result.data.error ||
+                r.result.error.error ||
                 "Syntax error, infinite loop or some other error?";
         }
         return this.saveResponse;
@@ -349,48 +399,33 @@ class CbfieldController
         this.vctrl.informChangeListeners(
             taskId,
             state,
-            this.attrs.tag ? this.attrs.tag : undefined
+            this.markup.tag ? this.markup.tag : undefined
         );
     }
 }
 
-/**
- * Introducing cbfieldRunner as HTML component.
- */
-cbfieldApp.component("cbfieldRunner", {
-    bindings: pluginBindings,
-    controller: CbfieldController,
-    require: {
-        vctrl: "^timView",
-    },
-    template: `
-<div class="textfieldNoSaveDiv" ng-style="::$ctrl.cols">
-    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-     <span style="width: 100%">
-      <span class="inputstem" ng-bind-html="::$ctrl.inputstem"></span>
-      <span  ng-if="::!$ctrl.isPlainText()" ng-class="{warnFrame: ($ctrl.isUnSaved() )  }">
-        <!-- <span ng-if="$ctrl.isUnSaved()"  ng-class="{warnFrame: ($ctrl.isUnSaved() )  }">&nbsp;</span> -->
-        <input type="checkbox"
-               ng-if="::!$ctrl.isPlainText()"
-               name="{{::$ctrl.rbname}}"
-               ng-style="::$ctrl.cbStyle"
-               class="form-control"
-               ng-model="$ctrl.userword"
-               ng-change="$ctrl.autoSave()"
-               ng-disabled="::$ctrl.readonly"
-               ng-model-options="::$ctrl.modelOpts"
-               uib-tooltip="{{ $ctrl.errormessage }}"
-               tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
-               tooltip-trigger="mouseenter"
-               >
-         </span>
-         <span ng-if="::$ctrl.isPlainText()" style="">{{$ctrl.userword}}</span>
-         </span>
-    <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
-    <!-- <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p> -->
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</div>
-`,
-});
+@NgModule({
+    declarations: [CbfieldPluginComponent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        TimUtilityModule,
+        FormsModule,
+        TooltipModule.forRoot(),
+    ],
+})
+export class CbfieldModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
+
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                CbfieldModule
+            )
+        ),
+        "cbfieldRunner",
+        CbfieldPluginComponent
+    ),
+];
