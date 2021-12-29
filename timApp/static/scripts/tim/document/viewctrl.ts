@@ -63,7 +63,10 @@ import {PendingCollection} from "./editing/edittypes";
 import {onClick} from "./eventhandlers";
 import {IDocSettings} from "./IDocSettings";
 import {ParRefController} from "./parRef";
-import {PopupMenuDialogComponent} from "./popup-menu-dialog.component";
+import {
+    EditMode,
+    PopupMenuDialogComponent,
+} from "./popup-menu-dialog.component";
 import {initSlideView} from "./slide";
 import {ViewRangeInfo} from "./viewRangeInfo";
 import {ICtrlWithMenuFunctionEntry, IMenuFunctionEntry} from "./viewutils";
@@ -187,6 +190,16 @@ export enum FormModeOption {
     NoForm,
 }
 
+/**
+ * Map of valid TIM document events and event data.
+ *
+ * NOTE: TIM document events are meant to be general-purpose events for common global TIM components.
+ * As such, avoid defining events that are specific to a particular plugin unless really needed.
+ */
+export type EventListeners = {
+    editModeChange: (editMode: EditMode | null) => void;
+};
+
 export class ViewCtrl implements IController {
     private hideVars: IVisibilityVars = getVisibilityVars();
     notification: string = "";
@@ -268,6 +281,11 @@ export class ViewCtrl implements IController {
     // Form-mode related attributes.
     private formTaskInfosLoaded = false;
     private hide = getVisibilityVars();
+
+    private eventListeners: Map<
+        keyof EventListeners,
+        EventListeners[keyof EventListeners][]
+    > = new Map();
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -1443,6 +1461,62 @@ export class ViewCtrl implements IController {
         const prefix = a.getKeyPrefix();
         const key = prefix + a.annotation.id;
         this.anns.delete(key);
+    }
+
+    /**
+     * Registers an event listener for a TIM document event.
+     *
+     * @param event Event type to listen to.
+     * @param callback Callback function to call when event is triggered.
+     */
+    listen<T extends keyof EventListeners>(
+        event: T,
+        callback: EventListeners[T]
+    ): void {
+        let eventList = this.eventListeners.get(event);
+        if (!eventList) {
+            eventList = [];
+            this.eventListeners.set(event, eventList);
+        }
+        eventList.push(callback);
+    }
+
+    /**
+     * Unregisters an event listener for a TIM document event.
+     *
+     * @param event Event type to unregister.
+     * @param callback Callback function to unregister.
+     */
+    removeListener<T extends keyof EventListeners>(
+        event: T,
+        callback: EventListeners[T]
+    ): void {
+        const eventList = this.eventListeners.get(event);
+        if (eventList) {
+            const index = eventList.indexOf(callback);
+            if (index >= 0) {
+                eventList.splice(index, 1);
+            }
+        }
+    }
+
+    /**
+     * Emits a TIM document event.
+     *
+     * @param event Event type to emit.
+     * @param args Arguments to pass to the event listeners.
+     */
+    emit<T extends keyof EventListeners>(
+        event: T,
+        ...args: Parameters<EventListeners[T]>
+    ): void {
+        const eventList = this.eventListeners.get(event);
+        if (eventList) {
+            eventList.forEach((callback) => {
+                // direct call does not work because Parameters is not able to infer full type
+                callback.apply(null, args);
+            });
+        }
     }
 }
 
