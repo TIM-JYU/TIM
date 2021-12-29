@@ -895,7 +895,8 @@ def render_doc_view(
                     | {d.id: d for d in user_themes}
                 ).values()
             )
-        override_theme = generate_style(document_theme_docs)
+        theme_style, theme_hash = generate_style(document_theme_docs)
+        override_theme = f"{theme_style}?{theme_hash}"
 
     templates_to_render = (
         ["slide_head.jinja2", "slide_content.jinja2"]

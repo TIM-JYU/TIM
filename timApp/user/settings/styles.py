@@ -180,7 +180,7 @@ def generate_style(
     theme_docs: list[DocEntry],
     gen_dir: Optional[Path] = None,
     throw_on_error: bool = False,
-) -> str:
+) -> tuple[str, str]:
     """Generates a CSS style based on the given theme documents.
 
     .. note::
@@ -203,7 +203,7 @@ def generate_style(
     :param theme_docs: List of theme documents with SCSS to generate style from.
     :param gen_dir: Directory to put the generated theme in. If not specified, default SCSS cache dir is used.
     :param throw_on_error: If True, an error is thrown on SCSS compile error. Otherwise, the error is sent to Flask.
-    :return: Path to the generated style file, relative to project root (timApp folder)
+    :return: Tuple of path to the generated style file relative to project root (timApp folder) and last timestamp hash
     """
     if not gen_dir:
         gen_dir = get_default_scss_gen_dir()
@@ -216,7 +216,7 @@ def generate_style(
     style_exits = style_path.exists()
 
     if style_exits and last_style_hash == current_style_hash:
-        return style_path.as_posix()
+        return style_path.as_posix(), current_style_hash
     gen_dir.mkdir(exist_ok=True)
 
     theme_paths = []
@@ -273,10 +273,10 @@ def generate_style(
             ),
             category="raw",
         )
-        return (gen_dir / f"{DEFAULT_STYLE_NAME}.css").as_posix()
+        return (gen_dir / f"{DEFAULT_STYLE_NAME}.css").as_posix(), current_style_hash
 
     set_style_timestamp_hash(style_name, current_style_hash)
-    return style_path.as_posix()
+    return style_path.as_posix(), current_style_hash
 
 
 @styles.get("")
@@ -379,7 +379,8 @@ def generate(
             )
 
     try:
-        return text_response(generate_style(doc_entries, throw_on_error=True))
+        style_path, _ = generate_style(doc_entries)
+        return text_response(style_path)
     except StyleCompileException as se:
         return text_response(
             se.compile_error,

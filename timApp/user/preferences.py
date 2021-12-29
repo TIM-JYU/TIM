@@ -44,7 +44,8 @@ class Preferences:
     def style_path(self) -> str:
         from timApp.user.settings.styles import generate_style
 
-        return generate_style(self.theme_docs())
+        style_path, style_hash = generate_style(self.theme_docs())
+        return f"{style_path}?{style_hash}"
 
     @cached_property
     def excluded_email_paths(self) -> list[Pattern[str]]:
