@@ -184,6 +184,10 @@ export class ViewCtrl implements IController {
     public users: IUserListEntry[];
     public teacherMode: boolean;
     private velpMode: boolean;
+    private editMenuOnLeftStorage = new TimStorage(
+        "editMenu_openOnLeft",
+        t.boolean
+    );
 
     private timTables = new Map<string, TimTableComponent>();
     private tableForms = new Map<string, TableFormComponent>();
@@ -371,6 +375,16 @@ export class ViewCtrl implements IController {
         this.jsRunnersToRun = new Set(runners ?? []);
 
         timLogTime("ViewCtrl end", "view");
+
+        this.editingHandler.updateEditBarState();
+    }
+
+    get editMenuOnLeft() {
+        return this.editMenuOnLeftStorage.get() ?? false;
+    }
+
+    set editMenuOnLeft(value: boolean) {
+        this.editMenuOnLeftStorage.set(value);
     }
 
     getDefaultAction(par: ParContext): IMenuFunctionEntry | undefined {

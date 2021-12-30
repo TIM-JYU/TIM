@@ -591,6 +591,7 @@ a.timButton {
     width: $editline-width;
     height: 100%;
     top: 0;
+    display: var(--editline-display, none);
 
     @media (max-width: 870px) { /* for ipdas because of outend headings */
         left: -($editline-width / 2);
@@ -607,6 +608,16 @@ a.timButton {
         background: $editline-bg-color;
     }
 }
+
+#pars.editmode {
+    .par.areacollapse, .par.areaexpand  {
+        .editline {
+            display: block;
+        }
+    }
+}
+
+
 
 .editmode {
     [data-area]::before {
@@ -1135,12 +1146,21 @@ p.docsettings {
     position: absolute;
     top: 0;
     left: -1.2em;
-    font-size: 93.75%;
+    font-size: 1em;
     padding: 0px;
     padding-left: 2px;
     padding-right: 3px;
     background-color: #dae1e1;
     border-color: #dae1e1;
+    color: $bg-color;
+
+    &.edit-menu-button {
+        left: -0.2em;
+    }
+
+    i {
+        color: $bg-color;
+    }
     &:hover {
         background-color: $basic-color;
     }

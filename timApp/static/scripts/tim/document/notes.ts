@@ -257,22 +257,35 @@ export class NotesHandler {
             return this.noteBadge;
         }
 
-        const btn = document.createElement("input");
-        btn.type = "button";
+        const btn = document.createElement("a");
         btn.classList.add("note-badge");
         if (documentglobals().velpMode) {
             btn.classList.add("note-badge-with-velp");
         }
         btn.classList.add("timButton");
-        btn.value = "C";
-        btn.title = "Add comment/note";
         btn.id = "noteBadge";
         this.noteBadge = btn;
         // btn.setAttribute("ng-click", "addNote()");
-        btn.onclick = ($event) => {
-            $event.stopPropagation();
+        btn.onclick = (event) => {
+            event.stopPropagation();
+            if (!this.viewctrl.editMenuOnLeft) {
+                // TODO: Clean up types
+                void this.viewctrl.parmenuHandler.openParMenu(
+                    $(event.currentTarget as HTMLElement),
+                    {
+                        originalEvent: event,
+                        pageY: event.pageY,
+                        pageX: event.pageX,
+                        type: "click",
+                        target: event.currentTarget as HTMLElement,
+                    }
+                );
+                return;
+            }
+
             this.addNote();
         };
+        this.updateBadgeState();
         $compile(btn)(this.sc);
         return btn;
     }
@@ -285,11 +298,30 @@ export class NotesHandler {
         }
     }
 
+    updateBadgeState() {
+        if (!this.noteBadge) {
+            return;
+        }
+        const btn = this.noteBadge;
+        const editOnLeft = this.viewctrl.editMenuOnLeft;
+        btn.innerHTML = editOnLeft
+            ? "C"
+            : `<i class="glyphicon glyphicon-pencil"></i>`;
+        btn.title = editOnLeft
+            ? $localize`Add comment/note`
+            : $localize`Open edit menu`;
+        if (!editOnLeft) {
+            btn.classList.add("edit-menu-button");
+        } else {
+            btn.classList.remove("edit-menu-button");
+        }
+    }
+
     /**
      * Moves the note badge to the correct element.
      * @param par - Element where the badge needs to be attached
      */
-    updateNoteBadge(par: ParContext) {
+    updateNoteBadge(par: ParContext, badgeY: number) {
         // At the moment note badge is not usable for people who can't comment
         // Moreover, can_comment is false is user is not logged in, in which case other misc functions of notes editor
         // (e.g. marking block unread) is not usable either
@@ -304,7 +336,13 @@ export class NotesHandler {
             return;
         }
         markParRead(par, ReadingType.ClickPar);
-        addElementToParagraphMargin(par, this.createNoteBadge(par));
+        const btn = this.createNoteBadge(par);
+        if (!this.viewctrl.editMenuOnLeft) {
+            btn.style.transform = `translateY(${badgeY}px)`;
+        } else {
+            btn.style.transform = "";
+        }
+        addElementToParagraphMargin(par, btn);
     }
 
     /**

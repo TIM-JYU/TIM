@@ -75,6 +75,7 @@ par 22
 """
         )
         self.goto_document(d)
+        self.use_left_menu()
 
         # open collapsed areas
         self.find_element_by_text("par 10").click()
@@ -89,6 +90,7 @@ par 22
             "Copy",
             "Add question above",
             "Close menu",
+            "Move menu to right",
         ]
         ref_par_choices = [
             "View source",
@@ -99,6 +101,7 @@ par 22
             "Copy",
             "Add question above",
             "Close menu",
+            "Move menu to right",
         ]
         ref_area_choices = [
             "View source",
@@ -108,12 +111,14 @@ par 22
             "Edit",
             "Add question above",
             "Close menu",
+            "Move menu to right",
         ]
         ref_area_choices_no_add = [
             "View source",
             "Comment/note",
             "Follow reference",
             "Close menu",
+            "Move menu to right",
         ]
         ref_area_choices_ext = [
             "View source",
@@ -125,6 +130,7 @@ par 22
             "Add question above",
             "Start selection",
             "Close menu",
+            "Move menu to right",
         ]
         ref_area_choices_ext_no_add = [
             "View source",
@@ -134,6 +140,7 @@ par 22
             "Paste...",
             "Start selection",
             "Close menu",
+            "Move menu to right",
         ]
 
         def area_choices(name):
@@ -146,6 +153,7 @@ par 22
                 f"Copy area '{name}'",
                 "Add question above",
                 "Close menu",
+                "Move menu to right",
             ]
 
         def area_choices_ext(name):
@@ -160,6 +168,7 @@ par 22
                 "Add question above",
                 "Start selection",
                 "Close menu",
+                "Move menu to right",
             ]
 
         # To make this test easier to follow, let's make sure that the indexes correspond to the paragraph texts.
@@ -232,6 +241,7 @@ par 2
         )
         self.login_browser_quick_test1()
         self.goto_document(d)
+        self.use_left_menu()
         pars = self.find_par_elems()
         menu = self.open_menu(pars[2])
         self.find_element_by_text("Edit", parent=menu).click()
@@ -270,6 +280,7 @@ par4
         )
         self.login_browser_quick_test1()
         self.goto_document(d)
+        self.use_left_menu()
 
         # Select across 2 areas.
         menu = self.select_pars(".par2", ".par3", toggle_edit=True)
@@ -321,6 +332,7 @@ par8
         )
         self.login_browser_quick_test1()
         self.goto_document(d)
+        self.use_left_menu()
         self.disable_ace()
 
         # Start and end inside a non-collapsible area.
@@ -393,6 +405,7 @@ par4
         )
         self.login_browser_quick_test1()
         self.goto_document(d)
+        self.use_left_menu()
         self.disable_ace()
         self.find_element_by_text("areatitle").click()
 
