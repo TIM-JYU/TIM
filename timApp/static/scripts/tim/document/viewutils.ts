@@ -7,6 +7,8 @@ export interface IMenuFunctionEntry {
     desc: string;
     show: boolean;
     closeAfter?: boolean;
+    allowAsDefault?: boolean;
+    spacingBefore?: number;
 }
 
 export type MenuFunctionList = IMenuFunctionEntry[];
