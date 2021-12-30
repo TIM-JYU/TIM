@@ -11,7 +11,7 @@ import {
     tryCreateParContextOrHelp,
 } from "tim/document/structure/create";
 import {Coords, dist, getPageXY, to} from "../util/utils";
-import {onClick} from "./eventhandlers";
+import {onClick, OnClickArg} from "./eventhandlers";
 import {getCitePar} from "./parhelpers";
 import {EditMode} from "./popup-menu-dialog.component";
 import {ViewCtrl} from "./viewctrl";
@@ -54,11 +54,16 @@ export class ParmenuHandler {
                 }
 
                 const target = $(e.target) as JQuery;
-                const par = tryCreateParContextOrHelp($this.parents(".par")[0]);
+                const parElement = $this.parents(".par")[0];
+                const par = tryCreateParContextOrHelp(parElement);
                 if (!par || par.isHelp || !par.isActionable()) {
                     return;
                 }
-                this.viewctrl.notesHandler.updateNoteBadge(par);
+                const badgeY =
+                    e.pageY -
+                    (parElement.getBoundingClientRect().y + window.scrollY);
+                console.log(badgeY);
+                this.viewctrl.notesHandler.updateNoteBadge(par, badgeY);
 
                 // Don't show paragraph menu on these specific tags or classes
                 if (
@@ -114,14 +119,18 @@ export class ParmenuHandler {
             true
         );
 
-        onClick(
-            ".editline",
-            async ($this, e) => {
-                await this.viewctrl.closePopupIfOpen();
-                const par = createParContextOrHelp(findParentPar($this));
-                if (!par.isHelp) {
-                    if (par.preamble) {
-                        showMessageDialog(`
+        onClick(".editline", this.openParMenu, true);
+    }
+
+    openParMenu = async (
+        $this: JQuery,
+        e: OnClickArg
+    ): Promise<boolean | void> => {
+        await this.viewctrl.closePopupIfOpen();
+        const par = createParContextOrHelp(findParentPar($this));
+        if (!par.isHelp) {
+            if (par.preamble) {
+                showMessageDialog(`
     <p>This paragraph is from a preamble document.
     To comment or edit this, go to the corresponding <a href="/view/${
         par.preamble
@@ -129,27 +138,24 @@ export class ParmenuHandler {
     
     <p>Citation help: <code>${getCitePar(this.viewctrl.item.id, par)}</code></p>
     `);
-                    }
-                    if (!par.isActionable()) {
-                        return;
-                    }
-                    if (this.viewctrl.editingHandler.selection != null) {
-                        this.viewctrl.editingHandler.updateSelection(
-                            par,
-                            this.viewctrl.editingHandler.selection,
-                            SelectionUpdateType.DontAllowShrink
-                        );
-                    }
-                }
+            }
+            if (!par.isActionable()) {
+                return;
+            }
+            if (this.viewctrl.editingHandler.selection != null) {
+                this.viewctrl.editingHandler.updateSelection(
+                    par,
+                    this.viewctrl.editingHandler.selection,
+                    SelectionUpdateType.DontAllowShrink
+                );
+            }
+        }
 
-                if (!this.viewctrl.actionsDisabled) {
-                    this.showOptionsWindow(e.originalEvent, par);
-                }
-                return false;
-            },
-            true
-        );
-    }
+        if (!this.viewctrl.actionsDisabled) {
+            this.showOptionsWindow(e.originalEvent, par);
+        }
+        return false;
+    };
 
     private isCloseMenuDefault() {
         return this.viewctrl.defaultAction === "Close menu";

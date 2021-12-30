@@ -908,8 +908,30 @@ auto_number_headings: 0${CURSOR}
                 }
             );
         }
+
         fns.push({func: empty, desc: "Close menu", show: true});
+
+        fns.push({
+            func: (e) => {
+                this.viewctrl.editMenuOnLeft = !this.viewctrl.editMenuOnLeft;
+                this.updateEditBarState();
+                this.viewctrl.notesHandler.updateBadgeState();
+            },
+            desc: this.viewctrl.editMenuOnLeft
+                ? "Move menu to right"
+                : "Move menu to left",
+            show: true,
+            allowAsDefault: false,
+            spacingBefore: 5,
+        });
         return fns;
+    }
+
+    updateEditBarState() {
+        document.documentElement.style.setProperty(
+            "--editline-display",
+            this.viewctrl.editMenuOnLeft ? "block" : "none"
+        );
     }
 
     private getAddParagraphItem(pos: EditPosition) {

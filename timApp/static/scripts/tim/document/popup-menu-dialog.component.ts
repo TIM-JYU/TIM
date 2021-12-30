@@ -41,7 +41,9 @@ export interface IPopupParams {
                     <div class="error" *ngIf="vctrl.notification" [innerText]="vctrl.notification"></div>
                     <div class="paragraphs pastePreview" *ngIf="content" [innerHtml]="content | purify"></div>
 
-                    <div class="flex rw align-center" *ngFor="let f of actions; let first = first">
+                    <div class="flex rw align-center"
+                         *ngFor="let f of actions; let first = first"
+                         [style.margin-top.px]="f.spacingBefore">
                         <button class="timButton btn-sm flex-grow-5"
                                 focusMe
                                 [enable]="first"
@@ -49,16 +51,19 @@ export interface IPopupParams {
                                 (click)="callFunc($event, f)">
                         </button>
 
-                        <input *ngIf="save"
+                        <input *ngIf="(save && (f.allowAsDefault === undefined || f.allowAsDefault)); else emptyMargin"
                                [checked]="getChecked(f.desc)"
                                (click)="clicked(f)"
                                style="margin: 5px 0 5px 15px;"
                                title="{{ getInputTitle(f) }}"
                                type="radio">
+                        <ng-template #emptyMargin>
+                            <input type="radio" disabled style="margin: 5px 0 5px 15px; visibility: hidden">
+                        </ng-template>
                     </div>
 
                     <div class="flex rw btn-group"
-                         style="padding-top: 6px; margin-right: 28px"
+                         style="padding-top: 10px; margin-right: 28px"
                          *ngIf="editbutton && editable">
                         <button class="timButton parEditButton flex-grow-5"
                                 (click)="parModeClicked()"

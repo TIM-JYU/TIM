@@ -4588,6 +4588,22 @@
           <context context-type="linenumber">18</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3403070715488584182" datatype="html">
+        <source>Add comment/note</source>
+        <target state="translated">Lisää kommentti</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/document/notes.ts</context>
+          <context context-type="linenumber">311</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4129829485187047152" datatype="html">
+        <source>Open edit menu</source>
+        <target state="translated">Avaa muokkausvalikko</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/document/notes.ts</context>
+          <context context-type="linenumber">312</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

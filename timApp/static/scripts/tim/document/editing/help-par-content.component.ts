@@ -13,7 +13,7 @@ import {ViewCtrl} from "../viewctrl";
                 <p>Since this document has no text content, the settings paragraphs are visible above.</p>
             </div>
             <div *ngIf="showHelp">
-                <p>Click left side to edit. You can get help with editing from editor's Help tab.</p>
+                <p>You can get help with editing from editor's Help tab.</p>
                 <p>This is an automatically added help paragraph. It will disappear when you add content.</p>
             </div>
         </div>
