@@ -12,9 +12,11 @@ import {Users} from "./userService";
     selector: "tim-user-menu",
     template: `
         <div class="btn-group" dropdown>
-            <button type="button" title="You're logged in" i18n-title class="btn btn-primary dropdown-toggle" dropdownToggle>
-                {{ getCurrentUser().real_name }} <span i18n
-                    *ngIf="numSession() > 0">and {numSession(), plural, =1 {one other} other {{{numSession()}} others}}</span>
+            <button type="button" title="You're logged in" i18n-title class="btn btn-primary dropdown-toggle user-button" dropdownToggle>
+                <span class="user-name">
+                    {{ getCurrentUser().real_name }} <ng-container i18n
+                        *ngIf="numSession() > 0">and {numSession(), plural, =1 {one other} other {{{numSession()}} others}}</ng-container>
+                </span>
                 &nbsp;<span class="caret"></span>
             </button>
             <ul class="dropdown-menu"
@@ -42,6 +44,7 @@ import {Users} from "./userService";
             </ul>
         </div>
     `,
+    styleUrls: ["./user-menu.component.scss"],
 })
 export class UserMenuComponent {
     hideOptions: IVisibilityVars = getVisibilityVars();

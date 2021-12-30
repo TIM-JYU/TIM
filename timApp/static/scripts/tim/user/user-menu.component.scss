@@ -1,0 +1,16 @@
+@import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap/variables";
+
+@media (max-width: $screen-xs-max) {
+  .user-name {
+    max-width: 60px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: inline-block;
+  }
+}
+
+.user-button {
+  display: flex;
+  align-items: center;
+}

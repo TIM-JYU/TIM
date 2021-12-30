@@ -1,0 +1,29 @@
+@import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap/variables";
+
+// Hide .jyu-logo if on mobile
+@media (max-width: $screen-xs-max) {
+  .jyu-logo {
+    display: none;
+  }
+
+  .button-search > span {
+    display: none;
+  }
+}
+
+.view-toggle {
+  display: flex;
+  margin-left: 0.5em;
+  align-items: center;
+  flex-wrap: nowrap;
+  user-select: none;
+
+  i {
+    margin-left: 0.25em;
+    font-size: 0.7em;
+  }
+
+  &:hover {
+    text-decoration: none;
+  }
+}

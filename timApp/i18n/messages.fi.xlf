@@ -4516,6 +4516,78 @@
           <context context-type="linenumber">121,122</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2509141182388535183" datatype="html">
+        <source>View</source>
+        <target state="translated">Näytä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/utils.ts</context>
+          <context context-type="linenumber">23</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3897348120591552265" datatype="html">
+        <source>Manage</source>
+        <target state="translated">Hallitse</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/utils.ts</context>
+          <context context-type="linenumber">24</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4250948520990652627" datatype="html">
+        <source>Teacher</source>
+        <target state="translated">Opettaja</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/utils.ts</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7967817482349015206" datatype="html">
+        <source>Answers</source>
+        <target state="translated">Vastaukset</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/utils.ts</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4394384597878317207" datatype="html">
+        <source>Velp</source>
+        <target state="translated">Velpit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/utils.ts</context>
+          <context context-type="linenumber">28</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1195990936404610211" datatype="html">
+        <source>Slide</source>
+        <target state="translated">Kalvot</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/utils.ts</context>
+          <context context-type="linenumber">29</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7430680760319628492" datatype="html">
+        <source>Review</source>
+        <target state="translated">Vertaisarviointi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/utils.ts</context>
+          <context context-type="linenumber">30</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1081973408978048544" datatype="html">
+        <source>University of Jyväskylä</source>
+        <target state="translated">Jyväskylän yliopisto</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/site-header.component.ts</context>
+          <context context-type="linenumber">29</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7489402800174786548" datatype="html">
+        <source>Show/hide view menu</source>
+        <target state="translated">Näytä tai piilota näkymavalikko</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/site-header.component.ts</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
