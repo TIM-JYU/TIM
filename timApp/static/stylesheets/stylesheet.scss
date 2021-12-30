@@ -609,6 +609,16 @@ a.timButton {
     }
 }
 
+#pars.editmode {
+    .par.areacollapse, .par.areaexpand  {
+        .editline {
+            display: block;
+        }
+    }
+}
+
+
+
 .editmode {
     [data-area]::before {
         content: "Area name: " attr(data-area);
@@ -1143,6 +1153,11 @@ p.docsettings {
     background-color: #dae1e1;
     border-color: #dae1e1;
     color: $bg-color;
+
+    &.edit-menu-button {
+        left: -0.2em;
+    }
+
     i {
         color: $bg-color;
     }

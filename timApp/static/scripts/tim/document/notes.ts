@@ -310,6 +310,11 @@ export class NotesHandler {
         btn.title = editOnLeft
             ? $localize`Add comment/note`
             : $localize`Open edit menu`;
+        if (!editOnLeft) {
+            btn.classList.add("edit-menu-button");
+        } else {
+            btn.classList.remove("edit-menu-button");
+        }
     }
 
     /**
