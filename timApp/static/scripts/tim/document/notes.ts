@@ -289,7 +289,7 @@ export class NotesHandler {
      * Moves the note badge to the correct element.
      * @param par - Element where the badge needs to be attached
      */
-    updateNoteBadge(par: ParContext) {
+    updateNoteBadge(par: ParContext, badgeY: number) {
         // At the moment note badge is not usable for people who can't comment
         // Moreover, can_comment is false is user is not logged in, in which case other misc functions of notes editor
         // (e.g. marking block unread) is not usable either
@@ -304,7 +304,9 @@ export class NotesHandler {
             return;
         }
         markParRead(par, ReadingType.ClickPar);
-        addElementToParagraphMargin(par, this.createNoteBadge(par));
+        const btn = this.createNoteBadge(par);
+        btn.style.transform = `translateY(${badgeY}px)`;
+        addElementToParagraphMargin(par, btn);
     }
 
     /**
