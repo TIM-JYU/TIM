@@ -446,7 +446,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         )
 
     def get_uninteractable_element(self):
-        return self.find_element(".breadcrumb .current")
+        return self.find_element("footer")
 
     def wait_for_editor_load(self):
         self.wait_until_present("pareditor")
