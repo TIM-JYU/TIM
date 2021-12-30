@@ -6,18 +6,18 @@ import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {rootInstance} from "tim/rootinstance";
 import {HttpClient} from "@angular/common/http";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {getAvailableViews, IItemLink} from "tim/header/utils";
 import {IDocSettings} from "../document/IDocSettings";
 import {
     DocumentOrFolder,
     IFolder,
-    isRootFolder,
     ITag,
     ITranslation,
     TagType,
 } from "../item/IItem";
 import {Users} from "../user/userService";
 import {genericglobals, someglobals} from "../util/globals";
-import {capitalizeFirstLetter, getViewName, to} from "../util/utils";
+import {getViewName, to} from "../util/utils";
 
 /**
  * Checks if the tag type is course code.
@@ -37,11 +37,6 @@ const courseFolder = "My courses";
  */
 function isExpired(tag: ITag) {
     return tag.expires && tag.expires.diff(moment.now()) < 0;
-}
-
-interface IItemLink {
-    route: string;
-    title: string;
 }
 
 @Component({
@@ -110,26 +105,7 @@ export class HeaderComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        const allowedRoutes = ["view"];
-        if (!isRootFolder(this.item)) {
-            allowedRoutes.push("manage");
-        }
-        if (!this.item.isFolder) {
-            if (this.item.rights.teacher) {
-                allowedRoutes.push("teacher");
-            }
-            if (this.item.rights.see_answers) {
-                allowedRoutes.push("answers");
-            }
-            allowedRoutes.push("lecture", "velp", "slide");
-            if (this.docSettings?.peer_review) {
-                allowedRoutes.push("review");
-            }
-        }
-        this.itemLinks = allowedRoutes.map((r) => ({
-            route: r,
-            title: capitalizeFirstLetter(r),
-        }));
+        this.itemLinks = getAvailableViews();
         (async () => {
             await this.checkIfBookmarked();
             void this.checkIfTaggedAsCourse();
