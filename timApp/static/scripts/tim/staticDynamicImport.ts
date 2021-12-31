@@ -27,7 +27,7 @@ export function staticDynamicImport(s: string) {
         case "timTable":
             return import("tim/plugin/timTable");
         case "cbcountfield":
-            return import("modules/fields/js/cbcountfield");
+            return import("modules/fields/js/cbcountfield-plugin.component");
         case "timMenu":
             return import("tim/plugin/timMenuController");
         case "/cs/js/build/csModule.js":
@@ -49,7 +49,7 @@ export function staticDynamicImport(s: string) {
         case "/field/js/build/rbfield.js":
             return import("modules/fields/js/rbfield");
         case "/field/js/build/cbfield.js":
-            return import("modules/fields/js/cbfield");
+            return import("modules/fields/js/cbfield-plugin.component");
         case "/field/js/build/dropdown.js":
             return import("modules/fields/js/dropdown");
         case "/drag/js/build/drag.js":
