@@ -37,6 +37,7 @@ import {
     createDowngradedModule,
     doDowngrade,
 } from "../../../static/scripts/tim/downgrade";
+import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
 import {FieldBasicData} from "./textfield";
 
 const CbfieldMarkup = t.intersection([
@@ -71,7 +72,7 @@ const CbfieldAll = t.intersection([
     template: `
 <div class="textfieldNoSaveDiv" [ngStyle]="cols">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <h4 *ngIf="header" [innerHtml]="header"></h4>
+    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
     <p class="stem" *ngIf="stem">{{stem}}</p>
      <span style="width: 100%">
       <span class="inputstem" [innerHtml]="inputstem"></span>
@@ -94,6 +95,7 @@ const CbfieldAll = t.intersection([
     <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
 </div>
 `,
+    styleUrls: ["./cbfield-plugin.component.scss"],
 })
 export class CbfieldPluginComponent
     extends AngularPluginBase<
@@ -412,6 +414,7 @@ export class CbfieldPluginComponent
         TimUtilityModule,
         FormsModule,
         TooltipModule.forRoot(),
+        PurifyModule,
     ],
 })
 export class CbfieldModule implements DoBootstrap {
