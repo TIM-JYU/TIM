@@ -54,15 +54,12 @@ export class ParmenuHandler {
                 }
 
                 const target = $(e.target) as JQuery;
-                const parElement = $this.parents(".par")[0];
-                const par = tryCreateParContextOrHelp(parElement);
+                const par = tryCreateParContextOrHelp($this.parents(".par")[0]);
                 if (!par || par.isHelp || !par.isActionable()) {
                     return;
                 }
-                const badgeY =
-                    e.pageY -
-                    (parElement.getBoundingClientRect().y + window.scrollY);
-                console.log(badgeY);
+                const parOffset = par.offset() ?? getEmptyCoords();
+                const badgeY = e.pageY - parOffset.top;
                 this.viewctrl.notesHandler.updateNoteBadge(par, badgeY);
 
                 // Don't show paragraph menu on these specific tags or classes

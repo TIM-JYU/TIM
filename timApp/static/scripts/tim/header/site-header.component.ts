@@ -7,20 +7,20 @@ import * as t from "io-ts";
 @Component({
     selector: "tim-site-header",
     template: `
-        <div class="siteheader" *ngIf="!hide.siteheader">
+        <div class="siteheader" [class.collapse-view-header]="!displayViewHeader" *ngIf="!hide.siteheader">
             <div class="hidden-lg hidden-md hamburger-placeholder" style="width: 27px; height: 1px"></div>
             <a class="logolink" title="To TIM main page" i18n-title *ngIf="!hide.links" href="/">
                 <tim-logo *ngIf="!hide.logo"></tim-logo>
             </a>
             <a class="view-toggle"
                *ngIf="activeView"
-               (click)="updateHeaderMenuVisibility()"
-                title="Show/hide view menu"
-                i18n-title>
+               (click)="toggleViewVisibility()"
+               title="Show/hide view menu"
+               i18n-title>
                 <span>{{activeView}}</span>
                 <i class="glyphicon"
-                   [class.glyphicon-triangle-bottom]="displayHeader"
-                   [class.glyphicon-triangle-top]="!displayHeader"></i>
+                   [class.glyphicon-triangle-bottom]="displayViewHeader"
+                   [class.glyphicon-triangle-top]="!displayViewHeader"></i>
             </a>
             <tim-logo *ngIf="hide.links && !hide.logo"></tim-logo>
             <tim-login-menu *ngIf="!hide.login"></tim-login-menu>
@@ -52,24 +52,36 @@ export class SiteHeaderComponent implements OnInit {
     hide = getVisibilityVars();
     displaySearch = false;
     activeView?: string;
-    displayHeader: boolean = false;
-    private lastHeaderHiddenState = new TimStorage(
+    private displayViewHeaderState?: boolean;
+    private lastViewHeaderDisplayState = new TimStorage(
         "siteHeader_lastHeaderHiddenState",
         t.boolean
     );
 
-    updateHeaderMenuVisibility(newState?: boolean) {
+    get displayViewHeader() {
+        if (this.displayViewHeaderState !== undefined) {
+            return this.displayViewHeaderState;
+        }
+        this.displayViewHeader = this.lastViewHeaderDisplayState.get() ?? false;
+        return this.displayViewHeaderState!;
+    }
+
+    set displayViewHeader(newState: boolean) {
+        this.lastViewHeaderDisplayState.set(newState);
+        this.displayViewHeaderState = newState;
+    }
+
+    toggleViewVisibility() {
+        this.displayViewHeader = !this.displayViewHeader;
+        this.updateHeaderMenuVisibility();
+    }
+
+    updateHeaderMenuVisibility() {
         const el = document.querySelector<HTMLElement>(".doc-header");
         if (!el) {
             return;
         }
-        if (newState === undefined) {
-            el.hidden = !el.hidden;
-        } else {
-            el.hidden = newState;
-        }
-        this.displayHeader = el.hidden;
-        this.lastHeaderHiddenState.set(el.hidden);
+        el.hidden = !this.displayViewHeader;
     }
 
     ngOnInit(): void {
@@ -78,8 +90,6 @@ export class SiteHeaderComponent implements OnInit {
         this.activeView = availableViews.find(
             (view) => view.route == currentView
         )?.title;
-        this.updateHeaderMenuVisibility(
-            this.lastHeaderHiddenState.get() ?? true
-        );
+        this.updateHeaderMenuVisibility();
     }
 }

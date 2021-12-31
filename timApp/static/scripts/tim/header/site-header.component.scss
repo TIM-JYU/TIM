@@ -1,6 +1,5 @@
 @import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap/variables";
 
-// Hide .jyu-logo if on mobile
 @media (max-width: $screen-xs-max) {
   .jyu-logo {
     display: none;
@@ -9,6 +8,10 @@
   .button-search > span {
     display: none;
   }
+}
+
+.collapse-view-header {
+  margin-bottom: 20px;
 }
 
 .view-toggle {
