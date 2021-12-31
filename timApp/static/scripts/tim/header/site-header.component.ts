@@ -13,7 +13,7 @@ import * as t from "io-ts";
                 <tim-logo *ngIf="!hide.logo"></tim-logo>
             </a>
             <a class="view-toggle"
-               *ngIf="activeView"
+               *ngIf="activeView && !hide.headerNav"
                (click)="toggleViewVisibility()"
                title="Show/hide view menu"
                i18n-title>
