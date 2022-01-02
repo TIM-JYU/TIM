@@ -127,6 +127,18 @@ class AutoCounters:
             text = text.replace(cm_key, cm_value)
         return text
 
+    def set_auto_name(self, base_name: str) -> str:
+        """
+        Set start of autonames
+        :param base_name: base name for counters in this block
+        :param ctype: default type for counters in this block
+        :return: emtpy string because used from filter
+        """
+        self.auto_name_base = base_name
+        if base_name:
+            self.need_auto_name_reset = False
+        return ""
+
     def set_auto_names(self, base_name: Optional[TName], ctype: str = "eq") -> str:
         """
         Set start of autonames
@@ -152,7 +164,8 @@ class AutoCounters:
         :return: None
         """
         self.auto_labels: bool = False
-        self.need_auto_name_reset = True
+        # self.need_auto_name_reset = True
+        self.set_auto_names(None)
         self.doing_latex_environment = False
         self.reset_label_cache()
 
@@ -202,7 +215,9 @@ class AutoCounters:
             if self.task_id is None:
                 return "", "", self.error("Missing base name, use c_auto")
             self.auto_name_plugin: bool = True
-            return self.task_id, ctype, None
+            sname = self.task_id
+            self.set_auto_name(sname)
+            return sname, ctype, None
         return self.auto_name_base + str(self.auto_name_counter), ctype, None
 
     def set_auto_number_headings(self, n: int) -> None:
@@ -645,12 +660,12 @@ macros:
         result += "   " + jso + "\n"
         return result
 
-    def set_counter(self, ctype: str, value: int) -> str:
+    def set_counter(self, value: int, ctype: str) -> str:
         """
         For filter c_set
         Set's the type counter value
-        :param ctype: for whta type o f counters
         :param value: new value
+        :param ctype: for what type of counters
         :return: ""
         """
         counter_type = self.counters.get(ctype)
@@ -658,6 +673,18 @@ macros:
             return ""
         counter_type.count = value
         return ""
+
+    def get_counter_value(self, ctype: str) -> int:
+        """
+        For filter c_get
+        Get's the value of counter while renumbering
+        :param ctype: for what type of counters
+        :return: 0 in view, but value of counter in renumbering
+        """
+        counter_type = self.counters.get(ctype)
+        if not counter_type:
+            return 0
+        return counter_type.count
 
     def set_renumbering(self, value: bool) -> None:
         """
@@ -778,6 +805,7 @@ macros:
             env.filters["c_ex"] = self.ex_counter
             env.filters["c_task"] = self.task_counter
             env.filters["c_set"] = self.set_counter
+            env.filters["c_get"] = self.get_counter_value
 
 
 def check_autonumber_error(m: str) -> str | None:

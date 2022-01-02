@@ -185,3 +185,26 @@ header: &#39;Tehtävä 2: Toka&#39;</code></pre>
 <p>Katso <a href="#shell1">1</a>, <a href="#shell2">2</a></p>
 """
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters tasks")
+
+    def test_set_counter_values(self):
+        docstr = """#-
+Kuva %%"k1"|c_fig%%
+%%("fig"|c_get +3)|c_set("fig")%%
+Kuva %%"k2"|c_fig%%
+"""
+        htmls_ex = """
+<p>Kuva <a id="c:k1"></a>1</p>
+<p>Kuva <a id="c:k2"></a>5</p>
+"""
+        self.doc_with_counters(docstr, htmls_ex, "AutoCounters tasks")
+
+    def test_autocounter_by_task_id(self):
+        docstr = """
+#- {#oma}
+Eka §n
+Toka §n
+"""
+        htmls_ex = """
+<p>Eka 1 Toka <a id="c:oma2"></a>2</p>
+"""
+        self.doc_with_counters(docstr, htmls_ex, "AutoCounters tasks")
