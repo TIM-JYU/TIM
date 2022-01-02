@@ -677,6 +677,24 @@ ${backTicks}
                                     ),
                             },
                             {
+                                name: "§\\",
+                                title: "Autonamed equation counter for LaTeX for for one line",
+                                func: () =>
+                                    this.editor!.surroundClicked("§\\", ""),
+                            },
+                            {
+                                name: "§n",
+                                title: "To be user as an autocounter",
+                                func: () =>
+                                    this.editor!.surroundClicked("§n", ""),
+                            },
+                            {
+                                name: "{§/§}",
+                                title: "Named counter",
+                                func: () =>
+                                    this.editor!.surroundClicked("{§", "§}"),
+                            },
+                            {
                                 name: "c_fig",
                                 title: "Figure counter",
                                 func: () =>
@@ -695,6 +713,15 @@ ${backTicks}
                                     ),
                             },
                             {
+                                name: "c_auto",
+                                title: "Auto named counters",
+                                func: () =>
+                                    this.editor!.surroundClicked(
+                                        '%%"',
+                                        '"|c_auto("")%%'
+                                    ),
+                            },
+                            {
                                 name: "ref",
                                 title: "Reference to counter",
                                 func: () =>
@@ -704,12 +731,12 @@ ${backTicks}
                                     ),
                             },
                             {
-                                name: "begin/end",
+                                name: "c_begin/c_end",
                                 title: "LaTeX begin align* / end with tag-counter and label",
                                 func: () =>
                                     this.editor!.surroundClicked(
                                         '%%"',
-                                        ' "| c_begin("align*")%%\nf\n%%""|c_end%%\n'
+                                        '"| c_begin("align*")%%\nf §\\\n%%""|c_end%%\n'
                                     ),
                             },
                             {
