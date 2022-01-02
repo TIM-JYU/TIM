@@ -165,7 +165,7 @@ input_format: rst
     def test_unsafe_not_allowed(self):
         self.assertEqual(
             """
-<p><span class="error">Syntax error in template: access to attribute '<strong>class</strong>' of 'str' object is unsafe.</span></p>
+<p><span class="error">Error in filters: access to attribute '<strong>class</strong>' of 'str' object is unsafe.</span></p>
         """.strip(),
             md_to_html("""%%''.__class__.__mro__%%""", macros={}),
         )
