@@ -57,7 +57,7 @@ class AutoCounters:
             6: 0,
         }
     )
-    pure_reset_formats = attr.Factory(
+    pure_reset_formats: list[str] = attr.Factory(
         lambda: ["{v}", "{v}", "{v}", "{v}", "{v}", "{v}", "{v}"]
     )
     counter_stack: list[str] = attr.Factory(list)
@@ -106,10 +106,12 @@ class AutoCounters:
         self.use_autonumbering: bool = self.macros.get("use_autonumbering", False)
         # TODO: check macros if there is counters_charmacros
         self.charmacros: dict[str, str] = {
-            "§n": "%%0|c_%%",
-            "§\\": "%%0|c_tag%%\\\\",
-            "{§": '%%"',
-            "§}": '"|c_%%',
+            "{§": r'%%"',
+            "\\§}": r'"|c_tag%%',
+            "§}": r'"|c_%%',
+            "§a": r"%%0|c_%%",
+            "§n": r"%%0|c_n%%",
+            "§\\": r"%%0|c_tag%%",
         }
 
     def do_char_macros(self, text: str) -> str:
@@ -131,7 +133,6 @@ class AutoCounters:
         """
         Set start of autonames
         :param base_name: base name for counters in this block
-        :param ctype: default type for counters in this block
         :return: emtpy string because used from filter
         """
         self.auto_name_base = base_name
@@ -204,6 +205,8 @@ class AutoCounters:
         if name:
             if not ctype:
                 ctype = self.auto_name_ctype
+            if not self.auto_name_base:
+                self.set_auto_name(name)
             return name, ctype, None
 
         if not ctype:
@@ -459,7 +462,7 @@ class AutoCounters:
         :param ctype: counter's type
         :return: counter as text with label where to jump
         """
-        if self.doing_latex_environment:
+        if self.doing_latex_environment or str(name)[-1] == "\\":
             return self.tag_counter(name, ctype)
         s, name, from_macros = self.create_new_counter(name, ctype)
         hyper_jmp = from_macros.get("h", "")
@@ -495,15 +498,16 @@ class AutoCounters:
         """
         return self.new_counter(name, "eq")
 
-    def tag_counter(self, name: TName, ctype: str = "eq") -> str:
+    def tag_counter(self, name: TName, ctype: str = "eq", lf: str = "\\\\") -> str:
         """
         For filter c_tag
         Counter inside LaTeX \tag{}
         :param name: counter's name
         :param ctype: type for the counter, default for eq
+        :param lf: what is coming to the end of counterline
         :return:  tag counter
         """
-        return f"\\tag{{{self.new_counter(name, ctype)}}}"
+        return f"\\tag{{{self.new_counter(name, ctype)}}}{lf}"
 
     @staticmethod
     def label_place_holder(n: int) -> str:
@@ -595,7 +599,7 @@ class AutoCounters:
         label_and_begin = self.make_latex_envoronment_begin(name, what, ctype)
         cnt = ""
         if name:
-            cnt = self.tag_counter(name, ctype)
+            cnt = self.tag_counter(name, ctype, "")
         return label_and_begin + cnt
 
     def begin_counter(

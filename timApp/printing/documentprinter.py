@@ -197,6 +197,15 @@ class DocumentPrinter:
 
         self._macros = pdoc_macros
 
+        # TODO: tries to change soft hyphens to LaTeX \-
+        #       but Pandoc removes the \???
+        """
+        if tformat == PrintFormat.LATEX:
+            charmacros = settings.get_charmacros() if settings else {}
+            charmacros = charmacros | {"&shy;": "\\-"}
+            if settings:
+                settings.set_charmacros(charmacros)
+        """
         # Remove paragraphs that are not to be printed and replace plugin pars,
         # that have a defined 'texprint' block in their yaml, with the 'texprint'-blocks content
         pars = self._doc_entry.document.get_paragraphs(include_preamble=True)

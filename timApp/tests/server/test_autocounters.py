@@ -1,21 +1,17 @@
 """A test for markdownconverter module."""
-import unittest
-
 import yaml
 
-import timApp.markdown.dumboclient
-from timApp.document.docparagraph import DocParagraph
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
 from timApp.markdown.autocounters import AutoCounters
 from timApp.markdown.markdownconverter import md_to_html, par_list_to_html_list
 from timApp.printing.documentprinter import DocumentPrinter
-from timApp.tests.db.timdbtest import TimDbTest, TEST_USER_1_ID
+from timApp.tests.db.timdbtest import TEST_USER_1_ID
+from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.user.user import User
-from tim_common.cs_sanitizer import tim_sanitize
 
 
-class AutoCountersTest(TimDbTest):
+class AutoCountersTest(TimRouteTest):
     def test_fig_counter(self):
         macros = {}
         counters = AutoCounters(macros)
@@ -77,13 +73,20 @@ class AutoCountersTest(TimDbTest):
         s = md_to_html(md, sanitize=True, macros=macros)
         self.assertEqual(html, s)
 
-    def doc_with_counters(self, docstr, htmls_ex, msg):
-        settinsgtr = """``` {settings=""}
+    def doc_with_counters(self, docstr, htmls_ex, msg, setstr=None):
+        self.login_test1()
+        settings = """``` {settings=""}
 auto_number_headings: 0
 ```
 """
-        str = settinsgtr + docstr
-        d = self.create_doc(initial_par=str)
+        if setstr:
+            settings = setstr
+        dstr = settings + docstr
+        d = self.create_doc(initial_par=dstr)
+
+        doc = d.document
+        doc.get_index(default_view_ctx)
+
         printer = DocumentPrinter(d, template_to_use=None, urlroot="")
         counters = printer.get_autocounters(
             UserContext.from_one_user(User.query.get(TEST_USER_1_ID))
@@ -92,8 +95,11 @@ auto_number_headings: 0
             f'``` {{settings="counters"}}\n{counters.get_counter_macros()}```\n'
         )
 
-        str = settinsgtr + new_counter_macro_values + docstr
-        d = self.create_doc(initial_par=str)
+        dstr = settings + new_counter_macro_values + docstr
+        d = self.create_doc(initial_par=dstr)
+        doc = d.document
+        doc.get_index(default_view_ctx)
+
         p = d.document.get_paragraphs()[2:]
         htmls = (
             par_list_to_html_list(
@@ -104,63 +110,99 @@ auto_number_headings: 0
         self.assertEqual(htmls_ex.strip("\n"), actual, msg=msg)
 
     def test_begin1_environment(self):
-        docstr = """#- 
+        docstr = r"""#- 
 %%"Pythagoras |py" | c_begin1%%
 a^2+b^2=c^2
 %%""|c_end%%
 #-
 Katso %%"py"|lref%%
 """
-        htmls_ex = """
-<p><a id="eq:py"></a><span class="math display">\\[\\begin{align*}\\tag{Pythagoras 1}
+        htmls_ex = r"""
+<p><a id="eq:py"></a><span class="math display">\[\begin{align*}\tag{Pythagoras 1}
 a^2+b^2=c^2
-\\end{align*}\\]</span></p>
+\end{align*}\]</span></p>
 <p>Katso <a href="#eq:py">(Pythagoras 1)</a></p>
 """
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters c_begin1")
 
     def test_begin_environment(self):
-        docstr = """#- 
+        docstr = r"""#- 
 %%"x"|c_begin%%
-a+1 §\\
-a+2 §\\
-a+3 {§a3§}\\\\
-a+4 §\\
+a+1 §\
+a+2 §\
+a+3 {§a3§}
+a+4 §\
 %%""|c_end%%
 #-
 Katso %%"x1"|ref%%, %%"x2"|ref%%, %%"a3"|ref%%
 """
-        htmls_ex = """
-<p><a id="eq:x"></a><span class="math display">\[\\begin{align*}
-a+1 \\tag{1}\\\\
-a+2 \\tag{2}\\\\
-a+3 \\tag{3}\\\\
-a+4 \\tag{4}\\\\
+        htmls_ex = r"""
+<p><a id="eq:x"></a><span class="math display">\[\begin{align*}
+a+1 \tag{1}\\
+a+2 \tag{2}\\
+a+3 \tag{3}\\
+a+4 \tag{4}\\
 \end{align*}\]</span></p>
 <p>Katso <a href="#eq:x">(1)</a>, <a href="#eq:x">(2)</a>, <a href="#eq:x">(3)</a></p>
 """
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters c_begin")
 
     def test_begin_no_base_name_environment(self):
-        docstr = """#- 
+        docstr = r"""#- 
 %%""|c_begin%%
-a+3 {§a3§}\\\\
-a+4 {§a4§}\\\\
+a+3 {§a3§}
+a+4 {§a4§}
 %%""|c_end%%
 #-
 Katso %%"a3"|ref%%, %%"a4"|ref%% 
 """
-        htmls_ex = """
-<p><a id="eq:a3"></a><a id="eq:a4"></a><span class="math display">\[\\begin{align*}
-a+3 \\tag{1}\\\\
-a+4 \\tag{2}\\\\
+        htmls_ex = r"""
+<p><a id="eq:a3"></a><a id="eq:a4"></a><span class="math display">\[\begin{align*}
+a+3 \tag{1}\\
+a+4 \tag{2}\\
 \end{align*}\]</span></p>
 <p>Katso <a href="#eq:a3">(1)</a>, <a href="#eq:a4">(2)</a></p>
 """
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters c_begin no basename")
 
+    def test_no_c_begin_environment(self):
+        docstr = r"""#- 
+\begin{align*}
+a+3 {§x1\§}
+a+4 §\
+\end{align*}
+#-
+Katso %%"x1"|pref%%, %%"x12"|pref%%
+"""
+        htmls_ex = r"""
+<p><span class="math display">\[\begin{align*}
+a+3 \tag{1}\\
+a+4 \tag{2}\\
+\end{align*}\]</span></p>
+<p>Katso (1), (2)</p>
+"""
+        self.doc_with_counters(docstr, htmls_ex, "AutoCounters no c_begin")
+
+    def test_no_c_begin_environment_no_man_name(self):
+        docstr = r"""#- {#kaava} 
+\begin{align*}
+a+3 §\
+a+4 §\
+\end{align*}
+#-
+Katso %%"kaava"|pref%%, %%"kaava2"|pref%%
+"""
+        htmls_ex = r"""
+<p><span class="math display">\[\begin{align*}
+a+3 \tag{1}\\
+a+4 \tag{2}\\
+\end{align*}\]</span></p>
+<p>Katso (1), (2)</p>
+"""
+        self.doc_with_counters(docstr, htmls_ex, "AutoCounters no c_begin, no man")
+
     def test_tasks(self):
-        docstr = """ 
+        docstr = r""" 
 ``` {plugin="csPlugin" #shell1}
 type: shell
 path: user
@@ -175,7 +217,7 @@ header: 'Tehtävä §n: Toka'
 #-
 Katso %%"shell1"|ref%%, %%"shell2"|ref%% 
 """
-        htmls_ex = """
+        htmls_ex = r"""
 <pre><code>type: shell
 path: user
 header: &#39;Tehtävä 1: Eka&#39;</code></pre>
@@ -187,24 +229,94 @@ header: &#39;Tehtävä 2: Toka&#39;</code></pre>
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters tasks")
 
     def test_set_counter_values(self):
-        docstr = """#-
+        docstr = r"""#-
 Kuva %%"k1"|c_fig%%
 %%("fig"|c_get +3)|c_set("fig")%%
 Kuva %%"k2"|c_fig%%
 """
-        htmls_ex = """
+        htmls_ex = r"""
 <p>Kuva <a id="c:k1"></a>1</p>
 <p>Kuva <a id="c:k2"></a>5</p>
 """
-        self.doc_with_counters(docstr, htmls_ex, "AutoCounters tasks")
+        self.doc_with_counters(docstr, htmls_ex, "AutoCounters set values")
 
     def test_autocounter_by_task_id(self):
-        docstr = """
+        docstr = r"""
+#- {#oma}
+Eka §a
+Toka §a
+"""
+        htmls_ex = r"""
+<p>Eka 1 Toka <a id="c:oma2"></a>2</p>
+"""
+        self.doc_with_counters(docstr, htmls_ex, "AutoCounters by taskid")
+
+    def test_autocounter_by_task_id_no_jump(self):
+        docstr = r"""
 #- {#oma}
 Eka §n
 Toka §n
 """
-        htmls_ex = """
-<p>Eka 1 Toka <a id="c:oma2"></a>2</p>
+        htmls_ex = r"""
+<p>Eka 1 Toka 2</p>
 """
-        self.doc_with_counters(docstr, htmls_ex, "AutoCounters tasks")
+        self.doc_with_counters(docstr, htmls_ex, "AutoCounters by tasks id none jump")
+
+    def test_autocounter_with_section_numbers(self):
+        setstr = r"""``` {settings=""}
+auto_number_headings: 2
+macros: 
+  autocounters:
+    all:
+      reset: 2  
+    eq:
+      ref: "formula ({p})"
+      long: "formula ({p})"
+```
+"""
+        docstr = r"""#-
+# Formulas 
+#-        
+## First 
+#-        
+%%"x"| c_begin("align*")%%
+a+1 §\
+a+2 {§|b|, nice§}
+%%""|c_end%%
+#-
+## Continue {#cont}
+#-
+%%"y"| c_begin("align*")%%
+a+1 §\
+a+2 §\
+%%""|c_end%%
+#-
+Look %%"x1"|lref%%,\
+%%"b"|ref%%,\
+%%"b"|lref%% and\
+%%"y2"|ref%%.
+
+Also look par %%"cont"|ref%% that is %%"cont"|lref%%.
+"""
+        htmls_ex = r"""
+<h1 id="formulas">Formulas</h1>
+<h2 id="first">First</h2>
+<p><a id="eq:x"></a><span class="math display">\[\begin{align*}
+a+1 \tag{1.1}\\
+a+2 \tag{1.2, nice}\\
+\end{align*}\]</span></p>
+
+<h2 id="continue">Continue</h2>
+<p><a id="eq:y"></a><span class="math display">\[\begin{align*}
+a+1 \tag{2.3}\\
+a+2 \tag{2.4}\\
+\end{align*}\]</span></p>
+<p>Look <a href="#eq:x">formula (1.1)</a>,<br />
+<a href="#eq:x">formula (1.2)</a>,<br />
+<a href="#eq:x">formula (1.2, nice)</a> and<br />
+<a href="#eq:y">formula (2.4)</a>.</p>
+<p>Also look par <a href="#cont">2</a> that is <a href="#cont">2. Continue</a>.</p>
+"""
+        self.doc_with_counters(
+            docstr, htmls_ex, "AutoCounters with section numbers", setstr
+        )

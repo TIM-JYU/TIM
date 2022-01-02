@@ -650,7 +650,7 @@ ${backTicks}
                         title: "Numbering",
                         items: [
                             {
-                                name: "c_",
+                                name: "c_ - general counter",
                                 title: "General counter",
                                 func: () =>
                                     this.editor!.surroundClicked(
@@ -659,7 +659,7 @@ ${backTicks}
                                     ),
                             },
                             {
-                                name: "c_eq",
+                                name: "c_eq - equation counter",
                                 title: "Equation counter for LaTeX",
                                 func: () =>
                                     this.editor!.surroundClicked(
@@ -668,7 +668,7 @@ ${backTicks}
                                     ),
                             },
                             {
-                                name: "c_tag",
+                                name: "c_tag - tag counter for LaTeX",
                                 title: "Equation counter for LaTeX for for one line",
                                 func: () =>
                                     this.editor!.surroundClicked(
@@ -677,25 +677,31 @@ ${backTicks}
                                     ),
                             },
                             {
-                                name: "§\\",
-                                title: "Autonamed equation counter for LaTeX for for one line",
+                                name: "§\\ - autonamed tag-counter for LaTeX",
+                                title: "Autonamed equation counter for LaTeX for end of line (tag)",
                                 func: () =>
                                     this.editor!.surroundClicked("§\\", ""),
                             },
                             {
-                                name: "§n",
-                                title: "To be user as an autocounter",
+                                name: "§a - autonamed, label",
+                                title: "To be used as an autonamed counter with label",
+                                func: () =>
+                                    this.editor!.surroundClicked("§a", ""),
+                            },
+                            {
+                                name: "§n - autonamed, no label",
+                                title: "To be used as an autonamed counter without label",
                                 func: () =>
                                     this.editor!.surroundClicked("§n", ""),
                             },
                             {
-                                name: "{§/§}",
+                                name: "{§/§} - named counter",
                                 title: "Named counter",
                                 func: () =>
                                     this.editor!.surroundClicked("{§", "§}"),
                             },
                             {
-                                name: "c_fig",
+                                name: "c_fig - figure counter",
                                 title: "Figure counter",
                                 func: () =>
                                     this.editor!.surroundClicked(
@@ -704,7 +710,7 @@ ${backTicks}
                                     ),
                             },
                             {
-                                name: "c_task",
+                                name: "c_task - task counter",
                                 title: "Task counter",
                                 func: () =>
                                     this.editor!.surroundClicked(
@@ -713,16 +719,7 @@ ${backTicks}
                                     ),
                             },
                             {
-                                name: "c_auto",
-                                title: "Auto named counters",
-                                func: () =>
-                                    this.editor!.surroundClicked(
-                                        '%%"',
-                                        '"|c_auto("")%%'
-                                    ),
-                            },
-                            {
-                                name: "ref",
+                                name: "ref - ref to counter",
                                 title: "Reference to counter",
                                 func: () =>
                                     this.editor!.surroundClicked(
@@ -731,7 +728,16 @@ ${backTicks}
                                     ),
                             },
                             {
-                                name: "c_begin/c_end",
+                                name: "c_begin1/c_end - LaTeX environment, on formula",
+                                title: "LaTeX begin equation* / end with tag-counter and label",
+                                func: () =>
+                                    this.editor!.surroundClicked(
+                                        '%%"',
+                                        '"| c_begin1("equation*")%%\nf\n%%""|c_end%%\n'
+                                    ),
+                            },
+                            {
+                                name: "c_begin/c_end - LaTeX environment",
                                 title: "LaTeX begin align* / end with tag-counter and label",
                                 func: () =>
                                     this.editor!.surroundClicked(
@@ -740,7 +746,16 @@ ${backTicks}
                                     ),
                             },
                             {
-                                name: "labels",
+                                name: "c_auto - start autonaming",
+                                title: "begin autonaming, give basename and counter type name",
+                                func: () =>
+                                    this.editor!.surroundClicked(
+                                        '%%"',
+                                        '"| c_auto("fig")\n'
+                                    ),
+                            },
+                            {
+                                name: "labels - list counternams used as hypelinks",
                                 title: "List of counter names that can be hyperlink targets",
                                 func: () =>
                                     this.editor!.surroundClicked(
@@ -947,6 +962,31 @@ ${backTicks}
               - data: TEXT THAT COMES FROM SUBMENU
                 text: VISIBLE TEXT FOR SUBMENU (optional)
                 expl: EXPLANATION FOR ITEM (optional)
+`
+                            ),
+                        name: "Editor templates",
+                    },
+                    {
+                        title: "Autunumber settings",
+                        func: () =>
+                            this.editor!.insertTemplate(
+                                `macros: 
+  autocounters:
+    all:
+      reset: 2  
+    task:
+      reset: 2
+      show: "Tehtävä {p}"
+      ref: "tehtävä {p}"
+    fig:
+      reset: 2
+      show: "Kuva {p}"
+      ref: "kuva {p}"
+      prexif: "fig:"
+    eq:
+      reset: 2
+      ref: "kaava ({p})"
+      long: "kaava ({p})"
 `
                             ),
                         name: "Editor templates",

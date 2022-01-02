@@ -400,6 +400,9 @@ class DocSettings:
     def get_charmacros(self, default=None):
         return self.__dict.get(self.charmacros_key, default)
 
+    def set_charmacros(self, charmacros: dict):
+        self.__dict[self.charmacros_key] = charmacros
+
     def preamble(self, default=DEFAULT_PREAMBLE_DOC):
         return self.__dict.get(self.preamble_key, default)
 
