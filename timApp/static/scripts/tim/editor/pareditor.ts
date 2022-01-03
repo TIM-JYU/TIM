@@ -967,7 +967,7 @@ ${backTicks}
                         name: "Editor templates",
                     },
                     {
-                        title: "Autunumber settings",
+                        title: "Autunumber settings, if macros already exits, remove macros-word",
                         func: () =>
                             this.editor!.insertTemplate(
                                 `macros: 
@@ -989,7 +989,7 @@ ${backTicks}
       long: "kaava ({p})"
 `
                             ),
-                        name: "Editor templates",
+                        name: "Autonumber settings",
                     },
                 ],
                 name: "Settings",
