@@ -967,7 +967,7 @@ ${backTicks}
                         name: "Editor templates",
                     },
                     {
-                        title: "Autunumber settings, if macros already exits, remove macros-word",
+                        title: "Autonumber settings, if macros already exits, remove macros-word",
                         func: () =>
                             this.editor!.insertTemplate(
                                 `macros: 
