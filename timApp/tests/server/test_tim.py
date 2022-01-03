@@ -275,7 +275,7 @@ class TimTest(TimRouteTest):
         ).document
         tree = self.get(f"/view/{doc.doc_id}", as_tree=True)
         e = tree.cssselect(".parContent > p > span.error")[0]
-        self.assertIn("Syntax error in template:", e.text)
+        self.assertIn("Syntax error in macro template:", e.text)
 
     def test_windows_eol(self):
         """Windows-style EOLs should work with Dumbo."""

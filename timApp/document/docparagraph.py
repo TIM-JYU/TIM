@@ -433,7 +433,10 @@ class DocParagraph:
             return md
         settings = self.doc.get_settings()
         macros = macroinfo.get_macros()
-
+        task_id = self.attrs.get("taskId", None)
+        counters = macroinfo.jinja_env.counters
+        if counters:
+            counters.task_id = task_id
         try:
             if self.insert_rnds(
                 md + macros.get("username", "")

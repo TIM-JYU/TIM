@@ -14,11 +14,7 @@ Class for autocounters to be used as Jinja2 filters
 LABEL_PRFIX = "c:"
 
 AUTOCOUNTERS_FMT_DEF: dict[str, dict[str, Union[int, str]]] = {
-    "eq": {
-        "ref": "({p})",
-        "long": "({p})",
-        "text": "({p})",
-    },
+    "eq": {"ref": "({p})", "long": "({p})", "text": "({p})", "prefix": "eq:"},
     "all": {
         "reset": -1,
         "pure": "{v}",
@@ -26,6 +22,7 @@ AUTOCOUNTERS_FMT_DEF: dict[str, dict[str, Union[int, str]]] = {
         "ref": "{p}",
         "long": "{p}",
         "text": "{p}",
+        "prefix": "c:",
     },
 }
 
@@ -34,6 +31,7 @@ TAttrib = Union[str, int]
 TCounter = dict[str, TAttrib]
 TMacroCounter = dict[str, TAttrib]
 TMacroCounters = dict[str, TMacroCounter]
+TAutoNames = dict[str, str]
 
 
 @dataclass
@@ -59,11 +57,13 @@ class AutoCounters:
             6: 0,
         }
     )
-    pure_reset_formats = attr.Factory(
+    pure_reset_formats: list[str] = attr.Factory(
         lambda: ["{v}", "{v}", "{v}", "{v}", "{v}", "{v}", "{v}"]
     )
     counter_stack: list[str] = attr.Factory(list)
-    c: TMacroCounters = attr.Factory(dict)
+    autocnts: TMacroCounters = attr.Factory(dict)
+    autonames: TAutoNames = attr.Factory(dict)
+    new_autonames: TAutoNames = attr.Factory(dict)
     tex: bool = False
     auto_number_headings: int = 0
 
@@ -71,14 +71,16 @@ class AutoCounters:
     auto_name_base: Optional[str] = None
     auto_name_counter: int = 0
     auto_name_ctype: str = "eq"
-    need_auto_name_reset: bool = True
     auto_name_plugin: bool = False
 
+    doing_latex_environment = False
+
     # counters for label cache to be replaced after block is ready
+    # needed if in LaTeX environment no base name is given
+    auto_labels: bool = False
     label_cache: list[list[str]] = attr.Factory(list)
-    label_count = 0  # total counter for cached labels (sum of in label_cache)
+    need_label_update = False  # total counter for cached labels (sum of in label_cache)
     current_labels: list[str] = attr.Factory(list)
-    auto_labels = False
 
     def __init__(self, macros: Optional[dict]):
         """
@@ -92,10 +94,48 @@ class AutoCounters:
         self.task_id: Optional[str] = None
         if macros:
             self.macros = macros
-            self.c = macros.get("c", {})
+            self.autocnts = macros.get("autocnts", {})
+            if self.autocnts is None:
+                self.autocnts = {}
+            self.autonames = macros.get("autonames", {})
             self.tex = macros.get("tex", False)
         else:
             self.macros = {}
+
+        self.use_autonumbering: bool = self.macros.get("use_autonumbering", False)
+        # TODO: check macros if there is counters_charmacros
+        self.charmacros: dict[str, str] = {
+            "{§": r'%%"',
+            "\\§}": r'"|c_tag%%',
+            "§}": r'"|c_%%',
+            "§a": r"%%0|c_%%",
+            "§n": r"%%0|c_n%%",
+            "§\\": r"%%0|c_tag%%",
+        }
+
+    def do_char_macros(self, text: str) -> str:
+        """
+        Do counters charmacros
+        :param text: what to convert
+        :return: converted text
+        """
+        if not self.use_autonumbering:
+            return text
+        i = text.find("§")  # TODO: use attribute that can be changed
+        if i < 0:
+            return text
+        for cm_key, cm_value in self.charmacros.items():
+            text = text.replace(cm_key, cm_value)
+        return text
+
+    def set_auto_name(self, base_name: str) -> str:
+        """
+        Set start of autonames
+        :param base_name: base name for counters in this block
+        :return: emtpy string because used from filter
+        """
+        self.auto_name_base = base_name
+        return ""
 
     def set_auto_names(self, base_name: Optional[TName], ctype: str = "eq") -> str:
         """
@@ -109,8 +149,6 @@ class AutoCounters:
         self.auto_name_base = base_name
         self.auto_name_ctype = ctype
         self.auto_name_counter = 0
-        if base_name:
-            self.need_auto_name_reset = False
         return ""
 
     def start_of_block(self) -> None:
@@ -121,18 +159,31 @@ class AutoCounters:
         Also reset auto names before first use
         :return: None
         """
-        self.label_count = 0
-        self.need_auto_name_reset = True
-        self.auto_labels = False
+        self.auto_labels: bool = False
+        self.set_auto_names(None)
+        self.doing_latex_environment = False
+        self.reset_label_cache()
 
     def reset_label_cache(self) -> None:
         """
         Reset label cache so that new label list's can start
         :return: None
         """
-        self.label_count = 0
+        self.need_label_update = False
         self.label_cache = []
         self.current_labels = []
+
+    def get_base_name(self, name: str) -> str:
+        """
+        Returns basename that is udes for name
+        :param name: name to use
+        :return: basename
+        """
+        if self.auto_name_base:
+            return self.auto_name_base
+        if self.task_id:
+            return self.task_id
+        return name
 
     def get_auto_name(self, name: str, ctype: str) -> tuple[str, str, Optional[str]]:
         """
@@ -141,13 +192,13 @@ class AutoCounters:
         :param ctype: if empty give ctype from auto name
         :return: name, ctype, error
         """
-        if self.need_auto_name_reset:
-            self.set_auto_names(None)
         self.auto_name_plugin: bool = False
         self.auto_name_counter += 1
         if name:
             if not ctype:
                 ctype = self.auto_name_ctype
+            if not self.auto_name_base:
+                self.set_auto_name(name)
             return name, ctype, None
 
         if not ctype:
@@ -159,7 +210,9 @@ class AutoCounters:
             if self.task_id is None:
                 return "", "", self.error("Missing base name, use c_auto")
             self.auto_name_plugin: bool = True
-            return self.task_id, ctype, None
+            sname = self.task_id
+            self.set_auto_name(sname)
+            return sname, ctype, None
         return self.auto_name_base + str(self.auto_name_counter), ctype, None
 
     def set_auto_number_headings(self, n: int) -> None:
@@ -182,13 +235,14 @@ class AutoCounters:
             pfmt += "{v}"
             self.pure_reset_formats.append(pfmt)
 
-    @staticmethod
-    def error(s: str) -> str:
+    def error(self, s: str) -> str:
         """
         return string as md red
         :param s: string to show as red
         :return: s surrounded be []{.red}
         """
+        if self.doing_latex_environment:
+            return s.replace("_", "\\_")
         return f"[{s}]{{.red}}"
 
     @staticmethod
@@ -212,7 +266,7 @@ class AutoCounters:
 
     def get_show_params(
         self, name: TName, showtype: str = "r"
-    ) -> tuple[str, str, dict]:
+    ) -> tuple[str, str, TMacroCounter]:
         """
         return  string name, text to show for chosen showtype and macros for sname
         :param name: name to separate t1, name nand t2
@@ -233,7 +287,7 @@ class AutoCounters:
             if text2 and not showtype:
                 showtype = "t"
 
-        from_macros = self.c.get(
+        from_macros = self.autocnts.get(
             sname,
             {"v": sname, "s": sname, "r": sname, "p": sname, "l": sname, "t": sname},
         )
@@ -321,17 +375,19 @@ class AutoCounters:
             return counter
         return None
 
-    def create_new_counter(self, name: TName, ctype: str) -> tuple[str, str]:
+    def create_new_counter(
+        self, name: TName, ctype: str
+    ) -> tuple[str, str, TMacroCounter]:
         """
         Create new counter as text that has name and ctype
         :param name: counters name, can include pre text t1 and post text t2
         :param ctype: counters type
         :return: counter as text and name
         """
-        text1, sname, text2 = self.get_texts_and_name(name)
-        sname, ctype, error = self.get_auto_name(sname, ctype)
+        text1, orig_name, text2 = self.get_texts_and_name(name)
+        sname, ctype, error = self.get_auto_name(orig_name, ctype)
         if error:
-            return error, sname
+            return error, sname, {}
         if self.renumbering:
             counters_type: TOneCounterType = self.get_counter_type(ctype)
             use_counters_type = counters_type
@@ -344,7 +400,7 @@ class AutoCounters:
             use_counters_type.count += 1
             value: int = use_counters_type.count
             if counter:  # shold not be
-                counter["s"] = self.error("Dublicate " + sname)
+                counter["s"] = self.error("Duplicate " + sname)
             else:
                 pure = self.get_type_text(ctype, sname, value, "pure", str(value))
                 show = (
@@ -354,8 +410,12 @@ class AutoCounters:
                 )
                 ref = self.get_type_text(ctype, sname, value, "ref", pure)
                 text = self.get_type_text(ctype, sname, value, "text", pure)
-                long = self.get_type_text(ctype, sname, value, "long", pure)
-                prefix = LABEL_PRFIX
+                long = self.get_type_text(ctype, sname, value, "long", show)
+                prefix = self.get_type_text(ctype, sname, value, "prefix", LABEL_PRFIX)
+                hname = sname
+                if self.doing_latex_environment and not self.auto_labels:
+                    # in case of latex env we use the base name
+                    hname = self.get_base_name(orig_name)
                 if self.auto_name_plugin:
                     prefix = ""
                 counter = {
@@ -365,18 +425,17 @@ class AutoCounters:
                     "r": ref,  # normal refence format
                     "t": text,  # with text
                     "l": long,  # long format, mostly for section header
-                    "h": prefix + sname.replace(" ", "_"),  # Jump address
+                    "h": prefix + hname.replace(" ", "_"),  # Jump address
                     "n": sname,  # name of counter
                     "y": ctype,
                 }
                 counters_type.counters[sname] = counter
-        from_macros = self.c.get(sname, {"s": "?" + str(sname) + "?"})
+        from_macros = self.autocnts.get(sname, {"s": self.error(f"?{sname}?")})
         if self.auto_labels:
-            if self.label_count == 0:
-                self.reset_label_cache()
-            self.label_count += 1
-            self.current_labels.append(sname)
-        return str(from_macros["s"]), sname
+            anchor = from_macros.get("h", "")
+            if anchor:
+                self.current_labels.append(sname)
+        return str(from_macros["s"]), sname, from_macros
 
     def new_counter(self, name: TName, ctype: str = "") -> str:
         """
@@ -385,7 +444,7 @@ class AutoCounters:
         :param ctype: counter's type
         :return: counter as text
         """
-        s, _ = self.create_new_counter(name, ctype)
+        s, _, _ = self.create_new_counter(name, ctype)
         return s
 
     def new_label_counter(self, name: TName, ctype: str = "") -> str:
@@ -395,25 +454,32 @@ class AutoCounters:
         :param ctype: counter's type
         :return: counter as text with label where to jump
         """
-        s, name = self.create_new_counter(name, ctype)
+        if self.doing_latex_environment or str(name)[-1] == "\\":
+            return self.tag_counter(name, ctype)
+        s, name, from_macros = self.create_new_counter(name, ctype)
+        hyper_jmp = from_macros.get("h", "")
         if self.auto_name_plugin:
             return s
         if self.tex:
-            return " \\label{" + LABEL_PRFIX + name + "}" + s
-        return '<a id="' + LABEL_PRFIX + name + '"></a>' + s
+            return f" \\label{{{hyper_jmp}}}{s}"
+        return f'<a id="{hyper_jmp}"></a>{s}'
 
     def labels(self, names: list) -> str:
         """
         For filter labels
-        Creates a a-tage of LaTeX label list from counter names.
+        Creates a a-tag or LaTeX label list from counter names.
         :param names: list of counter names that are converted to labels
         :return: string to output either a-tag's or LaTeX labels
         """
         result = ""
         for name in names:
+            hname = self.autocnts.get(name, {})
+            label = hname.get("h", None)
+            if label is None:
+                continue
             if self.tex:
-                result += " \\label{" + LABEL_PRFIX + name + "}"
-            result += '<a id="' + LABEL_PRFIX + name.replace(" ", "_") + '"></a>'
+                result += f" \\label{{{label}}}"
+            result += f'<a id="{label}"></a>'
         return result
 
     def eq_counter(self, name: TName) -> str:
@@ -424,27 +490,16 @@ class AutoCounters:
         """
         return self.new_counter(name, "eq")
 
-    def tag_counter(self, name: TName, ctype: str = "eq") -> str:
+    def tag_counter(self, name: TName, ctype: str = "eq", lf: str = "\\\\") -> str:
         """
         For filter c_tag
         Counter inside LaTeX \tag{}
         :param name: counter's name
         :param ctype: type for the counter, default for eq
+        :param lf: what is coming to the end of counterline
         :return:  tag counter
         """
-        return f"\\tag{{{self.new_counter(name, ctype)}}}"
-
-    def reset_current_labels(self) -> None:
-        """
-        Move current labels to cached labels
-        :return: None
-        """
-        if len(self.current_labels):
-            current_labels = self.current_labels
-            if self.label_count == 0:
-                self.reset_label_cache()
-            self.label_cache.append(current_labels)
-            self.current_labels = []
+        return f"\\tag{{{self.new_counter(name, ctype)}}}{lf}"
 
     @staticmethod
     def label_place_holder(n: int) -> str:
@@ -462,7 +517,6 @@ class AutoCounters:
         :param text: block text where to replace labels
         :return: text with labels inserted
         """
-        self.reset_current_labels()
         for n, lbls in enumerate(self.label_cache):
             # optimize not using replace
             ph = self.label_place_holder(n)
@@ -470,6 +524,57 @@ class AutoCounters:
         self.reset_label_cache()
         self.auto_labels = False
         return text
+
+    def get_label_placeholder(self) -> str:
+        """
+        returns next labels placeholder if there is labels
+        that can not be anchored to begining of the LaTeX environment
+        :return: placeholder for label that is replaced by
+                 real labes after whole block is ready
+        """
+        self.need_label_update = True
+        self.auto_labels = True
+        self.current_labels = []
+        self.label_cache.append(self.current_labels)
+        return self.label_place_holder(len(self.label_cache) - 1)
+
+    def make_latex_envoronment_begin(
+        self, name: TName, what: str = "align*", ctype: str = "eq"
+    ) -> str:
+        """
+        Crete LaTeX environment begin with label before
+        :param name: base name for equations
+        :param what: what LaTeX environment to start
+        :param ctype: type for counters
+        :return:
+        """
+        self.doing_latex_environment = True
+        t1, sname, t2 = self.get_texts_and_name(name)
+        if not sname:
+            self.auto_name_ctype = ctype
+        else:
+            self.set_auto_names(sname, ctype)
+        self.counter_stack.append(what)
+        if self.renumbering:
+            if sname:
+                prefix = self.get_type_text(ctype, sname, 0, "prefix", LABEL_PRFIX)
+                anchor = prefix + sname
+                self.new_autonames[sname] = anchor
+            else:
+                self.auto_labels = True
+            return ""
+        anchor = self.autonames.get(sname, "")
+        if self.tex:
+            if anchor:
+                label = f" \\label{{{anchor}}}"
+            else:
+                label = self.get_label_placeholder()
+            return f"\\begin{{{what}}}{label}"
+        if anchor:
+            label = f'<a id="{anchor}"></a>'
+        else:
+            label = self.get_label_placeholder()
+        return f"{label}\\begin{{{what}}}"
 
     def begin1_counter(
         self, name: TName, what: str = "align*", ctype: str = "eq"
@@ -483,20 +588,11 @@ class AutoCounters:
         :param ctype: what is default type for counters
         :return: label, LaTeX begin commands and one counter
         """
-        self.set_auto_names(name, ctype)
-        self.counter_stack.append(what)
-        self.auto_labels = False
+        label_and_begin = self.make_latex_envoronment_begin(name, what, ctype)
         cnt = ""
         if name:
-            cnt = self.tag_counter(name, ctype)
-        label = ""
-        if self.tex:
-            if name:
-                label = f" \\label{{{LABEL_PRFIX}{name}}}"
-            return f"\\begin{{{what}}}{label}{cnt}"
-        if name:
-            label = f'<a id="{LABEL_PRFIX}{name}"></a>'
-        return f"{label}\\begin{{{what}}}{cnt}"
+            cnt = self.tag_counter(name, ctype, "")
+        return label_and_begin + cnt
 
     def begin_counter(
         self, name: TName, what: str = "align*", ctype: str = "eq"
@@ -509,11 +605,7 @@ class AutoCounters:
         :param ctype: what is default type for counters
         :return: label's placeholder and LaTeX begin commands
         """
-        self.set_auto_names(name, ctype)
-        self.counter_stack.append(what)
-        self.auto_labels = True
-        label = self.label_place_holder(len(self.label_cache))
-        return label + "\\begin{" + what + "}"
+        return self.make_latex_envoronment_begin(name, what, ctype)
 
     def end_counter(self, _dummy: str = "") -> str:
         """
@@ -523,7 +615,7 @@ class AutoCounters:
         :param _dummy: this filter has no parameters
         :return: LaTeX environment end command
         """
-        self.reset_current_labels()
+        self.doing_latex_environment = False
         self.auto_labels = False
         if len(self.counter_stack) == 0:
             return ""
@@ -548,22 +640,28 @@ class AutoCounters:
         :param _dummy:  if used as filter
         :return: counter values as settigs macro
         """
-        result = "  use_autonumbering: true\n"
-        result += "  c:\n"
+        result = """
+macros:        
+  use_autonumbering: true
+  autocnts:
+"""
         for ctype in self.counters:
             counter_type = self.counters[ctype]
             for name in counter_type.counters:
                 counter = counter_type.counters[name]
                 jso = json.dumps(counter)
                 result += "    " + name + ": " + jso + "\n"
+        result += "  autonames:"
+        jso = json.dumps(self.new_autonames)
+        result += "   " + jso + "\n"
         return result
 
-    def set_counter(self, ctype: str, value: int) -> str:
+    def set_counter(self, value: int, ctype: str) -> str:
         """
         For filter c_set
         Set's the type counter value
-        :param ctype: for whta type o f counters
         :param value: new value
+        :param ctype: for what type of counters
         :return: ""
         """
         counter_type = self.counters.get(ctype)
@@ -571,6 +669,18 @@ class AutoCounters:
             return ""
         counter_type.count = value
         return ""
+
+    def get_counter_value(self, ctype: str) -> int:
+        """
+        For filter c_get
+        Get's the value of counter while renumbering
+        :param ctype: for what type of counters
+        :return: 0 in view, but value of counter in renumbering
+        """
+        counter_type = self.counters.get(ctype)
+        if not counter_type:
+            return 0
+        return counter_type.count
 
     def set_renumbering(self, value: bool) -> None:
         """
@@ -580,6 +690,7 @@ class AutoCounters:
         """
         self.renumbering = value
         self.macros["use_autonumbering"] = value
+        self.use_autonumbering = value
 
     def get_type_text(
         self, ctype: str, name: str, value: Union[int, str], showtype: str, pure: str
@@ -672,7 +783,7 @@ class AutoCounters:
         :param env: to what environment to add values
         :return: None
         """
-        if self.macros and self.macros.get("use_autonumbering"):
+        if self.macros and self.use_autonumbering:
             env.filters["c_auto"] = self.set_auto_names
             env.filters["lref"] = self.show_lref_value
             env.filters["ref"] = self.show_ref_value
@@ -690,6 +801,13 @@ class AutoCounters:
             env.filters["c_ex"] = self.ex_counter
             env.filters["c_task"] = self.task_counter
             env.filters["c_set"] = self.set_counter
+            env.filters["c_get"] = self.get_counter_value
+
+
+def check_autonumber_error(m: str) -> str | None:
+    if m.find("ref") >= 0 or m.find("labels") >= 0 or m.find("c_") >= 0:
+        return f"{m}: Run Refresh numbering under Cogwheel first!"
+    return None
 
 
 class TimSandboxedEnvironment(SandboxedEnvironment):

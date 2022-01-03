@@ -419,7 +419,7 @@ def get_numbering(doc_path: str) -> Response:
 
     settings_par, counters_par = get_setting_and_counters_par(doc_entry)
     if not settings_par:
-        raise NotExist("Add settings par first")
+        raise NotExist("Add settings par first: Press Edit settings under Cogwheel")
 
     printer = DocumentPrinter(doc_entry, template_to_use=None, urlroot="")
 
@@ -428,7 +428,7 @@ def get_numbering(doc_path: str) -> Response:
     except PrintingError as err:
         raise PrintingError(str(err))
 
-    new_counter_macro_values = f"```\nmacros:\n{counters.get_counter_macros()}```"
+    new_counter_macro_values = f"```\n{counters.get_counter_macros()}```"
 
     if counters_par:
         doc_entry.document.modify_paragraph(counters_par.id, new_counter_macro_values)
