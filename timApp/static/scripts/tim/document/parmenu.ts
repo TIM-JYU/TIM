@@ -55,13 +55,18 @@ export class ParmenuHandler {
 
                 const target = $(e.target) as JQuery;
                 const par = tryCreateParContextOrHelp($this.parents(".par")[0]);
-                if (!par || par.isHelp || !par.isActionable()) {
+                if (!par || par.isHelp) {
                     return;
                 }
-                const parOffset = par.offset() ?? getEmptyCoords();
-                const badgeY = e.pageY - parOffset.top;
-                this.viewctrl.notesHandler.updateNoteBadge(par, badgeY);
-
+                const editMenuLeft = this.viewctrl.editMenuOnLeft;
+                if ((editMenuLeft && !par.preamble) || !editMenuLeft) {
+                    const parOffset = par.offset() ?? getEmptyCoords();
+                    const badgeY = e.pageY - parOffset.top;
+                    this.viewctrl.notesHandler.updateNoteBadge(par, badgeY);
+                }
+                if (!par.isActionable()) {
+                    return;
+                }
                 // Don't show paragraph menu on these specific tags or classes
                 if (
                     checkIfIgnored(

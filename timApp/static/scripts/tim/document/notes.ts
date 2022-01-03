@@ -333,7 +333,7 @@ export class NotesHandler {
         ) {
             return;
         }
-        if (!par.isActionable()) {
+        if (par.isInPreview()) {
             return;
         }
         markParRead(par, ReadingType.ClickPar);
