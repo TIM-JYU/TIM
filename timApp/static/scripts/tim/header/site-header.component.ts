@@ -19,8 +19,8 @@ import * as t from "io-ts";
                i18n-title>
                 <span>{{activeView}}</span>
                 <i class="glyphicon"
-                   [class.glyphicon-triangle-bottom]="displayViewHeader"
-                   [class.glyphicon-triangle-top]="!displayViewHeader"></i>
+                   [class.glyphicon-triangle-bottom]="!displayViewHeader"
+                   [class.glyphicon-triangle-top]="displayViewHeader"></i>
             </a>
             <tim-logo *ngIf="hide.links && !hide.logo"></tim-logo>
             <tim-login-menu *ngIf="!hide.login"></tim-login-menu>
