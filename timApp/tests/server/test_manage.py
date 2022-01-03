@@ -67,10 +67,18 @@ class ManageTest(TimRouteTest):
         self.login_test2()
         d3 = self.create_doc()
         new_alias = f"{f.path}/z/y"
-        self.json_put(f"/alias/{d3.id}/{new_alias}", expect_status=403)
+        self.json_put(
+            f"/alias/{d3.id}/{new_alias}",
+            expect_status=403,
+            expect_content="You cannot create documents in this folder.",
+        )
         self.current_user.grant_access(f, AccessType.view)
         db.session.commit()
-        self.json_put(f"/alias/{d3.id}/{new_alias}", expect_status=403)
+        self.json_put(
+            f"/alias/{d3.id}/{new_alias}",
+            expect_status=403,
+            expect_content="You cannot create documents in this folder.",
+        )
         self.current_user.grant_access(f, AccessType.edit)
         db.session.commit()
         self.json_put(f"/alias/{d3.id}/{new_alias}")
@@ -80,7 +88,7 @@ class ManageTest(TimRouteTest):
             f"/alias/{new_alias}",
             {"new_name": new_alias_2},
             expect_status=403,
-            expect_content="You cannot create documents in this folder.",
+            expect_content="You don't have permission to write to the destination folder.",
         )
         self.current_user.grant_access(pf, AccessType.view)
         db.session.commit()
@@ -88,7 +96,7 @@ class ManageTest(TimRouteTest):
             f"/alias/{new_alias}",
             {"new_name": new_alias_2},
             expect_status=403,
-            expect_content="You cannot create documents in this folder.",
+            expect_content="You don't have permission to write to the destination folder.",
         )
         self.current_user.grant_access(pf, AccessType.edit)
         db.session.commit()
@@ -99,8 +107,7 @@ class ManageTest(TimRouteTest):
         self.json_post(
             f"/alias/{new_alias_2}",
             {"new_name": new_alias},
-            expect_status=403,
-            expect_content="You don't have permission to write to the source folder.",
+            expect_status=200,
         )
 
     def test_alias_no_empty_path_part(self):
