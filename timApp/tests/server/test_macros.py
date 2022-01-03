@@ -68,7 +68,7 @@ header: %%username%% and %%realname%%
         )
         self.assertEqual("Percents: %%", pars[1].text_content().strip())
         self.assertEqual(
-            "Syntax error in template: unexpected 'end of template'",
+            "Syntax error in macro template: unexpected 'end of template'",
             pars[2].text_content().strip(),
         )
         p, _ = Plugin.from_task_id(

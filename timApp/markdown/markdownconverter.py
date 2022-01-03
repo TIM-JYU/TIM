@@ -17,6 +17,7 @@ from timApp.markdown.autocounters import (
     TimSandboxedEnvironment,
     HEADING_TAGS,
     add_h_values,
+    check_autonumber_error,
 )
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.util.utils import get_error_html, title_to_id
@@ -313,6 +314,8 @@ def expand_macros(
     if charmacros:
         for cm_key, cm_value in charmacros.items():
             text = text.replace(cm_key, cm_value)
+    if env.counters:
+        text = env.counters.do_char_macros(text)
     if not has_macros(text, env):
         return text
     try:
@@ -340,16 +343,20 @@ def expand_macros(
         if env.counters:
             env.counters.start_of_block()
         conv = env.from_string(text).render(macros)
-        if env.counters and env.counters.label_count:
+        if env.counters and env.counters.need_label_update:
             conv = env.counters.update_labels(conv)
         return conv
     except TemplateSyntaxError as e:
         if not ignore_errors:
-            return get_error_html(f"Syntax error in template: {e}")
+            err = check_autonumber_error(e.message)
+            if err is not None:
+                return get_error_html(err)
+            return get_error_html(f"Syntax error in macro template: {e}")
         return text
     except Exception as e:
         if not ignore_errors:
-            return get_error_html(f"Syntax error in template: {e}")
+            # traceback.print_exc()
+            return get_error_html(f"Error in expanding macros: {e}")
         return text
 
 
@@ -404,10 +411,6 @@ tim_filters = {
     "fmt": fmt,
     "docid": get_document_id,
     "docpath": get_document_path,
-    "ref": belongs_placeholder,
-    "c_": belongs_placeholder,
-    "c_eq": belongs_placeholder,
-    "counters": belongs_placeholder,
 }
 
 
