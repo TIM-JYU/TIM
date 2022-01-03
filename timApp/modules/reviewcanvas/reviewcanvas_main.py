@@ -31,7 +31,7 @@ class ReviewCanvasStateModel:
 
 @dataclass
 class ReviewCanvasMarkupModel(GenericMarkupModel):
-    pass
+    maxSize: Union[int, Missing] = missing
 
 
 @dataclass
