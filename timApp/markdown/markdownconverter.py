@@ -356,7 +356,7 @@ def expand_macros(
     except Exception as e:
         if not ignore_errors:
             # traceback.print_exc()
-            return get_error_html(f"Error in filters: {e}")
+            return get_error_html(f"Error in expanding macros: {e}")
         return text
 
 

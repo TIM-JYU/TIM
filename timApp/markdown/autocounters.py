@@ -71,7 +71,6 @@ class AutoCounters:
     auto_name_base: Optional[str] = None
     auto_name_counter: int = 0
     auto_name_ctype: str = "eq"
-    need_auto_name_reset: bool = True
     auto_name_plugin: bool = False
 
     doing_latex_environment = False
@@ -136,8 +135,6 @@ class AutoCounters:
         :return: emtpy string because used from filter
         """
         self.auto_name_base = base_name
-        if base_name:
-            self.need_auto_name_reset = False
         return ""
 
     def set_auto_names(self, base_name: Optional[TName], ctype: str = "eq") -> str:
@@ -152,8 +149,6 @@ class AutoCounters:
         self.auto_name_base = base_name
         self.auto_name_ctype = ctype
         self.auto_name_counter = 0
-        if base_name:
-            self.need_auto_name_reset = False
         return ""
 
     def start_of_block(self) -> None:
@@ -165,7 +160,6 @@ class AutoCounters:
         :return: None
         """
         self.auto_labels: bool = False
-        # self.need_auto_name_reset = True
         self.set_auto_names(None)
         self.doing_latex_environment = False
         self.reset_label_cache()
@@ -198,8 +192,6 @@ class AutoCounters:
         :param ctype: if empty give ctype from auto name
         :return: name, ctype, error
         """
-        if self.need_auto_name_reset:
-            self.set_auto_names(None)
         self.auto_name_plugin: bool = False
         self.auto_name_counter += 1
         if name:

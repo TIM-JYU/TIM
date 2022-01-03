@@ -751,7 +751,7 @@ ${backTicks}
                                 func: () =>
                                     this.editor!.surroundClicked(
                                         '%%"',
-                                        '"| c_auto("fig")\n'
+                                        '"| c_auto("fig")%%\n'
                                     ),
                             },
                             {
