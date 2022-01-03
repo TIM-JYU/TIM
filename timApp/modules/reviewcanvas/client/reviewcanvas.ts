@@ -74,7 +74,7 @@ const PluginMarkupFields = t.intersection([
     t.type({
         // all withDefaults should come here; NOT in t.partial
         autoupdate: withDefault(t.number, 500),
-        maxSize: withDefault(t.number, 50),
+        maxSize: withDefault(t.number, 500),
     }),
 ]);
 
