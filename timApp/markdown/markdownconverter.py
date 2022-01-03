@@ -351,7 +351,7 @@ def expand_macros(
             err = check_autonumber_error(e.message)
             if err is not None:
                 return get_error_html(err)
-            return get_error_html(f"Syntax error in template: {e}")
+            return get_error_html(f"Syntax error in macro template: {e}")
         return text
     except Exception as e:
         if not ignore_errors:
