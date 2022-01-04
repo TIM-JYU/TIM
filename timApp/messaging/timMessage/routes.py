@@ -398,12 +398,13 @@ def create_tim_message(
         message_folder_path += "/global"
 
     message_doc = create_document(
-        f"{message_folder_path}/{message_path}", message_subject
+        f"{message_folder_path}/{message_path}",
+        message_subject,
+        doc_owner=(
+            UserGroup.get_admin_group() if is_global else sender.get_personal_group()
+        ),
     )
 
-    message_doc.block.set_owner(
-        UserGroup.get_admin_group() if is_global else sender.get_personal_group()
-    )
     if recipients:
         message_doc.block.add_rights(recipients, AccessType.view)
     elif is_global:
