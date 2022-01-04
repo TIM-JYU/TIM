@@ -17,7 +17,7 @@ class AutoCountersTest(TimRouteTest):
         counters = AutoCounters(macros)
         s = counters.fig_counter("figA")
         self.assertEqual(
-            '<a id=""></a>[?figA?]{.red}',
+            '<a id=""></a>?figA?',
             s,
             msg="AutoCounters figure before renumbering",
         )
@@ -27,7 +27,7 @@ class AutoCountersTest(TimRouteTest):
         counters.fig_counter("figB")
         counters.fig_counter("figC")
         self.assertEqual(
-            '<a id=""></a>[?figA?]{.red}', s, msg="AutoCounters figure when renumbering"
+            '<a id=""></a>?figA?', s, msg="AutoCounters figure when renumbering"
         )
         auto_macros = counters.get_counter_macros()
         auto_json = yaml.load(auto_macros, Loader=yaml.SafeLoader)
