@@ -7,7 +7,7 @@ import * as t from "io-ts";
 @Component({
     selector: "tim-site-header",
     template: `
-        <div class="siteheader" [class.collapse-view-header]="!displayViewHeader" *ngIf="!hide.siteheader">
+        <div class="siteheader" *ngIf="!hide.siteheader">
             <div class="hidden-lg hidden-md hamburger-placeholder" style="width: 27px; height: 1px"></div>
             <a class="logolink" title="To TIM main page" i18n-title *ngIf="!hide.links" href="/">
                 <tim-logo *ngIf="!hide.logo"></tim-logo>
@@ -77,11 +77,14 @@ export class SiteHeaderComponent implements OnInit {
     }
 
     updateHeaderMenuVisibility() {
-        const el = document.querySelector<HTMLElement>(".doc-header");
-        if (!el) {
-            return;
-        }
-        el.hidden = !this.displayViewHeader;
+        document.documentElement.style.setProperty(
+            "--header-menu-visibility",
+            this.displayViewHeader ? "block" : "none"
+        );
+        document.documentElement.style.setProperty(
+            "--header-menu-pull-position",
+            this.displayViewHeader ? "0" : "-20px"
+        );
     }
 
     ngOnInit(): void {

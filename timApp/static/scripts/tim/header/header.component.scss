@@ -1,0 +1,13 @@
+:host {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.doc-header {
+  display: var(--header-menu-visibility, none);
+}
+
+.pull-right {
+  top: var(--header-menu-pull-position, -20px);
+  position: relative;
+}

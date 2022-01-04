@@ -56,7 +56,7 @@ function isExpired(tag: ITag) {
             </span>
         </ng-container>
     </div>
-    <ng-container *ngIf="!hideVars.headerNav">
+    <div class="doc-header" *ngIf="!hideVars.headerNav">
         <div class="nav nav-tabs">
             <li *ngFor="let link of itemLinks"
                 role="presentation"
@@ -70,9 +70,10 @@ function isExpired(tag: ITag) {
             </li>
             <li class="current">{{ item.title }}</li>
         </ol>
-    </ng-container>
+    </div>
 </div>
   `,
+    styleUrls: ["./header.component.scss"],
 })
 export class HeaderComponent implements OnInit {
     public hideVars: IVisibilityVars = getVisibilityVars();
