@@ -430,7 +430,7 @@ class AutoCounters:
                     "y": ctype,
                 }
                 counters_type.counters[sname] = counter
-        from_macros = self.autocnts.get(sname, {"s": self.error(f"?{sname}?")})
+        from_macros = self.autocnts.get(sname, {"s": f"?{sname}?"})
         if self.auto_labels:
             anchor = from_macros.get("h", "")
             if anchor:
@@ -454,7 +454,7 @@ class AutoCounters:
         :param ctype: counter's type
         :return: counter as text with label where to jump
         """
-        if self.doing_latex_environment or str(name)[-1] == "\\":
+        if self.doing_latex_environment or name and str(name)[-1] == "\\":
             return self.tag_counter(name, ctype)
         s, name, from_macros = self.create_new_counter(name, ctype)
         hyper_jmp = from_macros.get("h", "")
