@@ -135,6 +135,25 @@ def get_tim_messages(item_id: int) -> Response:
     return json_response(get_tim_messages_as_list(item_id))
 
 
+@timMessage.post("/expire/<int:message_doc_id>")
+def expire_tim_message(message_doc_id: int) -> Response:
+    """
+    Expire a TIM message.
+
+    :param message_doc_id: Document ID of the message to expire.
+    :return: OK response if message was successfully expired.
+    """
+    internal_message: Optional[InternalMessage] = InternalMessage.query.filter_by(
+        doc_id=message_doc_id
+    ).first()
+    if not internal_message:
+        raise NotExist("Message not found")
+    verify_manage_access(internal_message.block)
+    internal_message.expires = get_current_time()
+    db.session.commit()
+    return ok_response()
+
+
 def get_tim_messages_as_list(item_id: Optional[int] = None) -> list[TimMessageData]:
     """
     Retrieve messages displayed for current user based on item id and return them as a list.
