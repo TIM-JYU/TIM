@@ -1,4 +1,4 @@
-import {Component, Input, NgModule, OnInit} from "@angular/core";
+import {Component, HostBinding, Input, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
 import {markAsRead} from "tim/messaging/messagingUtils";
@@ -80,6 +80,7 @@ export class TimMessageComponent implements OnInit {
     @Input()
     message!: TimMessageData;
     errorMessage?: string;
+    @HostBinding("class.global-message") isGlobal: boolean = false;
 
     messageOverMaxLength: boolean = false;
     showMessage: boolean = true;
@@ -177,7 +178,7 @@ export class TimMessageComponent implements OnInit {
 
     ngOnInit(): void {
         // TODO Display what group the message is related to; currently can't retrieve from database
-
+        this.isGlobal = this.message.doc_path.includes("/global/");
         if (this.message.message_body.length > MAX_DISPLAY_LENGTH) {
             this.messageOverMaxLength = true;
             this.showFullContent = false;

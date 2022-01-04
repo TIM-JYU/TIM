@@ -8,10 +8,17 @@ from flask import Response
 from isodate import datetime_isoformat
 from sqlalchemy import tuple_
 
-from timApp.auth.accesshelper import verify_edit_access, verify_manage_access
+from timApp.auth.accesshelper import (
+    verify_edit_access,
+    verify_manage_access,
+    verify_admin,
+)
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
-from timApp.auth.sessioninfo import get_current_user_object
+from timApp.auth.sessioninfo import (
+    get_current_user_object,
+    logged_in,
+)
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -37,7 +44,7 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
-from timApp.util.flask.requesthelper import NotExist
+from timApp.util.flask.requesthelper import NotExist, RouteException
 from timApp.util.flask.responsehelper import (
     ok_response,
     json_response,
@@ -84,7 +91,7 @@ class ReplyOptions:
 class MessageBody:
     messageBody: str
     messageSubject: str
-    recipients: list[str]
+    recipients: Optional[list[str]] = None
 
 
 @dataclass
@@ -107,6 +114,16 @@ class TimMessageReadReceipt:
     can_mark_as_read: bool
 
 
+@timMessage.get("/get")
+def get_global_messages() -> Response:
+    """
+    Retrieve global messages return them in json format.
+
+    :return: List of TIM messages to display
+    """
+    return json_response(get_tim_messages_as_list())
+
+
 @timMessage.get("/get/<int:item_id>")
 def get_tim_messages(item_id: int) -> Response:
     """
@@ -118,29 +135,45 @@ def get_tim_messages(item_id: int) -> Response:
     return json_response(get_tim_messages_as_list(item_id))
 
 
-def get_tim_messages_as_list(item_id: int) -> list[TimMessageData]:
+def get_tim_messages_as_list(item_id: Optional[int] = None) -> list[TimMessageData]:
     """
     Retrieve messages displayed for current user based on item id and return them as a list.
 
-    TODO: Once global messages are implemented, verify that user has view access
-     to the document before displaying messages.
-
-    :param item_id: Identifier for document or folder where message is displayed
-    :return:
+    :param item_id: Identifier for document or folder where message is displayed. If None, global messages are returned.
+    :return: List of TIM messages to display
     """
-    current_page_obj = DocEntry.find_by_id(item_id)
-    if isinstance(current_page_obj, Translation):
-        # Resolve to original file instead of translation file
-        current_page_obj = current_page_obj.docentry
-    if not current_page_obj:
-        current_page_obj = Folder.get_by_id(item_id)
-    if not current_page_obj:
-        raise NotExist("No document or folder found")
 
-    parent_paths = current_page_obj.parent_paths()  # parent folders
-    group_ids = get_current_user_object().group_ids
+    # TODO: Add logic for anon users to see and hide global messages
+    if not logged_in():
+        return []
 
     now = get_current_time()
+    is_global = (InternalMessageDisplay.usergroup_id == None) & (
+        InternalMessageDisplay.display_doc_id == None
+    )
+    is_user_specific = False
+    can_see = (InternalMessageReadReceipt.marked_as_read_on == None) & (
+        (InternalMessage.expires == None) | (InternalMessage.expires > now)
+    )
+
+    if item_id is not None:
+        current_page_obj = DocEntry.find_by_id(item_id)
+        if isinstance(current_page_obj, Translation):
+            # Resolve to original file instead of translation file
+            current_page_obj = current_page_obj.docentry
+        if not current_page_obj:
+            current_page_obj = Folder.get_by_id(item_id)
+        if not current_page_obj:
+            raise NotExist("No document or folder found")
+
+        parent_paths = current_page_obj.parent_paths()  # parent folders
+        group_ids = get_current_user_object().group_ids
+
+        is_user_specific = (InternalMessageDisplay.usergroup_id.in_(group_ids)) & (
+            (InternalMessageDisplay.display_doc_id == current_page_obj.id)
+            | (tuple_(Folder.location, Folder.name).in_(parent_paths))
+        )
+
     q = (
         InternalMessage.query.join(InternalMessageDisplay)
         .outerjoin(Folder, Folder.id == InternalMessageDisplay.display_doc_id)
@@ -151,15 +184,7 @@ def get_tim_messages_as_list(item_id: int) -> list[TimMessageData]:
             # With outer join, both cases are covered (marked_as_read_on becomes NULL)
             & (InternalMessageReadReceipt.user_id == get_current_user_object().id),
         )
-        .filter(
-            (InternalMessageDisplay.usergroup_id.in_(group_ids))
-            & (
-                (InternalMessageDisplay.display_doc_id == current_page_obj.id)
-                | (tuple_(Folder.location, Folder.name).in_(parent_paths))
-            )
-            & (InternalMessageReadReceipt.marked_as_read_on == None)
-            & ((InternalMessage.expires == None) | (InternalMessage.expires > now))
-        )
+        .filter((is_global | is_user_specific) & can_see)
     )
 
     messages: list[InternalMessage] = q.all()
@@ -274,11 +299,23 @@ def check_urls(urls: str) -> Response:
 
 
 @timMessage.post("/send")
-def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
-    return send_message_or_reply(options, message)
+def send_tim_message(message: MessageBody, options: MessageOptions) -> Response:
+    is_global = message.recipients is None
+    if is_global:
+        verify_admin()
+        options.messageChannel = False
+        options.isPrivate = True
+        options.archive = False
+        options.pageList = ""
+        options.readReceipt = True
+        options.reply = False
+        options.sender = ""
+        options.senderEmail = ""
+
+    return send_message_or_reply(message, options)
 
 
-def send_message_or_reply(options: MessageOptions, message: MessageBody) -> Response:
+def send_message_or_reply(message: MessageBody, options: MessageOptions) -> Response:
     """
     Creates a new TIM message and saves it to database.
 
@@ -323,9 +360,12 @@ def create_tim_message(
     """
     recipients = (
         message_viewers
-        if message_viewers
+        if message_viewers is not None
         else get_recipient_users(message_body.recipients)
     )
+
+    is_global = message_body.recipients is None
+
     sender = get_current_user_object()
     message_folder_path = "messages/tim-messages"
 
@@ -334,13 +374,25 @@ def create_tim_message(
     message_path = remove_path_special_chars(f"{timestamp}-{message_subject}")
 
     check_messages_folder_path("messages", message_folder_path)
+
+    if is_global:
+        message_folder_path += "/global"
+
     message_doc = create_document(
         f"{message_folder_path}/{message_path}", message_subject
     )
-    message_doc.block.add_rights([sender.get_personal_group()], AccessType.owner)
-    message_doc.block.add_rights(recipients, AccessType.view)
 
-    update_tim_msg_doc_settings(message_doc, sender, message_body)
+    message_doc.block.set_owner(
+        UserGroup.get_admin_group() if is_global else sender.get_personal_group()
+    )
+    if recipients:
+        message_doc.block.add_rights(recipients, AccessType.view)
+    elif is_global:
+        message_doc.block.add_rights([UserGroup.get_anonymous_group()], AccessType.view)
+
+    update_tim_msg_doc_settings(
+        message_doc, sender if not is_global else None, message_body
+    )
     message_par = message_doc.document.add_paragraph(message_body.messageBody)
     message_doc.document.add_paragraph(
         "<manage-read-receipt></manage-read-receipt>", attrs={"allowangular": "true"}
@@ -355,8 +407,8 @@ def create_tim_message(
 
 
 @timMessage.post("/reply")
-def reply_to_tim_message(options: ReplyOptions, messageBody: MessageBody) -> Response:
-    messageOptions = MessageOptions(
+def reply_to_tim_message(options: ReplyOptions, message: MessageBody) -> Response:
+    message_options = MessageOptions(
         options.messageChannel,
         False,
         True,
@@ -368,17 +420,20 @@ def reply_to_tim_message(options: ReplyOptions, messageBody: MessageBody) -> Res
         get_current_user_object().email,
         options.repliesTo,
     )
-    recipient = User.get_by_name(messageBody.recipients.pop())
+    if not message.recipients:
+        raise RouteException("Reply requires a recipient")
+
+    recipient = User.get_by_name(message.recipients.pop())
     if recipient:
         recipient_email = recipient.email
     else:
         raise NotExist("Recipient not found")
 
     message = MessageBody(
-        messageBody.messageBody, messageBody.messageSubject, [recipient_email]
+        message.messageBody, message.messageSubject, [recipient_email]
     )
 
-    return send_message_or_reply(messageOptions, message)
+    return send_message_or_reply(message, message_options)
 
 
 @timMessage.post("/mark_as_read")
@@ -479,6 +534,13 @@ def get_read_receipts(
         .filter(InternalMessage.doc_id == doc.id)
     ).all()
 
+    if not all_recipients:
+        if include_unread:
+            raise RouteException(
+                "For performance reasons, only read users can be shown for global messages"
+            )
+        all_recipients = User.query.filter(User.id.in_(read_user_map.keys())).all()
+
     data = [["id", "email", "user_name", "real_name", "read_on"]]
 
     for i, u in enumerate(all_recipients):
@@ -502,13 +564,15 @@ def get_read_receipts(
     return text_response(csv_string(data, "excel", separator))
 
 
-def get_recipient_users(recipients: list[str]) -> list[UserGroup]:
+def get_recipient_users(recipients: Optional[list[str]]) -> list[UserGroup]:
     """
     Finds UserGroup objects of recipients based on their email
 
     :param recipients: list of recipients' emails
     :return: list of recipient UserGroups
     """
+    if not recipients:
+        return []
     users = set()
     for rcpt in recipients:
         if not rcpt:
@@ -636,7 +700,7 @@ def check_messages_folder_path(
 
 
 def update_tim_msg_doc_settings(
-    message_doc: DocInfo, sender: User, message_body: MessageBody
+    message_doc: DocInfo, sender: Optional[User], message_body: MessageBody
 ) -> None:
     """
     Sets the message information into the preamble macros.
@@ -648,8 +712,9 @@ def update_tim_msg_doc_settings(
     """
     s = message_doc.document.get_settings().get_dict().get("macros", {})
     s["subject"] = message_body.messageSubject
-    s["sendername"] = sender.name
-    s["senderemail"] = sender.email
+    if sender:
+        s["sendername"] = sender.name
+        s["senderemail"] = sender.email
     s["recipients"] = message_body.recipients
 
     message_doc.document.add_setting("macros", s)

@@ -108,6 +108,7 @@ TIM_SAFE_TAGS = [
     "tim-archive-header",
     "tim-archive-footer",
     "tim-style-preview",
+    "tim-message-send",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
@@ -248,6 +249,8 @@ TIM_SAFE_ATTRS = frozenset(
         # tim-archive-footer
         "message",
         "ng-non-bindable",
+        # tim-message-send
+        "send-global",
     ]
 )
 
