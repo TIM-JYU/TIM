@@ -6,9 +6,9 @@
 import {Component, Input, OnInit} from "@angular/core";
 import {IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {showBookmarkDialog} from "tim/bookmark/showBookmarkDialog";
+import {HttpClient} from "@angular/common/http";
 import {getCourseCode, ITaggedItem} from "../item/IItem";
-import {$http} from "../util/ngimport";
-import {to} from "../util/utils";
+import {to, toPromise} from "../util/utils";
 
 export interface ITaggedBookmarkedItem {
     doc: ITaggedItem;
@@ -68,6 +68,8 @@ export class BookmarkFolderBoxComponent implements OnInit {
     editOn: boolean = false; // Show bookmark edit and removal icons.
     orphanBookmarks: IBookmark[] = []; // Bookmarks that aren't pointing to any TIM document.
 
+    constructor(private http: HttpClient) {}
+
     async ngOnInit() {
         this.getBookmarkFolder(this.bookmarkFolderName);
         await this.getDocumentData();
@@ -94,23 +96,24 @@ export class BookmarkFolderBoxComponent implements OnInit {
     private async getDocumentData() {
         // Returns a list of ITaggedItems because bookmarks aren't directly linked to
         // document items.
-        const response = await to(
-            $http<ITaggedItem[]>({
-                method: "GET",
-                url: `/courses/documents/${this.bookmarkFolderName}`,
-            })
+        const response = await toPromise(
+            this.http.get<ITaggedItem[]>(
+                `/courses/documents/${this.bookmarkFolderName}`
+            )
         );
         if (!response.ok) {
             return;
         }
+        const taggedItemByPath = new Map<string, ITaggedItem>(
+            response.result.map((item) => [`/view/${item.path}`, item])
+        );
         // Bookmarks are added to their corresponding documents here.
-        if (response && this.bookmarkFolder) {
+        if (taggedItemByPath.size > 0 && this.bookmarkFolder) {
             this.documents = [];
-            for (const responseItem of response.result.data) {
-                for (const b of this.bookmarkFolder.items) {
-                    if ("/view/" + responseItem.path === b.link) {
-                        this.documents.push({doc: responseItem, bookmark: b});
-                    }
+            for (const b of this.bookmarkFolder.items) {
+                const taggedItem = taggedItemByPath.get(b.link);
+                if (taggedItem) {
+                    this.documents.push({doc: taggedItem, bookmark: b});
                 }
             }
         }
@@ -141,14 +144,14 @@ export class BookmarkFolderBoxComponent implements OnInit {
      * @param {IBookmark} d Bookmark to delete.
      */
     async removeFromList(d: IBookmark) {
-        const response = await to(
-            $http.post<IBookmarkGroup[]>("/bookmarks/delete", {
+        const response = await toPromise(
+            this.http.post<IBookmarkGroup[]>("/bookmarks/delete", {
                 group: this.bookmarkFolderName,
                 name: d.name,
             })
         );
         if (response.ok) {
-            this.bookmarks = response.result.data;
+            this.bookmarks = response.result;
             await this.getBookmarkFolder(this.bookmarkFolderName);
             await this.getDocumentData();
         }
@@ -169,18 +172,17 @@ export class BookmarkFolderBoxComponent implements OnInit {
         if (!r.ok || !r.result.name) {
             return;
         }
-        const response = await to(
-            $http.post<IBookmarkGroup[]>("/bookmarks/edit", {
+        const response = await toPromise(
+            this.http.post<IBookmarkGroup[]>("/bookmarks/edit", {
                 old: {
                     group: this.bookmarkFolderName,
-                    link: b.link,
                     name: b.name,
                 },
                 new: r.result,
             })
         );
         if (response.ok) {
-            this.bookmarks = response.result.data;
+            this.bookmarks = response.result;
             await this.getBookmarkFolder(this.bookmarkFolderName);
             await this.getDocumentData();
         }
