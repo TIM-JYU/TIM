@@ -38,7 +38,7 @@ import moment from "moment";
                 </div>
             </div>
         </ng-container>
-        <div *ngIf="canManage && expires">
+        <div *ngIf="canManage">
             <button class="btn btn-danger"
                     title="Expire message"
                     [disabled]="messageExpired"
@@ -130,6 +130,9 @@ export class ManageReadReceiptComponent implements OnInit {
         );
 
         if (message.ok) {
+            this.expires = moment()
+                .local()
+                .format("dddd, MMMM Do YYYY, h:mm:ss a");
             this.messageExpired = true;
         } else {
             this.errorMessage = $localize`Could not expire message: ${message.result.error.error}`;
