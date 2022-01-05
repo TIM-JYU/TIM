@@ -30,7 +30,7 @@ menu: |!!
 !!
 ```
 
-# - {.messageheader}
+#- {.messageheader}
 
 [%%subject%%]{.messagetitle} \
 Sender: %%sendername%%, %%senderemail%% \

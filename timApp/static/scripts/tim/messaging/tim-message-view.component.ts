@@ -7,7 +7,7 @@ import {
     ViewContainerRef,
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
-import {itemglobals} from "tim/util/globals";
+import {itemglobals, someglobals} from "tim/util/globals";
 import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -36,12 +36,11 @@ export class TimMessageViewComponent implements OnInit {
     messageError?: string;
 
     ngOnInit(): void {
-        const current_item = itemglobals().curr_item;
-        // TODO: Fetch messages for root when there are global messages available
-        if (current_item?.path) {
-            const itemId = current_item.id;
-            void this.loadMessages(itemId);
-        }
+        void this.loadMessages(
+            "curr_item" in someglobals()
+                ? itemglobals().curr_item.id
+                : undefined
+        );
     }
 
     constructor(
@@ -51,17 +50,17 @@ export class TimMessageViewComponent implements OnInit {
 
     timMessages?: TimMessageData[];
 
-    async loadMessages(itemId: number) {
+    async loadMessages(itemId?: number) {
         this.containerNormal.clear();
-        const messages = await toPromise(
-            // get messages shown on current page
-            this.http.get<TimMessageData[]>(`/timMessage/get/${itemId}`)
-        );
+        const url =
+            itemId && itemId > 0
+                ? `/timMessage/get/${itemId}`
+                : "/timMessage/get";
+        const messages = await toPromise(this.http.get<TimMessageData[]>(url));
 
         if (messages.ok) {
             const component = (await import("./tim-message.component"))
                 .TimMessageComponent;
-            const factory = this.cfr.resolveComponentFactory(component);
 
             const normal = messages.result.filter(
                 (m) => m.display_type == DisplayType.TOP_OF_PAGE
@@ -75,7 +74,7 @@ export class TimMessageViewComponent implements OnInit {
                 vcr: ViewContainerRef
             ) => {
                 for (const message of msgs) {
-                    const res = vcr.createComponent(factory);
+                    const res = vcr.createComponent(component);
                     res.instance.message = message;
                 }
             };

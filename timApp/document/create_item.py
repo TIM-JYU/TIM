@@ -63,9 +63,15 @@ def create_document(
     item_title: str,
     validation_rule: ItemValidationRule = None,
     parent_owner: UserGroup = None,
+    doc_owner: Optional[UserGroup] = None,
 ) -> DocInfo:
     return do_create_item(
-        item_path, BlockType.Document, item_title, validation_rule, parent_owner
+        item_path,
+        BlockType.Document,
+        item_title,
+        validation_rule,
+        parent_owner,
+        doc_owner,
     )
 
 
@@ -75,11 +81,12 @@ def do_create_item(
     item_title: str,
     validation_rule: ItemValidationRule = None,
     parent_owner: UserGroup = None,
+    doc_owner: Optional[UserGroup] = None,
 ) -> Union[DocInfo, Folder]:
     create_function = (
         DocEntry.create if item_type == BlockType.Document else Folder.create
     )
-    owner_group = get_current_user_group_object()
+    owner_group = doc_owner if doc_owner else get_current_user_group_object()
 
     item_path = item_path.strip("/")
 

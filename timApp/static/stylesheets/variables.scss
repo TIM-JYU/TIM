@@ -98,3 +98,6 @@ $label-visited-color: white !default;
 
 $score-menu-link-color: $link-color !default;
 $score-menu-link-visited-color: $link-visited-color !default;
+
+$state-info-bg: #d9edf7 !default;
+$state-info-border: darken(adjust-hue($state-info-bg, -10), 7%) !default;

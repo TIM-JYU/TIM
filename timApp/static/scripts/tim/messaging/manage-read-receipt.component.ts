@@ -11,8 +11,11 @@ import moment from "moment";
     selector: "manage-read-receipt",
     template: `
         <hr>
-        <p class="small" *ngIf="expires">Note: this message expires on {{expires}}</p>
-        <div class="copy-query-panel" *ngIf="showQueryCopy">
+        <p class="small" *ngIf="expires">
+            <ng-container *ngIf="!messageExpired">Note: this message expires on {{expires}}</ng-container>
+            <ng-container *ngIf="messageExpired">Note: this message was expired on {{expires}}. Users will not see the message.</ng-container>
+        </p>
+        <div class="copy-query-panel" *ngIf="canManage">
             <span>Copy TableForm user query to clipboard:</span>
             <button class="timButton btn-sm" title="Copy read users as TableForm query" (click)="copyReceiptQuery(true, false)">Read users</button>
             <button class="timButton btn-sm" title="Copy unread users as TableForm query" (click)="copyReceiptQuery(false, true)">Unread users</button>
@@ -35,23 +38,32 @@ import moment from "moment";
                 </div>
             </div>
         </ng-container>
+        <div *ngIf="canManage">
+            <button class="btn btn-danger"
+                    title="Expire message"
+                    [disabled]="messageExpired"
+                    (click)="expireMessage()">
+                Expire message
+            </button>
+        </div>
     `,
     styleUrls: ["manage-read-receipt.component.scss"],
 })
 export class ManageReadReceiptComponent implements OnInit {
-    showQueryCopy = false;
+    canManage = false;
     markedAsRead: boolean = false;
     receipt?: TimMessageReadReceipt;
     canMarkAsRead: boolean = false;
     errorMessage?: string;
     expires?: string;
+    messageExpired: boolean = false;
     copied = false;
     docId: number;
 
     constructor(private http: HttpClient) {
         const item = itemglobals().curr_item;
         this.docId = item.id;
-        this.showQueryCopy = item.rights.manage;
+        this.canManage = item.rights.manage;
     }
 
     ngOnInit(): void {
@@ -103,9 +115,27 @@ export class ManageReadReceiptComponent implements OnInit {
                 this.expires = moment(message.result.expires)
                     .local()
                     .format("dddd, MMMM Do YYYY, h:mm:ss a");
+                this.messageExpired = moment(message.result.expires).isBefore(
+                    moment()
+                );
             }
         } else {
             this.errorMessage = $localize`Could not load read information: ${message.result.error.error}`;
+        }
+    }
+
+    async expireMessage() {
+        const message = await toPromise(
+            this.http.post(`/timMessage/expire/${this.docId}`, {})
+        );
+
+        if (message.ok) {
+            this.expires = moment()
+                .local()
+                .format("dddd, MMMM Do YYYY, h:mm:ss a");
+            this.messageExpired = true;
+        } else {
+            this.errorMessage = $localize`Could not expire message: ${message.result.error.error}`;
         }
     }
 

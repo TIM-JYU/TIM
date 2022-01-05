@@ -64,6 +64,7 @@ class DocSettingTypes:
     slide_themes: list[str]
     slide_size: tuple[int, int]
     allow_url_permission_edits: bool
+    additional_angular_modules: list[str]
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -549,6 +550,9 @@ class DocSettings:
 
     def allow_url_permission_edits(self) -> bool:
         return self.get_setting_or_default("allow_url_permission_edits", False)
+
+    def additional_angular_modules(self) -> list[str]:
+        return self.get_setting_or_default("additional_angular_modules", [])
 
     def is_style_document(self) -> bool:
         return self.get("description", None) is not None

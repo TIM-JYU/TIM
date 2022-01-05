@@ -1,4 +1,12 @@
-import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    EventEmitter,
+    Input,
+    NgModule,
+    Output,
+} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
@@ -7,7 +15,9 @@ import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {TimepickerModule} from "ngx-bootstrap/timepicker";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {Users} from "../user/userService";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {isAdmin, Users} from "../user/userService";
 import {toPromise} from "../util/utils";
 
 interface TimMessageOptions {
@@ -26,14 +36,16 @@ interface TimMessageOptions {
 @Component({
     selector: "tim-message-send",
     template: `
-        <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="recipientList">
-            <tim-close-button (click)="closeComponent()"></tim-close-button>
+        <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="recipientList || sendGlobal">
+            <tim-close-button *ngIf="!sendGlobal" (click)="closeComponent()"></tim-close-button>
             <form>
-                <fieldset [disabled]="sending">
+                <fieldset [disabled]="sending || !canUseComponent">
                     <div class="message-info">
-                        <label for="recipients" i18n>Recipients:</label>
-                        <textarea class="form-control" id="recipients" name="recipients" [(ngModel)]="recipientList"
-                                  rows="4" (input)="somethingChanged()"></textarea>
+                        <ng-container *ngIf="!sendGlobal">
+                            <label for="recipients" i18n>Recipients:</label>
+                            <textarea class="form-control" id="recipients" name="recipients" [(ngModel)]="recipientList"
+                                      rows="4" (input)="somethingChanged()"></textarea>
+                        </ng-container>
 
                         <label for="subject" i18n>Subject:</label>
                         <input class="form-control" [(ngModel)]="messageSubject" (input)="somethingChanged()"
@@ -49,19 +61,19 @@ interface TimMessageOptions {
                         <ng-template #hideOptions i18n>Show message options</ng-template>
                     </div>
                     <div *ngIf="showOptions">
-                        <div class="send-as-label">
+                        <div class="send-as-label" *ngIf="!sendGlobal">
                             <span i18n>Send as</span>
                             <a tooltip="Select at least one channel" i18n-tooltip><i
                                     class="glyphicon glyphicon-info-sign"></i></a>
                         </div>
 
                         <div class="cb-collection">
-                            <div>
+                            <div *ngIf="!sendGlobal">
                                 <input type="checkbox" (change)="notDefault()" [(ngModel)]="email" id="send-email"
                                        name="send-email" i18n>
                                 <label for="send-email" i18n>email</label>
                             </div>
-                            <div class="cb-collection" *ngIf="email">
+                            <div class="cb-collection" *ngIf="email && !sendGlobal">
                                 <div>
                                     <input type="radio" [(ngModel)]="defaultEmail" name="send-tim-message" id="send-tim"
                                            [value]="false">
@@ -91,7 +103,7 @@ interface TimMessageOptions {
                                     </div>
                                 </ng-container>
                             </div>
-                            <div *ngIf="!defaultEmail">
+                            <div *ngIf="!defaultEmail && !sendGlobal">
                                 <input type="checkbox" (change)="emptyPageList()" [(ngModel)]="timMessage"
                                        name="send-tim-message" id="send-tim-message">
                                 <label for="send-tim-message" i18n>TIM message</label>
@@ -103,18 +115,18 @@ interface TimMessageOptions {
                                 </a>
                             </div>
                             <div class="cb-collection" *ngIf="timMessage && !defaultEmail">
-                                <div class="page-list">
-                                <span class="pages-label">
-                                    <label for="tim-message-pages" i18n>Pages to send TIM message to</label>
-                                    <a tooltip="Enter URL addresses of the pages one per line. URLs will be automatically shortened."
-                                       i18n-tooltip><i class="glyphicon glyphicon-info-sign"></i></a>
-                                </span>
-                                    <tim-alert *ngIf="urlError" severity="danger">
-                                        {{ urlError }}
-                                    </tim-alert>
-                                    <textarea class="form-control" [(ngModel)]="timMessageOptions.pageList"
-                                              (input)="checkUrls()" rows="4" name="tim-message-pages"
-                                              id="tim-message-pages"></textarea>
+                                <div class="page-list" *ngIf="!sendGlobal">
+                                    <span class="pages-label">
+                                        <label for="tim-message-pages" i18n>Pages to send TIM message to</label>
+                                        <a tooltip="Enter URL addresses of the pages one per line. URLs will be automatically shortened."
+                                           i18n-tooltip><i class="glyphicon glyphicon-info-sign"></i></a>
+                                    </span>
+                                        <tim-alert *ngIf="urlError" severity="danger">
+                                            {{ urlError }}
+                                        </tim-alert>
+                                        <textarea class="form-control" [(ngModel)]="timMessageOptions.pageList"
+                                                  (input)="checkUrls()" rows="4" name="tim-message-pages"
+                                                  id="tim-message-pages"></textarea>
                                 </div>
                                 <div>
                                     <input type="checkbox" [(ngModel)]="timMessageOptions.important"
@@ -130,7 +142,7 @@ interface TimMessageOptions {
                                            name="tim-message-private" id="tim-message-private" disabled>
                                     <label for="tim-message-private" i18n>Recipient sees TIM message as private</label>
                                 </div>
-                                <div>
+                                <div *ngIf="!sendGlobal">
                                     <input type="checkbox" [(ngModel)]="timMessageOptions.reply"
                                            name="tim-message-can-reply" id="tim-message-can-reply">
                                     <label for="tim-message-can-reply" i18n>TIM message can be replied to</label>
@@ -182,9 +194,12 @@ export class TimMessageSendComponent {
      *  variable, as its length grows beoynd 0 the the flag is set on?
      */
 
-    @Input()
-    recipientList: string = "";
+    @Input() recipientList: string = "";
     @Output() recipientListChange = new EventEmitter<string>();
+    @Input()
+    sendGlobal: boolean = false;
+    @Input()
+    docId?: number;
     messageSubject: string = "";
     messageBody: string = "";
     showOptions: boolean = false;
@@ -200,6 +215,7 @@ export class TimMessageSendComponent {
     urlError?: string;
     formChanged: boolean = true;
     sending = false;
+    canUseComponent: boolean = true;
     timMessageOptions: TimMessageOptions = {
         messageChannel: false,
         archive: false,
@@ -212,8 +228,18 @@ export class TimMessageSendComponent {
         sender: Users.getCurrent().real_name,
         senderEmail: Users.getCurrent().email,
     };
-    @Input()
-    docId?: number;
+
+    ngOnInit() {
+        if (this.sendGlobal) {
+            if (!isAdmin()) {
+                this.messageSendError = $localize`You are not authorized to send global messages`;
+                this.canUseComponent = false;
+                return;
+            }
+            this.timMessage = true;
+            this.email = false;
+        }
+    }
 
     get recipients() {
         return this.recipientList.trim();
@@ -247,6 +273,13 @@ export class TimMessageSendComponent {
 
     // Checks if all mandatory fields have values
     disableSendButton() {
+        if (this.sendGlobal) {
+            return (
+                this.messageSubject.trim().length == 0 ||
+                this.messageBody.trim().length == 0
+            );
+        }
+
         return (
             !this.formChanged ||
             this.urlError ||
@@ -359,15 +392,18 @@ export class TimMessageSendComponent {
     }
 
     private postTimMessage(options: TimMessageOptions) {
-        const message = {
+        const message: Record<string, unknown> = {
             messageBody: this.messageBody,
             messageSubject: this.messageSubject,
-            recipients: this.recipients.split(/\n/g),
+            recipients: undefined,
         };
+        if (!this.sendGlobal) {
+            message.recipients = this.recipients.split(/\n/g);
+        }
         return toPromise(
             this.http.post<{docPath: string}>("/timMessage/send", {
-                options,
                 message,
+                options,
             })
         );
     }
@@ -387,4 +423,18 @@ export class TimMessageSendComponent {
     ],
     exports: [TimMessageSendComponent],
 })
-export class TimMessageSendModule {}
+export class TimMessageSendModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef): void {}
+}
+
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                TimMessageSendModule
+            )
+        ),
+        "timMessageSend",
+        TimMessageSendComponent
+    ),
+];

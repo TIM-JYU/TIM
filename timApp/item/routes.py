@@ -571,6 +571,19 @@ def preload_personal_folder_and_breadcrumbs(current_user: User, doc_info: DocInf
     _ = doc_info.parents_to_root_eager
 
 
+def get_additional_angular_modules(doc_info: DocInfo) -> set[str]:
+    result = set()
+    doc_settings = doc_info.document.get_settings()
+    if doc_info.path.startswith(MESSAGE_LIST_DOC_PREFIX):
+        result.add("timMessageListManagement")
+    if doc_info.path.startswith(MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX):
+        result.add("timArchive")
+    if doc_settings.is_style_document():
+        result.add("stylePreview")
+    result |= set(doc_settings.additional_angular_modules())
+    return result
+
+
 def render_doc_view(
     doc_info: DocInfo,
     m: DocViewParams,
@@ -828,13 +841,7 @@ def render_doc_view(
     if teacher_or_see_answers or view_ctx.route.is_review:
         post_process_result.js_paths.append("angular-ui-grid")
         angular_module_names += get_grid_modules()
-    # TODO: Instead add a docsetting that allows to manually import modules/lightweight components
-    if doc_info.path.startswith(MESSAGE_LIST_DOC_PREFIX):
-        post_process_result.js_paths.append("timMessageListManagement")
-    if doc_info.path.startswith(MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX):
-        post_process_result.js_paths.append("timArchive")
-    if doc_settings.is_style_document():
-        post_process_result.js_paths.append("stylePreview")
+    post_process_result.js_paths += get_additional_angular_modules(doc_info)
 
     taketime("before render")
     nav_ranges = []

@@ -1,7 +1,14 @@
 :host {
     display: block;
     @media (min-width: 1400px) {
-        margin: 0 10% 0 10%;
+        &:not(.global-message) {
+            margin: 0 10% 0 10%;
+        }
+    }
+
+    &.global-message .timMessageDisplay {
+        background-color: var(--state-info-bg);
+        border-color: var(--state-info-border);
     }
 }
 
@@ -15,7 +22,6 @@ tim-alert {
     border-radius: 6px;
     padding: 6px 8px 8px 8px;
     background-color: var(--basic-color-inverse);
-
 
     .fullMessageContent, .cutMessageContent {
         text-align: justify;

@@ -4604,6 +4604,22 @@
           <context context-type="linenumber">312</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4403569197028117197" datatype="html">
+        <source>Could not expire message: <x id="PH" equiv-text="message.result.error.error"/></source>
+        <target state="translated">Viestiä ei voitu vanhentaa: <x id="PH" equiv-text="message.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage-read-receipt.component.ts</context>
+          <context context-type="linenumber">135</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1879048180271503411" datatype="html">
+        <source>You are not authorized to send global messages</source>
+        <target state="translated">Sinulla ei ole oikeutta lähettää globaaleja viestejä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">235</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
