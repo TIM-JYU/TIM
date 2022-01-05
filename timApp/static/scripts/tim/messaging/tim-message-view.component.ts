@@ -52,7 +52,10 @@ export class TimMessageViewComponent implements OnInit {
 
     async loadMessages(itemId?: number) {
         this.containerNormal.clear();
-        const url = itemId ? `/timMessage/get/${itemId}` : "/timMessage/get";
+        const url =
+            itemId && itemId > 0
+                ? `/timMessage/get/${itemId}`
+                : "/timMessage/get";
         const messages = await toPromise(this.http.get<TimMessageData[]>(url));
 
         if (messages.ok) {
