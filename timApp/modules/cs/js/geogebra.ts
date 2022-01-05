@@ -26,6 +26,7 @@ const GeogebraMarkup = t.intersection([
     t.partial({
         beforeOpen: t.string,
         showButton: t.string,
+        hideButton: t.string,
         message: t.string,
         width: t.number,
         height: t.number,
@@ -87,6 +88,10 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
                         class="timButton btn-sm"
                         (click)="runShowTask()"
                         [innerHtml]="showButton() | purify"></button>
+                <button *ngIf="isOpen && hideButton"
+                        class="timButton btn-sm margin-5-right"
+                        (click)="hideShowTask()"
+                        [innerHtml]="hideButton | purify"></button>
                 <button *ngIf="isOpen && !markup.norun"
                         [disabled]="isRunning"
                         title="(Ctrl-S)"
@@ -134,6 +139,10 @@ export class GeogebraComponent extends AngularPluginBase<
         return this.english ? "Show task" : "Näytä tehtävä";
     }
 
+    get hideButton() {
+        return this.markup.hideButton;
+    }
+
     private viewctrl!: ViewCtrl;
     error?: string;
     console?: string;
@@ -166,6 +175,10 @@ export class GeogebraComponent extends AngularPluginBase<
 
     runShowTask() {
         this.isOpen = true;
+    }
+
+    hideShowTask() {
+        this.isOpen = false;
     }
 
     changeAnswer(a: IAnswer) {
