@@ -61,7 +61,7 @@ interface IUploadResponse {
 }
 
 interface IUploadRequestInput {
-    input: {uploadedfile?: {path: string; type: string}};
+    input: {uploadedfiles?: {path: string; type: string}[]};
 }
 
 const PluginMarkupFields = t.intersection([
@@ -81,12 +81,12 @@ const PluginMarkupFields = t.intersection([
 const PluginFields = t.intersection([
     getTopLevelFields(PluginMarkupFields),
     t.partial({
-        uploadedfile: nullable(UploadedFile),
+        uploadedfiles: nullable(t.array(UploadedFile)),
     }),
     t.type({
         state: nullable(
             t.type({
-                uploadedfile: nullable(UploadedFile),
+                uploadedfiles: nullable(t.array(UploadedFile)),
             })
         ),
     }),
@@ -99,6 +99,11 @@ const PluginFields = t.intersection([
                 <span [innerHTML]="header"></span>
             </tim-plugin-header>
             <p stem *ngIf="stem" [innerHTML]="stem"></p>
+            <div *ngIf="connectionErrorMessage || userErrorMessage">
+                <span *ngIf="connectionErrorMessage" class="error" [innerHTML]="connectionErrorMessage"></span>
+                <span *ngIf="userErrorMessage" class="error" [innerHTML]="userErrorMessage"></span>
+            </div>
+            <button class="timButton" (click)="saveAnswer()">Save answer</button>
             <ng-container body>
                  <file-select-manager class="small"
                         [dragAndDrop]="dragAndDrop"
@@ -113,7 +118,6 @@ const PluginFields = t.intersection([
                         <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
                     </span>
                 </div>
-                <span *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHTML]="connectionErrorMessage"></span>
                 <tim-loading *ngIf="isRunning"></tim-loading>
                 <div *ngIf="error" [innerHTML]="error"></div>
                 <pre *ngIf="result">{{result}}</pre>
@@ -122,6 +126,7 @@ const PluginFields = t.intersection([
     `,
     styleUrls: ["./reviewcanvas.scss"],
 })
+
 export class ReviewCanvasComponent
     extends AngularPluginBase<
         t.TypeOf<typeof PluginMarkupFields>,
@@ -133,7 +138,9 @@ export class ReviewCanvasComponent
     error?: string;
     isRunning = false;
     timeout: number = 0;
+    count: number = 0;
     connectionErrorMessage?: string;
+    userErrorMessage?: string;
     file?: object;
     modelChanged: Subject<object> = new Subject<object>();
     private modelChangeSub!: Subscription;
@@ -172,8 +179,10 @@ export class ReviewCanvasComponent
                 this.file = newValue;
             });
 
-        if (this.attrsall.state?.uploadedfile) {
-            this.uploadedFiles.push(this.attrsall.state.uploadedfile);
+        console.log(this.attrsall);
+
+        if (this.attrsall.state?.uploadedfiles && this.attrsall.state?.uploadedfiles.length > 0) {
+            this.attrsall.state.uploadedfiles.forEach(uf => this.uploadedFiles.push(uf));
         }
     }
 
@@ -232,7 +241,7 @@ export class ReviewCanvasComponent
         }
 
         const response = resp as IUploadResponse;
-        this.uploadedFiles.clear();
+        // this.uploadedFiles.clear();
         this.uploadedFiles.push({path: response.file, type: response.type});
     }
 
@@ -241,15 +250,30 @@ export class ReviewCanvasComponent
             return;
         }
 
-        this.postUploadAnswer();
+        this.postUploadImage();
     }
 
-    async postUploadAnswer() {
+    async postUploadImage() {
+
+    }
+
+    async saveAnswer() {
+
+        console.log('saveAnswer() called');
+
+        if (this.uploadedFiles.length === 0) {
+            this.userErrorMessage = 'Cannot save answer; no files have been uploaded.';
+            console.log('returning from saveAnswer');
+            return;
+        }
+
+        this.userErrorMessage = undefined;
+
         this.isRunning = true;
 
         const params: IUploadRequestInput = {
             input: {
-                uploadedfile: this.uploadedFiles.toArray()[0],
+                uploadedfiles: this.uploadedFiles.toArray(),
             },
         };
 
@@ -258,12 +282,13 @@ export class ReviewCanvasComponent
             new HttpHeaders({timeout: `${this.timeout + defaultTimeout}`})
         );
 
+        console.log('saveAnswer: response received from server');
+        console.log(r);
+
         if (r.ok) {
-            this.isRunning = false;
             const data = r.result;
             this.error = data.error;
         } else {
-            this.isRunning = false;
             const data = r.result.error;
             if (data?.error) {
                 this.error = data.error;

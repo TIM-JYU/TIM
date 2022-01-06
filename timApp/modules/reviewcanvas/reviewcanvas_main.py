@@ -1,6 +1,6 @@
 """
-A canvas component that can render different kinds of uploaded files
-(images and PDFs) and allow teachers to velp them.
+A canvas component that allows users to upload multiple image files
+to a single answer and allows the teacher to velp the images.
 """
 
 import os
@@ -25,8 +25,7 @@ class UploadedFile:
 @dataclass
 class ReviewCanvasStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    # userword: str
-    uploadedfile: UploadedFile
+    uploadedfiles: List[UploadedFile]
 
 
 @dataclass
@@ -36,10 +35,8 @@ class ReviewCanvasMarkupModel(GenericMarkupModel):
 
 @dataclass
 class ReviewCanvasInputModel:
-    """Model for the information that is sent from browser (plugin AngularJS component)."""
-    # would it be possible to receive multiple files somehow?
-    # Marshmallow appears to hate it if we make this into a list
-    uploadedfile: UploadedFile
+    """Model for the information that is sent from browser for an answer."""
+    uploadedfiles: List[UploadedFile]
 
 
 @dataclass
@@ -51,11 +48,10 @@ class ReviewCanvasHtmlModel(GenericHtmlModel[ReviewCanvasInputModel, ReviewCanva
         return render_static_reviewcanvas(self)
 
     def get_review(self) -> str:
-        if not self.state.uploadedfile.type:
+        if not self.state.uploadedfiles:
             return '<pre>ei kuvaa</pre>'
-        # https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs#syntax
 
-        return 'imageurl:' + self.state.uploadedfile.path
+        return 'imageurl:' + self.state.uploadedfiles[0].path
 
 
 @dataclass
@@ -85,8 +81,8 @@ def render_static_reviewcanvas(m: ReviewCanvasHtmlModel) -> str:
 def answer(args: ReviewCanvasAnswerModel) -> PluginAnswerResp:
     web: PluginAnswerWeb = {}
     result: PluginAnswerResp = {'web': web}
-    uploadedfile = args.input.uploadedfile
-    save = {"uploadedfile": uploadedfile}
+    uploadedfiles = args.input.uploadedfiles
+    save = {"uploadedfiles": uploadedfiles}
     result["save"] = save
     web['result'] = "saved"
     return result
