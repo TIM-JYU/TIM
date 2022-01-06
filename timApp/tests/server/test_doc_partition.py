@@ -475,10 +475,7 @@ Koira
 8
 """
         )
-        self.assert_content(
-            self.get(d3.url, as_tree=True),
-            ["1", "2", "3", "", "5", ""],
-        )
+        self.assert_content(self.get(d3.url, as_tree=True), ["1", "2", "3", "", "5"])
 
     # TODO: Test areas + preambles & areas.
 
