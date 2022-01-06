@@ -371,11 +371,10 @@ def generate(
     for doc in doc_entries:
         verify_view_access(doc)
 
-        if not doc.path.startswith(OFFICIAL_STYLES_PATH) and not doc.path.startswith(
-            USER_STYLES_PATH
-        ):
+        settings = doc.document.get_settings()
+        if settings.is_style_document():
             raise RouteException(
-                f"Document {doc.id} ({doc.path}) must be in {OFFICIAL_STYLES_PATH} or {USER_STYLES_PATH}"
+                f"Document {doc.id} ({doc.path}) must be marked as a style document (i.e. has `description` document setting)."
             )
 
     try:
