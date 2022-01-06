@@ -372,7 +372,7 @@ def generate(
         verify_view_access(doc)
 
         settings = doc.document.get_settings()
-        if settings.is_style_document():
+        if not settings.is_style_document():
             raise RouteException(
                 f"Document {doc.id} ({doc.path}) must be marked as a style document (i.e. has `description` document setting)."
             )
