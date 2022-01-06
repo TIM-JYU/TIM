@@ -60,7 +60,7 @@ interface IUploadResponse {
     block: number;
 }
 
-interface IUploadRequestInput {
+interface IReviewCanvasAnswerInput {
     input: {uploadedfiles?: {path: string; type: string}[]};
 }
 
@@ -138,7 +138,6 @@ export class ReviewCanvasComponent
     error?: string;
     isRunning = false;
     timeout: number = 0;
-    count: number = 0;
     connectionErrorMessage?: string;
     userErrorMessage?: string;
     file?: object;
@@ -271,13 +270,13 @@ export class ReviewCanvasComponent
 
         this.isRunning = true;
 
-        const params: IUploadRequestInput = {
+        const params: IReviewCanvasAnswerInput = {
             input: {
                 uploadedfiles: this.uploadedFiles.toArray(),
             },
         };
 
-        const r = await this.postAnswer<IUploadRequestInput>(
+        const r = await this.postAnswer<IReviewCanvasAnswerInput>(
             params,
             new HttpHeaders({timeout: `${this.timeout + defaultTimeout}`})
         );
