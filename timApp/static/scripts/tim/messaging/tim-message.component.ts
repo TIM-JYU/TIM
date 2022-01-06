@@ -26,7 +26,7 @@ const MAX_DISPLAY_LENGTH = 210;
                 {{errorMessage}}
             </tim-alert>
             <div class="timMessageDisplay">
-                <tim-close-button class="closeButton" (click)="closeMessage()"></tim-close-button>
+                <tim-close-button *ngIf="!isGlobal" class="closeButton" (click)="closeMessage()"></tim-close-button>
                 <p class="messageInformation" *ngIf="message.sender">
                     <span class="from" i18n>From: </span>
                     <span class="sender">{{message.sender}}</span>
@@ -58,17 +58,17 @@ const MAX_DISPLAY_LENGTH = 210;
                     </div>
                 </div>
                 <form class="readReceiptArea">
-                    <label class="markAsReadLabel"><input class="markAsReadCheckbox"
-                                                          type="checkbox"
-                                                          name="mark-as-read"
-                                                          id="mark-as-read"
-                                                          [disabled]="!canMarkAsRead || markedAsRead"
-                                                          (click)="markAsRead()" i18n/> Mark as Read</label>
+                    <button class="timButton btn-sm mark-as-read"
+                            (click)="markAsRead()"
+                            [disabled]="!canMarkAsRead || markedAsRead" title="Marks message as read and permanently hides it" i18n-title i18n>
+                        Mark as read
+                    </button>
                     <span class="readReceiptLink" *ngIf="markedAsRead" i18n>
                         Read receipt can be cancelled in <a href="/view/{{message.doc_path}}">the message document</a>
                     </span>
-                    <button class="timButton" title="Close Message" (click)="closeMessage()" i18n>
-                        Close
+                    <button class="timButton hide-message" (click)="closeMessage()">
+                        <ng-container *ngIf="!markedAsRead" i18n>Hide</ng-container>
+                        <ng-container *ngIf="markedAsRead" i18n>Close</ng-container>
                     </button>
                 </form>
             </div>
@@ -179,7 +179,10 @@ export class TimMessageComponent implements OnInit {
     ngOnInit(): void {
         // TODO Display what group the message is related to; currently can't retrieve from database
         this.isGlobal = this.message.doc_path.includes("/global/");
-        if (this.message.message_body.length > MAX_DISPLAY_LENGTH) {
+        if (
+            this.message.message_body.length > MAX_DISPLAY_LENGTH &&
+            !this.isGlobal
+        ) {
             this.messageOverMaxLength = true;
             this.showFullContent = false;
             this.shownContent = `${this.message.message_body.substr(

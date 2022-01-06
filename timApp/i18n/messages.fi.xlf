@@ -1934,14 +1934,6 @@
           <context context-type="linenumber">67,68</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="5547981558491672240" datatype="html">
-        <source> Close </source>
-        <target state="translated"> Sulje </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message.component.ts</context>
-          <context context-type="linenumber">71</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="2108140392962597724" datatype="html">
         <source>Could not reply to message: <x id="PH" equiv-text="result.result.error.error"/></source>
         <target state="translated">Viestiin vastaaminen epäonnistui: <x id="PH" equiv-text="result.result.error.error"/></target>
@@ -4618,6 +4610,30 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
           <context context-type="linenumber">235</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6173403717413698596" datatype="html">
+        <source> Mark as read </source>
+        <target state="translated"> Merkitse luetuksi </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message.component.ts</context>
+          <context context-type="linenumber">63,65</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2609550161342168984" datatype="html">
+        <source>Marks message as read and permanently hides it</source>
+        <target state="translated">Merkitsee viestin luetuksi ja piilottaa sen pysyvästi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message.component.ts</context>
+          <context context-type="linenumber">63</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8461609631969932886" datatype="html">
+        <source>Hide</source>
+        <target state="translated">Piilota</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message.component.ts</context>
+          <context context-type="linenumber">70</context>
         </context-group>
       </trans-unit>
     </body>

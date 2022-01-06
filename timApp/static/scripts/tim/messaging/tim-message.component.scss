@@ -60,32 +60,19 @@ tim-alert {
         grid-template-columns: auto 1fr auto;
         grid-template-areas: "checkbox link button";
         column-gap: 1em;
+        align-items: center;
 
-        input[type='checkbox'] {
+        .mark-as-read {
             grid-area: checkbox;
-            justify-self: start;
-            align-self: start;
-        }
-
-        label {
-            grid-area: checkbox;
-            font-weight: normal;
-            justify-self: start;
-            align-self: start;
         }
 
         .readReceiptLink {
             grid-area: link;
-            margin-top: 5px;
-            font-size: 80%;
-            justify-self: start;
-            align-self: start;
+            font-size: 0.8em;
         }
 
-        .timButton {
+        .hide-message {
             grid-area: button;
-            justify-self: end;
-            align-self: start;
         }
     }
 }
