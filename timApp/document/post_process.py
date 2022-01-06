@@ -370,6 +370,10 @@ def process_areas(
                                     md=alttext,
                                 ).prepare(view_ctx, use_md, cache)
                             )
+                else:
+                    # Hide output of the area paragraph if it's there (e.g. collapse title)
+                    html_par.areainfo.is_collapsed = None
+                    html_par.output = ""
 
         else:
             # Just a normal paragraph

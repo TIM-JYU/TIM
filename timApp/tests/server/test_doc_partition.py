@@ -1,5 +1,5 @@
-from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.item.partitioning import INCLUDE_IN_PARTS_CLASS_NAME
+from timApp.tests.server.timroutetest import TimRouteTest
 
 
 class DocPartitionTest(TimRouteTest):
@@ -477,13 +477,7 @@ Koira
         )
         self.assert_content(
             self.get(d3.url, as_tree=True),
-            [
-                "1",
-                "2",
-                "3",
-                "",
-                "5",
-            ],
+            ["1", "2", "3", "", "5", ""],
         )
 
     # TODO: Test areas + preambles & areas.

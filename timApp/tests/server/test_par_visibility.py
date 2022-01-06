@@ -121,7 +121,7 @@ a title
             self.get(d.url, as_tree=True),
             [
                 "1",
-                "a title",  # TODO: Possibly title should not be visible here.
+                "",
                 "",
                 "3",
             ],
