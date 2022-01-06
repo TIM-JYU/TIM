@@ -35,7 +35,7 @@ def resolve_themes(short_names: list[str]) -> list[DocEntry]:
     # NOTE: We also resolve full docs, but it is okay as style processing only preserves SCSS blocks
     full_names = [
         short_name[1:] if short_name.startswith("/") else short_name
-        for short_name in official_names
+        for short_name in short_names
         if "/" in short_name
     ]
 
