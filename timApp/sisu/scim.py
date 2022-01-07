@@ -438,7 +438,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                 user.set_emails(
                     u.emails, ContactOrigin.Sisu, can_update_primary=u.has_active_email
                 )
-                email_updates.append((prev_email, u.email))
+                email_updates.append((prev_email, user.email))
             else:
                 user = existing_accounts_by_email_dict.get(u.primary_email)
                 if user:
