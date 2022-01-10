@@ -115,7 +115,9 @@ const PluginFields = t.intersection([
                         (uploadDone)="onUploadDone($event)">
                 </file-select-manager>
                 <div class="form-inline small">
-                    <span *ngFor="let item of uploadedFiles">
+                    <span *ngFor="let item of uploadedFiles; let i = index">
+                        <button class="timButton" (click)="moveImageUp(i)">Move up</button>
+                        <button class="timButton" (click)="moveImageDown(i)">Move down</button>
                         <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
                     </span>
                 </div>
@@ -149,9 +151,11 @@ export class ReviewCanvasComponent
     uploadUrl?: string;
     dragAndDrop: boolean = true;
     uploadstem?: string;
-    uploadedFiles = new Set((o: IUploadedFile) =>
-        this.uploadedFileName(o.path)
-    );
+    uploadedFiles: IUploadedFile[] = [];
+
+    // uploadedFiles = new Set((o: IUploadedFile) =>
+    //     this.uploadedFileName(o.path)
+    // );
 
     uploadedFileName(url: string) {
         return url.split("/").slice(6).join("/");
@@ -257,13 +261,27 @@ export class ReviewCanvasComponent
         }
     }
 
-    async saveAnswer() {
+    async moveImageUp(index: number) {
+        const destinationIndex = index === 0 ? this.uploadedFiles.length - 1 : index - 1;
+        this.swapUploadedFilePositions(index, destinationIndex);
+    }
 
-        console.log('saveAnswer() called');
+    async moveImageDown(index: number) {
+        const destinationIndex = index === this.uploadedFiles.length - 1 ? 0 : index + 1;
+        this.swapUploadedFilePositions(index, destinationIndex);
+    }
+
+    swapUploadedFilePositions(index1: number, index2: number) {
+        const tmp = this.uploadedFiles[index2];
+
+        this.uploadedFiles[index2] = this.uploadedFiles[index1];
+        this.uploadedFiles[index1] = tmp;
+    }
+
+    async saveAnswer() {
 
         if (this.uploadedFiles.length === 0) {
             this.userErrorMessage = 'Cannot save answer; no files have been uploaded.';
-            console.log('returning from saveAnswer');
             return;
         }
 
@@ -273,7 +291,7 @@ export class ReviewCanvasComponent
 
         const params: IReviewCanvasAnswerInput = {
             input: {
-                uploadedfiles: this.uploadedFiles.toArray(),
+                uploadedfiles: this.uploadedFiles,
             },
         };
 
@@ -281,9 +299,6 @@ export class ReviewCanvasComponent
             params,
             new HttpHeaders({timeout: `${this.timeout + defaultTimeout}`})
         );
-
-        console.log('saveAnswer: response received from server');
-        console.log(r);
 
         if (r.ok) {
             const data = r.result;
