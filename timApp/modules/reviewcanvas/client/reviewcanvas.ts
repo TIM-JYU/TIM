@@ -262,13 +262,31 @@ export class ReviewCanvasComponent
     }
 
     async moveImageUp(index: number) {
-        const destinationIndex = index === 0 ? this.uploadedFiles.length - 1 : index - 1;
-        await this.swapUploadedFilePositions(index, destinationIndex);
+        if (index === 0) {
+            const item = this.uploadedFiles.shift() as IUploadedFile;
+            this.uploadedFiles.push(item);
+
+            if (this.markup.autosave) {
+                await this.saveAnswer();
+            }
+        }
+        else {
+            await this.swapUploadedFilePositions(index, index - 1);
+        }
     }
 
     async moveImageDown(index: number) {
-        const destinationIndex = index === this.uploadedFiles.length - 1 ? 0 : index + 1;
-        await this.swapUploadedFilePositions(index, destinationIndex);
+        if (index === this.uploadedFiles.length - 1) {
+            const item = this.uploadedFiles.pop() as IUploadedFile;
+            this.uploadedFiles.unshift(item);
+
+            if (this.markup.autosave) {
+                await this.saveAnswer();
+            }
+        }
+        else {
+            await this.swapUploadedFilePositions(index, index + 1);
+        }
     }
 
     async swapUploadedFilePositions(index1: number, index2: number) {
@@ -276,7 +294,7 @@ export class ReviewCanvasComponent
 
         this.uploadedFiles[index2] = this.uploadedFiles[index1];
         this.uploadedFiles[index1] = tmp;
-        
+
         if (this.markup.autosave) {
             await this.saveAnswer();
         }
