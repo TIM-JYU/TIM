@@ -252,13 +252,7 @@ export class ReviewCanvasComponent
             return;
         }
 
-        this.postUploadImage();
-    }
-
-    async postUploadImage() {
-        if (this.markup.autosave) {
-            await this.saveAnswer();
-        }
+        this.doAutoSave();
     }
 
     async moveImageUp(index: number) {
@@ -266,9 +260,7 @@ export class ReviewCanvasComponent
             const item = this.uploadedFiles.shift() as IUploadedFile;
             this.uploadedFiles.push(item);
 
-            if (this.markup.autosave) {
-                await this.saveAnswer();
-            }
+            await this.doAutoSave();
         }
         else {
             await this.swapUploadedFilePositions(index, index - 1);
@@ -280,9 +272,7 @@ export class ReviewCanvasComponent
             const item = this.uploadedFiles.pop() as IUploadedFile;
             this.uploadedFiles.unshift(item);
 
-            if (this.markup.autosave) {
-                await this.saveAnswer();
-            }
+            await this.doAutoSave();
         }
         else {
             await this.swapUploadedFilePositions(index, index + 1);
@@ -295,6 +285,10 @@ export class ReviewCanvasComponent
         this.uploadedFiles[index2] = this.uploadedFiles[index1];
         this.uploadedFiles[index1] = tmp;
 
+        await this.doAutoSave();
+    }
+
+    async doAutoSave() {
         if (this.markup.autosave) {
             await this.saveAnswer();
         }
