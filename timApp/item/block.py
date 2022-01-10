@@ -209,6 +209,9 @@ def insert_block(
                 accessible_from=get_current_time(),
             )
             b.accesses[(owner_group.id, AccessType.owner.value)] = access
+            # Also register to accesses_alt because it may be used by other methods in the same session
+            owner_group.accesses_alt[(b.id, AccessType.owner.value)] = access
+        db.session.flush()
     return b
 
 

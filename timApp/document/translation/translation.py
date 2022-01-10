@@ -65,5 +65,7 @@ class Translation(db.Model, DocInfo):
 def add_tr_entry(doc_id: int, item: DocInfo, tr: Translation) -> Translation:
     new_tr = Translation(doc_id=doc_id, src_docid=item.id, lang_id=tr.lang_id)
     new_tr.title = tr.title
+    # Set docentry so that it can be used without extra queries in other methods
+    new_tr.docentry = item
     db.session.add(new_tr)
     return new_tr

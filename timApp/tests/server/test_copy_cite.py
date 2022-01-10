@@ -1,6 +1,10 @@
+from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
+from timApp.folder.folder import Folder
+from timApp.item.block import BlockType
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
+from timApp.user.userutils import get_default_right_document, grant_access
 from timApp.util.utils import static_tim_doc
 
 
@@ -80,6 +84,49 @@ class CopyCiteTest(TimRouteTest):
         )
         self.assertEqual(
             finnish_par, copy_trs[2].document.get_paragraphs()[0].get_markdown()
+        )
+
+    def test_copy_translations_with_default_rights(self):
+        """Translations of document are copied and default rights are set correctly."""
+        self.login_test1()
+        ug = self.test_user_1.get_personal_group()
+        personal_folder = self.test_user_1.get_personal_folder().path
+
+        f_from = Folder.create(f"{personal_folder}/translations_from", owner_groups=ug)
+        f_to = Folder.create(f"{personal_folder}/translations_to", owner_groups=ug)
+        db.session.commit()
+
+        def_1 = get_default_right_document(
+            f_from, BlockType.Document, create_if_not_exist=True
+        )
+        def_2 = get_default_right_document(
+            f_to, BlockType.Document, create_if_not_exist=True
+        )
+
+        assert def_1 is not None
+        assert def_2 is not None
+
+        grant_access(ug, def_1, AccessType.owner)
+        grant_access(ug, def_2, AccessType.owner)
+        db.session.commit()
+
+        d = self.create_doc(
+            path=f"{f_from.path}/from_doc1", initial_par="suomalainen kappale"
+        )
+        d.lang_id = "fi"
+        d.title = "suomeksi"
+        db.session.commit()
+
+        tr_en = self.create_translation(d, "In English", "en")
+        tr_en.document.modify_paragraph(
+            tr_en.document.get_paragraphs()[0].get_id(), "an English paragraph"
+        )
+        db.session.commit()
+
+        copy = self.create_doc(f"{f_to.path}/to_doc1", copy_from=d.id)
+
+        self.assertEqual(
+            list(copy.block.accesses.keys()), [(ug.id, AccessType.owner.value)]
         )
 
     def test_copy_doc_with_issues(self):
