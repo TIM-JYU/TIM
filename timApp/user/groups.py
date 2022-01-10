@@ -2,12 +2,19 @@ from dataclasses import dataclass
 from operator import attrgetter
 from typing import Any, Optional
 
-from flask import Blueprint
+from flask import Response
 
-from timApp.auth.accesshelper import verify_admin, check_admin_access, AccessDenied
+from timApp.auth.accesshelper import (
+    verify_admin,
+    check_admin_access,
+    AccessDenied,
+)
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
-from timApp.auth.sessioninfo import get_current_user_object
+from timApp.auth.sessioninfo import (
+    get_current_user_object,
+    get_current_user_group_object,
+)
 from timApp.document.create_item import apply_template, create_document
 from timApp.document.docinfo import DocInfo
 from timApp.item.validation import ItemValidationRule
@@ -21,10 +28,11 @@ from timApp.user.user import User, view_access_set, edit_access_set
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import load_data_from_req, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars, get_current_time
 from tim_common.marshmallow_dataclass import class_schema
 
-groups = Blueprint("groups", __name__, url_prefix="/groups")
+groups = TypedBlueprint("groups", __name__, url_prefix="/groups")
 
 USER_NOT_FOUND = "User not found"
 
@@ -101,44 +109,62 @@ def raise_group_not_found_if_none(groupname: str, ug: Optional[UserGroup]):
         raise RouteException(f'User group "{groupname}" not found')
 
 
-@groups.get("/create/<groupname>")
-def create_group(groupname: str):
-    """Route for creating a usergroup.
+@groups.get("/create/<path:grouppath>")
+def create_group(grouppath: str) -> Response:
+    """Route for creating a user group.
 
-    The usergroup name has the following restrictions:
+    The name of user group has the following restrictions:
 
      1. The name must have at least one digit.
      2. The name must have at least one alphabetic character.
      3. The name must NOT have any non-alphanumeric characters, with the exception that spaces are allowed.
 
-    These restrictions are needed in order to distinguish manually-created groups from personal usergroups.
-    Personal usergroup names are either
+    These restrictions are needed in order to distinguish manually-created groups from personal user groups.
+    Personal user group names are either
 
      1. email addresses (containing '@' character), or
      2. lowercase ASCII strings (Korppi users) with length being in range [2,8].
 
     """
-    verify_groupadmin(action=f"Creating group {groupname}")
-    if UserGroup.get_by_name(groupname):
-        raise RouteException("User group already exists.")
-    _, doc = do_create_group(groupname)
+
+    _, doc = do_create_group(grouppath)
     db.session.commit()
     return json_response(doc)
 
 
-def do_create_group(groupname: str) -> tuple[UserGroup, DocInfo]:
-    verify_groupadmin(action=f"Creating group {groupname}")
-    validate_groupname(groupname)
-    u = UserGroup.create(groupname)
+def do_create_group(group_path: str) -> tuple[UserGroup, DocInfo]:
+
+    # The name of the user group is separated from the path.
+    # Does not check whether a name or a path is missing.
+    group_name = group_path.split("/")[-1]
+
+    if UserGroup.get_by_name(group_name):
+        raise RouteException("User group already exists.")
+
+    verify_groupadmin(action=f"Creating group {group_name}")
+    validate_groupname(group_name)
+
+    # To support legacy code:
+    # The group administrator has always writing permission to the groups' root folder.
+    # Creating a new user group into the root folder named groups is always allowed.
+    # Elsewhere, the current user must have group administrator rights.
+    creating_subdirectory = group_path != group_name
+    parent_owner = (
+        get_current_user_group_object()
+        if creating_subdirectory
+        else UserGroup.get_admin_group()
+    )
+
     doc = create_document(
-        f"groups/{remove_path_special_chars(groupname)}",
-        groupname,
-        validation_rule=ItemValidationRule(check_write_perm=False),
-        parent_owner=UserGroup.get_admin_group(),
+        f"groups/{remove_path_special_chars(group_path)}",
+        group_name,
+        validation_rule=ItemValidationRule(check_write_perm=creating_subdirectory),
+        parent_owner=parent_owner,
     )
     apply_template(doc)
-    update_group_doc_settings(doc, groupname)
+    update_group_doc_settings(doc, group_name)
     add_group_infofield_template(doc)
+    u = UserGroup.create(group_name)
     u.admin_doc = doc.block
     f = doc.parent
     if len(f.block.accesses) == 1:

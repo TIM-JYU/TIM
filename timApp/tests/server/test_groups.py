@@ -1,5 +1,6 @@
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
+from timApp.folder.folder import Folder
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
@@ -163,6 +164,76 @@ class GroupTest(TimRouteTest):
                 },
             )
             self.get(f"/groups/show/{groupname}", expect_content=[])
+
+    def test_create_group(self):
+        self.login_test1()  # This was needed to create user1 with group.
+
+        # Test user 1:
+        # Create a user with group administrator rights and login.
+        # Luodaan testikäyttäjä ryhmänhallinnan oikeuksilla ja kirjataan sisään.
+        user1, _ = User.create_with_group(
+            UserInfo(username="user1", email="user1@jyu.fi")
+        )
+        user1.add_to_group(UserGroup.get_groupadmin_group(), added_by=None)
+        db.session.commit()
+        self.login(username=user1.name)
+
+        # Test case 1:
+        # Users should not have a right to create new subdirectories directly to the groups root folder.
+        # Ei pitäisi olla oikeutta luoda käyttäjäryhmiä suoraan juurihakemiston (groups) alihakemistoon.
+        self.get(
+            "/groups/create/kurssit/tie/ohj2/2022k",
+            expect_status=403,
+            expect_content={"error": "You cannot create documents in this folder."},
+        )
+
+        # Test case 2:
+        # Users are able to create user groups to the subdirectories they already have manage access rights to.
+        # Käyttäjät voivat luoda käyttäjäryhmiä juurihakemiston (groups) alihakemistoon, jos siihen on oikeus.
+        Folder.create(
+            "groups/kurssit/tie/ohj2/2022k/tentit", user1.get_personal_group()
+        )
+        db.session.commit()
+        new_group = self.get(
+            "/groups/create/kurssit/tie/ohj2/2022k/tentit/ohj2_valikoe_zoom"
+        )
+        self.assertEqual(
+            new_group["path"],
+            "groups/kurssit/tie/ohj2/2022k/tentit/ohj2_valikoe_zoom",
+        )
+        existing_folder = Folder.find_by_path("groups/kurssit/tie/ohj2/2022k/tentit")
+        self.assertIn(
+            user1.get_personal_group().name,
+            [group.name for group in existing_folder.owners],
+        )
+
+        # Test case 3:
+        # Users are able to create new subdirectories to the directories they have manage access rights to.
+        # Käyttäjät voivat luoda hakemistoon uusia alihakemistoja ja saavat niihin omistusoikeuden.
+        self.get("/groups/create/tie/ohj2/2021s/ohj2_ohjaajat")
+        new_folder = Folder.find_by_path("groups/tie/ohj2/2021s")
+        self.assertIn(
+            user1.get_personal_group().name, [group.name for group in new_folder.owners]
+        )
+
+        # Test user 2:
+        # Create a user with group administrator rights and login.
+        # Luodaan testikäyttäjä ryhmänhallinnan oikeuksilla ja kirjataan sisään.
+        user2, _ = User.create_with_group(
+            UserInfo(username="user2", email="user2@jyu.fi"),
+        )
+        user2.add_to_group(UserGroup.get_groupadmin_group(), added_by=None)
+        db.session.commit()
+        self.login(username=user2.name)
+
+        # Test case 4:
+        # Another user may not create a group in a subdirectory to which user has no rights.
+        # Toinen käyttäjä ei saa luoda ryhmää alihakemistoon, johon hänellä ei ole oikeutta.
+        self.get(
+            "/groups/create/kurssit/tie/ohj2/2021s",
+            expect_status=403,
+            expect_content={"error": "You cannot create documents in this folder."},
+        )
 
     def init_admin(self):
         u = self.test_user_3
