@@ -69,6 +69,7 @@ const PluginMarkupFields = t.intersection([
         inputplaceholder: nullable(t.string),
         inputstem: t.string,
         filename: t.string,
+        autosave: t.boolean
     }),
     GenericPluginMarkup,
     t.type({
@@ -178,8 +179,6 @@ export class ReviewCanvasComponent
                 this.file = newValue;
             });
 
-        console.log(this.attrsall);
-
         if (this.attrsall.state?.uploadedfiles && this.attrsall.state?.uploadedfiles.length > 0) {
             this.attrsall.state.uploadedfiles.forEach(uf => this.uploadedFiles.push(uf));
         }
@@ -253,7 +252,9 @@ export class ReviewCanvasComponent
     }
 
     async postUploadImage() {
-
+        if (this.markup.autosave) {
+            await this.saveAnswer();
+        }
     }
 
     async saveAnswer() {

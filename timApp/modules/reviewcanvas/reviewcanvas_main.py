@@ -17,9 +17,13 @@ from tim_common.pluginserver_flask import GenericHtmlModel, \
 from tim_common.utils import Missing
 
 
+@dataclass
 class UploadedFile:
     path: str
     type: str
+
+    def to_json(self):
+        return asdict(self)
 
 
 @dataclass
@@ -31,6 +35,7 @@ class ReviewCanvasStateModel:
 @dataclass
 class ReviewCanvasMarkupModel(GenericMarkupModel):
     maxSize: Union[int, Missing] = missing
+    autosave: Union[bool, Missing] = missing
 
 
 @dataclass
