@@ -92,11 +92,11 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
     undefined,
     IDocument
 > {
-    protected dialogName: string = "User group";
+    protected dialogName = "UserGroupCreate";
 
-    name: string = "";
-    folder: string = "";
-    message?: string = undefined;
+    name = "";
+    folder = "";
+    message?: string;
 
     constructor(private http: HttpClient) {
         super();

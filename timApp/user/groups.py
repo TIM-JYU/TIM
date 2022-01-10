@@ -58,27 +58,27 @@ def verify_groupadmin(
     return True
 
 
-def get_uid_gid(groupname, usernames) -> tuple[UserGroup, list[User]]:
+def get_uid_gid(group_name, usernames) -> tuple[UserGroup, list[User]]:
     users = User.query.filter(User.name.in_(usernames)).all()
-    group = UserGroup.query.filter_by(name=groupname).first()
-    raise_group_not_found_if_none(groupname, group)
+    group = UserGroup.query.filter_by(name=group_name).first()
+    raise_group_not_found_if_none(group_name, group)
     return group, users
 
 
 @groups.get("/getOrgs")
-def get_organizations():
+def get_organizations() -> Response:
     return json_response(UserGroup.get_organizations())
 
 
-@groups.get("/show/<groupname>")
-def show_members(groupname):
-    ug = get_group_or_abort(groupname)
+@groups.get("/show/<group_name>")
+def show_members(group_name: str) -> Response:
+    ug = get_group_or_abort(group_name)
     verify_group_view_access(ug)
     return json_response(sorted(list(ug.users), key=attrgetter("id")))
 
 
 @groups.get("/usergroups/<username>")
-def show_usergroups(username):
+def show_usergroups(username: str) -> Response:
     verify_admin()
     u = User.get_by_name(username)
     if not u:
@@ -88,9 +88,9 @@ def show_usergroups(username):
     )
 
 
-@groups.get("/belongs/<username>/<groupname>")
-def belongs(username, groupname):
-    ug = get_group_or_abort(groupname)
+@groups.get("/belongs/<username>/<group_name>")
+def belongs(username: str, group_name: str) -> Response:
+    ug = get_group_or_abort(group_name)
     verify_group_view_access(ug)
     u = User.get_by_name(username)
     if not u:
@@ -98,19 +98,19 @@ def belongs(username, groupname):
     return json_response({"status": ug in u.groups})
 
 
-def get_group_or_abort(groupname: str):
-    ug = UserGroup.get_by_name(groupname)
-    raise_group_not_found_if_none(groupname, ug)
+def get_group_or_abort(group_name: str):
+    ug = UserGroup.get_by_name(group_name)
+    raise_group_not_found_if_none(group_name, ug)
     return ug
 
 
-def raise_group_not_found_if_none(groupname: str, ug: Optional[UserGroup]):
+def raise_group_not_found_if_none(group_name: str, ug: Optional[UserGroup]):
     if not ug:
-        raise RouteException(f'User group "{groupname}" not found')
+        raise RouteException(f'User group "{group_name}" not found')
 
 
-@groups.get("/create/<path:grouppath>")
-def create_group(grouppath: str) -> Response:
+@groups.get("/create/<path:group_path>")
+def create_group(group_path: str) -> Response:
     """Route for creating a user group.
 
     The name of user group has the following restrictions:
@@ -127,7 +127,7 @@ def create_group(grouppath: str) -> Response:
 
     """
 
-    _, doc = do_create_group(grouppath)
+    _, doc = do_create_group(group_path)
     db.session.commit()
     return json_response(doc)
 
@@ -177,7 +177,7 @@ def do_create_group(group_path: str) -> tuple[UserGroup, DocInfo]:
     return u, doc
 
 
-def add_group_infofield_template(doc: DocInfo) -> None:
+def add_group_infofield_template(doc: DocInfo):
     text = """
 ## Omia kenttiä {defaultplugin="textfield" readonly="view" .hidden-print}
 {#info autosave: true #}    
@@ -186,29 +186,29 @@ def add_group_infofield_template(doc: DocInfo) -> None:
 
 
 def update_group_doc_settings(
-    doc: DocInfo, groupname: str, extra_macros: dict[str, Any] = None
+    doc: DocInfo, group_name: str, extra_macros: dict[str, Any] = None
 ):
     s = doc.document.get_settings().get_dict().get("macros", {})
-    s["group"] = groupname
+    s["group"] = group_name
     s["fields"] = ["info"]
-    s["maxRows"] = "40em"  # maxrows for group list
+    s["maxRows"] = "40em"  # max rows for group list
     if extra_macros:
         s.update(extra_macros)
     doc.document.add_setting("macros", s)
 
 
-def validate_groupname(groupname: str):
+def validate_groupname(group_name: str):
     has_digits = False
     has_letters = False
     has_non_alnum = False
-    for c in groupname:
+    for c in group_name:
         has_digits = has_digits or c.isdigit()
         has_letters = has_letters or c.isalpha()
         has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace() or c in "-_")
     if not has_digits or not has_letters or has_non_alnum:
         raise RouteException(
-            'Usergroup must contain at least one digit and one letter and must not have special chars: "'
-            + groupname
+            'User group must contain at least one digit and one letter and must not have special chars: "'
+            + group_name
             + '"'
         )
 
@@ -244,9 +244,9 @@ def verify_group_view_access(ug: UserGroup, user=None, require=True):
     return verify_group_access(ug, view_access_set, user, require=require)
 
 
-def get_member_infos(groupname: str, usernames: list[str]):
+def get_member_infos(group_name: str, usernames: list[str]):
     usernames = get_usernames(usernames)
-    group, users = get_uid_gid(groupname, usernames)
+    group, users = get_uid_gid(group_name, usernames)
     verify_group_edit_access(group)
     existing_usernames = {u.name for u in users}
     existing_ids = {u.id for u in group.users}
@@ -262,11 +262,11 @@ class NamesModel:
 NamesModelSchema = class_schema(NamesModel)
 
 
-@groups.post("/addmember/<groupname>")
-def add_member(groupname):
+@groups.post("/addmember/<group_name>")
+def add_member(group_name: str) -> Response:
     nm: NamesModel = load_data_from_req(NamesModelSchema)
     existing_ids, group, not_exist, usernames, users = get_member_infos(
-        groupname, nm.names
+        group_name, nm.names
     )
     if set(nm.names) & SPECIAL_USERNAMES:
         raise RouteException("Cannot add special users.")
@@ -287,11 +287,11 @@ def add_member(groupname):
     )
 
 
-@groups.post("/removemember/<groupname>")
-def remove_member(groupname):
+@groups.post("/removemember/<group_name>")
+def remove_member(group_name: str) -> Response:
     nm: NamesModel = load_data_from_req(NamesModelSchema)
     existing_ids, group, not_exist, usernames, users = get_member_infos(
-        groupname, nm.names
+        group_name, nm.names
     )
     removed = []
     does_not_belong = []
