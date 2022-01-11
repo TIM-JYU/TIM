@@ -512,6 +512,9 @@ class Plugin:
     def is_lazy(self) -> bool:
         if self.type in NEVERLAZY_PLUGINS:
             return False
+        # Question paragraphs are not lazy
+        if self.par.is_question():
+            return False
         do_lazy = self.options.do_lazy
         plugin_lazy = self.plugin_lazy
         html = self.output
