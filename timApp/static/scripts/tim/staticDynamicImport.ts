@@ -57,7 +57,7 @@ export function staticDynamicImport(s: string) {
         case "/feedback/js/build/feedback.js":
             return import("modules/feedback/js/feedback");
         case "/field/js/build/goaltable.js":
-            return import("modules/fields/js/goaltable");
+            return import("modules/fields/js/goaltable-plugin.component");
         // Redirect mmcq scripts.
         case "/mmcq/script2.js":
         case "/mmcq/SimpleDirective.js":

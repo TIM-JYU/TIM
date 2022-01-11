@@ -1,8 +1,8 @@
 /**
  * Defines the client-side implementation of JavaScript runner plugin.
  */
-import angular from "angular";
 import * as t from "io-ts";
+import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -10,14 +10,20 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http} from "tim/util/ngimport";
-import {defaultTimeout, to} from "tim/util/utils";
+import {BrowserModule} from "@angular/platform-browser";
+import {HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
+import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
+import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
+import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
+import {
+    createDowngradedModule,
+    doDowngrade,
+} from "../../../static/scripts/tim/downgrade";
 
-const goalTableApp = angular.module("goalTableApp", ["ngSanitize"]);
-export const moduleDefs = [goalTableApp];
-
-// this.attrs
 const GoalTableMarkup = t.intersection([
     t.partial({
         goals: t.array(t.string),
@@ -78,8 +84,53 @@ const scaleValueWords: Word[] = [
     {fi: "osaa luoda", en: "create"}, // 6
 ];
 
-class GoalTableController
-    extends PluginBase<
+@Component({
+    selector: "tim-goaltable-runner",
+    template: `
+        <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+        <div [class.csRunDiv]="borders" class="goalTableDiv no-popup-menu">
+            <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
+            <div class="goalTableInner">
+                <p>
+                    <span *ngIf="stem" class="stem" [innerHtml]="stem | purify"></span>
+                    <span *ngIf="bloomText" class="bloom" [innerHtml]="bloomText | purify"></span>
+                </p>
+                <label class="editText small hidden-print " [title]="editTitle">{{editText}}
+                    <input type="checkbox" [(ngModel)]="editMode">
+                </label>
+                <table class="goaltable">
+                    <tbody>
+                        <tr class="heading">
+                            <th>{{goalText}}</th>
+                            <th *ngFor="let h of headings" [title]="getTitle(h)">{{h}}</th>
+                        </tr>
+                        <tr class="itemrow" *ngFor="let row of rows">
+                            <td [innerHtml]="row.itemtext | purify"></td>
+                            <td *ngFor="let h of headings" [ngStyle]="cellTDStyle(row, h)"
+                                (click)="rbClicked(row, h)"
+                            >
+                                <span class="goalspan" [ngStyle]="cellStyle(row, h)" [innerHtml]="getCell(row, h)"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="csRunMenuArea hidden-print">
+                    <button class="timButton" [disabled]="isRunning || !isUnSaved()" (click)="save()"
+                            *ngIf="editMode || isUnSaved()">
+                        {{btnText}}
+                    </button>
+                    <span class="notSavedSpan" *ngIf="isUnSaved()"></span>
+                    <span *ngIf="result">{{result}}</span>
+                </div>
+                <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+                <p></p>
+            </div>
+        </div>
+`,
+    styleUrls: ["goaltable-plugin.component.scss"],
+})
+export class GoalTablePluginComponent
+    extends AngularPluginBase<
         t.TypeOf<typeof GoalTableMarkup>,
         t.TypeOf<typeof GoalTableAll>,
         typeof GoalTableAll
@@ -87,28 +138,26 @@ class GoalTableController
     implements ITimComponent
 {
     private vctrl!: ViewCtrl;
-    private isRunning = false;
+    isRunning = false;
     private error: {message?: string; stacktrace?: string} = {};
-    private result: string = "";
-    // noinspection JSMismatchedCollectionQueryUpdate
-    private headings: string[] = [];
-    // noinspection JSMismatchedCollectionQueryUpdate
-    private rows: GoalLine[] = [];
-    private mingoal: number = 0;
-    private maxgoal: number = 6;
-    private initgoal: number = 0;
-    private editMode: boolean = false;
+    result: string = "";
+    headings: string[] = [];
+    rows: GoalLine[] = [];
+    private minGoal: number = 0;
+    private maxGoal: number = 6;
+    private initGoal: number = 0;
+    editMode: boolean = false;
     private initialValue: string = "";
-    private saveResponse: {saved: boolean; message: string | undefined} = {
+    saveResponse: {saved: boolean; message: string | undefined} = {
         saved: false,
         message: undefined,
     };
     private content: string = "";
-    private bloomText: string = "";
-    private editText: string = "";
-    private goalText: string = "";
-    private btnText: string = "";
-    private editTitle: string = "";
+    bloomText: string = "";
+    editText: string = "";
+    goalText: string = "";
+    btnText: string = "";
+    editTitle: string = "";
     private lang: string = "fi";
     private scaleWords: string[] = [];
 
@@ -116,26 +165,31 @@ class GoalTableController
         return {};
     }
 
-    $onInit() {
-        super.$onInit();
+    get borders() {
+        return this.markup.borders;
+    }
+
+    ngOnInit() {
+        super.ngOnInit();
+        this.vctrl = vctrlInstance!;
         const aa = this.attrsall;
-        const lang = this.attrs.lang || "fi";
+        const lang = this.markup.lang || "fi";
         this.lang = lang;
         const state = aa.state?.c ?? {};
-        this.mingoal = this.attrs.mingoal ?? 0;
-        this.maxgoal = this.attrs.maxgoal ?? scaleValueWords.length - 1;
-        this.initgoal = this.attrs.initgoal ?? 0;
-        for (let i = this.mingoal; i <= this.maxgoal; i++) {
+        this.minGoal = this.markup.mingoal ?? 0;
+        this.maxGoal = this.markup.maxgoal ?? scaleValueWords.length - 1;
+        this.initGoal = this.markup.initgoal ?? 0;
+        for (let i = this.minGoal; i <= this.maxGoal; i++) {
             this.headings.push("" + i);
         }
-        for (const s of this.attrs.goals ?? []) {
+        for (const s of this.markup.goals ?? []) {
             const parts = s.split(";", 3);
             const iid = s.indexOf(";");
             const ig = s.indexOf(";", iid + 1);
             const id = parts[0].trim();
             const goal = parts[1].trim() || "0";
             const itemtext = s.substring(ig + 1).trim() || "";
-            const userselection = state[id] || "" + this.initgoal;
+            const userselection = state[id] || "" + this.initGoal;
 
             this.rows.push({
                 id: id,
@@ -149,15 +203,15 @@ class GoalTableController
         this.vctrl.addTimComponent(this);
 
         // make translated words
-        if (this.attrs.goalscale) {
-            this.scaleWords = this.attrs.goalscale;
+        if (this.markup.goalscale) {
+            this.scaleWords = this.markup.goalscale;
         } else {
             for (let i = 0; i < scaleValueWords.length; i++) {
                 this.scaleWords[i] = scaleValueWords[i][lang];
             }
         }
-        if (this.attrs.bloom) {
-            if (this.attrs.lang === "en") {
+        if (this.markup.bloom) {
+            if (this.markup.lang === "en") {
                 this.bloomText = "(learning outcomes by Bloom's taxonomy: ";
             } else {
                 this.bloomText =
@@ -171,14 +225,14 @@ class GoalTableController
             this.bloomText += ")";
         }
         this.btnText = super.buttonText() ?? goalTableWords.btnText[lang];
-        this.editText = this.attrs.editText ?? goalTableWords.editText[lang];
-        this.goalText = this.attrs.goalText ?? goalTableWords.goalText[lang];
+        this.editText = this.markup.editText ?? goalTableWords.editText[lang];
+        this.goalText = this.markup.goalText ?? goalTableWords.goalText[lang];
         this.editTitle = goalTableWords.editTitle[lang];
     }
 
     private getJSContent() {
         const c: Record<string, string> = {};
-        const def: string = "" + this.initgoal;
+        const def: string = "" + this.initGoal;
         for (const row of this.rows) {
             const u = row.userSelection;
             if (u !== def) {
@@ -204,7 +258,6 @@ class GoalTableController
         return this.content;
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Checking if input has been changed since the last Save or initialization.
      * Displays a red thick marker at the right side of the inputfield to notify users
@@ -227,11 +280,8 @@ class GoalTableController
         return this.saveResponse;
     }
 
-    // noinspection JSUnusedGlobalSymbols
     async saveText() {
         this.isRunning = true;
-        const url = this.pluginMeta.getAnswerUrl();
-        // url.replace("answer", "goalTable");
         const c = this.getJSContent();
         const params = {
             input: {
@@ -243,44 +293,41 @@ class GoalTableController
         this.error = {};
         this.result = "";
 
-        const r = await to(
-            $http<{
-                web?: {result?: string; error?: string};
-                error?: string;
-            }>({method: "PUT", url: url, data: params, timeout: defaultTimeout})
-        );
+        const r = await this.postAnswer<{
+            web?: {result?: string; error?: string};
+            error?: string;
+        }>(params);
 
         this.isRunning = false;
         if (!r.ok) {
-            const e = r.result.data.error;
+            const e = r.result.error.error;
             if (e) {
                 this.error.message = e;
                 return;
             }
-            this.error.message = r.result.data.error;
+            this.error.message = r.result.error.error;
             return;
         }
-        if (!r.result.data.web) {
+        if (!r.result.web) {
             this.error.message = "No web reply from GoalTable!";
             return;
         }
-        if (r.result.data.error) {
-            this.error.message = r.result.data.error;
+        if (r.result.error) {
+            this.error.message = r.result.error;
             return;
         }
-        if (r.result.data.web.error) {
-            this.error.message = r.result.data.web.error;
+        if (r.result.web.error) {
+            this.error.message = r.result.web.error;
             return;
         }
-        if (r.result.data.web.result) {
-            this.result = r.result.data.web.result;
+        if (r.result.web.result) {
+            this.result = r.result.web.result;
             this.initialValue = this.getContent();
             return;
         }
     }
 
-    // noinspection JSUnusedLocalSymbols
-    private rbClicked(row: GoalLine, h: string) {
+    rbClicked(row: GoalLine, h: string) {
         if (!this.editMode) {
             return;
         }
@@ -290,7 +337,7 @@ class GoalTableController
     }
 
     // noinspection JSMethodCanBeStatic,JSUnusedLocalSymbols
-    private cellStyle(row: GoalLine, h: string) {
+    cellStyle(row: GoalLine, h: string) {
         const styles: Record<string, string> = {};
         const userSelection: string = row.userSelection;
         if (row.goal <= userSelection && userSelection === h) {
@@ -304,7 +351,7 @@ class GoalTableController
     }
 
     // noinspection JSMethodCanBeStatic,JSUnusedLocalSymbols
-    private cellTDStyle(row: GoalLine, h: string) {
+    cellTDStyle(row: GoalLine, h: string) {
         const styles: Record<string, string> = {};
         if (row.goal === h) {
             styles["background-color"] = "#ffff00";
@@ -312,7 +359,7 @@ class GoalTableController
         return styles;
     }
 
-    private getCell(row: GoalLine, h: string) {
+    getCell(row: GoalLine, h: string) {
         let html = "&nbsp;";
         const userSelection: string = row.userSelection;
         /* if ( row.goal <= userSelection && userSelection === h) {
@@ -326,56 +373,35 @@ class GoalTableController
         return html;
     }
 
-    private getTitle(h: string) {
+    getTitle(h: string) {
         const title: string = h + " = " + this.scaleWords[+h];
         return title;
     }
 }
 
-goalTableApp.component("goaltableRunner", {
-    bindings: pluginBindings,
-    controller: GoalTableController,
-    require: {
-        vctrl: "^timView",
-    },
-    template: `
-<tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
-<div ng-cloak ng-class="{'csRunDiv': ($ctrl.attrs.borders )}" class="goalTableDiv no-popup-menu" >
-   <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-   <div class="goalTableInner">
-    <p>
-    <stem ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></stem>
-    <stem ng-if="::$ctrl.bloomText" class="bloom" ng-bind-html="::$ctrl.bloomText"></stem>
-    </p>
-        <label class="editText small hidden-print " ng-attr-title="{{::$ctrl.editTitle}}">{{::$ctrl.editText}}
-         <input type="checkbox" ng-model="$ctrl.editMode">
-         </label>
-    <table class="goaltable">
-      <tr class="heading">
-        <th>{{::$ctrl.goalText}}</th>
-        <th ng-repeat="$h in $ctrl.headings"  ng-attr-title="{{::$ctrl.getTitle($h)}}">{{::$h}}</th>
-      </tr>
-      <tr class="itemrow" ng-repeat="$row in $ctrl.rows" >
-        <td ng-bind-html="::$row.itemtext"></td>
-        <td ng-repeat="$h in $ctrl.headings" ng-style="::$ctrl.cellTDStyle($row, $h)"
-            ng-click="$ctrl.rbClicked($row, $h)"
-        >
-          <span class="goalspan" ng-style="$ctrl.cellStyle($row, $h)" ng-bind-html="::$ctrl.getCell($row, $h)"  ></span>
-          <!-- <input type="radio" ng-model="$row.id" ng-value="$h" ng-click="$ctrl.rbClicked($row, $h)"> -->
-        </td>
-      </tr>
-    </table>
-    <div class="csRunMenuArea hidden-print" >
-        <button class="timButton"  ng-disabled="$ctrl.isRunning || !$ctrl.isUnSaved()" ng-click="$ctrl.save()" ng-show="$ctrl.editMode || $ctrl.isUnSaved()">
-            {{::$ctrl.btnText}}
-        </button>
-        <span class = "notSavedSpan" ng-show="$ctrl.isUnSaved()"></span>
-        <span ng-if="$ctrl.result">{{$ctrl.result}}</span>
-    </div>
-    <pre ng-if="$ctrl.output">{{$ctrl.output}}</pre>
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-    <p></p>
-   </div>
-</div>
-`,
-});
+@NgModule({
+    declarations: [GoalTablePluginComponent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        TimUtilityModule,
+        FormsModule,
+        TooltipModule.forRoot(),
+        PurifyModule,
+    ],
+})
+export class GoalTableModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
+
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                GoalTableModule
+            )
+        ),
+        "goaltableRunner",
+        GoalTablePluginComponent
+    ),
+];
