@@ -1,7 +1,6 @@
-from time import sleep
-
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions
 
 from timApp.tests.browser.browsertest import BrowserTest
 
@@ -70,13 +69,25 @@ Test
         def wait_jsrunner_done():
             self.wait_until_hidden("js-runner tim-loading")
 
+        def click_jsrunner():
+            self.drv.find_element(
+                By.CSS_SELECTOR, "div:nth-child(1) > .timButton:nth-child(1)"
+            ).click()
+            wait_jsrunner_done()
+
+        def wait_jsrunner_output(text: str):
+            self.wait_until_present(f"js-runner .jsrunner-output")
+            self.wait.until(
+                expected_conditions.text_to_be_present_in_element(
+                    (By.CSS_SELECTOR, "js-runner .jsrunner-output"), text
+                )
+            )
+
         wait_refresh_done()
         screenshot("initial")
 
-        self.drv.find_element(
-            By.CSS_SELECTOR, "div:nth-child(1) > .timButton:nth-child(1)"
-        ).click()
-        wait_jsrunner_done()
+        click_jsrunner()
+        wait_jsrunner_output("You need to say Yes to see the hidden content!")
         screenshot("no_answer_click")
 
         element = self.drv.find_element(
@@ -91,10 +102,8 @@ Test
         actions = ActionChains(self.drv)
         actions.move_to_element(element).perform()
         self.drv.find_element(By.CSS_SELECTOR, ".csRunDiv > .timButton").click()
-        self.drv.find_element(
-            By.CSS_SELECTOR, "div:nth-child(1) > .timButton:nth-child(1)"
-        ).click()
-        wait_jsrunner_done()
+        click_jsrunner()
+        wait_jsrunner_output("You can now see the hidden content!")
         screenshot("yes_click")
 
         self.refresh()
@@ -105,10 +114,8 @@ Test
             By.CSS_SELECTOR, ".qst-tr:nth-child(2) .qst-normal"
         ).click()
         self.drv.find_element(By.CSS_SELECTOR, ".csRunDiv > .timButton").click()
-        self.drv.find_element(
-            By.CSS_SELECTOR, "div:nth-child(1) > .timButton:nth-child(1)"
-        ).click()
-        wait_jsrunner_done()
+        click_jsrunner()
+        wait_jsrunner_output("You need to say Yes to see the hidden content!")
         screenshot("no_click")
 
         self.refresh()

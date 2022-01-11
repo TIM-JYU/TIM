@@ -1,8 +1,7 @@
-from time import sleep
-
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.select import Select
 
 from timApp.tests.browser.browsertest import BrowserTest, find_button_by_text
@@ -24,17 +23,19 @@ class VelpTest(BrowserTest):
         velp_selection_element = self.drv.find_element(
             by=By.CSS_SELECTOR, value="#velpSelection"
         )
+
+        create_velp_btn = find_button_by_text(velp_selection_element, "Create new velp")
+        self.wait.until(expected_conditions.element_to_be_clickable(create_velp_btn))
+
         self.assert_same_screenshot(
             velp_selection_element, ["velps/velp_selection_empty"]
         )
-        create_velp_btn = find_button_by_text(velp_selection_element, "Create new velp")
+
         create_velp_btn.click()
         new_velp_selector = ".velp-data.new.edit"
         new_velp_element: WebElement = velp_selection_element.find_element(
             by=By.CSS_SELECTOR, value=new_velp_selector
         )
-        # Wait a moment until all group info has been loaded
-        sleep(2)
         self.assert_same_screenshot(new_velp_element, "velps/create_new_velp_empty")
 
         velp_content_input: WebElement = new_velp_element.find_element(

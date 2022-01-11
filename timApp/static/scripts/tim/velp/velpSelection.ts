@@ -48,6 +48,7 @@ const sortLang: string = "fi";
  * Controller for velp selection
  */
 export class VelpSelectionController implements IController {
+    private initialized = false;
     private labels: ILabelUI[];
     private velpGroups: IVelpGroupUI[];
     private newVelp: INewVelp;
@@ -310,6 +311,7 @@ export class VelpSelectionController implements IController {
         });
 
         this.updateVelpList();
+        this.initialized = true;
     }
 
     // Methods

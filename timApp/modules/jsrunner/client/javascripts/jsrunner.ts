@@ -287,7 +287,7 @@ jsrunnerApp.component("jsRunner", {
     <pre ng-if="$ctrl.error">{{$ctrl.error.stackTrace}}</pre>
     <jsrunner-error ng-repeat="err in $ctrl.scriptErrors" e="err"></jsrunner-error>
     <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
-    <div ng-if="$ctrl.output">
+    <div class="jsrunner-output" ng-if="$ctrl.output">
     <p class="pull-right">
         <a class="smalltext" ng-click="$ctrl.copyText()" title="Copy to clipboard" 
            style="position: absolute; right: 0;">copy</a>
