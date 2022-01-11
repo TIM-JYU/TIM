@@ -12,22 +12,22 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
     selector: "tim-user-group-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
+            <ng-container i18n header>
                 Create group
             </ng-container>
             <ng-container body>
                 <form #form="ngForm" class="form-horizontal">
                     <div class="form-group"
-                         [ngClass]="{'has-error': ngModelName.touched && ngModelName.invalid}">
+                         [ngClass]="{'has-error': ngModelName.invalid && ngModelName.dirty}">
                         
-                        <label for="name" class="col-sm-2 control-label">Name:</label>
+                        <label i18n for="name" class="col-sm-2 control-label">Name</label>
                         <div class="col-sm-10">
-                            <input type="text" required
+                            <input i18n-placeholder type="text" required
                                    [(ngModel)]="name" #ngModelName="ngModel"
                                    (ngModelChange)="setMessage()"
                                    pattern="[^/]*"
                                    id="name" name="name"
-                                   class="form-control" 
+                                   class="form-control"
                                    placeholder="Enter the name of the user group"/>
                             </div>
                     </div>
@@ -39,11 +39,11 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
                     -->
                     
                     <div class="form-group">
-                        <label for="folder" class="col-sm-2 control-label">Folder:</label>
+                        <label i18n for="folder" class="col-sm-2 control-label">Folder</label>
                         <div class="col-sm-10">
                             <div class="input-group">
                                 <span class="input-group-addon">groups/</span>
-                                <input type="text"
+                                <input i18n-placeholder type="text"
                                        [(ngModel)]="folder"
                                        (ngModelChange)="setMessage()"
                                        id="folder" name="folder"
@@ -62,11 +62,11 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
                 Refer to documentation: https://angular.io/guide/form-validation#validating-form-input
                 -->
                     
-                <tim-alert *ngIf="ngModelName.invalid && ngModelName.touched" severity="danger">
-                    <ng-container *ngIf="ngModelName.errors?.['required']">
+                <tim-alert *ngIf="ngModelName.invalid && ngModelName.dirty" severity="danger">
+                    <ng-container i18n *ngIf="ngModelName.errors?.['required']">
                         Name is required.
                     </ng-container>
-                    <ng-container *ngIf="ngModelName.errors?.['pattern']">
+                    <ng-container i18n *ngIf="ngModelName.errors?.['pattern']">
                         Name should not contain the slash character.
                     </ng-container>
                 </tim-alert>
@@ -78,10 +78,10 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
                 
             </ng-container>
             <ng-container footer>
-                <button class="timButton" type="button" (click)="saveGroup()" [disabled]="form.invalid">
-                    Save
+                <button i18n class="timButton" type="button" (click)="saveGroup()" [disabled]="form.invalid">
+                    Create
                 </button>
-                <button class="btn btn-default" type="button" (click)="dismiss()">
+                <button i18n class="btn btn-default" type="button" (click)="dismiss()">
                     Cancel
                 </button>
             </ng-container>
