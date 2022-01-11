@@ -13,6 +13,10 @@ input[type="checkbox"] {
     @extend .stem-center;
 }
 
+.warnFrame {
+    @extend .bottomWarnFrame;
+}
+
 .form-control {
     width: 100%;
     height: auto;

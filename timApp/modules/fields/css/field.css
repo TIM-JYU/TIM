@@ -135,9 +135,7 @@ textfield-runner .stem, rbfield-runner .stem  {
 }
 
 .pluginrbfield .warnFrame {
-    border-bottom-style: solid;
-    border-bottom-color: gold;
-    border-bottom-width: thick;
+    border-bottom: thick solid gold;
 }
 
 .pluginrbfield .stem {
