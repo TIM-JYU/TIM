@@ -1,8 +1,8 @@
 /**
  * Defines the client-side implementation of a dropdown plugin.
  */
-import angular from "angular";
 import * as t from "io-ts";
+import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
 import {
     ChangeType,
     FormModeOption,
@@ -16,17 +16,21 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
+import {getFormBehavior, shuffleStrings} from "tim/plugin/util";
+import {defaultErrorMessage} from "tim/util/utils";
+import {BrowserModule} from "@angular/platform-browser";
+import {HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
+import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
 import {
-    getFormBehavior,
-    PluginBase,
-    pluginBindings,
-    shuffleStrings,
-} from "tim/plugin/util";
-import {$http} from "tim/util/ngimport";
-import {defaultErrorMessage, defaultTimeout, to} from "tim/util/utils";
-
-const dropdownApp = angular.module("dropdownApp", ["ngSanitize"]);
-export const moduleDefs = [dropdownApp];
+    createDowngradedModule,
+    doDowngrade,
+} from "../../../static/scripts/tim/downgrade";
+import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
+import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
 
 const DropdownMarkup = t.intersection([
     t.partial({
@@ -53,44 +57,75 @@ const DropdownAll = t.intersection([
     }),
 ]);
 
-class DropdownController
-    extends PluginBase<
+@Component({
+    selector: "tim-dropdown-runner",
+    template: `
+<div>
+    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
+    <p class="stem" *ngIf="stem">{{stem}}</p>
+    <div class="form-inline">
+        <div class="dropdown-radio" *ngIf="radio">
+            <label *ngFor="let item of wordList">
+                <input type="radio"
+                          name="selection"
+                          value="{{item}}"
+                          [(ngModel)]="selectedWord"
+                          (ngModelChange)="updateSelection()">
+                {{item}}
+            </label>        
+        </div>
+        <select *ngIf="!radio"
+                [(ngModel)]="selectedWord"
+                (ngModelChange)="updateSelection()"
+                [ngClass]="{warnFrame: isUnSaved()}">
+            <option *ngFor="let item of wordList" [value]="item">{{item}}</option>
+        </select>
+    </div>
+    <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
+    <div class="error" *ngIf="error" [innerHtml]="error"></div>
+    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
+</div>`,
+    styleUrls: ["./dropdown-plugin.component.scss"],
+})
+export class DropdownPluginComponent
+    extends AngularPluginBase<
         t.TypeOf<typeof DropdownMarkup>,
         t.TypeOf<typeof DropdownAll>,
         typeof DropdownAll
     >
     implements ITimComponent
 {
-    private error?: string;
-    // noinspection JSMismatchedCollectionQueryUpdate
-    private wordList?: string[];
-    private selectedWord?: string;
+    error?: string;
+    wordList?: string[];
+    selectedWord?: string;
     private initialWord?: string;
     private vctrl!: ViewCtrl;
     private forceSave = false;
-    private radio?: boolean;
+    radio?: boolean;
     private shuffle?: boolean;
     private changes = false;
-    private connectionErrorMessage?: string;
+    connectionErrorMessage?: string;
 
     getDefaultMarkup() {
         return {};
     }
 
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
+        this.vctrl = vctrlInstance!;
         this.selectedWord = this.attrsall.state?.c ?? undefined;
-        this.shuffle = this.attrs.shuffle;
-        if (this.shuffle && this.attrs.words) {
-            this.wordList = shuffleStrings(this.attrs.words);
+        this.shuffle = this.markup.shuffle;
+        if (this.shuffle && this.markup.words) {
+            this.wordList = shuffleStrings(this.markup.words);
         } else {
-            this.wordList = this.attrs.words ?? [];
+            this.wordList = this.markup.words ?? [];
         }
         if (!this.attrsall.preview) {
             this.addToCtrl();
         }
-        this.radio = this.attrs.radio;
-        if (this.attrs.answers) {
+        this.radio = this.markup.radio;
+        if (this.markup.answers) {
             // TODO: Implement showing and hiding the answer browser if it is deemed useful.
         }
     }
@@ -99,7 +134,7 @@ class DropdownController
      * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
      */
     addToCtrl() {
-        this.vctrl.addTimComponent(this, this.attrs.tag);
+        this.vctrl.addTimComponent(this, this.markup.tag);
     }
 
     /**
@@ -114,7 +149,7 @@ class DropdownController
      * Saves the selection that in the plugin.
      */
     async save() {
-        return await this.doSave(this.attrs.instruction);
+        return await this.doSave(this.markup.instruction);
     }
 
     async doSave(nosave: boolean) {
@@ -137,23 +172,20 @@ class DropdownController
             params.input.nosave = true;
         }
 
-        const url = this.pluginMeta.getAnswerUrl();
-        const r = await to(
-            $http.put<{web: {result: string; error?: string}}>(url, params, {
-                timeout: defaultTimeout,
-            })
-        );
+        const r = await this.postAnswer<{
+            web: {result: string; error?: string};
+        }>(params);
 
         if (r.ok) {
             this.changes = false;
             this.updateListeners(ChangeType.Saved);
-            const data = r.result.data;
+            const data = r.result;
             this.error = data.web.error;
         } else {
-            this.error = r.result.data?.error;
+            this.error = r.result.error.error;
             this.connectionErrorMessage =
                 this.error ??
-                this.attrs.connectionErrorMessage ??
+                this.markup.connectionErrorMessage ??
                 defaultErrorMessage;
         }
         this.initialWord = this.selectedWord;
@@ -165,7 +197,7 @@ class DropdownController
             this.changes = true;
             this.updateListeners(ChangeType.Modified);
         }
-        if (this.attrs.autosave || this.attrs.autosave === undefined) {
+        if (this.markup.autosave || this.markup.autosave === undefined) {
             this.save();
         }
     }
@@ -178,7 +210,7 @@ class DropdownController
         if (!taskId) {
             return;
         }
-        this.vctrl.informChangeListeners(taskId, state, this.attrs.tag);
+        this.vctrl.informChangeListeners(taskId, state, this.markup.tag);
     }
 
     /**
@@ -215,7 +247,7 @@ class DropdownController
     }
 
     formBehavior(): FormModeOption {
-        return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
+        return getFormBehavior(this.markup.form, FormModeOption.IsForm);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -260,38 +292,29 @@ class DropdownController
     }
 }
 
-dropdownApp.component("dropdownRunner", {
-    bindings: pluginBindings,
-    controller: DropdownController,
-    require: {
-        vctrl: "^timView",
-    },
-    template: `
-<div>
-    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <div class="form-inline"><label><span>
-        <li class="dropradio" ng-if="::$ctrl.radio" ng-repeat="item in $ctrl.wordList">
-        <label><input type="radio"
-                      name="selection"
-                      value="{{item}}"
-                      ng-model="$ctrl.selectedWord"
-                      ng-change="::$ctrl.updateSelection()">
-        {{item}}
-        </label>
-        </li>
-        <select ng-if="::!$ctrl.radio"
-                ng-model="$ctrl.selectedWord"
-                ng-options="item for item in $ctrl.wordList"
-                ng-change="::$ctrl.updateSelection()"
-                ng-class="{warnFrame: $ctrl.isUnSaved()}">
-        </select>
-        </span></label>
-    </div>
-    <div ng-if="$ctrl.connectionErrorMessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.connectionErrorMessage"></div>
-    <div class="error" ng-if="$ctrl.error" ng-bind-html="$ctrl.error"></div>
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</div>
-`,
-});
+@NgModule({
+    declarations: [DropdownPluginComponent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        TimUtilityModule,
+        FormsModule,
+        TooltipModule.forRoot(),
+        PurifyModule,
+    ],
+})
+export class DropdownModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
+
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                DropdownModule
+            )
+        ),
+        "dropdownRunner",
+        DropdownPluginComponent
+    ),
+];

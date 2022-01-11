@@ -51,7 +51,7 @@ export function staticDynamicImport(s: string) {
         case "/field/js/build/cbfield.js":
             return import("modules/fields/js/cbfield-plugin.component");
         case "/field/js/build/dropdown.js":
-            return import("modules/fields/js/dropdown");
+            return import("modules/fields/js/dropdown-plugin.component");
         case "/drag/js/build/drag.js":
             return import("modules/drag/client/drag");
         case "/feedback/js/build/feedback.js":

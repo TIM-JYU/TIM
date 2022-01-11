@@ -92,7 +92,7 @@ const CbfieldAll = t.intersection([
          </span>
          <span *ngIf="isPlainText()" style="">{{userword}}</span>
          </span>
-    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
 </div>
 `,
     styleUrls: ["./cbfield-plugin.component.scss"],
