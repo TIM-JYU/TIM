@@ -16,18 +16,10 @@ class TemplateTest(TimRouteTest):
         t2json = json.loads(json.dumps(t2, cls=TimJsonEncoder))
 
         d = self.create_doc(f"{folder}/a/test")
-        self.get(
-            "/getTemplates",
-            query_string={"item_path": d.path},
-            expect_content=[t1json, t2json],
-        )
+        self.get(f"/getTemplates/{d.path}", expect_content=[t1json, t2json])
         self.logout()
-        self.get("/getTemplates", query_string={"item_path": d.path}, expect_status=403)
-        self.get(
-            "/getTemplates",
-            query_string={"item_path": "nonexistent"},
-            expect_status=404,
-        )
+        self.get(f"/getTemplates/{d.path}", expect_status=403)
+        self.get("/getTemplates/nonexistent", expect_status=404)
 
     def test_automatic_template(self):
         self.login_test1()
