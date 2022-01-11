@@ -64,6 +64,7 @@
                 </div>
 
                 <button class="timButton margin-4"
+                        ng-disabled="!$ctrl.initialized"
                         ng-click="$ctrl.openCreateNewVelpWindow()"
                         value="">Create new velp</button>
 
