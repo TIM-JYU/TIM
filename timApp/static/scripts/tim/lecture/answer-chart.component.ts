@@ -154,10 +154,7 @@ interface IDataSet {
 
 interface ChartConfig {
     type: ChartType;
-    data: Overwrite<
-        ChartData,
-        {datasets: IDataSet[]; labels: Array<string | string[]>}
-    >;
+    data: Overwrite<ChartData, {datasets: IDataSet[]; labels: string[]}>;
     options: ChartOptions<"bar">;
 }
 
@@ -165,7 +162,6 @@ interface ChartConfig {
     selector: "tim-answer-chart",
     template: `
         <div *ngIf="!isText && chartData" style="flex: 1; min-height: 0">
-            <!--suppress TypeScriptUnresolvedVariable -->
             <canvas baseChart
                     [datasets]="chartData.datasets"
                     [labels]="chartData.config.data.labels"
@@ -352,6 +348,9 @@ export class AnswerChartComponent implements OnChanges {
         axis: number
     ): string | number | undefined {
         if (axis == this.axisIndex) {
+            if (typeof value === "number") {
+                return this.chartConfig?.data?.labels[value] ?? value;
+            }
             return value;
         }
         if (typeof value === "number" && value % 1 === 0) {
@@ -388,7 +387,7 @@ export class AnswerChartComponent implements OnChanges {
         this.isText = false;
         const showLegend = data.headers.length > 1;
 
-        const labels: Array<string | string[]> = [];
+        const labels: string[] = [];
         const emptyData: number[] = [];
         for (const row of data.rows) {
             const text = qstShortText(row.text);
@@ -431,7 +430,6 @@ export class AnswerChartComponent implements OnChanges {
                 plugins: {
                     legend: {
                         display: showLegend,
-                        labels: {},
                     },
                 },
                 scales: {
@@ -515,7 +513,10 @@ export class AnswerChartComponent implements OnChanges {
                     }
                 }
             }
-            this.chartData = {config: this.chartConfig, datasets: datasets};
+            this.chartData = {
+                config: this.chartConfig,
+                datasets: datasets,
+            };
         }
     }
 
