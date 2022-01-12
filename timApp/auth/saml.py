@@ -1,8 +1,11 @@
+import functools
 import json
 import os
 from copy import copy
 from dataclasses import dataclass, field
-from typing import Optional
+from enum import Enum
+from functools import cached_property, total_ordering
+from typing import Optional, Any
 from urllib.parse import urlparse
 
 import xmlsec
@@ -236,6 +239,55 @@ def prepare_and_init(entity_id: str, try_new_cert: bool) -> OneLogin_Saml2_Auth:
     return auth
 
 
+REFEDS_PREFIX = "https://refeds.org/assurance"
+REFEDS_LOCAL_ENTRPRISE_ASSURANCE = f"{REFEDS_PREFIX}/IAP/local-enterprise"
+
+
+@total_ordering
+class RefedsIapLevel(Enum):
+    """Valid Identity Assurance Proofing levels for REFEDS Assurance Framework ver 1.0 based on
+    https://wiki.refeds.org/display/ASS/REFEDS+Assurance+Framework+ver+1.0
+    """
+
+    low = f"{REFEDS_PREFIX}/IAP/low"
+    medium = f"{REFEDS_PREFIX}/IAP/medium"
+    high = f"{REFEDS_PREFIX}/IAP/high"
+
+    @staticmethod
+    @functools.cache
+    def as_list():
+        return list(RefedsIapLevel)
+
+    def __lt__(self, other: Any) -> bool:
+        if not isinstance(other, RefedsIapLevel):
+            return NotImplemented
+        return RefedsIapLevel.as_list().index(self) < RefedsIapLevel.as_list().index(
+            other
+        )
+
+    @staticmethod
+    def from_string(s: str) -> Optional["RefedsIapLevel"]:
+        try:
+            return RefedsIapLevel(s)
+        except ValueError:
+            return None
+
+
+@dataclass(frozen=True)
+class IdentityAssuranceProofing:
+    """Represents user's Identity Assurance Proofing (IAP) level.
+    IAP describes how the user's identity is assured (e.g. email, government ID, etc.)
+
+    Attributes:
+        highest_refeds_level: Highest IAP level according to REFEDS Assurance Framework
+        local_enterprise: If True, user's identity proofing is good enough to access Home Organisations'
+                          administrative systems.
+    """
+
+    highest_refeds_level: RefedsIapLevel
+    local_enterprise: bool
+
+
 @dataclass
 class TimRequestedAttributes:
     saml_auth: OneLogin_Saml2_Auth
@@ -277,6 +329,10 @@ class TimRequestedAttributes:
         return self.get_attribute_by_friendly_name("eduPersonPrincipalName")
 
     @property
+    def edu_person_assurance(self) -> list[str]:
+        return self.get_attributes_by_friendly_name("eduPersonAssurance")
+
+    @property
     def given_name(self):
         return self.get_attribute_by_friendly_name("givenName")
 
@@ -302,6 +358,22 @@ class TimRequestedAttributes:
         if org == app.config["HOME_ORGANIZATION"]:
             return uname
         return f"{org}:{uname}"
+
+    @cached_property
+    def identity_assurance_proofing(self) -> IdentityAssuranceProofing:
+        """Parses and returns the best Identity Assurance Proofing (IAP) level
+        from eduPersonAssurance based on REFEDS Assurance Framework ver 1.0 spec.
+
+        :return: Identity assurence proofing level
+        """
+        iap_levels = [
+            RefedsIapLevel.from_string(level) for level in self.edu_person_assurance
+        ]
+        # Don't check default because IAP must always be provided
+        best_level = max([level for level in iap_levels if level is not None])
+        return IdentityAssuranceProofing(
+            best_level, REFEDS_LOCAL_ENTRPRISE_ASSURANCE in self.edu_person_assurance
+        )
 
     def to_json(self):
         return {
@@ -371,6 +443,7 @@ def acs():
         raise RouteException(err)
     session.pop("requestID", None)
     timattrs = TimRequestedAttributes(auth)
+    print(timattrs.edu_person_assurance)
     org_group = UserGroup.get_organization_group(timattrs.org)
     parsed_codes = []
     ucs = timattrs.unique_codes
