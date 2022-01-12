@@ -317,8 +317,8 @@ TASK_PROG = re.compile(
     r"([\w\.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)"
 )  # see https://regex101.com/r/ZZuizF/4
 TASK_NAME_PROG = re.compile(
-    r"(\d+.)?([\w\d]+)[.\[]?.*"
-)  # see https://regex101.com/r/OjnTAn/4
+    r"(\d+\.)?([\w\d]+)[.\[]?.*"
+)  # see https://regex101.com/r/CFOLgd/1
 
 
 def widen_fields(fields: Union[list[str], str]) -> list[str]:
