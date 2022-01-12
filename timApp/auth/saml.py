@@ -443,7 +443,6 @@ def acs():
         raise RouteException(err)
     session.pop("requestID", None)
     timattrs = TimRequestedAttributes(auth)
-    print(timattrs.edu_person_assurance)
     org_group = UserGroup.get_organization_group(timattrs.org)
     parsed_codes = []
     ucs = timattrs.unique_codes
