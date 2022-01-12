@@ -434,9 +434,12 @@ class DocParagraph:
         settings = self.doc.get_settings()
         macros = macroinfo.get_macros()
         task_id = self.attrs.get("taskId", None)
-        counters = macroinfo.jinja_env.counters
+        env = macroinfo.jinja_env
+        counters = env.counters
         if counters:
             counters.task_id = task_id
+            if self.attrs.get("plugin"):
+                counters.is_plugin = True
         try:
             if self.insert_rnds(
                 md + macros.get("username", "")
@@ -445,12 +448,13 @@ class DocParagraph:
         except Exception as err:
             # raise Exception('Error in rnd: ' + str(err)) from err
             pass  # TODO: show exception to user!
+
         return expand_macros(
             md,
             macros,
             settings,
             ignore_errors=ignore_errors,
-            env=macroinfo.jinja_env,
+            env=env,
         )
 
     def get_title(self) -> str | None:

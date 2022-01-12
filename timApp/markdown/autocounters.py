@@ -81,6 +81,7 @@ class AutoCounters:
     label_cache: list[list[str]] = attr.Factory(list)
     need_label_update = False  # total counter for cached labels (sum of in label_cache)
     current_labels: list[str] = attr.Factory(list)
+    is_plugin = False
 
     def __init__(self, macros: Optional[dict]):
         """
@@ -90,6 +91,7 @@ class AutoCounters:
         # noinspection PyUnresolvedReferences
         self.__attrs_init__()  # type: ignore[attr-defined]
         self.counters: TCounters = {}
+        self.block_counters: TCounters = {}
         self.macros: dict
         self.task_id: Optional[str] = None
         if macros:
@@ -163,6 +165,7 @@ class AutoCounters:
         self.set_auto_names(None)
         self.doing_latex_environment = False
         self.reset_label_cache()
+        self.block_counters = {}
 
     def reset_label_cache(self) -> None:
         """
@@ -435,6 +438,9 @@ class AutoCounters:
             anchor = from_macros.get("h", "")
             if anchor:
                 self.current_labels.append(sname)
+
+        self.block_counters[sname] = from_macros
+
         return str(from_macros["s"]), sname, from_macros
 
     def new_counter(self, name: TName, ctype: str = "") -> str:
@@ -523,6 +529,16 @@ class AutoCounters:
             text = text.replace(ph, self.labels(lbls))
         self.reset_label_cache()
         self.auto_labels = False
+
+        if self.block_counters and not self.tex and not self.is_plugin:
+            # text += '<span class="headerlink cnt-labels">'
+            text += "\n\n["
+            for sname in self.block_counters:
+                text += sname + " "
+            # TODO: text += f'<copy-clipboard show="{sname}" copy="%%{sname}|ref%%" /> '
+            # text += "</span>"
+            text += "]{.headerlink .cnt-labels}"
+
         return text
 
     def get_label_placeholder(self) -> str:
