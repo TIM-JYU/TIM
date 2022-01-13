@@ -497,7 +497,7 @@ div.error {
     visibility: inherit;
     z-index: 10;
 
-    .header-name {
+    &:not(.anchor) .header-name {
         display: inline;
     }
 }

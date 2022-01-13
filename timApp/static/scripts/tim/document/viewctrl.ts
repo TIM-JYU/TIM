@@ -1246,9 +1246,8 @@ export class ViewCtrl implements IController {
                 const id = h.attr("id");
                 if (id) {
                     h.append(
-                        $(`<a href="#${id}" class="headerlink" title="Permanent link">
-                                <span class="header-anchor">#</span>
-                                <span class="header-name">${id}</span>
+                        $(`<a href="#${id}" class="headerlink anchor" title="Header anchor">
+                                <span class="header-anchor">#</span><span class="header-name">${id}</span>
                            </a>`)
                     );
                 }
