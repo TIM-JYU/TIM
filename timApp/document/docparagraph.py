@@ -438,8 +438,7 @@ class DocParagraph:
         counters = env.counters
         if counters:
             counters.task_id = task_id
-            if self.attrs.get("plugin"):
-                counters.is_plugin = True
+            counters.is_plugin = self.is_plugin()
         try:
             if self.insert_rnds(
                 md + macros.get("username", "")
