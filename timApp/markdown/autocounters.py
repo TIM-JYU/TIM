@@ -62,6 +62,7 @@ class AutoCounters:
     )
     counter_stack: list[str] = attr.Factory(list)
     autocnts: TMacroCounters = attr.Factory(dict)
+    block_counters: TMacroCounters = attr.Factory(dict)
     autonames: TAutoNames = attr.Factory(dict)
     new_autonames: TAutoNames = attr.Factory(dict)
     tex: bool = False
@@ -91,7 +92,6 @@ class AutoCounters:
         # noinspection PyUnresolvedReferences
         self.__attrs_init__()  # type: ignore[attr-defined]
         self.counters: TCounters = {}
-        self.block_counters: TCounters = {}
         self.macros: dict
         self.task_id: Optional[str] = None
         if macros:
