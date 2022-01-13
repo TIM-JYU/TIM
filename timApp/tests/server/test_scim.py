@@ -1081,7 +1081,7 @@ class ScimTest(TimRouteTest):
                 },
             ],
             expect_status=400,
-            expect_content='Usergroup must contain at least one digit and one letter and must not have special chars: "teachers"',
+            expect_content='User group must contain at least one digit and one letter and must not have special chars: "teachers"',
         )
 
         r = self.json_post(
