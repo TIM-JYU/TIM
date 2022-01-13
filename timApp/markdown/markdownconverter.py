@@ -343,8 +343,11 @@ def expand_macros(
         if env.counters:
             env.counters.start_of_block()
         conv = env.from_string(text).render(macros)
-        if env.counters and env.counters.need_label_update:
+        if env.counters and (
+            env.counters.need_label_update or env.counters.block_counters
+        ):
             conv = env.counters.update_labels(conv)
+        env.counters.is_plugin = False
         return conv
     except TemplateSyntaxError as e:
         if not ignore_errors:

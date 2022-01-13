@@ -109,6 +109,9 @@ auto_number_headings: 0
         actual = "\n".join(htmls[0])
         self.assertEqual(htmls_ex.strip("\n"), actual, msg=msg)
 
+    def cnt_labels(self, labels):
+        return f'<p><span class="headerlink cnt-labels">{labels}</span></p>'
+
     def test_begin1_environment(self):
         docstr = r"""#- 
 %%"Pythagoras |py" | c_begin1%%
@@ -117,12 +120,18 @@ a^2+b^2=c^2
 #-
 Katso %%"py"|lref%%
 """
-        htmls_ex = r"""
+        htmls_ex = (
+            r"""
 <p><a id="eq:py"></a><span class="math display">\[\begin{align*}\tag{Pythagoras 1}
 a^2+b^2=c^2
 \end{align*}\]</span></p>
+"""
+            + self.cnt_labels("py")
+            + r"""
 <p>Katso <a href="#eq:py">(Pythagoras 1)</a></p>
 """
+        )
+
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters c_begin1")
 
     def test_begin_environment(self):
@@ -136,15 +145,20 @@ a+4 §\
 #-
 Katso %%"x1"|ref%%, %%"x2"|ref%%, %%"a3"|ref%%
 """
-        htmls_ex = r"""
+        htmls_ex = (
+            r"""
 <p><a id="eq:x"></a><span class="math display">\[\begin{align*}
 a+1 \tag{1}\\
 a+2 \tag{2}\\
 a+3 \tag{3}\\
 a+4 \tag{4}\\
 \end{align*}\]</span></p>
+"""
+            + self.cnt_labels("x1 x2 a3 x4")
+            + r"""
 <p>Katso <a href="#eq:x">(1)</a>, <a href="#eq:x">(2)</a>, <a href="#eq:x">(3)</a></p>
 """
+        )
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters c_begin")
 
     def test_begin_no_base_name_environment(self):
@@ -156,13 +170,18 @@ a+4 {§a4§}
 #-
 Katso %%"a3"|ref%%, %%"a4"|ref%% 
 """
-        htmls_ex = r"""
+        htmls_ex = (
+            r"""
 <p><a id="eq:a3"></a><a id="eq:a4"></a><span class="math display">\[\begin{align*}
 a+3 \tag{1}\\
 a+4 \tag{2}\\
 \end{align*}\]</span></p>
+"""
+            + self.cnt_labels("a3 a4")
+            + r"""
 <p>Katso <a href="#eq:a3">(1)</a>, <a href="#eq:a4">(2)</a></p>
 """
+        )
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters c_begin no basename")
 
     def test_no_c_begin_environment(self):
@@ -174,13 +193,18 @@ a+4 §\
 #-
 Katso %%"x1"|pref%%, %%"x12"|pref%%
 """
-        htmls_ex = r"""
+        htmls_ex = (
+            r"""
 <p><span class="math display">\[\begin{align*}
 a+3 \tag{1}\\
 a+4 \tag{2}\\
 \end{align*}\]</span></p>
+"""
+            + self.cnt_labels("x1 x12")
+            + """
 <p>Katso (1), (2)</p>
 """
+        )
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters no c_begin")
 
     def test_no_c_begin_environment_no_man_name(self):
@@ -192,13 +216,18 @@ a+4 §\
 #-
 Katso %%"kaava"|pref%%, %%"kaava2"|pref%%
 """
-        htmls_ex = r"""
+        htmls_ex = (
+            r"""
 <p><span class="math display">\[\begin{align*}
 a+3 \tag{1}\\
 a+4 \tag{2}\\
 \end{align*}\]</span></p>
+"""
+            + self.cnt_labels("kaava kaava2")
+            + r"""
 <p>Katso (1), (2)</p>
 """
+        )
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters no c_begin, no man")
 
     def test_tasks(self):
@@ -237,7 +266,9 @@ Kuva %%"k2"|c_fig%%
         htmls_ex = r"""
 <p>Kuva <a id="c:k1"></a>1</p>
 <p>Kuva <a id="c:k2"></a>5</p>
-"""
+""" + self.cnt_labels(
+            "k1 k2"
+        )
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters set values")
 
     def test_autocounter_by_task_id(self):
@@ -248,7 +279,9 @@ Toka §a
 """
         htmls_ex = r"""
 <p>Eka 1 Toka <a id="c:oma2"></a>2</p>
-"""
+""" + self.cnt_labels(
+            "oma oma2"
+        )
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters by taskid")
 
     def test_autocounter_by_task_id_no_jump(self):
@@ -259,7 +292,9 @@ Toka §n
 """
         htmls_ex = r"""
 <p>Eka 1 Toka 2</p>
-"""
+""" + self.cnt_labels(
+            "oma oma2"
+        )
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters by tasks id none jump")
 
     def test_autocounter_with_section_numbers(self):
@@ -298,25 +333,33 @@ Look %%"x1"|lref%%,\
 
 Also look par %%"cont"|ref%% that is %%"cont"|lref%%.
 """
-        htmls_ex = r"""
+        htmls_ex = (
+            r"""
 <h1 id="formulas">Formulas</h1>
 <h2 id="first">First</h2>
 <p><a id="eq:x"></a><span class="math display">\[\begin{align*}
 a+1 \tag{1.1}\\
 a+2 \tag{1.2, nice}\\
 \end{align*}\]</span></p>
-
+"""
+            + self.cnt_labels("x1 b")
+            + "\n"
+            + r"""
 <h2 id="continue">Continue</h2>
 <p><a id="eq:y"></a><span class="math display">\[\begin{align*}
 a+1 \tag{2.3}\\
 a+2 \tag{2.4}\\
 \end{align*}\]</span></p>
+"""
+            + self.cnt_labels("y1 y2")
+            + r"""
 <p>Look <a href="#eq:x">formula (1.1)</a>,<br />
 <a href="#eq:x">formula (1.2)</a>,<br />
 <a href="#eq:x">formula (1.2, nice)</a> and<br />
 <a href="#eq:y">formula (2.4)</a>.</p>
 <p>Also look par <a href="#cont">2</a> that is <a href="#cont">2. Continue</a>.</p>
 """
+        )
         self.doc_with_counters(
             docstr, htmls_ex, "AutoCounters with section numbers", setstr
         )
