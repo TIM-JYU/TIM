@@ -1230,20 +1230,25 @@ export class ViewCtrl implements IController {
         if (documentglobals().exam_mode) {
             return;
         }
-        const pars = $(".parContent");
+        const pars = $(".par");
+        // Generate selector like .parContent h1, .parContent h2, .parContent h3, ...
+        const headerSelector = new Array(6)
+            .fill(".parContent h")
+            .map((h, i) => `${h as string}${i + 1}`)
+            .join(", ");
         pars.each((index, elem) => {
             const p = $(elem);
-            p.find("h1, h2, h3, h4, h5, h6").each((i, e) => {
+            if (p.children("a.headerlink").length > 0) {
+                return;
+            }
+            p.find(headerSelector).each((i, e) => {
                 const h = $(e);
                 const id = h.attr("id");
                 if (id) {
                     h.append(
-                        $("<a>", {
-                            text: "#",
-                            href: "#" + id,
-                            class: "headerlink",
-                            title: "Permanent link",
-                        })
+                        $(`<a href="#${id}" class="headerlink anchor" title="Header anchor">
+                                <span class="header-anchor">#</span><span class="header-name">${id}</span>
+                           </a>`)
                     );
                 }
             });

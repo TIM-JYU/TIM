@@ -84,6 +84,11 @@ class SettingsMock:
                         "friendlyName": "eduPersonPrincipalName",
                     },
                     {
+                        "name": "urn:oid:1.3.6.1.4.1.5923.1.1.1.11",
+                        "isRequired": True,
+                        "friendlyName": "eduPersonAssurance",
+                    },
+                    {
                         "name": "urn:oid:2.5.4.42",
                         "isRequired": True,
                         "friendlyName": "givenName",
@@ -113,9 +118,16 @@ class SettingsMock:
         }
 
 
+LOW_ASSURANCE = "https://refeds.org/assurance/IAP/low"
+MEDIUM_ASSURANCE = "https://refeds.org/assurance/IAP/medium"
+HIGH_ASSURANCE = "https://refeds.org/assurance/IAP/high"
+LOCAL_ENTERPRISE_ASSURANCE = "https://refeds.org/assurance/IAP/local-enterprise"
+
+
 @dataclass
 class OneLoginMock:
     info: UserInfo
+    assurance_levels: list[str]
     mock_missing_uniquecode: bool = False
 
     def process_response(self, request_id):
@@ -136,6 +148,9 @@ class OneLoginMock:
             "urn:oid:1.3.6.1.4.1.5923.1.1.1.6": [
                 self.info.username
             ],  # eduPersonPrincipalName
+            "urn:oid:1.3.6.1.4.1.5923.1.1.1.11": [
+                self.assurance_levels
+            ],  # eduPersonAssurance
             "urn:oid:2.16.840.1.113730.3.1.241": [self.info.full_name],  # displayName
             "urn:oid:2.16.840.1.113730.3.1.39": ["fi"],  # preferredLanguage
             "urn:oid:2.5.4.3": [self.info.full_name],  # cn
@@ -769,7 +784,9 @@ class TestSignUp(TimRouteTest):
             missing_uniquecode=True,
         )
 
-    def do_acs_mock(self, info: UserInfo, missing_uniquecode=False):
+    def do_acs_mock(
+        self, info: UserInfo, missing_uniquecode=False, assurance_levels=None
+    ):
         self.get(
             "/saml/sso",
             query_string={
@@ -780,7 +797,9 @@ class TestSignUp(TimRouteTest):
         )
         with mock.patch("timApp.auth.saml.OneLogin_Saml2_Auth") as m:
             m.return_value = OneLoginMock(
-                info=info, mock_missing_uniquecode=missing_uniquecode
+                info=info,
+                mock_missing_uniquecode=missing_uniquecode,
+                assurance_levels=assurance_levels or [LOW_ASSURANCE],
             )
             self.post(
                 acs_url,

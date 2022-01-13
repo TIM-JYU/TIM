@@ -663,6 +663,7 @@ def expand_macros_for_plugin(par: DocParagraph, macros, env: TimSandboxedEnviron
     yaml_str = strip_code_block(par_md)
     if not par.get_nomacros():
         env.counters.task_id = par.attrs.get("taskId", None)
+        env.counters.is_plugin = True
         yaml_str = expand_macros(
             yaml_str,
             macros=macros,

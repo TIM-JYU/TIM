@@ -1576,7 +1576,7 @@
       </trans-unit>
       <trans-unit id="7941428823403788384" datatype="html">
         <source> Create </source>
-        <target state="translated"> Luo lista </target>
+        <target state="translated"> Luo </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/message-list-create-dialog.component.ts</context>
           <context context-type="linenumber">120</context>
@@ -4650,6 +4650,52 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/document/editing/template-list.component.ts</context>
           <context context-type="linenumber">22</context>
+      <trans-unit id="6736759031683445755" datatype="html">
+        <source>Enter the name of the user group</source>
+        <target state="translated">Anna käyttäjäryhmän nimi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
+          <context context-type="linenumber">31</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2000929266442515663" datatype="html">
+        <source>Enter the location or leave empty</source>
+        <target state="translated">Anna sijainti tai jätä tyhjäksi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
+          <context context-type="linenumber">51</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3322954622926844982" datatype="html">
+        <source> Name should not contain the slash character. </source>
+        <target state="translated"> Nimi ei saa sisältää kauttaviivaa. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
+          <context context-type="linenumber">69,71</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7046259383943324039" datatype="html">
+        <source>Folder</source>
+        <target state="translated">Kansio</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
+          <context context-type="linenumber">42</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3323415564519831786" datatype="html">
+        <source> Name is required. </source>
+        <target state="translated"> Nimi vaaditaan. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
+          <context context-type="linenumber">64,66</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5581588744689339912" datatype="html">
+        <source> Create group </source>
+        <target state="translated"> Luo ryhmä </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
+          <context context-type="linenumber">15,17</context>
         </context-group>
       </trans-unit>
     </body>

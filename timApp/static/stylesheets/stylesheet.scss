@@ -483,10 +483,23 @@ div.error {
     float: right;
     visibility: hidden;
     font-size: small;
+
+    .header-name {
+        display: none;
+    }
 }
 
 *:hover > .headerlink {
     visibility: inherit;
+}
+
+.editmode .headerlink {
+    visibility: inherit;
+    z-index: 10;
+
+    &:not(.anchor) .header-name {
+        display: inline;
+    }
 }
 
 .parContent {
