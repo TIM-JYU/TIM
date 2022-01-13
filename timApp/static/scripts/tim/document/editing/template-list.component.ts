@@ -7,7 +7,7 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 @Component({
     selector: "tim-template-list",
     template: `
-        <bootstrap-panel title="Choose a template" [showClose]="true">
+        <bootstrap-panel i18n-title title="Choose a template" [showClose]="true" *ngIf="templateList.length > 0">
             
             <!--
             Templates' panel will always be shown even without any content.
@@ -16,10 +16,10 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
             misinterpret the placeholder text as an error message.
             -->
             
-            <ul *ngIf="templateList.length > 0">
+            <ul>
                 <li *ngFor="let template of templateList">
                     {{template.title}}
-                    <button class="timButton btn-xs" (click)="loadTemplate(template)">Load</button>
+                    <button i18n class="timButton btn-xs" (click)="loadTemplate(template)">Load</button>
                 </li>
             </ul>
         </bootstrap-panel>
