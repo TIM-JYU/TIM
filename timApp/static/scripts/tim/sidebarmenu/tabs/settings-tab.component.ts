@@ -19,7 +19,7 @@ import {
     IViewRange,
     toggleViewRange,
 } from "tim/document/viewRangeInfo";
-import {getTypedStorage, IOkResponse, toPromise} from "tim/util/utils";
+import {getTypedStorage, IOkResponse, to2, toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {getActiveDocument} from "tim/document/activedocument";
 import {ITemplateParams} from "tim/printing/print-dialog.component";
@@ -36,14 +36,13 @@ import {showTagSearchDialog} from "tim/item/showTagSearchDialog";
 import {showCourseDialog} from "tim/document/course/showCourseDialog";
 import {showTagDialog} from "tim/item/showTagDialog";
 import {showPrintDialog} from "tim/printing/showPrintDialog";
-import {showInputDialog} from "tim/ui/showInputDialog";
-import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {showMergePdfDialog} from "tim/document/minutes/showMergePdfDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
 import {openScheduleDialog} from "tim/document/scheduling/openScheduleDialog";
 import {showMessageListCreation} from "tim/messaging/showMessageListCreation";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
+import {showUserGroupDialog} from "tim/user/showUserGroupDialog";
 
 const DEFAULT_PIECE_SIZE = 20;
 
@@ -567,24 +566,9 @@ export class SettingsTabComponent implements OnInit {
         await showMergePdfDialog({document: this.item});
     }
 
-    async createGroup() {
-        const doc = await showInputDialog({
-            isInput: InputDialogKind.InputAndValidator,
-            defaultValue: "",
-            text: "Enter name of the usergroup",
-            title: "Create group",
-            validator: async (s) => {
-                const r = await toPromise(
-                    this.http.get<IDocument>(`/groups/create/${s}`)
-                );
-                if (r.ok) {
-                    return {ok: true, result: r.result};
-                } else {
-                    return {ok: false, result: r.result.error.error};
-                }
-            },
-        });
-        redirectToItem(doc);
+    async createGroup(): Promise<void> {
+        const doc = await to2(showUserGroupDialog());
+        if (doc.ok) redirectToItem(doc.result);
     }
 
     async createMessagelist() {
