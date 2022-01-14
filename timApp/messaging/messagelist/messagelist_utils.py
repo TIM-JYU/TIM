@@ -489,6 +489,9 @@ def parse_mailman_message(original: dict, msg_list: MessageListModel) -> BaseMes
         # If no sender is found on a message, we don't archive the message.
         raise RouteException("No sender found in the message.")
 
+    message_subject = original.get("subject", "No subject")
+    message_body = original.get("body", "")
+
     message = BaseMessage(
         message_list_name=msg_list.name,
         domain=msg_list.email_list_domain,
@@ -496,9 +499,9 @@ def parse_mailman_message(original: dict, msg_list: MessageListModel) -> BaseMes
         # Header information
         sender=sender,
         recipients=visible_recipients,
-        subject=original["subject"],
+        subject=message_subject,
         # Message body
-        message_body=original["body"],
+        message_body=message_body,
     )
 
     # Try parsing the rest of email specific fields.

@@ -1369,8 +1369,21 @@ class TimMessageListTest(TimRouteTest):
         self.json_post("/mailman/event", EVENTS[event.event].dump(event), auth=auth)
 
     def trigger_message_send(
-        self, message_list: MessageListModel, user: User, subject="Subject", body="Body"
+        self,
+        message_list: MessageListModel,
+        user: User,
+        subject: Optional[str] = None,
+        body: Optional[str] = None,
     ):
+        message = {
+            "to": [[message_list.name, message_list.email_address]],
+            "from": [[user.real_name, user.email]],
+            "date": "2020-01-01T12:00:00Z",
+        }
+        if subject:
+            message["subject"] = subject
+        if body:
+            message["body"] = body
         self.trigger_mailman_event(
             NewMessageEvent(
                 event="new_message",
@@ -1379,13 +1392,7 @@ class TimMessageListTest(TimRouteTest):
                     name=message_list.name,
                     host=message_list.email_list_domain,
                 ),
-                message={
-                    "to": [[message_list.name, message_list.email_address]],
-                    "from": [[user.real_name, user.email]],
-                    "subject": subject,
-                    "body": body,
-                    "date": "2020-01-01T12:00:00Z",
-                },
+                message=message,
             )
         )
 
