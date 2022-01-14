@@ -27,11 +27,16 @@ def try_return_folder(item_name):
             if t.short_name == template_to_find:
                 template_item = t
 
-        if template_item and template_item.short_name == FORCED_TEMPLATE_NAME:
+        force_create = template_item and (
+            get_option(request, "force_create", False)
+            or template_item.short_name == FORCED_TEMPLATE_NAME
+        )
+
+        if force_create:
             ind = item_name.rfind("/")
             if ind >= 0:
                 item = create_document(item_name, item_name[ind + 1 :])
-                apply_template(item, template_item.path)
+                apply_template(item, template_item.short_name)
                 db.session.commit()
                 return view(item_name, ViewRoute.View)
 
