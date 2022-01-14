@@ -10,7 +10,14 @@ from timApp.util.utils import get_current_time
 class LateAnswersTest(TimRouteTest):
     def test_late_answers(self):
         self.login_test1()
-        d = self.create_doc(initial_par="""#- {plugin=textfield #t}""")
+        d = self.create_doc(
+            initial_par="""
+#- {plugin=textfield #t}
+``` {#oneAttempt plugin="textfield"}
+answerLimit: 1
+```
+"""
+        )
         d.document.set_settings({"answer_submit_time_tolerance": 0})
         self.test_user_2.grant_access(
             d, AccessType.view, accessible_to=get_current_time()
@@ -45,6 +52,19 @@ class LateAnswersTest(TimRouteTest):
             d, AccessType.view, accessible_to=get_current_time()
         )
         db.session.commit()
+
         d.document.set_settings({"answer_submit_time_tolerance": 5000})
         a = self.post_answer("textfield", f"{d.id}.t", user_input={"c": "x"})
         self.assertEqual({"savedNew": 3, "valid": True, "web": {"result": "saved"}}, a)
+        # Don't force validity to true if plugin deems answer as false
+        self.post_answer("textfield", f"{d.id}.oneAttempt", user_input={"c": "x"})
+        a = self.post_answer("textfield", f"{d.id}.oneAttempt", user_input={"c": "y"})
+        self.assertEqual(
+            {
+                "web": {"result": "saved"},
+                "savedNew": 5,
+                "valid": False,
+                "error": "You have exceeded the answering limit.",
+            },
+            a,
+        )
