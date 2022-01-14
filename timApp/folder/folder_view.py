@@ -1,6 +1,7 @@
 from flask import request, render_template
 
 from timApp.auth.accesshelper import verify_view_access
+from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import (
     get_templates_for_folder,
@@ -11,6 +12,8 @@ from timApp.document.specialnames import FORCED_TEMPLATE_NAME
 from timApp.document.viewcontext import ViewRoute
 from timApp.folder.folder import Folder
 from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
+from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import get_option
 
 
@@ -27,16 +30,20 @@ def try_return_folder(item_name):
             if t.short_name == template_to_find:
                 template_item = t
 
-        force_create = template_item and (
-            get_option(request, "force_create", False)
-            or template_item.short_name == FORCED_TEMPLATE_NAME
+        force_create = get_option(request, "force_create", False) or (
+            template_item and template_item.short_name == FORCED_TEMPLATE_NAME
         )
+        create_public = get_option(request, "create_public", False)
 
         if force_create:
             ind = item_name.rfind("/")
             if ind >= 0:
                 item = create_document(item_name, item_name[ind + 1 :])
-                apply_template(item, template_item.short_name)
+                if template_item:
+                    apply_template(item, template_item.short_name)
+                if create_public:
+                    db.session.flush()
+                    grant_access(UserGroup.get_anonymous_group(), item, AccessType.view)
                 db.session.commit()
                 return view(item_name, ViewRoute.View)
 
