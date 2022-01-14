@@ -58,6 +58,7 @@ ExtraMacros = dict[str, object]
 class ViewContext:
     route: ViewRoute
     preview: bool
+    partial: bool = False
     hide_names_requested: bool = False
     urlmacros: UrlMacros = ()
     extramacros: str = ""
