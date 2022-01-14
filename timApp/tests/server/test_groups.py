@@ -11,7 +11,7 @@ class GroupTest(TimRouteTest):
     def error_resp(self, name):
         return {
             "error": "User group must contain at least one digit and one letter and must "
-            'not have special chars: "' + name + '"'
+            'not have uppercase or special chars: "' + name + '"'
         }
 
     def enum_admin_and_groupadmin(self):
@@ -36,7 +36,7 @@ class GroupTest(TimRouteTest):
             t1gid = users_and_groups[0][1].id
             uids = [u.id for u, g in users_and_groups]
             db.session.commit()
-            groupname = f"testgroup1{is_admin}"
+            groupname = f"testgroup1{str(is_admin).lower()}"
             self.get(
                 f"/groups/show/{groupname}",
                 expect_status=400,
@@ -180,6 +180,7 @@ class GroupTest(TimRouteTest):
 
     def test_invalid_groups(self):
         for is_admin in self.enum_admin_and_groupadmin():
+            is_admin_postfix = str(is_admin).lower()
             self.get(
                 "/groups/create/testgroup",
                 expect_status=400,
@@ -200,7 +201,12 @@ class GroupTest(TimRouteTest):
                 expect_status=400,
                 expect_content=self.error_resp("ok ok"),
             )
-            self.get(f"/groups/create/test x1{is_admin}")
+            self.get(
+                "/groups/create/TestGroup1",
+                expect_status=400,
+                expect_content=self.error_resp("TestGroup1"),
+            )
+            self.get(f"/groups/create/test x1{is_admin_postfix}")
 
             self.json_post(
                 "/groups/addmember/Logged-in users",
@@ -256,13 +262,13 @@ class GroupTest(TimRouteTest):
                 expect_content={"error": "Cannot edit special group: Logged-in users"},
             )
             self.json_post(
-                f"/groups/addmember/test x1{is_admin}",
+                f"/groups/addmember/test x1{is_admin_postfix}",
                 {"names": ["Anonymous"]},
                 expect_status=400,
                 expect_content={"error": "Cannot add special users."},
             )
             self.json_post(
-                f"/groups/addmember/test x1{is_admin}",
+                f"/groups/addmember/test x1{is_admin_postfix}",
                 {"names": ["Logged-in user"]},
                 expect_status=400,
                 expect_content={"error": "Cannot add special users."},

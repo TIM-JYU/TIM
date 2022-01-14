@@ -133,6 +133,7 @@ def create_group(group_path: str) -> Response:
 
 
 def do_create_group(group_path: str) -> tuple[UserGroup, DocInfo]:
+    group_path = group_path.strip("/ ")
 
     # The name of the user group is separated from the path.
     # Does not check whether a name or a path is missing.
@@ -148,7 +149,7 @@ def do_create_group(group_path: str) -> tuple[UserGroup, DocInfo]:
     # The group administrator has always writing permission to the groups' root folder.
     # Creating a new user group into the root folder named groups is always allowed.
     # Elsewhere, the current user must have group administrator rights.
-    creating_subdirectory = group_path != group_name
+    creating_subdirectory = "/" in group_path
     parent_owner = (
         get_current_user_group_object()
         if creating_subdirectory
@@ -200,14 +201,16 @@ def update_group_doc_settings(
 def validate_groupname(group_name: str):
     has_digits = False
     has_letters = False
+    has_upper_letters = False
     has_non_alnum = False
     for c in group_name:
         has_digits = has_digits or c.isdigit()
         has_letters = has_letters or c.isalpha()
+        has_upper_letters = has_upper_letters or c.isupper()
         has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace() or c in "-_")
-    if not has_digits or not has_letters or has_non_alnum:
+    if not has_digits or not has_letters or has_non_alnum or has_upper_letters:
         raise RouteException(
-            'User group must contain at least one digit and one letter and must not have special chars: "'
+            'User group must contain at least one digit and one letter and must not have uppercase or special chars: "'
             + group_name
             + '"'
         )
