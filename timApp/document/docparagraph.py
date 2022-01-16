@@ -1364,3 +1364,29 @@ def add_heading_numbers(
                         counters.set_heading_vals(vals)
         curr = curr.nxt
     return "\n".join(lines)
+
+
+def add_headings_to_counters(
+    s: str,
+    jump_name: str = None,
+    counters: AutoCounters = None,
+):
+    if not counters:
+        return s
+    ps = commonmark.Parser()
+    parsed = ps.parse(s)
+    lines = s.splitlines(keepends=False)
+    curr: Node = parsed.first_child
+    while curr:
+        if curr.t == "heading":
+            level = curr.level
+            line_idx = curr.sourcepos[0][0] - 1
+            heading_line = lines[line_idx]
+            heading_start = "#" * level
+
+            if heading_line.startswith(heading_start + " "):
+                line = heading_line[level + 1 :]
+            line = line.replace("{.unnumbered}", "")
+            counters.add_counter("chap", jump_name, "", line)
+        curr = curr.nxt
+    return s

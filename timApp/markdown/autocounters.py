@@ -215,10 +215,12 @@ class AutoCounters:
         if not self.auto_name_base:
             if self.task_id is None:
                 return "", "", self.error("Missing base name, use c_auto")
-            self.auto_name_plugin: bool = True
             sname = self.task_id
             self.set_auto_name(sname)
-            return sname, ctype, None
+            # First plugin counter is named by it's #name
+            if self.is_plugin:
+                self.auto_name_plugin: bool = True
+                return sname, ctype, None
         return self.auto_name_base + str(self.auto_name_counter), ctype, None
 
     def set_auto_number_headings(self, n: int) -> None:
@@ -549,7 +551,8 @@ class AutoCounters:
             # text += '<span class="headerlink cnt-labels">'
             text += "\n\n["
             for sname in self.block_counters:
-                text += f"[{sname}]{{.cnt-label}} "
+                val = self.block_counters[sname].get("v", "")
+                text += f"[{val}={sname}]{{.cnt-label}} "
             # TODO: text += f'<copy-clipboard show="{sname}" copy="%%{sname}|ref%%" /> '
             # text += "</span>"
             text += "]{.headerlink .cnt-labels}"

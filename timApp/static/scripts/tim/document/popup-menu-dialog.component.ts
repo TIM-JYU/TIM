@@ -222,8 +222,11 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
     }
 
     copyReference(e: ClickEvent<HTMLElement>) {
-        // eslint-disable-next-line no-unused-expressions,@typescript-eslint/no-unsafe-member-access
-        const text: string = e.target.innerText;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        let text: string = e.target.innerText;
+        const texts = text.split("=");
+        if (texts.length > 1) text = texts[1];
+
         copyToClipboard(`%%"${text}"|ref%%`);
     }
 

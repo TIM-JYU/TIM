@@ -131,7 +131,7 @@ Katso %%"py"|lref%%
 a^2+b^2=c^2
 \end{align*}\]</span></p>
 """
-            + self.cnt_labels("py")
+            + self.cnt_labels("1=py")
             + r"""
 <p>Katso <a href="#eq:py">(Pythagoras 1)</a></p>
 """
@@ -159,7 +159,7 @@ a+3 \tag{3}\\
 a+4 \tag{4}\\
 \end{align*}\]</span></p>
 """
-            + self.cnt_labels("x1 x2 a3 x4")
+            + self.cnt_labels("1=x1 2=x2 3=a3 4=x4")
             + r"""
 <p>Katso <a href="#eq:x">(1)</a>, <a href="#eq:x">(2)</a>, <a href="#eq:x">(3)</a></p>
 """
@@ -182,7 +182,7 @@ a+3 \tag{1}\\
 a+4 \tag{2}\\
 \end{align*}\]</span></p>
 """
-            + self.cnt_labels("a3 a4")
+            + self.cnt_labels("1=a3 2=a4")
             + r"""
 <p>Katso <a href="#eq:a3">(1)</a>, <a href="#eq:a4">(2)</a></p>
 """
@@ -205,7 +205,7 @@ a+3 \tag{1}\\
 a+4 \tag{2}\\
 \end{align*}\]</span></p>
 """
-            + self.cnt_labels("x1 x12")
+            + self.cnt_labels("1=x1 2=x12")
             + """
 <p>Katso (1), (2)</p>
 """
@@ -219,7 +219,7 @@ a+3 §\
 a+4 §\
 \end{align*}
 #-
-Katso %%"kaava"|pref%%, %%"kaava2"|pref%%
+Katso %%"kaava1"|pref%%, %%"kaava2"|pref%%
 """
         htmls_ex = (
             r"""
@@ -228,7 +228,7 @@ a+3 \tag{1}\\
 a+4 \tag{2}\\
 \end{align*}\]</span></p>
 """
-            + self.cnt_labels("kaava kaava2")
+            + self.cnt_labels("1=kaava1 2=kaava2")
             + r"""
 <p>Katso (1), (2)</p>
 """
@@ -272,7 +272,7 @@ Kuva %%"k2"|c_fig%%
 <p>Kuva <a id="c:k1"></a>1</p>
 <p>Kuva <a id="c:k2"></a>5</p>
 """ + self.cnt_labels(
-            "k1 k2"
+            "1=k1 5=k2"
         )
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters set values")
 
@@ -283,9 +283,9 @@ Eka §a
 Toka §a
 """
         htmls_ex = r"""
-<p>Eka 1 Toka <a id="c:oma2"></a>2</p>
+<p>Eka <a id="c:oma1"></a>1 Toka <a id="c:oma2"></a>2</p>
 """ + self.cnt_labels(
-            "oma oma2"
+            "1=oma1 2=oma2"
         )
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters by taskid")
 
@@ -298,7 +298,33 @@ Toka §n
         htmls_ex = r"""
 <p>Eka 1 Toka 2</p>
 """ + self.cnt_labels(
-            "oma oma2"
+            "1=oma1 2=oma2"
+        )
+        self.doc_with_counters(docstr, htmls_ex, "AutoCounters by tasks id none jump")
+
+    def test_autocounter_by_block_id(self):
+        docstr = r"""
+#- {id="bJmnL9inGk9g"}
+Eka §a
+Toka §a
+"""
+        htmls_ex = r"""
+<p>Eka <a id="c:bJmnL9inGk9g1"></a>1 Toka <a id="c:bJmnL9inGk9g2"></a>2</p>
+""" + self.cnt_labels(
+            "1=bJmnL9inGk9g1 2=bJmnL9inGk9g2"
+        )
+        self.doc_with_counters(docstr, htmls_ex, "AutoCounters by block id")
+
+    def test_autocounter_by_task_id_no_jump(self):
+        docstr = r"""
+#- {#oma}
+Eka §n
+Toka §n
+"""
+        htmls_ex = r"""
+<p>Eka 1 Toka 2</p>
+""" + self.cnt_labels(
+            "1=oma1 2=oma2"
         )
         self.doc_with_counters(docstr, htmls_ex, "AutoCounters by tasks id none jump")
 
@@ -347,7 +373,7 @@ a+1 \tag{1.1}\\
 a+2 \tag{1.2, nice}\\
 \end{align*}\]</span></p>
 """
-            + self.cnt_labels("x1 b")
+            + self.cnt_labels("1=x1 2=b")
             + "\n"
             + r"""
 <h2 id="continue">Continue</h2>
@@ -356,7 +382,7 @@ a+1 \tag{2.3}\\
 a+2 \tag{2.4}\\
 \end{align*}\]</span></p>
 """
-            + self.cnt_labels("y1 y2")
+            + self.cnt_labels("3=y1 4=y2")
             + r"""
 <p>Look <a href="#eq:x">formula (1.1)</a>,<br />
 <a href="#eq:x">formula (1.2)</a>,<br />
