@@ -486,6 +486,9 @@ div.error {
 
     .header-name {
         display: none;
+        cursor: copy;
+        color: $link-color;
+        font-size: 0.8em;
     }
 }
 
@@ -501,7 +504,11 @@ div.error {
     &.cnt-labels {
         color: $link-color;
         font-size: 0.8em;
-        font-weight: bold;
+        /* font-weight: bold; */
+        margin-top: -1.5em;
+        span.cnt-label {
+            cursor: copy;
+        }
     }
 
     &:not(.anchor) .header-name {

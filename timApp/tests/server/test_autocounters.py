@@ -110,7 +110,12 @@ auto_number_headings: 0
         self.assertEqual(htmls_ex.strip("\n"), actual, msg=msg)
 
     def cnt_labels(self, labels):
-        return f'<p><span class="headerlink cnt-labels">{labels}</span></p>'
+        lbsl = labels.split(" ")
+        result = '<p><span class="headerlink cnt-labels">'
+        for lbl in labels.split(" "):
+            result += f'<span class="cnt-label">{lbl}</span> '
+        result = result.strip(" ")
+        return result + "</span></p>"
 
     def test_begin1_environment(self):
         docstr = r"""#- 

@@ -349,6 +349,11 @@ class DocumentPrinter:
             md = p.prepare(view_ctx, use_md=True).output
             if not p.is_plugin() and not p.is_question():
                 if not p.get_nomacros() and not self.texplain and not self.textplain:
+                    env = pdoc_macro_env
+                    counters = env.counters
+                    if counters:
+                        counters.task_id = p.get_auto_id()
+                        counters.is_plugin = p.is_plugin()
                     md = expand_macros(
                         text=md,
                         macros=pdoc_macros,
@@ -460,7 +465,7 @@ class DocumentPrinter:
         view_ctx = default_view_ctx
 
         for par in pars:
-            counters.task_id = par.attrs.get("taskId", None)
+            counters.task_id = par.get_auto_id()
             # do not count document settings pars
             if par.is_setting():
                 continue

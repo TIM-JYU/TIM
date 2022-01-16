@@ -415,6 +415,12 @@ class DocParagraph:
         self.nomacros = self.no_macros()
         return self.nomacros
 
+    def get_auto_id(self):
+        task_id = self.attrs.get("taskId", None)
+        if task_id:
+            return task_id
+        return self.id
+
     def get_expanded_markdown(
         self,
         macroinfo: MacroInfo,
@@ -433,11 +439,10 @@ class DocParagraph:
             return md
         settings = self.doc.get_settings()
         macros = macroinfo.get_macros()
-        task_id = self.attrs.get("taskId", None)
         env = macroinfo.jinja_env
         counters = env.counters
         if counters:
-            counters.task_id = task_id
+            counters.task_id = self.get_auto_id()
             counters.is_plugin = self.is_plugin()
         try:
             if self.insert_rnds(
