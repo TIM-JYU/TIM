@@ -221,7 +221,7 @@ class AutoCounters:
             if self.is_plugin:
                 self.auto_name_plugin: bool = True
                 return sname, ctype, None
-        return self.auto_name_base + str(self.auto_name_counter), ctype, None
+        return str(self.auto_name_base) + str(self.auto_name_counter), ctype, None
 
     def set_auto_number_headings(self, n: int) -> None:
         """
