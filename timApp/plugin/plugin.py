@@ -633,7 +633,7 @@ class Plugin:
                 if self.access_end_for_user:
                     access_end = self.access_end_for_user.isoformat()
                 unlock_info = f"""access-duration='{self.known.accessDuration}' access-end="{access_end or ""}" 
-                unlock-text='{self.known.header}' """
+                unlock-text='{self.known.header or ""}' """
             if abtype and self.options.wraptype == PluginWrap.Full and False:
                 return (
                     f"""
