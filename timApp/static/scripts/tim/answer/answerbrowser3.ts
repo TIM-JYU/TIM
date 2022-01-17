@@ -131,6 +131,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     private accessEndText?: Binding<string, "@">;
     private accessHeader?: Binding<string, "@">;
 
+    private timed = false;
     private expired = false;
     private unlockable = false;
     private running = false;
@@ -181,6 +182,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         this.showPlaceholder = !this.isInFormMode() && !this.hideBrowser;
 
         if (this.accessDuration && !this.viewctrl?.item.rights.teacher) {
+            this.timed = true;
             if (!this.accessEnd) {
                 this.unlockable = true;
                 this.hidePlugin();
@@ -426,19 +428,20 @@ timApp.component("timPluginLoader", {
                task-id="$ctrl.parsedTaskId"
                answer-id="$ctrl.answerId">
 </answerbrowser>
-<div ng-if="$ctrl.running">
-Time left: <tim-countdown [end-time]="$ctrl.endTime" (on-finish)="$ctrl.expireTask()"></tim-countdown>
+<div ng-if="$ctrl.timed">
+    <div ng-if="$ctrl.running">
+    Time left: <tim-countdown [end-time]="$ctrl.endTime" (on-finish)="$ctrl.expireTask()"></tim-countdown>
+    </div>
+    <div ng-if="$ctrl.expired">
+    Your access to this task has expired
+    </div>
+    <h4 ng-if="$ctrl.accessHeader && !$ctrl.running">{{::$ctrl.accessHeader}}</h4>
+    <div ng-if="$ctrl.unlockable">
+    Unlock task. You will have {{$ctrl.accessDuration}} seconds to answer to this task.
+    <button class="btn btn-primary" ng-click="$ctrl.unlockTask()" title="Unlock task">Unlock task</button>
+    </div>
+    <div ng-if="$ctrl.expired && $ctrl.accessEndText">{{::$ctrl.accessEndText}}</div>
 </div>
-<div ng-if="$ctrl.expired">
-Your access to this task has expired
-</div>
-<h4 ng-if="$ctrl.accessHeader && !$ctrl.running">{{::$ctrl.accessHeader}}</h4>
-<div ng-if="$ctrl.unlockable">
-Unlock task. You will have {{$ctrl.accessDuration}} seconds to answer to this task.
-<button class="btn btn-primary" ng-click="$ctrl.unlockTask()" title="Unlock task">Unlock task</button>
-</div>
-
-<div ng-if="$ctrl.expired && $ctrl.accessEndText">{{::$ctrl.accessEndText}}</div>
     `,
     transclude: true,
 });
