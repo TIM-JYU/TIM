@@ -571,11 +571,6 @@ class Plugin:
             and self.known.accessDuration is not missing
         )
 
-    # class TimedAcces(enum.Enum):
-    #     accessible = 1
-    #     unlockable = 2
-    #     expired = 3
-
     def set_access_end_for_user(self, user: Optional[User] = None):
         """
         Changes access_end_for_user to match the end of user's plugin access

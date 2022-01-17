@@ -2302,7 +2302,6 @@ def unlock_task(task_id: str):
             AccessType.view,
             accessible_from=time_now,
             accessible_to=expire_time,
-            duration=timedelta(seconds=access_duration),
         )
         db.session.commit()
     else:
