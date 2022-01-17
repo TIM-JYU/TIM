@@ -661,7 +661,7 @@ def post_answer_impl(
     force_answer = answer_options.get(
         "forceSave", False
     )  # Only used in feedback plugin.
-    is_teacher = answer_browser_data.get("teacher", False)
+    is_teacher_mode = answer_browser_data.get("teacher", False)
     save_teacher = answer_browser_data.get("saveTeacher", False)
     should_save_answer = answer_browser_data.get("saveAnswer", True) and tid.task_name
 
@@ -671,7 +671,7 @@ def post_answer_impl(
 
     ctx_user = None
 
-    if is_teacher:
+    if is_teacher_mode:
         answer_id = answer_browser_data.get("answer_id", None)
         user_id = answer_browser_data.get("userId", None)
 
@@ -739,7 +739,7 @@ def post_answer_impl(
         and answerdata.get("getTask", False)
         and plugin.ptype.can_give_task()
     )
-    if not (should_save_answer or get_task) or is_teacher:
+    if not (should_save_answer or get_task) or is_teacher_mode:
         verify_seeanswers_access(d, user=curr_user)
 
     uploads = []
@@ -801,7 +801,7 @@ def post_answer_impl(
     info = plugin.get_info(
         users,
         answerinfo.count,
-        look_answer=is_teacher and not save_teacher,
+        look_answer=is_teacher_mode and not save_teacher,
         valid=valid,
     )
     if ask_new:
@@ -984,7 +984,7 @@ def post_answer_impl(
                 output = call_dumbo([output[3:]])[0]
             set_postoutput(result, output, postoutput)
 
-        if (not is_teacher and should_save_answer) or ("savedata" in jsonresp):
+        if (not is_teacher_mode and should_save_answer) or ("savedata" in jsonresp):
             is_valid, explanation = plugin.is_answer_valid(answerinfo.count, tim_info)
             if plugin.is_timed():
                 plugin.set_access_end_for_user(user=curr_user)
