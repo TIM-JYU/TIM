@@ -49,7 +49,7 @@ class QuestionTest(BrowserTest):
                 <a href="#{'test3'}" title="Permanent link to paragraph">
                     <span class="header-anchor">#</span>
                 </a>
-                <span class="header-name">{'test3'}</span>
+                <span title="Copy reference" class="header-name">{'test3'}</span>
                 </span>
                 <div ng-non-bindable tabindex="0" class="parContent" id="{'test3'}">
                     <pre><code>

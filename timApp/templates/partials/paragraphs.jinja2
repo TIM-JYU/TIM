@@ -59,9 +59,10 @@
         {% set task_id = attrs['taskId'] %}
         {%- if task_id and not preview and not exam_mode -%}
             <span  class="headerlink">
-            <a href="#{{ task_id }}" title="Permanent link to paragraph">
-                <span class="header-anchor">#</span>
-            </a><span class="header-name">{{ task_id }}</span>
+                <a href="#{{ task_id }}" title="Permanent link to paragraph">
+                    <span class="header-anchor">#</span>
+                </a>
+                <span title="Copy reference" class="header-name">{{ task_id }}</span>
             </span>
         {%- endif -%}
 
