@@ -38,7 +38,8 @@ def try_return_folder(item_name):
         if force_create:
             ind = item_name.rfind("/")
             if ind >= 0:
-                item = create_document(item_name, item_name[ind + 1 :])
+                title = get_option(request, "title", item_name[ind + 1 :])
+                item = create_document(item_name, title)
                 if template_item:
                     apply_template(item, template_item.short_name)
                 if create_public:
