@@ -58,9 +58,12 @@
         {% set attrs = t.target.attrs or t.attrs %}
         {% set task_id = attrs['taskId'] %}
         {%- if task_id and not preview and not exam_mode -%}
-            <a href="#{{ task_id }}" title="Permanent link to paragraph" class="headerlink">
-                <span class="header-anchor">#</span><span class="header-name">{{ task_id }}</span>
-            </a>
+            <span  class="headerlink">
+                <a href="#{{ task_id }}" title="Permanent link to paragraph">
+                    <span class="header-anchor">#</span>
+                </a>
+                <span title="Copy reference" class="header-name">{{ task_id }}</span>
+            </span>
         {%- endif -%}
 
         <div {% if not t.needs_angular and not attrs.allowangular %}ng-non-bindable{% endif %} tabindex="0" class="parContent"{% if task_id %} id="{{ task_id }}"{% endif %}>

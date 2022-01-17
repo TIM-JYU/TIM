@@ -16,7 +16,11 @@ from timApp.auth.accesshelper import has_view_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
-from timApp.document.docparagraph import DocParagraph, add_heading_numbers
+from timApp.document.docparagraph import (
+    DocParagraph,
+    add_heading_numbers,
+    add_headings_to_counters,
+)
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import dereference_pars, Document
 from timApp.document.macroinfo import MacroInfo
@@ -349,6 +353,11 @@ class DocumentPrinter:
             md = p.prepare(view_ctx, use_md=True).output
             if not p.is_plugin() and not p.is_question():
                 if not p.get_nomacros() and not self.texplain and not self.textplain:
+                    env = pdoc_macro_env
+                    counters = env.counters
+                    if counters:
+                        counters.task_id = p.get_auto_id()
+                        counters.is_plugin = p.is_plugin()
                     md = expand_macros(
                         text=md,
                         macros=pdoc_macros,
@@ -460,7 +469,7 @@ class DocumentPrinter:
         view_ctx = default_view_ctx
 
         for par in pars:
-            counters.task_id = par.attrs.get("taskId", None)
+            counters.task_id = par.get_auto_id()
             # do not count document settings pars
             if par.is_setting():
                 continue
@@ -491,8 +500,21 @@ class DocumentPrinter:
 
             md = p.prepare(view_ctx, use_md=True).output
 
+            classes = p.classes
+            nonumber = False
+
+            if classes:
+                for cls in classes:
+                    if cls == "nonumber":
+                        md = add_nonumber(md)
+                        nonumber = True
+                    else:
+                        pass
+
             jump_name = p.attrs.get("taskId", None)
-            if settings.auto_number_headings():
+
+            # TODO: Make counters also for nonumbered and no auto_number
+            if settings.auto_number_headings() and not nonumber:
                 md = add_heading_numbers(
                     md,
                     p,
@@ -501,6 +523,8 @@ class DocumentPrinter:
                     jump_name,
                     counters,
                 )
+            else:
+                add_headings_to_counters(md, jump_name, counters)
 
             if not p.is_plugin() and not p.is_question():
                 if not p.get_nomacros():
@@ -511,14 +535,6 @@ class DocumentPrinter:
                         env=env,
                         ignore_errors=False,
                     )
-                classes = p.classes
-
-                if classes:
-                    for cls in classes:
-                        if cls == "nonumber":
-                            md = add_nonumber(md)
-                        else:
-                            pass
 
         return counters
 

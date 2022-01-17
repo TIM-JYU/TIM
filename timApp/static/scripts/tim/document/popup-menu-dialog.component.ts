@@ -1,3 +1,4 @@
+import $ from "jquery";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule, NgZone} from "@angular/core";
 import {watchEditMode} from "tim/document/editing/editmode";
@@ -10,9 +11,10 @@ import {PurifyModule} from "tim/util/purify.module";
 import {HelpPar} from "tim/document/structure/helpPar";
 import {ParContext} from "tim/document/structure/parContext";
 import {documentglobals} from "../util/globals";
-import {toPromise} from "../util/utils";
+import {copyToClipboard, toPromise} from "../util/utils";
 import {ViewCtrl} from "./viewctrl";
 import {IMenuFunctionEntry, MenuFunctionList} from "./viewutils";
+import ClickEvent = JQuery.ClickEvent;
 
 export type EditMode = "par" | "area";
 
@@ -85,6 +87,7 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
     protected dialogName = "popupMenu";
     public editState: EditMode | null = documentglobals().editMode;
     content?: string;
+    private labelClickHandlerSet = false;
     private olds: Partial<IPopupParams> & {editState?: EditMode | null} = {
         contenturl: undefined,
         editState: undefined,
@@ -204,8 +207,26 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
             this.editState = null;
         } else {
             this.editState = "par";
+            if (!this.labelClickHandlerSet) {
+                $("div.paragraphs")
+                    .on("click", ".cnt-labels", (e) => {
+                        this.copyReference(e);
+                    })
+                    .on("click", ".header-name", (e) => {
+                        this.copyReference(e);
+                    });
+                this.labelClickHandlerSet = true;
+            }
         }
         $rootScope.$evalAsync();
+    }
+
+    copyReference(e: ClickEvent<HTMLElement, undefined, unknown, HTMLElement>) {
+        let text = e.target.innerText;
+        const texts = text.split("=");
+        if (texts.length > 1) text = texts[1];
+
+        copyToClipboard(`%%"${text}"|ref%%`);
     }
 
     getCtx() {

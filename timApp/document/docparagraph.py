@@ -415,6 +415,12 @@ class DocParagraph:
         self.nomacros = self.no_macros()
         return self.nomacros
 
+    def get_auto_id(self):
+        task_id = self.attrs.get("taskId", None)
+        if task_id:
+            return task_id
+        return self.id
+
     def get_expanded_markdown(
         self,
         macroinfo: MacroInfo,
@@ -433,11 +439,10 @@ class DocParagraph:
             return md
         settings = self.doc.get_settings()
         macros = macroinfo.get_macros()
-        task_id = self.attrs.get("taskId", None)
         env = macroinfo.jinja_env
         counters = env.counters
         if counters:
-            counters.task_id = task_id
+            counters.task_id = self.get_auto_id()
             counters.is_plugin = self.is_plugin()
         try:
             if self.insert_rnds(
@@ -1359,3 +1364,29 @@ def add_heading_numbers(
                         counters.set_heading_vals(vals)
         curr = curr.nxt
     return "\n".join(lines)
+
+
+def add_headings_to_counters(
+    s: str,
+    jump_name: str = None,
+    counters: AutoCounters = None,
+):
+    if not counters:
+        return s
+    ps = commonmark.Parser()
+    parsed = ps.parse(s)
+    lines = s.splitlines(keepends=False)
+    curr: Node = parsed.first_child
+    while curr:
+        if curr.t == "heading":
+            level = curr.level
+            line_idx = curr.sourcepos[0][0] - 1
+            heading_line = lines[line_idx]
+            heading_start = "#" * level
+
+            if heading_line.startswith(heading_start + " "):
+                line = heading_line[level + 1 :]
+            line = line.replace("{.unnumbered}", "")
+            counters.add_counter("chap", jump_name, "", line)
+        curr = curr.nxt
+    return s
