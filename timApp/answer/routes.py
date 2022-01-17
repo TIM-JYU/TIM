@@ -988,9 +988,7 @@ def post_answer_impl(
                     receive_time
                     - d.document.get_settings().answer_submit_time_tolerance()
                 )
-                if fixed_time < (vr.access.accessible_to or maxdate):
-                    is_valid = True
-                else:
+                if fixed_time > (vr.access.accessible_to or maxdate):
                     is_valid = False
                     explanation = "Your view access to this document has expired, so this answer was saved but marked as invalid."
             points_given_by = None

@@ -495,7 +495,14 @@ div.error {
 
 .editmode .headerlink {
     visibility: inherit;
+    position: relative;
     z-index: 10;
+
+    &.cnt-labels {
+        color: $link-color;
+        font-size: 0.8em;
+        font-weight: bold;
+    }
 
     &:not(.anchor) .header-name {
         display: inline;

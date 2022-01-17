@@ -350,6 +350,21 @@ class MessageListTest(TimMessageListTest):
             doc, f"Archived document named 'Test-message-2' must be created"
         )
 
+        self.trigger_message_send(message_list, self.test_user_1)
+
+        doc = next(
+            (
+                d
+                for d in folder.get_all_documents()
+                if d.short_name.startswith("No-subject")
+            ),
+            None,
+        )
+
+        self.assertIsNotNone(
+            doc, f"Archived document named 'No-subject' must be created"
+        )
+
     def test_mail_archive_access(self):
         self.login_test1()
         self.make_admin(self.test_user_1)
