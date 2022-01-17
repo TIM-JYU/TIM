@@ -31,7 +31,6 @@ import {
     copyToClipboard,
     defaultErrorMessage,
     defaultTimeout,
-    getClipboardHelper,
     timeout,
     to,
     toPromise,
@@ -2889,15 +2888,6 @@ ${fhtml}
         this.viewCode = !this.viewCode;
         this.localcode = undefined;
         this.showCodeNow();
-    }
-
-    getFromClipboard() {
-        // This does not work, it is not possible to get user clp contents
-        const e1 = getClipboardHelper();
-        e1.select();
-        document.execCommand("paste");
-        e1.select();
-        return e1.value;
     }
 
     getSameIndent(s: string, beg: number): string {

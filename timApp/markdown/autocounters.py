@@ -80,7 +80,9 @@ class AutoCounters:
     # needed if in LaTeX environment no base name is given
     auto_labels: bool = False
     label_cache: list[list[str]] = attr.Factory(list)
-    need_label_update = False  # total counter for cached labels (sum of in label_cache)
+    need_label_update = False
+    need_update_labels = False
+    # total counter for cached labels (sum of in label_cache)
     current_labels: list[str] = attr.Factory(list)
     is_plugin = False
 
@@ -166,6 +168,7 @@ class AutoCounters:
         self.doing_latex_environment = False
         self.reset_label_cache()
         self.block_counters = {}
+        self.need_update_labels = False
 
     def reset_label_cache(self) -> None:
         """
@@ -212,11 +215,13 @@ class AutoCounters:
         if not self.auto_name_base:
             if self.task_id is None:
                 return "", "", self.error("Missing base name, use c_auto")
-            self.auto_name_plugin: bool = True
             sname = self.task_id
             self.set_auto_name(sname)
-            return sname, ctype, None
-        return self.auto_name_base + str(self.auto_name_counter), ctype, None
+            # First plugin counter is named by it's #name
+            if self.is_plugin:
+                self.auto_name_plugin: bool = True
+                return sname, ctype, None
+        return str(self.auto_name_base) + str(self.auto_name_counter), ctype, None
 
     def set_auto_number_headings(self, n: int) -> None:
         """
@@ -440,6 +445,7 @@ class AutoCounters:
                 self.current_labels.append(sname)
 
         self.block_counters[sname] = from_macros
+        self.need_update_labels = True
 
         return str(from_macros["s"]), sname, from_macros
 
@@ -477,6 +483,8 @@ class AutoCounters:
         :param names: list of counter names that are converted to labels
         :return: string to output either a-tag's or LaTeX labels
         """
+        if self.tex:
+            return ""
         result = ""
         for name in names:
             hname = self.autocnts.get(name, {})
@@ -505,7 +513,13 @@ class AutoCounters:
         :param lf: what is coming to the end of counterline
         :return:  tag counter
         """
-        return f"\\tag{{{self.new_counter(name, ctype)}}}{lf}"
+        s, name, from_macros = self.create_new_counter(name, ctype)
+        hyper_jmp = from_macros.get("h", "")
+        if self.auto_name_plugin:
+            return f"\\tag{{{s}}}{lf}"
+        if self.tex:
+            return f" \\label{{{hyper_jmp}}}\\tag{{{s}}}{lf}"
+        return f"\\tag{{{s}}}{lf}"
 
     @staticmethod
     def label_place_holder(n: int) -> str:
@@ -523,6 +537,9 @@ class AutoCounters:
         :param text: block text where to replace labels
         :return: text with labels inserted
         """
+        if not self.need_update_labels:
+            return ""
+
         for n, lbls in enumerate(self.label_cache):
             # optimize not using replace
             ph = self.label_place_holder(n)
@@ -534,11 +551,13 @@ class AutoCounters:
             # text += '<span class="headerlink cnt-labels">'
             text += "\n\n["
             for sname in self.block_counters:
-                text += sname + " "
+                val = self.block_counters[sname].get("v", "")
+                text += f"[{val}={sname}]{{.cnt-label}} "
             # TODO: text += f'<copy-clipboard show="{sname}" copy="%%{sname}|ref%%" /> '
             # text += "</span>"
             text += "]{.headerlink .cnt-labels}"
 
+        self.need_update_labels = False
         return text
 
     def get_label_placeholder(self) -> str:
@@ -549,6 +568,7 @@ class AutoCounters:
                  real labes after whole block is ready
         """
         self.need_label_update = True
+        self.need_update_labels = True
         self.auto_labels = True
         self.current_labels = []
         self.label_cache.append(self.current_labels)
@@ -582,7 +602,8 @@ class AutoCounters:
         anchor = self.autonames.get(sname, "")
         if self.tex:
             if anchor:
-                label = f" \\label{{{anchor}}}"
+                #  label = f" \\label{{{anchor}}}"
+                return f"\\begin{{{what}}}"
             else:
                 label = self.get_label_placeholder()
             return f"\\begin{{{what}}}{label}"
@@ -605,9 +626,9 @@ class AutoCounters:
         :return: label, LaTeX begin commands and one counter
         """
         label_and_begin = self.make_latex_envoronment_begin(name, what, ctype)
-        cnt = ""
-        if name:
-            cnt = self.tag_counter(name, ctype, "")
+        # cnt = ""
+        # if name:
+        cnt = self.tag_counter(name, ctype, "")
         return label_and_begin + cnt
 
     def begin_counter(

@@ -45,9 +45,12 @@ class QuestionTest(BrowserTest):
                  id="{pars[2].get_id()}"
                  t="{pars[2].get_hash()}"
                  attrs="{{&#34;question&#34;: &#34;true&#34;, &#34;taskId&#34;: &#34;test3&#34;}}">
-                <a href="#{'test3'}" title="Permanent link to paragraph" class="headerlink">
-                    <span class="header-anchor">#</span><span class="header-name">{'test3'}</span>
+                <span class="headerlink">
+                <a href="#{'test3'}" title="Permanent link to paragraph">
+                    <span class="header-anchor">#</span>
                 </a>
+                <span title="Copy reference" class="header-name">{'test3'}</span>
+                </span>
                 <div ng-non-bindable tabindex="0" class="parContent" id="{'test3'}">
                     <pre><code>
 json:
