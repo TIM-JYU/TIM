@@ -4,7 +4,6 @@ So, do NOT import anything client-side-specific (like AngularJS) in this module 
 */
 
 import * as t from "io-ts";
-import {MomentFromString} from "tim/util/utils";
 
 export const AnswerBrowserSettings = t.type({
     pointsStep: nullable(t.number),
@@ -23,11 +22,6 @@ export const undoType = t.partial({
 
 // Attributes that are valid for all plugins.
 export const GenericPluginMarkup = t.partial({
-    // accessDuration: nullable(t.Integer),
-    // TODO: Type 'string | undefined' is not assignable to type 'Moment | undefined'.
-    // accessibleUntil: MomentFromString,
-    // accessibleUntil: nullable(t.string),
-    // accessibleUntil: t.union([MomentFromString, t.string]),
     answerLimit: nullable(t.Integer),
     button: nullable(t.string),
     buttonText: nullable(t.string),
@@ -70,7 +64,6 @@ export function getTopLevelFields<M extends IGenericPluginMarkup>(
                 readonly: null,
                 readwrite: null,
             }),
-            // accessEnd: t.string,
             state: t.unknown,
         }),
         t.type({

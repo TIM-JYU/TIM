@@ -25,7 +25,6 @@ import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
 import {$filter, $http, $httpParamSerializer, $timeout} from "../util/ngimport";
 import {
     Binding,
-    convertDateStringsToMoments,
     getURLParameter,
     getUrlParams,
     getViewName,
@@ -184,9 +183,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                 this.unlockable = true;
                 this.hidePlugin();
             } else {
-                console.log("BEFORE", this.accessEnd);
                 this.endTime = moment(this.accessEnd);
-                console.log(this.endTime);
                 if (this.endTime.isBefore(moment.now())) {
                     this.expireTask();
                 } else {
@@ -362,9 +359,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         );
         if (r.ok) {
             this.unlockable = false;
-            console.log("BEFORE", r.result.data.end_time);
             this.endTime = moment(r.result.data.end_time);
-            console.log(this.endTime);
             if (this.endTime.isBefore(moment.now())) {
                 this.expireTask();
             } else {
@@ -375,7 +370,6 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
 
     expireTask() {
         this.expired = true;
-        // this.hidePlugin();
     }
 
     startTask() {

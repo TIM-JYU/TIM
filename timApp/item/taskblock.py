@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from timApp.timdb.sqa import db
 from timApp.item.block import Block, BlockType, insert_block
+from timApp.user.usergroup import UserGroup
 
 
 class TaskBlock(db.Model):
