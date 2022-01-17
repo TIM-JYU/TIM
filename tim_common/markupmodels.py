@@ -71,6 +71,7 @@ class HiddenFieldsMixin:
 class KnownMarkupFields(HiddenFieldsMixin):
     """Represents the plugin markup fields that are known and used by TIM."""
 
+    accessDuration: Union[int, None, Missing] = missing
     anonymous: Union[bool, None, Missing] = missing
     answerLimit: Union[int, None, Missing] = missing
     automd: Union[bool, None, Missing] = missing

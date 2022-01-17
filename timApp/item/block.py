@@ -157,6 +157,15 @@ class Block(db.Model):
             )
         }
 
+    @staticmethod
+    def find_by_description(description: str) -> Block | None:
+        """Finds a Block by description.
+
+        TODO: Placeholder method: Description is probably not unique.
+        """
+        q = Block.query.filter_by(description=description)
+        return q.first()
+
     def add_rights(self, groups, access_type: AccessType):
         for gr in groups:
             key = (gr.id, access_type.value)
@@ -178,6 +187,7 @@ class BlockType(Enum):
     File = 7
     Upload = 8
     ScheduledFunction = 9
+    Task = 10
 
     @staticmethod
     def from_str(type_name: str) -> BlockType:

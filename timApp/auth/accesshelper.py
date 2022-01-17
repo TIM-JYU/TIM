@@ -536,11 +536,13 @@ def verify_task_access(
             grace_period=doc.get_settings().answer_grace_period(),
         )
         is_expired = True
-
+    ctx_user_teacher_access = context_user.logged_user.has_teacher_access(
+        doc.get_docinfo()
+    )
     if (
         found_plugin.task_id.access_specifier == TaskIdAccess.ReadOnly
         and required_task_access_level == TaskIdAccess.ReadWrite
-        and not context_user.logged_user.has_teacher_access(doc.get_docinfo())
+        and not ctx_user_teacher_access
     ):
         raise AccessDenied(
             f"This task/field {task_id.task_name} is readonly and thus only writable for teachers."
