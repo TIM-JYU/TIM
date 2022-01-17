@@ -87,6 +87,7 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
     protected dialogName = "popupMenu";
     public editState: EditMode | null = documentglobals().editMode;
     content?: string;
+    private labelClickHandlerSet = false;
     private olds: Partial<IPopupParams> & {editState?: EditMode | null} = {
         contenturl: undefined,
         editState: undefined,
@@ -201,20 +202,19 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
         }
     }
 
-    labelClickHandlerSet = false;
-
     parModeClicked() {
         if (this.editState === "par") {
             this.editState = null;
         } else {
             this.editState = "par";
             if (!this.labelClickHandlerSet) {
-                $("div.paragraphs").on("click", ".cnt-labels", (e) => {
-                    this.copyReference(e);
-                });
-                $("div.paragraphs").on("click", ".header-name", (e) => {
-                    this.copyReference(e);
-                });
+                $("div.paragraphs")
+                    .on("click", ".cnt-labels", (e) => {
+                        this.copyReference(e);
+                    })
+                    .on("click", ".header-name", (e) => {
+                        this.copyReference(e);
+                    });
                 this.labelClickHandlerSet = true;
             }
         }
