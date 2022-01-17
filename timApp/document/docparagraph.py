@@ -1373,6 +1373,8 @@ def add_headings_to_counters(
 ):
     if not counters:
         return s
+    if not jump_name:
+        return s
     ps = commonmark.Parser()
     parsed = ps.parse(s)
     lines = s.splitlines(keepends=False)
@@ -1387,6 +1389,8 @@ def add_headings_to_counters(
             if heading_line.startswith(heading_start + " "):
                 line = heading_line[level + 1 :]
             line = line.replace("{.unnumbered}", "")
+            if not line.strip():
+                continue
             counters.add_counter("chap", jump_name, "", line)
         curr = curr.nxt
     return s
