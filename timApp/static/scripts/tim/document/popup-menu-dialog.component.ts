@@ -221,9 +221,8 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
         $rootScope.$evalAsync();
     }
 
-    copyReference(e: ClickEvent<HTMLElement>) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        let text: string = e.target.innerText;
+    copyReference(e: ClickEvent<HTMLElement, undefined, unknown, HTMLElement>) {
+        let text = e.target.innerText;
         const texts = text.split("=");
         if (texts.length > 1) text = texts[1];
 

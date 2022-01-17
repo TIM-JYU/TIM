@@ -1238,7 +1238,7 @@ export class ViewCtrl implements IController {
             .join(", ");
         pars.each((index, elem) => {
             const p = $(elem);
-            if (p.children("a.headerlink").length > 0) {
+            if (p.children("span.headerlink").length > 0) {
                 return;
             }
             p.find(headerSelector).each((i, e) => {
