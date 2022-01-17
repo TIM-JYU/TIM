@@ -128,12 +128,14 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     public abLoad = new TimDefer<AnswerBrowserController | null>();
     private accessDuration?: Binding<number, "<">;
     private accessEnd?: Binding<string, "@">;
-    private unlockText?: Binding<string, "@">;
+    private accessEndText?: Binding<string, "@">;
+    private accessHeader?: Binding<string, "@">;
 
     private expired = false;
     private unlockable = false;
     private running = false;
     private endTime?: ReadonlyMoment;
+    private hideTask = false;
 
     constructor(
         private element: JQLite,
@@ -370,6 +372,10 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
 
     expireTask() {
         this.expired = true;
+        this.running = false;
+        if (this.accessEndText) {
+            this.hidePlugin();
+        }
     }
 
     startTask() {
@@ -400,7 +406,8 @@ timApp.component("timPluginLoader", {
         type: "@",
         accessDuration: "<",
         accessEnd: "@",
-        unlockText: "@",
+        accessHeader: "@",
+        accessEndText: "@",
     },
     controller: PluginLoaderCtrl,
     require: {
@@ -422,14 +429,16 @@ timApp.component("timPluginLoader", {
 <div ng-if="$ctrl.running">
 Time left: <tim-countdown [end-time]="$ctrl.endTime" (on-finish)="$ctrl.expireTask()"></tim-countdown>
 </div>
-<h4 ng-if="$ctrl.unlockable && $ctrl.unlockText">{{::$ctrl.unlockText}}</h4>
+<div ng-if="$ctrl.expired">
+Your access to this task has expired
+</div>
+<h4 ng-if="$ctrl.accessHeader && !$ctrl.running">{{::$ctrl.accessHeader}}</h4>
 <div ng-if="$ctrl.unlockable">
 Unlock task. You will have {{$ctrl.accessDuration}} seconds to answer to this task.
 <button class="btn btn-primary" ng-click="$ctrl.unlockTask()" title="Unlock task">Unlock task</button>
 </div>
-<div ng-if="$ctrl.expired">
-Your access to this task has expired
-</div>
+
+<div ng-if="$ctrl.expired && $ctrl.accessEndText">{{::$ctrl.accessEndText}}</div>
     `,
     transclude: true,
 });
