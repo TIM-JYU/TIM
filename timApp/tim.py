@@ -347,10 +347,9 @@ def get_time():
     return json_response({"time": get_current_time()}, date_conversion=True)
 
 
-@app.get("/getTemplates")
-def get_templates():
-    current_path = request.args.get("item_path", "")
-    d = DocEntry.find_by_path(current_path)
+@app.get("/getTemplates/<path:item_path>")
+def get_templates(item_path: str) -> Response:
+    d = DocEntry.find_by_path(item_path)
     if not d:
         raise NotExist()
     verify_edit_access(d)
