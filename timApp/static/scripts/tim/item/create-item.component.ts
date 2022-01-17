@@ -79,11 +79,9 @@ export class CreateItemComponent implements OnInit {
         if (this.fullPath) {
             const str = this.fullPath;
             this.itemLocation = str.substring(0, str.lastIndexOf("/"));
-            this.itemTitle =
-                getURLParameter("title") ??
-                str.substring(str.lastIndexOf("/") + 1, str.length);
-        }
-        if (this.itemTitle) {
+            this.itemName = str.substring(str.lastIndexOf("/") + 1);
+            this.itemTitle = getURLParameter("title") ?? this.itemName;
+        } else if (this.itemTitle) {
             this.itemName = slugify(this.itemTitle);
         }
         if (this.template) {

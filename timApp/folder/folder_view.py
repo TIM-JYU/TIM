@@ -1,6 +1,6 @@
 from flask import request, render_template
 
-from timApp.auth.accesshelper import verify_view_access
+from timApp.auth.accesshelper import verify_view_access, AccessDenied
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import (
@@ -38,7 +38,13 @@ def try_return_folder(item_name):
         if force_create:
             ind = item_name.rfind("/")
             if ind >= 0:
-                item = create_document(item_name, item_name[ind + 1 :])
+                check_username = get_option(request, "check_username", None)
+                if check_username and get_current_user_object().name != check_username:
+                    raise AccessDenied(
+                        "This document is reserved for another user. Create a document for your username."
+                    )
+                title = get_option(request, "title", item_name[ind + 1 :])
+                item = create_document(item_name, title)
                 if template_item:
                     apply_template(item, template_item.short_name)
                 if create_public:
