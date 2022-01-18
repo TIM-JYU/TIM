@@ -107,7 +107,7 @@ auto_number_headings: 0
             ),
         )
         actual = "\n".join(htmls[0])
-        self.assertEqual(htmls_ex.strip("\n"), actual, msg=msg)
+        self.assertEqual(htmls_ex.strip("\n"), actual.strip("\n"), msg=msg)
 
     def cnt_labels(self, labels):
         lbsl = labels.split(" ")
@@ -391,6 +391,55 @@ a+2 \tag{2.4}\\
 <p>Also look par <a href="#cont">2</a> that is <a href="#cont">2. Continue</a>.</p>
 """
         )
+        self.doc_with_counters(
+            docstr, htmls_ex, "AutoCounters with section numbers", setstr
+        )
+
+    def test_autotypes(self):
+        setstr = r"""``` {settings=""}
+auto_number_headings: 2
+macros: 
+  autocounters:
+     autotypes:
+       - lause
+       - maar
+     lause:
+        ref: "Lause {p}"
+     maar:
+        ref: "Määritelmä {p}"
+```
+"""
+        docstr = r"""#-
+## Määritelmä {.maar #maarit1}
+...
+## Määritelmä {.maar #maarit2}
+...
+## Lause {.lause #lause1}
+...
+## Lause {.lause #lause2}
+#-
+- Katso %%"maarit1"|ref%%
+- Katso %%"maarit2"|ref%%
+- Todista %%"lause1"|ref%%
+- Todista %%"lause2"|ref%%
+- Todista %%"|lause2"|ref%%
+"""
+        htmls_ex = """
+<h2 id="määritelmä">Määritelmä</h2>
+<p>...</p>
+<h2 id="määritelmä">Määritelmä</h2>
+<p>...</p>
+<h2 id="lause">Lause</h2>
+<p>...</p>
+<h2 id="lause">Lause</h2>
+<ul>
+<li>Katso <a href="#maarit1">Määritelmä 1</a></li>
+<li>Katso <a href="#maarit2">Määritelmä 2</a></li>
+<li>Todista <a href="#lause1">Lause 3</a></li>
+<li>Todista <a href="#lause2">Lause 4</a></li>
+<li>Todista <a href="#lause2">4</a></li>
+</ul>
+"""
         self.doc_with_counters(
             docstr, htmls_ex, "AutoCounters with section numbers", setstr
         )

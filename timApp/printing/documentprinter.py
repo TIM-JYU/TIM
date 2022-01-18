@@ -479,6 +479,7 @@ class DocumentPrinter:
             )
             _, _, pdoc_plugin_attrs, env, pdoc_macros, pdoc_macro_delimiter = p_info
             env.set_counters(counters)
+            counters.par = par
 
             # Replace plugin- and question pars with regular docpars
             # with the md defined in the 'print' block

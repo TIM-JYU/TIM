@@ -7,6 +7,8 @@ from typing import Optional, Union
 import attr
 from jinja2.sandbox import SandboxedEnvironment
 
+import timApp
+
 """
 Class for autocounters to be used as Jinja2 filters
 """
@@ -85,8 +87,10 @@ class AutoCounters:
     # total counter for cached labels (sum of in label_cache)
     current_labels: list[str] = attr.Factory(list)
     is_plugin = False
+    par: timApp.document.docparagraph.DocParagraph = None
 
     def __init__(self, macros: Optional[dict]):
+
         """
         Initialize autonumber counters to use macros
         :param macros: macros to use for these counters
@@ -103,6 +107,7 @@ class AutoCounters:
                 self.autocnts = {}
             self.autonames = macros.get("autonames", {})
             self.tex = macros.get("tex", False)
+            self.autotypes = macros.get("autocounters", {}).get("autotypes", {})
         else:
             self.macros = {}
 
@@ -282,8 +287,8 @@ class AutoCounters:
         :return: sname, text for counter, macros for counter
         """
         sname = str(name)
-        text1 = ""
-        text2 = ""
+        text1 = None
+        text2 = None
         if sname.find("|") >= 0:
             params = sname.split("|")
             sname = params[1].strip()
@@ -292,7 +297,7 @@ class AutoCounters:
                 text2 = params[2]
             if len(params) > 3 and not showtype:
                 showtype = params[3]
-            if text2 and not showtype:
+            if not showtype:
                 showtype = "t"
 
         from_macros = self.autocnts.get(
@@ -342,7 +347,7 @@ class AutoCounters:
 
     def get_counter_type(self, ctype: str) -> TOneCounterType:
         """
-        Get type couter, so with value of how many has been totally
+        Get type counter, so with value of how many has been totally
         during the whole document.  If this is first call for ctype,
         create new type counter.
         :param ctype: counter's type
@@ -365,23 +370,35 @@ class AutoCounters:
         :param long_val: long for with tilte like 2.4 Counters
         :return: None
         """
-        if self.renumbering:
-            counter_type = self.get_counter_type(ctype)
-            show = self.get_type_text(ctype, name, show_val, "chap", str(show_val))
-            counter: TCounter = {
-                "v": show_val,
-                "p": show_val,
-                "s": show,
-                "r": show_val,
-                "t": show_val,
-                "l": long_val,
-                "h": str(name),
-                "n": str(name),
-                "y": ctype,
-            }
-            counter_type.counters[name] = counter
-            return counter
-        return None
+        if not self.renumbering:
+            return None
+        if ctype == "chap" and self.autotypes:
+            classes = self.par.classes
+            for cls in classes:
+                if cls in self.autotypes:
+                    ctype = cls
+                    break
+
+        counter_type = self.get_counter_type(ctype)
+        # pure = self.get_type_text(ctype, name, show_val, "pure", str(show_val))
+        pure = str(show_val)  # TODO: think more how to set pure
+        show = self.get_type_text(ctype, name, show_val, "show", pure)
+        ref = self.get_type_text(ctype, name, show_val, "ref", pure)
+        text = self.get_type_text(ctype, name, show_val, "text", pure)
+        long = self.get_type_text(ctype, name, show_val, "long", long_val)
+        counter: TCounter = {
+            "v": show_val,
+            "p": pure,
+            "s": show,
+            "r": ref,
+            "t": text,
+            "l": long,
+            "h": str(name),
+            "n": str(name),
+            "y": ctype,
+        }
+        counter_type.counters[name] = counter
+        return counter
 
     def create_new_counter(
         self, name: TName, ctype: str
