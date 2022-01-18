@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Optional, Union
+from typing import Optional, Union, TYPE_CHECKING
 
 import attr
 from jinja2.sandbox import SandboxedEnvironment
 
-import timApp
+if TYPE_CHECKING:
+    from timApp.document.docparagraph import DocParagraph
 
 """
 Class for autocounters to be used as Jinja2 filters
@@ -87,7 +88,7 @@ class AutoCounters:
     # total counter for cached labels (sum of in label_cache)
     current_labels: list[str] = attr.Factory(list)
     is_plugin = False
-    par: timApp.document.docparagraph.DocParagraph = None
+    par: Optional[DocParagraph] = None
 
     def __init__(self, macros: Optional[dict]):
 
@@ -372,12 +373,13 @@ class AutoCounters:
         """
         if not self.renumbering:
             return None
-        if ctype == "chap" and self.autotypes:
+        if ctype == "chap" and self.autotypes and self.par:
             classes = self.par.classes
-            for cls in classes:
-                if cls in self.autotypes:
-                    ctype = cls
-                    break
+            if classes:
+                for cls in classes:
+                    if cls in self.autotypes:
+                        ctype = cls
+                        break
 
         counter_type = self.get_counter_type(ctype)
         # pure = self.get_type_text(ctype, name, show_val, "pure", str(show_val))
