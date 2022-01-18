@@ -17,14 +17,14 @@ no_implicit_optional = true
 show_column_numbers = true
 namespace_packages = true
 show_error_codes = true
-exclude = '''
-timApp/modules/cs/static
-timApp/tim_files
-mailman/
-tools/
-oiko/
-python_docs/
-'''
+exclude = [
+    'timApp/modules/cs/static',
+    'timApp/tim_files',
+    'mailman/',
+    'tools/',
+    'oiko/',
+    'python_docs/',
+]
 
 # Some modules have their own internal type checking, so we will always need to follow their imports
 [[tool.mypy.overrides]]
