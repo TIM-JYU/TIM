@@ -136,7 +136,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     private unlockable = false;
     private running = false;
     private endTime?: ReadonlyMoment;
-    private hideTask = false;
+    private taskHidden = false;
 
     constructor(
         private element: JQLite,
@@ -344,11 +344,14 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     hidePlugin() {
+        this.taskHidden = true;
         const e = this.getPluginElement();
         e.css("visibility", "hidden");
     }
 
     unHidePlugin() {
+        this.taskHidden = false;
+
         const e = this.getPluginElement();
         e.css("visibility", "visible");
     }
@@ -435,7 +438,7 @@ timApp.component("timPluginLoader", {
     <div ng-if="$ctrl.expired">
     Your access to this task has expired
     </div>
-    <h4 ng-if="$ctrl.accessHeader && !$ctrl.running">{{::$ctrl.accessHeader}}</h4>
+    <h4 ng-if="$ctrl.accessHeader && $ctrl.taskHidden">{{::$ctrl.accessHeader}}</h4>
     <div ng-if="$ctrl.unlockable">
     Unlock task. You will have {{$ctrl.accessDuration}} seconds to answer to this task.
     <button class="btn btn-primary" ng-click="$ctrl.unlockTask()" title="Unlock task">Unlock task</button>
