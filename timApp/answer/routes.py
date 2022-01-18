@@ -985,17 +985,10 @@ def post_answer_impl(
             set_postoutput(result, output, postoutput)
 
         if (not is_teacher_mode and should_save_answer) or ("savedata" in jsonresp):
-            is_valid, explanation = plugin.is_answer_valid(answerinfo.count, tim_info)
-            if plugin.is_timed():
-                plugin.set_access_end_for_user(user=curr_user)
-                if plugin.access_end_for_user:
-                    if plugin.access_end_for_user < receive_time:
-                        is_valid = False
-                        explanation = "Your access to this task has expired."
-                else:
-                    is_valid = False
-                    explanation = "You haven't started this task yet."
-            if vr.is_expired:
+            if vr.is_invalid:
+                is_valid = False
+                explanation = vr.invalidate_reason
+            elif vr.is_expired:
                 fixed_time = (
                     receive_time
                     - d.document.get_settings().answer_submit_time_tolerance()
@@ -1003,6 +996,8 @@ def post_answer_impl(
                 if fixed_time > (vr.access.accessible_to or maxdate):
                     is_valid = False
                     explanation = "Your view access to this document has expired, so this answer was saved but marked as invalid."
+            else:
+                is_valid, explanation = plugin.is_answer_valid(answerinfo.count, tim_info)
             points_given_by = None
             if answer_browser_data.get("giveCustomPoints"):
                 try:
