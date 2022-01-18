@@ -178,6 +178,7 @@ class BlockType(Enum):
     File = 7
     Upload = 8
     ScheduledFunction = 9
+    Task = 10
 
     @staticmethod
     def from_str(type_name: str) -> BlockType:

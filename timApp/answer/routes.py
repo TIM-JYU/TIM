@@ -3,7 +3,7 @@ import json
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Union, Optional, Any, Callable, TypedDict, DefaultDict
 
 from flask import Response
@@ -45,6 +45,7 @@ from timApp.auth.accesshelper import (
     get_plugin_from_request,
 )
 from timApp.auth.accesstype import AccessType
+from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.login import create_or_update_user
 from timApp.auth.sessioninfo import (
@@ -68,6 +69,7 @@ from timApp.document.viewcontext import (
     UrlMacros,
 )
 from timApp.item.block import Block, BlockType
+from timApp.item.taskblock import insert_task_block, TaskBlock
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.messaging.messagelist.messagelist_utils import (
     UserGroupDiff,
@@ -102,6 +104,7 @@ from timApp.user.user import User, UserInfo, has_no_higher_right
 from timApp.user.user import maxdate
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
+from timApp.user.userutils import grant_access
 from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import (
     get_option,
@@ -658,7 +661,7 @@ def post_answer_impl(
     force_answer = answer_options.get(
         "forceSave", False
     )  # Only used in feedback plugin.
-    is_teacher = answer_browser_data.get("teacher", False)
+    is_teacher_mode = answer_browser_data.get("teacher", False)
     save_teacher = answer_browser_data.get("saveTeacher", False)
     should_save_answer = answer_browser_data.get("saveAnswer", True) and tid.task_name
 
@@ -668,7 +671,7 @@ def post_answer_impl(
 
     ctx_user = None
 
-    if is_teacher:
+    if is_teacher_mode:
         answer_id = answer_browser_data.get("answer_id", None)
         user_id = answer_browser_data.get("userId", None)
 
@@ -736,7 +739,7 @@ def post_answer_impl(
         and answerdata.get("getTask", False)
         and plugin.ptype.can_give_task()
     )
-    if not (should_save_answer or get_task) or is_teacher:
+    if not (should_save_answer or get_task) or is_teacher_mode:
         verify_seeanswers_access(d, user=curr_user)
 
     uploads = []
@@ -798,7 +801,7 @@ def post_answer_impl(
     info = plugin.get_info(
         users,
         answerinfo.count,
-        look_answer=is_teacher and not save_teacher,
+        look_answer=is_teacher_mode and not save_teacher,
         valid=valid,
     )
     if ask_new:
@@ -981,9 +984,12 @@ def post_answer_impl(
                 output = call_dumbo([output[3:]])[0]
             set_postoutput(result, output, postoutput)
 
-        if (not is_teacher and should_save_answer) or ("savedata" in jsonresp):
+        if (not is_teacher_mode and should_save_answer) or ("savedata" in jsonresp):
             is_valid, explanation = plugin.is_answer_valid(answerinfo.count, tim_info)
-            if vr.is_expired:
+            if vr.is_invalid:
+                is_valid = False
+                explanation = vr.invalidate_reason
+            elif vr.is_expired:
                 fixed_time = (
                     receive_time
                     - d.document.get_settings().answer_submit_time_tolerance()
@@ -2251,3 +2257,47 @@ def rename_answers(old_name: str, new_name: str, doc_path: str):
         a.task_id = f"{d.id}.{new_name}"
     db.session.commit()
     return json_response({"modified": len(answers_to_rename), "conflicts": conflicts})
+
+
+@answers.get("/unlockTask")
+def unlock_task(task_id: str):
+    tid = TaskId.parse(task_id)
+    d = get_doc_or_abort(tid.doc_id)
+    verify_view_access(d)
+    doc = d.document
+    current_user = get_current_user_object()
+    view_ctx = ViewContext(ViewRoute.View, False, origin=get_origin_from_request())
+    user_ctx = user_context_with_logged_in(current_user)
+    try:
+        doc, plug = get_plugin_from_request(
+            doc, task_id=tid, u=user_ctx, view_ctx=view_ctx
+        )
+    except PluginException as e:
+        raise RouteException(str(e))
+    access_duration = plug.known.accessDuration
+    if not access_duration:
+        raise RouteException("Task is not a timed task.")
+    b = TaskBlock.get_by_task(tid.doc_task)
+    ba = None
+    if not b:
+        b = insert_task_block(task_id=tid.doc_task, owner_groups=d.owners)
+    else:
+        ba = BlockAccess.query.filter_by(
+            block_id=b.id,
+            type=AccessType.view.value,
+            usergroup_id=current_user.get_personal_group().id,
+        ).first()
+    if not ba:
+        time_now = get_current_time()
+        expire_time = time_now + timedelta(seconds=access_duration)
+        grant_access(
+            current_user.get_personal_group(),
+            b.block,
+            AccessType.view,
+            accessible_from=time_now,
+            accessible_to=expire_time,
+        )
+        db.session.commit()
+    else:
+        expire_time = ba.accessible_to
+    return json_response({"end_time": expire_time})

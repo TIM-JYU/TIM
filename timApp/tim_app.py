@@ -35,6 +35,7 @@ from timApp.item.block import Block
 from timApp.item.blockassociation import BlockAssociation
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.item.tag import Tag
+from timApp.item.taskblock import TaskBlock
 from timApp.lecture.askedjson import AskedJson
 from timApp.lecture.askedquestion import AskedQuestion
 from timApp.lecture.lecture import Lecture
@@ -167,6 +168,7 @@ all_models = (
     Showpoints,
     SlideStatus,
     Tag,
+    TaskBlock,
     Translation,
     User,
     Useractivity,

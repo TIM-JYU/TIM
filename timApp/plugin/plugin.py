@@ -10,6 +10,8 @@ import yaml
 from jinja2 import Environment, BaseLoader
 from marshmallow import missing, ValidationError
 
+from timApp.auth.accesstype import AccessType
+from timApp.auth.auth_models import BlockAccess
 from timApp.answer.answer import Answer
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -20,6 +22,7 @@ from timApp.document.macroinfo import MacroInfo
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.document.yamlblock import strip_code_block, YamlBlock, merge
+from timApp.item.taskblock import TaskBlock
 from timApp.markdown.autocounters import TimSandboxedEnvironment
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
@@ -47,6 +50,7 @@ JINJAENV = Environment(loader=BaseLoader)
 PLG_RTEMPLATE = JINJAENV.from_string(
     """
 <tim-plugin-loader type="{{abtype}}"
+{{unlock_info or ''}}
 answer-id="{{aid or ''}}"
 class="{{plgclass}}"
 task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>""".replace(
@@ -217,6 +221,7 @@ class Plugin:
         self.par = par
         self.output = None
         self.plugin_lazy = None
+        self.access_end_for_user = None
 
     # TODO don't set task_id in HTML or JSON at all if there isn't one.
     #  Currently at least csPlugin cannot handle taskID being None.
@@ -560,6 +565,32 @@ class Plugin:
     def get_wrapper_tag(self):
         return "div"
 
+    def is_timed(self) -> bool:
+        return (
+            self.known.accessDuration is not None
+            and self.known.accessDuration is not missing
+        )
+
+    def set_access_end_for_user(self, user: Optional[User] = None):
+        """
+        Changes access_end_for_user to match the end of user's plugin access
+        """
+        if self.task_id:
+            current_user = user if user else self.options.user_ctx.logged_user
+            if not current_user.has_teacher_access(self.par.doc.get_docinfo()):
+                # TODO: unlockable plugin shouldn't be a "placed" plugin in pluginify
+                b = TaskBlock.get_by_task(self.task_id.doc_task)
+                if not b:
+                    return
+                ba = BlockAccess.query.filter_by(
+                    block_id=b.id,
+                    type=AccessType.view.value,
+                    usergroup_id=current_user.get_personal_group().id,
+                ).first()
+                if not ba:
+                    return
+                self.access_end_for_user = ba.accessible_to
+
     def get_final_output(self):
         out = self.output
         if self.is_lazy() and out.find(LAZYSTART) < 0:
@@ -590,6 +621,14 @@ class Plugin:
         if self.options.wraptype != PluginWrap.Nothing:
             abtype = self.get_answerbrowser_type()
             cont = f"""<{tag} id='{html_task_id}' data-plugin='/{self.type}' {style}>{out}</{tag}>""".strip()
+            unlock_info = None
+            if self.is_timed():
+                self.set_access_end_for_user()
+                access_end = None
+                if self.access_end_for_user:
+                    access_end = self.access_end_for_user.isoformat()
+                unlock_info = f"""access-duration='{self.known.accessDuration}' access-end="{access_end or ""}" 
+                access-header='{self.known.header or ""}' access-end-text='{self.known.accessEndText or ''}'"""
             if abtype and self.options.wraptype == PluginWrap.Full and False:
                 return (
                     f"""
@@ -609,6 +648,7 @@ class Plugin:
                     doc_task_id=doc_task_id,
                     cont=cont,
                     aid=self.answer.id if self.answer else None,
+                    unlock_info=unlock_info,
                 )
                 return ret  # .replace("\n", "") # TODO: for some reason this is important for tables
             if abtype and self.options.wraptype == PluginWrap.Full:

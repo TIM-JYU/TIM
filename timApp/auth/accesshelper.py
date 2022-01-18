@@ -507,6 +507,10 @@ class TaskAccessVerification:
     plugin: Plugin
     access: BlockAccess
     is_expired: bool  # True if grace period is allowed and the current time is within the grace period.
+    is_invalid: bool = (
+        False  # user has access, but any possible answers are deemed invalid
+    )
+    invalidate_reason: Optional[str] = None
 
 
 def verify_task_access(
@@ -536,19 +540,39 @@ def verify_task_access(
             grace_period=doc.get_settings().answer_grace_period(),
         )
         is_expired = True
-
+    ctx_user_teacher_access = context_user.logged_user.has_teacher_access(
+        doc.get_docinfo()
+    )
     if (
         found_plugin.task_id.access_specifier == TaskIdAccess.ReadOnly
         and required_task_access_level == TaskIdAccess.ReadWrite
-        and not context_user.logged_user.has_teacher_access(doc.get_docinfo())
+        and not ctx_user_teacher_access
     ):
         raise AccessDenied(
             f"This task/field {task_id.task_name} is readonly and thus only writable for teachers."
         )
+    is_invalid = False
+    invalidate_reason = None
+    if (
+        found_plugin.is_timed()
+        and not ctx_user_teacher_access
+        and required_task_access_level == TaskIdAccess.ReadWrite
+    ):
+        found_plugin.set_access_end_for_user(user=context_user.logged_user)
+        if found_plugin.access_end_for_user:
+            if found_plugin.access_end_for_user < get_current_time():
+                is_invalid = True
+                invalidate_reason = "Your access to this task has expired."
+        else:
+            is_invalid = True
+            invalidate_reason = "You haven't started this task yet."
+
     return TaskAccessVerification(
         plugin=found_plugin,
         access=access,
         is_expired=is_expired,
+        is_invalid=is_invalid,
+        invalidate_reason=invalidate_reason,
     )
 
 
