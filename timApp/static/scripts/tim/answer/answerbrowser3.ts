@@ -8,6 +8,8 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAllAnswersDialog} from "tim/answer/showAllAnswersDialog";
 import {tryCreateParContextOrHelp} from "tim/document/structure/create";
 import {ParContext} from "tim/document/structure/parContext";
+import {ReadonlyMoment} from "tim/util/readonlymoment";
+import moment from "moment";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {
@@ -124,6 +126,17 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     public showPlaceholder = true;
     public feedback?: string = "";
     public abLoad = new TimDefer<AnswerBrowserController | null>();
+    private accessDuration?: Binding<number, "<">;
+    private accessEnd?: Binding<string, "@">;
+    private accessEndText?: Binding<string, "@">;
+    private accessHeader?: Binding<string, "@">;
+
+    private timed = false;
+    private expired = false;
+    private unlockable = false;
+    private running = false;
+    private endTime?: ReadonlyMoment;
+    private taskHidden = false;
 
     constructor(
         private element: JQLite,
@@ -167,6 +180,21 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         }
 
         this.showPlaceholder = !this.isInFormMode() && !this.hideBrowser;
+
+        if (this.accessDuration && !this.viewctrl?.item.rights.teacher) {
+            this.timed = true;
+            if (!this.accessEnd) {
+                this.unlockable = true;
+                this.hidePlugin();
+            } else {
+                this.endTime = moment(this.accessEnd);
+                if (this.endTime.isBefore(moment.now())) {
+                    this.expireTask();
+                } else {
+                    this.startTask();
+                }
+            }
+        }
     }
 
     $postLink() {
@@ -315,6 +343,51 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         }
     }
 
+    hidePlugin() {
+        this.taskHidden = true;
+        const e = this.getPluginElement();
+        e.css("visibility", "hidden");
+    }
+
+    unHidePlugin() {
+        this.taskHidden = false;
+
+        const e = this.getPluginElement();
+        e.css("visibility", "visible");
+    }
+
+    async unlockTask() {
+        const r = await to(
+            $http.get<{end_time: string; expired?: boolean}>("/unlockTask", {
+                params: {
+                    task_id: this.taskId,
+                },
+            })
+        );
+        if (r.ok) {
+            this.unlockable = false;
+            this.endTime = moment(r.result.data.end_time);
+            if (this.endTime.isBefore(moment.now())) {
+                this.expireTask();
+            } else {
+                this.startTask();
+            }
+        }
+    }
+
+    expireTask() {
+        this.expired = true;
+        this.running = false;
+        if (this.accessEndText) {
+            this.hidePlugin();
+        }
+    }
+
+    startTask() {
+        this.unHidePlugin();
+        this.running = true;
+    }
+
     isPreview() {
         return this.element.parents(".previewcontent").length > 0;
     }
@@ -336,6 +409,10 @@ timApp.component("timPluginLoader", {
         answerId: "<?",
         taskId: "@",
         type: "@",
+        accessDuration: "<",
+        accessEnd: "@",
+        accessHeader: "@",
+        accessEndText: "@",
     },
     controller: PluginLoaderCtrl,
     require: {
@@ -350,10 +427,24 @@ timApp.component("timPluginLoader", {
      ng-if="$ctrl.answerId && $ctrl.showPlaceholder && !$ctrl.isPreview()"
      style="width: 1px; height: 23px;"></div>
 <answerbrowser ng-class="{'has-answers': ($ctrl.answerId && !$ctrl.hideBrowser)}"
-               ng-if="$ctrl.showBrowser && !$ctrl.isPreview()"
+               ng-if="$ctrl.showBrowser && !$ctrl.isPreview() && !$$ctrl.unlockable"
                task-id="$ctrl.parsedTaskId"
                answer-id="$ctrl.answerId">
 </answerbrowser>
+<div ng-if="$ctrl.timed">
+    <div ng-if="$ctrl.running">
+    Time left: <tim-countdown [end-time]="$ctrl.endTime" (on-finish)="$ctrl.expireTask()"></tim-countdown>
+    </div>
+    <div ng-if="$ctrl.expired">
+    Your access to this task has expired
+    </div>
+    <h4 ng-if="$ctrl.accessHeader && $ctrl.taskHidden">{{::$ctrl.accessHeader}}</h4>
+    <div ng-if="$ctrl.unlockable">
+    Unlock task. You will have {{$ctrl.accessDuration}} seconds to answer to this task.
+    <button class="btn btn-primary" ng-click="$ctrl.unlockTask()" title="Unlock task">Unlock task</button>
+    </div>
+    <div ng-if="$ctrl.expired && $ctrl.accessEndText">{{::$ctrl.accessEndText}}</div>
+</div>
     `,
     transclude: true,
 });
