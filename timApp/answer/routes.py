@@ -985,6 +985,7 @@ def post_answer_impl(
             set_postoutput(result, output, postoutput)
 
         if (not is_teacher_mode and should_save_answer) or ("savedata" in jsonresp):
+            is_valid, explanation = plugin.is_answer_valid(answerinfo.count, tim_info)
             if vr.is_invalid:
                 is_valid = False
                 explanation = vr.invalidate_reason
@@ -996,10 +997,6 @@ def post_answer_impl(
                 if fixed_time > (vr.access.accessible_to or maxdate):
                     is_valid = False
                     explanation = "Your view access to this document has expired, so this answer was saved but marked as invalid."
-            else:
-                is_valid, explanation = plugin.is_answer_valid(
-                    answerinfo.count, tim_info
-                )
             points_given_by = None
             if answer_browser_data.get("giveCustomPoints"):
                 try:
