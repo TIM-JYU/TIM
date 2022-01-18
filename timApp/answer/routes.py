@@ -997,7 +997,9 @@ def post_answer_impl(
                     is_valid = False
                     explanation = "Your view access to this document has expired, so this answer was saved but marked as invalid."
             else:
-                is_valid, explanation = plugin.is_answer_valid(answerinfo.count, tim_info)
+                is_valid, explanation = plugin.is_answer_valid(
+                    answerinfo.count, tim_info
+                )
             points_given_by = None
             if answer_browser_data.get("giveCustomPoints"):
                 try:
