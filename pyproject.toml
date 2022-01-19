@@ -139,7 +139,6 @@ module = [
     "timApp.item.manage",
     "timApp.item.partitioning",
     "timApp.item.routes",
-    "timApp.item.routes_tags",
     "timApp.item.tag",
     "timApp.item.validation",
     "timApp.lecture.askedjson",

@@ -9,7 +9,7 @@ from flask import request, Response
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from sqlalchemy.orm.exc import UnmappedInstanceError, FlushError
+from sqlalchemy.orm.exc import UnmappedInstanceError, FlushError  # type: ignore
 
 from timApp.auth.accesshelper import (
     verify_view_access,
