@@ -68,6 +68,7 @@ const JsframeMarkup = t.intersection([
         fielddata: t.unknown,
         fields: t.unknown,
         initListener: t.boolean,
+        resetText: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -203,8 +204,12 @@ export interface Iframesettings {
                         (click)="getData('getDataSave')"
                         [disabled]="disableUnchanged && !isUnSaved()" [innerHtml]="saveButton | purify"></button>
                 &nbsp;
+                <a href="#" *ngIf="resetText"
+                   (click)="resetDrawing(); $event.preventDefault()">{{resetText}}</a>
+                <ng-container>
+                &nbsp;
                 <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle" (click)="tryResetChanges($event)">{{undoButton}}</a>
-
+                </ng-container>
                 &nbsp;
                 <span class="jsframe message"
                       *ngIf="message"
@@ -262,6 +267,10 @@ export class JsframeComponent
         return this.markup.norun;
     }
 
+    get resetText() {
+        return this.markup.resetText;
+    }
+
     get saveButton() {
         return this.markup.saveButton;
     }
@@ -305,6 +314,7 @@ export class JsframeComponent
     connectionErrorMessage?: string;
     private prevdata?: JSFrameData;
     private currentData?: JSFrameData;
+    private initFrameData?: JSFrameData;
     fullScreen: boolean = false;
 
     private initData: string = "";
@@ -394,6 +404,7 @@ export class JsframeComponent
             if (this.isTask() && !this.getTaskId()) {
                 this.error = "Task-mode on but TaskId is missing!";
             }
+            this.initFrameData = unwrapAllC(this.markup.data);
         }
     }
 
@@ -593,6 +604,23 @@ export class JsframeComponent
         this.send({msg: msg});
     }
 
+    /**
+     * Resets drawio task to default state given in markup
+     */
+    resetDrawing() {
+        if (!this.initFrameData) {
+            return;
+        }
+        this.setData(this.initFrameData, false, true);
+        // TODO: compare datas, handle "empty drawing" case. For now play it safe and assume init drawing differs from current state
+        this.edited = true;
+        this.currentData = this.initFrameData;
+        this.send({msg: "close"});
+        this.console = "";
+        this.updateListeners();
+        this.c();
+    }
+
     tryResetChanges(e?: Event): void {
         if (e) {
             e.preventDefault();
@@ -611,6 +639,7 @@ export class JsframeComponent
         this.currentData = this.prevdata;
         this.send({msg: "close"});
         this.edited = false;
+        this.console = "";
         this.updateListeners();
         this.c();
     }

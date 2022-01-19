@@ -51,8 +51,9 @@
         };
 
         var close = function () {
-
-            document.body.removeChild(iframe);
+            if (iframe != null) {
+                document.body.removeChild(iframe);
+            }
             window.port2.postMessage({msg: "frameClosed", fullscreen: !TIMJS.frm});
             // Do not clean up any eventListeners or tim-drawio communication variables here,
             // or else we may get stuck if browser cancels exit.
