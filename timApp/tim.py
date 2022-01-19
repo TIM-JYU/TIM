@@ -359,12 +359,16 @@ def get_templates(item_path: str) -> Response:
 
 def update_user_course_bookmarks():
     u = get_current_user_object()
+    now = get_current_time()
     for gr in u.groups:  # type: UserGroup
         if gr.is_sisu_student_group:
             docs = (
                 DocEntry.query.join(Block)
                 .join(Tag)
-                .filter(Tag.name == GROUP_TAG_PREFIX + gr.name)
+                .filter(
+                    (Tag.name == GROUP_TAG_PREFIX + gr.name)
+                    & ((Tag.expires == None) | (Tag.expires > now))
+                )
                 .with_entities(DocEntry)
                 .all()
             )
