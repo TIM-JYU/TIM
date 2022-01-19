@@ -95,8 +95,6 @@ module = [
     "timApp.auth.auth_models",
     "timApp.auth.saml",
     "timApp.auth.sessioninfo",
-    "timApp.bookmark.bookmarks",
-    "timApp.bookmark.routes",
     "timApp.defaultconfig",
     "timApp.document.attributeparser",
     "timApp.document.changelog",
