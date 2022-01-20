@@ -18,6 +18,8 @@ class BookmarkDictGroup(TypedDict):
 
 MY_COURSES_GROUP = "My courses"
 HIDDEN_COURSES_GROUP = "Hidden courses"
+LAST_READ_GROUP = "Last read"
+LAST_EDITED_GROUP = "Last edited"
 
 
 class Bookmarks:
@@ -114,10 +116,10 @@ class Bookmarks:
         :return: This object.
         """
         bookmark_data = self.bookmark_data
-        group = next((x for x in bookmark_data if x.get(groupname) is not None), None)
-        if not group:
-            return self
-        items = group.get(groupname)
+        items = next(
+            (group[groupname] for group in bookmark_data if groupname in group),
+            None,
+        )
         if not items:
             return self
         self._delete_item_from_group(items, name)
@@ -227,7 +229,7 @@ class Bookmarks:
                 {
                     "name": group_name,
                     "items": result_items,
-                    "editable": group_name != "Last edited",
+                    "editable": group_name != LAST_EDITED_GROUP,
                 }
             )
         return result

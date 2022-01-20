@@ -15,6 +15,7 @@ from timApp.bookmark.bookmarks import (
     MY_COURSES_GROUP,
     BookmarkDictGroup,
     HIDDEN_COURSES_GROUP,
+    LAST_READ_GROUP,
 )
 from timApp.document.course.validate import CourseException, verify_valid_course
 from timApp.document.docentry import DocEntry
@@ -86,14 +87,9 @@ def add_to_course_bookmark(b: Bookmarks, d: DocInfo) -> None:
 @bookmarks.post("/edit")
 def edit_bookmark(old: BookmarkNoLink, new: BookmarkWithLink) -> Response:
     verify_logged_in()
-    old_group = old.group
-    old_name = old.name
-    groupname = new.group
-    item_name = new.name
-    item_path = new.link
     u = get_current_user_object()
-    u.bookmarks.delete_bookmark(old_group, old_name).add_bookmark(
-        groupname, item_name, item_path
+    u.bookmarks.delete_bookmark(old.group, old.name).add_bookmark(
+        new.group, new.name, new.link
     ).save_bookmarks()
     db.session.commit()
     return _bookmarks_response()
@@ -170,7 +166,7 @@ def mark_last_read(doc_id: int, view: str) -> Response:
     d = get_doc_or_abort(doc_id)
     verify_view_access(d)
     u.bookmarks.add_bookmark(
-        "Last read",
+        LAST_READ_GROUP,
         d.title,
         d.get_relative_url_for_view(view),
         move_to_top=True,
