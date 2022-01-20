@@ -1,8 +1,8 @@
 from timApp.item.tag import TagType
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.user.usergroup import UserGroup
-from timApp.timdb.sqa import db
 
 
 class TagTest(TimRouteTest):
@@ -195,7 +195,7 @@ class TagTest(TimRouteTest):
         self.login_test1()
         self.json_post(
             f"/tags/remove/{d.path}",
-            {"tagObject": {"name": "test", "expires": None, "type": TagType.Regular}},
+            {"tag": {"name": "test", "expires": None, "type": TagType.Regular}},
             expect_status=403,
         )
 
@@ -213,7 +213,7 @@ class TagTest(TimRouteTest):
         )
         self.json_post(
             f"/tags/remove/{d.path}",
-            {"tagObject": {"name": "test", "expires": None, "type": TagType.Regular}},
+            {"tag": {"name": "test", "expires": None, "type": TagType.Regular}},
         )
 
     def test_special_tag_removal_without_rights(self):
@@ -238,7 +238,7 @@ class TagTest(TimRouteTest):
         self.json_post(
             f"/tags/remove/{d.path}",
             {
-                "tagObject": {
+                "tag": {
                     "name": "TEST123",
                     "expires": None,
                     "type": TagType.CourseCode,
@@ -273,7 +273,7 @@ class TagTest(TimRouteTest):
         self.json_post(
             f"/tags/remove/{d.path}",
             {
-                "tagObject": {
+                "tag": {
                     "name": "TEST123",
                     "expires": None,
                     "type": TagType.CourseCode,
@@ -345,6 +345,6 @@ class TagTest(TimRouteTest):
         self.json_post(f"/tags/add/{d.path}", {"tags": [old_tag]})
         self.json_post(
             f"/tags/edit/{d.path}",
-            {"oldTag": old_tag, "newTag": new_tag},
+            {"old_tag": old_tag, "new_tag": new_tag},
             expect_status=200,
         )

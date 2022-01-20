@@ -25,8 +25,8 @@ import {to} from "../util/utils";
             <div class="col-md-7 col-md-offset-3">
                 <tim-bookmark-folder-box *ngIf="bookmarks"
                                          [bookmarks]="bookmarks"
-                                         displayName="My courses"
-                                         i18n-displayName
+                                         [displayName]="'My courses' | bookmarkName"
+                                         [hideMode]="true"
                                          bookmarkFolderName="My courses">
                 </tim-bookmark-folder-box>
             </div>

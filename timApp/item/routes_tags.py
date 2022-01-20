@@ -1,14 +1,15 @@
 """
 Routes related to tags.
 """
+from dataclasses import dataclass, field
 from datetime import datetime
+from typing import Optional
 
-from flask import Blueprint
-from flask import request
+from flask import request, Response
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
-from sqlalchemy.orm.exc import UnmappedInstanceError, FlushError
+from sqlalchemy.orm.exc import UnmappedInstanceError, FlushError  # type: ignore
 
 from timApp.auth.accesshelper import (
     verify_view_access,
@@ -25,21 +26,32 @@ from timApp.user.groups import verify_group_view_access
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import (
-    verify_json_params,
     get_option,
     RouteException,
     NotExist,
 )
 from timApp.util.flask.responsehelper import ok_response, json_response
+from timApp.util.flask.typedblueprint import TypedBlueprint
 
-tags_blueprint = Blueprint("tags", __name__, url_prefix="/tags")
+tags_blueprint = TypedBlueprint("tags", __name__, url_prefix="/tags")
+
+
+@dataclass
+class TagInfo:
+    name: str
+    type: TagType = field(metadata={"by_value": True})
+    expires: Optional[datetime] = None
+
+    def to_tag(self) -> Tag:
+        return Tag(name=self.name, type=self.type, expires=self.expires)
 
 
 @tags_blueprint.post("/add/<path:doc>")
-def add_tag(doc):
+def add_tag(doc: str, tags: list[TagInfo]) -> Response:
     """
     Adds a tag-document entry into the database.
     :param doc The target document.
+    :param tags: Tags to add.
     :returns Tag adding success response.
     """
 
@@ -47,11 +59,11 @@ def add_tag(doc):
     if not d:
         raise NotExist()
     verify_manage_access(d)
-    add_tags_from_request(d)
+    add_tags(d, tags)
     return commit_and_ok()
 
 
-def commit_and_ok():
+def commit_and_ok() -> Response:
     try:
         db.session.commit()
     except (IntegrityError, FlushError):
@@ -60,21 +72,14 @@ def commit_and_ok():
     return ok_response()
 
 
-def add_tags_from_request(d: DocInfo):
-    (tag_dict_list,) = verify_json_params("tags")
-    tags = []
-    for tag_dict in tag_dict_list:
-        tag_type = TagType(int(tag_dict["type"]))
-        tag_name = tag_dict["name"]
-        tag_expire = tag_dict.get("expires")
-        tag = Tag(name=tag_name, expires=tag_expire, type=tag_type)
+def add_tags(d: DocInfo, tags: list[TagInfo]) -> None:
+    for tag_info in tags:
+        tag = tag_info.to_tag()
         check_tag_access(tag)
-        tags.append(tag)
-    for tag in tags:
         d.block.tags.append(tag)
 
 
-def check_tag_access(tag: Tag, check_group=True):
+def check_tag_access(tag: Tag, check_group: bool = True) -> None:
     """
     Checks whether the user is allowed to make changes to the tag type.
     If not allowed, gives abort response.
@@ -96,36 +101,42 @@ def check_tag_access(tag: Tag, check_group=True):
 
 
 @tags_blueprint.post("/setCourseTags/<path:doc>")
-def set_group_tags(doc):
+def set_group_tags(
+    doc: str,
+    groups: list[str],
+    tags: list[TagInfo],
+    groups_expire: Optional[datetime] = None,
+) -> Response:
     d = DocEntry.find_by_path(doc)
     if not d:
         raise NotExist()
     verify_manage_access(d)
-    tags: list[Tag] = d.block.tags
+    existing_tags: list[Tag] = d.block.tags
     tags_to_remove = [
         t
-        for t in tags
+        for t in existing_tags
         if t.get_group_name() or t.type in (TagType.CourseCode, TagType.Subject)
     ]
     for t in tags_to_remove:
         check_tag_access(t, check_group=False)
         db.session.delete(t)
 
-    add_tags_from_request(d)
+    add_tags(d, tags)
 
-    (new_groups,) = verify_json_params("groups")
-    for g in new_groups:
-        t = Tag(name=GROUP_TAG_PREFIX + g, type=TagType.Regular)
+    for g in groups:
+        t = Tag(name=GROUP_TAG_PREFIX + g, type=TagType.Regular, expires=groups_expire)
         check_tag_access(t)
         d.block.tags.append(t)
     return commit_and_ok()
 
 
 @tags_blueprint.post("/edit/<path:doc>")
-def edit_tag(doc):
+def edit_tag(doc: str, old_tag: TagInfo, new_tag: TagInfo) -> Response:
     """
     Replaces a tag-document entry in the database with new one.
     :param doc The target document.
+    :param old_tag: Tag to remove
+    :param new_tag: Tag to replace old tag with
     :returns Edit success response.
     """
     d = DocEntry.find_by_path(doc)
@@ -133,31 +144,21 @@ def edit_tag(doc):
         raise NotExist()
     verify_manage_access(d)
 
-    (new_tag_dict,) = verify_json_params("newTag")
-    (old_tag_dict,) = verify_json_params("oldTag")
-
-    new_tag_type = TagType(int(new_tag_dict["type"]))
-    old_tag_type = TagType(int(old_tag_dict["type"]))
-
-    new_tag_name = new_tag_dict["name"]
-    old_tag_name = old_tag_dict["name"]
-    new_tag_expire = new_tag_dict.get("expires")
-
     # If commas in the name, use first part.
-    new_tag_name = new_tag_name.split(",", 1)[0]
+    new_tag_name = new_tag.name.split(",", 1)[0]
 
-    new_tag = Tag(name=new_tag_name, expires=new_tag_expire, type=new_tag_type)
-    old_tag = Tag.query.filter_by(
-        block_id=d.id, name=old_tag_name, type=old_tag_type
+    new_tag_obj = Tag(name=new_tag_name, expires=new_tag.expires, type=new_tag.type)
+    old_tag_obj = Tag.query.filter_by(
+        block_id=d.id, name=old_tag.name, type=old_tag.type
     ).first()
 
-    if not old_tag:
+    if not old_tag_obj:
         raise RouteException("Tag to edit not found.")
-    check_tag_access(old_tag)
-    check_tag_access(new_tag)
+    check_tag_access(old_tag_obj)
+    check_tag_access(new_tag_obj)
     try:
-        db.session.delete(old_tag)
-        d.block.tags.append(new_tag)
+        db.session.delete(old_tag_obj)
+        d.block.tags.append(new_tag_obj)
         db.session.commit()
     except (IntegrityError, FlushError):
         raise RouteException("Tag editing failed! New tag name may already be in use")
@@ -165,10 +166,11 @@ def edit_tag(doc):
 
 
 @tags_blueprint.post("/remove/<path:doc>")
-def remove_tag(doc):
+def remove_tag(doc: str, tag: TagInfo) -> Response:
     """
     Removes a tag-document entry from the database.
     :param doc The target document.
+    :param tag: Tag to remove
     :returns Removal success response.
     """
     d = DocEntry.find_by_path(doc)
@@ -176,11 +178,7 @@ def remove_tag(doc):
         raise NotExist()
     verify_manage_access(d)
 
-    (tag_dict,) = verify_json_params("tagObject")
-
-    tag_type = TagType(int(tag_dict["type"]))
-    tag_name = tag_dict["name"]
-    tag_obj = Tag.query.filter_by(block_id=d.id, name=tag_name, type=tag_type).first()
+    tag_obj = Tag.query.filter_by(block_id=d.id, name=tag.name, type=tag.type).first()
 
     if not tag_obj:
         raise RouteException("Tag not found.")
@@ -194,7 +192,7 @@ def remove_tag(doc):
 
 
 @tags_blueprint.get("/getTags/<path:doc>")
-def get_tags(doc):
+def get_tags(doc: str) -> Response:
     """
     Gets the list of a document's tags.
     :param doc The target document.
@@ -209,7 +207,7 @@ def get_tags(doc):
 
 
 @tags_blueprint.get("/getAllTags")
-def get_all_tags():
+def get_all_tags() -> Response:
     """
     Gets the list of all unique tags used in any document, regardless
     of expiration.
@@ -224,7 +222,7 @@ def get_all_tags():
 
 
 @tags_blueprint.get("/getDocs")
-def get_tagged_documents():
+def get_tagged_documents() -> Response:
     """
     Gets a list of documents that have a certain tag.
     Options:
@@ -281,7 +279,7 @@ def get_tagged_documents():
 
 
 @tags_blueprint.get("/getDoc/<int:doc_id>")
-def get_tagged_document_by_id(doc_id):
+def get_tagged_document_by_id(doc_id: int) -> Response:
     """
     Gets a document and its tags by id.
     :param doc_id: Searched document id.

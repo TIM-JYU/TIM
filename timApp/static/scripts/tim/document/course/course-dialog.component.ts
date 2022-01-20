@@ -243,6 +243,7 @@ export class CourseDialogComponent extends AngularDialogComponent<IItem, void> {
                     this.studentGroupName.length > 0
                         ? this.studentGroupName.split(";")
                         : [],
+                groups_expire: this.expires,
                 tags: [codeTag, subjectTag],
             })
         );

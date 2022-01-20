@@ -267,7 +267,7 @@ class Document:
             if p.is_task():
                 yield p
 
-    def get_lock(self):
+    def get_lock(self) -> FileLock:
         return FileLock(f"/tmp/doc_{self.doc_id}_lock")
 
     def get_own_settings(self) -> YamlBlock:
