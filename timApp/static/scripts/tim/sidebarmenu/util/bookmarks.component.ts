@@ -20,7 +20,7 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
              [isOpen]="group.isOpen"
              container="body">
             <button dropdownToggle type="button" class="btn btn-default">
-                <ng-container *ngIf="group.name; else defaultName">{{group.name}} </ng-container>
+                <ng-container *ngIf="group.name; else defaultName">{{group.name | bookmarkName}} </ng-container>
                 <ng-template #defaultName i18n>Top level </ng-template>
                 <span class="caret"></span>
             </button>

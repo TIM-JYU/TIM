@@ -10,6 +10,7 @@ from timApp.auth.sessioninfo import (
     get_current_user_object,
     get_current_user_group_object,
 )
+from timApp.bookmark.bookmarks import LAST_EDITED_GROUP
 from timApp.document.docentry import DocEntry, get_documents, create_document_and_block
 from timApp.document.docinfo import DocInfo
 from timApp.document.documents import apply_citation
@@ -99,7 +100,7 @@ def do_create_item(
     if item_type == BlockType.Document and app.config["BOOKMARKS_ENABLED"]:
         bms = get_current_user_object().bookmarks
         bms.add_bookmark(
-            "Last edited",
+            LAST_EDITED_GROUP,
             item.title,
             item.url_relative,
             move_to_top=True,

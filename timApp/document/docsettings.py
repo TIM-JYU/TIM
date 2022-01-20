@@ -20,6 +20,7 @@ from tim_common.marshmallow_dataclass import field_for_schema
 
 if TYPE_CHECKING:
     from timApp.document.document import Document
+    from timApp.user.preferences import BookmarkCollection
 
 
 @dataclass
@@ -228,10 +229,8 @@ class DocSettings:
     def get_slide_background_color(self, default=None) -> Optional[str]:
         return self.__dict.get(self.slide_background_color_key, default)
 
-    def get_bookmarks(self, default=None):
-        if default is None:
-            default = []
-        return self.__dict.get(self.bookmark_key, default)
+    def get_bookmarks(self) -> "BookmarkCollection":
+        return self.__dict.get(self.bookmark_key, [])
 
     def get_print_settings(self, default=None):
         if default is None:

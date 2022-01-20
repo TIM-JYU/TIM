@@ -272,7 +272,7 @@ class BookmarkTest2(BookmarkTestBase):
         ug.external_id = ScimUserGroup(external_id="jy-CUR-4669-students")
         db.session.commit()
         self.get("/")
-        tu1 = self.test_user_1
+        tu1 = User.get_by_name(self.test_user_1.name)
         b = Bookmarks(tu1)
         self.assertEqual(
             {
@@ -284,8 +284,10 @@ class BookmarkTest2(BookmarkTestBase):
                 "name": "My courses",
             },
             b.as_dict()[1],
+            "Bookmarks should contain course bookmarks automatically",
         )
         self.get("/")
+        tu1 = User.get_by_name(self.test_user_1.name)
         b = Bookmarks(tu1)
         self.assertEqual(
             {
@@ -297,6 +299,53 @@ class BookmarkTest2(BookmarkTestBase):
                 "name": "My courses",
             },
             b.as_dict()[1],
+            "Bookmarks list should not change after second visit",
+        )
+        self.json_post(f"/bookmarks/delete", {"group": "My courses", "name": d.title})
+        tu1 = User.get_by_name(self.test_user_1.name)
+        b = Bookmarks(tu1)
+        self.assertEqual(
+            [
+                {
+                    "editable": True,
+                    "items": [
+                        {"link": d2.url_relative, "name": d2.title},
+                    ],
+                    "name": "My courses",
+                },
+                {
+                    "editable": True,
+                    "items": [
+                        {"link": d.url_relative, "name": d.title},
+                    ],
+                    "name": "Hidden courses",
+                },
+            ],
+            b.as_dict()[1:],
+            "Automatically enrolled courses should be hidden instead of deleted",
+        )
+        self.get("/")
+        tu1 = User.get_by_name(self.test_user_1.name)
+        b = Bookmarks(tu1)
+        self.assertEqual(
+            [
+                {
+                    "editable": True,
+                    "items": [
+                        {"link": d2.url_relative, "name": d2.title},
+                    ],
+                    "name": "My courses",
+                },
+                {
+                    "editable": True,
+                    "items": [
+                        {"link": d.url_relative, "name": d.title},
+                    ],
+                    "name": "Hidden courses",
+                },
+            ],
+            b.as_dict()[1:],
+            "Hidden course should not appear in bookmarks after automatic update",
         )
 
         # If the group name is changed, the tag name does not change automatically.
@@ -377,7 +426,6 @@ class BookmarkTest2(BookmarkTestBase):
         self.json_post(f"/bookmarks/delete", {"group": "My courses", "name": d.title})
         ug = UserGroup.get_by_name("testcourse")
         self.assertNotIn(self.test_user_1, ug.users)
-
         d = self.create_doc()
         self.json_post(
             f"/bookmarks/add",
