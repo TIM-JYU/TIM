@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Optional
 
 from flask import Response
-from webargs.flaskparser import use_args
 
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
@@ -19,7 +18,6 @@ from timApp.timdb.exceptions import TimDbException
 from timApp.util.flask.requesthelper import NotExist
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from tim_common.marshmallow_dataclass import class_schema
 
 doc_bp = TypedBlueprint("document", __name__, url_prefix="")
 
@@ -71,9 +69,6 @@ class GetBlockModel:
     use_exported: bool = True
 
 
-GetBlockModelSchema = class_schema(GetBlockModel)
-
-
 @doc_bp.get("/getBlock/<int:doc_id>/<par_id>")
 def get_block(
     doc_id: int,
@@ -91,8 +86,7 @@ def get_block(
     )
 
 
-@doc_bp.get("/getBlock", own_model=True)
-@use_args(GetBlockModelSchema())
+@doc_bp.get("/getBlock", model=GetBlockModel)
 def get_block_schema(args: GetBlockModel):
     return get_block_2(args)
 
