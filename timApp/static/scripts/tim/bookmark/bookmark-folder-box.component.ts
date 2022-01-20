@@ -7,6 +7,8 @@ import {Component, Input, OnInit} from "@angular/core";
 import {IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {showBookmarkDialog} from "tim/bookmark/showBookmarkDialog";
 import {HttpClient} from "@angular/common/http";
+import {RootCtrl} from "tim/timRoot";
+import {rootInstance} from "tim/rootinstance";
 import {getCourseCode, ITaggedItem} from "../item/IItem";
 import {to, toPromise} from "../util/utils";
 
@@ -67,6 +69,7 @@ export class BookmarkFolderBoxComponent implements OnInit {
     @Input() displayName?: string;
     @Input() bookmarks!: IBookmarkGroup[];
     @Input() hideMode!: boolean;
+    root!: RootCtrl;
     removeText: string = $localize`Remove bookmark`;
     documents?: ITaggedBookmarkedItem[]; // Documents of the bookmark folder.
     editOn: boolean = false; // Show bookmark edit and removal icons.
@@ -75,6 +78,7 @@ export class BookmarkFolderBoxComponent implements OnInit {
     constructor(private http: HttpClient) {}
 
     async ngOnInit() {
+        this.root = rootInstance!;
         if (this.hideMode) {
             this.removeText = $localize`Hide bookmark`;
         }
@@ -161,6 +165,7 @@ export class BookmarkFolderBoxComponent implements OnInit {
             this.bookmarks = response.result;
             await this.getBookmarkFolder(this.bookmarkFolderName);
             await this.getDocumentData();
+            await this.root.bookmarksCtrl?.refresh();
         }
     }
 
