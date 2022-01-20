@@ -77,7 +77,7 @@ const ShowFileAll = t.type({
     styleUrls: ["./images.component.scss"],
     encapsulation: ViewEncapsulation.None, // Prevents style isolation
     template: `
-        <div [class]="imagesClass" 
+        <div [class]="imagesClass"
              tabindex="0"
              (keydown.-)="speed(1.0/1.2, $event)"
              (keydown.1)="speed(0, $event)"
@@ -108,16 +108,16 @@ const ShowFileAll = t.type({
                 <a *ngIf="markup.change" class="next" (click)="jump(1)">&#10095;</a>
             </div>
             <br>
-            
+
             <div *ngIf="markup.dots" style="text-align:center" class="images-control" >
-              <span *ngFor="let file of files; 
-                let i = index" [ngClass]="{'active': (i+1) === fileIndex}" 
-                    class="dot" 
-                    (click)="currentFile(i+1)" 
+              <span *ngFor="let file of files;
+                let i = index" [ngClass]="{'active': (i+1) === fileIndex}"
+                    class="dot"
+                    (click)="currentFile(i+1)"
                     (mouseover)="hoverCurrentFile(i+1)"
                     (touchstart)="$event.preventDefault(); hoverCurrentFile(i+1)"
               ></span>
-            </div>                
+            </div>
 <!--                    (touchmove)="$event.preventDefault(); hoverCurrentFile(i+1)"-->
 
             <div *ngIf="markup.autoplay" class="flex"  style="justify-content: flex-end">
@@ -200,7 +200,9 @@ export class ImagesComponent extends AngularPluginBase<
 
     isNear(n: number) {
         const diff = Math.abs(this.fileIndex - n);
-        if (diff <= this.nearFiles) return true;
+        if (diff <= this.nearFiles) {
+            return true;
+        }
         return diff >= this.files.length - this.nearFiles;
     }
 
@@ -228,7 +230,9 @@ export class ImagesComponent extends AngularPluginBase<
             this.fileIndex = 1;
         } else if (n < 1) {
             this.fileIndex = this.files.length;
-        } else this.fileIndex = n;
+        } else {
+            this.fileIndex = n;
+        }
     }
 
     stop() {

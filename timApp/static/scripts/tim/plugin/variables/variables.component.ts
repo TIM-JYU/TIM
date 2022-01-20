@@ -15,8 +15,8 @@ import {TimDefer} from "../../util/timdefer";
     selector: "tim-variables",
     template: `
 <div class="variablesDiv" #variablesDiv>
-    
-</div>        
+
+</div>
     `,
     styleUrls: ["./variables.component.scss"],
 })
@@ -77,8 +77,9 @@ export class VariablesComponent implements OnInit, AfterViewInit {
             params = {...params, ...this.jsparams};
         }
 
-        if (this.height)
+        if (this.height) {
             this.variablesDiv.nativeElement.style.height = this.height + "px";
+        }
         const setData = this.varfunctions!.setData;
         const data = {
             code: changedObject.code!.currentValue,

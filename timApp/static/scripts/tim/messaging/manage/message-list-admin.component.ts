@@ -744,7 +744,9 @@ export class MessageListAdminComponent implements OnInit {
             const groupAndMembers = this.groupsAndMembers?.find(
                 (g) => g.groupName === this.currentGroup
             );
-            if (groupAndMembers) this.groupMembers = groupAndMembers.members;
+            if (groupAndMembers) {
+                this.groupMembers = groupAndMembers.members;
+            }
         }
     }
 

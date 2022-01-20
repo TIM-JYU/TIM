@@ -582,7 +582,9 @@ export class SettingsTabComponent implements OnInit {
 
     async createGroup(): Promise<void> {
         const doc = await to2(showUserGroupDialog());
-        if (doc.ok) redirectToItem(doc.result);
+        if (doc.ok) {
+            redirectToItem(doc.result);
+        }
     }
 
     async createMessagelist() {

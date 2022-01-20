@@ -134,7 +134,6 @@ module.exports = {
         ],
         "complexity": "off",
         "constructor-super": "error",
-        "curly": "error",
         "dot-notation": "error",
         "eol-last": "error",
         "eqeqeq": [

@@ -31,7 +31,7 @@ const MAX_DISPLAY_LENGTH = 210;
                     <span class="from" i18n>From: </span>
                     <span class="sender">{{message.sender}}</span>
                     <!-- TODO Display what group the message is related to
-                    <span class="group" *ngIf="messageToGroup">, {{group}}</span> 
+                    <span class="group" *ngIf="messageToGroup">, {{group}}</span>
                     -->
                 </p>
                 <p class="messageHeading">{{message.message_subject}}</p>

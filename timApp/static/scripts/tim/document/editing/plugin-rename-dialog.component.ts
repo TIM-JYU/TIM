@@ -60,7 +60,7 @@ export type RenameResult = IParResponse | IManageResponse;
                         <input type="text"
                                class="form-control"
                                name="field{{index}}"
-                               id="field{{index}}" 
+                               id="field{{index}}"
                                required
                                [(ngModel)]="newNames[index]">
                         <i *ngIf="dupe[2]"

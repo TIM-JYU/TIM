@@ -4057,9 +4057,15 @@ export class TimTableComponent
 
     getColumnName() {
         const col = this.getColumn();
-        if (col < 0) return "";
-        if (!this.data) return "";
-        if (!this.data.headers) return "";
+        if (col < 0) {
+            return "";
+        }
+        if (!this.data) {
+            return "";
+        }
+        if (!this.data.headers) {
+            return "";
+        }
         return this.data.headers[col];
     }
 
@@ -4067,7 +4073,9 @@ export class TimTableComponent
         if (!this.activeCell) {
             return -1;
         }
-        if (col < 0) return -1;
+        if (col < 0) {
+            return -1;
+        }
         const row = this.cellDataMatrix[this.activeCell.row]; // TODO: check if sorted rowindex?
         if (col >= row.length) {
             return -1;
@@ -4078,8 +4086,12 @@ export class TimTableComponent
     }
 
     setToColumnByName(name: string) {
-        if (!this.data) return -1;
-        if (!this.data.headers) return -1;
+        if (!this.data) {
+            return -1;
+        }
+        if (!this.data.headers) {
+            return -1;
+        }
         const col = this.data.headers.indexOf(name);
         return this.setToColumnByIndex(col);
     }

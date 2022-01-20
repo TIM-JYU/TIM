@@ -1666,7 +1666,7 @@ interface IAnswerResponse {
                         height={{canvasheight}}></canvas>
                 <div class="content"></div>
             </div>
-            <p class="csRunMenu"><span *ngIf="button">&nbsp;<button 
+            <p class="csRunMenu"><span *ngIf="button">&nbsp;<button
                                                class="timButton"
                                                [disabled]="isRunning"
                                                (click)="save()">{{button}}
@@ -1694,7 +1694,7 @@ interface IAnswerResponse {
                 </button>
                     </span>
                 <span *ngIf="button">
-                &nbsp;&nbsp;<a 
+                &nbsp;&nbsp;<a
                                (click)="resetExercise()">{{resetText}}</a>
                     </span>
                 <span *ngIf="muokattu" >
