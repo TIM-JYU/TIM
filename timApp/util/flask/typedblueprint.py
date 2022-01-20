@@ -105,6 +105,7 @@ def use_typed_params(
 ) -> Callable:
     def decorator(func: Callable) -> Callable:
         custom_model: Optional[type[ModelType]] = model
+        pass_by_kwargs = model is None
         if custom_model is None:
             sig = signature(func)
             params = OrderedDict(sig.parameters)
@@ -135,7 +136,7 @@ def use_typed_params(
             return inst
 
         @wraps(func)
-        def extract_and_call(*args: Any, **kwargs: Any) -> Any:
+        def extract_and_call_by_kwargs(*args: Any, **kwargs: Any) -> Any:
             extracted = extract_params()  # type: ignore[call-arg]
             return func(
                 *args,
@@ -143,6 +144,14 @@ def use_typed_params(
                 **{f.name: getattr(extracted, f.name) for f in fields(extracted)},
             )
 
-        return extract_and_call
+        @wraps(func)
+        def extract_and_call_with_model(*args: Any, **kwargs: Any) -> Any:
+            extracted = extract_params()  # type: ignore[call-arg]
+            return func(*args, extracted, **kwargs)
+
+        if pass_by_kwargs:
+            return extract_and_call_by_kwargs
+        else:
+            return extract_and_call_with_model
 
     return decorator
