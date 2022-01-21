@@ -41,6 +41,7 @@ class TagInfo:
     name: str
     type: TagType = field(metadata={"by_value": True})
     expires: Optional[datetime] = None
+    block_id: Optional[int] = None
 
     def to_tag(self) -> Tag:
         return Tag(name=self.name, type=self.type, expires=self.expires)
