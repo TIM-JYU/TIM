@@ -153,8 +153,7 @@ a: b
         d.document.add_text("# d")
         doc = self.get(d.url, as_tree=True)
         self.assert_content(doc, ["1. a", "2. b", "3. c", "4. d"])
-        pars = d.document.get_paragraphs()
-        first_par = pars[0]
+        first_par = d.document.get_paragraphs()[0]
         e = self.post_preview(
             d, text="# d", par=first_par.get_id(), json_key="texts", as_tree=True
         )
@@ -319,3 +318,50 @@ class PreambleTest3(PreambleTestBase):
         pars = t.cssselect(".par.preamble")
         for pr in pars:
             self.assertEqual(p.path, pr.attrib["data-from-preamble"])
+
+
+class PreambleTest4(TimRouteTest):
+    def test_absolute_preamble(self):
+        from timApp.timdb.sqa import db
+
+        self.test_user_1.make_admin()
+        db.session.commit()
+        self.login_test1()
+
+        folder = self.current_user.get_personal_folder().path
+        preamble = self.create_doc(f"/{folder}/{PREAMBLE_FOLDER_NAME}/test")
+        preamble.document.add_text("p1")
+        document = self.create_doc("/kurssit/tie/document")
+        document.document.add_text("p2")
+        document.document.set_settings(
+            {"preamble": f"/{folder}/{PREAMBLE_FOLDER_NAME}/test"}
+        )
+        document_text = self.get(document.url, as_tree=True)
+        self.assert_content(document_text, ["p1", "", "p2"])
+
+    def test_absolute_preamble_order(self):
+        from timApp.timdb.sqa import db
+
+        self.test_user_2.make_admin()
+        db.session.commit()
+        self.login_test2()
+
+        folder = self.current_user.get_personal_folder().path
+        p1 = self.create_doc(
+            f"{folder}/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}"
+        )
+        p1.document.add_text("templates")
+        p2 = self.create_doc(f"{folder}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}")
+        p2.document.add_text("preambles")
+        p3 = self.create_doc(
+            f"/kurssit/tie/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}"
+        )
+        p3.document.add_text("absolute")
+        document = self.create_doc(f"{folder}/document")
+        document.document.add_text("document")
+        path = f"{p1.short_name}, /{p3.path}"
+        document.document.set_settings({"preamble": path})
+        document_text = self.get(document.url, as_tree=True)
+        self.assert_content(
+            document_text, ["preambles", "templates", "absolute", "", "document"]
+        )
