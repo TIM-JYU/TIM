@@ -9,6 +9,11 @@ import attr
 from timApp.document.docentry import DocEntry
 from timApp.item.item import Item
 
+BookmarkEntry = dict[str, str]
+BookmarkEntryList = list[BookmarkEntry]
+BookmarkFolder = dict[str, BookmarkEntryList]
+BookmarkCollection = list[BookmarkFolder]
+
 
 @attr.s(auto_attribs=True)
 class Preferences:
@@ -23,7 +28,7 @@ class Preferences:
     style_doc_ids: list[int] = attr.Factory(list)
     last_answer_fetch: dict[str, str] = attr.Factory(dict)
     auto_mark_all_read: bool = False
-    bookmarks: Optional[list[dict[str, list[dict[str, str]]]]] = None
+    bookmarks: Optional[BookmarkCollection] = None
     max_uncollapsed_toc_items: Optional[int] = None
 
     @staticmethod

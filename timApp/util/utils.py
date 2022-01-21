@@ -265,7 +265,7 @@ def get_boolean(s: Union[bool, int, str], default: bool) -> bool:
     if isinstance(s, int):
         return s != 0
     result = s
-    lresult = result.lower()
+    lresult = result.lower().strip()
     if len(lresult) == 0:
         return default
     if "f0y".find(lresult[0]) >= 0:

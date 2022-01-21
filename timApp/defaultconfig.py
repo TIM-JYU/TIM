@@ -7,13 +7,13 @@ from pathlib import Path
 
 from celery.schedules import crontab
 
+from timApp.user.special_group_names import TEACHERS_GROUPNAME
+
 # NOTE: If you are a different organization (other than JYU), please don't modify this file directly.
 # This avoids merge conflicts. Override the values with prodconfig.py instead.
 
 # Path to TIM document containing the privacy notice. The link to the document is shown in page footer.
 # If None, link to the document is not shown
-from timApp.user.special_group_names import TEACHERS_GROUPNAME
-
 PRIVACY_NOTICE_DOC = "tim/tietosuojailmoitus"
 
 # Path to TIM document containing the accessibility notice. The link to the document is shown in page footer.
@@ -79,7 +79,7 @@ HELP_EMAIL = "tim@jyu.fi"
 # Default sender address for email.
 MAIL_FROM = "tim@jyu.fi"
 
-ERROR_EMAIL = "timwuff.group@korppi.jyu.fi"
+ERROR_EMAIL = "wuff-reports@tim.jyu.fi"
 WUFF_EMAIL = "wuff@tim.jyu.fi"
 NOREPLY_EMAIL = "no-reply@tim.jyu.fi"
 GLOBAL_NOTIFICATION_FILE = "/tmp/global_notification.html"

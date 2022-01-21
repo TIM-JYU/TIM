@@ -202,9 +202,11 @@ export class EditTagsDialogComponent extends AngularDialogComponent<
                 name: newName,
                 type: this.selected.type,
             };
-            const data = {oldTag: this.selected, newTag: newTag};
             const r = await toPromise(
-                this.http.post(`/tags/edit/${docPath}`, data)
+                this.http.post(`/tags/edit/${docPath}`, {
+                    old_tag: this.selected,
+                    new_tag: newTag,
+                })
             );
 
             if (!r.ok) {
@@ -243,9 +245,8 @@ export class EditTagsDialogComponent extends AngularDialogComponent<
         }
 
         const docPath = this.data.path;
-        const data = {tagObject: t};
         const r = await toPromise(
-            this.http.post(`/tags/remove/${docPath}`, data)
+            this.http.post(`/tags/remove/${docPath}`, {tag: t})
         );
 
         if (!r.ok) {
@@ -280,8 +281,9 @@ export class EditTagsDialogComponent extends AngularDialogComponent<
                 });
             }
         });
-        const data = {tags: tagObjects};
-        const r = await toPromise(this.http.post(`/tags/add/${docPath}`, data));
+        const r = await toPromise(
+            this.http.post(`/tags/add/${docPath}`, {tags: tagObjects})
+        );
 
         if (!r.ok) {
             this.errorMessage = r.result.error.error;

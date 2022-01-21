@@ -7,6 +7,8 @@ import {Component, Input, OnInit} from "@angular/core";
 import {IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {showBookmarkDialog} from "tim/bookmark/showBookmarkDialog";
 import {HttpClient} from "@angular/common/http";
+import {RootCtrl} from "tim/timRoot";
+import {rootInstance} from "tim/rootinstance";
 import {getCourseCode, ITaggedItem} from "../item/IItem";
 import {to, toPromise} from "../util/utils";
 
@@ -33,9 +35,10 @@ export interface ITaggedBookmarkedItem {
                               title="Edit bookmark"
                               i18n-title
                               (click)="editFromList(d.bookmark)"></i></a>
-                        <a><i class="glyphicon glyphicon-remove"
-                              title="Remove bookmark"
-                              i18n-title
+                        <a><i class="glyphicon"
+                              [class.glyphicon-remove]="!hideMode"
+                              [class.glyphicon-eye-close]="hideMode"
+                              [title]="removeText"
                               (click)="removeFromList(d.bookmark)"></i>
                         </a>
                     </ng-container>
@@ -48,9 +51,10 @@ export interface ITaggedBookmarkedItem {
                               title="Edit bookmark"
                               i18n-title
                               (click)="editFromList(b)"></i></a>
-                        <a><i class="glyphicon glyphicon-remove"
-                              title="Remove bookmark"
-                              i18n-title
+                        <a><i class="glyphicon"
+                              [class.glyphicon-remove]="!hideMode"
+                              [class.glyphicon-eye-close]="hideMode"
+                              [title]="removeText"
                               (click)="removeFromList(b)"></i>
                         </a>
                     </ng-container>
@@ -64,6 +68,9 @@ export class BookmarkFolderBoxComponent implements OnInit {
     @Input() bookmarkFolderName!: string;
     @Input() displayName?: string;
     @Input() bookmarks!: IBookmarkGroup[];
+    @Input() hideMode!: boolean;
+    root!: RootCtrl;
+    removeText: string = $localize`Remove bookmark`;
     documents?: ITaggedBookmarkedItem[]; // Documents of the bookmark folder.
     editOn: boolean = false; // Show bookmark edit and removal icons.
     orphanBookmarks: IBookmark[] = []; // Bookmarks that aren't pointing to any TIM document.
@@ -71,6 +78,10 @@ export class BookmarkFolderBoxComponent implements OnInit {
     constructor(private http: HttpClient) {}
 
     async ngOnInit() {
+        this.root = rootInstance!;
+        if (this.hideMode) {
+            this.removeText = $localize`Hide bookmark`;
+        }
         this.getBookmarkFolder(this.bookmarkFolderName);
         await this.getDocumentData();
     }
@@ -154,6 +165,7 @@ export class BookmarkFolderBoxComponent implements OnInit {
             this.bookmarks = response.result;
             await this.getBookmarkFolder(this.bookmarkFolderName);
             await this.getDocumentData();
+            await this.root.bookmarksCtrl?.refresh();
         }
     }
 

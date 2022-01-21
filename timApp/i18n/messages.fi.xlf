@@ -618,38 +618,6 @@
           <context context-type="linenumber">59,60</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8219178150622636984" datatype="html">
-        <source>Toggle editing</source>
-        <target state="translated">Vaihda muokkaustila päälle/pois</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
-          <context context-type="linenumber">24</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3580632903137616406" datatype="html">
-        <source>Edit bookmark</source>
-        <target state="translated">Muokkaa kirjanmerkkiä</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
-          <context context-type="linenumber">33</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
-          <context context-type="linenumber">48</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="523910090432848108" datatype="html">
-        <source>Remove bookmark</source>
-        <target state="translated">Poista kirjanmerkki</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
-          <context context-type="linenumber">37</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
-          <context context-type="linenumber">52</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="2714492186629770050" datatype="html">
         <source> Manage scheduled functions </source>
         <target state="translated"> Hallitse ajastettuja toimintoja </target>
@@ -4698,6 +4666,66 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">15,17</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6011374850607023802" datatype="html">
+        <source>Hidden courses</source>
+        <target state="translated">Piilotetut kurssit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-name.pipe.ts</context>
+          <context context-type="linenumber">5</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3245309402650985859" datatype="html">
+        <source>Last edited</source>
+        <target state="translated">Viimeksi muokattu</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-name.pipe.ts</context>
+          <context context-type="linenumber">6</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7117243968985169718" datatype="html">
+        <source>Last read</source>
+        <target state="translated">Viimeksi luettu</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-name.pipe.ts</context>
+          <context context-type="linenumber">7</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8219178150622636984" datatype="html">
+        <source>Toggle editing</source>
+        <target state="translated">Vaihda muokkaustila</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
+          <context context-type="linenumber">24</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3580632903137616406" datatype="html">
+        <source>Edit bookmark</source>
+        <target state="translated">Muokkaa kirjanmerkkiä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
+          <context context-type="linenumber">49</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="523910090432848108" datatype="html">
+        <source>Remove bookmark</source>
+        <target state="translated">Poista kirjanmerkki</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
+          <context context-type="linenumber">70</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4689827308933524228" datatype="html">
+        <source>Hide bookmark</source>
+        <target state="translated">Piilota kirjanmerkki</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/bookmark/bookmark-folder-box.component.ts</context>
+          <context context-type="linenumber">79</context>
         </context-group>
       </trans-unit>
     </body>

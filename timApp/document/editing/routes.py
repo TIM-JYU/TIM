@@ -26,6 +26,7 @@ from timApp.auth.sessioninfo import (
     get_current_user_group,
     user_context_with_logged_in,
 )
+from timApp.bookmark.bookmarks import LAST_EDITED_GROUP
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
@@ -487,7 +488,7 @@ def par_response(
             if current_app.config["BOOKMARKS_ENABLED"]:
                 bms = get_current_user_object().bookmarks
                 bms.add_bookmark(
-                    "Last edited",
+                    LAST_EDITED_GROUP,
                     docu.title,
                     docu.get_relative_url_for_view(
                         (edit_request.viewname or ViewRoute.View).value
