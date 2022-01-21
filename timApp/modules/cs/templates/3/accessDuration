@@ -1,0 +1,7 @@
+accessDuration
+User will have limited time to answer the task after unlocking the task
+# Answering time limit in seconds.
+accessDuration: 60
+# Message to be shown after task expires and is hidden.
+# Leave blank to disable hiding when using accessDuration
+accesssEndText:
