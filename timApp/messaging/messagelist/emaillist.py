@@ -710,6 +710,8 @@ def find_members_for_address(address: str) -> list[Member]:
 
 
 def update_mailing_list_address(old: str, new: str) -> None:
+    if not old or not new:
+        return
     if old == new:
         return
     # Don't try to update info for "soft" deleted emails (since the emails are invalid)
