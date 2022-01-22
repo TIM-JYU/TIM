@@ -324,6 +324,8 @@ class AutoCounters:
                 autocnts = self.macros.get("autocnts_" + ref, {})
                 remote_ref = self.autocounters.get("remoteRefs", {}).get(ref, {})
                 doc = remote_ref.get("doc", "")
+                if doc.startswith("/"):
+                    doc = "/view" + doc
                 remote_text = remote_ref.get(r, "")
 
         from_macros = autocnts.get(
