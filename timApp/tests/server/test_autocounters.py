@@ -1,6 +1,7 @@
 """A test for markdownconverter module."""
 import yaml
 
+from timApp.document.document import Document
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
 from timApp.markdown.autocounters import AutoCounters
@@ -331,8 +332,7 @@ Toka §n
     def test_autocounter_with_section_numbers(self):
         setstr = r"""``` {settings=""}
 auto_number_headings: 2
-macros: 
-  autocounters:
+autocounters:
     all:
       reset: 2  
     eq:
@@ -398,8 +398,7 @@ a+2 \tag{2.4}\\
     def test_autotypes(self):
         setstr = r"""``` {settings=""}
 auto_number_headings: 2
-macros: 
-  autocounters:
+autocounters:
      autotypes:
        - lause
        - maar

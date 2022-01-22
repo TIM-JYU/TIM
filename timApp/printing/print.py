@@ -1,12 +1,14 @@
 """
 Routes for printing a document
 """
+import json
 import os
 import shutil
 import tempfile
 from pathlib import Path
 from typing import Optional
 
+import yaml
 from flask import Blueprint, send_file, Response
 from flask import current_app
 from flask import g
@@ -404,6 +406,22 @@ def get_setting_and_counters_par(
     return settings_par, counters_par
 
 
+def add_counters_par(
+    doc_entry: DocEntry,
+    settings_par: DocParagraph,
+    counters_par: DocParagraph,
+    values: str,
+):
+    new_values = f"```\n{values}```"
+    if counters_par:
+        return doc_entry.document.modify_paragraph(counters_par.id, new_values)
+    return doc_entry.document.insert_paragraph(
+        new_values,
+        insert_after_id=settings_par.id,
+        attrs={"settings": "counters"},
+    )
+
+
 @print_blueprint.post("/numbering/<path:doc_path>")
 def get_numbering(doc_path: str) -> Response:
     """
@@ -421,6 +439,35 @@ def get_numbering(doc_path: str) -> Response:
     if not settings_par:
         raise NotExist("Add settings par first: Press Edit settings under Cogwheel")
 
+    autocounters = doc_entry.document.get_settings().autocounters()
+    remote_refs = autocounters.get("remoteRefs", {})
+    remote_counter_macros = ""
+
+    for remote_ref in remote_refs:
+        remote_doc_path = remote_refs.get(remote_ref).get("doc", None)
+        if not remote_doc_path:
+            continue
+        if remote_doc_path.startswith("/"):
+            remote_doc_path = remote_doc_path[1:]
+        else:
+            remote_doc_path = doc_entry.location + "/" + remote_doc_path
+        remote_doc_entry = DocEntry.find_by_path(remote_doc_path)
+        if not remote_doc_entry:
+            continue
+        _, remote_counters = get_setting_and_counters_par(remote_doc_entry)
+        if not remote_counters:
+            continue
+        md = remote_counters.md.replace("```", "").strip("\n")
+        jso = yaml.load(md, Loader=yaml.SafeLoader)
+        cnts = jso.get("macros", {}).get("autocnts", {})
+        if not cnts:
+            continue
+        rcnts = f"  autocnts_{remote_ref}: {json.dumps(cnts)}\n"
+        remote_counter_macros += rcnts
+    counters_par = add_counters_par(
+        doc_entry, settings_par, counters_par, "macros:\n" + remote_counter_macros
+    )
+
     printer = DocumentPrinter(doc_entry, template_to_use=None, urlroot="")
 
     try:
@@ -428,16 +475,8 @@ def get_numbering(doc_path: str) -> Response:
     except PrintingError as err:
         raise PrintingError(str(err))
 
-    new_counter_macro_values = f"```\n{counters.get_counter_macros()}```"
-
-    if counters_par:
-        doc_entry.document.modify_paragraph(counters_par.id, new_counter_macro_values)
-    else:
-        doc_entry.document.insert_paragraph(
-            new_counter_macro_values,
-            insert_after_id=settings_par.id,
-            attrs={"settings": "counters"},
-        )
+    new_counter_macro_values = counters.get_counter_macros() + remote_counter_macros
+    add_counters_par(doc_entry, settings_par, counters_par, new_counter_macro_values)
 
     return ok_response()
 
