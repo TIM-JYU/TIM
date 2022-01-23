@@ -21,7 +21,8 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import default_view_ctx
+from timApp.document.viewcontext import default_view_ctx, ViewRoute
+from timApp.item.routes import view
 from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTeXError
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.printing.printsettings import PrintFormat
@@ -464,9 +465,12 @@ def get_numbering(doc_path: str) -> Response:
             continue
         rcnts = f"  autocnts_{remote_ref}: {json.dumps(cnts)}\n"
         remote_counter_macros += rcnts
-    counters_par = add_counters_par(
-        doc_entry, settings_par, counters_par, "macros:\n" + remote_counter_macros
-    )
+
+    # TODO: thinks if this is even needed?
+    # if remote_counter_macros:
+    #    counters_par = add_counters_par(
+    #        doc_entry, settings_par, counters_par, "macros:\n" + remote_counter_macros
+    #    )
 
     printer = DocumentPrinter(doc_entry, template_to_use=None, urlroot="")
 
