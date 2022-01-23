@@ -23,6 +23,12 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx, ViewRoute
 from timApp.item.routes import view
+from timApp.markdown.autocounters import (
+    REMOTE_REFS_KEY,
+    AUTOCNTS_KEY,
+    AUTOCNTS_PREFIX,
+    COUNTERS_SETTINGS_KEY,
+)
 from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTeXError
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.printing.printsettings import PrintFormat
@@ -402,7 +408,7 @@ def get_setting_and_counters_par(
             if s == "":
                 settings_par = par
                 continue
-            if s == "counters":
+            if s == COUNTERS_SETTINGS_KEY:
                 counters_par = par
                 break
     return settings_par, counters_par
@@ -420,7 +426,7 @@ def add_counters_par(
     return doc_entry.document.insert_paragraph(
         new_values,
         insert_after_id=settings_par.id,
-        attrs={"settings": "counters"},
+        attrs={"settings": COUNTERS_SETTINGS_KEY},
     )
 
 
@@ -443,7 +449,7 @@ def handle_doc_numbering(doc_entry: DocEntry, used_names: list[str]) -> str:
         )
 
     autocounters = doc_entry.document.get_settings().autocounters()
-    remote_refs = autocounters.get("remoteRefs", {})
+    remote_refs = autocounters.get(REMOTE_REFS_KEY, {})
     remote_counter_macros = ""
 
     for remote_ref in remote_refs:
@@ -475,10 +481,10 @@ def handle_doc_numbering(doc_entry: DocEntry, used_names: list[str]) -> str:
             continue
         md = remote_counters.md.replace("```", "").strip("\n")
         jso = yaml.load(md, Loader=yaml.SafeLoader)
-        cnts = jso.get("macros", {}).get("autocnts", {})
+        cnts = jso.get("macros", {}).get(AUTOCNTS_KEY, {})
         if not cnts:
             continue
-        rcnts = f"  autocnts_{remote_ref}: {json.dumps(cnts)}\n"
+        rcnts = f"  {AUTOCNTS_PREFIX}{remote_ref}: {json.dumps(cnts)}\n"
         remote_counter_macros += rcnts
 
     # TODO: thinks if this is even needed?

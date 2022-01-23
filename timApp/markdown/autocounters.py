@@ -17,6 +17,11 @@ Class for autocounters to be used as Jinja2 filters
 
 LABEL_PRFIX = "c:"
 
+REMOTE_REFS_KEY = "remoteRefs"
+AUTOCNTS_KEY = "autocnts"
+AUTOCNTS_PREFIX = "autocnts_"
+COUNTERS_SETTINGS_KEY = "counters"
+
 AUTOCOUNTERS_FMT_DEF: dict[str, dict[str, Union[int, str]]] = {
     "eq": {"ref": "({p})", "long": "({p})", "text": "({p})", "prefix": "eq:"},
     "all": {
@@ -109,7 +114,7 @@ class AutoCounters:
             self.autocounters = self.doc.get_settings().autocounters()
         if macros:
             self.macros = macros
-            self.autocnts = macros.get("autocnts", {})
+            self.autocnts = macros.get(AUTOCNTS_KEY, {})
             if self.autocnts is None:
                 self.autocnts = {}
             self.autonames = macros.get("autonames", {})
@@ -321,8 +326,8 @@ class AutoCounters:
             ref = names[0]
             sname = names[1]
             if ref:
-                autocnts = self.macros.get("autocnts_" + ref, {})
-                remote_ref = self.autocounters.get("remoteRefs", {}).get(ref, {})
+                autocnts = self.macros.get(AUTOCNTS_PREFIX + ref, {})
+                remote_ref = self.autocounters.get(REMOTE_REFS_KEY, {}).get(ref, {})
                 doc = remote_ref.get("doc", "")
                 if doc.startswith("/"):
                     doc = "/view" + doc

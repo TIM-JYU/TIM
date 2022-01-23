@@ -15,6 +15,7 @@ import {copyToClipboard, toPromise} from "../util/utils";
 import {ViewCtrl} from "./viewctrl";
 import {IMenuFunctionEntry, MenuFunctionList} from "./viewutils";
 import ClickEvent = JQuery.ClickEvent;
+import TriggeredEvent = JQuery.TriggeredEvent;
 
 export type EditMode = "par" | "area";
 
@@ -215,18 +216,46 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
                     .on("click", ".header-name", (e) => {
                         this.copyReference(e);
                     });
+                /*
+                    .on("tabhold", ".header-name", (e) => {
+                        this.copyRemoteReference(e);
+                    })
+                    .on("tabhold", ".cnt-labels", (e) => {
+                        this.copyRemoteReference(e);
+                    })*/
                 this.labelClickHandlerSet = true;
             }
         }
         $rootScope.$evalAsync();
     }
 
-    copyReference(e: ClickEvent<HTMLElement, undefined, unknown, HTMLElement>) {
-        let text = e.target.innerText;
+    doCopyReference(text: string, remote: boolean): string {
         const texts = text.split("=");
         if (texts.length > 1) text = texts[1];
+        let remotePrefix = "";
+        if (remote) {
+            let rrn = "";
+            const ac = this.data.vctrl.docSettings.autocounters;
+            if (ac) rrn = ac.remoteRefName;
+            if (!rrn) rrn = this.data.vctrl.reviewCtrl.item.name;
+            remotePrefix = rrn + ".";
+        }
+        return `%%"${remotePrefix}${text}"|ref%%`;
+    }
 
-        copyToClipboard(`%%"${text}"|ref%%`);
+    copyRemoteReference(
+        e: TriggeredEvent<HTMLElement, undefined, unknown, HTMLElement>
+    ) {
+        this.doCopyReference(e.target.innerText, true);
+    }
+
+    copyReference(e: ClickEvent<HTMLElement, undefined, unknown, HTMLElement>) {
+        const s = this.doCopyReference(e.target.innerText, e.ctrlKey);
+        try {
+            copyToClipboard(s);
+        } catch (ex) {
+            alert(ex);
+        }
     }
 
     getCtx() {

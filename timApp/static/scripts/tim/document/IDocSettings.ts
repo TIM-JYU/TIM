@@ -23,6 +23,7 @@ export interface ILoginSettings {
 
 export interface IDocSettings {
     show_velps?: boolean;
+    autocounters?: Record<string, string>;
     custom_stamp_model?: string;
     course_main?: string;
     form_mode?: boolean;
