@@ -115,10 +115,16 @@ const DEFAULT_PIECE_SIZE = 20;
                     (click)="markDocumentUnread()"
                     i18n>Delete all read marks
             </button>
-            <a *ngIf="item.rights.editable" title="Refresh numbering" i18n-title
-               (click)="refreshNumbering()"
-               i18n>Refresh numbering
-            </a>
+            <span *ngIf="item.rights.editable">
+                <a title="Refresh numbering" i18n-title
+                   (click)="refreshNumbering(false)"
+                   i18n>Refresh numbering
+                </a> /
+                <a title="Refresh also remote documents numbering" i18n-title
+                   (click)="refreshNumbering(true)"
+                   i18n>recurse
+                </a>
+            </span>
             <tim-loading *ngIf="isAutoCounterNumbering"></tim-loading>
         </ng-container>
         <ng-container *ngIf="lctrl.lectureSettings.inLecture">
@@ -413,13 +419,17 @@ export class SettingsTabComponent implements OnInit {
         window.print();
     }
 
-    async refreshNumbering() {
+    async refreshNumbering(recurse: boolean) {
         if (!this.item) {
             return;
         }
+        const rec: string = recurse ? "true" : "false";
         this.isAutoCounterNumbering = true;
         const r = await toPromise(
-            this.http.post(`/print/numbering/${this.item.path}`, {})
+            this.http.post(
+                `/print/numbering/${this.item.path}?recurse=${rec}`,
+                {}
+            )
         );
         if (r.ok) {
             location.reload();

@@ -33,6 +33,7 @@ from timApp.util.flask.requesthelper import (
     get_option,
     RouteException,
     NotExist,
+    JSONException,
 )
 from timApp.util.flask.responsehelper import (
     json_response,
@@ -423,22 +424,23 @@ def add_counters_par(
     )
 
 
-@print_blueprint.post("/numbering/<path:doc_path>")
-def get_numbering(doc_path: str) -> Response:
+def handle_doc_numbering(doc_entry: DocEntry, used_names: list[str]) -> str:
     """
-    renumber autocounters
-    :param doc_path: from what document
-    :return: ok-response
+    Create autocounters for one document and call's recursiverly
+    to create all remoteRef-docs
+    :param doc_entry: document to handle
+    :param used_names: list of allready used names to avoid endless recursion
+    :                  if None, recusrions is done
+    :return: error str
     """
-
-    doc_entry = DocEntry.find_by_path(doc_path)
-    if doc_entry is None:
-        raise NotExist(doc_path)
-    verify_edit_access(doc_entry)  # throws exception
-
+    errors = ""
     settings_par, counters_par = get_setting_and_counters_par(doc_entry)
     if not settings_par:
-        raise NotExist("Add settings par first: Press Edit settings under Cogwheel")
+        # raise NotExist("Add settings par first: Press Edit settings under Cogwheel")
+        return (
+            doc_entry.short_name
+            + ": Add settings par first: Press Edit settings under Cogwheel"
+        )
 
     autocounters = doc_entry.document.get_settings().autocounters()
     remote_refs = autocounters.get("remoteRefs", {})
@@ -454,7 +456,20 @@ def get_numbering(doc_path: str) -> Response:
             remote_doc_path = doc_entry.location + "/" + remote_doc_path
         remote_doc_entry = DocEntry.find_by_path(remote_doc_path)
         if not remote_doc_entry:
+            errors += "\n Missing: " + remote_doc_path + "<br>\n"
             continue
+
+        # check if recurse and name not used yet
+        if used_names is not None and remote_doc_path not in used_names:
+            used_names.append(remote_doc_path)
+            try:
+                verify_edit_access(doc_entry)  # throws exception
+                error = handle_doc_numbering(remote_doc_entry, used_names)
+                if error:
+                    errors += error + "<br>\n"
+            except Exception as err:
+                errors += str(err) + "<br>\n"
+
         _, remote_counters = get_setting_and_counters_par(remote_doc_entry)
         if not remote_counters:
             continue
@@ -474,13 +489,42 @@ def get_numbering(doc_path: str) -> Response:
 
     printer = DocumentPrinter(doc_entry, template_to_use=None, urlroot="")
 
+    fullname = "Error in " + doc_entry.location + "/" + doc_entry.short_name + ":<br>\n"
+
     try:
         counters = printer.get_autocounters(UserContext.from_one_user(g.user))
     except PrintingError as err:
-        raise PrintingError(str(err))
+        return fullname + errors + "<br>\n" + str(err) + "<br>\n"
 
     new_counter_macro_values = counters.get_counter_macros() + remote_counter_macros
     add_counters_par(doc_entry, settings_par, counters_par, new_counter_macro_values)
+    if not errors:
+        return ""
+    return fullname + errors
+
+
+@print_blueprint.post("/numbering/<path:doc_path>")
+def get_numbering(doc_path: str) -> Response:
+    """
+    renumber autocounters
+    :param doc_path: from what document
+    :return: ok-response
+    """
+    recurse = request.args.get("recurse") == "true"
+
+    doc_entry = DocEntry.find_by_path(doc_path)
+    if doc_entry is None:
+        raise JSONException(doc_path)
+    verify_edit_access(doc_entry)  # throws exception
+
+    used_names = None
+
+    if recurse:
+        used_names = [doc_path]
+    errors = handle_doc_numbering(doc_entry, used_names)
+
+    if errors:  # TODO: better exception hers
+        raise NotExist(errors)
 
     return ok_response()
 
