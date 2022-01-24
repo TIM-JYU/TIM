@@ -142,51 +142,25 @@ textfield-runner .stem, rbfield-runner .stem  {
     text-align: center;
 }
 
-numericfield-runner .form-control, textfield-runner .form-control {
+textfield-runner .form-control {
     height: 2em;
     display: unset;
     width: unset;
 }
 
 /* Numeric field */
-.pluginnumericfield .timButton {
-    margin-bottom: 5px;
-}
-
-numericfield-runner .stem {
-    text-align: left;
-    height: 6px;
-}
 
 .plaintextFrame {
     border: none;
     box-shadow: none;
 }
 
-
-.pluginnumericfield p {
-    padding-top: 0px;
-    padding-bottom: 0px;
-    margin-bottom: 0px;
-    margin-top: 0px;
-}
-
-/* Hide HTML5 Up and Down arrows. */
-.noarrows input[type="number"]::-webkit-outer-spin-button,.noarrows  input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.noarrows input[type="number"] {
-    -moz-appearance: textfield;
-}
-
-.inlineplugin label, .numericfield label, .textfield label{
+.inlineplugin label, .textfield label{
     font-weight: unset;
     margin-left: 2px;
 }
 
-.inlineplugin input, .numericfield input, .textfield input{
+.inlineplugin input, .textfield input{
     padding: 0px;
     padding-left: 2px;
 }

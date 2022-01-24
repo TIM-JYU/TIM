@@ -5,7 +5,7 @@ export function staticDynamicImport(s: string) {
         case "/jsrunner/javascripts/build/jsrunner.js":
             return import("modules/jsrunner/client/javascripts/jsrunner");
         case "/field/js/build/numericfield.js":
-            return import("modules/fields/js/numericfield");
+            return import("modules/fields/js/numericfield-plugin.component");
         case "/field/js/build/textfield.js":
             return import("modules/fields/js/textfield");
         case "/pali/js/build/pali.js":
