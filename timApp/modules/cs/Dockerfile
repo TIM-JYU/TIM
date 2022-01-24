@@ -320,6 +320,21 @@ RUN dotnet tool install --tool-path /dotnet_tools/ NUnit.ConsoleRunner.NetCore -
 # Install ffmpeg for transcoding videos
 RUN bash -c "${APT_INSTALL} ffmpeg && ${APT_CLEANUP}"
 
+# Install mongosh (adapted from https://github.com/rtsp/docker-mongosh/blob/main/Dockerfile)
+ENV MONGODB_VERSION=5.0
+ENV MONGOSH_VERSION=1.1.9
+
+RUN curl -fsSL "https://www.mongodb.org/static/pgp/server-${MONGODB_VERSION}.asc" | gpg --dearmor -o /etc/apt/trusted.gpg.d/mongodb-org-${MONGODB_VERSION}.gpg && \
+    echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/${MONGODB_VERSION} multiverse" > /etc/apt/sources.list.d/mongodb-org-${MONGODB_VERSION}.list && \
+    apt-get update
+
+RUN bash -c "${APT_INSTALL} mongodb-mongosh=${MONGOSH_VERSION} && ${APT_CLEANUP}"
+RUN mongosh --version
+
+# Install cqlsh from pip
+RUN python3.9 -m pip install cqlsh six --upgrade && bash -c "${APT_CLEANUP}"
+RUN cqlsh --version
+
 USER agent
 
 FROM complete as sudo
