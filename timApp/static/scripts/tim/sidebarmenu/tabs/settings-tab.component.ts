@@ -423,12 +423,16 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        const rec: string = recurse ? "true" : "false";
         this.isAutoCounterNumbering = true;
         const r = await toPromise(
             this.http.post(
-                `/print/numbering/${this.item.path}?recurse=${rec}`,
-                {}
+                `/print/numbering/${this.item.path}`,
+                {},
+                {
+                    params: {
+                        recurse,
+                    },
+                }
             )
         );
         if (r.ok) {

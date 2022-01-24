@@ -216,13 +216,6 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
                     .on("click", ".header-name", (e) => {
                         this.copyReference(e);
                     });
-                /*
-                    .on("tabhold", ".header-name", (e) => {
-                        this.copyRemoteReference(e);
-                    })
-                    .on("tabhold", ".cnt-labels", (e) => {
-                        this.copyRemoteReference(e);
-                    })*/
                 this.labelClickHandlerSet = true;
             }
         }

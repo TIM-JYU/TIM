@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional, Union, TYPE_CHECKING, Any
 
 import attr
 from jinja2.sandbox import SandboxedEnvironment
@@ -54,6 +54,7 @@ TCounters = dict[str, TOneCounterType]
 
 @attr.s(auto_attribs=True, init=False)
 class AutoCounters:
+    doc: Optional[Document]
     renumbering: bool = False
     heading_vals: Optional[dict] = None
     heading_vals_def: dict[int, int] = attr.Factory(
@@ -95,21 +96,20 @@ class AutoCounters:
     current_labels: list[str] = attr.Factory(list)
     is_plugin = False
     par: Optional[DocParagraph] = None
+    task_id: Optional[str] = None
+    counters: TCounters = attr.Factory(dict)
+    autocounters: dict[str, Any] = attr.Factory(dict)
 
     def __init__(self, macros: Optional[dict], doc: Optional[Document] = None):
-
         """
         Initialize autonumber counters to use macros
         :param macros: macros to use for these counters
         :param doc: document we are handling
         """
         # noinspection PyUnresolvedReferences
-        self.doc = doc
-        self.__attrs_init__()  # type: ignore[attr-defined]
+        self.__attrs_init__(doc=doc)  # type: ignore[attr-defined]
         self.counters: TCounters = {}
         self.macros: dict
-        self.task_id: Optional[str] = None
-        self.autocounters = {}
         if self.doc:
             self.autocounters = self.doc.get_settings().autocounters()
         if macros:
@@ -291,12 +291,13 @@ class AutoCounters:
 
     def get_show_params(
         self, name: TName, showtype: str = "r"
-    ) -> tuple[str, str, TMacroCounter]:
+    ) -> tuple[str, str, TMacroCounter, str]:
         """
-        return  string name, text to show for chosen showtype and macros for sname
+        Get show parameters for counter name.
+
         :param name: name to separate t1, name nand t2
         :param showtype: how to show counter with name
-        :return: sname, text for counter, macros for counter
+        :return: sname, text for counter, macros for counter, document the reference is located in
         """
         sname = str(name)
         text1 = None
@@ -321,16 +322,15 @@ class AutoCounters:
         if text1:
             r = t
 
-        if sname.find(".") >= 0:  # is remote ref?
-            names = sname.split(".")
-            ref = names[0]
-            sname = names[1]
+        names = sname.split(".")
+        if len(names) == 2:  # is remote ref?
+            ref, sname = names
             if ref:
                 autocnts = self.macros.get(AUTOCNTS_PREFIX + ref, {})
                 remote_ref = self.autocounters.get(REMOTE_REFS_KEY, {}).get(ref, {})
                 doc = remote_ref.get("doc", "")
                 if doc.startswith("/"):
-                    doc = "/view" + doc
+                    doc = f"/view{doc}"
                 remote_text = remote_ref.get(r, "")
 
         from_macros = autocnts.get(
@@ -339,7 +339,7 @@ class AutoCounters:
         )
 
         if text1:
-            s = str(text1) + "&nbsp;" + str(from_macros.get(t, ""))
+            s = f"{text1}&nbsp;{from_macros.get(t, '')}"
         else:
             s = str(from_macros.get(r, ""))
         if text2:
