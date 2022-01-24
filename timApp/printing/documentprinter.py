@@ -114,6 +114,7 @@ def get_tex_settings_and_macros(
         user_ctx,
         default_view_ctx,
         pdoc_macros,
+        d,
     )
 
     if template_doc:

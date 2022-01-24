@@ -2,19 +2,25 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional, Union, TYPE_CHECKING, Any
 
 import attr
 from jinja2.sandbox import SandboxedEnvironment
 
 if TYPE_CHECKING:
     from timApp.document.docparagraph import DocParagraph
+    from timApp.document.document import Document
 
 """
 Class for autocounters to be used as Jinja2 filters
 """
 
 LABEL_PRFIX = "c:"
+
+REMOTE_REFS_KEY = "remoteRefs"
+AUTOCNTS_KEY = "autocnts"
+AUTOCNTS_PREFIX = "autocnts_"
+COUNTERS_SETTINGS_KEY = "counters"
 
 AUTOCOUNTERS_FMT_DEF: dict[str, dict[str, Union[int, str]]] = {
     "eq": {"ref": "({p})", "long": "({p})", "text": "({p})", "prefix": "eq:"},
@@ -48,6 +54,7 @@ TCounters = dict[str, TOneCounterType]
 
 @attr.s(auto_attribs=True, init=False)
 class AutoCounters:
+    doc: Optional[Document]
     renumbering: bool = False
     heading_vals: Optional[dict] = None
     heading_vals_def: dict[int, int] = attr.Factory(
@@ -89,26 +96,30 @@ class AutoCounters:
     current_labels: list[str] = attr.Factory(list)
     is_plugin = False
     par: Optional[DocParagraph] = None
+    task_id: Optional[str] = None
+    counters: TCounters = attr.Factory(dict)
+    autocounters: dict[str, Any] = attr.Factory(dict)
 
-    def __init__(self, macros: Optional[dict]):
-
+    def __init__(self, macros: Optional[dict], doc: Optional[Document] = None):
         """
         Initialize autonumber counters to use macros
         :param macros: macros to use for these counters
+        :param doc: document we are handling
         """
         # noinspection PyUnresolvedReferences
-        self.__attrs_init__()  # type: ignore[attr-defined]
+        self.__attrs_init__(doc=doc)  # type: ignore[attr-defined]
         self.counters: TCounters = {}
         self.macros: dict
-        self.task_id: Optional[str] = None
+        if self.doc:
+            self.autocounters = self.doc.get_settings().autocounters()
         if macros:
             self.macros = macros
-            self.autocnts = macros.get("autocnts", {})
+            self.autocnts = macros.get(AUTOCNTS_KEY, {})
             if self.autocnts is None:
                 self.autocnts = {}
             self.autonames = macros.get("autonames", {})
             self.tex = macros.get("tex", False)
-            self.autotypes = macros.get("autocounters", {}).get("autotypes", {})
+            self.autotypes = self.autocounters.get("autotypes", {})
         else:
             self.macros = {}
 
@@ -280,12 +291,13 @@ class AutoCounters:
 
     def get_show_params(
         self, name: TName, showtype: str = "r"
-    ) -> tuple[str, str, TMacroCounter]:
+    ) -> tuple[str, str, TMacroCounter, str]:
         """
-        return  string name, text to show for chosen showtype and macros for sname
+        Get show parameters for counter name.
+
         :param name: name to separate t1, name nand t2
         :param showtype: how to show counter with name
-        :return: sname, text for counter, macros for counter
+        :return: sname, text for counter, macros for counter, document the reference is located in
         """
         sname = str(name)
         text1 = None
@@ -301,20 +313,38 @@ class AutoCounters:
             if not showtype:
                 showtype = "t"
 
-        from_macros = self.autocnts.get(
+        autocnts = self.autocnts
+        doc = ""  # in same document
+        remote_text = ""
+
+        t = showtype or "t"
+        r = showtype or "r"
+        if text1:
+            r = t
+
+        names = sname.split(".")
+        if len(names) == 2:  # is remote ref?
+            ref, sname = names
+            if ref:
+                autocnts = self.macros.get(AUTOCNTS_PREFIX + ref, {})
+                remote_ref = self.autocounters.get(REMOTE_REFS_KEY, {}).get(ref, {})
+                doc = remote_ref.get("doc", "")
+                if doc.startswith("/"):
+                    doc = f"/view{doc}"
+                remote_text = remote_ref.get(r, "")
+
+        from_macros = autocnts.get(
             sname,
             {"v": sname, "s": sname, "r": sname, "p": sname, "l": sname, "t": sname},
         )
-        t = showtype or "t"
-        r = showtype or "r"
 
         if text1:
-            s = str(text1) + "&nbsp;" + str(from_macros.get(t, ""))
+            s = f"{text1}&nbsp;{from_macros.get(t, '')}"
         else:
             s = str(from_macros.get(r, ""))
         if text2:
             s += text2.replace(" ", "&nbsp;", 1)
-        return sname, s, from_macros
+        return sname, remote_text + s, from_macros, doc
 
     def show_pref_value(self, name: TName, showtype: str = "") -> str:
         """
@@ -323,7 +353,7 @@ class AutoCounters:
         :param showtype: how to show counter
         :return: string for reference
         """
-        _, s, _ = self.get_show_params(name, showtype)
+        _, s, _, _ = self.get_show_params(name, showtype)
         return s
 
     def show_ref_value(self, name: TName, showtype: str = "") -> str:
@@ -333,9 +363,9 @@ class AutoCounters:
         :param showtype: how to show counter
         :return: string for reference
         """
-        sname, s, from_macros = self.get_show_params(name, showtype)
+        sname, s, from_macros, doc = self.get_show_params(name, showtype)
         anchor = from_macros.get("h", sname)
-        return f"[{s}](#{anchor})"
+        return f"[{s}]({doc}#{anchor})"
 
     def show_lref_value(self, name: TName, showtype: str = "l") -> str:
         """
@@ -419,7 +449,7 @@ class AutoCounters:
             counters_type: TOneCounterType = self.get_counter_type(ctype)
             use_counters_type = counters_type
 
-            link = self.macros.get("autocounters", {}).get(ctype, {}).get("link", None)
+            link = self.autocounters.get(ctype, {}).get("link", None)
             if link is not None:
                 use_counters_type = self.get_counter_type(link)
 
@@ -763,7 +793,7 @@ macros:
         vals = self.heading_vals
         if vals is None:
             vals = self.heading_vals_def
-        autocounters = self.macros.get("autocounters", {})
+        autocounters = self.autocounters
 
         fmt_def = (
             AUTOCOUNTERS_FMT_DEF["all"]
@@ -803,7 +833,7 @@ macros:
         # TODO: throw exception if error in counters
         if not self.macros:
             return
-        autocounters = self.macros.get("autocounters", None)
+        autocounters = self.autocounters
         if not autocounters:
             return
         for counter_type_name in autocounters:

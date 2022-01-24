@@ -27,6 +27,7 @@ from tim_common.html_sanitize import sanitize_html, presanitize_html_body
 if TYPE_CHECKING:
     from timApp.document.docparagraph import DocParagraph
     from timApp.document.docsettings import DocSettings
+    from timApp.document.document import Document
 
 
 def has_macros(text: str, env: TimSandboxedEnvironment):
@@ -420,13 +421,14 @@ def create_environment(
     user_ctx: UserContext | None,
     view_ctx: ViewContext,
     macros: dict | None,
+    doc: Document | None = None,
 ) -> TimSandboxedEnvironment:
     env = TimSandboxedEnvironment(macro_delimiter)
     env.filters.update(tim_filters)
     env.filters["isview"] = view_ctx.isview
 
     if macros:
-        counters = AutoCounters(macros)
+        counters = AutoCounters(macros, doc)
         env.set_counters(counters)  # used in print.py
 
     if user_ctx:

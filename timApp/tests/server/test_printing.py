@@ -20,26 +20,22 @@ class PrintingTest(TimRouteTest):
         )
         self.json_post(
             f"/print/{d.path}",
-            expect_status=400,
-            expect_content="No filetype selected.",
+            expect_status=422,
         )
         self.json_post(
             f"/print/{d.path}",
             {},
-            expect_status=400,
-            expect_content="No filetype selected.",
+            expect_status=422,
         )
         self.json_post(
             f"/print/{d.path}",
             {"fileType": "x"},
-            expect_status=400,
-            expect_content="No template doc selected.",
+            expect_status=422,
         )
         self.json_post(
             f"/print/{d.path}",
             {"fileType": "x", "templateDocId": "x"},
-            expect_status=400,
-            expect_content="No value for printPluginsUserCode submitted.",
+            expect_status=422,
         )
         self.json_post(
             f"/print/{d.path}",
@@ -50,8 +46,7 @@ class PrintingTest(TimRouteTest):
         self.json_post(
             f"/print/{d.path}",
             {"fileType": "latex", "templateDocId": "x", "printPluginsUserCode": False},
-            expect_status=400,
-            expect_content="Invalid template doc id",
+            expect_status=422,
         )
         self.json_post(
             f"/print/{d.path}",
