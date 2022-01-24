@@ -1,33 +1,44 @@
 """
 Routes for printing a document
 """
+import json
 import os
 import shutil
 import tempfile
+from dataclasses import field
 from pathlib import Path
 from typing import Optional
 
-from flask import Blueprint, send_file, Response
 from flask import current_app
 from flask import g
 from flask import make_response
 from flask import request
+from flask import send_file, Response
 
 from timApp.auth import sessioninfo
-from timApp.auth.accesshelper import verify_view_access, verify_edit_access
+from timApp.auth.accesshelper import (
+    verify_view_access,
+    verify_edit_access,
+    has_edit_access,
+)
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
+from timApp.document.yamlblock import YamlBlock
+from timApp.markdown.autocounters import (
+    REMOTE_REFS_KEY,
+    AUTOCNTS_KEY,
+    AUTOCNTS_PREFIX,
+    COUNTERS_SETTINGS_KEY,
+)
 from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTeXError
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.sqa import db
 from timApp.upload.upload import add_csp_if_not_pdf
 from timApp.util.flask.requesthelper import (
-    verify_json_params,
-    get_option,
     RouteException,
     NotExist,
 )
@@ -37,6 +48,7 @@ from timApp.util.flask.responsehelper import (
     add_csp_header,
     ok_response,
 )
+from timApp.util.flask.typedblueprint import TypedBlueprint
 
 TEXPRINTTEMPLATE_KEY = "texprinttemplate"
 DEFAULT_PRINT_TEMPLATE_NAME = "templates/printing/runko"
@@ -44,16 +56,18 @@ EMPTY_PRINT_TEMPLATE_NAME = "templates/printing/empty"
 TEMP_DIR_PATH = tempfile.gettempdir()
 DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, "tim-img-dls")
 
-print_blueprint = Blueprint("print", __name__, url_prefix="/print")
+print_blueprint = TypedBlueprint("print", __name__, url_prefix="/print")
 
 
 @print_blueprint.before_request
-def do_before_requests():
+def do_before_requests() -> None:
     g.user = sessioninfo.get_current_user_object()
 
 
 @print_blueprint.url_value_preprocessor
-def pull_doc_path(endpoint, values):
+def pull_doc_path(endpoint: Optional[str], values: Optional[dict[str, str]]) -> None:
+    if not endpoint or not values:
+        return
     if current_app.url_map.is_endpoint_expecting(endpoint, "doc_path"):
         doc_path = values["doc_path"]
         if doc_path is None:
@@ -65,10 +79,12 @@ def pull_doc_path(endpoint, values):
         verify_view_access(g.doc_entry)
 
 
-def template_by_name(template_name: str, isdef: bool = False):
+def template_by_name(
+    template_name: str, isdef: bool = False
+) -> tuple[Optional[DocInfo], int, Optional[str], bool]:
     template_doc = DocEntry.find_by_path(template_name)
     if template_doc is None:
-        return None, 0, "Template not found: " + template_name, False
+        return None, 0, f"Template not found: {template_name}", False
     return template_doc, template_doc.id, None, isdef
 
 
@@ -79,19 +95,17 @@ def get_doc_template_name(doc: DocInfo) -> Optional[str]:
     if not texmacros:
         return None
     template_name = texmacros.get(TEXPRINTTEMPLATE_KEY)
-    return template_name
+    if template_name is None:
+        return None
+    return str(template_name)
 
 
-def get_template_doc(doc: DocInfo, template_doc_id):
+def get_template_doc(
+    doc: DocInfo, template_doc_id: int
+) -> tuple[Optional[DocInfo], int, Optional[str], bool]:
     template_name = get_doc_template_name(doc)
     if template_name:
         return template_by_name(template_name, True)
-
-    # template_doc_id = get_option(trequest, 'templateDocId', -1)
-    try:
-        template_doc_id = int(template_doc_id)
-    except:
-        return "", 0, "Invalid template doc id", False
 
     if template_doc_id == -1:
         return template_by_name(DEFAULT_PRINT_TEMPLATE_NAME, True)
@@ -100,30 +114,25 @@ def get_template_doc(doc: DocInfo, template_doc_id):
 
     template_doc = DocEntry.find_by_id(template_doc_id)
     if template_doc is None:
-        return None, 0, "There is no template with id " + str(template_doc_id), False
+        return None, 0, f"There is no template with id {str(template_doc_id)}", False
 
     def_template = DocEntry.find_by_path(DEFAULT_PRINT_TEMPLATE_NAME)
-    isdef = def_template and def_template.id == template_doc_id
+    isdef = def_template is not None and def_template.id == template_doc_id
 
     return template_doc, template_doc_id, None, isdef
 
 
 @print_blueprint.post("/<path:doc_path>")
-def print_document(doc_path):
-    file_type, template_doc_id, plugins_user_print = verify_json_params(
-        "fileType",
-        "templateDocId",
-        "printPluginsUserCode",
-        error_msgs=[
-            "No filetype selected.",
-            "No template doc selected.",
-            "No value for printPluginsUserCode submitted.",
-        ],
-    )
-    remove_old_images, force = verify_json_params(
-        "removeOldImages", "force", require=False
-    )
-
+def print_document(
+    doc_path: str,
+    file_type: str = field(metadata={"data_key": "fileType"}),
+    template_doc_id: int = field(metadata={"data_key": "templateDocId"}),
+    plugins_user_print: bool = field(metadata={"data_key": "printPluginsUserCode"}),
+    remove_old_images: bool = field(
+        metadata={"data_key": "removeOldImages"}, default=False
+    ),
+    force: bool = False,
+) -> Response:
     if not file_type:
         file_type = "pdf"
 
@@ -161,7 +170,7 @@ def print_document(doc_path):
     if plugins_user_print:
         print_access_url += f"{sep}plugins_user_code={plugins_user_print}"
 
-    if force == "true" or force == True:
+    if force:
         existing_doc = None
 
     if existing_doc is not None and not plugins_user_print:  # never cache user print
@@ -215,19 +224,24 @@ def print_document(doc_path):
 
 
 @print_blueprint.get("/<path:doc_path>")
-def get_printed_document(doc_path):
+def get_printed_document(
+    doc_path: str,
+    file_type: Optional[str] = None,
+    plugins_user_code: bool = False,
+    template_doc_id: int = -1,
+    force: bool = False,
+    showerror: bool = False,
+) -> Response:
     doc = g.doc_entry
 
     def_file_type = "pdf"
     if doc.document.get_settings().is_textplain():
         def_file_type = "plain"
 
-    file_type = get_option(request, "file_type", def_file_type)
+    file_type = file_type or def_file_type
     # if doc_path != doc.name and doc_path.rfind('.') >= 0:  # name have been changed because . in name
     #    file_type = 'plain'
 
-    # template_doc_id = get_option(request, 'template_doc_id', -1)
-    plugins_user_print = get_option(request, "plugins_user_code", False)
     line = request.args.get("line")
 
     if file_type.lower() not in (f.value for f in PrintFormat):
@@ -235,7 +249,6 @@ def get_printed_document(doc_path):
 
     print_type = PrintFormat(file_type)
     template_doc = None
-    template_doc_id = get_option(request, "template_doc_id", -1)
     orginal_print_type = print_type
     if print_type == PrintFormat.ICS:
         print_type = PrintFormat.PLAIN
@@ -254,11 +267,8 @@ def get_printed_document(doc_path):
         doc_entry=doc,
         template=template_doc,
         file_type=print_type,
-        plugins_user_print=plugins_user_print,
+        plugins_user_print=plugins_user_code,
     )
-
-    force = get_option(request, "force", False)
-    showerror = get_option(request, "showerror", False)
 
     if force or showerror:
         cached = None
@@ -273,7 +283,7 @@ def get_printed_document(doc_path):
                 file_type=print_type,
                 temp=True,
                 user_ctx=UserContext.from_one_user(g.user),
-                plugins_user_print=plugins_user_print,
+                plugins_user_print=plugins_user_code,
                 urlroot="http://localhost:5000/print/",
             )  # request.url_root+'print/')
         except PrintingError as err:
@@ -287,7 +297,7 @@ def get_printed_document(doc_path):
         doc_entry=doc,
         template=template_doc,
         file_type=print_type,
-        plugins_user_print=plugins_user_print,
+        plugins_user_print=plugins_user_code,
     )
     if (pdferror and showerror) or not cached:
         if not pdferror:
@@ -297,8 +307,8 @@ def get_printed_document(doc_path):
         rurl = request.url
         i = rurl.find("?")
         rurl = rurl[:i]
-        latex_access_url = f"{rurl}?file_type=latex&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}"
-        pdf_access_url = f"{rurl}?file_type=pdf&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}"
+        latex_access_url = f"{rurl}?file_type=latex&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_code}"
+        pdf_access_url = f"{rurl}?file_type=pdf&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_code}"
         line = pdferror.get("line", "")
         result = (
             "<!DOCTYPE html>\n"
@@ -398,52 +408,118 @@ def get_setting_and_counters_par(
             if s == "":
                 settings_par = par
                 continue
-            if s == "counters":
+            if s == COUNTERS_SETTINGS_KEY:
                 counters_par = par
                 break
     return settings_par, counters_par
 
 
-@print_blueprint.post("/numbering/<path:doc_path>")
-def get_numbering(doc_path: str) -> Response:
-    """
-    renumber autocounters
-    :param doc_path: from what document
-    :return: ok-response
-    """
+def add_counters_par(
+    doc_info: DocInfo,
+    settings_par: DocParagraph,
+    counters_par: Optional[DocParagraph],
+    values: str,
+) -> DocParagraph:
+    new_values = f"```\n{values}```"
+    if counters_par:
+        return doc_info.document.modify_paragraph(counters_par.id, new_values)
+    return doc_info.document.insert_paragraph(
+        new_values,
+        insert_after_id=settings_par.id,
+        attrs={"settings": COUNTERS_SETTINGS_KEY},
+    )
 
-    doc_entry = DocEntry.find_by_path(doc_path)
-    if doc_entry is None:
-        raise NotExist(doc_path)
-    verify_edit_access(doc_entry)  # throws exception
 
-    settings_par, counters_par = get_setting_and_counters_par(doc_entry)
+def handle_doc_numbering(doc_info: DocInfo, used_names: Optional[list[str]]) -> str:
+    """
+    Create automatic counters for document and all referenced documents.
+    :param doc_info: document to handle
+    :param used_names: list of already used names to avoid endless recursion
+    :return: Possible error string
+    """
+    errors = ""
+    settings_par, counters_par = get_setting_and_counters_par(doc_info)
     if not settings_par:
-        raise NotExist("Add settings par first: Press Edit settings under Cogwheel")
+        return f"{doc_info.short_name}: Add settings par first: Press Edit settings under Cogwheel"
 
-    printer = DocumentPrinter(doc_entry, template_to_use=None, urlroot="")
+    autocounters = doc_info.document.get_settings().autocounters()
+    remote_refs = autocounters.get(REMOTE_REFS_KEY, {})
+    remote_counter_macros = ""
+
+    for remote_ref in remote_refs:
+        remote_doc_path = remote_refs.get(remote_ref).get("doc", None)
+        if not remote_doc_path:
+            continue
+        if remote_doc_path.startswith("/"):
+            remote_doc_path = remote_doc_path[1:]
+        else:
+            remote_doc_path = f"{doc_info.location}/{remote_doc_path}"
+        remote_doc_entry = DocEntry.find_by_path(remote_doc_path)
+        if not remote_doc_entry:
+            errors += f"\n Missing: {remote_doc_path}<br>\n"
+            continue
+
+        # check if recurse and name not used yet
+        if used_names is not None and remote_doc_path not in used_names:
+            used_names.append(remote_doc_path)
+            if not has_edit_access(doc_info):
+                errors += f"\n No edit access to {doc_info.location}<br>\n"
+            else:
+                error = handle_doc_numbering(remote_doc_entry, used_names)
+                if error:
+                    errors += error + "<br>\n"
+
+        _, remote_counters = get_setting_and_counters_par(remote_doc_entry)
+        if not remote_counters:
+            continue
+        counters_settings = YamlBlock.from_markdown(remote_counters.get_markdown())
+        cnts = counters_settings.get("macros", {}).get(AUTOCNTS_KEY, {})
+        if not cnts:
+            continue
+        rcnts = f"  {AUTOCNTS_PREFIX}{remote_ref}: {json.dumps(cnts)}\n"
+        remote_counter_macros += rcnts
+
+    printer = DocumentPrinter(doc_info, template_to_use=None, urlroot="")
+
+    fullname = f"Error in {doc_info.location}/{doc_info.short_name}:<br>\n"
 
     try:
         counters = printer.get_autocounters(UserContext.from_one_user(g.user))
     except PrintingError as err:
-        raise PrintingError(str(err))
+        return f"{fullname}{errors}<br>\n{err}<br>\n"
 
-    new_counter_macro_values = f"```\n{counters.get_counter_macros()}```"
+    new_counter_macro_values = counters.get_counter_macros() + remote_counter_macros
+    add_counters_par(doc_info, settings_par, counters_par, new_counter_macro_values)
+    if not errors:
+        return ""
+    return fullname + errors
 
-    if counters_par:
-        doc_entry.document.modify_paragraph(counters_par.id, new_counter_macro_values)
-    else:
-        doc_entry.document.insert_paragraph(
-            new_counter_macro_values,
-            insert_after_id=settings_par.id,
-            attrs={"settings": "counters"},
-        )
+
+@print_blueprint.post("/numbering/<path:doc_path>")
+def get_numbering(doc_path: str, recurse: bool = False) -> Response:
+    """
+    renumber autocounters
+    :param doc_path: from what document
+    :param recurse: Should the referenced documents be renumbered as well?
+    :return: ok-response
+    """
+    doc_entry = DocEntry.find_by_path(doc_path)
+    if doc_entry is None:
+        raise NotExist(doc_path)
+    verify_edit_access(doc_entry)  # throws exception
+    used_names = None
+    if recurse:
+        used_names = [doc_path]
+    errors = handle_doc_numbering(doc_entry, used_names)
+
+    if errors:
+        raise RouteException(errors)
 
     return ok_response()
 
 
 @print_blueprint.get("/templates/<path:doc_path>")
-def get_templates(doc_path):
+def get_templates(doc_path: str) -> Response:
     doc = g.doc_entry
 
     template_name = get_doc_template_name(doc)
@@ -469,7 +545,7 @@ def get_mimetype_for_format(file_type: PrintFormat) -> str:
 
 def check_print_cache(
     doc_entry: DocInfo,
-    template: DocInfo,
+    template: Optional[DocInfo],
     file_type: PrintFormat,
     plugins_user_print: bool = False,
 ) -> Optional[str]:
@@ -567,9 +643,9 @@ def create_printed_doc(
     return p_doc.path_to_file
 
 
-def remove_images(docid):
+def remove_images(doc_id: int) -> None:
     # noinspection PyBroadException
     try:
-        shutil.rmtree(os.path.join(DOWNLOADED_IMAGES_ROOT, str(docid)))
+        shutil.rmtree(os.path.join(DOWNLOADED_IMAGES_ROOT, str(doc_id)))
     except:
         pass

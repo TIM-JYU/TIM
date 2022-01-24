@@ -52,6 +52,7 @@ class DocSettingTypes:
     scoreboard_docs: list[str]
     show_scoreboard: bool
     hideBrowser: bool
+    autocounters: dict[str, Any]
     macros: dict[str, Any]
     texmacros: dict[str, Any]
     urlmacros: UrlMacroMap
@@ -83,6 +84,7 @@ class DocSettings:
     doctexmacros_key = "doctexmacros"
     macro_delimiter_key = "macro_delimiter"
     source_document_key = "source_document"
+    autocounters_key = "autocounters"
     auto_number_headings_key = "auto_number_headings"
     auto_number_start_key = "auto_number_start"
     heading_format_key = "heading_format"
@@ -251,6 +253,9 @@ class DocSettings:
 
     def auto_number_headings(self) -> int:
         return self.__dict.get(self.auto_number_headings_key, 0)
+
+    def autocounters(self) -> dict:
+        return self.__dict.get(self.autocounters_key, {})
 
     def show_velps(self) -> bool:
         res = self.__dict.get(self.show_velps_key, True)
@@ -437,8 +442,9 @@ class DocSettings:
         macros = macroinfo.get_macros()
         charmacros = self.get_charmacros() or ""
         macro_delim = macroinfo.get_macro_delimiter()
+        autocounters = self.autocounters()
         return hashfunc(
-            f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}{self.smart_punct()}"
+            f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}{self.smart_punct()}{autocounters}"
         )
 
     def math_preamble(self):

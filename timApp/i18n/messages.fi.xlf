@@ -4728,6 +4728,22 @@
           <context context-type="linenumber">79</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2102652226889166925" datatype="html">
+        <source>Refresh also remote documents numbering</source>
+        <target state="translated">Virkistä myös ulkoisten dokumenttien numerointi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
+          <context context-type="linenumber">123</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2348778533763369806" datatype="html">
+        <source>recurse </source>
+        <target state="translated">alidokumentit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
+          <context context-type="linenumber">125,126</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
