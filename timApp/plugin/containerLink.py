@@ -26,7 +26,6 @@ HASKELLPLUGIN_DOMAIN = "haskellplugins"
 IMAGEXPLUGIN_DOMAIN = "imagex"
 JSRUNNERPLUGIN_DOMAIN = "jsrunner"
 PALIPLUGIN_DOMAIN = "pali"
-REVIEWCANVAS_DOMAIN = 'reviewcanvas'
 SVNPLUGIN_DOMAIN = "showfile"
 
 MARKUP = "markup"
@@ -102,7 +101,6 @@ def get_plugins() -> dict[str, PluginReg]:
             automd=True,
         ),
         PluginReg(name="pali", domain=PALIPLUGIN_DOMAIN),
-        PluginReg(name="reviewcanvas", domain=REVIEWCANVAS_DOMAIN),
         # TODO: field is just a dummy class to get route for /field - better solution is needed
         PluginReg(
             name="field",
@@ -181,6 +179,13 @@ def get_plugins() -> dict[str, PluginReg]:
             domain=internal_domain,
             port=qst_port,
             path="/tableForm/",
+            lazy=False,
+        ),
+        PluginReg(
+            name="reviewcanvas",
+            domain=internal_domain,
+            port=qst_port,
+            path="/reviewcanvas/",
             lazy=False,
         ),
         PluginReg(

@@ -10,8 +10,8 @@ export function staticDynamicImport(s: string) {
             return import("modules/fields/js/textfield");
         case "/pali/js/build/pali.js":
             return import("modules/pali/client/pali");
-        case "/reviewcanvas/js/build/reviewcanvas.js":
-            return import("modules/reviewcanvas/client/reviewcanvas");
+        case "reviewcanvas":
+            return import("tim/plugin/reviewcanvas");
         case "tableForm":
             return import("tim/plugin/tableForm");
         case "tim/plugin/imagex":

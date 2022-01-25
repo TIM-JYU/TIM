@@ -4,13 +4,6 @@
 
 import * as t from "io-ts";
 import {
-    GenericPluginMarkup,
-    getTopLevelFields,
-    nullable,
-    withDefault,
-} from "tim/plugin/attributes";
-import {defaultErrorMessage, defaultTimeout, valueDefu} from "tim/util/utils";
-import {
     ApplicationRef,
     Component,
     DoBootstrap,
@@ -25,16 +18,23 @@ import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {Subject, Subscription} from "rxjs";
 import {debounceTime, distinctUntilChanged} from "rxjs/operators";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {CsUtilityModule} from "../../cs/js/util/module";
+import {defaultErrorMessage, defaultTimeout} from "../util/utils";
+import {TimUtilityModule} from "../ui/tim-utility.module";
+import {createDowngradedModule, doDowngrade} from "../downgrade";
+import {CsUtilityModule} from "../../../../modules/cs/js/util/module";
 import {
     FileSelectManagerComponent,
     IFile,
     IFileSpecification,
-} from "../../cs/js/util/file-select";
-import {Set} from "../../cs/js/util/set";
+} from "../../../../modules/cs/js/util/file-select";
+// import {Set} from "../../../../modules/cs/js/util/set";
+import {AngularPluginBase} from "./angular-plugin-base.directive";
+import {
+    GenericPluginMarkup,
+    getTopLevelFields,
+    nullable,
+    withDefault,
+} from "./attributes";
 
 const FileSubmission = t.intersection([
     t.type({
@@ -69,7 +69,7 @@ const PluginMarkupFields = t.intersection([
         inputplaceholder: nullable(t.string),
         inputstem: t.string,
         filename: t.string,
-        autosave: t.boolean
+        autosave: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -129,14 +129,14 @@ const PluginFields = t.intersection([
     `,
     styleUrls: ["./reviewcanvas.scss"],
 })
-
 export class ReviewCanvasComponent
     extends AngularPluginBase<
         t.TypeOf<typeof PluginMarkupFields>,
         t.TypeOf<typeof PluginFields>,
         typeof PluginFields
     >
-    implements OnInit, OnDestroy {
+    implements OnInit, OnDestroy
+{
     result?: string;
     error?: string;
     isRunning = false;
@@ -183,8 +183,13 @@ export class ReviewCanvasComponent
                 this.file = newValue;
             });
 
-        if (this.attrsall.state?.uploadedfiles && this.attrsall.state?.uploadedfiles.length > 0) {
-            this.attrsall.state.uploadedfiles.forEach(uf => this.uploadedFiles.push(uf));
+        if (
+            this.attrsall.state?.uploadedfiles &&
+            this.attrsall.state?.uploadedfiles.length > 0
+        ) {
+            this.attrsall.state.uploadedfiles.forEach((uf) =>
+                this.uploadedFiles.push(uf)
+            );
         }
     }
 
@@ -261,8 +266,7 @@ export class ReviewCanvasComponent
             this.uploadedFiles.push(item);
 
             await this.doAutoSave();
-        }
-        else {
+        } else {
             await this.swapUploadedFilePositions(index, index - 1);
         }
     }
@@ -273,8 +277,7 @@ export class ReviewCanvasComponent
             this.uploadedFiles.unshift(item);
 
             await this.doAutoSave();
-        }
-        else {
+        } else {
             await this.swapUploadedFilePositions(index, index + 1);
         }
     }
@@ -295,9 +298,9 @@ export class ReviewCanvasComponent
     }
 
     async saveAnswer() {
-
         if (this.uploadedFiles.length === 0) {
-            this.userErrorMessage = 'Cannot save answer; no files have been uploaded.';
+            this.userErrorMessage =
+                "Cannot save answer; no files have been uploaded.";
             return;
         }
 
