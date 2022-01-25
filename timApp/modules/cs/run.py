@@ -154,6 +154,7 @@ def run2(
     compile_commandline="",
     mounts=[],
     escape_pipe=False,
+    escape_args=True,
 ):
     """Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed to fullfill the
     run inside docker.
@@ -174,6 +175,7 @@ def run2(
     :param dockercontainer: what container to run, container needs user with name agent
     :param compile_commandline: command line to compile code
     :param escape_pipe: If True, pipe charracter | is escaped into '|'
+    :param escape_args: If True, arguments are escaped
     :return: error code, stdout text, stderr text
 
     """
@@ -195,7 +197,9 @@ def run2(
     # print("cwd=", cwd)
     cmdf = cwd + "/" + urndname + ".sh"  # varsinaisen ajoskriptin nimi
     compf = cwd + "/run/compile.sh"
-    cmnds = " ".join(tquote(arg) for arg in args)  # otetaan args listan jonot yhteen
+    cmnds = (
+        " ".join(tquote(arg) for arg in args) if escape_args else " ".join(args)
+    )  # otetaan args listan jonot yhteen
     if not escape_pipe:
         cmnds = cmnds.replace("'|'", "|")
     source = ""
@@ -298,6 +302,10 @@ def run2(
 
     user_mappings = get_user_mappings(root_dir, mounts)
 
+    network_args = (
+        [] if CS3_TARGET == "base" else ["--network", f"{compose_proj}_csplugin_db"]
+    )
+
     dargs = [
         "docker",
         "run",
@@ -308,6 +316,7 @@ def run2(
         *itertools.chain.from_iterable(user_mappings),
         "-v",
         f"/tmp/{compose_proj}_uhome/{udir}/:/home/agent/",
+        *network_args,
         "-w",
         "/home/agent",
         dockercontainer,

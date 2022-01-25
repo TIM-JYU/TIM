@@ -376,6 +376,7 @@ class Language:
         savestate=None,
         dockercontainer=None,
         no_uargs=False,
+        escape_args=True,
     ):
         if self.imgname:  # this should only come from cache run
             self.imgdest = self.imgname + self.imgext
@@ -405,6 +406,7 @@ class Language:
             dockercontainer=df(dockercontainer, self.dockercontainer),
             compile_commandline=self.compile_commandline,
             mounts=mounts,
+            escape_args=escape_args,
         )
         if self.just_compile and not err:
             return code, "", "Compiled " + self.filename, pwddir
@@ -1431,6 +1433,42 @@ class PSQL(SQL):
 
     def run(self, result, sourcelines, points_rule):
         return self.runself(["psql", "-h", self.dbname, "-U", "$psqluser"])
+
+
+class MongoDB(Language):
+    ttype = "mongodb"
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.js"
+        self.exename = self.sourcefilename
+        self.pure_exename = f"{self.filename:s}.js"
+        self.fileext = "js"
+        self.mongodb_host = get_param(query, "dbHost", "csplugin_mongo")
+        self.db_username = "mongo"  # f"user_{self.user_id}"
+        self.db_password = "mongodb"  # f"pass_{self.user_id}"
+
+    def run(self, result, sourcelines, points_rule):
+        file_name = shlex.quote(self.pure_exename)
+        host = shlex.quote(self.mongodb_host)
+        code, out, err, pwddir = self.runself(
+            [
+                "mongosh",
+                "--quiet",
+                "--norc",
+                "--host",
+                host,
+                "--eval",
+                f'"$(cat {file_name})"',
+                "--username",
+                self.db_username,
+                "--password",
+                self.db_password,
+            ],
+            # Skip escaping because mongosh allows evaluating only as argument
+            escape_args=False,
+        )
+        return code, out, err, pwddir
 
 
 class Alloy(Language):
