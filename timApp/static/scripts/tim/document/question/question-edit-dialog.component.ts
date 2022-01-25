@@ -219,7 +219,7 @@ function isAskedQuestion(
             <ng-container footer>
                 <button *ngIf="!isNew()"
                         class="btn btn-danger"
-                        (click)="deleteQuestion()">Delete</button> 
+                        (click)="deleteQuestion()">Delete</button>
                 <button class="timButton saveButton" (click)="createQuestion(false)" title="Ctrl-S">Save</button>
                 <button class="timButton" (click)="dismiss()">Cancel</button>
             </ng-container>

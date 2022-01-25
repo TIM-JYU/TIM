@@ -224,13 +224,19 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
 
     doCopyReference(text: string, remote: boolean): string {
         const texts = text.split("=");
-        if (texts.length > 1) text = texts[1];
+        if (texts.length > 1) {
+            text = texts[1];
+        }
         let remotePrefix = "";
         if (remote) {
             let rrn = "";
             const ac = this.data.vctrl.docSettings.autocounters;
-            if (ac) rrn = ac.remoteRefName;
-            if (!rrn) rrn = this.data.vctrl.reviewCtrl.item.name;
+            if (ac) {
+                rrn = ac.remoteRefName;
+            }
+            if (!rrn) {
+                rrn = this.data.vctrl.reviewCtrl.item.name;
+            }
             remotePrefix = rrn + ".";
         }
         return `%%"${remotePrefix}${text}"|ref%%`;

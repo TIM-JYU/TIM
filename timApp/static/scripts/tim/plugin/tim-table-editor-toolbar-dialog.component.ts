@@ -211,7 +211,9 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
 
     async changeCellToTableArea() {
         const val = this.callbacks.getCell().trimEnd();
-        if (val === "") return;
+        if (val === "") {
+            return;
+        }
         const papa = await import("papaparse");
         const result = papa.default.parse(val);
         /*

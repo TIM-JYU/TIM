@@ -151,8 +151,12 @@ function matchKeywords(
 ) {
     const keywordsSet = new Set(keywords);
     const normalMatch = matchNormalKeywords(queryWords, keywordsSet);
-    if (normalMatch) return true;
-    if (!t9Mode) return false;
+    if (normalMatch) {
+        return true;
+    }
+    if (!t9Mode) {
+        return false;
+    }
     return matchT9Keywords(queryWords, keywordsSet);
 }
 
@@ -169,9 +173,13 @@ function matchNormalKeywords(queryWords: string[], keywordsSet: Set<string>) {
 }
 
 function matchT9Keywords(queryWords: string[], keywordsSet: Set<string>) {
-    if (queryWords.length === 0) return false;
+    if (queryWords.length === 0) {
+        return false;
+    }
     const qw = queryWords[0];
-    if (!qw.match(/^[0-9]+$/)) return false;
+    if (!qw.match(/^[0-9]+$/)) {
+        return false;
+    }
     // If match to original qw with 0's, use that.
     if (setHas(keywordsSet, (v) => isT9match(v, qw))) {
         return true;
@@ -212,10 +220,14 @@ const T9CHARS: string[] = [
 ];
 
 function isT9match(word: string, nums: string): boolean {
-    if (word.length < nums.length) return false;
+    if (word.length < nums.length) {
+        return false;
+    }
     for (let i = 0; i < nums.length; i++) {
         const ti: number = +nums[i];
-        if (!T9CHARS[ti].includes(word[i])) return false;
+        if (!T9CHARS[ti].includes(word[i])) {
+            return false;
+        }
     }
     return true;
 }
@@ -226,7 +238,9 @@ function setHas<T>(
     defaultValue: T | undefined = undefined
 ) {
     for (const val of set) {
-        if (fn(val)) return val;
+        if (fn(val)) {
+            return val;
+        }
     }
     return defaultValue;
 }

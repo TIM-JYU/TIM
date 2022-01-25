@@ -56,7 +56,6 @@ from timApp.user.users import (
 from timApp.user.userutils import grant_access, grant_default_access
 from timApp.util.flask.requesthelper import (
     get_option,
-    use_model,
     RouteException,
     NotExist,
 )
@@ -266,8 +265,7 @@ def add_permission_basic(
     return ok_response()
 
 
-@manage_page.put("/permissions/add", own_model=True)
-@use_model(PermissionSingleEditModel)
+@manage_page.put("/permissions/add", model=PermissionSingleEditModel)
 def add_permission(m: PermissionSingleEditModel):
     i = get_item_or_abort(m.id)
     is_owner = verify_permission_edit_access(i, m.type)
@@ -336,8 +334,7 @@ def confirm_permission_url(doc_id: int, username: str, redir: Optional[str] = No
     return do_confirm_permission(m, i, redir)
 
 
-@manage_page.put("/permissions/confirm", own_model=True)
-@use_model(PermissionRemoveModel)
+@manage_page.put("/permissions/confirm", model=PermissionRemoveModel)
 def confirm_permission(m: PermissionRemoveModel) -> Response:
     i = get_item_or_abort(m.id)
     verify_permission_edit_access(i, m.type)
@@ -366,8 +363,7 @@ def do_confirm_permission(
     return ok_response() if not redir else safe_redirect(redir)
 
 
-@manage_page.put("/permissions/edit", own_model=True)
-@use_model(PermissionMassEditModel)
+@manage_page.put("/permissions/edit", model=PermissionMassEditModel)
 def edit_permissions(m: PermissionMassEditModel) -> Response:
     groups = m.group_objects
     nonexistent = set(m.groups) - {g.name for g in groups}
@@ -437,8 +433,7 @@ def add_perm(
     return accs
 
 
-@manage_page.put("/permissions/remove", own_model=True)
-@use_model(PermissionRemoveModel)
+@manage_page.put("/permissions/remove", model=PermissionRemoveModel)
 def remove_permission(m: PermissionRemoveModel) -> Response:
     i = get_item_or_abort(m.id)
     had_ownership = verify_permission_edit_access(i, m.type)
@@ -459,8 +454,7 @@ class PermissionClearModel:
     type: AccessType = field(metadata={"by_value": True})
 
 
-@manage_page.put("/permissions/clear", own_model=True)
-@use_model(PermissionClearModel)
+@manage_page.put("/permissions/clear", model=PermissionClearModel)
 def clear_permissions(m: PermissionClearModel) -> Response:
     for p in m.paths:
         i = DocEntry.find_by_path(p, try_translation=True)
@@ -629,8 +623,7 @@ def get_default_document_permissions(folder_id: int, object_type: str) -> Respon
     return json_response({"grouprights": grouprights}, date_conversion=True)
 
 
-@manage_page.put("/defaultPermissions/add", own_model=True)
-@use_model(DefaultPermissionModel)
+@manage_page.put("/defaultPermissions/add", model=DefaultPermissionModel)
 def add_default_doc_permission(m: DefaultPermissionModel) -> Response:
     i = get_folder_or_abort(m.id)
     verify_permission_edit_access(i, m.type)
@@ -650,8 +643,7 @@ def add_default_doc_permission(m: DefaultPermissionModel) -> Response:
     return permission_response(m)
 
 
-@manage_page.put("/defaultPermissions/remove", own_model=True)
-@use_model(DefaultPermissionRemoveModel)
+@manage_page.put("/defaultPermissions/remove", model=DefaultPermissionRemoveModel)
 def remove_default_doc_permission(m: DefaultPermissionRemoveModel) -> Response:
     f = get_folder_or_abort(m.id)
     verify_permission_edit_access(f, m.type)

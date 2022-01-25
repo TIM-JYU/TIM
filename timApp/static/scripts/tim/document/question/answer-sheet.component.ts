@@ -408,7 +408,9 @@ export class AnswerSheetComponent implements OnChanges {
     }
 
     getTableRowClass(): string {
-        if (this.isMatrix()) return "qst-tr qst-matrix";
+        if (this.isMatrix()) {
+            return "qst-tr qst-matrix";
+        }
         return "qst-tr";
     }
 
