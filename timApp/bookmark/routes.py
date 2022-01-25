@@ -22,7 +22,7 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.util.flask.requesthelper import use_model, RouteException, NotExist
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
@@ -40,8 +40,7 @@ class BookmarkWithLink(BookmarkNoLink):
     link: str
 
 
-@bookmarks.post("/add", own_model=True)
-@use_model(BookmarkWithLink)
+@bookmarks.post("/add", model=BookmarkWithLink)
 def add_bookmark(m: BookmarkWithLink) -> Response:
     verify_logged_in()
     u = get_current_user_object()
@@ -113,8 +112,7 @@ def delete_bookmark_group(group: str) -> Response:
     return _bookmarks_response()
 
 
-@bookmarks.post("/delete", own_model=True)
-@use_model(BookmarkNoLink)
+@bookmarks.post("/delete", model=BookmarkNoLink)
 def delete_bookmark(bm: BookmarkNoLink) -> Response:
     verify_logged_in()
     u = get_current_user_object()

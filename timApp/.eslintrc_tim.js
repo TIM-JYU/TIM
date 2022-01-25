@@ -74,7 +74,6 @@ module.exports = {
         "@typescript-eslint/prefer-namespace-keyword": "error",
         "@typescript-eslint/no-floating-promises": "off", // TODO enable
         "@typescript-eslint/require-await": "error",
-        "quotes": "off",
         "@typescript-eslint/quotes": [
             "error",
             "double",
@@ -121,7 +120,6 @@ module.exports = {
         "@typescript-eslint/consistent-indexed-object-style": "error",
         "@typescript-eslint/no-confusing-void-expression": ["off", {"ignoreArrowShorthand": true}], // TODO enable
         "@typescript-eslint/non-nullable-type-assertion-style": "off", // TODO enable (buggy right now)
-        "arrow-body-style": "off",
         "arrow-parens": [
             "error",
             "always"
@@ -134,7 +132,6 @@ module.exports = {
         ],
         "complexity": "off",
         "constructor-super": "error",
-        "curly": "error",
         "dot-notation": "error",
         "eol-last": "error",
         "eqeqeq": [
@@ -155,7 +152,6 @@ module.exports = {
         "id-match": "error",
         "import/order": "error",
         "max-classes-per-file": "off",
-        "max-len": "off",
         "new-parens": "error",
         "brace-style": "error",
         "no-bitwise": "error",

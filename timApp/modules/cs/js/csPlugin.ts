@@ -265,10 +265,16 @@ class LanguageTypes {
         const c = this.languages[type].comment;
         const c2 = c.split(" ");
         let b = c2[0];
-        if (b !== "") b = b + " ";
+        if (b !== "") {
+            b = b + " ";
+        }
         let e = "";
-        if (c2.length >= 2) e = c2[1];
-        if (e !== "") e = " " + e;
+        if (c2.length >= 2) {
+            e = c2[1];
+        }
+        if (e !== "") {
+            e = " " + e;
+        }
         return [b, e];
     }
 
@@ -1551,7 +1557,9 @@ export class CsController extends CsBase implements ITimComponent {
     fullhtmlCache?: string;
 
     async getFullhtml(): Promise<string | undefined> {
-        if (this.fullhtmlCache) return this.fullhtmlCache;
+        if (this.fullhtmlCache) {
+            return this.fullhtmlCache;
+        }
         let r = this.markup.fullhtml;
         if ((!r && this.type.includes("html")) || this.isProcessing) {
             return "REPLACEBYCODE";
@@ -1835,7 +1843,9 @@ ${fhtml}
             const btns = b.split("\n");
             for (let i = 0; i < btns.length; i++) {
                 let s = btns[i];
-                if (s.length < 1) continue;
+                if (s.length < 1) {
+                    continue;
+                }
                 if (s.startsWith('"') || s.startsWith("'")) {
                     s = s.replace(new RegExp(s[0], "g"), "");
                     btns[i] = s;
@@ -2950,7 +2960,9 @@ ${fhtml}
             const c = languageTypes.getCommentMarkers(this.rtype);
             pre += ind + c[0] + "BYCODEBEGIN" + c[1] + "\n"; // TODO: ask comment string from language
             const i = this.findLastNonEmpty(usercode);
-            if (i > 0) ind = this.getSameIndent(this.usercode, i);
+            if (i > 0) {
+                ind = this.getSameIndent(this.usercode, i);
+            }
             post = "\n" + ind + c[0] + "BYCODEEND" + c[1] + "\n" + post; // TODO: ask comment string from language
         }
         const s = pre + this.usercode + post;

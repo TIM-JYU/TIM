@@ -1463,7 +1463,9 @@ export class AnswerBrowserController
 
     /* If seed=="answernr" show task first time as a new task */
     isAskNew() {
-        if (this.viewctrl.teacherMode) return false;
+        if (this.viewctrl.teacherMode) {
+            return false;
+        }
         const info = this.pluginInfo();
         return info?.askNew ?? false;
     }
@@ -1504,8 +1506,9 @@ export class AnswerBrowserController
         }
         this.taskInfo = r.result.data;
         this.showNewTask = this.isAndSetShowNewTask();
-        if (this.taskInfo.buttonNewTask)
+        if (this.taskInfo.buttonNewTask) {
             this.buttonNewTask = this.taskInfo.buttonNewTask;
+        }
     }
 
     async checkUsers() {
@@ -1545,7 +1548,9 @@ export class AnswerBrowserController
 
     findSelectedAnswerIndexRevFromUnFiltered() {
         const idx = this.findSelectedAnswerIndex();
-        if (idx < 0) return idx;
+        if (idx < 0) {
+            return idx;
+        }
         return this.filteredAnswers.length - idx - 1;
     }
 
