@@ -1070,14 +1070,6 @@
           <context context-type="linenumber">120</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2278623248737552376" datatype="html">
-        <source>Archive options</source>
-        <target state="translated">Arkistointiasetukset</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">87</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5280522151948167204" datatype="html">
         <source>Notify owners on list changes (e.g. user subscribes) </source>
         <target state="translated">Ilmoita listan omistajille listan muutoksista (esim. uudet jäsenet) </target>
@@ -1124,30 +1116,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">143</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5859710094628000865" datatype="html">
-        <source>No HTML messages allowed on the list </source>
-        <target state="translated">HTML-viestit ovat kielletty </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">150</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="7785811235900225258" datatype="html">
-        <source>Allow attachments on the list</source>
-        <target state="translated">Listalle saa lähettää liitteitä</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">158</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5410636336555554867" datatype="html">
-        <source>Direct answers to message list</source>
-        <target state="translated">Vastausviestien vastaanottaja on viestilista</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">165</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7174531398371981938" datatype="html">
@@ -4738,10 +4706,42 @@
       </trans-unit>
       <trans-unit id="2348778533763369806" datatype="html">
         <source>recurse </source>
-        <target state="translated">alidokumentit</target>
+        <target state="translated">alidokumentit </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">125,126</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6291931578463645615" datatype="html">
+        <source>General options</source>
+        <target state="translated">Yleiset asetukset</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
+          <context context-type="linenumber">55</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6189417014698334911" datatype="html">
+        <source>No HTML messages allowed </source>
+        <target state="translated">HTML-viestit ovat kielletty </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
+          <context context-type="linenumber">130,131</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2123590838467872" datatype="html">
+        <source>Allow attachments</source>
+        <target state="translated">Liitteet ovat sallitut</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
+          <context context-type="linenumber">138</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1716213329959289322" datatype="html">
+        <source>Redirect answers to message list</source>
+        <target state="translated">Vastausviestien vastaanottaja on viestilista</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
+          <context context-type="linenumber">145</context>
         </context-group>
       </trans-unit>
     </body>
