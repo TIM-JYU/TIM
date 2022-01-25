@@ -171,6 +171,7 @@ services:
   restart: unless-stopped
   volumes:
    - csplugin_db_data:/var/lib/cassandra
+   - ./timApp/modules/cs/cassandra/cassandra.yaml:/etc/cassandra/cassandra.yaml
   networks:
    - csplugin_db
  haskellplugins:
