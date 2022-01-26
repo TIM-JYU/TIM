@@ -56,6 +56,8 @@ sqlite3 \
 valgrind \
 xvfb \
 x11-utils \
+libglfw3 \
+libglfw3-dev \
 && ${APT_CLEANUP}"
 
 # We use Mesa drivers by default for GUI rendering
@@ -107,7 +109,7 @@ RUN java -version
 # run echo 3c99bef9df635abd860662e8594b78af >/etc/machine-id
 
 # JavaFX for OpenJDK
-ENV OPENJFX_VERSION=16
+ENV OPENJFX_VERSION=17
 RUN wget https://download2.gluonhq.com/openjfx/${OPENJFX_VERSION}/openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     unzip openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     rm openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip
@@ -118,7 +120,7 @@ ENV \
     # Do not generate certificate
     DOTNET_GENERATE_ASPNET_CERTIFICATE=false \
     # Version channel from which to install dotnet
-    DOTNET_VERSION_CHANNEL=5.0 \
+    DOTNET_VERSION_CHANNEL=6.0 \
     # Enable correct mode for dotnet watch (only mode supported in a container)
     DOTNET_USE_POLLING_FILE_WATCHER=true \
     # Skip extraction of XML docs - generally not useful within an image/container - helps performance
@@ -298,7 +300,7 @@ RUN ln -s "/cargo/bin/"* "/usr/bin/"
 RUN bash -c "${APT_INSTALL} fpc && ${APT_CLEANUP}"
 
 # Go
-ENV GOLANG_VERSION=1.16.6
+ENV GOLANG_VERSION=1.17.6
 RUN wget -q https://dl.google.com/go/go${GOLANG_VERSION}.linux-amd64.tar.gz && tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz && rm go${GOLANG_VERSION}.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 
@@ -307,12 +309,11 @@ RUN (curl -sL https://deb.nodesource.com/setup_14.x | bash -) && bash -c "${APT_
 RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
 RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 
-# Install NUnit runner for .NET 5
-RUN dotnet tool install --tool-path /dotnet_tools/ NUnit.ConsoleRunner.NetCore --version 3.12.0-beta2 && \
-    # At this moment NUnit runner actually targets .NET Core 3.1 which causes dotnet to not execute it
-    # See https://github.com/nunit/nunit-console/issues/858
-    # As such, we save the full path to NUnit console runner so we can invoke it directly via dotnet with rollforward param
-    ln -s /dotnet_tools/.store/nunit.consolerunner.netcore/3.12.0-beta2/nunit.consolerunner.netcore/3.12.0-beta2/tools/netcoreapp3.1/any/nunit3-console.dll /dotnet_tools/nunit.console.dll
+# Install NUnit runner for .NET
+ENV NUNIT_RUNNER_VERSION=3.14.0
+RUN dotnet tool install --tool-path /dotnet_tools/ NUnit.ConsoleRunner.NetCore --version ${NUNIT_RUNNER_VERSION} && \
+    # We need to call NUnit directly with dotnet exec in order to properly declare custom references
+    ln -s /dotnet_tools/.store/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/tools/netcoreapp3.1/any/nunit3-console.dll /dotnet_tools/nunit.console.dll
 
 # Install ffmpeg for transcoding videos
 RUN bash -c "${APT_INSTALL} ffmpeg && ${APT_CLEANUP}"
