@@ -169,6 +169,9 @@ services:
    - dev
   image: cassandra:4
   restart: unless-stopped
+  environment:
+   # We're not going to enable replication, so it's fine to listen to localhost
+   CASSANDRA_LISTEN_ADDRESS: localhost
   volumes:
    - csplugin_db_data:/var/lib/cassandra
    - ./timApp/modules/cs/cassandra/cassandra.yaml:/etc/cassandra/cassandra.yaml
