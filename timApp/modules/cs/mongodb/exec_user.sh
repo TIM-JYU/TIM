@@ -14,20 +14,10 @@ user_password=$3;
 drop_database=$4;
 user_db="${user_name}_db";
 
-# Disable some functions that could cause overwriting users' task data
-# This also prevents using mongo commands (like "use db" which can also cause security issues)
-query_contents="
-db.auth = undefined;
-db.logout = undefined;
-db.changeUserPassword = undefined;
-db.updateUser = undefined;
-db.getSiblingDB = undefined;
-$(cat "$5")
-";
-
 user_create_script="
-if (!db.getUser('${user_name}')) {
-  db.createUser({
+let adminDb = db.getSiblingDB('admin');
+if (!adminDb.getUser('${user_name}')) {
+  adminDb.createUser({
     user: '${user_name}',
     pwd: '${user_password}',
     roles: [ { role: 'dbAdmin', db: '${user_db}' },
@@ -35,26 +25,29 @@ if (!db.getUser('${user_name}')) {
   });
 }
 if (${drop_database}) {
-  db.getSiblingDB('${user_db}').dropDatabase();
+  db.dropDatabase();
 }
+adminDb.auth('${user_name}', '${user_password}');
+adminDb = undefined;
+db.auth = undefined;
+db.logout = undefined;
+db.changeUserPassword = undefined;
+db.updateUser = undefined;
+db.getSiblingDB = undefined;
+db.shutdownServer = undefined;
+db.adminCommand = undefined;
+db.runCommand = undefined;
+Mongo = undefined;
+
+$(cat "$5")
 ";
 
-# First, run mongosh as superuser and create user if it doesn't exist yet
+## First, run mongosh as superuser and create user if it doesn't exist yet
 mongosh \
   --quiet \
   --norc \
   --username "mongo" \
   --password "mongodb" \
   --eval "$user_create_script" \
-  --authenticationDatabase "admin" \
-  "mongodb://$db_host/admin" >/dev/null;
-
-# Then, run mongosh as the user
-mongosh \
-  --quiet \
-  --norc \
-  --username "$user_name" \
-  --password "$user_password" \
-  --eval "$query_contents" \
   --authenticationDatabase "admin" \
   "mongodb://$db_host/$user_db";
