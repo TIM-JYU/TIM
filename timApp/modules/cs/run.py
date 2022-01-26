@@ -154,7 +154,6 @@ def run2(
     compile_commandline="",
     mounts=[],
     escape_pipe=False,
-    escape_args=True,
 ):
     """Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed to fullfill the
     run inside docker.
@@ -175,7 +174,6 @@ def run2(
     :param dockercontainer: what container to run, container needs user with name agent
     :param compile_commandline: command line to compile code
     :param escape_pipe: If True, pipe charracter | is escaped into '|'
-    :param escape_args: If True, arguments are escaped
     :return: error code, stdout text, stderr text
 
     """
@@ -197,9 +195,7 @@ def run2(
     # print("cwd=", cwd)
     cmdf = cwd + "/" + urndname + ".sh"  # varsinaisen ajoskriptin nimi
     compf = cwd + "/run/compile.sh"
-    cmnds = (
-        " ".join(tquote(arg) for arg in args) if escape_args else " ".join(args)
-    )  # otetaan args listan jonot yhteen
+    cmnds = " ".join(tquote(arg) for arg in args)  # otetaan args listan jonot yhteen
     if not escape_pipe:
         cmnds = cmnds.replace("'|'", "|")
     source = ""
@@ -297,6 +293,7 @@ def run2(
             "data",
             "simcir",
             "MIRToolbox",
+            "mongodb",
         ]
     ]
 

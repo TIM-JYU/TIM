@@ -376,7 +376,6 @@ class Language:
         savestate=None,
         dockercontainer=None,
         no_uargs=False,
-        escape_args=True,
     ):
         if self.imgname:  # this should only come from cache run
             self.imgdest = self.imgname + self.imgext
@@ -406,7 +405,6 @@ class Language:
             dockercontainer=df(dockercontainer, self.dockercontainer),
             compile_commandline=self.compile_commandline,
             mounts=mounts,
-            escape_args=escape_args,
         )
         if self.just_compile and not err:
             return code, "", "Compiled " + self.filename, pwddir
@@ -1445,28 +1443,23 @@ class MongoDB(Language):
         self.pure_exename = f"{self.filename:s}.js"
         self.fileext = "js"
         self.mongodb_host = get_param(query, "dbHost", "csplugin_mongo")
-        self.db_username = "mongo"  # f"user_{self.user_id}"
-        self.db_password = "mongodb"  # f"pass_{self.user_id}"
+        self.db_username = f"user_{self.user_id}"
+        self.db_password = f"pass_{self.user_id}"
+        self.drop_database = get_param(query, "dropDatabase", False)
 
     def run(self, result, sourcelines, points_rule):
-        file_name = shlex.quote(self.pure_exename)
-        host = shlex.quote(self.mongodb_host)
+        cleaned_source: str = sourcelines.strip()
+        if not cleaned_source:
+            return 0, "", "", ""
         code, out, err, pwddir = self.runself(
             [
-                "mongosh",
-                "--quiet",
-                "--norc",
-                "--host",
-                host,
-                "--eval",
-                f'"$(cat {file_name})"',
-                "--username",
+                "/cs/mongodb/exec_user.sh",
+                self.mongodb_host,
                 self.db_username,
-                "--password",
                 self.db_password,
+                "true" if self.drop_database else "false",
+                self.pure_exename,
             ],
-            # Skip escaping because mongosh allows evaluating only as argument
-            escape_args=False,
         )
         return code, out, err, pwddir
 
