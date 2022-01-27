@@ -1464,6 +1464,29 @@ class MongoDB(Language):
         return code, out, err, pwddir
 
 
+# Cassandra Query Language language type
+class CQL(Language):
+    ttype = "cql"
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.cql"
+        self.exename = self.sourcefilename
+        self.pure_exename = f"{self.filename:s}.cql"
+        self.fileext = "cql"
+        self.cassandra_host = get_param(query, "dbHost", "csplugin_cassandra")
+        self.db_username = f"user_{self.user_id}"
+        self.db_password = f"pass_{self.user_id}"
+        self.drop_keyspace = get_param(query, "dropKeyspace", False)
+
+    def run(self, result, sourcelines, points_rule):
+        cleaned_source: str = sourcelines.strip()
+        if not cleaned_source:
+            return 0, "", "", ""
+        # TODO: use the cassandra-cli script
+        pass
+
+
 class Alloy(Language):
     ttype = "alloy"
 
