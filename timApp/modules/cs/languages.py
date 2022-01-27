@@ -1467,6 +1467,8 @@ class MongoDB(Language):
 # Cassandra Query Language language type
 class CQL(Language):
     ttype = "cql"
+    login_cmd_pattern = re.compile(r"LOGIN\s+[^\s]+(\s+[^\s]+)?\s*[;\n]", re.I)
+    use_cmd_pattern = re.compile(r"USE\s+[^\s]+\s*[;\n]", re.I)
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
@@ -1483,8 +1485,28 @@ class CQL(Language):
         cleaned_source: str = sourcelines.strip()
         if not cleaned_source:
             return 0, "", "", ""
-        # TODO: use the cassandra-cli script
-        pass
+
+        # We cannot just prevent CQL from running LOGIN and USE, so we will have to do simple regex cleanup
+
+        # Remove any LOGIN statements from cleaned_source
+        cleaned_source = CQL.login_cmd_pattern.sub("", cleaned_source)
+        # Remove any USE statements from cleaned_source
+        cleaned_source = CQL.use_cmd_pattern.sub("", cleaned_source)
+
+        with open(self.sourcefilename, "w") as f:
+            f.write(cleaned_source)
+
+        code, out, err, pwddir = self.runself(
+            [
+                "/cs/cassandra/exec_user.sh",
+                self.cassandra_host,
+                self.db_username,
+                self.db_password,
+                "true" if self.drop_keyspace else "false",
+                self.pure_exename,
+            ],
+        )
+        return code, out, err, pwddir
 
 
 class Alloy(Language):

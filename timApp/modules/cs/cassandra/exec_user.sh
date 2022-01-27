@@ -15,25 +15,26 @@ drop_keyspace=$4;
 query_file=$5;
 user_keyspace="${user_name}_db";
 
-user_create_script="
-CREATE ROLE IF NOT EXISTS '${user_name}' WITH PASSWORD = '${user_password}' AND SUPERUSER = false AND LOGIN = true;
-CREATE KEYSPACE IF NOT EXISTS '${user_keyspace}' WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1};
-GRANT ALL ON KEYSPACE '${user_keyspace}' TO '${user_name}';
-REVOKE AUTHORIZE ON KEYSPACE '${user_keyspace}' FROM '${user_name}';
-";
+# if drop_keyspace is true, add DROP KEYSPACE IF EXISTS ${user_keyspace}; to query string
+if [ "$drop_keyspace" = true ]; then
+    drop_string="DROP KEYSPACE IF EXISTS ${user_keyspace};";
+else
+    drop_string="";
+fi
 
-# First create user
+query_script="
+CREATE ROLE IF NOT EXISTS ${user_name} WITH PASSWORD = '${user_password}' AND SUPERUSER = false AND LOGIN = true;
+${drop_string}
+CREATE KEYSPACE IF NOT EXISTS ${user_keyspace} WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1};
+GRANT ALL ON KEYSPACE ${user_keyspace} TO ${user_name};
+REVOKE AUTHORIZE ON KEYSPACE ${user_keyspace} FROM ${user_name};
+
+USE ${user_keyspace};
+LOGIN ${user_name} '${user_password}';
+$(cat "${query_file}")";
+
 cqlsh \
   -u cassandra \
   -p cassandra \
-  -e "${user_create_script}" \
-  "${db_host}"
-
-# Then run the actual query
-
-cqlsh \
-  -u "${user_name}" \
-  -p "${user_password}" \
-  -k "${user_keyspace}" \
-  -f "$query_file" \
+  -e "${query_script}" \
   "${db_host}"

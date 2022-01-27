@@ -294,6 +294,7 @@ def run2(
             "simcir",
             "MIRToolbox",
             "mongodb",
+            "cassandra",
         ]
     ]
 
