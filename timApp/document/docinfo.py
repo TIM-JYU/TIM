@@ -15,7 +15,7 @@ from timApp.document.specialnames import (
 from timApp.item.item import Item
 from timApp.notification.notification import Notification
 from timApp.timdb.sqa import db
-from timApp.util.utils import get_current_time
+from timApp.util.utils import get_current_time, partition
 
 if TYPE_CHECKING:
     from timApp.document.translation.translation import Translation
@@ -131,36 +131,40 @@ class DocInfo(Item):
             return variable.startswith("/") and f"/{PREAMBLE_FOLDER_NAME}/" in variable
 
         # These two lists are mutually exclusive to avoid if statements.
-        absolute_path_parts = list(filter(absolute_path, preamble_names))
-        relative_path_parts = list(
-            filter(lambda x: not absolute_path(x), preamble_names)
+        absolute_path_parts, relative_path_parts = partition(
+            absolute_path, preamble_names
         )
 
         # To support legacy code:
         # Preambles' folder was previously located in templates' folder.
-        tuples = list(
+        tuples = [
             (
                 f"{p}{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}",
                 f"{p}{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}",
             )
             for p in accumulate(part + "/" for part in path_parts[:-1])
             for preamble_name in relative_path_parts
-        )
+        ]
 
         # Deconstruct tuples into a common list.
         paths = [i for sub in tuples for i in sub]
 
-        list_with_duplicates = []
         for preamble_name in absolute_path_parts:
             path_parts = preamble_name.split("/")[1:-2]
             preamble_name = preamble_name.split("/")[-1]
-            list_with_duplicates += list(
-                f"{p}{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}"
-                for p in accumulate(part + "/" for part in path_parts)
+            paths.extend(
+                [
+                    f"{p}{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}"
+                    for p in accumulate(part + "/" for part in path_parts)
+                ]
             )
 
-        # Remove duplicates using set conversion.
-        paths += list(set(list_with_duplicates))
+        # Remove self-references
+        while self.path_without_lang in paths:
+            paths.remove(self.path_without_lang)
+
+        # Remove duplicates
+        paths = list(dict.fromkeys(paths))
 
         if not paths:
             return []

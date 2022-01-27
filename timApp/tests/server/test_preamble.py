@@ -12,6 +12,7 @@ from timApp.document.specialnames import (
 )
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 
 
 class PreambleTestBase(TimRouteTest):
@@ -322,8 +323,7 @@ class PreambleTest3(PreambleTestBase):
 
 class PreambleTest4(TimRouteTest):
     def test_absolute_preamble(self):
-        from timApp.timdb.sqa import db
-
+        """User may refer to preambles located in an absolute path"""
         self.test_user_1.make_admin()
         db.session.commit()
         self.login_test1()
@@ -340,8 +340,7 @@ class PreambleTest4(TimRouteTest):
         self.assert_content(document_text, ["p1", "", "p2"])
 
     def test_absolute_preamble_order(self):
-        from timApp.timdb.sqa import db
-
+        """Preambles located in an absolute path will be treated last"""
         self.test_user_2.make_admin()
         db.session.commit()
         self.login_test2()
@@ -364,4 +363,22 @@ class PreambleTest4(TimRouteTest):
         document_text = self.get(document.url, as_tree=True)
         self.assert_content(
             document_text, ["preambles", "templates", "absolute", "", "document"]
+        )
+
+    def test_preambles_self_reference(self):
+        """Preamble shall not refer to itself"""
+        self.test_user_3.make_admin()
+        db.session.commit()
+        self.login_test3()
+
+        folder = self.current_user.get_personal_folder().path
+        preamble = self.create_doc(
+            f"{folder}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}"
+        )
+        preamble.document.add_text("test")[0]
+        self.assertNotIn(
+            "The paragraphs in the main document must "
+            "have distinct ids from the preamble documents. "
+            "Conflicting ids:",
+            self.get(preamble.url),
         )
