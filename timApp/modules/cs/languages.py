@@ -654,8 +654,6 @@ class Jypeli(CS, Modifier):
                 "-",
                 "-loglevel",
                 "quiet",
-                "-vf",
-                "vflip",
                 "-vcodec",
                 "libx264",
                 "-pix_fmt",
@@ -714,11 +712,7 @@ class Jypeli(CS, Modifier):
             else:
                 wait_file(self.imgsource)
                 remove(self.imgdest)
-                run(
-                    ["convert", "-flip", self.imgsource, self.imgdest],
-                    cwd=self.prgpath,
-                    timeout=20,
-                )
+                run(["mv", "-f", self.imgsource, self.imgdest], timeout=50)
                 remove(self.imgsource)
                 self.videodest = ""
                 self.imgdest += f"?{time_tag}"

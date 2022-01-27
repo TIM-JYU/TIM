@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <PackageReference Include="Jypeli.NET" Version="10.*" />
-    <PackageReference Include="Jypeli.FarseerPhysics.NET" Version="1.*" />
+    <PackageReference Include="Jypeli.NET" Version="11.*" />
+    <PackageReference Include="Jypeli.FarseerPhysics.NET" Version="2.*" />
   </ItemGroup>
 </Project>
