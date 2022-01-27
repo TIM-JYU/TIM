@@ -425,9 +425,11 @@ class AssessmentTableModel implements DataModelProvider {
             <p *ngIf="okAssessments != null && !loading">
                 {{ okAssessments }} arviointia lähetettiin Sisuun.
                 <span *ngIf="errAssessments != null && errAssessments > 0">{{ errAssessments }} virheellistä arviointia torjuttiin.</span>
-                Voit vahvistaa arvioinnit
-                <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/ng-evaluation/confirmation">
-                    Sisussa "Tarkista ja Vahvista"-sivulla</a>.
+                Voit vahvistaa arvioinnit menemällä kurssin
+                <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/ng-evaluation/form">
+                    Arviointi-sivulle</a>.
+                <strong>Huom:</strong> Tällä hetkellä joudut lisäämään vastaavan arvioijan itse ennen kuin voit vahvistaa arvosanat <em>Tarkista ja vahvista</em> -toiminnolla.
+                Ongelma on tiedossa ja sitä korjataan parhaillaan.
             </p>
         </div>
     `,

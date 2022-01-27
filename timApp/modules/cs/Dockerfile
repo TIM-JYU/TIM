@@ -98,10 +98,10 @@ RUN python3.9 -m pip install requests urllib3 --upgrade && bash -c "${APT_CLEANU
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
 
 # JDK
-RUN wget -q https://github.com/AdoptOpenJDK/openjdk16-binaries/releases/download/jdk-16.0.1%2B9/OpenJDK16U-jdk_x64_linux_hotspot_16.0.1_9.tar.gz && \
- tar -xf OpenJDK16U-jdk_x64_linux_hotspot_16.0.1_9.tar.gz && \
- rm OpenJDK16U-jdk_x64_linux_hotspot_16.0.1_9.tar.gz
-ENV PATH=$PWD/jdk-16.0.1+9/bin:$PATH
+RUN wget -q https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz && \
+ tar -xf openjdk-17.0.2_linux-x64_bin.tar.gz && \
+ rm openjdk-17.0.2_linux-x64_bin.tar.gz
+ENV PATH=$PWD/jdk-17.0.2/bin:$PATH
 RUN java -version
 # RUN bash -c "${APT_INSTALL} uuid-runtime && ${APT_CLEANUP}"
 # RUN uuidgen > /etc/machine-id
@@ -149,9 +149,11 @@ RUN mkdir -p /service
 RUN chown -R agent /service
 
 # Add .local cache and NuGet package store as volumes to allow dotnet commands to restore NuGet packages
-VOLUME /home/agent/.local
-VOLUME /home/agent/.nuget/packages
+VOLUME $HOME/.local
 # Add a special global package cache that will contain packages used for building directly with `csc`
+VOLUME $HOME/.nuget/packages
+RUN chown -R agent $HOME/.nuget
+RUN chown -R agent $HOME/.local
 
 # RUN groupadd docker
 #RUN gpasswd -a agent docker
