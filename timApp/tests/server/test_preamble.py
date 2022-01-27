@@ -346,24 +346,20 @@ class PreambleTest4(TimRouteTest):
         self.login_test2()
 
         folder = self.current_user.get_personal_folder().path
-        p1 = self.create_doc(
+        pt = self.create_doc(
             f"{folder}/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}"
         )
-        p1.document.add_text("templates")
-        p2 = self.create_doc(f"{folder}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}")
-        p2.document.add_text("preambles")
-        p3 = self.create_doc(
+        pt.document.add_text("templates")
+        pa = self.create_doc(
             f"/kurssit/tie/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}"
         )
-        p3.document.add_text("absolute")
+        pa.document.add_text("absolute")
         document = self.create_doc(f"{folder}/document")
         document.document.add_text("document")
-        path = f"{p1.short_name}, /{p3.path}"
+        path = f"{pt.short_name}, /{pa.path}"
         document.document.set_settings({"preamble": path})
         document_text = self.get(document.url, as_tree=True)
-        self.assert_content(
-            document_text, ["preambles", "templates", "absolute", "", "document"]
-        )
+        self.assert_content(document_text, ["templates", "absolute", "", "document"])
 
     def test_preambles_self_reference(self):
         """Preamble shall not refer to itself"""

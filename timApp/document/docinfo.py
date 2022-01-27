@@ -135,36 +135,24 @@ class DocInfo(Item):
             absolute_path, preamble_names
         )
 
-        # To support legacy code:
-        # Preambles' folder was previously located in templates' folder.
-        tuples = [
-            (
-                f"{p}{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}",
-                f"{p}{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}",
-            )
+        paths = list(
+            f"{p}{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}"
             for p in accumulate(part + "/" for part in path_parts[:-1])
             for preamble_name in relative_path_parts
-        ]
-
-        # Deconstruct tuples into a common list.
-        paths = [i for sub in tuples for i in sub]
+        )
 
         for preamble_name in absolute_path_parts:
             path_parts = preamble_name.split("/")[1:-2]
             preamble_name = preamble_name.split("/")[-1]
             paths.extend(
-                [
-                    f"{p}{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}"
-                    for p in accumulate(part + "/" for part in path_parts)
-                ]
+                f"{p}{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}"
+                for p in accumulate(part + "/" for part in path_parts)
             )
 
-        # Remove self-references
-        while self.path_without_lang in paths:
-            paths.remove(self.path_without_lang)
-
-        # Remove duplicates
+        # Remove duplicates and then self-reference
         paths = list(dict.fromkeys(paths))
+        if self.path_without_lang in paths:
+            paths.remove(self.path_without_lang)
 
         if not paths:
             return []

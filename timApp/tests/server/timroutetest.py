@@ -26,7 +26,11 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
-from timApp.document.specialnames import PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
+from timApp.document.specialnames import (
+    TEMPLATE_FOLDER_NAME,
+    PREAMBLE_FOLDER_NAME,
+    DEFAULT_PREAMBLE_DOC,
+)
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
 from timApp.item.item import Item
@@ -992,7 +996,7 @@ class TimRouteTest(TimDbTest):
     ) -> Optional[DocEntry]:
         folder = d.location
         p = self.create_doc(
-            f"{folder}/{PREAMBLE_FOLDER_NAME}/{preamble_name}",
+            f"{folder}/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name}",
             **kwargs,
         )
         return p
