@@ -68,6 +68,9 @@ export SVNPLUGIN_DEV_COMMAND=./startAll.sh
 # Same as above but for pali plugin.
 export PALI_DEV_COMMAND=./startAll.sh
 
+# Same as above but for reviewcanvas plugin.
+export REVIEWCANVAS_DEV_COMMAND=./startAll.sh
+
 # Same as above but for feedback plugin.
 export FEEDBACK_DEV_COMMAND=./startAll.sh
 

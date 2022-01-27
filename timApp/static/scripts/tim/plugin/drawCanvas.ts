@@ -181,6 +181,13 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
         <div #wrapper style="overflow: auto; position: relative;" [style.height.px]="getWrapperHeight()">
             <img style="max-width: none; position: absolute; display: unset;" #backGround *ngIf="bgImage"
                  [src]="bgImage" (load)="onImgLoad()">
+            
+            <!-- WIP code for ReviewCanvas support -->
+            <!-- Need to display all images here
+                 <img ng-repeat="let item of bgImages" style="max-width: none; position: absolute; display: unset;" 
+                      #backGround *ngIf="bgImages" src="item" (load)="onImgLoad()"> -->
+                      
+                      
             <!-- div for positioning custom objects behind the canvas-->
             <div #objectContainer class="canvasObjectContainer"
                  style="overflow: visible; position: absolute; height: 100%; width: 100%;">
@@ -195,6 +202,7 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
 export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     @Input() public bgSource = "";
     bgImage: SafeResourceUrl = "";
+    bgImages: SafeResourceUrl[] = [];
     @ViewChild("drawbase") canvas!: ElementRef<HTMLCanvasElement>;
     @ViewChild("wrapper") wrapper!: ElementRef<HTMLDivElement>;
     @ViewChild("backGround") bgElement!: ElementRef<HTMLImageElement>;

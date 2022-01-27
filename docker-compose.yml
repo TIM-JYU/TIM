@@ -195,6 +195,22 @@ services:
   read_only: true
   tmpfs:
    - /tmp
+ reviewcanvas:
+  image: timimages/tim:${TIM_IMAGE_TAG:?}
+  build: ./timApp/modules/reviewcanvas
+  volumes:
+   - ${FILES_ROOT:?}/blocks/uploads:/uploads:ro
+   - ./timApp/modules/reviewcanvas:/app/reviewcanvas:ro
+   - ./tim_common:/app/tim_common:ro
+  working_dir: /app/reviewcanvas
+  environment:
+   PYTHONPATH: /app
+   COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
+  command: ./startAll.sh
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+   - /tmp
  fields:
   image: timimages/tim:${TIM_IMAGE_TAG:?}
   build: ./timApp/modules/fields
