@@ -802,7 +802,7 @@ export class UserSelectComponent extends AngularPluginBase<
             return;
         }
         const observables: Observable<unknown>[] = [this.searchPress];
-        if (this.markup.autoSearchDelay > 0 || this.markup.preFetch)
+        if (this.markup.autoSearchDelay > 0 || this.markup.preFetch) {
             observables.push(
                 this.inputTyped.pipe(
                     debounceTime(
@@ -814,6 +814,7 @@ export class UserSelectComponent extends AngularPluginBase<
                     filter(() => this.searchForm.form.valid)
                 )
             );
+        }
         this.inputListener = race(...observables)
             .pipe(first())
             .subscribe(() => this.search(this.autoApplyOnFullMatch.value));

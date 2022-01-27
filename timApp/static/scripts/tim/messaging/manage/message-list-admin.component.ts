@@ -35,7 +35,7 @@ import {Users} from "../../user/userService";
                 <fieldset [disabled]="savingSettings">
                     <bootstrap-panel title="List options" i18n-title>
                         <tabset class="merged">
-                            <tab heading="General" i18n-heading class="grid-tab">
+                            <tab heading="General" i18n-heading class="grid-tab tab-form">
                                 <label for="list-name" i18n>List name</label>
                                 <input type="text" name="list-name" id="list-name" class="form-control"
                                        [value]="listname"
@@ -52,41 +52,10 @@ import {Users} from "../../user/userService";
                                 <label for="list-info" i18n>Long description</label>
                                 <textarea name="list-info" class="form-control" id="list-info"
                                           [(ngModel)]="listInfo"></textarea>
-                            </tab>
-                            <tab heading="Email" i18n-heading class="grid-tab">
-                                <label for="list-subject-prefix" i18n>Subject prefix</label>
-                                <input type="text" id="list-subject-prefix" name="list-subject-prefix"
-                                       class="form-control"
-                                       [(ngModel)]="listSubjectPrefix">
-                                <h4 i18n>Advanced</h4>
-                                <div *ngIf="emailAdminURL">
-                                    <a [href]="emailAdminURL" i18n>Advanced email list settings (takes to
-                                        Mailman)</a>
-                                </div>
-                            </tab>
-                            <tab heading="Archiving" i18n-heading id="tab-archive">
-                                <div *ngIf="archiveOptions && archive">
-                                    <h4 id="archive-policy-label" i18n>Archive access policy</h4>
-                                    <!-- Disable radio buttons here, until the changing of archive policy levels is implemented -->
-                                    <ul role="radiogroup"
-                                        aria-labelledby="archive-policy-label">
-                                        <li *ngFor="let option of archiveOptions">
-                                            <label class="not-implemented" title="This option is not implemented yet"
-                                                   i18n-title>
-                                                <input
-                                                        name="items-radio"
-                                                        type="radio"
-                                                        [value]="option.archiveType"
-                                                        [(ngModel)]="archive"
-                                                        disabled
-                                                />{{option.policyName}}</label>
-                                        </li>
-                                    </ul>
-                                </div>
+                                <h4 i18n>General options</h4>
                                 <div>
-                                    <h4 id="archive-options-label" i18n>Archive options</h4>
-                                    <ul role="radiogroup" aria-labelledby="archive-options-label">
-                                        <li>
+                                     <ul role="radiogroup" aria-labelledby="general-list-options-label">
+                                         <li>
                                             <label>
                                                 <input type="checkbox" name="notify-owner-on-list-change"
                                                        [(ngModel)]="notifyOwnerOnListChange"/>
@@ -95,7 +64,7 @@ import {Users} from "../../user/userService";
                                                 </ng-container>
                                             </label>
                                         </li>
-                                        <li>
+                                         <li>
                                             <label class="not-implemented" title="This option is not implemented yet"
                                                    i18n-title>
                                                 <input type="checkbox" name="tim-users-can-join"
@@ -127,7 +96,7 @@ import {Users} from "../../user/userService";
                                                 </li>
                                             </ul>
                                         </li>
-                                        <li>
+                                         <li>
                                             <label>
                                                 <input type="checkbox" name="can-user-unsubscribe"
                                                        [(ngModel)]="canUnsubscribe">
@@ -144,10 +113,21 @@ import {Users} from "../../user/userService";
                                                 </ng-container>
                                             </label>
                                         </li>
+                                     </ul>
+                                </div>
+                            </tab>
+                            <tab heading="Email" i18n-heading class="grid-tab tab-form">
+                                <label for="list-subject-prefix" i18n>Subject prefix</label>
+                                <input type="text" id="list-subject-prefix" name="list-subject-prefix"
+                                       class="form-control"
+                                       [(ngModel)]="listSubjectPrefix">
+                                <h4 i18n>List options</h4>
+                                <div>
+                                    <ul role="radiogroup" aria-labelledby="email-options-label">
                                         <li>
                                             <label>
                                                 <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
-                                                <ng-container i18n>No HTML messages allowed on the list
+                                                <ng-container i18n>No HTML messages allowed
                                                 </ng-container>
                                             </label>
                                         </li>
@@ -155,15 +135,40 @@ import {Users} from "../../user/userService";
                                             <label>
                                                 <input type="checkbox" name="allow-attachments"
                                                        [(ngModel)]="allowAttachments">
-                                                <ng-container i18n>Allow attachments on the list</ng-container>
+                                                <ng-container i18n>Allow attachments</ng-container>
                                             </label>
                                         </li>
                                         <li>
                                             <label>
                                                 <input type="checkbox" name="list-answer-guidance"
                                                        [(ngModel)]="listAnswerGuidance">
-                                                <ng-container i18n>Direct answers to message list</ng-container>
+                                                <ng-container i18n>Redirect answers to message list</ng-container>
                                             </label>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <h4 i18n>Advanced</h4>
+                                <div *ngIf="emailAdminURL">
+                                    <a [href]="emailAdminURL" i18n>Advanced email list settings (takes to
+                                        Mailman)</a>
+                                </div>
+                            </tab>
+                            <tab heading="Archiving" i18n-heading id="tab-archive" class="tab-form">
+                                <div *ngIf="archiveOptions && archive">
+                                    <h4 id="archive-policy-label" i18n>Archive access policy</h4>
+                                    <!-- Disable radio buttons here, until the changing of archive policy levels is implemented -->
+                                    <ul role="radiogroup"
+                                        aria-labelledby="archive-policy-label">
+                                        <li *ngFor="let option of archiveOptions">
+                                            <label class="not-implemented" title="This option is not implemented yet"
+                                                   i18n-title>
+                                                <input
+                                                        name="items-radio"
+                                                        type="radio"
+                                                        [value]="option.archiveType"
+                                                        [(ngModel)]="archive"
+                                                        disabled
+                                                />{{option.policyName}}</label>
                                         </li>
                                     </ul>
                                 </div>
@@ -739,7 +744,9 @@ export class MessageListAdminComponent implements OnInit {
             const groupAndMembers = this.groupsAndMembers?.find(
                 (g) => g.groupName === this.currentGroup
             );
-            if (groupAndMembers) this.groupMembers = groupAndMembers.members;
+            if (groupAndMembers) {
+                this.groupMembers = groupAndMembers.members;
+            }
         }
     }
 

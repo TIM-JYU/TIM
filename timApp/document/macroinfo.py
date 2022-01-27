@@ -86,7 +86,7 @@ class MacroInfo:
     @cached_property
     def jinja_env(self) -> TimSandboxedEnvironment:
         return create_environment(
-            self.macro_delimiter, self.user_ctx, self.view_ctx, self.macro_map
+            self.macro_delimiter, self.user_ctx, self.view_ctx, self.macro_map, self.doc
         )
 
     def get_macros_preserving_user(self) -> dict[str, object]:

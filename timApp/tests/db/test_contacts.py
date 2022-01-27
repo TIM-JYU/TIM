@@ -68,7 +68,12 @@ class ContactsTest(TimDbTest):
 
         # Adding new custom email
         # The primary email must not change after adding a new email
-        u.set_emails(["someuser1alt@example.com"], ContactOrigin.Custom, remove=False)
+        u.set_emails(
+            ["someuser1alt@example.com"],
+            ContactOrigin.Custom,
+            remove=False,
+            notify_message_lists=False,
+        )
         db.session.commit()
         db.session.refresh(u)
         self.assert_contacts(
@@ -90,6 +95,7 @@ class ContactsTest(TimDbTest):
             ["someuser1work@example.com", "someuser1@example.com"],
             ContactOrigin.Sisu,
             can_update_primary=True,
+            notify_message_lists=False,
         )
         db.session.commit()
         db.session.refresh(u)
@@ -109,7 +115,10 @@ class ContactsTest(TimDbTest):
         # Adding existing email via different integration
         # Primary email is the same but the email is now managed by different integration
         u.set_emails(
-            ["someuser1work@example.com"], ContactOrigin.Haka, can_update_primary=True
+            ["someuser1work@example.com"],
+            ContactOrigin.Haka,
+            can_update_primary=True,
+            notify_message_lists=False,
         )
         db.session.commit()
         db.session.refresh(u)
@@ -127,7 +136,7 @@ class ContactsTest(TimDbTest):
         )
 
         # Changing primary email to custom directly should work
-        u.update_email("someuser1alt@example.com", False)
+        u.update_email("someuser1alt@example.com", notify_message_lists=False)
         db.session.commit()
         db.session.refresh(u)
         self.assert_primary_contact(
@@ -136,7 +145,10 @@ class ContactsTest(TimDbTest):
 
         # Upgrading primary email via integration must not work because primary email was changed to custom
         u.set_emails(
-            ["someuser1@example.com"], ContactOrigin.Sisu, can_update_primary=True
+            ["someuser1@example.com"],
+            ContactOrigin.Sisu,
+            can_update_primary=True,
+            notify_message_lists=False,
         )
         db.session.commit()
         db.session.refresh(u)
@@ -146,13 +158,14 @@ class ContactsTest(TimDbTest):
 
         # Changing back to managed email should resume automatic email management
         # One email changes its integration back to Sisu
-        u.update_email("someuser1work@example.com", False)
+        u.update_email("someuser1work@example.com", notify_message_lists=False)
         db.session.commit()
         db.session.refresh(u)
         u.set_emails(
             ["someuser1new@example.com", "someuser1work@example.com"],
             ContactOrigin.Sisu,
             can_update_primary=True,
+            notify_message_lists=False,
         )
         db.session.commit()
         db.session.refresh(u)
@@ -172,7 +185,9 @@ class ContactsTest(TimDbTest):
 
         # Changing email directly still works like before
         # In that case email becomes verified and primary
-        u.update_email("someuser1differentemail@example.com", False)
+        u.update_email(
+            "someuser1differentemail@example.com", notify_message_lists=False
+        )
         db.session.commit()
         db.session.refresh(u)
         self.assert_primary_contact(

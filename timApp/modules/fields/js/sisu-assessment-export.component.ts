@@ -426,8 +426,8 @@ class AssessmentTableModel implements DataModelProvider {
                 {{ okAssessments }} arviointia lähetettiin Sisuun.
                 <span *ngIf="errAssessments != null && errAssessments > 0">{{ errAssessments }} virheellistä arviointia torjuttiin.</span>
                 Voit vahvistaa arvioinnit
-                <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/evaluation/grade">
-                    Sisussa</a> (klikkaa linkin takana "Vahvistus").
+                <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/ng-evaluation/confirmation">
+                    Sisussa "Tarkista ja Vahvista"-sivulla</a>.
             </p>
         </div>
     `,

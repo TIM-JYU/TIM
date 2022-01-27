@@ -436,7 +436,10 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                 )
                 prev_email = user.email
                 user.set_emails(
-                    u.emails, ContactOrigin.Sisu, can_update_primary=u.has_active_email
+                    u.emails,
+                    ContactOrigin.Sisu,
+                    can_update_primary=u.has_active_email,
+                    notify_message_lists=False,  # Notified in bulk below
                 )
                 email_updates.append((prev_email, user.email))
             else:
@@ -460,6 +463,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                         u.emails,
                         ContactOrigin.Sisu,
                         can_update_primary=u.has_active_email,
+                        notify_message_lists=False,  # Notified in bulk below
                     )
                     email_updates.append((prev_email, user.email))
                 else:
@@ -476,6 +480,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                         u.emails,
                         ContactOrigin.Sisu,
                         can_update_primary=u.has_active_email,
+                        notify_message_lists=False,  # New user, no need to notify
                     )
             added = user.add_to_group(ug, added_by=scimuser, sync_mailing_lists=False)
             if added:

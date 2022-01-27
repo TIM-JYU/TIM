@@ -19,7 +19,7 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
                 <form #form="ngForm" class="form-horizontal">
                     <div class="form-group"
                          [ngClass]="{'has-error': ngModelName.invalid && ngModelName.dirty}">
-                        
+
                         <label i18n for="name" class="col-sm-2 control-label">Name</label>
                         <div class="col-sm-10">
                             <input i18n-placeholder type="text" required
@@ -31,13 +31,13 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
                                    placeholder="Enter the name of the user group"/>
                             </div>
                     </div>
-                    
+
                     <!--
                     Do not mix form groups or grid column classes directly with input groups.
                     Instead, nest the input group inside of the form group or grid-related element.
                     Refer to documentation: https://getbootstrap.com/docs/3.3/components/#input-groups
                     -->
-                    
+
                     <div class="form-group">
                         <label i18n for="folder" class="col-sm-2 control-label">Folder</label>
                         <div class="col-sm-10">
@@ -53,15 +53,15 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
                         </div>
                     </div>
                 </form>
-                
+
                 <!--
                 User group validation has two (2) stages.
                 1) Browser validates that at least a name is required and does not contain a character slash
-                before sending a request to the server. 
+                before sending a request to the server.
                 2) Server responses with an error message if a given folder or name of the user group failed.
                 Refer to documentation: https://angular.io/guide/form-validation#validating-form-input
                 -->
-                    
+
                 <tim-alert *ngIf="ngModelName.invalid && ngModelName.dirty" severity="danger">
                     <ng-container i18n *ngIf="ngModelName.errors?.['required']">
                         Name is required.
@@ -75,7 +75,7 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
                         {{message}}
                     </ng-container>
                 </tim-alert>
-                
+
             </ng-container>
             <ng-container footer>
                 <button i18n class="timButton" type="button" (click)="saveGroup()" [disabled]="form.invalid">
@@ -117,7 +117,9 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
      * User group must always have a name, but folder is optional.
      */
     private getFolderName(): string {
-        if (this.folder) return this.folder + "/" + this.name;
+        if (this.folder) {
+            return this.folder + "/" + this.name;
+        }
         return this.name;
     }
 

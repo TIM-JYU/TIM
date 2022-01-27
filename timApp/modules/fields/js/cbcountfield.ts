@@ -127,11 +127,18 @@ class CbcountfieldController
 
     checkDisabled() {
         // Note: changes the disabled value
-        if (this.isReadOnly()) return (this.disabled = true);
-        if (this.attrsall.markup.limit == null) return (this.disabled = false);
-        if (this.userword) return (this.disabled = false);
-        if (this.count >= this.attrsall.markup.limit)
+        if (this.isReadOnly()) {
             return (this.disabled = true);
+        }
+        if (this.attrsall.markup.limit == null) {
+            return (this.disabled = false);
+        }
+        if (this.userword) {
+            return (this.disabled = false);
+        }
+        if (this.count >= this.attrsall.markup.limit) {
+            return (this.disabled = true);
+        }
         return (this.disabled = false);
     }
 

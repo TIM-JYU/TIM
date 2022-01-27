@@ -166,7 +166,7 @@ export async function updateAnnotationServer(
                                 class="smallButton"
                                 (click)="clearColor()"
                                 title="Reset color to original value">R</button>
-                        <button 
+                        <button
                                 class="smallButton"
                                 (click)="whiteColor()"
                                 title="Reset color to white">W</button>

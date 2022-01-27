@@ -148,7 +148,7 @@ const ShowFileAll = t.type({
 @Component({
     selector: "tim-video",
     template: `
-        <div [class]="videoClass" 
+        <div [class]="videoClass"
              tabindex="0"
              (keydown.-)="speed(1.0/1.2, $event)"
              (keydown.1)="speed(0, $event)"

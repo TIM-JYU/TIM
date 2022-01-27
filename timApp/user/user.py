@@ -293,28 +293,34 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     # See https://github.com/dropbox/sqlalchemy-stubs/issues/98
     email = hybrid_property(_get_email, _set_email)
 
-    def update_email(self, new_email: str, notify_message_lists: bool = True):
+    def update_email(
+        self,
+        new_email: str,
+        create_contact: bool = True,
+        notify_message_lists: bool = True,
+    ):
         from timApp.messaging.messagelist.emaillist import update_mailing_list_address
 
         prev_email = self._email
         self._email = new_email
         if prev_email != new_email:
-            new_primary = UserContact.query.filter_by(
-                user_id=self.id, channel=Channel.EMAIL, contact=new_email
-            ).first()
-            if not new_primary:
-                # If new primary contact does not exist for the email, create it
-                # This is used mainly for CLI operations where email of the user is changed directly
-                new_primary = UserContact(
-                    user=self,
-                    verified=True,
-                    channel=Channel.EMAIL,
-                    contact=new_email,
-                    contact_origin=ContactOrigin.Custom,
-                )
-                db.session.add(new_primary)
-            self.primary_email_contact.primary = None
-            new_primary.primary = PrimaryContact.true
+            if create_contact:
+                new_primary = UserContact.query.filter_by(
+                    user_id=self.id, channel=Channel.EMAIL, contact=new_email
+                ).first()
+                if not new_primary:
+                    # If new primary contact does not exist for the email, create it
+                    # This is used mainly for CLI operations where email of the user is changed directly
+                    new_primary = UserContact(
+                        user=self,
+                        verified=True,
+                        channel=Channel.EMAIL,
+                        contact=new_email,
+                        contact_origin=ContactOrigin.Custom,
+                    )
+                    db.session.add(new_primary)
+                self.primary_email_contact.primary = None
+                new_primary.primary = PrimaryContact.true
 
             if notify_message_lists:
                 update_mailing_list_address(prev_email, new_email)
@@ -730,7 +736,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def get_anon() -> "User":
         return User.get_by_id(0)
 
-    def update_info(self, info: UserInfo, sync_mailing_lists=True):
+    def update_info(self, info: UserInfo, sync_mailing_lists: bool = True) -> None:
         if info.username and self.name != info.username:
             group = self.get_personal_group()
             self.name = info.username
@@ -745,20 +751,14 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             email_origin = (
                 info.origin.to_contact_origin() if info.origin else ContactOrigin.Custom
             )
-            old_email = self.email
             self.set_emails(
                 [info.email],
                 email_origin,
                 force_verify=True,
                 force_primary=True,
                 remove=False,
+                notify_message_lists=sync_mailing_lists,
             )
-            if sync_mailing_lists:
-                from timApp.messaging.messagelist.emaillist import (
-                    update_mailing_list_address,
-                )
-
-                update_mailing_list_address(old_email, self.email)
         if info.password:
             self.pass_ = create_password_hash(info.password)
         elif info.password_hash:
@@ -774,6 +774,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         can_update_primary: bool = False,
         add: bool = True,
         remove: bool = True,
+        notify_message_lists: bool = True,
     ) -> None:
         """Sets emails for the given origin.
 
@@ -783,8 +784,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
         :param emails: List of emails to set to the given origin.
         :param origin: Emails' origin
-        :param force_verify: If True, emails all emails are marked as verified.
-                             Otherwise origins in NO_AUTO_VERIFY_ORIGINS are not verified.
+        :param force_verify: If True, all emails are marked as verified.
+                             Otherwise, origins in NO_AUTO_VERIFY_ORIGINS are not verified.
         :param force_primary: If True, forces to update the primary address
         :param can_update_primary: If True, allows to "update" the primary email address.
                                 If the user's primary email is custom and a new email is added from the integration,
@@ -793,6 +794,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                                 set the first email address in the list as primary.
         :param add: If True, adds new emails in the list to the user.
         :param remove: If True, removes emails not present in emails list.
+        :param notify_message_lists: If True, notifies the message lists about the change.
         """
 
         if not emails:
@@ -894,18 +896,22 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
                     if not new_primary:
                         # Special case: this update operation ends up deleting all emails of the user
-                        # This is not desired in most cases, so we will have to adjust by taking one of the deleted emails
-                        # and re-adding it as a Custom email
+                        # This is not desired in most cases, so we will have to adjust by taking
+                        # one of the deleted emails and re-adding it as a Custom email
                         new_primary = UserContact(
                             user=self,
                             contact_origin=ContactOrigin.Custom,
                             verified=True,
-                            contact=next(current_email_contacts).contact,
+                            contact=next(u for u in current_email_contacts).contact,
                         )
                         self.contacts.append(new_primary)
 
                 new_primary.primary = PrimaryContact.true
-                self._email = new_primary.contact
+                self.update_email(
+                    new_primary.contact,
+                    create_contact=False,
+                    notify_message_lists=notify_message_lists,
+                )
 
     def set_unique_codes(self, codes: list[SchacPersonalUniqueCode]):
         for c in codes:

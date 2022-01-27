@@ -469,7 +469,7 @@ def acs():
             unique_codes=parsed_codes,
         ),
         group_to_add=org_group,
-        update_email=False,
+        update_email=False,  # Don't update the email here since we don't want to force the Haka mail as primary
     )
     user.set_emails([timattrs.mail], ContactOrigin.Haka, can_update_primary=True)
     haka = UserGroup.get_haka_group()
