@@ -124,7 +124,7 @@ class DocInfo(Item):
         preamble_names = preamble_setting.split(",")
         path_parts = self.path_without_lang.split("/")
 
-        # An absolute path begins with “/” and “/preambles/” appears in it.
+        # An absolute path begins with "/" and "/preambles/" appears in it.
         # If the conditions are met, then proceed as in the relative preamble.
         def absolute_path(variable: str) -> bool:
             variable = variable.strip()
