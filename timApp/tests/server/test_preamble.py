@@ -12,6 +12,7 @@ from timApp.document.specialnames import (
 )
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 
 
 class PreambleTestBase(TimRouteTest):
@@ -153,8 +154,7 @@ a: b
         d.document.add_text("# d")
         doc = self.get(d.url, as_tree=True)
         self.assert_content(doc, ["1. a", "2. b", "3. c", "4. d"])
-        pars = d.document.get_paragraphs()
-        first_par = pars[0]
+        first_par = d.document.get_paragraphs()[0]
         e = self.post_preview(
             d, text="# d", par=first_par.get_id(), json_key="texts", as_tree=True
         )
@@ -319,3 +319,62 @@ class PreambleTest3(PreambleTestBase):
         pars = t.cssselect(".par.preamble")
         for pr in pars:
             self.assertEqual(p.path, pr.attrib["data-from-preamble"])
+
+
+class PreambleTest4(TimRouteTest):
+    def test_absolute_preamble(self):
+        """User may refer to preambles located in an absolute path"""
+        self.test_user_1.make_admin()
+        db.session.commit()
+        self.login_test1()
+
+        folder = self.current_user.get_personal_folder().path
+        preamble = self.create_doc(f"/{folder}/{PREAMBLE_FOLDER_NAME}/test")
+        preamble.document.add_text("p1")
+        document = self.create_doc("/kurssit/tie/document")
+        document.document.add_text("p2")
+        document.document.set_settings(
+            {"preamble": f"/{folder}/{PREAMBLE_FOLDER_NAME}/test"}
+        )
+        document_text = self.get(document.url, as_tree=True)
+        self.assert_content(document_text, ["p1", "", "p2"])
+
+    def test_absolute_preamble_order(self):
+        """Preambles located in an absolute path will be treated last"""
+        self.test_user_2.make_admin()
+        db.session.commit()
+        self.login_test2()
+
+        folder = self.current_user.get_personal_folder().path
+        pt = self.create_doc(
+            f"{folder}/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}"
+        )
+        pt.document.add_text("templates")
+        pa = self.create_doc(
+            f"/kurssit/tie/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}"
+        )
+        pa.document.add_text("absolute")
+        document = self.create_doc(f"{folder}/document")
+        document.document.add_text("document")
+        path = f"{pt.short_name}, /{pa.path}"
+        document.document.set_settings({"preamble": path})
+        document_text = self.get(document.url, as_tree=True)
+        self.assert_content(document_text, ["templates", "absolute", "", "document"])
+
+    def test_preambles_self_reference(self):
+        """Preamble shall not refer to itself"""
+        self.test_user_3.make_admin()
+        db.session.commit()
+        self.login_test3()
+
+        folder = self.current_user.get_personal_folder().path
+        preamble = self.create_doc(
+            f"{folder}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}"
+        )
+        preamble.document.add_text("test")[0]
+        self.assertNotIn(
+            "The paragraphs in the main document must "
+            "have distinct ids from the preamble documents. "
+            "Conflicting ids:",
+            self.get(preamble.url),
+        )
