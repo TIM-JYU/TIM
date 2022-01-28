@@ -15,7 +15,7 @@ from timApp.document.specialnames import (
 from timApp.item.item import Item
 from timApp.notification.notification import Notification
 from timApp.timdb.sqa import db
-from timApp.util.utils import get_current_time
+from timApp.util.utils import get_current_time, partition
 
 if TYPE_CHECKING:
     from timApp.document.translation.translation import Translation
@@ -96,7 +96,7 @@ class DocInfo(Item):
 
     def get_preamble_docs(self) -> list[DocInfo]:
         """Gets the list of preamble documents for this document.
-        The first document in the list is nearest root.
+        The first document in the list is the nearest root.
         """
         if getattr(self, "_preamble_docs", None) is None:
             preamble_setting = self.document.get_own_settings().get(
@@ -123,11 +123,37 @@ class DocInfo(Item):
     def _get_preamble_docs_impl(self, preamble_setting: str) -> list[DocInfo]:
         preamble_names = preamble_setting.split(",")
         path_parts = self.path_without_lang.split("/")
+
+        # An absolute path begins with "/" and "/preambles/" appears in it.
+        # If the conditions are met, then proceed as in the relative preamble.
+        def absolute_path(variable: str) -> bool:
+            variable = variable.strip()
+            return variable.startswith("/") and f"/{PREAMBLE_FOLDER_NAME}/" in variable
+
+        # These two lists are mutually exclusive to avoid if statements.
+        absolute_path_parts, relative_path_parts = partition(
+            absolute_path, preamble_names
+        )
+
         paths = list(
             f"{p}{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}"
             for p in accumulate(part + "/" for part in path_parts[:-1])
-            for preamble_name in preamble_names
+            for preamble_name in relative_path_parts
         )
+
+        for preamble_name in absolute_path_parts:
+            path_parts = preamble_name.split("/")[1:-2]
+            preamble_name = preamble_name.split("/")[-1]
+            paths.extend(
+                f"{p}{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}"
+                for p in accumulate(part + "/" for part in path_parts)
+            )
+
+        # Remove duplicates and then self-reference
+        paths = list(dict.fromkeys(paths))
+        if self.path_without_lang in paths:
+            paths.remove(self.path_without_lang)
+
         if not paths:
             return []
 
