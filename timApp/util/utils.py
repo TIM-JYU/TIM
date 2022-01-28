@@ -11,9 +11,10 @@ from concurrent.futures import Future
 from dataclasses import fields, asdict
 from datetime import datetime, timezone
 from enum import Enum
+from itertools import tee, filterfalse
 from pathlib import Path, PurePosixPath
 from types import TracebackType, FrameType
-from typing import Optional, Union, Any, Sequence, Callable
+from typing import Optional, Union, Any, Sequence, Callable, TypeVar, Iterable
 
 import dateutil.parser
 import jinja2
@@ -477,3 +478,22 @@ def render_raw_template_string(template: str, **context: Any) -> str:
     :return: Rendered template.
     """
     return jinja2.Template(template).render(**context)
+
+
+TItem = TypeVar("TItem")
+
+
+def partition(
+    pred: Callable[[TItem], bool], iterable: Iterable[TItem]
+) -> tuple[Iterable[TItem], Iterable[TItem]]:
+    """
+    Use a predicate to partition entries into false entries and true entries.
+
+    :param pred: Predicate to determine in which tuple entries will be placed.
+    :param iterable: Iterable that is divided into a tuple based on the predicate.
+    :return: True entries go to the left, and false entries to the right.
+    """
+
+    # Create two buffered iterators: values of i1 are cached for i2 to use
+    i1, i2 = tee((pred(item), item) for item in iterable)
+    return [item for t, item in i1 if t], [item for t, item in i2 if not t]
