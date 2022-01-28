@@ -426,10 +426,10 @@ class AssessmentTableModel implements DataModelProvider {
                 {{ okAssessments }} arviointia lähetettiin Sisuun.
                 <span *ngIf="errAssessments != null && errAssessments > 0">{{ errAssessments }} virheellistä arviointia torjuttiin.</span>
                 Voit vahvistaa arvioinnit menemällä kurssin
-                <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/ng-evaluation/form">
-                    Arviointi-sivulle</a>.
-                <strong>Huom:</strong> Tällä hetkellä joudut lisäämään vastaavan arvioijan itse ennen kuin voit vahvistaa arvosanat <em>Tarkista ja vahvista</em> -toiminnolla.
-                Ongelma on tiedossa ja sitä korjataan parhaillaan.
+                <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/ng-evaluation/confirmation">
+                    Tarkista ja vahvista -näkymään</a>.
+                <strong>Huom:</strong> Ennen 24.1.2022 luotujen kurssien arviointien vahvistaminen vaatii vastaavan arvioijan korjaamista Sisussa.
+                <a href="/view/tim/ohjeita/lomakkeiden-luominen#sisuAssesmentFix">Katso ohjeet täältä.</a>
             </p>
         </div>
     `,
