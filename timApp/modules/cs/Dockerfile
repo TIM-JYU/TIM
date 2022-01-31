@@ -148,12 +148,12 @@ ENV HOME /home/agent
 RUN mkdir -p /service
 RUN chown -R agent /service
 
+RUN mkdir $HOME/.nuget && chown -R agent $HOME/.nuget
+RUN mkdir $HOME/.local && chown -R agent $HOME/.local
 # Add .local cache and NuGet package store as volumes to allow dotnet commands to restore NuGet packages
 VOLUME $HOME/.local
 # Add a special global package cache that will contain packages used for building directly with `csc`
 VOLUME $HOME/.nuget/packages
-RUN chown -R agent $HOME/.nuget
-RUN chown -R agent $HOME/.local
 
 # RUN groupadd docker
 #RUN gpasswd -a agent docker
