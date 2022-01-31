@@ -28,16 +28,18 @@ if (${drop_database}) {
   db.dropDatabase();
 }
 adminDb.auth('${user_name}', '${user_password}');
-adminDb = undefined;
-db.auth = undefined;
-db.logout = undefined;
-db.changeUserPassword = undefined;
-db.updateUser = undefined;
-db.getSiblingDB = undefined;
-db.shutdownServer = undefined;
-db.adminCommand = undefined;
-db.runCommand = undefined;
-Mongo = undefined;
+delete db.auth;
+delete db.logout;
+delete db.changeUserPassword;
+delete db.updateUser;
+delete db.getSiblingDB;
+delete db.shutdownServer;
+delete db.adminCommand;
+delete db.runCommand;
+delete global.Mongo;
+delete global.connect;
+delete global.sleep;
+delete global.adminDb;
 
 $(cat "$5")
 ";
