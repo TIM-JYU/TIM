@@ -14,6 +14,7 @@ from flask import session
 from sqlalchemy import func
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import joinedload
+from sqlalchemy.orm.exc import StaleDataError
 
 from timApp.auth.accesshelper import (
     verify_ownership,
@@ -687,6 +688,11 @@ def create_lecture():
     return json_response(lecture, date_conversion=True)
 
 
+@suppress_wuff(
+    StaleDataError,
+    "https://gitlab.com/tim-jyu/tim/-/issues/1976",
+    r"StaleDataError: DELETE statement on table 'lectureusers' expected to delete",
+)
 def empty_lecture(lec: Lecture):
     lec.users = []
     clean_dictionaries_by_lecture(lec)
