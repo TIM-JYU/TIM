@@ -806,7 +806,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
 
     /**
      * Scroll to the top coordinate of the next background image
-     * @param down direction, going down => increased x coord
+     * @param down direction, going down => next image / increased y coord
      */
     scrollBgImage(down: boolean) {
         const currPos = this.wrapper.nativeElement.scrollTop;
@@ -821,7 +821,12 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
                 pos = sizes.find((s) => s > currPos);
             }
         } else {
-            pos = sizes.reverse().find((s) => s < currPos);
+            for (let i = sizes.length - 1; i >= 0; i--) {
+                if (sizes[i] < currPos) {
+                    pos = sizes[i];
+                    break;
+                }
+            }
         }
         if (pos != undefined) {
             this.wrapper.nativeElement.scrollTo({top: pos});
