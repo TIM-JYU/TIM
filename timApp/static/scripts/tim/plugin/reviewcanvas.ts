@@ -61,7 +61,7 @@ interface IUploadResponse {
 }
 
 interface IReviewCanvasAnswerInput {
-    input: {uploadedfiles?: {path: string; type: string}[]};
+    input: {uploadedFiles?: {path: string; type: string}[]};
 }
 
 const PluginMarkupFields = t.intersection([
@@ -82,12 +82,12 @@ const PluginMarkupFields = t.intersection([
 const PluginFields = t.intersection([
     getTopLevelFields(PluginMarkupFields),
     t.partial({
-        uploadedfiles: nullable(t.array(UploadedFile)),
+        uploadedFiles: nullable(t.array(UploadedFile)),
     }),
     t.type({
         state: nullable(
             t.type({
-                uploadedfiles: nullable(t.array(UploadedFile)),
+                uploadedFiles: nullable(t.array(UploadedFile)),
             })
         ),
     }),
@@ -184,10 +184,10 @@ export class ReviewCanvasComponent
             });
 
         if (
-            this.attrsall.state?.uploadedfiles &&
-            this.attrsall.state?.uploadedfiles.length > 0
+            this.attrsall.state?.uploadedFiles &&
+            this.attrsall.state?.uploadedFiles.length > 0
         ) {
-            this.attrsall.state.uploadedfiles.forEach((uf) =>
+            this.attrsall.state.uploadedFiles.forEach((uf) =>
                 this.uploadedFiles.push(uf)
             );
         }
@@ -310,7 +310,7 @@ export class ReviewCanvasComponent
 
         const params: IReviewCanvasAnswerInput = {
             input: {
-                uploadedfiles: this.uploadedFiles,
+                uploadedFiles: this.uploadedFiles,
             },
         };
 

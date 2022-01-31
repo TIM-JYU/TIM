@@ -36,7 +36,7 @@ class UploadedFile:
 class ReviewCanvasStateModel:
     """Model for the information that is stored in TIM database for each answer."""
 
-    uploadedfiles: List[UploadedFile]
+    uploadedFiles: List[UploadedFile]
 
 
 @dataclass
@@ -49,7 +49,7 @@ class ReviewCanvasMarkupModel(GenericMarkupModel):
 class ReviewCanvasInputModel:
     """Model for the information that is sent from browser for an answer."""
 
-    uploadedfiles: List[UploadedFile]
+    uploadedFiles: List[UploadedFile]
 
 
 @dataclass
@@ -65,10 +65,10 @@ class ReviewCanvasHtmlModel(
         return render_static_reviewcanvas(self)
 
     def get_review(self) -> str:
-        if not self.state.uploadedfiles:
+        if not self.state.uploadedFiles:
             return "<pre>ei kuvaa</pre>"
 
-        return "imageurl:" + self.state.uploadedfiles[0].path
+        return "imageurls:" + ";".join(x.path for x in self.state.uploadedFiles)
 
 
 @dataclass
@@ -102,8 +102,8 @@ def render_static_reviewcanvas(m: ReviewCanvasHtmlModel) -> str:
 def answer(args: ReviewCanvasAnswerModel) -> PluginAnswerResp:
     web: PluginAnswerWeb = {}
     result: PluginAnswerResp = {"web": web}
-    uploadedfiles = args.input.uploadedfiles
-    save = {"uploadedfiles": uploadedfiles}
+    uploadedFiles = args.input.uploadedFiles
+    save = {"uploadedFiles": uploadedFiles}
     result["save"] = save
     web["result"] = "saved"
     return result

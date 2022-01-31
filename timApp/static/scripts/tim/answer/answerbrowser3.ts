@@ -512,6 +512,9 @@ export class AnswerBrowserController
     private giveCustomPoints: boolean = false;
     public review: boolean = false;
     private imageReview: boolean = false;
+    private imageReviewUrls: string[] = [];
+    private imageReviewDatas: string[] = [];
+    private imageReviewUrlIndex = 0;
     public oldreview: boolean = false;
     private shouldFocus: boolean = false;
     // noinspection JSMismatchedCollectionQueryUpdate
@@ -933,26 +936,25 @@ export class AnswerBrowserController
             if (this.review) {
                 let newReviewHtml = r.result.data.reviewHtml;
 
-                this.imageReview = newReviewHtml.startsWith("data:image");
-
-                // Check if we're reviewing an uploaded image that can be found from a specific URL
-                if (!this.imageReview) {
-                    this.imageReview = newReviewHtml.startsWith("imageurl:");
-
-                    if (this.imageReview) {
-                        // Extract URL, load image from URL and assign it as review HTML
-
-                        const imageUrl = newReviewHtml.substring(9);
-
-                        await fetch(imageUrl)
-                            .then((resp) => resp.blob())
-                            .then(async (blob) => {
-                                const base64Data = await this.readAsDataUrl(
-                                    blob
-                                );
-                                newReviewHtml = base64Data as string;
-                            });
+                if (newReviewHtml.startsWith("data:image")) {
+                    this.imageReview = true;
+                    this.imageReviewDatas = [newReviewHtml];
+                } else if (newReviewHtml.startsWith("imageurls:")) {
+                    this.imageReview = true;
+                    const fetchedImages: string[] = [];
+                    this.imageReviewUrls = newReviewHtml
+                        .substring(10)
+                        .split(";");
+                    const promises = this.imageReviewUrls.map((url) =>
+                        fetch(url)
+                    );
+                    const ress = await Promise.all(promises);
+                    const blobs = ress.map((res) => res.blob());
+                    for (const b of blobs) {
+                        const base64Data = await this.readAsDataUrl(await b);
+                        fetchedImages.push(base64Data as string);
                     }
+                    this.imageReviewDatas = fetchedImages;
                 }
 
                 if (this.selectedAnswer) {

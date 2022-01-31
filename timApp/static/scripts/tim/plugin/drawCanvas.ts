@@ -37,6 +37,7 @@ import {
     touchEventToTouch,
 } from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
+import {CommonModule} from "@angular/common";
 
 type IRectangle = {
     type: "rectangle";
@@ -175,20 +176,27 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
     ctx.globalAlpha = seg.opacity ?? 1;
 }
 
+interface IImageSizes {
+    height: number;
+    width: number;
+}
+
 @Component({
     selector: "draw-canvas",
     template: `
-        <div #wrapper style="overflow: auto; position: relative;" [style.height.px]="getWrapperHeight()">
-            <img style="max-width: none; position: absolute; display: unset;" #backGround *ngIf="bgImage"
-                 [src]="bgImage" (load)="onImgLoad()">
-            
-            <!-- WIP code for ReviewCanvas support -->
-            <!-- Need to display all images here
-                 <img ng-repeat="let item of bgImages" style="max-width: none; position: absolute; display: unset;" 
-                      #backGround *ngIf="bgImages" src="item" (load)="onImgLoad()"> -->
-                      
-                      
-            <!-- div for positioning custom objects behind the canvas-->
+        <div *ngIf="bgSources.length > 1">
+            Quick scroll
+            <button title="Previous image" class="btn btn-primary" (click)="scrollBgImage(false)">Previous
+                image
+            </button>
+            <button title="Next image" class="btn btn-primary" (click)="scrollBgImage(true)">Next image
+            </button>
+        </div>
+        <div #wrapper style="overflow: auto; position: relative; resize: both;" [style.height.px]="getWrapperHeight()">
+            <div #backGround style="position: absolute;">
+                <img alt="review image" *ngFor="let item of bgImages; let i = index" style="max-width: none; display: unset;"
+                     [src]="bgImages[i]" (load)="onImgLoad($event, i)">
+            </div>
             <div #objectContainer class="canvasObjectContainer"
                  style="overflow: visible; position: absolute; height: 100%; width: 100%;">
 
@@ -196,22 +204,28 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
             <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">
             </canvas>
         </div>
-        <draw-toolbar *ngIf="toolBar" [drawSettings]="drawOptions" (drawSettingsChange)="saveSettings()" [undo]="undo"></draw-toolbar>
+        <draw-toolbar *ngIf="toolBar" [drawSettings]="drawOptions" (drawSettingsChange)="saveSettings()"
+                      [undo]="undo"></draw-toolbar>
     `,
 })
 export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
-    @Input() public bgSource = "";
-    bgImage: SafeResourceUrl = "";
+    @Input() public bgSources: string[] = [];
+    bgSourceSizes: IImageSizes[] = []; // dimensions of loaded background images, sorted
+    bgOffsets: number[] = []; // top starting coordinates of each background image, sorted
     bgImages: SafeResourceUrl[] = [];
     @ViewChild("drawbase") canvas!: ElementRef<HTMLCanvasElement>;
     @ViewChild("wrapper") wrapper!: ElementRef<HTMLDivElement>;
-    @ViewChild("backGround") bgElement!: ElementRef<HTMLImageElement>;
+    @ViewChild("backGround") bgElement!: ElementRef<HTMLDivElement>;
+    @ViewChild("backGroundSingle") bgElementSingle!: ElementRef<HTMLDivElement>;
     @ViewChild("objectContainer") objectContainer!: ElementRef<HTMLDivElement>;
     ctx!: CanvasRenderingContext2D;
-    imgHeight = 0;
+    imgHeight = 0; // total height of all background images
+    loadedImages = 0;
 
     // optional function to call when image is loaded to let external users know the canvas is ready for use
     @Input() imgLoadCallback?: (arg0: this) => void;
+
+    @Input() setExternalBg?: (arg0: string) => void;
 
     // TODO: for now there's no option to draw for e.g filled rectangle with borders, but save format should support it
     drawOptions: IDrawOptions = {
@@ -278,9 +292,13 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
      * Sets up the background image
      */
     setBg() {
+        if (!this.bgSources) {
+            return;
+        }
+        this.loadedImages = 0;
         // This goes to src of img tag, so there should be no XSS danger because imgs cannot execute scripts.
-        this.bgImage = this.domSanitizer.bypassSecurityTrustResourceUrl(
-            this.bgSource
+        this.bgImages = this.bgSources.map((src) =>
+            this.domSanitizer.bypassSecurityTrustResourceUrl(src)
         );
     }
 
@@ -317,7 +335,8 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngOnChanges(changes: SimpleChanges) {
-        if (changes.bgSource) {
+        if (changes.bgSources) {
+            this.bgSourceSizes = new Array<IImageSizes>(this.bgSources.length);
             this.setBg();
         }
     }
@@ -338,9 +357,30 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     /**
-     * Resizes canvas and calls the image load callback function after image is loaded
+     * Store dimensions of loaded background images
      */
-    onImgLoad(): void {
+    onImgLoad(e: Event, index: number): void {
+        const img = e.target as HTMLImageElement;
+        const height = img.height;
+        const width = img.width;
+        this.bgSourceSizes[index] = {height: height, width: width};
+        this.loadedImages += 1;
+        if (this.loadedImages < this.bgSources.length) {
+            return;
+        }
+        this.allImagesLoaded();
+    }
+
+    /**
+     * Resizes canvas and calls the image load callback function after every background image is loaded
+     */
+    allImagesLoaded(): void {
+        let offset = 0;
+        this.bgOffsets = [offset];
+        for (let i = 0; i < this.bgSourceSizes.length - 1; i++) {
+            this.bgOffsets.push(this.bgSourceSizes[i].height + offset);
+            offset += this.bgSourceSizes[i].height;
+        }
         this.imgHeight = this.bgElement.nativeElement.clientHeight;
         const newWidth = Math.max(
             this.bgElement.nativeElement.clientWidth,
@@ -361,15 +401,14 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
 
     /**
      * Gets the outer wrapper div's height based on background image and min/max settings
-     * For now we set it to image + 100px to reduce scroll jumping when inner objects (e.g velps) are
-     * near bottom of the canvas
-     * // TODO: if canvas is used without inner objects then this 100px is a waste of screen space
      */
     getWrapperHeight(): number {
         const min = 300;
-        const max = 1024;
+        const max = window.innerHeight - 155; // screen - answerbrowser - drawtoolbar (eyeballed)
 
+        // +100 => reduce screen jump when opening velps near bottom of canvas
         return Math.min(Math.max(min, this.imgHeight) + 100, max);
+        // TODO: Use case related min/max settings via attrs
     }
 
     /**
@@ -764,11 +803,39 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         this.persistentDrawData = data;
         this.redrawAll();
     }
+
+    /**
+     * Scroll to the top coordinate of the next background image
+     * @param down direction, going down => increased x coord
+     */
+    scrollBgImage(down: boolean) {
+        const currPos = this.wrapper.nativeElement.scrollTop;
+        const sizes = this.bgOffsets;
+        let pos;
+        if (down) {
+            if (
+                currPos <=
+                this.wrapper.nativeElement.scrollHeight -
+                    this.wrapper.nativeElement.offsetHeight
+            ) {
+                pos = sizes.find((s) => s > currPos);
+            }
+        } else {
+            pos = sizes.reverse().find((s) => s < currPos);
+        }
+        if (pos != undefined) {
+            this.wrapper.nativeElement.scrollTo({top: pos});
+        } else {
+            this.wrapper.nativeElement.scrollTo({
+                top: down ? 0 : sizes[this.bgSourceSizes.length - 1],
+            });
+        }
+    }
 }
 
 @NgModule({
     declarations: [DrawCanvasComponent],
-    imports: [BrowserModule, DrawToolbarModule, FormsModule],
+    imports: [BrowserModule, CommonModule, DrawToolbarModule, FormsModule],
     exports: [DrawCanvasComponent],
 })
 export class DrawCanvasModule implements DoBootstrap {
