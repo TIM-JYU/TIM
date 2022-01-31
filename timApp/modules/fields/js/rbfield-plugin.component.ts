@@ -1,8 +1,8 @@
 /**
  * Defines the client-side implementation of rbfield/label plugin.
  */
-import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
+import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
 import {
     ChangeType,
     FormModeOption,
@@ -17,13 +17,22 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http} from "tim/util/ngimport";
-import {to, valueOr} from "tim/util/utils";
+import {getFormBehavior} from "tim/plugin/util";
+import {valueOr} from "tim/util/utils";
+import {BrowserModule} from "@angular/platform-browser";
+import {HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
+import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
+import {
+    createDowngradedModule,
+    doDowngrade,
+} from "../../../static/scripts/tim/downgrade";
+import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
+import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
 import {FieldBasicData} from "./textfield";
-
-const rbfieldApp = angular.module("rbfieldApp", ["ngSanitize"]);
-export const moduleDefs = [rbfieldApp];
 
 const RbfieldMarkup = t.intersection([
     t.partial({
@@ -53,8 +62,41 @@ const RbfieldAll = t.intersection([
     }),
 ]);
 
-class RbfieldController
-    extends PluginBase<
+@Component({
+    selector: "tim-rbfield-runner",
+    template: `
+<div class="textfieldNoSaveDiv" [ngStyle]="cols">
+    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <h4 *ngIf="header" [innerHtml]="header"></h4>
+    <p class="stem" *ngIf="stem">{{stem}}</p>
+     <span style="width: 100%">
+      <span class="inputstem" [innerHtml]="inputstem"></span>
+      <span  *ngIf="!isPlainText()" [ngClass]="{warnFrame: (isUnSaved() )  }">
+        <input type="radio"
+               *ngIf="!isPlainText()"
+               name="{{getName()}}"
+               id="{{getName()}}"
+               value="1"
+               [ngStyle]="cbStyle"
+               class="form-control"
+               [(ngModel)]="userword"
+               (ngModelChange)="autoSave()"
+               [disabled]="readonly"
+               [readonly]="readonly"
+               [tooltip]="errormessage"
+               [isOpen]="errormessage !== undefined"
+               triggers="mouseenter"
+               >
+         </span>
+         <span *ngIf="isPlainText()" style="">{{userword}}</span>
+      </span>
+    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+</div>
+`,
+    styleUrls: ["./rbfield-plugin.component.scss"],
+})
+export class RbfieldPluginComponent
+    extends AngularPluginBase<
         t.TypeOf<typeof RbfieldMarkup>,
         t.TypeOf<typeof RbfieldAll>,
         typeof RbfieldAll
@@ -63,11 +105,10 @@ class RbfieldController
 {
     private result?: string;
     private isRunning = false;
-    private userword: string = "0";
-    private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
+    userword: string = "0";
     private vctrl!: ViewCtrl;
     private initialValue: string = "0";
-    private errormessage?: string;
+    errormessage?: string;
     private hideSavedText = true;
     private redAlert = false;
     private saveResponse: {saved: boolean; message: string | undefined} = {
@@ -96,22 +137,23 @@ class RbfieldController
         return true;
     }
 */
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
         this.rbName = this.rbname;
+        this.vctrl = vctrlInstance!;
         const uw = valueOr(
             this.attrsall.state?.c,
-            this.attrs.initword ?? "0"
+            this.markup.initword ?? "0"
         ).toString();
         this.userword = uw; // this.makeBoolean(uw);
 
-        if (this.attrs.tag) {
-            this.vctrl.addTimComponent(this, this.attrs.tag);
+        if (this.markup.tag) {
+            this.vctrl.addTimComponent(this, this.markup.tag);
         } else {
             this.vctrl.addTimComponent(this);
         }
         this.initialValue = this.userword;
-        if (this.attrs.showname) {
+        if (this.markup.showname) {
             this.initCode();
         }
     }
@@ -151,13 +193,12 @@ class RbfieldController
     }
 
     formBehavior(): FormModeOption {
-        return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
+        return getFormBehavior(this.markup.form, FormModeOption.IsForm);
     }
 
     resetChanges() {
         this.userword = this.initialValue;
         this.updateListeners(ChangeType.Saved);
-        this.scope.$digest();
     }
 
     setAnswer(content: Record<string, unknown>): ISetAnswerResult {
@@ -187,20 +228,19 @@ class RbfieldController
      * Returns (user) set inputstem (textfeed before userinput box).
      */
     get inputstem() {
-        return this.attrs.inputstem ?? "";
+        return this.markup.inputstem ?? "";
     }
 
     /**
      * Returns (user) set col size (size of the field).
      */
     get cols() {
-        if (!this.attrs.cols) {
+        if (!this.markup.cols) {
             return {};
         }
-        return {width: this.attrs.cols + "em", display: "inline-block"};
+        return {width: this.markup.cols + "em", display: "inline-block"};
     }
 
-    // noinspection JSUnusedGlobalSymbols
     get cbStyle() {
         if (!this.inputstem && (this.stem || this.header)) {
             return {};
@@ -215,7 +255,7 @@ class RbfieldController
      * Initialize content.
      */
     initCode() {
-        this.userword = this.attrs.initword ?? "";
+        this.userword = this.markup.initword ?? "";
         this.initialValue = this.userword;
         this.result = undefined;
         this.updateListeners(ChangeType.Saved);
@@ -223,7 +263,7 @@ class RbfieldController
 
     /**
      * Redirects save request to actual save method.
-     * Used as e.g. timButton ng-click event.
+     * Used as e.g. timButton (click) event.
      */
     async saveText() {
         if (this.isUnSaved()) {
@@ -236,7 +276,6 @@ class RbfieldController
         }
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true value, if label is set to plaintext.
      * Used to define readOnlyStyle in angular, either input or span.
@@ -244,19 +283,18 @@ class RbfieldController
      */
     isPlainText() {
         return (
-            this.attrs.readOnlyStyle == "plaintext" &&
+            this.markup.readOnlyStyle == "plaintext" &&
             window.location.pathname.startsWith("/view/")
         );
     }
 
     isReadOnly() {
-        return this.attrs.readOnlyStyle == "box" &&
+        return this.markup.readOnlyStyle == "box" &&
             window.location.pathname.startsWith("/view/")
             ? "disable"
             : "";
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Checking if input has been changed since the last Save or initialization.
      * Displays a red thick marker at the right side of the inputfield to notify users
@@ -275,14 +313,13 @@ class RbfieldController
         this.updateListeners(
             this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved
         );
-        if (this.attrs.autosave || this.attrs.autosave === undefined) {
+        if (this.markup.autosave || this.markup.autosave === undefined) {
             // We want to save the plugin regardless of unSaved status to prevent two radio buttons
             // from being checked at the same time.
             this.doSaveText(false);
         }
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Autosaver used by ng-blur in rbfieldApp component.
      * Needed to seperate from other save methods because of the if-structure.
@@ -302,7 +339,7 @@ class RbfieldController
             if (c.getName() == n) {
                 continue;
             }
-            if (!(c instanceof RbfieldController)) {
+            if (!(c instanceof RbfieldPluginComponent)) {
                 continue;
             }
             c.setChecked(false);
@@ -314,7 +351,7 @@ class RbfieldController
             this.preventedAutosave = false;
             return;
         }
-        if (this.attrs.autosave || this.attrs.autosave === undefined) {
+        if (this.markup.autosave || this.markup.autosave === undefined) {
             this.saveText();
         }
     }
@@ -338,15 +375,12 @@ class RbfieldController
         if (nosave) {
             params.input.nosave = true;
         }
-        const url = this.pluginMeta.getAnswerUrl();
-        const r = await to(
-            $http.put<{web: {result: string; error?: string}}>(url, params)
-        );
+        const r = await this.postAnswer<{
+            web: {result: string; error?: string};
+        }>(params);
         this.isRunning = false;
         if (r.ok) {
-            const data = r.result.data;
-            // TODO: Make angular to show tooltip even without user having to move cursor out and back into the input
-            // (Use premade bootstrap method / add listener for enter?)
+            const data = r.result;
             this.errormessage = data.web.error;
             this.result = data.web.result;
             this.initialValue = this.userword;
@@ -356,7 +390,7 @@ class RbfieldController
             this.saveResponse.message = this.errormessage;
         } else {
             this.errormessage =
-                r.result.data.error ||
+                r.result.error.error ||
                 "Syntax error, infinite loop or some other error?";
         }
         return this.saveResponse;
@@ -382,49 +416,29 @@ class RbfieldController
     }
 }
 
-/**
- * Introducing rbfieldRunner as HTML component.
- */
-rbfieldApp.component("rbfieldRunner", {
-    bindings: pluginBindings,
-    controller: RbfieldController,
-    require: {
-        vctrl: "^timView",
-    },
-    template: `
-<div class="textfieldNoSaveDiv" ng-style="::$ctrl.cols">
-    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <!--<form name="$ctrl.f" class="form-inline"> -->
-     <!--<label>-->
-     <span style="width: 100%">
-      <span class="inputstem" ng-bind-html="::$ctrl.inputstem"></span>
-      <span  ng-if="::!$ctrl.isPlainText()" ng-class="{warnFrame: ($ctrl.isUnSaved() )  }">
-        <!-- <span ng-if="$ctrl.isUnSaved()"  ng-class="{warnFrame: ($ctrl.isUnSaved() )  }">&nbsp;</span> -->
-        <input type="radio"
-               ng-if="::!$ctrl.isPlainText()"
-               name="{{::$ctrl.getName()}}"
-               id="{{::$ctrl.getName()}}"
-               value="1"
-               ng-style="::$ctrl.cbStyle"
-               class="form-control"
-               ng-model="$ctrl.userword"
-               ng-change="$ctrl.autoSave()"
-               ng-disabled="::$ctrl.readonly"
-               ng-model-options="::$ctrl.modelOpts"
-               ng-readonly="::$ctrl.readonly"
-               uib-tooltip="{{ $ctrl.errormessage }}"
-               tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
-               tooltip-trigger="mouseenter"
-               >
-         </span>
-         <span ng-if="::$ctrl.isPlainText()" style="">{{$ctrl.userword}}</span>
-         </span>
-         <!--</label>-->
-    <!--</form> -->
-    <div ng-if="$ctrl.error" style="font-size: 12px" ng-bind-html="$ctrl.error"></div>
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</div>
-`,
-});
+@NgModule({
+    declarations: [RbfieldPluginComponent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        TimUtilityModule,
+        FormsModule,
+        TooltipModule.forRoot(),
+        PurifyModule,
+    ],
+})
+export class RbfieldModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
+
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                RbfieldModule
+            )
+        ),
+        "rbfieldRunner",
+        RbfieldPluginComponent
+    ),
+];
