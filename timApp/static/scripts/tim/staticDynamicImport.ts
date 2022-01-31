@@ -47,7 +47,7 @@ export function staticDynamicImport(s: string) {
         case "/svn/js/images.js":
             return import("modules/svn/js/images.component");
         case "/field/js/build/rbfield.js":
-            return import("modules/fields/js/rbfield");
+            return import("modules/fields/js/rbfield-plugin.component");
         case "/field/js/build/cbfield.js":
             return import("modules/fields/js/cbfield-plugin.component");
         case "/field/js/build/dropdown.js":

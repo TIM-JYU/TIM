@@ -42,7 +42,7 @@ input:focus.alertframe {
     100% { opacity: 0; height: 0; }
 }
 
-.plugintextfield p, .pluginrbfield p {
+.plugintextfield p {
     padding-top: 0px;
     padding-left: 0px;
     padding-bottom: 0px;
@@ -50,7 +50,7 @@ input:focus.alertframe {
     margin-top: 0px;
 }
 
-textfield-runner .stem, rbfield-runner .stem  {
+textfield-runner .stem {
     text-align: left;
     height: 6px;
     margin-left: auto;
@@ -124,22 +124,6 @@ textfield-runner .stem, rbfield-runner .stem  {
 .singleLine {
     /*TODO: generic, move this*/
     white-space: nowrap;
-}
-
-.pluginrbfield input[type="radio"] {
-    margin: 0;
-    line-height: normal;
-    -webkit-box-shadow: none;
-    display: unset;
-    /* width: auto; */
-}
-
-.pluginrbfield .warnFrame {
-    border-bottom: thick solid gold;
-}
-
-.pluginrbfield .stem {
-    text-align: center;
 }
 
 textfield-runner .form-control {
