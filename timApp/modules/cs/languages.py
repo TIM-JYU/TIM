@@ -375,6 +375,7 @@ class Language:
         no_x11=None,
         savestate=None,
         dockercontainer=None,
+        extra_mappings=None,
         no_uargs=False,
     ):
         if self.imgname:  # this should only come from cache run
@@ -405,6 +406,7 @@ class Language:
             dockercontainer=df(dockercontainer, self.dockercontainer),
             compile_commandline=self.compile_commandline,
             mounts=mounts,
+            extra_mappings=extra_mappings,
         )
         if self.just_compile and not err:
             return code, "", "Compiled " + self.filename, pwddir
@@ -1431,6 +1433,88 @@ class PSQL(SQL):
 
     def run(self, result, sourcelines, points_rule):
         return self.runself(["psql", "-h", self.dbname, "-U", "$psqluser"])
+
+
+def clean_username(s: str) -> str:
+    return re.sub("[^A-Za-z0-9_]", "_", s)
+
+
+class MongoDB(Language):
+    ttype = "mongodb"
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.js"
+        self.exename = self.sourcefilename
+        self.pure_exename = f"{self.filename:s}.js"
+        self.fileext = "js"
+        self.mongodb_host = get_param(query, "dbHost", "csplugin_mongo")
+        self.db_username = clean_username(f"user_{self.user_id}")
+        self.db_password = clean_username(f"pass_{self.user_id}")
+        self.drop_database = get_param(query, "dropDatabase", False)
+
+    def run(self, result, sourcelines, points_rule):
+        cleaned_source: str = sourcelines.strip()
+        if not cleaned_source:
+            return 0, "", "", ""
+        code, out, err, pwddir = self.runself(
+            [
+                "/cs/mongodb/exec_user.sh",
+                self.mongodb_host,
+                self.db_username,
+                self.db_password,
+                "true" if self.drop_database else "false",
+                self.pure_exename,
+            ],
+            extra_mappings=["mongodb"],
+        )
+        return code, out, err, pwddir
+
+
+# Cassandra Query Language language type
+class CQL(Language):
+    ttype = "cql"
+    login_cmd_pattern = re.compile(r"LOGIN\s+[^\s]+(\s+[^\s]+)?\s*[;\n]", re.I)
+    use_cmd_pattern = re.compile(r"USE\s+[^\s]+\s*[;\n]", re.I)
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.cql"
+        self.exename = self.sourcefilename
+        self.pure_exename = f"{self.filename:s}.cql"
+        self.fileext = "cql"
+        self.cassandra_host = get_param(query, "dbHost", "csplugin_cassandra")
+        self.db_username = clean_username(f"user_{self.user_id}")
+        self.db_password = clean_username(f"pass_{self.user_id}")
+        self.drop_keyspace = get_param(query, "dropKeyspace", False)
+
+    def run(self, result, sourcelines, points_rule):
+        cleaned_source: str = sourcelines.strip()
+        if not cleaned_source:
+            return 0, "", "", ""
+
+        # We cannot just prevent CQL from running LOGIN and USE, so we will have to do simple regex cleanup
+
+        # Remove any LOGIN statements from cleaned_source
+        cleaned_source = CQL.login_cmd_pattern.sub("", cleaned_source)
+        # Remove any USE statements from cleaned_source
+        cleaned_source = CQL.use_cmd_pattern.sub("", cleaned_source)
+
+        with open(self.sourcefilename, "w") as f:
+            f.write(cleaned_source)
+
+        code, out, err, pwddir = self.runself(
+            [
+                "/cs/cassandra/exec_user.sh",
+                self.cassandra_host,
+                self.db_username,
+                self.db_password,
+                "true" if self.drop_keyspace else "false",
+                self.pure_exename,
+            ],
+            extra_mappings=["cassandra"],
+        )
+        return code, out, err, pwddir
 
 
 class Alloy(Language):

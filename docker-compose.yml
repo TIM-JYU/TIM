@@ -121,7 +121,7 @@ services:
   environment:
    POSTGRES_PASSWORD: postgresql
  csplugin:
-  image: timimages/cs3${CSPLUGIN_TARGET:-}:dotnet
+  image: timimages/cs3${CSPLUGIN_TARGET:-}:nosql
   build:
    context: ./timApp/modules/cs
    target: ${CSPLUGIN_TARGET:-complete}
@@ -134,6 +134,9 @@ services:
    - ./tim_common:/cs/tim_common:ro
    - /tmp/${COMPOSE_PROJECT_NAME:?}_uhome:/tmp
    - /root/.ssh/
+  networks:
+   - csplugin_db
+   - default
   working_dir: /cs
   command: ./startPlugins.sh
   environment:
@@ -145,6 +148,35 @@ services:
   user: root  # We need access to Docker socket.
   restart: unless-stopped
   read_only: true
+ csplugin_mongo: # MongoDB for csplugin
+  image: mongo:5
+  profiles:
+   - prod
+   - prod_multi
+   - dev
+  restart: unless-stopped
+  environment:
+   MONGO_INITDB_ROOT_USERNAME: mongo
+   MONGO_INITDB_ROOT_PASSWORD: mongodb
+  volumes:
+   - csplugin_db_data:/data/db
+  networks:
+   - csplugin_db
+ csplugin_cassandra: # Cassandra for csplugin
+  profiles:
+   - prod
+   - prod_multi
+   - dev
+  image: cassandra:4
+  restart: unless-stopped
+  environment:
+   # We're not going to enable replication, so it's fine to listen to localhost
+   CASSANDRA_LISTEN_ADDRESS: localhost
+  volumes:
+   - csplugin_db_data:/var/lib/cassandra
+   - ./timApp/modules/cs/cassandra/cassandra.yaml:/etc/cassandra/cassandra.yaml
+  networks:
+   - csplugin_db
  haskellplugins:
   image: timimages/haskellplugins:latest
   build:
@@ -157,7 +189,7 @@ services:
   restart: unless-stopped
   read_only: true
  showfile:
-  image: timimages/cs3${CSPLUGIN_TARGET:-}:dotnet
+  image: timimages/cs3${CSPLUGIN_TARGET:-}:nosql
   volumes:
    - ./timApp/modules/svn:/app/svn:ro
    - ./tim_common:/app/tim_common:ro
@@ -170,7 +202,7 @@ services:
   tmpfs:
     - /tmp
  imagex:
-  image: timimages/cs3${CSPLUGIN_TARGET:-}:dotnet
+  image: timimages/cs3${CSPLUGIN_TARGET:-}:nosql
   volumes:
    - ./timApp/modules/imagex:/app/imagex:ro
    - ./tim_common:/app/tim_common:ro
@@ -421,5 +453,7 @@ volumes:
  caddy_data:
  caddy_config:
  redis_data:
+ csplugin_db_data:
 networks:
  db:
+ csplugin_db:
