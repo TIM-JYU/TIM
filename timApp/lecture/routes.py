@@ -691,7 +691,7 @@ def create_lecture():
 @suppress_wuff(
     StaleDataError,
     "https://gitlab.com/tim-jyu/tim/-/issues/1976",
-    r"StaleDataError: DELETE statement on table 'lectureusers' expected to delete",
+    r"DELETE statement on table 'lectureusers' expected to delete",
 )
 def empty_lecture(lec: Lecture):
     lec.users = []
