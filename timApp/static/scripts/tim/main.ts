@@ -13,7 +13,8 @@ import * as viewctrl from "tim/document/viewctrl";
 import {ViewRangeNavigationComponent} from "tim/document/view-range-navigation.component";
 import {environment} from "tim/environments/environment";
 import {FrontPageComponent} from "tim/frontpage/front-page.component";
-import * as loadMap from "tim/gamification/loadMap";
+import * as loadMap from "tim/gamification/gamification-map.component";
+import {GamificationMapComponent} from "tim/gamification/gamification-map.component";
 import * as manageCtrl from "tim/item/manageCtrl";
 import * as rightsEditor from "tim/item/rightsEditor";
 import * as markAllAsRead from "tim/ui/markAllAsRead";
@@ -58,8 +59,8 @@ import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
 import {TimMessageViewComponent} from "tim/messaging/tim-message-view.component";
 import {ManageReadReceiptComponent} from "tim/messaging/manage-read-receipt.component";
 import {CopyFolderComponent} from "tim/folder/copy-folder.component";
-import {ParRefComponent} from "tim/document/parRef";
 import {NotificationOptionsComponent} from "tim/item/manage/notification-options.component";
+import {ParRefComponent} from "tim/document/par-ref.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -126,6 +127,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "manageReadReceipt", ManageReadReceiptComponent);
     doDowngrade(dg, "timNotificationOptions", NotificationOptionsComponent);
     doDowngrade(dg, "timParRef", ParRefComponent);
+    doDowngrade(dg, "gamificationMap", GamificationMapComponent);
     return dg;
 }
 
