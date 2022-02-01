@@ -1,0 +1,104 @@
+.robotMainDiv {
+  text-align: left;
+
+}
+
+.outputvalues, .inputvalues, .handItem {
+  height: 40px;
+}
+
+.outputbelt, .inputbelt {
+  width: 150px;
+  overflow: hidden;
+}
+
+.outputvalues {
+  width: 150px;
+  overflow: hidden;
+  text-align: right;
+}
+
+.output {
+  display: flex;
+  direction: rtl;
+}
+
+.inputvalues {
+  width: 150px;
+  overflow: hidden;
+  text-align: left;
+}
+
+.robotRunButtons {
+  display: table;
+  position: relative;
+  left: 180px;
+  top: -70px;
+}
+
+.inputbelt, .outputbelt, .robotDiv {
+  display: inline-block;
+  text-align: center;
+  vertical-align: top;
+}
+
+.tapeAndRobotDiv {
+  display: inline-table;
+  width: 700px;
+}
+
+.memoryArea {
+  width: 700px;
+}
+
+.memoryValue {
+  display: inline-table;
+  width: 30px;
+}
+
+.programArea {
+  display: flex;
+  width: 700px;
+}
+
+.commandAddArea .timButton, .commandAddArea input {
+  display: grid;
+  width: 100px;
+}
+
+.commandAddArea {
+  margin-top: 30px;
+  width: 120px;
+}
+
+.commandParamArea {
+  height: 80px;
+}
+
+.presetInput {
+  text-align: left;
+  width: 200px;
+}
+
+.robotEditArea {
+  height: calc(100% - 40px);
+  width: 150px;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: scroll;
+}
+
+.robotPresets {
+  margin-top: 30px;
+  display: inline-block;
+  vertical-align: top;
+  margin-left: 2em;
+}
+
+.commandListContainer {
+  width: 150px;
+}
+
+.tapeItem {
+  direction: ltr;
+}
