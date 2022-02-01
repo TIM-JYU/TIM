@@ -62,7 +62,6 @@ import {EditingHandler} from "./editing/editing";
 import {PendingCollection} from "./editing/edittypes";
 import {onClick} from "./eventhandlers";
 import {IDocSettings} from "./IDocSettings";
-import {ParRefController} from "./parRef";
 import {
     EditMode,
     PopupMenuDialogComponent,
@@ -71,7 +70,7 @@ import {initSlideView} from "./slide";
 import {ViewRangeInfo} from "./viewRangeInfo";
 import {ICtrlWithMenuFunctionEntry, IMenuFunctionEntry} from "./viewutils";
 
-markAsUsed(interceptor, ParRefController);
+markAsUsed(interceptor);
 
 export interface IChangeListener {
     informAboutChanges: (

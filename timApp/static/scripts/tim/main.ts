@@ -58,6 +58,7 @@ import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
 import {TimMessageViewComponent} from "tim/messaging/tim-message-view.component";
 import {ManageReadReceiptComponent} from "tim/messaging/manage-read-receipt.component";
 import {CopyFolderComponent} from "tim/folder/copy-folder.component";
+import {ParRefComponent} from "tim/document/parRef";
 import {NotificationOptionsComponent} from "tim/item/manage/notification-options.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
@@ -124,6 +125,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timMessageView", TimMessageViewComponent);
     doDowngrade(dg, "manageReadReceipt", ManageReadReceiptComponent);
     doDowngrade(dg, "timNotificationOptions", NotificationOptionsComponent);
+    doDowngrade(dg, "timParRef", ParRefComponent);
     return dg;
 }
 

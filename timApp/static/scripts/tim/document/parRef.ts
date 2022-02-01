@@ -1,25 +1,53 @@
-import {IController} from "angular";
-import {timApp} from "tim/app";
+import {Component, Input} from "@angular/core";
+import {HttpClient} from "@angular/common/http";
 import {IDocument} from "../item/IItem";
-import {$http} from "../util/ngimport";
-import {Binding, getGroupDesc, to} from "../util/utils";
+import {getGroupDesc, toPromise} from "../util/utils";
 
 interface IParInfo {
     item: IDocument;
     par_name: string | null;
 }
 
-export class ParRefController implements IController {
-    private loading = false;
-    private docid!: Binding<string, "@">;
-    private parid!: Binding<string, "@">;
+/**
+ * A reference popup window component that is used in the document view.
+ */
+@Component({
+    selector: "tim-par-ref",
+    template: `
+        <ng-template #tooltipHtml>
+            <div style="text-align: left; white-space: nowrap;">
+                This paragraph references another document.
+                <ul class="list-unstyled">
+                    <li><b>Title:</b> {{title}}</li>
+                    <li><b>Authors:</b> {{owners}}</li>
+                    <li><b>Paragraph:</b> {{par}}</li>
+                </ul>
+            </div>
+        </ng-template>
+        <a href="{{url}}">
+            <i class="glyphicon glyphicon-share-alt"
+               (mouseover)="loadData()"
+               [tooltip]="tooltipHtml"
+               [tooltipEnable]="data !== undefined"
+               [isOpen]="isOpen"
+            ></i>
+        </a>
+        <tim-loading style="position: absolute" *ngIf="loading"></tim-loading>
+    `,
+})
+export class ParRefComponent {
+    loading = false;
+    @Input() private docid!: string;
+    @Input() parid!: string;
     private error?: string;
-    private data?: IParInfo;
+    data?: IParInfo;
     private loaded = false;
-    private url!: string;
-    private isOpen = false;
+    url!: string;
+    isOpen = false;
 
-    $onInit() {
+    constructor(private http: HttpClient) {}
+
+    ngOnInit() {
         this.url = `/view/${this.docid}#${this.parid}`;
     }
 
@@ -29,56 +57,30 @@ export class ParRefController implements IController {
         }
         this.loaded = true;
         this.loading = true;
-        const r = await to(
-            $http.get<IParInfo>(`/par_info/${this.docid}/${this.parid}`)
+        const r = await toPromise(
+            this.http.get<IParInfo>(`/par_info/${this.docid}/${this.parid}`)
         );
         this.loading = false;
         this.isOpen = true;
         if (r.ok) {
-            this.data = r.result.data;
+            this.data = r.result;
             this.url = `/view/${this.data.item.path}#${this.parid}`;
         } else {
-            this.error = r.result.data.error;
+            this.error = r.result.error.error;
         }
     }
 
-    getTooltipHtml() {
-        if (!this.data) {
-            return this.error;
-        }
-        return `
-<div style="text-align: left; white-space: nowrap;">
-This paragraph references another document.
-<ul class="list-unstyled">
-    <li><b>Title:</b> ${this.data.item.title}</li>
-    <li><b>Authors:</b> ${this.data.item.owners
-        .map((o) => getGroupDesc(o))
-        .join(", ")}</li>
-    <li><b>Paragraph:</b> ${this.data.par_name ?? this.parid}</li>
-</ul>
-</div>
-        `;
+    get title() {
+        return this.data?.item.title ?? "";
+    }
+
+    get par() {
+        return this.data?.par_name ?? this.parid;
+    }
+
+    get owners() {
+        return (
+            this.data?.item.owners.map((o) => getGroupDesc(o)).join(", ") ?? ""
+        );
     }
 }
-
-/**
- * A reference popup window component that is used in the document view.
- */
-timApp.component("timParRef", {
-    bindings: {
-        docid: "@",
-        parid: "@",
-    },
-    controller: ParRefController,
-    template: `
-<a href="{{$ctrl.url}}">
-    <i class="glyphicon glyphicon-share-alt"
-       ng-mouseover="$ctrl.loadData()"
-       uib-tooltip-html="$ctrl.getTooltipHtml()"
-       tooltip-enable="$ctrl.data"
-       tooltip-is-open="$ctrl.isOpen"
-       ></i>
-</a>
-<tim-loading style="position: absolute" ng-if="$ctrl.loading"></tim-loading>
-    `,
-});

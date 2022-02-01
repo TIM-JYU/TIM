@@ -35,6 +35,7 @@ import {ViewRangeNavigationComponent} from "tim/document/view-range-navigation.c
 import {HelpParContent} from "tim/document/editing/help-par-content.component";
 import {TimepickerActions} from "ngx-bootstrap/timepicker";
 import {CopyFolderComponent} from "tim/folder/copy-folder.component";
+import {ParRefComponent} from "tim/document/parRef";
 import {TimManageModule} from "tim/item/manage/manage.module";
 
 @NgModule({
@@ -62,6 +63,7 @@ import {TimManageModule} from "tim/item/manage/manage.module";
         ConsentChoiceComponent,
         ViewRangeNavigationComponent,
         HelpParContent,
+        ParRefComponent,
     ],
     imports: [
         BrowserModule,
