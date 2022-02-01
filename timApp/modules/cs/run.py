@@ -153,6 +153,7 @@ def run2(
     dockercontainer=f"timimages/cs3{CS3_TARGET}:{CS3_TAG}",
     compile_commandline="",
     mounts=[],
+    extra_mappings=None,
     escape_pipe=False,
 ):
     """Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed to fullfill the
@@ -174,6 +175,8 @@ def run2(
     :param dockercontainer: what container to run, container needs user with name agent
     :param compile_commandline: command line to compile code
     :param escape_pipe: If True, pipe charracter | is escaped into '|'
+    :param mounts: User-defined mounts
+    :param extra_mappings: Extra non-user csplugin folder mappings
     :return: error code, stdout text, stderr text
 
     """
@@ -280,6 +283,8 @@ def run2(
         drive_letter = root_dir.drive[0]
         root_dir = PurePath("/") / drive_letter / root_dir.relative_to(root_dir.anchor)
 
+    extra_mappings = extra_mappings or []
+
     path_mappings = [
         ["-v", f"{root_dir.as_posix()}/timApp/modules/cs/{p}:/cs/{p}:ro"]
         for p in [
@@ -293,8 +298,7 @@ def run2(
             "data",
             "simcir",
             "MIRToolbox",
-            "mongodb",
-            "cassandra",
+            *extra_mappings,
         ]
     ]
 

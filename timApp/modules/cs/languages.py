@@ -375,6 +375,7 @@ class Language:
         no_x11=None,
         savestate=None,
         dockercontainer=None,
+        extra_mappings=None,
         no_uargs=False,
     ):
         if self.imgname:  # this should only come from cache run
@@ -405,6 +406,7 @@ class Language:
             dockercontainer=df(dockercontainer, self.dockercontainer),
             compile_commandline=self.compile_commandline,
             mounts=mounts,
+            extra_mappings=extra_mappings,
         )
         if self.just_compile and not err:
             return code, "", "Compiled " + self.filename, pwddir
@@ -1433,6 +1435,10 @@ class PSQL(SQL):
         return self.runself(["psql", "-h", self.dbname, "-U", "$psqluser"])
 
 
+def clean_username(s: str) -> str:
+    return re.sub("[^A-Za-z0-9_]", "_", s)
+
+
 class MongoDB(Language):
     ttype = "mongodb"
 
@@ -1443,8 +1449,8 @@ class MongoDB(Language):
         self.pure_exename = f"{self.filename:s}.js"
         self.fileext = "js"
         self.mongodb_host = get_param(query, "dbHost", "csplugin_mongo")
-        self.db_username = f"user_{self.user_id}"
-        self.db_password = f"pass_{self.user_id}"
+        self.db_username = clean_username(f"user_{self.user_id}")
+        self.db_password = clean_username(f"pass_{self.user_id}")
         self.drop_database = get_param(query, "dropDatabase", False)
 
     def run(self, result, sourcelines, points_rule):
@@ -1460,6 +1466,7 @@ class MongoDB(Language):
                 "true" if self.drop_database else "false",
                 self.pure_exename,
             ],
+            extra_mappings=["mongodb"],
         )
         return code, out, err, pwddir
 
@@ -1477,8 +1484,8 @@ class CQL(Language):
         self.pure_exename = f"{self.filename:s}.cql"
         self.fileext = "cql"
         self.cassandra_host = get_param(query, "dbHost", "csplugin_cassandra")
-        self.db_username = f"user_{self.user_id}"
-        self.db_password = f"pass_{self.user_id}"
+        self.db_username = clean_username(f"user_{self.user_id}")
+        self.db_password = clean_username(f"pass_{self.user_id}")
         self.drop_keyspace = get_param(query, "dropKeyspace", False)
 
     def run(self, result, sourcelines, points_rule):
@@ -1505,6 +1512,7 @@ class CQL(Language):
                 "true" if self.drop_keyspace else "false",
                 self.pure_exename,
             ],
+            extra_mappings=["cassandra"],
         )
         return code, out, err, pwddir
 
