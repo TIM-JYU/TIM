@@ -818,8 +818,8 @@ def check_fullprogram(query, cut_errors=False):
     # - "(\n[^\n]*REMOVELINE[^\n]*)"
     if not query.cut_errors:
         query.cut_errors = [
-            {"replace": "(\n[^\n]*REMOVEBEGIN.*? REMOVEEND[^\n]*)", "by": ""},
-            {"replace": "(\n[^\n]*REMOVELINE[^\n]*)", "by": ""},
+            {"replace": r"(\n[^\n]*REMOVEBEGIN.*? REMOVEEND[^\n]*)", "by": ""},
+            {"replace": r"(\n[^\n]*REMOVELINE[^\n]*)", "by": ""},
         ]
 
     query.hide_program = False
@@ -847,42 +847,42 @@ def check_fullprogram(query, cut_errors=False):
 
     program = replace_random(query, program)
     by_code_replace = [
-        {"replace": "(\\n[^\\n]*DELETEBEGIN.*? DELETEEND[^\\n]*)", "by": ""}
+        {"replace": r"(\n[^\n]*DELETEBEGIN.*? DELETEEND[^\n]*)", "by": ""}
     ]
     program = replace_code(by_code_replace, program)
-    delete_line = [{"replace": "(\n[^\n]*DELETELINE[^\n]*)", "by": ""}]
+    delete_line = [{"replace": r"(\n[^\n]*DELETELINE[^\n]*)", "by": ""}]
     program = replace_code(delete_line, program)
     delete_line = get_param_table(query, "deleteLine")
     if delete_line:
         program = replace_code(delete_line, program)
-    m = re.search("BYCODEBEGIN[^\\n]*\n(.*)\n.*?BYCODEEND", program, flags=re.S)
+    m = re.search(r"BYCODEBEGIN[^\n]*\n(.*)\n.*?BYCODEEND", program, flags=re.S)
     # m = re.search("BYCODEBEGIN[^\\n]\n(.*)\n.*?BYCODEEND", program, flags=re.S)
     by_code = ""
     if m:
         by_code = m.group(1)
         by_code_replace = [
             {
-                "replace": "((\n|)[^\\n]*BYCODEBEGIN.*?BYCODEEND[^\\n]*)",
+                "replace": r"((\n|)[^\n]*BYCODEBEGIN.*?BYCODEEND[^\n]*)",
                 "by": "\nREPLACEBYCODE",
             }
         ]
     else:  # no BYCODEBEGIN
-        m = re.search("BYCODEBEGIN[^\\n]*\n(.*)", program, flags=re.S)
+        m = re.search(r"BYCODEBEGIN[^\\n]*\n(.*)", program, flags=re.S)
         if m:
             by_code = m.group(1)
             by_code_replace = [
-                {"replace": "((\n|)[^\\n]*BYCODEBEGIN.*)", "by": "\nREPLACEBYCODE"}
+                {"replace": r"((\n|)[^\n]*BYCODEBEGIN.*)", "by": "\nREPLACEBYCODE"}
             ]
         else:
             if (
                 program.find("BYCODEEND") >= 0
             ):  # TODO: for some reason next regexp is slow in not found case
-                m = re.search("[^\\n]*\n(.*)\n.*?BYCODEEND", program, flags=re.S)
+                m = re.search(r"[^\n]*\n(.*)\n.*?BYCODEEND", program, flags=re.S)
                 if m:
                     by_code = m.group(1)
                     by_code_replace = [
                         {
-                            "replace": "((\n|)[^\\n]*.*?BYCODEEND[^\\n]*)",
+                            "replace": r"((\n|)[^\n]*.*?BYCODEEND[^\n]*)",
                             "by": "\nREPLACEBYCODE",
                         }
                     ]

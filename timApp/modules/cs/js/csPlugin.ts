@@ -187,6 +187,8 @@ class LanguageTypes {
         nodejs: {ace: "javascript", comment: "//"},
         psql: {ace: "sql", comment: "--"},
         sql: {ace: "sql", comment: "--"},
+        mongodb: {ace: "javascript", comment: "//"},
+        cql: {ace: "sql", comment: "--"},
         alloy: {ace: "alloy", comment: ""},
         text: {ace: "text", comment: ""},
         cs: {ace: "csharp", comment: "//"},
