@@ -38,7 +38,7 @@ import {
     doDowngrade,
 } from "../../../static/scripts/tim/downgrade";
 import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {FieldBasicData} from "./textfield";
+import {FieldBasicData} from "./textfield-plugin.component";
 
 const CbfieldMarkup = t.intersection([
     t.partial({

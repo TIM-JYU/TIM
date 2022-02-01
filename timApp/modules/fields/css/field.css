@@ -1,12 +1,3 @@
-.plugintextfield .timButton {
-    margin-bottom: 5px;
-}
-
-textfield-runner .stem {
-    text-align: left;
-    height: 6px;
-}
-
 .warnFrame {
     border-right-color: gold;
     border-right-width: thick;
@@ -40,21 +31,6 @@ input:focus.alertframe {
     0% { opacity: 1; height: 100%; }
     99% { opacity: 0.01; height: 100%; }
     100% { opacity: 0; height: 0; }
-}
-
-.plugintextfield p {
-    padding-top: 0px;
-    padding-left: 0px;
-    padding-bottom: 0px;
-    margin-bottom: 0px;
-    margin-top: 0px;
-}
-
-textfield-runner .stem {
-    text-align: left;
-    height: 6px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .fieldCell  textfield-runner h4, .fieldCell  numericfield-runner h4, .fieldCell cbfield-runner .h4, .fieldCell rbfield-runner .h4,  .fieldCell dropdown-runner .h4    {
@@ -126,12 +102,6 @@ textfield-runner .stem {
     white-space: nowrap;
 }
 
-textfield-runner .form-control {
-    height: 2em;
-    display: unset;
-    width: unset;
-}
-
 /* Numeric field */
 
 .plaintextFrame {
@@ -139,17 +109,17 @@ textfield-runner .form-control {
     box-shadow: none;
 }
 
-.inlineplugin label, .textfield label{
+.inlineplugin label {
     font-weight: unset;
     margin-left: 2px;
 }
 
-.inlineplugin input, .textfield input{
+.inlineplugin input {
     padding: 0px;
     padding-left: 2px;
 }
 
-.inlineplugin textarea, .textfield textarea{
+.inlineplugin textarea {
     padding: 0px;
     padding-left: 2px;
     padding-top: 2px;
