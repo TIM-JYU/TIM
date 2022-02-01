@@ -38,7 +38,7 @@ import {
     doDowngrade,
 } from "../../../static/scripts/tim/downgrade";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
-import {FieldBasicData} from "./textfield";
+import {FieldBasicData} from "./textfield-plugin.component";
 
 const CbcountfieldMarkup = t.intersection([
     t.partial({

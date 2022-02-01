@@ -32,7 +32,7 @@ import {
 } from "../../../static/scripts/tim/downgrade";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
 import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
-import {FieldDataWithStyles} from "./textfield";
+import {FieldDataWithStyles} from "./textfield-plugin.component";
 
 const REDOUBLE = /[^0-9,.e\-+]+/g;
 

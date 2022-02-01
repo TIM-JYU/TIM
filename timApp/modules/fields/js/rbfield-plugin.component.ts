@@ -32,7 +32,7 @@ import {
 } from "../../../static/scripts/tim/downgrade";
 import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
-import {FieldBasicData} from "./textfield";
+import {FieldBasicData} from "./textfield-plugin.component";
 
 const RbfieldMarkup = t.intersection([
     t.partial({

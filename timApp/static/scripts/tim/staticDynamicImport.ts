@@ -7,7 +7,7 @@ export function staticDynamicImport(s: string) {
         case "/field/js/build/numericfield.js":
             return import("modules/fields/js/numericfield-plugin.component");
         case "/field/js/build/textfield.js":
-            return import("modules/fields/js/textfield");
+            return import("modules/fields/js/textfield-plugin.component");
         case "/pali/js/build/pali.js":
             return import("modules/pali/client/pali");
         case "reviewcanvas":
