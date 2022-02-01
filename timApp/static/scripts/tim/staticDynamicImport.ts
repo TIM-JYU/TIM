@@ -23,7 +23,7 @@ export function staticDynamicImport(s: string) {
         case "qst":
             return import("tim/plugin/qst.component");
         case "tape":
-            return import("tim/plugin/tape");
+            return import("tim/plugin/tape-plugin.component");
         case "importData":
             return import("tim/plugin/import-data.component");
         case "timTable":
