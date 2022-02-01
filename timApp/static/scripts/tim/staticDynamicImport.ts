@@ -3,7 +3,9 @@ export function staticDynamicImport(s: string) {
         case "angular-ui-grid":
             return import("angular-ui-grid");
         case "/jsrunner/javascripts/build/jsrunner.js":
-            return import("modules/jsrunner/client/javascripts/jsrunner");
+            return import(
+                "modules/jsrunner/client/javascripts/jsrunner-plugin.component"
+            );
         case "/field/js/build/numericfield.js":
             return import("modules/fields/js/numericfield-plugin.component");
         case "/field/js/build/textfield.js":
