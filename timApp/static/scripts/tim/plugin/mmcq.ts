@@ -1,9 +1,21 @@
-import angular, {IController} from "angular";
-import {$http} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
+import {
+    ApplicationRef,
+    Component,
+    Directive,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+} from "@angular/core";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {BrowserModule} from "@angular/platform-browser";
+import {FormsModule} from "@angular/forms";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {showMessageDialog} from "../ui/showMessageDialog";
-
-const mcqMod = angular.module("MCQ", []);
+import {toPromise} from "../util/utils";
+import {TimUtilityModule} from "../ui/tim-utility.module";
+import {AnswerSheetModule} from "../document/question/answer-sheet.component";
+import {PurifyModule} from "../util/purify.module";
+import {createDowngradedModule, doDowngrade} from "../downgrade";
 
 interface MMCQContent<State> {
     state?: State;
@@ -14,6 +26,7 @@ interface MMCQContent<State> {
         trueText: string | null;
         wrongText: string | null;
         correctText: string | null;
+        stem: string | null;
         choices: Array<{
             text: string;
             reason?: string;
@@ -22,15 +35,21 @@ interface MMCQContent<State> {
     };
 }
 
-class MCQBase<State> implements IController {
-    private static $inject = ["$element"];
-    protected headerText: string = "Check your understanding";
-    protected buttonText: string = "Submit";
-    protected content!: MMCQContent<State>;
+@Directive()
+export class MCQBase<State> {
+    public headerText: string = "Check your understanding";
+    public buttonText: string = "Submit";
+    public content!: MMCQContent<State>;
+    protected element: JQuery<HTMLElement>;
 
-    constructor(protected element: JQLite) {}
+    constructor(
+        protected hostElement: ElementRef<HTMLElement>,
+        protected http: HttpClient
+    ) {
+        this.element = $(hostElement.nativeElement);
+    }
 
-    $onInit() {
+    ngOnInit() {
         this.content = JSON.parse(
             this.element.attr("data-content")!
         ) as MMCQContent<State>;
@@ -41,17 +60,57 @@ class MCQBase<State> implements IController {
     }
 }
 
-class MMCQ extends MCQBase<null | boolean[]> {
+@Component({
+    selector: "tim-mmcq",
+    template: `
+<div class="mcq">
+    <p class="header" style="font-weight:bold" [innerHtml]="headerText"></p>
+    <p class="stem" [innerHtml]="content.question.stem"></p>
+    <table>
+        <tr>
+            <th></th>
+            <th [innerHtml]="trueText"></th>
+            <th [innerHtml]="falseText"></th>
+            <th *ngIf="checked"></th>
+            <th *ngIf="checked"></th>
+        </tr>
+        <tr *ngFor="let choice of content.question.choices; let i = index">
+            <td><span class="MCQItem" [innerHtml]="choice.text"></span></td>
+            <td class="text-center">
+                <input type="checkbox" [(ngModel)]="answer[i]" ng-true-value="true" ng-false-value="false"/>
+            </td>
+            <td class="text-center">
+                <input type="checkbox" [(ngModel)]="answer[i]" ng-false-value="true" ng-true-value="false"/>
+            </td>
+            <td *ngIf="checked">
+                <span [innerHtml]="correctText"
+                      *ngIf="!(answer[i] == null) && !(choice.correct == null) && (''+answer[i] == ''+choice.correct)"
+                      class="correct"></span>
+                <span [innerHtml]="wrongText"
+                      *ngIf="!(answer[i] == null) && !(choice.correct == null) && (''+answer[i] !==''+choice.correct)"
+                      class="wrong"></span>
+            </td>
+            <td *ngIf="choice.reason">
+                <span class="MCQExpl" [innerHtml]="choice.reason"></span></td>
+        </tr>
+    </table>
+    <div class="text-center">
+        <button (click)="submit()" [innerHtml]="buttonText"></button>
+    </div>
+</div>
+`,
+})
+export class MMCQ extends MCQBase<null | boolean[]> {
     private active: boolean = false;
-    private checked: boolean = true;
-    private trueText: string = "True";
-    private falseText: string = "False";
-    private correctText: string = "Correct!";
-    private wrongText: string = "Wrong!";
-    private answer!: Array<boolean | "false" | "true">;
+    checked: boolean = true;
+    trueText: string = "True";
+    falseText: string = "False";
+    correctText: string = "Correct!";
+    wrongText: string = "Wrong!";
+    answer!: Array<boolean | "false" | "true">;
 
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
         const fields = [
             "headerText",
             "buttonText",
@@ -98,69 +157,49 @@ class MMCQ extends MCQBase<null | boolean[]> {
             return;
         }
 
-        const r = await to(
-            $http<{web: MMCQ["content"]}>({
-                method: "PUT",
-                url: `/mmcq/${ident}/answer`,
-                data: message,
-            })
+        const r = await toPromise(
+            this.http.put<{web: MMCQ["content"]}>(
+                `/mmcq/${ident}/answer`,
+                message
+            )
         );
         if (r.ok) {
-            this.content = r.result.data.web;
+            this.content = r.result.web;
             this.checked = true;
         } else {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 }
 
-mcqMod.component("mmcq", {
-    bindings: {},
+@Component({
+    selector: "tim-mcq",
     template: `
 <div class="mcq">
-    <p class="header" style="font-weight:bold" ng-bind-html="$ctrl.headerText"></p>
-    <p class="stem" ng-bind-html="$ctrl.content.question.stem"></p>
+    <p class="header" style="font-weight:bold" [innerHtml]="headerText"></p>
+    <p class="stem" [innerHtml]="content.question.stem"></p>
     <table>
-        <tr>
-            <th></th>
-            <th ng-bind-html="$ctrl.trueText"></th>
-            <th ng-bind-html="$ctrl.falseText"></th>
-            <th ng-if="$ctrl.checked"></th>
-            <th ng-if="$ctrl.checked"></th>
-        </tr>
-        <tr ng-repeat="choice in $ctrl.content.question.choices">
-            <td><span class="MCQItem" ng-bind-html="choice.text"></span></td>
-            <td class="text-center">
-                <input type="checkbox" ng-model="$ctrl.answer[$index]" ng-true-value="true" ng-false-value="false"/>
+        <tr *ngFor="let choice of content.question.choices; let i = index">
+            <td>
+                <input type="radio" [(ngModel)]="userSelection" [value]="i"/>
+                <span *ngIf="content.state==i&&choice.correct">✓</span>
+                <span *ngIf="content.state==i&&!choice.correct">✗</span>
             </td>
-            <td class="text-center">
-                <input type="checkbox" ng-model="$ctrl.answer[$index]" ng-false-value="true" ng-true-value="false"/>
-            </td>
-            <td ng-if="$ctrl.checked">
-                <span ng-bind-html="$ctrl.correctText"
-                      ng-if="!($ctrl.answer[$index] == null) && !(choice.correct == null) && (''+$ctrl.answer[$index] == ''+choice.correct)"
-                      class="correct"></span>
-                <span ng-bind-html="$ctrl.wrongText"
-                      ng-if="!($ctrl.answer[$index] == null) && !(choice.correct == null) && (''+$ctrl.answer[$index] !==''+choice.correct)"
-                      class="wrong"></span>
-            </td>
-            <td ng-if="choice.reason">
-                <span class="MCQExpl" ng-bind-html="choice.reason"></span></td>
+            <td><span class="MCQItem" [innerHtml]="choice.text"></span>
+                <span *ngIf="choice.reason" class="MCQExpl" [innerHtml]="choice.reason"></span></td>
         </tr>
     </table>
     <div class="text-center">
-        <button ng-click="$ctrl.submit()" ng-bind-html="$ctrl.buttonText"></button>
+        <button (click)="submit()" [innerHtml]="buttonText"></button>
     </div>
 </div>
 `,
-    controller: MMCQ,
-});
+})
+export class MCQ extends MCQBase<number | null> {
+    userSelection: number | undefined;
 
-class MCQ extends MCQBase<number | null> {
-    private userSelection: number | undefined;
-
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
         this.userSelection = this.content.state ?? undefined;
         const fields = ["headerText", "buttonText"] as const;
         fields.forEach((opt) => {
@@ -180,44 +219,40 @@ class MCQ extends MCQBase<number | null> {
             return;
         }
 
-        const r = await to(
-            $http<{web: MCQ["content"]}>({
-                method: "PUT",
-                url: `/mcq/${ident}/answer`,
-                data: message,
-            })
+        const r = await toPromise(
+            this.http.put<{web: MCQ["content"]}>(
+                `/mcq/${ident}/answer`,
+                message
+            )
         );
         if (r.ok) {
-            this.content = r.result.data.web;
+            this.content = r.result.web;
         } else {
-            await showMessageDialog(r.result.data.error);
+            await showMessageDialog(r.result.error.error);
         }
     }
 }
 
-mcqMod.component("mcq", {
-    bindings: {},
-    template: `
-<div class="mcq">
-    <p class="header" style="font-weight:bold" ng-bind-html="$ctrl.headerText"></p>
-    <p class="stem" ng-bind-html="$ctrl.content.question.stem"></p>
-    <table>
-        <tr ng-repeat="choice in $ctrl.content.question.choices">
-            <td>
-                <input type="radio" ng-model="$ctrl.userSelection" ng-value="$index"/>
-                <span ng-if="$ctrl.content.state==$index&&choice.correct">✓</span>
-                <span ng-if="$ctrl.content.state==$index&&!choice.correct">✗</span>
-            </td>
-            <td><span class="MCQItem" ng-bind-html="choice.text"></span>
-                <span ng-if="choice.reason" class="MCQExpl" ng-bind-html="choice.reason"></span></td>
-        </tr>
-    </table>
-    <div class="text-center">
-        <button ng-click="$ctrl.submit()" ng-bind-html="$ctrl.buttonText"></button>
-    </div>
-</div>
-`,
-    controller: MCQ,
-});
+@NgModule({
+    declarations: [MCQ, MMCQ],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        AnswerSheetModule,
+        PurifyModule,
+    ],
+})
+export class MCQModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
+
+const mcqMod = createDowngradedModule((extraProviders) =>
+    platformBrowserDynamic(extraProviders).bootstrapModule(MCQModule)
+);
+
+doDowngrade(mcqMod, "mmcq", MMCQ);
+doDowngrade(mcqMod, "mcq", MCQ);
 
 export const moduleDefs = [mcqMod];
