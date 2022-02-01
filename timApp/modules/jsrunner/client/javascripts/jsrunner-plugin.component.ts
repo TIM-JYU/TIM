@@ -2,12 +2,23 @@
  * Defines the client-side implementation of JavaScript runner plugin.
  */
 import * as t from "io-ts";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    Input,
+    NgModule,
+} from "@angular/core";
 import {IJsRunner, RegexOption, ViewCtrl} from "tim/document/viewctrl";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http} from "tim/util/ngimport";
-import {copyToClipboard, markAsUsed, to} from "tim/util/utils";
+import {copyToClipboard} from "tim/util/utils";
+import {BrowserModule} from "@angular/platform-browser";
+import {HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {
     AnswerReturnBrowser,
+    ErrorEntry,
     ErrorList,
     ExportData,
     IError,
@@ -15,31 +26,72 @@ import {
     JsrunnerAll,
     JsrunnerMarkup,
 } from "../../shared/jsrunnertypes";
-import {jsrunnerApp} from "./jsrunnerapp";
-import * as jsrunnererror from "./jsrunnererror";
+import {AngularPluginBase} from "../../../../static/scripts/tim/plugin/angular-plugin-base.directive";
+import {TimUtilityModule} from "../../../../static/scripts/tim/ui/tim-utility.module";
+import {PurifyModule} from "../../../../static/scripts/tim/util/purify.module";
+import {
+    createDowngradedModule,
+    doDowngrade,
+} from "../../../../static/scripts/tim/downgrade";
+import {vctrlInstance} from "../../../../static/scripts/tim/document/viewctrlinstance";
 
-markAsUsed(jsrunnererror);
-
-export const moduleDefs = [jsrunnerApp];
-
-class JsrunnerController
-    extends PluginBase<
+@Component({
+    selector: "tim-js-runner",
+    template: `
+<div *ngIf="isVisible()" style="display: inline-block">
+    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <h4 *ngIf="header" [innerHtml]="header"></h4>
+    <p *ngIf="stem" [innerHtml]="stem"></p>
+    <div class="form form-inline" *ngIf="showIncludeUsersOption()">
+    Users to include:
+    <select [(ngModel)]="userOpt" class="form-control">
+        <option *ngFor="let o of userOpts" [value]="o">{{o}}</option>
+    </select>
+    </div>
+    <button *ngIf="hasAllAttributes()" class="timButton"
+            [disabled]="isRunning || readonly"
+            (click)="runScript()">
+        {{buttonText()}}
+    </button>
+    <tim-loading *ngIf="isRunning"></tim-loading>
+    <p class="error" *ngIf="error">Error occurred, script results may not be saved.</p>
+    <pre *ngIf="error">{{error.msg}}</pre>
+    <pre *ngIf="error">{{error.stackTrace}}</pre>
+    <jsrunner-error *ngFor="let err of scriptErrors" [e]="err"></jsrunner-error>
+    <div class="jsrunner-output" *ngIf="output">
+    <p class="pull-right">
+        <a class="smalltext" (click)="copyText()" title="Copy to clipboard" 
+           style="position: absolute; right: 0;">copy</a>
+    </p>
+    <pre >{{output}}</pre>
+    </div>
+    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+    <div *ngIf="isFieldHelper()">
+    <p *ngIf="!isopen" (click)="toggleFieldHelper()" >+ Show field list</p>
+    <p *ngIf="isopen" (click)="toggleFieldHelper()">- Hide field list</p>
+    <pre *ngIf="isopen">{{fieldlist}}</pre>
+    </div>
+</div>
+`,
+})
+export class JsRunnerPluginComponent
+    extends AngularPluginBase<
         t.TypeOf<typeof JsrunnerMarkup>,
         t.TypeOf<typeof JsrunnerAll>,
         typeof JsrunnerAll
     >
     implements IJsRunner
 {
-    private error?: IError;
-    private isRunning = false;
-    private output: string = "";
-    private fieldlist: string = "";
+    error?: IError;
+    isRunning = false;
+    output: string = "";
+    fieldlist: string = "";
     private vctrl!: ViewCtrl;
-    private scriptErrors?: ErrorList;
-    private isopen: boolean = true;
+    scriptErrors?: ErrorList;
+    isopen: boolean = true;
     private visible: number = -1;
-    private userOpts = Object.keys(IncludeUsersOption.keys);
-    private userOpt: t.TypeOf<typeof IncludeUsersOption> = "current";
+    userOpts = Object.keys(IncludeUsersOption.keys);
+    userOpt: t.TypeOf<typeof IncludeUsersOption> = "current";
 
     getDefaultMarkup() {
         return {};
@@ -57,7 +109,7 @@ class JsrunnerController
     }
 
     showIncludeUsersOption() {
-        return this.attrs.selectIncludeUsers;
+        return this.markup.selectIncludeUsers;
     }
 
     showFieldHelper() {
@@ -66,7 +118,7 @@ class JsrunnerController
             RegexOption.DontPrependCurrentDocId
         );
         let tasks = "";
-        if (this.attrs.docid) {
+        if (this.markup.docid) {
             for (const plug of pluginlist) {
                 const taskId = plug.getTaskId();
                 if (taskId) {
@@ -84,11 +136,12 @@ class JsrunnerController
         this.fieldlist = tasks;
     }
 
-    $onInit() {
-        super.$onInit();
-        this.userOpt = this.attrs.includeUsers;
-        if (this.attrs.fieldhelper && this.isVisible()) {
-            this.isopen = this.attrs.open ?? false;
+    ngOnInit() {
+        super.ngOnInit();
+        this.vctrl = vctrlInstance!;
+        this.userOpt = this.markup.includeUsers;
+        if (this.markup.fieldhelper && this.isVisible()) {
+            this.isopen = this.markup.open ?? false;
             if (this.isopen) {
                 this.showFieldHelper();
             }
@@ -101,7 +154,8 @@ class JsrunnerController
 
     willAutoRefreshTables() {
         return (
-            this.attrs.updateFields !== undefined && this.attrs.autoUpdateTables
+            this.markup.updateFields !== undefined &&
+            this.markup.autoUpdateTables
         );
     }
 
@@ -151,11 +205,10 @@ class JsrunnerController
             },
         };
 
-        const url = this.pluginMeta.getAnswerUrl();
-        const r = await to($http.put<AnswerReturnBrowser>(url, params));
+        const r = await this.postAnswer<AnswerReturnBrowser>(params);
         this.isRunning = false;
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             if (data.web.fatalError) {
                 this.error = data.web.fatalError;
             } else {
@@ -166,7 +219,7 @@ class JsrunnerController
                     await this.vctrl.updateFields(
                         this.attrsall.markup.updateFields
                     );
-                    if (this.attrs.autoUpdateTables) {
+                    if (this.markup.autoUpdateTables) {
                         this.vctrl.updateAllTables(
                             this.attrsall.markup.updateFields,
                             this.getTaskId()
@@ -174,8 +227,8 @@ class JsrunnerController
                     }
                 }
 
-                if (this.attrs.nextRunner) {
-                    await this.vctrl.runJsRunner(this.attrs.nextRunner, []);
+                if (this.markup.nextRunner) {
+                    await this.vctrl.runJsRunner(this.markup.nextRunner, []);
                 }
 
                 // temp code:
@@ -187,7 +240,9 @@ class JsrunnerController
                 this.vctrl.processAreaVisibility(tempd.outdata.areaVisibility);
             }
         } else {
-            this.error = {msg: r.result.data.error || "Unknown error occurred"};
+            this.error = {
+                msg: r.result.error.error ?? "Unknown error occurred",
+            };
         }
     }
 
@@ -222,14 +277,14 @@ class JsrunnerController
         return JsrunnerAll;
     }
 
-    protected isFieldHelper() {
-        return this.attrs.fieldhelper;
+    isFieldHelper() {
+        return this.markup.fieldhelper;
     }
 
     /**
      * If runner does not have any of the 'fields', 'groups' or 'program'-attributes, it is not considered runnable
      */
-    protected hasAllAttributes() {
+    hasAllAttributes() {
         return this.attrsall.runnable;
     }
 
@@ -238,7 +293,7 @@ class JsrunnerController
             return this.visible == 1;
         }
         this.visible = 0;
-        if (this.attrs.showInView) {
+        if (this.markup.showInView) {
             this.visible = 1;
             return true;
         }
@@ -258,48 +313,51 @@ class JsrunnerController
     }
 }
 
-jsrunnerApp.component("jsRunner", {
-    bindings: pluginBindings,
-    controller: JsrunnerController,
-    require: {
-        vctrl: "^timView",
-    },
+@Component({
+    selector: "jsrunner-error",
     template: `
-<div ng-if="::$ctrl.isVisible()" style="display: inline-block">
-    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <div class="form form-inline" ng-if="::$ctrl.showIncludeUsersOption()">
-    Users to include:
-    <select ng-options="o for o in $ctrl.userOpts"
-            ng-model="$ctrl.userOpt"
-            class="form-control">
-    </select>
-    </div>
-    <button ng-if="::$ctrl.hasAllAttributes()" class="timButton"
-            ng-disabled="$ctrl.isRunning || $ctrl.readonly"
-            ng-click="$ctrl.runScript()">
-        {{::$ctrl.buttonText()}}
-    </button>
-    <tim-loading ng-if="$ctrl.isRunning"></tim-loading>
-    <p class="error" ng-if="$ctrl.error">Error occurred, script results may not be saved.</p>
-    <pre ng-if="$ctrl.error">{{$ctrl.error.msg}}</pre>
-    <pre ng-if="$ctrl.error">{{$ctrl.error.stackTrace}}</pre>
-    <jsrunner-error ng-repeat="err in $ctrl.scriptErrors" e="err"></jsrunner-error>
-    <pre ng-if="$ctrl.result">{{$ctrl.result}}</pre>
-    <div class="jsrunner-output" ng-if="$ctrl.output">
-    <p class="pull-right">
-        <a class="smalltext" ng-click="$ctrl.copyText()" title="Copy to clipboard" 
-           style="position: absolute; right: 0;">copy</a>
-    </p>
-    <pre >{{$ctrl.output}}</pre>
-    </div>
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-    <div ng-if="::$ctrl.isFieldHelper()">
-    <p ng-show="!$ctrl.isopen" ng-click="$ctrl.toggleFieldHelper()" >+ Show field list</p>
-    <p ng-show="$ctrl.isopen" ng-click="$ctrl.toggleFieldHelper()">- Hide field list</p>
-    <pre ng-show="$ctrl.isopen">{{$ctrl.fieldlist}}</pre>
-    </div>
-</div>
-`,
-});
+<tim-alert severity="danger">
+  <span>{{ e.user }}:</span>
+  <div *ngFor="let err of e.errors">
+    <span>{{ err.msg }}</span>
+    <button *ngIf="err.stackTrace" class="timButton btn-sm" (click)="toggleStackTrace()">Stack trace</button>
+    <pre *ngIf="err.stackTrace && showTrace">{{ err.stackTrace }}</pre>
+  </div>
+</tim-alert>
+    `,
+})
+export class JsRunnerErrorComponent {
+    @Input() e!: ErrorEntry;
+    showTrace = false;
+
+    toggleStackTrace() {
+        this.showTrace = !this.showTrace;
+    }
+}
+
+@NgModule({
+    declarations: [JsRunnerPluginComponent, JsRunnerErrorComponent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        TimUtilityModule,
+        FormsModule,
+        PurifyModule,
+        TooltipModule.forRoot(),
+    ],
+})
+export class JsRunnerModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
+
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                JsRunnerModule
+            )
+        ),
+        "jsRunner",
+        JsRunnerPluginComponent
+    ),
+];

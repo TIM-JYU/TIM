@@ -109,7 +109,7 @@ const NumericfieldAll = t.intersection([
     <div *ngIf="errormessage"  class="error" style="font-size: 12px" [innerHtml]="errormessage"></div>
     <button class="timButton"
             *ngIf="!isPlainText() && buttonText()"
-            [disabled]="!isUnSaved() || isRunning || readonly"
+            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly"
             (click)="saveText()">
         {{buttonText()}}
     </button>
@@ -143,6 +143,10 @@ export class NumericfieldPluginComponent
     private preventedAutosave = false;
     styles: Record<string, string> = {};
     private saveCalledExternally = false;
+
+    get disableUnchanged() {
+        return this.markup.disableUnchanged;
+    }
 
     get arrows() {
         return this.markup.arrows;
