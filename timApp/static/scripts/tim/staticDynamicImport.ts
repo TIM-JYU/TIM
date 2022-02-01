@@ -31,7 +31,7 @@ export function staticDynamicImport(s: string) {
         case "cbcountfield":
             return import("modules/fields/js/cbcountfield-plugin.component");
         case "timMenu":
-            return import("tim/plugin/timMenuController");
+            return import("tim/plugin/tim-menu-plugin.component");
         case "/cs/js/build/csModule.js":
             return import("modules/cs/js/csModule");
         case "/cs/js/build/stack.js":
