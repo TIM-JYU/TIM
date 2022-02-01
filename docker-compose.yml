@@ -169,6 +169,8 @@ services:
    - dev
   image: cassandra:4
   restart: unless-stopped
+  cap_add: # Needed for Cassandra to be able to bind to the Docker socket.
+   - SYS_NICE
   environment:
    # We're not going to enable replication, so it's fine to listen to localhost
    CASSANDRA_LISTEN_ADDRESS: localhost
