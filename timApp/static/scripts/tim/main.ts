@@ -17,7 +17,8 @@ import * as loadMap from "tim/gamification/gamification-map.component";
 import {GamificationMapComponent} from "tim/gamification/gamification-map.component";
 import * as manageCtrl from "tim/item/manageCtrl";
 import * as rightsEditor from "tim/item/rightsEditor";
-import * as markAllAsRead from "tim/ui/markAllAsRead";
+import * as markAllAsRead from "tim/ui/mark-all-as-read.component";
+import {MarkAllAsReadComponent} from "tim/ui/mark-all-as-read.component";
 import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
 import {LogoComponent} from "tim/ui/logo.component";
 import {LoginMenuComponent} from "tim/user/login-menu.component";
@@ -128,6 +129,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timNotificationOptions", NotificationOptionsComponent);
     doDowngrade(dg, "timParRef", ParRefComponent);
     doDowngrade(dg, "gamificationMap", GamificationMapComponent);
+    doDowngrade(dg, "timMarkAllAsRead", MarkAllAsReadComponent);
     return dg;
 }
 
