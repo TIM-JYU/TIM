@@ -294,7 +294,10 @@ def fromstring(html_string: str) -> Any:
         return document_fromstring(html_string)
     try:
         return fragment_fromstring(html_string)
-    except ParserError:
+    except (
+        ParserError,
+        TypeError,
+    ):  # TypeError is a temporary hack to deal with a bug in lxml
         return fragment_fromstring(html_string, create_parent="div")
 
 
