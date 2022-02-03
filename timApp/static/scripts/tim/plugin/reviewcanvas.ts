@@ -69,12 +69,12 @@ const PluginMarkupFields = t.intersection([
         inputplaceholder: nullable(t.string),
         inputstem: t.string,
         filename: t.string,
-        autosave: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
         // all withDefaults should come here; NOT in t.partial
         autoupdate: withDefault(t.number, 500),
+        autosave: withDefault(t.boolean, true),
         maxSize: withDefault(t.number, 500),
     }),
 ]);
