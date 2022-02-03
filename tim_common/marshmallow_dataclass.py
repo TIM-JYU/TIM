@@ -40,7 +40,6 @@ from enum import EnumMeta
 from functools import lru_cache
 from typing import (
     overload,
-    Dict,
     Type,
     List,
     cast,
@@ -49,9 +48,7 @@ from typing import (
     Any,
     Mapping,
     TypeVar,
-    Union,
     Callable,
-    Set,
 )
 
 import marshmallow
@@ -594,49 +591,6 @@ def _get_field_default(field: dataclasses.Field):
     if default_factory is not dataclasses.MISSING:
         return default_factory()
     return field.default
-
-
-def NewType(
-    name: str,
-    typ: type[_U],
-    field: type[marshmallow.fields.Field] | None = None,
-    **kwargs,
-) -> type:
-    """NewType creates simple unique types
-    to which you can attach custom marshmallow attributes.
-    All the keyword arguments passed to this function will be transmitted
-    to the marshmallow field constructor.
-
-    >>> import marshmallow.validate
-    >>> IPv4 = NewType('IPv4', str, validate=marshmallow.validate.Regexp(r'^([0-9]{1,3}\\.){3}[0-9]{1,3}$'))
-    >>> @dataclass
-    ... class MyIps:
-    ...   ips: List[IPv4]
-    >>> MyIps.Schema().load({"ips": ["0.0.0.0", "grumble grumble"]})
-    Traceback (most recent call last):
-    ...
-    marshmallow.exceptions.ValidationError: {'ips': {1: ['String does not match expected pattern.']}}
-    >>> MyIps.Schema().load({"ips": ["127.0.0.1"]})
-    MyIps(ips=['127.0.0.1'])
-
-    >>> Email = NewType('Email', str, field=marshmallow.fields.Email)
-    >>> @dataclass
-    ... class ContactInfo:
-    ...   mail: Email = dataclasses.field(default="anonymous@example.org")
-    >>> ContactInfo.Schema().load({})
-    ContactInfo(mail='anonymous@example.org')
-    >>> ContactInfo.Schema().load({"mail": "grumble grumble"})
-    Traceback (most recent call last):
-    ...
-    marshmallow.exceptions.ValidationError: {'mail': ['Not a valid email address.']}
-    """
-
-    res = type(
-        name,
-        (),
-        dict(__supertype__=typ, _marshmallow_field=field, _marshmallow_args=kwargs),
-    )
-    return res
 
 
 if __name__ == "__main__":

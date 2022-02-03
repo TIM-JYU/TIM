@@ -2,12 +2,12 @@ import secrets
 import string
 from dataclasses import dataclass
 from dataclasses import field
-from typing import Optional, Any
+from typing import Any, NewType
 
 from loadable import Loadable
 from marshmallow import fields
 
-from tim_common.marshmallow_dataclass import dataclass as mdataclass, NewType
+from tim_common.marshmallow_dataclass import dataclass as mdataclass
 
 
 class NotInAGitRepo(Exception):
@@ -16,7 +16,8 @@ class NotInAGitRepo(Exception):
         super().__init__(self.message)
 
 
-mAny = NewType("Any", Any, field=fields.Raw)
+mAny = NewType("Any", Any)
+mAny._marshmallow_field = fields.Raw  # type: ignore
 
 
 @mdataclass
