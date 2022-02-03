@@ -450,7 +450,7 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        void showTagDialog(this.item);
+        void to2(showTagDialog(this.item));
     }
 
     /**
