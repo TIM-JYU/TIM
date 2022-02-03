@@ -187,7 +187,7 @@ interface IImageSizes {
 
         <div style="position: relative;">
             <div *ngIf="bgSources.length > 1" style="position: absolute; top: 50%; left:-5%; display: flex; flex-flow: column; gap: 1em;
-                         -ms-transform: translateY(-50%); transform: translateY(-50%);">
+                         -ms-transform: translateY(-50%); transform: translateY(-50%); z-index: 4;">
                 <button title="Previous image" class="btn btn-primary" (click)="scrollBgImage(false)">&uarr;
                 </button>
                 <button title="Next image" class="btn btn-primary" (click)="scrollBgImage(true)">&darr;
