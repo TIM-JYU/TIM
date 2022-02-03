@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {setCurrentEditor} from "tim/editor/editorScope";
-import {markAsUsed, TimStorage, to} from "tim/util/utils";
+import {markAsUsed, TimStorage, to, to2} from "tim/util/utils";
 import {DialogController} from "tim/ui/dialogController";
 import {showRestampDialog} from "tim/editor/showRestampDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
@@ -1513,7 +1513,7 @@ ${backTicks}
                     stampFormat = "";
                 }
                 const customStampModel = this.docSettings.custom_stamp_model;
-                const r = await to(
+                const r = await to2(
                     showRestampDialog({
                         attachments: this.activeAttachments,
                         customStampModel: customStampModel,

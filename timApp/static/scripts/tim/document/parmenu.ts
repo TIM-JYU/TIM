@@ -10,7 +10,7 @@ import {
     findParentPar,
     tryCreateParContextOrHelp,
 } from "tim/document/structure/create";
-import {Coords, dist, getPageXY, to} from "../util/utils";
+import {Coords, dist, getPageXY, to2} from "tim/util/utils";
 import {onClick, OnClickArg} from "./eventhandlers";
 import {getCitePar} from "./parhelpers";
 import {EditMode} from "./popup-menu-dialog.component";
@@ -193,7 +193,7 @@ export class ParmenuHandler {
         const mi = showPopupMenu(p, pos);
         const dlg = await mi;
         this.viewctrl.registerPopupMenu(dlg);
-        await to(dlg.result);
+        await to2(dlg.result);
         this.currCtx = undefined;
         getEditLineOfParOrHelp(dlg.getCtx()).classList.remove("menuopen");
     }

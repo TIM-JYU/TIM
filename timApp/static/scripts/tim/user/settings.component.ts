@@ -27,7 +27,7 @@ import {polyfill} from "mobile-drag-drop";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {ConsentType} from "../ui/consent";
 import {INotification, ISettings, settingsglobals} from "../util/globals";
-import {IOkResponse, isIOS, timeout, toPromise} from "../util/utils";
+import {IOkResponse, isIOS, timeout, to2, toPromise} from "../util/utils";
 import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
 import {ContactOrigin, IFullUser, IUserContact} from "./IUser";
 
@@ -848,14 +848,16 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     /**
      * Open a dialog for user to add additional contact information.
      */
-    async openContactInfoDialog() {
-        return await showAddContactDialog((contact) => {
-            this.updateContacts(contact.channel, (contacts) => [
-                ...contacts,
-                contact,
-            ]);
-            this.cdr.detectChanges();
-        });
+    openContactInfoDialog() {
+        void to2(
+            showAddContactDialog((contact) => {
+                this.updateContacts(contact.channel, (contacts) => [
+                    ...contacts,
+                    contact,
+                ]);
+                this.cdr.detectChanges();
+            })
+        );
     }
 
     private getContactsFor(channel: Channel): IUserContact[] {

@@ -1,6 +1,6 @@
 import {IScope} from "angular";
 import $ from "jquery";
-import {to} from "tim/util/utils";
+import {to, to2} from "tim/util/utils";
 import {showNameAreaDialog} from "tim/document/editing/showNameAreaDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {UserSelection} from "tim/document/editing/userSelection";
@@ -53,8 +53,14 @@ export class AreaHandler {
     }
 
     async createArea(e: MouseEvent, sel: UnbrokenSelection) {
-        const result = await showNameAreaDialog();
-        await this.nameAreaOk(sel, result.areaName, result.options);
+        const result = await to2(showNameAreaDialog());
+        if (result.ok) {
+            await this.nameAreaOk(
+                sel,
+                result.result.areaName,
+                result.result.options
+            );
+        }
     }
 
     async nameAreaOk(

@@ -27,6 +27,7 @@ import {
     markPageDirty,
     posToRelative,
     to,
+    to2,
 } from "../util/utils";
 import {EditPosition, EditType} from "./editing/edittypes";
 import {
@@ -199,7 +200,7 @@ async function handleSeeChanges(elem: JQuery, e: OnClickArg) {
                 diffDialog.close();
             }
             setDiffDialog(mi);
-            await to(mi.result);
+            await to2(mi.result);
             setDiffDialog(undefined);
         }
     }
