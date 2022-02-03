@@ -86,7 +86,7 @@ def get_content(element: HtmlElement, selector: str = ".parContent") -> list[str
     return [r.text_content().strip() for r in element.cssselect(selector)]
 
 
-def get_cookie_value(resp: Response, key: str) -> Optional[str]:
+def get_cookie_value(resp: Response, key: str) -> str | None:
     """
     Get value of the cookie with given key.
     :param resp: Response.
@@ -123,14 +123,14 @@ class TimRouteTest(TimDbTest):
         self,
         url: str,
         as_tree: bool = False,
-        expect_status: Optional[int] = 200,
-        expect_content: Union[None, str, dict, list] = None,
-        expect_contains: Union[None, str, list[str], dict] = None,
-        expect_xpath: Optional[str] = None,
-        expect_cookie: Optional[tuple[str, Optional[str]]] = None,
-        json_key: Optional[str] = None,
-        headers: Optional[list[tuple[str, str]]] = None,
-        auth: Optional[BasicAuthParams] = None,
+        expect_status: int | None = 200,
+        expect_content: None | str | dict | list = None,
+        expect_contains: None | str | list[str] | dict = None,
+        expect_xpath: str | None = None,
+        expect_cookie: tuple[str, str | None] | None = None,
+        json_key: str | None = None,
+        headers: list[tuple[str, str]] | None = None,
+        auth: BasicAuthParams | None = None,
         **kwargs,
     ):
         """Performs a GET request.
@@ -157,12 +157,12 @@ class TimRouteTest(TimDbTest):
         self,
         url: str,
         as_tree: bool = False,
-        expect_status: Optional[int] = 200,
-        expect_content: Union[None, str, dict, list] = None,
-        expect_contains: Union[None, str, list[str]] = None,
-        expect_xpath: Optional[str] = None,
-        json_key: Optional[str] = None,
-        headers: Optional[list[tuple[str, str]]] = None,
+        expect_status: int | None = 200,
+        expect_content: None | str | dict | list = None,
+        expect_contains: None | str | list[str] = None,
+        expect_xpath: str | None = None,
+        json_key: str | None = None,
+        headers: list[tuple[str, str]] | None = None,
         **kwargs,
     ):
         """Performs a POST request.
@@ -187,12 +187,12 @@ class TimRouteTest(TimDbTest):
         self,
         url: str,
         as_tree: bool = False,
-        expect_status: Optional[int] = 200,
-        expect_content: Union[None, str, dict, list] = None,
-        expect_contains: Union[None, str, list[str]] = None,
-        expect_xpath: Optional[str] = None,
-        json_key: Optional[str] = None,
-        headers: Optional[list[tuple[str, str]]] = None,
+        expect_status: int | None = 200,
+        expect_content: None | str | dict | list = None,
+        expect_contains: None | str | list[str] = None,
+        expect_xpath: str | None = None,
+        json_key: str | None = None,
+        headers: list[tuple[str, str]] | None = None,
         **kwargs,
     ):
         """Performs a DELETE request.
@@ -219,19 +219,19 @@ class TimRouteTest(TimDbTest):
         method: str,
         as_tree: bool = False,
         as_response: bool = False,
-        expect_status: Optional[int] = 200,
-        expect_content: Union[None, str, dict, list] = None,
-        expect_contains: Union[None, str, list[str]] = None,
-        expect_mimetype: Optional[str] = None,
-        expect_xpath: Optional[str] = None,
-        expect_cookie: Optional[tuple[str, Optional[str]]] = None,
-        json_key: Optional[str] = None,
-        headers: Optional[list[tuple[str, str]]] = None,
+        expect_status: int | None = 200,
+        expect_content: None | str | dict | list = None,
+        expect_contains: None | str | list[str] = None,
+        expect_mimetype: str | None = None,
+        expect_xpath: str | None = None,
+        expect_cookie: tuple[str, str | None] | None = None,
+        json_key: str | None = None,
+        headers: list[tuple[str, str]] | None = None,
         xhr=True,
-        auth: Optional[BasicAuthParams] = None,
+        auth: BasicAuthParams | None = None,
         force_return_text=False,
         **kwargs,
-    ) -> Union[Response, str, dict]:
+    ) -> Response | str | dict:
         """Performs a request.
 
         For JSON POST/PUT requests, use the shortcut json_* methods.
@@ -347,14 +347,14 @@ class TimRouteTest(TimDbTest):
     def json_put(
         self,
         url: str,
-        json_data: Optional[dict] = None,
+        json_data: dict | None = None,
         as_tree: bool = False,
-        expect_status: Optional[int] = 200,
-        expect_content: Union[None, str, dict, list] = None,
-        expect_contains: Union[None, str, list[str]] = None,
-        expect_xpath: Optional[str] = None,
-        json_key: Optional[str] = None,
-        headers: Optional[list[tuple[str, str]]] = None,
+        expect_status: int | None = 200,
+        expect_content: None | str | dict | list = None,
+        expect_contains: None | str | list[str] = None,
+        expect_xpath: str | None = None,
+        json_key: str | None = None,
+        headers: list[tuple[str, str]] | None = None,
         **kwargs,
     ):
         """Performs a JSON PUT request.
@@ -382,15 +382,15 @@ class TimRouteTest(TimDbTest):
     def json_delete(
         self,
         url: str,
-        json_data: Optional[dict] = None,
+        json_data: dict | None = None,
         as_tree: bool = False,
-        expect_status: Optional[int] = 200,
-        expect_content: Union[None, str, dict, list] = None,
-        expect_contains: Union[None, str, list[str]] = None,
-        expect_xpath: Optional[str] = None,
-        json_key: Optional[str] = None,
-        headers: Optional[list[tuple[str, str]]] = None,
-        auth: Optional[BasicAuthParams] = None,
+        expect_status: int | None = 200,
+        expect_content: None | str | dict | list = None,
+        expect_contains: None | str | list[str] = None,
+        expect_xpath: str | None = None,
+        json_key: str | None = None,
+        headers: list[tuple[str, str]] | None = None,
+        auth: BasicAuthParams | None = None,
         **kwargs,
     ):
         """Performs a JSON DELETE request.
@@ -419,16 +419,16 @@ class TimRouteTest(TimDbTest):
     def json_post(
         self,
         url: str,
-        json_data: Optional[Union[dict, list]] = None,
+        json_data: dict | list | None = None,
         as_tree: bool = False,
-        expect_status: Optional[int] = 200,
-        expect_content: Union[None, str, dict, list] = None,
-        expect_contains: Union[None, str, list[str], dict] = None,
-        expect_xpath: Optional[str] = None,
-        expect_cookie: Optional[tuple[str, Optional[str]]] = None,
-        json_key: Optional[str] = None,
-        headers: Optional[list[tuple[str, str]]] = None,
-        auth: Optional[BasicAuthParams] = None,
+        expect_status: int | None = 200,
+        expect_content: None | str | dict | list = None,
+        expect_contains: None | str | list[str] | dict = None,
+        expect_xpath: str | None = None,
+        expect_cookie: tuple[str, str | None] | None = None,
+        json_key: str | None = None,
+        headers: list[tuple[str, str]] | None = None,
+        auth: BasicAuthParams | None = None,
         **kwargs,
     ):
         """Performs a JSON POST request.
@@ -458,18 +458,18 @@ class TimRouteTest(TimDbTest):
     def json_req(
         self,
         url: str,
-        json_data: Optional[dict] = None,
+        json_data: dict | None = None,
         method: str = "GET",
         as_tree: bool = False,
-        expect_status: Optional[int] = 200,
-        expect_content: Union[None, str, dict, list] = None,
-        expect_contains: Union[None, str, list[str]] = None,
-        expect_xpath: Optional[str] = None,
-        expect_cookie: Optional[tuple[str, Optional[str]]] = None,
-        json_key: Optional[str] = None,
-        headers: Optional[list[tuple[str, str]]] = None,
-        auth: Optional[BasicAuthParams] = None,
-        content_type: Optional[str] = None,
+        expect_status: int | None = 200,
+        expect_content: None | str | dict | list = None,
+        expect_contains: None | str | list[str] = None,
+        expect_xpath: str | None = None,
+        expect_cookie: tuple[str, str | None] | None = None,
+        json_key: str | None = None,
+        headers: list[tuple[str, str]] | None = None,
+        auth: BasicAuthParams | None = None,
+        content_type: str | None = None,
         **kwargs,
     ):
         """Performs a JSON request.
@@ -552,7 +552,7 @@ class TimRouteTest(TimDbTest):
         self,
         doc: Document,
         text: str,
-        next_id: Optional[str] = None,
+        next_id: str | None = None,
         additional_data=None,
         **kwargs,
     ):
@@ -651,14 +651,14 @@ class TimRouteTest(TimDbTest):
             **kwargs,
         )
 
-    def get_task_answers(self, task_id, user: Optional[User] = None):
+    def get_task_answers(self, task_id, user: User | None = None):
         answer_list = self.get(
             f"/getAnswers/{task_id}/{user.id if user else self.current_user_id()}"
         )
         return answer_list
 
     @staticmethod
-    def current_user_id() -> Optional[int]:
+    def current_user_id() -> int | None:
         """Returns the name of the current user.
 
         :return: The name of the current user.
@@ -671,7 +671,7 @@ class TimRouteTest(TimDbTest):
         return self.current_user_id() is not None
 
     @property
-    def current_user(self) -> Optional[User]:
+    def current_user(self) -> User | None:
         curr_id = self.current_user_id()
         return User.get_by_id(curr_id) if curr_id is not None else None
 
@@ -735,7 +735,7 @@ class TimRouteTest(TimDbTest):
             **kwargs,
         )
 
-    def logout(self, user_id: Optional[int] = None):
+    def logout(self, user_id: int | None = None):
         """Logs the specified user out.
 
         :param user_id: The id of the user to log out. If None, everyone in the session gets logged out.
@@ -746,9 +746,9 @@ class TimRouteTest(TimDbTest):
 
     def login(
         self,
-        email: Optional[str] = None,
-        passw: Optional[str] = None,
-        username: Optional[str] = None,
+        email: str | None = None,
+        passw: str | None = None,
+        username: str | None = None,
         force: bool = False,
         clear_last_doc: bool = True,
         add: bool = False,
@@ -789,17 +789,17 @@ class TimRouteTest(TimDbTest):
 
     def create_doc(
         self,
-        path: Optional[str] = None,
-        from_file: Optional[str] = None,
-        initial_par: Optional[Union[str, list[str]]] = None,
-        settings: Optional[dict] = None,
-        copy_from: Optional[int] = None,
-        cite: Optional[int] = None,
-        template: Optional[str] = None,
-        title: Optional[str] = None,
+        path: str | None = None,
+        from_file: str | None = None,
+        initial_par: str | list[str] | None = None,
+        settings: dict | None = None,
+        copy_from: int | None = None,
+        cite: int | None = None,
+        template: str | None = None,
+        title: str | None = None,
         expect_status=200,
         **kwargs,
-    ) -> Optional[DocEntry]:
+    ) -> DocEntry | None:
         """Creates a new document.
 
         :param copy_from: The id of an existing document if creating a copy.
@@ -920,7 +920,7 @@ class TimRouteTest(TimDbTest):
         expect_content=None,
         expect_status=200,
         **kwargs,
-    ) -> Optional[Translation]:
+    ) -> Translation | None:
         if expect_contains is None and expect_content is None:
             expect_contains = {
                 "title": doc_title,
@@ -952,7 +952,7 @@ class TimRouteTest(TimDbTest):
         doc: DocInfo,
         par_start: DocParagraph,
         par_end: DocParagraph,
-        area_name: Optional[str] = None,
+        area_name: str | None = None,
         **kwargs,
     ):
         self.json_post(
@@ -973,8 +973,8 @@ class TimRouteTest(TimDbTest):
     def paste(
         self,
         doc: DocInfo,
-        par_before: Optional[DocParagraph] = None,
-        par_after: Optional[DocParagraph] = None,
+        par_before: DocParagraph | None = None,
+        par_after: DocParagraph | None = None,
         as_ref: bool = False,
         **kwargs,
     ):
@@ -993,7 +993,7 @@ class TimRouteTest(TimDbTest):
 
     def create_preamble_for(
         self, d: Item, preamble_name: str = DEFAULT_PREAMBLE_DOC, **kwargs
-    ) -> Optional[DocEntry]:
+    ) -> DocEntry | None:
         folder = d.location
         p = self.create_doc(
             f"{folder}/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name}",
@@ -1020,7 +1020,7 @@ class TimRouteTest(TimDbTest):
         par: DocParagraph,
         public: bool,
         text: str,
-        orig: Optional[DocParagraph] = None,
+        orig: DocParagraph | None = None,
         **kwargs,
     ):
         glob_id = dict(doc_id=par.doc.doc_id, par_id=par.get_id())
@@ -1097,7 +1097,7 @@ class TimRouteTest(TimDbTest):
         self,
         d: DocInfo,
         task_name: str,
-        par_id: Optional[str] = None,
+        par_id: str | None = None,
         markup=None,
         state=None,
         toplevel=None,
@@ -1154,7 +1154,7 @@ class TimRouteTest(TimDbTest):
     def verify_answer_content(
         self,
         task: str,
-        content_field: Optional[str],
+        content_field: str | None,
         content,
         u: User,
         expected_count=1,
@@ -1177,10 +1177,10 @@ class TimRouteTest(TimDbTest):
         d: DocInfo,
         task_name: str,
         content: Any = "",
-        points: Union[None, int, float] = None,
+        points: None | int | float = None,
         valid: bool = True,
-        content_key: Optional[str] = "c",
-        user: Optional[User] = None,
+        content_key: str | None = "c",
+        user: User | None = None,
     ):
         if user is None:
             user = self.current_user
@@ -1378,8 +1378,8 @@ class TimMessageListTest(TimRouteTest):
         self,
         message_list: MessageListModel,
         user: User,
-        subject: Optional[str] = None,
-        body: Optional[str] = None,
+        subject: str | None = None,
+        body: str | None = None,
     ):
         message = {
             "to": [[message_list.name, message_list.email_address]],

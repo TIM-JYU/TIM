@@ -46,7 +46,7 @@ class Lecture(db.Model):
 
     @staticmethod
     def get_all_in_document(
-        doc_id: int, time: Optional[datetime] = None
+        doc_id: int, time: datetime | None = None
     ) -> list["Lecture"]:
         if not time:
             time = datetime.min.replace(tzinfo=timezone.utc)

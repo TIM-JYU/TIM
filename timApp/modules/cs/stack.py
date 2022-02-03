@@ -124,7 +124,7 @@ class Stack(Language):
 
     def parse_stack_question(
         self,
-        stack_question: Union[str, dict[str, Any]],
+        stack_question: str | dict[str, Any],
         replace_jsxgraph_blocks: bool = True,
     ):
         if not stack_question:
@@ -180,7 +180,7 @@ class Stack(Language):
         return question
 
 
-def value_between(s: str, start: str, end: str) -> Optional[str]:
+def value_between(s: str, start: str, end: str) -> str | None:
     start_index = s.find(start, 0)
     if start_index < 0:
         return None

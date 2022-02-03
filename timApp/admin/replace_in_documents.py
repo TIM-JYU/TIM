@@ -29,8 +29,8 @@ from timApp.timdb.exceptions import TimDbException
 class ReplaceArguments(DryrunnableOnly, SearchArgumentsBasic):
     """Arguments for a replacement operation."""
 
-    to: Optional[str] = attr.ib(kw_only=True, default=None)
-    add_attr: Optional[str] = attr.ib(kw_only=True, default=None)
+    to: str | None = attr.ib(kw_only=True, default=None)
+    add_attr: str | None = attr.ib(kw_only=True, default=None)
 
 
 @attr.s
@@ -96,7 +96,7 @@ class AttrModification:
     mod_type: str = "add"
 
     @property
-    def error(self) -> Optional[str]:
+    def error(self) -> str | None:
         return None
 
     def format_match(self, args: ReplaceArgumentsCLI) -> str:
@@ -112,14 +112,14 @@ class AttrModification:
 def perform_replace(
     d: DocInfo,
     args: ReplaceArguments,
-) -> Generator[Union[ReplacementResult, AttrModification], None, None]:
+) -> Generator[ReplacementResult | AttrModification, None, None]:
     """Performs a search-and-replace operation for the specified document, yielding ReplacementResults.
 
     :param args: The replacement arguments. If args.dryrun is True, no actual replacement will occur.
     :param d: The document to process.
     """
     for r in search(d, args, use_exported=False):
-        repl: Union[None, ReplacementResult, AttrModification] = None
+        repl: None | ReplacementResult | AttrModification = None
         old_md = None
         new_md = None
         mi = r.par.doc.get_settings().get_macroinfo(default_view_ctx)

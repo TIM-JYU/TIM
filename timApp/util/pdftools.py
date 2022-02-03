@@ -247,7 +247,7 @@ class AttachmentStampData:
         file_path: Path = Path(""),
         date: str = "",
         attachment: str = "",
-        issue: Union[str, int] = "",
+        issue: str | int = "",
         text: str = "",
     ):
         """
@@ -397,7 +397,7 @@ def merge_pdfs(pdf_file_list: list[UploadedFile], output_path: Path):
     call_popen(args, pdfmerge_timeout)
 
 
-def parse_tim_url(par_file: str) -> Optional[Path]:
+def parse_tim_url(par_file: str) -> Path | None:
     """
     Parses TIM-links to point to the corresponding file on the server.
     Note: Changes in upload folder need to be updated here as well.

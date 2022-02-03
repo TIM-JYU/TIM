@@ -48,7 +48,7 @@ cs_cleaner = Cleaner(
 )
 
 
-def allow_minimal(s: Optional[str]) -> Optional[str]:
+def allow_minimal(s: str | None) -> str | None:
     if not s:
         return s
     return sanitize_with_cleaner(s, cs_cleaner)
@@ -105,7 +105,7 @@ def cs_min_sanitize(s: str) -> str:
     return s
 
 
-def tim_sanitize(s: Optional[str]) -> Optional[str]:
+def tim_sanitize(s: str | None) -> str | None:
     if not s:
         return s
     return sanitize_html(s)

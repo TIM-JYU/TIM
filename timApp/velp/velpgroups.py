@@ -53,7 +53,7 @@ def create_velp_group(
     name: str,
     owner_group: UserGroup,
     new_group_path: str,
-    valid_until: Optional[str] = None,
+    valid_until: str | None = None,
 ) -> VelpGroup:
     """Create a velp group.
 
@@ -92,8 +92,8 @@ def get_groups_from_document_table(doc_id: int, user_id: int) -> list[VelpGroup]
 def make_document_a_velp_group(
     name: str,
     velp_group_id: int,
-    valid_until: Optional[str] = None,
-    default_group: Optional[bool] = False,
+    valid_until: str | None = None,
+    default_group: bool | None = False,
 ) -> VelpGroup:
     """Adds document to VelpGroup table.
 
@@ -155,7 +155,7 @@ def change_selection(
     :param selected: Boolean whether group is selected or not
 
     """
-    vgs: Optional[VelpGroupSelection] = VelpGroupSelection.query.filter_by(
+    vgs: VelpGroupSelection | None = VelpGroupSelection.query.filter_by(
         user_id=user_id,
         doc_id=doc_id,
         velp_group_id=velp_group_id,
@@ -301,9 +301,7 @@ def add_groups_to_selection_table(
         db.session.add(vgs)
 
 
-def process_selection_info(
-    vgss: Union[list[VelpGroupSelection], list[VelpGroupDefaults]]
-):
+def process_selection_info(vgss: list[VelpGroupSelection] | list[VelpGroupDefaults]):
     if vgss:
         target_id = vgss[0].target_id
         list_help = []

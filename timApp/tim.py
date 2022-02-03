@@ -198,7 +198,7 @@ def inject_angular_scripts() -> dict:
             )
 
 
-def get_angularscripts(index_file: str, locale: Optional[str] = None):
+def get_angularscripts(index_file: str, locale: str | None = None):
     with open(index_file) as f:
         html_data = f.read()
         bs = BeautifulSoup(html_data, "lxml")
@@ -280,9 +280,9 @@ def ping():
 @dataclass
 class GetProxyModel:
     url: str
-    auth_token: Optional[str] = None
+    auth_token: str | None = None
     raw: bool = False
-    mimetype: Optional[str] = None
+    mimetype: str | None = None
     file: bool = False
 
 

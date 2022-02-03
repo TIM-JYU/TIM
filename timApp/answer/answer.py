@@ -54,7 +54,7 @@ class Answer(db.Model):
     last_points_modifier = db.Column(db.Integer, db.ForeignKey("usergroup.id"))
     """The UserGroup who modified the points last. Null if the points have been given by the task automatically."""
 
-    plugin_type: Optional[PluginType] = db.relationship("PluginType", lazy="select")
+    plugin_type: PluginType | None = db.relationship("PluginType", lazy="select")
     uploads = db.relationship("AnswerUpload", back_populates="answer", lazy="dynamic")
     users = db.relationship(
         "User", secondary=UserAnswer.__table__, back_populates="answers", lazy="dynamic"

@@ -43,7 +43,7 @@ from tim_common.utils import Missing
 
 
 class PluginJsonEncoder(json.JSONEncoder):
-    def default(self, o: Any) -> Optional[Any]:
+    def default(self, o: Any) -> Any | None:
         tojson = getattr(o, "to_json", None)
         if tojson:
             return tojson()
@@ -96,7 +96,7 @@ class InfoModel:
 
     earlier_answers: int
     look_answer: bool
-    max_answers: Optional[int]
+    max_answers: int | None
     user_id: str
     valid: bool  # could be False e.g. if answering deadline has passed
 
@@ -117,9 +117,9 @@ PluginInput = TypeVar("PluginInput")
 class GenericRouteModel(Generic[PluginInput, PluginMarkup, PluginState]):
     """Base class for answer and HTML route models. Contains the fields that the routes have in common."""
 
-    info: Optional[InfoModel]
+    info: InfoModel | None
     markup: PluginMarkup
-    state: Optional[PluginState]
+    state: PluginState | None
     taskID: str
 
 
@@ -139,7 +139,7 @@ class Laziness(Enum):
     Yes = True
     Never = "NEVERLAZY"
 
-    def to_json(self) -> Union[str, bool]:
+    def to_json(self) -> str | bool:
         return self.value
 
     def __bool__(self) -> bool:
@@ -160,7 +160,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
     user_id: str
     userPrint: bool
     viewmode: bool
-    access: Union[str, Missing] = missing
+    access: str | Missing = missing
 
     def requires_login(self) -> bool:
         """
@@ -257,7 +257,7 @@ class GenericHtmlModelWithContext(
     GenericHtmlModel[PluginInput, PluginMarkup, PluginState],
     ABC,
 ):
-    ctx: Optional[PluginContext] = field(
+    ctx: PluginContext | None = field(
         init=False, default=None, metadata={"missing": True}
     )
 
@@ -308,7 +308,7 @@ def render_plugin_with_login_request(
     )
 
 
-def make_base64(d: dict, json_encoder: Optional[type[JSONEncoder]] = None) -> str:
+def make_base64(d: dict, json_encoder: type[JSONEncoder] | None = None) -> str:
     """Converts the given dict to a base64-encoded JSON string."""
     return base64.b64encode(
         json.dumps(d, sort_keys=True, cls=json_encoder).encode()
@@ -411,11 +411,11 @@ AnswerModel = TypeVar("AnswerModel", bound=GenericAnswerModel)
 
 
 def register_html_routes(
-    app: Union[Flask, Blueprint],
+    app: Flask | Blueprint,
     html_schema: type[Schema],
     reqs_handler: Callable[[], PluginReqs],
-    csrf: Optional[CSRFProtect] = None,
-    multihtml_preprocessor: Optional[Callable[[list[HtmlModel]], None]] = None,
+    csrf: CSRFProtect | None = None,
+    multihtml_preprocessor: Callable[[list[HtmlModel]], None] | None = None,
 ) -> None:
     @app.errorhandler(422)
     def handle_invalid_request(error: Any) -> Response:
@@ -466,7 +466,7 @@ def register_html_routes(
         :param args: Unvalidated HTML arguments.
         :return: List of HTMLs.
         """
-        results: list[Optional[str]] = []
+        results: list[str | None] = []
         result_data = []
         for a in args:
             try:
@@ -494,7 +494,7 @@ def register_html_routes(
 T = TypeVar("T")
 
 
-def value_or_default(val: Union[T, None, Missing], default: T) -> T:
+def value_or_default(val: T | None | Missing, default: T) -> T:
     if val is None or isinstance(val, Missing):
         return default
     return val
@@ -507,8 +507,8 @@ def create_blueprint(
     answer_model: type[AnswerModel],
     answer_handler: Callable[[AnswerModel], PluginAnswerResp],
     reqs_handler: Callable[[], PluginReqs],
-    csrf: Optional[CSRFProtect] = None,
-    multihtml_preprocessor: Optional[Callable[[list[HtmlModel]], None]] = None,
+    csrf: CSRFProtect | None = None,
+    multihtml_preprocessor: Callable[[list[HtmlModel]], None] | None = None,
 ) -> Blueprint:
     bp = create_nontask_blueprint(
         name, plugin_name, html_model, reqs_handler, csrf, multihtml_preprocessor
@@ -522,8 +522,8 @@ def create_nontask_blueprint(
     plugin_name: str,
     html_model: type[HtmlModel],
     reqs_handler: Callable[[], PluginReqs],
-    csrf: Optional[CSRFProtect] = None,
-    multihtml_preprocessor: Optional[Callable[[list[HtmlModel]], None]] = None,
+    csrf: CSRFProtect | None = None,
+    multihtml_preprocessor: Callable[[list[HtmlModel]], None] | None = None,
 ) -> Blueprint:
     bp = Blueprint(plugin_name, name, url_prefix=f"/{plugin_name}")
     register_html_routes(
@@ -534,10 +534,10 @@ def create_nontask_blueprint(
 
 
 def register_answer_route(
-    app: Union[Flask, Blueprint],
+    app: Flask | Blueprint,
     answer_model: type[AnswerModel],
     answer_handler: Callable[[AnswerModel], PluginAnswerResp],
-    csrf: Optional[CSRFProtect] = None,
+    csrf: CSRFProtect | None = None,
 ) -> None:
     @app.put("/answer")
     @use_args(class_schema(answer_model)(), locations=("json",))

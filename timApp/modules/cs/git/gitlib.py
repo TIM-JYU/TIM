@@ -21,7 +21,7 @@ git_lib_urls = {}
 class APIResponse:
     status: int
     data: Any
-    reason: Optional[str]
+    reason: str | None
 
 
 class CacheItem:
@@ -39,7 +39,7 @@ class LibResponse:
 
 class GitLib:
     id: str = "_gitlib"
-    url: Optional[str] = None
+    url: str | None = None
 
     _cache = {}
 
@@ -164,7 +164,7 @@ class GitLib:
         repo = re.sub(r"-+", "-", repo)
         return repo[:-1] if repo.endswith("-") else repo
 
-    def clone(self, path: Union[str, Path]):
+    def clone(self, path: str | Path):
         clone(
             path,
             self.remote.host,
@@ -203,7 +203,7 @@ class GitLib:
         pass
 
 
-def get_lib_class(host: str, library: Optional[str] = None) -> type(GitLib):
+def get_lib_class(host: str, library: str | None = None) -> type(GitLib):
     if library is not None:
         cls = git_libs.get(library, None)
     else:
@@ -290,7 +290,7 @@ def get_remote_info(path: str) -> RemoteInfo:
 
 
 def clone(
-    path: Union[str, Path],
+    path: str | Path,
     host: str,
     repo: str,
     protocol: str = "ssh",

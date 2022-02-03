@@ -22,25 +22,25 @@ from tim_common.utils import Missing
 
 @dataclass
 class TextfieldMarkupModel(GenericMarkupModel):
-    autosave: Union[bool, Missing] = missing
-    autogrow: Union[bool, Missing] = missing
-    autoUpdateTables: Union[bool, Missing] = True
-    clearstyles: Union[bool, Missing] = missing
-    cols: Union[int, Missing] = missing
-    errormessage: Union[str, Missing, None] = missing
-    form: Union[bool, Missing] = missing
-    rows: Union[int, Missing] = missing
-    ignorestyles: Union[bool, Missing] = missing
-    initword: Union[str, Missing, None] = missing
-    inputplaceholder: Union[str, Missing, None] = missing
-    inputstem: Union[str, Missing, None] = missing
-    nosave: Union[bool, Missing] = missing
-    points_array: Union[list[list[float]], Missing] = missing
-    readOnlyStyle: Union[str, Missing, None] = missing
-    showname: Union[int, Missing, None] = missing
-    tag: Union[str, Missing, None] = missing
-    textarea: Union[bool, Missing] = missing
-    validinput: Union[str, Missing, None] = missing
+    autosave: bool | Missing = missing
+    autogrow: bool | Missing = missing
+    autoUpdateTables: bool | Missing = True
+    clearstyles: bool | Missing = missing
+    cols: int | Missing = missing
+    errormessage: str | Missing | None = missing
+    form: bool | Missing = missing
+    rows: int | Missing = missing
+    ignorestyles: bool | Missing = missing
+    initword: str | Missing | None = missing
+    inputplaceholder: str | Missing | None = missing
+    inputstem: str | Missing | None = missing
+    nosave: bool | Missing = missing
+    points_array: list[list[float]] | Missing = missing
+    readOnlyStyle: str | Missing | None = missing
+    showname: int | Missing | None = missing
+    tag: str | Missing | None = missing
+    textarea: bool | Missing = missing
+    validinput: str | Missing | None = missing
 
 
 @dataclass
@@ -48,7 +48,7 @@ class TextfieldInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
 
     c: str
-    nosave: Union[bool, Missing] = missing
+    nosave: bool | Missing = missing
 
 
 @dataclass

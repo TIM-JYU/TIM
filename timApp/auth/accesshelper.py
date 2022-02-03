@@ -43,7 +43,7 @@ from timApp.util.logger import log_warning
 from timApp.util.utils import get_current_time
 
 
-def get_doc_or_abort(doc_id: int, msg: Optional[str] = None) -> DocInfo:
+def get_doc_or_abort(doc_id: int, msg: str | None = None) -> DocInfo:
     d = DocEntry.find_by_id(doc_id)
     if not d:
         raise NotExist(msg or "Document not found")
@@ -64,7 +64,7 @@ def get_folder_or_abort(folder_id: int):
     return f
 
 
-def verify_admin(require: bool = True, user: Optional[User] = None) -> bool:
+def verify_admin(require: bool = True, user: User | None = None) -> bool:
     if not check_admin_access(user=user):
         if require:
             raise AccessDenied("This action requires administrative rights.")
@@ -114,11 +114,11 @@ def verify_access(
     b: ItemOrBlock,
     access_type: AccessType,
     require: bool = True,
-    message: Optional[str] = None,
+    message: str | None = None,
     check_duration=False,
     check_parents=False,
     grace_period=timedelta(seconds=0),
-    user: Optional[User] = None,
+    user: User | None = None,
 ):
     u = user or get_current_user_object()
     has_access = u.has_access(b, access_type, grace_period)
@@ -143,7 +143,7 @@ def check_inherited_right(
     b: ItemOrBlock,
     access_type: AccessType,
     grace_period: timedelta,
-) -> Optional[BlockAccess]:
+) -> BlockAccess | None:
     has_access = None
     is_docinfo = isinstance(b, DocInfo)
     if is_docinfo or (isinstance(b, Block) and b.type_id == BlockType.Document.value):
@@ -236,8 +236,8 @@ class ItemLockedException(Exception):
     def __init__(
         self,
         access: BlockAccess,
-        msg: Optional[str] = None,
-        next_doc: Optional[DocInfo] = None,
+        msg: str | None = None,
+        next_doc: DocInfo | None = None,
     ):
         self.access = access
         self.msg = msg
@@ -399,7 +399,7 @@ def has_ownership(b: ItemOrBlock):
     return get_current_user_object().has_ownership(b)
 
 
-def check_admin_access(block_id=None, user=None) -> Union[BlockAccess, None]:
+def check_admin_access(block_id=None, user=None) -> BlockAccess | None:
     curr_user = user
     if curr_user is None:
         curr_user = get_current_user_object()
@@ -450,7 +450,7 @@ def get_plugin_from_request(
     task_id: TaskId,
     u: UserContext,
     view_ctx: ViewContext,
-    answernr: Optional[int] = None,
+    answernr: int | None = None,
 ) -> tuple[Document, Plugin]:
     assert doc.doc_id == task_id.doc_id
     orig_info = view_ctx.origin
@@ -489,7 +489,7 @@ def get_plugin_from_request(
     return doc, plug
 
 
-def get_origin_from_request() -> Optional[OriginInfo]:
+def get_origin_from_request() -> OriginInfo | None:
     ref_from = (request.get_json() or {}).get("ref_from") or {}
     doc_id = ref_from.get(
         "docId", get_option(request, "ref_from_doc_id", default=None, cast=int)
@@ -510,7 +510,7 @@ class TaskAccessVerification:
     is_invalid: bool = (
         False  # user has access, but any possible answers are deemed invalid
     )
-    invalidate_reason: Optional[str] = None
+    invalidate_reason: str | None = None
 
 
 def verify_task_access(
@@ -521,7 +521,7 @@ def verify_task_access(
     context_user: UserContext,
     view_ctx: ViewContext,
     allow_grace_period: bool = False,
-    answernr: Optional[int] = None,
+    answernr: int | None = None,
 ) -> TaskAccessVerification:
     assert d.id == task_id.doc_id
     doc, found_plugin = get_plugin_from_request(
@@ -670,7 +670,7 @@ def get_ipblocklist_path() -> Path:
     return Path(current_app.config["FILES_PATH"]) / "ipblocklist"
 
 
-def verify_ip_ok(user: Optional[User], msg: str = "IPNotAllowed"):
+def verify_ip_ok(user: User | None, msg: str = "IPNotAllowed"):
     if (not user or not user.is_admin) and not is_allowed_ip():
         username = user.name if user else "Anonymous"
         cfg = current_app.config

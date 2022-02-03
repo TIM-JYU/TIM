@@ -34,8 +34,8 @@ from tim_common.utils import Missing
 
 @dataclass
 class CbcountfieldMarkupModel(TextfieldMarkupModel):
-    groups: Union[list[str], Missing] = missing
-    limit: Union[int, Missing] = missing
+    groups: list[str] | Missing = missing
+    limit: int | Missing = missing
 
 
 @dataclass
@@ -43,7 +43,7 @@ class TextfieldInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
 
     c: str
-    nosave: Union[bool, Missing] = missing
+    nosave: bool | Missing = missing
 
 
 @dataclass

@@ -275,8 +275,8 @@ class ItemWithRights:
 
 @view_page.get("/getItems")
 def items_route(
-    folder: Optional[str] = None,
-    folder_id: Optional[int] = None,
+    folder: str | None = None,
+    folder_id: int | None = None,
     recursive: bool = False,
     include_rights: bool = False,
 ):
@@ -313,7 +313,7 @@ def gen_cache(
     same_for_all: bool = False,
     force: bool = False,
     print_diffs: bool = False,
-    group: Optional[str] = None,
+    group: str | None = None,
 ):
     """Pre-generates document cache for the users with non-expired rights.
 
@@ -371,7 +371,7 @@ def gen_cache(
     # This wouldn't cause any user-facing bugs, but it makes it easier to compare cached HTMLs.
     _ = doc_info.block.tags
 
-    def generate() -> Generator[tuple[str, Optional[DocRenderResult]], None, None]:
+    def generate() -> Generator[tuple[str, DocRenderResult | None], None, None]:
         first_cache = None
         for i, u in enumerate(users_uniq):
             start = f"{i + 1:>{digits}}/{total} {u.name}: "
@@ -735,7 +735,7 @@ def render_doc_view(
     if view_ctx.route == ViewRoute.Lecture and current_user.has_edit_access(doc_info):
         no_question_auto_numbering = doc_settings.auto_number_questions()
 
-    current_list_user: Optional[User] = None
+    current_list_user: User | None = None
     # teacher view sorts user by real name and selects the lowest - ensure first loaded answer matches the user
     if user_list:
         current_list_user = min(
@@ -975,7 +975,7 @@ def render_doc_view(
     )
 
 
-def render_login(item: Optional[Document]) -> FlaskViewResult:
+def render_login(item: Document | None) -> FlaskViewResult:
     view_settings = get_minimal_visibility_settings(item)
     session["came_from"] = request.url
     session["anchor"] = request.args.get("anchor", "")
@@ -1114,9 +1114,9 @@ def create_item_route(
     item_path: str,
     item_type: str,
     item_title: str,
-    cite: Optional[int] = None,
-    copy: Optional[int] = None,
-    template: Optional[str] = None,
+    cite: int | None = None,
+    copy: int | None = None,
+    template: str | None = None,
     use_template: bool = True,
 ):
     if (
@@ -1141,9 +1141,9 @@ def create_item_direct(
     item_path: str,
     item_type: str,
     item_title: str,
-    cite: Optional[int] = None,
-    copy: Optional[int] = None,
-    template: Optional[str] = None,
+    cite: int | None = None,
+    copy: int | None = None,
+    template: str | None = None,
     use_template: bool = True,
 ):
     cite_id, copy_id, template_name = cite, copy, template

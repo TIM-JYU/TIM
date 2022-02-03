@@ -27,20 +27,20 @@ class DropdownStateModel:
 
 @dataclass
 class DropdownMarkupModel(GenericMarkupModel):
-    words: Union[list[str], Missing] = missing
-    instruction: Union[bool, Missing] = missing
-    radio: Union[bool, Missing] = missing
-    shuffle: Union[bool, Missing] = missing
-    autosave: Union[bool, Missing] = missing
-    answers: Union[bool, Missing] = missing
-    tag: Union[str, Missing, None] = missing
+    words: list[str] | Missing = missing
+    instruction: bool | Missing = missing
+    radio: bool | Missing = missing
+    shuffle: bool | Missing = missing
+    autosave: bool | Missing = missing
+    answers: bool | Missing = missing
+    tag: str | Missing | None = missing
 
 
 @dataclass
 class DropdownInputModel:
     selectedWord: str
-    nosave: Union[bool, Missing] = missing
-    shuffle: Union[bool, Missing] = missing
+    nosave: bool | Missing = missing
+    shuffle: bool | Missing = missing
 
     @validates("selectedWord")
     def validate_selected_word(self, word: str) -> None:

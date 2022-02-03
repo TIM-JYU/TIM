@@ -177,7 +177,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def save_element_screenshot(
         self,
         element: WebElement,
-        filename_or_file: Union[str, BytesIO, None] = None,
+        filename_or_file: str | BytesIO | None = None,
         move_to_element: bool = False,
     ) -> Image:
         """Saves the screenshot of an element to a PNG file.
@@ -231,7 +231,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def assert_same_screenshot(
         self,
         element: WebElement,
-        filename: Union[str, list[str]],
+        filename: str | list[str],
         move_to_element: bool = False,
         attempts=1,
     ):
@@ -349,7 +349,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         )
 
     def find_element_and_move_to(
-        self, selector: str, times=1, parent: Optional[WebElement] = None
+        self, selector: str, times=1, parent: WebElement | None = None
     ) -> WebElement:
         e = None
         for i in range(0, times):
@@ -359,9 +359,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
 
     def find_element(
         self,
-        selector: Optional[str] = None,
-        xpath: Optional[str] = None,
-        parent: Optional[WebElement] = None,
+        selector: str | None = None,
+        xpath: str | None = None,
+        parent: WebElement | None = None,
     ) -> WebElement:
         if selector and xpath:
             raise Exception("Only one of selector and xpath must be given")
@@ -375,8 +375,8 @@ class BrowserTest(TimLiveServer, TimRouteTest):
 
     def find_element_avoid_staleness(
         self,
-        selector: Optional[str] = None,
-        xpath: Optional[str] = None,
+        selector: str | None = None,
+        xpath: str | None = None,
         tries: int = 10,
         click=False,
         parent=None,
@@ -401,7 +401,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         text: str,
         element: str = "*",
         staleness_attempts=1,
-        parent: Optional[WebElement] = None,
+        parent: WebElement | None = None,
     ) -> WebElement:
         return self.find_element_avoid_staleness(
             xpath=f"//{element}[contains(text(),'{text}')]",
@@ -422,9 +422,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
 
     def login(
         self,
-        email: Optional[str] = None,
-        passw: Optional[str] = None,
-        username: Optional[str] = None,
+        email: str | None = None,
+        passw: str | None = None,
+        username: str | None = None,
         add: bool = False,
         force: bool = True,
         **kwargs,

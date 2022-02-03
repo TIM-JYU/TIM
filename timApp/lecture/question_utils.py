@@ -9,7 +9,7 @@ def qst_rand_array(
     randoms: int,
     seed_word: str,
     random_seed: int = 0,
-    locks: Optional[Union[int, list[int]]] = None,
+    locks: int | list[int] | None = None,
 ) -> list[int]:
     """
     get array of count integers between 1 and max_count (incl.) using word and extra number as seed
@@ -125,8 +125,8 @@ def create_points_table(points: str) -> list[dict[str, float]]:
 
 def calculate_points_from_json_answer(
     single_answers: list[list[str]],
-    points_table: Optional[list[dict[str, float]]],
-    default_points: Union[float, None, Missing] = 0,
+    points_table: list[dict[str, float]] | None,
+    default_points: float | None | Missing = 0,
 ) -> float:
     points = 0.0
     if not isinstance(default_points, float) and not isinstance(default_points, int):

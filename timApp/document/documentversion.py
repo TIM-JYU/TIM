@@ -13,7 +13,7 @@ class DocumentVersion(Document):
         self,
         doc_id: int,
         doc_ver: Version,
-        modifier_group_id: Optional[int] = 0,
+        modifier_group_id: int | None = 0,
         preload_option=PreloadOption.none,
     ):
         super().__init__(doc_id, modifier_group_id, preload_option)
@@ -84,12 +84,12 @@ class DocumentVersion(Document):
         raise Exception("Called DocumentVersion.add_paragraph_obj")
 
     def add_paragraph(
-        self, text: str, par_id: Optional[str] = None, attrs: Optional[dict] = None
+        self, text: str, par_id: str | None = None, attrs: dict | None = None
     ) -> DocParagraph:
         raise Exception("Called DocumentVersion.add_paragraph")
 
     def add_ref_paragraph(
-        self, src_par: DocParagraph, text: Optional[str] = None
+        self, src_par: DocParagraph, text: str | None = None
     ) -> DocParagraph:
         raise Exception("Called DocumentVersion.add_ref_paragraph")
 
@@ -99,15 +99,15 @@ class DocumentVersion(Document):
     def insert_paragraph(
         self,
         text: str,
-        insert_before_id: Optional[str] = None,
-        insert_after_id: Optional[str] = None,
-        attrs: Optional[dict] = None,
-        par_id: Optional[str] = None,
+        insert_before_id: str | None = None,
+        insert_after_id: str | None = None,
+        attrs: dict | None = None,
+        par_id: str | None = None,
     ) -> DocParagraph:
         raise Exception("Called DocumentVersion.delete_paragraph")
 
     def modify_paragraph(
-        self, par_id: str, new_text: str, new_attrs: Optional[dict] = None
+        self, par_id: str, new_text: str, new_attrs: dict | None = None
     ) -> DocParagraph:
         raise Exception("Called DocumentVersion.modify_paragraph")
 
@@ -125,8 +125,8 @@ class DocumentVersion(Document):
     def insert_paragraph_obj(
         self,
         p: DocParagraph,
-        insert_before_id: Optional[str] = None,
-        insert_after_id: Optional[str] = None,
+        insert_before_id: str | None = None,
+        insert_after_id: str | None = None,
     ) -> DocParagraph:
         raise Exception("Called DocumentVersion.insert_paragraph_obj")
 

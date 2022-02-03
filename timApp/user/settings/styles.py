@@ -78,7 +78,7 @@ def generate_scss(doc: DocInfo, force: bool = False) -> str:
     macro_env = macro_info.jinja_env
 
     # Process to resolve invisible paragraphs
-    par_ids = set(
+    par_ids = {
         p.target_data.id
         for p in process_areas(
             settings,
@@ -90,7 +90,7 @@ def generate_scss(doc: DocInfo, force: bool = False) -> str:
             use_md=True,
             cache=False,
         )
-    )
+    }
 
     with cache_path.open("w", encoding="utf-8") as f:
         for par in pars:
@@ -119,7 +119,7 @@ def generate_scss(doc: DocInfo, force: bool = False) -> str:
     return cache_path.as_posix()
 
 
-def hash_theme_timestamps(theme_docs: Optional[list[DocEntry]] = None) -> str:
+def hash_theme_timestamps(theme_docs: list[DocEntry] | None = None) -> str:
     """Computes a hash of theme documents based on the last time they were modified.
 
     The hash can be used to determine if the style containing the themes needs to be regenerated.
@@ -178,7 +178,7 @@ def export_scss_variables() -> str:
 
 def generate_style(
     theme_docs: list[DocEntry],
-    gen_dir: Optional[Path] = None,
+    gen_dir: Path | None = None,
     throw_on_error: bool = False,
 ) -> tuple[str, str]:
     """Generates a CSS style based on the given theme documents.
@@ -281,7 +281,8 @@ def generate_style(
 
 @styles.get("")
 def get_styles(
-    docs: Optional[list[int]] = field(
+    docs: list[int]
+    | None = field(
         default=None,
         metadata={"list_type": "delimited"},
     ),
@@ -295,7 +296,7 @@ def get_styles(
     :return: List of JSON objects describing the style's name, path and type
     """
     cur_user = get_current_user_object()
-    filter_user: Optional[User] = cur_user
+    filter_user: User | None = cur_user
     filter = DocEntry.name.like(f"{OFFICIAL_STYLES_PATH}%") | DocEntry.name.like(
         f"{USER_STYLES_PATH}%"
     )
@@ -351,7 +352,7 @@ def get_raw_scss(doc_path: str, force: bool = False) -> Response:
     verify_view_access(doc)
     scss_path = generate_scss(doc, force)
 
-    with open(scss_path, "r", encoding="utf-8") as f:
+    with open(scss_path, encoding="utf-8") as f:
         return text_response(f.read())
 
 

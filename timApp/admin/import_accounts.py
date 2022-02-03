@@ -12,7 +12,7 @@ class ImportException(Exception):
 
 
 def import_accounts_impl(
-    file: str, password: Optional[str]
+    file: str, password: str | None
 ) -> tuple[list[User], list[User]]:
     existing = []
     added = []

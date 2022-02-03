@@ -48,9 +48,9 @@ class MailmanMessageList:
 @dataclass
 class MailmanMemberAddress:
     email: str
-    name: Optional[
+    name: None | (
         str
-    ]  # Names associated with an (member) email addresses are optional in Mailman.
+    )  # Names associated with an (member) email addresses are optional in Mailman.
 
 
 @dataclass

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# encoding: utf-8
 # NUnit test validator for csplugin tasks
 import json
 import os
@@ -140,8 +139,8 @@ def main():
     filename = sys.argv[1]
     filename2 = sys.argv[2]
     filename3 = "T" + filename
-    lines = open(filename, "r").readlines()
-    lines2 = open(filename2, "r").read()
+    lines = open(filename).readlines()
+    lines2 = open(filename2).read()
     # yaml
     # instructions = yaml.load(lines2, CLoader)
     # insert = instructions.get("insert", None)
@@ -151,7 +150,7 @@ def main():
     insertfile = instructions.get("insert", None)
     insert = ""
     if insertfile:
-        insert = open(insertfile, "r").read()
+        insert = open(insertfile).read()
 
     replace_by(lines, instructions)
 
@@ -201,12 +200,12 @@ def main():
     if ret < 0:
         print("Testikoodia ei voi ajaa")
 
-    xml = open("TestResult.xml", "r").readlines()
+    xml = open("TestResult.xml").readlines()
     # print("\n".join(xml))
 
     points = count_points(xml, instructions.get("test", None))
     points = scale_points(points, instructions.get("points", None))
-    print("Points: " + "{0:.2f}".format(points))
+    print("Points: " + f"{points:.2f}")
 
 
 if __name__ == "__main__":

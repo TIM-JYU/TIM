@@ -418,7 +418,7 @@ docentry_eager_relevance_opt = (
 )
 
 
-def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
+def add_doc_info_title_line(doc_id: int) -> str | None:
     """
     Forms a JSON-compatible string with doc id, title and path.
     :param doc_id: Document id.
@@ -441,7 +441,7 @@ def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
 
 def add_doc_info_content_line(
     doc_id: int, par_data, remove_deleted_pars: bool = True, add_title: bool = False
-) -> Union[str, None]:
+) -> str | None:
     """
     Forms a JSON-compatible string with doc_id and list of paragraph data with id and md attributes.
     :param doc_id: Document id.
@@ -496,7 +496,7 @@ def add_doc_info_content_line(
         )
 
 
-def get_doc_par_id(line: str) -> Union[tuple[int, str, str], None]:
+def get_doc_par_id(line: str) -> tuple[int, str, str] | None:
     """
     Takes doc id, par id and par data from one grep search result line.
     :param line: Tim pars grep search result line.

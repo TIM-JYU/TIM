@@ -47,7 +47,7 @@ UrlMacroMap = dict[str, Union[int, float, str]]
 class DocSettingTypes:
     themes: list[str]
     override_user_themes: bool
-    hide_sidemenu: Optional[str]
+    hide_sidemenu: str | None
     answer_submit_time_tolerance: int
     scoreboard_docs: list[str]
     show_scoreboard: bool
@@ -156,7 +156,7 @@ class DocSettings:
         except ValidationError:
             return default
 
-    def __init__(self, doc: "Document", settings_dict: Optional[YamlBlock] = None):
+    def __init__(self, doc: "Document", settings_dict: YamlBlock | None = None):
         self.doc = doc
         self.__dict = settings_dict if settings_dict else YamlBlock()
         self.macroinfo_cache = {}
@@ -180,7 +180,7 @@ class DocSettings:
         return self.__dict.get(self.css_key)
 
     def get_macroinfo(
-        self, view_ctx: ViewContext, user_ctx: Optional[UserContext] = None
+        self, view_ctx: ViewContext, user_ctx: UserContext | None = None
     ) -> MacroInfo:
         cache_key = (
             view_ctx,
@@ -200,7 +200,7 @@ class DocSettings:
         return mi
 
     def get_texmacroinfo(
-        self, view_ctx: ViewContext, user_ctx: Optional[UserContext] = None
+        self, view_ctx: ViewContext, user_ctx: UserContext | None = None
     ) -> MacroInfo:
         return MacroInfo(
             view_ctx,
@@ -222,13 +222,13 @@ class DocSettings:
     def auto_number_questions(self) -> bool:
         return self.__dict.get(self.no_question_auto_numbering_key, False)
 
-    def get_source_document(self) -> Optional[int]:
+    def get_source_document(self) -> int | None:
         return self.__dict.get(self.source_document_key)
 
-    def get_slide_background_url(self, default=None) -> Optional[str]:
+    def get_slide_background_url(self, default=None) -> str | None:
         return self.__dict.get(self.slide_background_url_key, default)
 
-    def get_slide_background_color(self, default=None) -> Optional[str]:
+    def get_slide_background_color(self, default=None) -> str | None:
         return self.__dict.get(self.slide_background_color_key, default)
 
     def get_bookmarks(self) -> "BookmarkCollection":
@@ -248,7 +248,7 @@ class DocSettings:
     def set_bookmarks(self, bookmarks: list[dict]):
         self.__dict[self.bookmark_key] = bookmarks
 
-    def set_source_document(self, source_docid: Optional[int]):
+    def set_source_document(self, source_docid: int | None):
         self.__dict[self.source_document_key] = source_docid
 
     def auto_number_headings(self) -> int:
@@ -261,7 +261,7 @@ class DocSettings:
         res = self.__dict.get(self.show_velps_key, True)
         return res
 
-    def group(self) -> Optional[str]:
+    def group(self) -> str | None:
         res = self.__dict.get(self.group_key, None)
         if res is not None and not isinstance(res, str):
             raise ValueError(f"group must be str, not {type(res)}")
@@ -376,7 +376,7 @@ class DocSettings:
     def exam_mode(self, default=None):
         return self.__dict.get(self.exam_mode_key, default)
 
-    def point_sum_rule(self, default=None) -> Optional[PointSumRule]:
+    def point_sum_rule(self, default=None) -> PointSumRule | None:
         psr_dict = self.__dict.get(self.point_sum_rule_key, default)
         if not psr_dict:
             return None
@@ -463,7 +463,7 @@ class DocSettings:
             smart_punct=self.smart_punct(),
         )
 
-    def memo_minutes_settings(self) -> Optional[dict]:
+    def memo_minutes_settings(self) -> dict | None:
         macros = self.__dict.get("macros", {})
         if not isinstance(macros, dict):
             return None
@@ -507,7 +507,7 @@ class DocSettings:
     def override_user_themes(self) -> bool:
         return self.get_setting_or_default("override_user_themes", False)
 
-    def hide_sidemenu(self) -> Optional[str]:
+    def hide_sidemenu(self) -> str | None:
         return self.get_setting_or_default("hide_sidemenu", None)
 
     def answer_submit_time_tolerance(self) -> timedelta:
@@ -538,10 +538,10 @@ class DocSettings:
     def peer_review_count(self) -> int:
         return self.get_setting_or_default("peer_review_count", 1)
 
-    def access_denied_message(self) -> Optional[str]:
+    def access_denied_message(self) -> str | None:
         return self.get_setting_or_default("access_denied_message", None)
 
-    def disable_answer(self) -> Optional[str]:
+    def disable_answer(self) -> str | None:
         return self.get_setting_or_default("disable_answer", None)
 
     def smart_punct(self) -> bool:

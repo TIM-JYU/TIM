@@ -157,9 +157,9 @@ def get_all_messages():
 @dataclass
 class GetUpdatesModel:
     client_last_id: int = field(metadata={"data_key": "c"})
-    current_points_id: Optional[int] = field(metadata={"data_key": "p"}, default=None)
-    current_question_id: Optional[int] = field(metadata={"data_key": "i"}, default=None)
-    doc_id: Optional[int] = field(metadata={"data_key": "d"}, default=None)
+    current_points_id: int | None = field(metadata={"data_key": "p"}, default=None)
+    current_question_id: int | None = field(metadata={"data_key": "i"}, default=None)
+    doc_id: int | None = field(metadata={"data_key": "d"}, default=None)
     use_questions: bool = field(metadata={"data_key": "q"}, default=False)
     use_wall: bool = field(metadata={"data_key": "m"}, default=False)
 
@@ -437,7 +437,7 @@ def get_new_question(
             return None
 
 
-def get_shown_points(lecture) -> Optional[AskedQuestion]:
+def get_shown_points(lecture) -> AskedQuestion | None:
     return lecture.asked_questions.join(Showpoints).first()
 
 
@@ -784,7 +784,7 @@ def delete_lecture(m: DeleteLectureModel):
 
 
 def get_lecture_from_request(
-    check_access=True, lecture_id: Optional[int] = None
+    check_access=True, lecture_id: int | None = None
 ) -> Lecture:
     lecture_id = get_option(request, "lecture_id", lecture_id, cast=int)
     if not lecture_id:
@@ -871,7 +871,7 @@ def extend_question():
     return ok_response()
 
 
-def get_current_lecture() -> Optional[Lecture]:
+def get_current_lecture() -> Lecture | None:
     u = get_current_user_object()
     lectures: list[Lecture] = u.lectures
     if not lectures:
@@ -963,8 +963,8 @@ def ask_question():
 
 
 class ShowAnswerPointsModel(AskedIdModel):
-    current_question_id: Optional[int] = None
-    current_points_id: Optional[int] = None
+    current_question_id: int | None = None
+    current_points_id: int | None = None
 
 
 @lecture_routes.post("/showAnswerPoints")

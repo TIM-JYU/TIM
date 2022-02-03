@@ -66,9 +66,9 @@ class TimMenuItem:
         self.id = ""
         self.items = items
         self.open = is_open
-        self.width: Optional[str] = None
-        self.height: Optional[str] = None
-        self.rights: Optional[str] = None
+        self.width: str | None = None
+        self.height: str | None = None
+        self.rights: str | None = None
 
     def __str__(self) -> str:
         s = f"{{level: {self.level}, id: '{self.id}', text: '{self.text}', items: {self.items}"
@@ -115,18 +115,18 @@ class TimMenuItemModel:
 
 @dataclass
 class TimMenuMarkupModel(GenericMarkupModel):
-    backgroundColor: Union[str, Missing, None] = "#F7F7F7"
-    basicColors: Union[bool, Missing, None] = False
-    fontSize: Union[str, Missing, None] = "0.84em"
-    hoverOpen: Union[bool, Missing, None] = True
-    keepLinkColors: Union[bool, Missing, None] = True
-    menu: Union[str, Missing] = missing
-    openAbove: Union[bool, Missing, None] = False
-    openingSymbol: Union[str, Missing, None] = "▼"
-    separator: Union[str, Missing, None] = "|"
-    textColor: Union[str, Missing, None] = "black"
-    topMenu: Union[bool, Missing, None] = False
-    topMenuTriggerHeight: Union[int, Missing, None] = 200
+    backgroundColor: str | Missing | None = "#F7F7F7"
+    basicColors: bool | Missing | None = False
+    fontSize: str | Missing | None = "0.84em"
+    hoverOpen: bool | Missing | None = True
+    keepLinkColors: bool | Missing | None = True
+    menu: str | Missing = missing
+    openAbove: bool | Missing | None = False
+    openingSymbol: str | Missing | None = "▼"
+    separator: str | Missing | None = "|"
+    textColor: str | Missing | None = "black"
+    topMenu: bool | Missing | None = False
+    topMenuTriggerHeight: int | Missing | None = 200
 
 
 class TimMenuError(Exception):
@@ -206,7 +206,7 @@ def set_attributes(line: str, item: TimMenuItem) -> None:
             item.rights = rights
 
 
-def get_attribute(line: str, attr_name: str) -> Optional[str]:
+def get_attribute(line: str, attr_name: str) -> str | None:
     """
     Tries parsing given attributes value, if the string contains it.
     :param line: String in format "attribute_name: value".

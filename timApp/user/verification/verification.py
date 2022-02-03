@@ -28,7 +28,7 @@ class VerificationType(Enum):
     @staticmethod
     @cache
     def get_verification_types() -> set[str]:
-        return set(v.value for v in VerificationType)
+        return {v.value for v in VerificationType}
 
     @staticmethod
     def parse(t: str) -> Optional["VerificationType"]:
@@ -69,7 +69,7 @@ class Verification(db.Model):
     """User that can react to verification request."""
 
     @property
-    def return_url(self) -> Optional[str]:
+    def return_url(self) -> str | None:
         return None
 
     def approve(self) -> None:
@@ -87,13 +87,13 @@ class Verification(db.Model):
 class ContactAddVerification(Verification):
     contact_id = db.Column(db.Integer, db.ForeignKey("usercontact.id"))
 
-    contact: Optional[UserContact] = db.relationship(
+    contact: UserContact | None = db.relationship(
         "UserContact", lazy="select", uselist=False
     )
     """Contact to verify."""
 
     @property
-    def return_url(self) -> Optional[str]:
+    def return_url(self) -> str | None:
         return url_for("settings_page.show")
 
     def deny(self) -> None:
@@ -156,7 +156,7 @@ def send_verification_impl(
     verification: Verification,
     message_title: str,
     message_body: str,
-    email: Optional[str] = None,
+    email: str | None = None,
 ) -> None:
     from timApp.notification.send_email import send_email
     from timApp.tim_app import app
@@ -182,7 +182,7 @@ def request_verification_impl(
     verification: Verification,
     message_title: str,
     message_body: str,
-    email: Optional[str] = None,
+    email: str | None = None,
 ) -> None:
     verification.token = secrets.token_urlsafe(VERIFICATION_TOKEN_LEN)
     verification.requested_at = get_current_time()
@@ -210,15 +210,11 @@ def get_verify_message_template(verify_type: VerificationType) -> tuple[str, str
     return subject, body
 
 
-def request_verification(
-    verification: Verification, email: Optional[str] = None
-) -> None:
+def request_verification(verification: Verification, email: str | None = None) -> None:
     subject, body = get_verify_message_template(verification.type)
     return request_verification_impl(verification, subject, body, email)
 
 
-def resend_verification(
-    verification: Verification, email: Optional[str] = None
-) -> None:
+def resend_verification(verification: Verification, email: str | None = None) -> None:
     subject, body = get_verify_message_template(verification.type)
     return send_verification_impl(verification, subject, body, email)

@@ -277,9 +277,7 @@ def verify_par_edit_access(par: DocParagraph):
         verify_ownership(d, message=message)
 
 
-def modify_paragraph_common(
-    doc_id: int, md: str, par_id: str, par_next_id: Optional[str]
-):
+def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str | None):
     docinfo = get_doc_or_abort(doc_id)
     verify_edit_access(docinfo)
 
@@ -432,9 +430,9 @@ def par_response(
     docu: DocInfo,
     spellcheck=False,
     update_cache=False,
-    edit_request: Optional[EditRequest] = None,
-    edit_result: Optional[DocumentEditResult] = None,
-    filter_return: Optional[GlobalParId] = None,
+    edit_request: EditRequest | None = None,
+    edit_result: DocumentEditResult | None = None,
+    filter_return: GlobalParId | None = None,
 ):
     user_ctx = user_context_with_logged_in(None)
     doc = docu.document
@@ -777,7 +775,7 @@ def add_paragraph():
     return add_paragraph_common(md, doc_id, par_next_id)
 
 
-def add_paragraph_common(md: str, doc_id: int, par_next_id: Optional[str]):
+def add_paragraph_common(md: str, doc_id: int, par_next_id: str | None):
     docinfo = get_doc_or_abort(doc_id)
     verify_edit_access(docinfo)
     doc = docinfo.document_as_current_user

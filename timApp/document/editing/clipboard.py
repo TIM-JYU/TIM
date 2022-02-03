@@ -68,8 +68,8 @@ class Clipboard:
                 return {"empty": True}
 
         def read(
-            self, as_ref: Optional[bool] = False, force_parrefs: Optional[bool] = False
-        ) -> Optional[list[dict[str, str]]]:
+            self, as_ref: bool | None = False, force_parrefs: bool | None = False
+        ) -> list[dict[str, str]] | None:
 
             if as_ref:
                 clipfilename = (
@@ -104,7 +104,7 @@ class Clipboard:
             with self.get_clipfilename().open("wt", encoding="utf-8") as clipfile:
                 clipfile.write(text)
 
-        def write_refs(self, pars: list[DocParagraph], area_name: Optional[str]):
+        def write_refs(self, pars: list[DocParagraph], area_name: str | None):
             self.path.mkdir(exist_ok=True, parents=True)
             ref_pars = [p.create_reference(p.doc).dict() for p in pars]
             reftext = DocumentWriter(ref_pars).get_text()
@@ -127,7 +127,7 @@ class Clipboard:
             doc: Document,
             par_start: str,
             par_end: str,
-            area_name: Optional[str] = None,
+            area_name: str | None = None,
         ) -> list[DocParagraph]:
 
             pars = self.copy_pars(doc, par_start, par_end, area_name, disable_ref=True)
@@ -140,7 +140,7 @@ class Clipboard:
             doc: Document,
             par_start: str,
             par_end: str,
-            area_name: Optional[str] = None,
+            area_name: str | None = None,
             disable_ref: bool = False,
         ) -> list[DocParagraph]:
 

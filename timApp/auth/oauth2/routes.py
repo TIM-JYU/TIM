@@ -18,7 +18,7 @@ oauth = TypedBlueprint("oauth", __name__, url_prefix="/oauth")
 
 
 @oauth.get("authorize")
-def request_authorization() -> Union[str, Response]:
+def request_authorization() -> str | Response:
     user = get_current_user_object() if logged_in() else None
     try:
         grant: BaseGrant = auth_server.get_consent_grant(end_user=user)

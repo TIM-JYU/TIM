@@ -59,56 +59,56 @@ class ListInfo:
     archive: ArchiveType = field(metadata={"by_value": True})
     """The type of archive policy this list uses."""
 
-    default_reply_type: Optional[ReplyToListChanges] = field(
+    default_reply_type: ReplyToListChanges | None = field(
         metadata={"by_value": True}, default=None
     )
     """The default reply type of the list."""
 
-    notify_owners_on_list_change: Optional[bool] = None
+    notify_owners_on_list_change: bool | None = None
     """A flag that determines if owners of the message list are notified of certain changes regarding the list, 
     e.g. a new user joins the list. """
 
-    only_text: Optional[bool] = None
+    only_text: bool | None = None
     """If only pure text is allowed on a list."""
 
-    list_description: Optional[str] = None
+    list_description: str | None = None
     """A short description of the list and its purpose."""
 
-    list_info: Optional[str] = None
+    list_info: str | None = None
     """Additional information about the list."""
 
-    email_admin_url: Optional[str] = None
+    email_admin_url: str | None = None
     """If the message list has an email list associated with it, this is the link to Mailman's advanced list 
     controls. """
 
-    tim_users_can_join: Optional[bool] = None
+    tim_users_can_join: bool | None = None
     """Flag used to determine if TIM users can directly join this list."""
 
-    members_can_unsubscribe: Optional[bool] = None
+    members_can_unsubscribe: bool | None = None
     """Flag used to determine if the TIM members of this list can leave the list on their own."""
 
-    default_send_right: Optional[bool] = None
+    default_send_right: bool | None = None
     """The list's default send right for (new) members."""
 
-    default_delivery_right: Optional[bool] = None
+    default_delivery_right: bool | None = None
     """The list's default delivery right for (new) members."""
 
-    list_subject_prefix: Optional[str] = None
+    list_subject_prefix: str | None = None
     """Messages routed by a message list will have this subject prefix added to them."""
 
-    domain: Optional[str] = None
+    domain: str | None = None
     """The domain of the message list, if it has email list associated with it."""
 
-    non_member_message_pass: Optional[bool] = None
+    non_member_message_pass: bool | None = None
     """A flag that controls if messages from non members are automatically passed to the list."""
 
-    allow_attachments: Optional[bool] = None
+    allow_attachments: bool | None = None
     """A flag controlling if attachments are allowed on the list."""
 
-    distribution: Optional[Distribution] = None
+    distribution: Distribution | None = None
     """All the message channels the list is using."""
 
-    removed: Optional[datetime] = None
+    removed: datetime | None = None
     """If set, shows the date the message list is set to not be in use. If a user has access to the admin document 
     even if this is set, it means that the message list is frozen, but not completely deleted. """
 
@@ -122,7 +122,7 @@ class MemberInfo:
     sendRight: bool
     deliveryRight: bool
     email: str
-    removed: Optional[datetime] = None
+    removed: datetime | None = None
 
 
 @dataclass

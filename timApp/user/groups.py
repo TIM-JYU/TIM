@@ -39,9 +39,9 @@ USER_NOT_FOUND = "User not found"
 
 def verify_groupadmin(
     require: bool = True,
-    user: Optional[User] = None,
-    action: Optional[str] = None,
-    msg: Optional[str] = None,
+    user: User | None = None,
+    action: str | None = None,
+    msg: str | None = None,
 ):
     curr_user = user
     if curr_user is None:
@@ -104,7 +104,7 @@ def get_group_or_abort(group_name: str):
     return ug
 
 
-def raise_group_not_found_if_none(group_name: str, ug: Optional[UserGroup]):
+def raise_group_not_found_if_none(group_name: str, ug: UserGroup | None):
     if not ug:
         raise RouteException(f'User group "{group_name}" not found')
 
@@ -233,7 +233,7 @@ def verify_group_access(ug: UserGroup, access_set, u=None, require=True):
         return True
 
 
-def verify_group_edit_access(ug: UserGroup, user: Optional[User] = None, require=True):
+def verify_group_edit_access(ug: UserGroup, user: User | None = None, require=True):
     if ug.name in SPECIAL_GROUPS:
         raise RouteException(f"Cannot edit special group: {ug.name}")
     if User.get_by_name(ug.name):

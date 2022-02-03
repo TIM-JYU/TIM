@@ -301,11 +301,11 @@ class TimRequestedAttributes:
         ]:
             self.friendly_name_map[ra["friendlyName"]] = ra["name"]
 
-    def get_attribute_by_friendly_name(self, name: str) -> Optional[str]:
+    def get_attribute_by_friendly_name(self, name: str) -> str | None:
         values = self.get_attributes_by_friendly_name(name)
         return values[0] if values else None
 
-    def get_attributes_by_friendly_name(self, name: str) -> Optional[list[str]]:
+    def get_attributes_by_friendly_name(self, name: str) -> list[str] | None:
         return self.saml_auth.get_attribute(self.friendly_name_map[name])
 
     @property
@@ -349,7 +349,7 @@ class TimRequestedAttributes:
         return self.eppn_parts[1]
 
     @property
-    def unique_codes(self) -> Optional[list[str]]:
+    def unique_codes(self) -> list[str] | None:
         return self.get_attributes_by_friendly_name("schacPersonalUniqueCode")
 
     @property
@@ -370,7 +370,7 @@ class TimRequestedAttributes:
             RefedsIapLevel.from_string(level) for level in self.edu_person_assurance
         ]
         # Don't check default because IAP must always be provided
-        best_level = max([level for level in iap_levels if level is not None])
+        best_level = max(level for level in iap_levels if level is not None)
         return IdentityAssuranceProofing(
             best_level, REFEDS_LOCAL_ENTRPRISE_ASSURANCE in self.edu_person_assurance
         )

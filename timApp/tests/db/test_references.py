@@ -14,8 +14,8 @@ from timApp.timdb.exceptions import TimDbException
 def add_ref_paragraph(
     doc: Document,
     src_par: DocParagraph,
-    text: Optional[str] = None,
-    attrs: Optional[dict] = None,
+    text: str | None = None,
+    attrs: dict | None = None,
 ) -> DocParagraph:
     ref_attrs = {} if attrs is None else attrs.copy()
     ref_attrs["rp"] = src_par.get_id()
@@ -36,8 +36,8 @@ def add_area_ref_paragraph(
     doc: Document,
     src_doc: "Document",
     src_area_name: str,
-    text: Optional[str] = None,
-    attrs: Optional[dict] = None,
+    text: str | None = None,
+    attrs: dict | None = None,
 ) -> DocParagraph:
     ref_attrs = {} if attrs is None else attrs.copy()
     ref_attrs["ra"] = src_area_name

@@ -54,11 +54,11 @@ def add_annotation(
     velp_id: int,
     doc_id: int,
     coord: AnnotationPosition,
-    points: Optional[float],
+    points: float | None,
     visible_to: AnnotationVisibility = field(metadata={"by_value": True}),
-    color: Optional[str] = None,
-    answer_id: Optional[int] = None,
-    draw_data: Optional[list[dict]] = None,
+    color: str | None = None,
+    answer_id: int | None = None,
+    draw_data: list[dict] | None = None,
 ) -> Response:
     """Adds a new annotation."""
     d = get_doc_or_abort(doc_id)
@@ -106,14 +106,14 @@ def add_annotation(
     return json_response(ann, date_conversion=True)
 
 
-def validate_color(color: Optional[str]) -> None:
+def validate_color(color: str | None) -> None:
     if color and not is_color_hex_string(color):
         raise RouteException("Color should be a hex string or None, e.g. '#FFFFFF'.")
 
 
 def check_visibility_and_maybe_get_doc(
     user: User, ann: Annotation
-) -> tuple[bool, Optional[DocInfo]]:
+) -> tuple[bool, DocInfo | None]:
     d = None
     if user.id == ann.annotator_id:
         return True, d
@@ -132,7 +132,7 @@ def check_visibility_and_maybe_get_doc(
 
 def check_annotation_edit_access_and_maybe_get_doc(
     user: User, ann: Annotation
-) -> tuple[bool, Optional[DocInfo]]:
+) -> tuple[bool, DocInfo | None]:
     vis, d = check_visibility_and_maybe_get_doc(user, ann)
     if not vis:
         return False, d
@@ -148,10 +148,10 @@ def check_annotation_edit_access_and_maybe_get_doc(
 def update_annotation(
     id: int,
     visible_to: AnnotationVisibility = field(metadata={"by_value": True}),
-    points: Optional[float] = None,
-    color: Optional[str] = None,
-    coord: Optional[AnnotationPosition] = None,
-    draw_data: Optional[list[dict]] = None,
+    points: float | None = None,
+    color: str | None = None,
+    coord: AnnotationPosition | None = None,
+    draw_data: list[dict] | None = None,
 ) -> Response:
     """Updates the information of an annotation."""
     verify_logged_in()

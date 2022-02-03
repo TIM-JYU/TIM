@@ -127,10 +127,10 @@ class Cell:
         content: str = "",
         colspan: int = default_colspan,
         rowspan: int = default_rowspan,
-        text_color: Union[None, str] = default_text_color,
-        text_color_html: Union[None, bool] = False,
-        bg_color: Union[None, str] = default_transparent_color,
-        bg_color_html: Union[None, bool] = False,
+        text_color: None | str = default_text_color,
+        text_color_html: None | bool = False,
+        bg_color: None | str = default_transparent_color,
+        bg_color_html: None | bool = False,
         h_align=default_text_h_align,
         font_size: float = default_font_size,
         cell_width=default_width,
@@ -283,7 +283,7 @@ class Row:
     """
 
     def __init__(
-        self, index: int, cells: list[Cell], height: Union[float, None] = None
+        self, index: int, cells: list[Cell], height: float | None = None
     ) -> None:
         """
         :param index: Row index.
@@ -304,7 +304,7 @@ class Row:
             output += f"& {str(self.cells[i])}"
         return output
 
-    def get_row_height(self) -> Union[int, float]:
+    def get_row_height(self) -> int | float:
         """
         Gives the largest cell height to be used as row height or row's height attribute, if it is taller.
         Note: sseparate cell heights aren't supported.
@@ -354,7 +354,7 @@ class Row:
             i += cell.colspan
         return i
 
-    def get_cell(self, index: int) -> Union[Cell, None]:
+    def get_cell(self, index: int) -> Cell | None:
         """
         Gives cell with the index number (which may be different from list index).
         :param index: Cell index number in the table.
@@ -1018,7 +1018,7 @@ def get_span(item, default=None) -> (int, int):
     return colspan, rowspan
 
 
-def get_size(item, key: str, default=None) -> Union[str, None]:
+def get_size(item, key: str, default=None) -> str | None:
     """
     Parse width or height into LaTeX-supported format.
     :param item: Cell data.
@@ -1035,9 +1035,7 @@ def get_size(item, key: str, default=None) -> Union[str, None]:
         return default
 
 
-def get_font_family(
-    item, default: Union[str, None] = default_font_family
-) -> Union[str, None]:
+def get_font_family(item, default: str | None = default_font_family) -> str | None:
     """
     :param item: Cell or row data.
     :param default: Font family to use in case none set.
@@ -1093,7 +1091,7 @@ def get_key_value(item, key, default=None):
     return a
 
 
-def parse_hex_color(color, default_color=None) -> Union[str, None]:
+def parse_hex_color(color, default_color=None) -> str | None:
     """
     Removes non-hex characters and checks if result is valid.
     :param color: Color string.

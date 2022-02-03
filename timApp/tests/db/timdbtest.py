@@ -78,7 +78,7 @@ class TimDbTest(unittest.TestCase):
         self.db.close()
 
     def create_doc(
-        self, from_file=None, initial_par: Union[str, list[str]] = None, settings=None
+        self, from_file=None, initial_par: str | list[str] = None, settings=None
     ) -> DocInfo:
         d = DocEntry.create(
             f"test{TimDbTest.i}",
@@ -92,7 +92,7 @@ class TimDbTest(unittest.TestCase):
         return d
 
     def init_doc(
-        self, doc: Document, from_file, initial_par: Union[str, list[str]], settings
+        self, doc: Document, from_file, initial_par: str | list[str], settings
     ):
         if from_file is not None:
             with open(from_file, encoding="utf-8") as f:

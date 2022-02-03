@@ -28,10 +28,10 @@ from timApp.velp.velp_models import (
 
 def _create_velp(
     creator_id: int,
-    default_points: Optional[float],
-    valid_until: Optional[str] = None,
-    visible_to: Optional[int] = None,
-    color: Optional[str] = None,
+    default_points: float | None,
+    valid_until: str | None = None,
+    visible_to: int | None = None,
+    color: str | None = None,
 ) -> Velp:
     """Creates a new entry to the velp table.
 
@@ -102,12 +102,12 @@ def create_velp_content(
 def create_new_velp(
     creator_id: int,
     content: str,
-    default_points: Optional[float] = None,
-    default_comment: Optional[str] = None,
-    valid_until: Optional[str] = None,
+    default_points: float | None = None,
+    default_comment: str | None = None,
+    valid_until: str | None = None,
     language_id: str = "FI",
-    visible_to: Optional[int] = None,
-    color: Optional[int] = None,
+    visible_to: int | None = None,
+    color: int | None = None,
 ) -> tuple[Velp, VelpVersion]:
     """Creates a new velp with all information.
 
@@ -179,7 +179,7 @@ def update_velp_labels(velp_id: int, labels: Iterable[int]):
 
 def get_latest_velp_version(
     velp_id: int, language_id: str = "FI"
-) -> Optional[VelpContent]:
+) -> VelpContent | None:
     """Method to fetch the latest version for velp in specific language.
 
     :param velp_id: ID of velp we're checking

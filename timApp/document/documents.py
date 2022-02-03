@@ -65,7 +65,7 @@ def delete_document(document_id: int):
 
 
 def import_document(
-    content: str, path: str, owner_group: UserGroup, title: Optional[str] = None
+    content: str, path: str, owner_group: UserGroup, title: str | None = None
 ) -> DocInfo:
     d = DocEntry.create(path, owner_group, title=title)
     doc = d.document
@@ -76,7 +76,7 @@ def import_document(
 
 
 def import_document_from_file(
-    document_file: str, path: str, owner_group: UserGroup, title: Optional[str] = None
+    document_file: str, path: str, owner_group: UserGroup, title: str | None = None
 ) -> DocInfo:
     """Imports the specified document in the database.
 

@@ -27,31 +27,31 @@ class DragStateModel:
 
 @dataclass
 class DragMarkupModel(GenericMarkupModel):
-    cols: Union[int, Missing] = missing
-    copy: Union[str, Missing] = missing
-    followid: Union[str, Missing] = missing
-    inputstem: Union[str, Missing] = missing
-    max: Union[int, Missing] = missing
-    needed_len: Union[int, Missing] = missing
-    savebutton: Union[bool, Missing] = missing
-    shuffle: Union[bool, Missing] = missing
-    trash: Union[bool, Missing] = missing
-    type: Union[str, Missing] = missing
-    words: Union[list[str], Missing] = missing
-    autoSave: Union[bool, Missing] = missing
+    cols: int | Missing = missing
+    copy: str | Missing = missing
+    followid: str | Missing = missing
+    inputstem: str | Missing = missing
+    max: int | Missing = missing
+    needed_len: int | Missing = missing
+    savebutton: bool | Missing = missing
+    shuffle: bool | Missing = missing
+    trash: bool | Missing = missing
+    type: str | Missing = missing
+    words: list[str] | Missing = missing
+    autoSave: bool | Missing = missing
 
 
 @dataclass
 class DragInputModel:
     words: list[str]
 
-    copy: Union[str, Missing] = missing
-    max: Union[int, Missing] = missing
-    nosave: Union[bool, Missing] = missing
-    savebutton: Union[bool, Missing] = missing
-    shuffle: Union[bool, Missing] = missing
-    trash: Union[bool, Missing] = missing
-    type: Union[str, Missing] = missing
+    copy: str | Missing = missing
+    max: int | Missing = missing
+    nosave: bool | Missing = missing
+    savebutton: bool | Missing = missing
+    shuffle: bool | Missing = missing
+    trash: bool | Missing = missing
+    type: str | Missing = missing
 
 
 @dataclass

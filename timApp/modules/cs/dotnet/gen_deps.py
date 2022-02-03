@@ -27,7 +27,7 @@ class DotNetDeps(TypedDict):
 def gen_deps(csproj_file: str, base_dir: str):
     print(f"Generating deps for {csproj_file}")
     name, _ = os.path.splitext(csproj_file)
-    deps_obj: Optional[DotNetDeps] = None
+    deps_obj: DotNetDeps | None = None
     with tempfile.TemporaryDirectory(dir=base_dir) as tmp_folder:
         with open(os.path.join(tmp_folder, "main.cs"), "w", encoding="utf-8") as f:
             f.write("System.Console.ReadKey();")

@@ -25,19 +25,19 @@ class DivContent(Loadable):
 
 @dataclass
 class OutputContainer(Loadable):
-    title: Optional[DivContent] = None
-    text: Optional[DivContent] = None
-    angular: Optional[AngularModule] = None
-    html: Optional[DivContent] = None
+    title: DivContent | None = None
+    text: DivContent | None = None
+    angular: AngularModule | None = None
+    html: DivContent | None = None
     hide: bool = False  # whether to hide by default
 
 
 @dataclass
 class RunResult(Loadable):
     output_boxes: list[OutputContainer] = field(default_factory=list)
-    penalties: dict[str, Union[bool, str]] = field(default_factory=dict)
+    penalties: dict[str, bool | str] = field(default_factory=dict)
     points: float = 0.0
-    max_points: Optional[float] = None
+    max_points: float | None = None
 
     def penalize(self, key: str) -> bool:
         return self.penalties and self.penalties.get(key, False)

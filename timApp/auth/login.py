@@ -61,7 +61,7 @@ def get_real_name(email: str) -> str:
 
 
 @login_page.post("/logout")
-def logout(user_id: Optional[int] = None) -> Response:
+def logout(user_id: int | None = None) -> Response:
     if user_id is not None and user_id != get_current_user_id():
         group = get_other_users()
         group.pop(str(user_id), None)
@@ -83,7 +83,7 @@ def login_user_data() -> dict:
 
 
 @login_page.get("/login")
-def login(anchor: Optional[str] = None) -> Union[Response, str]:
+def login(anchor: str | None = None) -> Response | str:
     save_came_from()
     if logged_in():
         flash("You are already logged in.")
@@ -95,7 +95,7 @@ def login(anchor: Optional[str] = None) -> Union[Response, str]:
 
 def create_or_update_user(
     info: UserInfo,
-    group_to_add: Optional[UserGroup] = None,
+    group_to_add: UserGroup | None = None,
     update_username: bool = True,
     update_email: bool = True,
 ) -> User:
@@ -187,7 +187,7 @@ def check_temp_password(email: str, token: str) -> Response:
 
 @login_page.post("/emailSignup")
 def email_signup(
-    email: str, url: Optional[str] = None, reset_password: bool = False
+    email: str, url: str | None = None, reset_password: bool = False
 ) -> Response:
     """Begins email signup process or resets a password for a user.
 
@@ -210,7 +210,7 @@ def is_email_registration_enabled() -> bool:
 
 def do_email_signup_or_password_reset(
     email_or_u: str,
-    url: Optional[str] = None,
+    url: str | None = None,
     force_fail: bool = False,
     only_password_reset: bool = False,
 ) -> Response:
@@ -296,7 +296,7 @@ def email_signup_finish(
     email: str,
     passconfirm: str,
     password: str,
-    realname: Optional[str],
+    realname: str | None,
     token: str,
 ) -> Response:
     """Finished the email signup or password reset process.

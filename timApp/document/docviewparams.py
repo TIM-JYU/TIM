@@ -10,16 +10,16 @@ from tim_common.marshmallow_dataclass import class_schema
 class DocViewParams:
     """View route parameters that affect document rendering."""
 
-    b: Union[int, str, None] = None
-    e: Union[int, str, None] = None
-    edit: Optional[str] = None
-    group: Optional[str] = None
-    hide_names: Optional[bool] = None
-    lazy: Optional[bool] = None
+    b: int | str | None = None
+    e: int | str | None = None
+    edit: str | None = None
+    group: str | None = None
+    hide_names: bool | None = None
+    lazy: bool | None = None
     noanswers: bool = False
     pars_only: bool = False
     preamble: bool = False
-    size: Union[int, None] = None
+    size: int | None = None
 
     def __post_init__(self) -> None:
         if self.b and self.e:

@@ -32,15 +32,15 @@ class PaliStateModel:
 
 @dataclass
 class PaliMarkupModel(GenericMarkupModel):
-    points_array: Union[list[list[float]], Missing] = missing
-    inputstem: Union[str, Missing] = missing
-    needed_len: Union[int, Missing] = missing
-    initword: Union[str, Missing] = missing
-    cols: Union[int, Missing] = missing
-    inputplaceholder: Union[str, Missing] = missing
+    points_array: list[list[float]] | Missing = missing
+    inputstem: str | Missing = missing
+    needed_len: int | Missing = missing
+    initword: str | Missing = missing
+    cols: int | Missing = missing
+    inputplaceholder: str | Missing = missing
 
     @validates("points_array")
-    def validate_points_array(self, value: Union[list[list[float]], Missing]) -> None:
+    def validate_points_array(self, value: list[list[float]] | Missing) -> None:
         if isinstance(value, list) and (
             len(value) != 2 or not all(len(v) == 2 for v in value)
         ):
@@ -52,8 +52,8 @@ class PaliInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
 
     userword: str
-    paliOK: Union[bool, Missing] = missing
-    nosave: Union[bool, Missing] = missing
+    paliOK: bool | Missing = missing
+    nosave: bool | Missing = missing
 
     @validates("userword")
     def validate_userword(self, word: str) -> None:

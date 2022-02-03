@@ -186,14 +186,14 @@ class UserOrigin(Enum):
 
 @dataclass
 class UserInfo:
-    username: Optional[str] = None
-    email: Optional[str] = None
-    full_name: Optional[str] = None
-    given_name: Optional[str] = None
-    last_name: Optional[str] = None
-    origin: Optional[UserOrigin] = None
-    password: Optional[str] = None
-    password_hash: Optional[str] = None
+    username: str | None = None
+    email: str | None = None
+    full_name: str | None = None
+    given_name: str | None = None
+    last_name: str | None = None
+    origin: UserOrigin | None = None
+    password: str | None = None
+    password_hash: str | None = None
     unique_codes: list[SchacPersonalUniqueCode] = field(default_factory=list)
 
     def __post_init__(self):
@@ -202,7 +202,7 @@ class UserInfo:
         ), "Cannot pass both password and password_hash to UserInfo"
 
 
-def last_name_to_first(full_name: Optional[str]):
+def last_name_to_first(full_name: str | None):
     """Converts a name of the form "Firstname Middlenames Lastname" to "Lastname Firstname Middlenames"."""
     if full_name is None:
         return None
@@ -212,7 +212,7 @@ def last_name_to_first(full_name: Optional[str]):
     return full_name
 
 
-def last_name_to_last(full_name: Optional[str]):
+def last_name_to_last(full_name: str | None):
     """Converts a name of the form "Lastname Firstname Middlenames" to "Firstname Middlenames Lastname"."""
     if full_name is None:
         return None
@@ -270,7 +270,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         collection_class=attribute_mapped_collection("user_collection_key"),
     )
 
-    internalmessage_readreceipt: Optional[InternalMessageReadReceipt] = db.relationship(
+    internalmessage_readreceipt: InternalMessageReadReceipt | None = db.relationship(
         "InternalMessageReadReceipt", back_populates="user"
     )
 
@@ -471,7 +471,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def create_with_group(
         info: UserInfo,
         is_admin: bool = False,
-        uid: Optional[int] = None,
+        uid: int | None = None,
     ) -> tuple["User", UserGroup]:
         p_hash = (
             create_password_hash(info.password)
@@ -701,8 +701,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         self,
         channel: Channel,
         contact: str,
-        options: Optional[list[loader_option]] = None,
-    ) -> Optional[UserContact]:
+        options: list[loader_option] | None = None,
+    ) -> UserContact | None:
         """Find user's contact by channel and contact contents.
 
         :param channel: Contact channel.
@@ -843,9 +843,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                     and uc.contact_origin != origin
                     and uc.contact in to_add
                 ]
-                added_email_contacts_set = set(
-                    uc.contact for uc in added_email_contacts
-                )
+                added_email_contacts_set = {uc.contact for uc in added_email_contacts}
                 other_origin_email_contacts: dict[str, UserContact] = {
                     uc.contact: uc for uc in added_email_contacts
                 }
@@ -932,7 +930,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         vals: set[int],
         allow_admin: bool = True,
         grace_period: timedelta = timedelta(seconds=0),
-    ) -> Optional[BlockAccess]:
+    ) -> BlockAccess | None:
         if allow_admin and self.is_admin:
             return BlockAccess(
                 block_id=i.id,
@@ -977,34 +975,34 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         i: ItemOrBlock,
         access: AccessType,
         grace_period=timedelta(seconds=0),
-    ) -> Optional[BlockAccess]:
+    ) -> BlockAccess | None:
         from timApp.auth.accesshelper import check_inherited_right
 
         return check_inherited_right(
             self, i, access, grace_period
         ) or self.has_some_access(i, access_sets[access], grace_period=grace_period)
 
-    def has_view_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
+    def has_view_access(self, i: ItemOrBlock) -> BlockAccess | None:
         return self.has_some_access(i, view_access_set)
 
-    def has_edit_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
+    def has_edit_access(self, i: ItemOrBlock) -> BlockAccess | None:
         return self.has_some_access(i, edit_access_set)
 
-    def has_manage_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
+    def has_manage_access(self, i: ItemOrBlock) -> BlockAccess | None:
         return self.has_some_access(i, manage_access_set)
 
-    def has_teacher_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
+    def has_teacher_access(self, i: ItemOrBlock) -> BlockAccess | None:
         return self.has_some_access(i, teacher_access_set)
 
-    def has_seeanswers_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
+    def has_seeanswers_access(self, i: ItemOrBlock) -> BlockAccess | None:
         return self.has_some_access(i, seeanswers_access_set)
 
-    def has_copy_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
+    def has_copy_access(self, i: ItemOrBlock) -> BlockAccess | None:
         return self.has_some_access(i, copy_access_set)
 
     def has_ownership(
         self, i: ItemOrBlock, allow_admin: bool = True
-    ) -> Optional[BlockAccess]:
+    ) -> BlockAccess | None:
         return self.has_some_access(i, owner_access_set, allow_admin)
 
     def can_write_to_folder(self, f: Folder):
@@ -1017,12 +1015,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         self,
         block: ItemOrBlock,
         access_type: AccessType,
-        accessible_from: Optional[datetime] = None,
-        accessible_to: Optional[datetime] = None,
-        duration_from: Optional[datetime] = None,
-        duration_to: Optional[datetime] = None,
-        duration: Optional[timedelta] = None,
-        require_confirm: Optional[bool] = None,
+        accessible_from: datetime | None = None,
+        accessible_to: datetime | None = None,
+        duration_from: datetime | None = None,
+        duration_to: datetime | None = None,
+        duration: timedelta | None = None,
+        require_confirm: bool | None = None,
     ):
         return grant_access(
             group=self.get_personal_group(),
@@ -1176,7 +1174,7 @@ def get_membership_end(u: User, group_ids: set[int]):
     return membership_end
 
 
-def has_no_higher_right(access_type: Optional[str], rights: UserItemRights) -> bool:
+def has_no_higher_right(access_type: str | None, rights: UserItemRights) -> bool:
     """
     Checks whether the given access type (view, edit, ...) has no higher match in the given UserItemRights.
     For example, if rights has {'edit': True}, then has_no_higher_right('view', rights) is False.

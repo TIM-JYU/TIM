@@ -1870,7 +1870,7 @@ class SendGradeTestBase(TimRouteTest):
         self,
         grade_params: dict[str, Any],
         expect_content: dict[str, Any],
-        mock_sisu_response: Optional[dict[str, Any]],
+        mock_sisu_response: dict[str, Any] | None,
         mock_sisu_status=200,
         expect_status=200,
     ):

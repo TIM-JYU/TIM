@@ -84,7 +84,7 @@ class LectureAnswer(db.Model):
 
 
 def get_totals(
-    lecture: Lecture, user: Optional[User] = None
+    lecture: Lecture, user: User | None = None
 ) -> list[tuple[User, float, int]]:
     q = User.query
     if user:

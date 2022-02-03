@@ -4,14 +4,12 @@ from collections import defaultdict, OrderedDict
 from dataclasses import dataclass
 from datetime import datetime
 from typing import (
-    Optional,
     Iterable,
     Any,
     Generator,
     TypeVar,
     SupportsRound,
     DefaultDict,
-    Union,
     TypedDict,
     ItemsView,
 )
@@ -40,7 +38,7 @@ from timApp.velp.annotation_model import Annotation
 
 @dataclass
 class ExistingAnswersInfo:
-    latest_answer: Optional[Answer]
+    latest_answer: Answer | None
     count: int
 
 
@@ -80,7 +78,7 @@ def get_latest_valid_answers_query(task_id: TaskId, users: list[User]) -> Query:
 def is_redundant_answer(
     content: str,
     existing_answers: ExistingAnswersInfo,
-    ptype: Optional[PluginTypeBase],
+    ptype: PluginTypeBase | None,
     valid: bool,
 ) -> bool:
     la = existing_answers.latest_answer
@@ -105,16 +103,16 @@ def save_answer(
     users: list[User],
     task_id: TaskId,
     content: Any,
-    points: Optional[float],
-    tags: Optional[list[str]] = None,
+    points: float | None,
+    tags: list[str] | None = None,
     valid: bool = True,
-    points_given_by: Optional[int] = None,
+    points_given_by: int | None = None,
     force_save: bool = False,
-    saver: Optional[User] = None,
-    plugintype: Optional[PluginTypeLazy] = None,
-    max_content_len: Optional[int] = None,
-    origin: Optional[OriginInfo] = None,
-) -> Optional[Answer]:
+    saver: User | None = None,
+    plugintype: PluginTypeLazy | None = None,
+    max_content_len: int | None = None,
+    origin: OriginInfo | None = None,
+) -> Answer | None:
     """Saves an answer to the database.
 
     :param max_content_len: Maximum length for answer content.
@@ -176,7 +174,7 @@ def save_answer(
 
 def get_all_answers(
     task_ids: list[TaskId],
-    usergroup: Optional[int],
+    usergroup: int | None,
     hide_names: bool,
     age: str,
     valid: str,
@@ -186,8 +184,8 @@ def get_all_answers(
     period_from: datetime,
     period_to: datetime,
     data_format: str,
-    consent: Optional[Consent],
-) -> Union[list[str], list[dict]]:
+    consent: Consent | None,
+) -> list[str] | list[dict]:
     """Gets all answers to the specified tasks.
 
     :param data_format: The data format to use, currently supports "text" and "json".
@@ -370,18 +368,18 @@ class UserTaskEntry(TypedDict):
     user: User
     task_count: int
     velped_task_count: int
-    total_points: Optional[float]
-    task_points: Optional[float]
-    velp_points: Optional[float]
+    total_points: float | None
+    task_points: float | None
+    velp_points: float | None
     task_id: str
 
 
 def get_users_for_tasks(
     task_ids: list[TaskId],
-    user_ids: Optional[list[int]] = None,
+    user_ids: list[int] | None = None,
     group_by_user: bool = True,
     group_by_doc: bool = False,
-    answer_filter: Optional[Any] = None,
+    answer_filter: Any | None = None,
 ) -> list[UserTaskEntry]:
     if not task_ids:
         return []
@@ -484,23 +482,23 @@ def get_users_for_tasks(
 T = TypeVar("T", bound=SupportsRound[Any])
 
 
-def sum_and_round(generator: Generator[T, None, None], digits: int = 2) -> Optional[T]:
+def sum_and_round(generator: Generator[T, None, None], digits: int = 2) -> T | None:
     list_to_sum = list(generator)
     if not list_to_sum:
         return None
     return round(sum(list_to_sum), digits)  # type: ignore
 
 
-def round_if_not_none(num: Optional[T], digits: int = 2) -> Optional[T]:
+def round_if_not_none(num: T | None, digits: int = 2) -> T | None:
     if num is None:
         return None
     return round(num, digits)
 
 
 class SumFields(TypedDict):
-    task_sum: Optional[float]
-    velp_sum: Optional[float]
-    total_sum: Optional[float]
+    task_sum: float | None
+    velp_sum: float | None
+    total_sum: float | None
 
 
 class UserPointGroup(SumFields):
@@ -519,9 +517,9 @@ class ResultGroup(SumFields):
 
 
 class UserPoints(TypedDict):
-    total_points: Optional[float]
-    task_points: Optional[float]
-    velp_points: Optional[float]
+    total_points: float | None
+    task_points: float | None
+    velp_points: float | None
     task_count: int
     velped_task_count: int
     groups: dict[str, ResultGroup]
@@ -529,14 +527,14 @@ class UserPoints(TypedDict):
 
 
 def get_points_by_rule(
-    rule: Optional[PointSumRule],
+    rule: PointSumRule | None,
     task_ids: list[TaskId],
-    user_ids: Optional[list[int]] = None,
-    answer_filter: Optional[Any] = None,
-    force_user: Optional[User] = None,
-) -> Union[
-    list[UserPoints], list[UserTaskEntry]
-]:  # TODO: Would be better to return always same kind of list.
+    user_ids: list[int] | None = None,
+    answer_filter: Any | None = None,
+    force_user: User | None = None,
+) -> (
+    list[UserPoints] | list[UserTaskEntry]
+):  # TODO: Would be better to return always same kind of list.
     """Computes the point sum from given tasks according to the given point rule.
 
     :param force_user: Whether to force at least one result user if the result would be empty otherwise.
@@ -624,7 +622,7 @@ def get_points_by_rule(
                 1 for t in group["tasks"] if t["velped_task_count"] > 0
             )
             if task_sum is not None and velp_sum is not None:
-                total_sum: Optional[float] = task_sum + velp_sum
+                total_sum: float | None = task_sum + velp_sum
             elif task_sum is not None:
                 total_sum = task_sum
             elif velp_sum is not None:
@@ -694,7 +692,7 @@ def flatten_points_result(
         )
 
         if rule.sort:
-            rulegroups: Union[ItemsView[str, Group], list[tuple[str, Group]]] = sorted(
+            rulegroups: ItemsView[str, Group] | list[tuple[str, Group]] = sorted(
                 rule_groups.items()
             )
         else:

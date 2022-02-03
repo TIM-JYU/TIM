@@ -17,7 +17,7 @@ class TypedBlueprint(Blueprint):
     """
 
     def get(
-        self, rule: str, model: Optional[type[ModelType]] = None, **kwargs: Any
+        self, rule: str, model: type[ModelType] | None = None, **kwargs: Any
     ) -> Callable:
         """
         Define a GET route.
@@ -30,7 +30,7 @@ class TypedBlueprint(Blueprint):
         return self.route(rule, model, **(kwargs | {"methods": ["get"]}))
 
     def post(
-        self, rule: str, model: Optional[type[ModelType]] = None, **kwargs: Any
+        self, rule: str, model: type[ModelType] | None = None, **kwargs: Any
     ) -> Callable:
         """
         Define a POST route.
@@ -43,7 +43,7 @@ class TypedBlueprint(Blueprint):
         return self.route(rule, model, **(kwargs | {"methods": ["post"]}))
 
     def put(
-        self, rule: str, model: Optional[type[ModelType]] = None, **kwargs: Any
+        self, rule: str, model: type[ModelType] | None = None, **kwargs: Any
     ) -> Callable:
         """
         Define a PUT route.
@@ -56,7 +56,7 @@ class TypedBlueprint(Blueprint):
         return self.route(rule, model, **(kwargs | {"methods": ["put"]}))
 
     def patch(
-        self, rule: str, model: Optional[type[ModelType]] = None, **kwargs: Any
+        self, rule: str, model: type[ModelType] | None = None, **kwargs: Any
     ) -> Callable:
         """
         Define a PATCH route.
@@ -69,7 +69,7 @@ class TypedBlueprint(Blueprint):
         return self.route(rule, model, **(kwargs | {"methods": ["patch"]}))
 
     def delete(
-        self, rule: str, model: Optional[type[ModelType]] = None, **kwargs: Any
+        self, rule: str, model: type[ModelType] | None = None, **kwargs: Any
     ) -> Callable:
         """
         Define a DELETE route.
@@ -82,7 +82,7 @@ class TypedBlueprint(Blueprint):
         return self.route(rule, model, **(kwargs | {"methods": ["delete"]}))
 
     def route(
-        self, rule: str, model: Optional[type[ModelType]] = None, **options: Any
+        self, rule: str, model: type[ModelType] | None = None, **options: Any
     ) -> Callable:
         """
         Define a generic Flask route.
@@ -101,10 +101,10 @@ class TypedBlueprint(Blueprint):
 
 
 def use_typed_params(
-    num_path_params: int = 0, model: Optional[type[ModelType]] = None
+    num_path_params: int = 0, model: type[ModelType] | None = None
 ) -> Callable:
     def decorator(func: Callable) -> Callable:
-        custom_model: Optional[type[ModelType]] = model
+        custom_model: type[ModelType] | None = model
         pass_by_kwargs = model is None
         if custom_model is None:
             sig = signature(func)

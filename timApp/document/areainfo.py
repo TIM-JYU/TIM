@@ -9,7 +9,7 @@ class AreaBoundary:
 
 @dataclass
 class AreaStart(AreaBoundary):
-    is_collapsed: Optional[bool]  # If None, not a collapsible area
+    is_collapsed: bool | None  # If None, not a collapsible area
 
     @property
     def area_class_str(self) -> str:

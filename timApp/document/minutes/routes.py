@@ -107,7 +107,7 @@ def create_minute_extracts(doc: str) -> Response:
                 continue
 
             try:
-                new_extract_index: Union[int, str] = ast.literal_eval(args[0])
+                new_extract_index: int | str = ast.literal_eval(args[0])
             except ValueError:
                 raise RouteException(
                     f"Failed to parse extract index from macro, from paragraph: \n{markdown}"

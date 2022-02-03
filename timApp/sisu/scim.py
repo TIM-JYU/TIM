@@ -53,7 +53,7 @@ UNPROCESSABLE_ENTITY = 422
 class SCIMNameModel:
     familyName: str
     givenName: str
-    middleName: Optional[str] = None
+    middleName: str | None = None
 
     def derive_full_name(self, last_name_first: bool) -> str:
         if last_name_first:
@@ -74,9 +74,9 @@ class SCIMMemberModel:
     name: SCIMNameModel
     display: str
     email: str
-    workEmail: Optional[str] = None
-    ref: Optional[str] = field(metadata={"data_key": "$ref"}, default=None)
-    type: Optional[str] = None
+    workEmail: str | None = None
+    ref: str | None = field(metadata={"data_key": "$ref"}, default=None)
+    type: str | None = None
 
     @cached_property
     def primary_email(self) -> str:
@@ -109,7 +109,7 @@ class SCIMCommonModel:
 @dataclass(frozen=True)
 class SCIMEmailModel:
     value: str
-    type: Optional[str] = None
+    type: str | None = None
     primary: bool = True
 
 
@@ -125,8 +125,8 @@ SCIMUserModelSchema = class_schema(SCIMUserModel)
 @dataclass(frozen=True)
 class SCIMGroupModel(SCIMCommonModel):
     members: list[SCIMMemberModel]
-    id: Optional[str] = None
-    schemas: Optional[list[str]] = None
+    id: str | None = None
+    schemas: list[str] | None = None
 
 
 SCIMGroupModelSchema = class_schema(SCIMGroupModel)
@@ -136,7 +136,7 @@ SCIMGroupModelSchema = class_schema(SCIMGroupModel)
 class SCIMException(Exception):
     code: int
     msg: str
-    headers: Optional[dict[str, str]] = None
+    headers: dict[str, str] | None = None
 
 
 @scim.errorhandler(SCIMException)
@@ -151,7 +151,7 @@ def handle_error(error: Any) -> Response:
 
 
 def handle_error_msg_code(
-    code: int, msg: str, headers: Optional[dict[str, str]] = None
+    code: int, msg: str, headers: dict[str, str] | None = None
 ) -> Response:
     return json_response(
         scim_error_json(code, msg),
@@ -574,7 +574,7 @@ def group_scim(ug: UserGroup) -> dict:
     }
 
 
-def try_get_group_by_scim(group_id: str) -> Optional[UserGroup]:
+def try_get_group_by_scim(group_id: str) -> UserGroup | None:
     try:
         ug = (
             ScimUserGroup.query.filter_by(external_id=scim_group_to_tim(group_id))

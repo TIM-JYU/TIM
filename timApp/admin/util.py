@@ -22,7 +22,7 @@ class BasicArguments:
     progress: bool = attr.ib(kw_only=True)
     doc: str = attr.ib(kw_only=True)
     folder: str = attr.ib(kw_only=True)
-    urlpath: Optional[str] = attr.ib(kw_only=True, default=None)
+    urlpath: str | None = attr.ib(kw_only=True, default=None)
 
 
 @attr.s
@@ -35,7 +35,7 @@ class DryrunnableArguments(BasicArguments, DryrunnableOnly):
     pass
 
 
-def enum_docs(folder: Optional[Folder] = None) -> Generator[DocInfo, None, None]:
+def enum_docs(folder: Folder | None = None) -> Generator[DocInfo, None, None]:
     visited_docs: set[int] = set()
     admin_id = UserGroup.get_admin_group().id
     if not folder:
@@ -61,7 +61,7 @@ def iterate_pars_skip_exceptions(d: DocInfo) -> Generator[DocParagraph, None, No
 
 
 def enum_pars(
-    item: Union[Folder, DocInfo, None] = None
+    item: Folder | DocInfo | None = None,
 ) -> Generator[tuple[DocInfo, DocParagraph], None, None]:
     if isinstance(item, Folder) or item is None:
         collection: Iterable[DocInfo] = enum_docs(item)

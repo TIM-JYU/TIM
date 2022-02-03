@@ -62,7 +62,7 @@ qst_plugin = Blueprint(
 class QuestionInDocument:
     markup: dict
     qst: bool
-    taskId: Optional[str]
+    taskId: str | None
     docId: int
     parId: str
     isPreamble: bool
@@ -108,7 +108,7 @@ def qst_mmcq_answer():
 @dataclass
 class QstInputModel:
     answers: list[list[str]]
-    nosave: Union[bool, Missing] = missing
+    nosave: bool | Missing = missing
 
 
 @dataclass
@@ -116,24 +116,24 @@ class QstMarkupModel(GenericMarkupModel):
     class Meta:
         unknown = EXCLUDE
 
-    points: Union[str, Missing] = missing
-    minpoints: Union[float, Missing] = missing
-    maxpoints: Union[float, Missing] = missing
+    points: str | Missing = missing
+    minpoints: float | Missing = missing
+    maxpoints: float | Missing = missing
     # TODO: Set proper types
-    answerFieldType: Union[str, None, Missing] = missing
-    expl: Union[Any, Missing] = missing
-    headers: Union[Any, Missing] = missing
-    matrixType: Union[str, None, Missing] = missing
-    questionText: Union[str, None, Missing] = missing
-    questionTitle: Union[str, None, Missing] = missing
-    questionType: Union[str, None, Missing] = missing
-    rows: Union[list[Any], Missing] = missing
-    randomizedRows: Union[int, None, Missing] = missing
-    randomSeed: Union[int, Missing] = missing
-    doNotMove: Union[list[int], int, None, Missing] = missing
-    defaultPoints: Union[int, float, None, Missing] = missing
-    savedText: Union[str, None, Missing] = missing
-    size: Union[str, None, Missing] = missing
+    answerFieldType: str | None | Missing = missing
+    expl: Any | Missing = missing
+    headers: Any | Missing = missing
+    matrixType: str | None | Missing = missing
+    questionText: str | None | Missing = missing
+    questionTitle: str | None | Missing = missing
+    questionType: str | None | Missing = missing
+    rows: list[Any] | Missing = missing
+    randomizedRows: int | None | Missing = missing
+    randomSeed: int | Missing = missing
+    doNotMove: list[int] | int | None | Missing = missing
+    defaultPoints: int | float | None | Missing = missing
+    savedText: str | None | Missing = missing
+    size: str | None | Missing = missing
 
 
 QstBasicState = list[list[str]]
@@ -849,7 +849,7 @@ def qst_get_md(jso):
     return result
 
 
-def question_convert_js_to_yaml(markup: dict, is_task: bool, task_id: Optional[str]):
+def question_convert_js_to_yaml(markup: dict, is_task: bool, task_id: str | None):
     # save question. How to pick up question see lecture.py, get_question_data_from_document
     markup = normalize_question_json(markup)
     question_title = markup["questionTitle"]
@@ -932,7 +932,7 @@ def get_question_data_from_document(
     )
 
 
-def convert_qst_md(plugindata: dict, dumbo_opts: Optional[DumboOptions] = None) -> None:
+def convert_qst_md(plugindata: dict, dumbo_opts: DumboOptions | None = None) -> None:
     if not dumbo_opts:
         dumbo_opts = DumboOptions.default()
     prepare_for_dumbo_attr_list_recursive(get_plugin_regex_obj("qst"), plugindata)
