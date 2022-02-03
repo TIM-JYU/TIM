@@ -297,7 +297,7 @@ def fromstring(html_string: str) -> Any:
     except (
         ParserError,
         TypeError,
-    ):  # TypeError is a temporary hack to deal with a bug in lxml
+    ):  # TypeError is a hack to deal with a bug in lxml
         return fragment_fromstring(html_string, create_parent="div")
 
 

@@ -3,7 +3,7 @@ import traceback
 from dataclasses import dataclass
 from io import BytesIO
 from os.path import basename
-from typing import Optional, Any
+from typing import Optional
 from urllib.parse import urlparse
 
 import bs4
@@ -17,7 +17,6 @@ from flask import request
 from flask import session
 from flask_assets import Environment
 from flask_wtf.csrf import generate_csrf
-from jinja2 import Undefined
 from requests.exceptions import MissingSchema, InvalidURL
 from sqlalchemy import event
 from werkzeug.middleware.profiler import ProfilerMiddleware
@@ -173,20 +172,6 @@ assets = Environment(app)
 
 register_errorhandlers(app)
 register_clis(app)
-
-
-def shim_jinja_undefined_contains(cls: Any, k: Any) -> bool:
-    return False
-
-
-# This is a temporary fix because of this change in Jinja 3.0.0:
-# https://github.com/pallets/jinja/pull/1204
-#
-# The change caused `a in b` checks fail for undefined fields in jinja templates
-# This shim emulates an official fix that will be merged into Jinja 3.0.2:
-# https://github.com/pallets/jinja/pull/1455
-# TODO: Remove once Jinja is updated to 3.0.2
-Undefined.__contains__ = classmethod(shim_jinja_undefined_contains)
 
 
 @app.context_processor

@@ -1,9 +1,8 @@
 import re
-from collections import Generator
 from copy import deepcopy
 from enum import Enum
 from textwrap import shorten
-from typing import Optional
+from typing import Optional, Generator
 
 import yaml
 from yaml import YAMLError, CSafeLoader, Event, AliasEvent, NodeEvent

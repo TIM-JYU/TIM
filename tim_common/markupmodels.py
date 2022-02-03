@@ -1,7 +1,7 @@
 from copy import copy
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime, timezone
-from typing import Union, Any, Optional, Mapping, NewType
+from typing import Union, Any, Optional, Mapping
 
 import marshmallow
 from marshmallow import missing, pre_load
@@ -49,8 +49,8 @@ class PluginDateTimeField(marshmallow.fields.Field):
         raise self.make_error("validator_failed")
 
 
-PluginDateTime = NewType("PluginDateTime", datetime)
-PluginDateTime._marshmallow_field = PluginDateTimeField  # type: ignore
+class PluginDateTime(datetime):
+    _marshmallow_field = PluginDateTimeField
 
 
 class HiddenFieldsMixin:
