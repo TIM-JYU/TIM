@@ -184,25 +184,29 @@ interface IImageSizes {
 @Component({
     selector: "draw-canvas",
     template: `
-        <div *ngIf="bgSources.length > 1">
-            Quick scroll
-            <button title="Previous image" class="btn btn-primary" (click)="scrollBgImage(false)">Previous
-                image
-            </button>
-            <button title="Next image" class="btn btn-primary" (click)="scrollBgImage(true)">Next image
-            </button>
-        </div>
-        <div #wrapper style="overflow: auto; position: relative; resize: both;" [style.height.px]="getWrapperHeight()">
-            <div #backGround style="position: absolute;">
-                <img alt="review image" *ngFor="let item of bgImages; let i = index" style="max-width: none; display: unset;"
-                     [src]="bgImages[i]" (load)="onImgLoad($event, i)">
-            </div>
-            <div #objectContainer class="canvasObjectContainer"
-                 style="overflow: visible; position: absolute; height: 100%; width: 100%;">
 
+        <div style="position: relative;">
+            <div *ngIf="bgSources.length > 1" style="position: absolute; top: 50%; left:-5%; display: flex; flex-flow: column; gap: 1em;
+                         -ms-transform: translateY(-50%); transform: translateY(-50%);">
+                <button title="Previous image" class="btn btn-primary" (click)="scrollBgImage(false)">&uarr;
+                </button>
+                <button title="Next image" class="btn btn-primary" (click)="scrollBgImage(true)">&darr;
+                </button>
             </div>
-            <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">
-            </canvas>
+            <div #wrapper style="overflow: auto; position: relative; resize: both;"
+                 [style.height.px]="getWrapperHeight()">
+                    <div #backGround style="position: absolute; display:flex; flex-direction: column;">
+                        <img alt="review image" *ngFor="let item of bgImages; let i = index"
+                             style="max-width: none; display: unset;"
+                             [src]="bgImages[i]" (load)="onImgLoad($event, i)">
+                    </div>
+                    <div #objectContainer class="canvasObjectContainer"
+                         style="overflow: visible; position: absolute; height: 100%; width: 100%;">
+
+                    </div>
+                    <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">
+                    </canvas>
+            </div>
         </div>
         <draw-toolbar *ngIf="toolBar" [drawSettings]="drawOptions" (drawSettingsChange)="saveSettings()"
                       [undo]="undo"></draw-toolbar>
@@ -441,6 +445,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
             // allow inspect element and scrolling
             event.preventDefault();
         }
+
         const {x, y} = posToRelative(this.canvas.nativeElement, e);
         if (this.drawOptions.enabled && !middleOrRightClick) {
             this.drawStarted = true;

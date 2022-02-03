@@ -96,35 +96,42 @@ const PluginFields = t.intersection([
 @Component({
     selector: "reviewcanvas-runner",
     template: `
-            <tim-plugin-header *ngIf="header" header>
-                <span [innerHTML]="header"></span>
-            </tim-plugin-header>
-            <p stem *ngIf="stem" [innerHTML]="stem"></p>
+        <tim-plugin-header *ngIf="header" header>
+            <span [innerHTML]="header"></span>
+        </tim-plugin-header>
+        <p stem *ngIf="stem" [innerHTML]="stem"></p>
+        <ng-container body>
+            <div class="form-inline small">
+                    <div style="position: relative;" *ngFor="let item of uploadedFiles; let i = index">
+                        <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
+                        <div style="position: absolute; top: 50%; display: flex; flex-flow: column; gap: 1em;
+                         -ms-transform: translateY(-50%); transform: translateY(-50%);">
+                            <button class="timButton" title="Move up" (click)="moveImageUp(i)">&uarr;</button>
+                            <button class="timButton" title="Move down" (click)="moveImageDown(i)">&darr;</button>
+                            <!--<button class="timButton" title="Rotate clockwise" (click)="rotateImage(i)">&#8635;</button>-->
+                            <button class="timButton" title="Delete picture" (click)="deleteImage(i)">
+                                <i class="glyphicon glyphicon-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+            </div>
+            <file-select-manager class="small"
+                                 [dragAndDrop]="dragAndDrop"
+                                 [uploadUrl]="uploadUrl"
+                                 [stem]="uploadstem"
+                                 (file)="onFileLoad($event)"
+                                 (upload)="onUploadResponse($event)"
+                                 (uploadDone)="onUploadDone($event)">
+            </file-select-manager>
+            <tim-loading *ngIf="isRunning"></tim-loading>
+            <div *ngIf="error" [innerHTML]="error"></div>
+            <pre *ngIf="result">{{result}}</pre>
+        </ng-container>
             <div *ngIf="connectionErrorMessage || userErrorMessage">
                 <span *ngIf="connectionErrorMessage" class="error" [innerHTML]="connectionErrorMessage"></span>
                 <span *ngIf="userErrorMessage" class="error" [innerHTML]="userErrorMessage"></span>
             </div>
             <button class="timButton" (click)="saveAnswer()">Save answer</button>
-            <ng-container body>
-                 <file-select-manager class="small"
-                        [dragAndDrop]="dragAndDrop"
-                        [uploadUrl]="uploadUrl"
-                        [stem]="uploadstem"
-                        (file)="onFileLoad($event)"
-                        (upload)="onUploadResponse($event)"
-                        (uploadDone)="onUploadDone($event)">
-                </file-select-manager>
-                <div class="form-inline small">
-                    <span *ngFor="let item of uploadedFiles; let i = index">
-                        <button class="timButton" (click)="moveImageUp(i)">Move up</button>
-                        <button class="timButton" (click)="moveImageDown(i)">Move down</button>
-                        <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
-                    </span>
-                </div>
-                <tim-loading *ngIf="isRunning"></tim-loading>
-                <div *ngIf="error" [innerHTML]="error"></div>
-                <pre *ngIf="result">{{result}}</pre>
-            </ng-container>
             <p footer *ngIf="footer" [textContent]="footer"></p>
     `,
     styleUrls: ["./reviewcanvas.scss"],
@@ -208,7 +215,6 @@ export class ReviewCanvasComponent
         const files: IFileSpecification[] = [];
         files.push({
             paths: [path],
-            maxSize: this.markup.maxSize,
             upload: true,
         });
 
@@ -280,6 +286,15 @@ export class ReviewCanvasComponent
         } else {
             await this.swapUploadedFilePositions(index, index + 1);
         }
+    }
+
+    rotateImage(index: number) {
+        console.log("not implemented", index);
+    }
+
+    async deleteImage(index: number) {
+        this.uploadedFiles.splice(index, 1);
+        await this.doAutoSave();
     }
 
     async swapUploadedFilePositions(index1: number, index2: number) {
