@@ -27,7 +27,6 @@ import {
     IFile,
     IFileSpecification,
 } from "../../../../modules/cs/js/util/file-select";
-// import {Set} from "../../../../modules/cs/js/util/set";
 import {AngularPluginBase} from "./angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
@@ -104,8 +103,7 @@ const PluginFields = t.intersection([
             <div class="form-inline small">
                     <div style="position: relative;" *ngFor="let item of uploadedFiles; let i = index">
                         <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
-                        <div style="position: absolute; top: 50%; display: flex; flex-flow: column; gap: 1em;
-                         -ms-transform: translateY(-50%); transform: translateY(-50%);">
+                        <div class="tools">
                             <button class="timButton" title="Move up" i18n-title (click)="moveImageUp(i)">&uarr;</button>
                             <button class="timButton" title="Move down" i18n-title (click)="moveImageDown(i)">&darr;</button>
                             <!--<button class="timButton" title="Rotate clockwise" (click)="rotateImage(i)">&#8635;</button>-->

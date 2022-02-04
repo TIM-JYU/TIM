@@ -220,7 +220,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     @ViewChild("drawbase") canvas!: ElementRef<HTMLCanvasElement>;
     @ViewChild("wrapper") wrapper!: ElementRef<HTMLDivElement>;
     @ViewChild("backGround") bgElement!: ElementRef<HTMLDivElement>;
-    @ViewChild("backGroundSingle") bgElementSingle!: ElementRef<HTMLDivElement>;
     @ViewChild("objectContainer") objectContainer!: ElementRef<HTMLDivElement>;
     ctx!: CanvasRenderingContext2D;
     imgHeight = 0; // total height of all background images
