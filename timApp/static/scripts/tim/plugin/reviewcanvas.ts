@@ -106,10 +106,10 @@ const PluginFields = t.intersection([
                         <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
                         <div style="position: absolute; top: 50%; display: flex; flex-flow: column; gap: 1em;
                          -ms-transform: translateY(-50%); transform: translateY(-50%);">
-                            <button class="timButton" title="Move up" (click)="moveImageUp(i)">&uarr;</button>
-                            <button class="timButton" title="Move down" (click)="moveImageDown(i)">&darr;</button>
+                            <button class="timButton" title="Move up" i18n-title (click)="moveImageUp(i)">&uarr;</button>
+                            <button class="timButton" title="Move down" i18n-title (click)="moveImageDown(i)">&darr;</button>
                             <!--<button class="timButton" title="Rotate clockwise" (click)="rotateImage(i)">&#8635;</button>-->
-                            <button class="timButton" title="Delete picture" (click)="deleteImage(i)">
+                            <button class="timButton" title="Delete picture" i18n-title (click)="deleteImage(i)">
                                 <i class="glyphicon glyphicon-trash"></i>
                             </button>
                         </div>
@@ -131,7 +131,7 @@ const PluginFields = t.intersection([
                 <span *ngIf="connectionErrorMessage" class="error" [innerHTML]="connectionErrorMessage"></span>
                 <span *ngIf="userErrorMessage" class="error" [innerHTML]="userErrorMessage"></span>
             </div>
-            <button class="timButton" (click)="saveAnswer()">Save answer</button>
+            <button class="timButton" (click)="saveAnswer()" i18n>Save answer</button>
             <p footer *ngIf="footer" [textContent]="footer"></p>
     `,
     styleUrls: ["./reviewcanvas.scss"],
