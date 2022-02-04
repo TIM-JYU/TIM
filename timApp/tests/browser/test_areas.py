@@ -1,3 +1,6 @@
+import time
+
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
@@ -78,8 +81,8 @@ par 22
         self.use_left_menu()
 
         # open collapsed areas
-        self.find_element_by_text("par 10").click()
-        self.find_element_by_text("par 17").click()
+        self.find_element_by_text("par 10", staleness_attempts=10).click()
+        self.find_element_by_text("par 17", staleness_attempts=10).click()
 
         pars = self.drv.find_elements(By.CSS_SELECTOR, ".par")
         norm_par_choices = [
@@ -220,8 +223,8 @@ par 22
         self.find_element("tim-close-button", parent=menu).click()
 
     def open_menu(self, p) -> WebElement:
-        self.find_element(".editline", parent=p).click()
-        menu = self.find_element("tim-popup-menu-dialog")
+        self.find_element_avoid_staleness(".editline", parent=p, click=True)
+        menu = self.find_element_avoid_staleness("tim-popup-menu-dialog")
         return menu
 
     def test_area_delete_par(self):
@@ -436,13 +439,22 @@ par4
         self.save_editor()
 
     def select_pars(self, start: str, end: str, toggle_edit: bool = False):
-        menu = self.open_menu(self.find_element(start))
-        if toggle_edit:
-            self.find_element(".parEditButton").click()
-        self.find_element_by_text("Start selection", parent=menu).click()
-        self.find_element(end).click()
-        menu = self.open_menu(self.find_element(start))
-        return menu
+        tries = 10
+        while True:
+            try:
+                menu = self.open_menu(self.find_element(start))
+                if toggle_edit:
+                    self.find_element(".parEditButton").click()
+                self.find_element_by_text("Start selection", parent=menu).click()
+                self.find_element(end).click()
+                menu = self.open_menu(self.find_element(start))
+                return menu
+            except StaleElementReferenceException:
+                tries -= 1
+                if tries == 0:
+                    raise
+                time.sleep(1)
+                continue
 
     def check_par_texts(self, pars: list[WebElement], expected: list[str]):
         self.assertEqual(expected, [p.text for p in pars])

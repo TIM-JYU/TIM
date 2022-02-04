@@ -382,13 +382,16 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         parent=None,
     ) -> WebElement:
         while True:
-            e = self.find_element(selector=selector, xpath=xpath, parent=parent)
             try:
+                e = self.find_element(selector=selector, xpath=xpath, parent=parent)
                 if click:
                     e.click()
                 else:
                     self.touch(e)
-            except (StaleElementReferenceException, ElementNotInteractableException):
+            except (
+                StaleElementReferenceException,
+                ElementNotInteractableException,
+            ):
                 tries -= 1
                 if tries == 0:
                     raise
