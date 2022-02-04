@@ -1,228 +1,451 @@
 /*!
-* Class for deterministic finite automate
+* Class for Reverce Polish Notation
 */
-class DFA {
+
+
+
+// Start non visual part of variables
+/*!
+ * base Class for any program object
+ */
+class RPNCommand {
+    static check(s, name, cls) {
+        let names = name.split(";");
+        for (name of names) {
+            let re = new RegExp('^' + name + '$', 'gmi')
+            let r = re.exec(s);
+            if (!r) continue;
+            let cmd = new cls();
+            cmd.name = name.replace("\\", "");
+            return [cmd];
+        }
+        return undefined;
+    }
+
+    constructor() {
+        this.createError = undefined;
+        this.error = "";
+        this.name = "???";
+    }
+
+    showText() {
+        return this.name;
+    }
+
+    run(rpn) {
+        rpn.stepnumber++;
+    }
+
+    isEnd() {
+        return false;
+    }
+
+    isLabel(_) { return false; }
+
+    prerun(_rpn) {
+        return "";
+    }
+}
+
+
+class End extends RPNCommand {
+    // Push command
+    // syntax: --
+    constructor() {
+        super();
+        this.name = "--";
+    }
+
+    isEnd() {
+        return true;
+    }
+}
+
+
+class Push extends RPNCommand {
+    // Push command
+    // see: https://regex101.com/r/PuQciP/latest
+    // syntax: push 5
+    static isMy(s) {
+        let re = /^push +(-?[0-9]+)$/gmi;
+        let r = re.exec(s);
+        if (!r) return undefined;
+        return [new Push("PUSH", r[1].trim())];
+    }
+
+    constructor(name, value) {
+        super();
+        this.name = name;
+        this.value = parseInt(value);
+    }
+
+    showText() {
+        return this.name + " " + this.value;
+    }
+
+    run(rpn) {
+        super.run(rpn);
+        rpn.stack.push(this.value);
+    }
+}
+
+
+class BinOperator extends RPNCommand {
+    calc(a,b) {
+        return 0;
+    }
+
+    run(rpn) {
+       let b = rpn.pop();
+       let a = rpn.pop();
+       super.run(rpn);
+       rpn.stack.push(this.calc(a,b));
+    }
+}
+
+class Add extends BinOperator {
+    static isMy(s) {
+        return this.check(s, "ADD;\\+", Add)
+    }
+
+    calc(a,b) {
+        return a + b;
+    }
+}
+
+class Sub extends BinOperator {
+    static isMy(s) {
+        return this.check(s, "SUB;-", Sub)
+    }
+
+    calc(a,b) {
+        return a - b;
+    }
+}
+
+class Mul extends BinOperator {
+    static isMy(s) {
+        return this.check(s, "MUL;\\*", Mul)
+    }
+
+    calc(a,b) {
+        return a * b;
+    }
+}
+
+class Pop extends RPNCommand {
+    static isMy(s) {
+        return this.check(s, "POP", Pop)
+    }
+
+    run(rpn) {
+        super.run(rpn);
+        rpn.pop();
+    }
+}
+
+class Double extends RPNCommand {
+    static isMy(s) {
+        return this.check(s, "DOUBLE", Double)
+    }
+
+    run(rpn) {
+        super.run(rpn);
+        let a = rpn.pop();
+        rpn.stack.push(a);
+        rpn.stack.push(a);
+    }
+}
+
+class Swap extends RPNCommand {
+    static isMy(s) {
+        return this.check(s, "SWAP", Swap)
+    }
+
+    run(rpn) {
+        super.run(rpn);
+        let a = rpn.pop();
+        let b = rpn.pop();
+        rpn.stack.push(a);
+        rpn.stack.push(b);
+    }
+}
+
+class Down extends RPNCommand {
+    static isMy(s) {
+        return this.check(s, "DOWN", Down)
+    }
+
+    run(rpn) {
+        super.run(rpn);
+        if ( rpn.isEmpty() ) return;
+        let a = rpn.stack.shift();
+        rpn.stack.push(a);
+    }
+}
+
+class Up extends RPNCommand {
+    static isMy(s) {
+        return this.check(s, "UP", Up)
+    }
+
+    run(rpn) {
+        super.run(rpn);
+        let a = rpn.pop();
+        rpn.stack.unshift(a);
+    }
+}
+
+class CommandWithLabel extends RPNCommand {
+    static check(s, name, cls) {
+        let re = new RegExp('^' + name + ' +([A-Za-z])$', 'gmi')
+        let r = re.exec(s);
+        if (!r) return undefined;
+        let cmd = new cls();
+        cmd.name = name;
+        cmd.label = r[1].toUpperCase();
+        return [cmd];
+    }
+
+    showText() {
+        return super.showText() + " " + this.label;
+    }
+}
+
+class Label extends CommandWithLabel {
+    static isMy(s) {
+        return this.check(s, "LABEL", Label)
+    }
+
+    isLabel(label) { return this.label === label; }
+}
+
+class JmpCommand extends CommandWithLabel {
+    static check(s, name, cls, n, cond) {
+        let cmds = super.check(s, name, cls);
+        if (!cmds) return cmds;
+        cmds[0].cond = cond;
+        cmds[0].n = n; // what is second peek
+        return cmds;
+    }
+
+    find(rpn) {
+        for (let cmd of rpn.commands) {
+            if (cmd.isLabel(this.label)) {
+                rpn.stepnumber = cmd.stepnumber - 1;
+                return undefined;
+            }
+        }
+        rpn.addError("Label " + this.label + " not found!")
+        super.run(rpn)
+        return undefined;
+    }
+
+    run(rpn) {
+        if (!this.cond) return this.find(rpn);
+        let a = rpn.peek(1);
+        let b = rpn.peek(this.n);
+        if ( this.cond(a,b) ) return this.find(rpn);
+        super.run(rpn);
+    }
+}
+
+class Jump extends JmpCommand {
+    static isMy(s) {
+        return this.check(s, "JUMP", Jump, 0, undefined);
+    }
+}
+
+class JZero extends JmpCommand {
+    static isMy(s) {
+        return this.check(s, "JZERO", JZero, 1,(a,_) => a === 0);
+    }
+}
+
+class JPos extends JmpCommand {
+    static isMy(s) {
+        return this.check(s, "JPOS", JPos, 1, (a,_) => a > 0);
+    }
+}
+
+class JGtr extends JmpCommand {
+    static isMy(s) {
+        return this.check(s, "JGTR", JGtr, 2,(a,b) => a > b);
+    }
+}
+
+
+const knownCommands = [
+    Push,
+    Add,
+    Sub,
+    Mul,
+    Pop,
+    Double,
+    Swap,
+    Down,
+    Up,
+    Label,
+    Jump,
+    JZero,
+    JPos,
+    JGtr,
+];
+
+class RPN {
+
+    addError(err) {
+        this.errors += err + "\n";
+    }
 
     /*!
      * Convert string to dfa
      * \fn constructor(s)
-     * \param string s DFA as a string representation
+     * \param string s RPN program as a string representation
      * \param dict params, syntaxes what syntaxes area allowed
-     * \return JSON resulting DFA structure
+     * \param list knownCmds, syntaxes what syntaxes area allowed
+     * \return JSON resulting RPN structure
      */
-    constructor(s, params) {
-        // regexps for various syntaxes
-        // syntax 1:  0: S1 -> S2
-        // syntax 2:  S1 0-> S2
-        // syntax 3:  +S1 S3 S2       https://regex101.com/r/uowlQQ/latest
-        // syntax Table:  = | a b c   https://regex101.com/r/xwijfX/latest
-        // syntax Trow:   1 | 2 3 4   https://regex101.com/r/Tdv6Qs/latest
-        // start node: ->S1
-        const re1 = /^ *([^ >:+-]+): *([^ >:+-]+) *-?>? *([^ >:+-]+) *$/;
-        const re2 = /^ *([^ >:+-]+) +([^ >:+-]+) *(->|-|>| ) *([^ >:+-]+) *$/;
-        const re3 = /^\+ *([^ |;,]+)[ |;,]+(.*) *$/;
-        const reTable = /^ *= *\| *(.*)$/;
-        const reTrow = /^ *(\S+) * *\| *(.*)$/;
-        const reStart = /^ *->? *([^ >:+-]+)$/;
-        const rePos = /^ *(\S*) *\/ *(\S+)$/;
-
+    constructor(s, params, knownCmds) {
+        if (knownCmds === undefined) knownCmds = knownCommands;
         params = params || {};
-        let syntaxes = params["syntaxes"] || "123";
-        let allowstar = params["allowstar"] || false;
-
-        this.arcs = [];
-        this.nodes = {};
-        this.positions = {};
-        this.first = null;
+        let initial = params["initial"] || "";
+        this.errorlevel = 3;
+        this.stack = [];
+        this.commands = [];
         this.errors = "";
-        this.staticerrors = "";
-        let errors = "";
-        this.columns = [0,1];
-        this.params = params;
-        let columns = this.columns;
+        this.createErrors = "";
+        this.linenumber = 0; // this is original linenumber in input
+        this.minStepnumber = 1000000;
+        this.maxStepnumber = 0;
+        this.values = initial.split(",");
+        this.init();
+        if (s) this.addCommands(s, knownCmds);
+    }
 
-        let firstFound = undefined;
-        let lastUsed = undefined;
-        let dfa = this;
-        let colnames = "";
+    maxStep() {
+        return 10000;
+    }
 
-        // Helper functions
-        function addLNode(s) { // remembers last name
-            lastUsed = addNode(s);
-            return lastUsed;
+    addCreatedCommands(cmds, line) {
+        let lnr = this.linenumber;
+        let cmdline = line;
+        let cmd;
+        for (cmd of cmds) {
+            cmd.linenumber = lnr;
+            if (cmd.line) cmdline = cmd.line; else cmdline = line;
+            this.commands.push(cmd);
+            cmd.stepnumber = this.commands.length;
         }
+        this.minStepnumber = Math.min(cmd.stepnumber, this.minStepnumber);
+        this.maxStepnumber = Math.max(cmd.stepnumber, this.maxStepnumber);
+    }
 
-
-        function addNode(s) {
-            let accept = false;
-            if (s.indexOf('*') >= 0) accept = true;
-            s = s.replace("*", "").trim();
-            if (s === ".") s = lastUsed;
-            if (s === undefined) s = "???";
-            let node = dfa.nodes[s];
-            if (!node) node = {name: s, arcs: {}, error: "", cnt: 0};
-            if (accept) node.accept = true;
-            dfa.nodes[s] = node;
-            if (!firstFound) firstFound = s;
-            return s;
-        }
-
-
-        function addArc(value, from, to) {
-            let label;
-            if (typeof value === 'string' || value instanceof String) {
-                value = value.trim();
-                label = value.replace(/_/g, " ");
-                value = value.replace(/_/g, "");
-            } else {
-                label = "" + value;
-            }
-            if (colnames && !columns.includes(value) && value !== "*" && value !== -1) {
-                errors += "Illegal transition: " + value + "\n";
-                return;
-            }
-            const arc = {value: value, label: label, from: from, to: to};
-            dfa.arcs.push(arc);
-            if (value === -1) return;
-            const node = dfa.nodes[from];
-            if (node.arcs[value]) {
-                node.error += "Node " + node.name + ": dublicate transition " + value + "\n";
-                node.dublicate = true;
-            }
-            node.arcs[value] = arc;
-        }
-
-
-        // Checking lines from string representation
-        for (let line of s.split("\n")) {
-            line = line.trim();
-            if (!line) continue; // forget empty lines
-            if (line.startsWith("--")) continue; // forget lines with ---
-            if (line.startsWith("#")) continue; // forget lines with #
-            if (line.startsWith("//")) continue; // forget lines with //
-
-            let r = reTable.exec(line);
-            if (r && colnames === "") { // Table column headers, only first accepted
-                colnames = r[1].trim().replace(/[ ,;|]+/g, " ");
-                this.columns = colnames.split(" ");
-                columns = this.columns;
-                continue;
-            }
-
-            r = re3.exec(line); // syntax 3: +S1 S2 S3
-            if (!r) r = reTrow.exec(line); // syntax: Trow 1 | 2 3 4
-            if (r && syntaxes.includes("3")) {
-                const from = r[1];
-                const to = r[2].trim().replace(/[ ,;|]+/g, " ").split(" ");
-                const n = Math.min(to.length, this.columns.length);
-                const f = addLNode(from);
-                for (let i=0; i<n; i++) {
-                    const t = addNode(to[i]);
-                    addArc(this.columns[i], f, t);
-                }
-                continue;
-            }
-
-            r = reStart.exec(line); // syntax ->1
-            if (r) { // start node
-                const n = addLNode(r[1])
-                addArc(-1, 'startpoint', n);
-                this.first = this.nodes[n];
-                continue;
-            }
-
-            r = re1.exec(line);
-            if (r && syntaxes.includes("1")) { // syntax 1: 1: S1 -> S2
-                const v = r[1];
-                const f = addLNode(r[2]);
-                const t = addNode(r[3]);
-                addArc(v, f, t);
-                continue;
-            }
-
-            r = re2.exec(line);
-            if (r && syntaxes.includes("2")) { // syntax 2: S1 1-> S2
-                const v = r[2];
-                const f = addLNode(r[1]);
-                const t = addNode(r[4]);
-                let vs = v.split(",");
-                for (let val of vs)
-                    addArc(val, f, t);
-                continue;
-            }
-
-            r = rePos.exec(line);
-            if (r) { // syntax: S1/3,2
-                let n = r[1];
-                const p = r[2];
-                if (n === "" || n.includes(">")) n = "startpoint";
-                this.positions[n] = p;
-                continue;
-            }
-            this.staticerrors += 'Illegal line: ' + line + "\n";
-        }
-
-
-        // check if there is no start node
-        if (!this.first && firstFound) {
-            addArc(-1, 'startpoint', firstFound);
-            this.first = this.nodes[firstFound];
-        }
-
-
-        // check if self transitions are needed
-        for (let n in this.nodes) {
-            const node = this.nodes[n];
-            let count = 0;
-            let starFound = false;
-            let cols = colnames;
-            for (let a in node.arcs) {
-                count++;
-                if (a === "*") {
-                    starFound = true;
-                    break;
-                }
-                cols = cols.replace(a, "");
-            }
-            cols = cols.trim();
-            if (cols !== "" && !starFound) {
-                if (allowstar)
-                    addArc("*", n, n);
-                else {
-                    node.error += "Node " + n + ": missing transitions: " + cols + "\n";
-                }
-            }
-            if (node.error) this.errors += node.error;
-        }
-        this.staticerrors += errors;
+    isShowErrors() {
+        return this.errorlevel > 1;
     }
 
 
     /*!
-     * Check if input s is accepted by this dfa
-     * \param s input to check
-     * \return boolean true if accpeted
+     * Convert string to list of commands
+     * \fn addCommands(s, knownCommands)
+     * \param string s variables as a string representation
+     * \param knownCommands list of classes that are know
+     * \return JSON resulting variables structure
      */
-    accepts(s) {
-        this.cnt = 0;
-        for (const node of Object.values(this.nodes)) node.cnt = 0;
-        for (const arc of Object.values(this.arcs)) arc.cnt = 0;
-        let active = this.first;
-        if (!active) return false;
-        active.cnt = 1;
-        this.cnt++;
-        for (let value of s) {
-            let activeArc = active.arcs[value];
-            if (!activeArc) activeArc = active.arcs['*'];
-            if (!activeArc) return false;
-            active = this.nodes[activeArc.to];
-            activeArc.cnt++;
-            if (active.cnt === 0) this.cnt++;
-            active.cnt++;
+    addCommands(s, knownCommands) {
+        // Start checking lines from string representation
+        this.linenumber = 0;
+        for (let line of s.split("\n")) {
+            try {
+                line = line.trim();
+                this.linenumber++;
+                if (!line) continue; // forget empty lines
+                if (line.startsWith("#")) continue; // forget comments
+                let cmds = undefined;
+                for (let cls of knownCommands) {
+                    cmds = cls.isMy(line);
+                    if (cmds) break;
+                }
+                if (!cmds) {  // this should not happend if there is UnknownCommand last
+                    this.addError(`${this.linenumber}: ${line} - unknown or illegal`);
+                    continue; // did not match any know types
+                }
 
+                this.addCreatedCommands(cmds, line);
+
+                for (let cmd of cmds) {
+                    let error = cmd.prerun(this);
+                    if (error) this.addError(`${this.linenumber}: ${error}`);
+                }
+            } catch (e) {
+                this.addError(`${this.linenumber}: ${e}`);
+            }
         }
-        if (!active || !active.accept) return false;
-        return active.accept;
+        // this.currentPhase.solveLazy();
+        this.addCreatedCommands([new End()]);
+        if (!this.isShowErrors()) this.createErrors = "";
+        else this.createErrors = this.errors;
     }
-} // DFA
+
+    init() {
+        this.maxStack = 0;
+        this.stepnumber = 0;
+        this.stack = [];
+        this.errors = "";
+        for (const s of this.values) {
+            let value = s.trim();
+            if (value === "") continue;
+            if (!/^-?([0-9]+)/.test(value)) this.addError("Wrong number: " + value);
+            this.stack.push(parseInt(value));
+        }
+    }
+
+    isEmpty() {
+        if (this.stack.length < 1) {
+            this.addError("Stack empty!");
+            return true;
+        }
+        return false;
+    }
+
+    pop() {
+        if (this.isEmpty()) return 0;
+        return this.stack.pop();
+    }
+
+    peek(n) {
+        if (this.stack.length < n) {
+            this.addError("No item " + n + " in stack!");
+            return true;
+        }
+        return this.stack[this.stack.length-n];
+    }
+
+    isEnd() {
+        let cmd = this.commands[this.stepnumber];
+        return cmd.isEnd();
+    }
+
+    runUntil(n) {
+        // Runs the command list from begining until in step n
+        // If n not defined, run all commands
+        this.init();
+        this.maxStack = Math.max(this.stack.length, this.maxStack);
+        let nr = 0;
+        let lastlinenr = 0;
+        if (n === undefined) n = this.maxStep()+1;
+        while (nr < n) {
+            if (this.stepnumber >= this.commands.length) break;
+            let cmd = this.commands[this.stepnumber];
+            if (cmd.isEnd()) break;
+            let error = cmd.run(this);
+            this.maxStack = Math.max(this.stack.length, this.maxStack);
+            lastlinenr = cmd.linenumber;
+            if (error && this.isShowErrors()) this.addError(`${cmd.linenumber}: ${error}`);
+            nr++;
+        }
+        return nr;
+    }
+} // RPN
 
