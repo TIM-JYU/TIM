@@ -177,7 +177,7 @@ typing-inspect \
 voikko \
 wand \
 webargs==5.5 \
-&& ${PIP_INSTALL} requests --upgrade && ${APT_CLEANUP}"
+&& ${PIP_INSTALL} requests six --upgrade && ${APT_CLEANUP}"
 
 # Install typings for MyPy
 RUN bash -c "${PIP_INSTALL} \
