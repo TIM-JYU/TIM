@@ -244,6 +244,7 @@
     if (!params) params = { };
     paramDefault(params, "acceptText", "accept");
     paramDefault(params, "rejectText", "reject");
+    params["initial"] = data["args];
     let rpn = new RPN(data.code, params);
     rpnState = new VisualRPNState(rpn, data.args);
     rpnState.drawrpn();
