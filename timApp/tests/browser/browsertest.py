@@ -4,7 +4,7 @@ from base64 import b64decode
 from contextlib import contextmanager
 from io import BytesIO
 from pprint import pprint
-from typing import Union, Optional, Any
+from typing import Any
 from urllib.parse import urlencode
 
 import requests
