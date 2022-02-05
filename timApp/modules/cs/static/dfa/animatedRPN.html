@@ -15,21 +15,13 @@
 </head>
 <body>
 <div id="maindiv">
-<div style="margin-bottom: 3px">
-    <span id="error" style="color: red;"></span>
-    <span id="expls" class="explspan"></span>
-</div>
-<canvas id="canvas" width=700 height=10 >
-</canvas>
-<div id="buttondiv" class="buttondiv">
-  <button onclick="jumpToStart()" title="reset">|&lt;</button>
-  <button onclick="animateBack()" title="animate back to start">&lt;&lt;&lt;</button>
-  <!--<button onclick="animateBack(1)" title="animate one step back">&lt;&lt;</button> -->
-  <button onclick="stepBack()" title="back minor step">&lt;</button>
-  <button onclick="stepFwd()" title="do minor step">&gt;</button>
-  <!--<button onclick="animateFwd(1)" title="animate one step">&gt;&gt;</button>-->
-  <button onclick="animateFwd()" title="animate to end">&gt;&gt;&gt;</button>
-  <button onclick="jumpToEnd()" title="run to end">&gt;|</button>
+    <div style="margin-bottom: 3px">
+        <span id="error" style="color: red;"></span>
+        <span id="expls" class="explspan"></span>
+    </div>
+    <canvas id="canvas" width=700 height=10 >
+    </canvas>
+    <div id="buttondiv" class="buttondiv">
 </div>
 </div>
 <script>
@@ -48,6 +40,7 @@
       }
 
       constructor(rpn) {
+          this.buttonDiv = buttondiv;
           this.rpn = rpn;
           this.params = rpn.params;
           this.reset();
@@ -61,6 +54,7 @@
           }
           this.keep2stack = this.params["keep2stack"];
           this.reset();
+          this.timer = null;
       }
 
       /*!
@@ -94,7 +88,7 @@
           return true;
       }
 
-      jumpToEnd() {
+      moveToEnd() {
           this.step = this.maxStep;
           this.rpn.runUntil();
       }
@@ -193,66 +187,98 @@
          this.drawrpn();
       }
 
-  } // VisualRPNState
+      createButton(jump, text, title) {
+          let button = document.createElement("button");
+          button.innerText = text;
+          button.onclick = jump;
+          button.title = title;
+          this.buttonDiv.appendChild(button);
+      }
+
+      createButtons() {
+          if (!this.buttonDiv) return;
+          let parent = this.buttonDiv;
+          while (parent.firstChild) {
+             parent.removeChild(parent.firstChild);
+          }
+          const stepcount = this.rpn.commands.length - 1;
+          if (stepcount < 1) return;
+          let btns = {back: true, fwd: true};
+          if (this.params.buttons) {
+              btns = this.params.buttons;
+          } else if (stepcount > 2) {
+              btns.start = true;
+              btns.aback = true;
+              btns.afwd = true;
+              btns.end = true;
+          }
+          if (btns.start) this.createButton(() => this.jumpToStart(), "|<", "reset");
+          if (btns.aback) this.createButton(() => this.animateBack(), "<<<", "animate back to start");
+          // this.createButton(() => this.animateBack(1), "<<", "animate one step back");
+          if (btns.back)  this.createButton(() => this.stepBack(), "<", "back one step");
+          if (btns.fwd) this.createButton(() => this.stepFwd(), ">", "do one step");
+          // this.createButton(() => this.animateFwd(1), ">>", "animate one step");
+          if (btns.afwd) this.createButton(() => this.animateFwd(), ">>>", "animate to end");
+          if (btns.end) this.createButton(() => this.jumpToEnd(), ">|", "run to end");
+          this.buttonDiv.classList.remove("hidden");
+      }
+
+      jumpToStart() {
+          this.stop();
+          this.reset();
+          this.update();
+      }
+
+      stepFwd() {
+          this.stop();
+          this.forward();
+          this.update();
+      }
+
+      stepBack() {
+          this.stop();
+          this.backward();
+          this.update();
+      }
 
 
-  let rpnState = null;
+      stop() {
+        clearInterval(this.timer);
+      }
 
-  function jumpToStart() {
-      stop();
-      rpnState.reset();
-      rpnState.update();
-  }
+      animate(_n, call, until) {
+        clearInterval(this.timer);
+        // if ( n === undefined ) n = 10000;
+        let step = 0;
+        if (this.step >= 0) step = this.step;
+        if ( step <= 0 ) step = -1;
+        let self = this;
+        this.timer = setInterval(function() {
+            if (until(step)) {
+              clearInterval(self.timer);
+              return;
+            }
+            if (!call()) clearInterval(self.timer);
+            self.update();
+        },500)
+      }
 
-  function stepFwd() {
-      stop();
-      rpnState.forward();
-      rpnState.update();
-  }
+      animateFwd(n) {
+          this.stop();
+          this.animate(n, () => this.forward(), (_step) => false)
+      }
 
-  function stepBack() {
-      stop();
-      rpnState.backward();
-      rpnState.update();
-  }
+      animateBack(n) {
+          this.stop();
+          this.animate(n, () => this.backward(), (_step) => false);
+      }
 
-  let timer;
-
-  function stop() {
-    clearInterval(timer);
-  }
-
-  function animate(rpnState, _n, call, until) {
-    clearInterval(timer);
-    // if ( n === undefined ) n = 10000;
-    let step = 0;
-    if (rpnState.step >= 0) step = rpnState.step;
-    if ( step <= 0 ) step = -1;
-    timer = setInterval(function() {
-        if (until(step)) {
-          clearInterval(timer);
-          return;
-        }
-        if (!call()) clearInterval(timer);
-        rpnState.update();
-    },500)
-  }
-
-  function animateFwd(n) {
-      stop();
-      animate(rpnState, n, () => rpnState.forward(), (_step) => false)
-  }
-
-  function animateBack(n) {
-      stop();
-      animate(rpnState, n, () => rpnState.backward(), (_step) => false);
-  }
-
-  function jumpToEnd() {
-      stop();
-      rpnState.jumpToEnd();
-      rpnState.update();
-  }
+      jumpToEnd() {
+          this.stop();
+          this.moveToEnd();
+          this.update();
+      }
+} // VisualRPNState
 
   function preCheck(data) {
      if (!data) return false;
@@ -287,9 +313,10 @@
     params["initial"] = data.args;
     let rpn = new RPN(data.code, params);
     let rpn2 = new RPN(data.code, params);
-    rpnState = new VisualRPNState(rpn);
+    const rpnState = new VisualRPNState(rpn);
     rpnState.rpn2 = rpn2;
     rpnState.drawrpn();
+    rpnState.createButtons();
     return {iframe: {height: document.body.clientHeight+4}};
   }
 
