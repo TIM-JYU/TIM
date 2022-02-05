@@ -13,8 +13,12 @@ export const communicationJS = `
         // console.log(event.origin);
         if (event.data.msg === "setData") {
             if (window.setData) {
-                setData(event.data.data);
-                window.port2.postMessage({msg: "Got data"});
+                const msg = {msg: "Got data"};
+                const ret = setData(event.data.data);
+                if (ret) {
+                    msg.ret = ret;
+                }
+                window.port2.postMessage(msg);
             } else {
                 console.log("iframe got setData message but iframe has no setData function");
             }

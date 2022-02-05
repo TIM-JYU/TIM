@@ -26,6 +26,7 @@ class RPNCommand {
         this.createError = undefined;
         this.error = "";
         this.name = "???";
+        this.expl = "";
     }
 
     showText() {
@@ -306,10 +307,12 @@ class RPN {
      * \param list knownCmds, syntaxes what syntaxes area allowed
      * \return JSON resulting RPN structure
      */
-    constructor(s, params, knownCmds) {
-        if (knownCmds === undefined) knownCmds = knownCommands;
+    constructor(s, params) {
         params = params || {};
+        this.params = params;
         let initial = params["initial"] || "";
+        this.allowed = params["allowed"] || [];
+        this.illegals = params["illegals"] || [];
         this.errorlevel = 3;
         this.stack = [];
         this.commands = [];
@@ -318,27 +321,48 @@ class RPN {
         this.linenumber = 0; // this is original linenumber in input
         this.minStepnumber = 1000000;
         this.maxStepnumber = 0;
+        this.explcount = 0;
         this.values = initial.split(",");
         this.init();
-        if (s) this.addCommands(s, knownCmds);
+        if (s) this.addCommands(s, knownCommands);
     }
 
     maxStep() {
         return 10000;
     }
 
-    addCreatedCommands(cmds, line) {
+    isIn(reglist, cmd, def, err) {
+        if (cmd.isEnd()) return def;
+        let name = cmd.name;
+        if (!reglist) return def;
+        for (let rs of reglist) {
+            if (rs === "+" || rs === "*") rs = "\\" + rs;
+            const re = new RegExp("^" + rs + "$");
+            if (re.test(name)) {
+                this.addError(cmd.linenumber + ": " + cmd.name + " " + err);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    addCreatedCommands(cmds, line, expl) {
         let lnr = this.linenumber;
-        let cmdline = line;
-        let cmd;
-        for (cmd of cmds) {
+        for (let cmd of cmds) {
             cmd.linenumber = lnr;
-            if (cmd.line) cmdline = cmd.line; else cmdline = line;
+            if (!this.isIn(this.params["allowed"], cmd, true, "not in allowed commands")) {
+                continue;
+            }
+            if (this.isIn(this.params["illegals"], cmd, false, "in illegal commands")) {
+                continue;
+            }
             this.commands.push(cmd);
             cmd.stepnumber = this.commands.length;
+            cmd.expl = expl;
+            if (expl) this.explcount++;
+            this.minStepnumber = Math.min(cmd.stepnumber, this.minStepnumber);
+            this.maxStepnumber = Math.max(cmd.stepnumber, this.maxStepnumber);
         }
-        this.minStepnumber = Math.min(cmd.stepnumber, this.minStepnumber);
-        this.maxStepnumber = Math.max(cmd.stepnumber, this.maxStepnumber);
     }
 
     isShowErrors() {
@@ -362,6 +386,9 @@ class RPN {
                 this.linenumber++;
                 if (!line) continue; // forget empty lines
                 if (line.startsWith("#")) continue; // forget comments
+                let parts = (line+"#").split("#");
+                line = parts[0].trim();
+                let expl = parts[1].trim();
                 let cmds = undefined;
                 for (let cls of knownCommands) {
                     cmds = cls.isMy(line);
@@ -372,7 +399,7 @@ class RPN {
                     continue; // did not match any know types
                 }
 
-                this.addCreatedCommands(cmds, line);
+                this.addCreatedCommands(cmds, line, expl);
 
                 for (let cmd of cmds) {
                     let error = cmd.prerun(this);
@@ -383,7 +410,7 @@ class RPN {
             }
         }
         // this.currentPhase.solveLazy();
-        this.addCreatedCommands([new End()]);
+        this.addCreatedCommands([new End()], "", "");
         if (!this.isShowErrors()) this.createErrors = "";
         else this.createErrors = this.errors;
     }
@@ -426,6 +453,13 @@ class RPN {
         let cmd = this.commands[this.stepnumber];
         return cmd.isEnd();
     }
+
+    currentCmd() {
+        if (this.commands.length === 0) return undefined;
+        return this.commands[this.stepnumber];
+    }
+
+
 
     runUntil(n) {
         // Runs the command list from begining until in step n
