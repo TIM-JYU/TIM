@@ -481,5 +481,25 @@ class RPN {
         }
         return nr;
     }
+
+    getErrors() {
+        let err = this.createErrors+this.errors;
+        return err;
+    }
+
+    compare(rpn2, initials) {
+        for (let initial of initials) {
+            this.values = initial.split(",");
+            this.runUntil();
+            if (this.getErrors()) return [this.getErrors(), "", "", initial];
+            rpn2.values = initial.split(",");
+            rpn2.runUntil();
+            if (rpn2.getErrors()) return ["2: " + rpn2.getErrors(), "", "", initial];
+            let s1 = JSON.stringify(this.stack).replace("[", "").replace("]", "");
+            let s2 = JSON.stringify(rpn2.stack).replace("[", "").replace("]", "");
+            if (s1 !== s2) return ["!=", s1, s2, initial];
+        }
+        return ["", "", "", ""];
+    }
 } // RPN
 
