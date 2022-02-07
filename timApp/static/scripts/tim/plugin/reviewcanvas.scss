@@ -1,0 +1,28 @@
+label {
+  font-weight: normal;
+}
+
+.buttons {
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  justify-items: center;
+  align-items: center;
+}
+
+.glyphicon-ok {
+  color: green;
+}
+
+.glyphicon-remove {
+  color: red;
+}
+
+.tools {
+  position: absolute;
+  top: 50%;
+  display: flex;
+  flex-flow: column;
+  gap: 1em;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}

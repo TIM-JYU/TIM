@@ -4744,6 +4744,38 @@
           <context context-type="linenumber">145</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="8502065112576581103" datatype="html">
+        <source>Move up</source>
+        <target state="translated">Siirrä ylöspäin</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
+          <context context-type="linenumber">109</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2207764482815871800" datatype="html">
+        <source>Move down</source>
+        <target state="translated">Siirrä alaspäin</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
+          <context context-type="linenumber">110</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5326571353347602751" datatype="html">
+        <source>Delete picture</source>
+        <target state="translated">Poista kuva</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
+          <context context-type="linenumber">112</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8116430031009038510" datatype="html">
+        <source>Save answer</source>
+        <target state="translated">Tallenna vastaus</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
+          <context context-type="linenumber">134</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

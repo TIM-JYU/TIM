@@ -9,6 +9,7 @@ from typing import Optional, Union
 from urllib.parse import unquote, urlparse
 
 from flask import Blueprint, request, send_file, Response, url_for
+from wand.image import Image
 from werkzeug.utils import secure_filename, redirect
 
 from timApp.auth.accesshelper import (
@@ -33,6 +34,7 @@ from timApp.item.validation import (
     validate_item_and_create_intermediate_folders,
     validate_uploaded_document_content,
 )
+from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_files_path
@@ -160,7 +162,7 @@ def pluginupload_file(doc_id: int, task_id: str):
     except PluginException:
         raise RouteException()
     tid.doc_id = d.id
-    verify_task_access(
+    task_access = verify_task_access(
         d,
         tid,
         AccessType.view,
@@ -189,6 +191,9 @@ def pluginupload_file(doc_id: int, task_id: str):
                 f"Failed to post-process {f.filesystem_path.name}. "
                 f"Please make sure the PDF is not broken."
             )
+    p = task_access.plugin
+    if p.type == "reviewcanvas":
+        compress_image(f)
     db.session.commit()
     return json_response(
         {
@@ -197,6 +202,15 @@ def pluginupload_file(doc_id: int, task_id: str):
             "block": f.id,
         }
     )
+
+
+def compress_image(f: UploadedFile):
+    if not f.content_mimetype.startswith("image/"):
+        return
+    p = f.filesystem_path
+    with Image(filename=p) as img:
+        img.transform(resize="2048x2048>")  # TODO: max dimensions from markup
+        img.save(filename=p)
 
 
 @upload.post("/upload/")

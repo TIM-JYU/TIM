@@ -316,6 +316,8 @@ export class AnnotationComponent
      * @param div Annotation info div
      */
     adjustAnnotationInPicturePosition(div: HTMLDivElement) {
+        // TODO: Update coordinate from canvas if direct click, or check scroll pos if opened via margin
+        //  Then adjust position near click / visible part of large drawn velp
         if (!this.isImageAnnotation()) {
             return;
         }
