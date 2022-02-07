@@ -17,6 +17,7 @@ import {
     setStorage,
     TimStorage,
     to,
+    to2,
     truncate,
 } from "tim/util/utils";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
@@ -175,7 +176,7 @@ export class LectureController {
             this.wallInstancePromise = showLectureWall(this.wallMessages);
             this.wallInstance = await this.wallInstancePromise;
             this.wallInstancePromise = undefined;
-            await to(this.wallInstance.result);
+            await to2(this.wallInstance.result);
             this.lectureSettings.useWall = false;
             this.storeLectureSettings();
         } else if (!this.lectureSettings.useWall) {
@@ -375,8 +376,11 @@ export class LectureController {
      * Toggle the lecture creation form.
      */
     async toggleLecture() {
-        const result = await showLectureDialog(this.viewctrl!.item);
-        if (result != null) {
+        const result = await to2(showLectureDialog(this.viewctrl!.item));
+        if (!result.ok) {
+            return;
+        }
+        if (result.result != null) {
             await this.checkIfInLecture();
         }
     }
@@ -515,7 +519,7 @@ export class LectureController {
             return;
         }
         const lecture = response.result.data;
-        await showLectureDialog(lecture);
+        await to2(showLectureDialog(lecture));
     }
 
     /**
@@ -632,18 +636,22 @@ export class LectureController {
                 ) {
                     this.lectureEndingDialogState =
                         LectureEndingDialogState.Open;
-                    const result = await showLectureEnding(this.lecture);
+                    const result = await to2(showLectureEnding(this.lecture));
                     this.lectureEndingDialogState =
                         LectureEndingDialogState.Answered;
-                    switch (result.result) {
-                        case "dontextend":
-                            break;
-                        case "extend":
-                            this.extendLecture(result.extendTime);
-                            break;
-                        case "end":
-                            this.endLecture();
-                            break;
+                    if (result.ok) {
+                        switch (result.result.result) {
+                            case "dontextend":
+                                break;
+                            case "extend":
+                                await this.extendLecture(
+                                    result.result.extendTime
+                                );
+                                break;
+                            case "end":
+                                await this.endLecture();
+                                break;
+                        }
                     }
                 }
             }
@@ -760,7 +768,7 @@ export class LectureController {
             currentQuestion.setData(answer.data);
             return;
         } else {
-            const r = await to(
+            const r = await to2(
                 showQuestionAnswerDialog({
                     qa: answer.data,
                     isLecturer: this.isLecturer,

@@ -301,7 +301,7 @@ export class SettingsTabComponent implements OnInit {
      */
     openRelevanceEditDialog() {
         if (this.item) {
-            void showRelevanceEditDialog(this.item);
+            void to2(showRelevanceEditDialog(this.item));
         }
     }
 
@@ -309,7 +309,7 @@ export class SettingsTabComponent implements OnInit {
      * Opens tag search dialog.
      */
     searchWithTags() {
-        void showTagSearchDialog();
+        void to2(showTagSearchDialog());
     }
 
     /**
@@ -411,7 +411,7 @@ export class SettingsTabComponent implements OnInit {
             this.http.get<ITemplateParams>(`/print/templates/${this.item.path}`)
         );
         if (r.ok) {
-            await showPrintDialog({document: this.item, params: r.result});
+            await to2(showPrintDialog({document: this.item, params: r.result}));
         }
     }
 
@@ -450,7 +450,7 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        void showTagDialog(this.item);
+        void to2(showTagDialog(this.item));
     }
 
     /**
@@ -460,7 +460,7 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        await showCourseDialog(this.item);
+        await to2(showCourseDialog(this.item));
         const r = await toPromise(
             this.http.get<IGroupWithSisuPath[]>(
                 `/items/linkedGroups/${this.item.id}`
@@ -573,11 +573,10 @@ export class SettingsTabComponent implements OnInit {
         );
     }
 
-    async mergePdf() {
-        if (!this.item) {
-            return;
+    mergePdf() {
+        if (this.item) {
+            void to2(showMergePdfDialog({document: this.item}));
         }
-        await showMergePdfDialog({document: this.item});
     }
 
     async createGroup(): Promise<void> {
@@ -587,8 +586,8 @@ export class SettingsTabComponent implements OnInit {
         }
     }
 
-    async createMessagelist() {
-        await showMessageListCreation();
+    createMessagelist() {
+        void to2(showMessageListCreation());
     }
 
     /**
@@ -621,6 +620,6 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        openScheduleDialog(this.item);
+        void to2(openScheduleDialog(this.item));
     }
 }

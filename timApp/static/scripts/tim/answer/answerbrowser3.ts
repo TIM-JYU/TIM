@@ -32,6 +32,7 @@ import {
     Require,
     scrollToElement,
     to,
+    to2,
 } from "../util/utils";
 import {IAnswer, IAnswerWithUsers} from "./IAnswer";
 
@@ -1566,12 +1567,14 @@ export class AnswerBrowserController
         }
     }
 
-    async getAllAnswers() {
-        await showAllAnswersDialog({
-            url: `/allAnswersPlain/${this.taskId.docTask().toString()}`,
-            identifier: this.taskId.docTask().toString(),
-            allTasks: false,
-        });
+    getAllAnswers() {
+        void to2(
+            showAllAnswersDialog({
+                url: `/allAnswersPlain/${this.taskId.docTask().toString()}`,
+                identifier: this.taskId.docTask().toString(),
+                allTasks: false,
+            })
+        );
     }
 
     findSelectedAnswerIndex() {

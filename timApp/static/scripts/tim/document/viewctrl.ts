@@ -20,6 +20,7 @@ import {
     markPageNotDirty,
     TimStorage,
     to,
+    to2,
     UnknownRecord,
 } from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
@@ -352,12 +353,14 @@ export class ViewCtrl implements IController {
         dg.allowMove = false;
         this.oldWidth = $(window).width() ?? 500;
         if (isPageDirty()) {
-            showInputDialog({
-                isInput: InputDialogKind.NoValidator,
-                text: "The page has been modified since the last reload. Refresh now?",
-                title: "Page was modified - reload?",
-                okValue: true,
-            });
+            void to2(
+                showInputDialog({
+                    isInput: InputDialogKind.NoValidator,
+                    text: "The page has been modified since the last reload. Refresh now?",
+                    title: "Page was modified - reload?",
+                    okValue: true,
+                })
+            );
         }
         this.liveUpdates = dg.liveUpdates;
 
@@ -1193,21 +1196,23 @@ export class ViewCtrl implements IController {
         return this.pendingUpdates.size;
     }
 
-    async updatePendingPars(pars: PendingCollection) {
+    updatePendingPars(pars: PendingCollection) {
         for (const [k, v] of pars) {
             this.pendingUpdates.set(k, v);
         }
         if (this.pendingUpdatesCount() < 10) {
             this.updatePending();
         } else {
-            const _ = await showInputDialog({
-                cancelText: "Dismiss",
-                isInput: InputDialogKind.NoValidator,
-                okText: "Update",
-                okValue: true,
-                text: `There are ${this.pendingUpdatesCount()} pending paragraph updates.`,
-                title: "Updates pending",
-            });
+            void to2(
+                showInputDialog({
+                    cancelText: "Dismiss",
+                    isInput: InputDialogKind.NoValidator,
+                    okText: "Update",
+                    okValue: true,
+                    text: `There are ${this.pendingUpdatesCount()} pending paragraph updates.`,
+                    title: "Updates pending",
+                })
+            );
             this.updatePending();
         }
     }

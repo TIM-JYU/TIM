@@ -14,7 +14,7 @@ import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
 import {manageglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
-import {capitalizeFirstLetter, clone, markAsUsed, to} from "../util/utils";
+import {capitalizeFirstLetter, clone, markAsUsed, to, to2} from "../util/utils";
 import {
     IDocument,
     IFolder,
@@ -463,7 +463,7 @@ export class PermCtrl implements IController {
         if (r.ok) {
             let data = r.result.data;
             if (data.duplicates.length > 0) {
-                const renameResult = await to(
+                const renameResult = await to2(
                     showRenameDialog({
                         duplicates: data.duplicates,
                     })

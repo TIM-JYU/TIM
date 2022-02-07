@@ -16,6 +16,7 @@ import {
     getURLParameter,
     getViewName,
     Require,
+    to2,
 } from "../util/utils";
 
 export interface IExportOptions {
@@ -251,8 +252,10 @@ export class UserListController implements IController {
                     title: "Export to Korppi",
                     action: ($event: IAngularEvent) => {
                         $timeout(async () => {
-                            const options = await showKorppiExportDialog();
-                            this.exportKorppi(options);
+                            const options = await to2(showKorppiExportDialog());
+                            if (options.ok) {
+                                this.exportKorppi(options.result);
+                            }
                         });
                     },
                     order: 10,
@@ -281,20 +284,22 @@ export class UserListController implements IController {
                 },
                 {
                     title: "Answers as plain text/JSON",
-                    action: async ($event: IAngularEvent) => {
-                        await showAllAnswersDialog({
-                            url:
-                                "/allDocumentAnswersPlain/" +
-                                this.viewctrl.item.id,
-                            identifier: this.viewctrl.item.id.toString(),
-                            allTasks: true,
-                        });
+                    action: ($event: IAngularEvent) => {
+                        void to2(
+                            showAllAnswersDialog({
+                                url:
+                                    "/allDocumentAnswersPlain/" +
+                                    this.viewctrl.item.id,
+                                identifier: this.viewctrl.item.id.toString(),
+                                allTasks: true,
+                            })
+                        );
                     },
                     order: 40,
                 },
                 {
                     title: "Create Feedback Report",
-                    action: async ($event: IAngularEvent) => {
+                    action: ($event: IAngularEvent) => {
                         let iusers: IUser[];
                         iusers = [];
                         if (this.gridApi) {
@@ -315,12 +320,15 @@ export class UserListController implements IController {
                                 iusers = [];
                             }
                         }
-                        await showFeedbackAnswers({
-                            url: "/feedback/report/" + this.viewctrl.item.id,
-                            users: iusers,
-                            identifier: this.viewctrl.item.id.toString(),
-                            allTasks: true,
-                        });
+                        void to2(
+                            showFeedbackAnswers({
+                                url:
+                                    "/feedback/report/" + this.viewctrl.item.id,
+                                users: iusers,
+                                identifier: this.viewctrl.item.id.toString(),
+                                allTasks: true,
+                            })
+                        );
                     },
                     order: 50,
                 },

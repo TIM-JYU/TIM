@@ -21,6 +21,7 @@ import {
     markPageDirty,
     TimStorage,
     to,
+    to2,
 } from "tim/util/utils";
 import {openEditor} from "tim/editor/pareditorOpen";
 import {getCurrentEditor} from "tim/editor/editorScope";
@@ -326,7 +327,7 @@ This will delete the whole ${
                         saveData.duplicates.length > 0 &&
                         saveData.new_par_ids != null
                     ) {
-                        const res = await to(
+                        const res = await to2(
                             showRenameDialog({
                                 duplicates: saveData.duplicates,
                                 extraData,

@@ -12,6 +12,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import * as t from "io-ts";
+import {defaultErrorMessage, to2} from "tim/util/utils";
 import {
     AnswerSheetModule,
     IPreviewParams,
@@ -23,7 +24,6 @@ import {
     AskedJsonJsonCodec,
     IQuestionMarkup,
 } from "../lecture/lecturetypes";
-import {defaultErrorMessage, to} from "../util/utils";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {vctrlInstance} from "../document/viewctrlinstance";
@@ -226,7 +226,7 @@ export class QstComponent
     }
 
     private async showQuestionNew(parId: string) {
-        const result = await to(
+        const result = await to2(
             showQuestionAskDialog({
                 docId: this.vctrl.docId,
                 parId: parId,

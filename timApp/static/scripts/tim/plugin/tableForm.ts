@@ -9,6 +9,7 @@ import {
     defaultErrorMessage,
     maxContentOrFitContent,
     to,
+    to2,
 } from "tim/util/utils";
 import {
     ApplicationRef,
@@ -1136,7 +1137,7 @@ export class TableFormComponent
     /**
      * Removes selected users from the group
      */
-    async removeUsers() {
+    removeUsers() {
         const timTable = this.getTimTable();
         if (timTable == null) {
             return;
@@ -1155,34 +1156,39 @@ export class TableFormComponent
         }
         const group = this.markup.groups[0];
 
-        await showInputDialog({
-            text:
-                "<b>Really remove the following users from group:</b> " +
-                group +
-                "<br>\n<pre>\n" +
-                msg +
-                "\n</pre>",
-            title: "Remove users from group " + group,
-            isInput: InputDialogKind.ValidatorOnly,
-            validator: async () => {
-                const ulist = TableFormComponent.makeUserList(
-                    selUsers,
-                    1,
-                    "",
-                    ","
-                );
-                const r = await to(
-                    $http.post<unknown>(`/groups/removemember/${group}`, {
-                        names: ulist.split(","),
-                    })
-                );
-                if (r.ok) {
-                    return {ok: true, result: r.result.data} as const;
-                } else {
-                    return {ok: false, result: r.result.data.error} as const;
-                }
-            },
-        });
+        void to2(
+            showInputDialog({
+                text:
+                    "<b>Really remove the following users from group:</b> " +
+                    group +
+                    "<br>\n<pre>\n" +
+                    msg +
+                    "\n</pre>",
+                title: "Remove users from group " + group,
+                isInput: InputDialogKind.ValidatorOnly,
+                validator: async () => {
+                    const ulist = TableFormComponent.makeUserList(
+                        selUsers,
+                        1,
+                        "",
+                        ","
+                    );
+                    const r = await to(
+                        $http.post<unknown>(`/groups/removemember/${group}`, {
+                            names: ulist.split(","),
+                        })
+                    );
+                    if (r.ok) {
+                        return {ok: true, result: r.result.data} as const;
+                    } else {
+                        return {
+                            ok: false,
+                            result: r.result.data.error,
+                        } as const;
+                    }
+                },
+            })
+        );
         location.reload();
     }
 
