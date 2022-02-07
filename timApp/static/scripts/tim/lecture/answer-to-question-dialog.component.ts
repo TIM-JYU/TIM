@@ -20,7 +20,7 @@ import {
     IPreviewParams,
     makePreview,
 } from "../document/question/answer-sheet.component";
-import {setStorage, toPromise} from "../util/utils";
+import {setStorage, to2, toPromise} from "../util/utils";
 import {
     AnswerTable,
     IAskedQuestion,
@@ -217,8 +217,8 @@ export class AnswerToQuestionDialogComponent
         // Don't call endQuestion here; it will come from timerTick.
     }
 
-    async showAnswers() {
-        await showStatisticsDialog(this.question);
+    showAnswers() {
+        void to2(showStatisticsDialog(this.question));
     }
 
     reAsk() {
@@ -231,7 +231,7 @@ export class AnswerToQuestionDialogComponent
 
     async edit() {
         const asked = await fetchAskedQuestion(this.question.asked_id);
-        const _ = await showQuestionEditDialog(asked);
+        await to2(showQuestionEditDialog(asked));
         if (isAskedQuestion(this.data.qa)) {
             this.setData(await fetchAskedQuestion(this.question.asked_id));
         } else {

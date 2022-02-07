@@ -10,7 +10,7 @@ import {HttpClient} from "@angular/common/http";
 import {RootCtrl} from "tim/timRoot";
 import {rootInstance} from "tim/rootinstance";
 import {getCourseCode, ITaggedItem} from "../item/IItem";
-import {to, toPromise} from "../util/utils";
+import {to2, toPromise} from "../util/utils";
 
 export interface ITaggedBookmarkedItem {
     doc: ITaggedItem;
@@ -174,7 +174,7 @@ export class BookmarkFolderBoxComponent implements OnInit {
      * @param {IBookmark} b Bookmark to edit.
      */
     async editFromList(b: IBookmark) {
-        const r = await to(
+        const r = await to2(
             showBookmarkDialog({
                 group: this.bookmarkFolderName,
                 link: b.link,

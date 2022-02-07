@@ -16,6 +16,7 @@ import {
 } from "tim/document/question/fetchQuestion";
 import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {to2} from "tim/util/utils";
 import {
     AnswerSheetModule,
     IPreviewParams,
@@ -94,10 +95,12 @@ export class QuestionPreviewDialogComponent extends AngularDialogComponent<
 
     async editQuestion() {
         if (!isReasking(this.data)) {
-            await fetchAndEditQuestion(this.data.docId, this.data.parId);
+            await to2(fetchAndEditQuestion(this.data.docId, this.data.parId));
         } else {
-            await showQuestionEditDialog(
-                await fetchAskedQuestion(this.data.askedId)
+            await to2(
+                showQuestionEditDialog(
+                    await fetchAskedQuestion(this.data.askedId)
+                )
             );
         }
         this.dismiss();

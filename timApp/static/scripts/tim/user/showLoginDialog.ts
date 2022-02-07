@@ -1,6 +1,6 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {to} from "tim/util/utils";
+import {to2} from "tim/util/utils";
 import {ILoginParams} from "tim/user/login-dialog.component";
 
 let instance: AngularDialogComponent<ILoginParams, void> | undefined;
@@ -17,7 +17,7 @@ export async function showLoginDialog(params: ILoginParams) {
         resetSize: true,
     });
     instance = await dialog;
-    await to(instance.result);
+    await to2(instance.result);
     instance = undefined;
     return;
 }
