@@ -724,6 +724,9 @@ const CsMarkupDefaults = t.type({
     allowMultipleFiles: withDefault(t.boolean, true),
     multipleUploadElements: withDefault(t.boolean, true),
     mayAddFiles: withDefault(t.boolean, false),
+    norunmenu: withDefault(t.boolean, false),
+    noargs: withDefault(t.boolean, false),
+    noclose: withDefault(t.boolean, false),
 });
 
 const CsMarkup = t.intersection([
@@ -3289,7 +3292,27 @@ ${fhtml}
         this.lastUserinput = this.userinput;
 
         if (!this.loadedIframe) {
-            const ld = await this.waitIframeLoad();
+            const self = this;
+            const ld = await this.waitIframeLoad(function (
+                event: MessageEvent
+            ) {
+                // setData may return dimensions for iframe
+                if (event.data && self.iframesettings) {
+                    const iframe = event.data.ret?.iframe;
+                    if (!iframe) {
+                        return;
+                    }
+                    const mu = self.markup;
+                    if (iframe.height && (!mu.height || mu.height < 0)) {
+                        self.iframesettings.height = iframe.height;
+                    }
+                    if (iframe.width && !mu.width) {
+                        self.iframesettings.width = iframe.width;
+                    }
+                    // self.anyChanged(); //
+                    self.cdr.detectChanges();
+                }
+            });
             if (!ld) {
                 return;
             }
@@ -3307,6 +3330,28 @@ ${fhtml}
                 language: "GlowScript 2.1 JavaScript",
             };
         }
+
+        /*
+        const self = this;
+        channel.port1.onmessage = function (event: MessageEvent) {
+            // setData may return dimensions for iframe
+            if (event.data && self.iframesettings) {
+                const iframe = event.data.ret?.iframe;
+                if (!iframe) {
+                    return;
+                }
+                const mu = self.markup;
+                if (iframe.height && (!mu.height || mu.height < 0)) {
+                    self.iframesettings.height = iframe.height;
+                }
+                if (iframe.width && !mu.width) {
+                    self.iframesettings.width = iframe.width;
+                }
+                // self.anyChanged(); //
+                self.cdr.detectChanges();
+            }
+        };
+         */
 
         channel.port1.postMessage({
             data: {
@@ -3470,7 +3515,7 @@ ${fhtml}
             </textarea>
         </div>
     </div>
-    <div class="csArgsDiv" *ngIf="showArgs && isInput"><label>{{argsstem}} </label>
+    <div class="csArgsDiv" *ngIf="showArgs &&!markup['noargs'] && isInput"><label>{{argsstem}} </label>
         <span><input type="text"
                     class="csArgsArea"
                     [(ngModel)]="userargs"
@@ -3485,7 +3530,7 @@ ${fhtml}
             [maxRows]="maxrows"
             [disabled]="true">
     </cs-editor>
-    <div class="csRunMenuArea" *ngIf="!forcedupload">
+    <div class="csRunMenuArea" *ngIf="!forcedupload && !markup['norunmenu']">
         <p class="csRunMenu">
             <button *ngIf="isRun && buttonText()"
                     [disabled]="isRunning || preventSave || (disableUnchanged && !isUnSaved() && isText)"
@@ -3578,7 +3623,7 @@ ${fhtml}
             <tim-close-button (click)="fetchError=undefined"></tim-close-button>
         </p>
         <pre class="csRunError" >{{fetchError}}</pre>
-        <p class="pull-right" style="margin-top: -1em">
+        <p class="pull-right" *ngIf="!markup['noclose']" style="margin-top: -1em">
             <tim-close-button (click)="fetchError=undefined"></tim-close-button>
         </p>
     </div>
@@ -3590,7 +3635,7 @@ ${fhtml}
                 caption="Preview"
                 detachable="true"
                 class="no-popup-menu">
-            <span class="csRunMenu">
+            <span class="csRunMenu" *ngIf="!markup['noclose']">
                 <tim-close-button
                         (click)="closeFrame()"
                         style="float: right">

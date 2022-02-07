@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<script src="http://localhost/csstatic/dfa/rpn.js"></script>
+ <style>
+  .buttondiv {margin-top: 1em; margin-left: 2em;}
+  .buttondiv button {font-size: x-large;}
+  .explspan {font-size: x-large; color: blue; }
+  .hidden {visibility: hidden;}
+  body {
+      margin: 0;
+  }
+ </style>
+ <title>RPN</title>
+</head>
+<body>
+<div id="maindiv">
+    <div style="margin-bottom: 3px">
+        <span id="error" style="color: red;"></span>
+        <span id="expls" class="explspan"></span>
+    </div>
+    <canvas id="canvas" width=700 height=10 >
+    </canvas>
+    <div id="buttondiv" class="buttondiv">
+</div>
+</div>
+<script>
+  let canvas = document.getElementById("canvas");
+  let context = canvas.getContext("2d");
+  let buttondiv = document.getElementById('buttondiv');
+  let errspan = document.getElementById('error');
+  let expls = document.getElementById('expls');
+
+
+  class RPNState {
+      reset() {
+          this.step = -1;
+          this.error = false;
+          this.rpn.init();
+      }
+
+      constructor(rpn) {
+          this.buttonDiv = buttondiv;
+          this.rpn = rpn;
+          this.params = rpn.params;
+          this.reset();
+          this.maxStep = this.rpn.runUntil();
+          this.maxStack = this.rpn.maxStack;
+          this.errorlines = "";
+          let errlines = this.rpn.errors.trim();
+          if (errlines) {
+              errlines = errlines.split("\n");
+              this.errorlines = errlines.length;
+          }
+          this.keep2stack = this.params["keep2stack"];
+          this.reset();
+          this.timer = null;
+      }
+
+      /*!
+       * Take one step forward in rpnState
+       * \fn boolean forward()
+       * \return boolean could it go forward
+       */
+      forward() {
+          let step = this.step;
+          if (this.step >= 0 && this.error) return false;
+          if (this.step < 0) {
+              this.step = 0;
+              this.error = false;
+              step = 0;
+          }
+          let oldEnd = this.rpn.isEnd();
+          step++;
+          this.rpn.runUntil(step);
+          if (!oldEnd) this.step = step;
+          else return false; // can not forward anymmore
+
+          return true;
+      }
+
+      backward() {
+          let step = this.step - 1;
+          if (step < -1) return false;
+          this.reset();
+          // while (this.step < step) this.forward();
+          this.step = this.rpn.runUntil(step);
+          return true;
+      }
+
+      moveToEnd() {
+          this.step = this.maxStep;
+          this.rpn.runUntil();
+      }
+} // RPNState
+
+
+  class VisualRPNState extends RPNState {
+      constructor(rpn, args) {
+          super(rpn, args);
+      }
+
+
+      /*!
+       * Draw whole rpn. Use also it's args to draw input
+       * \fn makeViz(rpn)
+       * \param json rpn structure of rpn
+       */
+      drawrpn() {
+          let stackItemHeight = 30;
+          let stackItemWidth = 50;
+          let commandTextHeight = 30;
+          let stackY = this.maxStack * stackItemHeight;
+          let stackX = 200;
+          let stack2X = stackX + 3*stackItemWidth;
+          let commandY = this.rpn.commands.length * commandTextHeight;
+          canvas.height = Math.max(stackY + stackItemHeight, commandY);
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          context.font = "18px Arial";
+          context.textAlign = "left";
+          context.textBaseline = "middle";
+          let code = this.rpn.commands;
+          let line = this.rpn.stepnumber;
+          for (let i = 0; i < code.length; i++) {
+              let x = 20;
+              let y = 15 + i * commandTextHeight;
+              let h = commandTextHeight;
+              let txt = code[i].showText();
+              if (i === line && !code[i].isEnd()) {
+                context.fillStyle = 'yellow';
+                let width = context.measureText("PUSH 100000").width;
+                context.fillRect(x-10, y - h/2, width, commandTextHeight);
+              }
+              context.fillStyle = i === line ? "red" : "black";
+              // context.fillText((i + 1), 10, 30+i*30);
+              context.fillText(txt, x, y);
+          }
+
+          drawStack(this.rpn.stack, stackX, "black");
+          this.rpn2.runUntil(Math.max(this.step+1,1));
+          let clr = this.rpn2.params["stack2Color"];
+          if (clr && (!this.rpn.isEnd() || this.keep2stack)) {
+              context.fillStyle = clr;
+              let arrow = this.params["arrow"];
+              if (arrow) context.fillText(arrow, stackX + (stack2X - stackX)/2 + stackItemWidth / 2, stackY);
+              drawStack(this.rpn2.stack, stack2X, clr);
+          }
+
+          function drawStack(stack, x, color) {
+              context.fillStyle = color;
+              context.strokeStyle = color;
+              context.textAlign = "center";
+              let y = stackY;
+              context.beginPath();
+              context.rect(x - stackItemWidth / 2, y + stackItemHeight / 2, stackItemWidth * 2, 5);
+              context.stroke();
+              for (let i = 0; i < stack.length; i++) {
+                  context.beginPath();
+                  context.rect(x, y - stackItemHeight / 2, stackItemWidth, stackItemHeight);
+                  context.stroke();
+                  context.fillText(stack[i], x + stackItemWidth / 2, y);
+                  y -= stackItemHeight;
+              }
+          }
+
+          if (this.rpn.createErrors || this.errorlines) {
+              let errors = this.rpn.errors;
+              if (this.errorlines) {
+                  let errlines = errors.split("\n").length;
+                  // "" -> 1,  "1\n" -> 2, "1\n2\n" -> 3
+                  errors += "\n".repeat(this.errorlines-errlines+1);
+              }
+              errspan.innerText = this.rpn.createErrors + errors;
+          } else {
+              errspan.innerText = "";
+          }
+          let cmd = this.rpn.currentCmd();
+          if (cmd) { // reserve space for expl if used in this program
+              let expl = "";
+              if (cmd.expl) expl = "&nbsp;".repeat(3) + cmd.expl +"<br>&nbsp;";
+              else if (this.rpn.explcount > 0) expl = "&nbsp;<br>&nbsp;";
+              expls.innerHTML = expl;
+          }
+      }
+
+      update() {
+         this.drawrpn();
+      }
+
+      createButton(jump, text, title) {
+          let button = document.createElement("button");
+          button.innerText = text;
+          button.onclick = jump;
+          button.title = title;
+          this.buttonDiv.appendChild(button);
+      }
+
+      createButtons() {
+          if (!this.buttonDiv) return;
+          let parent = this.buttonDiv;
+          while (parent.firstChild) {
+             parent.removeChild(parent.firstChild);
+          }
+          const stepcount = this.rpn.commands.length - 1;
+          if (stepcount < 1) return;
+          let btns = {back: true, fwd: true};
+          if (this.params.buttons) {
+              btns = this.params.buttons;
+          } else if (stepcount > 2) {
+              btns.start = true;
+              btns.aback = true;
+              btns.afwd = true;
+              btns.end = true;
+          }
+          if (btns.start) this.createButton(() => this.jumpToStart(), "|<", "reset");
+          if (btns.aback) this.createButton(() => this.animateBack(), "<<<", "animate back to start");
+          // this.createButton(() => this.animateBack(1), "<<", "animate one step back");
+          if (btns.back)  this.createButton(() => this.stepBack(), "<", "back one step");
+          if (btns.fwd) this.createButton(() => this.stepFwd(), ">", "do one step");
+          // this.createButton(() => this.animateFwd(1), ">>", "animate one step");
+          if (btns.afwd) this.createButton(() => this.animateFwd(), ">>>", "animate to end");
+          if (btns.end) this.createButton(() => this.jumpToEnd(), ">|", "run to end");
+          this.buttonDiv.classList.remove("hidden");
+      }
+
+      jumpToStart() {
+          this.stop();
+          this.reset();
+          this.update();
+      }
+
+      stepFwd() {
+          this.stop();
+          this.forward();
+          this.update();
+      }
+
+      stepBack() {
+          this.stop();
+          this.backward();
+          this.update();
+      }
+
+
+      stop() {
+        clearInterval(this.timer);
+      }
+
+      animate(_n, call, until) {
+        clearInterval(this.timer);
+        // if ( n === undefined ) n = 10000;
+        let step = 0;
+        if (this.step >= 0) step = this.step;
+        if ( step <= 0 ) step = -1;
+        let self = this;
+        this.timer = setInterval(function() {
+            if (until(step)) {
+              clearInterval(self.timer);
+              return;
+            }
+            if (!call()) clearInterval(self.timer);
+            self.update();
+        },500)
+      }
+
+      animateFwd(n) {
+          this.stop();
+          this.animate(n, () => this.forward(), (_step) => false)
+      }
+
+      animateBack(n) {
+          this.stop();
+          this.animate(n, () => this.backward(), (_step) => false);
+      }
+
+      jumpToEnd() {
+          this.stop();
+          this.moveToEnd();
+          this.update();
+      }
+} // VisualRPNState
+
+  function preCheck(data) {
+     if (!data) return false;
+     if (!data.params) return false;
+     let args = data.args || data.params.args;
+     if (!args) return;
+     args = (""+args).trim();
+     data.args = args;
+     let illegal = data.params.illegal;
+     if (!illegal) return false;
+     for (let s of illegal) {
+        let re = new RegExp("^"+s+"$");
+        if (args.match(re)) {
+            errspan.innerText = "Laiton jono: " + args;
+            return true;
+        }
+     }
+     return false;
+  }
+
+
+  function paramDefault(params, name, value) {
+      if (params[name] === undefined) params[name] = value;
+  }
+
+
+  function setData(data) {
+    if ( preCheck(data) ) return;
+    let params = data.params;
+    if (!params) params = { };
+    paramDefault(params, "stack2color", "");
+    params["initial"] = data.args;
+    let rpn = new RPN(data.code, params);
+    let rpn2 = new RPN(data.code, params);
+    const rpnState = new VisualRPNState(rpn);
+    rpnState.rpn2 = rpn2;
+    rpnState.drawrpn();
+    rpnState.createButtons();
+    return {iframe: {height: document.body.clientHeight+4}};
+  }
+
+</script>
+  <script>
+    const code = `
+SWAP
+POP
+pop
+pop2
+     `;
+    // setData({code: code, args: "abaa", params: {initial: "3,2"}});
+    // console.log(rpnState.rpn.accepts("abaa"));
+  </script>
+</body>
+
+</html>
