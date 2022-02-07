@@ -668,6 +668,7 @@ const CsMarkupOptional = t.partial({
     count: CountType,
     hide: t.partial({wrap: t.boolean, changed: t.boolean}),
     savedText: t.string,
+    testText: t.string,
     rootPath: t.string,
     masterPath: t.string,
     files: oneOrArray(FileMarkup),
@@ -1702,6 +1703,10 @@ ${fhtml}
             this.markup.justSave ||
             this.markup.button
         ); // or this.buttonText()?
+    }
+
+    get testText() {
+        return this.markup.testText ?? "Test";
     }
 
     buttonText() {
@@ -3554,7 +3559,8 @@ ${fhtml}
             <button *ngIf="isTest"
                     [disabled]="isRunning"
                     (click)="runTest()"
-                    class="timButton btn-sm">Test</button>
+                    class="timButton btn-sm"
+                    [innerHTML]="testText"></button>
             &nbsp;&nbsp;
             <button *ngIf="isUnitTest"
                     class="timButton btn-sm"
