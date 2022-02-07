@@ -512,6 +512,9 @@ export class AnswerBrowserController
     private giveCustomPoints: boolean = false;
     public review: boolean = false;
     private imageReview: boolean = false;
+    private imageReviewUrls: string[] = [];
+    private imageReviewDatas: string[] = [];
+    private imageReviewUrlIndex = 0;
     public oldreview: boolean = false;
     private shouldFocus: boolean = false;
     // noinspection JSMismatchedCollectionQueryUpdate
@@ -931,10 +934,30 @@ export class AnswerBrowserController
                 }
             }
             if (this.review) {
-                this.imageReview =
-                    r.result.data.reviewHtml.startsWith("data:image");
+                let newReviewHtml = r.result.data.reviewHtml;
+
+                if (newReviewHtml.startsWith("data:image")) {
+                    this.imageReview = true;
+                    this.imageReviewDatas = [newReviewHtml];
+                } else if (newReviewHtml.startsWith("imageurls:")) {
+                    this.imageReview = true;
+                    const fetchedImages: string[] = [];
+                    this.imageReviewUrls = newReviewHtml
+                        .substring(10)
+                        .split(";");
+                    const promises = this.imageReviewUrls.map((url) =>
+                        fetch(url)
+                    );
+                    const ress = await Promise.all(promises);
+                    const blobs = ress.map((res) => res.blob());
+                    for (const b of blobs) {
+                        const base64Data = await this.readAsDataUrl(await b);
+                        fetchedImages.push(base64Data as string);
+                    }
+                    this.imageReviewDatas = fetchedImages;
+                }
+
                 if (this.selectedAnswer) {
-                    let newReviewHtml = r.result.data.reviewHtml;
                     if (newReviewHtml === this.reviewHtml) {
                         // It's possible that the user was changed but the user has exactly the same
                         // answer as the current one. In that case, we still want to refresh the DOM
@@ -968,6 +991,23 @@ export class AnswerBrowserController
             }
         }
         this.isAndSetShowNewTask();
+    }
+
+    readAsDataUrl(input: Blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onerror = () => {
+                reader.abort();
+                reject(new DOMException("Problem parsing input blob."));
+            };
+
+            reader.onload = () => {
+                resolve(reader.result);
+            };
+
+            reader.readAsDataURL(input);
+        });
     }
 
     /**

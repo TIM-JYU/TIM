@@ -40,6 +40,7 @@ QSTMDATTRS = [
     "[0-9]",
     ".*[Tt]ext",
 ]
+
 FBMDATTRS = ["nextTask", "questionItems", "choices", "levels"]
 DRAGATTRS = ["words"]
 TEXTFIELDATTRS = ["header", "stem", "inputstem"]
@@ -178,6 +179,13 @@ def get_plugins() -> dict[str, PluginReg]:
             domain=internal_domain,
             port=qst_port,
             path="/tableForm/",
+            lazy=False,
+        ),
+        PluginReg(
+            name="reviewcanvas",
+            domain=internal_domain,
+            port=qst_port,
+            path="/reviewcanvas/",
             lazy=False,
         ),
         PluginReg(
