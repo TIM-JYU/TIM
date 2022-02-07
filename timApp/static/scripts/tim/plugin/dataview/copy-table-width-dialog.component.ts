@@ -1,7 +1,7 @@
 import {Component, OnInit} from "@angular/core";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {copyToClipboard, to} from "tim/util/utils";
+import {copyToClipboard, to2} from "tim/util/utils";
 
 export interface ICopyTableWidthsParams {
     columnWidths: number[];
@@ -60,11 +60,9 @@ export async function showCopyWidthsDialog(params: ICopyTableWidthsParams) {
     if (instance) {
         return;
     }
-    const dialog = angularDialog.open(CopyTableWidthDialogComponent, params, {
+    instance = await angularDialog.open(CopyTableWidthDialogComponent, params, {
         resetSize: true,
     });
-    instance = await dialog;
-    await to(instance.result);
+    await to2(instance.result);
     instance = undefined;
-    return;
 }

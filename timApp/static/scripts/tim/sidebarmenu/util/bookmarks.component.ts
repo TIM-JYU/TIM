@@ -114,13 +114,15 @@ export class BookmarksComponent implements OnInit {
         e.preventDefault();
         const suggestedName =
             genericglobals().curr_item?.title ?? document.title;
-        const bookmark = await showBookmarkDialog({
-            group: group ?? "",
-            name: suggestedName,
-            link: "",
-        });
+        const bookmark = await to2(
+            showBookmarkDialog({
+                group: group ?? "",
+                name: suggestedName,
+                link: "",
+            })
+        );
 
-        if (!bookmark.name) {
+        if (!bookmark.ok || !bookmark.result.name) {
             return;
         }
         const resp = await toPromise(

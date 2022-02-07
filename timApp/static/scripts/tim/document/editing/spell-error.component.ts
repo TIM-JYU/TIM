@@ -8,7 +8,7 @@ import {
     OnDestroy,
     OnInit,
 } from "@angular/core";
-import {to} from "tim/util/utils";
+import {to2} from "tim/util/utils";
 import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
@@ -46,7 +46,7 @@ export class SpellErrorComponent implements OnInit, OnDestroy {
             return;
         }
         const par = $(this.e.nativeElement).parents(".par");
-        const d = await showSpellErrorDialog({
+        this.dlg = await showSpellErrorDialog({
             info: {
                 word: this.e.nativeElement.textContent!,
                 occurrence: this.count ?? 1,
@@ -56,8 +56,7 @@ export class SpellErrorComponent implements OnInit, OnDestroy {
             dialogX: e.clientX,
             dialogY: e.clientY,
         });
-        this.dlg = await d;
-        await to(d.result);
+        await to2(this.dlg.result);
         this.dlg = undefined;
     }
 }

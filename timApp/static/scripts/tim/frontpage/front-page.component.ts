@@ -8,7 +8,7 @@ import {ICourseSettings} from "../item/IItem";
 import {Users} from "../user/userService";
 import {genericglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
-import {to} from "../util/utils";
+import {to, to2} from "../util/utils";
 
 @Component({
     selector: "tim-start",
@@ -149,7 +149,7 @@ export class FrontPageComponent implements IController {
     async openCourseListDialog() {
         const r = await to($http.get<ICourseSettings>(`/courses/settings`));
         if (r.ok) {
-            void showCourseListDialog({settings: r.result.data});
+            await to2(showCourseListDialog({settings: r.result.data}));
             return;
         }
         void showMessageDialog(

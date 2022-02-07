@@ -11,7 +11,7 @@ import {
     NgZone,
 } from "@angular/core";
 import moment from "moment";
-import {toPromise} from "tim/util/utils";
+import {to2, toPromise} from "tim/util/utils";
 import {BrowserModule} from "@angular/platform-browser";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AnswerChartModule} from "tim/lecture/answer-chart.component";
@@ -227,7 +227,7 @@ export class LectureInfoComponent {
         if (!response.ok) {
             return;
         }
-        await showQuestionEditDialog(response.result);
+        await to2(showQuestionEditDialog(response.result));
     }
 
     private getAnswers(question: IAskedQuestion) {
@@ -269,8 +269,10 @@ export class LectureInfoComponent {
         if (!response.ok) {
             return;
         }
-        const lecture = response.result;
-        this.lecture = await showLectureDialog(lecture);
+        const lecture = await to2(showLectureDialog(response.result));
+        if (lecture.ok) {
+            this.lecture = lecture.result;
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 import {HttpClient} from "@angular/common/http";
 import {Component, Input, OnInit} from "@angular/core";
 import moment, {Moment} from "moment";
-import {to, toPromise} from "../../util/utils";
+import {to, to2, toPromise} from "../../util/utils";
 import {
     archivePolicyNames,
     ArchiveType,
@@ -507,35 +507,37 @@ export class MessageListAdminComponent implements OnInit {
     /**
      * Helper for list deletion.
      */
-    async deleteList() {
+    deleteList() {
         // Ask confirmation from the user.
-        await showInputDialog({
-            title: $localize`Delete list ${this.listname}`,
-            text: $localize`Do you really want to delete list ${this.listname}? Members will not be able to receive or send messages through the list anymore.`,
-            okText: $localize`Delete`,
-            isInput: InputDialogKind.ValidatorOnly,
-            validator: async () => {
-                const result = await to(
-                    $http.delete(`/messagelist/deletelist`, {
-                        params: {
-                            listname: this.listname,
-                            permanent: false, // Only non-permanent deletion at this point.
-                        },
-                    })
-                );
-                if (result.ok) {
-                    // Deletion was successful. Beam us up.
-                    location.assign("/view/messagelists");
-                    return {ok: true, result: result.result} as const;
-                } else {
-                    this.permanentErrorMessage = $localize`Deleting the list failed.`;
-                    return {
-                        ok: false,
-                        result: result.result.data.error,
-                    } as const;
-                }
-            },
-        });
+        void to2(
+            showInputDialog({
+                title: $localize`Delete list ${this.listname}`,
+                text: $localize`Do you really want to delete list ${this.listname}? Members will not be able to receive or send messages through the list anymore.`,
+                okText: $localize`Delete`,
+                isInput: InputDialogKind.ValidatorOnly,
+                validator: async () => {
+                    const result = await to(
+                        $http.delete(`/messagelist/deletelist`, {
+                            params: {
+                                listname: this.listname,
+                                permanent: false, // Only non-permanent deletion at this point.
+                            },
+                        })
+                    );
+                    if (result.ok) {
+                        // Deletion was successful. Beam us up.
+                        location.assign("/view/messagelists");
+                        return {ok: true, result: result.result} as const;
+                    } else {
+                        this.permanentErrorMessage = $localize`Deleting the list failed.`;
+                        return {
+                            ok: false,
+                            result: result.result.data.error,
+                        } as const;
+                    }
+                },
+            })
+        );
     }
 
     /**
