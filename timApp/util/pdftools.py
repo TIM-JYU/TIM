@@ -404,6 +404,8 @@ def parse_tim_url(par_file: str) -> Optional[Path]:
     :param par_file: Link from the macro.
     :return: TIM upload file path if the link was within TIM, otherwise pass on unchanged.
     """
+    if not par_file:
+        return None
     domain = current_app.config["TIM_HOST"]
     if par_file.startswith("/files/"):
         path = get_files_path() / ("blocks" + par_file)
@@ -428,7 +430,7 @@ def get_attachments_from_pars(paragraphs: list[DocParagraph]) -> list[Attachment
                 par, default_view_ctx
             )
             par_data = par_plugin.values
-            par_file = par_data["file"]
+            par_file = par_data.get("file", None)
             file_path = parse_tim_url(par_file)
             if file_path:
                 error_message = test_pdf(file_path)
@@ -436,8 +438,7 @@ def get_attachments_from_pars(paragraphs: list[DocParagraph]) -> list[Attachment
             else:
                 error_message = "Error: Invalid PDF URL"
             selected = not error_message
-            par_str = str(par)
-            # Find macro name and unselect "unknown"- (bugged) and "perusliite"-attachments.
+            par_str = par.get_markdown()
             macro_name = "unknown"
             if "%%liite" in par_str:
                 macro_name = "liite"
@@ -445,7 +446,7 @@ def get_attachments_from_pars(paragraphs: list[DocParagraph]) -> list[Attachment
                 macro_name = "perusliite"
                 selected = False
             # File check and GUI link require different paths.
-            link = par_file.replace("tim_files/blocks/", "")
+            link = par_file.replace("tim_files/blocks/", "") if par_file else ""
             pdf_list.append(
                 Attachment(
                     link, error=error_message, macro=macro_name, selected=selected
