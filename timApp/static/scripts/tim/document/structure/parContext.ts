@@ -4,6 +4,7 @@ import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
 import {Area} from "tim/document/structure/area";
 import {EditType} from "tim/document/editing/edittypes";
 import {getContextualAreaInfo} from "tim/document/structure/areaContext";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 
 function getOutermostRef(par: Paragraph) {
     let ref;
@@ -33,6 +34,15 @@ export class ParContext {
      * Returns the corresponding {@link Paragraph} object without dereferencing {@link ReferenceParagraph}.
      */
     get originalPar() {
+        // Special case: with translations, we want to resolve only the immediate reference
+        // This way, the server handled resolving the diff between the original untranslated ref and this ref
+        if (
+            vctrlInstance?.isTranslation() &&
+            this.par.parent instanceof ReferenceParagraph
+        ) {
+            return this.par.parent.original;
+        }
+
         const ref = getOutermostRef(this.par);
 
         if (ref) {

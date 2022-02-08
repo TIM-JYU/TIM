@@ -78,6 +78,10 @@ export class UnbrokenSelection extends ParSelection {
         return firstctx.htmlElement;
     }
 
+    static explicit(par: ParContext) {
+        return new UnbrokenSelection(par, par);
+    }
+
     /**
      * Returns a new UnbrokenSelection such that
      *
@@ -146,6 +150,10 @@ export class UnbrokenSelection extends ParSelection {
             end ? end : s.end
         );
     }
+}
+
+export function getExplicitSelection(par: ParContext) {
+    return UnbrokenSelection.explicit(par);
 }
 
 export function getMinimalUnbrokenSelection(

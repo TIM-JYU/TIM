@@ -38,6 +38,7 @@ import {Area} from "tim/document/structure/area";
 import {HelpPar} from "tim/document/structure/helpPar";
 import {ParSelection} from "tim/document/editing/parSelection";
 import {
+    getExplicitSelection,
     getMinimalUnbrokenSelection,
     UnbrokenSelection,
 } from "tim/document/editing/unbrokenSelection";
@@ -671,6 +672,7 @@ auto_number_headings: 0${CURSOR}
         const fns: MenuFunctionList = [];
         fns.push(this.getViewSourceEditorMenuEntry(par));
         const showSingleParFns = par.isDeletableOnItsOwn();
+        const isTranslation = this.viewctrl.isTranslation();
         const {areasBeforeRef, areasAfterRef, refAreaInclusion} =
             getContextualAreaInfo(par);
         let areaWithSel:
@@ -776,6 +778,7 @@ auto_number_headings: 0${CURSOR}
                 fns.push(this.getAddParagraphItem(addAbovePos));
             }
             if (
+                isTranslation ||
                 showSingleParFns ||
                 refAreaInclusion === ParAreaInclusionKind.IsStart ||
                 refAreaInclusion === ParAreaInclusionKind.IsEnd
@@ -784,7 +787,10 @@ auto_number_headings: 0${CURSOR}
                     func: (e) =>
                         this.showEditWindow(
                             e,
-                            getMinimalUnbrokenSelection(par, par)
+                            // Translation files are always referenced by paragraph, so it's better to edit each paragraph instead of trying to resolve an area
+                            isTranslation
+                                ? getExplicitSelection(par)
+                                : getMinimalUnbrokenSelection(par, par)
                         ),
                     desc: "Edit",
                     show: parEditable,
