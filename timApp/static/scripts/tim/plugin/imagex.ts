@@ -27,13 +27,13 @@ import {
     MouseOrTouch,
     numOrStringToNumber,
     posToRelative,
-    Require,
     to,
     touchEventToTouch,
     valueOr,
 } from "../util/utils";
 import {editorChangeValue} from "../editor/editorScope";
-import {ViewCtrl} from "../document/viewctrl";
+import {ITimComponent, ViewCtrl} from "../document/viewctrl";
+import {vctrlInstance} from "../document/viewctrlinstance";
 import {
     CommonPropsT,
     DefaultPropsT,
@@ -1728,7 +1728,7 @@ export class ImageXComponent
         t.TypeOf<typeof ImageXAll>,
         typeof ImageXAll
     >
-    implements OnInit
+    implements OnInit, ITimComponent
 {
     public imageLoadError?: string | null;
 
@@ -1819,12 +1819,13 @@ export class ImageXComponent
     private tries = 0;
     public previewColor = "";
     public isRunning: boolean = false;
-    private vctrl!: Require<ViewCtrl>;
+    private vctrl!: ViewCtrl;
     public replyImage?: string;
     public replyHTML?: string;
     private canvas!: HTMLCanvasElement;
     private dt!: DragTask;
     private answer?: IAnswerResponse;
+    private prevAnswer?: string;
     private embed: boolean = false;
 
     draw() {
@@ -1844,6 +1845,8 @@ export class ImageXComponent
 
     async ngOnInit() {
         super.ngOnInit();
+        this.vctrl = vctrlInstance!;
+        this.vctrl.addTimComponent(this, this.markup.tag);
         // timeout required; otherwise the canvas element will be overwritten with another by Angular
         await $timeout();
         this.canvas = this.element.find(".canvas")[0] as HTMLCanvasElement;
@@ -1991,6 +1994,7 @@ export class ImageXComponent
         dt.draw();
 
         this.previewColor = globalPreviewColor;
+        this.prevAnswer = this.getContent();
     }
 
     initCode() {
@@ -2026,8 +2030,8 @@ export class ImageXComponent
         }
     }
 
-    save() {
-        this.doSave(false);
+    async save() {
+        return await this.doSave(false);
     }
 
     showAnswer() {
@@ -2108,6 +2112,7 @@ export class ImageXComponent
 
         // Draw the exercise so that reset appears instantly.
         this.dt.draw();
+        this.prevAnswer = this.getContent();
     }
 
     svgImageSnippet() {
@@ -2174,8 +2179,11 @@ export class ImageXComponent
             this.userHasAnswered = true;
             this.replyImage = data.web["-replyImage"];
             this.replyHTML = data.web["-replyHTML"];
+            this.prevAnswer = this.getContent();
+            return {saved: true, message: undefined};
         } else {
             this.error = "Ikuinen silmukka tai jokin muu vika?";
+            return {saved: false, message: this.error};
         }
     }
 
@@ -2223,6 +2231,17 @@ export class ImageXComponent
             ((this.max_tries && this.tries >= this.max_tries) ||
                 (!this.max_tries && this.tries > 0))
         );
+    }
+
+    getContent(): string | undefined {
+        return JSON.stringify({
+            drags: this.getDragObjectJson(),
+            freeHandData: this.freeHandDrawing.freeDrawing,
+        });
+    }
+
+    isUnSaved(): boolean {
+        return this.getContent() !== this.prevAnswer;
     }
 }
 
