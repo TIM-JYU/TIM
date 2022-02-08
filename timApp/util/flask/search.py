@@ -823,7 +823,7 @@ def compile_regex(
     else:
         term = re.escape(query)
     if search_whole_words:
-        term = fr"\b{term}\b"
+        term = rf"\b{term}\b"
     try:
         term_regex = re.compile(term, flags)
     except sre_constants.error as e:

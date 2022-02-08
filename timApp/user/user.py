@@ -223,7 +223,7 @@ def last_name_to_last(full_name: str | None):
 
 
 deleted_user_suffix = "_deleted"
-deleted_user_pattern = re.compile(fr".*{deleted_user_suffix}(_\d+)?$")
+deleted_user_pattern = re.compile(rf".*{deleted_user_suffix}(_\d+)?$")
 
 
 def user_query_with_joined_groups() -> Query:

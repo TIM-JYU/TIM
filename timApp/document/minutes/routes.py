@@ -195,7 +195,7 @@ def create_minute_extracts(doc: str) -> Response:
         #  Next must be add_text to avoid first coming as text and then changing to different paragraph
         #  and #- must be on the column 1!
         docentry.document.add_text(
-            fr"""
+            rf"""
 PÖYTÄKIRJANOTE - Lista {extract_number} -  {extract_title}      
 \        
 #- {{rd="{d.id}" ra="ETUSIVU"}}
@@ -210,7 +210,7 @@ PÖYTÄKIRJANOTE - Lista {extract_number} -  {extract_title}
             [f"%%allekirjoitus({author})%%" for author in authors]
         )
         docentry.document.add_paragraph(
-            fr"""
+            rf"""
 %%OTE_ALLEKIRJOITUKSET()%%
 
 {signature_names}

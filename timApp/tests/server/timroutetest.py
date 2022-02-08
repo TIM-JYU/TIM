@@ -95,7 +95,7 @@ def get_cookie_value(resp: Response, key: str) -> str | None:
     """
     cookies = resp.headers.getlist("Set-Cookie")
     for cookie in cookies:
-        match = re.match(fr"{key}=(?P<value>\d+);", cookie)
+        match = re.match(rf"{key}=(?P<value>\d+);", cookie)
         if match:
             return match.group("value")
     return None
@@ -889,7 +889,7 @@ class TimRouteTest(TimDbTest):
         for s in scripts:
             variables = s.text
             # '\s*' are zero or more whitespaces, '(.*)' is variable content between '=' and ';'.
-            matches = re.findall(fr"{variable_name}\s*=\s*(.*);", variables)
+            matches = re.findall(rf"{variable_name}\s*=\s*(.*);", variables)
             if matches:
                 var = json.loads(matches[0])
                 return var

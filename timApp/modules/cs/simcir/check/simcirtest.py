@@ -117,7 +117,7 @@ class Connector:
         return (self.to_id, self.from_id)
 
     def __str__(self):
-        return '{"from":"%s.%s","to":"%s.%s"}' % (
+        return '{{"from":"{}.{}","to":"{}.{}"}}'.format(
             self.from_id,
             self.from_port,
             self.to_id,

@@ -1159,7 +1159,7 @@ def datablock_key_to_indexes(datablock_key: str) -> tuple[int, int]:
     column_index = 0
     for c in columnstring.encode("ascii"):
         # ascii encoding returns a list of bytes, so we can use c directly
-        addition = ((ASCII_CHAR_COUNT ** chr_index) * (c - ASCII_OF_A)) + 1
+        addition = ((ASCII_CHAR_COUNT**chr_index) * (c - ASCII_OF_A)) + 1
         column_index += addition
     return column_index - 1, row_index - 1
 

@@ -165,7 +165,7 @@ class SolarSchedule(ModelBase, ModelMixin):
         return model
 
     def __repr__(self):
-        return "{} ({}, {})".format(self.event, self.latitude, self.longitude)
+        return f"{self.event} ({self.latitude}, {self.longitude})"
 
 
 class PeriodicTaskChanged(ModelBase, ModelMixin):

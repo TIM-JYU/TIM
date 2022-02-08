@@ -116,7 +116,7 @@ ts_format:
 
 py_format:
   stage: lint
-  image: python:3.9-slim
+  image: python:3.10-slim
   script:
-  - pip install black==21.9b0
+  - pip install black==22.1.0
   - black --check .
