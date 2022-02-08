@@ -1137,7 +1137,7 @@ export class TableFormComponent
     /**
      * Removes selected users from the group
      */
-    removeUsers() {
+    async removeUsers() {
         const timTable = this.getTimTable();
         if (timTable == null) {
             return;
@@ -1156,7 +1156,7 @@ export class TableFormComponent
         }
         const group = this.markup.groups[0];
 
-        void to2(
+        const dr = await to2(
             showInputDialog({
                 text:
                     "<b>Really remove the following users from group:</b> " +
@@ -1189,7 +1189,9 @@ export class TableFormComponent
                 },
             })
         );
-        location.reload();
+        if (dr.ok) {
+            location.reload();
+        }
     }
 
     listUsernames() {
