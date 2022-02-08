@@ -1196,14 +1196,14 @@ export class ViewCtrl implements IController {
         return this.pendingUpdates.size;
     }
 
-    updatePendingPars(pars: PendingCollection) {
+    async updatePendingPars(pars: PendingCollection) {
         for (const [k, v] of pars) {
             this.pendingUpdates.set(k, v);
         }
         if (this.pendingUpdatesCount() < 10) {
             this.updatePending();
         } else {
-            void to2(
+            await to2(
                 showInputDialog({
                     cancelText: "Dismiss",
                     isInput: InputDialogKind.NoValidator,
