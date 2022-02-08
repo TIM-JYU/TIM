@@ -188,7 +188,7 @@ import {angularDialog} from "tim/ui/angulardialog/dialog.service";"""
     for var in controller_vars:
         s.regex_replace(f"(private|protected) (async )?({var})", r"\2\3")
 
-    s.regex_replace(fr'ng-repeat="(\w+) in ', r'*ngFor="let \1 of ')
+    s.regex_replace(rf'ng-repeat="(\w+) in ', r'*ngFor="let \1 of ')
 
     with open(path, encoding="utf8", mode="wt", newline="\n") as f:
         f.write(s.src)

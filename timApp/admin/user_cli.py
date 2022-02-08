@@ -471,7 +471,7 @@ def fix_aalto_users(csvfile: TextIOWrapper) -> None:
     "--password",
     help="common password for all accounts",
 )
-def import_accounts(csvfile: str, password: Optional[str]) -> None:
+def import_accounts(csvfile: str, password: str | None) -> None:
     added, existing = import_accounts_impl(csvfile, password)
     total = len(added) + len(existing)
     click.echo(f"Processed {total} accounts.")
@@ -635,9 +635,9 @@ def send_email_cmd(
     template: TextIOWrapper,
     subject: str,
     mail_from: str,
-    reply_to: Optional[str],
-    mail_host: Optional[str],
-    login: Optional[str],
+    reply_to: str | None,
+    mail_host: str | None,
+    login: str | None,
     passwords: TextIOWrapper,
     dry_run: bool,
     delay: float,

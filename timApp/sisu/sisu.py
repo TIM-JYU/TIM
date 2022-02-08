@@ -94,7 +94,7 @@ role_suffixes = [
 ]
 
 
-def get_group_prefix(g: UserGroup) -> Optional[str]:
+def get_group_prefix(g: UserGroup) -> str | None:
     """Returns the prefix indicating which Sisu groups the users in this Sisu group shall have access to."""
     eid = g.external_id.external_id
     for s in role_suffixes:
@@ -103,9 +103,7 @@ def get_group_prefix(g: UserGroup) -> Optional[str]:
     return None
 
 
-def get_potential_groups(
-    u: User, course_filter: Optional[str] = None
-) -> list[UserGroup]:
+def get_potential_groups(u: User, course_filter: str | None = None) -> list[UserGroup]:
     """Returns all the Sisu groups that the user shall have access to."""
     sisu_group_memberships = (
         u.groups_dyn.join(UserGroup).join(ScimUserGroup).with_entities(UserGroup).all()
@@ -127,7 +125,7 @@ def get_potential_groups(
 @dataclass
 class GroupCreateModel:
     externalId: str
-    name: Union[str, _Missing] = missing
+    name: str | _Missing = missing
 
 
 GroupCreateSchema = class_schema(GroupCreateModel)
@@ -160,7 +158,7 @@ def create_groups_route(args: list[GroupCreateModel]) -> Response:
 
     # Now, create the admin documents for groups that don't yet exist.
     # Rights to already existing documents need to be updated too.
-    name_map: dict[str, Union[str, Missing]] = {a.externalId: a.name for a in args}
+    name_map: dict[str, str | Missing] = {a.externalId: a.name for a in args}
     group_map: dict[str, UserGroup] = {
         g.external_id.external_id: g for g in allowed_groups
     }
@@ -235,7 +233,7 @@ def create_groups_route(args: list[GroupCreateModel]) -> Response:
 def create_sisu_document(
     item_path: str,
     item_title: str,
-    owner_group: Optional[UserGroup] = None,
+    owner_group: UserGroup | None = None,
 ) -> DocInfo:
     validate_item_and_create_intermediate_folders(
         item_path,
@@ -373,12 +371,12 @@ class PostGradesModel:
     docId: int
     dryRun: bool
     partial: bool
-    filterUsers: Optional[list[str]] = None
+    filterUsers: list[str] | None = None
     includeUsers: MembershipFilter = field(
         default=MembershipFilter.All, metadata={"by_value": True}
     )
-    completionDate: Optional[datetime] = None
-    groups: Optional[list[str]] = None
+    completionDate: datetime | None = None
+    groups: list[str] | None = None
 
 
 def verify_sisu_assessments() -> None:
@@ -424,8 +422,8 @@ class PostAssessmentsErrorValue:
     code: int
     reason: str
     # TODO: Temporary workaround to allow floats because Sisu API may sometimes erroneously return these.
-    credits: Union[int, float, Missing] = missing
-    gradeId: Optional[str] = None
+    credits: int | float | Missing = missing
+    gradeId: str | None = None
 
 
 AssessmentErrors = dict[str, PostAssessmentsErrorValue]
@@ -438,8 +436,8 @@ class PostAssessmentsBody:
 
 @dataclass
 class PostAssessmentsResponse:
-    body: Optional[PostAssessmentsBody] = None
-    error: Optional[PostAssessmentsErrorValue] = None
+    body: PostAssessmentsBody | None = None
+    error: PostAssessmentsErrorValue | None = None
 
 
 PostAssessmentsResponseSchema = class_schema(PostAssessmentsResponse)
@@ -450,8 +448,8 @@ class Assessment:
     userName: str
     gradeId: str
     completionDate: str
-    completionCredits: Optional[int] = None
-    privateComment: Optional[str] = None
+    completionCredits: int | None = None
+    privateComment: str | None = None
 
     @validates("gradeId")
     def validate_grade(self, value: str) -> None:
@@ -463,7 +461,7 @@ class Assessment:
         #     raise ValidationError('Sisu interface currently does not accept HYL grade')
 
 
-def maybe_to_str(s: Optional[Any]) -> Optional[str]:
+def maybe_to_str(s: Any | None) -> str | None:
     if s is None:
         return s
     return str(s)
@@ -481,7 +479,7 @@ class CandidateAssessment:
 
     def to_sisu_json(
         self,
-        completion_date: Optional[str] = None,
+        completion_date: str | None = None,
         ensure_int_credit: bool = False,
     ) -> dict[str, str]:
         result = {
@@ -568,9 +566,9 @@ def send_grades_to_sisu(
     doc: DocInfo,
     partial: bool,
     dry_run: bool,
-    completion_date: Optional[date],
-    filter_users: Optional[list[str]],
-    groups: Optional[list[str]],
+    completion_date: date | None,
+    filter_users: list[str] | None,
+    groups: list[str] | None,
     membership_filter: MembershipFilter,
 ) -> dict[str, Any]:
     assessments = get_sisu_assessments(
@@ -702,8 +700,8 @@ def get_sisu_assessments(
     sisu_id: str,
     teacher: User,
     doc: DocInfo,
-    groups: Optional[list[str]],
-    filter_users: Optional[list[str]],
+    groups: list[str] | None,
+    filter_users: list[str] | None,
     membership_filter: MembershipFilter,
 ) -> list[CandidateAssessment]:
     teachers_group = UserGroup.get_teachers_group()

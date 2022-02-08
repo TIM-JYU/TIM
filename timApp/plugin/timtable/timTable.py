@@ -73,7 +73,7 @@ class TimTable:
 
 
 class RelativeDataBlockValue:
-    def __init__(self, row: int, column: int, data: Union[str, dict[str, Any]]):
+    def __init__(self, row: int, column: int, data: str | dict[str, Any]):
         self.row = row
         self.column = column
         self.data = data
@@ -1050,7 +1050,7 @@ def save_cell(
     datablock: dict[str, Any],
     row: int,
     col: int,
-    cell_content: Union[str, dict[str, Any]],
+    cell_content: str | dict[str, Any],
 ):
     """
     Updates datablock with the content and the coordinate of a cell.
@@ -1101,7 +1101,7 @@ def cell_coordinate(row: int, col: int) -> str:
     return colnum_to_letters(col) + str(row + 1)
 
 
-def find_cell_from_datablock(cells: dict, row: int, col: int) -> Optional[str]:
+def find_cell_from_datablock(cells: dict, row: int, col: int) -> str | None:
     """
     Finds cell from datablock
     :param cells: all cells
@@ -1159,7 +1159,7 @@ def datablock_key_to_indexes(datablock_key: str) -> tuple[int, int]:
     column_index = 0
     for c in columnstring.encode("ascii"):
         # ascii encoding returns a list of bytes, so we can use c directly
-        addition = ((ASCII_CHAR_COUNT ** chr_index) * (c - ASCII_OF_A)) + 1
+        addition = ((ASCII_CHAR_COUNT**chr_index) * (c - ASCII_OF_A)) + 1
         column_index += addition
     return column_index - 1, row_index - 1
 

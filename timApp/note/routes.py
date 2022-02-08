@@ -103,8 +103,8 @@ def get_notes(
     item_path: str,
     private: bool = False,
     deleted: bool = False,
-    start: Optional[datetime] = None,
-    end: Optional[datetime] = None,
+    start: datetime | None = None,
+    end: datetime | None = None,
 ) -> Response:
     """Gets all notes in a document or folder.
 
@@ -114,7 +114,7 @@ def get_notes(
     :param start: Start timestamp of notes.
     :param end: End timestamp of notes.
     """
-    i: Optional[Union[Folder, DocInfo]] = Folder.find_by_path(item_path)
+    i: Folder | DocInfo | None = Folder.find_by_path(item_path)
     if not i:
         i = DocEntry.find_by_path(item_path)
     if not i:
@@ -223,7 +223,7 @@ def post_note(
     text: str,
     access: str,
     ctx: ParContext,
-    tags: Optional[dict[str, bool]] = None,
+    tags: dict[str, bool] | None = None,
 ) -> Response:
     is_public = access == "everyone"
     got_tags = []
@@ -282,7 +282,7 @@ def edit_note(
     ctx: ParContext,
     text: str,
     access: str,
-    tags: Optional[dict[str, bool]] = None,
+    tags: dict[str, bool] | None = None,
 ) -> Response:
     verify_logged_in()
     note_id = id

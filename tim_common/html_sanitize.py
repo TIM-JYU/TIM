@@ -280,6 +280,27 @@ def sanitize_html(html_string: str, allow_styles: bool = False) -> str:
 # Taken from LXML
 looks_like_full_html = re.compile(r"^\s*<(?:html|!doctype)", re.I).match
 
+# NOTE: lxml now always removed data:image/svg+xml because of possible XSS:
+# See: https://github.com/lxml/lxml/commit/f2330237440df7e8f39c3ad1b1aa8852be3b27c0
+# However, in TIM, data URLs are used for plugins and Tex2SVG math content
+# In our case, we can generally be pretty sure that the data URL contains only SVG
+# Moreover, scripts embedded in SVG as data URLs are not executed unless the user opens the image:
+# See: https://security.stackexchange.com/a/212960
+# This is enough for our use case. Because lxml does not provide a switch to disable removing data URLs
+# (or even sanitizing them), we have to do it manually.
+replace_data_svg = re.compile(r"data:image/svg\+xml;base64,", re.I).sub
+replace_data_escaped = re.compile(r"data:image/escaped;base64,", re.I).sub
+
+
+def escape_data_svg(svg_string: str) -> str:
+    """Converts data:image/svg+xml;base64, to data:image/safe;base64,"""
+    return replace_data_svg("data:image/escaped;base64,", svg_string)
+
+
+def unescape_data_svg(svg_string: str) -> str:
+    """Converts data:image/safe;base64, back to data:image/svg+xml;base64,"""
+    return replace_data_escaped("data:image/svg+xml;base64,", svg_string)
+
 
 def fromstring(html_string: str) -> Any:
     """
@@ -297,15 +318,17 @@ def fromstring(html_string: str) -> Any:
     except (
         ParserError,
         TypeError,
-    ):  # TypeError is a temporary hack to deal with a bug in lxml
+    ):  # TypeError is a hack to deal with a bug in lxml
         return fragment_fromstring(html_string, create_parent="div")
 
 
 def sanitize_with_cleaner(html_string: str, cleaner: Cleaner) -> str:
     try:
+        html_string = escape_data_svg(html_string)
         doc = fromstring(html_string)
         cleaner(doc)
         cleaned = tostring(doc, encoding="ascii").decode("ascii")
+        cleaned = unescape_data_svg(cleaned)
         return strip_div(cleaned)
     except lxml.etree.ParserError:  # Thrown if the HTML string is empty
         return ""

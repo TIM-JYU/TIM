@@ -40,7 +40,6 @@ from enum import EnumMeta
 from functools import lru_cache
 from typing import (
     overload,
-    Dict,
     Type,
     List,
     cast,
@@ -49,14 +48,14 @@ from typing import (
     Any,
     Mapping,
     TypeVar,
-    Union,
     Callable,
-    Set,
 )
 
 import marshmallow
 import marshmallow.validate
 import typing_inspect
+
+import tim_common.typing_inspect_ext as typing_inspect_ext
 
 __all__ = ["dataclass", "add_schema", "class_schema", "field_for_schema", "NewType"]
 
@@ -68,7 +67,7 @@ NoneType = type(None)
 _U = TypeVar("_U")
 
 # Whitelist of dataclass members that will be copied to generated schema.
-MEMBERS_WHITELIST: Set[str] = {"Meta"}
+MEMBERS_WHITELIST: set[str] = {"Meta"}
 
 # Max number of generated schemas that class_schema keeps of generated schemas. Removes duplicates.
 MAX_CLASS_SCHEMA_CACHE_SIZE = 1024
@@ -78,15 +77,15 @@ MAX_CLASS_SCHEMA_CACHE_SIZE = 1024
 # underscore.  The presence of _cls is used to detect if this
 # decorator is being called with parameters or not.
 def dataclass(
-    _cls: Type[_U] = None,
+    _cls: type[_U] = None,
     *,
     repr: bool = True,
     eq: bool = True,
     order: bool = False,
     unsafe_hash: bool = False,
     frozen: bool = False,
-    base_schema: Optional[Type[marshmallow.Schema]] = None,
-) -> Union[Type[_U], Callable[[Type[_U]], Type[_U]]]:
+    base_schema: type[marshmallow.Schema] | None = None,
+) -> type[_U] | Callable[[type[_U]], type[_U]]:
     """
     This decorator does the same as dataclasses.dataclass, but also applies :func:`add_schema`.
     It adds a `.Schema` attribute to the class object
@@ -120,21 +119,21 @@ def dataclass(
 
 
 @overload
-def add_schema(_cls: Type[_U]) -> Type[_U]:
+def add_schema(_cls: type[_U]) -> type[_U]:
     ...
 
 
 @overload
 def add_schema(
-    base_schema: Type[marshmallow.Schema] = None,
-) -> Callable[[Type[_U]], Type[_U]]:
+    base_schema: type[marshmallow.Schema] = None,
+) -> Callable[[type[_U]], type[_U]]:
     ...
 
 
 @overload
 def add_schema(
-    _cls: Type[_U], base_schema: Type[marshmallow.Schema] = None
-) -> Type[_U]:
+    _cls: type[_U], base_schema: type[marshmallow.Schema] = None
+) -> type[_U]:
     ...
 
 
@@ -159,7 +158,7 @@ def add_schema(_cls=None, base_schema=None):
     Artist(names=('Martin', 'Ramirez'))
     """
 
-    def decorator(clazz: Type[_U]) -> Type[_U]:
+    def decorator(clazz: type[_U]) -> type[_U]:
         clazz.Schema = class_schema(clazz, base_schema)  # type: ignore
         return clazz
 
@@ -167,8 +166,8 @@ def add_schema(_cls=None, base_schema=None):
 
 
 def class_schema(
-    clazz: type, base_schema: Optional[Type[marshmallow.Schema]] = None
-) -> Type[marshmallow.Schema]:
+    clazz: type, base_schema: type[marshmallow.Schema] | None = None
+) -> type[marshmallow.Schema]:
 
     """
     Convert a class to a marshmallow schema
@@ -285,12 +284,12 @@ def class_schema(
 
 @lru_cache(maxsize=MAX_CLASS_SCHEMA_CACHE_SIZE)
 def _proxied_class_schema(
-    clazz: type, base_schema: Optional[Type[marshmallow.Schema]] = None
-) -> Type[marshmallow.Schema]:
+    clazz: type, base_schema: type[marshmallow.Schema] | None = None
+) -> type[marshmallow.Schema]:
 
     try:
         # noinspection PyDataclass
-        fields: Tuple[dataclasses.Field, ...] = dataclasses.fields(clazz)
+        fields: tuple[dataclasses.Field, ...] = dataclasses.fields(clazz)
     except TypeError:  # Not a dataclass
         try:
             return class_schema(dataclasses.dataclass(clazz), base_schema)
@@ -323,12 +322,12 @@ def _proxied_class_schema(
     )
 
     schema_class = type(clazz.__name__, (_base_schema(clazz, base_schema),), attributes)
-    return cast(Type[marshmallow.Schema], schema_class)
+    return cast(type[marshmallow.Schema], schema_class)
 
 
 def _field_by_type(
-    typ: Union[type, Any], base_schema: Optional[Type[marshmallow.Schema]]
-) -> Optional[Type[marshmallow.fields.Field]]:
+    typ: type | Any, base_schema: type[marshmallow.Schema] | None
+) -> type[marshmallow.fields.Field] | None:
     if typ is Any:
         return lambda **x: marshmallow.fields.Raw(**{**x, "allow_none": True})
     else:
@@ -347,8 +346,8 @@ class SemiStrictIntegerField(marshmallow.fields.Field):
     def _deserialize(
         self,
         value: Any,
-        attr: Optional[str],
-        data: Optional[Mapping[str, Any]],
+        attr: str | None,
+        data: Mapping[str, Any] | None,
         **kwargs,
     ):
         if isinstance(value, int):
@@ -367,7 +366,7 @@ def field_for_schema(
     metadata: Mapping[str, Any] = None,
     clazz: type = None,
     name=None,
-    base_schema: Optional[Type[marshmallow.Schema]] = None,
+    base_schema: type[marshmallow.Schema] | None = None,
 ) -> marshmallow.fields.Field:
     """
     Get a marshmallow Field corresponding to the given python type.
@@ -405,9 +404,9 @@ def field_for_schema(
 
     # Generic types specified without type arguments
     if typ is list:
-        typ = List[Any]
+        typ = list[Any]
     elif typ is dict:
-        typ = Dict[Any, Any]
+        typ = dict[Any, Any]
 
     # Base types
     field = _field_by_type(typ, base_schema)
@@ -432,10 +431,10 @@ def field_for_schema(
         )
 
     # Generic types
-    origin = typing_inspect.get_origin(typ)
+    origin = typing_inspect_ext.get_origin(typ)
     if origin:
-        arguments = typing_inspect.get_args(typ, True)
-        if origin in (list, List):
+        arguments = typing_inspect_ext.get_args(typ, True)
+        if origin in (list, list):
             check_default(clazz, default, list, name)
             child_type = field_for_schema(
                 arguments[0], clazz=clazz, base_schema=base_schema
@@ -443,14 +442,14 @@ def field_for_schema(
             if metadata.get("list_type", None) == "delimited":
                 return webargs.fields.DelimitedList(child_type)
             return marshmallow.fields.List(child_type, **metadata)
-        if origin in (tuple, Tuple):
+        if origin in (tuple, tuple):
             check_default(clazz, default, tuple, name)
             children = tuple(
                 field_for_schema(arg, clazz=clazz, base_schema=base_schema)
                 for arg in arguments
             )
             return marshmallow.fields.Tuple(children, **metadata)
-        elif origin in (dict, Dict):
+        elif origin in (dict, dict):
             check_default(clazz, default, dict, name)
             return marshmallow.fields.Dict(
                 keys=field_for_schema(
@@ -461,8 +460,8 @@ def field_for_schema(
                 ),
                 **metadata,
             )
-        elif typing_inspect.is_union_type(typ):
-            has_none = typing_inspect.is_optional_type(typ) or any(
+        elif typing_inspect_ext.is_union_type(typ):
+            has_none = typing_inspect_ext.is_optional_type(typ) or any(
                 subtyp is Any for subtyp in arguments
             )
             if has_none:
@@ -485,9 +484,9 @@ def field_for_schema(
             return marshmallow_union.Union(subfields, **metadata)
 
     check_default(clazz, default, typ, name)
-    # typing.NewType returns a function with a __supertype__ attribute
+    # typing.NewType has a __supertype__ attribute
     newtype_supertype = getattr(typ, "__supertype__", None)
-    if newtype_supertype and inspect.isfunction(typ):
+    if newtype_supertype:
         # Add the information coming our custom NewType implementation
         metadata = {
             "description": typ.__name__,
@@ -515,10 +514,10 @@ def field_for_schema(
     # generic types
     if type(typ) is TypeVar:
         b = typing_inspect.get_generic_bases(clazz)[0]
-        type_index = typing_inspect.get_args(
-            typing_inspect.get_generic_bases(typing_inspect.get_origin(b))[0]
+        type_index = typing_inspect_ext.get_args(
+            typing_inspect.get_generic_bases(typing_inspect_ext.get_origin(b))[0]
         ).index(typ)
-        instantiated_type = typing_inspect.get_args(b)[type_index]
+        instantiated_type = typing_inspect_ext.get_args(b)[type_index]
         return field_for_schema(
             instantiated_type,
             metadata=metadata,
@@ -539,20 +538,20 @@ def field_for_schema(
     return marshmallow.fields.Nested(nested, **metadata)
 
 
-def isinstance_noexcept(default: Any, t: Type):
+def isinstance_noexcept(default: Any, t: type):
     try:
         return isinstance(default, t)
     except TypeError:
         return False
 
 
-def check_default(clazz: Type, default: Any, typ: Type, name: Optional[str]):
+def check_default(clazz: type, default: Any, typ: type, name: str | None):
     if default is not dataclasses.MISSING:
         if not isinstance(default, typ):
             report_default_error(clazz, default, typ, name)
 
 
-def report_default_error(clazz: Type, default: Any, typ: Type, name: Optional[str]):
+def report_default_error(clazz: type, default: Any, typ: type, name: str | None):
     if not name:
         raise TypeError(
             f"Invalid default value {default} supplied in class {clazz.__name__} for {typ}"
@@ -564,8 +563,8 @@ def report_default_error(clazz: Type, default: Any, typ: Type, name: Optional[st
 
 
 def _base_schema(
-    clazz: type, base_schema: Optional[Type[marshmallow.Schema]] = None
-) -> Type[marshmallow.Schema]:
+    clazz: type, base_schema: type[marshmallow.Schema] | None = None
+) -> type[marshmallow.Schema]:
     """
     Base schema factory that creates a schema for `clazz` derived either from `base_schema`
     or `BaseSchema`
@@ -592,51 +591,6 @@ def _get_field_default(field: dataclasses.Field):
     if default_factory is not dataclasses.MISSING:
         return default_factory()
     return field.default
-
-
-def NewType(
-    name: str,
-    typ: Type[_U],
-    field: Optional[Type[marshmallow.fields.Field]] = None,
-    **kwargs,
-) -> Callable[[_U], _U]:
-    """NewType creates simple unique types
-    to which you can attach custom marshmallow attributes.
-    All the keyword arguments passed to this function will be transmitted
-    to the marshmallow field constructor.
-
-    >>> import marshmallow.validate
-    >>> IPv4 = NewType('IPv4', str, validate=marshmallow.validate.Regexp(r'^([0-9]{1,3}\\.){3}[0-9]{1,3}$'))
-    >>> @dataclass
-    ... class MyIps:
-    ...   ips: List[IPv4]
-    >>> MyIps.Schema().load({"ips": ["0.0.0.0", "grumble grumble"]})
-    Traceback (most recent call last):
-    ...
-    marshmallow.exceptions.ValidationError: {'ips': {1: ['String does not match expected pattern.']}}
-    >>> MyIps.Schema().load({"ips": ["127.0.0.1"]})
-    MyIps(ips=['127.0.0.1'])
-
-    >>> Email = NewType('Email', str, field=marshmallow.fields.Email)
-    >>> @dataclass
-    ... class ContactInfo:
-    ...   mail: Email = dataclasses.field(default="anonymous@example.org")
-    >>> ContactInfo.Schema().load({})
-    ContactInfo(mail='anonymous@example.org')
-    >>> ContactInfo.Schema().load({"mail": "grumble grumble"})
-    Traceback (most recent call last):
-    ...
-    marshmallow.exceptions.ValidationError: {'mail': ['Not a valid email address.']}
-    """
-
-    def new_type(x: _U):
-        return x
-
-    new_type.__name__ = name
-    new_type.__supertype__ = typ  # type: ignore
-    new_type._marshmallow_field = field  # type: ignore
-    new_type._marshmallow_args = kwargs  # type: ignore
-    return new_type
 
 
 if __name__ == "__main__":

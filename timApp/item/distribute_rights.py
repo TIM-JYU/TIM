@@ -115,11 +115,11 @@ class ChangeStartTimeGroupOp:
 @dataclass
 class Right:
     require_confirm: bool
-    duration_from: Optional[datetime]
-    duration_to: Optional[datetime]
-    duration: Optional[Duration]
-    accessible_from: Optional[datetime]
-    accessible_to: Optional[datetime]
+    duration_from: datetime | None
+    duration_to: datetime | None
+    duration: Duration | None
+    accessible_from: datetime | None
+    accessible_to: datetime | None
 
 
 RightOp = Union[
@@ -258,14 +258,14 @@ class RightLog:
         # Make a copy of the right so we keep it immutable.
         return replace(latest.right if latest else self.initial_right)
 
-    def latest_op(self, email: Email) -> Optional[RightLogEntry]:
+    def latest_op(self, email: Email) -> RightLogEntry | None:
         try:
             return self.op_history[email][-1]
         except IndexError:
             return None
 
 
-def change_time(right: Right, op: Union[ChangeTimeOp, ChangeTimeGroupOp]) -> None:
+def change_time(right: Right, op: ChangeTimeOp | ChangeTimeGroupOp) -> None:
     if right.accessible_to:
         right.accessible_to += timedelta(seconds=op.secs)
     if right.duration and not right.accessible_from:
@@ -316,9 +316,7 @@ def read_rights(path: Path, index: int) -> tuple[list[RightOp], list[dict]]:
     return [RightOpSchema.deserialize(line) for line in lines[index:]], lines
 
 
-def do_register_right(
-    op: RightOp, target: str
-) -> tuple[Optional[RightLog], Optional[str]]:
+def do_register_right(op: RightOp, target: str) -> tuple[RightLog | None, str | None]:
     rights, right_log_path = get_current_rights(target)
     if not isinstance(op, GroupOps):
         latest_op = rights.latest_op(op.email)
@@ -365,7 +363,7 @@ def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> list[str]:
 
 def register_right_impl(
     op: RightOp,
-    target: Union[str, list[str]],
+    target: str | list[str],
     backup: bool = True,
     distribute: bool = True,
 ) -> list[str]:
@@ -393,7 +391,7 @@ def register_right_impl(
 @csrf.exempt
 def register_right(
     op: RightOp,
-    target: Union[str, list[str]],
+    target: str | list[str],
     secret: str,
     is_receiving_backup: bool = False,
 ) -> Response:
@@ -431,7 +429,7 @@ def receive_right(
     group_map = {}
     for ug, email in uges:
         group_map[email] = ug
-    item: Optional[Item] = Folder.find_by_path(item_path)
+    item: Item | None = Folder.find_by_path(item_path)
     if not item:
         item = DocEntry.find_by_path(item_path)
     if not item:
@@ -491,7 +489,7 @@ def change_starttime_route(
 
 
 def register_op_to_hosts(
-    op: RightOp, target: Union[str, list[str]], is_receiving_backup: bool
+    op: RightOp, target: str | list[str], is_receiving_backup: bool
 ) -> list[str]:
     curr_host = app.config["TIM_HOST"]
     register_hosts = [

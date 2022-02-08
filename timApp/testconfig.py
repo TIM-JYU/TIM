@@ -49,7 +49,7 @@ CELERYBEAT_SCHEDULE: dict[str, Schedule] = {
 WTF_CSRF_METHODS: list[str] = []
 SCIM_USERNAME = "t"
 SCIM_PASSWORD = "pass"
-SISU_CERT_PATH: Optional[str] = None
+SISU_CERT_PATH: str | None = None
 HOME_ORGANIZATION = "jyu.fi"
 
 SAML_PATH = "/service/timApp/auth/saml/test"

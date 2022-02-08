@@ -14,7 +14,7 @@ from timApp.util.logger import log_info
 from timApp.util.utils import pycharm_running
 
 
-def quit_fast(_sig: int, _frame: Optional[FrameType]) -> None:
+def quit_fast(_sig: int, _frame: FrameType | None) -> None:
     sys.exit(0)
 
 

@@ -27,7 +27,7 @@ class DataclassDeserializationTest(TestCase):
 
         @dataclass
         class B:
-            x: Union[int, float]
+            x: int | float
 
         b_s = class_schema(B)()
         v = b_s.load({"x": 2})
@@ -51,7 +51,7 @@ class DataclassDeserializationTest(TestCase):
 
         @dataclass
         class B:
-            x: Union[Any, Missing]
+            x: Any | Missing
 
         a_s = class_schema(B)()
         self.assertEqual(1, a_s.load({"x": 1}).x)

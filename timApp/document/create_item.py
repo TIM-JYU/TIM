@@ -64,7 +64,7 @@ def create_document(
     item_title: str,
     validation_rule: ItemValidationRule = None,
     parent_owner: UserGroup = None,
-    doc_owner: Optional[UserGroup] = None,
+    doc_owner: UserGroup | None = None,
 ) -> DocInfo:
     return do_create_item(
         item_path,
@@ -82,8 +82,8 @@ def do_create_item(
     item_title: str,
     validation_rule: ItemValidationRule = None,
     parent_owner: UserGroup = None,
-    doc_owner: Optional[UserGroup] = None,
-) -> Union[DocInfo, Folder]:
+    doc_owner: UserGroup | None = None,
+) -> DocInfo | Folder:
     create_function = (
         DocEntry.create if item_type == BlockType.Document else Folder.create
     )
@@ -112,7 +112,7 @@ def do_create_item(
     return item
 
 
-def apply_template(item: DocInfo, template_name: Optional[str] = None):
+def apply_template(item: DocInfo, template_name: str | None = None):
     templates = get_templates_for_folder(item.parent)
     matched_templates = None
     if template_name:
@@ -185,8 +185,8 @@ def create_or_copy_item(
     item_path: str,
     item_type: BlockType,
     item_title: str,
-    copy_id: Optional[int] = None,
-    template_name: Optional[str] = None,
+    copy_id: int | None = None,
+    template_name: str | None = None,
     use_template: bool = True,
     copy_uploads: bool = True,
 ):

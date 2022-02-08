@@ -1,7 +1,7 @@
 from copy import copy
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime, timezone
-from typing import Union, Any, Optional, Mapping, NewType
+from typing import Any, Mapping, NewType
 
 import marshmallow
 from marshmallow import missing, pre_load
@@ -14,11 +14,11 @@ class PointsRule:
     class Meta:
         unknown = "EXCLUDE"  # Plugins may have custom rules - TIM can ignore them.
 
-    maxPoints: Union[str, int, float, None, Missing] = missing
-    allowUserMin: Union[int, float, None, Missing] = missing
-    allowUserMax: Union[int, float, None, Missing] = missing
-    multiplier: Union[int, float, None, Missing] = missing
-    penalties: Union[dict[str, float], None, Missing] = missing
+    maxPoints: str | int | float | None | Missing = missing
+    allowUserMin: int | float | None | Missing = missing
+    allowUserMax: int | float | None | Missing = missing
+    multiplier: int | float | None | Missing = missing
+    penalties: dict[str, float] | None | Missing = missing
 
 
 class PluginDateTimeField(marshmallow.fields.Field):
@@ -30,8 +30,8 @@ class PluginDateTimeField(marshmallow.fields.Field):
     def _deserialize(
         self,
         value: Any,
-        attr: Optional[str],
-        data: Optional[Mapping[str, Any]],
+        attr: str | None,
+        data: Mapping[str, Any] | None,
         **kwargs: dict[str, Any],
     ) -> datetime:
         d = None
@@ -71,39 +71,39 @@ class HiddenFieldsMixin:
 class KnownMarkupFields(HiddenFieldsMixin):
     """Represents the plugin markup fields that are known and used by TIM."""
 
-    accessDuration: Union[int, None, Missing] = missing
-    accessEndText: Union[str, None, Missing] = missing
-    anonymous: Union[bool, None, Missing] = missing
-    answerLimit: Union[int, None, Missing] = missing
-    automd: Union[bool, None, Missing] = missing
-    buttonNewTask: Union[str, None, Missing] = missing
-    cache: Union[bool, None, Missing] = missing
-    deadline: Union[PluginDateTime, datetime, None, Missing] = missing
-    fields: Union[list[str], None, Missing] = missing
-    header: Union[str, None, Missing] = missing
-    headerText: Union[str, None, Missing] = missing
-    hideBrowser: Union[bool, Missing, None] = missing
-    initNewAnswer: Union[str, None, Missing] = missing
-    lazy: Union[bool, Missing] = missing
-    maxHeight: Union[str, None, Missing] = field(
+    accessDuration: int | None | Missing = missing
+    accessEndText: str | None | Missing = missing
+    anonymous: bool | None | Missing = missing
+    answerLimit: int | None | Missing = missing
+    automd: bool | None | Missing = missing
+    buttonNewTask: str | None | Missing = missing
+    cache: bool | None | Missing = missing
+    deadline: PluginDateTime | datetime | None | Missing = missing
+    fields: list[str] | None | Missing = missing
+    header: str | None | Missing = missing
+    headerText: str | None | Missing = missing
+    hideBrowser: bool | Missing | None = missing
+    initNewAnswer: str | None | Missing = missing
+    lazy: bool | Missing = missing
+    maxHeight: str | None | Missing = field(
         metadata={"data_key": "max-height"}, default=missing
     )
-    minHeight: Union[str, None, Missing] = field(
+    minHeight: str | None | Missing = field(
         metadata={"data_key": "min-height"}, default=missing
     )
-    pointsRule: Union[PointsRule, None, Missing] = missing
-    pointsText: Union[str, None, Missing] = missing
-    postprogram: Union[str, Missing] = missing
-    postoutput: Union[str, Missing] = missing
-    showPoints: Union[bool, None, Missing] = missing
-    starttime: Union[PluginDateTime, datetime, None, Missing] = missing
-    showInView: Union[bool, Missing] = missing
-    stem: Union[str, None, Missing] = missing
-    triesText: Union[str, None, Missing] = missing
-    useCurrentUser: Union[bool, None, Missing] = missing
-    texafterprint: Union[str, None, Missing] = missing
-    texbeforeprint: Union[str, None, Missing] = missing
-    texprint: Union[str, None, Missing] = missing
+    pointsRule: PointsRule | None | Missing = missing
+    pointsText: str | None | Missing = missing
+    postprogram: str | Missing = missing
+    postoutput: str | Missing = missing
+    showPoints: bool | None | Missing = missing
+    starttime: PluginDateTime | datetime | None | Missing = missing
+    showInView: bool | Missing = missing
+    stem: str | None | Missing = missing
+    triesText: str | None | Missing = missing
+    useCurrentUser: bool | None | Missing = missing
+    texafterprint: str | None | Missing = missing
+    texbeforeprint: str | None | Missing = missing
+    texprint: str | None | Missing = missing
 
     def show_points(self) -> bool:
         if isinstance(self.showPoints, bool):
@@ -140,9 +140,9 @@ def list_not_missing_fields(inst: Any) -> list:
 
 @dataclass
 class UndoInfo:
-    button: Union[str, None, Missing] = missing
-    title: Union[str, None, Missing] = missing
-    confirmation: Union[str, None, Missing] = missing
+    button: str | None | Missing = missing
+    title: str | None | Missing = missing
+    confirmation: str | None | Missing = missing
 
 
 @dataclass
@@ -155,22 +155,22 @@ class GenericMarkupModel(KnownMarkupFields):
     TODO: Some fields here should be moved to KnownMarkupFields.
     """
 
-    hidden_keys: Union[list[str], Missing] = missing
+    hidden_keys: list[str] | Missing = missing
     """Meta field that keeps track which markup fields were hidden (that is, prefixed with "-").
     Hidden keys are never sent to browser.
     """
 
-    button: Union[str, None, Missing] = missing
-    buttonText: Union[str, None, Missing] = missing
-    disableUnchanged: Union[bool, Missing, None] = missing
-    footer: Union[str, Missing] = missing
-    forceBrowser: Union[bool, Missing, None] = missing
-    globalField: Union[bool, Missing, None] = missing
-    readonly: Union[bool, Missing, None] = missing
-    lang: Union[str, None, Missing] = missing
-    resetText: Union[str, Missing, None] = missing
-    connectionErrorMessage: Union[str, Missing] = missing
-    undo: Union[UndoInfo, Missing, None] = missing
+    button: str | None | Missing = missing
+    buttonText: str | None | Missing = missing
+    disableUnchanged: bool | Missing | None = missing
+    footer: str | Missing = missing
+    forceBrowser: bool | Missing | None = missing
+    globalField: bool | Missing | None = missing
+    readonly: bool | Missing | None = missing
+    lang: str | None | Missing = missing
+    resetText: str | Missing | None = missing
+    connectionErrorMessage: str | Missing = missing
+    undo: UndoInfo | Missing | None = missing
 
     def get_visible_data(self) -> dict:
         assert isinstance(self.hidden_keys, list)

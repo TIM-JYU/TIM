@@ -52,9 +52,9 @@ class TallyField:
     """In Jsrunner, represents the "tally:" type of field."""
 
     field: str
-    doc_id: Optional[int]
-    datetime_start: Optional[datetime]
-    datetime_end: Optional[datetime]
+    doc_id: int | None
+    datetime_start: datetime | None
+    datetime_end: datetime | None
     default_doc: DocInfo
 
     @property
@@ -158,7 +158,7 @@ def get_fields_and_users(
     access_option: GetFieldsAccess = GetFieldsAccess.RequireTeacher,
     member_filter_type: MembershipFilter = MembershipFilter.Current,
     user_filter=None,
-) -> tuple[list[UserFieldObj], dict[str, str], list[str], Optional[list[UserGroup]]]:
+) -> tuple[list[UserFieldObj], dict[str, str], list[str], list[UserGroup] | None]:
     """
     Return fielddata, aliases, field_names
     :param view_ctx: The view context.
@@ -205,7 +205,7 @@ def get_fields_and_users(
         raise RouteException(f"Problem with field names: {u_fields}\n{e}")
 
     tasks_without_fields = []
-    tally_fields: list[tuple[TallyField, Optional[str]]] = []
+    tally_fields: list[tuple[TallyField, str | None]] = []
     for field in u_fields:
         try:
             t, a, *rest = field.split("=")
@@ -352,7 +352,7 @@ def get_fields_and_users(
     answs = Answer.query.filter(
         Answer.id.in_(itertools.chain((aid for aid, _ in sub), global_answer_ids))
     ).all()
-    answers_with_users: list[tuple[int, Optional[Answer]]] = []
+    answers_with_users: list[tuple[int, Answer | None]] = []
     for a in answs:
         uids = aid_uid_map.get(a.id)
         if uids is not None:
@@ -447,7 +447,7 @@ def get_tally_field_values(
     doc_map: dict[int, DocInfo],
     group_filter,
     join_relation,
-    tally_fields: list[tuple[TallyField, Optional[str]]],
+    tally_fields: list[tuple[TallyField, str | None]],
     view_ctx: ViewContext,
     user_ctx: UserContext,
 ):

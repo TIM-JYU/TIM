@@ -26,34 +26,34 @@ NumericfieldStateModel = TextfieldStateModel
 
 @dataclass
 class NumericfieldMarkupModel(GenericMarkupModel):
-    arrows: Union[bool, Missing] = missing
-    autosave: Union[bool, Missing] = missing
-    autoUpdateTables: Union[bool, Missing] = True
-    clearstyles: Union[bool, Missing] = missing
-    cols: Union[int, Missing] = missing
-    errormessage: Union[str, Missing, None] = missing
-    form: Union[bool, Missing] = missing
-    ignorestyles: Union[bool, Missing] = missing
-    initnumber: Union[float, Missing, None] = missing
-    inputplaceholder: Union[int, Missing, None] = missing
-    inputstem: Union[str, Missing, None] = missing
-    nosave: Union[bool, Missing] = missing
-    points_array: Union[list[list[str]], Missing] = missing
-    readOnlyStyle: Union[str, Missing, None] = missing
-    save: Union[str, Missing, None] = missing  # TODO default 'double' or missing?
-    step: Union[float, Missing, None] = missing
-    tag: Union[str, Missing, None] = missing
-    validinput: Union[str, Missing, None] = missing
-    verticalkeys: Union[bool, Missing] = missing
-    wheel: Union[bool, Missing] = missing
+    arrows: bool | Missing = missing
+    autosave: bool | Missing = missing
+    autoUpdateTables: bool | Missing = True
+    clearstyles: bool | Missing = missing
+    cols: int | Missing = missing
+    errormessage: str | Missing | None = missing
+    form: bool | Missing = missing
+    ignorestyles: bool | Missing = missing
+    initnumber: float | Missing | None = missing
+    inputplaceholder: int | Missing | None = missing
+    inputstem: str | Missing | None = missing
+    nosave: bool | Missing = missing
+    points_array: list[list[str]] | Missing = missing
+    readOnlyStyle: str | Missing | None = missing
+    save: str | Missing | None = missing  # TODO default 'double' or missing?
+    step: float | Missing | None = missing
+    tag: str | Missing | None = missing
+    validinput: str | Missing | None = missing
+    verticalkeys: bool | Missing = missing
+    wheel: bool | Missing = missing
 
 
 @dataclass
 class NumericfieldInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
 
-    c: Union[str, Missing, None] = missing
-    nosave: Union[bool, Missing] = missing
+    c: str | Missing | None = missing
+    nosave: bool | Missing = missing
 
 
 @dataclass
@@ -106,7 +106,7 @@ size="{{cols}}"></span></label>
 REDOUBLE = re.compile(r"[^0-9,.e\-+]+")
 
 
-def get_double(c: Union[float, int, str]) -> float:
+def get_double(c: float | int | str) -> float:
     if isinstance(c, float):
         return c
     if isinstance(c, int):
@@ -122,7 +122,7 @@ def get_double(c: Union[float, int, str]) -> float:
 
 class NumericFieldAnswerWeb(PluginAnswerWeb, total=False):
     clear: bool
-    value: Union[str, float, int]
+    value: str | float | int
 
 
 def answer(args: NumericfieldAnswerModel) -> PluginAnswerResp:
@@ -140,7 +140,7 @@ def answer(args: NumericfieldAnswerModel) -> PluginAnswerResp:
         return result
     try:
         if c_input.strip() == "":
-            c: Union[str, float, int] = ""
+            c: str | float | int = ""
         elif args.markup.save == "double" or not args.markup.save:
             c = get_double(c_input)
         elif args.markup.save == "int":

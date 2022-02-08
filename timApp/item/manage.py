@@ -82,7 +82,7 @@ manage_page = TypedBlueprint(
 
 
 @manage_page.get("/manage/<path:path>")
-def manage(path: str) -> Union[Response, str]:
+def manage(path: str) -> Response | str:
     if has_special_chars(path):
         return redirect(
             remove_path_special_chars(request.path)
@@ -130,11 +130,11 @@ class TimeType(Enum):
 @dataclass
 class TimeOpt:
     type: TimeType
-    duration: Optional[Duration] = None
-    to: Optional[datetime] = None
-    ffrom: Optional[datetime] = field(metadata={"data_key": "from"}, default=None)
-    durationTo: Optional[datetime] = None
-    durationFrom: Optional[datetime] = None
+    duration: Duration | None = None
+    to: datetime | None = None
+    ffrom: datetime | None = field(metadata={"data_key": "from"}, default=None)
+    durationTo: datetime | None = None
+    durationFrom: datetime | None = None
 
     @cached_property
     def effective_opt(self):
@@ -183,7 +183,7 @@ class PermissionEditModel:
     type: AccessType = field(metadata={"by_value": True})
     time: TimeOpt
     groups: list[str]
-    confirm: Optional[bool]
+    confirm: bool | None
 
     def __post_init__(self):
         if self.confirm and self.time.type == TimeType.range and self.time.ffrom:
@@ -296,7 +296,7 @@ def get_group_and_doc(doc_id: int, username: str) -> tuple[UserGroup, DocInfo]:
     return g, i
 
 
-def raise_or_redirect(message: str, redir: Optional[str] = None) -> Response:
+def raise_or_redirect(message: str, redir: str | None = None) -> Response:
     if not redir:
         raise RouteException(message)
     url = list(urlparse(redir))
@@ -307,9 +307,9 @@ def raise_or_redirect(message: str, redir: Optional[str] = None) -> Response:
 
 
 @manage_page.get("/permissions/expire/<int:doc_id>/<username>")
-def expire_permission_url(doc_id: int, username: str, redir: Optional[str] = None):
+def expire_permission_url(doc_id: int, username: str, redir: str | None = None):
     g, i = get_group_and_doc(doc_id, username)
-    ba: Optional[BlockAccess] = BlockAccess.query.filter_by(
+    ba: BlockAccess | None = BlockAccess.query.filter_by(
         type=AccessType.view.value,
         block_id=i.id,
         usergroup_id=g.id,
@@ -328,7 +328,7 @@ def expire_permission_url(doc_id: int, username: str, redir: Optional[str] = Non
 
 
 @manage_page.get("/permissions/confirm/<int:doc_id>/<username>")
-def confirm_permission_url(doc_id: int, username: str, redir: Optional[str] = None):
+def confirm_permission_url(doc_id: int, username: str, redir: str | None = None):
     g, i = get_group_and_doc(doc_id, username)
     m = PermissionRemoveModel(id=doc_id, type=AccessType.view, group=g.id)
     return do_confirm_permission(m, i, redir)
@@ -342,9 +342,9 @@ def confirm_permission(m: PermissionRemoveModel) -> Response:
 
 
 def do_confirm_permission(
-    m: PermissionRemoveModel, i: DocInfo, redir: Optional[str] = None
+    m: PermissionRemoveModel, i: DocInfo, redir: str | None = None
 ):
-    ba: Optional[BlockAccess] = BlockAccess.query.filter_by(
+    ba: BlockAccess | None = BlockAccess.query.filter_by(
         type=m.type.value,
         block_id=m.id,
         usergroup_id=m.group,
@@ -719,7 +719,7 @@ def change_title(item_id: int, new_title: str) -> Response:
     return ok_response()
 
 
-def get_copy_folder_params(folder_id: int, dest: str, exclude: Optional[str]):
+def get_copy_folder_params(folder_id: int, dest: str, exclude: str | None):
     f = get_folder_or_abort(folder_id)
     verify_copy_access(f, message=f"Missing copy access to folder {f.path}")
     compiled = get_pattern(exclude)
@@ -739,7 +739,7 @@ class CopyOptions:
 def copy_folder_endpoint(
     folder_id: int,
     destination: str,
-    exclude: Optional[str],
+    exclude: str | None,
     copy_options: CopyOptions = field(default_factory=CopyOptions),
 ) -> Response:
     f, dest, compiled = get_copy_folder_params(folder_id, destination, exclude)
@@ -759,7 +759,7 @@ def copy_folder_endpoint(
     return json_response({"new_folder": nf, "errors": [str(e) for e in errors]})
 
 
-def get_pattern(exclude: Optional[str]) -> Pattern[str]:
+def get_pattern(exclude: str | None) -> Pattern[str]:
     if not exclude:
         exclude = "a^"
     try:
@@ -770,7 +770,7 @@ def get_pattern(exclude: Optional[str]) -> Pattern[str]:
 
 @manage_page.post("/copy/<int:folder_id>/preview")
 def copy_folder_preview(
-    folder_id: int, destination: str, exclude: Optional[str]
+    folder_id: int, destination: str, exclude: str | None
 ) -> Response:
     f, dest, compiled = get_copy_folder_params(folder_id, destination, exclude)
     preview_list = []

@@ -33,7 +33,7 @@ class DocumentWriter:
         if not export_ids:
             self.ignored_attrs.append("id")
 
-    def get_text(self, options: Optional[DocumentParserOptions] = None):
+    def get_text(self, options: DocumentParserOptions | None = None):
         """Gets the full text for the document.
 
         :return: The full text of the document.

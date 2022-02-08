@@ -83,7 +83,7 @@ def unread_paragraph(doc_id, par_id):
 
 @dataclass
 class ReadModel:
-    pars: Optional[list[tuple[int, str]]] = None
+    pars: list[tuple[int, str]] | None = None
 
 
 ReadModelSchema = class_schema(ReadModel)

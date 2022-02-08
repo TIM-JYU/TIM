@@ -24,12 +24,12 @@ class Preferences:
     remember_last_sidebar_menu_state: bool = False
     word_list: str = ""
     email_exclude: str = ""
-    language: Optional[str] = None
+    language: str | None = None
     style_doc_ids: list[int] = attr.Factory(list)
     last_answer_fetch: dict[str, str] = attr.Factory(dict)
     auto_mark_all_read: bool = False
-    bookmarks: Optional[BookmarkCollection] = None
-    max_uncollapsed_toc_items: Optional[int] = None
+    bookmarks: BookmarkCollection | None = None
+    max_uncollapsed_toc_items: int | None = None
 
     @staticmethod
     def from_json(j: dict) -> "Preferences":

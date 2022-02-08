@@ -34,9 +34,9 @@ from tim_common.utils import Missing
 class ImportDataStateModel:
     """Model for the information that is stored in TIM database for each answer."""
 
-    url: Union[str, Missing, None] = missing
-    separator: Union[str, Missing, None] = missing
-    fields: Union[list[str], Missing] = missing
+    url: str | Missing | None = missing
+    separator: str | Missing | None = missing
+    fields: list[str] | Missing = missing
 
 
 @dataclass
@@ -46,42 +46,42 @@ class AplusData:
 
 @dataclass
 class ImportDataMarkupModel(GenericMarkupModel):
-    allowMissing: Union[bool, Missing, None] = missing
-    beforeOpen: Union[str, Missing, None] = missing
-    docid: Union[int, Missing, None] = missing
-    fields: Union[list[str], Missing] = missing
-    loadButtonText: Union[str, Missing, None] = missing
-    open: Union[bool, Missing, None] = missing
-    placeholder: Union[str, Missing, None] = missing
-    prefilter: Union[str, Missing, None] = missing
-    separator: Union[str, Missing, None] = missing
-    upload: Union[bool, Missing, None] = missing
-    uploadstem: Union[str, Missing, None] = missing
-    url: Union[str, Missing, None] = missing
-    urlstem: Union[str, Missing, None] = missing
-    usefields: Union[bool, Missing, None] = missing
-    useseparator: Union[bool, Missing, None] = missing
-    useurl: Union[bool, Missing, None] = missing
-    useurltoken: Union[bool, Missing, None] = missing
-    ignoreMissing: Union[bool, Missing, None] = missing
-    joinProperty: Union[str, Missing, None] = missing
-    createMissingUsers: Union[bool, Missing] = missing
-    addUsersToGroup: Union[str, Missing] = missing
-    nextRunner: Union[str, Missing] = missing
+    allowMissing: bool | Missing | None = missing
+    beforeOpen: str | Missing | None = missing
+    docid: int | Missing | None = missing
+    fields: list[str] | Missing = missing
+    loadButtonText: str | Missing | None = missing
+    open: bool | Missing | None = missing
+    placeholder: str | Missing | None = missing
+    prefilter: str | Missing | None = missing
+    separator: str | Missing | None = missing
+    upload: bool | Missing | None = missing
+    uploadstem: str | Missing | None = missing
+    url: str | Missing | None = missing
+    urlstem: str | Missing | None = missing
+    usefields: bool | Missing | None = missing
+    useseparator: bool | Missing | None = missing
+    useurl: bool | Missing | None = missing
+    useurltoken: bool | Missing | None = missing
+    ignoreMissing: bool | Missing | None = missing
+    joinProperty: str | Missing | None = missing
+    createMissingUsers: bool | Missing = missing
+    addUsersToGroup: str | Missing = missing
+    nextRunner: str | Missing = missing
 
-    aplus: Union[AplusData, Missing] = missing
+    aplus: AplusData | Missing = missing
 
 
 @dataclass
 class ImportDataInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
 
-    data: Optional[str] = None
-    token: Optional[str] = None
-    createMissingUsers: Union[bool, Missing] = missing
-    separator: Union[str, Missing] = missing
-    url: Union[str, Missing] = missing
-    fields: Union[list[str], Missing] = missing
+    data: str | None = None
+    token: str | None = None
+    createMissingUsers: bool | Missing = missing
+    separator: str | Missing = missing
+    url: str | Missing = missing
+    fields: list[str] | Missing = missing
 
 
 @dataclass
@@ -281,10 +281,10 @@ class MissingUser:
 
 
 class ImportDataAnswerResp(PluginAnswerResp, total=False):
-    ignoreMissing: Union[bool, Missing, None]
-    allowMissing: Union[bool, Missing, None]
+    ignoreMissing: bool | Missing | None
+    allowMissing: bool | Missing | None
     savedata: list[dict[str, Any]]
-    groups: Optional[dict[str, dict[str, list[str]]]]
+    groups: dict[str, dict[str, list[str]]] | None
     createMissingUsers: bool
     missingUsers: list[MissingUser]
 

@@ -32,7 +32,7 @@ def get_score_infos(
     folder: Folder,
     doc_paths: list[str],
     user_ctx: UserContext,
-    lang_id: Optional[str] = None,
+    lang_id: str | None = None,
 ) -> list[DocScoreInfo]:
     total_table = OrderedDict()
     u = user_ctx.logged_user
@@ -162,7 +162,7 @@ def get_score_infos_if_enabled(
     doc_info: DocInfo,
     doc_settings: DocSettings,
     user_ctx: UserContext,
-) -> Optional[list[DocScoreInfo]]:
+) -> list[DocScoreInfo] | None:
     score_infos = None
     if user_ctx.logged_user.logged_in and doc_settings.show_scoreboard():
         scoreboard_docs = doc_settings.scoreboard_docs()

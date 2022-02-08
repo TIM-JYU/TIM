@@ -14,19 +14,19 @@ from timApp.util.flask.requesthelper import verify_json_params
 @dataclass
 class EditRequest:
     doc: Document
-    area_start: Optional[str] = None
-    area_end: Optional[str] = None
-    par: Optional[str] = None
-    text: Optional[str] = None
-    next_par_id: Optional[str] = None
+    area_start: str | None = None
+    area_end: str | None = None
+    par: str | None = None
+    text: str | None = None
+    next_par_id: str | None = None
     preview: bool = False
     forced_classes: list[str] = field(default_factory=list)
-    mark_translated: Optional[bool] = None
-    viewname: Optional[ViewRoute] = None
+    mark_translated: bool | None = None
+    viewname: ViewRoute | None = None
     old_doc_version: Version = field(init=False)
-    editor_pars: Optional[list[DocParagraph]] = field(init=False)
-    original_par: Optional[DocParagraph] = field(init=False)
-    context_par: Optional[DocParagraph] = field(init=False)
+    editor_pars: list[DocParagraph] | None = field(init=False)
+    original_par: DocParagraph | None = field(init=False)
+    context_par: DocParagraph | None = field(init=False)
 
     def __post_init__(self):
         self.old_doc_version = self.doc.get_version()
@@ -46,10 +46,10 @@ class EditRequest:
     def editing_area(self) -> bool:
         return self.area_start is not None and self.area_end is not None
 
-    def get_original_par(self) -> Optional[DocParagraph]:
+    def get_original_par(self) -> DocParagraph | None:
         return self.original_par
 
-    def get_last_of_preamble(self) -> Optional[DocParagraph]:
+    def get_last_of_preamble(self) -> DocParagraph | None:
         preamble = self.doc.insert_preamble_pars()  # TODO could be optimized
         return preamble[-1] if preamble else None
 
@@ -84,7 +84,7 @@ class EditRequest:
 
     @staticmethod
     def from_request(
-        doc: Document, text: Optional[str] = None, preview: bool = False
+        doc: Document, text: str | None = None, preview: bool = False
     ) -> "EditRequest":
         if text is None:
             (text,) = verify_json_params("text")

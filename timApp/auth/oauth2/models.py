@@ -24,7 +24,7 @@ class OAuth2Client(ClientMixin):
     client_id: str
     """Unique identifier for the client."""
 
-    client_name: Optional[str] = None
+    client_name: str | None = None
     """User-friendly client name"""
 
     client_secret: str = ""
@@ -71,12 +71,12 @@ class OAuth2Client(ClientMixin):
     def get_client_id(self) -> str:
         return self.client_id
 
-    def get_default_redirect_uri(self) -> Optional[str]:
+    def get_default_redirect_uri(self) -> str | None:
         if self.redirect_urls:
             return self.redirect_urls[0]
         return None
 
-    def get_allowed_scope(self, scope: str) -> Optional[str]:
+    def get_allowed_scope(self, scope: str) -> str | None:
         if not scope:
             return ""
         allowed = {s.name for s in self.allowed_scopes}

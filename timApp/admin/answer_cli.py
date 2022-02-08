@@ -96,8 +96,8 @@ def clear(
     doc: DocInfo,
     dry_run: bool,
     task: list[str],
-    answer_from: Optional[datetime],
-    answer_to: Optional[datetime],
+    answer_from: datetime | None,
+    answer_to: datetime | None,
     verbose: bool,
 ) -> None:
     tasks_to_delete = [f"{doc.id}.{t}" for t in task]

@@ -59,7 +59,7 @@ class DocumentParser:
 
     """
 
-    def __init__(self, doc_text="", options: Optional[DocumentParserOptions] = None):
+    def __init__(self, doc_text="", options: DocumentParserOptions | None = None):
         """
 
         :type doc_text: str
@@ -67,7 +67,7 @@ class DocumentParser:
         self._doc_text = doc_text
         self._blocks = None
         self._break_on_empty_line = False
-        self._last_setting: Optional[DocumentParserOptions] = None
+        self._last_setting: DocumentParserOptions | None = None
         self.options: DocumentParserOptions = (
             options if options is not None else DocumentParserOptions()
         )

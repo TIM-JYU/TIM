@@ -35,7 +35,7 @@ def safe_redirect(url: str, **values) -> Response:
 def json_response(
     jsondata: Any,
     status_code: int = 200,
-    headers: Optional[dict[str, str]] = None,
+    headers: dict[str, str] | None = None,
     date_conversion: bool = False,
 ) -> Response:
     if not date_conversion:

@@ -22,7 +22,7 @@ AUTOCNTS_KEY = "autocnts"
 AUTOCNTS_PREFIX = "autocnts_"
 COUNTERS_SETTINGS_KEY = "counters"
 
-AUTOCOUNTERS_FMT_DEF: dict[str, dict[str, Union[int, str]]] = {
+AUTOCOUNTERS_FMT_DEF: dict[str, dict[str, int | str]] = {
     "eq": {"ref": "({p})", "long": "({p})", "text": "({p})", "prefix": "eq:"},
     "all": {
         "reset": -1,
@@ -54,9 +54,9 @@ TCounters = dict[str, TOneCounterType]
 
 @attr.s(auto_attribs=True, init=False)
 class AutoCounters:
-    doc: Optional[Document]
+    doc: Document | None
     renumbering: bool = False
-    heading_vals: Optional[dict] = None
+    heading_vals: dict | None = None
     heading_vals_def: dict[int, int] = attr.Factory(
         lambda: {
             1: 0,
@@ -79,7 +79,7 @@ class AutoCounters:
     auto_number_headings: int = 0
 
     # counters for generating counter names automativally
-    auto_name_base: Optional[str] = None
+    auto_name_base: str | None = None
     auto_name_counter: int = 0
     auto_name_ctype: str = "eq"
     auto_name_plugin: bool = False
@@ -95,12 +95,12 @@ class AutoCounters:
     # total counter for cached labels (sum of in label_cache)
     current_labels: list[str] = attr.Factory(list)
     is_plugin = False
-    par: Optional[DocParagraph] = None
-    task_id: Optional[str] = None
+    par: DocParagraph | None = None
+    task_id: str | None = None
     counters: TCounters = attr.Factory(dict)
     autocounters: dict[str, Any] = attr.Factory(dict)
 
-    def __init__(self, macros: Optional[dict], doc: Optional[Document] = None):
+    def __init__(self, macros: dict | None, doc: Document | None = None):
         """
         Initialize autonumber counters to use macros
         :param macros: macros to use for these counters
@@ -158,7 +158,7 @@ class AutoCounters:
         self.auto_name_base = base_name
         return ""
 
-    def set_auto_names(self, base_name: Optional[TName], ctype: str = "eq") -> str:
+    def set_auto_names(self, base_name: TName | None, ctype: str = "eq") -> str:
         """
         Set start of autonames
         :param base_name: base name for counters in this block
@@ -208,7 +208,7 @@ class AutoCounters:
             return self.task_id
         return name
 
-    def get_auto_name(self, name: str, ctype: str) -> tuple[str, str, Optional[str]]:
+    def get_auto_name(self, name: str, ctype: str) -> tuple[str, str, str | None]:
         """
         Get automatic name and ctype if not given
         :param name: if empty, give autoname
@@ -392,7 +392,7 @@ class AutoCounters:
 
     def add_counter(
         self, ctype: str, name: str, show_val: str, long_val: str = ""
-    ) -> Optional[dict]:
+    ) -> dict | None:
         """
         Used to add chapter and paragraph counters.
         :param ctype: usually "chap"
@@ -453,7 +453,7 @@ class AutoCounters:
             if link is not None:
                 use_counters_type = self.get_counter_type(link)
 
-            counter: Optional[TCounter] = use_counters_type.counters.get(sname)
+            counter: TCounter | None = use_counters_type.counters.get(sname)
             use_counters_type.count += 1
             value: int = use_counters_type.count
             if counter:  # shold not be
@@ -779,7 +779,7 @@ macros:
         self.use_autonumbering = value
 
     def get_type_text(
-        self, ctype: str, name: str, value: Union[int, str], showtype: str, pure: str
+        self, ctype: str, name: str, value: int | str, showtype: str, pure: str
     ) -> str:
         """
         Get how to show counter with type name ctype
@@ -914,13 +914,13 @@ class TimSandboxedEnvironment(SandboxedEnvironment):
             trim_blocks=True,
             autoescape=autoescape,
         )
-        self.counters: Optional[AutoCounters] = None
+        self.counters: AutoCounters | None = None
 
     def set_counters(self, counters: AutoCounters) -> None:
         self.counters = counters
         counters.set_env_filters(self)
 
-    def get_counters(self) -> Optional[AutoCounters]:
+    def get_counters(self) -> AutoCounters | None:
         return self.counters
 
 

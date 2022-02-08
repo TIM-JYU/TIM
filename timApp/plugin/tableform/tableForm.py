@@ -71,78 +71,78 @@ class TableFormStateModel:
 
 @dataclass
 class DataViewVirtualScrollingModel:
-    enabled: Optional[bool] = True
-    verticalOverflow: Union[int, Missing] = missing
-    horizontalOverflow: Union[int, Missing] = missing
+    enabled: bool | None = True
+    verticalOverflow: int | Missing = missing
+    horizontalOverflow: int | Missing = missing
 
 
 @dataclass
 class DataViewSettingsModel:
-    virtual: Union[DataViewVirtualScrollingModel, Missing, None] = missing
-    rowHeight: Union[int, Missing] = missing
-    columnWidths: Union[dict[str, int], Missing] = missing
-    tableWidth: Union[str, Missing] = missing
-    fixedColumns: Union[int, Missing] = missing
+    virtual: DataViewVirtualScrollingModel | Missing | None = missing
+    rowHeight: int | Missing = missing
+    columnWidths: dict[str, int] | Missing = missing
+    tableWidth: str | Missing = missing
+    fixedColumns: int | Missing = missing
 
 
 @dataclass
 class RunScriptModel:
-    script: Optional[str] = None
-    button: Optional[str] = None
-    all: Optional[bool] = None
-    update: Optional[bool] = None
-    interval: Optional[int] = None
+    script: str | None = None
+    button: str | None = None
+    all: bool | None = None
+    update: bool | None = None
+    interval: int | None = None
 
 
 @dataclass
 class TableFormMarkupModel(GenericMarkupModel):
-    anonNames: Union[bool, Missing] = missing
-    autosave: Union[bool, Missing] = missing
-    autoUpdateFields: Union[bool, Missing] = True
-    autoUpdateTables: Union[bool, Missing] = True
-    cbColumn: Union[bool, Missing, None] = missing
-    dataCollection: Union[str, Missing, None] = missing
-    emails: Union[bool, Missing] = missing
-    emailUsersButtonText: Union[str, Missing, None] = missing
-    filterRow: Union[bool, Missing, None] = missing
-    fixedColor: Union[str, Missing, None] = missing
-    fontSize: Union[str, Missing, None] = missing
-    forceUpdateButtonText: Union[str, Missing, None] = missing
-    groups: Union[list[str], Missing] = missing
-    hiddenColumns: Union[list[int], Missing, None] = missing
-    hiddenRows: Union[list[int], Missing, None] = missing
-    hide: Union[dict[Any, Any], Missing, None] = missing
-    hideButtonText: Union[str, Missing, None] = missing
+    anonNames: bool | Missing = missing
+    autosave: bool | Missing = missing
+    autoUpdateFields: bool | Missing = True
+    autoUpdateTables: bool | Missing = True
+    cbColumn: bool | Missing | None = missing
+    dataCollection: str | Missing | None = missing
+    emails: bool | Missing = missing
+    emailUsersButtonText: str | Missing | None = missing
+    filterRow: bool | Missing | None = missing
+    fixedColor: str | Missing | None = missing
+    fontSize: str | Missing | None = missing
+    forceUpdateButtonText: str | Missing | None = missing
+    groups: list[str] | Missing = missing
+    hiddenColumns: list[int] | Missing | None = missing
+    hiddenRows: list[int] | Missing | None = missing
+    hide: dict[Any, Any] | Missing | None = missing
+    hideButtonText: str | Missing | None = missing
     includeUsers: MembershipFilter = field(
         default=MembershipFilter.Current, metadata={"by_value": True}
     )
-    lockedFields: Union[list[str], Missing] = missing
-    maxCols: Union[str, Missing, None] = missing
-    maxRows: Union[str, Missing, None] = missing
-    maxWidth: Union[str, Missing] = missing
-    minWidth: Union[str, Missing, None] = missing
-    nrColumn: Union[bool, Missing, None] = missing
-    charRow: Union[bool, Missing, None] = missing
-    open: Union[bool, Missing] = True
-    openButtonText: Union[str, Missing, None] = missing
-    realnames: Union[bool, Missing] = missing
-    removeDocIds: Union[bool, Missing] = True
-    removeUsersButtonText: Union[str, Missing, None] = missing
-    report: Union[bool, Missing] = missing
-    reportButton: Union[str, Missing, None] = missing
-    reportFilter: Union[str, Missing, None] = missing
-    runScripts: Union[list[Union[str, RunScriptModel]], Missing] = missing
-    saveStyles: Union[bool, Missing] = True
-    separator: Union[str, Missing, None] = missing
-    showToolbar: Union[bool, Missing, None] = missing
-    singleLine: Union[bool, Missing, None] = missing
-    sisugroups: Union[str, Missing] = missing
-    sortBy: Union[str, Missing, None] = missing
-    table: Union[bool, Missing] = missing
-    toolbarTemplates: Union[list[dict[Any, Any]], Missing] = missing
-    userListButtonText: Union[str, Missing, None] = missing
-    usernames: Union[bool, Missing] = missing
-    dataView: Union[DataViewSettingsModel, Missing, None] = missing
+    lockedFields: list[str] | Missing = missing
+    maxCols: str | Missing | None = missing
+    maxRows: str | Missing | None = missing
+    maxWidth: str | Missing = missing
+    minWidth: str | Missing | None = missing
+    nrColumn: bool | Missing | None = missing
+    charRow: bool | Missing | None = missing
+    open: bool | Missing = True
+    openButtonText: str | Missing | None = missing
+    realnames: bool | Missing = missing
+    removeDocIds: bool | Missing = True
+    removeUsersButtonText: str | Missing | None = missing
+    report: bool | Missing = missing
+    reportButton: str | Missing | None = missing
+    reportFilter: str | Missing | None = missing
+    runScripts: list[str | RunScriptModel] | Missing = missing
+    saveStyles: bool | Missing = True
+    separator: str | Missing | None = missing
+    showToolbar: bool | Missing | None = missing
+    singleLine: bool | Missing | None = missing
+    sisugroups: str | Missing = missing
+    sortBy: str | Missing | None = missing
+    table: bool | Missing = missing
+    toolbarTemplates: list[dict[Any, Any]] | Missing = missing
+    userListButtonText: str | Missing | None = missing
+    usernames: bool | Missing = missing
+    dataView: DataViewSettingsModel | Missing | None = missing
 
 
 TableFormMarkupSchema = class_schema(TableFormMarkupModel)
@@ -153,7 +153,7 @@ class TableFormInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
 
     replyRows: dict[int, Any]
-    nosave: Union[bool, Missing] = missing
+    nosave: bool | Missing = missing
 
 
 def get_sisu_group_desc_for_table(g: UserGroup) -> str:
@@ -166,7 +166,7 @@ def get_sisu_group_desc_for_table(g: UserGroup) -> str:
     return f"({p.desc})"
 
 
-def get_sisugroups(user: User, sisu_id: Optional[str]) -> "TableFormObj":
+def get_sisugroups(user: User, sisu_id: str | None) -> "TableFormObj":
     gs = get_potential_groups(user, sisu_id)
     docs_with_course_tag = (
         Tag.query.filter_by(type=TagType.CourseCode)
@@ -183,8 +183,8 @@ def get_sisugroups(user: User, sisu_id: Optional[str]) -> "TableFormObj":
     )
     tag_map = {t.name[len(GROUP_TAG_PREFIX) :]: t for t in tags}
 
-    def get_course_page(ug: UserGroup) -> Optional[str]:
-        t: Optional[Tag] = tag_map.get(ug.name)
+    def get_course_page(ug: UserGroup) -> str | None:
+        t: Tag | None = tag_map.get(ug.name)
         if t:
             return f'<a href="{t.block.docentries[0].url_relative}">URL</a>'
         else:
@@ -297,11 +297,11 @@ class GenerateCSVModel:
     groups: list[str]
     separator: str
     userFilter: list[str] = field(default_factory=list)
-    usernames: Union[bool, Missing] = True
-    realnames: Union[bool, Missing] = missing
-    removeDocIds: Union[bool, Missing] = missing
-    emails: Union[bool, Missing] = missing
-    reportFilter: Union[str, Missing] = missing
+    usernames: bool | Missing = True
+    realnames: bool | Missing = missing
+    removeDocIds: bool | Missing = missing
+    emails: bool | Missing = missing
+    reportFilter: str | Missing = missing
     filterFields: list[str] = field(default_factory=list)
     filterValues: list[str] = field(default_factory=list)
 
@@ -404,7 +404,7 @@ tableForm_plugin = create_blueprint(
 
 
 def check_field_filtering(
-    r_filter: Optional[RegexOrComparator], target: Union[str, float, None]
+    r_filter: RegexOrComparator | None, target: str | float | None
 ) -> bool:
     if r_filter is None:
         return True
@@ -413,7 +413,7 @@ def check_field_filtering(
 
 @tableForm_plugin.get("/generateCSV")
 @use_args(GenerateCSVSchema())
-def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
+def gen_csv(args: GenerateCSVModel) -> Response | str:
     """
     Generates a report defined by tableForm attributes
     # TODO: generic, move
@@ -463,14 +463,14 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
         user_filter=user_filter,
         # TODO: group_filter_type=self.markup.includeUsers,
     )
-    data: list[list[Union[str, float, None]]] = [[]]
+    data: list[list[str | float | None]] = [[]]
     if show_real_names:
         data[0].append("Real name")
     if show_user_names:
         data[0].append("Username")
     if show_emails:
         data[0].append("email")
-    tmp: Sequence[Union[str, float, None]] = r["fields"]
+    tmp: Sequence[str | float | None] = r["fields"]
     data[0] = data[0] + list(tmp)
     if len(filter_fields) != len(filter_values):
         raise RouteException("Filter targets and filter values do not match")
@@ -486,7 +486,7 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
         raise RouteException("Too many filters")
 
     for rowkey, row in sorted(r["rows"].items()):
-        row_data: list[Union[str, float, None]] = []
+        row_data: list[str | float | None] = []
         u = r["users"].get(rowkey)
         if show_real_names:
             if u is None:
@@ -680,10 +680,10 @@ class TableFormUserInfo(TypedDict):
 class TableFormObj(TypedDict):
     rows: dict[str, UserFields]
     users: dict[str, TableFormUserInfo]
-    membershipmap: dict[str, Union[datetime.datetime, None]]
+    membershipmap: dict[str, datetime.datetime | None]
     fields: list[str]
     aliases: dict[str, str]
-    styles: dict[str, dict[str, Union[str, None]]]
+    styles: dict[str, dict[str, str | None]]
 
 
 def tableform_get_fields(
@@ -695,7 +695,7 @@ def tableform_get_fields(
     remove_doc_ids: bool,
     allow_non_teacher: bool,
     group_filter_type: MembershipFilter = MembershipFilter.Current,
-    user_filter: Optional[list[str]] = None,
+    user_filter: list[str] | None = None,
 ) -> TableFormObj:
     fielddata, aliases, field_names, groups = get_fields_and_users(
         flds,

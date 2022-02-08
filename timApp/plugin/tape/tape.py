@@ -30,7 +30,7 @@ def tape_multihtml() -> Response:
     Route for getting the HTML of all tape plugins in a document.
     :return:
     """
-    jsondata: Optional[Union[dict[str, Any], list[dict[str, Any]]]] = request.get_json()
+    jsondata: dict[str, Any] | list[dict[str, Any]] | None = request.get_json()
     if not jsondata:
         return json_response([])
     args: list[dict[str, Any]] = jsondata if isinstance(jsondata, list) else [jsondata]

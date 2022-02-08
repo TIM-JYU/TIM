@@ -146,8 +146,8 @@ def get_reviews_for_user_query(d: DocInfo, user: User) -> Query:
 def has_review_access(
     doc: DocInfo,
     reviewer_user: User,
-    task_id: Optional[TaskId],
-    reviewable_user: Optional[User],
+    task_id: TaskId | None,
+    reviewable_user: User | None,
 ) -> bool:
     if not is_peerreview_enabled(doc):
         return False

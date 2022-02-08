@@ -44,7 +44,7 @@ class Tag(db.Model):
             "abcdefghijklmnopqrstuvwxyzåäöü0123456789$€£#+*!@%&().:;/- _"
         )
 
-    def get_group_name(self) -> Optional[str]:
+    def get_group_name(self) -> str | None:
         if self.name.startswith(GROUP_TAG_PREFIX):
             return self.name[len(GROUP_TAG_PREFIX) :]
         return None

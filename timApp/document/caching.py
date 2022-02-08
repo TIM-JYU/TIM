@@ -30,7 +30,7 @@ DocInfoOrDocument = Union[DocInfo, Document]
 @dataclass
 class CacheResult:
     key: str
-    doc: Optional[DocRenderResult]
+    doc: DocRenderResult | None
 
 
 def check_doc_cache(
@@ -118,6 +118,6 @@ def set_style_timestamp_hash(style_name: str, hash_val: str) -> None:
     rclient.set(f"tim-style-hash-{style_name}", hash_val)
 
 
-def get_style_timestamp_hash(style_name: str) -> Optional[str]:
+def get_style_timestamp_hash(style_name: str) -> str | None:
     res = rclient.get(f"tim-style-hash-{style_name}")
     return res.decode(encoding="utf-8") if res else None

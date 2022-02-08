@@ -191,14 +191,14 @@ class Plugin:
 
     def __init__(
         self,
-        task_id: Optional[TaskId],
+        task_id: TaskId | None,
         values: dict,
         plugin_type: str,
         par: DocParagraph,
     ):
-        self.answer: Optional[Answer] = None
+        self.answer: Answer | None = None
         self.answer_count = None
-        self.options: Optional[PluginRenderOptions] = None
+        self.options: PluginRenderOptions | None = None
         self.task_id = task_id
         if task_id and (task_id.doc_id == par.doc.doc_id or not task_id.doc_id):
             # self.task_id = TaskId.parse(task_id, require_doc_id=False)
@@ -251,7 +251,7 @@ class Plugin:
         task_id: str,
         user_ctx: UserContext,
         view_ctx: ViewContext,
-        cached_doc: Optional[DocInfo] = None,
+        cached_doc: DocInfo | None = None,
     ) -> tuple["Plugin", DocInfo]:
         tid = TaskId.parse(task_id)
         if not cached_doc:
@@ -267,7 +267,7 @@ class Plugin:
 
     @staticmethod
     def from_paragraph(
-        par: DocParagraph, view_ctx: ViewContext, user: Optional[UserContext] = None
+        par: DocParagraph, view_ctx: ViewContext, user: UserContext | None = None
     ):
         doc = par.doc
         if not par.is_plugin():
@@ -312,7 +312,7 @@ class Plugin:
             multiplier=missing,
         )
 
-    def max_points(self, default=None) -> Optional[str]:
+    def max_points(self, default=None) -> str | None:
         if self.known.pointsRule and self.known.pointsRule.maxPoints is not missing:
             return self.known.pointsRule.maxPoints
         return default
@@ -327,7 +327,7 @@ class Plugin:
             return self.known.pointsRule.allowUserMax
         return default
 
-    def answer_limit(self) -> Optional[int]:
+    def answer_limit(self) -> int | None:
         if self.known.answerLimit is not missing:
             return self.known.answerLimit
         return self.limit_defaults.get(self.type)
@@ -340,7 +340,7 @@ class Plugin:
             return self.known.pointsRule.multiplier
         return default
 
-    def validate_points(self, points: Union[str, float]):
+    def validate_points(self, points: str | float):
         try:
             points = float(points)
         except (ValueError, TypeError):
@@ -357,7 +357,7 @@ class Plugin:
             )
         return points
 
-    def to_paragraph(self, max_attr_width: Optional[float] = None) -> DocParagraph:
+    def to_paragraph(self, max_attr_width: float | None = None) -> DocParagraph:
         yaml.Dumper.ignore_aliases = lambda *args: True
         text = (
             "```\n"
@@ -384,7 +384,7 @@ class Plugin:
         self.values[key] = value
         return self
 
-    def save(self, max_attr_width: Optional[float] = None) -> None:
+    def save(self, max_attr_width: float | None = None) -> None:
         self.to_paragraph(max_attr_width).save()
 
     def get_info(
@@ -408,7 +408,7 @@ class Plugin:
         }
 
     def set_render_options(
-        self, answer: Optional[tuple[Answer, int]], options: PluginRenderOptions
+        self, answer: tuple[Answer, int] | None, options: PluginRenderOptions
     ):
         if answer:
             self.answer, self.answer_count = answer
@@ -571,7 +571,7 @@ class Plugin:
             and self.known.accessDuration is not missing
         )
 
-    def set_access_end_for_user(self, user: Optional[User] = None):
+    def set_access_end_for_user(self, user: User | None = None):
         """
         Changes access_end_for_user to match the end of user's plugin access
         """
@@ -753,7 +753,7 @@ TASK_MATCH_PROG = re.compile(
 
 def find_inline_plugins_from_str(
     md,
-) -> Generator[tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
+) -> Generator[tuple[UnvalidatedTaskId, str | None, Range, str], None, None]:
     # TODO make task id optional
     matches: Iterable[Match] = TASK_MATCH_PROG.finditer(md)
     for m in matches:
@@ -766,7 +766,7 @@ def find_inline_plugins_from_str(
 
 def find_inline_plugins(
     block: DocParagraph, macroinfo: MacroInfo
-) -> Generator[tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
+) -> Generator[tuple[UnvalidatedTaskId, str | None, Range, str], None, None]:
     md = block.get_expanded_markdown(macroinfo=macroinfo)
     return find_inline_plugins_from_str(md)
 
@@ -777,7 +777,7 @@ def maybe_get_plugin_from_par(
     u: UserContext,
     view_ctx: ViewContext,
     match_exact_document: bool = False,
-) -> Optional[Plugin]:
+) -> Plugin | None:
     t_attr = p.get_attr("taskId")
     if t_attr and p.get_attr("plugin"):
         try:
@@ -830,9 +830,9 @@ class CachedPluginFinder:
     doc_map: dict[int, DocInfo]
     curr_user: UserContext
     view_ctx: ViewContext
-    cache: dict[str, Optional[Plugin]] = field(default_factory=dict)
+    cache: dict[str, Plugin | None] = field(default_factory=dict)
 
-    def find(self, task_id: TaskId) -> Optional[Plugin]:
+    def find(self, task_id: TaskId) -> Plugin | None:
         cached = self.cache.get(task_id.doc_task, missing)
         if cached is not missing:
             return cached
@@ -883,11 +883,11 @@ def find_plugin_from_document(
 class InlinePlugin(Plugin):
     def __init__(
         self,
-        task_id: Optional[TaskId],
+        task_id: TaskId | None,
         values: dict,
         plugin_type: str,
         p_range: Range,
-        par: Optional[DocParagraph] = None,
+        par: DocParagraph | None = None,
     ):
         super().__init__(task_id, values, plugin_type, par)
         self.range = p_range
@@ -899,7 +899,7 @@ class InlinePlugin(Plugin):
         return "span"
 
 
-def finalize_inline_yaml(p_yaml: Optional[str]):
+def finalize_inline_yaml(p_yaml: str | None):
     if not p_yaml:
         return ""
     if "\n" not in p_yaml:
@@ -961,7 +961,7 @@ def find_task_ids(
 
 
 def get_simple_hash_from_par_and_user(
-    block: DocParagraph, uc: Optional[UserContext]
+    block: DocParagraph, uc: UserContext | None
 ) -> int:
     """
     Get simple int hash from TIM's document block and user.

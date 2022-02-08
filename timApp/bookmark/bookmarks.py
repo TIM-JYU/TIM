@@ -61,7 +61,7 @@ class Bookmarks:
         name: str,
         link: str,
         move_to_top: bool = False,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> "Bookmarks":
         """
         Adds a bookmark to the given bookmark group.
@@ -149,7 +149,7 @@ class Bookmarks:
         name: str,
         link: str,
         move_to_top: bool = False,
-        limit: Optional[int] = None,
+        limit: int | None = None,
     ) -> None:
         item_found = False
         for i in groupitems:

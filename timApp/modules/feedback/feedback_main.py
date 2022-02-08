@@ -33,17 +33,17 @@ class FeedbackStateModel:
 
 @dataclass
 class FeedbackMarkupModel(GenericMarkupModel):
-    area: Union[str, Missing] = missing
-    choice: Union[Any, Missing] = missing
-    correctsInRow: Union[int, Missing] = missing
-    dragSource: Union[str, Missing] = missing
-    matchElement: Union[Any, Missing] = missing
-    nextTask: Union[str, Missing] = missing
-    points_array: Union[list[float], Missing] = missing
-    practiceID: Union[str, Missing] = missing
-    questionItems: Union[Any, Missing] = missing
-    showAnswers: Union[bool, Missing] = missing
-    shuffle: Union[bool, Missing] = missing
+    area: str | Missing = missing
+    choice: Any | Missing = missing
+    correctsInRow: int | Missing = missing
+    dragSource: str | Missing = missing
+    matchElement: Any | Missing = missing
+    nextTask: str | Missing = missing
+    points_array: list[float] | Missing = missing
+    practiceID: str | Missing = missing
+    questionItems: Any | Missing = missing
+    showAnswers: bool | Missing = missing
+    shuffle: bool | Missing = missing
 
     @validates("points_array")
     def validate_points_array(self, value: list[float]) -> None:
@@ -59,7 +59,7 @@ class FeedbackInputModel:
     correct: bool
     feedback: str
     correct_answer: str
-    nosave: Union[bool, Missing] = missing
+    nosave: bool | Missing = missing
 
 
 @dataclass

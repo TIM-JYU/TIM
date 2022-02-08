@@ -25,7 +25,7 @@ from lxml.html import HtmlElement
 from tim_common.html_sanitize import sanitize_html
 
 
-def get_exception_code(ex: Exception, tb: Optional[TracebackType] = None) -> str:
+def get_exception_code(ex: Exception, tb: TracebackType | None = None) -> str:
     """
     Creates a unique code for the exception and the optional traceback.
     The code can be used for short identification of errors.
@@ -44,7 +44,7 @@ def get_exception_code(ex: Exception, tb: Optional[TracebackType] = None) -> str
     return result
 
 
-def datestr_to_relative(d: Union[str, datetime]) -> str:
+def datestr_to_relative(d: str | datetime) -> str:
     if isinstance(d, str):
         d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
     return date_to_relative(d) if d else ""
@@ -90,9 +90,7 @@ def count_chars_from_beginning(md: str, char: str) -> int:
     return num
 
 
-def get_error_html(
-    message: Union[str, Exception], response: Optional[str] = None
-) -> str:
+def get_error_html(message: str | Exception, response: str | None = None) -> str:
     """Wraps an error message in an HTML element with class 'error'.
 
     :param response: The plugin response string.
@@ -111,7 +109,7 @@ def get_error_html(
 
 
 def get_error_html_block(
-    title: str, message: Union[str, Exception], response: Optional[str] = None
+    title: str, message: str | Exception, response: str | None = None
 ) -> str:
     """Wraps an error message in a block-level HTML element with class 'error'.
 
@@ -132,7 +130,7 @@ def get_error_html_block(
     )
 
 
-def get_error_tex(title: str, message: Union[str, Exception]) -> str:
+def get_error_tex(title: str, message: str | Exception) -> str:
     """Wraps an error message in a TeX element 'timpluginerror'.
 
     :param title: The plugin response string.
@@ -144,7 +142,7 @@ def get_error_tex(title: str, message: Union[str, Exception]) -> str:
 
 
 def del_content(
-    directory: Path, onerror: Optional[Callable[[Any, str, Any], Any]] = None
+    directory: Path, onerror: Callable[[Any, str, Any], Any] | None = None
 ) -> None:
     for f in os.listdir(directory):
         f_path = os.path.join(directory, f)
@@ -197,7 +195,7 @@ def title_to_id(s: str) -> str:
     return s
 
 
-def getdatetime(s: str, default_val: Optional[datetime] = None) -> Optional[datetime]:
+def getdatetime(s: str, default_val: datetime | None = None) -> datetime | None:
     try:
         dt = dateutil.parser.parse(s, dayfirst=not "Z" in s)
         return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
@@ -248,7 +246,7 @@ class cached_property:
         return value
 
 
-def try_load_json(json_str: Optional[str]) -> Union[None, str, Any]:
+def try_load_json(json_str: str | None) -> None | str | Any:
     """"""
     try:
         if json_str is not None:
@@ -258,7 +256,7 @@ def try_load_json(json_str: Optional[str]) -> Union[None, str, Any]:
         return json_str
 
 
-def get_boolean(s: Union[bool, int, str], default: bool) -> bool:
+def get_boolean(s: bool | int | str, default: bool) -> bool:
     if s is None:
         return default
     if isinstance(s, bool):
@@ -322,7 +320,7 @@ TASK_NAME_PROG = re.compile(
 )  # see https://regex101.com/r/CFOLgd/1
 
 
-def widen_fields(fields: Union[list[str], str]) -> list[str]:
+def widen_fields(fields: list[str] | str) -> list[str]:
     """
     if there is syntax d(1,3) in fileds, it is made d1,d2
     from d(1,3)=t  would come d1=t1, d2=t2

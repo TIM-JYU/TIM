@@ -73,8 +73,8 @@ class MessageOptions:
     reply: bool
     sender: str
     senderEmail: str
-    repliesTo: Optional[int] = None
-    expires: Optional[datetime] = None
+    repliesTo: int | None = None
+    expires: datetime | None = None
 
 
 @dataclass
@@ -84,20 +84,20 @@ class ReplyOptions:
     pageList: str
     recipient: str
     readReceipt: bool = True
-    repliesTo: Optional[int] = None
+    repliesTo: int | None = None
 
 
 @dataclass
 class MessageBody:
     messageBody: str
     messageSubject: str
-    recipients: Optional[list[str]] = None
+    recipients: list[str] | None = None
 
 
 @dataclass
 class TimMessageData:
     id: int
-    sender: Optional[str]
+    sender: str | None
     doc_path: str
     can_mark_as_read: bool
     can_reply: bool
@@ -143,7 +143,7 @@ def expire_tim_message(message_doc_id: int) -> Response:
     :param message_doc_id: Document ID of the message to expire.
     :return: OK response if message was successfully expired.
     """
-    internal_message: Optional[InternalMessage] = InternalMessage.query.filter_by(
+    internal_message: InternalMessage | None = InternalMessage.query.filter_by(
         doc_id=message_doc_id
     ).first()
     if not internal_message:
@@ -154,7 +154,7 @@ def expire_tim_message(message_doc_id: int) -> Response:
     return ok_response()
 
 
-def get_tim_messages_as_list(item_id: Optional[int] = None) -> list[TimMessageData]:
+def get_tim_messages_as_list(item_id: int | None = None) -> list[TimMessageData]:
     """
     Retrieve messages displayed for current user based on item id and return them as a list.
 
@@ -366,7 +366,7 @@ def create_tim_message(
     tim_message: InternalMessage,
     options: MessageOptions,
     message_body: MessageBody,
-    message_viewers: Optional[list[UserGroup]] = None,
+    message_viewers: list[UserGroup] | None = None,
 ) -> DocInfo:
     """
     Creates a TIM document for the message to the TIM messages folder at TIM's root.
@@ -584,7 +584,7 @@ def get_read_receipts(
     return text_response(csv_string(data, "excel", separator))
 
 
-def get_recipient_users(recipients: Optional[list[str]]) -> list[UserGroup]:
+def get_recipient_users(recipients: list[str] | None) -> list[UserGroup]:
     """
     Finds UserGroup objects of recipients based on their email
 
@@ -720,7 +720,7 @@ def check_messages_folder_path(
 
 
 def update_tim_msg_doc_settings(
-    message_doc: DocInfo, sender: Optional[User], message_body: MessageBody
+    message_doc: DocInfo, sender: User | None, message_body: MessageBody
 ) -> None:
     """
     Sets the message information into the preamble macros.

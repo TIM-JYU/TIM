@@ -197,8 +197,8 @@ class BaseMessage:
     message_body: str
 
     # Email specific attributes.
-    domain: Optional[str] = None
-    reply_to: Optional[EmailAndDisplayName] = None
+    domain: str | None = None
+    reply_to: EmailAndDisplayName | None = None
 
     # Timestamp for the message is a mandatory value. If the message comes from an outside source, it should already
     # have a time stamp. The default value is mostly for messages that would be generated inside TIM. It can also be
@@ -383,7 +383,7 @@ def message_body_to_md(body: str) -> str:
     return "\n".join(result)
 
 
-def check_archives_folder_exists(message_list: MessageListModel) -> Optional[Folder]:
+def check_archives_folder_exists(message_list: MessageListModel) -> Folder | None:
     """
     Ensures archive folder exists for the given list if the list is archived.
 
@@ -480,7 +480,7 @@ def parse_mailman_message(original: dict, msg_list: MessageListModel) -> BaseMes
     if maybe_cc_addresses is not None:
         visible_recipients.extend(maybe_cc_addresses)
 
-    sender: Optional[EmailAndDisplayName] = None
+    sender: EmailAndDisplayName | None = None
     maybe_from_address = parse_mailman_message_address(original, "from")
     if maybe_from_address is not None:
         # Expect only one sender.
@@ -528,7 +528,7 @@ def parse_mailman_message(original: dict, msg_list: MessageListModel) -> BaseMes
 
 def parse_mailman_message_address(
     original: dict, header: str
-) -> Optional[list[EmailAndDisplayName]]:
+) -> list[EmailAndDisplayName] | None:
     """Parse (potentially existing) fields 'from' 'to', 'cc', or 'bcc' from a dict representing Mailman's email message.
     The fields are in lists, with individual list indicies being lists themselves of the form
         ['Display Name', 'email@domain.fi']
@@ -608,7 +608,7 @@ def new_list(list_options: ListInfo) -> tuple[DocInfo, MessageListModel]:
 
 
 def set_message_list_notify_owner_on_change(
-    message_list: MessageListModel, notify_owners_on_list_change_flag: Optional[bool]
+    message_list: MessageListModel, notify_owners_on_list_change_flag: bool | None
 ) -> None:
     """Set the notify list owner on list change flag for a list, and update necessary channels with this information.
 
@@ -635,7 +635,7 @@ def set_message_list_notify_owner_on_change(
 
 
 def set_message_list_member_can_unsubscribe(
-    message_list: MessageListModel, can_unsubscribe_flag: Optional[bool]
+    message_list: MessageListModel, can_unsubscribe_flag: bool | None
 ) -> None:
     """Set the list member's free unsubscription flag, and propagate that setting to channels that have own handling
     of unsubscription.
@@ -662,7 +662,7 @@ def set_message_list_member_can_unsubscribe(
 
 
 def set_message_list_subject_prefix(
-    message_list: MessageListModel, subject_prefix: Optional[str]
+    message_list: MessageListModel, subject_prefix: str | None
 ) -> None:
     """Set the message list's subject prefix.
 
@@ -691,7 +691,7 @@ def set_message_list_subject_prefix(
 
 
 def set_message_list_tim_users_can_join(
-    message_list: MessageListModel, can_join_flag: Optional[bool]
+    message_list: MessageListModel, can_join_flag: bool | None
 ) -> None:
     """Set the flag controlling if TIM users can directly join this list.
 
@@ -709,7 +709,7 @@ def set_message_list_tim_users_can_join(
 
 
 def set_message_list_default_send_right(
-    message_list: MessageListModel, default_send_right_flag: Optional[bool]
+    message_list: MessageListModel, default_send_right_flag: bool | None
 ) -> None:
     """Set the default message list new member send right flag.
 
@@ -726,7 +726,7 @@ def set_message_list_default_send_right(
 
 
 def set_message_list_default_delivery_right(
-    message_list: MessageListModel, default_delivery_right_flag: Optional[bool]
+    message_list: MessageListModel, default_delivery_right_flag: bool | None
 ) -> None:
     """Set the message list new member default delivery right.
 
@@ -743,7 +743,7 @@ def set_message_list_default_delivery_right(
 
 
 def set_message_list_only_text(
-    message_list: MessageListModel, only_text: Optional[bool]
+    message_list: MessageListModel, only_text: bool | None
 ) -> None:
     """Set the flag controlling if message list is to accept text-only messages.
 
@@ -763,7 +763,7 @@ def set_message_list_only_text(
 
 
 def set_message_list_non_member_message_pass(
-    message_list: MessageListModel, non_member_message_pass_flag: Optional[bool]
+    message_list: MessageListModel, non_member_message_pass_flag: bool | None
 ) -> None:
     """Set message list's non member message pass flag.
 
@@ -786,7 +786,7 @@ def set_message_list_non_member_message_pass(
 
 
 def set_message_list_allow_attachments(
-    message_list: MessageListModel, allow_attachments_flag: Optional[bool]
+    message_list: MessageListModel, allow_attachments_flag: bool | None
 ) -> None:
     """Set the flag controlling if a message list accepts messages with attachments.
 
@@ -809,7 +809,7 @@ def set_message_list_allow_attachments(
 
 
 def set_message_list_default_reply_type(
-    message_list: MessageListModel, default_reply_type: Optional[ReplyToListChanges]
+    message_list: MessageListModel, default_reply_type: ReplyToListChanges | None
 ) -> None:
     """Set a value controlling how replies to a message list are steered.
 
@@ -842,7 +842,7 @@ def add_new_message_list_group(
     ug: UserGroup,
     send_right: bool,
     delivery_right: bool,
-    em_list: Optional[MailingList],
+    em_list: MailingList | None,
 ) -> None:
     """Add new (user) group to a message list.
 
@@ -903,7 +903,7 @@ def add_message_list_external_email_member(
     send_right: bool,
     delivery_right: bool,
     em_list: MailingList,
-    display_name: Optional[str],
+    display_name: str | None,
 ) -> None:
     """Add external member to a message list. External members at this moment only support external members to email
      lists.
@@ -996,8 +996,8 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
 
 def set_message_list_member_removed_status(
     member: MessageListMember,
-    removed: Optional[datetime],
-    email_list: Optional[MailingList],
+    removed: datetime | None,
+    email_list: MailingList | None,
 ) -> None:
     """Set the message list member's membership removed status.
 
@@ -1046,7 +1046,7 @@ def set_member_send_delivery(
     member: MessageListMember,
     send: bool,
     delivery: bool,
-    email_list: Optional[MailingList] = None,
+    email_list: MailingList | None = None,
 ) -> None:
     """Set message list member's send and delivery rights.
 
@@ -1096,7 +1096,7 @@ def set_member_send_delivery(
 
 
 def set_message_list_description(
-    message_list: MessageListModel, description: Optional[str]
+    message_list: MessageListModel, description: str | None
 ) -> None:
     """Set a (short) description to a message list and its associated message channels.
 
@@ -1113,7 +1113,7 @@ def set_message_list_description(
         set_email_list_description(email_list, description)
 
 
-def set_message_list_info(message_list: MessageListModel, info: Optional[str]) -> None:
+def set_message_list_info(message_list: MessageListModel, info: str | None) -> None:
     """Set a long description (called 'info' on Mailman) to a message list and its associated message channels.
 
     :param message_list: The message list where the (long) description is set.

@@ -53,15 +53,15 @@ class PluginReg:
     domain: str
     port: int = 5000
     path: str = "/"
-    automd: Optional[bool] = None  # if true, plugin is always automd
+    automd: bool | None = None  # if true, plugin is always automd
 
     # List of regexp for yaml attribute names that are handled as markdown when automd attribute is true or
     # plugin has automd=True
-    regexattrs: Optional[list[str]] = None
+    regexattrs: list[str] | None = None
     skip_reqs: bool = False
     lazy: bool = True
     can_give_task: bool = False
-    instance: Optional[Any] = None  # TODO get rid of this; only used by timtable
+    instance: Any | None = None  # TODO get rid of this; only used by timtable
 
     @property
     def host(self) -> str:  # TODO rename to url because contains path
@@ -356,7 +356,7 @@ def convert_md(
     plugin_data: list[dict],
     options: DumboOptions,
     outtype: str = "md",
-    plugin_opts: Optional[list[DumboOptions]] = None,
+    plugin_opts: list[DumboOptions] | None = None,
 ) -> None:
     markups = [p for p in plugin_data]
     html_markups = call_dumbo(
@@ -394,7 +394,7 @@ def prepare_for_dumbo_attr_list_list_recursive(regex_obj: Pattern, data: list) -
                 data[i] = "md:" + item
 
 
-def convert_tex_mock(plugin_data: Union[dict, list]) -> None:
+def convert_tex_mock(plugin_data: dict | list) -> None:
     if isinstance(plugin_data, dict):
         dict_to_dumbo(plugin_data)
         return

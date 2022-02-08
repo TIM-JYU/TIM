@@ -159,9 +159,9 @@ def migrate_table(
     sq3c,
     pgc,
     old_table: str,
-    new_table: Optional[str] = None,
-    placeholders: Optional[dict[str, str]] = None,
-    id_column: Optional[str] = "id",
+    new_table: str | None = None,
+    placeholders: dict[str, str] | None = None,
+    id_column: str | None = "id",
     extra_clause="",
     new_columns=None,
 ):

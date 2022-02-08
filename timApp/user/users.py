@@ -41,7 +41,7 @@ def get_rights_holders(block_id: int) -> RightsList:
 def get_rights_holders_all(block_ids: list[int], order_by=None):
     if not order_by:
         order_by = User.name
-    result: list[tuple[BlockAccess, UserGroup, Optional[User]]] = (
+    result: list[tuple[BlockAccess, UserGroup, User | None]] = (
         BlockAccess.query.options(
             joinedload(BlockAccess.usergroup)
             .joinedload(UserGroup.admin_doc)

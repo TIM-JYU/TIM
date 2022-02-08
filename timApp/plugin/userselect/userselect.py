@@ -101,8 +101,8 @@ class SetTaskValueAction:
 @dataclass
 class DistributeRightAction:
     operation: Literal["confirm", "quit", "unlock", "changetime"]
-    target: Union[str, list[str]]
-    timestamp: Optional[datetime] = None
+    target: str | list[str]
+    timestamp: datetime | None = None
     minutes: float = 0.0
 
     @property
@@ -160,12 +160,12 @@ class ScannerOptions:
 
 @dataclass
 class TextOptions:
-    apply: Optional[str] = None
-    cancel: Optional[str] = None
-    success: Optional[str] = None
-    undone: Optional[str] = None
-    undo: Optional[str] = None
-    undoWarning: Optional[str] = None
+    apply: str | None = None
+    cancel: str | None = None
+    success: str | None = None
+    undone: str | None = None
+    undo: str | None = None
+    undoWarning: str | None = None
 
 
 @dataclass
@@ -179,7 +179,7 @@ class UserSelectMarkupModel(GenericMarkupModel):
     scanner: ScannerOptions = field(default_factory=ScannerOptions)
     groups: list[str] = field(default_factory=list)
     fields: list[str] = field(default_factory=list)
-    actions: Optional[ActionCollection] = None
+    actions: ActionCollection | None = None
     text: TextOptions = field(default_factory=TextOptions)
     displayFields: list[str] = field(default_factory=lambda: ["username", "realname"])
     sortBy: list[str] = field(default_factory=list)
@@ -303,7 +303,7 @@ actions:                 # Actions to apply for the selected user
 
 
 def get_plugin_markup(
-    task_id: Optional[str], par: Optional[GlobalParId]
+    task_id: str | None, par: GlobalParId | None
 ) -> tuple[UserSelectMarkupModel, DocInfo, User, ViewContext]:
     verify_logged_in()
     user = get_current_user_object()
@@ -322,9 +322,9 @@ def get_plugin_markup(
 
 @user_select_plugin.get("/fetchUsers")
 def fetch_users(
-    task_id: Optional[str] = None,
-    doc_id: Optional[int] = None,
-    par_id: Optional[str] = None,
+    task_id: str | None = None,
+    doc_id: int | None = None,
+    par_id: str | None = None,
 ) -> Response:
     model, doc, user, view_ctx = get_plugin_markup(
         task_id, GlobalParId(doc_id, par_id) if doc_id and par_id else None
@@ -356,8 +356,8 @@ def match_query(query_words: list[str], keywords: list[str]) -> bool:
 @user_select_plugin.post("/search")
 def search_users(
     search_strings: list[str],
-    task_id: Optional[str] = None,
-    par: Optional[GlobalParId] = None,
+    task_id: str | None = None,
+    par: GlobalParId | None = None,
 ) -> Response:
     model, doc, user, view_ctx = get_plugin_markup(task_id, par)
     verify_view_access(doc)
@@ -375,7 +375,7 @@ def search_users(
     for field_obj in field_data:
         fields = field_obj["fields"]
         usr = field_obj["user"]
-        values_to_check: list[Optional[Union[str, float, None]]] = [
+        values_to_check: list[str | float | None | None] = [
             usr.name,
             usr.real_name,
             usr.email,
@@ -416,7 +416,7 @@ def has_distribution_moderation_access(doc: DocInfo) -> bool:
 
 
 def get_plugin_info(
-    username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None
+    username: str, task_id: str | None = None, par: GlobalParId | None = None
 ) -> tuple[UserSelectMarkupModel, User, UserGroup, User]:
     model, doc, _, _ = get_plugin_markup(task_id, par)
     # Ensure user actually has access to document with the plugin
@@ -449,7 +449,7 @@ def undo_dist_right_actions(
     errors = []
     for distribute in undoable_dists:
         if distribute.operation == "confirm":
-            undo_op: Union[UndoConfirmOp, UndoQuitOp, ChangeTimeOp] = UndoConfirmOp(
+            undo_op: UndoConfirmOp | UndoQuitOp | ChangeTimeOp = UndoConfirmOp(
                 type="undoconfirm",
                 email=user_acc.email,
                 timestamp=distribute.timestamp_or_now,
@@ -525,7 +525,7 @@ def undo_group_actions(
 
 @user_select_plugin.post("/undo")
 def undo(
-    username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None
+    username: str, task_id: str | None = None, par: GlobalParId | None = None
 ) -> Response:
     model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
     # No permissions to undo
@@ -601,7 +601,7 @@ def apply_permission_actions(
 
     for to_confirm in confirm:
         doc_entry = doc_entries[to_confirm.doc_path]
-        ba_confirm: Optional[BlockAccess] = BlockAccess.query.filter_by(
+        ba_confirm: BlockAccess | None = BlockAccess.query.filter_by(
             type=to_confirm.type.value,
             block_id=doc_entry.block.id,
             usergroup_id=user_group.id,
@@ -614,7 +614,7 @@ def apply_permission_actions(
 
     for to_change in change_time:
         doc_entry = doc_entries[to_change.doc_path]
-        ba_change: Optional[BlockAccess] = BlockAccess.query.filter_by(
+        ba_change: BlockAccess | None = BlockAccess.query.filter_by(
             type=to_change.type.value,
             block_id=doc_entry.block.id,
             usergroup_id=user_group.id,
@@ -681,7 +681,7 @@ def apply_group_actions(
 
 @user_select_plugin.post("/apply")
 def apply(
-    username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None
+    username: str, task_id: str | None = None, par: GlobalParId | None = None
 ) -> Response:
     model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
     # No permissions to apply, simply return

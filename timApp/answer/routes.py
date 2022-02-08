@@ -238,7 +238,7 @@ def delete_answer_collab(answer_id: int, user_id: int):
     return ok_response()
 
 
-def points_to_float(points: Union[str, float]):
+def points_to_float(points: str | float):
     if isinstance(points, float):
         return points
     if points == "":
@@ -249,7 +249,7 @@ def points_to_float(points: Union[str, float]):
 
 
 def get_iframehtml_answer_impl(
-    plugintype: str, task_id_ext: str, user_id: int, answer_id: Optional[int] = None
+    plugintype: str, task_id_ext: str, user_id: int, answer_id: int | None = None
 ):
     """
     Gets the HTML to be used in iframe.
@@ -337,7 +337,7 @@ def call_plugin_answer_and_parse(answer_call_data, plugintype):
 
 @answers.get("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>/<int:answer_id>")
 def get_iframehtml_answer(
-    plugintype: str, task_id_ext: str, user_id: int, answer_id: Optional[int] = None
+    plugintype: str, task_id_ext: str, user_id: int, answer_id: int | None = None
 ):
     return get_iframehtml_answer_impl(plugintype, task_id_ext, user_id, answer_id)
 
@@ -432,34 +432,34 @@ def get_answers_for_tasks(tasks: list[str], user_id: int):
 
 @dataclass
 class JsRunnerMarkupModel(GenericMarkupModel):
-    fields: Union[
-        list[str], Missing
-    ] = missing  # This is actually required, but we cannot use non-default arguments here...
-    autoadd: Union[bool, Missing] = missing
-    autoUpdateTables: Union[bool, Missing] = True
-    creditField: Union[str, Missing] = missing
-    defaultPoints: Union[float, Missing] = missing
-    failGrade: Union[str, Missing] = missing
-    fieldhelper: Union[bool, Missing] = missing
-    gradeField: Union[str, Missing] = missing
-    gradingScale: Union[dict[Any, Any], Missing] = missing
-    group: Union[str, Missing] = missing
-    groups: Union[list[str], Missing] = missing
-    includeUsers: Union[MembershipFilter, Missing] = field(
+    fields: (
+        list[str] | Missing
+    ) = missing  # This is actually required, but we cannot use non-default arguments here...
+    autoadd: bool | Missing = missing
+    autoUpdateTables: bool | Missing = True
+    creditField: str | Missing = missing
+    defaultPoints: float | Missing = missing
+    failGrade: str | Missing = missing
+    fieldhelper: bool | Missing = missing
+    gradeField: str | Missing = missing
+    gradingScale: dict[Any, Any] | Missing = missing
+    group: str | Missing = missing
+    groups: list[str] | Missing = missing
+    includeUsers: MembershipFilter | Missing = field(
         default=MembershipFilter.Current, metadata={"by_value": True}
     )
     selectIncludeUsers: bool = False
-    paramFields: Union[list[str], Missing] = missing
-    postprogram: Union[str, Missing] = missing
-    preprogram: Union[str, Missing] = missing
-    program: Union[str, Missing] = missing
+    paramFields: list[str] | Missing = missing
+    postprogram: str | Missing = missing
+    preprogram: str | Missing = missing
+    program: str | Missing = missing
     overrideGrade: bool = False
     showInView: bool = False
-    confirmText: Union[str, Missing] = missing
-    timeout: Union[int, Missing] = missing
-    updateFields: Union[list[str], Missing] = missing
-    nextRunner: Union[str, Missing] = missing
-    timeZoneDiff: Union[int, Missing] = missing
+    confirmText: str | Missing = missing
+    timeout: int | Missing = missing
+    updateFields: list[str] | Missing = missing
+    nextRunner: str | Missing = missing
+    timeZoneDiff: int | Missing = missing
 
     @validates_schema(skip_on_field_errors=True)
     def validate_schema(self, data, **_):
@@ -476,10 +476,10 @@ JsRunnerMarkupSchema = class_schema(JsRunnerMarkupModel)
 
 @dataclass
 class JsRunnerInputModel:
-    nosave: Union[bool, Missing] = missing
-    userNames: Union[list[str], Missing] = missing
-    paramComps: Union[dict[str, str], Missing] = missing
-    includeUsers: Union[MembershipFilter, Missing] = field(
+    nosave: bool | Missing = missing
+    userNames: list[str] | Missing = missing
+    paramComps: dict[str, str] | Missing = missing
+    includeUsers: MembershipFilter | Missing = field(
         default=missing, metadata={"by_value": True}
     )
 
@@ -496,8 +496,8 @@ AnswerData = dict[str, Any]
 @dataclass
 class JsRunnerAnswerModel:
     input: JsRunnerInputModel
-    ref_from: Optional[RefFrom] = None
-    abData: Union[AnswerData, Missing] = missing
+    ref_from: RefFrom | None = None
+    abData: AnswerData | Missing = missing
 
 
 JsRunnerAnswerSchema = class_schema(JsRunnerAnswerModel)
@@ -575,9 +575,9 @@ def get_postanswer_plugin_etc(
     curr_user: User,
     ctx_user: UserContext,
     urlmacros: UrlMacros,
-    users: Optional[list[User]],
+    users: list[User] | None,
     other_session_users: list[User],
-    origin: Optional[OriginInfo],
+    origin: OriginInfo | None,
     force_answer: bool,
 ) -> tuple[TaskAccessVerification, ExistingAnswersInfo, list[User], bool, bool, bool]:
     allow_save = True
@@ -641,7 +641,7 @@ def post_answer_impl(
     curr_user: User,
     urlmacros: UrlMacros,
     other_session_users: list[User],
-    origin: Optional[OriginInfo],
+    origin: OriginInfo | None,
 ) -> AnswerRouteResult:
     receive_time = get_current_time()
     tid = TaskId.parse(task_id_ext)
@@ -1290,7 +1290,7 @@ class UserGroupMembersState:
     after: set[int]
 
 
-def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups], curr_user: User):
+def handle_jsrunner_groups(groupdata: JsrunnerGroups | None, curr_user: User):
     if not groupdata:
         return
     groups_created = 0
@@ -1407,12 +1407,12 @@ class FieldSaveUserEntry(TypedDict):
 
 
 class FieldSaveRequest(TypedDict, total=False):
-    savedata: Optional[list[FieldSaveUserEntry]]
-    ignoreMissing: Optional[bool]
-    allowMissing: Optional[bool]
-    createMissingUsers: Optional[bool]
-    missingUsers: Optional[Any]
-    groups: Optional[JsrunnerGroups]
+    savedata: list[FieldSaveUserEntry] | None
+    ignoreMissing: bool | None
+    allowMissing: bool | None
+    createMissingUsers: bool | None
+    missingUsers: Any | None
+    groups: JsrunnerGroups | None
 
 
 def verify_user_create_right(curr_user: User):
@@ -1426,9 +1426,9 @@ def verify_user_create_right(curr_user: User):
 def save_fields(
     jsonresp: FieldSaveRequest,
     curr_user: User,
-    current_doc: Optional[DocInfo] = None,
+    current_doc: DocInfo | None = None,
     allow_non_teacher: bool = False,
-    add_users_to_group: Optional[str] = None,
+    add_users_to_group: str | None = None,
 ) -> FieldSaveResult:
     save_obj = jsonresp.get("savedata")
     ignore_missing = jsonresp.get("ignoreMissing", False)
@@ -1695,13 +1695,13 @@ def get_hidden_name(user_id):
     return "Student %d" % user_id
 
 
-def should_hide_name(d: DocInfo, user: User, model_u: Optional[User]):
+def should_hide_name(d: DocInfo, user: User, model_u: User | None):
     # return True
     # return not user.has_teacher_access(d) and user.id != get_current_user_id()
     return user.id != get_current_user_id() and user != model_u
 
 
-def maybe_hide_name(d: DocInfo, u: User, model_u: Optional[User]):
+def maybe_hide_name(d: DocInfo, u: User, model_u: User | None):
     if should_hide_name(d, u, model_u):
         # NOTE! To anonymize user, do NOT assign to u's real_name, name, etc. attributes here (or anywhere else either)
         # because it is
@@ -1992,7 +1992,7 @@ def get_all_answers_as_list(task_ids: list[TaskId]):
 
 
 class GraphData(TypedDict):
-    data: list[Union[str, float, None]]
+    data: list[str | float | None]
     labels: list[str]
 
 
@@ -2006,7 +2006,7 @@ class FieldInfo:
 
 def get_plug_vals(
     doc: DocInfo, tid: TaskId, user_ctx: UserContext, view_ctx: ViewContext
-) -> Optional[FieldInfo]:
+) -> FieldInfo | None:
     d, plug = get_plugin_from_request(doc.document, tid, user_ctx, view_ctx)
     flds = plug.known.fields
     if not flds:
@@ -2056,13 +2056,13 @@ def get_jsframe_data(task_id, user_id):
 @answers.get("/getState")
 def get_state(
     user_id: int,
-    answer_id: Optional[int] = None,
-    par_id: Optional[str] = None,
-    doc_id: Optional[int] = None,
+    answer_id: int | None = None,
+    par_id: str | None = None,
+    doc_id: int | None = None,
     review: bool = False,
-    task_id: Optional[str] = None,
-    answernr: Optional[int] = None,
-    ask_new: Optional[bool] = False,
+    task_id: str | None = None,
+    answernr: int | None = None,
+    ask_new: bool | None = False,
 ):
     answer = None
     user = User.get_by_id(user_id)

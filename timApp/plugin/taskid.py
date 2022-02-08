@@ -25,12 +25,12 @@ class TaskIdAccess(Enum):
 
 @dataclass
 class TaskId:
-    doc_id: Optional[int]
+    doc_id: int | None
     task_name: str
-    block_id_hint: Optional[str] = None
-    field: Optional[str] = None
-    plugin_type: Optional[str] = None
-    access_specifier: Optional[TaskIdAccess] = None
+    block_id_hint: str | None = None
+    field: str | None = None
+    plugin_type: str | None = None
+    access_specifier: TaskIdAccess | None = None
 
     def __post_init__(self):
         value = self.task_name

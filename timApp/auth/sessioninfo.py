@@ -41,7 +41,7 @@ def get_current_user_object() -> User:
     return g.user
 
 
-def user_context_with_logged_in(u: Optional[User]) -> UserContext:
+def user_context_with_logged_in(u: User | None) -> UserContext:
     curr = get_current_user_object()
     return UserContext(user=u or curr, logged_user=curr)
 

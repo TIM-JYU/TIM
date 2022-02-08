@@ -23,7 +23,7 @@ def create_yaml(
     field_type: str,
     question_type: str,
     choices: ChoiceList,
-    points_str: Optional[str] = None,
+    points_str: str | None = None,
     headers=None,
     matrix_type=None,
 ):
@@ -231,10 +231,10 @@ class QuestionTest(BrowserTest):
 
     def do_question_test(
         self,
-        answer_choices: Union[list[int], list[str]],
+        answer_choices: list[int] | list[str],
         choices: ChoiceList,
         expected_answer: str,
-        expected_points: Optional[float],
+        expected_points: float | None,
         expected_yaml: dict,
         headers: list[str],
         points: list[str],

@@ -2,12 +2,12 @@ import secrets
 import string
 from dataclasses import dataclass
 from dataclasses import field
-from typing import Optional, Any
+from typing import Any, NewType
 
 from loadable import Loadable
 from marshmallow import fields
 
-from tim_common.marshmallow_dataclass import dataclass as mdataclass, NewType
+from tim_common.marshmallow_dataclass import dataclass as mdataclass
 
 
 class NotInAGitRepo(Exception):
@@ -16,37 +16,38 @@ class NotInAGitRepo(Exception):
         super().__init__(self.message)
 
 
-mAny = NewType("Any", Any, field=fields.Raw)
+mAny = NewType("Any", Any)
+mAny._marshmallow_field = fields.Raw  # type: ignore
 
 
 @mdataclass
 class Settings(Loadable):
-    url: Optional[str] = field(default=None)
-    user: Optional[str] = field(default=None)
-    branch: Optional[str] = field(default="master")
-    library: Optional[str] = field(default=None)
+    url: str | None = field(default=None)
+    user: str | None = field(default=None)
+    branch: str | None = field(default="master")
+    library: str | None = field(default=None)
     apiProtocol: str = field(default="https")
     cache: int = field(default=86400)  # time in seconds; default 24 hours
-    librarySpecific: Optional[mAny] = field(default=None)
+    librarySpecific: mAny | None = field(default=None)
 
 
 @dataclass
 class RepoSettings:
     name: str
-    owner: Optional[str] = field(default=None)
+    owner: str | None = field(default=None)
     fork: bool = field(default=False)
-    oldName: Optional[str] = field(default=None)
-    oldOwner: Optional[str] = field(default=None)
-    librarySpecific: Optional[mAny] = field(default=None)
+    oldName: str | None = field(default=None)
+    oldOwner: str | None = field(default=None)
+    librarySpecific: mAny | None = field(default=None)
 
 
 @mdataclass
 class Options(Loadable):
     onError: str = field(default="raise")
-    repo: Optional[RepoSettings] = field(default=None)
-    library: Optional[str] = field(default=None)
+    repo: RepoSettings | None = field(default=None)
+    library: str | None = field(default=None)
     fields: dict[str, Any] = field(default_factory=lambda: {})
-    askFields: Optional[list[str]] = field(default=None)
+    askFields: list[str] | None = field(default=None)
 
 
 @dataclass
@@ -56,7 +57,7 @@ class RemoteInfo:
     protocol: str = field(default="ssh")
     name: str = field(default="origin")
     branch: str = field(default="master")
-    user: Optional[str] = field(default=None)
+    user: str | None = field(default=None)
 
     @staticmethod
     def parse_url(url: str, settings: Settings = None):

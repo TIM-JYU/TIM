@@ -21,9 +21,9 @@ class LectureTest(TimRouteTest):
         self,
         doc_id: int,
         msg_id: int,
-        use_questions: Optional[bool] = None,
-        curr_q: Optional[int] = None,
-        curr_p: Optional[int] = None,
+        use_questions: bool | None = None,
+        curr_q: int | None = None,
+        curr_p: int | None = None,
         **kwargs,
     ):
         return self.get(

@@ -105,7 +105,7 @@ def file_hash(s):
 class Language:
     ttype = "_language"
 
-    def __init__(self, query: Optional[QueryClass], sourcefiles=""):
+    def __init__(self, query: QueryClass | None, sourcefiles=""):
         """
         :param self: object reference
         :param query: query to use
@@ -583,7 +583,7 @@ class Jypeli(CS, Modifier):
         self.imgdest = "/csgenerated/%s.png" % self.genname
         self.videosource = "/tmp/%s/Output/out.mp4" % self.basename
         self.videodest = "/csgenerated/%s.mp4" % self.genname
-        self.pure_exename = "{0:s}.exe".format(self.filename)
+        self.pure_exename = f"{self.filename:s}.exe"
 
     @staticmethod
     @functools.cache

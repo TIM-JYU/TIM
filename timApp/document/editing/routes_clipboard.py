@@ -55,7 +55,7 @@ def pull_doc_id(endpoint, values):
 
 
 @clipboard.post("/clipboard/cut/<int:doc_id>/<from_par>/<to_par>")
-def cut_to_clipboard(doc_id, from_par, to_par, area_name: Optional[str] = None):
+def cut_to_clipboard(doc_id, from_par, to_par, area_name: str | None = None):
     verify_logged_in()
     verify_edit_access(wd.docentry)
 
@@ -88,7 +88,7 @@ def copy_to_clipboard(
     doc_id,
     from_par,
     to_par,
-    area_name: Optional[str] = None,
+    area_name: str | None = None,
 ):
     verify_logged_in()
     verify_view_access(wd.docentry)
@@ -106,8 +106,8 @@ def copy_to_clipboard(
 @clipboard.post("/clipboard/paste/<int:doc_id>")
 def paste_from_clipboard(
     doc_id,
-    par_before: Optional[str] = None,
-    par_after: Optional[str] = None,
+    par_before: str | None = None,
+    par_after: str | None = None,
     as_ref: bool = False,
 ):
     verify_logged_in()

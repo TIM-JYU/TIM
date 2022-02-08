@@ -278,7 +278,7 @@ def save_members(listname: str, members: list[MemberInfo]) -> Response:
     return ok_response()
 
 
-def parse_external_member(external_member_candidate: str) -> Optional[list[str]]:
+def parse_external_member(external_member_candidate: str) -> list[str] | None:
     """Parse the information of an external member.
 
     There are two supported ways to give external members. The user can write
@@ -455,7 +455,7 @@ def get_sibling_archive_messages(message_doc_id: int) -> Response:
         if message_doc.id < doc.id and (not next_doc or doc.id < next_doc.id):
             next_doc = doc
 
-    def to_json(d: Optional[DocInfo]) -> Optional[dict[str, Any]]:
+    def to_json(d: DocInfo | None) -> dict[str, Any] | None:
         return (
             {
                 "title": d.title,

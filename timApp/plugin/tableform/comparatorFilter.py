@@ -20,8 +20,8 @@ num_filter_expression = "([<=>!]=?) *(-?[\\w.,]*) *(!?) *"
 
 
 def float_or_str_tuple(
-    a: Union[str, float], b: Union[str, float]
-) -> Union[tuple[str, str], tuple[float, float]]:
+    a: str | float, b: str | float
+) -> tuple[str, str] | tuple[float, float]:
     """
     Attempts to convert two parameters to float
     :param a: first parameter to convert
@@ -71,7 +71,7 @@ class RegexOrComparator:
             self.comparator = ComparatorFilter(fltr)
             self.is_comparator = True
 
-    def is_match(self, value: Union[str, float, None]) -> bool:
+    def is_match(self, value: str | float | None) -> bool:
         if not self.is_comparator:
             if value is None:
                 field_value = ""
@@ -89,7 +89,7 @@ class RegexOrComparator:
 
 class ComparatorFilter:
     def __init__(self, fltr: str):
-        self.values: list[Union[str, float]] = []
+        self.values: list[str | float] = []
         self.funcs = []
         self.negate = False
         for result in re.findall(num_filter_expression, fltr):
@@ -104,7 +104,7 @@ class ComparatorFilter:
                 v = vs.lower()
             self.values.append(v)
 
-    def is_match(self, s: Union[str, float, None]) -> bool:
+    def is_match(self, s: str | float | None) -> bool:
         if s is None:
             s = ""
         if isinstance(s, str):

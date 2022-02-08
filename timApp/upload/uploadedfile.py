@@ -47,7 +47,7 @@ class UploadedFile(ItemBase):
 
     @staticmethod
     def find_by_id(block_id: int) -> Optional["UploadedFile"]:
-        b: Optional[Block] = Block.query.get(block_id)
+        b: Block | None = Block.query.get(block_id)
         if not b:
             return None
         klass = CLASS_MAPPING.get(BlockType(b.type_id))
@@ -72,7 +72,7 @@ class UploadedFile(ItemBase):
     @staticmethod
     def get_by_id_and_filename(
         file_id: int, filename: str
-    ) -> Optional[Union["UploadedFile", "StampedPDF"]]:
+    ) -> Union["UploadedFile", "StampedPDF"] | None:
         """
         Get uploaded file or its stamped version in case file name differs (i.e. it has "_stamped" in it).
         :param file_id: File id.

@@ -45,7 +45,7 @@ class SuppressedError(Exception):
 
 
 def suppress_wuff(
-    ex_type: Type[Exception], details_url: str, message_regex: Optional[str] = None
+    ex_type: type[Exception], details_url: str, message_regex: str | None = None
 ) -> Callable:
     """
     Decorator to prevent sending email errors ("wuffs") on the specified error.

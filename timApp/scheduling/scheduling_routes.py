@@ -47,7 +47,7 @@ class ScheduledFunctionItem:
     block_id: int
     name: str
     expires: datetime
-    last_run_at: Optional[datetime]
+    last_run_at: datetime | None
     total_run_count: int
     interval: Interval
     owners: list[UserGroup]

@@ -55,7 +55,7 @@ def associate_old_uploads() -> None:
 def associate_document(
     d: DocInfo,
     search_opt: SearchArgumentsBasic,
-    del_anon: Optional[Callable[[UploadedFile], None]] = None,
+    del_anon: Callable[[UploadedFile], None] | None = None,
 ) -> int:
     found = 0
     for r in search(d, search_opt, use_exported=False):
