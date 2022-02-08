@@ -44,7 +44,7 @@ print("Hello World")
         check_first_par("Macro is: TIM.")
 
     def check_console(
-        self, d: DocInfo, console_text: str, query: Optional[dict[str, str]] = None
+        self, d: DocInfo, console_text: str, query: dict[str, str] | None = None
     ):
         self.goto_document(d, query=query)
         runbutton = self.find_element_avoid_staleness("#t button")

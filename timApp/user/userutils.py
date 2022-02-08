@@ -16,12 +16,12 @@ from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERN
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import get_current_time
 
-ANON_USER_ID: Optional[int] = None
-LOGGED_USER_ID: Optional[int] = None
-ANON_GROUP_ID: Optional[int] = None
-LOGGED_GROUP_ID: Optional[int] = None
-ADMIN_GROUP_ID: Optional[int] = None
-KORPPI_GROUP_ID: Optional[int] = None
+ANON_USER_ID: int | None = None
+LOGGED_USER_ID: int | None = None
+ANON_GROUP_ID: int | None = None
+LOGGED_GROUP_ID: int | None = None
+ADMIN_GROUP_ID: int | None = None
+KORPPI_GROUP_ID: int | None = None
 DOC_DEFAULT_RIGHT_NAME = "DefaultDocumentRights"
 FOLDER_DEFAULT_RIGHT_NAME = "DefaultFolderRights"
 
@@ -71,14 +71,14 @@ def get_access_type_id(access_type: str) -> int:
 
 def grant_access(
     group: UserGroup,
-    block: Union[ItemBase, Block],
+    block: ItemBase | Block,
     access_type: AccessType,
-    accessible_from: Optional[datetime] = None,
-    accessible_to: Optional[datetime] = None,
-    duration_from: Optional[datetime] = None,
-    duration_to: Optional[datetime] = None,
-    duration: Optional[timedelta] = None,
-    require_confirm: Optional[bool] = None,
+    accessible_from: datetime | None = None,
+    accessible_to: datetime | None = None,
+    duration_from: datetime | None = None,
+    duration_to: datetime | None = None,
+    duration: timedelta | None = None,
+    require_confirm: bool | None = None,
 ) -> BlockAccess:
     """Grants access to a group for a block.
 
@@ -125,7 +125,7 @@ def grant_access(
     return ba
 
 
-def get_usergroup_by_name(name: str) -> Optional[int]:
+def get_usergroup_by_name(name: str) -> int | None:
     from timApp.user.usergroup import UserGroup
 
     ug = UserGroup.get_by_name(name)
@@ -134,7 +134,7 @@ def get_usergroup_by_name(name: str) -> Optional[int]:
     return None
 
 
-def get_user_id_by_name(name: str) -> Optional[int]:
+def get_user_id_by_name(name: str) -> int | None:
     """Gets the id of the specified username.
 
     :param name: The name of the user.
@@ -162,7 +162,7 @@ def get_default_right_document(
     folder: Folder,
     object_type: BlockType,
     create_if_not_exist: bool = False,
-) -> Optional[DocInfo]:
+) -> DocInfo | None:
     right_doc_path = default_right_paths.get(object_type)
     if right_doc_path is None:
         raise TimDbException(f"Unsupported object type: {object_type}")
@@ -179,11 +179,11 @@ def grant_default_access(
     folder: Folder,
     access_type: AccessType,
     object_type: BlockType,
-    accessible_from: Optional[datetime] = None,
-    accessible_to: Optional[datetime] = None,
-    duration_from: Optional[datetime] = None,
-    duration_to: Optional[datetime] = None,
-    duration: Optional[timedelta] = None,
+    accessible_from: datetime | None = None,
+    accessible_to: datetime | None = None,
+    duration_from: datetime | None = None,
+    duration_to: datetime | None = None,
+    duration: timedelta | None = None,
 ) -> list[BlockAccess]:
     doc = get_or_create_default_right_document(folder, object_type)
     accesses = []

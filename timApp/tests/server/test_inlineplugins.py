@@ -33,7 +33,7 @@ Hi {#t3#} $x$
         )
         self.assert_same_html(
             e,
-            fr"""
+            rf"""
 <div class="par" id="Lm7y6R7n5XIb" t="MHgyN2U5NDhhMA==" attrs='{{"defaultplugin": "pali"}}'>
 <div tabindex="0" class="parContent">
             <p>
@@ -78,7 +78,7 @@ Hi {#t3#} $x$
         )
         self.assert_same_html(
             e,
-            fr"""
+            rf"""
 <div class="par" id="Lm7y6R7n5XIb" t="MHgyN2U5NDhhMA==" attrs='{{"defaultplugin": "pali"}}'>
 <div tabindex="0" class="parContent">
 <p>

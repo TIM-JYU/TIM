@@ -8,4 +8,4 @@ class DocRenderResult:
     head_html: str
     content_html: str
     allowed_to_cache: bool
-    override_theme: Optional[str]
+    override_theme: str | None

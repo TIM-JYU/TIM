@@ -506,7 +506,7 @@ def update_velp_label_route():
     language_id = json_data.get("language_id")
     language_id = "FI" if language_id is None else language_id
 
-    vlc: Optional[VelpLabelContent] = VelpLabelContent.query.filter_by(
+    vlc: VelpLabelContent | None = VelpLabelContent.query.filter_by(
         language_id=language_id,
         velplabel_id=velp_label_id,
     ).first()

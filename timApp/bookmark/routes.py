@@ -117,11 +117,11 @@ def delete_bookmark(bm: BookmarkNoLink) -> Response:
     verify_logged_in()
     u = get_current_user_object()
     hide_course = False
-    course_link: Optional[str] = None
+    course_link: str | None = None
     if bm.group == MY_COURSES_GROUP:
         hide_course = True
         bks = u.bookmarks.as_dict()
-        my_courses_group: Optional[BookmarkDictGroup] = next(
+        my_courses_group: BookmarkDictGroup | None = next(
             (b for b in bks if b["name"] == bm.group), None
         )
         if my_courses_group:

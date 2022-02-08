@@ -76,7 +76,7 @@ def get_user_notify_settings():
     return json_response(nots)
 
 
-def get_current_user_notifications(limit: Optional[int] = None):
+def get_current_user_notifications(limit: int | None = None):
     q = (
         Notification.query.filter_by(user_id=get_current_user_id())
         .options(joinedload(Notification.block).joinedload(Block.docentries))
@@ -93,7 +93,7 @@ def notify_doc_watchers(
     doc: DocInfo,
     content_msg: str,
     notify_type: NotificationType,
-    par: Optional[DocParagraph] = None,
+    par: DocParagraph | None = None,
     old_version: Version = None,
 ):
     me = get_current_user_object()

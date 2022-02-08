@@ -77,7 +77,7 @@ def call_dumbo(
     data: list[str],
     path="",
     options: DumboOptions = DumboOptions.default(),
-    data_opts: Optional[list[DumboOptions]] = None,
+    data_opts: list[DumboOptions] | None = None,
 ) -> list[str]:
     ...
 
@@ -87,7 +87,7 @@ def call_dumbo(
     data: dict,
     path="",
     options: DumboOptions = DumboOptions.default(),
-    data_opts: Optional[list[DumboOptions]] = None,
+    data_opts: list[DumboOptions] | None = None,
 ) -> dict:
     ...
 
@@ -97,17 +97,17 @@ def call_dumbo(
     data: list[dict],
     path="",
     options: DumboOptions = DumboOptions.default(),
-    data_opts: Optional[list[DumboOptions]] = None,
+    data_opts: list[DumboOptions] | None = None,
 ) -> list[dict]:
     ...
 
 
 def call_dumbo(
-    data: Union[list[str], dict, list[dict]],
+    data: list[str] | dict | list[dict],
     path="",
     options: DumboOptions = DumboOptions.default(),
-    data_opts: Optional[list[DumboOptions]] = None,
-) -> Union[list[str], dict, list[dict]]:
+    data_opts: list[DumboOptions] | None = None,
+) -> list[str] | dict | list[dict]:
     """Calls Dumbo for converting the given markdown to HTML.
 
     :param options: Options for Dumbo.

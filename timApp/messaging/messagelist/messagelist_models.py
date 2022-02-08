@@ -178,7 +178,7 @@ class MessageListModel(db.Model):
         return tim_members
 
     def find_member(
-        self, username: Optional[str], email: Optional[str]
+        self, username: str | None, email: str | None
     ) -> Optional["MessageListMember"]:
         """Get member of this list. Member can be searched with username and/or email. At least one has to be given. If
         both are given, username is preferred and is used in a search first.
@@ -200,7 +200,7 @@ class MessageListModel(db.Model):
         return None
 
     @property
-    def email_address(self) -> Optional[str]:
+    def email_address(self) -> str | None:
         """Full email address of the messagelist, if the list has been assigned an active address.
         Otherwise None."""
         return (
@@ -327,7 +327,7 @@ class MessageListMember(db.Model):
         """If the member is verified to be on the list."""
         return self.membership_verified is not None
 
-    def remove(self, end_time: Optional[datetime] = get_current_time()) -> None:
+    def remove(self, end_time: datetime | None = get_current_time()) -> None:
         """Shorthand for removing a member out of the group, by setting the membership_ended attribute."""
         self.membership_ended = end_time
 

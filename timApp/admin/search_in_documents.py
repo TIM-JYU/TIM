@@ -28,10 +28,10 @@ class SearchArgumentsBasic:
     format: str = attr.ib(kw_only=True, default="{0}")
     """Format string to print matches."""
 
-    onlyfirst: Optional[int] = attr.ib(kw_only=True, default=None)
+    onlyfirst: int | None = attr.ib(kw_only=True, default=None)
     """If given, only search the first x paragraphs from each document."""
 
-    filter_attr: Optional[str] = attr.ib(kw_only=True, default=None)
+    filter_attr: str | None = attr.ib(kw_only=True, default=None)
     """If given, only search the paragraphs that have the specified attribute and value."""
 
 
@@ -81,9 +81,7 @@ class SearchResult(NamedTuple):
         )
 
 
-def matches_attr_filter(
-    p: DocParagraph, key: Optional[str], value: Optional[str]
-) -> bool:
+def matches_attr_filter(p: DocParagraph, key: str | None, value: str | None) -> bool:
     if key is None:
         return True
     a = p.get_attr(key)

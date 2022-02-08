@@ -25,7 +25,7 @@ class RefreshTokenGrant(grants.RefreshTokenGrant):
     ]
     INCLUDE_NEW_REFRESH_TOKEN = True
 
-    def authenticate_refresh_token(self, refresh_token: str) -> Optional[OAuth2Token]:
+    def authenticate_refresh_token(self, refresh_token: str) -> OAuth2Token | None:
         token: OAuth2Token = OAuth2Token.query.filter_by(refresh_token=refresh_token)
         if token and not token.is_revoked() and not token.is_expired():
             return token
@@ -63,7 +63,7 @@ class AuthorizationCodeGrant(grants.AuthorizationCodeGrant):
 
     def query_authorization_code(
         self, code: str, client: OAuth2Client
-    ) -> Optional[OAuth2AuthorizationCode]:
+    ) -> OAuth2AuthorizationCode | None:
         auth_code = OAuth2AuthorizationCode.query.filter_by(
             code=code, client_id=client.client_id
         ).first()

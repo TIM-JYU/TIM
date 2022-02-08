@@ -65,7 +65,7 @@ def do_before_requests() -> None:
 
 
 @print_blueprint.url_value_preprocessor
-def pull_doc_path(endpoint: Optional[str], values: Optional[dict[str, str]]) -> None:
+def pull_doc_path(endpoint: str | None, values: dict[str, str] | None) -> None:
     if not endpoint or not values:
         return
     if current_app.url_map.is_endpoint_expecting(endpoint, "doc_path"):
@@ -81,14 +81,14 @@ def pull_doc_path(endpoint: Optional[str], values: Optional[dict[str, str]]) -> 
 
 def template_by_name(
     template_name: str, isdef: bool = False
-) -> tuple[Optional[DocInfo], int, Optional[str], bool]:
+) -> tuple[DocInfo | None, int, str | None, bool]:
     template_doc = DocEntry.find_by_path(template_name)
     if template_doc is None:
         return None, 0, f"Template not found: {template_name}", False
     return template_doc, template_doc.id, None, isdef
 
 
-def get_doc_template_name(doc: DocInfo) -> Optional[str]:
+def get_doc_template_name(doc: DocInfo) -> str | None:
     texmacros = (
         doc.document.get_settings().get_texmacroinfo(default_view_ctx).get_macros()
     )
@@ -102,7 +102,7 @@ def get_doc_template_name(doc: DocInfo) -> Optional[str]:
 
 def get_template_doc(
     doc: DocInfo, template_doc_id: int
-) -> tuple[Optional[DocInfo], int, Optional[str], bool]:
+) -> tuple[DocInfo | None, int, str | None, bool]:
     template_name = get_doc_template_name(doc)
     if template_name:
         return template_by_name(template_name, True)
@@ -226,7 +226,7 @@ def print_document(
 @print_blueprint.get("/<path:doc_path>")
 def get_printed_document(
     doc_path: str,
-    file_type: Optional[str] = None,
+    file_type: str | None = None,
     plugins_user_code: bool = False,
     template_doc_id: int = -1,
     force: bool = False,
@@ -398,10 +398,10 @@ def get_printed_document(
 
 def get_setting_and_counters_par(
     doc_info: DocInfo,
-) -> tuple[Optional[DocParagraph], Optional[DocParagraph]]:
+) -> tuple[DocParagraph | None, DocParagraph | None]:
     # TODO: Make this more efective!
-    settings_par: Optional[DocParagraph] = None
-    counters_par: Optional[DocParagraph] = None
+    settings_par: DocParagraph | None = None
+    counters_par: DocParagraph | None = None
     for par in doc_info.document:  # type: DocParagraph
         s = par.get_attr("settings", None)
         if s is not None:
@@ -417,7 +417,7 @@ def get_setting_and_counters_par(
 def add_counters_par(
     doc_info: DocInfo,
     settings_par: DocParagraph,
-    counters_par: Optional[DocParagraph],
+    counters_par: DocParagraph | None,
     values: str,
 ) -> DocParagraph:
     new_values = f"```\n{values}```"
@@ -430,7 +430,7 @@ def add_counters_par(
     )
 
 
-def handle_doc_numbering(doc_info: DocInfo, used_names: Optional[list[str]]) -> str:
+def handle_doc_numbering(doc_info: DocInfo, used_names: list[str] | None) -> str:
     """
     Create automatic counters for document and all referenced documents.
     :param doc_info: document to handle
@@ -545,10 +545,10 @@ def get_mimetype_for_format(file_type: PrintFormat) -> str:
 
 def check_print_cache(
     doc_entry: DocInfo,
-    template: Optional[DocInfo],
+    template: DocInfo | None,
     file_type: PrintFormat,
     plugins_user_print: bool = False,
-) -> Optional[str]:
+) -> str | None:
     """
     Fetches the given document from the database.
 
@@ -583,7 +583,7 @@ def check_print_cache(
 
 def create_printed_doc(
     doc_entry: DocInfo,
-    template_doc: Optional[DocInfo],
+    template_doc: DocInfo | None,
     file_type: PrintFormat,
     temp: bool,
     user_ctx: UserContext,

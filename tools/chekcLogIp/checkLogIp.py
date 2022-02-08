@@ -11,7 +11,7 @@ import sys
 # https://regex101.com/r/S6xh2p/latest
 ipmatcher = re.compile(
     #  d     t    .sec  m   user     ip       prot res  time client processid
-    "^(.*) (.*),(.*) (.*) (.+) \[([0-9.]+)]: (.*) (.*) (.*) (.*) (.+)"
+    r"^(.*) (.*),(.*) (.*) (.+) \[([0-9.]+)]: (.*) (.*) (.*) (.*) (.+)"
 )
 
 
@@ -35,7 +35,7 @@ rightsmatcher = re.compile(
 # https://regex101.com/r/hQ8zOI/latest
 rightsmatcher2 = re.compile(
     #  d     t    .sec  m   who     ip         prot              op    ip     user       what       res time client processid
-    "^(.*) (.*),(.*) (.*) (.+) \[([0-9.]+)]: GET /permissions/(.*)/([0-9]*)/([^ /?]*)([/?](.*))? (.*) (.*) (.*) (.+)"
+    r"^(.*) (.*),(.*) (.*) (.+) \[([0-9.]+)]: GET /permissions/(.*)/([0-9]*)/([^ /?]*)([/?](.*))? (.*) (.*) (.*) (.+)"
 )
 
 
@@ -64,14 +64,14 @@ def main():
     logname = sys.argv[1]
     ignoreusers = []
     if len(sys.argv) >= 3:
-        with open(sys.argv[2], "r") as f:
+        with open(sys.argv[2]) as f:
             for line in f:
                 ignoreusers.append(line.rstrip("\n"))
 
     n = 0
     ips = {}
     users = {}
-    with open(logname, "r") as f:
+    with open(logname) as f:
         for line in f:
             # s = line.rstrip("\n")
             n += 1

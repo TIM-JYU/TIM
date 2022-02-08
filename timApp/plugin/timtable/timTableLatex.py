@@ -127,10 +127,10 @@ class Cell:
         content: str = "",
         colspan: int = default_colspan,
         rowspan: int = default_rowspan,
-        text_color: Union[None, str] = default_text_color,
-        text_color_html: Union[None, bool] = False,
-        bg_color: Union[None, str] = default_transparent_color,
-        bg_color_html: Union[None, bool] = False,
+        text_color: None | str = default_text_color,
+        text_color_html: None | bool = False,
+        bg_color: None | str = default_transparent_color,
+        bg_color_html: None | bool = False,
         h_align=default_text_h_align,
         font_size: float = default_font_size,
         cell_width=default_width,
@@ -189,14 +189,14 @@ class Cell:
             l_b_color, l_b_html = self.borders.color_left
             if not l_b_color == default_transparent_color:
                 v_border_and_align += (
-                    fr"!{{\color{format_color(l_b_color, l_b_html)}\vrule}}"
+                    rf"!{{\color{format_color(l_b_color, l_b_html)}\vrule}}"
                 )
         v_border_and_align += self.h_align
         if self.borders.right:
             r_b_color, r_b_html = self.borders.color_right
             if not r_b_color == default_transparent_color:
                 v_border_and_align += (
-                    fr"!{{\color{format_color(r_b_color, r_b_html)}\vrule}}"
+                    rf"!{{\color{format_color(r_b_color, r_b_html)}\vrule}}"
                 )
 
         # HTML-colors have an extra tag
@@ -204,7 +204,7 @@ class Cell:
         if self.bg_color == default_transparent_color or not self.bg_color:
             cell_color = ""
         else:
-            cell_color = fr"\cellcolor{cell_color}"
+            cell_color = rf"\cellcolor{cell_color}"
 
         content = self.content
         # Minipage doesn't handle cell width always properly even if it's given,
@@ -214,7 +214,7 @@ class Cell:
             if "*" in str(minipage_width):
                 minipage_width = default_minipage_width
             content = (
-                fr"\begin{{minipage}}{{{minipage_width}}}{content}\end{{minipage}}"
+                rf"\begin{{minipage}}{{{minipage_width}}}{content}\end{{minipage}}"
             )
 
         # Font weight may be bold, bolder, lighter or number from 100 to 900.
@@ -235,15 +235,15 @@ class Cell:
         font_family_line = ""
         font_family_line_postfix = ""
         if self.font_family != default_font_family:
-            font_family_line = fr"\fontfamily{{{self.font_family}}}\selectfont{{"
+            font_family_line = rf"\fontfamily{{{self.font_family}}}\selectfont{{"
             font_family_line_postfix = f"}}"
         return (
-            fr"\multicolumn{{{self.colspan}}}{{{v_border_and_align}}}{{"
-            fr"\multirow{{{self.rowspan}}}{{{cell_width}}}{{"
+            rf"\multicolumn{{{self.colspan}}}{{{v_border_and_align}}}{{"
+            rf"\multirow{{{self.rowspan}}}{{{cell_width}}}{{"
             f"{cell_color}"
-            fr"\fontsize{{{self.font_size}}}{{{self.line_space}}}"
-            fr"\selectfont{{\textcolor{{{self.text_color}}}{{{{{font_family_line}"
-            fr"{content}}}}}}}}}}}{font_family_line_postfix}"
+            rf"\fontsize{{{self.font_size}}}{{{self.line_space}}}"
+            rf"\selectfont{{\textcolor{{{self.text_color}}}{{{{{font_family_line}"
+            rf"{content}}}}}}}}}}}{font_family_line_postfix}"
         )
 
     def __repr__(self) -> str:
@@ -283,7 +283,7 @@ class Row:
     """
 
     def __init__(
-        self, index: int, cells: list[Cell], height: Union[float, None] = None
+        self, index: int, cells: list[Cell], height: float | None = None
     ) -> None:
         """
         :param index: Row index.
@@ -304,7 +304,7 @@ class Row:
             output += f"& {str(self.cells[i])}"
         return output
 
-    def get_row_height(self) -> Union[int, float]:
+    def get_row_height(self) -> int | float:
         """
         Gives the largest cell height to be used as row height or row's height attribute, if it is taller.
         Note: sseparate cell heights aren't supported.
@@ -354,7 +354,7 @@ class Row:
             i += cell.colspan
         return i
 
-    def get_cell(self, index: int) -> Union[Cell, None]:
+    def get_cell(self, index: int) -> Cell | None:
         """
         Gives cell with the index number (which may be different from list index).
         :param index: Cell index number in the table.
@@ -485,7 +485,7 @@ class HorizontalBorder:
                 else:
                     output += (
                         colspan
-                        * fr">{{\arrayrulecolor{format_color(color, html_color)}}}-"
+                        * rf">{{\arrayrulecolor{format_color(color, html_color)}}}-"
                     )
             colspan_counter_lower = colspan_counter_lower + i_upper_colspan - 1
             colspan_counter_upper = colspan_counter_upper + i_lower_colspan - 1
@@ -633,12 +633,12 @@ class Table:
         output = ""
         for i in range(0, len(self.rows)):
             output += (
-                "\n" + fr"\hhline{{{str(self.hborders[i])}}}"
+                "\n" + rf"\hhline{{{str(self.hborders[i])}}}"
                 "\n" + f"{str(self.rows[i])}"
-                "\n" + fr"\tabularnewline[{self.rows[i].get_row_height()}pt]"
+                "\n" + rf"\tabularnewline[{self.rows[i].get_row_height()}pt]"
             )
 
-        output += "\n" + fr"\hhline{{{str(self.hborders[-1])}}}"
+        output += "\n" + rf"\hhline{{{str(self.hborders[-1])}}}"
         return f"{prefix}\n{output}\n{postfix}"
 
     def get_or_create_row(self, i: int) -> Row:
@@ -1018,7 +1018,7 @@ def get_span(item, default=None) -> (int, int):
     return colspan, rowspan
 
 
-def get_size(item, key: str, default=None) -> Union[str, None]:
+def get_size(item, key: str, default=None) -> str | None:
     """
     Parse width or height into LaTeX-supported format.
     :param item: Cell data.
@@ -1035,9 +1035,7 @@ def get_size(item, key: str, default=None) -> Union[str, None]:
         return default
 
 
-def get_font_family(
-    item, default: Union[str, None] = default_font_family
-) -> Union[str, None]:
+def get_font_family(item, default: str | None = default_font_family) -> str | None:
     """
     :param item: Cell or row data.
     :param default: Font family to use in case none set.
@@ -1093,7 +1091,7 @@ def get_key_value(item, key, default=None):
     return a
 
 
-def parse_hex_color(color, default_color=None) -> Union[str, None]:
+def parse_hex_color(color, default_color=None) -> str | None:
     """
     Removes non-hex characters and checks if result is valid.
     :param color: Color string.

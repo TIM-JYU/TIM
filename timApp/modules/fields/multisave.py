@@ -23,26 +23,26 @@ class MultisaveStateModel:
 
 @dataclass
 class MultisaveMarkupModel(GenericMarkupModel):
-    areas: Union[list[str], Missing] = missing
-    autoUpdateDuplicates: Union[bool, Missing] = True
-    autoUpdateTables: Union[bool, Missing] = True
-    allSavedText: Union[str, Missing] = missing
-    fields: Union[list[str], Missing] = missing
-    jumplink: Union[str, Missing, None] = missing
-    jumptarget: Union[str, Missing, None] = missing
-    listener: Union[bool, Missing] = False
-    livefeed: Union[bool, Missing] = False
-    savedText: Union[str, Missing] = missing
-    tags: Union[list[str], Missing] = missing
-    unsavedText: Union[str, Missing] = missing
+    areas: list[str] | Missing = missing
+    autoUpdateDuplicates: bool | Missing = True
+    autoUpdateTables: bool | Missing = True
+    allSavedText: str | Missing = missing
+    fields: list[str] | Missing = missing
+    jumplink: str | Missing | None = missing
+    jumptarget: str | Missing | None = missing
+    listener: bool | Missing = False
+    livefeed: bool | Missing = False
+    savedText: str | Missing = missing
+    tags: list[str] | Missing = missing
+    unsavedText: str | Missing = missing
 
     # Sisu export-related fields; TODO: Should be a separate plugin.
-    destCourse: Union[str, Missing] = missing
-    group: Union[str, list[str], Missing] = missing  # for destCourse
-    includeUsers: Union[
-        str, Missing
-    ] = missing  # TODO: Should be MembershipFilter, but cannot import
-    testOnly: Union[bool, Missing] = missing
+    destCourse: str | Missing = missing
+    group: str | list[str] | Missing = missing  # for destCourse
+    includeUsers: (
+        str | Missing
+    ) = missing  # TODO: Should be MembershipFilter, but cannot import
+    testOnly: bool | Missing = missing
 
 
 @dataclass

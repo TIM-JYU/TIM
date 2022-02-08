@@ -7,7 +7,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.user.user import User
 
 
-def hide_names_in_teacher(d: DocInfo, context_user: Optional[User] = None) -> bool:
+def hide_names_in_teacher(d: DocInfo, context_user: User | None = None) -> bool:
     """Determines whether user names should be hidden.
 
     :param d: The document we're viewing.
@@ -20,7 +20,7 @@ def hide_names_in_teacher(d: DocInfo, context_user: Optional[User] = None) -> bo
 
 
 def force_hide_names(
-    current_user: User, d: DocInfo, context_user: Optional[User] = None
+    current_user: User, d: DocInfo, context_user: User | None = None
 ) -> bool:
     force_hide = False
     if context_user and context_user.id == current_user.id:

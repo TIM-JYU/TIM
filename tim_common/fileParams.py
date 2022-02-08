@@ -354,7 +354,7 @@ def check_url_scheme(url: str):
 
 
 # noinspection PyBroadException
-def get_url_lines_as_string(url: str, headers: Optional[dict[str, str]] = None):
+def get_url_lines_as_string(url: str, headers: dict[str, str] | None = None):
     global cache
     cachename = "lines_" + url + secure_hash_dict(headers)
     diskcache = CACHE_DIR + cachename.replace("/", "_").replace(":", "_")
@@ -932,7 +932,7 @@ def getint(s):
     return int(s)
 
 
-def secure_hash_dict(d: Optional[dict[str, str]]) -> str:
+def secure_hash_dict(d: dict[str, str] | None) -> str:
     if not d:
         return ""
     dk = hashlib.pbkdf2_hmac("sha256", str.encode(str(d)), b"timdict", 100)

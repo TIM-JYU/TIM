@@ -40,8 +40,8 @@ tags_blueprint = TypedBlueprint("tags", __name__, url_prefix="/tags")
 class TagInfo:
     name: str
     type: TagType = field(metadata={"by_value": True})
-    expires: Optional[datetime] = None
-    block_id: Optional[int] = None
+    expires: datetime | None = None
+    block_id: int | None = None
 
     def to_tag(self) -> Tag:
         return Tag(name=self.name, type=self.type, expires=self.expires)
@@ -106,7 +106,7 @@ def set_group_tags(
     doc: str,
     groups: list[str],
     tags: list[TagInfo],
-    groups_expire: Optional[datetime] = None,
+    groups_expire: datetime | None = None,
 ) -> Response:
     d = DocEntry.find_by_path(doc)
     if not d:

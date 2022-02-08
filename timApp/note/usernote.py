@@ -67,5 +67,5 @@ class UserNote(db.Model):
         }
 
 
-def get_comment_by_id(c_id: int) -> Optional[UserNote]:
+def get_comment_by_id(c_id: int) -> UserNote | None:
     return UserNote.query.get(c_id)

@@ -51,7 +51,7 @@ class AskedQuestion(db.Model):
     )
 
     @property
-    def end_time(self) -> Optional[datetime]:
+    def end_time(self) -> datetime | None:
         timelimit = self.time_limit
         if not timelimit:
             return None
@@ -135,7 +135,7 @@ class AskedQuestion(db.Model):
         return get_current_time() < et
 
 
-def get_asked_question(asked_id: int) -> Optional[AskedQuestion]:
+def get_asked_question(asked_id: int) -> AskedQuestion | None:
     return AskedQuestion.query.get(asked_id)
 
 

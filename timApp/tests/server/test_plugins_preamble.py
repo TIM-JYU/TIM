@@ -195,5 +195,5 @@ choices:
         self.assertEqual(expected_par.get_id(), par.attrib["ref-id"])
         self.assertEqual(str(expected_doc.id), par.attrib["ref-doc-id"])
         self.assertTrue(
-            par.cssselect(fr"#{expected_doc.id}\.t\.{expected_par.get_id()}")
+            par.cssselect(rf"#{expected_doc.id}\.t\.{expected_par.get_id()}")
         )

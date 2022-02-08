@@ -9,5 +9,5 @@ from marshmallow.utils import _Missing, missing
 class TextfieldStateModel:
     """Model for the information that is stored in TIM database for each answer."""
 
-    c: Union[str, int, float, None]
-    styles: Union[dict[str, str], _Missing] = missing
+    c: str | int | float | None
+    styles: dict[str, str] | _Missing = missing

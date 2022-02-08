@@ -99,7 +99,7 @@ def add_nonumber(md: str) -> str:
 def get_tex_settings_and_macros(
     d: Document,
     user_ctx: UserContext,
-    template_doc: Optional[DocEntry] = None,
+    template_doc: DocEntry | None = None,
     tformat: PrintFormat = PrintFormat.PLAIN,
 ):
     settings = d.get_settings()
@@ -146,7 +146,7 @@ class DocumentPrinter:
     def __init__(
         self,
         doc_entry: DocInfo,
-        template_to_use: Optional[DocInfo],
+        template_to_use: DocInfo | None,
         urlroot: str,
     ):
         self._doc_entry = doc_entry
@@ -159,7 +159,7 @@ class DocumentPrinter:
         self.texfiles = None
         self.urlroot = urlroot
 
-    def get_template_id(self) -> Optional[int]:
+    def get_template_id(self) -> int | None:
         if self._template_to_use:
             return self._template_to_use.id
         return None
@@ -238,7 +238,7 @@ class DocumentPrinter:
 
         # Process areas to determine what is visible to the user who is printing
         # TODO: We don't need to process all the areas, just need to find the IDs of the visible items
-        processed_par_ids = set(
+        processed_par_ids = {
             p.target_data.id
             for p in process_areas(
                 settings,
@@ -250,7 +250,7 @@ class DocumentPrinter:
                 use_md=True,
                 cache=False,
             )
-        )
+        }
 
         par_infos: [  # TODO: Why this was list[]
             tuple[
@@ -800,7 +800,7 @@ class DocumentPrinter:
         doc_v_fst, doc_v_snd = doc_v[0], doc_v[1]
         return doc_v_fst + doc_v_snd / 10
 
-    def get_template_version_as_float(self) -> Optional[float]:
+    def get_template_version_as_float(self) -> float | None:
         if self._template_to_use is None:
             return None
 
@@ -827,8 +827,8 @@ class DocumentPrinter:
 
     def get_printed_document_path_from_db(
         self, file_type: PrintFormat, plugins_user_print: bool = False
-    ) -> Optional[str]:
-        existing_print: Optional[PrintedDoc] = (
+    ) -> str | None:
+        existing_print: PrintedDoc | None = (
             PrintedDoc.query.filter_by(
                 doc_id=self._doc_entry.id,
                 template_doc_id=self.get_template_id(),

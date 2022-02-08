@@ -9,7 +9,7 @@ class ViewParams:
     """View route parameters that don't affect document rendering."""
 
     direct_link_timer: int = 15
-    goto: Optional[str] = None
+    goto: str | None = None
     login: bool = False
     nocache: bool = False
     wait_max: int = 0

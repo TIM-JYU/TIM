@@ -50,7 +50,7 @@ class OriginInfo:
 
 
 # Mypy needs capital "Tuple" here.
-UrlMacros = Tuple[tuple[str, str], ...]
+UrlMacros = tuple[tuple[str, str], ...]
 ExtraMacros = dict[str, object]
 
 
@@ -61,7 +61,7 @@ class ViewContext:
     hide_names_requested: bool = False
     urlmacros: UrlMacros = ()
     extramacros: str = ""
-    origin: Optional[OriginInfo] = None
+    origin: OriginInfo | None = None
 
     @property
     def viewmode(self) -> bool:
@@ -78,7 +78,7 @@ class ViewContext:
         em = json.loads(self.extramacros)
         return em  # TODO same tape for url and extra macros
 
-    def get_url_param(self, key: str) -> Optional[str]:
+    def get_url_param(self, key: str) -> str | None:
         for k, v in self.url_params:
             if k == key:
                 return v
@@ -107,7 +107,7 @@ def copy_of_default_view_ctx(extramacros: ExtraMacros) -> ViewContext:
     return ViewContext(ViewRoute.View, False, extramacros=json.dumps(extramacros))
 
 
-def viewroute_from_str(s: str) -> Optional[ViewRoute]:
+def viewroute_from_str(s: str) -> ViewRoute | None:
     try:
         return ViewRoute(s)
     except ValueError:

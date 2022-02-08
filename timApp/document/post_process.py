@@ -57,7 +57,7 @@ def post_process_pars(
     sanitize: bool = True,
     do_lazy: bool = False,
     load_plugin_states: bool = True,
-    filter_return: Optional[GlobalParId] = None,
+    filter_return: GlobalParId | None = None,
 ) -> PostProcessResult:
     taketime("start pluginify")
 
@@ -253,7 +253,7 @@ def post_process_pars(
 class Area:
     name: str
     attrs: dict
-    visible: Optional[bool] = None
+    visible: bool | None = None
 
 
 # TODO: It would be better to return a tree-like structure of the document instead of a flat list.

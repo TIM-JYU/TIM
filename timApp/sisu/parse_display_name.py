@@ -31,7 +31,7 @@ class SisuDisplayName:
     month: str
     day: str
     desc: str
-    period: Optional[str]
+    period: str | None
 
     @property
     def group_doc_root(self) -> str:
@@ -57,7 +57,7 @@ class SisuDisplayName:
         return desc
 
 
-def parse_sisu_group_display_name(s: str) -> Optional[SisuDisplayName]:
+def parse_sisu_group_display_name(s: str) -> SisuDisplayName | None:
     m = display_name_re.fullmatch(s)
     if not m:
         return None

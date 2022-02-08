@@ -38,7 +38,7 @@ def verify_json_params(
     *args: str,
     require: bool = True,
     default: Any = None,
-    error_msgs: Optional[list[str]] = None,
+    error_msgs: list[str] | None = None,
 ) -> list[Any]:
     """Gets the specified JSON parameters from the request.
 
@@ -67,10 +67,10 @@ def verify_json_params(
 
 
 def get_option(
-    req: Union[Request, ViewContext],
+    req: Request | ViewContext,
     name: str,
     default: Any,
-    cast: Optional[type] = None,
+    cast: type | None = None,
 ) -> Any:
     if name not in req.args:
         return default
@@ -105,10 +105,10 @@ def is_localhost() -> bool:
     return current_app.config["TIM_HOST"] in ("http://localhost", "http://caddy")
 
 
-def get_consent_opt() -> Optional[Consent]:
+def get_consent_opt() -> Consent | None:
     consent_opt = get_option(request, "consent", "any")
     if consent_opt == "true":
-        consent: Optional[Consent] = Consent.CookieAndData
+        consent: Consent | None = Consent.CookieAndData
     elif consent_opt == "false":
         consent = Consent.CookieOnly
     elif consent_opt == "any":
@@ -120,7 +120,7 @@ def get_consent_opt() -> Optional[Consent]:
     return consent
 
 
-def get_request_time() -> Optional[str]:
+def get_request_time() -> str | None:
     try:
         return f"{time.monotonic() - g.request_start_time:.3g}s"
     except AttributeError:
@@ -128,7 +128,7 @@ def get_request_time() -> Optional[str]:
 
 
 def get_request_message(
-    status_code: Optional[int] = None, include_body: bool = False
+    status_code: int | None = None, include_body: bool = False
 ) -> str:
     name = get_current_user_name()
     if current_app.config["LOG_HOST"]:

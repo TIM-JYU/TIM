@@ -18,7 +18,7 @@ def send_email(
     msg: str,
     mail_from: str = app.config["MAIL_FROM"],
     reply_to: str = app.config["NOREPLY_EMAIL"],
-) -> Optional[Thread]:
+) -> Thread | None:
     if is_testing():
         sent_mails_in_testing.append(locals())
         return None
@@ -101,9 +101,7 @@ def multi_send_email_impl(
     with flask_app.app_context():
         s = smtplib.SMTP(flask_app.config["MAIL_HOST"]) if not is_localhost() else None
         rcpts = rcpt.split(";")
-        mail_targets: list[Union[str, list[str]]] = (
-            list(rcpts) if not reply_all else [rcpts]
-        )
+        mail_targets: list[str | list[str]] = list(rcpts) if not reply_all else [rcpts]
         bccmail = bcc
         extra = ""
         if bcc:

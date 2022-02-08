@@ -17,14 +17,14 @@ verify = TypedBlueprint("verify", __name__, url_prefix="/verify")
 
 def get_verification_data(
     verify_type: str, verify_token: str
-) -> tuple[Optional[Verification], Optional[str]]:
+) -> tuple[Verification | None, str | None]:
     verify_logged_in()
     verify_type_parsed = VerificationType.parse(verify_type)
     error = None
     if not verify_type_parsed:
         error = "Invalid verification type"
 
-    verification: Optional[Verification] = Verification.query.filter_by(
+    verification: Verification | None = Verification.query.filter_by(
         token=verify_token, type=verify_type_parsed
     ).first()
 

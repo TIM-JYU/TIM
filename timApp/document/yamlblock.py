@@ -1,9 +1,8 @@
 import re
-from collections import Generator
 from copy import deepcopy
 from enum import Enum
 from textwrap import shorten
-from typing import Optional
+from typing import Optional, Generator
 
 import yaml
 from yaml import YAMLError, CSafeLoader, Event, AliasEvent, NodeEvent
@@ -44,9 +43,7 @@ yaml_loader = CSafeLoader
 
 
 class YamlBlock:
-    def __init__(
-        self, values: dict = None, merge_hints: Optional[YamlMergeInfo] = None
-    ):
+    def __init__(self, values: dict = None, merge_hints: YamlMergeInfo | None = None):
         self.values = values if values is not None else {}
         self.merge_hints = merge_hints
 
@@ -411,7 +408,7 @@ def parse_yaml(text: str) -> tuple[dict, YamlMergeInfo]:
     return (values or {}), hints
 
 
-def merge(a: dict, b: dict, merge_info: Optional[YamlMergeInfo] = None):
+def merge(a: dict, b: dict, merge_info: YamlMergeInfo | None = None):
     """Merges two dictionaries recursively. Stores the result in the first dictionary.
 
     :param merge_info: The merge hints to use while merging.
@@ -426,7 +423,7 @@ default_append_keys = {"css", "themes"}
 
 
 def __merge_helper(
-    a: dict, b: dict, depth: int = 0, merge_info: Optional[YamlMergeInfo] = None
+    a: dict, b: dict, depth: int = 0, merge_info: YamlMergeInfo | None = None
 ):
     for key in b:
         if key in a:

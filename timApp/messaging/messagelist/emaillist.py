@@ -21,10 +21,10 @@ from tim_common.marshmallow_dataclass import class_schema
 
 @dataclass
 class MailmanConfig:
-    MAILMAN_URL: Optional[str]
-    MAILMAN_USER: Optional[str]
-    MAILMAN_PASS: Optional[str]
-    MAILMAN_UI_LINK_PREFIX: Optional[str]
+    MAILMAN_URL: str | None
+    MAILMAN_USER: str | None
+    MAILMAN_PASS: str | None
+    MAILMAN_UI_LINK_PREFIX: str | None
 
     def __bool__(self) -> bool:
         return bool(
@@ -278,7 +278,7 @@ def create_new_email_list(list_options: ListInfo, owner: User) -> None:
         raise
 
 
-def get_list_ui_link(listname: str, domain: Optional[str]) -> Optional[str]:
+def get_list_ui_link(listname: str, domain: str | None) -> str | None:
     """Get a link for a list to use for advanced email list options and moderation.
 
     The function assumes that Mailman uses Postorius as its web-UI. There exists no guarantee that other web-UIs would
@@ -354,7 +354,7 @@ def add_email(
     mlist: MailingList,
     email: str,
     email_owner_pre_confirmation: bool,
-    real_name: Optional[str],
+    real_name: str | None,
     send_right: bool = True,
     delivery_right: bool = False,
 ) -> None:

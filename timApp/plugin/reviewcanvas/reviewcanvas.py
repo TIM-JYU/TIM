@@ -4,7 +4,6 @@ to a single answer and allows the teacher to velp the images.
 """
 
 from dataclasses import dataclass, asdict
-from typing import Union, List
 
 from flask import render_template_string
 from marshmallow import missing
@@ -28,7 +27,7 @@ class UploadedFile:
     path: str
     type: str
 
-    def to_json(self):
+    def to_json(self) -> dict:
         return asdict(self)
 
 
@@ -36,20 +35,20 @@ class UploadedFile:
 class ReviewCanvasStateModel:
     """Model for the information that is stored in TIM database for each answer."""
 
-    uploadedFiles: List[UploadedFile]
+    uploadedFiles: list[UploadedFile]
 
 
 @dataclass
 class ReviewCanvasMarkupModel(GenericMarkupModel):
-    maxSize: Union[int, Missing] = missing
-    autosave: Union[bool, Missing] = missing
+    maxSize: int | Missing = missing
+    autosave: bool | Missing = missing
 
 
 @dataclass
 class ReviewCanvasInputModel:
     """Model for the information that is sent from browser for an answer."""
 
-    uploadedFiles: List[UploadedFile]
+    uploadedFiles: list[UploadedFile]
 
 
 @dataclass
@@ -65,7 +64,7 @@ class ReviewCanvasHtmlModel(
         return render_static_reviewcanvas(self)
 
     def get_review(self) -> str:
-        if not self.state.uploadedFiles:
+        if not self.state or not self.state.uploadedFiles:
             return "<pre>ei kuvaa</pre>"
 
         return "imageurls:" + ";".join(x.path for x in self.state.uploadedFiles)
@@ -118,7 +117,7 @@ stem: Stem
 inputstem: "inputstem"
 ```"""
     ]
-    editor_tabs: List[EditorTab] = [
+    editor_tabs: list[EditorTab] = [
         {
             "text": "Plugins",
             "items": [

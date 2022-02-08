@@ -25,21 +25,21 @@ from tim_common.utils import Missing
 class GoalTableStateModel:
     """Model for the information that is stored in TIM database for each answer."""
 
-    c: Union[dict[str, str], Missing] = missing
-    styles: Union[dict[str, str], Missing] = missing
+    c: dict[str, str] | Missing = missing
+    styles: dict[str, str] | Missing = missing
 
 
 @dataclass
 class GoalTableMarkupModel(GenericMarkupModel):
-    editText: Union[str, Missing, None] = missing
-    goalText: Union[str, Missing, None] = missing
-    bloom: Union[bool, Missing, None] = missing
-    borders: Union[bool, Missing, None] = missing
-    goals: Union[list[str], Missing, None] = missing
-    goalscale: Union[list[str], Missing, None] = missing
-    mingoal: Union[int, Missing, None] = missing
-    maxgoal: Union[int, Missing, None] = missing
-    initgoal: Union[int, Missing, None] = missing
+    editText: str | Missing | None = missing
+    goalText: str | Missing | None = missing
+    bloom: bool | Missing | None = missing
+    borders: bool | Missing | None = missing
+    goals: list[str] | Missing | None = missing
+    goalscale: list[str] | Missing | None = missing
+    mingoal: int | Missing | None = missing
+    maxgoal: int | Missing | None = missing
+    initgoal: int | Missing | None = missing
 
     def get_mingoal(self) -> int:
         return max(value_or_default(self.mingoal, 1), 1)
@@ -59,8 +59,8 @@ class GoalTableInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
 
     # c: str
-    c: Union[dict[str, str], Missing] = missing
-    nosave: Union[bool, Missing] = missing
+    c: dict[str, str] | Missing = missing
+    nosave: bool | Missing = missing
 
 
 @dataclass

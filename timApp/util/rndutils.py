@@ -165,7 +165,7 @@ T = TypeVar("T")
 
 def repeat_rnd(
     list_func: Callable[[Random, str], list[T]], myrandom: Random, jso: str
-) -> Optional[list[T]]:
+) -> list[T] | None:
     """
 
     :param list_func: function to produce random list
@@ -194,17 +194,15 @@ def repeat_rnd(
 
 
 # Mypy needs capital "Tuple" here.
-State = Tuple[int, ...]
+State = tuple[int, ...]
 
 
 def get_rnds(
     attrs: dict,
     name: str = "rnd",
-    rnd_seed: Optional[SeedType] = None,
-    state: Optional[State] = None,
-) -> tuple[
-    Optional[Union[list[float], list[int]]], Optional[SeedType], Optional[State]
-]:
+    rnd_seed: SeedType | None = None,
+    state: State | None = None,
+) -> tuple[list[float] | list[int] | None, SeedType | None, State | None]:
     """
     Returns list of random numbers based on attribute name (def: rnd) and rnd_seed.
     :param attrs: dict of attributes
@@ -260,8 +258,8 @@ def get_rnds(
 
 
 def get_rands_as_dict(
-    attrs: dict, rnd_seed: Optional[SeedType], state: Optional[State] = None
-) -> tuple[Optional[dict], Optional[SeedType], Optional[State]]:
+    attrs: dict, rnd_seed: SeedType | None, state: State | None = None
+) -> tuple[dict | None, SeedType | None, State | None]:
     """
     Returns a dict of random numbers variables (each is a list of random numbers).
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
@@ -286,8 +284,8 @@ def get_rands_as_dict(
 
 
 def get_rands_as_str(
-    attrs: dict, rnd_seed: Optional[SeedType], state: Optional[State] = None
-) -> tuple[str, Optional[SeedType], Optional[State]]:
+    attrs: dict, rnd_seed: SeedType | None, state: State | None = None
+) -> tuple[str, SeedType | None, State | None]:
     """
     Returns a Jinja2 str of random numbers variables (each is a list of random numbers).
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"

@@ -263,18 +263,18 @@ def upload_file():
 
 @dataclass
 class AttachmentModel:
-    issueNumber: Union[int, str]
+    issueNumber: int | str
     attachmentLetter: str
     uploadUrl: str
-    upToDate: Optional[bool] = None
+    upToDate: bool | None = None
 
 
 @dataclass
 class RestampModel:
     attachments: list[AttachmentModel]
     meetingDate: str
-    stampFormat: Optional[str] = None
-    customStampModel: Optional[str] = None
+    stampFormat: str | None = None
+    customStampModel: str | None = None
 
 
 @upload.post("/upload/restamp")
@@ -349,7 +349,7 @@ def upload_and_stamp_attachment(
     file,
     stamp_data: AttachmentStampData,
     stampformat: str,
-    custom_stamp_model_content: Optional[str] = None,
+    custom_stamp_model_content: str | None = None,
 ):
     """
     Uploads the file and makes a stamped version of it into the same folder.

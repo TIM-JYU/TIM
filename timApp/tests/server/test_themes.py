@@ -14,7 +14,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.utils import static_tim_doc
 
 
-def get_theme_style_name(html: HtmlElement, style_origin: str) -> Optional[str]:
+def get_theme_style_name(html: HtmlElement, style_origin: str) -> str | None:
     s: list[HtmlElement] = html.cssselect(
         f"link[rel='stylesheet'][data-style-origin='{style_origin}']"
     )

@@ -39,7 +39,7 @@ class IndexedViewRange:
     def is_full(self):
         return self.b == 0 and self.e == self.par_count
 
-    def to_json(self, name: Optional[str] = None):
+    def to_json(self, name: str | None = None):
         r = {"b": self.b, "e": self.e, "is_full": self.is_full}
         if name:
             r["name"] = name
@@ -64,9 +64,9 @@ class IndexedViewRange:
 
 @dataclass
 class RequestedViewRange:
-    b: Optional[RangeParam]
-    e: Optional[RangeParam]
-    size: Optional[int]
+    b: RangeParam | None
+    e: RangeParam | None
+    size: int | None
 
     @property
     def is_full(self):
@@ -132,7 +132,7 @@ def get_doc_version_hash(doc_info: DocInfo) -> str:
     return hashfunc(version)
 
 
-def load_index(file_path: Path) -> Optional[dict]:
+def load_index(file_path: Path) -> dict | None:
     """
     Load headers from a file.
     :param file_path: Cache file path.
@@ -156,7 +156,7 @@ def save_index(index, file_path: Path):
         json.dump(index, f)
 
 
-def get_index_with_header_id(doc_info: DocInfo, header_id: str) -> Optional[int]:
+def get_index_with_header_id(doc_info: DocInfo, header_id: str) -> int | None:
     """
     Returns first index containing the given HTML header id.
     :param doc_info: Document.
@@ -176,7 +176,7 @@ def get_index_with_header_id(doc_info: DocInfo, header_id: str) -> Optional[int]
     return None
 
 
-def get_piece_size_from_cookie(request: Request) -> Optional[int]:
+def get_piece_size_from_cookie(request: Request) -> int | None:
     """
     Reads piece size from cookie, if it exists.
     :param request: Request.
@@ -248,7 +248,7 @@ def decide_view_range(
     preferred_set_size: int,
     index: int = 0,
     forwards: bool = True,
-    areas: Optional[list[Range]] = None,
+    areas: list[Range] | None = None,
     min_set_size_modifier: float = 0.5,
 ) -> IndexedViewRange:
     """

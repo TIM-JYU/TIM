@@ -1,4 +1,3 @@
-# coding=utf-8
 """SQLAlchemy session."""
 
 from contextlib import contextmanager
@@ -28,7 +27,7 @@ def _after_fork_cleanup_session(session):
     session._after_fork()
 
 
-class SessionManager(object):
+class SessionManager:
     """Manage SQLAlchemy sessions."""
 
     def __init__(self):

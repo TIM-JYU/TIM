@@ -25,7 +25,7 @@ class PointCountMethod(enum.Enum):
 
 
 class Group:
-    def __init__(self, name: str, data: Union[str, dict]) -> None:
+    def __init__(self, name: str, data: str | dict) -> None:
         self.name = name
         if isinstance(data, str):
             self.matchers = {data}
@@ -34,7 +34,7 @@ class Group:
             self.max_points: float = 1e100
             self.expl: str = "{0}: {1:.1f}"
             self.link: bool = False
-            self.linktext: Optional[str] = None
+            self.linktext: str | None = None
         elif isinstance(data, dict):
             match_re = data.get("match", name)
             # match can be a single regex or a list of regexes
@@ -73,8 +73,8 @@ class ScoreboardOptions:
 
 @dataclass(frozen=True)
 class CountModel:
-    best: Optional[int] = None
-    worst: Optional[int] = None
+    best: int | None = None
+    worst: int | None = None
 
 
 # TODO: Add all pointsumrule fields under this.
@@ -123,7 +123,7 @@ class PointSumRule:
             if g.check_match(task_id):
                 yield g.name
 
-    def get_groups(self, task_ids: Optional[list[TaskId]] = None) -> dict[str, Group]:
+    def get_groups(self, task_ids: list[TaskId] | None = None) -> dict[str, Group]:
         if task_ids is None:
             return self.groups
         groups = dict(self.groups)

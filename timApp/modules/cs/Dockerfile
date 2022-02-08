@@ -27,9 +27,9 @@ ENV LANG=en_US.UTF-8 \
 RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata && bash -c "${APT_CLEANUP}"
 
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
-RUN bash -c "${APT_INSTALL} python3.9 wget dirmngr gpg-agent curl python3-distutils && ${APT_CLEANUP}"
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.9 get-pip.py && rm get-pip.py
-RUN python3.9 -m pip install Flask bleach lxml && bash -c "${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} python3.10 wget dirmngr gpg-agent curl python3.10-distutils && ${APT_CLEANUP}"
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.10 get-pip.py && rm get-pip.py
+RUN python3.10 -m pip install Flask bleach lxml && bash -c "${APT_CLEANUP}"
 
 # Keep above same as SVN Dockerfile for better caching
 
@@ -77,7 +77,7 @@ RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${DOCK
     tar -xzvf docker-${DOCKER_VERSION}.tgz --strip=1 -C /usr/bin docker/docker && \
     rm docker-${DOCKER_VERSION}.tgz && docker --version
 
-RUN python3.9 -m pip install \
+RUN python3.10 -m pip install \
 beautifulsoup4 \
 filelock \
 gunicorn \
@@ -92,7 +92,7 @@ python-dateutil \
 typing-inspect \
 webargs \
  && bash -c "${APT_CLEANUP}"
-RUN python3.9 -m pip install requests urllib3 --upgrade && bash -c "${APT_CLEANUP}"
+RUN python3.10 -m pip install requests urllib3 --upgrade && bash -c "${APT_CLEANUP}"
 
 # git
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
@@ -140,8 +140,8 @@ RUN bash -c "${APT_INSTALL} \
 RUN curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel $DOTNET_VERSION_CHANNEL --install-dir /usr/share/dotnet \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
 
-# Set active Python version to 3.9
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 20
+# Set active Python version to 3.10
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 20
 
 RUN useradd -m agent
 ENV HOME /home/agent
@@ -196,11 +196,11 @@ USER root
 # Python packages
 
 # OpenCV
-RUN python3.9 -m pip install sympy opencv-contrib-python-headless && bash -c "${APT_CLEANUP}"
+RUN python3.10 -m pip install sympy opencv-contrib-python-headless && bash -c "${APT_CLEANUP}"
 
 # http://www.scipy.org/install.html
 RUN bash -c "${APT_INSTALL} epstool transfig && ${APT_CLEANUP}"
-RUN python3.9 -m pip install numpy scipy matplotlib pandas statsmodels control scikit-learn networkx && bash -c "${APT_CLEANUP}"
+RUN python3.10 -m pip install numpy scipy matplotlib pandas statsmodels control scikit-learn networkx && bash -c "${APT_CLEANUP}"
 
 # R packages
 RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-base libopenblas-dev gfortran && ${APT_CLEANUP}"
@@ -332,7 +332,7 @@ RUN bash -c "${APT_INSTALL} mongodb-mongosh=${MONGOSH_VERSION} && ${APT_CLEANUP}
 RUN mongosh --version
 
 # Install cqlsh from pip
-RUN python3.9 -m pip install cqlsh six --upgrade && bash -c "${APT_CLEANUP}"
+RUN python3.10 -m pip install cqlsh six --upgrade && bash -c "${APT_CLEANUP}"
 RUN cqlsh --version
 
 USER agent

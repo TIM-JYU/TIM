@@ -49,7 +49,7 @@ class PluginTest(TimRouteTest):
         doc = self.create_doc(from_file=static_tim_doc("mmcq_example.md"))
         resp = self.get(f"/view/{doc.id}")
         tree = html.fromstring(resp)
-        mmcq_xpath = fr'.par.mmcq > .parContent > tim-plugin-loader > div[id="{doc.id}.mmcqexample.{doc.document.get_paragraphs()[0].get_id()}"]'
+        mmcq_xpath = rf'.par.mmcq > .parContent > tim-plugin-loader > div[id="{doc.id}.mmcqexample.{doc.document.get_paragraphs()[0].get_id()}"]'
         plugs = tree.cssselect(mmcq_xpath)
         self.assertEqual(1, len(plugs))
         task_name = "mmcqexample"
@@ -679,7 +679,7 @@ type: upload
         date_re = r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}"
         self.assertRegex(
             text,
-            fr"""
+            rf"""
 {TEST_USER_1_NAME}; {'testuser1'}; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
 \[true, false, false\]
 
@@ -699,7 +699,7 @@ type: upload
         text2 = self.get(f"/allAnswersPlain/{task_id}")
         self.assertRegex(
             text2,
-            fr"""
+            rf"""
 {TEST_USER_1_NAME}; {'testuser1'}; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
 \[true, false, false\]
 

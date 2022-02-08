@@ -9,11 +9,11 @@ from timApp.timdb.sqa import db
 @dataclass
 class AnnotationCoordinate:
     par_id: str
-    offset: Optional[int] = None
-    depth: Optional[int] = None
-    node: Optional[int] = None
-    el_path: Optional[list[int]] = None
-    t: Optional[str] = None
+    offset: int | None = None
+    depth: int | None = None
+    node: int | None = None
+    el_path: list[int] | None = None
+    t: str | None = None
 
 
 @dataclass

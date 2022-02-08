@@ -63,9 +63,9 @@ def diff_document(doc_id: int, major1: int, minor1: int, major2: int, minor2: in
 class GetBlockModel:
     doc_id: int
     par_id: str
-    area_start: Optional[str] = None
-    area_end: Optional[str] = None
-    par_hash: Optional[str] = None
+    area_start: str | None = None
+    area_end: str | None = None
+    par_hash: str | None = None
     use_exported: bool = True
 
 
@@ -73,8 +73,8 @@ class GetBlockModel:
 def get_block(
     doc_id: int,
     par_id: str,
-    area_end: Optional[str] = None,
-    area_start: Optional[str] = None,
+    area_end: str | None = None,
+    area_start: str | None = None,
 ):
     return get_block_2(
         GetBlockModel(

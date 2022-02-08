@@ -177,7 +177,7 @@ class PluginPlacement:
         view_ctx: ViewContext,
         settings: DocSettings,
         answer_map: AnswerMap,
-        custom_answer: Optional[Answer],
+        custom_answer: Answer | None,
         output_format: PluginOutputFormat,
     ) -> Optional["PluginPlacement"]:
         plugin_name = block.get_attr("plugin")
@@ -404,7 +404,7 @@ class PluginifyResult:
     pars: list[DocParagraph]
     js_paths: list[str]
     css_paths: list[str]
-    custom_answer_plugin: Optional[Plugin]
+    custom_answer_plugin: Plugin | None
     all_plugins: list[Plugin]
     has_errors: bool
 
@@ -414,8 +414,8 @@ def pluginify(
     pars: list[DocParagraph],
     user_ctx: UserContext,
     view_ctx: ViewContext,
-    custom_answer: Optional[Answer] = None,
-    task_id: Optional[TaskId] = None,
+    custom_answer: Answer | None = None,
+    task_id: TaskId | None = None,
     sanitize=True,
     do_lazy=False,
     load_states=True,

@@ -26,7 +26,7 @@ class AskedJson(db.Model):
         }
 
 
-def get_asked_json_by_hash(json_hash: str) -> Optional[AskedJson]:
+def get_asked_json_by_hash(json_hash: str) -> AskedJson | None:
     return AskedJson.query.filter_by(hash=json_hash).first()
 
 
@@ -117,7 +117,7 @@ def make_error_question(desc: str):
 
 def process_json(
     json_data: dict[str, Any],
-    normalized: dict[str, Union[str, dict, list]],
+    normalized: dict[str, str | dict | list],
     skip_keys: set[str] = None,
 ):
     skip_keys = skip_keys or set()

@@ -3,13 +3,13 @@ import re
 from dataclasses import field
 from pathlib import Path
 from shutil import rmtree, copy2, chown, copytree
-from typing import Optional
+from typing import NewType
 
 from marshmallow import fields
 
 from loadable import Loadable
 from tim_common.fileParams import get_param, mkdirs
-from tim_common.marshmallow_dataclass import dataclass, NewType
+from tim_common.marshmallow_dataclass import dataclass
 
 
 def listify(item):
@@ -46,28 +46,28 @@ class Listify(fields.List):
         return super()._deserialize(value, attr, data, **kwargs)
 
 
-ListifiedStr = NewType(
-    "Listify", list[str], field=Listify, cls_or_instance=fields.String()
-)
+ListifiedStr = NewType("Listify", list[str])
+ListifiedStr._marshmallow_field = Listify  # type: ignore
+ListifiedStr._marshmallow_args = dict(cls_or_instance=fields.String())  # type: ignore
 
 
 @dataclass
 class FileSpecification(Loadable):
-    path: Optional[str] = field(default=None)
+    path: str | None = field(default=None)
     source: str = field(default="editor")
-    paths: Optional[ListifiedStr] = field(default=None)
-    canClose: Optional[bool] = field(default=False)
-    canRename: Optional[bool] = field(default=False)
-    maxSize: Optional[int] = field(default=None)
-    maxTotalSize: Optional[int] = field(default=None)
+    paths: ListifiedStr | None = field(default=None)
+    canClose: bool | None = field(default=False)
+    canRename: bool | None = field(default=False)
+    maxSize: int | None = field(default=None)
+    maxTotalSize: int | None = field(default=None)
 
 
 @dataclass
 class File(Loadable):
     path: str
     source: str = field(default="editor")
-    content: Optional[str] = field(default=None)
-    bcontent: Optional[bytes] = field(default=None)
+    content: str | None = field(default=None)
+    bcontent: bytes | None = field(default=None)
     fileext: str = field(default="")
     filedext: str = field(default="")
 
