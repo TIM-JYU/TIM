@@ -335,6 +335,15 @@ RUN mongosh --version
 RUN python3.10 -m pip install cqlsh six --upgrade && bash -c "${APT_CLEANUP}"
 RUN cqlsh --version
 
+# Install Elixir
+RUN bash -c "${APT_INSTALL} gnupg" && \
+    wget https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb && \
+    dpkg -i erlang-solutions_2.0_all.deb && \
+    rm erlang-solutions_2.0_all.deb && \
+    apt-get update && \
+    bash -c "${APT_INSTALL} esl-erlang elixir && apt-get purge --auto-remove -y gnupg && ${APT_CLEANUP}" && \
+    elixir --version
+
 USER agent
 
 FROM complete as sudo

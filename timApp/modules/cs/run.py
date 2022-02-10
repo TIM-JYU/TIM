@@ -11,7 +11,7 @@ from subprocess import PIPE, Popen
 
 from tim_common.fileParams import remove, mkdirs, tquote, get_param
 
-CS3_TAG = "nosql"
+CS3_TAG = "elixir"
 CS3_TARGET = os.environ.get("CSPLUGIN_TARGET", "")
 
 

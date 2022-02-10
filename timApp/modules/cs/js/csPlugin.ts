@@ -219,6 +219,7 @@ class LanguageTypes {
         r: {ace: "r", comment: "#"},
         ts: {ace: "typescript", comment: "//"},
         maxima: {ace: "matlab", comment: "/* */"},
+        elixir: {ace: "elixir", comment: "#"},
     };
 
     // The known language types

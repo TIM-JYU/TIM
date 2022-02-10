@@ -13,7 +13,6 @@ from io import BytesIO
 from os.path import splitext
 from subprocess import check_output
 from traceback import print_exc
-from typing import Optional
 from zipfile import ZipFile
 
 import requests
@@ -552,6 +551,31 @@ class CS(Language):
             if err.find("StackOverflowException") >= 0:
                 err = err[0:300]
 
+        return code, out, err, pwddir
+
+
+class Elixir(Language):
+    ttype = "elixir"
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.exs"
+        self.exename = self.sourcefilename
+        self.pure_exename = f"./{self.filename}.exs"
+        self.fileext = "exs"
+        self.imgdest = f"/csgenerated/{self.rndname}.png"
+        self.imgsource = get_imgsource(query)
+
+    def run(self, result, sourcelines, points_rule):
+        code, out, err, pwddir = self.runself(
+            [
+                "elixir",
+                self.pure_exename,
+            ],
+            # Erlang VM creates some files, so we need to extend the ulimit
+            ulimit=df("ulimit -f 100000 -t 10 -s 2000", self.ulimit),
+        )
+        out, err = self.copy_image(result, code, out, err, points_rule)
         return code, out, err, pwddir
 
 
