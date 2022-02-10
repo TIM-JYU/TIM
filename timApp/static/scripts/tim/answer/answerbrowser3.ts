@@ -1029,10 +1029,19 @@ export class AnswerBrowserController
         }
     };
 
+    /**
+     * Moves selected answer to newer or older answer. Rolls over if at the end/start.
+     *
+     * @param dir -1 for older answer, 1 for newer answer
+     */
     async changeAnswerTo(dir: -1 | 1) {
         if (!this.trySavePoints(true)) {
             return;
         }
+
+        // Note: filteredAnswers is always a descending list of answer IDs (i.e. from newest to oldest)
+        // As such, flip the dir to make more sense
+        dir *= -1;
 
         let newIndex = this.findSelectedAnswerIndex() + dir;
         if (newIndex < 0) {
@@ -1081,7 +1090,7 @@ export class AnswerBrowserController
     }
 
     async checkKeyPress(e: KeyboardEvent) {
-        if (this.loading > 0) {
+        if (this.loading > 0 || this.hidden) {
             return false;
         }
         if (e.ctrlKey) {
