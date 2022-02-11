@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Any
+from typing import Any
 from urllib.error import HTTPError
 
 from mailmanclient import Client, MailingList, Domain, Member
@@ -11,8 +11,13 @@ from timApp.messaging.messagelist.listinfo import (
     ArchiveType,
     ReplyToListChanges,
 )
-from timApp.messaging.messagelist.messagelist_models import MessageListModel
+from timApp.messaging.messagelist.messagelist_models import (
+    MessageListModel,
+    MessageListExternalMember,
+    MessageListMember,
+)
 from timApp.tim_app import app
+from timApp.timdb.sqa import db
 from timApp.user.user import User, deleted_user_pattern
 from timApp.util.flask.requesthelper import NotExist, RouteException
 from timApp.util.logger import log_warning, log_info, log_error
@@ -691,7 +696,7 @@ def unfreeze_list(mlist: MailingList, msg_list: MessageListModel) -> None:
         raise
 
 
-def find_members_for_address(address: str) -> list[Member]:
+def find_members_for_address(address: str) -> dict[str, Member]:
     """
     Modified version of
     https://gitlab.com/mailman/mailmanclient/-/blob/509f19b3f666e54f460e7e5f7d2514c758111df3/src/mailmanclient/restobjects/user.py#L60
@@ -703,10 +708,23 @@ def find_members_for_address(address: str) -> list[Member]:
     content: dict[str, Any]
     _, content = con.call("members/find", data={"subscriber": address})
     try:
-        return [Member(con, entry["self_link"], entry) for entry in content["entries"]]
+        return _deduplicate_members(
+            [Member(con, entry["self_link"], entry) for entry in content["entries"]]
+        )
     except KeyError as e:
         pass
-    return []
+    return {}
+
+
+def _deduplicate_members(members: list[Member]) -> dict[str, Member]:
+    result = {}
+    for member in members:
+        if member.list_id in result:
+            # Deduplicate possible broken subscriptions (Mailman allows them but doesn't like them)
+            member.unsubscribe()
+        else:
+            result[member.list_id] = member
+    return result
 
 
 def update_mailing_list_address(old: str, new: str) -> None:
@@ -720,12 +738,44 @@ def update_mailing_list_address(old: str, new: str) -> None:
     if not check_mailman_connection():
         return
     try:
+
         usr = _client.get_user(old)
         addr = usr.add_address(new, absorb_existing=True)
         addr.verify()
         usr.preferred_address = addr
-        members = find_members_for_address(old)
-        for member in members:
+        old_members = find_members_for_address(old)
+        new_members = find_members_for_address(new)
+
+        # Try to pair the old and new members by list_id
+        member_pairs: list[tuple[Member, Member]] = []
+        for list_id, old_member in old_members.items():
+            new_member = new_members.get(list_id, None)
+            if new_member:
+                member_pairs.append((old_member, new_member))
+
+        # Paired old-new members present a problem: after (old => new) conversion the list would have
+        # two members with the same email.
+        # Fix this by removing new existing new member and removing all external memberships for that email
+        # TODO: This is irreversible, i.e. user changing primary email back doesn't restore old external membership
+
+        for old_member, new_member in member_pairs:
+            delete_ids_q = (
+                db.session.query(MessageListExternalMember.id)
+                .join(MessageListModel)
+                .filter(
+                    (MessageListExternalMember.email_address == new)
+                    & (MessageListModel.mailman_list_id == new_member.list_id)
+                )
+            ).all()
+            MessageListExternalMember.query.filter(
+                MessageListExternalMember.id.in_(delete_ids_q)
+            ).delete(synchronize_session=False)
+            MessageListMember.query.filter(
+                MessageListMember.id.in_(delete_ids_q)
+            ).delete(synchronize_session=False)
+            new_member.unsubscribe()
+
+        for member in old_members.values():
             # Mailman objects have dynamic attributes
             # noinspection PyPropertyAccess
             member.address = new

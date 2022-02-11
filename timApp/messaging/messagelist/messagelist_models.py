@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional, Any
 
+from sqlalchemy.ext.hybrid import hybrid_property  # type: ignore
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound  # type: ignore
 
 from timApp.messaging.messagelist.listinfo import (
@@ -153,6 +154,10 @@ class MessageListModel(db.Model):
     @property
     def archive_policy(self) -> ArchiveType:
         return self.archive
+
+    @hybrid_property
+    def mailman_list_id(self) -> str:
+        return self.name + "." + self.email_list_domain
 
     def get_individual_members(self) -> list["MessageListMember"]:
         """Get all the members that are not groups.

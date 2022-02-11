@@ -4,7 +4,6 @@ import signal
 import subprocess
 import sys
 from types import FrameType
-from typing import Optional
 
 import timApp.tim
 from timApp.admin.routes import gunicorn_pid_path
