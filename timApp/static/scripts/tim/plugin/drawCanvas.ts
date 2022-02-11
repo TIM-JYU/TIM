@@ -23,6 +23,7 @@ import {
     IDrawOptions,
 } from "tim/plugin/drawToolbar";
 import {
+    ILine,
     ILineSegment,
     IPoint,
     IRectangleOrEllipse,
@@ -39,19 +40,24 @@ import {
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
 
-type IRectangle = {
+export type IRectangle = {
     type: "rectangle";
     drawData: IRectangleOrEllipse;
 };
 
-type IEllipse = {
+export type IEllipse = {
     type: "ellipse";
     drawData: IRectangleOrEllipse;
 };
 
-type IFreeHand = {
+export type IFreeHand = {
     type: "freehand";
     drawData: ILineSegment;
+};
+
+export type IArrow = {
+    type: "arrow";
+    drawData: ILine;
 };
 
 // TODO: 4th variable for reporting MouseDown, TouchMove etc could be useful for fine-tuning the desired
@@ -63,16 +69,15 @@ export interface IDrawUpdate {
     drawingUpdated: boolean;
 }
 
-// TODO: Name overlap with imagex DrawObject
-export type DrawObject = IRectangle | IEllipse | IFreeHand;
+export type DrawItem = IRectangle | IEllipse | IFreeHand | IArrow;
 
 /**
  * Gets dimensions (start coordinates, width, height) from given drawing
- * @param drawing DrawObject[] to check
+ * @param drawing DrawItem[] to check
  * @param minSize if width/height is less than this, then add extra padding (at both ends)
  */
 export function getDrawingDimensions(
-    drawing: DrawObject[],
+    drawing: DrawItem[],
     minSize = 0
 ): {x: number; y: number; w: number; h: number} {
     let x = Number.MAX_SAFE_INTEGER;
@@ -98,20 +103,63 @@ export function getDrawingDimensions(
                     h = line[1] + width;
                 }
             }
-        } else {
-            // TODO: for now shapes don't start in pixel-perfect locations so lineWidth is currently ignored
+        } else if (obj.type == "rectangle" || obj.type == "ellipse") {
             const shape = obj.drawData;
+            let width = 0;
+            if (shape.fillColor == undefined && shape.lineWidth != undefined) {
+                width = shape.lineWidth / 2;
+            }
             if (x > shape.x) {
-                x = shape.x;
+                x = shape.x - width;
             }
             if (y > shape.y) {
-                y = shape.y;
+                y = shape.y - width;
             }
             if (w < shape.x + shape.w) {
-                w = shape.x + shape.w;
+                w = shape.x + shape.w + width;
             }
             if (h < shape.y + shape.h) {
-                h = shape.y + shape.h;
+                h = shape.y + shape.h + width;
+            }
+        } else if (obj.type == "arrow") {
+            const shape = obj.drawData;
+            const width = shape.w / 2;
+            const sides = getArrowPoints(shape);
+            const minX = Math.min(
+                shape.start.x,
+                shape.end.x,
+                sides.right.x,
+                sides.left.x
+            );
+            const minY = Math.min(
+                shape.start.y,
+                shape.end.y,
+                sides.right.y,
+                sides.left.y
+            );
+            const maxX = Math.max(
+                shape.start.x,
+                shape.end.x,
+                sides.right.x,
+                sides.left.x
+            );
+            const maxY = Math.max(
+                shape.start.y,
+                shape.end.y,
+                sides.right.y,
+                sides.left.y
+            );
+            if (x > minX) {
+                x = minX - width;
+            }
+            if (y > minY) {
+                y = minY - width;
+            }
+            if (h < maxY) {
+                h = maxY + width;
+            }
+            if (w < maxX) {
+                w = maxX + width;
             }
         }
     }
@@ -128,13 +176,13 @@ export function getDrawingDimensions(
 
 /**
  * Checks if a coordinate exists within given drawing
- * @param drawing DrawObject[] to check
+ * @param drawing DrawItem[] to check
  * @param x start coordinate
  * @param y start coordinate
  * @param minSize if width/height is less than this, then add extra padding (at both ends)
  */
 export function isCoordWithinDrawing(
-    drawing: DrawObject[],
+    drawing: DrawItem[],
     x: number,
     y: number,
     minSize = 0
@@ -150,7 +198,44 @@ export function isCoordWithinDrawing(
     );
 }
 
-// TODO: Repeated from imagex, move
+/**
+ * Prepare canvas options (line widths, colors, opacity) to suit given object
+ * @param obj IRectangleOrEllipse object with options
+ * @param options default options to use if missing from object
+ * @param ctx canvas context to edit
+ */
+export function setContextSettingsFromObject(
+    obj: IRectangleOrEllipse,
+    options: IDrawOptions,
+    ctx: CanvasRenderingContext2D
+) {
+    ctx.strokeStyle = obj.color ?? options.color;
+    ctx.lineWidth = obj.lineWidth ?? options.w;
+    ctx.fillStyle = obj.fillColor ?? "transparent";
+    ctx.globalAlpha = obj.opacity ?? options.opacity;
+}
+
+/**
+ * Prepare canvas options (line widths, colors, opacity) for a given line
+ * @param line ILine line with options
+ * @param options default options to use if missing from object
+ * @param ctx canvas context to edit
+ */
+export function setContextSettingsFromLine(
+    line: ILine,
+    options: IDrawOptions,
+    ctx: CanvasRenderingContext2D
+) {
+    ctx.strokeStyle = line.color ?? options.color;
+    ctx.lineWidth = line.w ?? options.w;
+    ctx.globalAlpha = line.opacity ?? options.opacity;
+}
+
+/**
+ * Draw freehand data on canvas
+ * @param ctx canvas context to draw on
+ * @param dr array of ILineSegment to draw
+ */
 export function drawFreeHand(
     ctx: CanvasRenderingContext2D,
     dr: ILineSegment[]
@@ -170,6 +255,141 @@ export function drawFreeHand(
     }
 }
 
+/**
+ * Calculate arrow head points
+ * @param line arrow data to inspect
+ */
+export function getArrowPoints(line: ILine): {
+    right: {x: number; y: number};
+    left: {x: number; y: number};
+} {
+    const baseLength = 10; // minimum arrow side length
+    const widthMultiplier = 2; // increase arrow side length for wider arrows
+
+    const headlen = baseLength + line.w * widthMultiplier;
+    const angle = Math.atan2(
+        line.end.y - line.start.y,
+        line.end.x - line.start.x
+    );
+    const arrowAngle = 5; // increase to make arrow more narrow
+    return {
+        right: {
+            x: line.end.x - headlen * Math.cos(angle - Math.PI / arrowAngle),
+            y: line.end.y - headlen * Math.sin(angle - Math.PI / arrowAngle),
+        },
+        left: {
+            x: line.end.x - headlen * Math.cos(angle + Math.PI / arrowAngle),
+            y: line.end.y - headlen * Math.sin(angle + Math.PI / arrowAngle),
+        },
+    };
+}
+
+/**
+ * Draw an arrow on canvas
+ * @param line arrow data in ILine format
+ * @param ctx canvas context to draw on
+ */
+export function drawArrow(line: ILine, ctx: CanvasRenderingContext2D) {
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(line.start.x, line.start.y);
+    ctx.lineTo(line.end.x, line.end.y);
+    const sides = getArrowPoints(line);
+    ctx.lineTo(sides.right.x, sides.right.y);
+    ctx.moveTo(line.end.x, line.end.y);
+    ctx.lineTo(sides.left.x, sides.left.y);
+    ctx.stroke();
+}
+
+/**
+ * Draws given input on canvas
+ * @param data array of freehand drawings, ellipses and rectangles
+ * @param options default options to use if missing from object
+ * @param ctx canvas context to edit
+ */
+export function drawFromArray(
+    data: DrawItem[],
+    options: IDrawOptions,
+    ctx: CanvasRenderingContext2D
+) {
+    for (const object of data) {
+        if (object.type == "ellipse") {
+            setContextSettingsFromObject(object.drawData, options, ctx);
+            drawEllipse(object.drawData, ctx);
+        } else if (object.type == "rectangle") {
+            setContextSettingsFromObject(object.drawData, options, ctx);
+            drawRectangle(object.drawData, ctx);
+        } else if (object.type == "arrow") {
+            setContextSettingsFromLine(object.drawData, options, ctx);
+            drawArrow(object.drawData, ctx);
+        } else {
+            drawFreeHand(ctx, [object.drawData]);
+        }
+    }
+}
+
+/**
+ * Draws a rectangle
+ * @param rectangle in IRectangleOrEllipse format
+ * @param ctx CanvasRenderingContext2D to draw on
+ */
+export function drawRectangle(
+    rectangle: IRectangleOrEllipse,
+    ctx: CanvasRenderingContext2D
+) {
+    // TODO: Draw border with own settings but custom fill color
+    ctx.lineJoin = "miter";
+    if (rectangle.fillColor) {
+        ctx.fillRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
+    } else {
+        ctx.strokeRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
+    }
+}
+
+/**
+ * Draws an ellipse
+ * @param ellipse in IRectangleOrEllipse format
+ * @param ctx CanvasRenderingContext2D to draw on
+ */
+export function drawEllipse(
+    ellipse: IRectangleOrEllipse,
+    ctx: CanvasRenderingContext2D
+) {
+    const ratio = ellipse.w / ellipse.h;
+    ctx.save();
+    ctx.beginPath();
+    ctx.scale(ratio, 1);
+    const r = Math.min(ellipse.w / ratio, ellipse.h) / 2;
+    ctx.arc(
+        (ellipse.x + ellipse.w / 2) / ratio,
+        ellipse.y + ellipse.h / 2,
+        r,
+        0,
+        2 * Math.PI
+    );
+    ctx.restore();
+    if (ellipse.fillColor) {
+        ctx.fill();
+    } else {
+        ctx.stroke();
+    }
+}
+
+/**
+ * Sets canvas options (line widths, colors, opacity) based on given settings
+ * @param options settings to use
+ * @param ctx canvas context to edit
+ */
+export function setContextSettingsFromOptions(
+    options: IDrawOptions,
+    ctx: CanvasRenderingContext2D
+) {
+    ctx.globalAlpha = options.opacity;
+    ctx.strokeStyle = options.color;
+    ctx.lineWidth = options.w;
+    ctx.fillStyle = options.color;
+}
+
 function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
     ctx.strokeStyle = seg.color ?? ctx.strokeStyle;
     ctx.lineWidth = numOrStringToNumber(seg.w ?? ctx.lineWidth);
@@ -179,6 +399,354 @@ function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
 interface IImageSizes {
     height: number;
     width: number;
+}
+
+/**
+ * Draw basic shapes on canvas via manually called movement events
+ */
+export class Drawing {
+    drawOptions: IDrawOptions;
+    ctx: CanvasRenderingContext2D;
+    canvas: HTMLCanvasElement;
+    externalClear = false;
+
+    /**
+     * @param drawOptions settings used when drawing new items
+     * @param canvas CanvasElement to draw on
+     * @param externalClear if true, don't automatically clear canvas before redraws
+     */
+    constructor(
+        drawOptions: IDrawOptions,
+        canvas: HTMLCanvasElement,
+        externalClear?: boolean
+    ) {
+        this.drawOptions = drawOptions;
+        this.canvas = canvas;
+        this.ctx = this.canvas.getContext("2d")!;
+        this.ctx.lineCap = "round";
+        if (externalClear) {
+            this.externalClear = true;
+        }
+    }
+
+    // keep track of mousedown while drawing enabled
+    drawStarted = false;
+    drawMoved = false;
+    // drawings that can altered with undo (TODO: Redo, erase...?)
+    drawData: DrawItem[] = [];
+    // drawings that cannot be altered via undo, e.g background or permanent drawings
+    persistentDrawData: DrawItem[] = [];
+
+    // freehand drawing that is built while mouse is pressed
+    freeDrawing?: ILineSegment;
+    // previous mouse position when drawing freehand
+    private prevPos?: TuplePoint;
+
+    // click start position
+    private startX: number = 0;
+    private startY: number = 0;
+
+    // click end position
+    private endX: number = 0;
+    private endY: number = 0;
+
+    // dimension used when drawing shapes
+    private itemX: number = 0;
+    private itemY: number = 0;
+    private itemW: number = 0;
+    private itemH: number = 0;
+
+    /**
+     * Begin drawing sequence
+     * @param coords starting location
+     */
+    public downEvent(coords: {x: number; y: number}) {
+        if (this.drawOptions.enabled) {
+            this.drawStarted = true;
+            this.drawMoved = false;
+            this.startX = coords.x;
+            this.startY = coords.y;
+            this.startSegmentDraw(coords);
+        }
+    }
+
+    /**
+     * Draw preview object based on mouse movement and current drawing settings
+     * @param coords current location
+     */
+    public moveEvent(coords: {x: number; y: number}) {
+        if (!this.drawStarted) {
+            return;
+        }
+        this.drawMoved = true;
+        const {x, y} = coords;
+        if (
+            this.drawOptions.drawType == DrawType.Ellipse ||
+            this.drawOptions.drawType == DrawType.Rectangle
+        ) {
+            this.redrawAll();
+            setContextSettingsFromOptions(this.drawOptions, this.ctx);
+            this.itemX = Math.min(x, this.startX);
+            this.itemY = Math.min(y, this.startY);
+            this.itemW = Math.abs(x - this.startX);
+            this.itemH = Math.abs(y - this.startY);
+            if (this.drawOptions.drawType == DrawType.Ellipse) {
+                this.drawPreviewEllipse();
+            } else {
+                this.drawPreviewRectangle();
+            }
+        } else if (this.drawOptions.drawType == DrawType.Arrow) {
+            this.redrawAll();
+            setContextSettingsFromOptions(this.drawOptions, this.ctx);
+            drawArrow(
+                {
+                    start: {x: this.startX, y: this.startY},
+                    end: coords,
+                    w: this.drawOptions.w,
+                },
+                this.ctx
+            );
+        } else if (this.prevPos) {
+            if (this.drawOptions.drawType == DrawType.Line) {
+                this.popPoint(1);
+            }
+            setContextSettingsFromOptions(this.drawOptions, this.ctx);
+            this.addPoint(coords);
+            this.redrawAll();
+        }
+    }
+
+    /**
+     * Finish drawing sequence and store the drawn object
+     * @param coords end location
+     */
+    public upEvent(coords: {x: number; y: number}) {
+        this.endX = coords.x;
+        this.endY = coords.y;
+        if (this.drawStarted) {
+            this.drawStarted = false;
+        }
+        if (this.drawMoved) {
+            if (this.drawOptions.drawType == DrawType.Ellipse) {
+                const ellipse: IEllipse = {
+                    type: "ellipse",
+                    drawData: this.makeFullRectangleOrEllipse(),
+                };
+                this.drawData.push(ellipse);
+            } else if (this.drawOptions.drawType == DrawType.Rectangle) {
+                const rect: IRectangle = {
+                    type: "rectangle",
+                    drawData: this.makeFullRectangleOrEllipse(),
+                };
+                this.drawData.push(rect);
+            } else if (this.drawOptions.drawType == DrawType.Arrow) {
+                const arrow: IArrow = {
+                    type: "arrow",
+                    drawData: this.makeLine(),
+                };
+                this.drawData.push(arrow);
+            } else if (this.freeDrawing) {
+                const freeDrawing: IFreeHand = {
+                    type: "freehand",
+                    drawData: this.freeDrawing,
+                };
+                this.drawData.push(freeDrawing);
+                this.freeDrawing = undefined;
+            }
+        }
+    }
+
+    /**
+     * Create ILine based on draw coordinates and current settings
+     */
+    makeLine(): ILine {
+        return {
+            start: {x: this.startX, y: this.startY},
+            end: {x: this.endX, y: this.endY},
+            w: this.drawOptions.w,
+            opacity: this.drawOptions.opacity,
+            color: this.drawOptions.color,
+        };
+    }
+
+    /**
+     * Returns full shape information for ellipse or rectangle based on current settings
+     */
+    makeFullRectangleOrEllipse(): IRectangleOrEllipse {
+        let fillOrBorder = {};
+        if (this.drawOptions.fill) {
+            fillOrBorder = {fillColor: this.drawOptions.color};
+        } else {
+            fillOrBorder = {lineWidth: this.drawOptions.w};
+        }
+        return {
+            x: this.itemX,
+            y: this.itemY,
+            w: this.itemW,
+            h: this.itemH,
+            opacity: this.drawOptions.opacity,
+            color: this.drawOptions.color,
+            ...fillOrBorder,
+        };
+    }
+
+    /**
+     * Start drawing freehand
+     */
+    startSegmentDraw(pxy: IPoint) {
+        const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
+        const ns: ILineSegment = {lines: [p]};
+        ns.color = this.drawOptions.color;
+        ns.w = this.drawOptions.w;
+        if (this.drawOptions.opacity < 1) {
+            ns.opacity = this.drawOptions.opacity;
+        }
+        this.freeDrawing = ns;
+        this.prevPos = p;
+    }
+
+    /**
+     * Draw a rectangle during mouse move
+     */
+    drawPreviewRectangle() {
+        drawRectangle(this.makeShape(), this.ctx);
+    }
+
+    /**
+     * Draw an ellipse during mouse move
+     */
+    drawPreviewEllipse() {
+        drawEllipse(this.makeShape(), this.ctx);
+    }
+
+    /**
+     * Return dimension for current shape dimensions based on last draw event
+     */
+    makeShape(): IRectangleOrEllipse {
+        return {
+            x: this.itemX,
+            y: this.itemY,
+            w: this.itemW,
+            h: this.itemH,
+            fillColor: this.drawOptions.fill
+                ? this.drawOptions.color
+                : undefined,
+        };
+    }
+
+    /**
+     * Clear current non-permanent drawings
+     */
+    resetDrawing(): void {
+        this.drawData = [];
+        this.freeDrawing = undefined;
+        if (!this.externalClear) {
+            this.clearCanvas();
+        }
+    }
+
+    /**
+     * Clears the entire canvas
+     */
+    clearCanvas(): void {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    /**
+     * Redraws everything (current drawings, permanent drawings, possible freehand drawing)
+     * Canvas will be cleared first unless this.externalClear is true
+     */
+    redrawAll(): void {
+        if (!this.externalClear) {
+            this.clearCanvas();
+        }
+        drawFromArray(this.persistentDrawData, this.drawOptions, this.ctx);
+        drawFromArray(this.drawData, this.drawOptions, this.ctx);
+        if (this.freeDrawing) {
+            drawFreeHand(this.ctx, [this.freeDrawing]);
+        }
+    }
+
+    /**
+     * Removes a piece of line from current freehand drawing in progress
+     * @param minlen
+     */
+    popPoint(minlen: number) {
+        if (!this.freeDrawing) {
+            return;
+        }
+        if (this.freeDrawing.lines.length > minlen) {
+            this.freeDrawing.lines.pop();
+        }
+    }
+
+    /**
+     * Draws a line between two points
+     */
+    line(p1: TuplePoint, p2: IPoint) {
+        this.ctx.beginPath();
+        this.ctx.moveTo(p1[0], p1[1]);
+        this.ctx.lineTo(p2.x, p2.y);
+        this.ctx.stroke();
+    }
+
+    /**
+     * Adds and draws a point to current freehand drawing
+     * @param pxy
+     */
+    addPoint(pxy: IPoint) {
+        if (!this.freeDrawing) {
+            return;
+        }
+
+        const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
+        this.freeDrawing.lines.push(p);
+        if (this.drawOptions.drawType != DrawType.Line) {
+            this.prevPos = p;
+        }
+    }
+
+    /**
+     * Remove last drawn piece of non-permanent drawings
+     */
+    undo(): DrawItem | undefined {
+        const ret = this.drawData.pop();
+        this.redrawAll();
+        return ret;
+    }
+
+    /**
+     * Returns current drawing progress in an array
+     */
+    getDrawing(): DrawItem[] {
+        return this.drawData;
+    }
+
+    /**
+     * Add current non-permanent drawings to permanent drawings
+     */
+    storeDrawing() {
+        this.persistentDrawData = this.persistentDrawData.concat(this.drawData);
+        this.drawData = [];
+    }
+
+    /**
+     * Set permanent drawings
+     * @param data drawings to set
+     */
+    setPersistentDrawData(data: DrawItem[]) {
+        this.ctx.lineCap = "round";
+        this.persistentDrawData = data;
+        this.redrawAll();
+    }
+
+    /**
+     * Set non-permanent drawings
+     * @param data drawings to set
+     */
+    setDrawData(data: DrawItem[]) {
+        this.drawData = data;
+    }
 }
 
 @Component({
@@ -225,6 +793,8 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     imgHeight = 0; // total height of all background images
     loadedImages = 0;
 
+    drawHandler!: Drawing;
+
     // optional function to call when image is loaded to let external users know the canvas is ready for use
     @Input() imgLoadCallback?: (arg0: this) => void;
 
@@ -247,29 +817,6 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
 
     // optional function to call on certain drawing events and clicks
     updateCallback?: (arg0: this, arg1: IDrawUpdate) => void;
-
-    // keep track of mousedown while drawing enabled
-    drawStarted = false;
-    drawMoved = false;
-    // drawings that can altered with undo (TODO: Redo, erase...?)
-    drawData: DrawObject[] = [];
-    // drawings that cannot be altered via undo, e.g background or permanent drawings
-    persistentDrawData: DrawObject[] = [];
-
-    // freehand drawing that is built while mouse is pressed
-    freeDrawing?: ILineSegment;
-    // previous mouse position when drawing freehand
-    private prevPos?: TuplePoint;
-
-    // click start position
-    private startX: number = 0;
-    private startY: number = 0;
-
-    // dimension used when drawing shapes
-    private objX: number = 0;
-    private objY: number = 0;
-    private objW: number = 0;
-    private objH: number = 0;
 
     // identifier e.g for associating specific canvas with specific answer review
     public id: number = 0;
@@ -306,8 +853,10 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     ngAfterViewInit() {
-        this.ctx = this.canvas.nativeElement.getContext("2d")!;
-        this.ctx.lineCap = "round";
+        this.drawHandler = new Drawing(
+            this.drawOptions,
+            this.canvas.nativeElement
+        );
         this.canvas.nativeElement.addEventListener("mousedown", (event) => {
             this.downEvent(event, event);
         });
@@ -444,14 +993,10 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
             // allow inspect element and scrolling
             event.preventDefault();
         }
-
-        const {x, y} = posToRelative(this.canvas.nativeElement, e);
-        if (this.drawOptions.enabled && !middleOrRightClick) {
-            this.drawStarted = true;
-            this.drawMoved = false;
-            this.startX = x;
-            this.startY = y;
-            this.startSegmentDraw(posToRelative(this.canvas.nativeElement, e));
+        if (!middleOrRightClick) {
+            this.drawHandler.downEvent(
+                posToRelative(this.canvas.nativeElement, e)
+            );
         }
     }
 
@@ -463,36 +1008,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         if (!(isTouchEvent(event) && !this.drawOptions.enabled)) {
             event.preventDefault();
         }
-        if (!this.drawStarted) {
-            return;
-        }
-        this.drawMoved = true;
-        const pxy = posToRelative(this.canvas.nativeElement, e);
-        const {x, y} = pxy;
-
-        if (
-            this.drawOptions.drawType == DrawType.Ellipse ||
-            this.drawOptions.drawType == DrawType.Rectangle
-        ) {
-            this.redrawAll();
-            this.objX = Math.min(x, this.startX);
-            this.objY = Math.min(y, this.startY);
-            this.objW = Math.abs(x - this.startX);
-            this.objH = Math.abs(y - this.startY);
-            this.setContextSettingsFromOptions();
-            if (this.drawOptions.drawType == DrawType.Ellipse) {
-                this.drawPreviewEllipse();
-            } else {
-                this.drawPreviewRectangle();
-            }
-        } else if (this.prevPos) {
-            if (this.drawOptions.drawType == DrawType.Line) {
-                this.popPoint(1);
-            }
-            this.line(this.prevPos, pxy);
-            this.addPoint(pxy);
-            this.redrawAll();
-        }
+        this.drawHandler.moveEvent(posToRelative(this.canvas.nativeElement, e));
     }
 
     /**
@@ -500,61 +1016,15 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
      */
     upEvent(event: Event, e: MouseOrTouch): void {
         const pxy = posToRelative(this.canvas.nativeElement, e);
-        const {x, y} = pxy;
-        if (this.drawStarted) {
-            this.drawStarted = false;
-        }
-        if (this.drawMoved) {
-            if (this.drawOptions.drawType == DrawType.Ellipse) {
-                const ellipse: IEllipse = {
-                    type: "ellipse",
-                    drawData: this.makeFullRectangleOrEllipse(),
-                };
-                this.drawData.push(ellipse);
-            } else if (this.drawOptions.drawType == DrawType.Rectangle) {
-                const rect: IRectangle = {
-                    type: "rectangle",
-                    drawData: this.makeFullRectangleOrEllipse(),
-                };
-                this.drawData.push(rect);
-            } else if (this.freeDrawing) {
-                const freeDrawing: IFreeHand = {
-                    type: "freehand",
-                    drawData: this.freeDrawing,
-                };
-                this.drawData.push(freeDrawing);
-                this.freeDrawing = undefined;
-            }
-        }
-
+        this.drawHandler.upEvent(posToRelative(this.canvas.nativeElement, e));
         if (this.updateCallback) {
             this.updateCallback(this, {
-                x: x,
-                y: y,
-                drawingUpdated: this.drawMoved && this.drawOptions.enabled,
+                x: pxy.x,
+                y: pxy.y,
+                drawingUpdated:
+                    this.drawHandler.drawMoved && this.drawOptions.enabled,
             });
         }
-    }
-
-    /**
-     * Returns full shape information for ellipse or rectangle based on current settings
-     */
-    makeFullRectangleOrEllipse(): IRectangleOrEllipse {
-        let fillOrBorder = {};
-        if (this.drawOptions.fill) {
-            fillOrBorder = {fillColor: this.drawOptions.color};
-        } else {
-            fillOrBorder = {lineWidth: this.drawOptions.w};
-        }
-        return {
-            x: this.objX,
-            y: this.objY,
-            w: this.objW,
-            h: this.objH,
-            opacity: this.drawOptions.opacity,
-            color: this.drawOptions.color,
-            ...fillOrBorder,
-        };
     }
 
     /**
@@ -564,217 +1034,17 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         if (e) {
             e.preventDefault();
         }
-        this.drawData.pop();
-        this.redrawAll();
+        this.drawHandler.undo();
         if (this.updateCallback) {
             this.updateCallback(this, {drawingUpdated: true});
         }
     };
 
     /**
-     * Draw a rectangle during mouse move
-     */
-    drawPreviewRectangle() {
-        this.drawRectangle(this.makeObj());
-    }
-
-    /**
-     * Draw an ellipse during mouse move
-     */
-    drawPreviewEllipse() {
-        this.drawEllipse(this.makeObj());
-    }
-
-    /**
-     * Return dimension for current shape dimensions based on last draw event
-     */
-    makeObj(): IRectangleOrEllipse {
-        return {
-            x: this.objX,
-            y: this.objY,
-            w: this.objW,
-            h: this.objH,
-            fillColor: this.drawOptions.fill
-                ? this.drawOptions.color
-                : undefined,
-        };
-    }
-
-    /**
-     * Start drawing freehand
-     */
-    startSegmentDraw(pxy: IPoint) {
-        const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
-        const ns: ILineSegment = {lines: [p]};
-        ns.color = this.drawOptions.color;
-        ns.w = this.drawOptions.w;
-        if (this.drawOptions.opacity < 1) {
-            ns.opacity = this.drawOptions.opacity;
-        }
-        this.freeDrawing = ns;
-        this.prevPos = p;
-    }
-
-    /**
-     * Clears the entire canvas
-     */
-    clear(): void {
-        this.ctx.clearRect(
-            0,
-            0,
-            this.canvas.nativeElement.width,
-            this.canvas.nativeElement.height
-        );
-    }
-
-    /**
-     * Clears the canvas and redraws everything (current drawings, permanent drawings, possible freehand drawing)
-     */
-    redrawAll(): void {
-        this.clear();
-        this.drawFromArray(this.persistentDrawData);
-        this.drawFromArray(this.drawData);
-        if (this.freeDrawing) {
-            drawFreeHand(this.ctx, [this.freeDrawing]);
-        }
-    }
-
-    /**
-     * Draws given input on canvas
-     * @param data array of freehand drawings, ellipses and rectangles
-     */
-    drawFromArray(data: DrawObject[]) {
-        for (const object of data) {
-            if (object.type == "ellipse") {
-                this.setContextSettingsFromObject(object.drawData);
-                this.drawEllipse(object.drawData);
-            } else if (object.type == "rectangle") {
-                this.setContextSettingsFromObject(object.drawData);
-                this.drawRectangle(object.drawData);
-            } else {
-                drawFreeHand(this.ctx, [object.drawData]);
-            }
-        }
-    }
-
-    /**
-     * Sets canvas options (line widths, colors, opacity) to suit given object
-     * If any is missing use current canvas options
-     * @param obj IRectangleOrEllipse object with options
-     */
-    setContextSettingsFromObject(obj: IRectangleOrEllipse) {
-        this.ctx.strokeStyle = obj.color ?? this.drawOptions.color;
-        this.ctx.lineWidth = obj.lineWidth ?? this.drawOptions.w;
-        this.ctx.fillStyle = obj.fillColor ?? "transparent";
-        this.ctx.globalAlpha = obj.opacity ?? this.drawOptions.opacity;
-    }
-
-    /**
-     * Sets canvas options (line widths, colors, opacity) based on current toolbar settings
-     */
-    setContextSettingsFromOptions() {
-        this.ctx.globalAlpha = this.drawOptions.opacity;
-        this.ctx.strokeStyle = this.drawOptions.color;
-        this.ctx.lineWidth = this.drawOptions.w;
-        this.ctx.fillStyle = this.drawOptions.color;
-    }
-
-    /**
-     * Draws an ellipse
-     * @param ellipse in IRectangleOrEllipse format
-     */
-    drawEllipse(ellipse: IRectangleOrEllipse) {
-        const ratio = ellipse.w / ellipse.h;
-        this.ctx.save();
-        this.ctx.beginPath();
-        this.ctx.scale(ratio, 1);
-        const r = Math.min(ellipse.w / ratio, ellipse.h) / 2;
-        this.ctx.arc(
-            (ellipse.x + ellipse.w / 2) / ratio,
-            ellipse.y + ellipse.h / 2,
-            r,
-            0,
-            2 * Math.PI
-        );
-        this.ctx.restore();
-        if (ellipse.fillColor) {
-            this.ctx.fill();
-        } else {
-            this.ctx.stroke();
-        }
-    }
-
-    /**
-     * Draws a rectangle
-     * @param rectangle in IRectangleOrEllipse format
-     */
-    drawRectangle(rectangle: IRectangleOrEllipse) {
-        // TODO: Draw border with own settings but custom fill color
-        this.ctx.lineJoin = "miter";
-        if (rectangle.fillColor) {
-            this.ctx.fillRect(
-                rectangle.x,
-                rectangle.y,
-                rectangle.w,
-                rectangle.h
-            );
-        } else {
-            this.ctx.strokeRect(
-                rectangle.x,
-                rectangle.y,
-                rectangle.w,
-                rectangle.h
-            );
-        }
-    }
-
-    /**
-     * Removes a piece of line from current freehand drawing in progress
-     * @param minlen
-     */
-    popPoint(minlen: number) {
-        if (!this.freeDrawing) {
-            return;
-        }
-        if (this.freeDrawing.lines.length > minlen) {
-            this.freeDrawing.lines.pop();
-        }
-    }
-
-    /**
-     * Draws a line between two points
-     */
-    line(p1: TuplePoint, p2: IPoint) {
-        this.ctx.beginPath();
-        this.ctx.strokeStyle = this.drawOptions.color;
-        this.ctx.lineWidth = this.drawOptions.w;
-        this.ctx.globalAlpha = this.drawOptions.opacity;
-        this.ctx.moveTo(p1[0], p1[1]);
-        this.ctx.lineTo(p2.x, p2.y);
-        this.ctx.stroke();
-    }
-
-    /**
-     * Adds and draws a point to current freehand drawing
-     * @param pxy
-     */
-    addPoint(pxy: IPoint) {
-        if (!this.freeDrawing) {
-            return;
-        }
-
-        const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
-        this.freeDrawing.lines.push(p);
-        if (this.drawOptions.drawType != DrawType.Line) {
-            this.prevPos = p;
-        }
-    }
-
-    /**
      * Returns current drawing progress in an array
      */
-    getDrawing(): DrawObject[] {
-        return this.drawData;
+    getDrawing(): DrawItem[] {
+        return this.drawHandler.getDrawing();
     }
 
     /**
@@ -794,18 +1064,15 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
      * Moves current drawing progress to permanent storage (e.g makes it immune to undo)
      */
     storeDrawing() {
-        this.persistentDrawData = this.persistentDrawData.concat(this.drawData);
-        this.drawData = [];
+        this.drawHandler.storeDrawing();
     }
 
     /**
      * Sets and draws the given permanent drawing on canvas
      * @param data Drawing to draw
      */
-    setPersistentDrawData(data: DrawObject[]): void {
-        this.ctx.lineCap = "round";
-        this.persistentDrawData = data;
-        this.redrawAll();
+    setPersistentDrawData(data: DrawItem[]): void {
+        this.drawHandler.setPersistentDrawData(data);
     }
 
     /**

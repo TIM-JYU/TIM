@@ -25,7 +25,6 @@ import {TimDefer} from "../util/timdefer";
 import {
     defaultTimeout,
     MouseOrTouch,
-    numOrStringToNumber,
     posToRelative,
     to,
     touchEventToTouch,
@@ -39,8 +38,6 @@ import {
     DefaultPropsT,
     DragObjectPropsT,
     FixedObjectPropsT,
-    IFakeVideo,
-    ILineSegment,
     ImageXAll,
     ImageXMarkup,
     IPinPosition,
@@ -64,15 +61,11 @@ import {
     TextboxPropsT,
     TuplePoint,
     ValidCoord,
-    VideoPlayer,
 } from "./imagextypes";
 import {AngularPluginBase} from "./angular-plugin-base.directive";
+import {Drawing, DrawItem} from "./drawCanvas";
 
 let globalPreviewColor = "#fff";
-
-function isFakePlayer(p: VideoPlayer): p is IFakeVideo {
-    return "fakeVideo" in p && p.fakeVideo;
-}
 
 export function tupleToCoords(p: TuplePoint) {
     return {x: p[0], y: p[1]};
@@ -83,427 +76,6 @@ function tupleToSizedOrDef(
     def: ISizedPartial | undefined
 ) {
     return p ? {width: p[0], height: p[1]} : def;
-}
-
-export class FreeHand {
-    public freeDrawing: ILineSegment[];
-    public redraw?: () => void;
-    private videoPlayer: VideoPlayer;
-    private emotion: boolean;
-    private imgx: ImageXComponent;
-    private prevPos?: TuplePoint;
-    private lastDrawnSeg?: number;
-    private lastVT?: number;
-    private ctx: CanvasRenderingContext2D;
-
-    constructor(
-        imgx: ImageXComponent,
-        drawData: ILineSegment[],
-        player: HTMLVideoElement | undefined
-    ) {
-        this.freeDrawing = drawData;
-        this.ctx = imgx.getCanvasCtx();
-        this.emotion = imgx.emotion;
-        this.imgx = imgx;
-        this.videoPlayer = player ?? {currentTime: 1e60, fakeVideo: true};
-        if (this.emotion && this.imgx.teacherMode) {
-            if (!isFakePlayer(this.videoPlayer)) {
-                if (this.imgx.markup.analyzeDot) {
-                    this.videoPlayer.ontimeupdate = () =>
-                        this.drawCirclesVideoDot(
-                            this.ctx,
-                            this.freeDrawing,
-                            this.videoPlayer
-                        );
-                } else {
-                    this.videoPlayer.ontimeupdate = () =>
-                        this.drawCirclesVideo(
-                            this.ctx,
-                            this.freeDrawing,
-                            this.videoPlayer
-                        );
-                }
-            }
-        }
-    }
-
-    draw(ctx: CanvasRenderingContext2D) {
-        if (this.emotion) {
-            if (this.imgx.teacherMode) {
-                if (isFakePlayer(this.videoPlayer)) {
-                    this.drawCirclesVideo(
-                        ctx,
-                        this.freeDrawing,
-                        this.videoPlayer
-                    );
-                }
-            }
-        } else {
-            drawFreeHand(ctx, this.freeDrawing);
-        }
-    }
-
-    startSegment(pxy: IPoint) {
-        const p: TuplePoint = [Math.round(pxy.x), Math.round(pxy.y)];
-        const ns: ILineSegment = {lines: [p]};
-        if (!this.emotion) {
-            ns.color = this.imgx.drawSettings.color;
-            ns.w = this.imgx.drawSettings.w;
-        }
-        this.freeDrawing.push(ns);
-        this.prevPos = p;
-    }
-
-    endSegment() {
-        // this.drawingSurfaceImageData = null; // not used anywhere
-    }
-
-    startSegmentDraw(pxy: IPoint) {
-        if (!pxy) {
-            return;
-        }
-        let p: TuplePoint;
-        if (this.emotion) {
-            if (this.freeDrawing.length != 0) {
-                return;
-            }
-            p = [
-                Math.round(pxy.x),
-                Math.round(pxy.y),
-                Date.now() / 1000,
-                this.videoPlayer.currentTime,
-            ];
-        } else {
-            p = [Math.round(pxy.x), Math.round(pxy.y)];
-        }
-        const ns: ILineSegment = {lines: [p]};
-        if (!this.emotion) {
-            ns.color = this.imgx.drawSettings.color;
-            ns.w = this.imgx.drawSettings.w;
-        }
-        this.freeDrawing.push(ns);
-        this.prevPos = p;
-    }
-
-    addPoint(pxy: IPoint) {
-        if (!pxy) {
-            return;
-        }
-        let p: TuplePoint;
-        if (this.emotion) {
-            p = [
-                Math.round(pxy.x),
-                Math.round(pxy.y),
-                Date.now() / 1000,
-                this.videoPlayer.currentTime,
-            ];
-        } else {
-            p = [Math.round(pxy.x), Math.round(pxy.y)];
-        }
-        const n = this.freeDrawing.length;
-        if (n == 0) {
-            this.startSegment(tupleToCoords(p));
-        } else {
-            const ns = this.freeDrawing[n - 1];
-            //    ns.lines = [p];
-            ns.lines.push(p);
-        }
-        if (!this.imgx.lineMode() || this.emotion) {
-            this.prevPos = p;
-        }
-    }
-
-    popPoint(minlen: number) {
-        const n = this.freeDrawing.length;
-        if (n == 0) {
-            return;
-        }
-        const ns = this.freeDrawing[n - 1];
-        if (ns.lines.length > minlen) {
-            ns.lines.pop();
-        }
-    }
-
-    popSegment(minlen: number) {
-        const n = this.freeDrawing.length;
-        if (n <= minlen) {
-            return;
-        }
-        this.freeDrawing.pop();
-        if (this.redraw) {
-            this.redraw();
-        }
-    }
-
-    addPointDraw(ctx: CanvasRenderingContext2D, pxy: IPoint) {
-        if (this.imgx.lineMode()) {
-            this.popPoint(1);
-            if (this.redraw) {
-                this.redraw();
-            }
-        }
-        if (!this.emotion) {
-            this.line(ctx, this.prevPos, pxy);
-        }
-        this.addPoint(pxy);
-    }
-
-    clear() {
-        this.freeDrawing = [];
-        if (this.redraw) {
-            this.redraw();
-        }
-    }
-
-    setColor(newColor: string) {
-        this.imgx.drawSettings.color = newColor;
-        if (this.prevPos) {
-            this.startSegment(tupleToCoords(this.prevPos));
-        }
-    }
-
-    setWidth(newWidth: number) {
-        this.imgx.drawSettings.w = newWidth;
-        if (this.imgx.drawSettings.w < 1) {
-            this.imgx.drawSettings.w = 1;
-        }
-        if (this.prevPos) {
-            this.startSegment(tupleToCoords(this.prevPos));
-        }
-    }
-
-    incWidth(dw: number) {
-        this.setWidth(this.imgx.drawSettings.w + dw);
-    }
-
-    // setLineMode(newMode: boolean) {
-    //     this.imgx.lineMode = newMode;
-    // }
-    //
-    // flipLineMode() {
-    //     this.setLineMode(!this.imgx.lineMode);
-    // }
-
-    line(
-        ctx: CanvasRenderingContext2D,
-        p1: TuplePoint | undefined,
-        p2: IPoint
-    ) {
-        if (!p1 || !p2) {
-            return;
-        }
-        ctx.beginPath();
-        ctx.strokeStyle = this.imgx.drawSettings.color;
-        ctx.lineWidth = this.imgx.drawSettings.w;
-        ctx.moveTo(p1[0], p1[1]);
-        ctx.lineTo(p2.x, p2.y);
-        ctx.stroke();
-    }
-
-    // TODO get rid of type assertions ("as number")
-    drawCirclesVideoDot(
-        ctx: CanvasRenderingContext2D,
-        dr: ILineSegment[],
-        videoPlayer: VideoPlayer
-    ) {
-        for (const seg of dr) {
-            const vt = videoPlayer.currentTime;
-            // console.log("vt: " + vt + " " + this.lastDrawnSeg );
-            let seg1 = -1;
-            let seg2 = 0;
-            let s = "";
-            for (let lni = 0; lni < seg.lines.length; lni++) {
-                if (vt < (seg.lines[lni][3] as number)) {
-                    break;
-                }
-                seg1 = seg2;
-                seg2 = lni;
-            }
-
-            // console.log("" + seg1 + "-" + seg2 + ": " + seg.lines[seg2][3]);
-            let drawDone = false;
-            if (
-                this.imgx.markup.dotVisibleTime &&
-                this.lastVT &&
-                vt - this.lastVT > this.imgx.markup.dotVisibleTime
-            ) {
-                // remove old dot if needed
-                this.imgx.draw();
-                drawDone = true;
-            }
-            if (this.imgx.markup.showVideoTime) {
-                showTime(ctx, vt, 0, 0, "13px Arial");
-            }
-            if (this.lastDrawnSeg == seg2) {
-                return;
-            }
-            this.lastDrawnSeg = -1;
-            if (!drawDone) {
-                this.imgx.draw();
-            }
-            if (this.imgx.markup.showVideoTime) {
-                showTime(ctx, vt, 0, 0, "13px Arial");
-            }
-            if (seg1 < 0 || vt == 0 || seg.lines[seg2][3] == 0) {
-                return;
-            }
-
-            // console.log("" + seg1 + "-" + seg2 + ": " + seg.lines[seg2][3]);
-
-            ctx.beginPath();
-            this.lastVT = vt;
-            applyStyleAndWidth(ctx, seg);
-            ctx.moveTo(seg.lines[seg1][0], seg.lines[seg1][1]);
-            if (this.imgx.markup.drawLast) {
-                ctx.lineTo(seg.lines[seg2][0], seg.lines[seg2][1]);
-            }
-            ctx.stroke();
-            drawFillCircle(
-                ctx,
-                30,
-                seg.lines[seg2][0],
-                seg.lines[seg2][1],
-                "black",
-                0.5
-            );
-            if (this.imgx.markup.showTimes) {
-                s = dateToString(seg.lines[seg2][3] as number, false);
-                drawText(
-                    ctx,
-                    s,
-                    seg.lines[seg2][0],
-                    seg.lines[seg2][1],
-                    "13px Arial"
-                );
-            }
-
-            this.lastDrawnSeg = seg2;
-        }
-    }
-
-    // TODO get rid of type assertions ("as number")
-    drawCirclesVideo(
-        ctx: CanvasRenderingContext2D,
-        dr: ILineSegment[],
-        videoPlayer: VideoPlayer
-    ) {
-        if (!isFakePlayer(videoPlayer)) {
-            this.imgx.draw();
-        }
-        const vt = videoPlayer.currentTime;
-        for (const seg of dr) {
-            if (seg.lines.length < 1) {
-                continue;
-            }
-            let s = "";
-            ctx.beginPath();
-            applyStyleAndWidth(ctx, seg);
-            ctx.moveTo(seg.lines[0][0], seg.lines[0][1]);
-            if (isFakePlayer(videoPlayer)) {
-                s = dateToString(seg.lines[0][2] as number, true);
-                drawText(ctx, s, seg.lines[0][0], seg.lines[0][1]);
-            } else {
-                if (vt >= (seg.lines[0][3] as number)) {
-                    drawFillCircle(
-                        ctx,
-                        5,
-                        seg.lines[0][0],
-                        seg.lines[0][1],
-                        "black",
-                        0.5
-                    );
-                }
-            }
-            for (let lni = 1; lni < seg.lines.length; lni++) {
-                if (vt < (seg.lines[lni][3] as number)) {
-                    break;
-                }
-                ctx.lineTo(seg.lines[lni][0], seg.lines[lni][1]);
-                if (isFakePlayer(videoPlayer)) {
-                    s = dateToString(seg.lines[lni][2] as number, true);
-                    drawText(ctx, s, seg.lines[lni][0], seg.lines[lni][1]);
-                }
-            }
-            ctx.stroke();
-        }
-    }
-}
-
-function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
-    ctx.strokeStyle = seg.color ?? ctx.strokeStyle;
-    ctx.lineWidth = numOrStringToNumber(seg.w ?? ctx.lineWidth);
-    ctx.globalAlpha = seg.opacity ?? 1;
-}
-
-export function drawFreeHand(
-    ctx: CanvasRenderingContext2D,
-    dr: ILineSegment[]
-): void {
-    // console.log(dr);
-    for (const seg of dr) {
-        if (seg.lines.length < 2) {
-            continue;
-        }
-        ctx.beginPath();
-        applyStyleAndWidth(ctx, seg);
-        ctx.moveTo(seg.lines[0][0], seg.lines[0][1]);
-        for (let lni = 1; lni < seg.lines.length; lni++) {
-            ctx.lineTo(seg.lines[lni][0], seg.lines[lni][1]);
-        }
-        ctx.stroke();
-    }
-}
-
-function pad(num: number, size: number) {
-    const s = "000000000" + num;
-    return s.substr(s.length - size);
-}
-
-function dateToString(d: number, h: boolean) {
-    const dt = new Date(d * 1000);
-    let hs = "";
-    if (h) {
-        hs = pad(dt.getHours(), 2) + ":";
-    }
-    return (
-        hs +
-        pad(dt.getMinutes(), 2) +
-        ":" +
-        pad(dt.getSeconds(), 2) +
-        "." +
-        pad(dt.getMilliseconds(), 3)
-    );
-}
-
-function drawText(
-    ctx: CanvasRenderingContext2D,
-    s: string,
-    x: number,
-    y: number,
-    font = "10px Arial"
-) {
-    ctx.save();
-    ctx.textBaseline = "top";
-    ctx.font = font;
-    const width = ctx.measureText(s).width;
-    ctx.fillStyle = "#ffff00";
-    ctx.fillRect(x, y, width + 1, parseInt(ctx.font, 10));
-    ctx.fillStyle = "#000000";
-    ctx.fillText(s, x, y);
-    ctx.restore();
-}
-
-function showTime(
-    ctx: CanvasRenderingContext2D,
-    vt: number,
-    x: number,
-    y: number,
-    font: string
-) {
-    ctx.beginPath();
-    const s = dateToString(vt, false);
-    drawText(ctx, s, x, y, font);
-    ctx.stroke();
 }
 
 function drawFillCircle(
@@ -564,7 +136,7 @@ enum TargetState {
 class DragTask {
     public ctx: CanvasRenderingContext2D;
     private mousePosition: IPoint;
-    private freeHand: FreeHand;
+    private drawing: Drawing;
     private mouseDown = false;
     private activeDragObject?: {
         obj: DragObject;
@@ -581,10 +153,9 @@ class DragTask {
         this.ctx = canvas.getContext("2d")!;
         this.drawObjects = [];
         this.mousePosition = {x: 0, y: 0};
-        this.freeHand = imgx.freeHandDrawing;
+        this.drawing = imgx.drawing;
 
         this.canvas.style.touchAction = "double-tap-zoom"; // To get IE and EDGE touch to work
-        this.freeHand.redraw = () => this.draw();
 
         this.canvas.addEventListener("mousemove", (event) => {
             event.preventDefault();
@@ -620,43 +191,45 @@ class DragTask {
                 (event) => {
                     const c = String.fromCharCode(event.keyCode);
                     if (event.keyCode === 26) {
-                        this.freeHand.popSegment(0);
+                        this.drawing.undo();
                     }
                     if (c === "c") {
-                        this.freeHand.clear();
+                        this.drawing.resetDrawing();
+                        this.drawDragTask();
+                        this.drawing.redrawAll();
                     }
                     if (c === "r") {
-                        this.freeHand.setColor("#f00");
+                        this.setColor("#f00");
                     }
                     if (c === "b") {
-                        this.freeHand.setColor("#00f");
+                        this.setColor("#00f");
                     }
                     if (c === "y") {
-                        this.freeHand.setColor("#ff0");
+                        this.setColor("#ff0");
                     }
                     if (c === "g") {
-                        this.freeHand.setColor("#0f0");
+                        this.setColor("#0f0");
                     }
                     if (c === "+") {
-                        this.freeHand.incWidth(+1);
+                        this.incWidth(+1);
                     }
                     if (c === "-") {
-                        this.freeHand.incWidth(-1);
+                        this.incWidth(-1);
                     }
                     if (c === "1") {
-                        this.freeHand.setWidth(1);
+                        this.setWidth(1);
                     }
                     if (c === "2") {
-                        this.freeHand.setWidth(2);
+                        this.setWidth(2);
                     }
                     if (c === "3") {
-                        this.freeHand.setWidth(3);
+                        this.setWidth(3);
                     }
                     if (c === "4") {
-                        this.freeHand.setWidth(4);
+                        this.setWidth(4);
                     }
                     // if (c === "l") {
-                    //     this.freeHand.flipLineMode();
+                    //     this.drawing.flipLineMode();
                     // }
                     if (c === "f" && imgx.freeHandShortCut) {
                         imgx.drawSettings.enabled = !imgx.drawSettings.enabled;
@@ -699,11 +272,12 @@ class DragTask {
         return result;
     }
 
-    draw() {
+    drawDragTask() {
         const canvas = this.canvas;
         setIdentityTransform(this.ctx);
         this.ctx.fillStyle = "white"; // TODO get from markup?
-        this.ctx.fillRect(0, 0, canvas.width, canvas.height);
+        this.ctx.globalAlpha = 1;
+        this.ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (this.activeDragObject) {
             const dobj = this.activeDragObject;
@@ -763,7 +337,6 @@ class DragTask {
                 l.draw(this.ctx);
             }
         }
-        this.freeHand.draw(this.ctx);
     }
 
     downEvent(event: Event, p: MouseOrTouch) {
@@ -787,8 +360,7 @@ class DragTask {
                 "black",
                 0.5
             );
-            this.freeHand.startSegmentDraw(this.mousePosition);
-            this.freeHand.addPointDraw(this.ctx, this.mousePosition);
+            this.drawing.startSegmentDraw(this.mousePosition);
             if (this.imgx.markup.autosave) {
                 this.imgx.save();
             }
@@ -803,12 +375,13 @@ class DragTask {
                 xoffset: this.mousePosition.x - active.x,
                 yoffset: this.mousePosition.y - active.y,
             };
-            this.draw();
+            this.drawDragTask();
+            this.drawing.redrawAll();
         } else if (this.imgx.drawSettings.enabled) {
             this.canvas.style.cursor = "pointer";
             this.mouseDown = true;
             if (!this.imgx.emotion) {
-                this.freeHand.startSegmentDraw(this.mousePosition);
+                this.drawing.downEvent(this.mousePosition);
             }
         }
 
@@ -828,17 +401,16 @@ class DragTask {
             }
             this.mousePosition = posToRelative(this.canvas, p);
             if (!this.imgx.emotion) {
-                this.draw();
+                this.drawDragTask();
+                this.drawing.redrawAll();
             }
         } else if (this.mouseDown) {
             if (event != p) {
                 event.preventDefault();
             }
             if (!this.imgx.emotion) {
-                this.freeHand.addPointDraw(
-                    this.ctx,
-                    posToRelative(this.canvas, p)
-                );
+                this.drawDragTask();
+                this.drawing.moveEvent(posToRelative(this.canvas, p));
             }
         }
     }
@@ -870,12 +442,13 @@ class DragTask {
 
             this.activeDragObject = undefined;
             if (!this.imgx.emotion) {
-                this.draw();
+                this.drawDragTask();
+                this.drawing.redrawAll();
             }
         } else if (this.mouseDown) {
             this.canvas.style.cursor = "default";
             this.mouseDown = false;
-            this.freeHand.endSegment();
+            this.drawing.upEvent(posToRelative(this.canvas, p));
         }
     }
 
@@ -895,7 +468,23 @@ class DragTask {
                 }
             }
         }
-        this.draw();
+        this.drawDragTask();
+        this.drawing.redrawAll();
+    }
+
+    setColor(newColor: string) {
+        this.imgx.drawSettings.color = newColor;
+    }
+
+    setWidth(newWidth: number) {
+        this.imgx.drawSettings.w = newWidth;
+        if (this.imgx.drawSettings.w < 1) {
+            this.imgx.drawSettings.w = 1;
+        }
+    }
+
+    incWidth(dw: number) {
+        this.setWidth(this.imgx.drawSettings.w + dw);
     }
 }
 
@@ -1788,15 +1377,18 @@ export class ImageXComponent
         return isTouchDevice() ? this.markup.extraGrabAreaHeight : 0;
     }
 
-    // public w = 0;
-    // public freeHand = false; // Drawing enabled
-    // public drawType: DrawType = DrawType.Freehand;
+    // TODO: Choose visible options from markup
     public drawVisibleOptions: IDrawVisibleOptions = {
         enabled: true,
         freeHand: true,
         lineMode: true,
-        color: true,
+        rectangleMode: true,
+        ellipseMode: true,
+        arrowMode: true,
         w: true,
+        color: true,
+        fill: true,
+        opacity: true,
     };
     public drawSettings: IDrawOptions = {
         enabled: false,
@@ -1807,7 +1399,7 @@ export class ImageXComponent
         opacity: 1,
     };
     // public color = "";
-    public freeHandDrawing!: FreeHand;
+    public drawing!: Drawing;
     public coords = "";
     public drags: DragObject[] = [];
     public userHasAnswered = false;
@@ -1829,7 +1421,7 @@ export class ImageXComponent
     private embed: boolean = false;
 
     draw() {
-        this.dt.draw();
+        this.dt.drawDragTask();
     }
 
     constructor(el: ElementRef, http: HttpClient, domSanitizer: DomSanitizer) {
@@ -1837,6 +1429,10 @@ export class ImageXComponent
         this.muokattu = false;
         this.result = "";
         this.cursor = "\u0383"; // "\u0347"; // "\u02FD";
+    }
+
+    getCanvas(): HTMLCanvasElement {
+        return this.canvas;
     }
 
     getCanvasCtx() {
@@ -1859,11 +1455,14 @@ export class ImageXComponent
         });
 
         this.tries = this.attrsall.info?.earlier_answers ?? 0;
-        this.freeHandDrawing = new FreeHand(
-            this,
-            this.attrsall.state?.freeHandData ?? [],
-            this.videoPlayer
-        );
+        const drawings: DrawItem[] = [];
+        if (this.attrsall.state?.freeHandData) {
+            for (const obj of this.attrsall.state.freeHandData) {
+                drawings.push({type: "freehand", drawData: obj});
+            }
+        }
+        this.drawing = new Drawing(this.drawSettings, this.canvas, true);
+        this.drawing.drawData = this.attrsall.state?.drawings ?? drawings;
         if (this.isFreeHandInUse) {
             this.drawSettings.enabled = true;
         }
@@ -1990,8 +1589,8 @@ export class ImageXComponent
         if (!this.imageLoadError) {
             this.imageLoadError = null;
         }
-        // console.log(dt.drawObjects);
-        dt.draw();
+        dt.drawDragTask();
+        this.drawing.redrawAll();
 
         this.previewColor = globalPreviewColor;
         this.prevAnswer = this.getContent();
@@ -2013,7 +1612,9 @@ export class ImageXComponent
         if (e) {
             e.preventDefault();
         }
-        this.freeHandDrawing.popSegment(0);
+        this.drawing.undo();
+        this.dt.drawDragTask();
+        this.drawing.redrawAll();
     }
 
     lineMode(): boolean {
@@ -2063,7 +1664,7 @@ export class ImageXComponent
             input: {
                 drags: this.getDragObjectJson(),
                 finalanswerquery: true,
-                freeHandData: this.freeHandDrawing.freeDrawing,
+                drawings: this.drawing.getDrawing(),
             },
         };
         const url = this.pluginMeta.getAnswerUrl();
@@ -2102,7 +1703,7 @@ export class ImageXComponent
     resetExercise() {
         this.error = "";
         this.result = "";
-        this.freeHandDrawing.clear();
+        this.drawing.resetDrawing();
 
         for (const obj of this.drags) {
             obj.resetPosition();
@@ -2111,7 +1712,8 @@ export class ImageXComponent
         this.dt.lines = undefined;
 
         // Draw the exercise so that reset appears instantly.
-        this.dt.draw();
+        this.dt.drawDragTask();
+        this.drawing.redrawAll();
         this.prevAnswer = this.getContent();
     }
 
@@ -2149,7 +1751,7 @@ export class ImageXComponent
         const params = {
             input: {
                 drags: this.getDragObjectJson(),
-                freeHandData: this.freeHandDrawing.freeDrawing,
+                drawings: this.drawing.getDrawing(),
                 nosave: false,
             },
         };
@@ -2236,7 +1838,7 @@ export class ImageXComponent
     getContent(): string | undefined {
         return JSON.stringify({
             drags: this.getDragObjectJson(),
-            freeHandData: this.freeHandDrawing.freeDrawing,
+            drawings: this.drawing.getDrawing(),
         });
     }
 
