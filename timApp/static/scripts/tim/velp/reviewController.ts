@@ -12,7 +12,7 @@ import {deserialize} from "typescript-json-serializer";
 import {TaskId} from "tim/plugin/taskid";
 import {
     DrawCanvasComponent,
-    DrawObject,
+    DrawItem,
     getDrawingDimensions,
     IDrawUpdate,
     isCoordWithinDrawing,
@@ -1436,7 +1436,7 @@ export class ReviewController {
     drawAnnotationsOnCanvas(canvas: DrawCanvasComponent, answerId: number) {
         const annotationDrawings = this.getAnnotationsByAnswerId(
             answerId
-        ).reduce((arr: DrawObject[], ann: Annotation) => {
+        ).reduce((arr: DrawItem[], ann: Annotation) => {
             if (ann.draw_data) {
                 arr = arr.concat(ann.draw_data);
             }
