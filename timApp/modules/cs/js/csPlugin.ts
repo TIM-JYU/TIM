@@ -294,15 +294,14 @@ class LanguageTypes {
         return def;
     }
 
-    whatIsInAce(types: string[], type: string) {
+    whatIsInAce(type: string) {
         if (!type) {
             return undefined;
         }
         type = type.toLowerCase();
-        for (let i = 0; i < types.length; i++) {
-            if (type.includes(types[i])) {
-                return this.aceModes[i];
-            }
+        const mod = this.languages[type];
+        if (mod) {
+            return mod.ace;
         }
         // If not any of languages, is it any of test's?
         for (let i = 0; i < this.testTypes.length; i++) {
@@ -334,7 +333,7 @@ class LanguageTypes {
         if (def) {
             return def;
         }
-        return this.whatIsInAce(this.runTypes, type) ?? (def as string);
+        return this.whatIsInAce(type) ?? (def as string);
     }
 
     getTestType(type: string, language: string, def: string) {
@@ -781,6 +780,7 @@ export class CsBase extends AngularPluginBase<
     typeof CsAll
 > {
     usercode_: string = "";
+    languageType: string = "cs";
 
     get usercode(): string {
         return this.usercode_;
@@ -794,7 +794,8 @@ export class CsBase extends AngularPluginBase<
     }
 
     get type() {
-        return this.markup.type;
+        return this.languageType;
+        // return this.markup.type;
     }
 
     get path() {
@@ -1375,6 +1376,13 @@ export class CsController extends CsBase implements ITimComponent {
         }
     }
 
+    languageChange(): void {
+        this.languageType = this.selectedLanguage;
+        if (this.editor) {
+            this.editor.languageMode = this.mode;
+        }
+    }
+
     updateListeners(state: ChangeType) {
         if (!this.vctrl) {
             return;
@@ -1688,7 +1696,7 @@ ${fhtml}
     }
 
     get isAll() {
-        return languageTypes.isAllType(this.type);
+        return languageTypes.isAllType(this.markup.type);
     }
 
     get glowscript() {
@@ -1893,6 +1901,8 @@ ${fhtml}
     ngOnInit() {
         super.ngOnInit();
 
+        this.languageType = this.markup.type;
+
         this.clearSaved = !!this.attrsall.markup.savedText;
 
         this.upload =
@@ -1948,7 +1958,17 @@ ${fhtml}
                 (isText && isArgs ? this.markup.filename ?? "" : "")
             ).toString()
         );
-        this.selectedLanguage = this.attrsall.selectedLanguage ?? rt;
+        // this.selectedLanguage = this.attrsall.selectedLanguage ?? rt;
+        // TODO: why this is not found from attrsall?
+        this.selectedLanguage =
+            this.attrsall.selectedLanguage ??
+            this.markup.selectedLanguage ??
+            rt;
+        this.languageType = this.selectedLanguage;
+        if (this.editor) {
+            this.editor.languageMode = this.mode;
+        }
+
         this.noeditor = valueOr(
             this.markup.noeditor,
             this.isSimcir || this.type === "upload"
@@ -3482,7 +3502,7 @@ ${fhtml}
         </div>
     </ng-container>
     <div *ngIf="isAll" style="float: right;">{{languageText}}
-        <select [(ngModel)]="selectedLanguage" required>
+        <select [(ngModel)]="selectedLanguage" required (change)="languageChange()">
             <option *ngFor="let o of progLanguages" [value]="o">{{o}}</option>
         </select>
     </div>

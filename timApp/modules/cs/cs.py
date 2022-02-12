@@ -2029,6 +2029,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             else:
                 out = re.sub(out_replace, out_by, out, flags=re.M)
 
+        stdout = get_param(query, "stdout", None)
+        if stdout:
+            outname = language.filepath + "/" + stdout
+            codecs.open(outname, "w", "utf-8").write(out)
+            stdtee = get_param(query, "stdtee", True)
+            if not stdtee:
+                out = ""
+
         is_html = get_param(query, "isHtml", False)
         if is_html:
             out = svg_sanitize(out)

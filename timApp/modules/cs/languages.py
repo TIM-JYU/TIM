@@ -2179,7 +2179,7 @@ class Rust(Language):
 class Pascal(Language):
     ttype = "pascal"
 
-    def __init__(self, query, sourcecode):
+    def __init__(self, query, sourcecode): 
         super().__init__(query, sourcecode)
         self.compiler = "fpc"
 
