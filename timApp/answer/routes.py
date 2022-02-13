@@ -133,6 +133,8 @@ from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import value_or_default
 from tim_common.utils import Missing
 
+PRE_POST_ERROR = "You must have at least one\n   return data;\nrow in code!"
+
 answers = TypedBlueprint("answers", __name__, url_prefix="")
 
 PointsType = Union[
@@ -835,18 +837,67 @@ def post_answer_impl(
         "taskID": tid.doc_task,
         "info": info,
     }
+
+    result = {}
+    web = ""
+
+    def set_postoutput(result, output, outputname):
+        if not outputname or (not output and not preoutput):
+            return
+        parts = outputname.split(".")
+        r = result
+        lastkey = parts[-1]
+        for p in parts[:-1]:
+            if not p in r:
+                r[p] = {}
+            r = r[p]
+        r[lastkey] = r.get(lastkey, "") + str(output)
+
+    def add_value(result, key, data):
+        value = data.get(key, None)
+        if value is None:
+            return
+        if value.startswith("md:"):
+            value = call_dumbo([value[3:]])[0]
+        result[key] = result.get(key, "") + value
+
+    def postprogram_result(data, output, outputname):
+        result["web"] = data.get("web", web)
+        add_value(result, "error", data)
+        add_value(result, "feedback", data)
+        add_value(result, "topfeedback", data)
+        if output.startswith("md:"):
+            output = call_dumbo([output[3:]])[0]
+        set_postoutput(result, output, outputname)
+
     preoutput = ""
     preprogram = plugin.values.get("preprogram", None)
     if preprogram and plugin.type != "jsrunner":
-        params = JsRunnerParams(code=preprogram, data=answer_call_data)
-        answer_call_data, preoutput = jsrunner_run(params)
+        try:
+            params = JsRunnerParams(
+                code=preprogram,
+                data=answer_call_data,
+                error_text=PRE_POST_ERROR,
+                caller="preprogram:",
+            )
+            answer_call_data, preoutput = jsrunner_run(params)
+        except JsRunnerError as e:
+            return AnswerRouteResult(
+                result={"web": {"error": "Error in JavaScript: " + e.args[0]}},
+                plugin=plugin,
+            )
+
+    if preoutput:
+        postprogram_result(
+            answer_call_data, preoutput, plugin.values.get("preoutput", "feedback")
+        )
 
     jsonresp = call_plugin_answer_and_parse(answer_call_data, plugin.type)
 
     web = jsonresp.get("web")
     if web is None:
         raise PluginException(f"Got malformed response from plugin: {jsonresp}")
-    result = {"web": web}
+    result["web"] = web
 
     if "savedata" in jsonresp:
         siw = answer_call_data.get("markup", {}).get("showInView", False)
@@ -955,35 +1006,6 @@ def post_answer_impl(
             if postprogram:
                 postprogram = libs + "\n//=== END LIBRARIES ===\n" + postprogram
 
-        def set_postoutput(result, output, postoutput):
-            if not postoutput or (not output and not preoutput):
-                return
-            parts = postoutput.split(".")
-            r = result
-            lastkey = parts[-1]
-            for p in parts[:-1]:
-                if not p in r:
-                    r[p] = {}
-                r = r[p]
-            r[lastkey] = r.get(lastkey, "") + str(preoutput) + str(output)
-
-        def add_value(result, key, data):
-            value = data.get(key, None)
-            if value is None:
-                return
-            if value.startswith("md:"):
-                value = call_dumbo([value[3:]])[0]
-            result[key] = result.get(key, "") + value
-
-        def postprogram_result(data, output):
-            result["web"] = data.get("web", web)
-            add_value(result, "error", data)
-            add_value(result, "feedback", data)
-            add_value(result, "topfeedback", data)
-            if output.startswith("md:"):
-                output = call_dumbo([output[3:]])[0]
-            set_postoutput(result, output, postoutput)
-
         if (not is_teacher_mode and should_save_answer) or ("savedata" in jsonresp):
             is_valid, explanation = plugin.is_answer_valid(answerinfo.count, tim_info)
             if vr.is_invalid:
@@ -1034,14 +1056,19 @@ def post_answer_impl(
                     user_fields = field_data[0]["fields"]
                     data["fields"] = {"values": user_fields, "names": field_aliases}
                 try:
-                    params = JsRunnerParams(code=postprogram, data=data)
+                    params = JsRunnerParams(
+                        code=postprogram,
+                        data=data,
+                        error_text=PRE_POST_ERROR,
+                        caller="postprogram:",
+                    )
                     data, output = jsrunner_run(params)
                     points = data.get("points", points)
                     save_object = data.get("save_object", save_object)
                     is_valid = data.get("is_valid", is_valid)
                     force_answer = data.get("force_answer", force_answer)
                     allow_save = data.get("allow_save", allow_save)
-                    postprogram_result(data, output)
+                    postprogram_result(data, output, postoutput)
                 except JsRunnerError as e:
                     return AnswerRouteResult(
                         result={"web": {"error": "Error in JavaScript: " + e.args[0]}},
@@ -1109,11 +1136,16 @@ def post_answer_impl(
                     "web": web,
                 }
                 try:
-                    params = JsRunnerParams(code=postprogram, data=data)
+                    params = JsRunnerParams(
+                        code=postprogram,
+                        data=data,
+                        error_text=PRE_POST_ERROR,
+                        caller="postprogram:",
+                    )
                     data, output = jsrunner_run(params)
                     points = data.get("points", points)
                     output += "\nPoints: " + str(points)
-                    postprogram_result(data, output)
+                    postprogram_result(data, output, postoutput)
                 except JsRunnerError as e:
                     return AnswerRouteResult(
                         result={"web": {"error": "Error in JavaScript: " + e.args[0]}},

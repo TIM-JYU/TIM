@@ -279,7 +279,7 @@ class Language:
 
         is_input = get_json_param(self.query.jso, "input", "isInput", None)
         # print(isInput)
-        if is_input:
+        if is_input or userinput:
             # print("Write input file: " + inputfilename)
             if not userinput:
                 userinput = ""
