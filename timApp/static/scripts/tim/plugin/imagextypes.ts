@@ -1,10 +1,7 @@
 import * as t from "io-ts";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 
-export interface IPoint {
-    x: number;
-    y: number;
-}
+const Point = t.type({x: t.number, y: t.number});
 
 const TuplePointR = t.union([
     t.tuple([t.number, t.number]),
@@ -19,6 +16,14 @@ const LineSegment = t.intersection([
     }),
 ]);
 
+const Line = t.intersection([
+    t.type({start: Point, end: Point, w: t.number}),
+    t.partial({
+        color: t.string,
+        opacity: t.number,
+    }),
+]);
+
 const RectangleOrEllipse = t.intersection([
     t.type({x: t.number, y: t.number, w: t.number, h: t.number}),
     t.partial({
@@ -29,11 +34,24 @@ const RectangleOrEllipse = t.intersection([
     }),
 ]);
 
+const DrawData = t.union([
+    t.type({type: t.literal("freehand"), drawData: LineSegment}),
+    t.type({type: t.literal("rectangle"), drawData: RectangleOrEllipse}),
+    t.type({type: t.literal("ellipse"), drawData: RectangleOrEllipse}),
+    t.type({type: t.literal("arrow"), drawData: Line}),
+]);
+
+export type IPoint = t.TypeOf<typeof Point>;
+
 export type TuplePoint = t.TypeOf<typeof TuplePointR>;
+
+export type ILine = t.TypeOf<typeof Line>;
 
 export type ILineSegment = t.TypeOf<typeof LineSegment>;
 
 export type IRectangleOrEllipse = t.TypeOf<typeof RectangleOrEllipse>;
+
+export type IDrawData = t.TypeOf<typeof DrawData>;
 
 export interface IFakeVideo {
     currentTime: number;
@@ -280,6 +298,7 @@ export const ImageXAll = t.intersection([
         state: nullable(
             t.partial({
                 freeHandData: t.array(LineSegment),
+                drawings: t.array(DrawData),
                 userAnswer: t.partial({
                     drags: t.array(
                         t.type({

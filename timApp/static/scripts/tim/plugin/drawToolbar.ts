@@ -16,12 +16,12 @@ import * as t from "io-ts";
 
 export interface IDrawVisibleOptions {
     // Interface to define which options should be visible in the drawing toolbar
-    // For example imageX does not support ellipses
     enabled?: boolean;
     freeHand?: boolean;
     lineMode?: boolean;
     rectangleMode?: boolean;
     ellipseMode?: boolean;
+    arrowMode?: boolean;
     w?: boolean;
     color?: boolean;
     fill?: boolean;
@@ -33,6 +33,7 @@ export enum DrawType {
     Line,
     Rectangle,
     Ellipse,
+    Arrow,
 }
 
 // keyof is designed to work with objects containing string keys, so we use an union of number literals instead
@@ -42,6 +43,7 @@ const DrawTypeCodec = t.union([
     t.literal(DrawType.Line),
     t.literal(DrawType.Rectangle),
     t.literal(DrawType.Ellipse),
+    t.literal(DrawType.Arrow),
 ]);
 
 export const DrawOptions = t.type({
@@ -104,6 +106,16 @@ export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
                            (ngModelChange)="onSettingsChanged()">
                     Ellipse</label>
                 </span>
+                <span *ngIf="drawVisibleOptions.arrowMode"
+                      (ngModelChange)="onSettingsChanged()">
+                    <label>
+                    <input type="radio"
+                           name="drawType"
+                           [value]="4"
+                           [(ngModel)]="drawSettings.drawType"
+                           (ngModelChange)="onSettingsChanged()">
+                    Arrow</label>
+                </span>
             </form>
             <span *ngIf="drawVisibleOptions.fill">
                 <label>
@@ -164,6 +176,7 @@ export class DrawToolbarComponent implements AfterViewInit {
         lineMode: true,
         rectangleMode: true,
         ellipseMode: true,
+        arrowMode: true,
         w: true,
         color: true,
         fill: true,

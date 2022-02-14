@@ -286,12 +286,12 @@ class ImagexServer(TimServer):
             answer["studentanswers"] = gottenpoints
             # print(answer)
         tries = tries + 1
-        free_hand_data = get_json_param(query.jso, "input", "freeHandData", None)
 
         # Save user input and points to markup
         save = {"userAnswer": {"drags": drags}}
-        if free_hand_data:
-            save["freeHandData"] = free_hand_data
+        drawings = get_json_param(query.jso, "input", "drawings", None)
+        if drawings:
+            save["drawings"] = drawings
         result["save"] = save
         out = "saved"
         result["tim_info"] = {"points": points}
