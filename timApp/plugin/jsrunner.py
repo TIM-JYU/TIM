@@ -10,6 +10,8 @@ from timApp.plugin.containerLink import get_plugin
 class JsRunnerParams:
     code: str
     data: Any
+    error_text: str = ""
+    caller: str = ""
 
 
 class JsRunnerError(Exception):
@@ -27,6 +29,10 @@ def jsrunner_run(params: JsRunnerParams) -> tuple[Any, str]:
     result = r.json()
     error = result.get("error")
     if error:
+        if params.error_text and error.find("Script failed to return") >= 0:
+            error += "\n" + params.error_text
+        if params.caller:
+            error = params.caller + "\n" + error
         raise JsRunnerError(error)
     data = result.get("result", [])
     output = result.get("output", "")

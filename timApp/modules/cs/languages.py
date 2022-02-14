@@ -279,13 +279,15 @@ class Language:
 
         is_input = get_json_param(self.query.jso, "input", "isInput", None)
         # print(isInput)
-        if is_input:
+        if is_input or userinput:
             # print("Write input file: " + inputfilename)
             if not userinput:
                 userinput = ""
             if self.inputfilename.find("input.txt") >= 0:
                 stdin_default = "input.txt"
-            codecs.open(self.inputfilename, "w", "utf-8").write(userinput)
+            input_absolue = os.path.abspath(self.inputfilename)
+            if not input_absolue.startswith("/cs/"):
+                codecs.open(self.inputfilename, "w", "utf-8").write(userinput)
         self.stdin = get_param(self.query, "stdin", stdin_default)
 
     def before_save(self, s):
