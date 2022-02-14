@@ -795,7 +795,6 @@ export class CsBase extends AngularPluginBase<
 
     get type() {
         return this.languageType;
-        // return this.markup.type;
     }
 
     get path() {
@@ -1958,8 +1957,7 @@ ${fhtml}
                 (isText && isArgs ? this.markup.filename ?? "" : "")
             ).toString()
         );
-        // this.selectedLanguage = this.attrsall.selectedLanguage ?? rt;
-        // TODO: why this is not found from attrsall?
+        // Order: selectedLanguage in current answer, selected language in markup, selected language parsed from type
         this.selectedLanguage =
             this.attrsall.selectedLanguage ??
             this.markup.selectedLanguage ??
@@ -3502,7 +3500,7 @@ ${fhtml}
         </div>
     </ng-container>
     <div *ngIf="isAll" style="float: right;">{{languageText}}
-        <select [(ngModel)]="selectedLanguage" required (change)="languageChange()">
+        <select [(ngModel)]="selectedLanguage" required (ngModelChange)="languageChange()">
             <option *ngFor="let o of progLanguages" [value]="o">{{o}}</option>
         </select>
     </div>

@@ -2031,11 +2031,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         stdout = get_param(query, "stdout", None)
         if stdout:
-            outname = language.filepath + "/" + stdout
-            codecs.open(outname, "w", "utf-8").write(out)
-            stdtee = get_param(query, "stdtee", True)
-            if not stdtee:
-                out = ""
+            outname = os.path.abspath(f"{language.filepath}/{stdout}")
+            if outname.startswith("/cs"):
+                err += f"\nThe stdout path is not allowed: {outname}"
+            else:
+                codecs.open(outname, "w", "utf-8").write(out)
+                stdtee = get_param(query, "stdtee", True)
+                if not stdtee:
+                    out = ""
 
         is_html = get_param(query, "isHtml", False)
         if is_html:

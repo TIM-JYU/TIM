@@ -4,7 +4,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Union, Optional, Any, Callable, TypedDict, DefaultDict
+from typing import Union, Any, Callable, TypedDict, DefaultDict
 
 from flask import Response
 from flask import request
@@ -133,7 +133,11 @@ from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import value_or_default
 from tim_common.utils import Missing
 
-PRE_POST_ERROR = "You must have at least one\n   return data;\nrow in code!"
+PRE_POST_ERROR = """
+You must have at least one
+  return data;
+row in code!
+"""
 
 answers = TypedBlueprint("answers", __name__, url_prefix="")
 
