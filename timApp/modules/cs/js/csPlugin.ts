@@ -781,6 +781,7 @@ export class CsBase extends AngularPluginBase<
 > {
     usercode_: string = "";
     languageType: string = "cs";
+    origLanguageType: string = "cs";
 
     get usercode(): string {
         return this.usercode_;
@@ -1163,7 +1164,7 @@ export class CsController extends CsBase implements ITimComponent {
                 }
             }
         } else if (
-            this.markup.type.includes("upload") ||
+            this.origLanguageType.includes("upload") ||
             this.markup.upload ||
             this.markup.uploadbycode
         ) {
@@ -1422,13 +1423,13 @@ export class CsController extends CsBase implements ITimComponent {
 
     get isInput() {
         return (
-            this.markup.type.includes("input") ||
-            this.markup.type.includes("args")
+            this.origLanguageType.includes("input") ||
+            this.origLanguageType.includes("args")
         );
     }
 
     get isSimcir() {
-        return this.markup.type.includes("simcir");
+        return this.origLanguageType.includes("simcir");
     }
 
     get isTauno() {
@@ -1495,7 +1496,7 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get placeholder() {
-        const tiny = this.type.includes("tiny");
+        const tiny = this.origLanguageType.includes("tiny");
         return valueDefu(
             this.markup.placeholder,
             tiny
@@ -1695,7 +1696,7 @@ ${fhtml}
     }
 
     get isAll() {
-        return languageTypes.isAllType(this.markup.type);
+        return languageTypes.isAllType(this.origLanguageType);
     }
 
     get glowscript() {
@@ -1783,15 +1784,18 @@ ${fhtml}
 
     get isTest() {
         return (
-            languageTypes.getTestType(this.type, this.selectedLanguage, "") !==
-            ""
+            languageTypes.getTestType(
+                this.origLanguageType,
+                this.selectedLanguage,
+                ""
+            ) !== ""
         );
     }
 
     get isUnitTest() {
         return (
             languageTypes.getUnitTestType(
-                this.type,
+                this.origLanguageType,
                 this.selectedLanguage,
                 ""
             ) !== ""
@@ -1799,18 +1803,18 @@ ${fhtml}
     }
 
     get isDocument() {
-        return this.type.includes("doc");
+        return this.origLanguageType.includes("doc");
     }
 
     get showInput() {
-        return this.type.includes("input");
+        return this.origLanguageType.includes("input");
     }
 
     get showArgs() {
-        return this.type.includes("args");
+        return this.origLanguageType.includes("args");
     }
 
-    get uploadstem() {
+    get uploadstem(): string {
         return valueOr(
             this.markup.uploadstem,
             this.english ? "Upload image/file" : "Lataa kuva/tiedosto"
@@ -1900,12 +1904,13 @@ ${fhtml}
     ngOnInit() {
         super.ngOnInit();
 
-        this.languageType = this.markup.type;
+        this.languageType = this.markup.type; // user may change
+        this.origLanguageType = this.markup.type;
 
         this.clearSaved = !!this.attrsall.markup.savedText;
 
         this.upload =
-            this.type === "upload" ||
+            this.origLanguageType === "upload" ||
             this.markup.upload ||
             this.markup.uploadbycode;
         if (!this.upload) {
@@ -2215,7 +2220,8 @@ ${fhtml}
         if (
             success &&
             (this.markup.uploadautosave ||
-                (this.markup.type.includes("upload") && !this.markup.button) ||
+                (this.origLanguageType.includes("upload") &&
+                    !this.markup.button) ||
                 !(this.isRun && this.buttonText()))
         ) {
             this.doRunCode("upload", false);
