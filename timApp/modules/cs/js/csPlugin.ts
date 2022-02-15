@@ -243,7 +243,7 @@ class LanguageTypes {
     unitTestTypes = ["junit", "unit"];
 
     // If test type is comtest, how to change it for specific languages
-    impTestTypes: Record<string, string | undefined> = {
+    impTestTypes: Record<string, string> = {
         cs: "comtest",
         console: "comtest",
         cc: "ccomtest",
@@ -252,7 +252,7 @@ class LanguageTypes {
         "c++": "ccomtest",
     };
     // If test type is unit, how to change it for specific languages
-    impUnitTestTypes: Record<string, string | undefined> = {
+    impUnitTestTypes: Record<string, string> = {
         cs: "nunit",
         console: "nunit",
         cc: "cunit",
@@ -279,6 +279,23 @@ class LanguageTypes {
             e = " " + e;
         }
         return [b, e];
+    }
+
+    getPureRunType(type: string) {
+        const lang = this.languages[type];
+        if (lang) {
+            return type;
+        }
+        return "";
+    }
+
+    getTestRunType(type: string) {
+        for (const [tlang, tname] of Object.entries(this.impTestTypes)) {
+            if (tname === type) {
+                return tlang;
+            }
+        }
+        return "";
     }
 
     whatIsIn(types: string[], type: string, def: string) {
@@ -339,14 +356,20 @@ class LanguageTypes {
     getTestType(type: string, language: string, def: string) {
         const ty = this.whatIsIn(this.testTypes, type, def);
         if (ty !== "comtest") {
+            // specific text name, use it
             return ty;
         }
-        const lt = this.whatIsIn(this.runTypes, language, "console");
-        const impt = this.impTestTypes[lt];
+        const lang = this.languages[language];
+        if (!lang) {
+            // main lagnguage not know => no test
+            return "";
+        }
+        const impt = this.impTestTypes[language];
         if (impt) {
+            // no test know for this language
             return impt;
         }
-        return ty;
+        return "";
     }
 
     getUnitTestType(type: string, language: string, def: string) {
@@ -354,12 +377,17 @@ class LanguageTypes {
         if (ty !== "unit") {
             return ty;
         }
-        const lt = this.whatIsIn(this.runTypes, language, "console");
-        const impt = this.impUnitTestTypes[lt];
+        const lang = this.languages[language];
+        if (!lang) {
+            // main lagnguage not know => no test
+            return "";
+        }
+        const impt = this.impUnitTestTypes[language];
         if (impt) {
+            // no unit test know for this language
             return impt;
         }
-        return ty;
+        return "";
     }
 
     isInArray(word: string, array: string[]) {
@@ -782,6 +810,11 @@ export class CsBase extends AngularPluginBase<
     usercode_: string = "";
     languageType: string = "cs";
     origLanguageType: string = "cs";
+    rtype: string = "cs";
+    isRun: boolean = true;
+    isAll: boolean = false;
+    isTest: boolean = false;
+    isUnitTest: boolean = false;
 
     get usercode(): string {
         return this.usercode_;
@@ -1381,6 +1414,9 @@ export class CsController extends CsBase implements ITimComponent {
         if (this.editor) {
             this.editor.languageMode = this.mode;
         }
+        this.rtype = this.languageType;
+        this.isTest = this.getIsTest();
+        this.isUnitTest = this.getIsUnitTest();
     }
 
     updateListeners(state: ChangeType) {
@@ -1479,7 +1515,7 @@ export class CsController extends CsBase implements ITimComponent {
         return this.type === "upload" && !this.markup.button;
     }
 
-    get rtype() {
+    get oldrtype() {
         return languageTypes.getRunType(this.type, "text");
     }
 
@@ -1695,7 +1731,7 @@ ${fhtml}
         return getInt(this.markup.rows) ?? 0;
     }
 
-    get isAll() {
+    getIsAll() {
         return languageTypes.isAllType(this.origLanguageType);
     }
 
@@ -1703,7 +1739,7 @@ ${fhtml}
         return languageTypes.isInArray(this.rtype, ["glowscript", "vpython"]);
     }
 
-    get isRun() {
+    getIsRun() {
         return (
             ((languageTypes.getRunType(this.type, "") !== "" || this.isAll) &&
                 !this.markup.norun) ||
@@ -1782,7 +1818,7 @@ ${fhtml}
         this.cdr.detectChanges();
     }
 
-    get isTest() {
+    getIsTest() {
         return (
             languageTypes.getTestType(
                 this.origLanguageType,
@@ -1792,7 +1828,7 @@ ${fhtml}
         );
     }
 
-    get isUnitTest() {
+    getIsUnitTest() {
         return (
             languageTypes.getUnitTestType(
                 this.origLanguageType,
@@ -1903,9 +1939,39 @@ ${fhtml}
 
     ngOnInit() {
         super.ngOnInit();
+        // First find out what language we are using
+        const type = this.markup.type.split(/[/,; ]/)[0];
 
         this.languageType = this.markup.type; // user may change
         this.origLanguageType = this.markup.type;
+        this.rtype = languageTypes.getPureRunType(type);
+
+        if (this.getIsAll()) {
+            this.rtype = "cs";
+            this.isAll = true;
+        }
+
+        if (this.rtype) {
+            this.isRun = !!this.getIsRun();
+        } else {
+            this.rtype = languageTypes.getTestRunType(type);
+            this.isRun = false; // just test, no run type
+        }
+        if (!this.rtype) {
+            this.rtype = "cs";
+        }
+
+        // Order: selectedLanguage in current answer, selected language in markup, selected language parsed from type
+        this.selectedLanguage = this.rtype;
+
+        if (this.isAll) {
+            this.selectedLanguage =
+                this.attrsall.selectedLanguage ??
+                this.markup.selectedLanguage ??
+                this.rtype;
+        }
+        this.languageChange();
+        // Language find out
 
         this.clearSaved = !!this.attrsall.markup.savedText;
 
@@ -1935,7 +2001,6 @@ ${fhtml}
         this.hide = this.attrsall.markup.hide ?? {};
         //  if ( typeof this.markup.borders !== 'undefined' ) this.markup.borders = true;
         this.buttons = this.getTemplateButtons();
-        const rt = this.rtype;
         const isText = this.isText;
         const isArgs = this.type.includes("args");
         if (this.attrsall.markup.docurl) {
@@ -1962,12 +2027,6 @@ ${fhtml}
                 (isText && isArgs ? this.markup.filename ?? "" : "")
             ).toString()
         );
-        // Order: selectedLanguage in current answer, selected language in markup, selected language parsed from type
-        this.selectedLanguage =
-            this.attrsall.selectedLanguage ??
-            this.markup.selectedLanguage ??
-            rt;
-        this.languageType = this.selectedLanguage;
         if (this.editor) {
             this.editor.languageMode = this.mode;
         }
@@ -2277,7 +2336,7 @@ ${fhtml}
 
     runTest() {
         const ty = languageTypes.getTestType(
-            this.type,
+            this.origLanguageType,
             this.selectedLanguage,
             "comtest"
         );
@@ -2286,7 +2345,7 @@ ${fhtml}
 
     runUnitTest() {
         const ty = languageTypes.getUnitTestType(
-            this.type,
+            this.origLanguageType,
             this.selectedLanguage,
             "junit"
         );
