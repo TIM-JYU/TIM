@@ -2,8 +2,12 @@
 # Set locale
 export LANG=en_US.UTF-8
 # export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/
-export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar:/cs/java/gui.jar
+export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs_data/java/comtest.jar:/cs_data/java/Ali.jar:/cs_data/java/Graphics.jar:/cs_data/java/fxgui.jar:/cs_data/java/gui.jar
 export PATH="$PATH:/cs/dotnet"
+
+# Create symlinks for some data folders for legacy reasons
+ln -s /cs_data/MIRToolbox /cs/MIRToolbox
+ln -s /cs_data/simcir /cs/simcir
 
 printf "\n" >~/run/time.txt
 if [ -e run/compile.sh ]

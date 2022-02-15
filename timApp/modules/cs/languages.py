@@ -502,7 +502,7 @@ class All(Language):
     ttype = "all"
 
 
-GLOBAL_NUGET_PACKAGES_PATH = "/cs/dotnet/nuget_cache"
+GLOBAL_NUGET_PACKAGES_PATH = "/cs_data/dotnet/nuget_cache"
 
 
 class CS(Language):
@@ -614,7 +614,7 @@ class Jypeli(CS, Modifier):
     @staticmethod
     @functools.cache
     def get_build_refs():
-        with open("/cs/dotnet/configs/jypeli.build.deps", encoding="utf-8") as f:
+        with open("/cs_data/dotnet/configs/jypeli.build.deps", encoding="utf-8") as f:
             dep_paths = [
                 os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip())
                 for dep_line in f.readlines()
@@ -624,7 +624,7 @@ class Jypeli(CS, Modifier):
     @staticmethod
     @functools.cache
     def get_run_args():
-        return ["--depsfile", "/cs/dotnet/configs/jypeli.deps.json"]
+        return ["--depsfile", "/cs_data/dotnet/configs/jypeli.deps.json"]
 
     def get_cmdline(self):
         mainfile = ""
@@ -787,7 +787,9 @@ class CSComtest(
     @staticmethod
     @functools.cache
     def get_build_refs():
-        with open("/cs/dotnet/configs/nunit_test.build.deps", encoding="utf-8") as f:
+        with open(
+            "/cs_data/dotnet/configs/nunit_test.build.deps", encoding="utf-8"
+        ) as f:
             dep_paths = [
                 os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip())
                 for dep_line in f.readlines()
@@ -797,7 +799,7 @@ class CSComtest(
     def get_cmdline(self):
         testcs = f"/tmp/{self.basename}/{self.filename}Test.cs"
         cmdline = (
-            f"java -jar /cs/java/cs/ComTest.jar nunit {self.sourcefilename} && "
+            f"java -jar /cs_data/java/cs/ComTest.jar nunit {self.sourcefilename} && "
             f"{self.compiler} -nologo -out:{self.testdll} -target:library {CSComtest.get_build_refs()} "
             f"{Jypeli.get_build_refs()} {self.sourcefilename} {testcs} /cs/dotnet/shims/TIMconsole.cs"
         )
@@ -811,7 +813,7 @@ class CSComtest(
                 "exec",
                 *CS.runtime_config(),
                 "--additional-deps",
-                "/cs/dotnet/configs/jypeli.deps.json:/cs/dotnet/configs/nunit_test.deps.json",
+                "/cs_data/dotnet/configs/jypeli.deps.json:/cs_data/dotnet/configs/nunit_test.deps.json",
                 "--roll-forward",
                 "LatestMajor",  # Force to use latest available .NET
                 "/dotnet_tools/nunit.console.dll",
@@ -1172,7 +1174,7 @@ class CComtest(Language):
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(
-            ["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", self.testcs]
+            ["java", "-jar", "/cs_data/java/comtestcpp.jar", "-nq", self.testcs]
         )
         out, err = check_comtest(self, "ccomtest", code, out, err, result, points_rule)
         return code, out, err, pwddir

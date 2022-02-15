@@ -13,6 +13,8 @@ x-caddy:
   - ${LOG_DIR:?}/caddy:/logs
   - ./timApp/modules/cs/generated:/tim/timApp/modules/cs/generated:ro
   - ./timApp/modules/cs/static:/tim/timApp/modules/cs/static:ro
+  - csplugin_data:/cs_data:ro
+  - csplugin_data_generated:/csgenerated:ro
  depends_on:
   - jsrunner
  environment:
@@ -127,14 +129,15 @@ services:
    target: ${CSPLUGIN_TARGET:-complete}
   volumes:
    - ${FILES_ROOT:?}/blocks/uploads:/uploads:ro
-   - ./timApp/modules/cs:/cs
+   - ./timApp/modules/cs:/cs:ro
    - /var/run/docker.sock:/var/run/docker.sock
-   - ./timApp/modules/cs/generated:/csgenerated
    - ./timApp/modules/cs/static:/csstatic:ro
    - ./tim_common:/cs/tim_common:ro
    - /tmp/${COMPOSE_PROJECT_NAME:?}_uhome:/tmp
    - ${LOG_DIR:?}/cs:/logs
    - /root/.ssh/
+   - csplugin_data:/cs_data
+   - csplugin_data_generated:/csgenerated
   networks:
    - csplugin_db
    - default
@@ -457,6 +460,8 @@ volumes:
  caddy_config:
  redis_data:
  csplugin_db_data:
+ csplugin_data:
+ csplugin_data_generated:
 networks:
  db:
  csplugin_db:

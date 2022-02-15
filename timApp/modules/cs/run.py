@@ -285,8 +285,16 @@ def run2(
 
     extra_mappings = extra_mappings or []
 
+    root_dir_path = root_dir.as_posix()
+
+    def resolve_mapping(p: str) -> list[str]:
+        orig = (
+            p if p.startswith("/cs_data/") else f"{root_dir_path}/timApp/modules/cs/{p}"
+        )
+        return ["-v", f"{orig}:/cs/{p}:ro"]
+
     path_mappings = [
-        ["-v", f"{root_dir.as_posix()}/timApp/modules/cs/{p}:/cs/{p}:ro"]
+        resolve_mapping(p)
         for p in [
             "rcmd.sh",
             "cpp",
@@ -296,8 +304,6 @@ def run2(
             "mathcheck",
             "fs",
             "data",
-            "simcir",
-            "MIRToolbox",
             *extra_mappings,
         ]
     ]
@@ -314,10 +320,14 @@ def run2(
         "--name",
         tmpname,
         "--rm=true",
+        "--tmpfs",
+        "/cs",
         *itertools.chain.from_iterable(path_mappings),
         *itertools.chain.from_iterable(user_mappings),
         "-v",
         f"/tmp/{compose_proj}_uhome/{udir}/:/home/agent/",
+        "-v",
+        f"{compose_proj}_csplugin_data:/cs_data:ro",
         *network_args,
         "-w",
         "/home/agent",
