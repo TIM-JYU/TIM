@@ -133,6 +133,7 @@ services:
    - ./timApp/modules/cs/static:/csstatic:ro
    - ./tim_common:/cs/tim_common:ro
    - /tmp/${COMPOSE_PROJECT_NAME:?}_uhome:/tmp
+   - ${LOG_DIR:?}/cs:/logs
    - /root/.ssh/
   networks:
    - csplugin_db

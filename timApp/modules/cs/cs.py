@@ -16,6 +16,7 @@ import socketserver
 import subprocess
 import time
 from base64 import b64encode
+from logging.handlers import RotatingFileHandler
 from os.path import splitext
 from pathlib import Path
 from subprocess import Popen, PIPE, check_output
@@ -730,28 +731,26 @@ def debug_str(s):
     print(t.isoformat(" ") + ": " + s)
 
 
-def log(self):
-    t = datetime.datetime.now()
-    agent = " :AG: " + self.headers["User-Agent"]
-    if agent.find("ython") >= 0:
-        agent = ""
-    logfile = "/cs/log.txt"
-    try:
-        with open(logfile, "a") as f:
-            f.write(
-                t.isoformat(" ")
-                + ": "
-                + self.path
-                + agent
-                + " u:"
-                + self.user_id
-                + "\n"
-            )
-    except Exception as e:
-        print(e)
-        return
+logger = None
 
-    return
+
+def get_logger():
+    global logger
+    if logger:
+        return logger
+    # Create a rotating logger in /cs_logs
+    logger = logging.getLogger("csplugin")
+    logger.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter(
+        "[%(asctime)s: %(levelname)s] %(user_id)s: %(message)s - UA: %(useragent)s"
+    )
+    # Max size is 100MB
+    max_size = 100 * 1024 * 1024
+    handler = RotatingFileHandler("/logs/cs_log.log", maxBytes=max_size, backupCount=5)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    return logger
 
 
 def replace_code(rules, s):
@@ -994,6 +993,14 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         super().__init__(request, client_address, _server)
         self.user_id = "--"
 
+    def log(self):
+        msg_logger = get_logger()
+        agent = self.headers.get("User-Agent", "unknown")
+        if agent.find("ython") >= 0:
+            agent = ""
+
+        msg_logger.info(self.path, extra={"user_id": self.user_id, "useragent": agent})
+
     def do_OPTIONS(self):
         print("do_OPTIONS ==============================================")
         self.send_response(200, "ok")
@@ -1040,7 +1047,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.user_id = get_param(querys[0], "user_id", "--")
         if self.user_id != "--":
             print("UserId:", self.user_id)
-        log(self)
+        self.log()
         # print(querys)
 
         global_anonymous = False
@@ -1116,7 +1123,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print(htmls)
         sresult = json.dumps(htmls)
         self.wout(sresult)
-        log(self)
+        self.log()
         t2 = time.perf_counter()
         t2t = time.time()
         ts = f"multihtml: {t2 - t1:7.4f} {t2t - t1t:7.4f}"
@@ -1253,7 +1260,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         self.user_id = get_param(query, "user_id", "--")
         if self.user_id != "--":
             print("UserId:", self.user_id)
-        log(self)
+        self.log()
         """
         if self.path.find('/login') >= 0:
             username = check_korppi_user(self,"tim")
@@ -1703,7 +1710,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
             # print(ttype)
             # ########################## Compiling programs ###################################################
-            log(self)
+            self.log()
             cmdline = ""
             if get_param(query, "justCompile", False) and "comtest" not in str(
                 ttype
