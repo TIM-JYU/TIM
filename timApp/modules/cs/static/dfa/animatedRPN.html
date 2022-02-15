@@ -116,7 +116,9 @@
           let commandY = this.rpn.commands.length * commandTextHeight;
           canvas.height = Math.max(stackY + stackItemHeight, commandY);
           context.clearRect(0, 0, canvas.width, canvas.height);
-          context.font = "bold 18px 'Courier New'";
+          let bold = "";
+          if (this.rpn.params["bold"]) bold = "bold ";
+          context.font = bold + "18px 'Courier New'";
           context.textAlign = "left";
           context.textBaseline = "middle";
           let code = this.rpn.commands;
