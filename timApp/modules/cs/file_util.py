@@ -16,6 +16,34 @@ def listify(item):
     return item if isinstance(item, list) else [item]
 
 
+DENY_PATH_LIST = ["/logs", "/cs_data", "/var/run/docker.sock"]
+
+
+def is_safe_path(path: str | Path):
+    """Returns whether a path is safe to use"""
+    p_abs = Path(path).resolve().as_posix()
+    if any(p_abs.startswith(d) for d in DENY_PATH_LIST):
+        return False
+    return True
+
+
+def write_safe(path: str, content: str, write_type: str = "w") -> bool:
+    """
+    Write contents to a file but only if the absolute path is not in DENY_PATH_LIST.
+
+    :param path: Path to write the file to
+    :param content: Contents to write
+    :param write_type: File open mode.
+    :return: True, if write was successful
+    """
+    p = Path(path)
+    if not is_safe_path(p):
+        return False
+    with p.open(write_type, encoding="utf-8") as f:
+        f.write(content)
+    return True
+
+
 nonascii_pat = re.compile(r"[^A-Za-z0-9_]")
 
 
@@ -89,6 +117,8 @@ def rm(path: Path):
 def copy_files_regex(f: str, source: str, dest: str):
     if f is None or source is None or dest is None:
         return 0
+    if not is_safe_path(dest):
+        return 0
 
     dest = Path(dest)
 
@@ -116,6 +146,8 @@ def copy_files_regex(f: str, source: str, dest: str):
 
 def copy_files_glob(glob: str, source: str, dest: str):
     if glob is None or source is None or dest is None:
+        return 0
+    if not is_safe_path(dest):
         return 0
 
     path = Path(source)

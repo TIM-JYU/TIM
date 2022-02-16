@@ -9,6 +9,7 @@ import uuid
 from pathlib import PurePath, PureWindowsPath
 from subprocess import PIPE, Popen
 
+from file_util import write_safe, is_safe_path
 from tim_common.fileParams import remove, mkdirs, tquote, get_param
 
 CS3_TAG = "elixir"
@@ -234,9 +235,7 @@ def run2(
             + stderrf
             + "\n"
         )
-        codecs.open(compf, "w", "utf-8").write(
-            compile_cmnds
-        )  # kirjoitetaan kääntämisskripti
+        write_safe(compf, compile_cmnds)
         os.chmod(compf, 0o777)
     else:
         cmnds = (
@@ -269,7 +268,7 @@ def run2(
     # print(cmdf)
     # print(cmnds)
     # print("============")
-    codecs.open(cmdf, "w", "utf-8").write(cmnds)  # kirjoitetaan komentotiedosto
+    write_safe(cmdf, cmnds)  # kirjoitetaan komentotiedosto
     mkdirs("/tmp/run")  # varmistetaan run-hakemisto
     udir = cwd.replace(
         "/tmp/", ""
@@ -435,16 +434,19 @@ def run2_subdir(args, dir=None, cwd=None, *kargs, **kwargs):
 
 def copy_file(f1, f2, remove_f1=False, is_optional=False):
     """Copy file.  This function is done, because basic copy2 seems to fail in some cases or to be more specific, the f1
-    may not be ready before starting copy. First if the file is not optional, it is waited to appear.  After appering it
-    should be more than 43 bytes long (seems the not ready file is many times 43 bytes long)
+    may not be ready before starting copy. First if the file is not optional, it is waited to appear.
+    After appearing, it should be more than 43 bytes long (seems the not ready file is many times 43 bytes long)
 
-    :param f1: file name to copyt
+    :param f1: file name to copy
     :param f2:
     :param remove_f1:
     :param is_optional:
     :return:
 
     """
+    if not is_safe_path(f2):
+        return False, f"Cannot write to {f2}"
+
     try:
         # print(f1, f2)
         count = 0

@@ -17,7 +17,7 @@ from zipfile import ZipFile
 
 import requests
 
-from file_util import File, default_filename
+from file_util import File, default_filename, write_safe
 from modifiers import Modifier
 from points import give_points
 from run import (
@@ -285,9 +285,7 @@ class Language:
                 userinput = ""
             if self.inputfilename.find("input.txt") >= 0:
                 stdin_default = "input.txt"
-            input_absolue = os.path.abspath(self.inputfilename)
-            if not input_absolue.startswith("/cs/"):
-                codecs.open(self.inputfilename, "w", "utf-8").write(userinput)
+            write_safe(self.inputfilename, userinput)
         self.stdin = get_param(self.query, "stdin", stdin_default)
 
     def before_save(self, s):
@@ -637,9 +635,7 @@ class Jypeli(CS, Modifier):
             if not classname:
                 classname = find_cs_class(sourcecode)
                 mainfile = "/tmp/{}/{}.cs".format(self.basename, "MainProgram")
-                codecs.open(mainfile, "w", "utf-8").write(
-                    f"using var game = new {classname}();game.Run();"
-                )
+                write_safe(mainfile, f"using var game = new {classname}();game.Run();")
 
         cmdline = f"{self.compiler} -nologo -out:{self.exename} {Jypeli.get_build_refs()} {options} {self.get_sourcefiles(mainfile)}"
         return cmdline
@@ -1528,8 +1524,7 @@ class CQL(Language):
         # Remove any USE statements from cleaned_source
         cleaned_source = CQL.use_cmd_pattern.sub("", cleaned_source)
 
-        with open(self.sourcefilename, "w") as f:
-            f.write(cleaned_source)
+        write_safe(self.sourcefilename, cleaned_source)
 
         code, out, err, pwddir = self.runself(
             [
@@ -1560,7 +1555,7 @@ class Alloy(Language):
         runcmd = [
             "java",
             "-cp",
-            "/cs/java/alloy-dev.jar:/cs/java",
+            "/cs/java/alloy-dev.jar:/cs/java:/cs_data/java",
             "RunAll",
             self.pure_exename,
         ]

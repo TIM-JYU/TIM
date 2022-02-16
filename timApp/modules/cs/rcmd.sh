@@ -5,7 +5,7 @@ export LANG=en_US.UTF-8
 export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs_data/java/comtest.jar:/cs_data/java/Ali.jar:/cs_data/java/Graphics.jar:/cs_data/java/fxgui.jar:/cs_data/java/gui.jar
 export PATH="$PATH:/cs/dotnet"
 
-# Create symlinks for some data folders for legacy reasons
+# Create symlinks for some data folders as they are expected to be found in /cs
 ln -s /cs_data/MIRToolbox /cs/MIRToolbox
 ln -s /cs_data/simcir /cs/simcir
 

@@ -24,6 +24,7 @@ from traceback import print_exc
 from urllib.request import urlopen
 
 from file_handler import FileHandler
+from file_util import write_safe
 from languages import dummy_language, sanitize_cmdline
 from manager import all_js_files, all_css_files
 from points import return_points, get_points_rule, check_number_rule, give_points
@@ -97,21 +98,27 @@ from ttype import TType
 #
 # Hakemistot:
 #  tim-koneessa
-#     /opt/cs               - varsinainen csPluginin hakemisto, skirptit yms
-#     /opt/cs/masters       - masterPath-attribuutin juurikansio
-#     /opt/cs/templates     - pluginin templatet editoria varten
-#     /opt/cs/java          - javan tarvitsemat tavarat
-#     /opt/cs/images/cs     - kuvat jotka syntyvät csPlugin ajamista ohjelmista
-#     /tmp/uhome            - käyttäjän hakemistoja ohjelmien ajamisen ajan
-#     /tmp/uhome/user       - käyttäjän hakemistoja ohjelmien ajamisen ajan
-#     /tmp/uhome/user/HASH  - yhden käyttäjän hakemisto joka säilyy ajojen välillä
+#     <tim polku>/timApp/modules/cs               - varsinainen csPluginin hakemisto, skirptit yms
+#     <tim polku>/timApp/modules/cs/masters       - masterPath-attribuutin juurikansio
+#     <tim polku>/timApp/modules/cs/templates     - pluginin templatet editoria varten
+#     <tim polku>/timApp/modules/cs/java          - javan tarvitsemat tavarat
+#     <tim polku>/timApp/modules/cs/images/cs     - kuvat jotka syntyvät csPlugin ajamista ohjelmista
+#     /tmp/uhome                                  - käyttäjän hakemistoja ohjelmien ajamisen ajan
+#     /tmp/uhome/user                             - käyttäjän hakemistoja ohjelmien ajamisen ajan
+#     /tmp/uhome/user/HASH                        - yhden käyttäjän hakemisto joka säilyy ajojen välillä
+#
 #
 # tim-koneesta käynnistetään cs docker-kontti nimelle csPlugin (./startPlugins.sh), jossa
 # mountataan em. hakemistoja seuraavasti:
 #
-#   /opt/cs  ->          /cs/          read only
-#   /opt/cs/images/cs -> /csimages/    kuvat
-#   /tmp/uhome:       -> /tmp/         käyttäjän jutut tänne
+#   <tim polku>/timApp/modules/cs  ->          /cs/          (ohjelmat ja polut, read only)
+#   <tim polku>/timApp/modules/cs/static  ->   /csstatic     (julkiset tiedostot, read only)
+#   <lokien polku>/cs                    -> /logs            (lokitiedostot, read/write)
+#   /tmp/uhome:       -> /tmp/                               käyttäjän jutut tänne
+#
+# Lisäksi konttiin lisätään volumet:
+#   csplugin_data  -> /cs_data                              (data, read/write)
+#   csplugin_data_generated -> /csgenerated                 käyttäjän ohjelmien kuvat ja muut julkiset tiedostot
 #
 # Käyttäjistä (csPlugin-kontissa) tehdään /tmp/user/HASHCODE
 # tai /tmp/HASHCODE nimiset hakemistot (USERPATH=user/HASHCODE tai HASHCODE),
@@ -200,7 +207,8 @@ def save_extra_files(query, extra_files, prgpath):
             # noinspection PyBroadException
             try:
                 s = replace_random(query, extra_file["text"])
-                codecs.open(efilename, "w", "utf-8").write(s)
+                if not write_safe(efilename, s):
+                    print(f"Tried to write to unsafe path: {efilename}")
             except:
                 print("Can not write", efilename)
         if "file" in extra_file:
@@ -210,9 +218,9 @@ def save_extra_files(query, extra_files, prgpath):
                     lines = get_url_lines_as_string(
                         replace_random(query, extra_file["file"]), headers
                     )
-                    codecs.open(efilename, "w", "utf-8").write(lines)
+                    write_safe(efilename, lines)
                 else:
-                    open(efilename, "wb").write(urlopen(extra_file["file"]).read())
+                    write_safe(efilename, urlopen(extra_file["file"]).read(), "wb")
             except Exception as e:
                 print(str(e))
                 print("XXXXXXXXXXXXXXXXXXXXXXXX Could no file cache: \n", efilename)
@@ -491,8 +499,7 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
 
         os.makedirs(filepath, exist_ok=True)
 
-        with open(filename, "w") as fh:
-            fh.write(htmldata)
+        write_safe(filename, htmldata)
 
         # return '<img src="' + img + '">'
         return htmldata
@@ -2038,11 +2045,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
 
         stdout = get_param(query, "stdout", None)
         if stdout:
-            outname = os.path.abspath(f"{language.filepath}/{stdout}")
-            if outname.startswith("/cs"):
+            outname = f"{language.filepath}/{stdout}"
+            if not write_safe(outname, out):
                 err += f"\nThe stdout path is not allowed: {outname}"
             else:
-                codecs.open(outname, "w", "utf-8").write(out)
                 stdtee = get_param(query, "stdtee", True)
                 if not stdtee:
                     out = ""
