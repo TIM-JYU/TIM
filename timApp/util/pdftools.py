@@ -709,17 +709,18 @@ ghostscript_regex = re.compile(r"Producer:\s*GPL Ghostscript")
 
 
 def is_pdf_producer_ghostscript(f: UploadedFile):
-    # r = subprocess.run(
-    #     [
-    #         "pdfinfo",
-    #         f.filesystem_path,
-    #     ],
-    #     capture_output=True,
-    # )
-    # stdout = r.stdout.decode(encoding="utf-8")
+    r = subprocess.run(
+        [
+            "pdfinfo",
+            f.filesystem_path,
+        ],
+        capture_output=True,
+    )
+    # Some documents include bad date, ignore them.
+    stdout = r.stdout.decode(encoding="utf-8", errors="ignore")
 
     # If the producer is Ghostscript, InfoValue contains also Ghostscript version, but let's not hardcode it here.
-    result = False  # ghostscript_regex.search(stdout) is not None
+    result = ghostscript_regex.search(stdout) is not None
     return result
 
 
