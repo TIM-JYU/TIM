@@ -122,20 +122,22 @@
           context.textBaseline = "middle";
           let code = this.rpn.commands;
           let line = this.rpn.stepnumber;
-          for (let i = 0; i < code.length; i++) {
-              let x = 20;
-              let y = 15 + i * commandTextHeight;
-              let h = commandTextHeight;
-              let txt = code[i].showText();
-              if (i === line) { //  && !code[i].isEnd())
-                context.fillStyle = 'yellow';
-                let width = context.measureText("PUSH 100000").width;
-                context.fillRect(x-10, y - h/2, width, commandTextHeight);
+          if (!this.rpn.params["nocode"]) {
+              for (let i = 0; i < code.length; i++) {
+                  let x = 20;
+                  let y = 15 + i * commandTextHeight;
+                  let h = commandTextHeight;
+                  let txt = code[i].showText();
+                  if (i === line) { //  && !code[i].isEnd())
+                      context.fillStyle = 'yellow';
+                      let width = context.measureText("PUSH 100000").width;
+                      context.fillRect(x - 10, y - h / 2, width, commandTextHeight);
+                  }
+                  // context.fillStyle = i === line ? "red" : "black";
+                  context.fillStyle = (i === line && line >= code.length - 1) ? "red" : "black";
+                  // context.fillText((i + 1), 10, 30+i*30);
+                  context.fillText(txt, x, y);
               }
-              // context.fillStyle = i === line ? "red" : "black";
-              context.fillStyle = (i === line && line >=  code.length-1) ? "red" : "black";
-              // context.fillText((i + 1), 10, 30+i*30);
-              context.fillText(txt, x, y);
           }
 
           drawStack(this.rpn.stack, stackX, "black");
