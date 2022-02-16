@@ -716,10 +716,10 @@ def is_pdf_producer_ghostscript(f: UploadedFile):
         ],
         capture_output=True,
     )
-    stdout = r.stdout.decode()
+    stdout = r.stdout.decode(encoding="utf-8")
 
     # If the producer is Ghostscript, InfoValue contains also Ghostscript version, but let's not hardcode it here.
-    result = ghostscript_regex.search(stdout) is not None
+    result = False  # ghostscript_regex.search(stdout) is not None
     return result
 
 
