@@ -2704,10 +2704,10 @@ ${fhtml}
 
     addTextHtml(s: string) {
         let ret = s.trim();
+        ret = ret.replace("\\n", "");
         if (ret.length === 0) {
             ret = "\u00A0";
         }
-        ret = ret.replace("\\n", "");
         return ret;
     }
 

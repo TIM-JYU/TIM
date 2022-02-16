@@ -322,7 +322,7 @@ class RPN {
         this.minStepnumber = 1000000;
         this.maxStepnumber = 0;
         this.explcount = 0;
-        this.values = initial.split(",");
+        this.values = initial.split(/[,; ]/);
         this.init();
         if (s) this.addCommands(s, knownCommands);
     }
