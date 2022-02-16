@@ -203,7 +203,8 @@ RUN mkdir /service
 RUN useradd -M agent
 RUN chown -R agent /service
 
-RUN bash -c "${APT_INSTALL} curl pdftk gpg-agent poppler-utils && ${APT_CLEANUP} && pdftk --version && curl --version"
+RUN bash -c "${APT_INSTALL} curl qpdf gpg-agent poppler-utils && ${APT_CLEANUP} && \
+    curl --version && qpdf --version"
 
 # On current TIM production server, using latest versions of Node and NPM will cause
 # ./npmi and ./js scripts to fail, causing the following symptoms:
@@ -254,7 +255,6 @@ RUN if [ -z "$CHROME_DRIVER_VERSION" ]; \
   && mv /opt/selenium/chromedriver /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
   && chmod 755 /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
   && ln -fs /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION /usr/bin/chromedriver
-
 
 WORKDIR /service
 
