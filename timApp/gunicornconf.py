@@ -12,6 +12,8 @@ worker_class = (
 )
 limit_request_line = 0
 timeout = 600
+max_requests = 5000
+max_requests_jitter = 500
 
 
 def post_fork(server: Any, worker: Any) -> None:
