@@ -2707,6 +2707,7 @@ ${fhtml}
         if (ret.length === 0) {
             ret = "\u00A0";
         }
+        ret = ret.replace("\\n", "");
         return ret;
     }
 
