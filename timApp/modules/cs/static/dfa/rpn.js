@@ -450,6 +450,7 @@ class RPN {
     }
 
     isEnd() {
+        if (this.commands.length == 0) return true;
         let cmd = this.commands[this.stepnumber];
         return cmd.isEnd();
     }
