@@ -444,6 +444,12 @@ interface IUploadResponse {
     block: number;
 }
 
+interface ITemplateButton {
+    html: string;
+    text: string;
+    title?: string;
+}
+
 /**
  * This defines the required format for the csPlugin YAML markup.
  * All fields in the markup are optional (as indicated by t.partial function).
@@ -974,7 +980,8 @@ export class CsController extends CsBase implements ITimComponent {
     viewCode!: boolean;
     wavURL: string = "";
     wrap!: {n: number; auto: boolean};
-    buttons: string[] = [];
+    templateButtons: ITemplateButton[] = [];
+    templateButtonsCount: number = 0;
     mdHtml?: string;
 
     iframesettings?: {
@@ -1882,36 +1889,63 @@ ${fhtml}
         );
     }
 
-    getTemplateButtons(): string[] {
+    createTemplateButtons() {
         let b = this.markup.buttons;
-        if (b) {
-            const helloButtons =
-                "public \nclass \nHello \n\\n\n{\n}\n" +
-                "static \nvoid \n Main\n(\n)\n" +
-                '        Console.WriteLine(\n"\nworld!\n;\n ';
-            const typeButtons =
-                "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
-            const charButtons =
-                "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
-            b = b.replace("$hellobuttons$", helloButtons);
-            b = b.replace("$typebuttons$", typeButtons);
-            b = b.replace("$charbuttons$", charButtons);
-            b = b.trim();
-            b = b.replace("$space$", " ");
-            const btns = b.split("\n");
-            for (let i = 0; i < btns.length; i++) {
-                let s = btns[i];
-                if (s.length < 1) {
-                    continue;
-                }
-                if (s.startsWith('"') || s.startsWith("'")) {
-                    s = s.replace(new RegExp(s[0], "g"), "");
-                    btns[i] = s;
-                }
-            }
-            return btns;
+        if (!b) {
+            return;
         }
-        return [];
+        const helloButtons =
+            "public \nclass \nHello \n\\n\n{\n}\n" +
+            "static \nvoid \n Main\n(\n)\n" +
+            '        Console.WriteLine(\n"\nworld!\n;\n ';
+        const typeButtons =
+            "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
+        const charButtons =
+            "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
+        b = b.replace("$hellobuttons$", helloButtons);
+        b = b.replace("$typebuttons$", typeButtons);
+        b = b.replace("$charbuttons$", charButtons);
+        b = b.trim();
+        b = b.replace("$space$", " ");
+        const btns = b.split("\n");
+        for (let i = 0; i < btns.length; i++) {
+            let s = btns[i];
+            if (s.length < 1) {
+                continue;
+            }
+            if (s.startsWith('"') || s.startsWith("'")) {
+                s = s.replace(new RegExp(s[0], "g"), "");
+                btns[i] = s;
+            }
+        }
+        for (const s of btns) {
+            if (!s.startsWith("[")) {
+                this.templateButtons.push({
+                    html: this.getButtonTextHtml(s),
+                    text: s,
+                });
+                continue;
+            }
+            try {
+                const pair = JSON.parse(s);
+                const item: ITemplateButton = {html: pair[0], text: pair[0]};
+                if (pair.length > 1 && pair[1] !== "") {
+                    item.text = pair[1];
+                }
+                if (pair.length > 2 && pair[2] !== "") {
+                    item.title = pair[2];
+                }
+                this.templateButtons.push(item);
+            } catch (e) {
+                this.templateButtons.push({
+                    html: "error",
+                    text: "",
+                    title: "" + e,
+                });
+            }
+        }
+        this.templateButtonsCount = this.templateButtons.length;
+        return btns;
     }
 
     get progLanguages() {
@@ -2000,7 +2034,7 @@ ${fhtml}
         this.vctrl = vctrlInstance!;
         this.hide = this.attrsall.markup.hide ?? {};
         //  if ( typeof this.markup.borders !== 'undefined' ) this.markup.borders = true;
-        this.buttons = this.getTemplateButtons();
+        this.createTemplateButtons();
         const isText = this.isText;
         const isArgs = this.type.includes("args");
         if (this.attrsall.markup.docurl) {
@@ -2702,7 +2736,7 @@ ${fhtml}
         this.editor?.insert?.(text);
     }
 
-    addTextHtml(s: string) {
+    getButtonTextHtml(s: string) {
         let ret = s.trim();
         ret = ret.replace("\\n", "");
         if (ret.length === 0) {
@@ -3612,8 +3646,8 @@ ${fhtml}
                     [placeholder]="argsplaceholder"></span>
     </div>
     <cs-count-board *ngIf="count" [options]="count"></cs-count-board>
-    <p class="csRunSnippets" *ngIf="buttons && !noeditor">
-        <button *ngFor="let item of buttons" (click)="addText(item)">{{addTextHtml(item)}}</button>
+    <p class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
+        <button *ngFor="let item of templateButtons;" (click)="addText(item.text)" title="{{item.title}}">{{item.html}}</button>
         &nbsp;&nbsp;
     </p>
     <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
