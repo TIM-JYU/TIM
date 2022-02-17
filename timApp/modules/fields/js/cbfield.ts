@@ -4,6 +4,7 @@
 import angular from "angular"; // , {INgModelOptions}
 import * as t from "io-ts";
 import {
+    ChangeType,
     FormModeOption,
     ISetAnswerResult,
     ITimComponent,
@@ -142,6 +143,12 @@ class CbfieldController
         return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
     }
 
+    resetChanges(): void {
+        this.userword = this.initialValue;
+        this.updateListeners(ChangeType.Saved);
+        this.scope.$digest();
+    }
+
     // TODO: Use answer content as arg or entire IAnswer?
     setAnswer(content: Record<string, unknown>): ISetAnswerResult {
         this.errormessage = undefined;
@@ -205,6 +212,7 @@ class CbfieldController
         );
         this.initialValue = this.userword;
         this.result = undefined;
+        this.updateListeners(ChangeType.Saved);
     }
 
     /**
@@ -267,6 +275,9 @@ class CbfieldController
             this.preventedAutosave = false;
             return;
         }
+        this.updateListeners(
+            this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved
+        );
         if (this.attrs.autosave || this.attrs.autosave === undefined) {
             this.saveText();
         }
@@ -311,6 +322,7 @@ class CbfieldController
             this.errormessage = data.web.error;
             this.result = data.web.result;
             this.initialValue = this.userword;
+            this.updateListeners(ChangeType.Saved);
             this.hideSavedText = false;
             this.saveResponse.saved = true;
             this.saveResponse.message = this.errormessage;
@@ -324,6 +336,21 @@ class CbfieldController
 
     getAttributeType() {
         return CbfieldAll;
+    }
+
+    updateListeners(state: ChangeType) {
+        if (!this.vctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        this.vctrl.informChangeListeners(
+            taskId,
+            state,
+            this.attrs.tag ? this.attrs.tag : undefined
+        );
     }
 }
 
