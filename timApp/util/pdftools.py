@@ -346,7 +346,7 @@ def test_pdf(pdf_path: Path, timeout_seconds: int = pdfmerge_timeout) -> str:
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = p.communicate(timeout=timeout_seconds)
     # Return codes: https://qpdf.readthedocs.io/en/stable/cli.html#exit-status
-    if p.returncode == 2:
+    if p.returncode in (1, 2):
         return parse_error(err.decode(encoding="utf-8"))
     return ""
 
@@ -401,7 +401,7 @@ def merge_pdfs(pdf_file_list: list[UploadedFile], output_path: Path):
         "--",
         output_path.absolute().as_posix(),
     ]
-    call_popen(args, pdfmerge_timeout)
+    qpdf_popen(args, pdfmerge_timeout)
 
 
 def parse_tim_url(par_file: str) -> Path | None:
@@ -590,7 +590,7 @@ def stamp_pdf(
         "--",
         output_path.absolute().as_posix(),
     ]
-    call_popen(args)
+    qpdf_popen(args)
 
     # Optionally clean up the stamp-pdf after use.
     if remove_stamp:
@@ -598,9 +598,9 @@ def stamp_pdf(
     return output_path
 
 
-def call_popen(args: list[str], timeout_seconds=default_subprocess_timeout) -> None:
+def qpdf_popen(args: list[str], timeout_seconds=default_subprocess_timeout) -> None:
     """
-    Calls Popen with args list, checks return code and
+    Calls Popen with args list for QPDF, checks QPDF-specific error code and
     raises error if timeouted.
     :param args: List of arguments.
     :param timeout_seconds: Timeout after which error is raised.
@@ -610,7 +610,8 @@ def call_popen(args: list[str], timeout_seconds=default_subprocess_timeout) -> N
         p = Popen(args, stdout=PIPE, stderr=PIPE)
         out, err = p.communicate(timeout=timeout_seconds)
         rc = p.returncode
-        if rc != 0:
+        # QPDF return codes: https://qpdf.readthedocs.io/en/stable/cli.html#exit-status
+        if rc in (1, 2):
             raise SubprocessError(err.decode(encoding="utf-8"))
     except FileNotFoundError:
         raise SubprocessError(" ".join(args))
