@@ -699,6 +699,7 @@ class Jypeli(CS, Modifier):
         if (save_hash == old_hash or self.hash_by_code) and os.path.isfile(saved_file):
             out = state.get("save_out", "")
             code, out, err, pwddir = 0, out, "", ""
+            self.imgdest += f"?{save_hash}"
             result["nosave"] = True
         else:
             code, out, err, pwddir = self.runself(
