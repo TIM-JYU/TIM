@@ -31,8 +31,10 @@ import {
     copyToClipboard,
     defaultErrorMessage,
     defaultTimeout,
+    Result,
     timeout,
     to,
+    to2,
     toPromise,
     valueDefu,
     valueOr,
@@ -41,6 +43,8 @@ import {TimDefer} from "tim/util/timdefer";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import deepEqual from "deep-equal";
 import {SimcirConnectorDef, SimcirDeviceInstance} from "../simcir/simcir-all";
+import {showInputDialog} from "../../../static/scripts/tim/ui/showInputDialog";
+import {InputDialogKind} from "../../../static/scripts/tim/ui/input-dialog.kind";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import {EditorComponent, EditorFile, Mode} from "./editor/editor";
@@ -444,10 +448,18 @@ interface IUploadResponse {
     block: number;
 }
 
+interface ITemplateParam {
+    def: string;
+    text: string;
+    regexp: string;
+    errmsg: string;
+}
+
 interface ITemplateButton {
     html: string;
     text: string;
     title?: string;
+    params?: ITemplateParam[];
 }
 
 /**
@@ -1927,13 +1939,31 @@ ${fhtml}
                 continue;
             }
             try {
-                const pair = JSON.parse(s);
-                const item: ITemplateButton = {html: pair[0], text: pair[0]};
-                if (pair.length > 1 && pair[1] !== "") {
-                    item.text = pair[1];
+                const parsed = JSON.parse(s);
+                const item: ITemplateButton = {
+                    html: parsed[0],
+                    text: parsed[0],
+                };
+                if (parsed.length > 1 && parsed[1] !== "") {
+                    item.text = parsed[1];
                 }
-                if (pair.length > 2 && pair[2] !== "") {
-                    item.title = pair[2];
+                if (parsed.length > 2 && parsed[2] !== "") {
+                    item.title = parsed[2];
+                }
+                if (parsed.length > 3) {
+                    item.params = [];
+                }
+                for (let i = 3; i < parsed.length; i++) {
+                    const p = parsed[i];
+                    const param: ITemplateParam = {
+                        def: p[0] ?? "",
+                        text: p[1] ?? "",
+                        regexp: p[2] ?? "",
+                        errmsg: p[3] ?? "",
+                    };
+                    if (p.length > 0) {
+                        item.params?.push(param);
+                    }
                 }
                 this.templateButtons.push(item);
             } catch (e) {
@@ -2727,10 +2757,45 @@ ${fhtml}
         this.muokattu = false;
     }
 
-    addText(s: string) {
+    async addText(item: ITemplateButton) {
+        let s = item.text;
         if (this.noeditor) {
             this.userargs += s + " ";
             return;
+        }
+        let ip = 0;
+        while (s.includes("\\?")) {
+            let param: ITemplateParam = {
+                def: "",
+                text: "Value",
+                regexp: ".*",
+                errmsg: "",
+            };
+            if (item.params && ip < item.params.length) {
+                param = item.params[ip];
+            }
+            const re = new RegExp(param.regexp);
+            const replace = await to2(
+                showInputDialog({
+                    isInput: InputDialogKind.InputAndValidator,
+                    text: param.text,
+                    title: "Parameter",
+                    okText: "OK",
+                    defaultValue: param.def,
+                    validator: (input) =>
+                        new Promise<Result<string, string>>((res) => {
+                            if (!input.match(re)) {
+                                return res({ok: false, result: param.errmsg});
+                            }
+                            return res({ok: true, result: input});
+                        }),
+                })
+            );
+            if (!replace.ok) {
+                return "";
+            }
+            s = s.replace("\\?", replace.result);
+            ip++;
         }
         const text = s.replace(/\\n/g, "\n");
         this.editor?.insert?.(text);
@@ -3647,7 +3712,7 @@ ${fhtml}
     </div>
     <cs-count-board *ngIf="count" [options]="count"></cs-count-board>
     <p class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
-        <button *ngFor="let item of templateButtons;" (click)="addText(item.text)" title="{{item.title}}">{{item.html}}</button>
+        <button *ngFor="let item of templateButtons;" (click)="addText(item)" title="{{item.title}}">{{item.html}}</button>
         &nbsp;&nbsp;
     </p>
     <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"

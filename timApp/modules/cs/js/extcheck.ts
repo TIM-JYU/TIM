@@ -46,6 +46,7 @@ interface IRunResult {
     penalties: string[];
 }
 
+// noinspection TypeScriptUnresolvedVariable
 @Component({
     selector: "cs-extcheck-runner",
     styleUrls: ["./extcheck.scss"],
@@ -111,7 +112,7 @@ interface IRunResult {
             </div>
             <cs-count-board *ngIf="markup.count" [options]="markup.count"></cs-count-board>
             <p class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
-                <button *ngFor="let item of templateButtons;" (click)="addText(item.text)" title="{{item.title}}">{{item.html}}</button>
+                <button *ngFor="let item of templateButtons;" (click)="addText(item)" title="{{item.title}}">{{item.html}}</button>
                 &nbsp;&nbsp;
             </p>
             <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
