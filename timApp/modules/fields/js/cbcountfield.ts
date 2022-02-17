@@ -4,6 +4,7 @@
 import angular from "angular"; // , {INgModelOptions}
 import * as t from "io-ts";
 import {
+    ChangeType,
     FormModeOption,
     ISetAnswerResult,
     ITimComponent,
@@ -166,6 +167,11 @@ class CbcountfieldController
         return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
     }
 
+    resetChanges(): void {
+        this.userword = this.initialValue;
+        this.updateListeners(ChangeType.Saved);
+    }
+
     // TODO: Use answer content as arg or entire IAnswer?
     setAnswer(content: Record<string, unknown>): ISetAnswerResult {
         this.errormessage = undefined;
@@ -293,6 +299,9 @@ class CbcountfieldController
             this.preventedAutosave = false;
             return;
         }
+        this.updateListeners(
+            this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved
+        );
         if (this.attrs.autosave || this.attrs.autosave === undefined) {
             this.saveText();
         }
@@ -350,6 +359,7 @@ class CbcountfieldController
                 this.disabled = true;
             }
             this.initialValue = this.userword;
+            this.updateListeners(ChangeType.Saved);
             this.hideSavedText = false;
             this.saveResponse.saved = true;
             this.saveResponse.message = this.errormessage;
@@ -363,6 +373,21 @@ class CbcountfieldController
 
     getAttributeType() {
         return CbcountfieldAll;
+    }
+
+    updateListeners(state: ChangeType) {
+        if (!this.vctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        this.vctrl.informChangeListeners(
+            taskId,
+            state,
+            this.attrs.tag ? this.attrs.tag : undefined
+        );
     }
 }
 

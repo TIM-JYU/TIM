@@ -4,6 +4,7 @@
 import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
 import {
+    ChangeType,
     FormModeOption,
     ISetAnswerResult,
     ITimComponent,
@@ -153,6 +154,11 @@ class RbfieldController
         return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
     }
 
+    resetChanges() {
+        this.userword = this.initialValue;
+        this.updateListeners(ChangeType.Saved);
+    }
+
     setAnswer(content: Record<string, unknown>): ISetAnswerResult {
         this.errormessage = undefined;
         let message;
@@ -211,6 +217,7 @@ class RbfieldController
         this.userword = this.attrs.initword ?? "";
         this.initialValue = this.userword;
         this.result = undefined;
+        this.updateListeners(ChangeType.Saved);
     }
 
     /**
@@ -264,6 +271,9 @@ class RbfieldController
 
     setChecked(b: boolean) {
         this.userword = b ? "1" : "0";
+        this.updateListeners(
+            this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved
+        );
         if (this.attrs.autosave || this.attrs.autosave === undefined) {
             // We want to save the plugin regardless of unSaved status to prevent two radio buttons
             // from being checked at the same time.
@@ -296,6 +306,9 @@ class RbfieldController
             }
             c.setChecked(false);
         }
+        this.updateListeners(
+            this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved
+        );
         if (this.preventedAutosave) {
             this.preventedAutosave = false;
             return;
@@ -336,6 +349,7 @@ class RbfieldController
             this.errormessage = data.web.error;
             this.result = data.web.result;
             this.initialValue = this.userword;
+            this.updateListeners(ChangeType.Saved);
             this.hideSavedText = false;
             this.saveResponse.saved = true;
             this.saveResponse.message = this.errormessage;
@@ -349,6 +363,21 @@ class RbfieldController
 
     getAttributeType() {
         return RbfieldAll;
+    }
+
+    updateListeners(state: ChangeType) {
+        if (!this.vctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        this.vctrl.informChangeListeners(
+            taskId,
+            state,
+            this.attrs.tag ? this.attrs.tag : undefined
+        );
     }
 }
 
