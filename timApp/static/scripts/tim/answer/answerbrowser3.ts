@@ -1227,7 +1227,7 @@ export class AnswerBrowserController
     }
 
     async getAvailableUsers() {
-        // Temporarily prevent getting ALL users for a global task since the answers are the same
+        // No need to poll task users for global tasks as global answers are the same for all
         if (this.isGlobal()) {
             return;
         }
