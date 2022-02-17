@@ -7,6 +7,7 @@ from typing import NewType
 
 from marshmallow import fields
 
+from cs_logging import log_warning
 from loadable import Loadable
 from tim_common.fileParams import get_param, mkdirs
 from tim_common.marshmallow_dataclass import dataclass
@@ -111,6 +112,7 @@ def rm(path: str | Path):
     if isinstance(path, str):
         path = Path(path)
     if not is_safe_path(path):
+        log_warning(f"rm: refusing to remove unsafe path: {path}")
         return
     if path.is_dir():
         rmtree(str(path))

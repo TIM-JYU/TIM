@@ -16,13 +16,13 @@ import socketserver
 import subprocess
 import time
 from base64 import b64encode
-from logging.handlers import RotatingFileHandler
 from os.path import splitext
 from pathlib import Path
 from subprocess import Popen, PIPE, check_output
 from traceback import print_exc
 from urllib.request import urlopen
 
+from cs_logging import get_logger
 from file_handler import FileHandler
 from file_util import write_safe, rm, rm_safe
 from languages import dummy_language, sanitize_cmdline
@@ -733,28 +733,6 @@ def wait_file(f1):
 def debug_str(s):
     t = datetime.datetime.now()
     print(t.isoformat(" ") + ": " + s)
-
-
-logger = None
-
-
-def get_logger():
-    global logger
-    if logger:
-        return logger
-    # Create a rotating logger in /cs_logs
-    logger = logging.getLogger("csplugin")
-    logger.setLevel(logging.DEBUG)
-
-    formatter = logging.Formatter(
-        "[%(asctime)s: %(levelname)s] %(user_id)s: %(message)s - UA: %(useragent)s"
-    )
-    # Max size is 100MB
-    max_size = 100 * 1024 * 1024
-    handler = RotatingFileHandler("/logs/cs_log.log", maxBytes=max_size, backupCount=5)
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    return logger
 
 
 def replace_code(rules, s):
