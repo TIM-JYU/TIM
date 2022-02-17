@@ -1227,6 +1227,10 @@ export class AnswerBrowserController
     }
 
     async getAvailableUsers() {
+        // Temporarily prevent getting ALL users for a global task since the answers are the same
+        if (this.isGlobal()) {
+            return;
+        }
         this.loading++;
         const r = await to(
             $http.get<IUser[]>(
