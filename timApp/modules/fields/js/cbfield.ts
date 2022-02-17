@@ -146,6 +146,7 @@ class CbfieldController
     resetChanges(): void {
         this.userword = this.initialValue;
         this.updateListeners(ChangeType.Saved);
+        this.scope.$digest();
     }
 
     // TODO: Use answer content as arg or entire IAnswer?

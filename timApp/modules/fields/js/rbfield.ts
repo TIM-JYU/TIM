@@ -157,6 +157,7 @@ class RbfieldController
     resetChanges() {
         this.userword = this.initialValue;
         this.updateListeners(ChangeType.Saved);
+        this.scope.$digest();
     }
 
     setAnswer(content: Record<string, unknown>): ISetAnswerResult {

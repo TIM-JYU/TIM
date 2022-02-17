@@ -161,6 +161,7 @@ class TextfieldController
         this.userword = this.initialValue;
         this.changes = false;
         this.updateListeners(ChangeType.Saved);
+        this.scope.$digest();
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
