@@ -107,11 +107,22 @@ class File(Loadable):
         return File(default_filename(query), "editor", content)
 
 
-def rm(path: Path):
+def rm(path: str | Path):
+    if isinstance(path, str):
+        path = Path(path)
+    if not is_safe_path(path):
+        return
     if path.is_dir():
         rmtree(str(path))
     else:
         path.unlink()
+
+
+def rm_safe(path: str | Path):
+    try:
+        rm(path)
+    except:
+        pass
 
 
 def copy_files_regex(f: str, source: str, dest: str):

@@ -17,7 +17,7 @@ from zipfile import ZipFile
 
 import requests
 
-from file_util import File, default_filename, write_safe
+from file_util import File, default_filename, write_safe, rm_safe
 from modifiers import Modifier
 from points import give_points
 from run import (
@@ -36,7 +36,6 @@ from tim_common.fileParams import (
     get_param,
     get_json_param,
     hash_user_dir,
-    remove,
     find_cs_class,
     remove_before,
     find_java_package,
@@ -428,7 +427,7 @@ class Language:
             if e:
                 err = str(err) + "\n" + str(e) + "\n" + str(out)
             # print(self.is_optional_image, image_ok)
-            remove(self.imgsource)
+            rm_safe(self.imgsource)
             if image_ok:
                 web = result["web"]
                 if self.imgname:
@@ -735,9 +734,9 @@ class Jypeli(CS, Modifier):
                 self.imgdest = ""
             else:
                 wait_file(self.imgsource)
-                remove(self.imgdest)
+                rm_safe(self.imgdest)
                 run(["mv", "-f", self.imgsource, self.imgdest], timeout=50)
-                remove(self.imgsource)
+                rm_safe(self.imgsource)
                 self.videodest = ""
                 self.imgdest += f"?{time_tag}"
         result["save"]["save_hash"] = save_hash
@@ -765,8 +764,8 @@ class Jypeli(CS, Modifier):
             give_points(points_rule, "run")
             self.run_points_given = True
         if self.delete_tmp:
-            remove(self.sourcefilename)
-            remove(self.exename)
+            rm_safe(self.sourcefilename)
+            rm_safe(self.exename)
         return code, out, err, pwddir
 
 
@@ -1854,8 +1853,8 @@ class R(Language):
         err = re.sub("^This is vegan .*\n", "", err, flags=re.M)
         out, err = self.copy_image(result, code, out, err, points_rule)
         if self.delete_tmp:
-            remove(self.sourcefilename)
-            remove(self.exename)
+            rm_safe(self.sourcefilename)
+            rm_safe(self.exename)
 
         return code, out, err, pwddir
 
@@ -2141,7 +2140,7 @@ class Octave(Language):
             print("err2: ", err)
         out, err = self.copy_image(result, code, out, err, points_rule)
         if self.wavsource and self.wavdest:
-            remove(self.wavdest)
+            rm_safe(self.wavdest)
             wav_ok, e = copy_file(
                 self.filepath + "/" + self.wavsource,
                 self.wavdest,
@@ -2151,7 +2150,7 @@ class Octave(Language):
             if e:
                 err = str(err) + "\n" + str(e) + "\n" + str(out)
             # print("WAV: ", self.is_optional_image, wav_ok, self.wavname, self.wavsource, self.wavdest)
-            remove(self.wavsource)
+            rm_safe(self.wavsource)
             web = result["web"]
             if wav_ok:
                 web["wav"] = "/csgenerated/" + self.wavname

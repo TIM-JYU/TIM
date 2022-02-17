@@ -9,8 +9,8 @@ import uuid
 from pathlib import PurePath, PureWindowsPath
 from subprocess import PIPE, Popen
 
-from file_util import write_safe, is_safe_path
-from tim_common.fileParams import remove, mkdirs, tquote, get_param
+from file_util import write_safe, is_safe_path, rm_safe
+from tim_common.fileParams import mkdirs, tquote, get_param
 
 CS3_TAG = "elixir"
 CS3_TARGET = os.environ.get("CSPLUGIN_TARGET", "")
@@ -133,7 +133,7 @@ class RunCleaner:
             subprocess.run(["docker", "kill", self.container])
 
         for file in self.files:
-            remove(file)
+            rm_safe(file)
 
 
 # noinspection PyBroadException
@@ -254,11 +254,7 @@ def run2(
             + s_in
             + "\n"
         )
-        try:
-            os.remove(compf)
-        except:
-            pass
-
+        rm_safe(compf)
     # cmnds = "#!/usr/bin/env bash\n" + ulimit + "\n" + extra + cmnds + " 1>" + "~/" +
     # stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
     # print("============")
@@ -464,7 +460,7 @@ def copy_file(f1, f2, remove_f1=False, is_optional=False):
             # print(s1.st_size, " ?? ", s2.st_size)
             if s1.st_size == s2.st_size:
                 if remove_f1:
-                    remove(f1)
+                    rm_safe(f1)
                 return True, ""
             # print(s1.st_size, " != ", s2.st_size)
         print("Copy error!!!")

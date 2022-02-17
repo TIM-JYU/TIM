@@ -24,7 +24,7 @@ from traceback import print_exc
 from urllib.request import urlopen
 
 from file_handler import FileHandler
-from file_util import write_safe
+from file_util import write_safe, rm, rm_safe
 from languages import dummy_language, sanitize_cmdline
 from manager import all_js_files, all_css_files
 from points import return_points, get_points_rule, check_number_rule, give_points
@@ -238,7 +238,7 @@ def delete_extra_files(extra_files, prgpath):
                 efilename = prgpath + "/" + extra_file["name"]
             # noinspection PyBroadException
             try:
-                os.remove(efilename)
+                rm(efilename)
             except:
                 print("Can not delete: ", efilename)
 
@@ -477,10 +477,7 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
                 + image_attributes
                 + "/>"
             )
-            try:
-                os.remove(img)
-            except:
-                pass
+            rm_safe(img)
 
         video = ret["web"].get("video", None)
         if video:
