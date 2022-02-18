@@ -7,6 +7,7 @@ from typing import NewType
 
 from marshmallow import fields
 
+from cs_logging import log_warning
 from loadable import Loadable
 from tim_common.fileParams import get_param, mkdirs
 from tim_common.marshmallow_dataclass import dataclass
@@ -14,6 +15,34 @@ from tim_common.marshmallow_dataclass import dataclass
 
 def listify(item):
     return item if isinstance(item, list) else [item]
+
+
+DENY_PATH_LIST = ["/logs", "/cs_data", "/var/run/docker.sock"]
+
+
+def is_safe_path(path: str | Path):
+    """Returns whether a path is safe to use"""
+    p_abs = Path(path).resolve().as_posix()
+    if any(p_abs.startswith(d) for d in DENY_PATH_LIST):
+        return False
+    return True
+
+
+def write_safe(path: str, content: str, write_type: str = "w") -> bool:
+    """
+    Write contents to a file but only if the absolute path is not in DENY_PATH_LIST.
+
+    :param path: Path to write the file to
+    :param content: Contents to write
+    :param write_type: File open mode.
+    :return: True, if write was successful
+    """
+    p = Path(path)
+    if not is_safe_path(p):
+        return False
+    with p.open(write_type, encoding="utf-8") as f:
+        f.write(content)
+    return True
 
 
 nonascii_pat = re.compile(r"[^A-Za-z0-9_]")
@@ -79,15 +108,29 @@ class File(Loadable):
         return File(default_filename(query), "editor", content)
 
 
-def rm(path: Path):
+def rm(path: str | Path):
+    if isinstance(path, str):
+        path = Path(path)
+    if not is_safe_path(path):
+        log_warning(f"rm: refusing to remove unsafe path: {path}")
+        return
     if path.is_dir():
         rmtree(str(path))
     else:
         path.unlink()
 
 
+def rm_safe(path: str | Path):
+    try:
+        rm(path)
+    except:
+        pass
+
+
 def copy_files_regex(f: str, source: str, dest: str):
     if f is None or source is None or dest is None:
+        return 0
+    if not is_safe_path(dest):
         return 0
 
     dest = Path(dest)
@@ -116,6 +159,8 @@ def copy_files_regex(f: str, source: str, dest: str):
 
 def copy_files_glob(glob: str, source: str, dest: str):
     if glob is None or source is None or dest is None:
+        return 0
+    if not is_safe_path(dest):
         return 0
 
     path = Path(source)
