@@ -757,16 +757,31 @@ const SCROLLBAR_APPROX_WIDTH = 17;
     template: `
 
         <div style="position: relative;">
-            <div *ngIf="bgSources.length > 1" style="position: absolute; top: 50%; left:-5%; display: flex; flex-flow: column; gap: 1em;
+            <div style="position: absolute; top: 50%; left:-5%; display: flex; flex-flow: column; gap: 1em;
                          -ms-transform: translateY(-50%); transform: translateY(-50%); z-index: 4;">
-                <button title="Previous image" class="btn btn-primary" (click)="scrollBgImage(false)">&uarr;
-                </button>
-                <button title="Next image" class="btn btn-primary" (click)="scrollBgImage(true)">&darr;
-                </button>
+                <div *ngIf="bgSources.length > 1" style="display: flex; flex-flow: column;">
+                    <button title="Previous image" class="btn btn-primary" (click)="scrollBgImage(false)">&uarr;
+                    </button>
+                    <button title="Next image" class="btn btn-primary" (click)="scrollBgImage(true)">&darr;
+                    </button>
+                </div>
+                <div style="display: flex; flex-flow: column;">
+                   <button title="Zoom in" class="btn btn-primary" (click)="zoom(0.1)">
+                       <i class="glyphicon glyphicon-zoom-in"></i>
+                    </button>
+                    <!-- TODO icons-->
+                    <button title="Reset zoom" class="btn btn-primary" (click)="zoom(0)">R
+                    </button>
+                    <button title="Zoom out" class="btn btn-primary" (click)="zoom(-0.1)">
+                       <i class="glyphicon glyphicon-zoom-out"></i>
+                    </button>
+                </div>
+
             </div>
             <div #wrapper style="overflow: auto; position: relative; resize: both;"
                  [style.height.px]="getWrapperHeight(true)"
                  [style.width.px]="getWrapperWidth(true)">
+                <div class="zoomer" style="-webkit-transform-origin: 0 0;" [style.transform]="getZoomLevel()">
                     <div #backGround style="position: absolute; display:flex; flex-direction: column;">
                         <img alt="review image" *ngFor="let item of bgImages; let i = index"
                              style="max-width: none; display: unset;"
@@ -777,6 +792,7 @@ const SCROLLBAR_APPROX_WIDTH = 17;
                     </div>
                     <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">
                     </canvas>
+                </div>
             </div>
         </div>
         <draw-toolbar *ngIf="toolBar" [drawSettings]="drawOptions" (drawSettingsChange)="saveSettings()"
@@ -796,6 +812,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     imgHeight = 0; // total height of all background images
     imgWidth = 0;
     loadedImages = 0;
+    zoomLevel = 1;
 
     drawHandler!: Drawing;
 
@@ -1011,7 +1028,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         }
         if (!middleOrRightClick) {
             this.drawHandler.downEvent(
-                posToRelative(this.canvas.nativeElement, e)
+                this.normalizeCoordinate(
+                    posToRelative(this.canvas.nativeElement, e)
+                )
             );
         }
     }
@@ -1024,15 +1043,21 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         if (!(isTouchEvent(event) && !this.drawOptions.enabled)) {
             event.preventDefault();
         }
-        this.drawHandler.moveEvent(posToRelative(this.canvas.nativeElement, e));
+        this.drawHandler.moveEvent(
+            this.normalizeCoordinate(
+                posToRelative(this.canvas.nativeElement, e)
+            )
+        );
     }
 
     /**
      * Finishes the draw event
      */
     upEvent(event: Event, e: MouseOrTouch): void {
-        const pxy = posToRelative(this.canvas.nativeElement, e);
-        this.drawHandler.upEvent(posToRelative(this.canvas.nativeElement, e));
+        const pxy = this.normalizeCoordinate(
+            posToRelative(this.canvas.nativeElement, e)
+        );
+        this.drawHandler.upEvent(pxy);
         if (this.updateCallback) {
             this.updateCallback(this, {
                 x: pxy.x,
@@ -1097,7 +1122,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
      */
     scrollBgImage(down: boolean) {
         const currPos = this.wrapper.nativeElement.scrollTop;
-        const sizes = this.bgOffsets;
+        const sizes = this.bgOffsets.map((os) => os * this.zoomLevel);
         let pos;
         if (down) {
             if (
@@ -1105,11 +1130,11 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
                 this.wrapper.nativeElement.scrollHeight -
                     this.wrapper.nativeElement.offsetHeight
             ) {
-                pos = sizes.find((s) => s > currPos);
+                pos = sizes.find((s) => Math.floor(s) > currPos);
             }
         } else {
             for (let i = sizes.length - 1; i >= 0; i--) {
-                if (sizes[i] < currPos) {
+                if (Math.floor(sizes[i]) < currPos) {
                     pos = sizes[i];
                     break;
                 }
@@ -1122,6 +1147,28 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
                 top: down ? 0 : sizes[this.bgSourceSizes.length - 1],
             });
         }
+    }
+
+    zoom(delta: number) {
+        if (delta === 0) {
+            this.zoomLevel = 1;
+            return;
+        }
+        this.zoomLevel += delta;
+        if (this.zoomLevel < 0.1) {
+            this.zoomLevel = 0.1;
+        }
+    }
+
+    getZoomLevel() {
+        return `scale(${this.zoomLevel})`;
+    }
+
+    normalizeCoordinate(coord: {x: number; y: number}) {
+        return {
+            x: coord.x / this.zoomLevel,
+            y: coord.y / this.zoomLevel,
+        };
     }
 }
 
