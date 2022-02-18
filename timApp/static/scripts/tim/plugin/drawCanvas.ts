@@ -749,6 +749,9 @@ export class Drawing {
     }
 }
 
+// Approximate scrollbar size
+const SCROLLBAR_APPROX_WIDTH = 17;
+
 @Component({
     selector: "draw-canvas",
     template: `
@@ -762,7 +765,8 @@ export class Drawing {
                 </button>
             </div>
             <div #wrapper style="overflow: auto; position: relative; resize: both;"
-                 [style.height.px]="getWrapperHeight()">
+                 [style.height.px]="getWrapperHeight(true)"
+                 [style.width.px]="getWrapperWidth(true)">
                     <div #backGround style="position: absolute; display:flex; flex-direction: column;">
                         <img alt="review image" *ngFor="let item of bgImages; let i = index"
                              style="max-width: none; display: unset;"
@@ -770,7 +774,6 @@ export class Drawing {
                     </div>
                     <div #objectContainer class="canvasObjectContainer"
                          style="overflow: visible; position: absolute; height: 100%; width: 100%;">
-
                     </div>
                     <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">
                     </canvas>
@@ -791,6 +794,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     @ViewChild("objectContainer") objectContainer!: ElementRef<HTMLDivElement>;
     ctx!: CanvasRenderingContext2D;
     imgHeight = 0; // total height of all background images
+    imgWidth = 0;
     loadedImages = 0;
 
     drawHandler!: Drawing;
@@ -934,6 +938,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
             offset += this.bgSourceSizes[i].height;
         }
         this.imgHeight = this.bgElement.nativeElement.clientHeight;
+        this.imgWidth = this.bgElement.nativeElement.clientWidth;
         const newWidth = Math.max(
             this.bgElement.nativeElement.clientWidth,
             this.wrapper.nativeElement.clientWidth - 50
@@ -951,15 +956,26 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         }
     }
 
+    getWrapperWidth(includeScrollbar: boolean = false): number {
+        const min = 400;
+        return (
+            Math.max(min, this.imgWidth) +
+            (includeScrollbar ? SCROLLBAR_APPROX_WIDTH : 0)
+        );
+    }
+
     /**
      * Gets the outer wrapper div's height based on background image and min/max settings
      */
-    getWrapperHeight(): number {
+    getWrapperHeight(includeScrollbar: boolean = false): number {
         const min = 300;
         const max = window.innerHeight - 155; // screen - answerbrowser - drawtoolbar (eyeballed)
 
         // +100 => reduce screen jump when opening velps near bottom of canvas
-        return Math.min(Math.max(min, this.imgHeight) + 100, max);
+        return (
+            Math.min(Math.max(min, this.imgHeight) + 100, max) +
+            (includeScrollbar ? SCROLLBAR_APPROX_WIDTH : 0)
+        );
         // TODO: Use case related min/max settings via attrs
     }
 
