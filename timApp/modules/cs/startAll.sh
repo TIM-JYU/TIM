@@ -9,7 +9,7 @@ rm -f /tmp/.X*-lock
 Xvfb $DISPLAY -ac -screen 0 "$XVFB_WHD" -nolisten tcp +extension GLX +render -noreset -nolisten unix &
 
 cd /cs
-export CLASSPATH=".:/cs/java/*"
+export CLASSPATH=".:/cs/java/*:/cs_data/java/*"
 
 # Run the server.
 python3 -O /cs/cs.py

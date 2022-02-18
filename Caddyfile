@@ -23,11 +23,26 @@
 	}
 	handle_path /csgenerated/* {
 		file_server * {
-			root /tim/timApp/modules/cs/generated
+			root /csgenerated
 		}
 	}
 	handle_path /csstatic/* {
-		file_server * {
+        @is_global {
+            file {
+                root /tim/timApp/modules/cs/static
+                try_files {path}
+            }
+        }
+        @is_volume {
+            file {
+                root /cs_data/static
+                try_files {path}
+            }
+        }
+        file_server @is_volume {
+			root /cs_data/static
+		}
+		file_server @is_global {
 			root /tim/timApp/modules/cs/static
 		}
 	}
