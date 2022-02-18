@@ -10,7 +10,7 @@ import {tryCreateParContextOrHelp} from "tim/document/structure/create";
 import {ParContext} from "tim/document/structure/parContext";
 import {ReadonlyMoment} from "tim/util/readonlymoment";
 import moment from "moment";
-import {ITimComponent, ViewCtrl} from "../document/viewctrl";
+import {isVelpable, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {
     IAnswerBrowserMarkupSettings,
@@ -936,6 +936,14 @@ export class AnswerBrowserController
             }
             if (this.review) {
                 let newReviewHtml = r.result.data.reviewHtml;
+                // Check if component itself provides review data and try to load it instead
+                const comp = this.viewctrl.getTimComponentByName(
+                    this.taskId.docTaskField()
+                );
+                if (isVelpable(comp)) {
+                    newReviewHtml =
+                        (await comp.getVelpImage()) ?? newReviewHtml;
+                }
 
                 if (newReviewHtml.startsWith("data:image")) {
                     this.imageReview = true;
@@ -947,12 +955,18 @@ export class AnswerBrowserController
                         .substring(10)
                         .split(";");
                     const promises = this.imageReviewUrls.map((url) =>
-                        fetch(url)
+                        to($http.get<Blob>(url, {responseType: "blob"}))
                     );
                     const ress = await Promise.all(promises);
-                    const blobs = ress.map((res) => res.blob());
-                    for (const b of blobs) {
-                        const base64Data = await this.readAsDataUrl(await b);
+                    for (const blobRes of ress) {
+                        if (!blobRes.ok) {
+                            // Push some invalid image src to show it as 404
+                            fetchedImages.push("error");
+                            continue;
+                        }
+                        const base64Data = await this.readAsDataUrl(
+                            blobRes.result.data
+                        );
                         fetchedImages.push(base64Data as string);
                     }
                     this.imageReviewDatas = fetchedImages;
