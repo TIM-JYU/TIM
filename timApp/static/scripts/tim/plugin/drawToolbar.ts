@@ -13,6 +13,7 @@ import {
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
 import * as t from "io-ts";
+import {ButtonsModule} from "ngx-bootstrap/buttons";
 
 export interface IDrawVisibleOptions {
     // Interface to define which options should be visible in the drawing toolbar
@@ -36,6 +37,10 @@ export enum DrawType {
     Arrow,
 }
 
+const DrawTypeReverseMap: Record<string, DrawType> = Object.entries(
+    DrawType
+).reduce((acc, [key, value]) => ({...acc, [value]: key}), {});
+
 // keyof is designed to work with objects containing string keys, so we use an union of number literals instead
 // https://github.com/gcanti/io-ts/blob/master/index.md
 const DrawTypeCodec = t.union([
@@ -57,115 +62,148 @@ export const DrawOptions = t.type({
 
 export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
 
+function parseRGB(rgb: string) {
+    const parseResult = rgb.match(
+        /^rgba?\((\d+),\s*(\d+),\s*(\d+)(,\s*\d+\.*\d+)?\)$/
+    );
+    return {
+        r: parseInt(parseResult?.[1] ?? "0", 10) / 255,
+        g: parseInt(parseResult?.[2] ?? "0", 10) / 255,
+        b: parseInt(parseResult?.[3] ?? "0", 10) / 255,
+    };
+}
+
 // noinspection TypeScriptUnresolvedVariable
 @Component({
     selector: "draw-toolbar",
     template: `
-        <label
-                *ngIf="drawVisibleOptions.enabled"><input type="checkbox" name="enabled" value="true"
-                                                          [(ngModel)]="drawSettings.enabled"
-                                                          (ngModelChange)="onSettingsChanged()">
-            Draw</label>
-        <span class="drawOptions" [hidden]="!drawSettings.enabled">
-            <form class="drawRadioForm">
-                <span *ngIf="drawVisibleOptions.freeHand">
-                    <label>
-                    <input type="radio"
-                           name="drawType"
-                           [value]="0"
-                           [(ngModel)]="drawSettings.drawType"
-                           (ngModelChange)="onSettingsChanged()">
-                    FreeHand</label>
-                </span>
-                <span *ngIf="drawVisibleOptions.lineMode">
-                    <label>
-                    <input type="radio"
-                           name="drawType"
-                           [value]="1"
-                           [(ngModel)]="drawSettings.drawType"
-                           (ngModelChange)="onSettingsChanged()">
-                    Line</label>
-                </span>
-                <span *ngIf="drawVisibleOptions.rectangleMode"
-                      (ngModelChange)="onSettingsChanged()">
-                    <label>
-                    <input type="radio"
-                           name="drawType"
-                           [value]="2"
-                           [(ngModel)]="drawSettings.drawType"
-                           (ngModelChange)="onSettingsChanged()">
-                    Rectangle</label>
-                </span>
-                <span *ngIf="drawVisibleOptions.ellipseMode"
-                      (ngModelChange)="onSettingsChanged()">
-                    <label>
-                    <input type="radio"
-                           name="drawType"
-                           [value]="3"
-                           [(ngModel)]="drawSettings.drawType"
-                           (ngModelChange)="onSettingsChanged()">
-                    Ellipse</label>
-                </span>
-                <span *ngIf="drawVisibleOptions.arrowMode"
-                      (ngModelChange)="onSettingsChanged()">
-                    <label>
-                    <input type="radio"
-                           name="drawType"
-                           [value]="4"
-                           [(ngModel)]="drawSettings.drawType"
-                           (ngModelChange)="onSettingsChanged()">
-                    Arrow</label>
-                </span>
-            </form>
-            <span *ngIf="drawVisibleOptions.fill">
-                <label>
-                <input type="checkbox"
-                       name="fill"
-                       value="true"
-                       [(ngModel)]="drawSettings.fill"
-                       (ngModelChange)="onSettingsChanged()">
-                Fill</label>
-            </span>
-                <span *ngIf="drawVisibleOptions.w">
-                    <span class="noWrap">
-                    Width:
-                    <input class="width"
-                           id="freeWidth"
-                           size="2"
-                           type="number"
-                           [(ngModel)]="drawSettings.w"
-                           (ngModelChange)="onSettingsChanged()"/>
-                    </span>
-                </span>
-                <span *ngIf="drawVisibleOptions.opacity">
-                    <span class="noWrap">
-                    Opacity:
-                    <input class="opacity"
-                           id="opacity"
-                           size="3"
-                           type="number"
-                           step="0.1" min="0" max="1"
-                           [(ngModel)]="drawSettings.opacity"
-                           (ngModelChange)="onSettingsChanged()"/>
-                    </span>
-                </span>
-            <span *ngIf="drawVisibleOptions.color">
-                <span class="noWrap">
-                    <input #colorInput colorpicker="hex"
-                           type="text"
-                           [(ngModel)]="drawSettings.color" (ngModelChange)="setColor($event)" size="4"/><span
-                        style="background-color: red; display: table-cell; text-align: center; width: 30px;"
-                        (click)="setColor('#f00')">R</span><span
-                        style="background-color: blue; display: table-cell; text-align: center; width: 30px;"
-                        (click)="setColor('#00f')">B</span><span
-                        style="background-color: yellow; display: table-cell; text-align: center; width: 30px;"
-                        (click)="setColor('#ff0')">Y</span><span
-                        style="background-color: #0f0; display: table-cell; text-align: center; width: 30px;"
-                        (click)="setColor('#0f0')">G</span>
-                    </span>
-                </span>
-             <a href="" *ngIf="undo" (click)="toolbarUndo($event)">Undo</a>
-        </span>
+        <button *ngIf="drawVisibleOptions.enabled"
+                type="button"
+                class="btn btn-default"
+                [(ngModel)]="drawSettings.enabled"
+                btnCheckbox
+                title="Open drawing toolbar">
+            <i class="glyphicon glyphicon-edit"></i>
+        </button>
+        <div class="drawOptions" [hidden]="!drawSettings.enabled">
+            <div class="btn-group drawRadioForm"
+                 btnRadioGroup
+                 [(ngModel)]="drawTypeStr"
+                 (ngModelChange)="onSettingsChanged()">
+                <label class="btn btn-default mb-0"
+                       title="Free hand drawing"
+                       i18n-title
+                       btnRadio="Freehand">
+                    <i class="glyphicon glyphicon-pencil"></i>
+                </label>
+                <label class="btn btn-default mb-0"
+                       btnRadio="Line"
+                       title="Line"
+                       i18n-title>
+                    <i class="gg-border-style-solid"></i>
+                </label>
+                <label class="btn btn-default mb-0"
+                       btnRadio="Rectangle"
+                       title="Rectangle"
+                       i18n-title>
+                    <i class="gg-shape-square"></i>
+                </label>
+                <label class="btn btn-default mb-0"
+                       btnRadio="Ellipse"
+                       title="Ellipse"
+                       i18n-title>
+                    <i class="gg-shape-circle"></i>
+                </label>
+                <label class="btn btn-default mb-0"
+                       btnRadio="Arrow"
+                       title="Arrow"
+                       i18n-title>
+                    <i class="gg-arrow-top-right"></i>
+                </label>
+            </div>
+            <button class="btn btn-default fill-object"
+                    *ngIf="drawVisibleOptions.fill"
+                    [(ngModel)]="drawSettings.fill"
+                    btnCheckbox
+                    (ngModelChange)="onSettingsChanged()"
+                    title="Fill object"
+                    i18n-title>
+                <i class="gg-color-bucket "></i>
+            </button>
+            <span class="sep"></span>
+            <label class="text-input"
+                   *ngIf="drawVisibleOptions.w"
+                   title="Line width"
+                   i18n-title>
+                <i class="gg-arrows-shrink-h"></i>
+                <input class="width form-control"
+                       id="freeWidth"
+                       size="2"
+                       type="number"
+                       min="0"
+                       [(ngModel)]="drawSettings.w"
+                       (ngModelChange)="onSettingsChanged()"/>
+            </label>
+            <label class="text-input"
+                   *ngIf="drawVisibleOptions.opacity"
+                   title="Opacity"
+                   i18n-title>
+                <i class="gg-edit-fade"></i>
+                <input class="opacity form-control"
+                       id="opacity"
+                       size="3"
+                       type="number"
+                       step="0.1" min="0" max="1"
+                       [(ngModel)]="drawSettings.opacity"
+                       (ngModelChange)="onSettingsChanged()"/>
+            </label>
+            <span class="sep"></span>
+            <div class="color-bar btn-group" *ngIf="drawVisibleOptions.color">
+                <button class="btn btn-default color-selector"
+                        #colorInput
+                        title="Color picker"
+                        i18n-title>
+                    <i class="glyphicon glyphicon-tint picker-icon" [style.color]="selectorIconColor"></i>
+                    <input
+                            class="form-control"
+                            type="color"
+                            [(ngModel)]="drawSettings.color"
+                            (ngModelChange)="setColor($event)" size="4"/>
+                </button>
+                <button class="btn btn-default color-preset"
+                        title="Select red"
+                        i18n-title
+                        style="--tim-preset-color: red; --tim-preset-text: white" (click)="setColor('#ff0000')">
+                    R
+                </button>
+                <button class="btn btn-default color-preset"
+                        title="Select blue"
+                        i18n-title
+                        style="--tim-preset-color: blue; --tim-preset-text: white" (click)="setColor('#0000ff')">
+                    B
+                </button>
+                <button class="btn btn-default color-preset"
+                        title="Select yellow"
+                        i18n-title
+                        style="--tim-preset-color: yellow; --tim-preset-text: black" (click)="setColor('#ffff00')">
+                    Y
+                </button>
+                <button class="btn btn-default color-preset"
+                        title="Select green"
+                        i18n-title
+                        style="--tim-preset-color: #0f0; --tim-preset-text: black" (click)="setColor('#00ff00')">
+                    G
+                </button>
+            </div>
+            <span class="sep"></span>
+            <button class="btn btn-default"
+                    *ngIf="undo"
+                    (click)="toolbarUndo($event)"
+                    title="Undo"
+                    i18n-title>
+                <i class="glyphicon glyphicon-repeat flip"></i>
+            </button>
+        </div>
     `,
     styleUrls: ["./draw-toolbar.component.scss"],
 })
@@ -193,9 +231,18 @@ export class DrawToolbarComponent implements AfterViewInit {
     };
     @Output() drawSettingsChange = new EventEmitter<IDrawOptions>();
 
-    @ViewChild("colorInput") colorInput?: ElementRef<HTMLInputElement>;
+    @ViewChild("colorInput") colorInput?: ElementRef<HTMLSpanElement>;
 
     @Input() public undo?: () => void;
+    selectorIconColor = "black";
+
+    get drawTypeStr(): string {
+        return DrawType[this.drawSettings.drawType];
+    }
+
+    set drawTypeStr(value: string) {
+        this.drawSettings.drawType = DrawTypeReverseMap[value];
+    }
 
     ngAfterViewInit() {
         this.updateVisuals();
@@ -232,6 +279,11 @@ export class DrawToolbarComponent implements AfterViewInit {
                 this.colorInput.nativeElement.style.backgroundColor = prev
                     .replace("rgb", "rgba")
                     .replace(")", `, ${this.drawSettings.opacity})`);
+                const {r, g, b} = parseRGB(prev);
+                const luma =
+                    (0.2126 * r + 0.7152 * g + 0.0722 * b) *
+                    this.drawSettings.opacity;
+                this.selectorIconColor = luma > 0.5 ? "black" : "white";
             }
         }
     }
@@ -239,7 +291,7 @@ export class DrawToolbarComponent implements AfterViewInit {
 
 @NgModule({
     declarations: [DrawToolbarComponent],
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, ButtonsModule.forRoot()],
     exports: [DrawToolbarComponent],
 })
 export class DrawToolbarModule implements DoBootstrap {
