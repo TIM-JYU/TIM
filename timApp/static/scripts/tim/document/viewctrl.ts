@@ -98,6 +98,29 @@ export interface ITimComponent {
     setData?(data: unknown, save: boolean): void;
 }
 
+/**
+ * Interface for components that can be Velped.
+ */
+export interface IVelpableComponent extends ITimComponent {
+    // TODO: Allow to velp components directly by inserting them under the velp canvas.
+    /**
+     * Resolves Base64 encoded image representation of the component for Velping.
+     */
+    getVelpImage(): Promise<string | undefined>;
+}
+
+/**
+ * Checks if the given component is a velpable.
+ * @param obj TIM component to check.
+ */
+export function isVelpable(obj?: ITimComponent): obj is IVelpableComponent {
+    return (
+        obj !== undefined &&
+        (obj as IVelpableComponent).getVelpImage !== undefined &&
+        typeof (obj as IVelpableComponent).getVelpImage === "function"
+    );
+}
+
 export interface ISetAnswerResult {
     ok: boolean;
     message: string | undefined;
