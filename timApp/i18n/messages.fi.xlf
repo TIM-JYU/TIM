@@ -4874,7 +4874,7 @@
       </trans-unit>
       <trans-unit id="883430579201070569" datatype="html">
         <source>Select green</source>
-        <target state="translated">Valitse virheä</target>
+        <target state="translated">Valitse vihreä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
           <context context-type="linenumber">192</context>
