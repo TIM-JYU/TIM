@@ -5,7 +5,7 @@
 <script src="http://localhost/csstatic/dfa/rpn.js"></script>
  <style>
     :root {
-        --how-many-elements: 2;
+        --how-many-elements: 1;
         --stack-item-border-width: 2px;
         --stack-item-height: 1.8em;
         --stack-item-width: 3em;
@@ -14,6 +14,8 @@
         --op-item-width: 6em;
         --color2: lightgray;
         --arrow-margin: 1em;
+        --arrow-width: unset;
+        --arrow-item-height: 1.3em;
         --font: 18px Courier New;
         --expl-font: x-large Arial ;
         --expl-color: blue;
@@ -63,11 +65,6 @@
         height: calc(var(--how-many-elements) * var(--stack-item-height) + var(--stack-border-width));
     }
 
-    .arrow p {
-      border: unset !important;
-      margin-bottom: var(--arrow-margin) !important;
-    }
-
     .end-cmd {
         color: var(--end-color);
     }
@@ -96,6 +93,16 @@
         justify-content: center;
         height: 3px;
         width: calc(2 * var(--stack-item-width));
+    }
+
+    .arrow p {
+      width: var(--arrow-width);
+      border: unset !important;
+      height: var(--arrow-item-height);
+    }
+
+    .arrow p:first-child {
+      margin-bottom: var(--arrow-margin);
     }
 
     .stack.s2 {
@@ -219,6 +226,7 @@
               }
           }
           let font = style.getPropertyValue("--font");
+          let elemns = style.getPropertyValue("--how-many-elements");
           let color2 = this.rpn2.params["stack2Color"];
           let nocode = this.rpn.params["nocode"];
           let arrow = this.params["arrow"];
@@ -230,7 +238,7 @@
               root.style.setProperty('--font', font);
           }
 
-          root.style.setProperty('--how-many-elements', Math.max(this.maxStack,1));
+          root.style.setProperty('--how-many-elements', Math.max(this.maxStack,elemns));
           if (color2) root.style.setProperty('--color2', color2);
 
           let operations = document.createElement("div");
@@ -261,9 +269,12 @@
               if (arrow) {
                   let arwdiv = document.createElement("div");
                   arwdiv.className = "stack s2 arrow";
-                  let arwp = document.createElement("p");
-                  arwp.appendChild(document.createTextNode(arrow));
-                  arwdiv.appendChild(arwp);
+                  if (!Array.isArray(arrow)) arrow = [arrow];
+                  for (let i=arrow.length-1; i >= 0; i--) {
+                      let arwp = document.createElement("p");
+                      arwp.appendChild(document.createTextNode(arrow[i]));
+                      arwdiv.appendChild(arwp);
+                  }
                   stackmachine.appendChild(arwdiv);
               }
               drawStack(this.rpn2.stack, "stack s2");
@@ -439,13 +450,13 @@
   <script>
     const code = `
 # SWAP # Vaihtaa 2 päällimmästä
-POP
+# POP
      `;
     setData({code: code, args: "",
              params: {
                  initial: "3,2",
                  arrow: "POP\n=====>",
-                 stack2Color: "lightblue",
+                 xstack2Color: "lightblue",
                  keep2stack: true,
                  bold: true,
                  "--font": "20px Arial",

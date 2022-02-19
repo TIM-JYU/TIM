@@ -833,6 +833,11 @@ export class CsBase extends AngularPluginBase<
     isAll: boolean = false;
     isTest: boolean = false;
     isUnitTest: boolean = false;
+    byCode: string = "";
+    runChanged: boolean = false;
+    canReset: boolean = false;
+    firstTime: boolean = true; // force showJS on first time even usercode === ""
+    // otherwise clears for some reason the codearea???
 
     get usercode(): string {
         return this.usercode_;
@@ -841,7 +846,8 @@ export class CsBase extends AngularPluginBase<
         this.usercode_ = str;
     }
 
-    get byCode() {
+    get xbyCode() {
+        // TODO: remove this, moved to attribute
         return commentTrim(this.attrsall.by ?? this.markup.byCode ?? "");
     }
 
@@ -1055,6 +1061,9 @@ export class CsController extends CsBase implements ITimComponent {
 
     @ViewChild("mainEditor")
     set editorViewSetter(new_value: EditorComponent | undefined) {
+        if (this.editor == new_value) {
+            return;
+        }
         this.editor = new_value;
         if (!this.editor) {
             return;
@@ -2006,6 +2015,8 @@ ${fhtml}
         // First find out what language we are using
         const type = this.markup.type.split(/[/,; ]/)[0];
 
+        this.byCode = commentTrim(this.attrsall.by ?? this.markup.byCode ?? "");
+
         this.languageType = this.markup.type; // user may change
         this.origLanguageType = this.markup.type;
         this.rtype = languageTypes.getPureRunType(type);
@@ -2168,6 +2179,7 @@ ${fhtml}
         //  Otherwise precode and postcode won't show up until user clicks hide + show code.
         //  It's unclear if getCode should handle this already.
         this.showCodeNow();
+        this.updateRunChanged();
     }
 
     async ngAfterViewInit() {
@@ -2241,6 +2253,7 @@ ${fhtml}
 
         this.anyChanged();
         this.cdr.detectChanges();
+        this.updateRunChanged();
     }
 
     anyChanged() {
@@ -2618,6 +2631,7 @@ ${fhtml}
         );
         if (r.ok) {
             this.isRunning = false;
+
             this.initSaved();
             const data = r.result;
             const tsruntime = ((performance.now() - t0run) / 1000).toFixed(3);
@@ -2648,7 +2662,7 @@ ${fhtml}
             }
             this.runSuccess = true;
 
-            this.runError = this.error;
+            this.runError = this.error; // TODO: TÄMÄ AIHEUTTAA TEKSTIN PALAUTTAMISEN
 
             const imgURL = data.web.image;
             const videoURL = data.web.video;
@@ -2704,7 +2718,6 @@ ${fhtml}
                     }
                 }
             }
-
             this.languageResponse(data.web.language);
 
             this.processPluginMath();
@@ -2967,8 +2980,13 @@ ${fhtml}
         return this.taunoFrame != undefined;
     }
 
-    get canReset() {
-        return (this.editor?.modified ?? false) || this.isSage || this.simcir;
+    updateCanReset() {
+        this.canReset = !!(
+            (this.editor?.modified ?? false) ||
+            this.isSage ||
+            this.simcir
+        );
+        return this.canReset;
     }
 
     async initCode() {
@@ -3407,10 +3425,12 @@ ${fhtml}
             !this.markup.runeverytime &&
             !this.usercode &&
             !this.userargs &&
-            !this.userinput
+            !this.userinput &&
+            !this.firstTime
         ) {
             return;
         }
+        this.firstTime = false;
         if (this.type.includes("truthtable")) {
             const truthTable = (await import("./truthTable")).truthTable;
             this.result = truthTable(this.userargs);
@@ -3608,11 +3628,14 @@ ${fhtml}
         }
     }
 
-    get runChanged(): boolean {
+    updateRunChanged(): boolean {
         if (this.editor?.parsonsEditor) {
-            return false;
+            this.runChanged = false;
+        } else {
+            this.runChanged = this.byCode !== this.usercode;
         }
-        return this.byCode !== this.usercode;
+        this.updateCanReset();
+        return this.runChanged;
     }
 }
 
@@ -3799,17 +3822,17 @@ ${fhtml}
     <p class="unitTestGreen" *ngIf="runTestGreen">&nbsp;ok</p>
     <pre class="unitTestRed" *ngIf="runTestRed">{{comtestError}}</pre>
     <div class="csRunErrorClass" *ngIf="runError">
-        <p class="pull-right">
+        <p class="pull-right" *ngIf="!markup['noclose']">
             <label class="normalLabel" title="Keep erros until next run">Keep <input type="checkbox" [(ngModel)]="keepErros" /></label>
             <tim-close-button (click)="closeError()"></tim-close-button>
         </p>
         <pre class="csRunError" >{{error}}</pre>
-        <p class="pull-right" style="margin-top: -1em">
+        <p class="pull-right" *ngIf="!markup['noclose']" style="margin-top: -1em">
             <tim-close-button (click)="closeError()"></tim-close-button>
         </p>
     </div>
     <div class="csRunErrorClass" *ngIf="fetchError">
-        <p class="pull-right">
+        <p class="pull-right" *ngIf="!markup['noclose']">
             <tim-close-button (click)="fetchError=undefined"></tim-close-button>
         </p>
         <pre class="csRunError" >{{fetchError}}</pre>

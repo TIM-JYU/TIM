@@ -334,7 +334,7 @@ class RPN {
     isIn(reglist, cmd, def, err) {
         if (cmd.isEnd()) return def;
         let name = cmd.name;
-        if (!reglist) return def;
+        if (!reglist || reglist.length === 0) return def;
         for (let rs of reglist) {
             if (rs === "+" || rs === "*") rs = "\\" + rs;
             const re = new RegExp("^" + rs + "$");
@@ -350,10 +350,10 @@ class RPN {
         let lnr = this.linenumber;
         for (let cmd of cmds) {
             cmd.linenumber = lnr;
-            if (!this.isIn(this.params["allowed"], cmd, true, "not in allowed commands")) {
+            if (!this.isIn(this.allowed, cmd, true, "not in allowed commands")) {
                 continue;
             }
-            if (this.isIn(this.params["illegals"], cmd, false, "in illegal commands")) {
+            if (this.isIn(this.illegals, cmd, false, "in illegal commands")) {
                 continue;
             }
             this.commands.push(cmd);
