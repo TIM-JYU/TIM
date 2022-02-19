@@ -1,11 +1,118 @@
 <!doctype html>
 <html lang="fi">
 <head>
+<meta charset="UTF-8">
 <script src="http://localhost/csstatic/dfa/rpn.js"></script>
  <style>
+    :root {
+        --how-many-elements: 2;
+        --stack-item-border-width: 2px;
+        --stack-item-height: 1.8em;
+        --stack-item-width: 3em;
+        --stack-border-width: 3px;
+        --op-item-height: 1.5em;
+        --op-item-width: 6em;
+        --color2: lightgray;
+        --arrow-margin: 1em;
+        --font: 18px Courier New;
+        --expl-font: x-large Arial ;
+        --expl-color: blue;
+        --expl-bg: unset;
+        --current-bg: yellow;
+        --end-color: red;
+        --end-bg: yellow;
+    }
+
+    .stackmachine {
+        /* border: 1px solid black; */
+        flex-direction: row;
+        justify-content: space-evenly;
+        display: flex;
+        width: fit-content;
+    }
+
+    .operations {
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+        font: var(--font);
+        margin-right: 2em;
+        min-width: var(--op-item-width);
+    }
+
+    .operations>p {
+        margin: unset;
+        display: flex;
+        align-items: center;
+        justify-content: left;
+        width: var(--op-item-width);
+        height: var(--op-item-height);
+        padding: 4px 4px 4px 0.5em;
+    }
+
+    .operations>p.current {
+      background: var(--current-bg);
+    }
+
+    .stack {
+        font: var(--font);
+        align-items: center;
+        display: flex;
+        flex-direction: column-reverse;
+        flex-grow: 1;
+        height: calc(var(--how-many-elements) * var(--stack-item-height) + var(--stack-border-width));
+    }
+
+    .arrow p {
+      border: unset !important;
+      margin-bottom: var(--arrow-margin) !important;
+    }
+
+    .end-cmd {
+        color: var(--end-color);
+    }
+
+    p.current.end-cmd {
+        background: var(--end-bg);
+    }
+    .stack p {
+        align-items: center;
+        margin: unset;
+        margin-bottom: calc(-1 * var(--stack-item-border-width));
+        /* background: lightblue; */
+        border: var(--stack-item-border-width) solid black;
+        border-width: var(--stack-item-border-width);
+        display: flex;
+        justify-content: center;
+        height: var(--stack-item-height);
+        width: var(--stack-item-width);
+    }
+
+    .stack p.bottom {
+        align-items: center;
+        margin: unset;
+        /* background: lightblue; */
+        display: flex;
+        justify-content: center;
+        height: 3px;
+        width: calc(2 * var(--stack-item-width));
+    }
+
+    .stack.s2 {
+      visibility: visible;
+    }
+
+    .stack.s2 p {
+      border-color: var(--color2);
+      color: var(--color2);
+    }
   .buttondiv {margin-top: 1em; margin-left: 2em;}
   .buttondiv button {font-size: x-large;}
-  .explspan {font-size: x-large; color: blue; }
+  .explspan {
+      font:  var(--expl-font);
+      color: var(--expl-color);
+      background: var(--expl-bg);
+  }
   .hidden {visibility: hidden;}
   body {
       margin: 0;
@@ -19,13 +126,12 @@
         <span id="error" style="color: red;"></span>
         <span id="expls" class="explspan"></span>
     </div>
-    <canvas id="canvas" width=700 height=10 >
-    </canvas>
+    <div id="stackmachine" class="stackmachine"></div>
     <div id="buttondiv" class="buttondiv"></div>
 </div>
 <script>
-  let canvas = document.getElementById("canvas");
-  let context = canvas.getContext("2d");
+  let root = document.documentElement;
+  let stackmachine = document.getElementById("stackmachine");
   let buttondiv = document.getElementById('buttondiv');
   let errspan = document.getElementById('error');
   let expls = document.getElementById('expls');
@@ -106,65 +212,76 @@
        * \param json rpn structure of rpn
        */
       drawrpn() {
-          let stackItemHeight = 30;
-          let stackItemWidth = 50;
-          let commandTextHeight = 30;
-          let stackY = this.maxStack * stackItemHeight;
-          let stackX = 200;
-          let stack2X = stackX + 3*stackItemWidth;
-          let commandY = this.rpn.commands.length * commandTextHeight;
-          canvas.height = Math.max(stackY + stackItemHeight, commandY);
-          context.clearRect(0, 0, canvas.width, canvas.height);
-          let bold = "";
-          if (this.rpn.params["bold"]) bold = "bold ";
-          context.font = bold + "18px 'Courier New'";
-          context.textAlign = "left";
-          context.textBaseline = "middle";
+          let style = getComputedStyle(root);
+          for (const param in this.params) {
+              if (param.startsWith("--")) {
+                  root.style.setProperty(param, this.params[param]);
+              }
+          }
+          let font = style.getPropertyValue("--font");
+          let color2 = this.rpn2.params["stack2Color"];
+          let nocode = this.rpn.params["nocode"];
+          let arrow = this.params["arrow"];
+          let bold = this.params["bold"];
+          let noend = this.params["noend"];
+
+          if (bold && !font.includes("bold")) {
+              font = "bold " + font;
+              root.style.setProperty('--font', font);
+          }
+
+          root.style.setProperty('--how-many-elements', Math.max(this.maxStack,1));
+          if (color2) root.style.setProperty('--color2', color2);
+
+          let operations = document.createElement("div");
+          operations.className ="operations";
+
           let code = this.rpn.commands;
           let line = this.rpn.stepnumber;
-          if (!this.rpn.params["nocode"]) {
+          if (!nocode) {
               for (let i = 0; i < code.length; i++) {
-                  let x = 20;
-                  let y = 15 + i * commandTextHeight;
-                  let h = commandTextHeight;
+                  let operation = document.createElement("p");
                   let txt = code[i].showText();
+                  operation.appendChild(document.createTextNode(txt));
                   if (i === line) { //  && !code[i].isEnd())
-                      context.fillStyle = 'yellow';
-                      let width = context.measureText("PUSH 100000").width;
-                      context.fillRect(x - 10, y - h / 2, width, commandTextHeight);
+                       operation.className = "current";
+                       if (line >= code.length - 1) operation.className += " end-cmd";
                   }
-                  // context.fillStyle = i === line ? "red" : "black";
-                  context.fillStyle = (i === line && line >= code.length - 1) ? "red" : "black";
-                  // context.fillText((i + 1), 10, 30+i*30);
-                  context.fillText(txt, x, y);
+                  if (!(noend && code[i].isEnd()))
+                    operations.appendChild(operation);
               }
           }
 
-          drawStack(this.rpn.stack, stackX, "black");
+          stackmachine.innerHTML = "";
+          stackmachine.appendChild(operations);
+
+          drawStack(this.rpn.stack, "stack");
           this.rpn2.runUntil(Math.max(this.step+1,1));
-          let clr = this.rpn2.params["stack2Color"];
-          if (clr && (!this.rpn.isEnd() || this.keep2stack)) {
-              context.fillStyle = clr;
-              let arrow = this.params["arrow"];
-              if (arrow) context.fillText(arrow, stackX + (stack2X - stackX)/2 + stackItemWidth / 2, stackY);
-              drawStack(this.rpn2.stack, stack2X, clr);
+          if (color2 && (!this.rpn.isEnd() || this.keep2stack)) {
+              if (arrow) {
+                  let arwdiv = document.createElement("div");
+                  arwdiv.className = "stack s2 arrow";
+                  let arwp = document.createElement("p");
+                  arwp.appendChild(document.createTextNode(arrow));
+                  arwdiv.appendChild(arwp);
+                  stackmachine.appendChild(arwdiv);
+              }
+              drawStack(this.rpn2.stack, "stack s2");
           }
 
-          function drawStack(stack, x, color) {
-              context.fillStyle = color;
-              context.strokeStyle = color;
-              context.textAlign = "center";
-              let y = stackY;
-              context.beginPath();
-              context.rect(x - stackItemWidth / 2, y + stackItemHeight / 2, stackItemWidth * 2, 5);
-              context.stroke();
+          function drawStack(stack, cls) {
+              let stackDiv = document.createElement("div");
+              stackDiv.className = cls;
+              let bottom = document.createElement("p");
+              bottom.className = "bottom";
+              stackDiv.appendChild(bottom);
+
               for (let i = 0; i < stack.length; i++) {
-                  context.beginPath();
-                  context.rect(x, y - stackItemHeight / 2, stackItemWidth, stackItemHeight);
-                  context.stroke();
-                  context.fillText(stack[i], x + stackItemWidth / 2, y);
-                  y -= stackItemHeight;
+                  let item = document.createElement("p");
+                  item.appendChild(document.createTextNode(stack[i]));
+                  stackDiv.appendChild(item);
               }
+              stackmachine.appendChild(stackDiv);
           }
 
           if (this.rpn.createErrors || this.errorlines) {
@@ -303,18 +420,11 @@
      return false;
   }
 
-
-  function paramDefault(params, name, value) {
-      if (params[name] === undefined) params[name] = value;
-  }
-
-
   function setData(data) {
     if ( preCheck(data) ) return;
     let params = data.params;
     if (!params) params = { };
-    paramDefault(params, "stack2color", "");
-    params["initial"] = data.args;
+    if (data.args) params["initial"] = data.args;
     let rpn = new RPN(data.code, params);
     let rpn2 = new RPN(data.code, params);
     const rpnState = new VisualRPNState(rpn);
@@ -327,12 +437,26 @@
 </script>
   <script>
     const code = `
-SWAP
+# SWAP # Vaihtaa 2 päällimmästä
 POP
-pop
-pop2
      `;
-    // setData({code: code, args: "abaa", params: {initial: "3,2"}});
+    setData({code: code, args: "",
+             params: {
+                 initial: "3,2",
+                 arrow: "POP\n=====>",
+                 stack2Color: "lightblue",
+                 keep2stack: true,
+                 bold: true,
+                 "--font": "20px Arial",
+                 "--expl-color": "green",
+                 "x--current-bg": "unset",
+                 "x--stack-item-border-width": "5px",
+                 xfont: "bold 18px Arial",
+                 xnoend: true,
+                 "--end-bg": "unset",
+                 nocode: true,
+
+             }});
     // console.log(rpnState.rpn.accepts("abaa"));
   </script>
 </body>
