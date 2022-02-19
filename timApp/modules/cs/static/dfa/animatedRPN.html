@@ -12,6 +12,7 @@
         --stack-border-width: 3px;
         --op-item-height: 1.5em;
         --op-item-width: 6em;
+        --bottom-height: 3px;
         --color2: lightgray;
         --arrow-margin: 1em;
         --arrow-width: unset;
@@ -62,7 +63,10 @@
         display: flex;
         flex-direction: column-reverse;
         flex-grow: 1;
-        height: calc(var(--how-many-elements) * var(--stack-item-height) + var(--stack-border-width));
+        height: calc(var(--how-many-elements) * var(--stack-item-height) +
+                     var(--how-many-elements) * var(--stack-border-width) +
+                     var(--bottom-height)
+        );
     }
 
     .end-cmd {
@@ -91,7 +95,7 @@
         /* background: lightblue; */
         display: flex;
         justify-content: center;
-        height: 3px;
+        height: var(--bottom-height);
         width: calc(2 * var(--stack-item-width));
     }
 
