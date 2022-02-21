@@ -552,7 +552,7 @@ def get_read_receipts(
         .filter(InternalMessage.doc_id == doc.id)
     )
 
-    read_user_map: dict[int, tuple[datetime, datetime | None]] = {
+    read_user_map: dict[int, datetime] = {
         user_id: read_time for user_id, read_time, _ in read_users if read_time
     }
     last_seen_user_map: dict[int, datetime] = {
@@ -585,10 +585,10 @@ def get_read_receipts(
             if not include_read:
                 continue
             read_time = datetime_isoformat(read_user_map[u.id])
-        if u.id in last_seen_user_map:
-            last_seen_time = datetime_isoformat(last_seen_user_map[u.id])
         elif not include_unread:
             continue
+        if u.id in last_seen_user_map:
+            last_seen_time = datetime_isoformat(last_seen_user_map[u.id])
         if not is_hide_names():
             data.append([u.id, u.email, u.name, u.real_name, read_time, last_seen_time])
         else:
