@@ -459,6 +459,7 @@ interface ITemplateButton {
     html: string;
     text: string;
     title?: string;
+    hasMath?: boolean;
     params?: ITemplateParam[];
 }
 
@@ -1032,6 +1033,7 @@ export class CsController extends CsBase implements ITimComponent {
     upload?: boolean;
     uploadByCodeFiles: {path: string; show: boolean | "loaded"}[] = [];
     @ViewChild(CountBoardComponent) countBoard?: CountBoardComponent;
+    @ViewChild("csRunSnippets") runSnippets?: ElementRef<HTMLParagraphElement>;
     private isSimcirUnsaved?: boolean;
     private clearSaved: boolean = false;
 
@@ -1962,8 +1964,14 @@ ${fhtml}
                 if (parsed.length > 3) {
                     item.params = [];
                 }
+                item.hasMath = (parsed as string[]).some(
+                    (x, i) => i >= 2 && x == "math"
+                );
                 for (let i = 3; i < parsed.length; i++) {
                     const p = parsed[i];
+                    if (!(p instanceof Array)) {
+                        continue;
+                    }
                     const param: ITemplateParam = {
                         def: p[0] ?? "",
                         text: p[1] ?? "",
@@ -2216,6 +2224,9 @@ ${fhtml}
         if (this.markup.autorun) {
             this.runCodeLink(true);
         }
+
+        // TODO: Snippets should be processed via Dumbo
+        ParCompiler.processAllMath(this.element.find(".csRunSnippets"));
     }
 
     uploadedFileName(url: string) {
@@ -3734,9 +3745,8 @@ ${fhtml}
                     [placeholder]="argsplaceholder"></span>
     </div>
     <cs-count-board *ngIf="count" [options]="count"></cs-count-board>
-    <p class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
-        <button *ngFor="let item of templateButtons;" (click)="addText(item)" title="{{item.title}}">{{item.html}}</button>
-        &nbsp;&nbsp;
+    <p #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
+        <button [class.math]="item.hasMath" *ngFor="let item of templateButtons;" (click)="addText(item)" title="{{item.title}}">{{item.html}}</button>
     </p>
     <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
             [maxRows]="maxrows"
