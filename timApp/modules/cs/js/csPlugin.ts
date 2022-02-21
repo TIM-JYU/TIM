@@ -847,11 +847,6 @@ export class CsBase extends AngularPluginBase<
         this.usercode_ = str;
     }
 
-    get xbyCode() {
-        // TODO: remove this, moved to attribute
-        return commentTrim(this.attrsall.by ?? this.markup.byCode ?? "");
-    }
-
     get type() {
         return this.languageType;
     }
@@ -1037,8 +1032,11 @@ export class CsController extends CsBase implements ITimComponent {
     private clearSaved: boolean = false;
 
     @ViewChild("externalEditor")
-    set externalEditorViewSetter(new_value: EditorComponent | undefined) {
-        this.externalEditor = new_value;
+    set externalEditorViewSetter(newValue: EditorComponent | undefined) {
+        if (newValue == this.externalEditor) {
+            return;
+        }
+        this.externalEditor = newValue;
         this.updateExternalEditor();
     }
 
@@ -1190,6 +1188,9 @@ export class CsController extends CsBase implements ITimComponent {
 
     @ViewChild(FileSelectManagerComponent)
     set fileSelectSetter(component: FileSelectManagerComponent | undefined) {
+        if (component == this.fileSelect) {
+            return;
+        }
         this.fileSelect = component;
         if (!component || !this.upload) {
             return;
