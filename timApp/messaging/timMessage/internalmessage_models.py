@@ -42,7 +42,7 @@ class InternalMessage(db.Model):
     """Id of the message which this messages is a reply to"""
 
     displays = db.relationship("InternalMessageDisplay", back_populates="message")
-    readreceipts = db.relationship(
+    readreceipts: list["InternalMessageReadReceipt"] = db.relationship(
         "InternalMessageReadReceipt", back_populates="message"
     )
     block = db.relationship("Block", back_populates="internalmessage")
@@ -107,6 +107,9 @@ class InternalMessageReadReceipt(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
     """Identifier for the user who marked the message as read."""
+
+    last_seen = db.Column(db.DateTime)
+    """Timestamp for the last time the the message was displayed to the user"""
 
     marked_as_read_on = db.Column(db.DateTime)
     """Timestamp for when the message was marked as read."""
