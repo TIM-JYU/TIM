@@ -1033,7 +1033,6 @@ export class CsController extends CsBase implements ITimComponent {
     upload?: boolean;
     uploadByCodeFiles: {path: string; show: boolean | "loaded"}[] = [];
     @ViewChild(CountBoardComponent) countBoard?: CountBoardComponent;
-    @ViewChild("csRunSnippets") runSnippets?: ElementRef<HTMLParagraphElement>;
     private isSimcirUnsaved?: boolean;
     private clearSaved: boolean = false;
 
@@ -3745,9 +3744,9 @@ ${fhtml}
                     [placeholder]="argsplaceholder"></span>
     </div>
     <cs-count-board *ngIf="count" [options]="count"></cs-count-board>
-    <p #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
-        <button [class.math]="item.hasMath" *ngFor="let item of templateButtons;" (click)="addText(item)" title="{{item.title}}">{{item.html}}</button>
-    </p>
+    <div #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
+        <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;" (click)="addText(item)" title="{{item.title}}">{{item.html}}</button>
+    </div>
     <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
             [maxRows]="maxrows"
             [disabled]="true">
