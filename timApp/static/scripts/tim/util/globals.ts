@@ -142,10 +142,19 @@ export interface IDocumentGlobals extends IItemGlobals {
     show_unpublished_bg: boolean;
 }
 
+export enum NotificationType {
+    DocModified = 1,
+    ParAdded = 2,
+    ParModified = 3,
+    ParDeleted = 4,
+    CommentAdded = 5,
+    CommentModified = 6,
+    CommentDeleted = 7,
+    AnswerAdded = 8,
+}
+
 export interface INotification {
-    email_comment_add: boolean;
-    email_comment_modify: boolean;
-    email_doc_modify: boolean;
+    notification_type: NotificationType;
     item: DocumentOrFolder;
 }
 

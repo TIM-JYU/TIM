@@ -26,7 +26,12 @@ import {DndDropEvent, DndModule} from "ngx-drag-drop";
 import {polyfill} from "mobile-drag-drop";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {ConsentType} from "../ui/consent";
-import {INotification, ISettings, settingsglobals} from "../util/globals";
+import {
+    INotification,
+    ISettings,
+    NotificationType,
+    settingsglobals,
+} from "../util/globals";
 import {IOkResponse, isIOS, timeout, to2, toPromise} from "../util/utils";
 import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
 import {ContactOrigin, IFullUser, IUserContact} from "./IUser";
@@ -254,13 +259,13 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                         <a href="/manage/{{n.item.path}}">
                             <span *ngIf="n.item.isFolder" class="glyphicon glyphicon-folder-open"></span>
                             {{n.item.title}}</a>
-                        <span *ngIf="n.email_doc_modify"
+                        <span *ngIf="isDocModify(n)"
                               class="glyphicon glyphicon-pencil"
                               tooltip="Document modifications" i18n-tooltip></span>
-                        <span *ngIf="n.email_comment_add"
+                        <span *ngIf="isCommentAdd(n)"
                               class="glyphicon glyphicon-comment"
                               tooltip="New comments" i18n-tooltip></span>
-                        <span *ngIf="n.email_comment_modify"
+                        <span *ngIf="isCommentModify(n)"
                               class="glyphicon glyphicon-comment"
                               tooltip="Comment modifications" i18n-tooltip></span>
                     </li>
@@ -512,6 +517,26 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
             (c) => c.primary
         )!;
         this.tableData.cbCallBack = this.cbChanged;
+    }
+
+    isDocModify(n: INotification) {
+        return (
+            n.notification_type == NotificationType.DocModified ||
+            n.notification_type == NotificationType.ParAdded ||
+            n.notification_type == NotificationType.ParDeleted ||
+            n.notification_type == NotificationType.ParModified
+        );
+    }
+
+    isCommentAdd(n: INotification) {
+        return n.notification_type == NotificationType.CommentAdded;
+    }
+
+    isCommentModify(n: INotification) {
+        return (
+            n.notification_type == NotificationType.CommentModified ||
+            n.notification_type == NotificationType.CommentDeleted
+        );
     }
 
     // region Styles tab
