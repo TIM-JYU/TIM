@@ -934,10 +934,14 @@ def name_area(doc_id, area_name):
         if options.get("alttext"):
             area_attrs["alttext"] = str(options.get("alttext"))
 
-    doc.insert_paragraph(
+    area_start = doc.insert_paragraph(
         area_title + after_title, insert_before_id=area_start, attrs=area_attrs
     )
-    doc.insert_paragraph("", insert_after_id=area_end, attrs={"area_end": area_name})
+    area_end = doc.insert_paragraph(
+        "", insert_after_id=area_end, attrs={"area_end": area_name}
+    )
+
+    synchronize_translations(docentry, DocumentEditResult(added=[area_start, area_end]))
 
     return par_response(
         doc.get_named_section(area_name),
