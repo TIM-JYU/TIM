@@ -38,6 +38,7 @@ class NotifyTestBase(TimRouteTest):
                 "email_comment_add": True,
                 "email_comment_modify": False,
                 "email_doc_modify": True,
+                "email_answer_add": False,
             },
         )
         self.login_test1()
@@ -57,6 +58,7 @@ class NotifyTest(NotifyTestBase):
                 "email_comment_add": False,
                 "email_comment_modify": False,
                 "email_doc_modify": False,
+                "email_answer_add": False,
             },
             n,
         )
@@ -64,6 +66,7 @@ class NotifyTest(NotifyTestBase):
             "email_comment_add": True,
             "email_comment_modify": False,
             "email_doc_modify": True,
+            "email_answer_add": False,
         }
         self.update_notify_settings(d, new_settings)
         n = self.get(notify_url)
@@ -235,6 +238,7 @@ class NotifyFolderTest(NotifyTestBase):
                 "email_comment_add": True,
                 "email_comment_modify": False,
                 "email_doc_modify": True,
+                "email_doc_add": False,
             },
         )
         r = self.get("/notify/all")
