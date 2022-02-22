@@ -30,6 +30,10 @@ export class ParContext {
         return $(this.par.htmlElement);
     }
 
+    get originalCtx() {
+        return new ParContext(this.originalPar);
+    }
+
     /**
      * Returns the corresponding {@link Paragraph} object without dereferencing {@link ReferenceParagraph}.
      */

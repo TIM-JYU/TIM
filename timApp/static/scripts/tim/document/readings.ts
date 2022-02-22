@@ -105,6 +105,7 @@ export async function markParRead(par: ParContext, readingType: ReadingType) {
 
 async function markParsRead(pars: ParContext[], item: IItem) {
     const parIds = pars
+        .map((par) => par.originalCtx)
         .filter((e) => !isAlreadyRead(e, ReadingType.ClickRed))
         .map((e) => {
             return [e.par.docId, e.par.id];
@@ -166,7 +167,7 @@ function queueParagraphForReading() {
 }
 
 async function handleSeeChanges(elem: JQuery, e: OnClickArg) {
-    const par = fromParents(elem);
+    const par = fromParents(elem).originalCtx;
     const [id, blockId, t] = [par.par.docId, par.par.id, par.par.hash];
     const parData = await to(
         $http.get<Array<{par_hash: string}>>(`/read/${id}/${blockId}`)
@@ -214,7 +215,7 @@ async function readlineHandler(elem: JQuery, e: OnClickArg) {
     if (par.isHelp) {
         return;
     }
-    await markParRead(par, ReadingType.ClickRed);
+    await markParRead(par.originalCtx, ReadingType.ClickRed);
 }
 
 export async function initReadings(item: IItem) {
@@ -254,7 +255,7 @@ export async function initReadings(item: IItem) {
 
     onClick(".readsection", function readSectionHandler($readsection, e) {
         const doc = getActiveDocument();
-        const par = fromParents($readsection);
+        const par = fromParents($readsection).originalCtx;
         const pars = doc.getSectionFor(par.par);
         if (!pars) {
             return;
