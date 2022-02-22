@@ -26,6 +26,7 @@ from tim_common.utils import Missing
 class UploadedFile:
     path: str
     type: str
+    rotation: int = 0
 
     def to_json(self) -> dict:
         return asdict(self)

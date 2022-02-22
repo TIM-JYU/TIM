@@ -106,7 +106,7 @@ export interface IVelpableComponent extends ITimComponent {
     /**
      * Resolves Base64 encoded image representation of the component for Velping.
      */
-    getVelpImage(): Promise<string | undefined>;
+    getVelpImages(): Promise<string[] | undefined>;
 }
 
 /**
@@ -116,8 +116,8 @@ export interface IVelpableComponent extends ITimComponent {
 export function isVelpable(obj?: ITimComponent): obj is IVelpableComponent {
     return (
         obj !== undefined &&
-        (obj as IVelpableComponent).getVelpImage !== undefined &&
-        typeof (obj as IVelpableComponent).getVelpImage === "function"
+        (obj as IVelpableComponent).getVelpImages !== undefined &&
+        typeof (obj as IVelpableComponent).getVelpImages === "function"
     );
 }
 
