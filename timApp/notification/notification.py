@@ -13,9 +13,10 @@ class NotificationType(enum.Enum):
     CommentAdded = 5
     CommentModified = 6
     CommentDeleted = 7
+    AnswerAdded = 8
 
     @property
-    def is_document_modification(self):
+    def is_document_modification(self) -> bool:
         return self in (
             NotificationType.DocModified,
             NotificationType.ParAdded,
