@@ -39,6 +39,7 @@ import {
 } from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
+import {IUnsavedComponent} from "tim/document/viewctrl";
 
 export type IRectangle = {
     type: "rectangle";
@@ -802,7 +803,9 @@ const SCROLLBAR_APPROX_WIDTH = 17;
                       [undo]="undo"></draw-toolbar>
     `,
 })
-export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
+export class DrawCanvasComponent
+    implements OnInit, OnChanges, OnDestroy, IUnsavedComponent
+{
     @Input() public bgSources: string[] = [];
     bgSourceSizes: IImageSizes[] = []; // dimensions of loaded background images, sorted
     bgOffsets: number[] = []; // top starting coordinates of each background image, sorted
@@ -1187,6 +1190,10 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
             x: coord.x / this.zoomLevel,
             y: coord.y / this.zoomLevel,
         };
+    }
+
+    isUnSaved() {
+        return this.getDrawing().length > 0;
     }
 }
 
