@@ -1471,6 +1471,16 @@ export class ReviewController {
                 this.selectionIsDrawing = false;
                 this.selectedElement = undefined;
             }
+        } else if (updateArgs.scaleChange != undefined) {
+            const anns = this.getAnnotationsByAnswerId(canvas.id);
+            for (const a of anns) {
+                if (!a.draw_data) {
+                    continue;
+                }
+                this.vctrl
+                    .getAnnotation(`t${a.id}`)
+                    ?.resizeElementBorder(updateArgs.scaleChange);
+            }
         } else if (updateArgs.x != undefined && updateArgs.y != undefined) {
             const anns = this.getAnnotationsByAnswerId(canvas.id);
             const annCompsInCoord: AnnotationComponent[] = [];

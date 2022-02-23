@@ -60,13 +60,14 @@ export type IArrow = {
     drawData: ILine;
 };
 
-// TODO: 4th variable for reporting MouseDown, TouchMove etc could be useful for fine-tuning the desired
+// TODO: a variable for reporting MouseDown, TouchMove etc could be useful for fine-tuning the desired
 //  update behaviour - for now this is called on certain MouseUp/TouchEnd events, and the behaviour
 //  is not optimal for mobile (e.g contained objects register clicks when user just wanted to scroll the page)
 export interface IDrawUpdate {
     x?: number;
     y?: number;
     drawingUpdated: boolean;
+    scaleChange?: number;
 }
 
 export type DrawItem = IRectangle | IEllipse | IFreeHand | IArrow;
@@ -780,16 +781,18 @@ const SCROLLBAR_APPROX_WIDTH = 17;
             </div>
             <div #wrapper style="overflow: auto; position: relative; resize: both;"
                  [style.height.px]="getWrapperHeight(true)"
-                 [style.width.px]="getWrapperWidth(true)">
+                 >
                 <div class="zoomer" style="-webkit-transform-origin: 0 0;" [style.transform]="getZoomLevel()">
                     <div #backGround style="position: absolute; display:flex; flex-direction: column;">
                         <img alt="review image" *ngFor="let item of bgImages; let i = index"
                              style="max-width: none; display: unset;"
                              [src]="bgImages[i]" (load)="onImgLoad($event, i)">
                     </div>
-                    <div #objectContainer class="canvasObjectContainer"
-                         style="overflow: visible; position: absolute; height: 100%; width: 100%;">
-                    </div>
+                </div>
+                <div #objectContainer class="canvasObjectContainer"
+                     style="overflow: visible; position: absolute; height: 0; width: 0;">
+                </div>
+                <div class="zoomer" style="-webkit-transform-origin: 0 0;" [style.transform]="getZoomLevel()">
                     <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">
                     </canvas>
                 </div>
@@ -813,6 +816,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     imgWidth = 0;
     loadedImages = 0;
     zoomLevel = 1;
+    defaultZoomLevel = 1;
 
     drawHandler!: Drawing;
 
@@ -966,17 +970,25 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         );
         this.canvas.nativeElement.width = newWidth;
         this.canvas.nativeElement.height = newHeight;
-        this.objectContainer.nativeElement.style.width = newWidth + "px";
-        this.objectContainer.nativeElement.style.height = newHeight + "px";
+        if (this.imgWidth > this.wrapper.nativeElement.clientWidth) {
+            this.defaultZoomLevel =
+                this.wrapper.nativeElement.clientWidth / this.imgWidth;
+            this.zoomLevel = this.defaultZoomLevel;
+        }
         if (this.imgLoadCallback) {
             this.imgLoadCallback(this);
         }
     }
 
+    getWrapper(): HTMLDivElement {
+        return this.wrapper.nativeElement;
+    }
+
     getWrapperWidth(includeScrollbar: boolean = false): number {
         const min = 400;
+        const max = window.innerWidth;
         return (
-            Math.max(min, this.imgWidth) +
+            Math.min(Math.max(min, this.imgWidth), max) +
             (includeScrollbar ? SCROLLBAR_APPROX_WIDTH : 0)
         );
     }
@@ -1151,12 +1163,18 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
 
     zoom(delta: number) {
         if (delta === 0) {
-            this.zoomLevel = 1;
-            return;
+            this.zoomLevel = this.defaultZoomLevel;
+        } else {
+            this.zoomLevel += delta;
+            if (this.zoomLevel < 0.1) {
+                this.zoomLevel = 0.1;
+            }
         }
-        this.zoomLevel += delta;
-        if (this.zoomLevel < 0.1) {
-            this.zoomLevel = 0.1;
+        if (this.updateCallback) {
+            this.updateCallback(this, {
+                drawingUpdated: false,
+                scaleChange: this.zoomLevel,
+            });
         }
     }
 
