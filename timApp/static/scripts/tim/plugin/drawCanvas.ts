@@ -858,12 +858,17 @@ export class DrawCanvasComponent
     ) {}
 
     ngOnInit() {
-        const prevSettings = this.optionsStorage.get();
-        if (prevSettings) {
-            this.drawOptions = prevSettings;
+        if (!this.toolBar) {
+            this.drawOptions.enabled = false;
         } else {
-            this.drawOptions = {...this.drawOptions, ...this.options};
+            const prevSettings = this.optionsStorage.get();
+            if (prevSettings) {
+                this.drawOptions = prevSettings;
+            } else {
+                this.drawOptions = {...this.drawOptions, ...this.options};
+            }
         }
+
         this.setBg();
     }
 
