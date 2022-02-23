@@ -4,24 +4,28 @@
 if [ "$2" != "p" ]
 then
 
+DATA_PATH="/cs_data"
+
 #setfacl  -R -d -m m::rwx -m group::rwx -m other::rwx /tmp
 
-if [ ! -d MIRToolbox ]; then
+MIR_PATH="$DATA_PATH/MIRToolbox"
+
+if [ ! -d "$MIR_PATH" ]; then
     echo "GET MIR"
-    mkdir MIRToolbox
-    cd MIRToolbox
+    mkdir "$MIR_PATH"
+    cd "$MIR_PATH"
     rm -rf *
 
     #Here we download MIRToolbox:
     git clone https://github.com/martinarielhartmann/mirtooloct .
-    #To reduce the size of the folder a bit:
-    cd mirtooloct
-    rm -rf *.pdf
 fi
 
-if [ ! -d static/glowscript ]; then
+GLOWSCRIPT_PATH="$DATA_PATH/static/glowscript"
+
+if [ ! -d "$GLOWSCRIPT_PATH" ]; then
     echo "GET GlowScript"
-    git clone https://github.com/vpython/glowscript static/glowscript
+    mkdir -p "$GLOWSCRIPT_PATH"
+    git clone https://github.com/vpython/glowscript "$GLOWSCRIPT_PATH"
 fi
 
 mkdir -p /tmp/cache
@@ -29,9 +33,9 @@ chown -R agent:agent /tmp
 rm /tmp/cache/* > /dev/null 2>&1
 
 chown -R agent:agent /csgenerated
-
-touch /cs/log.txt
-chown agent:agent /cs/log.txt
+chown -R agent:agent /logs
+#touch /cs/log.txt
+#chown agent:agent /cs/log.txt
 
 # TODO: This might not be necessary because we have to run as root anyway - in Docker Desktop for Windows,
 #  it's not possible to change socket permissions (it has no effect).
@@ -40,10 +44,11 @@ chmod 766 /var/run/docker.sock
 if [ "$CSPLUGIN_TARGET" != "base" ]; then
   # Refresh dotnet dependency cache
   cd /cs/dotnet
-  ./gen_deps.py
+  ./gen_deps.py /cs_data/dotnet
 fi
 
-cd /cs/java
+mkdir -p "$DATA_PATH/java/cs"
+cd "$DATA_PATH/java"
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar -O comtest.jar.tmp -nv && mv comtest.jar.tmp comtest.jar
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar -O comtestcpp.jar.tmp -nv && mv comtestcpp.jar.tmp comtestcpp.jar
 wget https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar -O Graphics.jar.tmp -nv && mv Graphics.jar.tmp Graphics.jar
@@ -51,11 +56,14 @@ wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar -O Ali.jar.tmp -nv && 
 wget https://svn.cc.jyu.fi/srv/svn/ohj2/FXExamples/trunk/FXGui/fxgui.jar -O fxgui.jar.tmp -nv && mv fxgui.jar.tmp fxgui.jar
 wget https://svn.cc.jyu.fi/srv/svn/ohj2/gui/gui.jar -O gui.jar.tmp -nv && mv gui.jar.tmp gui.jar
 
-mkdir -p cs
 cd cs
 wget https://kurssit.it.jyu.fi/npo/ComTest/ComTest.jar -O ComTest.jar.tmp -nv && mv ComTest.jar.tmp ComTest.jar
 
-cd /cs/simcir/check
+cd /cs
+mkdir -p "$DATA_PATH/simcir/check"
+rm -rf "$DATA_PATH/simcir"
+cp -r simcir "$DATA_PATH/simcir"
+cd "$DATA_PATH/simcir/check"
 wget https://gitlab.jyu.fi/arjuvi/logik-py/-/raw/master/simcirtest.py -O simcirtest.py.tmp -nv && mv simcirtest.py.tmp simcirtest.py
 
 fi

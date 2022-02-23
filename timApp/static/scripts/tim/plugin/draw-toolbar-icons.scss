@@ -1,0 +1,182 @@
+// Some icon base code taken from css.gg:
+// https://github.com/astrit/css.gg/blob/master/LICENSE
+
+.gg-color-bucket {
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  width: 6px;
+  height: 10px;
+  border: 2px solid;
+  border-bottom: 0;
+  border-top-left-radius: 100px;
+  border-top-right-radius: 100px;
+  margin-top: -18px;
+  top: 5px;
+  left: -2px;
+}
+
+.gg-color-bucket::after,
+.gg-color-bucket::before {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  position: absolute;
+  transform: rotate(45deg)
+}
+
+.gg-color-bucket::before {
+  border: 2px solid;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  top: 4px;
+  left: -4px;
+  width: 14px;
+  height: 16px
+}
+
+.gg-color-bucket::after {
+  width: 6px;
+  height: 6px;
+  border-radius: 0 100% 100% 100%;
+  background: currentColor;
+  right: -15px;
+  bottom: -12px
+}
+
+.gg-arrow-top-right {
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid;
+  border-right: 2px solid;
+  top: 5px;
+}
+
+.gg-arrow-top-right::after {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  position: absolute;
+  width: 14px;
+  height: 2px;
+  background: currentColor;
+  transform: rotate(-45deg);
+  top: 3px;
+  right: -3px
+}
+
+.gg-shape-square {
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  top: 2px;
+  width: 20px;
+  height: 16px;
+  border: 3px solid
+}
+
+.gg-border-style-solid {
+  top: 2px;
+}
+
+.gg-border-style-solid,
+.gg-border-style-solid::before {
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 17px
+}
+
+.gg-border-style-solid::before {
+  content: "";
+  position: absolute;
+  height: 2px;
+  top: 7px;
+  border-top: 2px solid
+}
+
+.gg-shape-circle {
+  box-sizing: border-box;
+  position: relative;
+  top: 2px;
+  display: block;
+  width: 20px;
+  height: 16px;
+  border: 3px solid;
+  border-radius: 100px / 85px;
+}
+
+.gg-edit-fade {
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  box-shadow: 0 0 0 2px;
+  border-radius: 100px;
+  overflow: hidden
+}
+
+.gg-edit-fade::after,
+.gg-edit-fade::before {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  position: absolute;
+  width: 8px;
+  height: 20px;
+  left: -2px;
+  background: currentColor;
+  opacity: .6
+}
+
+.gg-edit-fade::before {
+  left: 6px;
+  opacity: .1
+}
+
+.gg-arrows-shrink-h {
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 10px;
+  background: linear-gradient(
+                  to left, currentColor 10px,
+                  transparent 0) no-repeat center center/10px 2px,
+  linear-gradient(
+                  to left, currentColor 10px,
+                  transparent 0) no-repeat 18px center/2px 10px,
+  linear-gradient(
+                  to left, currentColor 10px,
+                  transparent 0) no-repeat 0px center/2px 10px
+}
+
+.gg-arrows-shrink-h::after,
+.gg-arrows-shrink-h::before {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  transform: rotate(45deg);
+  top: 2px
+}
+
+.gg-arrows-shrink-h::after {
+  border-left: 2px solid;
+  border-bottom: 2px solid;
+  left: 4px;
+}
+
+.gg-arrows-shrink-h::before {
+  border-right: 2px solid;
+  border-top: 2px solid;
+  right: 4px
+}

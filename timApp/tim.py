@@ -3,7 +3,6 @@ import traceback
 from dataclasses import dataclass
 from io import BytesIO
 from os.path import basename
-from typing import Optional
 from urllib.parse import urlparse
 
 import bs4
@@ -400,7 +399,10 @@ def install_sql_hook():
                 and not receive_before_execute.__name__ in r
             ):
                 print(r, end="")
-        print(clauseelement)
+        try:
+            print(clauseelement)
+        except Exception as e:
+            print(f"<unprintable clauseelement>: {e}")
 
 
 if app.config["TESTING"]:
@@ -410,11 +412,15 @@ if app.config["TESTING"]:
 if app.config["DEBUG_SQL"]:
     install_sql_hook()
 
+LOG_BEFORE_REQUESTS = app.config["LOG_BEFORE_REQUESTS"]
+
 
 @app.before_request
 def preprocess_request():
     session.permanent = True
     g.request_start_time = time.monotonic()
+    if LOG_BEFORE_REQUESTS:
+        log_info(get_request_message(include_time=False, is_before=True))
     if request.method == "GET":
         p = request.path
         if "//" in p or (p.endswith("/") and p != "/"):

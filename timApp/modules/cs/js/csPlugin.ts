@@ -31,8 +31,10 @@ import {
     copyToClipboard,
     defaultErrorMessage,
     defaultTimeout,
+    Result,
     timeout,
     to,
+    to2,
     toPromise,
     valueDefu,
     valueOr,
@@ -41,6 +43,8 @@ import {TimDefer} from "tim/util/timdefer";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import deepEqual from "deep-equal";
 import {SimcirConnectorDef, SimcirDeviceInstance} from "../simcir/simcir-all";
+import {showInputDialog} from "../../../static/scripts/tim/ui/showInputDialog";
+import {InputDialogKind} from "../../../static/scripts/tim/ui/input-dialog.kind";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import {EditorComponent, EditorFile, Mode} from "./editor/editor";
@@ -444,6 +448,21 @@ interface IUploadResponse {
     block: number;
 }
 
+interface ITemplateParam {
+    def: string;
+    text: string;
+    regexp: string;
+    errmsg: string;
+}
+
+interface ITemplateButton {
+    html: string;
+    text: string;
+    title?: string;
+    hasMath?: boolean;
+    params?: ITemplateParam[];
+}
+
 /**
  * This defines the required format for the csPlugin YAML markup.
  * All fields in the markup are optional (as indicated by t.partial function).
@@ -815,16 +834,17 @@ export class CsBase extends AngularPluginBase<
     isAll: boolean = false;
     isTest: boolean = false;
     isUnitTest: boolean = false;
+    byCode: string = "";
+    runChanged: boolean = false;
+    canReset: boolean = false;
+    firstTime: boolean = true; // force showJS on first time even usercode === ""
+    // otherwise clears for some reason the codearea???
 
     get usercode(): string {
         return this.usercode_;
     }
     set usercode(str: string) {
         this.usercode_ = str;
-    }
-
-    get byCode() {
-        return commentTrim(this.attrsall.by ?? this.markup.byCode ?? "");
     }
 
     get type() {
@@ -974,7 +994,8 @@ export class CsController extends CsBase implements ITimComponent {
     viewCode!: boolean;
     wavURL: string = "";
     wrap!: {n: number; auto: boolean};
-    buttons: string[] = [];
+    templateButtons: ITemplateButton[] = [];
+    templateButtonsCount: number = 0;
     mdHtml?: string;
 
     iframesettings?: {
@@ -1011,8 +1032,11 @@ export class CsController extends CsBase implements ITimComponent {
     private clearSaved: boolean = false;
 
     @ViewChild("externalEditor")
-    set externalEditorViewSetter(new_value: EditorComponent | undefined) {
-        this.externalEditor = new_value;
+    set externalEditorViewSetter(newValue: EditorComponent | undefined) {
+        if (newValue == this.externalEditor) {
+            return;
+        }
+        this.externalEditor = newValue;
         this.updateExternalEditor();
     }
 
@@ -1036,6 +1060,9 @@ export class CsController extends CsBase implements ITimComponent {
 
     @ViewChild("mainEditor")
     set editorViewSetter(new_value: EditorComponent | undefined) {
+        if (this.editor == new_value) {
+            return;
+        }
         this.editor = new_value;
         if (!this.editor) {
             return;
@@ -1161,6 +1188,9 @@ export class CsController extends CsBase implements ITimComponent {
 
     @ViewChild(FileSelectManagerComponent)
     set fileSelectSetter(component: FileSelectManagerComponent | undefined) {
+        if (component == this.fileSelect) {
+            return;
+        }
         this.fileSelect = component;
         if (!component || !this.upload) {
             return;
@@ -1882,36 +1912,87 @@ ${fhtml}
         );
     }
 
-    getTemplateButtons(): string[] {
+    createTemplateButtons() {
         let b = this.markup.buttons;
-        if (b) {
-            const helloButtons =
-                "public \nclass \nHello \n\\n\n{\n}\n" +
-                "static \nvoid \n Main\n(\n)\n" +
-                '        Console.WriteLine(\n"\nworld!\n;\n ';
-            const typeButtons =
-                "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
-            const charButtons =
-                "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
-            b = b.replace("$hellobuttons$", helloButtons);
-            b = b.replace("$typebuttons$", typeButtons);
-            b = b.replace("$charbuttons$", charButtons);
-            b = b.trim();
-            b = b.replace("$space$", " ");
-            const btns = b.split("\n");
-            for (let i = 0; i < btns.length; i++) {
-                let s = btns[i];
-                if (s.length < 1) {
-                    continue;
-                }
-                if (s.startsWith('"') || s.startsWith("'")) {
-                    s = s.replace(new RegExp(s[0], "g"), "");
-                    btns[i] = s;
-                }
-            }
-            return btns;
+        if (!b) {
+            return;
         }
-        return [];
+        const helloButtons =
+            "public \nclass \nHello \n\\n\n{\n}\n" +
+            "static \nvoid \n Main\n(\n)\n" +
+            '        Console.WriteLine(\n"\nworld!\n;\n ';
+        const typeButtons =
+            "bool \nchar\n int \ndouble \nstring \nStringBuilder \nPhysicsObject \n[] \nreturn \n, ";
+        const charButtons =
+            "a\nb\nc\nd\ne\ni\nj\n.\n0\n1\n2\n3\n4\n5\nfalse\ntrue\nnull\n=";
+        b = b.replace("$hellobuttons$", helloButtons);
+        b = b.replace("$typebuttons$", typeButtons);
+        b = b.replace("$charbuttons$", charButtons);
+        b = b.trim();
+        b = b.replace("$space$", " ");
+        const btns = b.split("\n");
+        for (let i = 0; i < btns.length; i++) {
+            let s = btns[i];
+            if (s.length < 1) {
+                continue;
+            }
+            if (s.startsWith('"') || s.startsWith("'")) {
+                s = s.replace(new RegExp(s[0], "g"), "");
+                btns[i] = s;
+            }
+        }
+        for (const s of btns) {
+            if (!s.startsWith("[")) {
+                this.templateButtons.push({
+                    html: this.getButtonTextHtml(s),
+                    text: s,
+                });
+                continue;
+            }
+            try {
+                const parsed = JSON.parse(s);
+                const item: ITemplateButton = {
+                    html: parsed[0],
+                    text: parsed[0],
+                };
+                if (parsed.length > 1 && parsed[1] !== "") {
+                    item.text = parsed[1];
+                }
+                if (parsed.length > 2 && parsed[2] !== "") {
+                    item.title = parsed[2];
+                }
+                if (parsed.length > 3) {
+                    item.params = [];
+                }
+                item.hasMath = (parsed as string[]).some(
+                    (x, i) => i >= 2 && x == "math"
+                );
+                for (let i = 3; i < parsed.length; i++) {
+                    const p = parsed[i];
+                    if (!(p instanceof Array)) {
+                        continue;
+                    }
+                    const param: ITemplateParam = {
+                        def: p[0] ?? "",
+                        text: p[1] ?? "",
+                        regexp: p[2] ?? "",
+                        errmsg: p[3] ?? "",
+                    };
+                    if (p.length > 0) {
+                        item.params?.push(param);
+                    }
+                }
+                this.templateButtons.push(item);
+            } catch (e) {
+                this.templateButtons.push({
+                    html: "error",
+                    text: "",
+                    title: "" + e,
+                });
+            }
+        }
+        this.templateButtonsCount = this.templateButtons.length;
+        return btns;
     }
 
     get progLanguages() {
@@ -1941,6 +2022,8 @@ ${fhtml}
         super.ngOnInit();
         // First find out what language we are using
         const type = this.markup.type.split(/[/,; ]/)[0];
+
+        this.byCode = commentTrim(this.attrsall.by ?? this.markup.byCode ?? "");
 
         this.languageType = this.markup.type; // user may change
         this.origLanguageType = this.markup.type;
@@ -2000,7 +2083,7 @@ ${fhtml}
         this.vctrl = vctrlInstance!;
         this.hide = this.attrsall.markup.hide ?? {};
         //  if ( typeof this.markup.borders !== 'undefined' ) this.markup.borders = true;
-        this.buttons = this.getTemplateButtons();
+        this.createTemplateButtons();
         const isText = this.isText;
         const isArgs = this.type.includes("args");
         if (this.attrsall.markup.docurl) {
@@ -2104,6 +2187,7 @@ ${fhtml}
         //  Otherwise precode and postcode won't show up until user clicks hide + show code.
         //  It's unclear if getCode should handle this already.
         this.showCodeNow();
+        this.updateRunChanged();
     }
 
     async ngAfterViewInit() {
@@ -2140,6 +2224,9 @@ ${fhtml}
         if (this.markup.autorun) {
             this.runCodeLink(true);
         }
+
+        // TODO: Snippets should be processed via Dumbo
+        ParCompiler.processAllMath(this.element.find(".csRunSnippets"));
     }
 
     uploadedFileName(url: string) {
@@ -2177,6 +2264,7 @@ ${fhtml}
 
         this.anyChanged();
         this.cdr.detectChanges();
+        this.updateRunChanged();
     }
 
     anyChanged() {
@@ -2554,6 +2642,7 @@ ${fhtml}
         );
         if (r.ok) {
             this.isRunning = false;
+
             this.initSaved();
             const data = r.result;
             const tsruntime = ((performance.now() - t0run) / 1000).toFixed(3);
@@ -2584,7 +2673,7 @@ ${fhtml}
             }
             this.runSuccess = true;
 
-            this.runError = this.error;
+            this.runError = this.error; // TODO: TÄMÄ AIHEUTTAA TEKSTIN PALAUTTAMISEN
 
             const imgURL = data.web.image;
             const videoURL = data.web.video;
@@ -2640,7 +2729,6 @@ ${fhtml}
                     }
                 }
             }
-
             this.languageResponse(data.web.language);
 
             this.processPluginMath();
@@ -2693,17 +2781,53 @@ ${fhtml}
         this.muokattu = false;
     }
 
-    addText(s: string) {
+    async addText(item: ITemplateButton) {
+        let s = item.text;
         if (this.noeditor) {
             this.userargs += s + " ";
             return;
+        }
+        let ip = 0;
+        while (s.includes("\\?")) {
+            let param: ITemplateParam = {
+                def: "",
+                text: "Value",
+                regexp: ".*",
+                errmsg: "",
+            };
+            if (item.params && ip < item.params.length) {
+                param = item.params[ip];
+            }
+            const re = new RegExp(param.regexp);
+            const replace = await to2(
+                showInputDialog({
+                    isInput: InputDialogKind.InputAndValidator,
+                    text: param.text,
+                    title: "Parameter",
+                    okText: "OK",
+                    defaultValue: param.def,
+                    validator: (input) =>
+                        new Promise<Result<string, string>>((res) => {
+                            if (!input.match(re)) {
+                                return res({ok: false, result: param.errmsg});
+                            }
+                            return res({ok: true, result: input});
+                        }),
+                })
+            );
+            if (!replace.ok) {
+                return "";
+            }
+            s = s.replace("\\?", replace.result);
+            ip++;
         }
         const text = s.replace(/\\n/g, "\n");
         this.editor?.insert?.(text);
     }
 
-    addTextHtml(s: string) {
+    getButtonTextHtml(s: string) {
         let ret = s.trim();
+        ret = ret.replace("\\n", "");
         if (ret.length === 0) {
             ret = "\u00A0";
         }
@@ -2867,8 +2991,13 @@ ${fhtml}
         return this.taunoFrame != undefined;
     }
 
-    get canReset() {
-        return (this.editor?.modified ?? false) || this.isSage || this.simcir;
+    updateCanReset() {
+        this.canReset = !!(
+            (this.editor?.modified ?? false) ||
+            this.isSage ||
+            this.simcir
+        );
+        return this.canReset;
     }
 
     async initCode() {
@@ -3307,10 +3436,12 @@ ${fhtml}
             !this.markup.runeverytime &&
             !this.usercode &&
             !this.userargs &&
-            !this.userinput
+            !this.userinput &&
+            !this.firstTime
         ) {
             return;
         }
+        this.firstTime = false;
         if (this.type.includes("truthtable")) {
             const truthTable = (await import("./truthTable")).truthTable;
             this.result = truthTable(this.userargs);
@@ -3508,11 +3639,14 @@ ${fhtml}
         }
     }
 
-    get runChanged(): boolean {
+    updateRunChanged(): boolean {
         if (this.editor?.parsonsEditor) {
-            return false;
+            this.runChanged = false;
+        } else {
+            this.runChanged = this.byCode !== this.usercode;
         }
-        return this.byCode !== this.usercode;
+        this.updateCanReset();
+        return this.runChanged;
     }
 }
 
@@ -3611,10 +3745,9 @@ ${fhtml}
                     [placeholder]="argsplaceholder"></span>
     </div>
     <cs-count-board *ngIf="count" [options]="count"></cs-count-board>
-    <p class="csRunSnippets" *ngIf="buttons && !noeditor">
-        <button *ngFor="let item of buttons" (click)="addText(item)">{{addTextHtml(item)}}</button>
-        &nbsp;&nbsp;
-    </p>
+    <div #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
+        <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;" (click)="addText(item)" title="{{item.title}}">{{item.html}}</button>
+    </div>
     <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
             [maxRows]="maxrows"
             [disabled]="true">
@@ -3699,17 +3832,17 @@ ${fhtml}
     <p class="unitTestGreen" *ngIf="runTestGreen">&nbsp;ok</p>
     <pre class="unitTestRed" *ngIf="runTestRed">{{comtestError}}</pre>
     <div class="csRunErrorClass" *ngIf="runError">
-        <p class="pull-right">
+        <p class="pull-right" *ngIf="!markup['noclose']">
             <label class="normalLabel" title="Keep erros until next run">Keep <input type="checkbox" [(ngModel)]="keepErros" /></label>
             <tim-close-button (click)="closeError()"></tim-close-button>
         </p>
         <pre class="csRunError" >{{error}}</pre>
-        <p class="pull-right" style="margin-top: -1em">
+        <p class="pull-right" *ngIf="!markup['noclose']" style="margin-top: -1em">
             <tim-close-button (click)="closeError()"></tim-close-button>
         </p>
     </div>
     <div class="csRunErrorClass" *ngIf="fetchError">
-        <p class="pull-right">
+        <p class="pull-right" *ngIf="!markup['noclose']">
             <tim-close-button (click)="fetchError=undefined"></tim-close-button>
         </p>
         <pre class="csRunError" >{{fetchError}}</pre>

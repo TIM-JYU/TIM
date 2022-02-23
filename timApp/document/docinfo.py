@@ -142,11 +142,11 @@ class DocInfo(Item):
         )
 
         for preamble_name in absolute_path_parts:
-            path_parts = preamble_name.split("/")[1:-2]
+            preamble_path_parts = preamble_name.split("/")[1:-2]
             preamble_name = preamble_name.split("/")[-1]
             paths.extend(
                 f"{p}{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}"
-                for p in accumulate(part + "/" for part in path_parts)
+                for p in accumulate(part + "/" for part in preamble_path_parts)
             )
 
         # Remove duplicates and then self-reference

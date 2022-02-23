@@ -2260,11 +2260,11 @@ def get_task_users(task_id):
             User.query.options(lazyload(User.groups))
             .join(Answer, User.answers)
             .filter_by(task_id=task_id)
-            .join(UserGroup, User.groups)
             .order_by(User.real_name.asc())
+            .distinct()
         )
         if usergroup is not None:
-            q = q.filter(UserGroup.name.in_([usergroup]))
+            q = q.join(UserGroup, User.groups).filter(UserGroup.name.in_([usergroup]))
         users = q.all()
     if hide_names_in_teacher(d):
         model_u = User.get_model_answer_user()
