@@ -115,7 +115,6 @@ def reqs() -> PluginReqs:
 ``` {#rc plugin="reviewcanvas"}
 header: Header
 stem: Stem
-inputstem: "inputstem"
 ```"""
     ]
     editor_tabs: list[EditorTab] = [
