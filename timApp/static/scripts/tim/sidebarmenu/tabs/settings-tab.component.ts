@@ -57,10 +57,7 @@ const DEFAULT_PIECE_SIZE = 20;
         <ng-container *ngIf="users.isLoggedIn()">
             <h5 i18n>Customize</h5>
             <a href="/settings" i18n>Customize TIM</a>
-            <button i18n class="timButton btn-block" #buttonMarginLeft
-                    (click)="toggleMarginLeft(buttonMarginLeft)">
-                Align to the left
-            </button>
+            <tim-switch-button></tim-switch-button>
         </ng-container>
         <ng-container *ngIf="showFolderSettings && showRelevance">
             <h5 i18n>Folder settings</h5>
@@ -297,15 +294,6 @@ export class SettingsTabComponent implements OnInit {
         }
         if (!this.item?.isFolder) {
             this.loadViewRangeSettings();
-        }
-    }
-
-    toggleMarginLeft(button: HTMLButtonElement): void {
-        button.textContent = "Align to the left";
-        for (const element of document.querySelectorAll(".row *")) {
-            if (element.classList.toggle("toggle-margin-left")) {
-                button.textContent = "Reset to the center";
-            }
         }
     }
 
