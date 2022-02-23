@@ -805,6 +805,10 @@ export class ViewCtrl implements IController {
         return this.velpCanvases.get(id);
     }
 
+    public removeVelpCanvas(id: number) {
+        this.velpCanvases.delete(id);
+    }
+
     /**
      * Registers an ITimComponent to the view controller by its name attribute if it has one.
      * @param {ITimComponent} component The component to be registered.

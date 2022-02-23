@@ -69,6 +69,7 @@ export interface IDrawUpdate {
     y?: number;
     drawingUpdated: boolean;
     scaleChange?: number;
+    deleted?: boolean;
 }
 
 export type DrawItem = IRectangle | IEllipse | IFreeHand | IArrow;
@@ -923,6 +924,9 @@ export class DrawCanvasComponent
 
     ngOnDestroy() {
         this.clearObjectContainer();
+        if (this.updateCallback) {
+            this.updateCallback(this, {drawingUpdated: false, deleted: true});
+        }
     }
 
     saveSettings() {

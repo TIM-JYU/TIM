@@ -1481,6 +1481,8 @@ export class ReviewController {
                     .getAnnotation(`t${a.id}`)
                     ?.resizeElementBorder(updateArgs.scaleChange);
             }
+        } else if (updateArgs.deleted) {
+            this.vctrl.removeVelpCanvas(canvas.id);
         } else if (updateArgs.x != undefined && updateArgs.y != undefined) {
             const anns = this.getAnnotationsByAnswerId(canvas.id);
             const annCompsInCoord: AnnotationComponent[] = [];
