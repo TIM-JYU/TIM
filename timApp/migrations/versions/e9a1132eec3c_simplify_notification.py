@@ -177,13 +177,17 @@ def downgrade():
                 "email_comment_add": False,
                 "email_comment_modify": False,
             }
-        match notification_type:
-            case "DocModified" | "ParAdded" | "ParModified" | "ParDeleted":
-                old_notifications[(user_id, block_id)]["email_doc_modify"] = True
-            case "CommentAdded":
-                old_notifications[(user_id, block_id)]["email_comment_add"] = True
-            case "CommentModified" | "CommentDeleted":
-                old_notifications[(user_id, block_id)]["email_comment_modify"] = True
+        if notification_type in (
+            "DocModified",
+            "ParAdded",
+            "ParModified",
+            "ParDeleted",
+        ):
+            old_notifications[(user_id, block_id)]["email_doc_modify"] = True
+        elif notification_type in ("CommentAdded",):
+            old_notifications[(user_id, block_id)]["email_comment_add"] = True
+        elif notification_type in ("CommentModified", "CommentDeleted"):
+            old_notifications[(user_id, block_id)]["email_comment_modify"] = True
 
     # Drop the new primary key constraint
     op.add_column(

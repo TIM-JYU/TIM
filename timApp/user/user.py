@@ -1054,20 +1054,22 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         }
 
         for nn in n:
-            match nn.notification_type:
-                case (
-                    NotificationType.DocModified
-                    | NotificationType.ParAdded
-                    | NotificationType.ParDeleted
-                    | NotificationType.ParModified
-                ):
-                    result["email_doc_modify"] = True
-                case NotificationType.CommentAdded:
-                    result["email_comment_add"] = True
-                case NotificationType.CommentModified | NotificationType.CommentDeleted:
-                    result["email_comment_modify"] = True
-                case NotificationType.AnswerAdded:
-                    result["email_answer_add"] = True
+            if nn.notification_type in (
+                NotificationType.DocModified,
+                NotificationType.ParAdded,
+                NotificationType.ParDeleted,
+                NotificationType.ParModified,
+            ):
+                result["email_doc_modify"] = True
+            if nn.notification_type in (NotificationType.CommentAdded,):
+                result["email_comment_add"] = True
+            if nn.notification_type in (
+                NotificationType.CommentModified,
+                NotificationType.CommentDeleted,
+            ):
+                result["email_comment_modify"] = True
+            if nn.notification_type in (NotificationType.AnswerAdded,):
+                result["email_answer_add"] = True
 
         return result
 

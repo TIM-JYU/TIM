@@ -1,7 +1,8 @@
 import urllib.parse
 from collections import defaultdict
+from dataclasses import dataclass
 from threading import Thread
-from typing import DefaultDict
+from typing import DefaultDict, Callable
 
 from flask import current_app
 from sqlalchemy.orm import joinedload
@@ -113,25 +114,28 @@ def notify_doc_watchers(
             **kwargs,
         )
     else:
-        match notify_type:
-            case NotificationType.CommentAdded | NotificationType.CommentModified | NotificationType.CommentDeleted:
-                p = CommentNotification(
-                    user=me,
-                    doc_id=doc.id,
-                    par_id=par.get_id() if par else None,
-                    text=content_msg,
-                    kind=notify_type,
-                    **kwargs,
-                )
-            case NotificationType.AnswerAdded:
-                p = AnswerNotification(
-                    user=me,
-                    doc_id=doc.id,
-                    par_id=par.get_id() if par else None,
-                    text=content_msg,
-                    kind=notify_type,
-                    **kwargs,
-                )
+        if notify_type in (
+            NotificationType.CommentAdded,
+            NotificationType.CommentModified,
+            NotificationType.CommentDeleted,
+        ):
+            p = CommentNotification(
+                user=me,
+                doc_id=doc.id,
+                par_id=par.get_id() if par else None,
+                text=content_msg,
+                kind=notify_type,
+                **kwargs,
+            )
+        elif notify_type == NotificationType.AnswerAdded:
+            p = AnswerNotification(
+                user=me,
+                doc_id=doc.id,
+                par_id=par.get_id() if par else None,
+                text=content_msg,
+                kind=notify_type,
+                **kwargs,
+            )
     db.session.add(p)
 
 
@@ -221,51 +225,6 @@ def get_message_for(
     return msg.strip()
 
 
-def get_subject_for(ps: list[PendingNotification], d: DocInfo, show_names: bool) -> str:
-    num_mods = len(ps)
-    distinct_users = list({p.user for p in ps})
-    type_of_all = get_type_of_notify(ps)
-    name_str = get_name_string(distinct_users, show_names)
-    match type_of_all:
-        case NotificationType.ParAdded:
-            return f"{name_str} added {get_par_count_str(num_mods)} to the document {d.title}"
-        case NotificationType.ParModified:
-            return f"{name_str} modified {get_par_count_str(num_mods)} in the document {d.title}"
-        case NotificationType.ParDeleted:
-            return f"{name_str} deleted {get_par_count_str(num_mods)} from the document {d.title}"
-        case NotificationType.CommentAdded:
-            return f"{name_str} posted {get_comment_count_str(num_mods)} to the document {d.title}"
-        case NotificationType.CommentModified:
-            return f"{name_str} modified {get_comment_count_str(num_mods)} in the document {d.title}"
-        case NotificationType.CommentDeleted:
-            return f"{name_str} deleted {get_comment_count_str(num_mods)} from the document {d.title}"
-        case NotificationType.AnswerAdded:
-            return f"{name_str} posted {get_answer_count_str(num_mods)} to the document {d.title}"
-        case _:
-            if (
-                type_of_all == NotificationType.DocModified
-                or type_of_all == MIXED_DOC_MODIFY
-            ):
-                return f"{name_str} edited the document {d.title} {get_edit_count_str(num_mods)}"
-            if type_of_all == MIXED_COMMENT:
-                return f"{name_str} posted/modified/deleted {get_comment_count_str(num_mods)} in the document {d.title}"
-    return f"{name_str} triggered an event in {d.title}"
-
-
-def get_type_of_notify(ps) -> NotificationType | str:
-    for n in NotificationType:
-        if all(p.notify_type == n for p in ps):
-            return n
-    if all(p.notify_type.is_document_modification for p in ps):
-        return MIXED_DOC_MODIFY
-    elif all(not p.notify_type.is_document_modification for p in ps):
-        return MIXED_COMMENT
-    else:
-        assert (
-            False
-        ), "There should not be mixed comment and doc modification notification types in a batch"
-
-
 def get_edit_count_str(num_edits):
     if num_edits > 1:
         return f"{num_edits} times"
@@ -301,6 +260,89 @@ def get_answer_count_str(num_mods):
         return "an answer"
 
 
+@dataclass(frozen=True, slots=True)
+class NotificationSubject:
+    subject_template: str
+    num_count_modifier: Callable[[int], str]
+
+    def message(self, user: str, num_count: int, resource_title: str) -> str:
+        return self.subject_template.format_map(
+            dict(
+                user=user,
+                num_count=self.num_count_modifier(num_count),
+                resource_title=resource_title,
+            )
+        )
+
+
+NOTIFICATION_TITLE_SUBJECT: dict[NotificationType, NotificationSubject] = {
+    NotificationType.ParAdded: NotificationSubject(
+        subject_template="{user} added {num_count} to the document {resource_title}",
+        num_count_modifier=get_par_count_str,
+    ),
+    NotificationType.ParModified: NotificationSubject(
+        subject_template="{user} modified {num_count} in the document {resource_title}",
+        num_count_modifier=get_par_count_str,
+    ),
+    NotificationType.ParDeleted: NotificationSubject(
+        subject_template="{user} deleted {num_count} from the document {resource_title}",
+        num_count_modifier=get_par_count_str,
+    ),
+    NotificationType.CommentAdded: NotificationSubject(
+        subject_template="{user} posted {num_count} to the document {resource_title}",
+        num_count_modifier=get_comment_count_str,
+    ),
+    NotificationType.CommentModified: NotificationSubject(
+        subject_template="{user} modified {num_count} in the document {resource_title}",
+        num_count_modifier=get_comment_count_str,
+    ),
+    NotificationType.CommentDeleted: NotificationSubject(
+        subject_template="{user} deleted {num_count} from the document {resource_title}",
+        num_count_modifier=get_comment_count_str,
+    ),
+    NotificationType.AnswerAdded: NotificationSubject(
+        subject_template="{user} posted {num_count} to the document {resource_title}",
+        num_count_modifier=get_answer_count_str,
+    ),
+}
+
+
+def get_subject_for(ps: list[PendingNotification], d: DocInfo, show_names: bool) -> str:
+    num_mods = len(ps)
+    distinct_users = list({p.user for p in ps})
+    type_of_all = get_type_of_notify(ps)
+    name_str = get_name_string(distinct_users, show_names)
+
+    notif_type = NOTIFICATION_TITLE_SUBJECT.get(type_of_all, None)
+    if notif_type is not None:
+        return notif_type.message(name_str, num_mods, d.title)
+    else:
+        # TODO: Allow aggregating notifications programmatically
+        if (
+            type_of_all == NotificationType.DocModified
+            or type_of_all == MIXED_DOC_MODIFY
+        ):
+            return f"{name_str} edited the document {d.title} {get_edit_count_str(num_mods)}"
+        if type_of_all == MIXED_COMMENT:
+            return f"{name_str} posted/modified/deleted {get_comment_count_str(num_mods)} in the document {d.title}"
+
+    return f"{name_str} triggered an event in {d.title}"
+
+
+def get_type_of_notify(ps) -> NotificationType | str:
+    for n in NotificationType:
+        if all(p.notify_type == n for p in ps):
+            return n
+    if all(p.notify_type.is_document_modification for p in ps):
+        return MIXED_DOC_MODIFY
+    elif all(not p.notify_type.is_document_modification for p in ps):
+        return MIXED_COMMENT
+    else:
+        assert (
+            False
+        ), "There should not be mixed comment and doc modification notification types in a batch"
+
+
 @notify.get("/process")
 def force_process():
     process_pending_notifications()
@@ -316,39 +358,38 @@ def process_pending_notifications():
     for (doc_id, t), ps in grouped_pns.items():
         doc = DocEntry.find_by_id(doc_id)
         # Combine ps to a single mail (tailored for each subscriber) and send it
-        match t:
-            case "d":
-                assert all(
-                    isinstance(p, DocumentNotification) for p in ps
-                ), "Expected all notifications of type DocumentNotification"
-                condition = Notification.notification_type.in_(
-                    (
-                        NotificationType.DocModified,
-                        NotificationType.ParModified,
-                        NotificationType.ParAdded,
-                        NotificationType.ParDeleted,
-                    )
+        if t == "d":
+            assert all(
+                isinstance(p, DocumentNotification) for p in ps
+            ), "Expected all notifications of type DocumentNotification"
+            condition = Notification.notification_type.in_(
+                (
+                    NotificationType.DocModified,
+                    NotificationType.ParModified,
+                    NotificationType.ParAdded,
+                    NotificationType.ParDeleted,
                 )
-            case "c":
-                assert all(
-                    isinstance(p, CommentNotification) for p in ps
-                ), "Expected all notifications of type CommentNotification"
-                condition = Notification.notification_type.in_(
-                    (
-                        NotificationType.CommentAdded,
-                        NotificationType.CommentDeleted,
-                        NotificationType.CommentModified,
-                    )
+            )
+        elif t == "c":
+            assert all(
+                isinstance(p, CommentNotification) for p in ps
+            ), "Expected all notifications of type CommentNotification"
+            condition = Notification.notification_type.in_(
+                (
+                    NotificationType.CommentAdded,
+                    NotificationType.CommentDeleted,
+                    NotificationType.CommentModified,
                 )
-            case "a":
-                assert all(
-                    isinstance(p, AnswerNotification) for p in ps
-                ), "Expected all notifications of type AnswerNotification"
-                condition = Notification.notification_type.in_(
-                    (NotificationType.AnswerAdded,)
-                )
-            case _:
-                assert False, "Unknown notify type"
+            )
+        elif t == "a":
+            assert all(
+                isinstance(p, AnswerNotification) for p in ps
+            ), "Expected all notifications of type AnswerNotification"
+            condition = Notification.notification_type.in_(
+                (NotificationType.AnswerAdded,)
+            )
+        else:
+            assert False, "Unknown notification type"
         users_to_notify: set[User] = {n.user for n in doc.get_notifications(condition)}
         for user in users_to_notify:
             if (
