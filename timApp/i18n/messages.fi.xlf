@@ -4928,6 +4928,14 @@
           <context context-type="linenumber">133</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6644632063501552458" datatype="html">
+        <source>Answer posts</source>
+        <target state="translated">Vastauksien lähettäminen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">279</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
