@@ -33,7 +33,7 @@ from timApp.readmark.readings import (
 from timApp.readmark.readmarkcollection import ReadMarkCollection
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.user.user import User, has_no_higher_right
-from timApp.util.flask.responsehelper import flash_if_not_preview
+from timApp.util.flask.responsehelper import flash_if_visible
 from timApp.util.timtiming import taketime
 from timApp.util.utils import getdatetime, get_boolean
 
@@ -294,14 +294,14 @@ def process_areas(
             current_areas.append(cur_area)
             if not p.ref_chain:
                 if area_start in encountered_areas:
-                    flash_if_not_preview(
+                    flash_if_visible(
                         f"Area {area_start} appears more than once in this document. {fix}",
                         view_ctx,
                     )
                 encountered_areas[area_start] = cur_area
         if area_end is not None:
             if area_start is not None:
-                flash_if_not_preview(
+                flash_if_visible(
                     f"The paragraph {p.get_id()} has both area and area_end. {fix}",
                     view_ctx,
                 )
@@ -315,13 +315,13 @@ def process_areas(
             try:
                 latest_area = current_areas.pop()
             except IndexError:
-                flash_if_not_preview(
+                flash_if_visible(
                     f'area_end found for "{area_end}" without corresponding start. {fix}',
                     view_ctx,
                 )
             else:
                 if latest_area.name != area_end:
-                    flash_if_not_preview(
+                    flash_if_visible(
                         f'area_end found for "{area_end}" without corresponding start. {fix}',
                         view_ctx,
                     )
@@ -411,7 +411,7 @@ def process_areas(
 
     # Complete unbalanced areas.
     if current_areas and not is_single:
-        flash_if_not_preview(
+        flash_if_visible(
             f"{len(current_areas)} areas are missing area_end: {current_areas}",
             view_ctx,
         )
