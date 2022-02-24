@@ -105,7 +105,7 @@ export async function markParRead(par: ParContext, readingType: ReadingType) {
 
 async function markParsRead(pars: ParContext[], item: IItem) {
     const parIds = pars
-        .map((par) => par.originalCtx)
+        .map((par) => par.readLineCtx)
         .filter((e) => !isAlreadyRead(e, ReadingType.ClickRed))
         .map((e) => {
             return [e.par.docId, e.par.id];
@@ -135,7 +135,7 @@ function queueParagraphForReading() {
         e: HelpPar | ParContext | undefined
     ): e is HelpPar | ParContext =>
         e !== undefined && !e.isHelp && isAlreadyRead(e, ReadingType.OnScreen);
-    const visiblePars = $(".par:not('.preamble')")
+    const visiblePars = $(".par:not(.preamble)")
         .filter((i, e) => isInViewport(e))
         .toArray()
         .map((e) => tryCreateParContextOrHelp(e))
@@ -167,7 +167,7 @@ function queueParagraphForReading() {
 }
 
 async function handleSeeChanges(elem: JQuery, e: OnClickArg) {
-    const par = fromParents(elem).originalCtx;
+    const par = fromParents(elem).readLineCtx;
     const [id, blockId, t] = [par.par.docId, par.par.id, par.par.hash];
     const parData = await to(
         $http.get<Array<{par_hash: string}>>(`/read/${id}/${blockId}`)
@@ -215,7 +215,7 @@ async function readlineHandler(elem: JQuery, e: OnClickArg) {
     if (par.isHelp) {
         return;
     }
-    await markParRead(par.originalCtx, ReadingType.ClickRed);
+    await markParRead(par.readLineCtx, ReadingType.ClickRed);
 }
 
 export async function initReadings(item: IItem) {
@@ -255,7 +255,7 @@ export async function initReadings(item: IItem) {
 
     onClick(".readsection", function readSectionHandler($readsection, e) {
         const doc = getActiveDocument();
-        const par = fromParents($readsection).originalCtx;
+        const par = fromParents($readsection).readLineCtx;
         const pars = doc.getSectionFor(par.par);
         if (!pars) {
             return;

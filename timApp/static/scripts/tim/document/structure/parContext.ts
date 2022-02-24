@@ -30,8 +30,15 @@ export class ParContext {
         return $(this.par.htmlElement);
     }
 
-    get originalCtx() {
-        return new ParContext(this.originalPar);
+    get readLineCtx() {
+        let p = this.par;
+        if (
+            vctrlInstance?.isTranslation() &&
+            this.par.parent instanceof ReferenceParagraph
+        ) {
+            p = this.par.parent.original;
+        }
+        return new ParContext(p);
     }
 
     /**
