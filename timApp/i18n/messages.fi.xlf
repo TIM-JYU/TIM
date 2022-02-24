@@ -4896,6 +4896,54 @@
           <context context-type="linenumber">17</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="8081339872439098904" datatype="html">
+        <source>Previous image</source>
+        <target state="translated">Edellinen kuva</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="linenumber">766</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2171733231818328220" datatype="html">
+        <source>Next image</source>
+        <target state="translated">Seuraava kuva</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="linenumber">768</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6500061599200357251" datatype="html">
+        <source>Zoom in</source>
+        <target state="translated">Suurenna</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="linenumber">772</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3787205057553482493" datatype="html">
+        <source>Reset zoom</source>
+        <target state="translated">Palauta oletuskoko</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="linenumber">776</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="944767796496567082" datatype="html">
+        <source>Zoom out</source>
+        <target state="translated">Pienennä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="linenumber">778</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="631338357809243389" datatype="html">
+        <source>Rotate clockwise</source>
+        <target state="translated">Käännä myötäpäivään</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
+          <context context-type="linenumber">133</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

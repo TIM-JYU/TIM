@@ -39,6 +39,7 @@ import {
 } from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
+import {IUnsavedComponent} from "tim/document/viewctrl";
 
 export type IRectangle = {
     type: "rectangle";
@@ -60,13 +61,15 @@ export type IArrow = {
     drawData: ILine;
 };
 
-// TODO: 4th variable for reporting MouseDown, TouchMove etc could be useful for fine-tuning the desired
+// TODO: a variable for reporting MouseDown, TouchMove etc could be useful for fine-tuning the desired
 //  update behaviour - for now this is called on certain MouseUp/TouchEnd events, and the behaviour
 //  is not optimal for mobile (e.g contained objects register clicks when user just wanted to scroll the page)
 export interface IDrawUpdate {
     x?: number;
     y?: number;
     drawingUpdated: boolean;
+    scaleChange?: number;
+    deleted?: boolean;
 }
 
 export type DrawItem = IRectangle | IEllipse | IFreeHand | IArrow;
@@ -757,33 +760,52 @@ const SCROLLBAR_APPROX_WIDTH = 17;
     template: `
 
         <div style="position: relative;">
-            <div *ngIf="bgSources.length > 1" style="position: absolute; top: 50%; left:-5%; display: flex; flex-flow: column; gap: 1em;
+            <div style="position: absolute; top: 50%; left:-5%; display: flex; flex-flow: column; gap: 1em;
                          -ms-transform: translateY(-50%); transform: translateY(-50%); z-index: 4;">
-                <button title="Previous image" class="btn btn-primary" (click)="scrollBgImage(false)">&uarr;
-                </button>
-                <button title="Next image" class="btn btn-primary" (click)="scrollBgImage(true)">&darr;
-                </button>
+                <div *ngIf="bgSources.length > 1" style="display: flex; flex-flow: column;">
+                    <button title="Previous image" i18n-title class="btn btn-primary" (click)="scrollBgImage(false)">&uarr;
+                    </button>
+                    <button title="Next image" i18n-title class="btn btn-primary" (click)="scrollBgImage(true)">&darr;
+                    </button>
+                </div>
+                <div style="display: flex; flex-flow: column;">
+                   <button title="Zoom in" i18n-title class="btn btn-primary" (click)="zoom(0.1)">
+                       <i class="glyphicon glyphicon-zoom-in"></i>
+                    </button>
+                    <!-- TODO icons-->
+                    <button title="Reset zoom" i18n-title class="btn btn-primary" (click)="zoom(0)">R
+                    </button>
+                    <button title="Zoom out" i18n-title class="btn btn-primary" (click)="zoom(-0.1)">
+                       <i class="glyphicon glyphicon-zoom-out"></i>
+                    </button>
+                </div>
+
             </div>
             <div #wrapper style="overflow: auto; position: relative; resize: both;"
-                 [style.height.px]="getWrapperHeight(true)"
-                 [style.width.px]="getWrapperWidth(true)">
+                 [style.height.px]="getWrapperHeight(true)">
+                <div class="zoomer" style="-webkit-transform-origin: 0 0;" [style.transform]="getZoomLevel()">
                     <div #backGround style="position: absolute; display:flex; flex-direction: column;">
                         <img alt="review image" *ngFor="let item of bgImages; let i = index"
                              style="max-width: none; display: unset;"
                              [src]="bgImages[i]" (load)="onImgLoad($event, i)">
                     </div>
-                    <div #objectContainer class="canvasObjectContainer"
-                         style="overflow: visible; position: absolute; height: 100%; width: 100%;">
-                    </div>
+                </div>
+                <div #objectContainer class="canvasObjectContainer"
+                     style="overflow: visible; position: absolute; height: 0; width: 0;">
+                </div>
+                <div class="zoomer" style="-webkit-transform-origin: 0 0;" [style.transform]="getZoomLevel()">
                     <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">
                     </canvas>
+                </div>
             </div>
         </div>
         <draw-toolbar *ngIf="toolBar" [drawSettings]="drawOptions" (drawSettingsChange)="saveSettings()"
                       [undo]="undo"></draw-toolbar>
     `,
 })
-export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
+export class DrawCanvasComponent
+    implements OnInit, OnChanges, OnDestroy, IUnsavedComponent
+{
     @Input() public bgSources: string[] = [];
     bgSourceSizes: IImageSizes[] = []; // dimensions of loaded background images, sorted
     bgOffsets: number[] = []; // top starting coordinates of each background image, sorted
@@ -796,6 +818,8 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     imgHeight = 0; // total height of all background images
     imgWidth = 0;
     loadedImages = 0;
+    zoomLevel = 1;
+    defaultZoomLevel = 1; // adjusted to show full image width after images are loaded
 
     drawHandler!: Drawing;
 
@@ -833,12 +857,17 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     ) {}
 
     ngOnInit() {
-        const prevSettings = this.optionsStorage.get();
-        if (prevSettings) {
-            this.drawOptions = prevSettings;
+        if (!this.toolBar) {
+            this.drawOptions.enabled = false;
         } else {
-            this.drawOptions = {...this.drawOptions, ...this.options};
+            const prevSettings = this.optionsStorage.get();
+            if (prevSettings) {
+                this.drawOptions = prevSettings;
+            } else {
+                this.drawOptions = {...this.drawOptions, ...this.options};
+            }
         }
+
         this.setBg();
     }
 
@@ -899,6 +928,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
 
     ngOnDestroy() {
         this.clearObjectContainer();
+        if (this.updateCallback) {
+            this.updateCallback(this, {drawingUpdated: false, deleted: true});
+        }
     }
 
     saveSettings() {
@@ -928,7 +960,8 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     /**
-     * Resizes canvas and calls the image load callback function after every background image is loaded
+     * Resizes canvas, fits image zoom to show full width, and calls the image load callback
+     * function after every background image is loaded
      */
     allImagesLoaded(): void {
         let offset = 0;
@@ -949,19 +982,23 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         );
         this.canvas.nativeElement.width = newWidth;
         this.canvas.nativeElement.height = newHeight;
-        this.objectContainer.nativeElement.style.width = newWidth + "px";
-        this.objectContainer.nativeElement.style.height = newHeight + "px";
+        if (this.imgWidth > this.wrapper.nativeElement.clientWidth) {
+            this.defaultZoomLevel =
+                (this.wrapper.nativeElement.clientWidth -
+                    SCROLLBAR_APPROX_WIDTH) /
+                this.imgWidth;
+            this.zoomLevel = this.defaultZoomLevel;
+        }
         if (this.imgLoadCallback) {
             this.imgLoadCallback(this);
         }
     }
 
-    getWrapperWidth(includeScrollbar: boolean = false): number {
-        const min = 400;
-        return (
-            Math.max(min, this.imgWidth) +
-            (includeScrollbar ? SCROLLBAR_APPROX_WIDTH : 0)
-        );
+    /**
+     * Returns the resizable div that contains the canvas, background images and objects within objectContainer
+     */
+    getWrapper(): HTMLDivElement {
+        return this.wrapper.nativeElement;
     }
 
     /**
@@ -1011,7 +1048,9 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         }
         if (!middleOrRightClick) {
             this.drawHandler.downEvent(
-                posToRelative(this.canvas.nativeElement, e)
+                this.normalizeCoordinate(
+                    posToRelative(this.canvas.nativeElement, e)
+                )
             );
         }
     }
@@ -1024,15 +1063,21 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
         if (!(isTouchEvent(event) && !this.drawOptions.enabled)) {
             event.preventDefault();
         }
-        this.drawHandler.moveEvent(posToRelative(this.canvas.nativeElement, e));
+        this.drawHandler.moveEvent(
+            this.normalizeCoordinate(
+                posToRelative(this.canvas.nativeElement, e)
+            )
+        );
     }
 
     /**
      * Finishes the draw event
      */
     upEvent(event: Event, e: MouseOrTouch): void {
-        const pxy = posToRelative(this.canvas.nativeElement, e);
-        this.drawHandler.upEvent(posToRelative(this.canvas.nativeElement, e));
+        const pxy = this.normalizeCoordinate(
+            posToRelative(this.canvas.nativeElement, e)
+        );
+        this.drawHandler.upEvent(pxy);
         if (this.updateCallback) {
             this.updateCallback(this, {
                 x: pxy.x,
@@ -1097,7 +1142,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
      */
     scrollBgImage(down: boolean) {
         const currPos = this.wrapper.nativeElement.scrollTop;
-        const sizes = this.bgOffsets;
+        const sizes = this.bgOffsets.map((os) => os * this.zoomLevel);
         let pos;
         if (down) {
             if (
@@ -1105,11 +1150,11 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
                 this.wrapper.nativeElement.scrollHeight -
                     this.wrapper.nativeElement.offsetHeight
             ) {
-                pos = sizes.find((s) => s > currPos);
+                pos = sizes.find((s) => Math.floor(s) > currPos);
             }
         } else {
             for (let i = sizes.length - 1; i >= 0; i--) {
-                if (sizes[i] < currPos) {
+                if (Math.floor(sizes[i]) < currPos) {
                     pos = sizes[i];
                     break;
                 }
@@ -1122,6 +1167,48 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
                 top: down ? 0 : sizes[this.bgSourceSizes.length - 1],
             });
         }
+    }
+
+    /**
+     * Change zoom level of canvas and background image
+     * objects within canvasObjectContainer are unaffected, they should be updated manually by listening
+     * to updateCallback on external controller
+     * @param delta change in zoom level, 0 to reset to initial
+     */
+    zoom(delta: number) {
+        if (delta === 0) {
+            this.zoomLevel = this.defaultZoomLevel;
+        } else {
+            this.zoomLevel += delta;
+            if (this.zoomLevel < 0.1) {
+                this.zoomLevel = 0.1;
+            }
+        }
+        if (this.updateCallback) {
+            this.updateCallback(this, {
+                drawingUpdated: false,
+                scaleChange: this.zoomLevel,
+            });
+        }
+    }
+
+    getZoomLevel() {
+        return `scale(${this.zoomLevel})`;
+    }
+
+    /**
+     * Adjust coordinate according to current zoom level
+     * @param coord {x, y}
+     */
+    normalizeCoordinate(coord: {x: number; y: number}) {
+        return {
+            x: coord.x / this.zoomLevel,
+            y: coord.y / this.zoomLevel,
+        };
+    }
+
+    isUnSaved() {
+        return this.getDrawing().length > 0;
     }
 }
 

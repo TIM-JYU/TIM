@@ -168,6 +168,6 @@ def get_grid_modules():
     ]
 
 
-def flash_if_not_preview(message: str, view_ctx: ViewContext) -> None:
-    if not view_ctx.preview:
+def flash_if_visible(message: str, view_ctx: ViewContext) -> None:
+    if not view_ctx.preview and not view_ctx.partial:
         flash(message)

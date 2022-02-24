@@ -78,7 +78,11 @@ export interface IChangeListener {
     ) => void;
 }
 
-export interface ITimComponent {
+export interface IUnsavedComponent {
+    isUnSaved: (userChange?: boolean) => boolean;
+}
+
+export interface ITimComponent extends IUnsavedComponent {
     attrsall?: IGenericPluginTopLevelFields<IGenericPluginMarkup>; // TimTable does not have attrsall - that's why it's optional.
     getName: () => string | undefined;
     getContent: () => string | undefined;
@@ -87,7 +91,6 @@ export interface ITimComponent {
     getTaskId: () => TaskId | undefined;
     belongsToArea: (area: string) => boolean;
     formBehavior: () => FormModeOption;
-    isUnSaved: (userChange?: boolean) => boolean;
     save: () => Promise<{saved: boolean; message: string | undefined}>;
     getPar: () => ParContext | undefined;
     setPluginWords?: (words: string[]) => void;
@@ -106,7 +109,7 @@ export interface IVelpableComponent extends ITimComponent {
     /**
      * Resolves Base64 encoded image representation of the component for Velping.
      */
-    getVelpImage(): Promise<string | undefined>;
+    getVelpImages(): Promise<string[] | undefined>;
 }
 
 /**
@@ -116,8 +119,8 @@ export interface IVelpableComponent extends ITimComponent {
 export function isVelpable(obj?: ITimComponent): obj is IVelpableComponent {
     return (
         obj !== undefined &&
-        (obj as IVelpableComponent).getVelpImage !== undefined &&
-        typeof (obj as IVelpableComponent).getVelpImage === "function"
+        (obj as IVelpableComponent).getVelpImages !== undefined &&
+        typeof (obj as IVelpableComponent).getVelpImages === "function"
     );
 }
 
@@ -445,7 +448,8 @@ export class ViewCtrl implements IController {
 
             if (
                 (!this.editing &&
-                    !this.checkUnSavedTimComponents() &&
+                    // TODO: Visual info / scroll to unsaved if user stays on page after prompt
+                    !this.checkUnSavedComponents() &&
                     !this.doingTask) ||
                 documentglobals().IS_TESTING
             ) {
@@ -801,6 +805,10 @@ export class ViewCtrl implements IController {
         return this.velpCanvases.get(id);
     }
 
+    public removeVelpCanvas(id: number) {
+        this.velpCanvases.delete(id);
+    }
+
     /**
      * Registers an ITimComponent to the view controller by its name attribute if it has one.
      * @param {ITimComponent} component The component to be registered.
@@ -927,19 +935,22 @@ export class ViewCtrl implements IController {
     }
 
     /**
-     * Check whether ITimComponents could lose data when leaving page or changing user
+     * Check whether certain components could lose data when leaving page or changing user
      * @param userChange true if changing user, otherwise undefined or false
      * @returns {boolean} True if at least one registered ITimComponent was in unsaved state
      */
-    public checkUnSavedTimComponents(userChange?: boolean): boolean {
-        let unsavedTimComponents = false;
-        for (const component of this.timComponents.values()) {
-            if (component.isUnSaved(userChange)) {
-                unsavedTimComponents = true;
-                break;
+    public checkUnSavedComponents(userChange?: boolean): boolean {
+        for (const canvas of this.velpCanvases.values()) {
+            if (canvas.isUnSaved()) {
+                return true;
             }
         }
-        return unsavedTimComponents;
+        for (const component of this.timComponents.values()) {
+            if (component.isUnSaved(userChange)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     isEmptyDocument() {

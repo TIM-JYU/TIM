@@ -1437,11 +1437,11 @@ export class ImageXComponent
         this.cursor = "\u0383"; // "\u0347"; // "\u02FD";
     }
 
-    async getVelpImage() {
+    async getVelpImages() {
         while (!this.init) {
             await timeout();
         }
-        return this.canvas.toDataURL();
+        return [this.canvas.toDataURL()];
     }
 
     getCanvas(): HTMLCanvasElement {
