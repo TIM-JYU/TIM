@@ -26,6 +26,7 @@ from tim_common.utils import Missing
 class UploadedFile:
     path: str
     type: str
+    rotation: int = 0
 
     def to_json(self) -> dict:
         return asdict(self)
@@ -114,7 +115,6 @@ def reqs() -> PluginReqs:
 ``` {#rc plugin="reviewcanvas"}
 header: Header
 stem: Stem
-inputstem: "inputstem"
 ```"""
     ]
     editor_tabs: list[EditorTab] = [

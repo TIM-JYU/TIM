@@ -41,15 +41,13 @@ const DrawTypeReverseMap: Record<string, DrawType> = Object.entries(
     DrawType
 ).reduce((acc, [key, value]) => ({...acc, [value]: key}), {});
 
-// keyof is designed to work with objects containing string keys, so we use an union of number literals instead
-// https://github.com/gcanti/io-ts/blob/master/index.md
-const DrawTypeCodec = t.union([
-    t.literal(DrawType.Freehand),
-    t.literal(DrawType.Line),
-    t.literal(DrawType.Rectangle),
-    t.literal(DrawType.Ellipse),
-    t.literal(DrawType.Arrow),
-]);
+const DrawTypeCodec = t.keyof({
+    [DrawType.Freehand]: null,
+    [DrawType.Line]: null,
+    [DrawType.Rectangle]: null,
+    [DrawType.Ellipse]: null,
+    [DrawType.Arrow]: null,
+});
 
 export const DrawOptions = t.type({
     color: t.string,

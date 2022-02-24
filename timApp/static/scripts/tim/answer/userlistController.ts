@@ -216,7 +216,7 @@ export class UserListController implements IController {
                             return;
                         }
                         const unsavedTimComponents =
-                            this.viewctrl.checkUnSavedTimComponents(true);
+                            this.viewctrl.checkUnSavedComponents(true);
                         if (
                             unsavedTimComponents &&
                             !window.confirm(

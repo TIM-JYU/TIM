@@ -941,11 +941,12 @@ export class AnswerBrowserController
                     this.taskId.docTaskField()
                 );
                 if (isVelpable(comp)) {
-                    newReviewHtml =
-                        (await comp.getVelpImage()) ?? newReviewHtml;
-                }
-
-                if (newReviewHtml.startsWith("data:image")) {
+                    const velpImages = await comp.getVelpImages();
+                    if (velpImages) {
+                        this.imageReview = true;
+                        this.imageReviewDatas = velpImages;
+                    }
+                } else if (newReviewHtml.startsWith("data:image")) {
                     this.imageReview = true;
                     this.imageReviewDatas = [newReviewHtml];
                 } else if (newReviewHtml.startsWith("imageurls:")) {
