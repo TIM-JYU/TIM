@@ -782,8 +782,7 @@ const SCROLLBAR_APPROX_WIDTH = 17;
 
             </div>
             <div #wrapper style="overflow: auto; position: relative; resize: both;"
-                 [style.height.px]="getWrapperHeight(true)"
-                 >
+                 [style.height.px]="getWrapperHeight(true)">
                 <div class="zoomer" style="-webkit-transform-origin: 0 0;" [style.transform]="getZoomLevel()">
                     <div #backGround style="position: absolute; display:flex; flex-direction: column;">
                         <img alt="review image" *ngFor="let item of bgImages; let i = index"
@@ -985,7 +984,9 @@ export class DrawCanvasComponent
         this.canvas.nativeElement.height = newHeight;
         if (this.imgWidth > this.wrapper.nativeElement.clientWidth) {
             this.defaultZoomLevel =
-                this.wrapper.nativeElement.clientWidth / this.imgWidth;
+                (this.wrapper.nativeElement.clientWidth -
+                    SCROLLBAR_APPROX_WIDTH) /
+                this.imgWidth;
             this.zoomLevel = this.defaultZoomLevel;
         }
         if (this.imgLoadCallback) {
@@ -998,15 +999,6 @@ export class DrawCanvasComponent
      */
     getWrapper(): HTMLDivElement {
         return this.wrapper.nativeElement;
-    }
-
-    getWrapperWidth(includeScrollbar: boolean = false): number {
-        const min = 400;
-        const max = window.innerWidth;
-        return (
-            Math.min(Math.max(min, this.imgWidth), max) +
-            (includeScrollbar ? SCROLLBAR_APPROX_WIDTH : 0)
-        );
     }
 
     /**
