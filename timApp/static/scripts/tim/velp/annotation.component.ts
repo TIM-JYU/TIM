@@ -223,12 +223,19 @@ export class AnnotationComponent
     private prefix = "x";
     private readonly element: JQuery<HTMLElement>;
     zIndex = 0;
+
+    imageCoordinates = {top: 0, left: 0}; // location of drawn velp on drawCanvas
+    imageDimensions = {width: 0, height: 0}; // size of annotation border div on drawCanvas
+
     @ViewChild("inlineSpan") inlineSpan!: ElementRef<HTMLSpanElement>;
     @ViewChild("contentSpan") contentSpan!: ElementRef<HTMLSpanElement>;
-
+    inlineDivRef?: ElementRef<HTMLDivElement>;
     @ViewChild("inlineDiv") set inlineDiv(div: ElementRef<HTMLDivElement>) {
         if (div && this.isImageAnnotation()) {
-            this.adjustAnnotationInPicturePosition(div.nativeElement);
+            this.inlineDivRef = div;
+            this.adjustAnnotationInPicturePosition(
+                this.inlineDivRef.nativeElement
+            );
         }
     }
 
@@ -241,9 +248,9 @@ export class AnnotationComponent
         if (v) {
             this.show = true;
             this.updateZIndex();
-            if (this.inlineDiv) {
+            if (this.inlineDivRef) {
                 this.adjustAnnotationInPicturePosition(
-                    this.inlineDiv.nativeElement
+                    this.inlineDivRef.nativeElement
                 );
             }
         }
@@ -286,6 +293,21 @@ export class AnnotationComponent
         if (this.placement == AnnotationPlacement.InMarginOnly) {
             this.vctrl.rejectTextAnnotation(this);
         }
+        if (this.isImageAnnotation()) {
+            const ele = this.element.get()[0];
+            this.imageCoordinates = {top: ele.offsetTop, left: ele.offsetLeft};
+            this.imageDimensions = {
+                width: ele.clientWidth,
+                height: ele.clientHeight,
+            };
+            const aid = this.annotation.getAnswerId();
+            if (aid) {
+                const canvas = this.vctrl.getVelpCanvas(aid);
+                if (canvas) {
+                    this.resizeElementBorder(canvas.zoomLevel);
+                }
+            }
+        }
     }
 
     setAnnotation(a: Annotation) {
@@ -321,12 +343,21 @@ export class AnnotationComponent
         if (!this.isImageAnnotation()) {
             return;
         }
+        const aid = this.annotation.getAnswerId();
+        if (aid == undefined) {
+            return;
+        }
+        const canvas = this.vctrl.getVelpCanvas(aid);
+        if (!canvas) {
+            return;
+        }
         let left = 0;
+        const container = canvas.getWrapper();
         const drawingLeft = this.element[0].offsetLeft;
         const annWidth = div.clientWidth;
-        const containerWidth = this.element.parent()[0].clientWidth;
+        const containerWidth = container.clientWidth + container.scrollLeft;
         if (drawingLeft + annWidth > containerWidth) {
-            if (containerWidth - annWidth >= 0) {
+            if (containerWidth - annWidth >= container.scrollLeft) {
                 left = containerWidth - annWidth - drawingLeft;
             }
         }
@@ -334,10 +365,10 @@ export class AnnotationComponent
         const drawingHeight = this.element[0].clientHeight;
         const drawingTop = this.element[0].offsetTop;
         const annHeight = div.clientHeight;
-        const containerHeight = this.element.parent()[0].clientHeight;
+        const containerHeight = container.clientHeight + container.scrollTop;
         let top = drawingHeight;
         if (drawingTop + drawingHeight + annHeight > containerHeight) {
-            if (drawingTop - annHeight >= 0) {
+            if (drawingTop - annHeight >= container.scrollTop) {
                 top = -annHeight;
             }
         }
@@ -371,6 +402,32 @@ export class AnnotationComponent
                 innerRectangle[0].style.border = this.show
                     ? "1px solid #000000"
                     : "none";
+            }
+        }
+    }
+
+    /**
+     * Resize the div around which a drawn velp is wrapped
+     * @param scale new size
+     */
+    resizeElementBorder(scale: number) {
+        if (this.isImageAnnotation()) {
+            const innerRectangle = this.element.find(
+                ".annotation-picture-element"
+            );
+            const rect = innerRectangle[0];
+            const ele = this.element.get()[0];
+            if (!ele || !rect) {
+                return;
+            }
+            rect.style.width = this.imageDimensions.width * scale + "px";
+            rect.style.height = this.imageDimensions.height * scale + "px";
+            ele.style.left = this.imageCoordinates.left * scale + "px";
+            ele.style.top = this.imageCoordinates.top * scale + "px";
+            if (this.inlineDivRef) {
+                this.adjustAnnotationInPicturePosition(
+                    this.inlineDivRef.nativeElement
+                );
             }
         }
     }
