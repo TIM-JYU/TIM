@@ -57,7 +57,6 @@ const DEFAULT_PIECE_SIZE = 20;
         <ng-container *ngIf="users.isLoggedIn()">
             <h5 i18n>Customize</h5>
             <a href="/settings" i18n>Customize TIM</a>
-            <tim-switch-button></tim-switch-button>
         </ng-container>
         <ng-container *ngIf="showFolderSettings && showRelevance">
             <h5 i18n>Folder settings</h5>

@@ -3,12 +3,27 @@ import {Component} from "@angular/core";
 @Component({
     selector: "tim-switch-button",
     template: `
-        <button class="timButton btn-block" #buttonMarginLeft
-                (click)="toggleMarginLeft(buttonMarginLeft)">
-                <ng-container i18n *ngIf="isOn === true">Reset to the center</ng-container>
-                <ng-container i18n *ngIf="isOn === false">Align to the left</ng-container>
-        </button>
+        <!-- Button layout when the switch is ON -->
+        <ng-container *ngIf="isOn === true">
+            <button #buttonMarginLeft
+                    i18n-title title="Aligned on the left"
+                    class="btn btn-default btn-sm pull-left
+                    glyphicon glyphicon-object-align-left"
+                    (click)="toggleMarginLeft(buttonMarginLeft)">
+            </button>
+        </ng-container>
+        
+        <!-- Button layout when the switch is OFF -->
+        <ng-container *ngIf="isOn === false">
+            <button #buttonMarginLeft
+                    i18n-title title="Aligned on the center"
+                    class="btn btn-default btn-sm pull-left 
+                    glyphicon glyphicon-object-align-vertical"
+                    (click)="toggleMarginLeft(buttonMarginLeft)">
+            </button>
+        </ng-container>
     `,
+    styleUrls: ["./switch-button.component.scss"],
 })
 export class SwitchButtonComponent {
     public isOn = false;
