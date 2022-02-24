@@ -130,7 +130,7 @@ const PluginFields = t.intersection([
                         <button class="timButton" title="Move up" i18n-title (click)="moveImageUp(i)">&uarr;</button>
                         <button class="timButton" title="Move down" i18n-title (click)="moveImageDown(i)">&darr;
                         </button>
-                        <button class="timButton" title="Rotate clockwise" (click)="increaseRotation(i)">&#8635;
+                        <button class="timButton" title="Rotate clockwise" i18n-title (click)="increaseRotation(i)">&#8635;
                         </button>
                         <button class="timButton" title="Delete picture" i18n-title (click)="deleteImage(i)">
                             <i class="glyphicon glyphicon-trash"></i>

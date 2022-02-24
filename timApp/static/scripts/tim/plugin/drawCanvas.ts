@@ -763,19 +763,19 @@ const SCROLLBAR_APPROX_WIDTH = 17;
             <div style="position: absolute; top: 50%; left:-5%; display: flex; flex-flow: column; gap: 1em;
                          -ms-transform: translateY(-50%); transform: translateY(-50%); z-index: 4;">
                 <div *ngIf="bgSources.length > 1" style="display: flex; flex-flow: column;">
-                    <button title="Previous image" class="btn btn-primary" (click)="scrollBgImage(false)">&uarr;
+                    <button title="Previous image" i18n-title class="btn btn-primary" (click)="scrollBgImage(false)">&uarr;
                     </button>
-                    <button title="Next image" class="btn btn-primary" (click)="scrollBgImage(true)">&darr;
+                    <button title="Next image" i18n-title class="btn btn-primary" (click)="scrollBgImage(true)">&darr;
                     </button>
                 </div>
                 <div style="display: flex; flex-flow: column;">
-                   <button title="Zoom in" class="btn btn-primary" (click)="zoom(0.1)">
+                   <button title="Zoom in" i18n-title class="btn btn-primary" (click)="zoom(0.1)">
                        <i class="glyphicon glyphicon-zoom-in"></i>
                     </button>
                     <!-- TODO icons-->
-                    <button title="Reset zoom" class="btn btn-primary" (click)="zoom(0)">R
+                    <button title="Reset zoom" i18n-title class="btn btn-primary" (click)="zoom(0)">R
                     </button>
-                    <button title="Zoom out" class="btn btn-primary" (click)="zoom(-0.1)">
+                    <button title="Zoom out" i18n-title class="btn btn-primary" (click)="zoom(-0.1)">
                        <i class="glyphicon glyphicon-zoom-out"></i>
                     </button>
                 </div>
