@@ -99,9 +99,10 @@ def notify_doc_watchers(
     notify_type: NotificationType,
     par: DocParagraph | None = None,
     old_version: Version = None,
+    curr_user: User = None,
     **kwargs,
 ):
-    me = get_current_user_object()
+    me = curr_user if curr_user else get_current_user_object()
     new_version = doc.document.get_version()
     if notify_type.is_document_modification:
         p = DocumentNotification(

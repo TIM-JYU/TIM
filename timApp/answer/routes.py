@@ -1103,6 +1103,7 @@ def post_answer_impl(
                         NotificationType.AnswerAdded,
                         plugin.par,
                         answer_number=answerinfo.count + 1,
+                        curr_user=curr_user,
                     )
                     send_answer_backup_if_enabled(a)
             else:

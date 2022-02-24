@@ -1046,7 +1046,6 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         n: list[Notification] = self.notifications.filter_by(block_id=item.id).all()
 
         result = {
-            "item": item,
             "email_doc_modify": False,
             "email_comment_add": False,
             "email_comment_modify": False,

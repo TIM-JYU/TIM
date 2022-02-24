@@ -242,7 +242,7 @@ class NotifyFolderTest(NotifyTestBase):
             },
         )
         r = self.get("/notify/all")
-        self.assertEqual(1, len(r))
+        self.assertEqual(5, len(r))
         self.assertTrue(r[0]["item"]["isFolder"])
         self.login_test1()
         d = self.create_doc()
@@ -261,11 +261,12 @@ class NotifyFolderTest(NotifyTestBase):
                 "email_comment_add": True,
                 "email_comment_modify": False,
                 "email_doc_modify": True,
+                "email_answer_add": False,
             },
         )
         r = self.get("/notify/all")
-        self.assertEqual(2, len(r))
-        self.assertTrue(r[1]["item"]["isFolder"])
+        self.assertEqual(10, len(r))
+        self.assertTrue(r[5]["item"]["isFolder"])
         self.assertFalse(r[0]["item"]["isFolder"])
         self.login_test1()
         self.new_par(d.document, "test")
