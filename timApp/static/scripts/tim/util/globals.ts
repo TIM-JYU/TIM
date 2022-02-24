@@ -154,7 +154,7 @@ export enum NotificationType {
 }
 
 export interface INotification {
-    notification_type: NotificationType;
+    type: NotificationType;
     item: DocumentOrFolder;
 }
 
