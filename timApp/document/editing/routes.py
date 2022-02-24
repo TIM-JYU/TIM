@@ -1,7 +1,6 @@
 """Routes for editing a document."""
 import re
 from dataclasses import dataclass
-from typing import Optional
 
 from flask import Blueprint, render_template
 from flask import current_app
@@ -433,7 +432,23 @@ def par_response(
     edit_request: EditRequest | None = None,
     edit_result: DocumentEditResult | None = None,
     filter_return: GlobalParId | None = None,
+    partial_doc_pars: bool = False,
 ):
+    """Return a JSON response containing updated paragraphs and updated HTMLs.
+
+    ..note:: Applies additional processing to the paragraphs (e.g. spellchecking, filtering).
+
+    :param pars: Paragraphs to process.
+    :param docu: Document to which the paragraphs belong.
+    :param spellcheck: If True, spellcheck the paragraph texts and return HTML with spellcheck suggestions.
+    :param update_cache: If True, updates the HTML cache for the paragraphs.
+    :param edit_request: Full edit request.
+    :param edit_result: Result of the document edit request.
+    :param filter_return: Return only paragraphs with this document and paragraph id.
+    :param partial_doc_pars: If True, assumes that pars list includes partial document (e.g. areas may be incomplete).
+                             The option disables some checks that would be otherwise done for full paragraphs.
+    :return: JSON object containing HTMLs, JS and CSS dependencies of changed paragraphs.
+    """
     user_ctx = user_context_with_logged_in(None)
     doc = docu.document
     new_doc_version = doc.get_version()
@@ -447,10 +462,14 @@ def par_response(
             edit_request.viewname or ViewRoute.View,
             preview,
             hide_names_requested=is_hide_names(),
+            partial=partial_doc_pars,
         )
     else:
         view_ctx = ViewContext(
-            ViewRoute.View, preview, hide_names_requested=is_hide_names()
+            ViewRoute.View,
+            preview,
+            hide_names_requested=is_hide_names(),
+            partial=partial_doc_pars,
         )
     if update_cache:
         changed_pars = DocParagraph.preload_htmls(
@@ -877,7 +896,9 @@ def get_updated_pars(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_view_access(d)
     d.document.preload_option = PreloadOption.all
-    return par_response([], d, spellcheck=False, update_cache=True)
+    return par_response(
+        [], d, spellcheck=False, update_cache=True, partial_doc_pars=True
+    )
 
 
 @edit_page.post("/name_area/<int:doc_id>/<area_name>")
@@ -913,10 +934,14 @@ def name_area(doc_id, area_name):
         if options.get("alttext"):
             area_attrs["alttext"] = str(options.get("alttext"))
 
-    doc.insert_paragraph(
+    area_start = doc.insert_paragraph(
         area_title + after_title, insert_before_id=area_start, attrs=area_attrs
     )
-    doc.insert_paragraph("", insert_after_id=area_end, attrs={"area_end": area_name})
+    area_end = doc.insert_paragraph(
+        "", insert_after_id=area_end, attrs={"area_end": area_name}
+    )
+
+    synchronize_translations(docentry, DocumentEditResult(added=[area_start, area_end]))
 
     return par_response(
         doc.get_named_section(area_name),
