@@ -4880,20 +4880,20 @@
           <context context-type="linenumber">192</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6185550586794219927" datatype="html">
-        <source>Aligned on the left</source>
-        <target state="translated">Kohdistettu vasemmalle</target>
+      <trans-unit id="1790032515357564728" datatype="html">
+        <source>Align to the center</source>
+        <target state="translated">Kohdista keskelle</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/switch-button.component.ts</context>
-          <context context-type="linenumber">9</context>
+          <context context-type="linenumber">8</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="1087573768019061956" datatype="html">
-        <source>Aligned on the center</source>
-        <target state="translated">Kohdistettu keskelle</target>
+      <trans-unit id="6311820510318489653" datatype="html">
+        <source>Align to the left</source>
+        <target state="translated">Kohdista vasemmalle</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/switch-button.component.ts</context>
-          <context context-type="linenumber">19</context>
+          <context context-type="linenumber">17</context>
         </context-group>
       </trans-unit>
     </body>
