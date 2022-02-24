@@ -820,7 +820,7 @@ export class DrawCanvasComponent
     imgWidth = 0;
     loadedImages = 0;
     zoomLevel = 1;
-    defaultZoomLevel = 1;
+    defaultZoomLevel = 1; // adjusted to show full image width after images are loaded
 
     drawHandler!: Drawing;
 
@@ -961,7 +961,8 @@ export class DrawCanvasComponent
     }
 
     /**
-     * Resizes canvas and calls the image load callback function after every background image is loaded
+     * Resizes canvas, fits image zoom to show full width, and calls the image load callback
+     * function after every background image is loaded
      */
     allImagesLoaded(): void {
         let offset = 0;
@@ -992,6 +993,9 @@ export class DrawCanvasComponent
         }
     }
 
+    /**
+     * Returns the resizable div that contains the canvas, background images and objects within objectContainer
+     */
     getWrapper(): HTMLDivElement {
         return this.wrapper.nativeElement;
     }
@@ -1173,6 +1177,12 @@ export class DrawCanvasComponent
         }
     }
 
+    /**
+     * Change zoom level of canvas and background image
+     * objects within canvasObjectContainer are unaffected, they should be updated manually by listening
+     * to updateCallback on external controller
+     * @param delta change in zoom level, 0 to reset to initial
+     */
     zoom(delta: number) {
         if (delta === 0) {
             this.zoomLevel = this.defaultZoomLevel;
@@ -1194,6 +1204,10 @@ export class DrawCanvasComponent
         return `scale(${this.zoomLevel})`;
     }
 
+    /**
+     * Adjust coordinate according to current zoom level
+     * @param coord {x, y}
+     */
     normalizeCoordinate(coord: {x: number; y: number}) {
         return {
             x: coord.x / this.zoomLevel,

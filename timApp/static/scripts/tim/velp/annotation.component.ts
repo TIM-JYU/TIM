@@ -406,6 +406,10 @@ export class AnnotationComponent
         }
     }
 
+    /**
+     * Resize the div around which a drawn velp is wrapped
+     * @param scale new size
+     */
     resizeElementBorder(scale: number) {
         if (this.isImageAnnotation()) {
             const innerRectangle = this.element.find(

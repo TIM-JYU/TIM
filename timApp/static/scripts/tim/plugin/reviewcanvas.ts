@@ -187,7 +187,6 @@ export class ReviewCanvasComponent
     uploadstem?: string;
     uploadedFiles: IUploadedFile[] = [];
 
-    @ViewChildren("canvas") canvases!: QueryList<ElementRef<HTMLCanvasElement>>;
     @ViewChildren("img") imgElements!: QueryList<ElementRef<HTMLImageElement>>;
     @ViewChildren("wraps") wraps!: QueryList<ElementRef<HTMLDivElement>>;
 
@@ -336,6 +335,10 @@ export class ReviewCanvasComponent
         this.doAutoSave();
     }
 
+    /**
+     * Rotate image with css according to current rotation (90deg per one rotation)
+     * @param index image position in uploadedFiles
+     */
     rotateImage(index: number) {
         const uploadedFile = this.uploadedFiles[index];
         if (uploadedFile.rotation == undefined) {
@@ -461,6 +464,10 @@ export class ReviewCanvasComponent
         return JSON.stringify(this.uploadedFiles);
     }
 
+    /**
+     * Return promise of images' dataUrl presentation
+     * The returned images are fully rotated to their current rotation value (90deg per one rotation)
+     */
     async getVelpImages(): Promise<string[] | undefined> {
         while (!this.init) {
             await timeout();
