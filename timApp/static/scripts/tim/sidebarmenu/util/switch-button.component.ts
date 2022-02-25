@@ -7,7 +7,7 @@ import {Component} from "@angular/core";
         <ng-container *ngIf="isOn === true">
             <button i18n-title title="Align to the center"
                     class="btn btn-default btn-sm pull-left
-                    glyphicon glyphicon-chevron-right"
+                    glyphicon glyphicon-align-center"
                     (click)="onValueChanged()">
             </button>
         </ng-container>
@@ -16,7 +16,7 @@ import {Component} from "@angular/core";
         <ng-container *ngIf="isOn === false">
             <button i18n-title title="Align to the left"
                     class="btn btn-default btn-sm pull-left 
-                    glyphicon glyphicon-chevron-left"
+                    glyphicon glyphicon-align-left"
                     (click)="onValueChanged()">
             </button>
         </ng-container>
