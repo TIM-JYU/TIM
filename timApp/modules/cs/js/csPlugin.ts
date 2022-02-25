@@ -947,6 +947,7 @@ export class CsController extends CsBase implements ITimComponent {
     fileProgress?: number;
     fullCode: string = "";
     height?: string | number;
+    width?: string | number;
     htmlresult: string;
     iframeClientHeight: number;
     imgURL: string;
@@ -2177,6 +2178,7 @@ ${fhtml}
         this.isVars = this.type.startsWith("vars");
         this.vctrl.addTimComponent(this);
         this.height = this.markup.height;
+        this.width = this.markup.width;
         this.jsparams = this.markup.jsparams;
         // if (this.isText) {
         //     this.preventSave = true;
@@ -3653,7 +3655,7 @@ ${fhtml}
 @Component({
     selector: "cs-runner",
     template: `
-<div [ngClass]="{'csRunDiv': borders}" class="type-{{rtype}}">
+<div [ngClass]="{'csRunDiv': borders}" class="type-{{rtype}}" [ngStyle]="width: {{width}}px;">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
     <h4 *ngIf="header" [innerHTML]="header | purify"></h4>
     <p *ngIf="stem" class="stem" [innerHTML]="stem | purify"></p>
