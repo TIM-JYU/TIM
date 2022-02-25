@@ -1,13 +1,12 @@
-@import url('node_modules/bootstrap-sass/assets/stylesheets/bootstrap/_variables.scss');
+@import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap/variables";
 
-// Hide when a viewport has no margin.
-@media(max-width: $screen-xs-max) {
-  visibility: hidden;
-}
-
-// Align to the right.
 :host {
+  // Align to the right.
   float: right;
+  // Hide when a viewport has no margin.
+  @media (max-width: $screen-xs-max) {
+    visibility: hidden;
+  }
 }
 
 // Remove focus effect from the button.
