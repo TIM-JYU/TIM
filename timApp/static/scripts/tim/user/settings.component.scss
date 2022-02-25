@@ -1,5 +1,10 @@
 @import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap/variables";
 
+.notification-icon {
+  margin-left: 0.1em;
+  margin-right: 0.1em;
+}
+
 .form-view {
   display: grid;
   grid-template-columns: max-content auto;

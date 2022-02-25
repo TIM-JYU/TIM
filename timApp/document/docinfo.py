@@ -198,7 +198,7 @@ class DocInfo(Item):
 
         q = Notification.query.options(
             joinedload(Notification.user).joinedload(User.groups)
-        ).filter(Notification.doc_id.in_([f.id for f in items]))
+        ).filter(Notification.block_id.in_([f.id for f in items]))
         q = q.filter(condition)
         return q.all()
 
