@@ -143,7 +143,7 @@ p.stem {
   margin: 0.3em 0 0.3em 0em;
   padding-bottom: 0.5em;
   margin-bottom: 1.5em;
-  width: calc(100% - 2px);
+  min-width: calc(100% - 2px);
 
   .csRunPre, .csRunPost {
     margin-left: 0;

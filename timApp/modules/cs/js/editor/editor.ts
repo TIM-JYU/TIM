@@ -42,6 +42,8 @@ export class Mode {
     }
 }
 
+export const CURSOR = "⁞";
+
 export interface IEditor {
     content: string;
 

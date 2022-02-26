@@ -3,6 +3,7 @@ import $ from "jquery";
 import {Ace} from "ace-builds/src-noconflict/ace";
 import {ElementRef, ViewChild, Component, Input} from "@angular/core";
 import {wrapText} from "tim/document/editing/utils";
+import {CURSOR} from "./editor";
 import {IEditor} from "./editor";
 
 type IAceEditor = Ace.Editor;
@@ -130,14 +131,21 @@ export class AceEditorComponent implements IEditor {
     insert(str: string, strPos?: number): void {
         const sess = this.aceEditor.getSession();
         let cursor;
+        let back = -1;
+        const ci = str.indexOf(CURSOR); // check if there is a cursor marker
+        if (ci >= 0) {
+            str = str.replace(CURSOR, "");
+            back = str.length - ci;
+        }
         if (strPos) {
             cursor = sess.getDocument().indexToPosition(strPos, 0);
             sess.insert(cursor, str); // TODO: might have to move cursor
         } else {
             sess.replace(sess.selection.getRange(), str);
-            // cursor = this.aceEditor.getCursorPosition();
+            if (back > 0) {
+                this.aceEditor.navigateLeft(back);
+            }
         }
-        // sess.insert(cursor, str); // TODO: might have to move cursor
     }
 
     doWrap(wrap: number) {
