@@ -96,7 +96,7 @@ export class NormalEditorComponent implements IEditor {
         this.content = cont.slice(0, strPos) + str + cont.slice(endPos);
 
         const newPos = strPos + str.length - back;
-        if (txtarea.selectionStart || back) {
+        if (txtarea.selectionStart >= 0 || back >= 0) {
             function setpos() {
                 txtarea.selectionStart = newPos;
                 txtarea.selectionEnd = newPos;
