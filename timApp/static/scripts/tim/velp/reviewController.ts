@@ -1518,6 +1518,7 @@ export class ReviewController {
                 this.toggleAnnotationsInList(annCompsInCoord);
             }
         }
+        this.scope.$digest();
     };
 
     /**
