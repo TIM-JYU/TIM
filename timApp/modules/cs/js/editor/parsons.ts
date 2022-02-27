@@ -39,6 +39,8 @@ export class ParsonsEditorComponent implements IEditor {
         }
     }
 
+    focus() {}
+
     ngAfterViewInit() {
         this.createParsons(this.content);
     }

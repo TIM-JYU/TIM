@@ -34,6 +34,11 @@ export class NormalEditorComponent implements IEditor {
 
     constructor(private cdr: ChangeDetectorRef) {}
 
+    focus() {
+        const element = this.area.nativeElement as HTMLTextAreaElement;
+        element.focus();
+    }
+
     setReadOnly(b: boolean) {
         this.editorreadonly = b;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access

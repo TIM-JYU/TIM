@@ -51,6 +51,7 @@ export interface IEditor {
     doWrap?(wrap: number): void;
     insert?(str: string): void;
     setReadOnly(b: boolean): void;
+    focus(): void;
 }
 
 export interface IEditorFile {
@@ -119,6 +120,7 @@ export class EditorFile {
 export class JSParsonsEditorComponent implements IEditor {
     content: string = "";
     setReadOnly(b: boolean) {}
+    focus() {}
 }
 
 @Component({
@@ -764,5 +766,9 @@ export class EditorComponent implements IMultiEditor {
 
     trackByPath(index: number, item: EditorFile) {
         return item.path;
+    }
+
+    focus() {
+        this.editor?.focus();
     }
 }

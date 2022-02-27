@@ -449,19 +449,45 @@ interface IUploadResponse {
 }
 
 interface ITemplateParam {
-    def: string;
+    default: string;
     text: string;
-    regexp: string;
-    errmsg: string;
+    pattern?: string;
+    error?: string;
 }
 
 interface ITemplateButton {
-    html: string;
+    data: string;
     text: string;
-    title?: string;
+    expl?: string;
     hasMath?: boolean;
-    params?: ITemplateParam[];
+    placeholders?: ITemplateParam[];
 }
+
+const TemplateParam = t.intersection([
+    t.type({
+        default: t.string,
+        text: t.string,
+    }),
+    t.partial({
+        pattern: t.string,
+        error: t.string,
+    }),
+]);
+
+const TemplateButton = t.intersection([
+    t.type({
+        data: t.string,
+        text: t.string,
+    }),
+    t.partial({
+        expl: t.string,
+        hasMath: t.boolean,
+        placeholders: t.array(TemplateParam),
+    }),
+]);
+
+// interface ITemplateParam extends t.TypeOf<typeof TemplateParam> {}
+// interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
 
 /**
  * This defines the required format for the csPlugin YAML markup.
@@ -668,6 +694,7 @@ const CsMarkupOptional = t.partial({
     argsstem: t.string,
     autoupdate: t.number,
     buttons: t.string,
+    mdButtons: nullable(t.array(TemplateButton)),
     byCode: t.string,
     docurl: t.string,
     editorreadonly: t.boolean,
@@ -1915,8 +1942,15 @@ ${fhtml}
 
     createTemplateButtons() {
         let b = this.markup.buttons;
-        if (!b) {
+        let mdButtons = this.markup.mdButtons;
+        if (!b && !mdButtons) {
             return;
+        }
+        if (!b) {
+            b = "";
+        }
+        if (!mdButtons) {
+            mdButtons = [];
         }
         const helloButtons =
             "public \nclass \nHello \n\\n\n{\n}\n" +
@@ -1943,9 +1977,12 @@ ${fhtml}
             }
         }
         for (const s of btns) {
+            if (s === "") {
+                continue;
+            }
             if (!s.startsWith("[")) {
                 this.templateButtons.push({
-                    html: this.getButtonTextHtml(s),
+                    data: this.getButtonTextHtml(s),
                     text: s,
                 });
                 continue;
@@ -1953,17 +1990,17 @@ ${fhtml}
             try {
                 const parsed = JSON.parse(s);
                 const item: ITemplateButton = {
-                    html: parsed[0],
                     text: parsed[0],
+                    data: parsed[0],
                 };
                 if (parsed.length > 1 && parsed[1] !== "") {
-                    item.text = parsed[1];
+                    item.data = parsed[1];
                 }
                 if (parsed.length > 2 && parsed[2] !== "") {
-                    item.title = parsed[2];
+                    item.expl = parsed[2];
                 }
                 if (parsed.length > 3) {
-                    item.params = [];
+                    item.placeholders = [];
                 }
                 item.hasMath = (parsed as string[]).some(
                     (x, i) => i >= 2 && x == "math"
@@ -1974,26 +2011,28 @@ ${fhtml}
                         continue;
                     }
                     const param: ITemplateParam = {
-                        def: p[0] ?? "",
+                        default: p[0] ?? "",
                         text: p[1] ?? "",
-                        regexp: p[2] ?? "",
-                        errmsg: p[3] ?? "",
+                        pattern: p[2] ?? "",
+                        error: p[3] ?? "",
                     };
                     if (p.length > 0) {
-                        item.params?.push(param);
+                        item.placeholders?.push(param);
                     }
                 }
                 this.templateButtons.push(item);
             } catch (e) {
                 this.templateButtons.push({
-                    html: "error",
-                    text: "",
-                    title: "" + e,
+                    text: "error",
+                    data: "",
+                    expl: "" + e,
                 });
             }
         }
+        for (const btn of mdButtons) {
+            this.templateButtons.push(btn);
+        }
         this.templateButtonsCount = this.templateButtons.length;
-        return btns;
     }
 
     get progLanguages() {
@@ -2786,7 +2825,7 @@ ${fhtml}
     }
 
     async addText(item: ITemplateButton) {
-        let s = item.text;
+        let s = item.data;
         if (this.noeditor) {
             this.userargs += s + " ";
             return;
@@ -2794,26 +2833,29 @@ ${fhtml}
         let ip = 0;
         while (s.includes("\\?")) {
             let param: ITemplateParam = {
-                def: "",
+                default: "",
                 text: "Value",
-                regexp: ".*",
-                errmsg: "",
+                pattern: ".*",
+                error: "",
             };
-            if (item.params && ip < item.params.length) {
-                param = item.params[ip];
+            if (item.placeholders && ip < item.placeholders.length) {
+                param = item.placeholders[ip];
             }
-            const re = new RegExp(param.regexp);
+            const re = new RegExp(param.pattern ?? ".*");
             const replace = await to2(
                 showInputDialog({
                     isInput: InputDialogKind.InputAndValidator,
                     text: param.text,
                     title: "Parameter",
                     okText: "OK",
-                    defaultValue: param.def,
+                    defaultValue: param.default,
                     validator: (input) =>
                         new Promise<Result<string, string>>((res) => {
                             if (!input.match(re)) {
-                                return res({ok: false, result: param.errmsg});
+                                return res({
+                                    ok: false,
+                                    result: param.error ?? "",
+                                });
                             }
                             return res({ok: true, result: input});
                         }),
@@ -2827,6 +2869,7 @@ ${fhtml}
         }
         const text = s.replace(/\\n/g, "\n");
         this.editor?.insert?.(text);
+        this.editor?.focus();
     }
 
     getButtonTextHtml(s: string) {
@@ -3752,7 +3795,7 @@ ${fhtml}
             <cs-count-board *ngIf="count" [options]="count"></cs-count-board>
             <div #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
                 <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
-                        (click)="addText(item)" title="{{item.title}}">{{item.html}}</button>
+                        (click)="addText(item)" title="{{item.expl}}">{{item.text}}</button>
             </div>
             <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
                        [maxRows]="maxrows"

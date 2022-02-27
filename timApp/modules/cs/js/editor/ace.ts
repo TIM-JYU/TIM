@@ -61,6 +61,10 @@ export class AceEditorComponent implements IEditor {
         this.aceEditor?.setOption("readOnly", this.disabled);
     }
 
+    focus() {
+        this.aceEditor?.focus();
+    }
+
     @Input()
     set disabled(d: boolean) {
         this.disabled_ = d;
