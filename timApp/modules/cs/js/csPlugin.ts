@@ -3795,7 +3795,7 @@ ${fhtml}
             <cs-count-board *ngIf="count" [options]="count"></cs-count-board>
             <div #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
                 <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
-                        (click)="addText(item)" title="{{item.expl}}">{{item.text}}</button>
+                        (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text" ></button>
             </div>
             <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
                        [maxRows]="maxrows"
