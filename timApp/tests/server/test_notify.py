@@ -38,6 +38,7 @@ class NotifyTestBase(TimRouteTest):
                 "email_comment_add": True,
                 "email_comment_modify": False,
                 "email_doc_modify": True,
+                "email_answer_add": False,
             },
         )
         self.login_test1()
@@ -57,6 +58,7 @@ class NotifyTest(NotifyTestBase):
                 "email_comment_add": False,
                 "email_comment_modify": False,
                 "email_doc_modify": False,
+                "email_answer_add": False,
             },
             n,
         )
@@ -64,6 +66,7 @@ class NotifyTest(NotifyTestBase):
             "email_comment_add": True,
             "email_comment_modify": False,
             "email_doc_modify": True,
+            "email_answer_add": False,
         }
         self.update_notify_settings(d, new_settings)
         n = self.get(notify_url)
@@ -235,10 +238,11 @@ class NotifyFolderTest(NotifyTestBase):
                 "email_comment_add": True,
                 "email_comment_modify": False,
                 "email_doc_modify": True,
+                "email_answer_add": False,
             },
         )
         r = self.get("/notify/all")
-        self.assertEqual(1, len(r))
+        self.assertEqual(5, len(r))
         self.assertTrue(r[0]["item"]["isFolder"])
         self.login_test1()
         d = self.create_doc()
@@ -257,11 +261,12 @@ class NotifyFolderTest(NotifyTestBase):
                 "email_comment_add": True,
                 "email_comment_modify": False,
                 "email_doc_modify": True,
+                "email_answer_add": False,
             },
         )
         r = self.get("/notify/all")
-        self.assertEqual(2, len(r))
-        self.assertTrue(r[1]["item"]["isFolder"])
+        self.assertEqual(10, len(r))
+        self.assertTrue(r[5]["item"]["isFolder"])
         self.assertFalse(r[0]["item"]["isFolder"])
         self.login_test1()
         self.new_par(d.document, "test")
@@ -339,4 +344,53 @@ class CutPasteNotifyTest(NotifyTestBase):
                 "subject": "user 1 Test added a paragraph to the document document 2",
             },
             sent_mails_in_testing[-1],
+        )
+
+
+class AnswerNotifyTest(NotifyTestBase):
+    def test_answer_notify(self):
+        """Test that the notification is sent when a user sends an answer to a question."""
+
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+``` {#t plugin="csPlugin"}
+type: text
+```
+"""
+        )
+        self.test_user_2.grant_access(d, AccessType.teacher)
+        db.session.commit()
+        self.login_test2()
+        self.update_notify_settings(
+            d,
+            {
+                "email_comment_add": False,
+                "email_comment_modify": False,
+                "email_doc_modify": False,
+                "email_answer_add": True,
+            },
+        )
+        self.login_test1()
+        self.post_answer("csplugin", f"{d.id}.t", user_input={"usercode": "test"})
+        process_pending_notifications()
+        self.assertEqual(1, len(sent_mails_in_testing))
+        mail_from = "no-reply@tim.jyu.fi"
+        self.assertEqual(
+            {
+                "mail_from": mail_from,
+                "msg": "Answer posted by user 1 Test: "
+                "http://localhost/answers/users/test-user-1/doc1?task=t&user=testuser1&answerNumber=1",
+                "rcpt": "test2@example.com",
+                "reply_to": "test1@example.com",
+                "subject": "user 1 Test posted an answer to the document document 2",
+            },
+            sent_mails_in_testing[-1],
+        )
+        self.test_user_2.remove_access(d.id, "teacher")
+        db.session.commit()
+        self.post_answer("csplugin", f"{d.id}.t", user_input={"usercode": "test"})
+        process_pending_notifications()
+        self.assertEqual(
+            1, len(sent_mails_in_testing), "No email should be sent to non-teachers"
         )

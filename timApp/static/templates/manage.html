@@ -82,6 +82,10 @@
                 <input type="checkbox" ng-model="$ctrl.notifySettings.email_comment_modify"
                        ng-change="$ctrl.notifyChanged()"/>Edited comments
             </label></div>
+            <div class="checkbox" ng-if="$ctrl.item.rights.teacher"><label>
+                <input type="checkbox" ng-model="$ctrl.notifySettings.email_answer_add"
+                       ng-change="$ctrl.notifyChanged()"/>New answers to tasks
+            </label></div>
         </form>
     </div>
 </div>

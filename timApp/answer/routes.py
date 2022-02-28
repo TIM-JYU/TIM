@@ -75,6 +75,8 @@ from timApp.messaging.messagelist.messagelist_utils import (
     UserGroupDiff,
     sync_usergroup_messagelist_members,
 )
+from timApp.notification.notification import NotificationType
+from timApp.notification.notify import notify_doc_watchers
 from timApp.notification.send_email import multi_send_email
 from timApp.peerreview.peerreview_utils import (
     has_review_access,
@@ -1095,6 +1097,14 @@ def post_answer_impl(
                 )
                 result["savedNew"] = a.id if a else None
                 if a:
+                    notify_doc_watchers(
+                        d,
+                        "",
+                        NotificationType.AnswerAdded,
+                        plugin.par,
+                        answer_number=answerinfo.count + 1,
+                        curr_user=curr_user,
+                    )
                     send_answer_backup_if_enabled(a)
             else:
                 result["savedNew"] = None
