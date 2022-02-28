@@ -12,6 +12,7 @@ for creating interactive documents such as:
 * manuals
 * workbooks
 * discussions
+* moro
 
 TIM can be used for:
 
