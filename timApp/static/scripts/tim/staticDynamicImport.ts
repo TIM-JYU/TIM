@@ -86,6 +86,8 @@ export function staticDynamicImport(s: string) {
             return import("tim/ui/style-preview.component");
         case "messageSend":
             return import("tim/messaging/tim-message-send.component");
+        case "todoList":
+            return import("tim/plugin/todo/todo-list.component");
     }
     throw Error(`Module was not statically known: ${s}`);
 }

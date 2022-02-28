@@ -3,7 +3,7 @@ import re
 from dataclasses import dataclass
 from functools import lru_cache
 from re import Pattern
-from typing import Optional, Any, Union
+from typing import Any
 
 import requests
 from flask import current_app
@@ -210,6 +210,12 @@ def get_plugins() -> dict[str, PluginReg]:
         ),
         PluginReg(
             name="drag", domain=DRAGPLUGIN_DOMAIN, regexattrs=DRAGATTRS, automd=True
+        ),
+        PluginReg(
+            name="todoList",
+            domain=internal_domain,
+            port=qst_port,
+            path="/todoList/",
         ),
     ]
     plugins = {p.name: p for p in plugin_list}

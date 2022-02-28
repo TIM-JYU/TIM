@@ -1,0 +1,41 @@
+:host {
+  display: block;
+  border: 1px var(--basic-border-color) solid;
+  border-radius: 3px;
+  padding: 1em;
+}
+
+ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+div.add-todo {
+  display: flex;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+
+  button {
+    margin-left: 1em;
+  }
+}
+
+.todo-item {
+  display: flex;
+
+  .todo-text {
+    flex-grow: 1;
+    display: inline-block;
+    margin-right: 0.5em;
+    margin-left: 0.5em;
+  }
+
+  .remove {
+    color: #323232;
+    cursor: pointer;
+
+    &:hover {
+      color: #8c0000;
+    }
+  }
+}

@@ -75,6 +75,7 @@ from timApp.plugin.tableform.tableForm import tableForm_plugin
 from timApp.plugin.tape.tape import tape_plugin
 from timApp.plugin.timmenu.timMenu import timMenu_plugin
 from timApp.plugin.timtable.timTable import timTable_plugin
+from timApp.plugin.todo.todo import todo_plugin
 from timApp.plugin.userselect.userselect import user_select_plugin
 from timApp.printing.print import print_blueprint
 from timApp.readmark.routes import readings
@@ -150,6 +151,7 @@ blueprints = [
     reviewcanvas_plugin,
     tableForm_plugin,
     tape_plugin,
+    todo_plugin,
     cbcountfield_route,
     timMenu_plugin,
     timTable_plugin,
