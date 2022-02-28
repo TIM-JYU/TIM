@@ -448,21 +448,6 @@ interface IUploadResponse {
     block: number;
 }
 
-interface ITemplateParam {
-    default: string;
-    text: string;
-    pattern?: string;
-    error?: string;
-}
-
-interface ITemplateButton {
-    data: string;
-    text: string;
-    expl?: string;
-    hasMath?: boolean;
-    placeholders?: ITemplateParam[];
-}
-
 const TemplateParam = t.intersection([
     t.type({
         default: t.string,
@@ -486,8 +471,8 @@ const TemplateButton = t.intersection([
     }),
 ]);
 
-// interface ITemplateParam extends t.TypeOf<typeof TemplateParam> {}
-// interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
+interface ITemplateParam extends t.TypeOf<typeof TemplateParam> {}
+interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
 
 /**
  * This defines the required format for the csPlugin YAML markup.
@@ -974,7 +959,7 @@ export class CsController extends CsBase implements ITimComponent {
     fileProgress?: number;
     fullCode: string = "";
     height?: string | number;
-    csRunDivStyle: Record<string, string> | null = {width: "fit-content"};
+    csRunDivStyle: Record<string, string> = {};
     htmlresult: string;
     iframeClientHeight: number;
     imgURL: string;
@@ -2218,7 +2203,7 @@ ${fhtml}
         this.vctrl.addTimComponent(this);
         this.height = this.markup.height;
         if (this.markup.width) {
-            this.csRunDivStyle = {width: "" + this.markup.width};
+            this.csRunDivStyle = {width: this.markup.width.toString()};
         }
         this.jsparams = this.markup.jsparams;
         // if (this.isText) {
@@ -3701,6 +3686,7 @@ ${fhtml}
 @Component({
     selector: "cs-runner",
     template: `
+        <!--suppress TypeScriptUnresolvedVariable -->
         <div [ngClass]="{'csRunDiv': borders}" class="type-{{rtype}}" [ngStyle]="csRunDivStyle">
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <h4 *ngIf="header" [innerHTML]="header | purify"></h4>
@@ -3795,7 +3781,7 @@ ${fhtml}
             <cs-count-board *ngIf="count" [options]="count"></cs-count-board>
             <div #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
                 <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
-                        (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text" ></button>
+                        (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify" ></button>
             </div>
             <cs-editor #externalEditor *ngIf="externalFiles && externalFiles.length" class="csrunEditorDiv"
                        [maxRows]="maxrows"
