@@ -384,6 +384,13 @@ export class SettingsTabComponent implements OnInit {
         );
     }
 
+    async markTranslationChecked() {
+        await this.confirmPost(
+            $localize`This will mark the translations in all paragraphs in this document as checked. Continue?`,
+            `/markChecked/${this.item!.id}`
+        );
+    }
+
     private async confirmPost(message: string, url: string) {
         if (!this.item) {
             return;

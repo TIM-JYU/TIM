@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from timApp.document.document import Document
     from timApp.document.docinfo import DocInfo
 
-SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "settings"}
+SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "rc", "settings"}
 
 # TODO: a bit short name for global variable
 se = SandboxedEnvironment(autoescape=True)
@@ -1187,6 +1187,20 @@ class DocParagraph:
             last_ref.is_translation()
             and not reached_par.is_setting()
             and reached_par.get_hash() != last_ref.get_attr("rt")
+        )
+
+    """
+    TODO: How does this even work? Let alone how can I make it work??
+    """
+    def is_translation_checked(self):
+        if not self.ref_chain:
+            return False
+        last_ref = self.ref_chain.prev_deref
+        reached_par = self.ref_chain
+        return (
+            last_ref.is_translation()
+            and not reached_par.is_setting()
+            and reached_par.get_hash() != last_ref.get_attr("rc")
         )
 
 

@@ -223,6 +223,12 @@ export class EditingHandler {
                 name: "marktranslated",
                 desc: "Mark as translated",
             });
+
+            tagKeys.push("markchecked");
+            tagsDescs.push({
+                name: "markchecked",
+                desc: "Mark translation as checked",
+            });
         }
         for (const k of tagKeys) {
             tags[k] = new TimStorage(k, t.boolean).get() ?? false;

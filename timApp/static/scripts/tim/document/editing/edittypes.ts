@@ -31,6 +31,7 @@ export interface IParInfo {
 export type ITags = {
     markread?: boolean;
     marktranslated?: boolean;
+    markchecked?: boolean;
 };
 
 export interface IExtraData extends IParInfo {

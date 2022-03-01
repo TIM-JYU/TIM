@@ -233,6 +233,14 @@ a .glyphicon {
         right: 0;
     }
 
+    .checktr::before {
+        content: "Check translation";
+        color: red;
+        position: absolute;
+        top: -0.8em;
+        right: 0;
+    }
+
      .header th {
             border: 1px solid #bbb;
      }

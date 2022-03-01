@@ -449,6 +449,9 @@ def pluginify(
         for p in pars:
             if p.is_translation_out_of_date():
                 p.add_class("troutofdate")
+            else:
+                if p.is_translation_checked():
+                    p.add_class("checktr")
     if sanitize:
         for par in pars:
             par.sanitize_html()
