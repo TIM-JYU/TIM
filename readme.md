@@ -12,7 +12,7 @@ for creating interactive documents such as:
 * manuals
 * workbooks
 * discussions
-* moro2
+* moro2 - validate test
 
 TIM can be used for:
 
