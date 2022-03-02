@@ -36,17 +36,11 @@ export class SwitchButtonComponent {
     ngOnInit(): void {
         // Listen to changes in the local storage.
         window.addEventListener("storage", () => {
-            const currentState = this.currentStateStorage.get();
-            if (currentState) {
-                this.isOn = currentState;
-                this.updateElements();
-            }
+            this.isOn = this.currentStateStorage.get() ?? this.isOn;
+            this.updateElements();
         });
         // Synchronize local state with the local storage.
-        const currentState = this.currentStateStorage.get();
-        if (currentState) {
-            this.isOn = currentState;
-        }
+        this.isOn = this.currentStateStorage.get() ?? this.isOn;
         this.updateElements();
     }
 
