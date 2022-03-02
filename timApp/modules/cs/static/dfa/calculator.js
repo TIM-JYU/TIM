@@ -117,6 +117,12 @@ class Cos extends FuncRROperation {
     doCalc(a) { return Math.cos(this.calculator.toAngle(a)); }
 }
 
+class Sqrt extends FuncRROperation {
+    op() { return "sqrt"; }
+    doCalc(a) { return Math.sqrt(a); }
+}
+
+
 class Calculator {
     constructor(params) {
         this.params = params;
@@ -129,6 +135,7 @@ class Calculator {
         this.operations.push(new Div(this));
         this.operations.push(new Sin(this));
         this.operations.push(new Cos(this));
+        this.operations.push(new Sqrt(this));
         this.operations.push(new Deg(this));
         this.operations.push(new Rad(this));
     }
