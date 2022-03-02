@@ -34,6 +34,14 @@
   box-shadow: 2px 6px 16px -5px rgba(0, 0, 0, 0.6);
 }
 
+.visible-icon {
+  margin-right: 0.25em;
+}
+
+.help-icon {
+  margin-left: 0.25em;
+}
+
 .annotationVisibleText {
   font-size: 0.9rem;
 }
@@ -100,4 +108,18 @@
 
 .saveChanges {
   float: left;
+}
+
+.dark-bg {
+  &.highlighted {
+    color: white;
+  }
+
+  .fulldiv, .points-input, .comment-area, .visible-icon, .help-icon {
+    color: white;
+  }
+
+  ::ng-deep .timestamp {
+    color: white;
+  }
 }
