@@ -1,59 +1,24 @@
-.warnFrame {
-    border-right-color: gold;
-    border-right-width: thick;
-}
-
-input:focus.warnFrame, textarea:focus.warnFrame {
-    border-right-color: gold !important;
-}
-
-.alertFrame {
-    border-color: red;
-    border-width: 2px;
-}
-
-input:focus.alertframe {
-    border-color: red !important;
-}
-
-.savedtext {
-    display: inline-block;
-    white-space: nowrap;
-}
-
-@-webkit-keyframes fadeOut {
-    0% { opacity: 1; height: 100%; }
-    99% { opacity: 0.01; height: 100%; }
-    100% { opacity: 0; height: 0%; }
-}
-
-@keyframes fadeOut {
-    0% { opacity: 1; height: 100%; }
-    99% { opacity: 0.01; height: 100%; }
-    100% { opacity: 0; height: 0; }
-}
-
-.fieldCell  textfield-runner h4, .fieldCell  numericfield-runner h4, .fieldCell cbfield-runner .h4, .fieldCell rbfield-runner .h4,  .fieldCell dropdown-runner .h4    {
+.fieldCell textfield-runner h4,
+.fieldCell numericfield-runner h4,
+.fieldCell cbfield-runner .h4,
+.fieldCell rbfield-runner .h4,
+.fieldCell dropdown-runner .h4 {
     font-size: small;
     background-color: lightgrey;
-    /*outline-style: solid;*/
-    /*outline-width: 1px;*/
-    /*outline-color: #b4b4b4;*/
     border-bottom-style: solid;
     border-bottom-width: 1px;
     border-color: #b4b4b4;
-    /* text-align: center; */
-    /* height: 30px; */
     line-height: 1.5em;
-    margin: 0px;
+    margin: 0;
 }
 
-.fieldCell textfield-runner .stem, .fieldCell numericfield-runner .stem, .fieldCell cbfield-runner .stem, .fieldCell rbfield-runner .stem, .fieldCell dropdown-runner .stem  {
+.fieldCell textfield-runner .stem,
+.fieldCell numericfield-runner .stem,
+.fieldCell cbfield-runner .stem,
+.fieldCell rbfield-runner .stem,
+.fieldCell dropdown-runner .stem {
     font-size: 0.7em;
     background-color: lightgrey;
-    /* outline-style: solid; */
-    /* outline-width: 1px; */
-    /* outline-color: #b4b4b4; */
     border-bottom-style: solid;
     border-bottom-width: 1px;
     border-color: #b4b4b4;
@@ -61,26 +26,26 @@ input:focus.alertframe {
     height: 1.5em;
     line-height: 1.5em;
     font-weight: 600;
-    margin: 0px;
+    margin: 0;
 }
 
-.fieldCell  .textfieldNoSaveDiv, .fieldCell  .numericfieldNoSaveDiv {
+.fieldCell .textfieldNoSaveDiv,
+.fieldCell .numericfieldNoSaveDiv {
     text-align:center;
 }
 
-
-.fieldCell textfield-runner input, .fieldCell numericfield-runner input {
+.fieldCell textfield-runner input,
+.fieldCell numericfield-runner input {
     margin-left: 2px;
     margin-right: 2px;
     margin-top: 2px;
-    /* text-align: center; */
 }
 
 .fieldCell .plaintext {
     display: inline-block;
 }
 
-.fieldCell  tim-plugin-loader {
+.fieldCell tim-plugin-loader {
     width: auto;
     border-style: solid;
     border-width: 1px;
@@ -90,19 +55,9 @@ input:focus.alertframe {
     max-width: 100%;
 }
 
-.fieldCell  tim-plugin-loader:last-child {
-  /*  border-style: solid;
-    border-width: 1px;
-    border-color: #b4b4b4;
-    border-right-width: 1px; */
-}
-
 .singleLine {
-    /*TODO: generic, move this*/
     white-space: nowrap;
 }
-
-/* Numeric field */
 
 .plaintextFrame {
     border: none;
@@ -115,28 +70,11 @@ input:focus.alertframe {
 }
 
 .inlineplugin input {
-    padding: 0px;
-    padding-left: 2px;
+    padding: 0 0 0 2px;
 }
 
 .inlineplugin textarea {
-    padding: 0px;
-    padding-left: 2px;
-    padding-top: 2px;
+    padding: 2px 0 0 2px;
     overflow:hidden;
     height: auto;
-}
-
-/* multisave */
-
-.pluginmultisave .timButton {
-    margin-bottom: 5px;
-    margin-top: 5px;
-}
-
-.pluginmultisave p {
-    padding-top: 0px;
-    padding-bottom: 0px;
-    margin-bottom: 0px;
-    margin-top: 0px;
 }

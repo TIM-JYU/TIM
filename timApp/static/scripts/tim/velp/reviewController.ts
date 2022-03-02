@@ -1076,7 +1076,7 @@ export class ReviewController {
             if (answ.length > 0) {
                 const first = answ[0];
                 const isInline = first.classList.contains("inlineplugin");
-                if (isInline && answ.length > 1) {
+                if (!isInline && answ.length > 1) {
                     console.warn(
                         "Paragraph has multiple plugins but the first of them was not inlineplugin?"
                     );

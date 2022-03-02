@@ -2,7 +2,14 @@
  * Defines the client-side implementation of textfield/label plugin.
  */
 import * as t from "io-ts";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+    NgZone,
+} from "@angular/core";
 import {
     ChangeType,
     FormModeOption,
@@ -18,8 +25,8 @@ import {
 } from "tim/plugin/attributes";
 import {getFormBehavior} from "tim/plugin/util";
 import {defaultErrorMessage, timeout, valueOr} from "tim/util/utils";
-import {BrowserModule} from "@angular/platform-browser";
-import {HttpClientModule} from "@angular/common/http";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
@@ -170,6 +177,15 @@ export class TextfieldPluginComponent
     styles: Record<string, string> = {};
     private saveCalledExternally = false;
 
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private zone: NgZone
+    ) {
+        super(el, http, domSanitizer);
+    }
+
     get disableUnchanged() {
         return this.markup.disableUnchanged;
     }
@@ -231,15 +247,19 @@ export class TextfieldPluginComponent
      * Save method for other plugins, needed by e.g. multisave plugin.
      */
     async save() {
-        this.saveCalledExternally = true;
-        return this.saveText();
+        return this.zone.run(() => {
+            this.saveCalledExternally = true;
+            return this.saveText();
+        });
     }
 
     resetField(): undefined {
-        this.initCode();
-        this.applyStyling({});
-        this.errormessage = undefined;
-        return undefined;
+        return this.zone.run(() => {
+            this.initCode();
+            this.applyStyling({});
+            this.errormessage = undefined;
+            return undefined;
+        });
     }
 
     tryResetChanges(e?: Event): void {
@@ -253,40 +273,43 @@ export class TextfieldPluginComponent
     }
 
     resetChanges(): void {
-        this.userword = this.initialValue;
-        this.changes = false;
-        this.updateListeners(ChangeType.Saved);
-        this.scope.$digest();
+        this.zone.run(() => {
+            this.userword = this.initialValue;
+            this.changes = false;
+            this.updateListeners(ChangeType.Saved);
+        });
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
     // TODO: get rid of any (styles can arrive as object)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setAnswer(content: Record<string, any>): ISetAnswerResult {
-        this.errormessage = undefined;
-        let message;
-        let ok = true;
-        // TODO: should receiving empty answer reset to defaultnumber or clear field?
-        if (Object.keys(content).length == 0) {
-            this.resetField();
-        } else {
-            try {
-                this.userword = content.c;
-            } catch (e) {
-                this.userword = "";
-                ok = false;
-                message = `Couldn't find related content ("c") from ${JSON.stringify(
-                    content
-                )}`;
-                this.errormessage = message;
+        return this.zone.run(() => {
+            this.errormessage = undefined;
+            let message;
+            let ok = true;
+            // TODO: should receiving empty answer reset to defaultnumber or clear field?
+            if (Object.keys(content).length == 0) {
+                this.resetField();
+            } else {
+                try {
+                    this.userword = content.c;
+                } catch (e) {
+                    this.userword = "";
+                    ok = false;
+                    message = `Couldn't find related content ("c") from ${JSON.stringify(
+                        content
+                    )}`;
+                    this.errormessage = message;
+                }
+                if (!this.markup.ignorestyles) {
+                    this.applyStyling(content.styles);
+                }
             }
-            if (!this.markup.ignorestyles) {
-                this.applyStyling(content.styles);
-            }
-        }
-        this.changes = false;
-        this.updateListeners(ChangeType.Saved);
-        return {ok: ok, message: message};
+            this.changes = false;
+            this.updateListeners(ChangeType.Saved);
+            return {ok: ok, message: message};
+        });
     }
 
     /**

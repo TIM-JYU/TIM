@@ -2,7 +2,14 @@
  * Defines the client-side implementation of a dropdown plugin.
  */
 import * as t from "io-ts";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+    NgZone,
+} from "@angular/core";
 import {
     ChangeType,
     FormModeOption,
@@ -18,8 +25,8 @@ import {
 } from "tim/plugin/attributes";
 import {getFormBehavior, shuffleStrings} from "tim/plugin/util";
 import {defaultErrorMessage} from "tim/util/utils";
-import {BrowserModule} from "@angular/platform-browser";
-import {HttpClientModule} from "@angular/common/http";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
@@ -107,6 +114,15 @@ export class DropdownPluginComponent
     private changes = false;
     connectionErrorMessage?: string;
 
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private zone: NgZone
+    ) {
+        super(el, http, domSanitizer);
+    }
+
     getDefaultMarkup() {
         return {};
     }
@@ -149,7 +165,7 @@ export class DropdownPluginComponent
      * Saves the selection that in the plugin.
      */
     async save() {
-        return await this.doSave(this.markup.instruction);
+        return this.zone.run(() => this.doSave(this.markup.instruction));
     }
 
     async doSave(nosave: boolean) {
@@ -219,7 +235,9 @@ export class DropdownPluginComponent
      * @param force Whether to force the plugin to always save itself when the answer route is called.
      */
     setForceAnswerSave(force: boolean) {
-        this.forceSave = force;
+        this.zone.run(() => {
+            this.forceSave = force;
+        });
     }
 
     /**
@@ -228,14 +246,16 @@ export class DropdownPluginComponent
      * @param words List of words to be shown in the plugin.
      */
     setPluginWords(words: string[]) {
-        if (this.shuffle) {
-            this.wordList = shuffleStrings(words);
-        } else {
-            this.wordList = words;
-        }
+        this.zone.run(() => {
+            if (this.shuffle) {
+                this.wordList = shuffleStrings(words);
+            } else {
+                this.wordList = words;
+            }
 
-        this.selectedWord = undefined;
-        this.initialWord = this.selectedWord;
+            this.selectedWord = undefined;
+            this.initialWord = this.selectedWord;
+        });
     }
 
     getAttributeType() {
@@ -252,43 +272,48 @@ export class DropdownPluginComponent
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setAnswer(content: Record<string, any>): ISetAnswerResult {
-        this.error = undefined;
-        let message;
-        let ok = true;
-        if (Object.keys(content).length == 0) {
-            this.resetField();
-        } else {
-            try {
-                this.selectedWord = content.c;
-            } catch (e) {
-                this.selectedWord = "";
-                ok = false;
-                message = `Couldn't find related content ("c") from ${JSON.stringify(
-                    content
-                )}`;
-                this.error = message;
+        return this.zone.run(() => {
+            this.error = undefined;
+            let message;
+            let ok = true;
+            if (Object.keys(content).length == 0) {
+                this.resetField();
+            } else {
+                try {
+                    this.selectedWord = content.c;
+                } catch (e) {
+                    this.selectedWord = "";
+                    ok = false;
+                    message = `Couldn't find related content ("c") from ${JSON.stringify(
+                        content
+                    )}`;
+                    this.error = message;
+                }
             }
-        }
-        this.changes = false;
-        this.updateListeners(ChangeType.Saved);
-        this.initialWord = this.selectedWord;
-        return {ok: ok, message: message};
+            this.changes = false;
+            this.updateListeners(ChangeType.Saved);
+            this.initialWord = this.selectedWord;
+            return {ok: ok, message: message};
+        });
     }
 
     resetField(): undefined {
-        this.selectedWord = "";
-        this.initialWord = this.selectedWord;
-        this.changes = false;
-        this.error = undefined;
-        this.updateListeners(ChangeType.Saved);
-        return undefined;
+        return this.zone.run(() => {
+            this.selectedWord = "";
+            this.initialWord = this.selectedWord;
+            this.changes = false;
+            this.error = undefined;
+            this.updateListeners(ChangeType.Saved);
+            return undefined;
+        });
     }
 
     resetChanges(): void {
-        this.selectedWord = this.initialWord;
-        this.changes = false;
-        this.updateListeners(ChangeType.Saved);
-        this.scope.$digest();
+        this.zone.run(() => {
+            this.selectedWord = this.initialWord;
+            this.changes = false;
+            this.updateListeners(ChangeType.Saved);
+        });
     }
 }
 

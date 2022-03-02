@@ -2,7 +2,14 @@
  * Defines the client-side implementation of JavaScript runner plugin.
  */
 import * as t from "io-ts";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+    NgZone,
+} from "@angular/core";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -10,8 +17,8 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {BrowserModule} from "@angular/platform-browser";
-import {HttpClientModule} from "@angular/common/http";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
@@ -161,6 +168,15 @@ export class GoalTablePluginComponent
     private lang: string = "fi";
     private scaleWords: string[] = [];
 
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private zone: NgZone
+    ) {
+        super(el, http, domSanitizer);
+    }
+
     getDefaultMarkup() {
         return {};
     }
@@ -276,8 +292,10 @@ export class GoalTablePluginComponent
      * Save method for other plugins, needed by e.g. multisave plugin.
      */
     async save() {
-        await this.saveText();
-        return this.saveResponse;
+        return this.zone.run(async () => {
+            await this.saveText();
+            return this.saveResponse;
+        });
     }
 
     async saveText() {

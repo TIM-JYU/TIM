@@ -46,3 +46,17 @@ input:focus.warnFrame, textarea:focus.warnFrame {
     top: 2px;
     position: relative;
 }
+
+.alertFrame {
+    border-color: red;
+    border-width: 2px;
+}
+
+input:focus.alertframe {
+    border-color: red !important;
+}
+
+.savedtext {
+    display: inline-block;
+    white-space: nowrap;
+}

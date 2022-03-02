@@ -2,7 +2,14 @@
  * Defines the client-side implementation of rbfield/label plugin.
  */
 import * as t from "io-ts";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+    NgZone,
+} from "@angular/core";
 import {
     ChangeType,
     FormModeOption,
@@ -19,8 +26,8 @@ import {
 } from "tim/plugin/attributes";
 import {getFormBehavior} from "tim/plugin/util";
 import {valueOr} from "tim/util/utils";
-import {BrowserModule} from "@angular/platform-browser";
-import {HttpClientModule} from "@angular/common/http";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
@@ -118,6 +125,15 @@ export class RbfieldPluginComponent
     private preventedAutosave = false; // looks depracated???
     private rbName: string = "";
 
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private zone: NgZone
+    ) {
+        super(el, http, domSanitizer);
+    }
+
     getDefaultMarkup() {
         return {};
     }
@@ -183,13 +199,15 @@ export class RbfieldPluginComponent
      * Save method for other plugins, needed by e.g. multisave plugin.
      */
     async save() {
-        return this.saveText();
+        return this.zone.run(() => this.saveText());
     }
 
     resetField(): undefined {
-        this.initCode();
-        this.errormessage = undefined;
-        return undefined;
+        return this.zone.run(() => {
+            this.initCode();
+            this.errormessage = undefined;
+            return undefined;
+        });
     }
 
     formBehavior(): FormModeOption {
@@ -197,31 +215,35 @@ export class RbfieldPluginComponent
     }
 
     resetChanges() {
-        this.userword = this.initialValue;
-        this.updateListeners(ChangeType.Saved);
+        this.zone.run(() => {
+            this.userword = this.initialValue;
+            this.updateListeners(ChangeType.Saved);
+        });
     }
 
     setAnswer(content: Record<string, unknown>): ISetAnswerResult {
-        this.errormessage = undefined;
-        let message;
-        let ok = true;
-        // TODO: should receiving empty answer reset to defaultnumber or clear field?
-        if (Object.keys(content).length == 0) {
-            this.resetField();
-        } else {
-            try {
-                this.userword = content.c as string;
-            } catch (e) {
-                this.userword = "";
-                ok = false;
-                message = `Couldn't find related content ("c") from ${JSON.stringify(
-                    content
-                )}`;
-                this.errormessage = message;
+        return this.zone.run(() => {
+            this.errormessage = undefined;
+            let message;
+            let ok = true;
+            // TODO: should receiving empty answer reset to defaultnumber or clear field?
+            if (Object.keys(content).length == 0) {
+                this.resetField();
+            } else {
+                try {
+                    this.userword = content.c as string;
+                } catch (e) {
+                    this.userword = "";
+                    ok = false;
+                    message = `Couldn't find related content ("c") from ${JSON.stringify(
+                        content
+                    )}`;
+                    this.errormessage = message;
+                }
             }
-        }
-        this.initialValue = this.userword;
-        return {ok: ok, message: message};
+            this.initialValue = this.userword;
+            return {ok: ok, message: message};
+        });
     }
 
     /**
@@ -411,7 +433,7 @@ export class RbfieldPluginComponent
         this.vctrl.informChangeListeners(
             taskId,
             state,
-            this.attrs.tag ? this.attrs.tag : undefined
+            this.markup.tag ? this.markup.tag : undefined
         );
     }
 }

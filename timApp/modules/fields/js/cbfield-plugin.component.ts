@@ -185,13 +185,16 @@ export class CbfieldPluginComponent
      * Save method for other plugins, needed by e.g. multisave plugin.
      */
     async save() {
-        return this.saveText();
+        // TODO: Remove zone.run once AngularJS downgrade is removed
+        return this.zone.run(() => this.saveText());
     }
 
     resetField(): undefined {
-        this.initCode();
-        this.errormessage = undefined;
-        return undefined;
+        return this.zone.run(() => {
+            this.initCode();
+            this.errormessage = undefined;
+            return undefined;
+        });
     }
 
     formBehavior(): FormModeOption {
@@ -199,17 +202,18 @@ export class CbfieldPluginComponent
     }
 
     resetChanges(): void {
-        this.userword = this.initialValue;
-        this.updateListeners(ChangeType.Saved);
+        this.zone.run(() => {
+            this.userword = this.initialValue;
+            this.updateListeners(ChangeType.Saved);
+        });
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
     setAnswer(content: Record<string, unknown>): ISetAnswerResult {
-        this.errormessage = undefined;
-        let message;
-        let ok = true;
-        // TODO: Remove once Answerbrowser is Angular as well
-        this.zone.run(() => {
+        return this.zone.run(() => {
+            this.errormessage = undefined;
+            let message;
+            let ok = true;
             if (Object.keys(content).length == 0) {
                 this.resetField();
             } else {
@@ -227,8 +231,8 @@ export class CbfieldPluginComponent
                 }
             }
             this.initialValue = this.userword;
+            return {ok: ok, message: message};
         });
-        return {ok: ok, message: message};
     }
 
     /**
