@@ -1468,7 +1468,15 @@ ${backTicks}
 
     showTranslated() {
         const par = this.getExtraData().par;
+        if (this.checkIfOriginal()) {
+            return false;
+        }
         return !par?.getReadline()?.classList.contains("translated");
+    }
+
+    checkIfOriginal() {
+        const tags = this.getExtraData().tags;
+        return tags.marktranslated == undefined;
     }
 
     translateClicked() {
