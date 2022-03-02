@@ -2,7 +2,14 @@
  * Defines the client-side implementation of numericfield/label plugin.
  */
 import * as t from "io-ts";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+    NgZone,
+} from "@angular/core";
 import {
     ChangeType,
     FormModeOption,
@@ -19,8 +26,8 @@ import {
 import {getFormBehavior} from "tim/plugin/util";
 import {$http} from "tim/util/ngimport";
 import {defaultErrorMessage, defaultTimeout, to, valueOr} from "tim/util/utils";
-import {BrowserModule} from "@angular/platform-browser";
-import {HttpClientModule} from "@angular/common/http";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -144,6 +151,15 @@ export class NumericfieldPluginComponent
     styles: Record<string, string> = {};
     private saveCalledExternally = false;
 
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private zone: NgZone
+    ) {
+        super(el, http, domSanitizer);
+    }
+
     get disableUnchanged() {
         return this.markup.disableUnchanged;
     }
@@ -260,15 +276,19 @@ export class NumericfieldPluginComponent
      * Save method for other plguins, needed by e.g. multisave plugin.
      */
     async save() {
-        this.saveCalledExternally = true;
-        return this.saveText();
+        return this.zone.run(() => {
+            this.saveCalledExternally = true;
+            return this.saveText();
+        });
     }
 
     resetField(): undefined {
-        this.initCode();
-        this.applyStyling({});
-        this.errormessage = undefined;
-        return undefined;
+        return this.zone.run(() => {
+            this.initCode();
+            this.applyStyling({});
+            this.errormessage = undefined;
+            return undefined;
+        });
     }
 
     tryResetChanges(e?: Event): void {
@@ -282,42 +302,45 @@ export class NumericfieldPluginComponent
     }
 
     resetChanges(): void {
-        this.numericvalue = this.initialValue;
-        this.changes = false;
-        this.updateListeners(ChangeType.Saved);
-        this.scope.$digest();
+        this.zone.run(() => {
+            this.numericvalue = this.initialValue;
+            this.changes = false;
+            this.updateListeners(ChangeType.Saved);
+        });
     }
 
     setAnswer(content: unknown): ISetAnswerResult {
-        this.errormessage = undefined;
-        let message;
-        let ok = true;
-        // TODO: should receiving empty answer reset to defaultnumber or clear field?
-        if (!FieldDataWithStyles.is(content)) {
-            this.resetField();
-        } else {
-            if (this.isAllowedNull(content.c)) {
-                this.numericvalue = undefined;
+        return this.zone.run(() => {
+            this.errormessage = undefined;
+            let message;
+            let ok = true;
+            // TODO: should receiving empty answer reset to defaultnumber or clear field?
+            if (!FieldDataWithStyles.is(content)) {
+                this.resetField();
             } else {
-                const parsed = this.getDouble(content.c);
-                if (isNaN(parsed)) {
+                if (this.isAllowedNull(content.c)) {
                     this.numericvalue = undefined;
-                    ok = false;
-                    message = 'Value at "c" was not a valid number';
-                    this.errormessage = `Content is not a number (${content.c}); showing empty value.`;
                 } else {
-                    this.numericvalue = parsed;
+                    const parsed = this.getDouble(content.c);
+                    if (isNaN(parsed)) {
+                        this.numericvalue = undefined;
+                        ok = false;
+                        message = 'Value at "c" was not a valid number';
+                        this.errormessage = `Content is not a number (${content.c}); showing empty value.`;
+                    } else {
+                        this.numericvalue = parsed;
+                    }
+                }
+
+                if (!this.markup.ignorestyles && content.styles) {
+                    this.applyStyling(content.styles);
                 }
             }
-
-            if (!this.markup.ignorestyles && content.styles) {
-                this.applyStyling(content.styles);
-            }
-        }
-        this.initialValue = this.numericvalue;
-        this.changes = false;
-        this.updateListeners(ChangeType.Saved);
-        return {ok: ok, message: message};
+            this.initialValue = this.numericvalue;
+            this.changes = false;
+            this.updateListeners(ChangeType.Saved);
+            return {ok: ok, message: message};
+        });
     }
 
     /**
