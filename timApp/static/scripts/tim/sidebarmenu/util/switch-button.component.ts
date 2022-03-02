@@ -1,4 +1,6 @@
 import {Component} from "@angular/core";
+import {TimStorage} from "tim/util/utils";
+import * as t from "io-ts";
 
 @Component({
     selector: "tim-switch-button",
@@ -25,24 +27,25 @@ import {Component} from "@angular/core";
 })
 export class SwitchButtonComponent {
     public isOn = false;
-    private storageKey = "switchState";
-    private toggleClass = "toggle-margin-left";
+
+    private currentStateStorage = new TimStorage(
+        "switchButton_currentState",
+        t.boolean
+    );
 
     ngOnInit(): void {
         // Listen to changes in the local storage.
         window.addEventListener("storage", () => {
-            const switchState = window.localStorage.getItem(this.storageKey);
-            if (switchState !== null) {
-                if (JSON.parse(switchState) !== this.isOn) {
-                    this.isOn = !this.isOn;
-                    this.updateElements();
-                }
+            const currentState = this.currentStateStorage.get();
+            if (currentState) {
+                this.isOn = currentState;
+                this.updateElements();
             }
         });
         // Synchronize local state with the local storage.
-        const switchState = localStorage?.getItem(this.storageKey);
-        if (switchState !== null) {
-            this.isOn = JSON.parse(switchState) === true;
+        const currentState = this.currentStateStorage.get();
+        if (currentState) {
+            this.isOn = currentState;
         }
         this.updateElements();
     }
@@ -50,7 +53,7 @@ export class SwitchButtonComponent {
     onValueChanged(): void {
         this.isOn = !this.isOn;
         // Publish changes to the local storage.
-        localStorage?.setItem(this.storageKey, JSON.stringify(this.isOn));
+        this.currentStateStorage.set(this.isOn);
         this.updateElements();
     }
 
@@ -58,8 +61,8 @@ export class SwitchButtonComponent {
         const elements = document.querySelectorAll(".row *");
         for (const element of elements) {
             // Make sure that all elements are in the current state.
-            if (this.isOn !== element.classList.toggle(this.toggleClass)) {
-                element.classList.toggle(this.toggleClass);
+            if (this.isOn !== element.classList.toggle("toggle-margin-left")) {
+                element.classList.toggle("toggle-margin-left");
             }
         }
     }
