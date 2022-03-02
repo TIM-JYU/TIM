@@ -3,18 +3,28 @@
 
     <uib-tabset active="$ctrl.active" class="velpFill">
         <uib-tab index="0" heading="Select">
-            <p ng-if="$ctrl.rctrl.selectedElement">Selected:
-                <span ng-if="$ctrl.rctrl.selectedArea">
-                    '{{ $ctrl.rctrl.selectedArea }}' of
-                </span>
-                <span ng-if="$ctrl.rctrl.selectionIsDrawing">
-                    new drawing in review image of
-                </span>
-                <span ng-if="!$ctrl.rctrl.getSelectedAnswerTaskName()">paragraph '{{$ctrl.rctrl.getSelectedBeginning()}}'</span>
-                <span ng-if="$ctrl.rctrl.getSelectedAnswerTaskName()">
-                    answer in task '{{$ctrl.rctrl.getSelectedAnswerTaskName()}}'
-                </span>
-            </p>
+                <p id="selection"
+                   uib-tooltip="{{$ctrl.rctrl.selectedArea}}"
+                   tooltip-placement="bottom">
+                    <span ng-if="!$ctrl.rctrl.selectedElement">
+                        Nothing selected
+                    </span>
+                    <span ng-if="$ctrl.rctrl.selectedElement">
+                    Selected:
+                    </span>
+                    <span ng-if="$ctrl.rctrl.selectedArea">
+                        '{{ $ctrl.rctrl.getSelectedAreaBeginning() }}' of
+                    </span>
+                    <span ng-if="$ctrl.rctrl.selectionIsDrawing">
+                        new drawing in review image of
+                    </span>
+                    <span ng-if="$ctrl.rctrl.selectedElement">
+                        <span ng-if="!$ctrl.rctrl.getSelectedAnswerTaskName()">paragraph '{{$ctrl.rctrl.getSelectedParagraphBeginning()}}'</span>
+                        <span ng-if="$ctrl.rctrl.getSelectedAnswerTaskName()">
+                            answer in task '{{$ctrl.rctrl.getSelectedAnswerTaskName()}}'
+                        </span>
+                    </span>
+                </p>
             <label><input type="checkbox" ng-model="$ctrl.advancedOn" ng-change="$ctrl.setAdvancedOnlocalStorage($ctrl.advancedOn)"> Advanced view</label>
             <div class="velpArea">
 

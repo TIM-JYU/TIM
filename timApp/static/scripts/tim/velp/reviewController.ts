@@ -802,7 +802,14 @@ export class ReviewController {
         }
     }
 
-    getSelectedBeginning() {
+    getSelectedAreaBeginning() {
+        if (!this.selectedArea) {
+            return;
+        }
+        return truncate(this.selectedArea.toString()?.trim() ?? "", 20);
+    }
+
+    getSelectedParagraphBeginning() {
         if (!this.selectedElement) {
             return;
         }
@@ -1518,6 +1525,7 @@ export class ReviewController {
                 this.toggleAnnotationsInList(annCompsInCoord);
             }
         }
+        this.scope.$digest();
     };
 
     /**
