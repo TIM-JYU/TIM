@@ -4,6 +4,9 @@ class CalculatorOp {
     }
 }
 
+// See https://regex101.com/r/e5iqja/latest
+const num = "((?:(?:[-+][0-9]+)|(?:[0-9]*))(?:\\.[0-9]*)?)";
+
 class Command extends  CalculatorOp {
     op() {
         return "";
@@ -14,7 +17,6 @@ class Command extends  CalculatorOp {
     }
 
     calc(s) {
-        let num = "(-?[0-9]*(?:\.[0-9]*)?)";
         let re = new RegExp("^ *("+this.op()+")?$", "i")
         let r = re.exec(s);
         if (!r) return undefined;
@@ -34,7 +36,6 @@ class FuncRROperation extends  CalculatorOp {
     }
 
     calc(s) {
-        let num = "(-?[0-9]*(?:\\.[0-9]*)?)";
         let re = new RegExp("^ *("+this.op()+") *\\(? *" + num + "?\\)?$", "i")
         let r = re.exec(s);
         if (!r) return undefined;
@@ -56,7 +57,6 @@ class BinOperation extends  CalculatorOp {
     }
 
     calc(s) {
-        let num = "(-?[0-9]*(?:\\.[0-9])*)";
         let re = new RegExp("^ *" + num + "? *("+this.op()+") *" + num + "$", "i")
         let r = re.exec(s);
         if (!r) return undefined;
