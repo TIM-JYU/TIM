@@ -7,6 +7,11 @@ class CalculatorOp {
 // See https://regex101.com/r/e5iqja/latest
 const num = "((?:(?:[-+][0-9]+)|(?:[0-9]*))(?:\\.[0-9]*)?(?:[eE]-?[0-9]+)?)";
 
+function getnum(s) {
+    if ((""+s).toUpperCase().startsWith("E")) s = "1"+s;
+    return parseFloat(s);
+}
+
 class Command extends  CalculatorOp {
     op() {
         return "";
@@ -42,7 +47,7 @@ class FuncRROperation extends  CalculatorOp {
         let o = r[1];
         let a = r[2];
         if (a==="" || a === undefined) a = this.calculator.lastResult;
-        let res = this.doCalc(parseFloat(a));
+        let res = this.doCalc(getnum(a));
         return {res: res, calc: `${o} ${a} = ${res}`};
     }
 }
@@ -64,7 +69,7 @@ class BinOperation extends  CalculatorOp {
         let o = r[2];
         let b = r[3];
         if (a==="" || a === undefined) a = this.calculator.lastResult;
-        let res = this.doCalc(parseFloat(a),parseFloat(b));
+        let res = this.doCalc(getnum(a),getnum(b));
         return {res: res, calc: `${a} ${o} ${b} = ${res}`};
     }
 }
