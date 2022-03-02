@@ -177,8 +177,7 @@ export class DraggableController implements IController {
 
         // Move element towards an anchor point selected by the user.
         window.addEventListener("resize", () => {
-            this.doMove(this.lastPageXYPos);
-            this.ensureVisibleInViewport();
+            void this.restoreSizeAndPosition(VisibilityFix.Partial);
         });
     }
 
