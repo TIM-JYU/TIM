@@ -5,7 +5,7 @@ class CalculatorOp {
 }
 
 // See https://regex101.com/r/e5iqja/latest
-const num = "((?:(?:[-+][0-9]+)|(?:[0-9]*))(?:\\.[0-9]*)?)";
+const num = "((?:(?:[-+][0-9]+)|(?:[0-9]*))(?:\\.[0-9]*)?(?:[eE]-?[0-9]+)?)";
 
 class Command extends  CalculatorOp {
     op() {
