@@ -153,7 +153,7 @@ class Calculator {
         let result = [];
         let lines = s.split("\n");
         for (const line of lines) {
-            let tline = line.trim();
+            let tline = line.replace(/ *#.*/, "").trim();
             if (!tline) continue;
             let r = this.calcOne(tline);
             result.push(r);
