@@ -1,10 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>Calculator</title>
+    <script src="http://localhost/csstatic/dfa/calculator.js"></script>
 </head>
 <body>
-$END$
+<script>
+    function setData(data) {
+        let calculator = new Calculator(data.params);
+        let res = calculator.calc(data.code);
+        return res;
+    }
+</script>
+<!--
+<script>
+    const code = `
+3.5+4
+5-2
+*3
+/9
+*45
+sin
+rad
+sin 1
+deg
+sin(45)
+`;
+    let res = setData({code: code});
+</script>
+-->
 </body>
 </html>
