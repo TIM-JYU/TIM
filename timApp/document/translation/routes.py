@@ -20,6 +20,7 @@ from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import verify_json_params, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util import logger
+from timApp.document.translation.translator import KonttiTranslator
 
 
 def valid_language_id(lang_id):
@@ -52,24 +53,13 @@ def create_translation_route(tr_doc_id, language):
     add_reference_pars(cite_doc, src_doc, "tr")
 
     # Translate each paragraph sequentially
-    parsorig = list(tr.document.get_source_document())
-    parstr = list(tr.document)
-    for orig_par, tr_par in zip(parsorig, parstr):
-        # Translate text - whatever it is - into Kontti-language
-        # https://fi.wikipedia.org/wiki/Kontinkieli
-        new_text = ""
-        for line in orig_par.md.splitlines():
-            words = line.split()
-            if not words:
-                continue
-            for word in words:
-                if len(word) < 3:
-                    continue
-                new_text += "Ko" if word[0].isupper() else "ko"
-                new_text += word[2:] + word[0].lower() + word[1] + "ntti "
-            new_text += "\n"
-        logger.log_info(new_text)
-        tr.document.modify_paragraph(tr_par.id, new_text)
+    translator = KonttiTranslator()
+    # Be careful about closing the underlying file when iterating document
+    with tr.document.get_source_document().__iter__() as doc_iter:
+        for orig_par, tr_par in zip(doc_iter, tr.document):
+            new_text = translator.translate(orig_par.md)
+            logger.log_info(new_text)
+            tr.document.modify_paragraph(tr_par.id, new_text)
 
     if isinstance(doc, DocEntry):
         de = doc
