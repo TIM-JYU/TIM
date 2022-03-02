@@ -90,6 +90,7 @@ export type IEditorResult =
     | {type: "save"; text: string}
     | {type: "delete"}
     | {type: "markunread"}
+    | {type: "translated"}
     | {type: "cancel"};
 
 const MenuItemFileObject = t.intersection([
@@ -1463,6 +1464,15 @@ ${backTicks}
         if (this.resolve.params.initialText === this.editor!.getEditorText()) {
             this.close({type: "markunread"});
         }
+    }
+
+    showTranslated() {
+        const par = this.getExtraData().par;
+        return !par?.getReadline()?.classList.contains("translated");
+    }
+
+    translateClicked() {
+        window.confirm("This function is unavailable right now.");
     }
 
     close(r: IEditorResult) {
