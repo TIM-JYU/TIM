@@ -14,7 +14,7 @@ class Command extends  CalculatorOp {
     }
 
     calc(s) {
-        let num = "(-?[0-9]*(?:\.[0-9])?)";
+        let num = "(-?[0-9]*(?:\.[0-9]*)?)";
         let re = new RegExp("^ *("+this.op()+")?$", "i")
         let r = re.exec(s);
         if (!r) return undefined;
@@ -34,7 +34,7 @@ class FuncRROperation extends  CalculatorOp {
     }
 
     calc(s) {
-        let num = "(-?[0-9]*(?:\.[0-9])?)";
+        let num = "(-?[0-9]*(?:\\.[0-9]*)?)";
         let re = new RegExp("^ *("+this.op()+") *\\(? *" + num + "?\\)?$", "i")
         let r = re.exec(s);
         if (!r) return undefined;
@@ -56,7 +56,7 @@ class BinOperation extends  CalculatorOp {
     }
 
     calc(s) {
-        let num = "(-?[0-9]*(?:\.[0-9])?)";
+        let num = "(-?[0-9]*(?:\\.[0-9])*)";
         let re = new RegExp("^ *" + num + "? *("+this.op()+") *" + num + "$", "i")
         let r = re.exec(s);
         if (!r) return undefined;
@@ -146,7 +146,7 @@ class Calculator {
                 return r;
             }
         }
-        return {res: "Error!", calc: s};
+        return {res: "Error!", calc: "Error: " + s};
     }
 
     calc(s) {
