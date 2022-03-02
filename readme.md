@@ -12,7 +12,6 @@ for creating interactive documents such as:
 * manuals
 * workbooks
 * discussions
-* moro2 - validate test 2
 
 TIM can be used for:
 
