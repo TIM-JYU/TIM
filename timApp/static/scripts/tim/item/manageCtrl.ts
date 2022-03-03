@@ -21,6 +21,7 @@ import {
     IFullDocument,
     IItem,
     IEditableTranslation,
+    ILanguages,
     redirectToItem,
     getItemTypeName,
 } from "./IItem";
@@ -41,6 +42,8 @@ export class PermCtrl implements IController {
     private newFolderName: string;
     private hasMoreChangelog?: boolean;
     private translations: Array<IEditableTranslation> = [];
+    private sourceLanguages: Array<ILanguages> = [];
+    private targetLanguages: Array<ILanguages> = [];
     private newTranslation: {language: string; title: string};
     private accessTypes: Array<unknown>; // TODO proper type
     private orgs: IGroup[];
@@ -540,6 +543,34 @@ export class PermCtrl implements IController {
         } else {
             await showMessageDialog(r.result.data.error);
         }
+    }
+
+    updateLanguages() {
+        // TODO: Do this properly
+        this.sourceLanguages.push({name: "Finnish", code: "FI"});
+        this.sourceLanguages.push({name: "English", code: "EN"});
+
+        this.targetLanguages.push({name: "Finnish", code: "FI"});
+        this.targetLanguages.push({name: "English", code: "EN"});
+    }
+
+    checkTranslatability() {
+        if (
+            this.newTranslation.title == "" ||
+            this.newTranslation.language == ""
+        ) {
+            return false;
+            // TODO: Implement checks for source language!
+        } else {
+            for (const language of this.targetLanguages) {
+                if (
+                    language.code == this.newTranslation.language.toUpperCase()
+                ) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     async getNotifySettings() {
