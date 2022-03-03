@@ -22,6 +22,7 @@ import {TimePipe} from "tim/ui/time.pipe";
 import {CapitalizePipe} from "tim/ui/capitalize.pipe";
 import {LanguageSelectorComponent} from "tim/user/language-selector.component";
 import {BookmarkNamePipe} from "tim/bookmark/bookmark-name.pipe";
+import {SwitchButtonComponent} from "tim/sidebarmenu/util/switch-button.component";
 import {PluginFrameComponent} from "./plugin-frame.component";
 import {LoadingComponent} from "./loading.component";
 import {MarkupErrorComponent} from "./markup-error.component";
@@ -52,6 +53,7 @@ import {CloseButtonComponent} from "./close-button.component";
         TimePipe,
         CapitalizePipe,
         BookmarkNamePipe,
+        SwitchButtonComponent,
     ],
     exports: [
         MarkupErrorComponent,
@@ -77,6 +79,7 @@ import {CloseButtonComponent} from "./close-button.component";
         TimePipe,
         CapitalizePipe,
         BookmarkNamePipe,
+        SwitchButtonComponent,
     ],
     imports: [CommonModule, FormsModule],
 })

@@ -142,11 +142,11 @@ class DocInfo(Item):
         )
 
         for preamble_name in absolute_path_parts:
-            path_parts = preamble_name.split("/")[1:-2]
+            preamble_path_parts = preamble_name.split("/")[1:-2]
             preamble_name = preamble_name.split("/")[-1]
             paths.extend(
                 f"{p}{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}"
-                for p in accumulate(part + "/" for part in path_parts)
+                for p in accumulate(part + "/" for part in preamble_path_parts)
             )
 
         # Remove duplicates and then self-reference
@@ -198,7 +198,7 @@ class DocInfo(Item):
 
         q = Notification.query.options(
             joinedload(Notification.user).joinedload(User.groups)
-        ).filter(Notification.doc_id.in_([f.id for f in items]))
+        ).filter(Notification.block_id.in_([f.id for f in items]))
         q = q.filter(condition)
         return q.all()
 

@@ -43,6 +43,9 @@ const sizeBreakpoint = "md";
             <div class="btn btn-default btn-sm pull-left" (click)="nextVisibilityState()" i18n-title title="Show menu">
                 <i class="glyphicon glyphicon-{{nextGlyphicon}}" i18n-title title="Open sidebar"></i>
             </div>
+            <ng-container *ngIf="showTabset">
+                <tim-switch-button></tim-switch-button>
+            </ng-container>
             <tabset id="menuTabs" [class.show]="showTabset" #tabs>
                 <ng-container *ngFor="let menuTab of menuTabs">
                     <tab *ngIf="tabsVisTable[menuTab.id]"
@@ -154,7 +157,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         // Previously, old sidebar menu could make do with ng-ifs to detect which one to show.
         // Here, to simplify code, we use data-based approach to defining tabs.
         // Because of that, we need to implement custom change detection.
-        // Therefore, the visible() checks should generally be really small and fast.
+        // Therefore, the visible() checks should generally be very small and fast.
         let shouldSet = false;
         const visTabs: Record<string, boolean> = {};
         for (const tab of this.menuTabs) {

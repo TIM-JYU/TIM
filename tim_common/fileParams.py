@@ -10,7 +10,7 @@ import re
 import shlex
 import shutil
 import urllib
-from typing import Any, Callable, Optional
+from typing import Any, Callable
 from urllib.parse import urlparse, parse_qs
 from urllib.request import urlopen, Request
 

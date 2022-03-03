@@ -136,6 +136,7 @@ class CommentTest(NotifyTestBase):
                 "email_comment_add": True,
                 "email_comment_modify": True,
                 "email_doc_modify": True,
+                "email_answer_add": False,
             },
         )
         process_pending_notifications()

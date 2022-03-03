@@ -14,6 +14,7 @@ from file_util import (
     default_filename,
     listify,
     is_parent_of,
+    is_safe_path,
 )
 from git.gitlib import get_lib
 from git.util import Settings as GitSettings, RemoteInfo
@@ -226,6 +227,8 @@ class UploadSource(FileSource):
 
     def copy(self, destination_path: str) -> None:
         # we'll allow this so teachers can upload a file and include it in the task. Though, it is not easy
+        if not is_safe_path(destination_path):
+            raise PermissionError("Destination path is not safe")
         dpath = Path(destination_path)
         if dpath.exists():
             rm(dpath)
@@ -279,6 +282,8 @@ class MasterSource(FileSource):
 
     @classinstancemethod
     def copy(cls, self, destination_path: str) -> None:
+        if not is_safe_path(destination_path):
+            raise PermissionError("Cannot copy to the destination path")
         if self.is_root and self.language.rootpath is None:
             raise ValueError(
                 "Cannot copy from master task: cannot determine task path (root path not specified)"
@@ -371,6 +376,8 @@ class GitSource(ExternalFileSource):
 
     @classinstancemethod
     def copy(cls, self, destination_path: str) -> None:
+        if not is_safe_path(destination_path):
+            raise PermissionError("Cannot copy to the destination path")
         count = self.lib.copy_files(self.sub_path, destination_path, self.glob)
         if count == 0:
             raise ValueError(
