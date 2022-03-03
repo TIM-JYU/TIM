@@ -5,12 +5,13 @@ class CalculatorOp {
 }
 
 // See https://regex101.com/r/e5iqja/latest
-const num = "((?:(?:[-+][0-9]+)|(?:[0-9]*))(?:\\.[0-9]*)?(?:[eE]-?[0-9]+)?|-?pi|-?π)";
+const num = "((?:(?:[-+][0-9]+)|(?:[0-9]*))(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?|-?pi|-?π)";
 
 function getnum(s) {
-    if ((""+s).toUpperCase().startsWith("E")) s = "1"+s;
+    s = ""+s;
+    if (s.toUpperCase().startsWith("E")) s = "1"+s;
     if (s === "pi" || s === "π") return Math.PI;
-    return parseFloat(s);
+    return parseFloat(s.replace(",", "."));
 }
 
 class Command extends  CalculatorOp {
