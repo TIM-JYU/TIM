@@ -1467,11 +1467,11 @@ ${backTicks}
     }
 
     showTranslated() {
-        const par = this.getExtraData().par;
         if (this.checkIfOriginal()) {
             return false;
         }
-        return !par?.getReadline()?.classList.contains("translated");
+        // TODO: Check for automatic translation's availability
+        return true;
     }
 
     checkIfOriginal() {
