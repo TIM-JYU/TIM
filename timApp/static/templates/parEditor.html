@@ -43,7 +43,10 @@
         <span ng-show="$ctrl.proeditor">
         <button class="btn btn-danger" ng-disabled="$ctrl.saving" ng-show="$ctrl.getOptions().showDelete" ng-click="$ctrl.deleteClicked()">Delete</button>
         </span>
-        <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showUnread()" ng-click="$ctrl.unreadClicked()" style="right: 2px; position: absolute;">Mark as unread</button>
+        <div class="hidingButtonArea">
+            <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showTranslated()" ng-click="$ctrl.translateClicked()" style="right: 2px;">Translate</button>
+            <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showUnread()" ng-click="$ctrl.unreadClicked()" style="right: 2px;">Mark as unread</button>
+        </div>
     </div>
     <div class="choices" ng-show="$ctrl.getOptions().choices">
         <div ng-repeat="choice in $ctrl.getOptions().choices" title="{{ choice.title }}">

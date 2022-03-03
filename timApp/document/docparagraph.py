@@ -1189,9 +1189,6 @@ class DocParagraph:
             and reached_par.get_hash() != last_ref.get_attr("rt")
         )
 
-    """
-    TODO: How does this even work? Let alone how can I make it work??
-    """
     def is_translation_checked(self):
         if not self.ref_chain:
             return False

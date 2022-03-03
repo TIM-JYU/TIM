@@ -866,6 +866,11 @@ pareditor {
     margin: 2px;
 }
 
+.hidingButtonArea {
+    margin-bottom: 0.6em;
+    float: right;
+}
+
 li.tab.active, li.tab.pinned {
     background: $tab-bg-color;
 }

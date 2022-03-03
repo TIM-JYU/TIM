@@ -90,6 +90,7 @@ export type IEditorResult =
     | {type: "save"; text: string}
     | {type: "delete"}
     | {type: "markunread"}
+    | {type: "translated"}
     | {type: "cancel"};
 
 const MenuItemFileObject = t.intersection([
@@ -1463,6 +1464,23 @@ ${backTicks}
         if (this.resolve.params.initialText === this.editor!.getEditorText()) {
             this.close({type: "markunread"});
         }
+    }
+
+    showTranslated() {
+        if (this.checkIfOriginal()) {
+            return false;
+        }
+        // TODO: Check for automatic translation's availability
+        return true;
+    }
+
+    checkIfOriginal() {
+        const tags = this.getExtraData().tags;
+        return tags.marktranslated == undefined;
+    }
+
+    translateClicked() {
+        window.confirm("This function is unavailable right now.");
     }
 
     close(r: IEditorResult) {
