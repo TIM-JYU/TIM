@@ -479,7 +479,7 @@ class RPN {
             this.maxStack = Math.max(this.stack.length, this.maxStack);
             lastlinenr = cmd.linenumber;
             if (error && this.isShowErrors()) this.addError(`${cmd.linenumber}: ${error}`);
-            if (error && this.params.stopOnError) break;
+            if (this.errors.length > 0 && this.params.stopOnError) break;
             nr++;
         }
         return nr;
