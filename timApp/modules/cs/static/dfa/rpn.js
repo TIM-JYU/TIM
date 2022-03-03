@@ -309,6 +309,7 @@ class RPN {
      */
     constructor(s, params) {
         params = params || {};
+        params.stopOnError = params.stopOnError || true;
         this.params = params;
         let initial = params["initial"] || "";
         this.allowed = params["allowed"] || [];
@@ -478,6 +479,7 @@ class RPN {
             this.maxStack = Math.max(this.stack.length, this.maxStack);
             lastlinenr = cmd.linenumber;
             if (error && this.isShowErrors()) this.addError(`${cmd.linenumber}: ${error}`);
+            if (error && this.params.stopOnError) break;
             nr++;
         }
         return nr;
