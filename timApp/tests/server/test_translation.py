@@ -314,6 +314,7 @@ c
         t = self.create_translation(d)
         self.json_post(f"/markTranslated/{t.id}")
         self.check_outofdate_count(t, 0)
+        # TODO On current version, this test fails because translating now actually modifies each paragraph (changelog length grows by the amount of paragraphs).
         self.assertEqual(6, len(t.document.get_changelog().entries))
         self.json_post(f"/markTranslated/{t.id}")
         t.document.clear_mem_cache()

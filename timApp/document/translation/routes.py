@@ -20,7 +20,7 @@ from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import verify_json_params, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util import logger
-from timApp.document.translation.translator import KonttiTranslator
+from timApp.document.translation.translator import DeepLTranslator
 
 
 def valid_language_id(lang_id):
@@ -52,12 +52,28 @@ def create_translation_route(tr_doc_id, language):
     # This call gets references to original document and attaches them to the new translated document
     add_reference_pars(cite_doc, src_doc, "tr")
 
-    # Translate each paragraph sequentially
-    translator = KonttiTranslator()
+    # Get the API-key from environment
+    try:
+        from os import environ
+
+        api_key = environ["DEEPL_API_KEY"]
+        translator = DeepLTranslator(api_key)
+        usage = translator.usage()
+        logger.log_info(
+            "Current DeepL API usage: "
+            + str(usage.character_count)
+            + "/"
+            + str(usage.character_limit)
+        )
+    except KeyError:
+        raise Exception(
+            "Please set the DEEPL_API_KEY=<your API key> into your environment"
+        )
     # Be careful about closing the underlying file when iterating document
     with tr.document.get_source_document().__iter__() as doc_iter:
+        # Translate each paragraph sequentially
         for orig_par, tr_par in zip(doc_iter, tr.document):
-            new_text = translator.translate(orig_par.md)
+            new_text = translator.translate(orig_par.md, "FI", "EN-GB")
             logger.log_info(new_text)
             tr.document.modify_paragraph(tr_par.id, new_text)
 
