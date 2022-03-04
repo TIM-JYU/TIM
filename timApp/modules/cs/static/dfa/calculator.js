@@ -1,6 +1,29 @@
+function roundToNearest(num, decimals) {
+  decimals = decimals || 0;
+  var p = Math.pow(10, decimals);
+  var n = (num * p) * (1 + Number.EPSILON);
+  return Math.round(n) / p;
+}
+
 class CalculatorOp {
     constructor(calculator) {
         this.calculator = calculator;
+    }
+
+    op() {
+        return "";
+    }
+
+    name() {
+        return this.op(); // needed if name is different than op
+    }
+
+    doCalc() {
+        return undefined;
+    }
+
+    r(v) {
+        return roundToNearest(v, this.calculator.params.decimals);
     }
 }
 
@@ -15,14 +38,6 @@ function getnum(s) {
 }
 
 class Command extends  CalculatorOp {
-    op() {
-        return "";
-    }
-
-    doCalc() {
-        return undefined;
-    }
-
     calc(s) {
         let re = new RegExp("^ *("+this.op()+")?$", "i")
         let r = re.exec(s);
@@ -34,10 +49,6 @@ class Command extends  CalculatorOp {
 }
 
 class FuncRROperation extends  CalculatorOp {
-    op() {
-        return "";
-    }
-
     doCalc(a) {
         return 0;
     }
@@ -49,16 +60,12 @@ class FuncRROperation extends  CalculatorOp {
         let o = r[1];
         let a = r[2];
         if (a==="" || a === undefined) a = this.calculator.lastResult;
-        let res = this.doCalc(getnum(a));
+        let res = this.r(this.doCalc(getnum(a)));
         return {res: res, calc: `${o} ${a} = ${res}`};
     }
 }
 
 class BinOperation extends  CalculatorOp {
-    op() {
-        return "";
-    }
-
     doCalc(a,b) {
 
     }
@@ -71,7 +78,7 @@ class BinOperation extends  CalculatorOp {
         let o = r[2];
         let b = r[3];
         if (a==="" || a === undefined) a = this.calculator.lastResult;
-        let res = this.doCalc(getnum(a),getnum(b));
+        let res = this.r(this.doCalc(getnum(a),getnum(b)));
         return {res: res, calc: `${a} ${o} ${b} = ${res}`};
     }
 }
@@ -96,6 +103,7 @@ class Rad extends Command {
 
 class Plus extends BinOperation {
     op() { return "\\+"; }
+    name() { return "+"; }
     doCalc(a, b) { return a + b; }
 }
 
@@ -106,6 +114,7 @@ class Minus extends BinOperation {
 
 class Mul extends BinOperation {
     op() { return "\\*"; }
+    name() { return "*"; }
     doCalc(a, b) { return a * b; }
 }
 
@@ -129,22 +138,49 @@ class Sqrt extends FuncRROperation {
     doCalc(a) { return Math.sqrt(a); }
 }
 
+const operations = [
+  Plus,
+  Minus,
+  Mul,
+  Div,
+  Sin,
+  Cos,
+  Sqrt,
+  Deg,
+  Rad,
+];
+
 
 class Calculator {
+    isIn(reglist, cmd, def, err) {
+        let name = cmd.name();
+        if (!reglist || reglist.length === 0) return def;
+        for (let rs of reglist) {
+            if (rs === "+" || rs === "*") rs = "\\" + rs;
+            const re = new RegExp("^" + rs + "$");
+            if (re.test(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     constructor(params) {
-        this.params = params;
-        this.deg = true;
+        this.params = params || {};
+        this.params.decimals = this.params.decimals || 13;
+        this.deg = this.params.deg || true;
         this.lastResult = 0;
         this.operations = [];
-        this.operations.push(new Plus(this));
-        this.operations.push(new Minus(this));
-        this.operations.push(new Mul(this));
-        this.operations.push(new Div(this));
-        this.operations.push(new Sin(this));
-        this.operations.push(new Cos(this));
-        this.operations.push(new Sqrt(this));
-        this.operations.push(new Deg(this));
-        this.operations.push(new Rad(this));
+        for (const op of operations) {
+            const oper = new op(this);
+            if (!this.isIn(this.params.allowed, oper, true, "not in allowed commands")) {
+                continue;
+            }
+            if (this.isIn(this.params.illegals, oper, false, "in illegal commands")) {
+                continue;
+            }
+            this.operations.push(oper);
+        }
     }
 
     toAngle(a) {
@@ -156,7 +192,7 @@ class Calculator {
         for (const op of this.operations) {
             let r = op.calc(s);
             if (r) {
-                this.lastResult = r.res;
+                if (r.res !== undefined) this.lastResult = r.res;
                 return r;
             }
         }
@@ -167,6 +203,7 @@ class Calculator {
         let result = [];
         let lines = s.split("\n");
         for (const line of lines) {
+            // remove comments # and trim
             let tline = line.replace(/ *#.*/, "").trim();
             if (!tline) continue;
             let r = this.calcOne(tline);

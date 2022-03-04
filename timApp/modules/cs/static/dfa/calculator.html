@@ -16,15 +16,12 @@
 <!-- -->
 <script>
     const code = `
-sin 3.14
-sin 3,1,4
-sqrt 81.81
-2.345+34.354
-e9+e8
---2
+rad
 π/2
+*3
+cos
 `;
-    let res = setData({code: code});
+    let res = setData({code: code, params: {xallowed: ["/", "+", ], xillegals: ["sin"]}});
     console.log(res);
 </script>
 -->
