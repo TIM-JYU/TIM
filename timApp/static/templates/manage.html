@@ -211,14 +211,11 @@
                 <uib-tab heading="Create a translation">
                     <uib-tabset active="-1">
                         <uib-tab heading="Languages available for automatic translation">
-                            <button class="timButton"
-                            ng-click="$ctrl.updateLanguages()">Update the translations</button>
-                            <!-- TODO: Find the place to put the update call in --!>
-                            <p>Source languages:</p> <!-- TODO: Implement calling the function for this! --!>
+                            <p>Source languages:</p>
                             <ul ng-repeat="li in $ctrl.sourceLanguages">
                                 <li>{{li.name}} ({{li.code}})</li>
                             </ul>
-                            <p>Target languages:</p> <!-- TODO: Implement calling the function for this! --!>
+                            <p>Target languages:</p>
                             <ul ng-repeat="li in $ctrl.targetLanguages">
                                 <li>{{li.name}} ({{li.code}})</li>
                             </ul>
@@ -233,10 +230,10 @@
                                ng-model="$ctrl.newTranslation.language"
                                placeholder="Short language identifier, e.g. fi or en"/></div>
                     <div ng-show="$ctrl.checkTranslatability()">
-                        <p>(if the languages are available) This document will be automatically translated.</p>
+                        <p>This document will be automatically translated on creation.</p>
                     </div>
                     <div ng-show="!$ctrl.checkTranslatability()">
-                        <p>(if the languages are unavailable) This document will not be automatically translated.</p>
+                        <p>This document will not be automatically translated on creation.</p>
                     </div>
                     <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title"
                             class="timButton"

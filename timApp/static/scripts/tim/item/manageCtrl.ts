@@ -90,6 +90,7 @@ export class PermCtrl implements IController {
 
     async $onInit() {
         this.getNotifySettings();
+        this.updateLanguages();
         if (this.item.isFolder) {
             this.newName = this.item.name;
             this.newFolderName = this.item.location;
@@ -554,19 +555,37 @@ export class PermCtrl implements IController {
         this.targetLanguages.push({name: "English", code: "EN"});
     }
 
+    findSourceDoc() {
+        let begin: number;
+        for (begin = 0; begin < this.translations.length; begin++) {
+            if (
+                this.translations[begin].id ==
+                this.translations[begin].src_docid
+            ) {
+                return begin;
+            }
+        }
+        return -1;
+    }
+
     checkTranslatability() {
         if (
             this.newTranslation.title == "" ||
             this.newTranslation.language == ""
         ) {
             return false;
-            // TODO: Implement checks for source language!
         } else {
-            for (const language of this.targetLanguages) {
-                if (
-                    language.code == this.newTranslation.language.toUpperCase()
-                ) {
-                    return true;
+            const position = this.findSourceDoc();
+            for (const target of this.targetLanguages) {
+                if (target.code == this.newTranslation.language.toUpperCase()) {
+                    for (const source of this.sourceLanguages) {
+                        if (
+                            source.code ==
+                            this.translations[position].lang_id.toUpperCase()
+                        ) {
+                            return true;
+                        }
+                    }
                 }
             }
         }
