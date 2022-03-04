@@ -32,17 +32,15 @@ class CalculatorOp {
         if (s === "") return this.calculator.lastResult;
         if (s.toUpperCase().startsWith("E")) s = "1"+s;
         if (s === "pi" || s === "π") return Math.PI;
-        if (s.startsWith("r")) {
-            if (s==="r") return this.calculator.lastResult;
-            let idx = parseInt(s.substring(1));
-            idx = Math.max(0, Math.min(idx, this.calculator.results.length-1));
-            return this.calculator.results[idx];
-        }
         if (s.startsWith("p")) {
             if (s==="p") return this.calculator.lastResult;
-            let idx = this.calculator.results.length - parseInt(s.substring(1)) -1;
-            idx = Math.max(0, Math.min(idx, this.calculator.results.length-1));
-            return this.calculator.results[idx];
+            let idx = this.calculator.row - parseInt(s.substring(1));
+            idx = Math.max(0, Math.min(idx, this.calculator.row-1));
+            return this.calculator.mem["r"+idx] || 0;
+        }
+        if (s[0].match(/[a-z]/)) {
+            let val = this.calculator.mem[s];
+            return val || 0;
         }
         return parseFloat(s.replace(",", "."));
     }
@@ -50,7 +48,7 @@ class CalculatorOp {
 }
 
 // See https://regex101.com/r/e5iqja/latest
-const num = "((?:(?:[-+][0-9]+)|(?:[0-9]*))(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?|-?pi|-?π|r[0-9]*|p[0-9]*)";
+const num = "((?:(?:[-+][0-9]+)|(?:[0-9]*))(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?|-?pi|-?π|[a-z][a-z0-9]*)";
 
 class Command extends  CalculatorOp {
     calc(s) {
@@ -184,8 +182,9 @@ class Calculator {
         this.params.decimals = this.params.decimals || 13;
         this.deg = this.params.deg || true;
         this.lastResult = 0;
-        this.results = [];
         this.operations = [];
+        this.mem = {};
+        this.row = 0;
         for (const op of operations) {
             const oper = new op(this);
             if (!this.isIn(this.params.allowed, oper, true, "not in allowed commands")) {
@@ -217,19 +216,30 @@ class Calculator {
     calc(s) {
         let result = [];
         let lines = s.split("\n");
-        this.results = [];
         let i = 0;
         for (const line of lines) {
-            // remove comments # and trim
             i++;
-            this.results[i] = this.lastResult;
+            this.row = i;
+            this.mem["r"] = this.lastResult;
+            // remove comments # and trim
             let tline = line.replace(/ *#.*/, "").trim();
             if (!tline) continue;
+            const parts = tline.split("->");
+            let toMem = "";
+            const mi = tline.indexOf("->");
+            if (mi >= 0) {
+                toMem = " " + tline.substring(mi);
+            }
+            tline = parts[0].trim();
             let r = this.calcOne(tline);
-            r.calc = `r${i}: ${r.calc}`;
+            r.calc = `r${i}: ${r.calc}${toMem}`;
             result.push(r);
-            this.results[i] = r.res;
-            this.results[0] = this.lastResult;
+            this.mem["r"+i] = r.res;
+            this.mem["r"] = this.lastResult;
+            for (let i=1; i<parts.length; i++) {
+                const mem = parts[i].trim();
+                if (mem) this.mem[mem] = r.res;
+            }
         }
         return result;
     }
