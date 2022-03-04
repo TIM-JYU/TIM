@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from subprocess import run as run_subprocess
-from json import json_loads
+from json import loads as json_loads
 
 
 @dataclass
@@ -102,7 +102,7 @@ class DeepLTranslator(ITranslator):
             capture_output=True,
         )
         if response.returncode == 0 and response.stdout:
-            resp_json = json.loads(response.stdout.decode("utf-8"))
+            resp_json = json_loads(response.stdout.decode("utf-8"))
             return Usage(
                 character_count=int(resp_json["character_count"]),
                 character_limit=int(resp_json["character_limit"]),
