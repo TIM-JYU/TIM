@@ -17,11 +17,12 @@
 <script>
     const code = `
 rad
-π/2
-*3
-cos
+3*3
+4*4
+p2+p1
+sqrt
 `;
-    let res = setData({code: code, params: {xallowed: ["/", "+", ], xillegals: ["sin"]}});
+    let res = setData({code: code.substring(1), params: {xallowed: ["/", "+", ], xillegals: ["sin"]}});
     console.log(res);
 </script>
 -->

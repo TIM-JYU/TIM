@@ -25,17 +25,32 @@ class CalculatorOp {
     r(v) {
         return roundToNearest(v, this.calculator.params.decimals);
     }
+
+    getnum(s) {
+        if (s === undefined) return this.calculator.lastResult;
+        s = (""+s).trim();
+        if (s === "") return this.calculator.lastResult;
+        if (s.toUpperCase().startsWith("E")) s = "1"+s;
+        if (s === "pi" || s === "π") return Math.PI;
+        if (s.startsWith("r")) {
+            if (s==="r") return this.calculator.lastResult;
+            let idx = parseInt(s.substring(1));
+            idx = Math.max(0, Math.min(idx, this.calculator.results.length-1));
+            return this.calculator.results[idx];
+        }
+        if (s.startsWith("p")) {
+            if (s==="p") return this.calculator.lastResult;
+            let idx = this.calculator.results.length - parseInt(s.substring(1)) -1;
+            idx = Math.max(0, Math.min(idx, this.calculator.results.length-1));
+            return this.calculator.results[idx];
+        }
+        return parseFloat(s.replace(",", "."));
+    }
+
 }
 
 // See https://regex101.com/r/e5iqja/latest
-const num = "((?:(?:[-+][0-9]+)|(?:[0-9]*))(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?|-?pi|-?π)";
-
-function getnum(s) {
-    s = ""+s;
-    if (s.toUpperCase().startsWith("E")) s = "1"+s;
-    if (s === "pi" || s === "π") return Math.PI;
-    return parseFloat(s.replace(",", "."));
-}
+const num = "((?:(?:[-+][0-9]+)|(?:[0-9]*))(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?|-?pi|-?π|r[0-9]*|p[0-9]*)";
 
 class Command extends  CalculatorOp {
     calc(s) {
@@ -58,9 +73,8 @@ class FuncRROperation extends  CalculatorOp {
         let r = re.exec(s);
         if (!r) return undefined;
         let o = r[1];
-        let a = r[2];
-        if (a==="" || a === undefined) a = this.calculator.lastResult;
-        let res = this.r(this.doCalc(getnum(a)));
+        let a = this.getnum(r[2]);
+        let res = this.r(this.doCalc(a));
         return {res: res, calc: `${o} ${a} = ${res}`};
     }
 }
@@ -74,11 +88,11 @@ class BinOperation extends  CalculatorOp {
         let re = new RegExp("^ *" + num + "? *("+this.op()+") *" + num + "$", "i")
         let r = re.exec(s);
         if (!r) return undefined;
-        let a = r[1];
+        let a = this.getnum(r[1]);
         let o = r[2];
-        let b = r[3];
+        let b = this.getnum(r[3]);
         if (a==="" || a === undefined) a = this.calculator.lastResult;
-        let res = this.r(this.doCalc(getnum(a),getnum(b)));
+        let res = this.r(this.doCalc(a,b));
         return {res: res, calc: `${a} ${o} ${b} = ${res}`};
     }
 }
@@ -170,6 +184,7 @@ class Calculator {
         this.params.decimals = this.params.decimals || 13;
         this.deg = this.params.deg || true;
         this.lastResult = 0;
+        this.results = [];
         this.operations = [];
         for (const op of operations) {
             const oper = new op(this);
@@ -202,12 +217,19 @@ class Calculator {
     calc(s) {
         let result = [];
         let lines = s.split("\n");
+        this.results = [];
+        let i = 0;
         for (const line of lines) {
             // remove comments # and trim
+            i++;
+            this.results[i] = this.lastResult;
             let tline = line.replace(/ *#.*/, "").trim();
             if (!tline) continue;
             let r = this.calcOne(tline);
+            r.calc = `r${i}: ${r.calc}`;
             result.push(r);
+            this.results[i] = r.res;
+            this.results[0] = this.lastResult;
         }
         return result;
     }
