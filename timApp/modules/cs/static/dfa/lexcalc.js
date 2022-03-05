@@ -70,28 +70,27 @@ class Lexer {
             let index = this.index;
 
             while (matches.length) {
-                if (this.reject) {
-                    let match = matches.shift();
-                    let result = match.result;
-                    let length = match.length;
-                    this.index += length;
-                    this.reject = false;
-                    this.remove++;
+                if (!this.reject) break;
+                let match = matches.shift();
+                let result = match.result;
+                let length = match.length;
+                this.index += length;
+                this.reject = false;
+                this.remove++;
 
-                    token = match.action.apply(this, result);
-                    if (this.reject) this.index = result.index;
-                    else if (typeof token !== "undefined") {
-                        // noinspection FallThroughInSwitchStatementJS
-                        switch (Object.prototype.toString.call(token)) {
-                            case "[object Array]":
-                                this.tokens = token.slice(1);
-                                token = token[0];
-                            default:
-                                if (length) this.remove = 0;
-                                return token;
-                        }
+                token = match.action.apply(this, result);
+                if (this.reject) this.index = result.index;
+                else if (typeof token !== "undefined") {
+                    // noinspection FallThroughInSwitchStatementJS
+                    switch (Object.prototype.toString.call(token)) {
+                        case "[object Array]":
+                            this.tokens = token.slice(1);
+                            token = token[0];
+                        default:
+                            if (length) this.remove = 0;
+                            return token;
                     }
-                } else break;
+                }
             }
 
             let input = this.input;
@@ -135,23 +134,23 @@ class Lexer {
                 pattern.lastIndex = lastIndex;
                 let result = pattern.exec(input);
 
-                if (result && result.index === lastIndex) {
-                    let j = matches.push({
-                        result: result,
-                        action: rule.action,
-                        length: result[0].length
-                    });
+                if (!result || result.index !== lastIndex) continue;
 
-                    if (rule.global) index = j;
+                let j = matches.push({
+                    result: result,
+                    action: rule.action,
+                    length: result[0].length
+                });
 
-                    while (--j > index) {
-                        let k = j - 1;
+                if (rule.global) index = j;
 
-                        if (matches[j].length > matches[k].length) {
-                            let temple = matches[j];
-                            matches[j] = matches[k];
-                            matches[k] = temple;
-                        }
+                while (--j > index) {
+                    let k = j - 1;
+
+                    if (matches[j].length > matches[k].length) {
+                        let temple = matches[j];
+                        matches[j] = matches[k];
+                        matches[k] = temple;
                     }
                 }
             }
@@ -165,12 +164,9 @@ class Lexer {
 // Parser see: https://gist.github.com/aaditmshah/6683499
 class Parser {
 
-    constructor(table) {
-        this.table = table;
-    }
+    constructor() { }
 
     parse(input) {
-        let table = this.table;
         let output = [];
         let stack = [];
         let index = 0;
@@ -186,38 +182,38 @@ class Parser {
                     while (stack.length) {
                         token = stack.shift();
                         if (token.name() === "(") break;
-                        else output.push(token);
+                        output.push(token);
                     }
 
                     if (token.name() !== "(")
-                        throw new Error("Mismatched parentheses.");
+                        throw new Error("Missing (.");
                     break;
                 default:
-                    if (table.hasOwnProperty(token.name())) {
-                        while (stack.length) {
-                            let punctuator = stack[0].name();
+                    if (token.type() === undefined) {
+                        output.push(token);
+                        break;
+                    }
+                    while (stack.length) {
+                        let punctuator = stack[0].name();
+                        if (punctuator === "(") break;
+                        let operator = token.type();
+                        let precedence = operator.precedence;
+                        let antecedence = stack[0].type().precedence;
 
-                            if (punctuator === "(") break;
+                        if (precedence > antecedence ||
+                            precedence === antecedence &&
+                            operator.associativity === "right") break;
+                        output.push(stack.shift());
+                    }
 
-                            let operator = table[token.name()],
-                                precedence = operator.precedence,
-                                antecedence = table[punctuator].precedence;
-
-                            if (precedence > antecedence ||
-                                precedence === antecedence &&
-                                operator.associativity === "right") break;
-                            else output.push(stack.shift());
-                        }
-
-                        stack.unshift(token);
-                    } else output.push(token);
+                    stack.unshift(token);
             }
         }
 
         while (stack.length) {
             let token = stack.shift();
             if (token.name() !== "(") output.push(token);
-            else throw new Error("Mismatched parentheses.");
+            else throw new Error("Missing ).");
         }
 
         return output;
@@ -236,29 +232,30 @@ function roundToNearest(num, decimals) {
   return Math.round(n) / p2;
 }
 
-let factor = {
-    precedence: 2,
-    associativity: "left"
-};
-
-let term = {
-    precedence: 1,
-    associativity: "left"
-};
-
-let func = {
-    precedence: 1,
-    associativity: "right"
-};
-
 class CalculatorOp {
+
+    static factor = {
+        precedence: 2,
+        associativity: "left"
+    };
+
+    static term = {
+        precedence: 1,
+        associativity: "left"
+    };
+
+    static func = {
+        precedence: 1,
+        associativity: "right"
+    };
 
     constructor(calculator) {
         this.calculator = calculator;
     }
 
     type() {   }
-    op() { return "";  }
+    op() { return "";  }  // regexp to match thos opertation
+    params() { return "";} // regexp options for this match
 
     pop() {
         if (this.calculator.stack.length === 0)
@@ -275,6 +272,8 @@ class CalculatorOp {
     calc() { this.doCalc(); }
     r(v) { return roundToNearest(v, this.calculator.params.decimals);  }
     lexfunc(lexme) { return this;  }
+    allowSignRight() { return true; }
+    checkSign(lastToken) { return this; } // deny 2-3 as a sign
 
     getnum(s) {
         if (s === undefined) return this.calculator.lastResult;
@@ -302,7 +301,7 @@ class Command extends  CalculatorOp {
 }
 
 class FuncRROperation extends  CalculatorOp {
-    type() { return func; }
+    type() { return CalculatorOp.func; }
     doCalc(a) { return 0; }
     output(extraBefore) { return extraBefore + this.name(); }
     extraSpaceAfter() { return " "; }
@@ -320,11 +319,13 @@ class BracketOperation extends  CalculatorOp {
 class LeftBracketOperation extends  BracketOperation {
     op() { return "[(]";}
     name() { return "("; }
+    extraSpaceAfter() { return ""; }
 }
 
 class RightBracketOperation extends  BracketOperation {
     op() { return "[)]";}
     name() { return ")"; }
+    allowSignRight() { return false; }
 }
 
 class ValueOperation extends  CalculatorOp {
@@ -335,6 +336,7 @@ class ValueOperation extends  CalculatorOp {
     name() { return ""+this.value; }
     output(extraBefore) { return extraBefore + this.name(); }
     calc() { this.push(this.value);}
+    allowSignRight() { return false; }
 }
 
 class NumOperation extends  ValueOperation {
@@ -368,8 +370,8 @@ class MemOperation extends  ValueOperation {
 }
 
 class BinOperation extends  CalculatorOp {
+    type() { return CalculatorOp.term; }
     doCalc(a,b) { return 0; }
-
     calc() {
         let b = this.pop();
         let a = this.pop();
@@ -387,29 +389,58 @@ class Rad extends Command {
     calc() { this.calculator.deg = false; }
 }
 
+class SignOperation extends FuncRROperation{
+    type() { return CalculatorOp.func; }
+    extraSpaceAfter() { return ""; }
+    output(extraBefore) { return extraBefore + this.name().trim(); }
+}
+
+class SignMinus extends SignOperation {
+    op() { return " *-"; }
+    name() { return " -"; }
+    calc() {
+        let a = this.pop();
+        this.push(-a);
+    }
+    checkSign(lastToken) {
+        if (lastToken.allowSignRight()) return this;
+        return new Minus(this.calculator);
+    }
+}
+
+class SignPlus extends SignOperation {
+    op() { return " *\\+"; }
+    name() { return " +"; }
+    calc() {  }
+    checkSign(lastToken) {
+        if (lastToken.allowSignRight()) return this;
+        return new Plus(this.calculator);
+    }
+}
+
 class Plus extends BinOperation {
-    op() { return "\\+"; }
+    op() { return " *\\+ "; }
     name() { return "+"; }
-    type() { return term; }
     doCalc(a, b) { return a + b; }
 }
 
 class Minus extends BinOperation {
-    op() { return "-"; }
-    type() { return term; }
+    op() { return " *- "; }
+    // params() { return "g";}
+    name() { return "-"; }
     doCalc(a, b) { return a - b; }
 }
 
 class Mul extends BinOperation {
     op() { return "\\*"; }
     name() { return "*"; }
-    type() { return factor; }
+    type() { return CalculatorOp.factor; }
     doCalc(a, b) { return a * b; }
 }
 
 class Div extends BinOperation {
     op() { return "/"; }
-    type() { return factor; }
+    type() { return CalculatorOp.factor; }
     doCalc(a, b) { return a / b; }
 }
 
@@ -433,6 +464,8 @@ const operations = [
     RightBracketOperation,
     Plus,
     Minus,
+    SignMinus,
+    SignPlus,
     Mul,
     Div,
     Sin,
@@ -470,10 +503,6 @@ class Calculator {
         this.row = 0;
         this.stack = [];
         this.lexer = new Lexer();
-        this.lexer.addRule(/\s+/, function () {
-             /* skip whitespace */
-        });
-        this.parserLexer = {};
         /*
         this.lexer.addRule(/[()]/, function (lexeme) {
              return lexeme; // punctuation (i.e. "(", ")")
@@ -488,14 +517,14 @@ class Calculator {
                 continue;
             }
             this.operations.push(oper);
-            this.lexer.addRule(new RegExp(oper.op()),function (lexme) {
+            this.lexer.addRule(new RegExp(oper.op(), oper.params()),function (lexme) {
                return oper.lexfunc(lexme);
             })
-            const type = oper.type();
-            if (type !== undefined)
-                this.parserLexer[oper.name()] = type;
         }
-        this.parser = new Parser(this.parserLexer);
+        this.lexer.addRule(/\s+/, function () {
+             /* skip whitespace */
+        });
+        this.parser = new Parser();
     }
 
     toAngle(a) {
@@ -508,7 +537,12 @@ class Calculator {
             this.stack = [];
             this.lexer.setInput(s);
             let tokens = [], token;
-            while (token = this.lexer.lex()) tokens.push(token);
+            let lastToken = new LeftBracketOperation(this);
+            while (token = this.lexer.lex()) {
+                token = token.checkSign(lastToken);
+                tokens.push(token);
+                lastToken = token;
+            }
             let cmds = this.parser.parse(tokens);
             let calc = "";
             for (const cmd of cmds) {

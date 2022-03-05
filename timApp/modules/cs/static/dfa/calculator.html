@@ -16,8 +16,24 @@
 <!-- -->
 <script>
     const code = `
-3 + +sin 90
-3 + +sin 90
+(16)
+sqrt sqrt r
+4-2
+rad
+(-3+5) * 2
+sin pi
+2-5*3*(9-7)+4
+4-2
+4--2
+4- -2
+4 - -2
+sin (-pi/2 + pi)
+sin -pi/2 + pi
+4+3
+4-+3
+4+-3
+4--3
+4++3
 `;
     let res = setData({code: code.substring(1), params: {xallowed: ["rad"], xillegals: ["sin"]}});
     console.log(res);
