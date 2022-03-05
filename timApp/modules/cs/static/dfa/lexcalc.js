@@ -338,6 +338,7 @@ class ValueOperation extends  CalculatorOp {
     output(extraBefore) { return extraBefore + this.name(); }
     calc() { this.push(this.value);}
     allowSignRight() { return false; }
+    extraSpaceAfter() { return " "; }
 }
 
 class NumOperation extends  ValueOperation {
