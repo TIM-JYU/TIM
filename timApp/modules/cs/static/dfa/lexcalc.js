@@ -235,7 +235,7 @@ function roundToNearest(num, decimals) {
 class CalculatorOp {
 
     static factor = {
-        precedence: 2,
+        precedence: 3,
         associativity: "left"
     };
 
@@ -245,7 +245,7 @@ class CalculatorOp {
     };
 
     static func = {
-        precedence: 1,
+        precedence: 3,
         associativity: "right"
     };
 
@@ -298,6 +298,7 @@ class CalculatorOp {
 const num = "((?:(?:[-+][0-9]+)|(?:[0-9]*))(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?|-?pi|-?π|[a-z][a-z0-9]*)";
 
 class Command extends  CalculatorOp {
+    output(extraBefore) { return extraBefore + this.name() + " "; }
 }
 
 class FuncRROperation extends  CalculatorOp {
