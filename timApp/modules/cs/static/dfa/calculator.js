@@ -30,8 +30,8 @@ class CalculatorOp {
         if (s === undefined) return this.calculator.lastResult;
         s = (""+s).trim();
         if (s === "") return this.calculator.lastResult;
-        if (s.toUpperCase().startsWith("E")) s = "1"+s;
         if (s === "pi" || s === "π") return Math.PI;
+        if (s === "-pi" || s === "-π") return -Math.PI;
         if (s.startsWith("p")) {
             if (s==="p") return this.calculator.lastResult;
             let idx = this.calculator.row - parseInt(s.substring(1));

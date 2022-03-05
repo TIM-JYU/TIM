@@ -1,33 +1,37 @@
-Lexer.defunct = function (chr) {
-    throw new Error("Unexpected character at index " + (this.index - 1) + ": " + chr);
-};
+// noinspection DuplicatedCode
 
-try {
-    Lexer.engineHasStickySupport = typeof /(?:)/.sticky == 'boolean';
-} catch (ignored) {
-    Lexer.engineHasStickySupport = false;
-}
-try {
-    Lexer.engineHasUnicodeSupport = typeof /(?:)/.unicode == 'boolean';
-} catch (ignored) {
-    Lexer.engineHasUnicodeSupport = false;
-}
+// For Lexer see: https://github.com/aaditmshah/lexer
+class Lexer {
+    deferror(chr) {
+        throw new Error("Unexpected character at index " + (this.index - 1) + ": " + chr);
+    };
 
-function Lexer(defunct) {
-    if (typeof defunct !== "function") defunct = Lexer.defunct;
 
-    var tokens = [];
-    var rules = [];
-    var remove = 0;
-    this.state = 0;
-    this.index = 0;
-    this.input = "";
+    constructor(defunct) {
+        this.defunc = defunct;
+        if (typeof defunct !== "function") this.defunct = this.deferror;
 
-    this.addRule = function (pattern, action, start) {
-        var global = pattern.global;
+        try {
+            Lexer.engineHasStickySupport = typeof /(.)/.sticky == 'boolean';
+        } catch (ignored) {
+            Lexer.engineHasStickySupport = false;
+        }
+        try {
+            Lexer.engineHasUnicodeSupport = typeof /(.)/.unicode == 'boolean';
+        } catch (ignored) {
+            Lexer.engineHasUnicodeSupport = false;
+        }
+
+        this.tokens = [];
+        this.rules = [];
+        this.setInput("")
+    }
+
+    addRule(pattern, action, start) {
+        let global = pattern.global;
 
         if (!global || Lexer.engineHasStickySupport && !pattern.sticky) {
-            var flags = Lexer.engineHasStickySupport ? "gy" : "g";
+            let flags = Lexer.engineHasStickySupport ? "gy" : "g";
             if (pattern.multiline) flags += "m";
             if (pattern.ignoreCase) flags += "i";
             if (Lexer.engineHasUnicodeSupport && pattern.unicode) flags += "u";
@@ -36,7 +40,7 @@ function Lexer(defunct) {
 
         if (Object.prototype.toString.call(start) !== "[object Array]") start = [0];
 
-        rules.push({
+        this.rules.push({
             pattern: pattern,
             global: global,
             action: action,
@@ -44,93 +48,95 @@ function Lexer(defunct) {
         });
 
         return this;
-    };
+    }
 
-    this.setInput = function (input) {
-        remove = 0;
+    setInput(input) {
+        this.remove = 0;
         this.state = 0;
         this.index = 0;
-        tokens.length = 0;
+        this.tokens.length = 0;
         this.input = input;
         return this;
-    };
+    }
 
-    this.lex = function () {
-        if (tokens.length) return tokens.shift();
+    lex() {
+        let token;
+        if (this.tokens.length) return this.tokens.shift();
 
         this.reject = true;
 
         while (this.index <= this.input.length) {
-            var matches = scan.call(this).splice(remove);
-            var index = this.index;
+            let matches = this.scan().splice(this.remove);
+            let index = this.index;
 
             while (matches.length) {
                 if (this.reject) {
-                    var match = matches.shift();
-                    var result = match.result;
-                    var length = match.length;
+                    let match = matches.shift();
+                    let result = match.result;
+                    let length = match.length;
                     this.index += length;
                     this.reject = false;
-                    remove++;
+                    this.remove++;
 
-                    var token = match.action.apply(this, result);
+                    token = match.action.apply(this, result);
                     if (this.reject) this.index = result.index;
                     else if (typeof token !== "undefined") {
+                        // noinspection FallThroughInSwitchStatementJS
                         switch (Object.prototype.toString.call(token)) {
-                        case "[object Array]":
-                            tokens = token.slice(1);
-                            token = token[0];
-                        default:
-                            if (length) remove = 0;
-                            return token;
+                            case "[object Array]":
+                                this.tokens = token.slice(1);
+                                token = token[0];
+                            default:
+                                if (length) this.remove = 0;
+                                return token;
                         }
                     }
                 } else break;
             }
 
-            var input = this.input;
+            let input = this.input;
 
             if (index < input.length) {
                 if (this.reject) {
-                    remove = 0;
-                    var token = defunct.call(this, input.charAt(this.index++));
+                    this.remove = 0;
+                    token = this.defunct.call(this, input.charAt(this.index++));
                     if (typeof token !== "undefined") {
                         if (Object.prototype.toString.call(token) === "[object Array]") {
-                            tokens = token.slice(1);
+                            this.tokens = token.slice(1);
                             return token[0];
                         } else return token;
                     }
                 } else {
-                    if (this.index !== index) remove = 0;
+                    if (this.index !== index) this.remove = 0;
                     this.reject = true;
                 }
             } else if (matches.length)
                 this.reject = true;
             else break;
         }
-    };
+    }
 
-    function scan() {
-        var matches = [];
-        var index = 0;
+    scan() {
+        let matches = [];
+        let index = 0;
 
-        var state = this.state;
-        var lastIndex = this.index;
-        var input = this.input;
+        let state = this.state;
+        let lastIndex = this.index;
+        let input = this.input;
 
-        for (var i = 0, length = rules.length; i < length; i++) {
-            var rule = rules[i];
-            var start = rule.start;
-            var states = start.length;
+        for (let i = 0; i < this.rules.length; i++) {
+            let rule = this.rules[i];
+            let start = rule.start;
+            let states = start.length;
 
             if ((!states || start.indexOf(state) >= 0) ||
                 (state % 2 && states === 1 && !start[0])) {
-                var pattern = rule.pattern;
+                let pattern = rule.pattern;
                 pattern.lastIndex = lastIndex;
-                var result = pattern.exec(input);
+                let result = pattern.exec(input);
 
                 if (result && result.index === lastIndex) {
-                    var j = matches.push({
+                    let j = matches.push({
                         result: result,
                         action: rule.action,
                         length: result[0].length
@@ -139,10 +145,10 @@ function Lexer(defunct) {
                     if (rule.global) index = j;
 
                     while (--j > index) {
-                        var k = j - 1;
+                        let k = j - 1;
 
                         if (matches[j].length > matches[k].length) {
-                            var temple = matches[j];
+                            let temple = matches[j];
                             matches[j] = matches[k];
                             matches[k] = temple;
                         }
@@ -155,99 +161,125 @@ function Lexer(defunct) {
     }
 }
 
-function Parser(table) {
-    this.table = table;
-}
+// Dijkstra's shunting yard algorithm
+// Parser see: https://gist.github.com/aaditmshah/6683499
+class Parser {
 
-Parser.prototype.parse = function (input) {
-    var length = input.length,
-        table = this.table,
-        output = [],
-        stack = [],
-        index = 0;
+    constructor(table) {
+        this.table = table;
+    }
 
-    while (index < length) {
-        var token = input[index++];
+    parse(input) {
+        let table = this.table;
+        let output = [];
+        let stack = [];
+        let index = 0;
 
-        switch (token) {
-        case "(":
-            stack.unshift(token);
-            break;
-        case ")":
-            while (stack.length) {
-                var token = stack.shift();
-                if (token === "(") break;
-                else output.push(token);
+        while (index < input.length) {
+            let token = input[index++];
+
+            switch (token.name()) {
+                case "(":
+                    stack.unshift(token);
+                    break;
+                case ")":
+                    while (stack.length) {
+                        token = stack.shift();
+                        if (token.name() === "(") break;
+                        else output.push(token);
+                    }
+
+                    if (token.name() !== "(")
+                        throw new Error("Mismatched parentheses.");
+                    break;
+                default:
+                    if (table.hasOwnProperty(token.name())) {
+                        while (stack.length) {
+                            let punctuator = stack[0].name();
+
+                            if (punctuator === "(") break;
+
+                            let operator = table[token.name()],
+                                precedence = operator.precedence,
+                                antecedence = table[punctuator].precedence;
+
+                            if (precedence > antecedence ||
+                                precedence === antecedence &&
+                                operator.associativity === "right") break;
+                            else output.push(stack.shift());
+                        }
+
+                        stack.unshift(token);
+                    } else output.push(token);
             }
-
-            if (token !== "(")
-                throw new Error("Mismatched parentheses.");
-            break;
-        default:
-            if (table.hasOwnProperty(token)) {
-                while (stack.length) {
-                    var punctuator = stack[0];
-
-                    if (punctuator === "(") break;
-
-                    var operator = table[token],
-                        precedence = operator.precedence,
-                        antecedence = table[punctuator].precedence;
-
-                    if (precedence > antecedence ||
-                        precedence === antecedence &&
-                        operator.associativity === "right") break;
-                    else output.push(stack.shift());
-                }
-
-                stack.unshift(token);
-            } else output.push(token);
         }
-    }
 
-    while (stack.length) {
-        var token = stack.shift();
-        if (token !== "(") output.push(token);
-        else throw new Error("Mismatched parentheses.");
-    }
+        while (stack.length) {
+            let token = stack.shift();
+            if (token.name() !== "(") output.push(token);
+            else throw new Error("Mismatched parentheses.");
+        }
 
-    return output;
-};
+        return output;
+    }
+}
 
 function roundToNearest(num, decimals) {
   decimals = decimals || 0;
-  var p = Math.pow(10, decimals);
-  var n = (num * p) * (1 + Number.EPSILON);
-  return Math.round(n) / p;
+  let p = Math.pow(10, decimals);
+  let p2 = p;
+  while (Math.abs(num) > 10) {
+      p2 /= 10;
+      num /= 10;
+  }
+  let n = (num * p) * (1 + Number.EPSILON);
+  return Math.round(n) / p2;
 }
 
+let factor = {
+    precedence: 2,
+    associativity: "left"
+};
+
+let term = {
+    precedence: 1,
+    associativity: "left"
+};
+
+let func = {
+    precedence: 1,
+    associativity: "right"
+};
+
 class CalculatorOp {
+
     constructor(calculator) {
         this.calculator = calculator;
     }
 
-    op() {
-        return "";
+    type() {   }
+    op() { return "";  }
+
+    pop() {
+        if (this.calculator.stack.length === 0)
+            return this.calculator.lastResult;
+        return this.calculator.stack.pop();
     }
 
-    name() {
-        return this.op(); // needed if name is different than op
-    }
-
-    doCalc() {
-        return undefined;
-    }
-
-    r(v) {
-        return roundToNearest(v, this.calculator.params.decimals);
-    }
+    push(v) { this.calculator.stack.push(this.r(v)); }
+    name() { return this.op(); } // needed if name is different from op
+    output(extraBefore) { return ` ${this.name()} `;  }
+    extraSpaceAfter() { return ""; } // need space before some operation
+    mapValue() { return this.name(); }
+    doCalc() {  }
+    calc() { this.doCalc(); }
+    r(v) { return roundToNearest(v, this.calculator.params.decimals);  }
+    lexfunc(lexme) { return this;  }
 
     getnum(s) {
         if (s === undefined) return this.calculator.lastResult;
         s = (""+s).trim();
         if (s === "") return this.calculator.lastResult;
-        if (s === "pi" || s === "π") return Math.PI;
-        if (s === "-pi" || s === "-π") return -Math.PI;
         if (s.startsWith("p")) {
             if (s==="p") return this.calculator.lastResult;
             let idx = this.calculator.row - parseInt(s.substring(1));
@@ -256,98 +288,128 @@ class CalculatorOp {
         }
         if (s[0].match(/[a-z]/)) {
             let val = this.calculator.mem[s];
-            return val || 0;
+            if (val === undefined) throw new Error(`Unknown variable '${s}'`);
+            return val;
         }
         return parseFloat(s.replace(",", "."));
     }
-
 }
 
 // See https://regex101.com/r/e5iqja/latest
 const num = "((?:(?:[-+][0-9]+)|(?:[0-9]*))(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?|-?pi|-?π|[a-z][a-z0-9]*)";
 
 class Command extends  CalculatorOp {
-    calc(s) {
-        let re = new RegExp("^ *("+this.op()+")?$", "i")
-        let r = re.exec(s);
-        if (!r) return undefined;
-        let o = r[1];
-        let res = this.doCalc();
-        return {res: res, calc: `${o}`};
-    }
 }
 
 class FuncRROperation extends  CalculatorOp {
-    doCalc(a) {
-        return 0;
-    }
+    type() { return func; }
+    doCalc(a) { return 0; }
+    output(extraBefore) { return extraBefore + this.name(); }
+    extraSpaceAfter() { return " "; }
 
-    calc(s) {
-        let re = new RegExp("^ *("+this.op()+") *\\(? *" + num + "?\\)?$", "i")
-        let r = re.exec(s);
-        if (!r) return undefined;
-        let o = r[1];
-        let a = this.getnum(r[2]);
-        let res = this.r(this.doCalc(a));
-        return {res: res, calc: `${o} ${a} = ${res}`};
+    calc() {
+        let a = this.pop();
+        this.push(this.doCalc(a));
+    }
+}
+
+class BracketOperation extends  CalculatorOp {
+    output(extraBefore) { return this.name(); }
+}
+
+class LeftBracketOperation extends  BracketOperation {
+    op() { return "[(]";}
+    name() { return "("; }
+}
+
+class RightBracketOperation extends  BracketOperation {
+    op() { return "[)]";}
+    name() { return ")"; }
+}
+
+class ValueOperation extends  CalculatorOp {
+    constructor(calculator) {
+        super(calculator);
+        this.value = "";
+    }
+    name() { return ""+this.value; }
+    output(extraBefore) { return extraBefore + this.name(); }
+    calc() { this.push(this.value);}
+}
+
+class NumOperation extends  ValueOperation {
+    op() {
+        // return "((?:(?:[-][0-9]+)|(?:[0-9]*))(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?)"
+        return "([0-9]+(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?)";
+    }
+    lexfunc(lexme) {
+        const oper = new NumOperation(this.calculator);
+        oper.value = parseFloat(lexme.replace(",", "."))
+        return oper;
+    }
+}
+
+class PiOperation extends  ValueOperation {
+    op() { return "pi|π" }
+    lexfunc(lexme) {
+        const oper = new PiOperation(this.calculator);
+        oper.value = Math.PI;
+        return oper;
+    }
+}
+
+class MemOperation extends  ValueOperation {
+    op() { return "[a-z][a-z0-9]*" }
+    lexfunc(lexme) {
+        const oper = new MemOperation(this.calculator);
+        oper.value = this.getnum(lexme)
+        return oper;
     }
 }
 
 class BinOperation extends  CalculatorOp {
-    doCalc(a,b) {
+    doCalc(a,b) { return 0; }
 
-    }
-
-    calc(s) {
-        let re = new RegExp("^ *" + num + "? *("+this.op()+") *" + num + "$", "i")
-        let r = re.exec(s);
-        if (!r) return undefined;
-        let a = this.getnum(r[1]);
-        let o = r[2];
-        let b = this.getnum(r[3]);
-        if (a==="" || a === undefined) a = this.calculator.lastResult;
-        let res = this.r(this.doCalc(a,b));
-        return {res: res, calc: `${a} ${o} ${b} = ${res}`};
+    calc() {
+        let b = this.pop();
+        let a = this.pop();
+        this.push(this.doCalc(a,b));
     }
 }
 
 class Deg extends Command {
     op() { return "deg"; }
-    doCalc() {
-        this.calculator.deg = true;
-        return undefined;
-    }
+    calc() { this.calculator.deg = true; }
 }
-
 
 class Rad extends Command {
     op() { return "rad"; }
-    doCalc() {
-        this.calculator.deg = false;
-        return undefined;
-    }
+    calc() { this.calculator.deg = false; }
 }
-
 
 class Plus extends BinOperation {
     op() { return "\\+"; }
     name() { return "+"; }
+    type() { return term; }
     doCalc(a, b) { return a + b; }
 }
 
 class Minus extends BinOperation {
     op() { return "-"; }
+    type() { return term; }
     doCalc(a, b) { return a - b; }
 }
 
 class Mul extends BinOperation {
     op() { return "\\*"; }
     name() { return "*"; }
+    type() { return factor; }
     doCalc(a, b) { return a * b; }
 }
 
 class Div extends BinOperation {
     op() { return "/"; }
+    type() { return factor; }
     doCalc(a, b) { return a / b; }
 }
 
@@ -367,20 +429,25 @@ class Sqrt extends FuncRROperation {
 }
 
 const operations = [
-  Plus,
-  Minus,
-  Mul,
-  Div,
-  Sin,
-  Cos,
-  Sqrt,
-  Deg,
-  Rad,
+    LeftBracketOperation,
+    RightBracketOperation,
+    Plus,
+    Minus,
+    Mul,
+    Div,
+    Sin,
+    Cos,
+    Sqrt,
+    Deg,
+    Rad,
+    NumOperation,
+    PiOperation,
+    MemOperation,
 ];
 
 
 class Calculator {
-    isIn(reglist, cmd, def, err) {
+    isIn(reglist, cmd, def) {
         let name = cmd.name();
         if (!reglist || reglist.length === 0) return def;
         for (let rs of reglist) {
@@ -401,16 +468,34 @@ class Calculator {
         this.operations = [];
         this.mem = {};
         this.row = 0;
+        this.stack = [];
+        this.lexer = new Lexer();
+        this.lexer.addRule(/\s+/, function () {
+             /* skip whitespace */
+        });
+        this.parserLexer = {};
+        /*
+        this.lexer.addRule(/[()]/, function (lexeme) {
+             return lexeme; // punctuation (i.e. "(", ")")
+        });
+         */
         for (const op of operations) {
             const oper = new op(this);
-            if (!this.isIn(this.params.allowed, oper, true, "not in allowed commands")) {
+            if (!this.isIn(this.params.allowed, oper, true)) {
                 continue;
             }
-            if (this.isIn(this.params.illegals, oper, false, "in illegal commands")) {
+            if (this.isIn(this.params.illegals, oper, false)) {
                 continue;
             }
             this.operations.push(oper);
+            this.lexer.addRule(new RegExp(oper.op()),function (lexme) {
+               return oper.lexfunc(lexme);
+            })
+            const type = oper.type();
+            if (type !== undefined)
+                this.parserLexer[oper.name()] = type;
         }
+        this.parser = new Parser(this.parserLexer);
     }
 
     toAngle(a) {
@@ -419,14 +504,34 @@ class Calculator {
     }
 
     calcOne(s) {
-        for (const op of this.operations) {
-            let r = op.calc(s);
-            if (r) {
-                if (r.res !== undefined) this.lastResult = r.res;
-                return r;
+        try {
+            this.stack = [];
+            this.lexer.setInput(s);
+            let tokens = [], token;
+            while (token = this.lexer.lex()) tokens.push(token);
+            let cmds = this.parser.parse(tokens);
+            let calc = "";
+            for (const cmd of cmds) {
+                cmd.calc();
             }
+
+            let extraBefore = "";
+            for (const cmd of tokens) {
+                calc += cmd.output(extraBefore);
+                extraBefore = cmd.extraSpaceAfter();
+            }
+
+            let res = "";
+            if (this.stack.length > 0) {
+                res = this.stack.pop();
+                this.lastResult = res;
+                calc += " = " + res;
+            }
+
+            return {res: res, calc: calc};
+        } catch (e) {
+            return {res: undefined, calc: e.message};
         }
-        return {res: "Error!", calc: "Error: " + s};
     }
 
     calc(s) {
@@ -447,7 +552,9 @@ class Calculator {
                 toMem = " " + tline.substring(mi);
             }
             tline = parts[0].trim();
-            let r = this.calcOne(tline);
+            let r = {res: this.lastResult, calc: ""};
+            if (tline)
+                r = this.calcOne(tline);
             r.calc = `r${i}: ${r.calc}${toMem}`;
             result.push(r);
             this.mem["r"+i] = r.res;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Calculator</title>
-    <script src="http://localhost/csstatic/dfa/calculator.js"></script>
+    <script src="http://localhost/csstatic/dfa/lexcalc.js"></script>
 </head>
 <body>
 <script>
@@ -16,13 +16,10 @@
 <!-- -->
 <script>
     const code = `
-rad
-3*3
-4*4
-p2+p1
-sqrt p
+3 + +sin 90
+3 + +sin 90
 `;
-    let res = setData({code: code.substring(1), params: {xallowed: ["/", "+", ], xillegals: ["sin"]}});
+    let res = setData({code: code.substring(1), params: {xallowed: ["rad"], xillegals: ["sin"]}});
     console.log(res);
 </script>
 -->
