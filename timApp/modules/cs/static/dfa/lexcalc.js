@@ -648,10 +648,10 @@ class Calculator {
                 r = this.calcOne(tline);
             r.calc = `r${i}: ${r.calc}${toMem}`;
             if (expected !== undefined) {
-                if (r.res != expected) r.calc += " expected " + expected;
-                else continue;
+                if (r.res == expected) r.calc = ""; // OK, do not display
+                else r.calc += " expected " + expected;
             }
-            result.push(r);
+            if (r.calc) result.push(r);
             this.mem["r"+i] = r.res;
             this.mem["r"] = this.lastResult;
             for (let i = 1; i < parts.length; i++) {

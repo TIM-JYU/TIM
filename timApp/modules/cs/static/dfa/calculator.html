@@ -12,7 +12,13 @@ class Sqr extends FuncRROperation {
     reg() { return "sqr"; }
     doCalc(a) { return a*a; }
 }
+class Modulo extends BinOperation {
+    reg() { return "%"; }
+    type() { return CalculatorOp.factor; }
+    doCalc(a,b) { return a % b; }
+}
 addOperation(Sqr);
+addOperation(Modulo);
         let calculator = new Calculator(data.params);
         let res = calculator.calc(data.code);
         return res;
@@ -21,8 +27,10 @@ addOperation(Sqr);
 <!-- -->
 <script>
     const code = `
-sqr(4) === 16
-rad cos(pi) === -1
+2*3+4*5-2 -> a === 24
+6-2 -> b === 4
+a/b === 6
++ 5 === 11
 `;
     let res = setData({code: code.substring(1), params: {xusemem: false, xallowed: ["signm","mem","num", "*", ], xillegals: ["mem", "sin"]}});
     console.log(res);
