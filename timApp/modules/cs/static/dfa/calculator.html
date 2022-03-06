@@ -8,6 +8,11 @@
 <body>
 <script>
     function setData(data) {
+class Sqr extends FuncRROperation {
+    reg() { return "sqr"; }
+    doCalc(a) { return a*a; }
+}
+addOperation(Sqr);
         let calculator = new Calculator(data.params);
         let res = calculator.calc(data.code);
         return res;
@@ -16,7 +21,8 @@
 <!-- -->
 <script>
     const code = `
-list
+sqr(4) === 16
+rad cos(pi) === -1
 `;
     let res = setData({code: code.substring(1), params: {xusemem: false, xallowed: ["signm","mem","num", "*", ], xillegals: ["mem", "sin"]}});
     console.log(res);

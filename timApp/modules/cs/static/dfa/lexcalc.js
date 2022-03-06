@@ -142,7 +142,11 @@ class Lexer {
                     length: result[0].length
                 });
 
-                if (rule.global) index = j;
+                if (rule.global) {
+                   // index = j;
+                   matches[0] = matches[j-1];
+                   return  matches;
+                }
 
                 while (--j > index) {
                     let k = j - 1;
@@ -477,7 +481,18 @@ class MemOperation extends  ValueOperation {
         return oper;
     }
 },
-]
+];
+
+// Add new operation class to index
+// if index not defined, insert before MemOperation (that
+// matches almost any name)
+function addOperation(oper, index) {
+    if (index === undefined) index = operations.length-2;
+    if (index < 0) return;
+    if (index >= operations.length) index = operations.length-1;
+    operations.splice(index,0, oper);
+}
+
 
 /*
 const operations = [
@@ -612,8 +627,13 @@ class Calculator {
                 }
                 return result;
             }
+            let parts = tline.split("===");
+            tline = parts[0].trim();
+            let expected = undefined;
+            if (parts.length > 1) expected = parts[1].trim();
+
             let toMem = "";
-            let parts = [];
+            parts = [];
             // check if mem is used
             if (this.params.usemem) {
                 parts = tline.split("->");
@@ -627,6 +647,10 @@ class Calculator {
             if (tline)
                 r = this.calcOne(tline);
             r.calc = `r${i}: ${r.calc}${toMem}`;
+            if (expected !== undefined) {
+                if (r.res != expected) r.calc += " expected " + expected;
+                else continue;
+            }
             result.push(r);
             this.mem["r"+i] = r.res;
             this.mem["r"] = this.lastResult;
