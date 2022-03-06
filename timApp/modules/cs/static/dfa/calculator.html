@@ -16,13 +16,10 @@
 <!-- -->
 <script>
     const code = `
-6 5 *
-1+2
-(2-4)
-cos 5 - sqrt 8
-16 sqrt
+2-3
+r
 `;
-    let res = setData({code: code.substring(1), params: {xallowed: ["rad"], xillegals: ["sin"]}});
+    let res = setData({code: code.substring(1), params: {xusemem: false, xallowed: ["signm","mem","num", "*", ], xillegals: ["mem", "sin"]}});
     console.log(res);
 </script>
 -->

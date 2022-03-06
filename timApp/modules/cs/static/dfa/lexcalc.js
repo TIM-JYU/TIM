@@ -232,6 +232,7 @@ function roundToNearest(num, decimals) {
   return Math.round(n) / p2;
 }
 
+// Base clasee for all calculatrot operations
 class CalculatorOp {
 
     static factor = {
@@ -253,8 +254,8 @@ class CalculatorOp {
         this.calculator = calculator;
     }
 
-    type() {   }
-    op() { return "";  }  // regexp to match thos opertation
+    type() {   }           // if parser should order, return on of above
+    reg() { return "";  }  // regexp to match those opertation
     params() { return "";} // regexp options for this match
 
     pop() {
@@ -264,28 +265,28 @@ class CalculatorOp {
     }
 
     push(v) { this.calculator.stack.push(this.r(v)); }
-    name() { return this.op(); } // needed if name is different from op
-    output(extraBefore) { return ` ${this.name()} `;  }
-    extraSpaceAfter() { return ""; } // need space before some operation
-    mapValue() { return this.name(); }
+    name() { return this.reg(); } // needed if name is different from op
+    lexname() { return this.name(); } // nae to be used in allowed or illegals list
+    output(extraBefore) { return ` ${this.name()} `;  } // text to output
+    extraSpaceAfter() { return ""; } // need space before some operation?
     doCalc() {  }
-    calc() { this.doCalc(); }
+    calc() { this.doCalc(); }  // what to do when runned
     r(v) { return roundToNearest(v, this.calculator.params.decimals);  }
-    lexfunc(lexme) { return this;  }
-    allowSignRight() { return true; }
+    lexfunc(lexme) { return this;  }  // what to be returned for parser
+    allowSignRight() { return true; } // does shen allow sign operatio on right side
     checkSign(lastToken) { return this; } // deny 2-3 as a sign
 
-    getnum(s) {
+    getnum(s) { // convert s as numeric using p, mem or parse
         if (s === undefined) return this.calculator.lastResult;
         s = (""+s).trim();
         if (s === "") return this.calculator.lastResult;
-        if (s.startsWith("p")) {
+        if (s.match(/^p[0-9]*$/)) { // calc index for r
             if (s==="p") return this.calculator.lastResult;
             let idx = this.calculator.row - parseInt(s.substring(1));
             idx = Math.max(0, Math.min(idx, this.calculator.row-1));
             return this.calculator.mem["r"+idx] || 0;
         }
-        if (s[0].match(/[a-z]/)) {
+        if (s[0].match(/^[a-z]/)) { // use mem value
             let val = this.calculator.mem[s];
             if (val === undefined) throw new Error(`Unknown variable '${s}'`);
             return val;
@@ -293,9 +294,6 @@ class CalculatorOp {
         return parseFloat(s.replace(",", "."));
     }
 }
-
-// See https://regex101.com/r/e5iqja/latest
-const num = "((?:(?:[-+][0-9]+)|(?:[0-9]*))(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?|-?pi|-?π|[a-z][a-z0-9]*)";
 
 class Command extends  CalculatorOp {
     output(extraBefore) { return extraBefore + this.name() + " "; }
@@ -317,18 +315,6 @@ class BracketOperation extends  CalculatorOp {
     output(extraBefore) { return this.name(); }
 }
 
-class LeftBracketOperation extends  BracketOperation {
-    op() { return "[(]";}
-    name() { return "("; }
-    extraSpaceAfter() { return ""; }
-}
-
-class RightBracketOperation extends  BracketOperation {
-    op() { return "[)]";}
-    name() { return ")"; }
-    allowSignRight() { return false; }
-}
-
 class ValueOperation extends  CalculatorOp {
     constructor(calculator) {
         super(calculator);
@@ -341,35 +327,6 @@ class ValueOperation extends  CalculatorOp {
     extraSpaceAfter() { return " "; }
 }
 
-class NumOperation extends  ValueOperation {
-    op() {
-        // return "((?:(?:[-][0-9]+)|(?:[0-9]*))(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?)"
-        return "([0-9]+(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?)";
-    }
-    lexfunc(lexme) {
-        const oper = new NumOperation(this.calculator);
-        oper.value = parseFloat(lexme.replace(",", "."))
-        return oper;
-    }
-}
-
-class PiOperation extends  ValueOperation {
-    op() { return "pi|π" }
-    lexfunc(lexme) {
-        const oper = new PiOperation(this.calculator);
-        oper.value = Math.PI;
-        return oper;
-    }
-}
-
-class MemOperation extends  ValueOperation {
-    op() { return "[a-z][a-z0-9]*" }
-    lexfunc(lexme) {
-        const oper = new MemOperation(this.calculator);
-        oper.value = this.getnum(lexme)
-        return oper;
-    }
-}
 
 class BinOperation extends  CalculatorOp {
     type() { return CalculatorOp.term; }
@@ -381,25 +338,44 @@ class BinOperation extends  CalculatorOp {
     }
 }
 
-class Deg extends Command {
-    op() { return "deg"; }
-    calc() { this.calculator.deg = true; }
-}
-
-class Rad extends Command {
-    op() { return "rad"; }
-    calc() { this.calculator.deg = false; }
-}
-
 class SignOperation extends FuncRROperation{
     type() { return CalculatorOp.func; }
     extraSpaceAfter() { return ""; }
     output(extraBefore) { return extraBefore + this.name().trim(); }
 }
 
+// Thse two are outside of operations list, because
+// they are refered inside the list (SignMinus and SignPlus)
+class Plus extends BinOperation {
+    reg() { return " *\\+ "; }
+    name() { return "+"; }
+    doCalc(a, b) { return a + b; }
+}
+
+class Minus extends BinOperation {
+    reg() { return " *- "; }
+    name() { return "-"; }
+    doCalc(a, b) { return a - b; }
+}
+
+const operations = [
+
+class LeftBracketOperation extends  BracketOperation {
+    reg() { return "[(]";}
+    name() { return "("; }
+    extraSpaceAfter() { return ""; }
+},
+
+class RightBracketOperation extends  BracketOperation {
+    reg() { return "[)]";}
+    name() { return ")"; }
+    allowSignRight() { return false; }
+},
+
 class SignMinus extends SignOperation {
-    op() { return " *-"; }
+    reg() { return " *-"; }
     name() { return " -"; }
+    lexname() { return "signm"}
     calc() {
         let a = this.pop();
         this.push(-a);
@@ -408,59 +384,102 @@ class SignMinus extends SignOperation {
         if (lastToken.allowSignRight()) return this;
         return new Minus(this.calculator);
     }
-}
+},
 
 class SignPlus extends SignOperation {
-    op() { return " *\\+"; }
+    reg() { return " *\\+"; }
     name() { return " +"; }
+    lexname() { return "signp"}
     calc() {  }
     checkSign(lastToken) {
         if (lastToken.allowSignRight()) return this;
         return new Plus(this.calculator);
     }
-}
+},
 
-class Plus extends BinOperation {
-    op() { return " *\\+ "; }
-    name() { return "+"; }
-    doCalc(a, b) { return a + b; }
-}
-
-class Minus extends BinOperation {
-    op() { return " *- "; }
-    // params() { return "g";}
-    name() { return "-"; }
-    doCalc(a, b) { return a - b; }
-}
+Plus,
+Minus,
 
 class Mul extends BinOperation {
-    op() { return "\\*"; }
+    reg() { return "\\*"; }
     name() { return "*"; }
     type() { return CalculatorOp.factor; }
     doCalc(a, b) { return a * b; }
-}
+},
 
 class Div extends BinOperation {
-    op() { return "/"; }
+    reg() { return "/"; }
     type() { return CalculatorOp.factor; }
     doCalc(a, b) { return a / b; }
-}
+},
+
+class Pow extends BinOperation {
+    reg() { return "\\^"; }
+    name() { return "^"; }
+    type() { return CalculatorOp.factor; }
+    doCalc(a, b) { return Math.pow(a , b); }
+},
 
 class Sin extends FuncRROperation {
-    op() { return "sin"; }
+    reg() { return "sin"; }
     doCalc(a) { return Math.sin(this.calculator.toAngle(a)); }
-}
+},
 
 class Cos extends FuncRROperation {
-    op() { return "cos"; }
+    reg() { return "cos"; }
     doCalc(a) { return Math.cos(this.calculator.toAngle(a)); }
-}
+},
 
 class Sqrt extends FuncRROperation {
-    op() { return "sqrt"; }
+    reg() { return "sqrt"; }
     doCalc(a) { return Math.sqrt(a); }
-}
+},
 
+class Rad extends Command {
+    reg() { return "rad"; }
+    calc() { this.calculator.deg = false; }
+},
+
+class Deg extends Command {
+    reg() { return "deg"; }
+    calc() { this.calculator.deg = true; }
+},
+
+class NumOperation extends  ValueOperation {
+    reg() {
+        // return "((?:(?:[-][0-9]+)|(?:[0-9]*))(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?)"
+        return "([0-9]+(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?)";
+    }
+    lexname() { return "num"; }
+    lexfunc(lexme) {
+        const oper = new NumOperation(this.calculator);
+        oper.value = parseFloat(lexme.replace(",", "."))
+        return oper;
+    }
+},
+
+class PiOperation extends  ValueOperation {
+    reg() { return "pi|π" }
+    lexname() { return "pi"; }
+    lexfunc(lexme) {
+        const oper = new PiOperation(this.calculator);
+        oper.value = Math.PI;
+        return oper;
+    }
+},
+
+class MemOperation extends  ValueOperation {
+    reg() { return "[a-z][a-z0-9]*" }
+    lexname() { return "mem"; }
+    lexfunc(lexme) {
+        const oper = new MemOperation(this.calculator);
+        oper.value = this.getnum(lexme)
+        return oper;
+    }
+},
+]
+
+/*
 const operations = [
     LeftBracketOperation,
     RightBracketOperation,
@@ -470,6 +489,7 @@ const operations = [
     SignPlus,
     Mul,
     Div,
+    Pow,
     Sin,
     Cos,
     Sqrt,
@@ -479,11 +499,11 @@ const operations = [
     PiOperation,
     MemOperation,
 ];
-
+*/
 
 class Calculator {
     isIn(reglist, cmd, def) {
-        let name = cmd.name();
+        let name = cmd.lexname();
         if (!reglist || reglist.length === 0) return def;
         for (let rs of reglist) {
             if (rs === "+" || rs === "*") rs = "\\" + rs;
@@ -498,6 +518,7 @@ class Calculator {
     constructor(params) {
         this.params = params || {};
         this.params.decimals = this.params.decimals || 13;
+        if (this.params.usemem === undefined) this.params.usemem = true;
         this.deg = this.params.deg || true;
         this.lastResult = 0;
         this.operations = [];
@@ -519,7 +540,7 @@ class Calculator {
                 continue;
             }
             this.operations.push(oper);
-            this.lexer.addRule(new RegExp(oper.op(), oper.params()),function (lexme) {
+            this.lexer.addRule(new RegExp(oper.reg(), oper.params()),function (lexme) {
                return oper.lexfunc(lexme);
             })
         }
@@ -539,7 +560,7 @@ class Calculator {
             this.stack = [];
             this.lexer.setInput(s);
             let tokens = [], token;
-            let lastToken = new LeftBracketOperation(this);
+            let lastToken = new BracketOperation(this);
             while (token = this.lexer.lex()) {
                 token = token.checkSign(lastToken);
                 tokens.push(token);
@@ -581,13 +602,17 @@ class Calculator {
             // remove comments # and trim
             let tline = line.replace(/ *#.*/, "").trim();
             if (!tline) continue;
-            const parts = tline.split("->");
             let toMem = "";
-            const mi = tline.indexOf("->");
-            if (mi >= 0) {
-                toMem = " " + tline.substring(mi);
+            let parts = [];
+            // check if mem is used
+            if (this.params.usemem) {
+                parts = tline.split("->");
+                const mi = tline.indexOf("->");
+                if (mi >= 0) {
+                    toMem = " " + tline.substring(mi);
+                }
+                tline = parts[0].trim();
             }
-            tline = parts[0].trim();
             let r = {res: this.lastResult, calc: ""};
             if (tline)
                 r = this.calcOne(tline);
@@ -595,7 +620,7 @@ class Calculator {
             result.push(r);
             this.mem["r"+i] = r.res;
             this.mem["r"] = this.lastResult;
-            for (let i=1; i<parts.length; i++) {
+            for (let i = 1; i < parts.length; i++) {
                 const mem = parts[i].trim();
                 if (mem) this.mem[mem] = r.res;
             }
