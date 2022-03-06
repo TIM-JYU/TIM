@@ -519,7 +519,8 @@ class Calculator {
         this.params = params || {};
         this.params.decimals = this.params.decimals || 13;
         if (this.params.usemem === undefined) this.params.usemem = true;
-        this.deg = this.params.deg || true;
+        this.deg = this.params.deg;
+        if (this.deg === undefined) this.deg = true;
         this.lastResult = 0;
         this.operations = [];
         this.mem = {};
@@ -602,6 +603,15 @@ class Calculator {
             // remove comments # and trim
             let tline = line.replace(/ *#.*/, "").trim();
             if (!tline) continue;
+            if (tline === "list") {
+                for (const cmd of this.operations) {
+                    const name = cmd.name();
+                    let ex = cmd.lexname();
+                    if (name === ex) ex = ""; else ex = "  " +ex
+                    result.push({res: "", calc: name + ex});
+                }
+                return result;
+            }
             let toMem = "";
             let parts = [];
             // check if mem is used
