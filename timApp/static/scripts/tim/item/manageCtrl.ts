@@ -546,31 +546,38 @@ export class PermCtrl implements IController {
         }
     }
 
+    listLanguages(languages: string, languageArray: Array<ILanguages>) {
+        while (languages.includes(",")) {
+            languageArray.push({
+                name: languages.substring(0, languages.indexOf("-")),
+                code: languages.substring(
+                    languages.indexOf("-") + 1,
+                    languages.indexOf(",")
+                ),
+            });
+            languages = languages.substr(languages.indexOf(",") + 1);
+        }
+
+        languageArray.push({
+            name: languages.substring(0, languages.indexOf("-")),
+            code: languages.substring(languages.indexOf("-") + 1),
+        });
+    }
+
     async updateLanguages() {
-        const sources = await to(
+        let sources = await to(
             $http.get<string[]>("/translations/source-languages")
         );
         // eslint-disable-next-line @typescript-eslint/no-base-to-string
-        let something = sources.result.data.toString();
-        // TODO: Do this properly - requires HTTP GET to a translation URL
-        while (something.includes(",")) {
-            this.sourceLanguages.push({
-                name: something.substring(0, something.indexOf("-")),
-                code: something.substring(
-                    something.indexOf("-") + 1,
-                    something.indexOf(",")
-                ),
-            });
-            something = something.substr(something.indexOf(",") + 1);
-        }
+        let languages = sources.result.data.toString();
+        this.listLanguages(languages, this.sourceLanguages);
 
-        this.sourceLanguages.push({
-            name: something.substring(0, something.indexOf("-")),
-            code: something.substring(something.indexOf("-") + 1),
-        });
-
-        this.targetLanguages.push({name: "Finnish", code: "FI"});
-        this.targetLanguages.push({name: "English", code: "EN"});
+        sources = await to(
+            $http.get<string[]>("/translations/target-languages")
+        );
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        languages = sources.result.data.toString();
+        this.listLanguages(languages, this.targetLanguages);
     }
 
     findSourceDoc() {

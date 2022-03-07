@@ -124,3 +124,13 @@ def get_source_languages():
 
     sl = ["Finnish-FI", "English-EN"]
     return json_response(sl)
+
+
+@tr_bp.get("/translations/target-languages")
+def get_target_languages():
+    """
+    A very rough version of getting the languages.
+    """
+
+    sl = ["Finnish-FI", "English-EN", "German-GE"]
+    return json_response(sl)
