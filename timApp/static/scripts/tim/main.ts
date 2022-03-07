@@ -53,7 +53,8 @@ import {DrawToolbarComponent} from "tim/plugin/drawToolbar";
 import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {DirectoryListComponent} from "tim/folder/directory-list.component";
 import {TemplateListComponent} from "tim/document/editing/template-list.component";
-import * as selfExpire from "tim/item/selfExpire";
+import * as selfExpire from "tim/item/self-expire.component";
+import {SelfExpireComponent} from "tim/item/self-expire.component";
 import {HelpParContent} from "tim/document/editing/help-par-content.component";
 import {DurationPickerComponent} from "tim/ui/duration-picker.component";
 import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
@@ -130,6 +131,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timParRef", ParRefComponent);
     doDowngrade(dg, "gamificationMap", GamificationMapComponent);
     doDowngrade(dg, "timMarkAllAsRead", MarkAllAsReadComponent);
+    doDowngrade(dg, "timSelfExpire", SelfExpireComponent);
     return dg;
 }
 
