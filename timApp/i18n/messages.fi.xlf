@@ -4880,6 +4880,22 @@
           <context context-type="linenumber">192</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1790032515357564728" datatype="html">
+        <source>Align to the center</source>
+        <target state="translated">Kohdista keskelle</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/switch-button.component.ts</context>
+          <context context-type="linenumber">8</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6311820510318489653" datatype="html">
+        <source>Align to the left</source>
+        <target state="translated">Kohdista vasemmalle</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/switch-button.component.ts</context>
+          <context context-type="linenumber">17</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="8081339872439098904" datatype="html">
         <source>Previous image</source>
         <target state="translated">Edellinen kuva</target>

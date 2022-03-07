@@ -14,6 +14,12 @@ import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
 import * as t from "io-ts";
 import {ButtonsModule} from "ngx-bootstrap/buttons";
+import {
+    applyOpacity,
+    DOCUMENT_BG,
+    luma,
+    parseRGBAColor,
+} from "tim/util/colorUtils";
 
 export interface IDrawVisibleOptions {
     // Interface to define which options should be visible in the drawing toolbar
@@ -59,17 +65,6 @@ export const DrawOptions = t.type({
 });
 
 export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
-
-function parseRGB(rgb: string) {
-    const parseResult = rgb.match(
-        /^rgba?\((\d+),\s*(\d+),\s*(\d+)(,\s*\d+\.*\d+)?\)$/
-    );
-    return {
-        r: parseInt(parseResult?.[1] ?? "0", 10) / 255,
-        g: parseInt(parseResult?.[2] ?? "0", 10) / 255,
-        b: parseInt(parseResult?.[3] ?? "0", 10) / 255,
-    };
-}
 
 // noinspection TypeScriptUnresolvedVariable
 @Component({
@@ -277,11 +272,12 @@ export class DrawToolbarComponent implements AfterViewInit {
                 this.colorInput.nativeElement.style.backgroundColor = prev
                     .replace("rgb", "rgba")
                     .replace(")", `, ${this.drawSettings.opacity})`);
-                const {r, g, b} = parseRGB(prev);
-                const luma =
-                    (0.2126 * r + 0.7152 * g + 0.0722 * b) *
-                    this.drawSettings.opacity;
-                this.selectorIconColor = luma > 0.5 ? "black" : "white";
+                const rgb = applyOpacity(
+                    {...parseRGBAColor(prev)!, a: this.drawSettings.opacity},
+                    DOCUMENT_BG
+                );
+                const l = luma(rgb);
+                this.selectorIconColor = l > 0.5 ? "black" : "white";
             }
         }
     }

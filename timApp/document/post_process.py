@@ -2,12 +2,11 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
-from typing import DefaultDict, Optional
+from typing import DefaultDict
 
 import pytz
 
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
-from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.areainfo import AreaStart, AreaEnd
 from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
@@ -187,7 +186,9 @@ def post_process_pars(
         usergroup_ids = [user_ctx.logged_user.get_personal_group().id]
 
         # If we're in exam mode and we're visiting the page for the first time, mark everything read
-        if should_auto_read(doc, usergroup_ids, user_ctx.logged_user):
+        if should_auto_read(
+            doc, usergroup_ids, user_ctx.logged_user, view_ctx.for_cache
+        ):
             should_mark_all_read = True
             readings = []
         else:
@@ -429,11 +430,13 @@ def process_areas(
     return new_pars
 
 
-def should_auto_read(doc: Document, usergroup_ids: list[int], user: User) -> bool:
+def should_auto_read(
+    doc: Document, usergroup_ids: list[int], user: User, for_cache: bool = False
+) -> bool:
     return not has_anything_read(usergroup_ids, doc) and (
         has_no_higher_right(
             doc.get_settings().exam_mode(),
-            get_user_rights_for_item(doc.docinfo, get_current_user_object()),
+            get_user_rights_for_item(doc.docinfo, user, allow_duration=for_cache),
         )
         or user.get_prefs().auto_mark_all_read
     )

@@ -1967,8 +1967,8 @@ ${fhtml}
             }
             if (!s.startsWith("[")) {
                 this.templateButtons.push({
-                    data: this.getButtonTextHtml(s),
-                    text: s,
+                    text: this.getButtonTextHtml(s),
+                    data: s,
                 });
                 continue;
             }

@@ -1432,3 +1432,8 @@ tim-rights-editor {
         text-decoration: line-through;
     }
 }
+
+// Global access from switch-button.component.ts
+.toggle-margin-left {
+    margin-left: 0;
+}

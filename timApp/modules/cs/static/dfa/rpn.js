@@ -309,10 +309,12 @@ class RPN {
      */
     constructor(s, params) {
         params = params || {};
+        params.stopOnError = params.stopOnError || true;
         this.params = params;
         let initial = params["initial"] || "";
         this.allowed = params["allowed"] || [];
         this.illegals = params["illegals"] || [];
+        this.params.maxStep = this.params.maxStep || 10000;
         this.errorlevel = 3;
         this.stack = [];
         this.commands = [];
@@ -328,7 +330,7 @@ class RPN {
     }
 
     maxStep() {
-        return 10000;
+        return this.params.maxStep;
     }
 
     isIn(reglist, cmd, def, err) {
@@ -478,6 +480,7 @@ class RPN {
             this.maxStack = Math.max(this.stack.length, this.maxStack);
             lastlinenr = cmd.linenumber;
             if (error && this.isShowErrors()) this.addError(`${cmd.linenumber}: ${error}`);
+            if (this.errors.length > 0 && this.params.stopOnError) break;
             nr++;
         }
         return nr;
