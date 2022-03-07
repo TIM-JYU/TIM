@@ -19,41 +19,6 @@ class ITranslator:
 
 
 @dataclass
-class KonttiTranslator(ITranslator):
-
-    # TODO Should maybe just ignore lang params like this:
-    # def translate(self, text: str, *) -> str:
-    def translate(
-        self, text: str, src_lang: str | None = None, target_lang: str | None = None
-    ) -> str:
-        """
-        Translate text - whatever it is - into Kontti-language
-        https://fi.wikipedia.org/wiki/Kontinkieli
-        :param text: Text that is ready to be translated
-        :param src_lang: The language to translate from (ignored)
-        :param target_lang: The language to translate into (ignored)
-        :return: text translated into Kontti-language
-        """
-        s = ""
-        words = text.split(" ")
-        for word in words:
-            if len(word) < 3 or not word.isalpha():
-                s += word
-            else:
-                s += "Ko" if word[0].isupper() else "ko"
-                s += word[2:] + word[0].lower() + word[1] + "ntti "
-        return s
-
-    def usage(self) -> Usage:
-        return Usage(
-            # No need to keep count
-            character_count=0,
-            # Unlimited amount of translation quota
-            character_limit=int("inf"),
-        )
-
-
-@dataclass
 class DeepLTranslator(ITranslator):
     api_key: str
     url: str = "https://api-free.deepl.com/v2"
