@@ -64,16 +64,16 @@
     box-shadow: none;
 }
 
-.inlineplugin label {
+.inlineplugin label, .inline-form label {
     font-weight: unset;
     margin-left: 2px;
 }
 
-.inlineplugin input {
+.inlineplugin input, .inline-form input {
     padding: 0 0 0 2px;
 }
 
-.inlineplugin textarea {
+.inlineplugin textarea, .inline-form textarea {
     padding: 2px 0 0 2px;
     overflow:hidden;
     height: auto;
