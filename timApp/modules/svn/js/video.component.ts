@@ -3,7 +3,6 @@ import {
     ApplicationRef,
     Component,
     DoBootstrap,
-    ElementRef,
     NgModule,
     ViewChild,
 } from "@angular/core";
@@ -102,15 +101,6 @@ function time02String(time: number) {
 const youtubeDomains = new Set(["www.youtube.com", "youtube.com", "youtu.be"]);
 const moniviestinDomains = new Set(["m3.jyu.fi", "moniviestin.jyu.fi"]);
 
-function isYoutube(file: string) {
-    try {
-        const u = new URL(file, location.origin);
-        return youtubeDomains.has(u.hostname);
-    } catch {
-        return false;
-    }
-}
-
 const ShowFileMarkup = t.intersection([
     t.partial({
         doclink: nullable(t.string),
@@ -129,6 +119,7 @@ const ShowFileMarkup = t.intersection([
     t.type({
         autoplay: withDefault(t.boolean, true),
         file: withDefault(t.string, ""),
+        subtitleUrl: withDefault(t.string, ""),
         target: withDefault(t.string, "timdoc"),
         open: withDefault(t.boolean, false),
         videoicon: withDefault(t.boolean, true),
@@ -227,6 +218,7 @@ const ShowFileAll = t.type({
                        [src]="videosettings.src"
                        [autoplay]="markup.autoplay"
                 >
+                    <track [src]="markup.subtitleUrl" default kind="subtitles" srclang="fi" label="Finnish" />
                 </video>
             </ng-container>
             <ng-container *ngIf="isNormalSize">
@@ -244,6 +236,13 @@ const ShowFileAll = t.type({
                 ></tim-video-link>
             </ng-container>
             <div class="flex" *ngIf="videoOn" style="justify-content: flex-end">
+                <div *ngIf="videosettings" class="margin-5-right">
+                    Subtitles:
+                    <select #subtitles (change)="selectSubtitles(subtitles.value)">
+                        <option value="Off" selected="selected">off</option>
+                        <option value="Finnish">test</option>
+                    </select>
+                </div>
                 <div *ngIf="videosettings" class="margin-5-right">
                     <label class="normalLabel" title="Advanced video controls">Adv <input type="checkbox" [(ngModel)]="advVideo" /></label>
                     Speed:
@@ -307,8 +306,18 @@ export class VideoComponent extends AngularPluginBase<
         return this.markup.type === "normal";
     }
 
-    get iframe() {
-        return this.markup.iframe ?? isYoutube(this.markup.file);
+    get iframe(): boolean {
+        try {
+            const url = new URL(this.markup.file, location.origin);
+            const conditions: boolean[] = [
+                this.markup.iframe !== undefined,
+                youtubeDomains.has(url.hostname),
+                moniviestinDomains.has(url.hostname),
+            ];
+            return conditions.includes(true);
+        } catch {
+            return false;
+        }
     }
 
     get videoname() {
@@ -331,7 +340,6 @@ export class VideoComponent extends AngularPluginBase<
     private origSize!: string;
     private origWidth?: number;
     private origHeight?: number;
-    @ViewChild("video") video?: ElementRef<HTMLVideoElement>;
     private limits!: string | null;
     duration!: string | null;
     startt!: string | null;
@@ -374,6 +382,15 @@ export class VideoComponent extends AngularPluginBase<
             this.toggleVideo();
         }
     }
+
+    @ViewChild("video") video?: HTMLVideoElement;
+
+    ngAfterViewInit() {
+        console.log("on after view init", this.video);
+        // this returns null
+    }
+
+    selectSubtitles(subtitle: string): void {}
 
     hideVideo() {
         this.removeEventListeners();
@@ -449,13 +466,12 @@ export class VideoComponent extends AngularPluginBase<
         if ($event) {
             $event.preventDefault();
         }
-        const v = this.video.nativeElement;
         if (mult === 0) {
-            v.playbackRate = 1.0;
+            this.video.playbackRate = 1.0;
         } else {
-            v.playbackRate *= mult;
+            this.video.playbackRate *= mult;
         }
-        this.playbackRateString = v.playbackRate.toFixed(1);
+        this.playbackRateString = this.video.playbackRate.toFixed(1);
     }
 
     bookmarks: number[] = [0, 0];
@@ -472,9 +488,8 @@ export class VideoComponent extends AngularPluginBase<
         if ($event) {
             $event.preventDefault();
         }
-        const v = this.video.nativeElement;
-        this.bookmarks[nr] = v.currentTime;
-        return time02String(v.currentTime);
+        this.bookmarks[nr] = this.video.currentTime;
+        return time02String(this.video.currentTime);
     }
 
     markStart($event: Event | undefined = undefined) {
@@ -509,8 +524,7 @@ export class VideoComponent extends AngularPluginBase<
         if ($event) {
             $event.preventDefault();
         }
-        const v = this.video.nativeElement;
-        v.currentTime = this.bookmarks[value];
+        this.video.currentTime = this.bookmarks[value];
     }
 
     jump(value: number, $event: Event | undefined = undefined) {
@@ -520,8 +534,7 @@ export class VideoComponent extends AngularPluginBase<
         if ($event) {
             $event.preventDefault();
         }
-        const v = this.video.nativeElement;
-        v.currentTime += value;
+        this.video.currentTime += value;
     }
 
     zoom(mult: number, $event: Event | undefined = undefined) {
@@ -622,19 +635,15 @@ export class VideoComponent extends AngularPluginBase<
     }
 
     metadataloaded() {
-        this.video!.nativeElement.currentTime = this.start ?? 0;
+        this.video!.currentTime = this.start ?? 0;
         if (this.markup.followid && this.vctrl) {
-            this.vctrl.registerVideo(
-                this.markup.followid,
-                this.video!.nativeElement
-            );
+            this.vctrl.registerVideo(this.markup.followid, this.video!);
         }
     }
 
     timeupdate() {
-        const v = this.video!.nativeElement;
-        if (this.watchEnd && v.currentTime > this.watchEnd) {
-            v.pause();
+        if (this.watchEnd && this.video!.currentTime > this.watchEnd) {
+            this.video!.pause();
             this.watchEnd = 1000000;
         }
     }
