@@ -54,6 +54,7 @@ def create_translation_route(tr_doc_id, language):
 
     # Get the API-key from environment
     try:
+        # TODO Get the API-key from user profile or the post-request
         from os import environ
 
         api_key = environ["DEEPL_API_KEY"]
@@ -66,16 +67,18 @@ def create_translation_route(tr_doc_id, language):
             + str(usage.character_limit)
         )
     except KeyError:
-        raise Exception(
-            "Please set the DEEPL_API_KEY=<your API key> into your environment"
+        api_key = None
+        logger.log_info(
+            "The DEEPL_API_KEY environment variable is not set and automatic translation will not be made."
         )
-    # Be careful about closing the underlying file when iterating document
-    with tr.document.get_source_document().__iter__() as doc_iter:
-        # Translate each paragraph sequentially
-        for orig_par, tr_par in zip(doc_iter, tr.document):
-            new_text = translator.translate(orig_par.md, "FI", "EN-GB")
-            logger.log_info(new_text)
-            tr.document.modify_paragraph(tr_par.id, new_text)
+    if api_key:
+        # Be careful about closing the underlying file when iterating document
+        with tr.document.get_source_document().__iter__() as doc_iter:
+            # Translate each paragraph sequentially
+            for orig_par, tr_par in zip(doc_iter, tr.document):
+                new_text = translator.translate(orig_par.md, "FI", "EN-GB")
+                logger.log_info(new_text)
+                tr.document.modify_paragraph(tr_par.id, new_text)
 
     if isinstance(doc, DocEntry):
         de = doc
