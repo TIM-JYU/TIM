@@ -118,6 +118,7 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
                 class="timButton btn-sm"
                 (click)="getData(false)"
                 [innerHtml]="button | purify"></button>
+        &nbsp;
         <!-- The model answer button -->
         <button *ngIf="isOpen && userCode"
                 [disabled]="isRunning"
@@ -125,10 +126,12 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
                 class="timButton btn-sm"
                 (click)="modelAnswer()"
                 [innerHtml]="modelAnswerButton | purify"></button>
+        &nbsp;
         <!-- User-specified messages -->
         <span class="jsav message"
               *ngIf="message"
               [innerHtml]="message | purify"></span>
+        &nbsp;
         <!-- Plugin's messages -->
         <span class="jsav message"
               *ngIf="console"
