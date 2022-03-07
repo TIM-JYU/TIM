@@ -10,7 +10,7 @@ import {
 } from "@angular/core";
 import {wrapText} from "tim/document/editing/utils";
 import {countChars} from "../util/util";
-import {IEditor} from "./editor";
+import {CURSOR, IEditor} from "./editor";
 
 @Component({
     selector: "cs-normal-editor",
@@ -33,6 +33,11 @@ export class NormalEditorComponent implements IEditor {
     private editorreadonly: boolean = false;
 
     constructor(private cdr: ChangeDetectorRef) {}
+
+    focus() {
+        const element = this.area.nativeElement as HTMLTextAreaElement;
+        element.focus();
+    }
 
     setReadOnly(b: boolean) {
         this.editorreadonly = b;
@@ -85,11 +90,18 @@ export class NormalEditorComponent implements IEditor {
         const endPos = strPos ?? txtarea.selectionEnd ?? 0;
         strPos = strPos ?? txtarea.selectionStart ?? 0;
 
+        let back = 0;
+        const ci = str.indexOf(CURSOR);
+        if (ci >= 0) {
+            str = str.replace(CURSOR, "");
+            back = str.length - ci;
+        }
+
         const cont = this.content;
         this.content = cont.slice(0, strPos) + str + cont.slice(endPos);
 
-        const newPos = strPos + str.length;
-        if (txtarea.selectionStart) {
+        const newPos = strPos + str.length - back;
+        if (txtarea.selectionStart >= 0 || back >= 0) {
             function setpos() {
                 txtarea.selectionStart = newPos;
                 txtarea.selectionEnd = newPos;

@@ -46,6 +46,7 @@ import {ScoreInfoTabComponent} from "./tabs/score-info-tab.component";
             Record<string, unknown>
         >,
         TimUtilityModule,
+        TabsModule,
     ],
     entryComponents: [
         BookmarksTabComponent,

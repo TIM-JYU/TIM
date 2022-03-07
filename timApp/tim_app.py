@@ -7,7 +7,6 @@ import inspect
 import mimetypes
 import os
 import sys
-from typing import Optional
 
 from flask import Flask, Request
 from flask_migrate import Migrate
@@ -65,6 +64,7 @@ from timApp.notification.pending_notification import (
     PendingNotification,
     DocumentNotification,
     CommentNotification,
+    AnswerNotification,
 )
 from timApp.peerreview.peerreview import PeerReview
 from timApp.plugin.plugintype import PluginType
@@ -120,6 +120,7 @@ all_models = (
     Annotation,
     AnnotationComment,
     Answer,
+    AnswerNotification,
     AnswerSaver,
     AnswerTag,
     AnswerUpload,

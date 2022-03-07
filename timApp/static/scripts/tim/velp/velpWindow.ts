@@ -1,6 +1,7 @@
-import {IController, IFormController} from "angular";
+import {IController, IFormController, IScope} from "angular";
 import {timApp} from "tim/app";
-import {$http} from "../util/ngimport";
+import {ParCompiler} from "tim/editor/parCompiler";
+import {$http, $timeout} from "../util/ngimport";
 import {Binding, clone, Require, to} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
 import {
@@ -39,6 +40,7 @@ export const colorPalette = [
  * Controller for velp Window
  */
 export class VelpWindowController implements IController {
+    static $inject = ["$scope", "$element"];
     private onVelpSelect!: Binding<(params: {$VELP: IVelp}) => void, "&">;
     private velpLocal!: IVelp;
     private velp!: Binding<IVelpUI, "<">;
@@ -82,9 +84,14 @@ export class VelpWindowController implements IController {
                 (g) => (g.edit_access && this.isGroupInVelp(g)) || false
             );
         }
+        $timeout(() => {
+            this.scope.$evalAsync(() => {
+                ParCompiler.processAllMath(this.element.find(".velpContent"));
+            });
+        });
     }
 
-    constructor() {
+    constructor(private scope: IScope, private element: JQLite) {
         this.newLabel = {content: "", selected: true, valid: true, id: null};
         this.labelToEdit = {
             content: "",
@@ -110,6 +117,18 @@ export class VelpWindowController implements IController {
         };
         this.submitted = false;
         this.hasEditAccess = false;
+        scope.$watch(
+            () => this.velp.edit,
+            (newValue, oldValue) => {
+                if (!newValue && oldValue) {
+                    scope.$evalAsync(() => {
+                        ParCompiler.processAllMath(
+                            this.element.find(".velpContent")
+                        );
+                    });
+                }
+            }
+        );
     }
 
     saveButtonText() {

@@ -256,6 +256,7 @@ class DropdownController
         this.selectedWord = this.initialWord;
         this.changes = false;
         this.updateListeners(ChangeType.Saved);
+        this.scope.$digest();
     }
 }
 

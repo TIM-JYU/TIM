@@ -71,6 +71,20 @@ class CommentNotification(PendingNotification):
     }
 
 
+class AnswerNotification(PendingNotification):
+    """A notification that an answer has been added, changed or deleted."""
+
+    answer_number = db.Column(db.Integer)
+
+    @property
+    def grouping_key(self) -> GroupingKey:
+        return self.doc_id, "a"
+
+    __mapper_args__ = {
+        "polymorphic_identity": "a",
+    }
+
+
 def get_pending_notifications() -> list[PendingNotification]:
     return (
         PendingNotification.query.filter(PendingNotification.processed == None)

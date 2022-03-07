@@ -802,7 +802,14 @@ export class ReviewController {
         }
     }
 
-    getSelectedBeginning() {
+    getSelectedAreaBeginning() {
+        if (!this.selectedArea) {
+            return;
+        }
+        return truncate(this.selectedArea.toString()?.trim() ?? "", 20);
+    }
+
+    getSelectedParagraphBeginning() {
         if (!this.selectedElement) {
             return;
         }
@@ -1448,7 +1455,7 @@ export class ReviewController {
     /**
      * Handles click and drawing update callbacks from canvas.
      * If the drawing was updated and not empty, then select canvas as annotation target element.
-     * If the drawing was updatend and cleared, then unselect the canvas
+     * If the drawing was updated and cleared, then unselect the canvas
      * If the drawing was not updated and there were click coordinates,
      * then attempt to open one of the annotations under the click target.
      * @param canvas
@@ -1468,6 +1475,22 @@ export class ReviewController {
                 this.selectedElement = createParContext(par);
                 this.selectedCanvas = canvas;
             } else if (this.selectedCanvas == canvas) {
+                this.selectionIsDrawing = false;
+                this.selectedElement = undefined;
+            }
+        } else if (updateArgs.scaleChange != undefined) {
+            const anns = this.getAnnotationsByAnswerId(canvas.id);
+            for (const a of anns) {
+                if (!a.draw_data) {
+                    continue;
+                }
+                this.vctrl
+                    .getAnnotation(`t${a.id}`)
+                    ?.resizeElementBorder(updateArgs.scaleChange);
+            }
+        } else if (updateArgs.deleted) {
+            this.vctrl.removeVelpCanvas(canvas.id);
+            if (this.selectedCanvas == canvas) {
                 this.selectionIsDrawing = false;
                 this.selectedElement = undefined;
             }
@@ -1502,6 +1525,7 @@ export class ReviewController {
                 this.toggleAnnotationsInList(annCompsInCoord);
             }
         }
+        this.scope.$digest();
     };
 
     /**

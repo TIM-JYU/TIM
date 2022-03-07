@@ -1,7 +1,8 @@
 import urllib.parse
 from collections import defaultdict
+from dataclasses import dataclass
 from threading import Thread
-from typing import Optional, DefaultDict
+from typing import DefaultDict, Callable
 
 from flask import current_app
 from sqlalchemy.orm import joinedload
@@ -24,6 +25,7 @@ from timApp.notification.pending_notification import (
     PendingNotification,
     get_pending_notifications,
     GroupingKey,
+    AnswerNotification,
 )
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
@@ -55,6 +57,7 @@ def set_notify_settings(
     email_comment_modify: bool,
     email_comment_add: bool,
     email_doc_modify: bool,
+    email_answer_add: bool,
 ):
     verify_logged_in()
     i = get_item_or_abort(doc_id)
@@ -64,6 +67,7 @@ def set_notify_settings(
         comment_modify=email_comment_modify,
         comment_add=email_comment_add,
         doc_modify=email_doc_modify,
+        answer_add=email_answer_add,
     )
     db.session.commit()
     return ok_response()
@@ -82,7 +86,7 @@ def get_current_user_notifications(limit: int | None = None):
         .options(joinedload(Notification.block).joinedload(Block.docentries))
         .options(joinedload(Notification.block).joinedload(Block.folder))
         .options(joinedload(Notification.block).joinedload(Block.translation))
-    ).order_by(Notification.doc_id.desc())
+    ).order_by(Notification.block_id.desc())
     if limit is not None:
         q = q.limit(limit)
     nots = q.all()
@@ -95,8 +99,10 @@ def notify_doc_watchers(
     notify_type: NotificationType,
     par: DocParagraph | None = None,
     old_version: Version = None,
+    curr_user: User = None,
+    **kwargs,
 ):
-    me = get_current_user_object()
+    me = curr_user if curr_user else get_current_user_object()
     new_version = doc.document.get_version()
     if notify_type.is_document_modification:
         p = DocumentNotification(
@@ -106,15 +112,31 @@ def notify_doc_watchers(
             text=content_msg,
             version_change=f"{ver_to_str(old_version)}/{ver_to_str(new_version)}",
             kind=notify_type,
+            **kwargs,
         )
     else:
-        p = CommentNotification(
-            user=me,
-            doc_id=doc.id,
-            par_id=par.get_id() if par else None,
-            text=content_msg,
-            kind=notify_type,
-        )
+        if notify_type in (
+            NotificationType.CommentAdded,
+            NotificationType.CommentModified,
+            NotificationType.CommentDeleted,
+        ):
+            p = CommentNotification(
+                user=me,
+                doc_id=doc.id,
+                par_id=par.get_id() if par else None,
+                text=content_msg,
+                kind=notify_type,
+                **kwargs,
+            )
+        elif notify_type == NotificationType.AnswerAdded:
+            p = AnswerNotification(
+                user=me,
+                doc_id=doc.id,
+                par_id=par.get_id() if par else None,
+                text=content_msg,
+                kind=notify_type,
+                **kwargs,
+            )
     db.session.add(p)
 
 
@@ -132,6 +154,18 @@ MIXED_COMMENT = "comment"
 
 def get_diff_link(docentry: DocInfo, ver_before: Version, ver_after: Version):
     return f"""{current_app.config['TIM_HOST']}/diff/{docentry.id}/{ver_before[0]}/{ver_before[1]}/{ver_after[0]}/{ver_after[1]}"""
+
+
+NOTIFICATION_TITLE = {
+    NotificationType.DocModified: "Document modified",
+    NotificationType.ParAdded: "Paragraph added",
+    NotificationType.ParModified: "Paragraph modified",
+    NotificationType.ParDeleted: "Paragraph deleted",
+    NotificationType.CommentAdded: "Comment posted",
+    NotificationType.CommentModified: "Comment modified",
+    NotificationType.CommentDeleted: "Comment deleted",
+    NotificationType.AnswerAdded: "Answer posted",
+}
 
 
 def get_message_for(
@@ -157,22 +191,10 @@ def get_message_for(
         name_str = get_name_string([p.user], show_names=show_names)
         par = p.par_id
         t = p.notify_type
-        if t == NotificationType.DocModified:
-            s = f"Document modified"
-        elif t == NotificationType.ParAdded:
-            s = f"Paragraph added"
-        elif t == NotificationType.ParModified:
-            s = f"Paragraph modified"
-        elif t == NotificationType.ParDeleted:
-            s = f"Paragraph deleted"
-        elif t == NotificationType.CommentAdded:
-            s = f"Comment posted"
-        elif t == NotificationType.CommentModified:
-            s = f"Comment modified"
-        elif t == NotificationType.CommentDeleted:
-            s = f"Comment deleted"
-        else:
-            assert False, "Unknown NotificationType"
+        s = NOTIFICATION_TITLE.get(t, None)
+        if s is None:
+            continue
+
         url = f'{d.url}{"#" + par if par else ""}'
         if show_names:
             s += f" by {name_str}"
@@ -185,9 +207,10 @@ def get_message_for(
                 else:
                     if pobj.is_task():
                         task_id = pobj.get_attr("taskId")
-                        params = urllib.parse.urlencode(
-                            {"task": task_id, "user": p.user.name}
-                        )
+                        params_dict = {"task": task_id, "user": p.user.name}
+                        if isinstance(p, AnswerNotification):
+                            params_dict |= {"answerNumber": p.answer_number}
+                        params = urllib.parse.urlencode(params_dict)
                         url = f'{d.get_url_for_view("answers")}?{params}'
 
         msg += f"{s}: {url}"
@@ -201,47 +224,6 @@ def get_message_for(
         if show_text or not p.notify_type.is_document_modification:
             msg += p.text + "\n\n"
     return msg.strip()
-
-
-def get_subject_for(ps: list[PendingNotification], d: DocInfo, show_names: bool):
-    num_mods = len(ps)
-    distinct_users = list({p.user for p in ps})
-    type_of_all = get_type_of_notify(ps)
-    name_str = get_name_string(distinct_users, show_names)
-    if type_of_all == NotificationType.DocModified or type_of_all == MIXED_DOC_MODIFY:
-        return (
-            f"{name_str} edited the document {d.title} {get_edit_count_str(num_mods)}"
-        )
-    elif type_of_all == NotificationType.ParAdded:
-        return (
-            f"{name_str} added {get_par_count_str(num_mods)} to the document {d.title}"
-        )
-    elif type_of_all == NotificationType.ParModified:
-        return f"{name_str} modified {get_par_count_str(num_mods)} in the document {d.title}"
-    elif type_of_all == NotificationType.ParDeleted:
-        return f"{name_str} deleted {get_par_count_str(num_mods)} from the document {d.title}"
-    elif type_of_all == NotificationType.CommentAdded:
-        return f"{name_str} posted {get_comment_count_str(num_mods)} to the document {d.title}"
-    elif type_of_all == NotificationType.CommentModified:
-        return f"{name_str} modified {get_comment_count_str(num_mods)} in the document {d.title}"
-    elif type_of_all == NotificationType.CommentDeleted:
-        return f"{name_str} deleted {get_comment_count_str(num_mods)} from the document {d.title}"
-    elif type_of_all == MIXED_COMMENT:
-        return f"{name_str} posted/modified/deleted {get_comment_count_str(num_mods)} in the document {d.title}"
-
-
-def get_type_of_notify(ps):
-    for n in NotificationType:
-        if all(p.notify_type == n for p in ps):
-            return n
-    if all(p.notify_type.is_document_modification for p in ps):
-        return MIXED_DOC_MODIFY
-    elif all(not p.notify_type.is_document_modification for p in ps):
-        return MIXED_COMMENT
-    else:
-        assert (
-            False
-        ), "There should not be mixed comment and doc modification notification types in a batch"
 
 
 def get_edit_count_str(num_edits):
@@ -272,6 +254,102 @@ def get_comment_count_str(num_mods):
         return "a comment"
 
 
+def get_answer_count_str(num_mods):
+    if num_mods > 1:
+        return f"{num_mods} answers"
+    else:
+        return "an answer"
+
+
+@dataclass(frozen=True, slots=True)
+class NotificationSubject:
+    subject_template: str
+    num_count_modifier: Callable[[int], str]
+
+    def message(self, user: str, num_count: int, resource_title: str) -> str:
+        return self.subject_template.format_map(
+            dict(
+                user=user,
+                num_count=self.num_count_modifier(num_count),
+                resource_title=resource_title,
+            )
+        )
+
+
+NOTIFICATION_TITLE_SUBJECT: dict[NotificationType, NotificationSubject] = {
+    NotificationType.ParAdded: NotificationSubject(
+        subject_template="{user} added {num_count} to the document {resource_title}",
+        num_count_modifier=get_par_count_str,
+    ),
+    NotificationType.ParModified: NotificationSubject(
+        subject_template="{user} modified {num_count} in the document {resource_title}",
+        num_count_modifier=get_par_count_str,
+    ),
+    NotificationType.ParDeleted: NotificationSubject(
+        subject_template="{user} deleted {num_count} from the document {resource_title}",
+        num_count_modifier=get_par_count_str,
+    ),
+    NotificationType.CommentAdded: NotificationSubject(
+        subject_template="{user} posted {num_count} to the document {resource_title}",
+        num_count_modifier=get_comment_count_str,
+    ),
+    NotificationType.CommentModified: NotificationSubject(
+        subject_template="{user} modified {num_count} in the document {resource_title}",
+        num_count_modifier=get_comment_count_str,
+    ),
+    NotificationType.CommentDeleted: NotificationSubject(
+        subject_template="{user} deleted {num_count} from the document {resource_title}",
+        num_count_modifier=get_comment_count_str,
+    ),
+    NotificationType.AnswerAdded: NotificationSubject(
+        subject_template="{user} posted {num_count} to the document {resource_title}",
+        num_count_modifier=get_answer_count_str,
+    ),
+}
+
+
+def get_subject_for(ps: list[PendingNotification], d: DocInfo, show_names: bool) -> str:
+    num_mods = len(ps)
+    distinct_users = list({p.user for p in ps})
+    type_of_all = get_type_of_notify(ps)
+    name_str = get_name_string(distinct_users, show_names)
+
+    notif_type = NOTIFICATION_TITLE_SUBJECT.get(type_of_all, None)
+    if notif_type is not None:
+        return notif_type.message(name_str, num_mods, d.title)
+    else:
+        # TODO: Allow aggregating notifications programmatically
+        if (
+            type_of_all == NotificationType.DocModified
+            or type_of_all == MIXED_DOC_MODIFY
+        ):
+            return f"{name_str} edited the document {d.title} {get_edit_count_str(num_mods)}"
+        if type_of_all == MIXED_COMMENT:
+            return f"{name_str} posted/modified/deleted {get_comment_count_str(num_mods)} in the document {d.title}"
+
+    return f"{name_str} triggered an event in {d.title}"
+
+
+def get_type_of_notify(ps) -> NotificationType | str:
+    for n in NotificationType:
+        if all(p.notify_type == n for p in ps):
+            return n
+    if all(p.notify_type.is_document_modification for p in ps):
+        return MIXED_DOC_MODIFY
+    elif all(not p.notify_type.is_document_modification for p in ps):
+        return MIXED_COMMENT
+    else:
+        assert (
+            False
+        ), "There should not be mixed comment and doc modification notification types in a batch"
+
+
+@notify.get("/process")
+def force_process():
+    process_pending_notifications()
+    return "OK"
+
+
 def process_pending_notifications():
     pns = get_pending_notifications()
     grouped_pns: DefaultDict[GroupingKey, list[PendingNotification]] = defaultdict(list)
@@ -285,16 +363,34 @@ def process_pending_notifications():
             assert all(
                 isinstance(p, DocumentNotification) for p in ps
             ), "Expected all notifications of type DocumentNotification"
-            condition = Notification.email_doc_modify == True
+            condition = Notification.notification_type.in_(
+                (
+                    NotificationType.DocModified,
+                    NotificationType.ParModified,
+                    NotificationType.ParAdded,
+                    NotificationType.ParDeleted,
+                )
+            )
         elif t == "c":
             assert all(
                 isinstance(p, CommentNotification) for p in ps
             ), "Expected all notifications of type CommentNotification"
-            condition = (Notification.email_comment_add == True) | (
-                Notification.email_comment_modify == True
+            condition = Notification.notification_type.in_(
+                (
+                    NotificationType.CommentAdded,
+                    NotificationType.CommentDeleted,
+                    NotificationType.CommentModified,
+                )
+            )
+        elif t == "a":
+            assert all(
+                isinstance(p, AnswerNotification) for p in ps
+            ), "Expected all notifications of type AnswerNotification"
+            condition = Notification.notification_type.in_(
+                (NotificationType.AnswerAdded,)
             )
         else:
-            assert False, "Unknown notify type"
+            assert False, "Unknown notification type"
         users_to_notify: set[User] = {n.user for n in doc.get_notifications(condition)}
         for user in users_to_notify:
             if (
@@ -304,8 +400,15 @@ def process_pending_notifications():
             ):
                 continue
 
-            # don't send emails about own actions
-            ps_to_consider = [p for p in ps if p.user != user]
+            is_teacher: bool = user.has_teacher_access(doc) is not None
+            ps_to_consider = [
+                p
+                for p in ps
+                if p.user != user  # don't send emails about own actions
+                and (
+                    is_teacher or p.notify_type != NotificationType.AnswerAdded
+                )  # don't send emails about answers to non-teachers
+            ]
 
             # TODO Currently email_comment_add and email_comment_modify are basically the same option.
             # Should do additional filtering here.
@@ -314,20 +417,19 @@ def process_pending_notifications():
                 continue
 
             # Poster identity should be hidden unless the user has teacher access to the document
-            show_names = user.has_teacher_access(doc)
-            subject = get_subject_for(ps_to_consider, doc, show_names=show_names)
+            subject = get_subject_for(ps_to_consider, doc, show_names=is_teacher)
             # If a document was modified and the user doesn't have edit access to it, we must not send the source md
             msg = get_message_for(
                 ps_to_consider,
                 doc,
                 show_text=user.has_edit_access(doc)
                 or not ps_to_consider[0].notify_type.is_document_modification,
-                show_names=show_names,
+                show_names=is_teacher,
             )
 
             is_unique_user = len({p.user for p in ps_to_consider}) == 1
             reply_to = (
-                ps_to_consider[0].user.email if show_names and is_unique_user else None
+                ps_to_consider[0].user.email if is_teacher and is_unique_user else None
             )
             result = send_email(
                 user.email,
