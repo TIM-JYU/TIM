@@ -16,6 +16,9 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
 import {AnswerSheetModule} from "../document/question/answer-sheet.component";
 import {PurifyModule} from "../util/purify.module";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
+import {handleAnswerResponse} from "../document/interceptor";
+import {IAnswerSaveEvent} from "../answer/answerbrowser3";
+import {TaskId} from "./taskid";
 
 interface MMCQContent<State> {
     state?: State;
@@ -58,6 +61,15 @@ export class MCQBase<State> {
     protected getId() {
         return this.element.parent().attr("id");
     }
+
+    protected getTaskId() {
+        const r = TaskId.tryParse(this.getId() ?? "");
+        if (r.ok) {
+            return r.result;
+        } else {
+            throw new Error("Invalid task id");
+        }
+    }
 }
 
 @Component({
@@ -67,32 +79,34 @@ export class MCQBase<State> {
     <p class="header" style="font-weight:bold" [innerHtml]="headerText"></p>
     <p class="stem" [innerHtml]="content.question.stem"></p>
     <table>
-        <tr>
-            <th></th>
-            <th [innerHtml]="trueText"></th>
-            <th [innerHtml]="falseText"></th>
-            <th *ngIf="checked"></th>
-            <th *ngIf="checked"></th>
-        </tr>
-        <tr *ngFor="let choice of content.question.choices; let i = index">
-            <td><span class="MCQItem" [innerHtml]="choice.text"></span></td>
-            <td class="text-center">
-                <input type="checkbox" [(ngModel)]="answer[i]" ng-true-value="true" ng-false-value="false"/>
-            </td>
-            <td class="text-center">
-                <input type="checkbox" [(ngModel)]="answer[i]" ng-false-value="true" ng-true-value="false"/>
-            </td>
-            <td *ngIf="checked">
-                <span [innerHtml]="correctText"
-                      *ngIf="!(answer[i] == null) && !(choice.correct == null) && (''+answer[i] == ''+choice.correct)"
-                      class="correct"></span>
-                <span [innerHtml]="wrongText"
-                      *ngIf="!(answer[i] == null) && !(choice.correct == null) && (''+answer[i] !==''+choice.correct)"
-                      class="wrong"></span>
-            </td>
-            <td *ngIf="choice.reason">
-                <span class="MCQExpl" [innerHtml]="choice.reason"></span></td>
-        </tr>
+        <tbody>
+            <tr>
+                <th></th>
+                <th [innerHtml]="trueText"></th>
+                <th [innerHtml]="falseText"></th>
+                <th *ngIf="checked"></th>
+                <th *ngIf="checked"></th>
+            </tr>
+            <tr *ngFor="let choice of content.question.choices; let i = index">
+                <td><span class="MCQItem" [innerHtml]="choice.text"></span></td>
+                <td class="text-center">
+                    <input type="checkbox" [(ngModel)]="answer[i]" ng-true-value="true" ng-false-value="false"/>
+                </td>
+                <td class="text-center">
+                    <input type="checkbox" [(ngModel)]="answer[i]" ng-false-value="true" ng-true-value="false"/>
+                </td>
+                <td *ngIf="checked">
+                    <span [innerHtml]="correctText"
+                          *ngIf="!(answer[i] == null) && !(choice.correct == null) && (''+answer[i] == ''+choice.correct)"
+                          class="correct"></span>
+                    <span [innerHtml]="wrongText"
+                          *ngIf="!(answer[i] == null) && !(choice.correct == null) && (''+answer[i] !==''+choice.correct)"
+                          class="wrong"></span>
+                </td>
+                <td *ngIf="choice.reason">
+                    <span class="MCQExpl" [innerHtml]="choice.reason"></span></td>
+            </tr>
+        </tbody>
     </table>
     <div class="text-center">
         <button (click)="submit()" [innerHtml]="buttonText"></button>
@@ -153,12 +167,13 @@ export class MMCQ extends MCQBase<null | boolean[]> {
             input: this.extract(),
         };
         const ident = this.getId();
+        console.log(ident);
         if (!ident) {
             return;
         }
 
         const r = await toPromise(
-            this.http.put<{web: MMCQ["content"]}>(
+            this.http.put<{web: MMCQ["content"]} & IAnswerSaveEvent>(
                 `/mmcq/${ident}/answer`,
                 message
             )
@@ -166,7 +181,19 @@ export class MMCQ extends MCQBase<null | boolean[]> {
         if (r.ok) {
             this.content = r.result.web;
             this.checked = true;
+            handleAnswerResponse(ident, {
+                savedNew: r.result.savedNew,
+                error: r.result.error,
+                feedback: r.result.feedback,
+                topfeedback: r.result.topfeedback,
+                valid: r.result.valid,
+            });
         } else {
+            handleAnswerResponse(ident, {
+                savedNew: false,
+                valid: false,
+                error: r.result.error.error,
+            });
             await showMessageDialog(r.result.error.error);
         }
     }
@@ -220,14 +247,26 @@ export class MCQ extends MCQBase<number | null> {
         }
 
         const r = await toPromise(
-            this.http.put<{web: MCQ["content"]}>(
+            this.http.put<{web: MCQ["content"]} & IAnswerSaveEvent>(
                 `/mcq/${ident}/answer`,
                 message
             )
         );
         if (r.ok) {
             this.content = r.result.web;
+            handleAnswerResponse(ident, {
+                savedNew: r.result.savedNew,
+                error: r.result.error,
+                feedback: r.result.feedback,
+                topfeedback: r.result.topfeedback,
+                valid: r.result.valid,
+            });
         } else {
+            handleAnswerResponse(ident, {
+                savedNew: false,
+                valid: false,
+                error: r.result.error.error,
+            });
             await showMessageDialog(r.result.error.error);
         }
     }
