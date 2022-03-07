@@ -641,7 +641,11 @@ def render_doc_view(
     # Used later to get partitioning with preambles included correct.
     # Includes either only special class preambles, or all of them if b=0.
     preamble_count = 0
-    if load_preamble or view_range.starts_from_beginning:
+    if (
+        load_preamble
+        or view_range.starts_from_beginning
+        and not doc.preamble_included  # e.g. document is being cached in which case the preamble is preloaded
+    ):
         try:
             preamble_pars = doc.insert_preamble_pars(
                 [INCLUDE_IN_PARTS_CLASS_NAME]
