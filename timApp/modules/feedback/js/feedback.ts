@@ -1239,6 +1239,7 @@ export class FeedbackPluginComponent
             for (const plugin of item.pluginNames) {
                 const timComponent = this.vctrl.getTimComponentByName(plugin);
                 if (timComponent?.setPluginWords) {
+                    // TODO: This doesn't properly reset selected dropdown value
                     if (item.words.length === 0) {
                         timComponent.setPluginWords([]);
                     } else {
