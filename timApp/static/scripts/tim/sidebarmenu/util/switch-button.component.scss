@@ -1,0 +1,20 @@
+@import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap/variables";
+
+:host {
+  // Align to the right.
+  float: right;
+  // Hide when a viewport has no margin.
+  @media (max-width: $screen-md-max) {
+    visibility: hidden;
+  }
+}
+
+// Remove focus effect from the button.
+:focus {
+  outline: none;
+}
+
+// Remove empty space around the button.
+button {
+  position: unset;
+}

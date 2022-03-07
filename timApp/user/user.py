@@ -28,7 +28,7 @@ from timApp.messaging.messagelist.listinfo import Channel
 from timApp.messaging.timMessage.internalmessage_models import (
     InternalMessageReadReceipt,
 )
-from timApp.notification.notification import Notification
+from timApp.notification.notification import Notification, NotificationType
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, TimeStampMixin, is_attribute_loaded
@@ -1041,28 +1041,79 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             type=get_access_type_id(access_type),
         ).delete()
 
-    def get_notify_settings(self, doc: DocInfo):
-        n = self.notifications.filter_by(doc_id=doc.id).first()
-        if not n:
-            n = Notification(
-                doc_id=doc.id,
-                user_id=self.id,
-                email_doc_modify=False,
-                email_comment_add=False,
-                email_comment_modify=False,
-            )
-            db.session.add(n)
-        return n
+    def get_notify_settings(self, item: DocInfo | Folder) -> dict:
+        # TODO: Instead of conversion, expose all notification types in UI
+        n: list[Notification] = self.notifications.filter_by(block_id=item.id).all()
+
+        result = {
+            "email_doc_modify": False,
+            "email_comment_add": False,
+            "email_comment_modify": False,
+            "email_answer_add": False,
+        }
+
+        for nn in n:
+            if nn.notification_type in (
+                NotificationType.DocModified,
+                NotificationType.ParAdded,
+                NotificationType.ParDeleted,
+                NotificationType.ParModified,
+            ):
+                result["email_doc_modify"] = True
+            if nn.notification_type in (NotificationType.CommentAdded,):
+                result["email_comment_add"] = True
+            if nn.notification_type in (
+                NotificationType.CommentModified,
+                NotificationType.CommentDeleted,
+            ):
+                result["email_comment_modify"] = True
+            if nn.notification_type in (NotificationType.AnswerAdded,):
+                result["email_answer_add"] = True
+
+        return result
 
     def set_notify_settings(
-        self, doc: DocInfo, doc_modify: bool, comment_add: bool, comment_modify: bool
+        self,
+        item: DocInfo | Folder,
+        doc_modify: bool,
+        comment_add: bool,
+        comment_modify: bool,
+        answer_add: bool,
     ):
-        n = self.get_notify_settings(doc)
-        n.email_comment_add = comment_add
-        n.email_doc_modify = doc_modify
-        n.email_comment_modify = comment_modify
-        if not any((doc_modify, comment_add, comment_modify)):
-            db.session.delete(n)
+        # TODO: Instead of conversion, expose all notification types in UI
+        notification_types = []
+        if doc_modify:
+            notification_types.extend(
+                (
+                    NotificationType.DocModified,
+                    NotificationType.ParAdded,
+                    NotificationType.ParDeleted,
+                    NotificationType.ParModified,
+                )
+            )
+        if comment_add:
+            notification_types.extend((NotificationType.CommentAdded,))
+        if comment_modify:
+            notification_types.extend(
+                (
+                    NotificationType.CommentModified,
+                    NotificationType.CommentDeleted,
+                )
+            )
+        if answer_add:
+            notification_types.extend((NotificationType.AnswerAdded,))
+
+        self.notifications.filter((Notification.block_id == item.id)).delete(
+            synchronize_session=False
+        )
+        for nt in notification_types:
+            db.session.add(
+                Notification(
+                    user=self,
+                    block_id=item.id,
+                    notification_type=nt,
+                )
+            )
 
     def get_answers_for_task(self, task_id: str):
         return (

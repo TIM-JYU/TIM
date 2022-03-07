@@ -2,11 +2,11 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from flask import Response
 from isodate import datetime_isoformat
 from sqlalchemy import tuple_
+from sqlalchemy.orm import contains_eager
 
 from timApp.auth.accesshelper import (
     verify_edit_access,
@@ -193,6 +193,7 @@ def get_tim_messages_as_list(item_id: int | None = None) -> list[TimMessageData]
             | (tuple_(Folder.location, Folder.name).in_(parent_paths))
         )
 
+    cur_user = get_current_user_object()
     q = (
         InternalMessage.query.join(InternalMessageDisplay)
         .outerjoin(Folder, Folder.id == InternalMessageDisplay.display_doc_id)
@@ -201,8 +202,9 @@ def get_tim_messages_as_list(item_id: int | None = None) -> list[TimMessageData]
             (InternalMessageReadReceipt.message_id == InternalMessage.id)
             # Do this in outer join because message can be seen if no receipt is found or receipt is not marked as read
             # With outer join, both cases are covered (marked_as_read_on becomes NULL)
-            & (InternalMessageReadReceipt.user_id == get_current_user_object().id),
+            & (InternalMessageReadReceipt.user_id == cur_user.id),
         )
+        .options(contains_eager(InternalMessage.readreceipts))
         .filter((is_global | is_user_specific) & can_see)
     )
 
@@ -233,6 +235,19 @@ def get_tim_messages_as_list(item_id: int | None = None) -> list[TimMessageData]
         )
 
         full_messages.append(data)
+
+        if message.readreceipts:
+            # Note: previous contains_eager will force message.readreceipts to contain only receipt of current user
+            for read_receipt in message.readreceipts:
+                read_receipt.last_seen = now
+        else:
+            db.session.add(
+                InternalMessageReadReceipt(
+                    message=message, user=cur_user, last_seen=now
+                )
+            )
+
+    db.session.commit()
 
     return full_messages
 
@@ -531,17 +546,17 @@ def get_read_receipts(
         db.session.query(
             InternalMessageReadReceipt.user_id,
             InternalMessageReadReceipt.marked_as_read_on,
+            InternalMessageReadReceipt.last_seen,
         )
         .join(InternalMessage)
-        .filter(
-            (InternalMessage.doc_id == doc.id)
-            # Old DB allowed marked_as_read_on to be NULL
-            & (InternalMessageReadReceipt.marked_as_read_on != None)
-        )
+        .filter(InternalMessage.doc_id == doc.id)
     )
 
     read_user_map: dict[int, datetime] = {
-        user_id: read_time for user_id, read_time in read_users
+        user_id: read_time for user_id, read_time, _ in read_users if read_time
+    }
+    last_seen_user_map: dict[int, datetime] = {
+        user_id: last_seen for user_id, _, last_seen in read_users if last_seen
     }
 
     all_recipients = (
@@ -561,21 +576,31 @@ def get_read_receipts(
             )
         all_recipients = User.query.filter(User.id.in_(read_user_map.keys())).all()
 
-    data = [["id", "email", "user_name", "real_name", "read_on"]]
+    data = [["id", "email", "user_name", "real_name", "read_on", "last_seen"]]
 
     for i, u in enumerate(all_recipients):
         read_time = ""
+        last_seen_time = ""
         if u.id in read_user_map:
             if not include_read:
                 continue
             read_time = datetime_isoformat(read_user_map[u.id])
         elif not include_unread:
             continue
+        if u.id in last_seen_user_map:
+            last_seen_time = datetime_isoformat(last_seen_user_map[u.id])
         if not is_hide_names():
-            data.append([u.id, u.email, u.name, u.real_name, read_time])
+            data.append([u.id, u.email, u.name, u.real_name, read_time, last_seen_time])
         else:
             data.append(
-                [str(i), f"user_{i}@noreply", f"user{i}", f"User {i}", read_time]
+                [
+                    str(i),
+                    f"user_{i}@noreply",
+                    f"user{i}",
+                    f"User {i}",
+                    read_time,
+                    last_seen_time,
+                ]
             )
 
     if receipt_format == ReadReceiptFormat.TableFormQuery:

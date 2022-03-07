@@ -200,7 +200,7 @@ export class GotoLinkComponent implements OnInit {
         if (
             !this.unsavedChangesChecked &&
             this.checkUnsaved &&
-            vctrlInstance?.checkUnSavedTimComponents()
+            vctrlInstance?.checkUnSavedComponents()
         ) {
             this.showError({
                 userMessage: this.unsavedChangesText,

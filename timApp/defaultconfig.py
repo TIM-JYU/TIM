@@ -37,6 +37,9 @@ LOG_FILE = "timLog.log"
 LOG_LEVEL = logging.INFO
 LOG_LEVEL_STDOUT = logging.INFO
 LOG_PATH = os.path.join(LOG_DIR, LOG_FILE)
+# If True, requests are also logged before they are processed.
+# This is useful sometimes to profile calls that never complete.
+LOG_BEFORE_REQUESTS = False
 MAX_CONTENT_LENGTH = 50 * 1024 * 1024
 PROFILE = False
 SECRET_KEY = "85db8764yhfZz7-U.-y968buyn89b54y8y45tg"

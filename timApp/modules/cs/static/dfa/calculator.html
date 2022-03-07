@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculator</title>
+    <script src="http://localhost/csstatic/dfa/calculator.js"></script>
+</head>
+<body>
+<script>
+    function setData(data) {
+        let calculator = new Calculator(data.params);
+        let res = calculator.calc(data.code);
+        return res;
+    }
+</script>
+<!-- -->
+<script>
+    const code = `
+sin 3.14
+sin 3,1,4
+sqrt 81.81
+2.345+34.354
+e9+e8
+--2
+π/2
+`;
+    let res = setData({code: code});
+    console.log(res);
+</script>
+-->
+</body>
+</html>

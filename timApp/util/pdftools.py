@@ -1,14 +1,14 @@
 """
-Stamping and merging pdf files with pdftk and pdflatex.
+Stamping and merging pdf files with qpdf and pdflatex.
 Visa Naukkarinen
 """
+import re
 import subprocess
 import uuid
 from os import remove
 from pathlib import Path
 from re import escape as re_escape, compile as re_compile
 from subprocess import Popen, PIPE, run as subprocess_run
-from typing import Union, Optional
 
 from flask import current_app
 
@@ -177,7 +177,7 @@ class StampDataEmptyError(PdfError):
 
 class SubprocessError(PdfError):
     """
-    Raised when subprocesses (pdftk, pdflatex, possibly others) return
+    Raised when subprocesses (qpdf, pdflatex, possibly others) return
     error code or otherwise raise exception.
     """
 
@@ -185,9 +185,9 @@ class SubprocessError(PdfError):
         self.cmd = cmd
 
     def __str__(self):
-        if "pdftk" in self.cmd and " stamp " in self.cmd:
+        if "qpdf" in self.cmd and " --overlay " in self.cmd:
             return f"Stamping process failed: {self.cmd}"
-        elif "pdftk" in self.cmd:
+        elif "qpdf" in self.cmd:
             return f"Merging process failed: {self.cmd}"
         elif "pdflatex" in self.cmd:
             return f"Stamp creating process failed: {self.cmd}"
@@ -333,7 +333,7 @@ def escape_tex(text: str):
 
 def test_pdf(pdf_path: Path, timeout_seconds: int = pdfmerge_timeout) -> str:
     """
-    Test pdf file suitability for pdftk.
+    Test pdf file suitability for qpdf.
     :param pdf_path: Pdf to test.
     :param timeout_seconds: Timeout after which error is raised.
     :return: Return error message (empty string if no error).
@@ -342,17 +342,19 @@ def test_pdf(pdf_path: Path, timeout_seconds: int = pdfmerge_timeout) -> str:
         return "Error: Attachment is not a PDF file"
     if not pdf_path.exists():
         return "Error: file not found; try reuploading it"
-    test_output_path = temp_folder_path / f"pdftk_test.pdf"
-    args = ["pdftk", pdf_path, "cat", "output", test_output_path.absolute().as_posix()]
+    args = ["qpdf", pdf_path, "--check"]
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = p.communicate(timeout=timeout_seconds)
-    return parse_error(err.decode(encoding="utf-8"))
+    # Return codes: https://qpdf.readthedocs.io/en/stable/cli.html#exit-status
+    if p.returncode in (1, 2):
+        return parse_error(err.decode(encoding="utf-8"))
+    return ""
 
 
 def parse_error(message: str) -> str:
     """
     Shortens known long PDFtk error messages and logs unexpected ones.
-    :param message: Error message string from pdftk.
+    :param message: Error message string from qpdf.
     :return: Pre-written error message.
     """
     if not message:
@@ -377,7 +379,7 @@ def parse_error(message: str) -> str:
 
 def merge_pdfs(pdf_file_list: list[UploadedFile], output_path: Path):
     """
-    Merges a list of PDFs using pdftk.
+    Merges a list of PDFs using qpdf.
     :param pdf_file_list: List of the uploaded files (as objects) to merge.
     :param output_path: Merged output file path.
     """
@@ -391,10 +393,15 @@ def merge_pdfs(pdf_file_list: list[UploadedFile], output_path: Path):
         check_pdf_validity(pdf.filesystem_path)
         pdf_path_args += [pdf.filesystem_path]
 
-    args = (
-        ["pdftk"] + pdf_path_args + ["cat", "output", output_path.absolute().as_posix()]
-    )
-    call_popen(args, pdfmerge_timeout)
+    args = [
+        "qpdf",
+        "--empty",
+        "--pages",
+        *pdf_path_args,
+        "--",
+        output_path.absolute().as_posix(),
+    ]
+    qpdf_popen(args, pdfmerge_timeout)
 
 
 def parse_tim_url(par_file: str) -> Path | None:
@@ -419,7 +426,7 @@ def parse_tim_url(par_file: str) -> Path | None:
 def get_attachments_from_pars(paragraphs: list[DocParagraph]) -> list[Attachment]:
     """
     Goes through paragraphs and gets attachments from showPdf-macros.
-    Checks file validity with pdftk.
+    Checks file validity with qpdf.
     :param paragraphs: Document paragraphs.
     :return: List of pdf paths and whether the list is complete.
     """
@@ -576,14 +583,14 @@ def stamp_pdf(
     if not stamp_path.exists():
         raise StampFileNotFoundError(stamp_path)
     args = [
-        "pdftk",
+        "qpdf",
         pdf_path.absolute().as_posix(),
-        "stamp",
+        "--overlay",
         stamp_path.absolute().as_posix(),
-        "output",
+        "--",
         output_path.absolute().as_posix(),
     ]
-    call_popen(args)
+    qpdf_popen(args)
 
     # Optionally clean up the stamp-pdf after use.
     if remove_stamp:
@@ -591,9 +598,9 @@ def stamp_pdf(
     return output_path
 
 
-def call_popen(args: list[str], timeout_seconds=default_subprocess_timeout) -> None:
+def qpdf_popen(args: list[str], timeout_seconds=default_subprocess_timeout) -> None:
     """
-    Calls Popen with args list, checks return code and
+    Calls Popen with args list for QPDF, checks QPDF-specific error code and
     raises error if timeouted.
     :param args: List of arguments.
     :param timeout_seconds: Timeout after which error is raised.
@@ -603,7 +610,8 @@ def call_popen(args: list[str], timeout_seconds=default_subprocess_timeout) -> N
         p = Popen(args, stdout=PIPE, stderr=PIPE)
         out, err = p.communicate(timeout=timeout_seconds)
         rc = p.returncode
-        if rc != 0:
+        # QPDF return codes: https://qpdf.readthedocs.io/en/stable/cli.html#exit-status
+        if rc in (1, 2):
             raise SubprocessError(err.decode(encoding="utf-8"))
     except FileNotFoundError:
         raise SubprocessError(" ".join(args))
@@ -697,19 +705,27 @@ def stamp_pdfs(
     return stamped_pdfs
 
 
+# Match Producer: GPL Ghostscript from pdf info
+ghostscript_regex = re.compile(r"Producer:\s*GPL Ghostscript")
+
+
 def is_pdf_producer_ghostscript(f: UploadedFile):
-    r = subprocess.run(
+    p = Popen(
         [
-            "pdftk",
+            "pdfinfo",
             f.filesystem_path,
-            "dump_data_utf8",
         ],
-        capture_output=True,
+        stdout=PIPE,
+        stderr=PIPE,
     )
-    stdout = r.stdout.decode()
+    out, err = p.communicate(timeout=default_subprocess_timeout)
+    stdout = out.decode(encoding="utf-8", errors="ignore")
+    if p.returncode != 0:
+        # Return false just in case to force Ghostscript to be used
+        return False
 
     # If the producer is Ghostscript, InfoValue contains also Ghostscript version, but let's not hardcode it here.
-    result = "\nInfoBegin\nInfoKey: Producer\nInfoValue: GPL Ghostscript " in stdout
+    result = ghostscript_regex.search(stdout) is not None
     return result
 
 

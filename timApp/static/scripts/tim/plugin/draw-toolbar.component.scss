@@ -1,26 +1,94 @@
+@import "draw-toolbar-icons";
+
+.btn-group.drawRadioForm {
+  display: inline-flex;
+
+  ::ng-deep .btn.active {
+    background-color: var(--button-bg-color);
+    color: var(--bg-color);
+  }
+}
+
+.color-preset {
+  background-color: var(--tim-preset-color, #000);
+  color: var(--tim-preset-text);
+}
+
+.flip {
+  transform: scaleX(-1);
+}
 
 .drawOptions {
-  margin-left: 0.8em;
+  display: flex;
+  flex-wrap: wrap;
 
-  span + span, a {
-    margin-left: 0.8em;
+  & > * {
+    margin-top: 0.5em;
   }
 
-  .noWrap {
-    display: inline-table;
+  & > *:not(:last-child) {
+    margin-right: 0.5em;
+  }
+
+  .sep {
+    align-self: center;
+    color: #aeaeae;
+
+    &::before {
+      content: "|";
+    }
+  }
+
+  .text-input {
+    display: inline-flex;
+    font-weight: normal;
+    align-items: center;
+    margin-bottom: 0;
+
+    i {
+      margin-left: 0.25em;
+      margin-right: 0.5em;
+    }
   }
 
   .width {
-    width: 3em;
-  }
-
-  .opacity {
     width: 4em;
   }
 
-  .drawRadioForm {
-    display: inline;
-    margin-right: 0.8em;
+  .opacity {
+    width: 5em;
+  }
+
+  .color-selector {
+    padding: 0;
+
+    input[type="color"] {
+      opacity: 0;
+      border: none;
+      cursor: pointer;
+    }
+
+    .picker-icon {
+      position: absolute;
+      transform: translate(-50%, 50%);
+
+      &::before {
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+.color-bar {
+  display: inline-flex;
+}
+
+.fill-object {
+  min-width: 35px;
+
+  ::ng-deep &.btn.active {
+    background-color: var(--button-bg-color);
+    color: var(--bg-color);
   }
 }
 

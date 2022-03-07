@@ -1398,7 +1398,7 @@ tim-user-list {
 }
 
 [hidden] {
-    display: none;
+    display: none !important;
 }
 
 .toolbarButton {
@@ -1444,4 +1444,9 @@ tim-rights-editor {
     span.obsolete {
         text-decoration: line-through;
     }
+}
+
+// Global access from switch-button.component.ts
+.toggle-margin-left {
+    margin-left: 0;
 }

@@ -207,6 +207,7 @@ class NumericfieldController
         this.numericvalue = this.initialValue;
         this.changes = false;
         this.updateListeners(ChangeType.Saved);
+        this.scope.$digest();
     }
 
     setAnswer(content: unknown): ISetAnswerResult {
