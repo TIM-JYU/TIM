@@ -1470,7 +1470,8 @@ ${backTicks}
         if (this.checkIfOriginal()) {
             return false;
         }
-        // TODO: Check for automatic translation's availability
+        // TODO: Check for automatic translation's availability - info needs to be gotten
+        //  via HTTP GET to a translation URL (which needs to be made)
         return true;
     }
 

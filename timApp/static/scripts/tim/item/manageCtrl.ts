@@ -546,10 +546,28 @@ export class PermCtrl implements IController {
         }
     }
 
-    updateLanguages() {
-        // TODO: Do this properly
-        this.sourceLanguages.push({name: "Finnish", code: "FI"});
-        this.sourceLanguages.push({name: "English", code: "EN"});
+    async updateLanguages() {
+        const sources = await to(
+            $http.get<string[]>("/translations/source-languages")
+        );
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        let something = sources.result.data.toString();
+        // TODO: Do this properly - requires HTTP GET to a translation URL
+        while (something.includes(",")) {
+            this.sourceLanguages.push({
+                name: something.substring(0, something.indexOf("-")),
+                code: something.substring(
+                    something.indexOf("-") + 1,
+                    something.indexOf(",")
+                ),
+            });
+            something = something.substr(something.indexOf(",") + 1);
+        }
+
+        this.sourceLanguages.push({
+            name: something.substring(0, something.indexOf("-")),
+            code: something.substring(something.indexOf("-") + 1),
+        });
 
         this.targetLanguages.push({name: "Finnish", code: "FI"});
         this.targetLanguages.push({name: "English", code: "EN"});
@@ -569,6 +587,7 @@ export class PermCtrl implements IController {
     }
 
     checkTranslatability() {
+        // TODO: Check if user has the API key (check needs to be done in initialization to a boolean of its own)
         if (
             this.newTranslation.title == "" ||
             this.newTranslation.language == ""

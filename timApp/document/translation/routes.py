@@ -114,3 +114,13 @@ def get_translations(doc_id):
     verify_manage_access(d)
 
     return json_response(d.translations)
+
+
+@tr_bp.get("/translations/source-languages")
+def get_source_languages():
+    """
+    A very rough version of getting the languages.
+    """
+
+    sl = ["Finnish-FI", "English-EN"]
+    return json_response(sl)
