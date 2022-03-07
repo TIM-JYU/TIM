@@ -119,7 +119,7 @@ class EditRequest:
             preview=preview,
             forced_classes=forced_classes or [],
             mark_translated=mark_translated,
-            mark_translation_checked = mark_translation_checked,
+            mark_translation_checked=mark_translation_checked,
             viewname=viewroute_from_str(view) if view else None,
         )
 
