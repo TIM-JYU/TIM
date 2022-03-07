@@ -86,7 +86,7 @@ const NumericfieldAll = t.intersection([
 @Component({
     selector: "tim-numericfield-runner",
     template: `
-<div class="numericfieldNoSaveDiv">
+<div class="numericfieldNoSaveDiv inline-form">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
     <h4 *ngIf="header" [innerHtml]="header"></h4>
     <p class="stem" *ngIf="stem" [innerHtml]="stem"></p>
