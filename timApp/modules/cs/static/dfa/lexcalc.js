@@ -170,52 +170,49 @@ class Parser {
 
     constructor() { }
 
-    parse(input) {
+    parse(tokens) {
         let output = [];
         let stack = [];
-        let index = 0;
 
-        while (index < input.length) {
-            let token = input[index++];
-
-            switch (token.name()) {
-                case "(":
-                    stack.unshift(token);
-                    break;
-                case ")":
-                    while (stack.length) {
-                        token = stack.shift();
-                        if (token.name() === "(") break;
-                        output.push(token);
-                    }
-
-                    if (token.name() !== "(")
-                        throw new Error("Missing (.");
-                    break;
-                default:
-                    if (token.type() === undefined) {
-                        output.push(token);
-                        break;
-                    }
-                    while (stack.length) {
-                        let punctuator = stack[0].name();
-                        if (punctuator === "(") break;
-                        let operator = token.type();
-                        let precedence = operator.precedence;
-                        let antecedence = stack[0].type().precedence;
-
-                        if (precedence > antecedence ||
-                            precedence === antecedence &&
-                            operator.associativity === "right") break;
-                        output.push(stack.shift());
-                    }
-
-                    stack.unshift(token);
+        for (let token of tokens) {
+            if (token.name() ==="(") {
+                stack.push(token);
+                continue;
             }
+            if (token.name() === ")") {
+                while (stack.length) {
+                    token = stack.pop();
+                    if (token.name() === "(") break;
+                    output.push(token);
+                }
+
+                if (token.name() !== "(")
+                    throw new Error("Missing (.");
+                continue;
+            }
+
+            if (token.type() === undefined) {
+                output.push(token);
+                continue;
+            }
+            while (stack.length) {
+                let top = stack[stack.length-1];
+                if (top.name() === "(") break;
+                let operator = token.type();
+                let precedence = operator.precedence;
+                let antecedence = top.type().precedence;
+
+                if (precedence > antecedence ||
+                    precedence === antecedence &&
+                    operator.associativity === "right") break;
+                output.push(stack.pop());
+            }
+
+            stack.push(token);
         }
 
         while (stack.length) {
-            let token = stack.shift();
+            let token = stack.pop();
             if (token.name() !== "(") output.push(token);
             else throw new Error("Missing ).");
         }
@@ -236,7 +233,7 @@ function roundToNearest(num, decimals) {
   return Math.round(n) / p2;
 }
 
-// Base clasee for all calculatrot operations
+// Base class for all calculator operations
 class CalculatorOp {
 
     static factor = {
@@ -346,6 +343,7 @@ class SignOperation extends FuncRROperation{
     type() { return CalculatorOp.func; }
     extraSpaceAfter() { return ""; }
     output(extraBefore) { return extraBefore + this.name().trim(); }
+    newCalcOperation() { return this; }
 }
 
 // Thse two are outside of operations list, because
@@ -384,9 +382,10 @@ class SignMinus extends SignOperation {
         let a = this.pop();
         this.push(-a);
     }
+    newCalcOperation() { return new Minus(this.calculator); }
     checkSign(lastToken) {
         if (lastToken.allowSignRight()) return this;
-        return new Minus(this.calculator);
+        return this.newCalcOperation();
     }
 },
 
@@ -395,9 +394,10 @@ class SignPlus extends SignOperation {
     name() { return " +"; }
     lexname() { return "signp"}
     calc() {  }
+    newCalcOperation() { return new Plus(this.calculator); }
     checkSign(lastToken) {
         if (lastToken.allowSignRight()) return this;
-        return new Plus(this.calculator);
+        return this.newCalcOperation();
     }
 },
 
@@ -447,6 +447,16 @@ class Rad extends Command {
 class Deg extends Command {
     reg() { return "deg"; }
     calc() { this.calculator.deg = true; }
+},
+
+class RPN extends Command {
+    reg() { return "rpn"; }
+    calc() { this.calculator.rpn = true; }
+},
+
+class Infix extends Command {
+    reg() { return "infix"; }
+    calc() { this.calculator.rpn = false; }
 },
 
 class NumOperation extends  ValueOperation {
@@ -517,6 +527,25 @@ const operations = [
 */
 
 class Calculator {
+    rpnparse(tokens) {
+        let output = [];
+        let lasttoken = new BracketOperation(this);
+        for (const token of tokens) {
+            if (lasttoken instanceof SignOperation) {
+                const lt = output.pop();
+                output.push(token);
+                output.push(lt)
+            } else output.push(token);
+            lasttoken = token;
+        }
+        if (lasttoken instanceof SignOperation) {
+            output.pop();
+            output.push(lasttoken.newCalcOperation());
+        }
+        return output;
+    }
+
+
     isIn(reglist, cmd, def) {
         let name = cmd.lexname();
         if (!reglist || reglist.length === 0) return def;
@@ -533,6 +562,7 @@ class Calculator {
     constructor(params) {
         this.params = params || {};
         this.params.decimals = this.params.decimals || 13;
+        this.rpn = this.params.rpn || false;
         if (this.params.usemem === undefined) this.params.usemem = true;
         this.deg = this.params.deg;
         if (this.deg === undefined) this.deg = true;
@@ -578,11 +608,17 @@ class Calculator {
             let tokens = [], token;
             let lastToken = new BracketOperation(this);
             while (token = this.lexer.lex()) {
+                if (this.rpn) {
+                    tokens.push(token);
+                    continue;
+                }
                 token = token.checkSign(lastToken);
                 tokens.push(token);
                 lastToken = token;
             }
-            let cmds = this.parser.parse(tokens);
+            let cmds;
+            if (this.rpn) cmds = this.rpnparse(tokens);
+            else cmds = this.parser.parse(tokens);
             let calc = "";
             for (const cmd of cmds) {
                 cmd.calc();
