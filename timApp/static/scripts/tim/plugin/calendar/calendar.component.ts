@@ -81,7 +81,7 @@ const CalendarFields = t.intersection([
           </mwl-calendar-day-view>
         </div>
     `,
-    styleUrls: ["calendar.component.scss"],
+    // styleUrls: ["calendar.component.scss"],
     // templateUrl: "template.html",
 })
 export class CalendarComponent
