@@ -546,13 +546,38 @@ export class PermCtrl implements IController {
         }
     }
 
-    updateLanguages() {
-        // TODO: Do this properly
-        this.sourceLanguages.push({name: "Finnish", code: "FI"});
-        this.sourceLanguages.push({name: "English", code: "EN"});
+    listLanguages(languages: string, languageArray: Array<ILanguages>) {
+        while (languages.includes(",")) {
+            languageArray.push({
+                name: languages.substring(0, languages.indexOf("-")),
+                code: languages.substring(
+                    languages.indexOf("-") + 1,
+                    languages.indexOf(",")
+                ),
+            });
+            languages = languages.substr(languages.indexOf(",") + 1);
+        }
 
-        this.targetLanguages.push({name: "Finnish", code: "FI"});
-        this.targetLanguages.push({name: "English", code: "EN"});
+        languageArray.push({
+            name: languages.substring(0, languages.indexOf("-")),
+            code: languages.substring(languages.indexOf("-") + 1),
+        });
+    }
+
+    async updateLanguages() {
+        let sources = await to(
+            $http.get<string[]>("/translations/source-languages")
+        );
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        let languages = sources.result.data.toString();
+        this.listLanguages(languages, this.sourceLanguages);
+
+        sources = await to(
+            $http.get<string[]>("/translations/target-languages")
+        );
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        languages = sources.result.data.toString();
+        this.listLanguages(languages, this.targetLanguages);
     }
 
     findSourceDoc() {
@@ -569,6 +594,7 @@ export class PermCtrl implements IController {
     }
 
     checkTranslatability() {
+        // TODO: Check if user has the API key (check needs to be done in initialization to a boolean of its own)
         if (
             this.newTranslation.title == "" ||
             this.newTranslation.language == ""
