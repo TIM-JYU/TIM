@@ -1,8 +1,9 @@
 """Routes for document view."""
+import dataclasses
 import html
 import time
 from difflib import context_diff
-from typing import Optional, Union, Any, ValuesView, Generator
+from typing import Union, Any, ValuesView, Generator
 
 import attr
 import filelock
@@ -43,7 +44,7 @@ from timApp.document.document import (
 )
 from timApp.document.docviewparams import DocViewParams, ViewModelSchema
 from timApp.document.hide_names import is_hide_names, force_hide_names
-from timApp.document.post_process import post_process_pars
+from timApp.document.post_process import post_process_pars, should_auto_read
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import (
@@ -376,11 +377,12 @@ def gen_cache(
         for i, u in enumerate(users_uniq):
             start = f"{i + 1:>{digits}}/{total} {u.name}: "
             cr = check_doc_cache(doc_info, u, view_ctx, m, vp.nocache)
+            view_ctx_cached = dataclasses.replace(view_ctx, for_cache=True)
             if cr.doc and not force:
                 yield f"{start}already cached\n", cr.doc
             else:
                 if first_cache is None or not same_for_all:
-                    dr = render_doc_view(doc_info, m, view_ctx, u, False)
+                    dr = render_doc_view(doc_info, m, view_ctx_cached, u, False)
                     first_cache = dr
                 else:
                     dr = first_cache
@@ -521,6 +523,7 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
         return render_login(doc_info.document)
 
     current_user = get_current_user_object()
+    ug = current_user.get_personal_group()
 
     if current_user.is_deleted:
         raise DeletedUserException()
@@ -537,6 +540,10 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
             if result.allowed_to_cache:
                 set_doc_cache(cr.key, result)
         else:
+            # Document reading was skipped during caching, mark it now
+            if should_auto_read(doc_info.document, [ug.id], current_user):
+                mark_all_read(ug.id, doc_info.document)
+                db.session.commit()
             refresh_doc_expire(cr.key)
             result = cr.doc
     else:
@@ -881,7 +888,7 @@ def render_doc_view(
                 last_range.to_json("Last"),
             ]
 
-    if post_process_result.should_mark_all_read:
+    if post_process_result.should_mark_all_read and not view_ctx.for_cache:
         # TODO: Support multiple logged in users without using globals.
         #  On the other hand, should_mark_all_read is used only in exam mode,
         #  so we know there's only one user.
