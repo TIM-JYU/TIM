@@ -177,8 +177,10 @@ export class DraggableController implements IController {
 
         // Move element towards an anchor point selected by the user.
         window.addEventListener("resize", () => {
-            void this.restoreSizeAndPosition(VisibilityFix.Partial);
+            void this.restoreSizeAndPosition(VisibilityFix.Full);
         });
+        // User may have refreshed the document after resizing the window.
+        void this.restoreSizeAndPosition(VisibilityFix.Full);
     }
 
     private setVisibility(v: "visible" | "hidden" | "inherit") {
@@ -216,7 +218,7 @@ export class DraggableController implements IController {
         } else {
             this.element.css("position", "absolute");
             this.element.css("visibility", "visible");
-            this.restoreSizeAndPosition(VisibilityFix.Partial);
+            void this.restoreSizeAndPosition(VisibilityFix.Full);
         }
         this.detachStorage.set(this.canDrag());
     }
@@ -235,7 +237,7 @@ export class DraggableController implements IController {
         }
 
         // We don't want "this.modal.opened" here because then the saved position gets set incorrectly
-        // (20px too much left). On the other hand, when using "rendered", we have to manually hide the modal while
+        // (50px too much left). On the other hand, when using "rendered", we have to manually hide the modal while
         // loading its old position to avoid it being flashed briefly in wrong position.
         // This is done in $onInit and setInitialLayout.
         await this.modal.rendered;
@@ -347,7 +349,9 @@ export class DraggableController implements IController {
         const oldPos = this.posStorage.get();
         // it doesn't make sense to restore Y position if the dialog has absolute position (instead of fixed)
         if (await this.modalHasAbsolutePosition()) {
-            const off = this.element.offset() ?? {left: 20};
+            // 50px was kept as a constant because it would be tiresome to look for
+            // return value of the (utils.ts) file's (getOutOffsetVisible) function.
+            const off = this.element.offset() ?? {left: 50};
             this.element.offset({top: window.pageYOffset, left: off.left});
         }
         if (oldPos) {
@@ -559,7 +563,7 @@ export class DraggableController implements IController {
         this.removeMouseUp();
         this.removeMouseMove(this.move);
         this.removeMouseMove(this.moveResize);
-        this.ensureVisibleInViewport();
+        this.ensureFullyInViewport();
         if (this.posKey) {
             const css = this.element.css(["top", "bottom", "left", "right"]);
             this.posStorage.set(css);
