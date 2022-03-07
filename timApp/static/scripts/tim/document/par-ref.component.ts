@@ -37,7 +37,7 @@ interface IParInfo {
 })
 export class ParRefComponent {
     loading = false;
-    @Input() private docid!: string;
+    @Input() docid!: string;
     @Input() parid!: string;
     private error?: string;
     data?: IParInfo;

@@ -2,6 +2,7 @@ import {Component, Input} from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {HttpClient} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
+import {documentglobals} from "tim/util/globals";
 import {getActiveDocument} from "../document/activedocument";
 
 @Component({
@@ -22,11 +23,12 @@ import {getActiveDocument} from "../document/activedocument";
 })
 export class MarkAllAsReadComponent {
     @Input() buttonText?: string;
-    @Input() itemId!: number;
+    @Input() itemId?: number;
 
     constructor(private http: HttpClient) {}
 
     ngOnInit() {
+        this.itemId = this.itemId ?? documentglobals()?.curr_item?.id;
         if (!this.buttonText) {
             this.buttonText = $localize`Mark all as read`;
         }
