@@ -17,7 +17,7 @@ from timApp.document.translation.translation import Translation
 from timApp.item.block import copy_default_rights, BlockType
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
-from timApp.util.flask.requesthelper import verify_json_params, NotExist
+from timApp.util.flask.requesthelper import verify_json_params, NotExist, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util import logger
 from timApp.document.translation.translator import DeepLTranslator
@@ -32,7 +32,8 @@ tr_bp = Blueprint("translation", __name__, url_prefix="")
 
 @tr_bp.post("/translate/<int:tr_doc_id>/<language>")
 def create_translation_route(tr_doc_id, language):
-    title = request.get_json().get("doc_title", None)
+    req_data = request.get_json()
+    title = req_data.get("doc_title", None)
 
     doc = get_doc_or_abort(tr_doc_id)
 
@@ -49,36 +50,12 @@ def create_translation_route(tr_doc_id, language):
     tr = Translation(doc_id=cite_doc.doc_id, src_docid=src_doc.doc_id, lang_id=language)
     tr.title = title
 
-    # This call gets references to original document and attaches them to the new translated document
     add_reference_pars(cite_doc, src_doc, "tr")
 
-    # Get the API-key from environment
-    try:
-        # TODO Get the API-key from user profile or the post-request
-        from os import environ
-
-        api_key = environ["DEEPL_API_KEY"]
-        translator = DeepLTranslator(api_key)
-        usage = translator.usage()
-        logger.log_info(
-            "Current DeepL API usage: "
-            + str(usage.character_count)
-            + "/"
-            + str(usage.character_limit)
-        )
-    except KeyError:
-        api_key = None
-        logger.log_info(
-            "The DEEPL_API_KEY environment variable is not set and automatic translation will not be made."
-        )
-    if api_key:
-        # Be careful about closing the underlying file when iterating document
-        with tr.document.get_source_document().__iter__() as doc_iter:
-            # Translate each paragraph sequentially
-            for orig_par, tr_par in zip(doc_iter, tr.document):
-                new_text = translator.translate(orig_par.md, "FI", "EN-GB")
-                logger.log_info(new_text)
-                tr.document.modify_paragraph(tr_par.id, new_text)
+    # Select the specified translator and translate if valid
+    if translator_code := req_data.get("autotranslate", None):
+        if translator_code.lower() == "deepl":
+            deepl_translate(tr, src_doc.docinfo.lang_id, language)
 
     if isinstance(doc, DocEntry):
         de = doc
@@ -137,3 +114,42 @@ def get_target_languages():
 
     sl = ["Finnish-FI", "English-EN", "German-GE"]
     return json_response(sl)
+
+
+def deepl_translate(tr: Translation, source_lang: str, target_lang: str) -> None:
+    """
+    Perform the machine translation using DeepL API
+    :param tr: The version of the document to translate
+    :param source_lang: The language to translate from
+    :param target_lang: The language to translate into
+    """
+    # Get the API-key from environment variable
+    try:
+        # TODO Get the API-key from user profile or the post-request
+        from os import environ
+
+        api_key = environ["DEEPL_API_KEY"]
+        translator = DeepLTranslator(api_key)
+        # TODO Languages should use common values / standard codes at this point (also applies to any doc.lang_id)
+        if not translator.supports(source_lang, target_lang):
+            raise RouteException(
+                f"The language pair from {source_lang} to {target_lang} is not supported"
+            )
+
+        usage = translator.usage()
+        logger.log_info(
+            "Current DeepL API usage: "
+            + str(usage.character_count)
+            + "/"
+            + str(usage.character_limit)
+        )
+    except KeyError:
+        raise NotExist("The DEEPL_API_KEY is not set into your configuration")
+
+    # Be careful about closing the underlying file when iterating document
+    with tr.document.get_source_document().__iter__() as doc_iter:
+        # Translate each paragraph sequentially
+        for orig_par, tr_par in zip(doc_iter, tr.document):
+            new_text = translator.translate(orig_par.md, source_lang, target_lang)
+            logger.log_info(new_text)
+            tr.document.modify_paragraph(tr_par.id, new_text)

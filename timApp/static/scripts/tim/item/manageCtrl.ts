@@ -535,6 +535,8 @@ export class PermCtrl implements IController {
                 `/translate/${this.item.id}/${this.newTranslation.language}`,
                 {
                     doc_title: this.newTranslation.title,
+                    // TODO Get this from a dropdown menu
+                    autotranslate: "DeepL",
                 }
             )
         );
