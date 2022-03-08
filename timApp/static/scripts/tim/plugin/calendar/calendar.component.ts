@@ -16,7 +16,8 @@ import {
 } from "angular-calendar";
 import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {CommonModule} from "@angular/common";
+import {CommonModule, registerLocaleData} from "@angular/common";
+import localeFr from "@angular/common/locales/fi";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
@@ -40,6 +41,7 @@ const CalendarFields = t.intersection([
     getTopLevelFields(CalendarMarkup),
     t.type({}),
 ]);
+registerLocaleData(localeFr);
 
 @Component({
     selector: "mwl-calendar-component",
@@ -60,6 +62,8 @@ const CalendarFields = t.intersection([
             *ngSwitchCase="'month'"
             [viewDate]="viewDate"
             [events]="events"
+            [locale]="'fi-FI'"
+            [weekStartsOn]= "1"
             (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
             (dayClicked)="clickedDate = $event.day.date"
           >
