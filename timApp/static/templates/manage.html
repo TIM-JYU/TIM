@@ -68,25 +68,7 @@
             Want to quickly get notifications from multiple documents?
             Subscribe to <a href=".">the entire folder</a>.
         </tim-alert>
-        <form>
-            <p>Send me email on</p>
-            <div class="checkbox"><label>
-                <input type="checkbox" ng-model="$ctrl.notifySettings.email_doc_modify"
-                       ng-change="$ctrl.notifyChanged()"/>Document modifications
-            </label></div>
-            <div class="checkbox"><label>
-                <input type="checkbox" ng-model="$ctrl.notifySettings.email_comment_add"
-                       ng-change="$ctrl.notifyChanged()"/>New comments
-            </label></div>
-            <div class="checkbox"><label>
-                <input type="checkbox" ng-model="$ctrl.notifySettings.email_comment_modify"
-                       ng-change="$ctrl.notifyChanged()"/>Edited comments
-            </label></div>
-            <div class="checkbox" ng-if="$ctrl.item.rights.teacher"><label>
-                <input type="checkbox" ng-model="$ctrl.notifySettings.email_answer_add"
-                       ng-change="$ctrl.notifyChanged()"/>New answers to tasks
-            </label></div>
-        </form>
+        <tim-notification-options></tim-notification-options>
     </div>
 </div>
 

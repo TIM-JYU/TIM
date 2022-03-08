@@ -35,6 +35,7 @@ import {ViewRangeNavigationComponent} from "tim/document/view-range-navigation.c
 import {HelpParContent} from "tim/document/editing/help-par-content.component";
 import {TimepickerActions} from "ngx-bootstrap/timepicker";
 import {CopyFolderComponent} from "tim/folder/copy-folder.component";
+import {TimManageModule} from "tim/item/manage/manage.module";
 
 @NgModule({
     declarations: [
@@ -69,6 +70,7 @@ import {CopyFolderComponent} from "tim/folder/copy-folder.component";
         TimUtilityModule,
         NoopAnimationsModule,
         SideBarMenuModule,
+        TimManageModule,
         BsDropdownModule.forRoot(),
         TypeaheadModule.forRoot(),
         TooltipModule.forRoot(),
