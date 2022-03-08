@@ -52,7 +52,7 @@ import {vctrlInstance} from "../../../../static/scripts/tim/document/viewctrlins
             [disabled]="isRunning || readonly"
             (click)="runScript()">
         {{buttonText()}}
-    </button>
+    </button>&nbsp;
     <tim-loading *ngIf="isRunning"></tim-loading>
     <p class="error" *ngIf="error">Error occurred, script results may not be saved.</p>
     <pre *ngIf="error">{{error.msg}}</pre>
