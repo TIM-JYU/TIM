@@ -64,8 +64,9 @@ const TextfieldMarkup = t.intersection([
         rows: withDefault(t.number, 1),
     }),
 ]);
+export const FieldContent = t.union([t.string, t.number, t.null]);
 export const FieldBasicData = t.type({
-    c: t.union([t.string, t.number, t.null]),
+    c: FieldContent,
 });
 export const FieldDataWithStyles = t.intersection([
     FieldBasicData,
@@ -82,6 +83,7 @@ const TextfieldAll = t.intersection([
         state: nullable(FieldDataWithStyles),
     }),
 ]);
+export type TFieldContent = t.TypeOf<typeof FieldContent>;
 
 @Component({
     selector: "tim-textfield-runner",

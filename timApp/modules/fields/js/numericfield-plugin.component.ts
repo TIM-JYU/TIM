@@ -24,8 +24,7 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {getFormBehavior} from "tim/plugin/util";
-import {$http} from "tim/util/ngimport";
-import {defaultErrorMessage, defaultTimeout, to, valueOr} from "tim/util/utils";
+import {defaultErrorMessage, valueOr} from "tim/util/utils";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -39,7 +38,7 @@ import {
 } from "../../../static/scripts/tim/downgrade";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
 import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
-import {FieldDataWithStyles} from "./textfield-plugin.component";
+import {FieldDataWithStyles, TFieldContent} from "./textfield-plugin.component";
 
 const REDOUBLE = /[^0-9,.e\-+]+/g;
 
@@ -215,6 +214,29 @@ export class NumericfieldPluginComponent
         ).toString();
     }
 
+    private updateFieldValue(val: TFieldContent): boolean {
+        if (typeof val === "number") {
+            this.numericvalue = val;
+            return true;
+        }
+        if (this.isAllowedNull(val)) {
+            this.numericvalue = undefined;
+            return true;
+        }
+        // TODO: parseFloat accepts too much like "6hello", should have a more accurate float check.
+        const numericvalue = this.getDouble(val);
+        if (isNaN(numericvalue)) {
+            this.numericvalue = undefined;
+            if (val !== "") {
+                this.errormessage = $localize`Content is not a number (${val}); showing empty value.`;
+                this.redAlert = true;
+            }
+            return false;
+        }
+        this.numericvalue = numericvalue;
+        return true;
+    }
+
     ngOnInit() {
         super.ngOnInit();
         this.vctrl = vctrlInstance!;
@@ -222,24 +244,7 @@ export class NumericfieldPluginComponent
         if (state === undefined || state === null) {
             this.initCode();
         } else {
-            if (typeof state === "number") {
-                this.numericvalue = state;
-            } else {
-                if (this.isAllowedNull(state)) {
-                    this.numericvalue = undefined;
-                } else {
-                    // TODO: parseFloat accepts too much like "6hello", should have a more accurate float check.
-                    const numericvalue = this.getDouble(state);
-                    this.numericvalue = numericvalue;
-                    if (isNaN(numericvalue)) {
-                        this.numericvalue = undefined;
-                        if (state !== "") {
-                            this.errormessage = `Content is not a number (${state}); showing empty value.`;
-                            this.redAlert = true;
-                        }
-                    }
-                }
-            }
+            this.updateFieldValue(state);
         }
         if (!this.markup.wheel) {
             this.element.on(
@@ -285,6 +290,7 @@ export class NumericfieldPluginComponent
             this.initCode();
             this.applyStyling({});
             this.errormessage = undefined;
+            this.redAlert = false;
             return undefined;
         });
     }
@@ -316,18 +322,9 @@ export class NumericfieldPluginComponent
             if (!FieldDataWithStyles.is(content)) {
                 this.resetField();
             } else {
-                if (this.isAllowedNull(content.c)) {
-                    this.numericvalue = undefined;
-                } else {
-                    const parsed = this.getDouble(content.c);
-                    if (isNaN(parsed)) {
-                        this.numericvalue = undefined;
-                        ok = false;
-                        message = 'Value at "c" was not a valid number';
-                        this.errormessage = `Content is not a number (${content.c}); showing empty value.`;
-                    } else {
-                        this.numericvalue = parsed;
-                    }
+                if (!this.updateFieldValue(content.c)) {
+                    ok = false;
+                    message = 'Value at "c" was not a valid number';
                 }
 
                 if (!this.markup.ignorestyles && content.styles) {
@@ -496,6 +493,7 @@ export class NumericfieldPluginComponent
      */
     async doSaveText(nosave: boolean) {
         this.errormessage = undefined;
+        this.redAlert = false;
         if (this.markup.validinput) {
             if (!this.validityCheck(this.markup.validinput)) {
                 this.errormessage =
@@ -520,26 +518,24 @@ export class NumericfieldPluginComponent
         if (nosave) {
             params.input.nosave = true;
         }
-        const url = this.pluginMeta.getAnswerUrl();
-        const r = await to(
-            $http.put<{
-                web: {
-                    result: string;
-                    error?: string;
-                    clear?: boolean;
-                    value: string;
-                };
-            }>(url, params, {timeout: defaultTimeout})
-        );
+        const r = await this.postAnswer<{
+            web: {
+                result: string;
+                error?: string;
+                clear?: boolean;
+                value: TFieldContent;
+            };
+        }>(params);
         this.isRunning = false;
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             if (data.web.error) {
                 this.errormessage = data.web.error;
+                this.redAlert = true;
             }
             this.result = data.web.result;
             if (this.result === "saved") {
-                this.numericvalue = +data.web.value.toString();
+                this.updateFieldValue(data.web.value);
                 this.initialValue = this.numericvalue;
                 this.changes = false;
                 this.updateListeners(ChangeType.Saved);
@@ -571,9 +567,10 @@ export class NumericfieldPluginComponent
             }
         } else {
             this.errormessage =
-                r.result.data?.error ??
+                r.result.error?.error ??
                 this.markup.connectionErrorMessage ??
                 defaultErrorMessage;
+            this.redAlert = true;
         }
         return this.saveResponse;
     }
