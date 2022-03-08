@@ -125,8 +125,8 @@ const scaleValueWords: Word[] = [
                     <button class="timButton" [disabled]="isRunning || !isUnSaved()" (click)="save()"
                             *ngIf="editMode || isUnSaved()">
                         {{btnText}}
-                    </button>
-                    <span class="notSavedSpan" *ngIf="isUnSaved()"></span>
+                    </button>&nbsp;
+                    <span class="notSavedSpan" *ngIf="isUnSaved()"></span>&nbsp;
                     <span *ngIf="result">{{result}}</span>
                 </div>
                 <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
