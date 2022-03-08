@@ -8,7 +8,7 @@ import {FormsModule} from "@angular/forms";
     template: `
     <div class="row text-center">
       <div class="col-md-4">
-        <div class="btn-group">
+        <div class="btn-group time-period-btn">
           <div
             class="btn btn-primary"
             mwlCalendarPreviousView
@@ -68,6 +68,7 @@ import {FormsModule} from "@angular/forms";
     </div>
     <br />
   `,
+    styleUrls: ["calendar.component.scss"],
 })
 export class CalendarHeaderComponent {
     @Input() view: CalendarView = CalendarView.Week;
