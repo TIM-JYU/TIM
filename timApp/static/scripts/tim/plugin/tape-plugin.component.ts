@@ -5,6 +5,7 @@ import {
     ElementRef,
     Input,
     NgModule,
+    ViewChild,
 } from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
@@ -14,6 +15,7 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
 import {AnswerSheetModule} from "../document/question/answer-sheet.component";
 import {PurifyModule} from "../util/purify.module";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
+import {copyToClipboard, isIOS} from "../util/utils";
 
 export enum ParameterType {
     NUMBER,
@@ -333,26 +335,6 @@ export interface TapeAttrs {
     useJumpIfEmpty: boolean;
 }
 
-function isiOS(): boolean {
-    const iDevices = [
-        "iPad Simulator",
-        "iPhone Simulator",
-        "iPod Simulator",
-        "iPad",
-        "iPhone",
-        "iPod",
-    ];
-
-    if (!!navigator.platform) {
-        while (iDevices.length) {
-            if (navigator.platform === iDevices.pop()) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 function scrollElementVisibleInParent(
     el: Element,
     par: Element,
@@ -393,7 +375,7 @@ function scrollElementVisibleInParent(
                     <div *ngFor="let n of state.output" class="tapeItem">{{n}}</div>
                     </div>
                </div>
-                <img src="/static/images/tape/output.png" />
+                <img alt="output" src="/static/images/tape/output.png" />
                 <span>Output</span>
             </div>
             <div class="robotDiv" >
@@ -401,7 +383,7 @@ function scrollElementVisibleInParent(
                     <div class="tapeItem"  [innerText]="getHand()"></div>
                 </div>
                 <div class="robotImage">
-                    <img src="/static/images/tape/robot.png" />
+                    <img alt="robot" src="/static/images/tape/robot.png" />
                     <div class="robotRunButtons">
                          <button class="timButton" (click)="step()"><span>Step</span></button>
                          <button class="timButton" (click)="run()"><span [innerText]="getRunButtonText()"></span></button>
@@ -415,7 +397,7 @@ function scrollElementVisibleInParent(
                         <div *ngFor="let n of state.input" class="tapeItem">{{n}}</div>
                     </span>
                 </div>
-                <img src="/static/images/tape/input.png" />
+                <img alt="input" src="/static/images/tape/input.png" />
                 <span>Input</span>
             </div>
         </div>
@@ -450,7 +432,7 @@ function scrollElementVisibleInParent(
             </div>
             <span class="commandListContainer">
                 Program:
-                <textarea class= "robotEditArea textAreaRobotProgram" [(ngModel)]="programAsText" *ngIf="textmode"></textarea>
+                <textarea #textAreaRobotProgram class="robotEditArea textAreaRobotProgram" [(ngModel)]="programAsText" *ngIf="textmode"></textarea>
                 <ul class="cmditems list-unstyled listBox programCommandList" *ngIf="!textmode">
                 <li  *ngFor="let c of commandList; let i = index" class="command" (click)="selectedCommandIndex = i"
                 [ngStyle]="{'color': getCommandColor(i), 'background-color': getCommandBackgroundColor(i)}">{{c.getName()}}</li>
@@ -491,6 +473,8 @@ function scrollElementVisibleInParent(
 })
 export class TapePluginContent {
     @Input() data!: TapeAttrs;
+    @ViewChild("textAreaRobotProgram")
+    textAreaRobotProgram?: ElementRef<HTMLTextAreaElement>;
     private element: JQuery<HTMLElement>;
 
     constructor(hostElement: ElementRef<HTMLElement>) {
@@ -511,7 +495,9 @@ export class TapePluginContent {
     }
 
     ngOnInit() {
-        this.iOS = isiOS();
+        // TODO: Convert to proper Angular plugin and use base64 encoding
+        this.data = JSON.parse(this.data as unknown as string);
+        this.iOS = isIOS();
         if (this.data.useJumpIfEmpty) {
             this.possibleCommandList.push(new JumpIfEmpty());
         }
@@ -765,6 +751,7 @@ export class TapePluginContent {
         }
 
         this.state.instructionPointer = 0;
+        console.log(this.data.presetCode);
         if (this.data.presetCode && this.commandList.length === 0) {
             // assign pre-defined code only if we have no code right now,
             // so we don't clear the user's code on reset
@@ -802,31 +789,12 @@ export class TapePluginContent {
         this.programAsText = this.toText();
     }
 
-    private selectAllText(name: string, newtext: string) {
-        const jh = this.element.find(name);
-        if (newtext) {
-            jh.val(newtext);
-        }
-        const h = jh[0] as HTMLTextAreaElement;
-        if (!h) {
-            return;
-        }
-        if (this.iOS) {
-            h.focus();
-            h.setSelectionRange(0, 99999); // select is not working in iOS
-        } else {
-            jh.select();
-        }
-    }
-
     copyAll() {
-        // this.changeText();
-        if (this.textmode) {
-            this.selectAllText(".textAreaRobotProgram", "");
+        if (this.textmode && this.textAreaRobotProgram) {
+            copyToClipboard(this.textAreaRobotProgram.nativeElement.value);
         } else {
-            this.selectAllText(".hiddenRobotProgram", this.toText());
+            copyToClipboard(this.toText());
         }
-        document.execCommand("copy");
     }
 
     paste() {
