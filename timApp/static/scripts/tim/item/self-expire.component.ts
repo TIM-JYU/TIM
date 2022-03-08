@@ -18,6 +18,10 @@ export class SelfExpireComponent {
     constructor(private http: HttpClient) {}
 
     ngOnInit() {
+        // Legacy support for AngularJS item-id being a string
+        if (typeof this.itemId !== "number") {
+            this.itemId = documentglobals()?.curr_item?.id;
+        }
         this.itemId = this.itemId ?? documentglobals()?.curr_item?.id;
         if (!this.buttonText) {
             this.buttonText = "Remove your rights";
