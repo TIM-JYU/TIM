@@ -9,6 +9,7 @@ import {
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import * as t from "io-ts";
 import {
+    CalendarDateFormatter,
     CalendarEvent,
     CalendarModule,
     CalendarView,
@@ -25,6 +26,7 @@ import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
 import {CalendarHeaderModule} from "./calendar-header.component";
+import {CustomDateFormatter} from "./custom-date-formatter.service";
 
 const CalendarItem = t.type({
     done: t.boolean,
@@ -47,6 +49,12 @@ registerLocaleData(localeFr);
 @Component({
     selector: "mwl-calendar-component",
     changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [
+        {
+            provide: CalendarDateFormatter,
+            useClass: CustomDateFormatter,
+        },
+    ],
     template: `
         <mwl-utils-calendar-header [(view)]="view" [(viewDate)]="viewDate">
         </mwl-utils-calendar-header>
