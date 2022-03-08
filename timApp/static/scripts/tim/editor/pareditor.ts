@@ -28,6 +28,7 @@ import {EditorType, SelectionRange} from "./BaseParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {RestampDialogClose} from "./restamp-dialog.component";
 import {TextAreaParEditor} from "./TextAreaParEditor";
+import {ILanguages} from "tim/item/IItem";
 
 markAsUsed(rangyinputs);
 
@@ -90,7 +91,6 @@ export type IEditorResult =
     | {type: "save"; text: string}
     | {type: "delete"}
     | {type: "markunread"}
-    | {type: "translated"}
     | {type: "cancel"};
 
 const MenuItemFileObject = t.intersection([
@@ -225,6 +225,8 @@ export class PareditorController extends DialogController<
     private perusliiteMacroStringBegin = "%%perusliite("; // Attachment macro without stamping.
     private perusliiteMacroStringEnd = ")%%";
     private lastKnownDialogHeight?: number;
+    private sourceLanguages: Array<ILanguages> = [];
+    private targetLanguages: Array<ILanguages> = [];
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -1075,6 +1077,7 @@ ${backTicks}
 
     $onInit() {
         super.$onInit();
+        this.updateLanguages();
         const saveTag = this.getSaveTag();
         this.storage = {
             acebehaviours: new TimStorage("acebehaviours" + saveTag, t.boolean),
@@ -1466,13 +1469,70 @@ ${backTicks}
         }
     }
 
-    showTranslated() {
-        if (this.checkIfOriginal()) {
-            return false;
+    listLanguages(languages: string, languageArray: Array<ILanguages>) {
+        while (languages.includes(",")) {
+            languageArray.push({
+                name: languages.substring(0, languages.indexOf("-")),
+                code: languages.substring(
+                    languages.indexOf("-") + 1,
+                    languages.indexOf(",")
+                ),
+            });
+            languages = languages.substr(languages.indexOf(",") + 1);
         }
-        // TODO: Check for automatic translation's availability - info needs to be gotten
-        //  via HTTP GET to a translation URL (which needs to be made)
-        return true;
+
+        languageArray.push({
+            name: languages.substring(0, languages.indexOf("-")),
+            code: languages.substring(languages.indexOf("-") + 1),
+        });
+    }
+
+    async updateLanguages() {
+        let sources = await to(
+            $http.get<string[]>("/translations/source-languages")
+        );
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        let languages = sources.result.data.toString();
+        this.listLanguages(languages, this.sourceLanguages);
+
+        sources = await to(
+            $http.get<string[]>("/translations/target-languages")
+        );
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        languages = sources.result.data.toString();
+        this.listLanguages(languages, this.targetLanguages);
+    }
+
+    showTranslated() {
+        let isTranslated = false;
+        if (this.checkIfOriginal()) {
+            return isTranslated;
+        }
+        const trs = documentglobals().translations;
+        const orig = trs.find((tab) => tab.id === tab.src_docid);
+        if (
+            orig != undefined &&
+            this.resolve.params.viewCtrl != undefined &&
+            this.resolve.params.viewCtrl.item.lang_id != undefined
+        ) {
+            const orig_lang = orig.lang_id;
+            const tr_lang = this.resolve.params.viewCtrl.item.lang_id;
+            isTranslated = this.checkIfSupported(orig_lang, tr_lang);
+        }
+        return isTranslated;
+    }
+
+    checkIfSupported(orig: string, tr: string) {
+        for (const target of this.targetLanguages) {
+            if (target.code == tr.toUpperCase()) {
+                for (const source of this.sourceLanguages) {
+                    if (source.code == orig.toUpperCase()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     checkIfOriginal() {
