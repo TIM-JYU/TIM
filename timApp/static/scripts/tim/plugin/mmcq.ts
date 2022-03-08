@@ -90,10 +90,10 @@ export class MCQBase<State> {
             <tr *ngFor="let choice of content.question.choices; let i = index">
                 <td><span class="MCQItem" [innerHtml]="choice.text"></span></td>
                 <td class="text-center">
-                    <input type="checkbox" [(ngModel)]="answer[i]" ng-true-value="true" ng-false-value="false"/>
+                    <input type="checkbox" [(ngModel)]="answer[i]"/>
                 </td>
                 <td class="text-center">
-                    <input type="checkbox" [(ngModel)]="answer[i]" ng-false-value="true" ng-true-value="false"/>
+                    <input type="checkbox" [ngModel]="answer[i] === undefined ? undefined : !answer[i]" (ngModelChange)="answer[i] = !$event"/>
                 </td>
                 <td *ngIf="checked">
                     <span [innerHtml]="correctText"
@@ -167,7 +167,6 @@ export class MMCQ extends MCQBase<null | boolean[]> {
             input: this.extract(),
         };
         const ident = this.getId();
-        console.log(ident);
         if (!ident) {
             return;
         }
@@ -206,15 +205,17 @@ export class MMCQ extends MCQBase<null | boolean[]> {
     <p class="header" style="font-weight:bold" [innerHtml]="headerText"></p>
     <p class="stem" [innerHtml]="content.question.stem"></p>
     <table>
-        <tr *ngFor="let choice of content.question.choices; let i = index">
-            <td>
-                <input type="radio" [(ngModel)]="userSelection" [value]="i"/>
-                <span *ngIf="content.state==i&&choice.correct">✓</span>
-                <span *ngIf="content.state==i&&!choice.correct">✗</span>
-            </td>
-            <td><span class="MCQItem" [innerHtml]="choice.text"></span>
-                <span *ngIf="choice.reason" class="MCQExpl" [innerHtml]="choice.reason"></span></td>
-        </tr>
+        <tbody>
+            <tr *ngFor="let choice of content.question.choices; let i = index">
+                <td>
+                    <input type="radio" [(ngModel)]="userSelection" [value]="i"/>
+                    <span *ngIf="content.state==i&&choice.correct">✓</span>
+                    <span *ngIf="content.state==i&&!choice.correct">✗</span>
+                </td>
+                <td><span class="MCQItem" [innerHtml]="choice.text"></span>
+                    <span *ngIf="choice.reason" class="MCQExpl" [innerHtml]="choice.reason"></span></td>
+            </tr>
+        </tbody>
     </table>
     <div class="text-center">
         <button (click)="submit()" [innerHtml]="buttonText"></button>
