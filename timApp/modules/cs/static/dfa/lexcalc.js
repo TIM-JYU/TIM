@@ -61,7 +61,7 @@ class Lexer {
 
     lex() {
         let token;
-        if (this.tokens.length) return this.tokens.shift();
+        if (this.tokens.length > 0) return this.tokens.shift();
 
         this.reject = true;
 
@@ -72,24 +72,21 @@ class Lexer {
             while (matches.length) {
                 if (!this.reject) break;
                 let match = matches.shift();
-                let result = match.result;
-                let length = match.length;
-                this.index += length;
+                this.index += match.length;
                 this.reject = false;
                 this.remove++;
 
-                token = match.action.apply(this, result);
-                if (this.reject) this.index = result.index;
-                else if (typeof token !== "undefined") {
-                    // noinspection FallThroughInSwitchStatementJS
-                    switch (Object.prototype.toString.call(token)) {
-                        case "[object Array]":
-                            this.tokens = token.slice(1);
-                            token = token[0];
-                        default:
-                            if (length) this.remove = 0;
-                            return token;
+                token = match.action.apply(this, match.result);
+                // action may change this.reject!
+                if (this.reject)
+                    this.index = match.result.index;
+                else if (token !== undefined) {
+                    if (Array.isArray(token)) {
+                        this.tokens = token.slice(1); // save rest if many
+                        token = token[0]; // and return first one
                     }
+                    if (match.length > 0) this.remove = 0;
+                    return token;
                 }
             }
 
@@ -103,7 +100,8 @@ class Lexer {
                         if (Object.prototype.toString.call(token) === "[object Array]") {
                             this.tokens = token.slice(1);
                             return token[0];
-                        } else return token;
+                        }
+                        return token;
                     }
                 } else {
                     if (this.index !== index) this.remove = 0;
@@ -111,7 +109,7 @@ class Lexer {
                 }
             } else if (matches.length)
                 this.reject = true;
-            else break;
+            else return undefined;
         }
     }
 
@@ -123,8 +121,7 @@ class Lexer {
         let lastIndex = this.index;
         let input = this.input;
 
-        for (let i = 0; i < this.rules.length; i++) {
-            let rule = this.rules[i];
+        for (const rule of this.rules) {
             let start = rule.start;
             let states = start.length;
 
@@ -142,12 +139,9 @@ class Lexer {
                     length: result[0].length
                 });
 
-                if (rule.global) {
-                   // index = j;
-                   matches[0] = matches[j-1];
-                   return  matches;
-                }
+                if (rule.global) index = j; // do not sort prior this
 
+                // move to place agording by its lenght, longest firts
                 while (--j > index) {
                     let k = j - 1;
 
@@ -222,15 +216,15 @@ class Parser {
 }
 
 function roundToNearest(num, decimals) {
-  decimals = decimals || 0;
-  let p = Math.pow(10, decimals);
-  let p2 = p;
-  while (Math.abs(num) > 10) {
-      p2 /= 10;
-      num /= 10;
-  }
-  let n = (num * p) * (1 + Number.EPSILON);
-  return Math.round(n) / p2;
+    decimals = decimals || 0;
+    let p = Math.pow(10, decimals);
+    let p2 = p;
+    while (Math.abs(num) > 10) { // normalize
+        p2 /= 10;
+        num /= 10;
+    }
+    let n = (num * p) * (1 + Number.EPSILON);
+    return Math.round(n) / p2;
 }
 
 // Base class for all calculator operations
@@ -256,24 +250,23 @@ class CalculatorOp {
     }
 
     type() {   }           // if parser should order, return on of above
-    reg() { return "";  }  // regexp to match those opertation
-    params() { return "";} // regexp options for this match
+    reg() { return / /;  }  // regexp to match those opertation
 
-    pop() {
+    pop() {                // pop value from calc stack
         if (this.calculator.stack.length === 0)
             return this.calculator.lastResult;
         return this.calculator.stack.pop();
     }
 
     push(v) { this.calculator.stack.push(this.r(v)); }
-    name() { return this.reg(); } // needed if name is different from op
-    lexname() { return this.name(); } // nae to be used in allowed or illegals list
+    name() { return this.reg().source.replace("\\", ""); } // needed if name is different from op
+    lexname() { return this.name(); } // name to be used in allowed or illegals list
     output(extraBefore) { return ` ${this.name()} `;  } // text to output
     extraSpaceAfter() { return ""; } // need space before some operation?
-    doCalc() {  }
+    doCalc() {  }              // helpper method for doing calc
     calc() { this.doCalc(); }  // what to do when runned
     r(v) { return roundToNearest(v, this.calculator.params.decimals);  }
-    lexfunc(lexme) { return this;  }  // what to be returned for parser
+    lexfunc(lexme, lexer) { return this;  }  // what to be returned for parser
     allowSignRight() { return true; } // does shen allow sign operatio on right side
     checkSign(lastToken) { return this; } // deny 2-3 as a sign
 
@@ -281,7 +274,7 @@ class CalculatorOp {
         if (s === undefined) return this.calculator.lastResult;
         s = (""+s).trim();
         if (s === "") return this.calculator.lastResult;
-        if (s.match(/^p[0-9]*$/)) { // calc index for r
+        if (s.match(/^p[0-9]*$/)) { // from pX calc index for r
             if (s==="p") return this.calculator.lastResult;
             let idx = this.calculator.row - parseInt(s.substring(1));
             idx = Math.max(0, Math.min(idx, this.calculator.row-1));
@@ -343,19 +336,19 @@ class SignOperation extends FuncRROperation{
     type() { return CalculatorOp.func; }
     extraSpaceAfter() { return ""; }
     output(extraBefore) { return extraBefore + this.name().trim(); }
-    newCalcOperation() { return this; }
+    newCalcOperation() { return new BinOperation(this.calculator); }
 }
 
 // Thse two are outside of operations list, because
 // they are refered inside the list (SignMinus and SignPlus)
 class Plus extends BinOperation {
-    reg() { return " *\\+ "; }
+    reg() { return / *\+ /; }
     name() { return "+"; }
     doCalc(a, b) { return a + b; }
 }
 
 class Minus extends BinOperation {
-    reg() { return " *- "; }
+    reg() { return / *- /; }
     name() { return "-"; }
     doCalc(a, b) { return a - b; }
 }
@@ -363,19 +356,17 @@ class Minus extends BinOperation {
 const operations = [
 
 class LeftBracketOperation extends  BracketOperation {
-    reg() { return "[(]";}
-    name() { return "("; }
+    reg() { return /\(/;}
     extraSpaceAfter() { return ""; }
 },
 
 class RightBracketOperation extends  BracketOperation {
-    reg() { return "[)]";}
-    name() { return ")"; }
+    reg() { return /\)/;}
     allowSignRight() { return false; }
 },
 
 class SignMinus extends SignOperation {
-    reg() { return " *-"; }
+    reg() { return / *-/; }
     name() { return " -"; }
     lexname() { return "signm"}
     calc() {
@@ -390,7 +381,7 @@ class SignMinus extends SignOperation {
 },
 
 class SignPlus extends SignOperation {
-    reg() { return " *\\+"; }
+    reg() { return / *\+/; }
     name() { return " +"; }
     lexname() { return "signp"}
     calc() {  }
@@ -405,67 +396,65 @@ Plus,
 Minus,
 
 class Mul extends BinOperation {
-    reg() { return "\\*"; }
-    name() { return "*"; }
+    reg() { return /\*/; }
     type() { return CalculatorOp.factor; }
     doCalc(a, b) { return a * b; }
 },
 
 class Div extends BinOperation {
-    reg() { return "/"; }
+    reg() { return /\//; }
     type() { return CalculatorOp.factor; }
     doCalc(a, b) { return a / b; }
 },
 
 class Pow extends BinOperation {
-    reg() { return "\\^"; }
-    name() { return "^"; }
+    reg() { return /\^/; }
     type() { return CalculatorOp.factor; }
     doCalc(a, b) { return Math.pow(a , b); }
 },
 
 class Sin extends FuncRROperation {
-    reg() { return "sin"; }
+    reg() { return /sin/; }
     doCalc(a) { return Math.sin(this.calculator.toAngle(a)); }
 },
 
 class Cos extends FuncRROperation {
-    reg() { return "cos"; }
+    reg() { return /cos/; }
     doCalc(a) { return Math.cos(this.calculator.toAngle(a)); }
 },
 
 class Sqrt extends FuncRROperation {
-    reg() { return "sqrt"; }
+    reg() { return /sqrt/; }
     doCalc(a) { return Math.sqrt(a); }
 },
 
 class Rad extends Command {
-    reg() { return "rad"; }
+    reg() { return /rad/; }
     calc() { this.calculator.deg = false; }
 },
 
 class Deg extends Command {
-    reg() { return "deg"; }
+    reg() { return /deg/; }
     calc() { this.calculator.deg = true; }
 },
 
 class RPN extends Command {
-    reg() { return "rpn"; }
+    reg() { return /rpn/; }
     calc() { this.calculator.rpn = true; }
 },
 
 class Infix extends Command {
-    reg() { return "infix"; }
+    reg() { return /infix/; }
     calc() { this.calculator.rpn = false; }
 },
 
 class NumOperation extends  ValueOperation {
     reg() {
         // return "((?:(?:[-][0-9]+)|(?:[0-9]*))(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?)"
-        return "([0-9]+(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?)";
+        return /([0-9]+(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?)/;
     }
     lexname() { return "num"; }
-    lexfunc(lexme) {
+    lexfunc(lexme, lexer) {
         const oper = new NumOperation(this.calculator);
         oper.value = parseFloat(lexme.replace(",", "."))
         return oper;
@@ -473,9 +462,9 @@ class NumOperation extends  ValueOperation {
 },
 
 class PiOperation extends  ValueOperation {
-    reg() { return "pi|π" }
+    reg() { return /pi|π/ }
     lexname() { return "pi"; }
-    lexfunc(lexme) {
+    lexfunc(lexme, lexer) {
         const oper = new PiOperation(this.calculator);
         oper.value = Math.PI;
         return oper;
@@ -483,9 +472,9 @@ class PiOperation extends  ValueOperation {
 },
 
 class MemOperation extends  ValueOperation {
-    reg() { return "[a-z][a-z0-9]*" }
+    reg() { return /[a-z][a-z0-9]*/ }
     lexname() { return "mem"; }
-    lexfunc(lexme) {
+    lexfunc(lexme, lexer) {
         const oper = new MemOperation(this.calculator);
         oper.value = this.getnum(lexme)
         return oper;
@@ -586,8 +575,8 @@ class Calculator {
                 continue;
             }
             this.operations.push(oper);
-            this.lexer.addRule(new RegExp(oper.reg(), oper.params()),function (lexme) {
-               return oper.lexfunc(lexme);
+            this.lexer.addRule(oper.reg(),function (lexme) {
+               return oper.lexfunc(lexme, this);  // this is lexer!
             })
         }
         this.lexer.addRule(/\s+/, function () {

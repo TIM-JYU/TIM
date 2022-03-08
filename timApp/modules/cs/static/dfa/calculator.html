@@ -8,17 +8,21 @@
 <body>
 <script>
     function setData(data) {
-class Sqr extends FuncRROperation {
-    reg() { return "sqr"; }
-    doCalc(a) { return a*a; }
-}
-class Modulo extends BinOperation {
-    reg() { return "%"; }
-    type() { return CalculatorOp.factor; }
-    doCalc(a,b) { return a % b; }
-}
-addOperation(Sqr);
-addOperation(Modulo);
+        class Sqr extends FuncRROperation {
+            reg() { return /sqr/; }
+            doCalc(a) { return a*a; }
+            lexfunc(lexme, lexer) {
+                // lexer.reject = true;
+                return [this, this];
+            }
+        }
+        class Modulo extends BinOperation {
+            reg() { return /%/; }
+            type() { return CalculatorOp.factor; }
+            doCalc(a,b) { return a % b; }
+        }
+        addOperation(Sqr,0);
+        addOperation(Modulo);
         let calculator = new Calculator(data.params);
         let res = calculator.calc(data.code);
         return res;
@@ -26,6 +30,9 @@ addOperation(Modulo);
 </script>
 <!-- -->
 <script>
+    const xcode = `
+sqr 2
+`
     const code = `
 5-3 === 3              # tahallaan väärin oleva testi, oikeasti tulee 2
 5 - 3 === 2            # normaali vähennyslasku
