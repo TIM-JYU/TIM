@@ -104,8 +104,6 @@ const NumericfieldAll = t.intersection([
                (ngModelChange)="updateInput()"
                [readonly]="readonly"
                [tooltip]="errormessage"
-               [isOpen]="errormessage !== undefined"
-               triggers="mouseenter"
                placeholder="{{inputplaceholder}}"
                [ngClass]="{warnFrame: (isUnSaved() && !redAlert), alertFrame: redAlert}"
                [ngStyle]="styles">
@@ -113,7 +111,6 @@ const NumericfieldAll = t.intersection([
       <span *ngIf="isPlainText()" class="plaintext" [style.width.em]="cols">{{numericvalue}}</span>
      </span></label>
     </div>
-    <div *ngIf="errormessage"  class="error" style="font-size: 12px" [innerHtml]="errormessage"></div>
     <button class="timButton"
             *ngIf="!isPlainText() && buttonText()"
             [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly"
@@ -238,6 +235,7 @@ export class NumericfieldPluginComponent
                         this.numericvalue = undefined;
                         if (state !== "") {
                             this.errormessage = `Content is not a number (${state}); showing empty value.`;
+                            this.redAlert = true;
                         }
                     }
                 }
@@ -369,7 +367,7 @@ export class NumericfieldPluginComponent
      */
     initCode() {
         if (this.markup.initnumber == undefined) {
-            this.numericvalue = 0;
+            this.numericvalue = undefined;
         } else {
             this.numericvalue = this.markup.initnumber;
         }
