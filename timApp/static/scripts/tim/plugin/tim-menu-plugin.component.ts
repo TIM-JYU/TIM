@@ -84,26 +84,26 @@ const TimMenuAll = t.intersection([
     selector: "tim-menu-runner",
     template: `
         <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-        <span ng-cloak *ngIf="topMenu" class="tim-menu-placeholder"></span>
-        <span ng-cloak *ngIf="topMenu" class="tim-menu-placeholder-content tim-menu-hidden"><br></span>
+        <span *ngIf="topMenu" class="tim-menu-placeholder"></span>
+        <span *ngIf="topMenu" class="tim-menu-placeholder-content tim-menu-hidden"><br></span>
         <div class="tim-menu" [ngClass]="{'bgtim white': basicColors, 'hide-link-colors': !keepLinkColors}"
-             style="{{barStyle}}" ng-mouseleave="mouseLeave()" ng-mouseenter="mouseEnter()">
-    <span *ngFor="let t1 of menu; let last = last">
+             style="{{barStyle}}" (mouseleave)="mouseLeave()" (mouseenter)="mouseEnter()">
+    <span class="tim-menu-links" *ngFor="let t1 of menu; let last = last">
         <span *ngIf="t1.items && t1.items.length > 0 && hasRights(t1)" class="btn-group" style="{{setStyle(t1)}}">
           <span [innerHtml]="t1.text+openingSymbol" (click)="toggleSubmenu(t1, undefined, undefined, true)"
-                ng-mouseenter="toggleSubmenu(t1, undefined, undefined, false)"></span>
+                (mouseenter)="toggleSubmenu(t1, undefined, undefined, false)"></span>
           <ul class="tim-menu-dropdown" *ngIf="t1.open" [ngClass]="openDirection(t1.id)" id="{{t1.id}}">
             <li class="tim-menu-list-item" *ngFor="let t2 of t1.items" style="{{setStyle(t2)}}">
                 <span class="tim-menu-item" *ngIf="t2.items && t2.items.length > 0 && hasRights(t2)">
                     <span class="tim-menu-item" [innerHtml]="t2.text+openingSymbol"
                           (click)="toggleSubmenu(t2, t1, undefined, true)"
-                          ng-mouseenter="toggleSubmenu(t2, t1, undefined, false)"></span>
+                          (mouseenter)="toggleSubmenu(t2, t1, undefined, false)"></span>
                     <ul class="tim-menu-dropdown" id="{{t2.id}}" [ngClass]="openDirection(t2.id)" *ngIf="t2.open">
                         <li class="tim-menu-list-item" *ngFor="let t3 of t2.items" style="{{setStyle(t3)}}">
                             <span class="tim-menu-item" *ngIf="t3.items && t3.items.length > 0 && hasRights(t3)">
                                 <span class="tim-menu-item" [innerHtml]="t3.text+openingSymbol"
                                       (click)="toggleSubmenu(t3, t2, t1, true)"
-                                      ng-mouseenter="toggleSubmenu(t3, t2, t1, false)"></span>
+                                      (mouseenter)="toggleSubmenu(t3, t2, t1, false)"></span>
                                 <ul class="tim-menu-dropdown" id="{{t3.id}}" [ngClass]="openDirection(t3.id)"
                                     *ngIf="t3.open">
                                     <ng-container *ngFor="let t4 of t3.items">
