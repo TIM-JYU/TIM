@@ -9,6 +9,7 @@ import {
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import * as t from "io-ts";
 import {
+    CalendarDateFormatter,
     CalendarEvent,
     CalendarModule,
     CalendarView,
@@ -24,6 +25,7 @@ import {BrowserModule} from "@angular/platform-browser";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
+import {CustomDateFormatter} from "./custom-date-formatter.service";
 
 const CalendarItem = t.type({
     done: t.boolean,
@@ -46,6 +48,12 @@ registerLocaleData(localeFr);
 @Component({
     selector: "mwl-calendar-component",
     changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [
+        {
+            provide: CalendarDateFormatter,
+            useClass: CustomDateFormatter,
+        },
+    ],
     template: `
         <div class="alert alert-info">
           Click on a day or time slot on the view.
