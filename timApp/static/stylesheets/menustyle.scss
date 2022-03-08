@@ -31,10 +31,10 @@ $menuTab-border: 1px solid lighten($gray-base, 88%);
     }
 
     &.show {
-        min-width: 15em;
+        min-width: 20em;
         z-index: 10;
         @media (min-width: $screen-md-min) {
-            min-width: 12em;
+            min-width: 17em;
         }
     }
 }
