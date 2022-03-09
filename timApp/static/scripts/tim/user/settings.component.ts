@@ -35,7 +35,7 @@ import {
 import {IOkResponse, isIOS, timeout, to2, toPromise} from "../util/utils";
 import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
 import {DocumentOrFolder} from "../item/IItem";
-import {ContactOrigin, IFullUser, IUserContact} from "./IUser";
+import {ContactOrigin, IFullUser, IUserAPIKey, IUserContact} from "./IUser";
 
 @Component({
     selector: "settings-button-panel",
@@ -428,9 +428,23 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                             </div>
                         </div>
                     </ng-container>
+                    <ng-container>
+                        <span class="form-label" i18n>Translator API Keys</span>
+                        <div class="contact-collection">
+                            <div class="contact-info" *ngFor="let APIkey of userAPIKeyEntries">
+                                <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>
+                                <input type="text" class="form-control" [value]="APIkey.translator" disabled>
+                                <button class="btn btn-danger" type="button"
+                                        (click)="deleteKey(APIkey)">
+                                    <i class="glyphicon glyphicon-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </ng-container>
                 </div>
                 <settings-button-panel [saved]="saveUserAccountInfo">
                     <button class="timButton" (click)="openContactInfoDialog()" i18n>Add new contact</button>
+                    <button class="timButton" (click)="openAPIKeyDialog()" i18n>Add new API key</button>
                 </settings-button-panel>
             </bootstrap-form-panel>
             <bootstrap-form-panel [disabled]="saving" title="Delete your account" i18n-title>
@@ -470,6 +484,9 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     deleteConfirmName = "";
     contacts: IUserContact[];
     userContacts = new Map<Channel, IUserContact[]>();
+    userAPIKeys: IUserAPIKey[] = [
+        {translator: "DeepL", APIkey: "This is a test key"},
+    ];
     userEmailContacts: IUserContact[] = [];
     canRemoveCustomContacts = true;
     primaryEmail!: IUserContact;
@@ -617,6 +634,9 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         return [...this.userContacts.entries()];
     }
 
+    get userAPIKeyEntries() {
+        return [...this.userAPIKeys];
+    }
     cbChanged = (cbs: boolean[], n: number, index: number) => {
         this.cbCount = n;
         if (n == 0) {
@@ -876,6 +896,14 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         );
     }
 
+    /**
+     * Opens a dialog for user to add API keys for translators.
+     */
+    openAPIKeyDialog() {
+        // TODO: Reuse openContactInfoDialog() for this
+        window.alert("This function is currently unavailable.");
+    }
+
     private getContactsFor(channel: Channel): IUserContact[] {
         if (!EDITABLE_CONTACT_CHANNELS[channel]) {
             return [];
@@ -952,6 +980,11 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         }
         // TODO: Figure out why this is needed for change detection
         this.cdr.detectChanges();
+    }
+
+    // TODO: Reuse deleteContact() for this
+    deleteKey(key: IUserAPIKey) {
+        window.alert("This is unavailable right now.");
     }
 
     saveUserAccountInfo = async () => {
