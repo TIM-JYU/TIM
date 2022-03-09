@@ -384,6 +384,7 @@ export class SettingsTabComponent implements OnInit {
         );
     }
 
+    // TODO: Localize this
     /* async markTranslationChecked() {
         await this.confirmPost(
             $localize`This will mark the translations in all paragraphs in this document as checked. Continue?`,

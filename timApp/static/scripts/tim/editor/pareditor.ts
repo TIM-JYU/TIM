@@ -12,7 +12,12 @@ import {
     getFullscreenElement,
     toggleFullScreen,
 } from "tim/util/fullscreen";
-import {IExtraData, ITags} from "../document/editing/edittypes";
+import {ILanguages} from "tim/item/IItem";
+import {
+    IExtraData,
+    ITags,
+    updateLanguages,
+} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -28,7 +33,6 @@ import {EditorType, SelectionRange} from "./BaseParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
 import {RestampDialogClose} from "./restamp-dialog.component";
 import {TextAreaParEditor} from "./TextAreaParEditor";
-import {ILanguages} from "tim/item/IItem";
 
 markAsUsed(rangyinputs);
 
@@ -1077,7 +1081,7 @@ ${backTicks}
 
     $onInit() {
         super.$onInit();
-        this.updateLanguages();
+        updateLanguages(this.sourceLanguages, this.targetLanguages);
         const saveTag = this.getSaveTag();
         this.storage = {
             acebehaviours: new TimStorage("acebehaviours" + saveTag, t.boolean),
@@ -1467,40 +1471,6 @@ ${backTicks}
         if (this.resolve.params.initialText === this.editor!.getEditorText()) {
             this.close({type: "markunread"});
         }
-    }
-
-    listLanguages(languages: string, languageArray: Array<ILanguages>) {
-        while (languages.includes(",")) {
-            languageArray.push({
-                name: languages.substring(0, languages.indexOf("-")),
-                code: languages.substring(
-                    languages.indexOf("-") + 1,
-                    languages.indexOf(",")
-                ),
-            });
-            languages = languages.substr(languages.indexOf(",") + 1);
-        }
-
-        languageArray.push({
-            name: languages.substring(0, languages.indexOf("-")),
-            code: languages.substring(languages.indexOf("-") + 1),
-        });
-    }
-
-    async updateLanguages() {
-        let sources = await to(
-            $http.get<string[]>("/translations/source-languages")
-        );
-        // eslint-disable-next-line @typescript-eslint/no-base-to-string
-        let languages = sources.result.data.toString();
-        this.listLanguages(languages, this.sourceLanguages);
-
-        sources = await to(
-            $http.get<string[]>("/translations/target-languages")
-        );
-        // eslint-disable-next-line @typescript-eslint/no-base-to-string
-        languages = sources.result.data.toString();
-        this.listLanguages(languages, this.targetLanguages);
     }
 
     showTranslated() {
