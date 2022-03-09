@@ -84,6 +84,8 @@ registerLocaleData(localeFr);
             *ngSwitchCase="'week'"
             [viewDate]="viewDate"
             [events]="events"
+            [dayStartHour]="8"
+            [dayEndHour]="19"
             [locale]="'fi-FI'"
             [weekStartsOn]= "1"
             (dayHeaderClicked)="clickedDate = $event.day.date"
@@ -94,6 +96,8 @@ registerLocaleData(localeFr);
             *ngSwitchCase="'day'"
             [viewDate]="viewDate"
             [events]="events"
+            [dayStartHour]="8" 
+            [dayEndHour]="19"
             [locale]="'fi-FI'"
             (hourSegmentClicked)="clickedDate = $event.date"
           >
