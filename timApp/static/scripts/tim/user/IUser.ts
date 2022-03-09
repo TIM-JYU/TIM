@@ -35,6 +35,12 @@ export interface IUserContact {
     primary: boolean;
 }
 
+// TODO: Should there be something done to keep the API keys secret when stored on TIM servers?
+export interface IUserAPIKey {
+    translator: string;
+    APIkey: string;
+}
+
 export interface IFullUser extends IUser {
     groups: IGroup[];
     consent: ConsentType | undefined;
