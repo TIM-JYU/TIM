@@ -25,6 +25,7 @@ import {BrowserModule} from "@angular/platform-browser";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
+import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 
 const CalendarItem = t.type({
@@ -55,6 +56,9 @@ registerLocaleData(localeFr);
         },
     ],
     template: `
+        <mwl-utils-calendar-header [(view)]="view" [(viewDate)]="viewDate">
+        </mwl-utils-calendar-header>
+        
         <div class="alert alert-info">
           Click on a day or time slot on the view.
           <strong *ngIf="clickedDate"
@@ -80,6 +84,8 @@ registerLocaleData(localeFr);
             *ngSwitchCase="'week'"
             [viewDate]="viewDate"
             [events]="events"
+            [locale]="'fi-FI'"
+            [weekStartsOn]= "1"
             (dayHeaderClicked)="clickedDate = $event.day.date"
             (hourSegmentClicked)="clickedDate = $event.date"
           >
@@ -88,6 +94,7 @@ registerLocaleData(localeFr);
             *ngSwitchCase="'day'"
             [viewDate]="viewDate"
             [events]="events"
+            [locale]="'fi-FI'"
             (hourSegmentClicked)="clickedDate = $event.date"
           >
           </mwl-calendar-day-view>
@@ -104,7 +111,7 @@ export class CalendarComponent
     >
     implements OnInit
 {
-    view: CalendarView = CalendarView.Month;
+    view: CalendarView = CalendarView.Week;
 
     viewDate: Date = new Date();
 
@@ -138,6 +145,7 @@ export class CalendarComponent
             provide: DateAdapter,
             useFactory: adapterFactory,
         }),
+        CalendarHeaderModule,
     ],
     declarations: [CalendarComponent],
     exports: [CalendarComponent],
