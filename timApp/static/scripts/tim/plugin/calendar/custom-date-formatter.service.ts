@@ -19,4 +19,8 @@ export class CustomDateFormatter extends CalendarDateFormatter {
     public dayViewHour({date, locale}: DateFormatterParams): string {
         return formatDate(date, "HH:mm", "Fi-fi");
     }
+
+    public weekViewHour({date, locale}: DateFormatterParams): string {
+        return formatDate(date, "HH:mm", "Fi-fi");
+    }
 }
