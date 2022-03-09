@@ -1,5 +1,9 @@
-from dataclasses import dataclass
 import requests
+
+from dataclasses import dataclass
+from enum import Enum
+from typing import Dict
+from timApp.util.flask.requesthelper import RouteException
 
 
 @dataclass
@@ -8,24 +12,24 @@ class Usage:
     character_limit: int
 
 
-@dataclass
-class LanguagePairing:
-    en: list[str]
-    fi: list[str]
+# TODO Does dataclass make this unhashable?
+class LangCode(Enum):
+    """
+    Selection of ISO 639-1 two-letter codes as described at: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
+    """
 
-    def get(self, language: str) -> list[str]:
-        """
-        Get the list of supported languages matching the language code
-        :param language: Source language code
-        :return: List of supported target languages
-        """
-        # TODO Use the ISO-codes
-        # TODO think about just having this whole class be a dict...
-        if language.lower() == "en":
-            return self.en
-        if language.lower() == "fi":
-            return self.fi
-        return []
+    ENGLISH: str = "en"
+    FINNISH: str = "fi"
+    SWEDISH: str = "sv"
+
+
+# TODO make dataclass?
+class LanguagePairing(Dict[LangCode, list[LangCode]]):
+    """
+    Holds the list of supported source language codes mapping to target language codes
+    """
+
+    ...
 
 
 class ITranslator:
@@ -129,17 +133,54 @@ class DeepLTranslator(ITranslator):
         )
 
     def languages(self) -> LanguagePairing:
+        """
+        Asks the DeepL API for the list of supported languages (Note: the supported language _pairings_ are not explicitly specified) and picks the returned language codes that when turned to lowercase match the LangCode-enum's values.
+        :return: Dictionary of source langs to lists of target langs, that are supported by the API and also defined in LangCode
+        """
         resp_json = self._post("languages")
-        # NOTE it is assumed, that DeepL supports all its languages translated both ways
-        lang_codes = list(map(lambda x: x["language"], resp_json))
-        return LanguagePairing(en=lang_codes, fi=lang_codes)
+        lang_codes: list[LangCode] = list(
+            filter(
+                None,
+                map(
+                    # The DeepL language code might contain '-' for example in 'EN-GB'
+                    lambda x: get_lang_code(x["language"].split("-")[0].lower()),
+                    resp_json,
+                ),
+            )
+        )
+        # NOTE it is assumed, that DeepL supports all its languages translated both ways,
+        # thus all selected languages are mapped to all selected languages
+        d = {code: lang_codes for code in lang_codes}
+        return LanguagePairing(d)
 
     def supports(self, source_lang: str, target_lang: str) -> bool:
         """
         Check that the source language can be translated into target language by the translation API
-        :param source_lang: Language of original text
-        :param target_lang: Language to translate into
+        :param source_lang: Language of original text TODO In what format?
+        :param target_lang: Language to translate into TODO In what format?
         :return: True, if the pairing is supported
         """
-        # TODO Use some standard codes for the languages
-        return target_lang.upper() in self.languages().get(source_lang.upper())
+        source_lang_code = get_lang_code(source_lang)
+        if source_lang_code is None:
+            raise RouteException(
+                description=f"The language '{source_lang}' is not supported"
+            )
+
+        target_lang_code = get_lang_code(target_lang)
+        if target_lang_code is None:
+            raise RouteException(
+                description=f"The language '{target_lang}' is not supported"
+            )
+
+        supported_languages: list[LangCode] = self.languages()[source_lang_code]
+
+        return target_lang_code in supported_languages
+
+
+def get_lang_code(s: str) -> LangCode | None:
+    try:
+        return LangCode(s)
+    except KeyError:
+        return None
+    except ValueError:
+        return None

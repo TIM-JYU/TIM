@@ -44,6 +44,7 @@ def create_translation_route(tr_doc_id, language):
         raise ItemAlreadyExistsException("Translation for this language already exists")
     verify_manage_access(doc.src_doc)
 
+    # NOTE Failing to create the translation still increases document id number and sometimes the manage page gets stuck (because of it?)
     src_doc = doc.src_doc.document
     cite_doc = create_document_and_block(get_current_user_object().get_personal_group())
 
@@ -130,22 +131,22 @@ def deepl_translate(tr: Translation, source_lang: str, target_lang: str) -> None
 
         api_key = environ["DEEPL_API_KEY"]
         translator = DeepLTranslator(api_key)
-        # TODO Languages should use common values / standard codes at this point (also applies to any doc.lang_id)
-        if not translator.supports(source_lang, target_lang):
-            raise RouteException(
-                f"The language pair from {source_lang} to {target_lang} is not supported"
-            )
-
-        usage = translator.usage()
-        logger.log_info(
-            "Current DeepL API usage: "
-            + str(usage.character_count)
-            + "/"
-            + str(usage.character_limit)
-        )
     except KeyError:
         raise NotExist("The DEEPL_API_KEY is not set into your configuration")
 
+    # TODO Languages should use common values / standard codes at this point (also applies to any doc.lang_id)
+    if not translator.supports(source_lang, target_lang):
+        raise RouteException(
+            description=f"The language pair from {source_lang} to {target_lang} is not supported"
+        )
+
+    usage = translator.usage()
+    logger.log_info(
+        "Current DeepL API usage: "
+        + str(usage.character_count)
+        + "/"
+        + str(usage.character_limit)
+    )
     # Be careful about closing the underlying file when iterating document
     with tr.document.get_source_document().__iter__() as doc_iter:
         # Translate each paragraph sequentially
