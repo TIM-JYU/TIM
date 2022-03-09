@@ -47,7 +47,8 @@ class DeepLTranslator(ITranslator):
     def __post_init__(self) -> None:
         self.headers = {"Authorization": f"DeepL-Auth-Key {self.api_key}"}
 
-    def _post(self, url_slug: str, data=None) -> dict:
+    # TODO Change the dict to DeepLTranslateParams or smth
+    def _post(self, url_slug: str, data: dict | None = None) -> dict:
         """
         Perform a authorized post-request to the DeepL-API
         :param url_slug: The last part of URL-path for the API function _without_ the starting '/' slash
