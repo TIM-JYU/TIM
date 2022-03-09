@@ -4952,6 +4952,30 @@
           <context context-type="linenumber">279</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4302420491905014187" datatype="html">
+        <source>This will mark the translations in all paragraphs in this document as checked. Continue?</source>
+        <target state="new">Tämä merkitsee käännökset kaikissa tämän dokumentin kappaleissa tarkistetuiksi. Jatketaanko?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
+          <context context-type="linenumber">390</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2312247969910854946" datatype="html">
+        <source>Add new API key</source>
+        <target state="new">Lisää uusi API-avain</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">447</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6138642781979779012" datatype="html">
+        <source>Translator API Keys</source>
+        <target state="new">Kääntäjien API-avaimet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">432</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
