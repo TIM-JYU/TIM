@@ -2,8 +2,12 @@
 
 // For Lexer see: https://github.com/aaditmshah/lexer
 class Lexer {
-    deferror(chr) {
-        throw new Error("Unexpected character at index " + (this.index - 1) + ": " + chr);
+// Create lexer, add rexexp rules where to match
+// call lexer.setInput(input) to give input
+// call lexer.lex() to get on token at time until undefined
+// longest match is used if not /g in rule.
+    deferror(chr) {  // default error handler
+        throw new Error(`Unexpected character at index ${this.index - 1}: ${chr}`);
     };
 
 
@@ -60,12 +64,12 @@ class Lexer {
     }
 
     lex() {
-        let token;
         if (this.tokens.length > 0) return this.tokens.shift();
 
         this.reject = true;
 
         while (this.index <= this.input.length) {
+            let token;
             let matches = this.scan().splice(this.remove);
             let index = this.index;
 
@@ -77,40 +81,40 @@ class Lexer {
                 this.remove++;
 
                 token = match.action.apply(this, match.result);
-                // action may change this.reject!
-                if (this.reject)
+                if (this.reject) { // action may change this.reject!
                     this.index = match.result.index;
-                else if (token !== undefined) {
-                    if (Array.isArray(token)) {
-                        this.tokens = token.slice(1); // save rest if many
-                        token = token[0]; // and return first one
-                    }
-                    if (match.length > 0) this.remove = 0;
-                    return token;
+                    continue;
                 }
+                if (token === undefined)  continue;
+                if (Array.isArray(token)) {
+                    this.tokens = token.slice(1); // save rest if many
+                    token = token[0]; // and return first one
+                }
+                if (match.length > 0) this.remove = 0;
+                return token;
             }
 
-            let input = this.input;
-
-            if (index < input.length) {
-                if (this.reject) {
-                    this.remove = 0;
-                    token = this.defunct.call(this, input.charAt(this.index++));
-                    if (typeof token !== "undefined") {
-                        if (Object.prototype.toString.call(token) === "[object Array]") {
-                            this.tokens = token.slice(1);
-                            return token[0];
-                        }
-                        return token;
-                    }
-                } else {
-                    if (this.index !== index) this.remove = 0;
-                    this.reject = true;
-                }
-            } else if (matches.length)
+            if (index >= this.input.length) {
+                if (matches.length === 0) return undefined;
                 this.reject = true;
-            else return undefined;
+                continue;
+            }
+
+            if (this.reject) {
+                this.remove = 0;
+                token = this.defunct.call(this, this.input.charAt(this.index++));
+                if (token === undefined)  continue;
+                if (Array.isArray(token)) {
+                    this.tokens = token.slice(1);
+                    token = token[0];
+                }
+                return token;
+            }
+
+            if (this.index !== index) this.remove = 0;
+            this.reject = true;
         }
+        return undefined;
     }
 
     scan() {
@@ -125,31 +129,29 @@ class Lexer {
             let start = rule.start;
             let states = start.length;
 
-            if ((!states || start.indexOf(state) >= 0) ||
-                (state % 2 && states === 1 && !start[0])) {
-                let pattern = rule.pattern;
-                pattern.lastIndex = lastIndex;
-                let result = pattern.exec(input);
+            if ((states > 0 && start.indexOf(state) < 0) &&
+                (state % 2 == 0 || states !== 1 || start[0]==1)) continue;
 
-                if (!result || result.index !== lastIndex) continue;
+            rule.pattern.lastIndex = lastIndex;
+            let result = rule.pattern.exec(input);
+            if (!result || result.index !== lastIndex) continue;
 
-                let j = matches.push({
-                    result: result,
-                    action: rule.action,
-                    length: result[0].length
-                });
+            let j = matches.push({
+                result: result,
+                action: rule.action,
+                length: result[0].length
+            });
 
-                if (rule.global) index = j; // do not sort prior this
+            if (rule.global) index = j; // do not sort prior this
 
-                // move to place agording by its lenght, longest firts
-                while (--j > index) {
-                    let k = j - 1;
+            // move to place agording by its lenght, longest firts
+            while (--j > index) {
+                let k = j - 1;
 
-                    if (matches[j].length > matches[k].length) {
-                        let temple = matches[j];
-                        matches[j] = matches[k];
-                        matches[k] = temple;
-                    }
+                if (matches[j].length > matches[k].length) {
+                    let temple = matches[j];
+                    matches[j] = matches[k];
+                    matches[k] = temple;
                 }
             }
         }
@@ -266,9 +268,9 @@ class CalculatorOp {
     doCalc() {  }              // helpper method for doing calc
     calc() { this.doCalc(); }  // what to do when runned
     r(v) { return roundToNearest(v, this.calculator.params.decimals);  }
-    lexfunc(lexme, lexer) { return this;  }  // what to be returned for parser
-    allowSignRight() { return true; } // does shen allow sign operatio on right side
-    checkSign(lastToken) { return this; } // deny 2-3 as a sign
+    lexfunc(lexme, lexer) { return this;  }  // what to be returned for lexer if match
+    allowSignRight() { return true; } // does allow sign operation on right side
+    checkSign(lastToken) { return this; } // deny 2-3 as a sign and change to bin opertator -
 
     getnum(s) { // convert s as numeric using p, mem or parse
         if (s === undefined) return this.calculator.lastResult;
@@ -410,6 +412,8 @@ class Div extends BinOperation {
 class Pow extends BinOperation {
     reg() { return /\^/; }
     type() { return CalculatorOp.factor; }
+    extraSpaceAfter() { return ""; }
+    output(extraBefore) { return this.name().trim(); }
     doCalc(a, b) { return Math.pow(a , b); }
 },
 
@@ -486,7 +490,7 @@ class MemOperation extends  ValueOperation {
 // if index not defined, insert before MemOperation (that
 // matches almost any name)
 function addOperation(oper, index) {
-    if (index === undefined) index = operations.length-2;
+    if (index === undefined) index = operations.length-1;
     if (index < 0) return;
     if (index >= operations.length) index = operations.length-1;
     operations.splice(index,0, oper);
@@ -561,13 +565,9 @@ class Calculator {
         this.row = 0;
         this.stack = [];
         this.lexer = new Lexer();
-        /*
-        this.lexer.addRule(/[()]/, function (lexeme) {
-             return lexeme; // punctuation (i.e. "(", ")")
-        });
-         */
-        for (const op of operations) {
-            const oper = new op(this);
+
+        for (const opClass of operations) {
+            const oper = new opClass(this);
             if (!this.isIn(this.params.allowed, oper, true)) {
                 continue;
             }
@@ -597,22 +597,19 @@ class Calculator {
             let tokens = [], token;
             let lastToken = new BracketOperation(this);
             while (token = this.lexer.lex()) {
-                if (this.rpn) {
-                    tokens.push(token);
-                    continue;
-                }
-                token = token.checkSign(lastToken);
+                if (!this.rpn) token = token.checkSign(lastToken);
                 tokens.push(token);
                 lastToken = token;
             }
             let cmds;
             if (this.rpn) cmds = this.rpnparse(tokens);
             else cmds = this.parser.parse(tokens);
-            let calc = "";
+
             for (const cmd of cmds) {
                 cmd.calc();
             }
 
+            let calc = "";
             let extraBefore = "";
             for (const cmd of tokens) {
                 calc += cmd.output(extraBefore);
@@ -620,10 +617,14 @@ class Calculator {
             }
 
             let res = "";
-            if (this.stack.length > 0) {
+            if (this.stack.length > 0) {  // is some result
                 res = this.stack.pop();
                 this.lastResult = res;
                 calc += " = " + res;
+                if (this.stack.length > 0) { // is too much left
+                    calc += " extra values!"
+                    res = undefined;
+                }
             }
 
             return {res: res, calc: calc};
@@ -650,11 +651,11 @@ class Calculator {
                     if (name === ex) ex = ""; else ex = "  " +ex
                     result.push({res: "", calc: name + ex});
                 }
-                return result;
+                continue;
             }
             let parts = tline.split("===");
             tline = parts[0].trim();
-            let expected = undefined;
+            let expected = null;
             if (parts.length > 1) expected = parts[1].trim();
 
             let toMem = "";
@@ -672,8 +673,8 @@ class Calculator {
             if (tline)
                 r = this.calcOne(tline);
             r.calc = `r${i}: ${r.calc}${toMem}`;
-            if (expected !== undefined) {
-                if (r.res == expected) r.calc = ""; // OK, do not display
+            if (expected !== null) {
+                if (""+r.res == expected) r.calc = ""; // OK, do not display
                 else r.calc += " expected " + expected;
             }
             if (r.calc) result.push(r);
