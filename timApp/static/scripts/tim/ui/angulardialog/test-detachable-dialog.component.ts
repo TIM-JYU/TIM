@@ -3,7 +3,7 @@ import {Component, OnInit} from "@angular/core";
 @Component({
     selector: "tim-test-detachable-dialog",
     template: `
-    <tim-dialog-frame anchor="absolute">
+    <tim-dialog-frame [detachable]="true">
         <ng-container header>
             Test
         </ng-container>
