@@ -563,7 +563,7 @@ export class DraggableController implements IController {
         this.removeMouseUp();
         this.removeMouseMove(this.move);
         this.removeMouseMove(this.moveResize);
-        this.ensureFullyInViewport();
+        this.ensureVisibleInViewport();
         if (this.posKey) {
             const css = this.element.css(["top", "bottom", "left", "right"]);
             this.posStorage.set(css);
