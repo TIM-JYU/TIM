@@ -1564,6 +1564,7 @@ export class ReviewController {
                 points: velp.points,
                 velp_id: newAnnotation.velp.id,
                 visible_to: velp.visible_to,
+                style: velp.style,
             })
         );
         if (!json.ok) {

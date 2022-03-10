@@ -96,6 +96,7 @@ export class VelpSelectionController implements IController {
             language_id: "FI",
             color: null,
             valid_until: null,
+            style: undefined,
         };
         this.velpToEdit = {
             content: "",
@@ -109,6 +110,7 @@ export class VelpSelectionController implements IController {
             language_id: "FI",
             color: null,
             valid_until: null,
+            style: undefined,
         };
         this.newLabel = {
             content: "",
@@ -485,6 +487,7 @@ export class VelpSelectionController implements IController {
             language_id: "FI",
             color: null,
             valid_until: null,
+            style: undefined,
         };
     }
 
@@ -537,6 +540,7 @@ export class VelpSelectionController implements IController {
             language_id: "FI",
             color: null,
             valid_until: null,
+            style: undefined,
         };
     }
 

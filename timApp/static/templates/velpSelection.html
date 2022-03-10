@@ -11,12 +11,12 @@
                     </span>
                     <span ng-if="$ctrl.rctrl.selectedElement">
                     Selected:
-                    </span>
-                    <span ng-if="$ctrl.rctrl.selectedArea">
-                        '{{ $ctrl.rctrl.getSelectedAreaBeginning() }}' of
-                    </span>
-                    <span ng-if="$ctrl.rctrl.selectionIsDrawing">
-                        new drawing in review image of
+                        <span ng-if="$ctrl.rctrl.selectedArea">
+                            '{{ $ctrl.rctrl.getSelectedAreaBeginning() }}' of
+                        </span>
+                        <span ng-if="$ctrl.rctrl.selectionIsDrawing">
+                            new drawing in review image of
+                        </span>
                     </span>
                     <span ng-if="$ctrl.rctrl.selectedElement">
                         <span ng-if="!$ctrl.rctrl.getSelectedAnswerTaskName()">paragraph '{{$ctrl.rctrl.getSelectedParagraphBeginning()}}'</span>
