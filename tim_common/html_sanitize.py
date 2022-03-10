@@ -110,6 +110,7 @@ TIM_SAFE_TAGS = [
     "tim-style-preview",
     "tim-message-send",
     "tim-notification-options",
+    "tim-test-dialog",
     "tim-search-button",
 ]
 

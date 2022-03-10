@@ -62,6 +62,7 @@ import {ManageReadReceiptComponent} from "tim/messaging/manage-read-receipt.comp
 import {CopyFolderComponent} from "tim/folder/copy-folder.component";
 import {NotificationOptionsComponent} from "tim/item/manage/notification-options.component";
 import {ParRefComponent} from "tim/document/par-ref.component";
+import {TestDetachableDialogComponent} from "tim/ui/angulardialog/test-detachable-dialog.component";
 import {SearchButtonComponent} from "tim/search/search-button.component";
 import {
     handleExpiredSession,
@@ -144,6 +145,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timSelfExpire", SelfExpireComponent);
     doDowngrade(dg, "timSearchButton", SearchButtonComponent);
     doDowngrade(dg, "timRoleInfo", RoleInfoComponent);
+    doDowngrade(dg, "timTestDialog", TestDetachableDialogComponent);
     return dg;
 }
 
