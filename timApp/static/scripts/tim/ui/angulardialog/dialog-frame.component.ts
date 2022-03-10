@@ -10,6 +10,7 @@ import {IResizeEvent} from "angular2-draggable/lib/models/resize-event";
 export interface IAngularResizableDirectivePublic {
     _currSize: Size;
     _currPos: Position;
+    _initSize: Size;
 
     doResize(): void;
     resetSize(): void;
@@ -45,29 +46,43 @@ class ResizableDraggableWrapper {
 @Component({
     selector: "tim-dialog-frame",
     template: `
-        <div class="modal no-pointer-events in" role="dialog"
-             [ngStyle]="{'z-index': 1050 + index*10, display: 'block', position: anchor}" tabindex="-1" #bounds>
-            <div [ngDraggable]
-                 [ngResizable]="canResize && !areaMinimized"
+        <ng-container [ngSwitch]="detachable">
+            <div *ngSwitchCase="false" class="modal no-pointer-events in" role="dialog"
+                 [style.z-index]="1050 + index * 10"
+                 [style.display]="'block'"
+                 [style.position]="anchor" tabindex="-1" #bounds>
+                <ng-container [ngTemplateOutlet]="draggableModal"></ng-container>
+            </div>
+            <ng-container *ngSwitchCase="true" [ngTemplateOutlet]="draggableModal"></ng-container>
+        </ng-container>
+        
+        <ng-template #draggableModal>
+            <div [ngDraggable]="detached"
+                 [ngResizable]="detached && canResize && !areaMinimized"
                  [inBounds]="true"
-                 [bounds]="bounds"
+                 [bounds]="bounds?.nativeElement!"
                  #resizable="ngResizable"
                  #draggable="ngDraggable"
                  #dragelem
                  [preventDefaultEvent]="true"
                  [handle]="draghandle"
+                 [zIndex]="detachedIndex"
                  [position]="position"
                  (stopped)="onPosChange($event)"
                  (rzStop)="onSizeChange($event)"
+                 [class.attached]="!detached"
+                 [class.detachable]="detachable"
+                 [style.position]="(!detachable || detachable && !detached) ? '' : 'fixed'"
                  class="modal-dialog modal-{{size}}"
                  style="pointer-events: auto">
-                <div class="draghandle"
-                     [ngClass]="{attached: !canDrag()}">
+                <div class="draghandle" [class.attached]="!detached">
                     <p #draghandle>
                         <ng-content select="[header]"></ng-content>
                     </p>
                     <i *ngIf="detachable" (click)="toggleDetach()" title="Attach"
-                       class="glyphicon glyphicon-arrow-left"></i>
+                       class="glyphicon glyphicon-arrow-left" 
+                       [class.glyphicon-arrow-left]="detached"
+                       [class.glyphicon-arrow-right]="!detached"></i>
                     <i *ngIf="minimizable" title="Minimize dialog" (click)="toggleMinimize()"
                        class="glyphicon"
                        [class.glyphicon-minus]="!areaMinimized"
@@ -85,7 +100,7 @@ class ResizableDraggableWrapper {
                     </div>
                 </div>
             </div>
-        </div>
+        </ng-template>
     `,
     styleUrls: [
         "../../../../../node_modules/angular2-draggable/css/resizable.min.css",
@@ -93,7 +108,7 @@ class ResizableDraggableWrapper {
     ],
 })
 export class DialogFrame {
-    detachable = false;
+    @Input() detachable = false;
     @Input() minimizable = true;
     @Input() canResize = true;
 
@@ -107,23 +122,39 @@ export class DialogFrame {
     @Input() initialAutoHeight = false;
     closeFn?: () => void;
     index = 1;
+    detachedIndex: string = "";
     areaMinimized = false;
+    detached = true;
     private oldSize: ISize = {width: 600, height: 400};
     @ViewChild("resizable")
     private ngResizable!: IAngularResizableDirectivePublic;
     @ViewChild("draggable") private ngDraggable!: AngularDraggableDirective;
     @ViewChild("dragelem") dragelem!: ElementRef<HTMLElement>;
     @ViewChild("body") modalBody!: ElementRef<HTMLElement>;
+    @ViewChild("bounds", {static: false}) bounds?: ElementRef<HTMLElement>;
     @Input() size: "sm" | "md" | "lg" | "xs" = "md"; // xs is custom TIM style
     resizable!: ResizableDraggableWrapper;
     position: IPosition = {x: 0, y: 0};
     sizeOrPosChanged = new Subject<void>();
+
+    ngOnInit() {
+        if (this.detachable) {
+            this.detachedIndex = `${1050 + this.index * 10}`;
+            this.detached = false;
+        }
+    }
 
     ngAfterViewInit() {
         this.resizable = new ResizableDraggableWrapper(
             this.ngResizable,
             this.ngDraggable
         );
+
+        // Fix initial size to account for Chrome/Firefox using decimal values for width/height
+        const initSize = this.ngResizable._initSize;
+        const r = this.dragelem.nativeElement.getBoundingClientRect();
+        initSize.width = Math.round(r.width);
+        initSize.height = Math.round(r.height);
     }
 
     canDrag() {
@@ -138,7 +169,14 @@ export class DialogFrame {
         return this.position;
     }
 
-    toggleDetach() {}
+    toggleDetach() {
+        this.detached = !this.detached;
+        this.position = {x: 0, y: 0};
+        this.detachedIndex = this.detached ? `${1050 + this.index * 10}` : "";
+        if (!this.detached) {
+            this.ngResizable.resetSize();
+        }
+    }
 
     toggleMinimize() {
         const res = this.ngResizable;
@@ -147,15 +185,23 @@ export class DialogFrame {
         const cp = res._currPos;
         const minimizedWidth = 100;
         if (this.areaMinimized) {
-            this.oldSize = {width: cs.width, height: cs.height};
-            cs.width = minimizedWidth;
+            const rect = this.dragelem.nativeElement.getBoundingClientRect();
+            this.oldSize = {
+                width: Math.round(rect.width),
+                height: Math.round(rect.height),
+            };
+            if (this.detached) {
+                cs.width = minimizedWidth;
+            }
             cs.height = 0;
         } else {
             cs.set(this.oldSize);
         }
-        cp.x +=
-            ((this.oldSize.width - minimizedWidth) / 2) *
-            (this.areaMinimized ? 1 : -1);
+        if (this.detached) {
+            cp.x +=
+                ((this.oldSize.width - minimizedWidth) / 2) *
+                (this.areaMinimized ? 1 : -1);
+        }
         res.doResize();
     }
 
