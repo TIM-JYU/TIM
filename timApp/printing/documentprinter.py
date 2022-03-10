@@ -6,7 +6,6 @@ import re
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Optional
 
 from flask import current_app
 from pypandoc import _as_unicode, _validate_formats
@@ -546,6 +545,7 @@ class DocumentPrinter:
         target_format: PrintFormat,
         path: Path,
         plugins_user_print: bool = False,
+        eol_type: str = "native",
     ):
         """
         Converts the document to latex and returns the converted document as a bytearray
@@ -553,6 +553,7 @@ class DocumentPrinter:
         :param target_format: The target file format
         :param plugins_user_print: Whether or not to print user input from plugins (instead of default values)
         :param path:  filepath to write
+        :param eol_type: EOL type. Allows same option as Pandoc (crlf, lf, native)
         :return: Converted document as bytearray
         """
 
@@ -647,6 +648,7 @@ class DocumentPrinter:
                     ],
                     filters=filters,
                     texfiles=texfiles,
+                    eol_type=eol_type,
                 )
             except LaTeXError as ex:
                 raise LaTeXError(ex.value)
@@ -868,6 +870,7 @@ def tim_convert_text(
     filters=None,
     removethis=None,
     texfiles=None,
+    eol_type="native",
 ):
     """Converts given `source` from `format` to `to`.
     :param str source: Unicode string or bytes (see encoding)
@@ -883,6 +886,7 @@ def tim_convert_text(
     :param removethis: lines that contains this text are removed from genereted LaTeX file
     :param texfiles: what files need to copy
     :returns: converted string (unicode) or an empty string if an outputfile was given
+    :param eol_type: EOL type to use. Allowed values are same as Pandoc (crlf, lf, native)
     :rtype: unicode
 
     :raises RuntimeError: if any of the inputs are not valid of if pandoc fails with an error
@@ -900,6 +904,7 @@ def tim_convert_text(
         filters=filters,
         removethis=removethis,
         texfiles=texfiles,
+        eol_type=eol_type,
     )
 
 
@@ -913,6 +918,7 @@ def tim_convert_input(
     filters=None,
     removethis=None,
     texfiles=None,
+    eol_type="native",
 ):
     pandoc_path = "/usr/bin/pandoc"
     stdout = ""
@@ -943,6 +949,13 @@ def tim_convert_input(
 
     if from_format == "latex":
         with open(latex_file, "w", encoding="utf-8") as f:
+            if eol_type == "native":
+                # Resolve the EOL type to the native one of the OS
+                eol_type = "lf" if os.linesep == "\n" else "crlf"
+            if eol_type == "crlf":
+                f.write(source.replace("\n", "\r\n"))
+            elif eol_type == "lf":
+                f.write(source.replace("\r\n", "\n"))
             f.write(source)
     else:
 
@@ -955,6 +968,7 @@ def tim_convert_input(
             args.append("--output=" + latex_file)
 
         args.extend(extra_args)
+        args.append(f"--eol={eol_type}")
 
         # adds the proper filter syntax for each item in the filters list
         if filters is not None:
