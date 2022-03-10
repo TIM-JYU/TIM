@@ -33,3 +33,11 @@ $draghandle-height: 20px;
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
 }
+
+.modal-dialog.attached {
+  margin: 0;
+
+  .modal-content {
+    box-shadow: none;
+  }
+}
