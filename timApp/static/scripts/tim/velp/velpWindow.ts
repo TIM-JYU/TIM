@@ -36,6 +36,13 @@ export const colorPalette = [
 // TODO: add min and max values for points
 // TODO: user should be able to delete velp without any annotations
 
+interface IVelpOptionSetting {
+    type: string;
+    title: string;
+    values: number[];
+    names: string[];
+}
+
 /**
  * Controller for velp Window
  */
@@ -46,12 +53,8 @@ export class VelpWindowController implements IController {
     private velp!: Binding<IVelpUI, "<">;
     private newLabel: INewLabel;
     private labelToEdit: INewLabel;
-    private visibleOptions: {
-        type: string;
-        title: string;
-        values: [number, number, number, number];
-        names: [string, string, string, string];
-    };
+    private visibleOptions: IVelpOptionSetting;
+    private styleOptions: IVelpOptionSetting;
     private settings: {
         teacherRightsError: string;
         labelContentError: string;
@@ -73,6 +76,9 @@ export class VelpWindowController implements IController {
 
         if (this.velp.visible_to == null) {
             this.velp.visible_to = 4; // Everyone by default
+        }
+        if (this.velp.style == null) {
+            this.velp.style = 1;
         }
 
         // declare edit rights
@@ -105,6 +111,12 @@ export class VelpWindowController implements IController {
             title: "Visible to",
             values: [1, 2, 3, 4],
             names: ["Just me", "Document owner", "Teachers", "Everyone"],
+        };
+        this.styleOptions = {
+            type: "select",
+            title: "Style",
+            values: [1, 2, 3],
+            names: ["Default", "Text", "Text (always visible)"],
         };
         this.settings = {
             teacherRightsError:
@@ -493,6 +505,7 @@ export class VelpWindowController implements IController {
             color: this.velp.color,
             visible_to: this.velp.visible_to,
             velp_groups: clone(this.velp.velp_groups),
+            style: this.velp.style,
         };
         const json = await to($http.post<number>("/add_velp", data));
         if (!json.ok) {

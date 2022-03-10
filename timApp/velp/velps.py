@@ -32,6 +32,7 @@ def _create_velp(
     valid_until: str | None = None,
     visible_to: int | None = None,
     color: str | None = None,
+    style: int | None = None,
 ) -> Velp:
     """Creates a new entry to the velp table.
 
@@ -50,6 +51,7 @@ def _create_velp(
         color=color,
         valid_until=valid_until,
         visible_to=visible_to,
+        style=style,
     )
     db.session.add(v)
     return v
@@ -108,6 +110,7 @@ def create_new_velp(
     language_id: str = "FI",
     visible_to: int | None = None,
     color: int | None = None,
+    style: int | None = None,
 ) -> tuple[Velp, VelpVersion]:
     """Creates a new velp with all information.
 
@@ -124,20 +127,25 @@ def create_new_velp(
     :return: A tuple of (velp id, velp version id).
 
     """
-    new_velp = _create_velp(creator_id, default_points, valid_until, visible_to, color)
+    new_velp = _create_velp(
+        creator_id, default_points, valid_until, visible_to, color, style
+    )
     new_version = create_velp_version(new_velp)
     create_velp_content(new_version, language_id, content, default_comment)
     db.session.flush()
     return new_velp, new_version
 
 
-def update_velp(velp_id: int, default_points: str, color: str, visible_to: int):
+def update_velp(
+    velp_id: int, default_points: str, color: str, visible_to: int, style: int
+):
     """Changes the non-versioned properties of a velp. Does not update labels.
 
     :param velp_id: ID of velp that's being updated
     :param default_points: New default points
     :param color: Velp color
     :param visible_to: Velp visibility
+    :param style: Velp style
 
     """
     if not visible_to:
@@ -147,6 +155,7 @@ def update_velp(velp_id: int, default_points: str, color: str, visible_to: int):
         v.default_points = default_points
         v.color = color
         v.visible_to = visible_to
+        v.style = style
 
 
 def add_labels_to_velp(velp_id: int, labels: Iterable[int]):
