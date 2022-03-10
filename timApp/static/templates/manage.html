@@ -216,12 +216,12 @@
                     <uib-tabset active="-1">
                         <uib-tab heading="Languages available for automatic translation">
                             <p>Source languages:</p>
-                            <ul ng-repeat="li in $ctrl.sourceLanguages">
-                                <li>{{li.name}} ({{li.code}})</li>
+                            <ul>
+                                <li ng-repeat="li in $ctrl.sourceLanguages">{{li.name}} ({{li.code}})</li>
                             </ul>
                             <p>Target languages:</p>
-                            <ul ng-repeat="li in $ctrl.targetLanguages">
-                                <li>{{li.name}} ({{li.code}})</li>
+                            <ul>
+                                <li ng-repeat="li in $ctrl.targetLanguages">{{li.name}} ({{li.code}})</li>
                             </ul>
                         </uib-tab>
                     </uib-tabset>
@@ -229,12 +229,29 @@
                         <input id="translationTitle" class="form-control" type="text"
                                ng-model="$ctrl.newTranslation.title"/>
                     </div>
-                    <div class="form-group"><label for="translationName">Language:</label>
-                        <input id="translationName" class="form-control" type="text"
-                               ng-model="$ctrl.newTranslation.language"
-                               placeholder="Short language identifier, e.g. fi or en"/></div>
+                    <div class="form-group" style="display:flex;">
+                        <div>
+                        <label for="documentLanguage">Document language:</label>
+                        <select id="document-language" name="document-language-select" class="form-control"
+                               ng-model="$ctrl.newTranslation.language">
+                                <option ng-repeat="option in $ctrl.documentLanguages">{{option.name}} ({{option.code}})</option>
+                        </select></div>
+                        <div>
+                        <label for="translator">Translator:</label>
+                        <select id="translator" name="translator-select" class="form-control"
+                               ng-model="$ctrl.newTranslation.translator">
+                                <option ng-repeat="option in $ctrl.translators">{{option}}</option>
+                        </select></div>
+                        <div ng-show="$ctrl.notManual()"> <!-- TODO: Convert ng-show lines to *ngIf (see settings.components.ts)? --!>
+                            <label for="translatorLanguage">Translator language:</label>
+                        <select id="translator-language" name="translator-language-select" class="form-control"
+                               ng-model="$ctrl.newTranslation.translatorLanguage">
+                                <option ng-repeat="option in $ctrl.targetLanguages">{{option.name}} ({{option.code}})</option>
+                        </select>
+                            </div>
+                    </div>
                     <div ng-show="$ctrl.checkTranslatability()">
-                        <p>This document will be automatically translated on creation.</p>
+                        <p>This document will be automatically translated on creation. Note: A human should check the translation for any errors and fix them!</p>
                     </div>
                     <div ng-show="!$ctrl.checkTranslatability()">
                         <p>This document will not be automatically translated on creation.</p>

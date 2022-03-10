@@ -45,7 +45,18 @@ export class PermCtrl implements IController {
     private translations: Array<IEditableTranslation> = [];
     private sourceLanguages: Array<ILanguages> = [];
     private targetLanguages: Array<ILanguages> = [];
-    private newTranslation: {language: string; title: string};
+    private documentLanguages: Array<ILanguages> = [
+        {name: "Finnish", code: "FI"},
+        {name: "French", code: "FR"},
+        {name: "German", code: "GE"},
+    ]; // TODO: Code
+    private translators: Array<string> = ["Manual", "DeepL"]; // TODO: Code
+    private newTranslation: {
+        language: string;
+        title: string;
+        translator: string;
+        translatorLanguage: string;
+    };
     private accessTypes: Array<unknown>; // TODO proper type
     private orgs: IGroup[];
     private item: IFullDocument | IFolder;
@@ -71,7 +82,12 @@ export class PermCtrl implements IController {
     private result?: boolean;
 
     constructor() {
-        this.newTranslation = {language: "", title: ""};
+        this.newTranslation = {
+            language: "",
+            title: "",
+            translator: this.translators[0],
+            translatorLanguage: "",
+        };
         this.accessTypes = manageglobals().accessTypes;
         this.orgs = manageglobals().orgs;
         this.item = manageglobals().curr_item;
@@ -531,15 +547,12 @@ export class PermCtrl implements IController {
     }
 
     async createTranslation() {
+        const lang = this.parseLanguage(this.newTranslation.language);
         const r = await to(
-            $http.post<IDocument>(
-                `/translate/${this.item.id}/${this.newTranslation.language}`,
-                {
-                    doc_title: this.newTranslation.title,
-                    // TODO Get this from a dropdown menu
-                    autotranslate: "DeepL",
-                }
-            )
+            $http.post<IDocument>(`/translate/${this.item.id}/${lang.code}`, {
+                doc_title: this.newTranslation.title,
+                autotranslate: this.newTranslation.translator,
+            })
         );
         if (r.ok) {
             const data = r.result.data;
@@ -562,17 +575,44 @@ export class PermCtrl implements IController {
         return -1;
     }
 
+    /*
+    Checks whether the translator chosen for the document is Manual (in which case a translator language is not shown) or not
+     */
+    notManual() {
+        if (this.newTranslation.translator == "Manual") {
+            return false;
+        }
+        return true;
+    }
+
+    /*
+    The dropdown for choosing languages returns strings that somehow go over the ILanguages typing in newTranslation,
+    making using string within newTranslation and this function necessary.
+    */
+    parseLanguage(language: string) {
+        return {
+            name: language.substring(0, language.indexOf(" ")),
+            code: language.substring(
+                language.indexOf("(") + 1,
+                language.indexOf(")")
+            ),
+        };
+    }
+
     checkTranslatability() {
         // TODO: Check if user has the API key (check needs to be done in initialization to a boolean of its own)
         if (
             this.newTranslation.title == "" ||
-            this.newTranslation.language == ""
+            this.newTranslation.translator == "Manual"
         ) {
             return false;
         } else {
+            const translateLanguage = this.parseLanguage(
+                this.newTranslation.translatorLanguage
+            );
             const position = this.findSourceDoc();
             for (const target of this.targetLanguages) {
-                if (target.code == this.newTranslation.language.toUpperCase()) {
+                if (target.code == translateLanguage.code) {
                     for (const source of this.sourceLanguages) {
                         if (
                             source.code ==
