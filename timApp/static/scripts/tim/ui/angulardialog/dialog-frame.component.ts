@@ -47,7 +47,9 @@ class ResizableDraggableWrapper {
     template: `
         <ng-container [ngSwitch]="detachable">
             <div *ngSwitchCase="false" class="modal no-pointer-events in" role="dialog"
-             [ngStyle]="{'z-index': 1050 + index*10, display: 'block', position: anchor}" tabindex="-1" #bounds>
+                 [style.z-index]="1050 + index * 10"
+                 [style.display]="'block'"
+                 [style.position]="anchor" tabindex="-1" #bounds>
                 <ng-container [ngTemplateOutlet]="draggableModal"></ng-container>
             </div>
             <ng-container *ngSwitchCase="true" [ngTemplateOutlet]="draggableModal"></ng-container>
@@ -100,7 +102,7 @@ class ResizableDraggableWrapper {
     ],
 })
 export class DialogFrame {
-    detachable = false;
+    @Input() detachable = false;
     @Input() minimizable = true;
     @Input() canResize = true;
 
@@ -114,6 +116,7 @@ export class DialogFrame {
     @Input() initialAutoHeight = false;
     closeFn?: () => void;
     index = 1;
+    detachedIndex: string = "";
     areaMinimized = false;
     private oldSize: ISize = {width: 600, height: 400};
     @ViewChild("resizable")
@@ -126,6 +129,12 @@ export class DialogFrame {
     resizable!: ResizableDraggableWrapper;
     position: IPosition = {x: 0, y: 0};
     sizeOrPosChanged = new Subject<void>();
+
+    ngOnInit() {
+        if (this.detachable) {
+            this.detachedIndex = `${this.index}`;
+        }
+    }
 
     ngAfterViewInit() {
         this.resizable = new ResizableDraggableWrapper(
