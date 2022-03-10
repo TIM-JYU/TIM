@@ -457,7 +457,7 @@ export function getOutOffsetFully(el: Element): IBounds {
 }
 
 export function getOutOffsetVisible(el: Element) {
-    const minVisiblePixels = 20;
+    const minVisiblePixels = 50;
     const rect = getVisualBoundingRect(el);
     const bounds = {left: 0, top: 0, right: 0, bottom: 0};
     if (rect.top < 0) {
