@@ -63,6 +63,7 @@ import {ManageReadReceiptComponent} from "tim/messaging/manage-read-receipt.comp
 import {CopyFolderComponent} from "tim/folder/copy-folder.component";
 import {NotificationOptionsComponent} from "tim/item/manage/notification-options.component";
 import {ParRefComponent} from "tim/document/par-ref.component";
+import {TestDetachableDialogComponent} from "tim/ui/angulardialog/test-detachable-dialog.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -132,6 +133,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "gamificationMap", GamificationMapComponent);
     doDowngrade(dg, "timMarkAllAsRead", MarkAllAsReadComponent);
     doDowngrade(dg, "timSelfExpire", SelfExpireComponent);
+    doDowngrade(dg, "timTestDialog", TestDetachableDialogComponent);
     return dg;
 }
 

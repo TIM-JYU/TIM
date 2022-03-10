@@ -5,9 +5,15 @@ import {DialogFrame} from "tim/ui/angulardialog/dialog-frame.component";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {AngularDraggableModule} from "angular2-draggable";
+import {TestDetachableDialogComponent} from "./test-detachable-dialog.component";
 
 @NgModule({
-    declarations: [DialogContainerComponent, DialogHostDirective, DialogFrame],
+    declarations: [
+        DialogContainerComponent,
+        DialogHostDirective,
+        DialogFrame,
+        TestDetachableDialogComponent,
+    ],
     imports: [TimUtilityModule, BrowserModule, AngularDraggableModule],
     exports: [DialogFrame, DialogContainerComponent],
 })

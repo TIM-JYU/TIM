@@ -45,12 +45,19 @@ class ResizableDraggableWrapper {
 @Component({
     selector: "tim-dialog-frame",
     template: `
-        <div class="modal no-pointer-events in" role="dialog"
+        <ng-container [ngSwitch]="detachable">
+            <div *ngSwitchCase="false" class="modal no-pointer-events in" role="dialog"
              [ngStyle]="{'z-index': 1050 + index*10, display: 'block', position: anchor}" tabindex="-1" #bounds>
-            <div [ngDraggable]
+                <ng-container [ngTemplateOutlet]="draggableModal"></ng-container>
+            </div>
+            <ng-container *ngSwitchCase="true" [ngTemplateOutlet]="draggableModal"></ng-container>
+        </ng-container>
+        
+        <ng-template #draggableModal>
+            <div [ngDraggable]="true"
                  [ngResizable]="canResize && !areaMinimized"
                  [inBounds]="true"
-                 [bounds]="bounds"
+                 [bounds]="bounds?.nativeElement!"
                  #resizable="ngResizable"
                  #draggable="ngDraggable"
                  #dragelem
@@ -85,7 +92,7 @@ class ResizableDraggableWrapper {
                     </div>
                 </div>
             </div>
-        </div>
+        </ng-template>
     `,
     styleUrls: [
         "../../../../../node_modules/angular2-draggable/css/resizable.min.css",
@@ -114,6 +121,7 @@ export class DialogFrame {
     @ViewChild("draggable") private ngDraggable!: AngularDraggableDirective;
     @ViewChild("dragelem") dragelem!: ElementRef<HTMLElement>;
     @ViewChild("body") modalBody!: ElementRef<HTMLElement>;
+    @ViewChild("bounds", {static: false}) bounds?: ElementRef<HTMLElement>;
     @Input() size: "sm" | "md" | "lg" | "xs" = "md"; // xs is custom TIM style
     resizable!: ResizableDraggableWrapper;
     position: IPosition = {x: 0, y: 0};

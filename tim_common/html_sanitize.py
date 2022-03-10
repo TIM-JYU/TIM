@@ -110,6 +110,7 @@ TIM_SAFE_TAGS = [
     "tim-style-preview",
     "tim-message-send",
     "tim-notification-options",
+    "tim-test-dialog",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
