@@ -10,6 +10,7 @@ import {IResizeEvent} from "angular2-draggable/lib/models/resize-event";
 export interface IAngularResizableDirectivePublic {
     _currSize: Size;
     _currPos: Position;
+    _initSize: Size;
 
     doResize(): void;
     resetSize(): void;
@@ -56,8 +57,8 @@ class ResizableDraggableWrapper {
         </ng-container>
         
         <ng-template #draggableModal>
-            <div [ngDraggable]="true"
-                 [ngResizable]="canResize && !areaMinimized"
+            <div [ngDraggable]="detached"
+                 [ngResizable]="detached && canResize && !areaMinimized"
                  [inBounds]="true"
                  [bounds]="bounds?.nativeElement!"
                  #resizable="ngResizable"
@@ -65,18 +66,22 @@ class ResizableDraggableWrapper {
                  #dragelem
                  [preventDefaultEvent]="true"
                  [handle]="draghandle"
+                 [zIndex]="detachedIndex"
                  [position]="position"
                  (stopped)="onPosChange($event)"
                  (rzStop)="onSizeChange($event)"
+                 [class.attached]="!detached"
+                 [style.position]="detachable && !detached ? '' : 'fixed'"
                  class="modal-dialog modal-{{size}}"
                  style="pointer-events: auto">
-                <div class="draghandle"
-                     [ngClass]="{attached: !canDrag()}">
+                <div class="draghandle" [class.attached]="!detached">
                     <p #draghandle>
                         <ng-content select="[header]"></ng-content>
                     </p>
                     <i *ngIf="detachable" (click)="toggleDetach()" title="Attach"
-                       class="glyphicon glyphicon-arrow-left"></i>
+                       class="glyphicon glyphicon-arrow-left" 
+                       [class.glyphicon-arrow-left]="detached"
+                       [class.glyphicon-arrow-right]="!detached"></i>
                     <i *ngIf="minimizable" title="Minimize dialog" (click)="toggleMinimize()"
                        class="glyphicon"
                        [class.glyphicon-minus]="!areaMinimized"
@@ -118,6 +123,7 @@ export class DialogFrame {
     index = 1;
     detachedIndex: string = "";
     areaMinimized = false;
+    detached = true;
     private oldSize: ISize = {width: 600, height: 400};
     @ViewChild("resizable")
     private ngResizable!: IAngularResizableDirectivePublic;
@@ -132,7 +138,8 @@ export class DialogFrame {
 
     ngOnInit() {
         if (this.detachable) {
-            this.detachedIndex = `${this.index}`;
+            this.detachedIndex = `${1050 + this.index * 10}`;
+            this.detached = false;
         }
     }
 
@@ -141,6 +148,12 @@ export class DialogFrame {
             this.ngResizable,
             this.ngDraggable
         );
+
+        // Fix initial size to account for Chrome/Firefox using decimal values for width/height
+        const initSize = this.ngResizable._initSize;
+        const r = this.dragelem.nativeElement.getBoundingClientRect();
+        initSize.width = Math.round(r.width);
+        initSize.height = Math.round(r.height);
     }
 
     canDrag() {
@@ -155,7 +168,14 @@ export class DialogFrame {
         return this.position;
     }
 
-    toggleDetach() {}
+    toggleDetach() {
+        this.detached = !this.detached;
+        this.position = {x: 0, y: 0};
+        this.detachedIndex = this.detached ? `${1050 + this.index * 10}` : "";
+        if (!this.detached) {
+            this.ngResizable.resetSize();
+        }
+    }
 
     toggleMinimize() {
         const res = this.ngResizable;
@@ -164,15 +184,23 @@ export class DialogFrame {
         const cp = res._currPos;
         const minimizedWidth = 100;
         if (this.areaMinimized) {
-            this.oldSize = {width: cs.width, height: cs.height};
-            cs.width = minimizedWidth;
+            const rect = this.dragelem.nativeElement.getBoundingClientRect();
+            this.oldSize = {
+                width: Math.round(rect.width),
+                height: Math.round(rect.height),
+            };
+            if (this.detached) {
+                cs.width = minimizedWidth;
+            }
             cs.height = 0;
         } else {
             cs.set(this.oldSize);
         }
-        cp.x +=
-            ((this.oldSize.width - minimizedWidth) / 2) *
-            (this.areaMinimized ? 1 : -1);
+        if (this.detached) {
+            cp.x +=
+                ((this.oldSize.width - minimizedWidth) / 2) *
+                (this.areaMinimized ? 1 : -1);
+        }
         res.doResize();
     }
 
