@@ -1515,13 +1515,16 @@ ${backTicks}
     }
 
     async translateClicked() {
-        // TODO: send an HTTP POST to translation (print to console for now?)
         if (
             this.resolve.params.viewCtrl == undefined ||
             this.resolve.params.viewCtrl.item.lang_id == undefined
         ) {
             window.alert(
                 "This document does not have a language set. Please set a language and try again."
+            );
+        } else if (this.trdiff == undefined) {
+            window.alert(
+                "There is no original text to be translated. Please check the Difference in original document view."
             );
         } else {
             const lang = this.resolve.params.viewCtrl.item.lang_id;
@@ -1530,16 +1533,21 @@ ${backTicks}
                     `/translate/${this.resolve.params.viewCtrl.item.id}/${lang}/translate_block`,
                     {
                         autotranslate: "DeepL", // TODO: Make this not hardcoded
+                        originaltext: this.trdiff.new,
                     }
                 )
             );
             if (r.ok) {
-                window.alert("Translation successful!");
+                const ref =
+                    this.resolve.params.initialText?.substring(
+                        0,
+                        this.resolve.params.initialText?.indexOf("}") + 1
+                    ) + "\n";
+                // eslint-disable-next-line @typescript-eslint/no-base-to-string
+                this.getEditor()?.setEditorText(ref + r.result.data.toString());
             } else {
                 await showMessageDialog(r.result.data.error);
             }
-
-            // TODO: Take the text and replace it
         }
     }
 
