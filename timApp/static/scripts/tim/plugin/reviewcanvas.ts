@@ -21,6 +21,7 @@ import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {Subject, Subscription} from "rxjs";
 import {debounceTime, distinctUntilChanged} from "rxjs/operators";
+import {PurifyModule} from "tim/util/purify.module";
 import {defaultErrorMessage, defaultTimeout, timeout} from "../util/utils";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
@@ -117,9 +118,9 @@ const PluginFields = t.intersection([
     selector: "reviewcanvas-runner",
     template: `
         <tim-plugin-header *ngIf="header" header>
-            <span [innerHTML]="header"></span>
+            <span [innerHTML]="header | purify"></span>
         </tim-plugin-header>
-        <p stem *ngIf="stem" [innerHTML]="stem"></p>
+        <p stem *ngIf="stem" [innerHTML]="stem | purify"></p>
         <ng-container body>
             <div class="form-inline small">
                 <div style="position: relative;" *ngFor="let item of uploadedFiles; let i = index">
@@ -516,6 +517,7 @@ export class ReviewCanvasComponent
         FormsModule,
         TimUtilityModule,
         CsUtilityModule,
+        PurifyModule,
     ],
 })
 export class ReviewCanvasModule implements DoBootstrap {
