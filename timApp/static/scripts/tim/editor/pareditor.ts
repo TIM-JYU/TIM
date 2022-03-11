@@ -12,7 +12,7 @@ import {
     getFullscreenElement,
     toggleFullScreen,
 } from "tim/util/fullscreen";
-import {ILanguages} from "tim/item/IItem";
+import {IDocument, ILanguages, redirectToItem} from "tim/item/IItem";
 import {
     IExtraData,
     ITags,
@@ -1081,7 +1081,11 @@ ${backTicks}
 
     $onInit() {
         super.$onInit();
-        updateLanguages(this.sourceLanguages, this.targetLanguages);
+        updateLanguages(
+            this.sourceLanguages,
+            this.targetLanguages,
+            this.targetLanguages
+        );
         const saveTag = this.getSaveTag();
         this.storage = {
             acebehaviours: new TimStorage("acebehaviours" + saveTag, t.boolean),
@@ -1510,8 +1514,33 @@ ${backTicks}
         return tags.marktranslated == undefined;
     }
 
-    translateClicked() {
-        window.confirm("This function is unavailable right now.");
+    async translateClicked() {
+        // TODO: send an HTTP POST to translation (print to console for now?)
+        if (
+            this.resolve.params.viewCtrl == undefined ||
+            this.resolve.params.viewCtrl.item.lang_id == undefined
+        ) {
+            window.alert(
+                "This document does not have a language set. Please set a language and try again."
+            );
+        } else {
+            const lang = this.resolve.params.viewCtrl.item.lang_id;
+            const r = await to(
+                $http.post<IDocument>(
+                    `/translate/${this.resolve.params.viewCtrl.item.id}/${lang}/translate_block`,
+                    {
+                        autotranslate: "DeepL", // TODO: Make this not hardcoded
+                    }
+                )
+            );
+            if (r.ok) {
+                window.alert("Translation successful!");
+            } else {
+                await showMessageDialog(r.result.data.error);
+            }
+
+            // TODO: Take the text and replace it
+        }
     }
 
     close(r: IEditorResult) {

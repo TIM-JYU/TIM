@@ -18,9 +18,9 @@ class LangCode(Enum):
     Selection of ISO 639-1 two-letter codes as described at: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
     """
 
-    ENGLISH: str = "en"
-    FINNISH: str = "fi"
-    SWEDISH: str = "sv"
+    ENGLISH: str = "EN"
+    FINNISH: str = "FI"
+    SWEDISH: str = "SV"
 
 
 # TODO make dataclass?
@@ -143,7 +143,7 @@ class DeepLTranslator(ITranslator):
                 None,
                 map(
                     # The DeepL language code might contain '-' for example in 'EN-GB'
-                    lambda x: get_lang_code(x["language"].split("-")[0].lower()),
+                    lambda x: get_lang_code(x["language"].split("-")[0].upper()),
                     resp_json,
                 ),
             )

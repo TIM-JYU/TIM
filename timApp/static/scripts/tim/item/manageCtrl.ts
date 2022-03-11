@@ -45,11 +45,7 @@ export class PermCtrl implements IController {
     private translations: Array<IEditableTranslation> = [];
     private sourceLanguages: Array<ILanguages> = [];
     private targetLanguages: Array<ILanguages> = [];
-    private documentLanguages: Array<ILanguages> = [
-        {name: "Finnish", code: "FI"},
-        {name: "French", code: "FR"},
-        {name: "German", code: "GE"},
-    ]; // TODO: Code
+    private documentLanguages: Array<ILanguages> = [];
     private translators: Array<string> = ["Manual", "DeepL"]; // TODO: Code
     private newTranslation: {
         language: string;
@@ -107,7 +103,11 @@ export class PermCtrl implements IController {
 
     async $onInit() {
         this.getNotifySettings();
-        await updateLanguages(this.sourceLanguages, this.targetLanguages);
+        await updateLanguages(
+            this.sourceLanguages,
+            this.documentLanguages,
+            this.targetLanguages
+        );
         if (this.item.isFolder) {
             this.newName = this.item.name;
             this.newFolderName = this.item.location;

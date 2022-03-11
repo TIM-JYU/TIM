@@ -90,6 +90,7 @@ export function listLanguages(
 
 export async function updateLanguages(
     sourceL: Array<ILanguages>,
+    docL: Array<ILanguages>,
     targetL: Array<ILanguages>
 ) {
     let sources = await to(
@@ -98,6 +99,11 @@ export async function updateLanguages(
     // eslint-disable-next-line @typescript-eslint/no-base-to-string
     let languages = sources.result.data.toString();
     listLanguages(languages, sourceL);
+
+    sources = await to($http.get<string[]>("/translations/document-languages"));
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
+    languages = sources.result.data.toString();
+    listLanguages(languages, docL);
 
     sources = await to($http.get<string[]>("/translations/target-languages"));
     // eslint-disable-next-line @typescript-eslint/no-base-to-string

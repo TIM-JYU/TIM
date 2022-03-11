@@ -56,7 +56,7 @@ def create_translation_route(tr_doc_id, language):
     # Select the specified translator and translate if valid
     if translator_code := req_data.get("autotranslate", None):
         if translator_code.lower() == "deepl":
-            deepl_translate(tr, src_doc.docinfo.lang_id, language)
+            deepl_translate(tr, src_doc.docinfo.lang_id, language, True)
 
     if isinstance(doc, DocEntry):
         de = doc
@@ -67,6 +67,30 @@ def create_translation_route(tr_doc_id, language):
     de.trs.append(tr)
     copy_default_rights(tr, BlockType.Document)
     db.session.commit()
+    return json_response(tr)
+
+
+@tr_bp.post("/translate/<int:tr_doc_id>/<language>/translate_block")
+def create_block_translation_route(tr_doc_id, language):
+    req_data = request.get_json()
+
+    doc = get_doc_or_abort(tr_doc_id)
+
+    verify_view_access(doc)
+    verify_manage_access(doc.src_doc)
+
+    # NOTE Failing to create the translation still increases document id number and sometimes the manage page gets stuck (because of it?)
+    src_doc = doc.src_doc.document
+
+    tr = Translation(doc_id=tr_doc_id, src_docid=src_doc.doc_id, lang_id=language)
+
+    # add_reference_pars(cite_doc, src_doc, "tr")
+
+    # Select the specified translator and translate if valid
+    if translator_code := req_data.get("autotranslate", None):
+        if translator_code.lower() == "deepl":
+            deepl_translate(tr, src_doc.docinfo.lang_id, language, False)
+
     return json_response(tr)
 
 
@@ -107,6 +131,16 @@ def get_source_languages():
     return json_response(sl)
 
 
+@tr_bp.get("/translations/document-languages")
+def get_document_languages():
+    """
+    A very rough version of getting the languages.
+    """
+
+    sl = ["Finnish-FI", "English-EN", "French-FR", "German-GE"]
+    return json_response(sl)
+
+
 @tr_bp.get("/translations/target-languages")
 def get_target_languages():
     """
@@ -117,12 +151,15 @@ def get_target_languages():
     return json_response(sl)
 
 
-def deepl_translate(tr: Translation, source_lang: str, target_lang: str) -> None:
+def deepl_translate(
+    tr: Translation, source_lang: str, target_lang: str, full_document: bool
+) -> None:
     """
     Perform the machine translation using DeepL API
     :param tr: The version of the document to translate
     :param source_lang: The language to translate from
     :param target_lang: The language to translate into
+    :param full_document: Whether the entire document will be translated or not
     """
     # Get the API-key from environment variable
     try:
@@ -147,10 +184,21 @@ def deepl_translate(tr: Translation, source_lang: str, target_lang: str) -> None
         + "/"
         + str(usage.character_limit)
     )
-    # Be careful about closing the underlying file when iterating document
-    with tr.document.get_source_document().__iter__() as doc_iter:
-        # Translate each paragraph sequentially
-        for orig_par, tr_par in zip(doc_iter, tr.document):
-            new_text = translator.translate(orig_par.md, source_lang, target_lang)
-            logger.log_info(new_text)
-            tr.document.modify_paragraph(tr_par.id, new_text)
+    if full_document:
+        # Be careful about closing the underlying file when iterating document
+        with tr.document.get_source_document().__iter__() as doc_iter:
+            # Translate each paragraph sequentially
+            for orig_par, tr_par in zip(doc_iter, tr.document):
+                new_text = translator.translate(orig_par.md, source_lang, target_lang)
+                logger.log_info(new_text)
+                tr.document.modify_paragraph(tr_par.id, new_text)
+    """ else:
+        test = tr.document.get_source_document().get_paragraph()
+        test2 = [tr.document.get_paragraph(tr.__getattribute__("rt")).md]
+        new_text = translator.translate(
+            [tr.document.get_paragraph(tr.__getattribute__("rt")).md],
+            source_lang,
+            target_lang,
+        )
+        logger.log_info(new_text)
+        tr.document.modify_paragraph(tr.doc_id, new_text)"""
