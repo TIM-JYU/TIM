@@ -13,6 +13,7 @@ import {
     IVelpGroupUI,
     IVelpUI,
 } from "./velptypes";
+import {ViewCtrl} from "tim/document/viewctrl";
 
 /**
  * Created by Seppo Tarvainen on 25.11.2016.
@@ -70,6 +71,7 @@ export class VelpWindowController implements IController {
     private labels!: Binding<ILabelUI[], "<">;
     private docId!: Binding<number, "<">;
     private teacherRight!: Binding<boolean, "<">;
+    private vctrl!: ViewCtrl;
 
     $onInit() {
         this.velpLocal = clone(this.velp);
@@ -220,7 +222,7 @@ export class VelpWindowController implements IController {
         if (this.teacherRight) {
             return false;
         } else {
-            if (points == null) {
+            if (points == null || this.vctrl.docSettings.peer_review) {
                 return false;
             } else {
                 return true;
@@ -594,6 +596,7 @@ timApp.component("velpWindow", {
     },
     require: {
         velpSelection: "^velpSelection",
+        vctrl: "^timView",
     },
     controller: VelpWindowController,
     templateUrl: "/static/templates/velpWindow.html",
