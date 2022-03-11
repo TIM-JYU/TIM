@@ -1,6 +1,7 @@
 import {IController, IFormController, IScope} from "angular";
 import {timApp} from "tim/app";
 import {ParCompiler} from "tim/editor/parCompiler";
+import {ViewCtrl} from "tim/document/viewctrl";
 import {$http, $timeout} from "../util/ngimport";
 import {Binding, clone, Require, to} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
@@ -13,7 +14,6 @@ import {
     IVelpGroupUI,
     IVelpUI,
 } from "./velptypes";
-import {ViewCtrl} from "tim/document/viewctrl";
 
 /**
  * Created by Seppo Tarvainen on 25.11.2016.
