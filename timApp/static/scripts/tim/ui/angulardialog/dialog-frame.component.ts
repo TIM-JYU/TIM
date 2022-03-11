@@ -71,7 +71,8 @@ class ResizableDraggableWrapper {
                  (stopped)="onPosChange($event)"
                  (rzStop)="onSizeChange($event)"
                  [class.attached]="!detached"
-                 [style.position]="detachable && !detached ? '' : 'fixed'"
+                 [class.detachable]="detachable"
+                 [style.position]="(!detachable || detachable && !detached) ? '' : 'fixed'"
                  class="modal-dialog modal-{{size}}"
                  style="pointer-events: auto">
                 <div class="draghandle" [class.attached]="!detached">
