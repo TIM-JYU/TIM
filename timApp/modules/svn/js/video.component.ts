@@ -101,6 +101,10 @@ function time02String(time: number) {
 const youtubeDomains = new Set(["www.youtube.com", "youtube.com", "youtu.be"]);
 const moniviestinDomains = new Set(["m3.jyu.fi", "moniviestin.jyu.fi"]);
 
+const SubtitlesMarkup = t.type({
+    name: withDefault(t.string, ""),
+    file: withDefault(t.string, ""),
+});
 const ShowFileMarkup = t.intersection([
     t.partial({
         doclink: nullable(t.string),
@@ -119,7 +123,7 @@ const ShowFileMarkup = t.intersection([
     t.type({
         autoplay: withDefault(t.boolean, true),
         file: withDefault(t.string, ""),
-        subtitleUrl: withDefault(t.string, ""),
+        subtitles: withDefault(t.array(SubtitlesMarkup), []),
         target: withDefault(t.string, "timdoc"),
         open: withDefault(t.boolean, false),
         videoicon: withDefault(t.boolean, true),
@@ -211,6 +215,7 @@ const ShowFileAll = t.type({
                        #video
                        class="showVideo"
                        controls
+                       id="video"
                        (loadedmetadata)="metadataloaded()"
                        (timeupdate)="timeupdate()"
                        [style.width.px]="width"
@@ -218,7 +223,6 @@ const ShowFileAll = t.type({
                        [src]="videosettings.src"
                        [autoplay]="markup.autoplay"
                 >
-                    <track [src]="markup.subtitleUrl" default kind="subtitles" srclang="fi" label="Finnish" />
                 </video>
             </ng-container>
             <ng-container *ngIf="isNormalSize">
@@ -236,13 +240,6 @@ const ShowFileAll = t.type({
                 ></tim-video-link>
             </ng-container>
             <div class="flex" *ngIf="videoOn" style="justify-content: flex-end">
-                <div *ngIf="videosettings" class="margin-5-right">
-                    Subtitles:
-                    <select #subtitles (change)="selectSubtitles(subtitles.value)">
-                        <option value="Off" selected="selected">off</option>
-                        <option value="Finnish">test</option>
-                    </select>
-                </div>
                 <div *ngIf="videosettings" class="margin-5-right">
                     <label class="normalLabel" title="Advanced video controls">Adv <input type="checkbox" [(ngModel)]="advVideo" /></label>
                     Speed:
@@ -340,6 +337,7 @@ export class VideoComponent extends AngularPluginBase<
     private origSize!: string;
     private origWidth?: number;
     private origHeight?: number;
+    @ViewChild("video") video?: HTMLVideoElement;
     private limits!: string | null;
     duration!: string | null;
     startt!: string | null;
@@ -382,15 +380,6 @@ export class VideoComponent extends AngularPluginBase<
             this.toggleVideo();
         }
     }
-
-    @ViewChild("video") video?: HTMLVideoElement;
-
-    ngAfterViewInit() {
-        console.log("on after view init", this.video);
-        // this returns null
-    }
-
-    selectSubtitles(subtitle: string): void {}
 
     hideVideo() {
         this.removeEventListeners();
@@ -638,6 +627,28 @@ export class VideoComponent extends AngularPluginBase<
         this.video!.currentTime = this.start ?? 0;
         if (this.markup.followid && this.vctrl) {
             this.vctrl.registerVideo(this.markup.followid, this.video!);
+        }
+
+        this.createSubtitleTracks();
+    }
+
+    /**
+     * Function creates a following structure:
+     * <video>
+     *   <track label="" src="" />
+     *   <track label="" src="" />
+     *   ...
+     * </video>
+     */
+    private createSubtitleTracks(): void {
+        // Text Track API does not provide a way to load WebVTT source from a file dynamically.
+        // Refer to HTML documentation: https://html.spec.whatwg.org/#dom-media-addtexttrack
+        for (const subtitle of this.markup.subtitles) {
+            const video = document.getElementById("video");
+            const track = document.createElement("track");
+            track.label = subtitle.name;
+            track.src = subtitle.file;
+            video?.appendChild(track);
         }
     }
 
