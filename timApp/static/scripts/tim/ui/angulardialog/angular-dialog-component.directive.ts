@@ -107,6 +107,9 @@ export abstract class AngularDialogComponent<Params, Result>
         }
         if (this.frame.autoHeight) {
             this.bodyObserver = new MutationObserver(async (record) => {
+                if (this.isDetachedDialogMutation(record)) {
+                    return;
+                }
                 await this.setHeightAutomatic();
             });
             this.bodyObserver.observe(this.frame.modalBody.nativeElement, {
@@ -238,5 +241,19 @@ export abstract class AngularDialogComponent<Params, Result>
     protected async ensureFullyInViewport() {
         await timeout();
         this.frame.resizable.boundsCheck();
+    }
+
+    private isDetachedDialogMutation(record: MutationRecord[]) {
+        return record.every((r) => {
+            if (!(r.target instanceof HTMLElement)) {
+                return false;
+            }
+            const cl = r.target.classList;
+            return (
+                cl.contains("modal-dialog") &&
+                cl.contains("detachable") &&
+                !cl.contains("attached")
+            );
+        });
     }
 }
