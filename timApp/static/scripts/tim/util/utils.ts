@@ -731,7 +731,21 @@ function getBrowserKind() {
     return BrowserKind.Unknown;
 }
 
+const iDevices = new Set([
+    "iPad Simulator",
+    "iPhone Simulator",
+    "iPod Simulator",
+    "iPad",
+    "iPhone",
+    "iPod",
+]);
+
 export function isIOS() {
+    // navigator.platform is legacy but still the only option is some browsers
+    if (!!navigator.platform) {
+        return iDevices.has(navigator.platform);
+    }
+
     // New iPads can report MacIntel as platform
     // https://stackoverflow.com/a/58979271
     return !!(

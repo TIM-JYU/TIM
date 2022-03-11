@@ -41,7 +41,7 @@ browser_tests:
     when: always
     paths:
     - screenshots
-  timeout: 40m  # usually takes less than 40 minutes
+  timeout: 50m  # usually takes less than 40 minutes
   retry:
     max: 2
     when:

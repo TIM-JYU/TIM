@@ -1,8 +1,15 @@
 /**
  * Defines the client-side implementation of numericfield/label plugin.
  */
-import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+    NgZone,
+} from "@angular/core";
 import {
     ChangeType,
     FormModeOption,
@@ -16,13 +23,22 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http} from "tim/util/ngimport";
-import {defaultErrorMessage, defaultTimeout, to, valueOr} from "tim/util/utils";
-import {FieldDataWithStyles} from "./textfield";
-
-const numericfieldApp = angular.module("numericfieldApp", ["ngSanitize"]);
-export const moduleDefs = [numericfieldApp];
+import {getFormBehavior} from "tim/plugin/util";
+import {defaultErrorMessage, valueOr} from "tim/util/utils";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
+import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
+import {
+    createDowngradedModule,
+    doDowngrade,
+} from "../../../static/scripts/tim/downgrade";
+import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
+import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
+import {FieldDataWithStyles, TFieldContent} from "./textfield-plugin.component";
 
 const REDOUBLE = /[^0-9,.e\-+]+/g;
 
@@ -61,8 +77,53 @@ const NumericfieldAll = t.intersection([
     }),
 ]);
 
-class NumericfieldController
-    extends PluginBase<
+/**
+ * Introducing numericfieldRunner as HTML component.
+ * Attribute style used to force user given cols to determine size.
+ * Developers note: attribute step="0.01" can determine lower step size between scroll-up/down.
+ */
+@Component({
+    selector: "tim-numericfield-runner",
+    template: `
+<div class="numericfieldNoSaveDiv inline-form">
+    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <h4 *ngIf="header" [innerHtml]="header"></h4>
+    <p class="stem" *ngIf="stem" [innerHtml]="stem"></p>
+    <div class="form-inline">
+     <label><span>
+      <span [innerHtml]="inputstem"></span>
+      <span *ngIf="!isPlainText()" [class.noarrows]="!arrows">
+        <input type="number"
+               [style.width.em]="cols"
+               step="{{ stepCheck() }}"
+               class="form-control"
+               [(ngModel)]="numericvalue"
+               (blur)="autoSave()"
+               (keydown.enter)="saveAndRefocus()"
+               (ngModelChange)="updateInput()"
+               [readonly]="readonly"
+               [tooltip]="errormessage"
+               placeholder="{{inputplaceholder}}"
+               [ngClass]="{warnFrame: (isUnSaved() && !redAlert), alertFrame: redAlert}"
+               [ngStyle]="styles">
+      </span>
+      <span *ngIf="isPlainText()" class="plaintext" [style.width.em]="cols">{{numericvalue}}</span>
+     </span></label>
+    </div>
+    <button class="timButton"
+            *ngIf="!isPlainText() && buttonText()"
+            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly"
+            (click)="saveText()">
+        {{buttonText()}}
+    </button>
+    <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event);">{{undoButton}}</a>
+    <p class="savedtext" *ngIf="!hideSavedText && buttonText()">Saved!</p>
+    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+</div> `,
+    styleUrls: ["./numericfield-plugin.component.scss"],
+})
+export class NumericfieldPluginComponent
+    extends AngularPluginBase<
         t.TypeOf<typeof NumericfieldMarkup>,
         t.TypeOf<typeof NumericfieldAll>,
         typeof NumericfieldAll
@@ -71,21 +132,41 @@ class NumericfieldController
 {
     private changes = false;
     private result?: string;
-    private isRunning = false;
-    private numericvalue?: string;
-    private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
+    isRunning = false;
+    numericvalue?: number;
     private vctrl!: ViewCtrl;
-    private initialValue?: string;
-    private errormessage?: string;
-    private hideSavedText = true;
-    private redAlert = false;
+    private initialValue?: number;
+    errormessage?: string;
+    hideSavedText = true;
+    redAlert = false;
     private saveResponse: {saved: boolean; message: string | undefined} = {
         saved: false,
         message: undefined,
     };
     private preventedAutosave = false;
-    private styles: Record<string, string> = {};
+    styles: Record<string, string> = {};
     private saveCalledExternally = false;
+
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private zone: NgZone
+    ) {
+        super(el, http, domSanitizer);
+    }
+
+    get disableUnchanged() {
+        return this.markup.disableUnchanged;
+    }
+
+    get arrows() {
+        return this.markup.arrows;
+    }
+
+    get inputplaceholder() {
+        return this.markup.inputplaceholder;
+    }
 
     getDouble(s: string | number): number {
         if (typeof s === "number") {
@@ -110,6 +191,11 @@ class NumericfieldController
         return c === null || c === "";
     }
 
+    saveAndRefocus() {
+        this.autoSave();
+        this.changeFocus();
+    }
+
     getDefaultMarkup() {
         return {};
     }
@@ -128,44 +214,55 @@ class NumericfieldController
         ).toString();
     }
 
-    $onInit() {
-        super.$onInit();
+    private updateFieldValue(val: TFieldContent): boolean {
+        if (typeof val === "number") {
+            this.numericvalue = val;
+            return true;
+        }
+        if (this.isAllowedNull(val)) {
+            this.numericvalue = undefined;
+            return true;
+        }
+        // TODO: parseFloat accepts too much like "6hello", should have a more accurate float check.
+        const numericvalue = this.getDouble(val);
+        if (isNaN(numericvalue)) {
+            this.numericvalue = undefined;
+            if (val !== "") {
+                this.errormessage = $localize`Content is not a number (${val}); showing empty value.`;
+                this.redAlert = true;
+            }
+            return false;
+        }
+        this.numericvalue = numericvalue;
+        return true;
+    }
+
+    ngOnInit() {
+        super.ngOnInit();
+        this.vctrl = vctrlInstance!;
         const state = this.attrsall.state?.c;
         if (state === undefined || state === null) {
             this.initCode();
         } else {
-            if (typeof state === "number") {
-                this.numericvalue = state.toString();
-            } else {
-                if (this.isAllowedNull(state)) {
-                    this.numericvalue = undefined;
-                } else {
-                    // TODO: parseFloat accepts too much like "6hello", should have a more accurate float check.
-                    const numericvalue = this.getDouble(state);
-                    this.numericvalue = numericvalue.toString();
-                    if (isNaN(numericvalue)) {
-                        this.numericvalue = undefined;
-                        if (state !== "") {
-                            this.errormessage = `Content is not a number (${state}); showing empty value.`;
-                        }
-                    }
-                }
-            }
+            this.updateFieldValue(state);
         }
-        if (!this.attrs.wheel) {
-            this.element.bind("mousewheel DOMMouseScroll", () => false);
+        if (!this.markup.wheel) {
+            this.element.on(
+                "mousewheel DOMMouseScroll",
+                (e) => (e.bubbles = false)
+            );
         }
-        if (!this.attrs.verticalkeys) {
-            this.element.bind("keydown", (e) => {
-                if (e.which == 38 || e.which == 40) {
+        if (!this.markup.verticalkeys) {
+            this.element.on("keydown", (e) => {
+                e.bubbles = false;
+                if (e.key == "ArrowUp" || e.key == "ArrowDown") {
                     e.preventDefault();
                 }
             });
         }
-        this.modelOpts = {debounce: {blur: 0}};
-        this.vctrl.addTimComponent(this, this.attrs.tag);
+        this.vctrl.addTimComponent(this, this.markup.tag);
         this.initialValue = this.numericvalue;
-        if (this.attrsall.state?.styles && !this.attrs.ignorestyles) {
+        if (this.attrsall.state?.styles && !this.markup.ignorestyles) {
             this.applyStyling(this.attrsall.state.styles);
         }
     }
@@ -182,15 +279,20 @@ class NumericfieldController
      * Save method for other plguins, needed by e.g. multisave plugin.
      */
     async save() {
-        this.saveCalledExternally = true;
-        return this.saveText();
+        return this.zone.run(() => {
+            this.saveCalledExternally = true;
+            return this.saveText();
+        });
     }
 
     resetField(): undefined {
-        this.initCode();
-        this.applyStyling({});
-        this.errormessage = undefined;
-        return undefined;
+        return this.zone.run(() => {
+            this.initCode();
+            this.applyStyling({});
+            this.errormessage = undefined;
+            this.redAlert = false;
+            return undefined;
+        });
     }
 
     tryResetChanges(e?: Event): void {
@@ -204,73 +306,67 @@ class NumericfieldController
     }
 
     resetChanges(): void {
-        this.numericvalue = this.initialValue;
-        this.changes = false;
-        this.updateListeners(ChangeType.Saved);
-        this.scope.$digest();
+        this.zone.run(() => {
+            this.numericvalue = this.initialValue;
+            this.changes = false;
+            this.updateListeners(ChangeType.Saved);
+        });
     }
 
     setAnswer(content: unknown): ISetAnswerResult {
-        this.errormessage = undefined;
-        let message;
-        let ok = true;
-        // TODO: should receiving empty answer reset to defaultnumber or clear field?
-        if (!FieldDataWithStyles.is(content)) {
-            this.resetField();
-        } else {
-            if (this.isAllowedNull(content.c)) {
-                this.numericvalue = undefined;
+        return this.zone.run(() => {
+            this.errormessage = undefined;
+            let message;
+            let ok = true;
+            // TODO: should receiving empty answer reset to defaultnumber or clear field?
+            if (!FieldDataWithStyles.is(content)) {
+                this.resetField();
             } else {
-                const parsed = this.getDouble(content.c);
-                if (isNaN(parsed)) {
-                    this.numericvalue = undefined;
+                if (!this.updateFieldValue(content.c)) {
                     ok = false;
                     message = 'Value at "c" was not a valid number';
-                    this.errormessage = `Content is not a number (${content.c}); showing empty value.`;
-                } else {
-                    this.numericvalue = parsed.toString();
+                }
+
+                if (!this.markup.ignorestyles && content.styles) {
+                    this.applyStyling(content.styles);
                 }
             }
-
-            if (!this.attrs.ignorestyles && content.styles) {
-                this.applyStyling(content.styles);
-            }
-        }
-        this.initialValue = this.numericvalue;
-        this.changes = false;
-        this.updateListeners(ChangeType.Saved);
-        return {ok: ok, message: message};
+            this.initialValue = this.numericvalue;
+            this.changes = false;
+            this.updateListeners(ChangeType.Saved);
+            return {ok: ok, message: message};
+        });
     }
 
     /**
      * Method for autoupdating.
      */
     get autoupdate(): number {
-        return this.attrs.autoupdate;
+        return this.markup.autoupdate;
     }
 
     /**
      * Returns (user) set inputstem (textfeed before userinput box).
      */
     get inputstem() {
-        return this.attrs.inputstem ?? null;
+        return this.markup.inputstem ?? null;
     }
 
     /**
      * Returns (user) set col size (size of the field).
      */
     get cols() {
-        return this.attrs.cols;
+        return this.markup.cols;
     }
 
     /**
      * Initialize content.
      */
     initCode() {
-        if (this.attrs.initnumber == undefined) {
-            this.numericvalue = "";
+        if (this.markup.initnumber == undefined) {
+            this.numericvalue = undefined;
         } else {
-            this.numericvalue = "" + this.attrs.initnumber;
+            this.numericvalue = this.markup.initnumber;
         }
         this.initialValue = this.numericvalue;
         this.result = undefined;
@@ -280,7 +376,7 @@ class NumericfieldController
 
     /**
      * Redirects save request to actual save method.
-     * Used as e.g. timButton ng-click event.
+     * Used as e.g. timButton (click) event.
      */
     saveText() {
         if (this.isUnSaved()) {
@@ -292,7 +388,6 @@ class NumericfieldController
         }
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Autosaver used by ng-blur in textfieldApp component.
      * Needed to seperate from other save methods because of the if-structure.
@@ -304,29 +399,27 @@ class NumericfieldController
             this.preventedAutosave = false;
             return;
         }
-        if (this.attrs.autosave || this.attrs.autosave === undefined) {
+        if (this.markup.autosave || this.markup.autosave === undefined) {
             this.saveText();
         }
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Stepper used by step in numericfield-Runner component.
      * Used to define range of each numeric step for scroll up/down, e.g. 0.25 or 1.0.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     stepCheck() {
-        return this.attrs.step;
+        return this.markup.step;
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true value, if label is set to plaintext.
      * Used to define readOnlyStyle in angular, either input or span.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isPlainText() {
-        const ros = this.attrs.readOnlyStyle;
+        const ros = this.markup.readOnlyStyle;
         if (ros === "htmlalways") {
             return true;
         }
@@ -363,7 +456,6 @@ class NumericfieldController
         return regExpChecker.test(this.valueOrEmpty);
     }
 
-    // noinspection JSUnusedGlobalSymbols,JSMethodCanBeStatic
     /**
      * Returns focus on next HTML field.
      * Used by keydown (Enter) in angular.
@@ -385,7 +477,6 @@ class NumericfieldController
         }
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Checking if input has been changed since the last Save or initialization.
      * Displays a red thick marker at the right side of the inputfield to notify users
@@ -393,7 +484,7 @@ class NumericfieldController
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isUnSaved() {
-        return !this.attrs.nosave && this.changes;
+        return !this.markup.nosave && this.changes;
     }
 
     /**
@@ -402,11 +493,12 @@ class NumericfieldController
      */
     async doSaveText(nosave: boolean) {
         this.errormessage = undefined;
-        if (this.attrs.validinput) {
-            if (!this.validityCheck(this.attrs.validinput)) {
+        this.redAlert = false;
+        if (this.markup.validinput) {
+            if (!this.validityCheck(this.markup.validinput)) {
                 this.errormessage =
-                    this.attrs.errormessage ??
-                    "Input does not pass the RegEx: " + this.attrs.validinput;
+                    this.markup.errormessage ??
+                    "Input does not pass the RegEx: " + this.markup.validinput;
                 this.redAlert = true;
                 this.saveResponse.message = this.errormessage;
                 return this.saveResponse;
@@ -419,33 +511,31 @@ class NumericfieldController
         const params = {
             input: {
                 nosave: false,
-                c: this.numericvalue,
+                c: this.numericvalue?.toString() ?? "",
             },
         };
 
         if (nosave) {
             params.input.nosave = true;
         }
-        const url = this.pluginMeta.getAnswerUrl();
-        const r = await to(
-            $http.put<{
-                web: {
-                    result: string;
-                    error?: string;
-                    clear?: boolean;
-                    value: string;
-                };
-            }>(url, params, {timeout: defaultTimeout})
-        );
+        const r = await this.postAnswer<{
+            web: {
+                result: string;
+                error?: string;
+                clear?: boolean;
+                value: TFieldContent;
+            };
+        }>(params);
         this.isRunning = false;
         if (r.ok) {
-            const data = r.result.data;
+            const data = r.result;
             if (data.web.error) {
                 this.errormessage = data.web.error;
+                this.redAlert = true;
             }
             this.result = data.web.result;
             if (this.result === "saved") {
-                this.numericvalue = data.web.value.toString();
+                this.updateFieldValue(data.web.value);
                 this.initialValue = this.numericvalue;
                 this.changes = false;
                 this.updateListeners(ChangeType.Saved);
@@ -461,7 +551,7 @@ class NumericfieldController
                 const taskId = this.getTaskId();
                 if (taskId) {
                     const tid = taskId.docTask().toString();
-                    if (this.attrs.autoUpdateTables) {
+                    if (this.markup.autoUpdateTables) {
                         this.vctrl.updateAllTables([tid]);
                     }
                     if (this.vctrl.docSettings.form_mode) {
@@ -477,15 +567,16 @@ class NumericfieldController
             }
         } else {
             this.errormessage =
-                r.result.data?.error ??
-                this.attrs.connectionErrorMessage ??
+                r.result.error?.error ??
+                this.markup.connectionErrorMessage ??
                 defaultErrorMessage;
+            this.redAlert = true;
         }
         return this.saveResponse;
     }
 
     formBehavior(): FormModeOption {
-        return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
+        return getFormBehavior(this.markup.form, FormModeOption.IsForm);
     }
 
     getAttributeType() {
@@ -511,63 +602,34 @@ class NumericfieldController
         this.vctrl.informChangeListeners(
             taskId,
             state,
-            this.attrs.tag ? this.attrs.tag : undefined
+            this.markup.tag ? this.markup.tag : undefined
         );
     }
 }
 
-/**
- * Introducing numericfieldRunner as HTML component.
- * Attribute style used to force user given cols to determine size.
- * Developers note: attribute step="0.01" can determine lower step size between scroll-up/down.
- */
-numericfieldApp.component("numericfieldRunner", {
-    bindings: pluginBindings,
-    controller: NumericfieldController,
-    require: {
-        vctrl: "^timView",
-    },
-    template: `
-<div class="numericfieldNoSaveDiv">
-    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p class="stem" ng-if="::$ctrl.stem" ng-bind-html="::$ctrl.stem"></p>
-    <div class="form-inline">
-     <label><span>
-      <span ng-bind-html="::$ctrl.inputstem"></span>
-      <span ng-if="::!$ctrl.isPlainText()" ng-class="::{noarrows: (!$ctrl.attrs.arrows)}">
-        <input type="tel" xpattern="[0-9,.a-zA-Z/-]*" pattern=".*"
-               style="width: {{::$ctrl.cols}}em"
-               step="{{ $ctrl.stepCheck() }}"
-               class="form-control"
-               ng-model="$ctrl.numericvalue"
-               ng-blur="$ctrl.autoSave()"
-               ng-keydown="$event.keyCode === 13 && $ctrl.autoSave() && $ctrl.changeFocus()"
-               ng-change="$ctrl.updateInput()"
-               ng-model-options="::$ctrl.modelOpts"
-               ng-change="$ctrl.checkNumericfield()"
-               ng-trim="false"
-               ng-readonly="::$ctrl.readonly"
-               uib-tooltip="{{ $ctrl.errormessage }}"
-               tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
-               tooltip-trigger="mouseenter"
-               placeholder="{{::$ctrl.inputplaceholder}}"
-               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert}"
-               ng-style="$ctrl.styles">
-      </span>
-      <!--<span ng-if="::$ctrl.isPlainText()" style="float:left;" ng-bind-html="$ctrl.inputstem + " " + $ctrl.numericvalue">{{$ctrl.numericvalue}}</span> -->
-      <span ng-if="::$ctrl.isPlainText()" class="plaintext" style="width: {{::$ctrl.cols}}em">{{$ctrl.numericvalue}}</span>
-     </span></label>
-    </div>
-    <div ng-if="$ctrl.errormessage"  class="error" style="font-size: 12px" ng-bind-html="$ctrl.errormessage"></div>
-    <button class="timButton"
-            ng-if="::!$ctrl.isPlainText() && $ctrl.buttonText()"
-            ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.readonly"
-            ng-click="$ctrl.saveText()">
-        {{::$ctrl.buttonText()}}
-    </button>
-    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.tryResetChanges($event);">{{::$ctrl.undoButton}}</a>
-    <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p>
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</div> `,
-});
+@NgModule({
+    declarations: [NumericfieldPluginComponent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        TimUtilityModule,
+        FormsModule,
+        PurifyModule,
+        TooltipModule.forRoot(),
+    ],
+})
+export class NumericfieldModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
+
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                NumericfieldModule
+            )
+        ),
+        "numericfieldRunner",
+        NumericfieldPluginComponent
+    ),
+];
