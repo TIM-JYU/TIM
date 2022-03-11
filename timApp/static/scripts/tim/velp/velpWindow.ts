@@ -1,6 +1,7 @@
 import {IController, IFormController, IScope} from "angular";
 import {timApp} from "tim/app";
 import {ParCompiler} from "tim/editor/parCompiler";
+import {ViewCtrl} from "tim/document/viewctrl";
 import {$http, $timeout} from "../util/ngimport";
 import {Binding, clone, Require, to} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
@@ -70,6 +71,7 @@ export class VelpWindowController implements IController {
     private labels!: Binding<ILabelUI[], "<">;
     private docId!: Binding<number, "<">;
     private teacherRight!: Binding<boolean, "<">;
+    private vctrl!: ViewCtrl;
 
     $onInit() {
         this.velpLocal = clone(this.velp);
@@ -220,7 +222,7 @@ export class VelpWindowController implements IController {
         if (this.teacherRight) {
             return false;
         } else {
-            if (points == null) {
+            if (points == null || this.vctrl.docSettings.peer_review) {
                 return false;
             } else {
                 return true;
@@ -594,6 +596,7 @@ timApp.component("velpWindow", {
     },
     require: {
         velpSelection: "^velpSelection",
+        vctrl: "^timView",
     },
     controller: VelpWindowController,
     templateUrl: "/static/templates/velpWindow.html",

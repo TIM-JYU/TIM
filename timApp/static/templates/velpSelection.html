@@ -93,6 +93,7 @@
                                      teacher-right="$ctrl.vctrl.item.rights.teacher"
                                      labels="$ctrl.labels"
                                      new="true"
+                                     vctrl="$ctrl.vctrl"
                                      advanced-on="$ctrl.advancedOn"></velp-window>
                         <velp-window
                                 ng-repeat="velp in filteredVelps = ($ctrl.rctrl.velps | filter:{content:$ctrl.filterVelp} | orderByWhenNotEditing:$ctrl.order:filteredVelps | filterByVelpGroups:$ctrl.velpGroups | filterByLabels:$ctrl.labels:$ctrl.advancedOn
