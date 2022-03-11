@@ -35,10 +35,10 @@ enum SizeNeedsRefresh {
 }
 
 function getCurrentSize(el: Element) {
-    const computed = window.getComputedStyle(el);
+    const computed = el.getBoundingClientRect();
     return {
-        width: parseInt(computed.width, 10),
-        height: parseInt(computed.height, 10),
+        width: Math.round(computed.width),
+        height: Math.round(computed.height),
     };
 }
 
@@ -116,9 +116,6 @@ export abstract class AngularDialogComponent<Params, Result>
             });
         }
         this.frame.closeFn = () => this.dismiss();
-        this.sub = this.frame.sizeOrPosChanged.subscribe(() => {
-            this.savePosSize();
-        });
         let sizehint = null;
         if (this.dialogOptions?.resetSize) {
             this.frame.resizable.resetSize();
@@ -133,6 +130,10 @@ export abstract class AngularDialogComponent<Params, Result>
         if (savedPos) {
             this.frame.setPos({x: savedPos[0], y: savedPos[1]});
         }
+
+        this.sub = this.frame.sizeOrPosChanged.subscribe(() => {
+            this.savePosSize();
+        });
 
         this.fixPosSizeInbounds(sizehint);
         this.frame.resizable.doResize();

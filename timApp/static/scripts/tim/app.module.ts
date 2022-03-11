@@ -11,7 +11,6 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TimeStampToMomentConverter} from "tim/util/time-stamp-to-moment-converter.service";
 import {AnnotationComponent} from "tim/velp/annotation.component";
 import {SignatureComponent} from "tim/ui/signature.component";
-import {VelpSummaryComponent} from "tim/velp/velp-summary.component";
 import {FooterComponent} from "tim/footer.component";
 import {UserMenuComponent} from "tim/user/user-menu.component";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
@@ -50,7 +49,6 @@ import {SelfExpireComponent} from "tim/item/self-expire.component";
         ShortNameDirective,
         AnnotationComponent,
         SignatureComponent,
-        VelpSummaryComponent,
         FooterComponent,
         UserMenuComponent,
         LogoComponent,

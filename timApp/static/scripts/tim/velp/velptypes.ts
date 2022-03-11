@@ -175,6 +175,7 @@ export type IVelpGroup = {
     id: number;
     default: boolean;
     edit_access?: boolean;
+    location?: string;
 };
 
 export type INewLabel = Overwrite<ILabel, {id: null | number}> & IUIFields;

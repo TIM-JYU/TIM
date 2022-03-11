@@ -1,8 +1,5 @@
 /** Layout styles **/
-.fulldiv {
-    width: 100%;
-    float: left;
-}
+
 
 .div-90 {
     width: 90%;
@@ -13,13 +10,6 @@
     width: 10%;
     float: left;
 }
-
-/** Velp area styles **/
-.velpMenu .tab-content {
-    bottom: 0;
-    top:0;
-}
-
 
 .velpFill {
     top: 0;
@@ -39,69 +29,6 @@
     background: white;
     z-index: 1000;
     /* border-top-left-radius: 8px; */
-}
-
-/** Velp area styles **/
-.velpMenu {
-    /* position: fixed; */
-    min-width: 15em;
-    max-width: 22.5em;
-    word-wrap: break-word;
-    border: 1px solid gainsboro;
-    background: white;
-    z-index: 1001;
-    /*overflow-y: auto;*/
-    padding-left: 0.5em;
-    top: 0;
-    bottom: 0;
-    height: 95%;
-}
-
-.velpMenu .nav-tabs {
-    margin-left: 0;
-    margin-top: 0em;
-}
-
-.velpMenu .nav-tabs > li.active > a {
-    color: white;
-    font-size: 0.8em;
-    background-color: #3cc;
-    border: 1px solid $basic-border-color;
-    border-bottom: none;
-    padding: 0.5em 1em;
-}
-
-.velpMenu .nav-tabs > li > a {
-    color: #333;
-    font-size: 0.8em;
-    background-color: #F6F6F6;
-    border: 1px solid $basic-border-color;
-    border-bottom: none;
-    padding: 0.5em 1em;
-}
-
-.velpArea {
-    width: 100%;
-    margin-bottom: 1em;
-    background-color: white;
-    border-top: solid 1px gainsboro;
-    float:left;
-    position: relative;
-    top: 0;
-    bottom: 0;
-}
-
-/* needs media queries */
-.velpArea .velp-stack {
-    background: white;
-    height: 1em;
-    width: 18em;
-    position: relative;
-}
-
-.adjustForm {
-    margin-top: 0.4em;
-    margin-bottom: 0.4em;
 }
 
 .adjustAnnForm {
@@ -137,37 +64,12 @@
     margin: 6px;
 }
 
-.velpArea input[type="number"] {
-    width: 30%;
-}
-
-.velpArea legend {
-    font-size: 1.1em;
-    margin-top: 15px;
-    margin-bottom: 0.3em;
-}
-
 .velpTable td{
     border: 0;
     margin: 0;
     padding: 4px;
     width: 10em;
     white-space: normal;
-}
-
-.tag-true, .tag-false {
-    font-size: 0.85em;
-    word-wrap: break-word;
-    margin: 0.25em;
-    padding: 0.5em;
-    display: inline-block;
-    cursor: pointer;
-    max-width: 98%;
-    white-space: normal;
-}
-
-.tag-true {
-    border-bottom: solid 4px darkblue;
 }
 
 .tags {
@@ -348,10 +250,6 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
     right: 0;
 }
 
-label.disabled {
-    color: grey;
-}
-
 $default: gainsboro;
 $positive: palegreen;
 $neutral: khaki;
@@ -424,10 +322,6 @@ $inactive: whitesmoke;
 
 .clickable {
     cursor: pointer;
-}
-
-#resetAllSelBtn {
-    margin-top: 1em;
 }
 
 #selection {

@@ -35,7 +35,8 @@ import {
     to,
     truncate,
 } from "../util/utils";
-import {VelpSelectionController} from "./velpSelection";
+import type {VelpSelectionDialog} from "./velp-selection-dialog.component";
+
 import {
     Annotation,
     IAnnotationCoordinate,
@@ -94,16 +95,16 @@ export class ReviewController {
     public velpMode: boolean;
     public teacherMode: boolean;
     public velps?: IVelpUI[];
-    private selectedArea?: Range;
-    private selectionIsDrawing = false; // whether the review area is for drawn annotations or not
+    selectedArea?: Range;
+    selectionIsDrawing = false; // whether the review area is for drawn annotations or not
     private selectedCanvas?: DrawCanvasComponent; // drawn annotation area
     private drawMinDimensions = 10; // minimum width/height for drawn velp. If less then add extra padding
-    private annotations: Annotation[];
     private scope: IScope;
     private velpBadge?: HTMLInputElement;
     private velpBadgePar?: ParContext;
-    private velpSelection?: VelpSelectionController; // initialized through onInit
+    private velpSelection?: VelpSelectionDialog; // initialized through onInit
     private lastOpenedAnnotation = 0;
+    annotations: Annotation[];
 
     constructor(public vctrl: ViewCtrl) {
         this.scope = vctrl.scope;
@@ -114,7 +115,7 @@ export class ReviewController {
         this.zIndex = 3;
     }
 
-    initVelpSelection(velpSelection: VelpSelectionController) {
+    initVelpSelection(velpSelection: VelpSelectionDialog) {
         this.velpSelection = velpSelection;
 
         document.addEventListener("selectionchange", () => {

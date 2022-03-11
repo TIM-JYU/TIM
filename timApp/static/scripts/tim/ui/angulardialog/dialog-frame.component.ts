@@ -61,6 +61,7 @@ class ResizableDraggableWrapper {
                  [ngResizable]="detached && canResize && !areaMinimized"
                  [inBounds]="true"
                  [bounds]="bounds?.nativeElement!"
+                 [rzContainment]="bounds?.nativeElement!"
                  #resizable="ngResizable"
                  #draggable="ngDraggable"
                  #dragelem
@@ -73,6 +74,7 @@ class ResizableDraggableWrapper {
                  [class.attached]="!detached"
                  [class.detachable]="detachable"
                  [style.position]="(!detachable || detachable && !detached) ? '' : 'fixed'"
+                 [ngStyle]="modalStyle"
                  class="modal-dialog modal-{{size}}"
                  style="pointer-events: auto">
                 <div class="draghandle" [class.attached]="!detached">
@@ -88,11 +90,11 @@ class ResizableDraggableWrapper {
                        [class.glyphicon-minus]="!areaMinimized"
                        [class.glyphicon-unchecked]="areaMinimized"
                     ></i>
-                    <tim-close-button *ngIf="closeFn" (click)="closeFn!()">
+                    <tim-close-button *ngIf="closeFn && closeable" (click)="closeFn!()">
                     </tim-close-button>
                 </div>
                 <div class="draggable-content modal-content" [class.minimized]="areaMinimized">
-                    <div #body id="modal-body" class="modal-body">
+                    <div #body id="modal-body" class="modal-body" [class.mini]="mini">
                         <ng-content select="[body]"></ng-content>
                     </div>
                     <div class="modal-footer">
@@ -111,6 +113,8 @@ export class DialogFrame {
     @Input() detachable = false;
     @Input() minimizable = true;
     @Input() canResize = true;
+    @Input() closeable: boolean = true;
+    @Input() modalStyle: Record<string, string> = {};
 
     // If true, indicates that there may be some asynchronous loading going on when opening the dialog.
     // This info is only used when initializing the position of the dialog.
@@ -120,6 +124,7 @@ export class DialogFrame {
     @Input() anchor: "absolute" | "fixed" = "fixed";
     @Input() autoHeight = true;
     @Input() initialAutoHeight = false;
+    @Input() mini: boolean = false;
     closeFn?: () => void;
     index = 1;
     detachedIndex: string = "";

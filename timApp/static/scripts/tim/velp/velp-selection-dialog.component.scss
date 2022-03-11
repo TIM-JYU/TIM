@@ -1,0 +1,103 @@
+.fulldiv {
+  width: 100%;
+  float: left;
+}
+
+/** Velp area styles **/
+.velpMenu .tab-content {
+  bottom: 0;
+  top: 0;
+}
+
+.velpMenu {
+  /* position: fixed; */
+  min-width: 15em;
+  max-width: 22.5em;
+  word-wrap: break-word;
+  background: white;
+  z-index: 1001;
+  /*overflow-y: auto;*/
+  padding-left: 0.5em;
+  top: 0;
+  bottom: 0;
+  height: 95%;
+}
+
+.velpMenu ::ng-deep .nav-tabs {
+  margin-left: 0;
+  margin-top: 0em;
+
+  & > li.active > a {
+    color: white;
+    font-size: 0.8em;
+    background-color: #3cc;
+    border: 1px solid var(--basic-border-color);
+    border-bottom: none;
+    padding: 0.5em 1em;
+  }
+
+  & > li > a {
+    color: #333;
+    font-size: 0.8em;
+    background-color: #F6F6F6;
+    border: 1px solid var(--basic-border-color);
+    border-bottom: none;
+    padding: 0.5em 1em;
+  }
+}
+
+.velpArea {
+  width: 100%;
+  margin-bottom: 1em;
+  background-color: white;
+  float: left;
+  position: relative;
+  top: 0;
+  bottom: 0;
+}
+
+/* needs media queries */
+.velpArea .velp-stack {
+  background: white;
+  height: 1em;
+  width: 18em;
+  position: relative;
+}
+
+.velpArea input[type="number"] {
+  width: 30%;
+}
+
+.velpArea legend {
+  font-size: 1.1em;
+  margin-top: 15px;
+  margin-bottom: 0.3em;
+}
+
+.adjustForm {
+  margin-top: 0.4em;
+  margin-bottom: 0.4em;
+}
+
+.tag-true, .tag-false {
+  font-size: 0.85em;
+  word-wrap: break-word;
+  margin: 0.25em;
+  padding: 0.5em;
+  display: inline-block;
+  cursor: pointer;
+  max-width: 98%;
+  white-space: normal;
+}
+
+.tag-true {
+  border-bottom: solid 4px darkblue;
+}
+
+label.disabled {
+  color: grey;
+}
+
+#resetAllSelBtn {
+  margin-top: 1em;
+}

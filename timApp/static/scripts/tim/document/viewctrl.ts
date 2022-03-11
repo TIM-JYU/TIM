@@ -34,6 +34,7 @@ import {ParContext} from "tim/document/structure/parContext";
 import {DerefOption} from "tim/document/structure/derefOption";
 import {enumPars} from "tim/document/structure/iteration";
 import {getParContainerElem} from "tim/document/structure/create";
+import {showVelpDialog} from "tim/velp/showVelpDialog";
 import {
     AnswerBrowserController,
     PluginLoaderCtrl,
@@ -731,6 +732,10 @@ export class ViewCtrl implements IController {
                     }
                 }
             });
+        }
+
+        if (this.showVelpSelection()) {
+            void showVelpDialog();
         }
     }
 

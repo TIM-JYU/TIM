@@ -26,6 +26,10 @@ $draghandle-height: 20px;
 
 .modal-body {
   max-height: 90vh;
+
+  &.mini {
+    padding: 0;
+  }
 }
 
 .draggable-content {

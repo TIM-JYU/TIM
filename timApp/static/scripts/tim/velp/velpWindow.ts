@@ -4,7 +4,7 @@ import {ParCompiler} from "tim/editor/parCompiler";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {$http, $timeout} from "../util/ngimport";
 import {Binding, clone, Require, to} from "../util/utils";
-import {VelpSelectionController} from "./velpSelection";
+import {VelpSelectionDialog} from "./velp-selection-dialog.component";
 import {
     ILabel,
     ILabelUI,
@@ -67,7 +67,7 @@ export class VelpWindowController implements IController {
     private hasEditAccess: boolean;
     private new!: Binding<boolean, "<">;
     private velpGroups!: Binding<IVelpGroupUI[], "<">;
-    private velpSelection!: Require<VelpSelectionController>;
+    private velpSelection!: Require<VelpSelectionDialog>;
     private labels!: Binding<ILabelUI[], "<">;
     private docId!: Binding<number, "<">;
     private teacherRight!: Binding<boolean, "<">;

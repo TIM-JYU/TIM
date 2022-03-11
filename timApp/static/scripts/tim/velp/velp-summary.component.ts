@@ -60,7 +60,7 @@ import {Annotation} from "./velptypes";
     styleUrls: ["./velp-summary.component.scss"],
 })
 export class VelpSummaryComponent implements OnChanges {
-    @Input() private annotations!: Array<Annotation>;
+    @Input() annotations!: Array<Annotation>;
     @Input() selectedUser!: IUser;
     @Output() annotationselected = new EventEmitter<Annotation>();
     taskAnns!: Annotation[];
