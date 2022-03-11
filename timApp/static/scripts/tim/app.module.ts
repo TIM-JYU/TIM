@@ -36,6 +36,9 @@ import {HelpParContent} from "tim/document/editing/help-par-content.component";
 import {TimepickerActions} from "ngx-bootstrap/timepicker";
 import {CopyFolderComponent} from "tim/folder/copy-folder.component";
 import {TimManageModule} from "tim/item/manage/manage.module";
+import {ParRefComponent} from "tim/document/par-ref.component";
+import {GamificationMapComponent} from "tim/gamification/gamification-map.component";
+import {SelfExpireComponent} from "tim/item/self-expire.component";
 
 @NgModule({
     declarations: [
@@ -62,6 +65,9 @@ import {TimManageModule} from "tim/item/manage/manage.module";
         ConsentChoiceComponent,
         ViewRangeNavigationComponent,
         HelpParContent,
+        ParRefComponent,
+        GamificationMapComponent,
+        SelfExpireComponent,
     ],
     imports: [
         BrowserModule,

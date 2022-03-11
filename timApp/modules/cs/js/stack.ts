@@ -1,18 +1,30 @@
-﻿import angular from "angular";
-import * as t from "io-ts";
+﻿import * as t from "io-ts";
+import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http, $sce} from "tim/util/ngimport";
-import {defaultTimeout, to, windowAsAny} from "tim/util/utils";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
+import {windowAsAny} from "tim/util/utils";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {BrowserModule} from "@angular/platform-browser";
+import {HttpClientModule} from "@angular/common/http";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {FormsModule} from "@angular/forms";
+import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
+import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
+import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
+import {
+    createDowngradedModule,
+    doDowngrade,
+} from "../../../static/scripts/tim/downgrade";
+import {ScriptedInnerHTMLModule} from "../../../static/scripts/tim/util/scripted-inner-html.module";
 
-const stackApp = angular.module("stackApp", ["ngSanitize"]);
-export const moduleDefs = [stackApp];
 const STACK_VARIABLE_PREFIX = "stackapi_";
 
-// this.attrs
 const StackMarkup = t.intersection([
     t.partial({
         beforeOpen: t.string,
@@ -22,11 +34,13 @@ const StackMarkup = t.intersection([
         generalfeedback: t.boolean,
         open: t.boolean,
         timWay: t.boolean,
+        inputplaceholder: nullable(t.string),
     }),
     GenericPluginMarkup,
     t.type({
         autopeek: withDefault(t.boolean, true),
         lang: withDefault(t.string, "fi"),
+        inputrows: withDefault(t.Integer, 1),
     }),
 ]);
 const StackAll = t.intersection([
@@ -67,8 +81,74 @@ interface IStackData {
     verifyvar: string;
 }
 
-class StackController
-    extends PluginBase<
+// noinspection TypeScriptUnresolvedVariable
+@Component({
+    selector: "tim-stack-runner",
+    template: `
+        <div class="csRunDiv math que stack no-popup-menu">
+            <h4 *ngIf="header" [innerHtml]="header"></h4>
+            <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
+            <p *ngIf="!isOpen" class="stem" [innerHtml]="markup.beforeOpen | purify"></p>
+
+            <div class="no-popup-menu stackOutput" *ngIf="timWay">
+                <div class="csRunCode"><textarea class="csRunArea csInputArea"
+                                                 name="stackapi_ans1" id="stackapi_ans1"
+                                                 [rows]="inputrows"
+                                                 [(ngModel)]="userCode"
+                                                 [placeholder]="inputplaceholder"></textarea></div>
+            </div>
+            <div id="output" *ngIf="!timWay && stackOutput" class="stackOutput" [scriptedInnerHTML]="stackOutput"></div>
+            <p class="csRunMenu">
+                <button *ngIf="!isOpen"
+                        class="timButton btn-sm"
+                        (click)="runGetTask()">Show task
+                </button>
+                <button *ngIf="isOpen"
+                        [disabled]="isRunning"
+                        title="(Ctrl-S)"
+                        class="timButton btn-sm"
+                        (click)="runSave()"
+                        [innerHtml]="button | purify"></button>
+                <button *ngIf="!markup.autopeek"
+                        class="timButton btn-sm"
+                        [disabled]="isRunning"
+                        (click)="runPeek()">Peek
+                </button>
+            </p>
+            <div *ngIf="stackPeek" class="peekdiv" id="peek" style="min-height: 10em;">
+                <div></div>
+            </div>
+            <div *ngIf="stackInputFeedback" id="stackinputfeedback"
+                 class="stackinputfeedback1"
+                 [scriptedInnerHTML]="stackInputFeedback"></div>
+            <span class="csRunError"
+                  *ngIf="error"
+                  [innerHtml]="error | purify"></span>
+
+            <div *ngIf="stackFeedback">
+                <div *ngIf="markup.generalfeedback">
+                    <h5>General feedback:</h5>
+                    <div id="generalfeedback" [innerHtml]="stackFeedback | purify"></div>
+                </div>
+                <div *ngIf="markup.correctresponse">
+                    <h5>Format correct response:</h5>
+                    <div id="formatcorrectresponse" [innerHtml]="stackFormatCorrectResponse | purify"></div>
+                    <div style="font-size: 0.7em;">
+                        <p>Score: <span id="score" [innerHtml]="stackScore | purify"></span></p>
+                        <p>Summarise response: <span id="summariseresponse"
+                                                     [innerHtml]="stackSummariseResponse | purify"></span></p>
+                        <p>Answer notes: <span id="answernotes" [innerHtml]="stackAnswerNotes | purify"></span></p>
+                        <p>Time: <span id="time" [innerHtml]="stackTime | purify"></span></p>
+                    </div>
+                </div>
+            </div>
+
+            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
+        </div>
+    `,
+})
+export class StackPluginComponent
+    extends AngularPluginBase<
         t.TypeOf<typeof StackMarkup>,
         t.TypeOf<typeof StackAll>,
         typeof StackAll
@@ -81,7 +161,7 @@ class StackController
         return this.userCode;
     }
 
-    getContentArray?: (() => string[] | undefined) | undefined;
+    getContentArray?: () => string[] | undefined;
     isUnSaved(userChange?: boolean | undefined): boolean {
         return this.userCode !== this.originalUserCode;
     }
@@ -91,11 +171,11 @@ class StackController
         return {saved: true, message: undefined};
     }
 
-    setPluginWords?: ((words: string[]) => void) | undefined;
-    setForceAnswerSave?: ((force: boolean) => void) | undefined;
+    setPluginWords?: (words: string[]) => void;
+    setForceAnswerSave?: (force: boolean) => void;
 
     get english() {
-        return this.attrs.lang === "en";
+        return this.markup.lang === "en";
     }
 
     buttonText() {
@@ -107,42 +187,44 @@ class StackController
     }
 
     private span: string = "";
-    private error: string = "";
-    private userCode: string = "";
+    error: string = "";
+    userCode: string = "";
     private originalUserCode: string = "";
-    private stackoutput: string = "";
-    private stackinputfeedback: string = "";
-    private stackpeek: boolean = false;
-    private stackfeedback: string = "";
-    private stackformatcorrectresponse: string = "";
-    private stackscore: string = "";
-    private stacksummariseresponse: string = "";
-    private stackanswernotes: string = "";
-    private stacktime: string = "";
-    private isRunning: boolean = false;
-    private inputrows: number = 1;
-    private timWay: boolean = false; // if answer is given to TIM TextArea-field
-    private isOpen: boolean = false;
+    stackOutput?: string;
+    stackInputFeedback?: string;
+    stackPeek: boolean = false;
+    stackFeedback: string = "";
+    stackFormatCorrectResponse: string = "";
+    stackScore: string = "";
+    stackSummariseResponse: string = "";
+    stackAnswerNotes: string = "";
+    stackTime: string = "";
+    isRunning: boolean = false;
+    inputrows: number = 1;
+    timWay: boolean = false; // if answer is given to TIM TextArea-field
+    isOpen: boolean = false;
     private lastInputFieldId: string = "";
     private lastInputFieldValue: string = "";
-    private lastInputFieldElement: HTMLInputElement | undefined;
-    private button: string = "";
+    private lastInputFieldElement?: HTMLInputElement;
+    button: string = "";
+    inputplaceholder!: string;
 
-    private timer: NodeJS.Timer | undefined;
+    private timer?: number;
 
-    private taskUrl: string = "";
-
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
+        this.vctrl = vctrlInstance!;
         this.button = this.buttonText();
         const aa = this.attrsall;
-        this.userCode = aa.usercode ?? this.attrs.by ?? "";
+        this.userCode = aa.usercode ?? this.markup.by ?? "";
         this.originalUserCode = this.userCode;
-        this.timWay = aa.timWay ?? this.attrs.timWay ?? false;
+        this.timWay = aa.timWay ?? this.markup.timWay ?? false;
+        this.inputrows = this.markup.inputrows;
+        this.inputplaceholder = this.markup.inputplaceholder ?? "";
 
         this.element.on("keydown", (event) => {
             if (event.ctrlKey || event.metaKey) {
-                switch (String.fromCharCode(event.which).toLowerCase()) {
+                switch (event.key) {
                     case "s":
                         event.preventDefault();
                         this.runSend(false);
@@ -151,7 +233,8 @@ class StackController
             }
         });
 
-        if (this.attrs.open) {
+        console.log(this.pluginMeta, this.isPreview());
+        if (this.markup.open) {
             this.runGetTask();
         }
         this.vctrl = vctrlInstance!;
@@ -187,16 +270,6 @@ class StackController
         return res;
     }
 
-    outputAsHtml() {
-        const s = $sce.trustAsHtml(this.stackoutput);
-        return s;
-    }
-
-    stackinputfeedbackAsHtml() {
-        const s = $sce.trustAsHtml(this.stackinputfeedback);
-        return s;
-    }
-
     collectAnswer(id: string) {
         const parent = this.element[0];
         const inputs = parent.getElementsByTagName("input");
@@ -218,7 +291,7 @@ class StackController
             } // note: cannot be else because timWay may change during try
         }
         if (this.timWay) {
-            res[STACK_VARIABLE_PREFIX + "ans1"] = this.userCode;
+            res[`${STACK_VARIABLE_PREFIX}ans1`] = this.userCode;
         }
         return res;
     }
@@ -251,43 +324,40 @@ class StackController
         windowAsAny().ServerSyncValues = helper.ServerSyncValues;
         windowAsAny().findParentElementFromScript =
             helper.findParentElementFromScript;
-        if (this.attrs.buttonBottom || i < 0) {
-            this.stackoutput = qt;
-            this.stackinputfeedback = "";
+        if (this.markup.buttonBottom || i < 0) {
+            this.stackOutput = qt;
+            this.stackInputFeedback = "";
         } else {
-            this.stackoutput = qt.substr(0, i) + "\n";
-            this.stackinputfeedback = qt.substr(i);
+            this.stackOutput = qt.substr(0, i) + "\n";
+            this.stackInputFeedback = qt.substr(i);
         }
 
         if (!getTask) {
-            this.stackfeedback = this.replace(r.generalfeedback);
-            this.stackformatcorrectresponse = this.replace(
+            this.stackFeedback = this.replace(r.generalfeedback);
+            this.stackFormatCorrectResponse = this.replace(
                 r.formatcorrectresponse
             );
-            this.stacksummariseresponse = this.replace(
+            this.stackSummariseResponse = this.replace(
                 JSON.stringify(r.summariseresponse)
             );
-            this.stackanswernotes = this.replace(JSON.stringify(r.answernotes));
+            this.stackAnswerNotes = this.replace(JSON.stringify(r.answernotes));
         }
-        this.stackscore = r.score.toString();
-        this.stacktime =
-            "Request Time: " +
-            r.request_time.toFixed(2) +
-            " Api Time: " +
-            r.api_time.toFixed(2);
+        this.stackScore = r.score.toString();
+        this.stackTime = `Request Time: ${r.request_time.toFixed(
+            2
+        )} Api Time: ${r.api_time.toFixed(2)}`;
 
         ParCompiler.processAllMathDelayed(this.element, 1);
         const html = this.element.find(".stackOutput");
         const inputs = html.find("input");
         const inputse = html.find("textarea");
-        $(inputs).keyup((e) => this.inputHandler(e));
-        $(inputse).keyup((e) => this.inputHandler(e));
+        $(inputs).on("keyup", (e) => this.inputHandler(e));
+        $(inputse).on("keyup", (e) => this.inputHandler(e));
         if (getTask) {
             // remove input validation texts
             const divinput = this.element.find(".stackinputfeedback");
             divinput.remove();
         }
-        // await ParCompiler.processAllMath(this.element);
     }
 
     inputHandler(e: JQuery.TriggeredEvent) {
@@ -302,10 +372,7 @@ class StackController
         }
         this.lastInputFieldId = id;
         this.lastInputFieldValue = target.value;
-        this.scope.$evalAsync(() => {
-            this.autoPeekInput(id);
-        });
-        // await this.autoPeekInput(id);
+        this.autoPeekInput(id);
     }
 
     async handleServerPeekResult(r: StackResult) {
@@ -320,21 +387,19 @@ class StackController
         const peekDiv = this.element.find(".peekdiv");
         const peekDivC = peekDiv.children();
         // editorDiv.empty();
-        const pdiv = $(
-            '<div><div class="math">' + r.questiontext + "</div></div>"
-        );
+        const pdiv = $(`<div><div class="math">${r.questiontext}</div></div>`);
         await ParCompiler.processAllMath(pdiv);
         peekDivC.replaceWith(pdiv); // TODO: still flashes
     }
 
     autoPeekInput(id: string) {
         this.stopTimer();
-        this.timer = setTimeout(() => this.timedAutoPeek(id), 500);
+        this.timer = window.setTimeout(() => this.timedAutoPeek(id), 500);
     }
 
     async timedAutoPeek(id: string) {
         this.stopTimer();
-        if (!this.attrs.autopeek) {
+        if (!this.markup.autopeek) {
             return;
         }
         await this.doPeek(id);
@@ -342,7 +407,6 @@ class StackController
 
     async doPeek(id: string) {
         id = id.substr(STACK_VARIABLE_PREFIX.length);
-        // answ[STACK_VARIABLE_PREFIX + id] = target.value;
         const isub = id.indexOf("_sub_");
         if (isub > 0) {
             id = id.substr(0, isub); // f.ex in matrix case stackapi_ans1_sub_0_1
@@ -358,9 +422,6 @@ class StackController
     }
 
     async runPeek() {
-        // called from template
-        // let data = this.collectData();
-        // await this.runValidationPeek(data, 'ans1');
         if (this.lastInputFieldId) {
             await this.doPeek(this.lastInputFieldId);
         }
@@ -372,7 +433,7 @@ class StackController
             return;
         }
         this.isRunning = true;
-        if (!this.stackpeek) {
+        if (!this.stackPeek) {
             // remove extra fields from sceen
             let divinput = this.element.find(".stackinputfeedback");
             divinput.remove();
@@ -381,45 +442,24 @@ class StackController
             divinput = this.element.find(".stackpartmark");
             divinput.remove();
         }
-        this.stackpeek = true;
-        const url = this.getTaskUrl();
+        this.stackPeek = true;
         data.seed = 1;
-        const params = {
+        this.error = "";
+        const r = await this.postAnswer<{web: {stackResult: StackResult}}>({
             input: {
                 nosave: true,
-                stackData: data,
                 type: "stack",
                 usercode: "",
+                stackData: {...data},
             },
-        };
-        this.error = "";
-        const r = await to(
-            $http<{
-                web: {
-                    stackResult: StackResult;
-                };
-            }>({
-                data: params,
-                method: "PUT",
-                timeout: defaultTimeout,
-                url: url,
-            })
-        );
+        });
+
         this.isRunning = false;
         if (!r.ok) {
-            this.error = r.result.data.error;
+            this.error = r.result.error.error;
             return;
         }
-        await this.handleServerPeekResult(r.result.data.web.stackResult);
-    }
-
-    getTaskUrl(): string {
-        if (this.taskUrl) {
-            return this.taskUrl;
-        }
-        const url = this.pluginMeta.getAnswerUrl();
-        this.taskUrl = url;
-        return url;
+        await this.handleServerPeekResult(r.result.web.stackResult);
     }
 
     async runSave() {
@@ -436,12 +476,14 @@ class StackController
             this.error = "Cannot run plugin while previewing.";
             return;
         }
-        this.stackpeek = false;
+        this.stackPeek = false;
         this.error = "";
         this.isRunning = true;
-        const url = this.getTaskUrl();
         const stackData = this.collectData();
-        const params = {
+
+        const r = await this.postAnswer<{
+            web: {stackResult: StackResult; error?: string};
+        }>({
             input: {
                 getTask: getTask,
                 stackData: stackData,
@@ -450,33 +492,26 @@ class StackController
                     ? this.userCode
                     : JSON.stringify(stackData.answer),
             },
-        };
-
-        const r = await to(
-            $http<{
-                web: {stackResult: StackResult; error?: string};
-            }>({method: "PUT", url: url, data: params, timeout: defaultTimeout})
-        );
+        });
         this.isRunning = false;
-
         if (!r.ok) {
-            this.error = r.result.data.error;
+            this.error = r.result.error.error;
             return;
         }
-        if (!r.result.data.web) {
+        if (!r.result.web) {
             this.error = "No web reply from csPlugin!";
             return;
         }
-        if (r.result.data.web.error) {
-            this.error = r.result.data.web.error;
+        if (r.result.web.error) {
+            this.error = r.result.web.error;
             return;
         }
-        const stackResult = r.result.data.web.stackResult;
+        const stackResult = r.result.web.stackResult;
         this.originalUserCode = this.userCode;
         await this.handleServerResult(stackResult, getTask);
         if (this.lastInputFieldId) {
             this.lastInputFieldElement = this.element.find(
-                "#" + this.lastInputFieldId
+                `#${this.lastInputFieldId}`
             )[0] as HTMLInputElement;
             if (this.lastInputFieldElement) {
                 this.lastInputFieldElement.focus();
@@ -504,129 +539,27 @@ class StackController
     }
 }
 
-const common = {
-    bindings: pluginBindings,
-    controller: StackController,
-};
-
-/*
-
-Feedback (examples from 2x2 matrix multiplication)
-
-  https://stack2.maths.ed.ac.uk/demo2018/mod/quiz/attempt.php?attempt=1502&cmid=147&page=4&scrollpos=281#q9
-
-Correct:
-
-<div class="stackprtfeedback stackprtfeedback-prt1" id="yui_3">
- <div class="correct" id="yui_3">
- <span style="font-size: 1.5em; color:green;" id="yui_3_17">
-   <i class="fa fa-check" id="yui_3_17_2_"></i></span>
-   Correct answer, well done.
- </div>
- <div class="gradingdetails">
-   Marks for this submission: 1.00/1.00. Accounting for previous tries, this gives <strong>0.90/1.00</strong>.
- </div>
-</div>
-
-.fa-check:before {
-    content: "\f00c";
+@NgModule({
+    declarations: [StackPluginComponent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        TimUtilityModule,
+        PurifyModule,
+        FormsModule,
+        ScriptedInnerHTMLModule,
+    ],
+})
+export class StackModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-Wrong:
-
-<div class="outcome clearfix" id="yui_3">
-  <h4 class="accesshide">Feedback</h4>
-  <div class="feedback">
-  <p></p>
-  <div class="stackprtfeedback stackprtfeedback-prt1">
-    <div class="incorrect">
-      <span style="font-size: 1.5em; color:red;"><i class="fa fa-times"></i></span>
-      Incorrect answer.
-    </div><span class="filter_mathjaxloader_equation">The entries underlined in red below are those that are incorrect.
-    <span class="filter_mathjaxloader_equation">...
-
-    <div class="gradingdetails">
-      Marks for this submission: 0.00/1.00. Accounting for previous tries, this gives <strong>0.90/1.00</strong>.
-      This submission attracted a penalty of 0.10. Total penalties so far: 0.20.
-    </div>
-   </div>
-   <p></p>
-  </div>
-</div>
-
-.fa-remove:before, .fa-close:before, .fa-times:before {
-    content: "\f00d";
-}
-
-// style="min-height: 20em; max-height: 20em; overflow: auto"
-
-*/
-
-stackApp.component("stackRunner", {
-    ...common,
-    template: `
-<div ng-cloak class="csRunDiv math que stack no-popup-menu" >
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
-    <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen"></p>
-
-    <div class="no-popup-menu stackOutput" ng-if="::$ctrl.timWay" >
-        <div class="csRunCode"><textarea class="csRunArea csInputArea"
-                                 name="stackapi_ans1" id="stackapi_ans1"
-                                 rows={{$ctrl.inputrows}}
-                                 ng-model="$ctrl.userCode"
-                                 ng-trim="false"
-                                 ng-change="$ctrl.autoPeek()"
-                                 placeholder="{{$ctrl.inputplaceholder}}"></textarea></div>
-    </div>
-    <div ng-cloak id="output" ng-if="::!$ctrl.timWay" class="stackOutput" ng-bind-html="$ctrl.outputAsHtml()">
-    <!--<div ng-cloak id="output" ng-if="::!$ctrl.timWay" class="stackOutput" ng-bind-html="$ctrl.output">-->
-    </div>
-    <!-- <div class="peekdiv" id="peek" ng-bind-html="$ctrl.stackpeek"></div> -->
-    <p class="csRunMenu">
-        <button ng-if="!$ctrl.isOpen"
-                class="timButton btn-sm"
-                ng-click="$ctrl.runGetTask()"
-                ng-bind-html="'Show task'"></button>
-        <button ng-if="$ctrl.isOpen"
-                ng-disabled="$ctrl.isRunning"
-                title="(Ctrl-S)"
-                class="timButton btn-sm"
-                ng-click="$ctrl.runSave()"
-                ng-bind-html="::$ctrl.button"></button>
-        <button ng-if="::!$ctrl.attrs.autopeek"
-                class="timButton btn-sm"
-                ng-disabled="$ctrl.isRunning"
-                ng-click="$ctrl.runPeek()"
-                ng-bind-html="'Peek'"></button>
-    </p>
-    <div ng-cloak ng-if="$ctrl.stackpeek" class="peekdiv" id="peek" style="min-height: 10em;"><div></div></div>
-    <div ng-cloak id="stackinputfeedback"
-         class="stackinputfeedback1"
-         ng-bind-html="$ctrl.stackinputfeedbackAsHtml()"></div>
-    <span class="csRunError"
-          ng-if="$ctrl.error"
-          ng-style="$ctrl.tinyErrorStyle" ng-bind-html="$ctrl.error"></span>
-
-    <div ng-if="$ctrl.stackfeedback">
-        <div ng-if="$ctrl.attrs.generalfeedback">
-            <h5>General feedback:</h5>
-            <div id="generalfeedback" ng-bind-html="$ctrl.stackfeedback"></div>
-        </div>
-        <div ng-if="::$ctrl.attrs.correctresponse">
-            <h5>Format correct response:</h5>
-            <div id="formatcorrectresponse" ng-bind-html="$ctrl.stackformatcorrectresponse"></div>
-            <div style="font-size: 0.7em;">
-                <p>Score: <span id="score" ng-bind-html="$ctrl.stackscore"></span></p>
-                <p>Summarise response: <span id="summariseresponse"
-                                             ng-bind-html="$ctrl.stacksummariseresponse"></span></p>
-                <p>Answer notes: <span id="answernotes" ng-bind-html="$ctrl.stackanswernotes"></span></p>
-                <p>Time: <span id="time" ng-bind-html="$ctrl.stacktime"></span></p>
-            </div>
-        </div>
-    </div>
-
-    <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
-</div>
-`,
-});
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(StackModule)
+        ),
+        "stackRunner",
+        StackPluginComponent
+    ),
+];

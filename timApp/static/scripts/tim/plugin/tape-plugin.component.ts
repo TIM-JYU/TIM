@@ -1,6 +1,21 @@
-import angular from "angular";
-import {IController, IScope} from "angular";
-import {Binding} from "../util/utils";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    Input,
+    NgModule,
+    ViewChild,
+} from "@angular/core";
+import {BrowserModule} from "@angular/platform-browser";
+import {HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {TimUtilityModule} from "../ui/tim-utility.module";
+import {AnswerSheetModule} from "../document/question/answer-sheet.component";
+import {PurifyModule} from "../util/purify.module";
+import {createDowngradedModule, doDowngrade} from "../downgrade";
+import {copyToClipboard, isIOS} from "../util/utils";
 
 export enum ParameterType {
     NUMBER,
@@ -63,7 +78,7 @@ export class CommandParameters<T> {
 
 // <editor-fold desc="Commands">
 
-class Input extends Command {
+class InputC extends Command {
     constructor() {
         super("INPUT", "i");
         this.usesParameter = false;
@@ -320,26 +335,6 @@ export interface TapeAttrs {
     useJumpIfEmpty: boolean;
 }
 
-function isiOS(): boolean {
-    const iDevices = [
-        "iPad Simulator",
-        "iPhone Simulator",
-        "iPod Simulator",
-        "iPad",
-        "iPhone",
-        "iPod",
-    ];
-
-    if (!!navigator.platform) {
-        while (iDevices.length) {
-            if (navigator.platform === iDevices.pop()) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 function scrollElementVisibleInParent(
     el: Element,
     par: Element,
@@ -369,13 +364,124 @@ function scrollElementVisibleInParent(
 /**
  * The tape machine controller.
  */
-export class TapeController implements IController {
-    static $inject = ["$scope", "$element"]; // do not remove this even PyCharm says it is not used
+@Component({
+    selector: "tim-tape",
+    template: `
+    <div class="no-highlight robotMainDiv fullinv">
+        <div class="tapeAndRobotDiv">
+            <div class="outputbelt" >
+                <div class="outputvalues">
+                    <div class="output">
+                    <div *ngFor="let n of state.output" class="tapeItem">{{n}}</div>
+                    </div>
+               </div>
+                <img alt="output" src="/static/images/tape/output.png" />
+                <span>Output</span>
+            </div>
+            <div class="robotDiv" >
+                <div class="handItem">
+                    <div class="tapeItem"  [innerText]="getHand()"></div>
+                </div>
+                <div class="robotImage">
+                    <img alt="robot" src="/static/images/tape/robot.png" />
+                    <div class="robotRunButtons">
+                         <button class="timButton" (click)="step()"><span>Step</span></button>
+                         <button class="timButton" (click)="run()"><span [innerText]="getRunButtonText()"></span></button>
+                         <button class="timButton" (click)="reset()"><span>Reset</span></button>
+                    </div>
+                </div>
+            </div>
+            <div class="inputbelt">
+                <div class="inputvalues">
+                    <span class="input">
+                        <div *ngFor="let n of state.input" class="tapeItem">{{n}}</div>
+                    </span>
+                </div>
+                <img alt="input" src="/static/images/tape/input.png" />
+                <span>Input</span>
+            </div>
+        </div>
+        <div class="memoryArea">
+            <div>Memory:</div>
+            <div *ngFor="let n of state.memory; let i = index" class="memoryContainer">
+                <div [innerText]="n" class="memoryValue"></div>
+                <div [innerText]="getMemoryText(i)" class="memoryIndex"></div>
+            </div>
+        </div>
+        <div class="programArea">
+            <span class="commandListContainer newCommandList" *ngIf="!data.hideCommands">
+                Commands:
+                <ul class="list-unstyled listBox">
+                <li *ngFor="let c of possibleCommandList; let i = index" class="command" [ngStyle]="{'color': getNewCommandColor(i)}"
+                    (click)="onCommandClick(i)">{{c.name}}</li>
+                </ul>
+            </span>
+            <div class="commandAddArea" *ngIf="!data.hideCommands" >
+                 <div class="commandParamArea">
+                     <span class="commandParameterArea" *ngIf="showNewCommandParameter">
+                        <span>{{newCommandParameterText}}</span>
+                        <input size="5em" [(ngModel)]="newCommandParameter">
+                     </span>
+                 </div>
+                 <div class="commandButtons">
+                     <button class="timButton" (click)="insertCommandButtonClick()"><span>Insert -&gt;</span></button>
+                     <button class="timButton" (click)="removeCommand()"><span>&lt;- Remove</span></button>
+                     <button class="timButton" (click)="copyAll()" *ngIf="!data.hideCopyAll"><span>Copy all</span></button>
+                     <!-- <button class="timButton" (click)="paste()"><span>Paste</span></button> -->
+                 </div>
+            </div>
+            <span class="commandListContainer">
+                Program:
+                <textarea #textAreaRobotProgram class="robotEditArea textAreaRobotProgram" [(ngModel)]="programAsText" *ngIf="textmode"></textarea>
+                <ul class="cmditems list-unstyled listBox programCommandList" *ngIf="!textmode">
+                <li  *ngFor="let c of commandList; let i = index" class="command" (click)="selectedCommandIndex = i"
+                [ngStyle]="{'color': getCommandColor(i), 'background-color': getCommandBackgroundColor(i)}">{{c.getName()}}</li>
+                <li class="command" [ngStyle]="{'color': getCommandColor(commandList.length + 1)}"
+                    (click)="selectedCommandIndex = (commandList.length + 1)">-</li>
+                </ul>
+                <!--- <select [(ngModel)]="selected" size="10">
+                <option *ngFor="let c of commandList" [ngStyle]="{'color': getCommandColor($index)}">{{c.getName()}}</option>
+                </select> --->
+            </span>
+            <div class="robotPresets">
+                <div class="presetInput" *ngIf="!data.hidePresetInput" >
+                     <div class="commandParamArea">
+                         <span>
+                            <span>Preset input:</span>
+                            <input size="15em" [(ngModel)]="inputString">
+                         </span>
+                     </div>
+                </div>
+                <div class="presetInput" *ngIf="!data.hidePresetMem" >
+                     <div class="commandParamArea">
+                         <span>
+                            <span>Preset memory:</span>
+                            <input size="15em" [(ngModel)]="memString">
+                         </span>
+                     </div>
+                </div>
+                <span *ngIf="!data.hideTextMode">
+                    <input type="checkbox" [(ngModel)]="textmodeCB" class="belttextbox" name="textmode" value="textmode"  (click)="changeMode()" />
+                    <label for="belttextbox">&nbsp;Text&nbsp;mode</label>
+                </span>
+            </div>
+            </div>
+        <textarea style= "height: 1px; width: 1px; position: unset;" class="hiddenRobotProgram"></textarea>
+    </div>
+    `,
+    styleUrls: ["tape-plugin.component.scss"],
+})
+export class TapePluginContent {
+    @Input() data!: TapeAttrs;
+    @ViewChild("textAreaRobotProgram")
+    textAreaRobotProgram?: ElementRef<HTMLTextAreaElement>;
+    private element: JQuery<HTMLElement>;
 
-    constructor(protected scope: IScope, protected element: JQLite) {
+    constructor(hostElement: ElementRef<HTMLElement>) {
+        this.element = $(hostElement.nativeElement);
         this.state = new TapeState();
         this.possibleCommandList = [
-            new Input(),
+            new InputC(),
             new Output(),
             new Add(),
             new Sub(),
@@ -388,8 +494,10 @@ export class TapeController implements IController {
         ];
     }
 
-    $onInit() {
-        this.iOS = isiOS();
+    ngOnInit() {
+        // TODO: Convert to proper Angular plugin and use base64 encoding
+        this.data = JSON.parse(this.data as unknown as string);
+        this.iOS = isIOS();
         if (this.data.useJumpIfEmpty) {
             this.possibleCommandList.push(new JumpIfEmpty());
         }
@@ -415,29 +523,27 @@ export class TapeController implements IController {
     public state: TapeState;
 
     private newCommandIndex: number = -1;
-    private newCommandParameter: string = "";
-    private newCommandParameterText: string = "Parameter:";
+    newCommandParameter: string = "";
+    newCommandParameterText: string = "Parameter:";
 
-    private showNewCommandParameter: boolean = false;
+    showNewCommandParameter: boolean = false;
 
     // The index of the selected command of the current program, if any
-    private selectedCommandIndex: number = -1;
-
-    private data!: Binding<TapeAttrs, "<">;
+    selectedCommandIndex: number = -1;
 
     private timer?: number;
 
-    private inputString: string = "";
-    private memString: string = "";
-    private programAsText: string = "";
-    private textmode: boolean = false; // do not use as ng-model, because ipad changes it different time than PC
-    private textmodeCB: boolean = false;
+    inputString: string = "";
+    memString: string = "";
+    programAsText: string = "";
+    textmode: boolean = false; // do not use as [(ngModel)], because ipad changes it different time than PC
+    textmodeCB: boolean = false;
     private iOS: boolean = false;
 
     /**
      * Handles clicks on the "Insert command" button.
      */
-    private insertCommandButtonClick() {
+    insertCommandButtonClick() {
         if (this.newCommandIndex == -1) {
             return;
         }
@@ -538,7 +644,7 @@ export class TapeController implements IController {
     /**
      * Steps the program.
      */
-    private step() {
+    step() {
         this.changeList();
         if (
             this.state.instructionPointer >= this.commandList.length ||
@@ -546,7 +652,6 @@ export class TapeController implements IController {
         ) {
             if (this.timer) {
                 this.stop();
-                this.scope.$apply();
             }
             return;
         }
@@ -566,13 +671,12 @@ export class TapeController implements IController {
 
     private automaticStep() {
         this.step();
-        this.scope.$apply();
     }
 
     /**
      * Handles clicks on the Run / Stop button.
      */
-    private run() {
+    run() {
         if (
             this.state.instructionPointer >= this.commandList.length ||
             this.state.stopped
@@ -613,14 +717,14 @@ export class TapeController implements IController {
      * Clears output, sets input to match the original input,
      * sets the instruction pointer to zero and clears memory.
      */
-    private reset() {
+    reset() {
         if (this.timer) {
             stop();
         }
 
         this.state.stopped = false;
 
-        this.state.input = TapeController.arrayFromString(this.inputString); // Array.from(this.data.presetInput);
+        this.state.input = TapePluginContent.arrayFromString(this.inputString); // Array.from(this.data.presetInput);
 
         if (this.data.presetHand) {
             this.state.hand = this.data.presetHand;
@@ -636,7 +740,7 @@ export class TapeController implements IController {
 
         this.state.memory = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
-        const memState = TapeController.arrayFromString(this.memString); // Array.from(this.data.presetInput);
+        const memState = TapePluginContent.arrayFromString(this.memString); // Array.from(this.data.presetInput);
 
         for (
             let i = 0;
@@ -647,6 +751,7 @@ export class TapeController implements IController {
         }
 
         this.state.instructionPointer = 0;
+        console.log(this.data.presetCode);
         if (this.data.presetCode && this.commandList.length === 0) {
             // assign pre-defined code only if we have no code right now,
             // so we don't clear the user's code on reset
@@ -670,7 +775,7 @@ export class TapeController implements IController {
     /**
      * Handles clicks on the "Remove command" button.
      */
-    private removeCommand() {
+    removeCommand() {
         if (
             this.selectedCommandIndex > -1 &&
             this.selectedCommandIndex < this.commandList.length
@@ -684,34 +789,15 @@ export class TapeController implements IController {
         this.programAsText = this.toText();
     }
 
-    private selectAllText(name: string, newtext: string) {
-        const jh = this.element.find(name);
-        if (newtext) {
-            jh.val(newtext);
-        }
-        const h = jh[0] as HTMLTextAreaElement;
-        if (!h) {
-            return;
-        }
-        if (this.iOS) {
-            h.focus();
-            h.setSelectionRange(0, 99999); // select is not working in iOS
+    copyAll() {
+        if (this.textmode && this.textAreaRobotProgram) {
+            copyToClipboard(this.textAreaRobotProgram.nativeElement.value);
         } else {
-            jh.select();
+            copyToClipboard(this.toText());
         }
     }
 
-    private copyAll() {
-        // this.changeText();
-        if (this.textmode) {
-            this.selectAllText(".textAreaRobotProgram", "");
-        } else {
-            this.selectAllText(".hiddenRobotProgram", this.toText());
-        }
-        document.execCommand("copy");
-    }
-
-    private paste() {
+    paste() {
         if (this.programAsText === "") {
             return;
         }
@@ -737,7 +823,7 @@ export class TapeController implements IController {
         this.textAll();
     }
 
-    private changeMode() {
+    changeMode() {
         if (this.textmode) {
             this.changeList();
         } else {
@@ -836,7 +922,7 @@ export class TapeController implements IController {
      * Handles clicks on the "add command" command list.
      * @param index The index of the command that was clicked.
      */
-    private onCommandClick(index: number) {
+    onCommandClick(index: number) {
         this.newCommandIndex = index;
 
         if (this.newCommandIndex > -1) {
@@ -854,7 +940,7 @@ export class TapeController implements IController {
      * Gets the color of an item in the "add command" supported command list.
      * @param index The index of the command.
      */
-    private getNewCommandColor(index: number) {
+    getNewCommandColor(index: number) {
         if (index === this.newCommandIndex) {
             return "red";
         }
@@ -866,7 +952,7 @@ export class TapeController implements IController {
      * Gets the color of an item in the current program command list.
      * @param index The index of the program command.
      */
-    private getCommandColor(index: number) {
+    getCommandColor(index: number) {
         if (index == this.selectedCommandIndex) {
             return "red";
         }
@@ -880,7 +966,7 @@ export class TapeController implements IController {
         return "black";
     }
 
-    private getCommandBackgroundColor(index: number) {
+    getCommandBackgroundColor(index: number) {
         if (index == this.state.instructionPointer) {
             return "yellow";
         }
@@ -888,7 +974,7 @@ export class TapeController implements IController {
         return "white";
     }
 
-    private getRunButtonText() {
+    getRunButtonText() {
         if (this.timer) {
             return "Stop";
         }
@@ -896,7 +982,7 @@ export class TapeController implements IController {
         return "Run";
     }
 
-    private getHand() {
+    getHand() {
         if (this.state.hand != null) {
             return this.state.hand;
         } else {
@@ -908,218 +994,34 @@ export class TapeController implements IController {
      * Gets the text for a specific index in the memory index (not memory content!) display.
      * @param index The memory location index.
      */
-    private getMemoryText(index: number) {
+    getMemoryText(index: number) {
         return /* "#" + */ index.toString();
     }
 }
 
-const tapeApp = angular.module("tapeApp", ["ngSanitize"]);
-export const moduleDefs = [tapeApp];
-
-tapeApp.component("timTape", {
-    controller: TapeController,
-    bindings: {
-        data: "<",
-    },
-    template: `
-<style>
-
-tim-tape .robotMainDiv {
-    text-align: left;
-
+@NgModule({
+    declarations: [TapePluginContent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        AnswerSheetModule,
+        PurifyModule,
+    ],
+})
+export class TapePluginModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-tim-tape .outputvalues, tim-tape .inputvalues, tim-tape .handItem {
-    height: 40px;
-}
-tim-tape .outputbelt, tim-tape .inputbelt {
-    width: 150px;
-    overflow: hidden;
-}
-tim-tape .outputvalues {
-    width: 150px;
-    overflow: hidden;
-    text-align: right;
-}
-tim-tape .output {
-    display: flex;
-    direction: rtl;
-}
-tim-tape .inputvalues {
-    width: 150px;
-    overflow: hidden;
-    text-align: left;
-}
-
-tim-tape .robotRunButtons {
-    display: table;
-    position: relative;
-    left: 180px;
-    top: -70px;
-}
-tim-tape .inputbelt, tim-tape .outputbelt, tim-tape .robotDiv {
-    display: inline-block;
-    text-align: center;
-    vertical-align: top;
-}
-tim-tape .robotDiv {
-}
-tim-tape .tapeAndRobotDiv {
-    display: inline-table;
-    width: 700px;
-}
-tim-tape .memoryArea {
-    width: 700px;
-}
-tim-tape .memoryValue {
-    display: inline-table;
-    width: 30px;
-}
-tim-tape .programArea {
-    display: flex;
-    width: 700px;
-}
-tim-tape .commandAddArea .timButton, tim-tape .commandAddArea input {
-    display: grid;
-    width: 100px;
-}
-tim-tape .commandButtons {
-}
-tim-tape .commandAddArea {
-    margin-top: 30px;
-    width: 120px;
-}
-tim-tape .commandParamArea {
-    height: 80px;
-}
-tim-tape .presetInput {
-    text-align: left;
-    width: 200px;
-}
-tim-tape .robotEditDiv {
-
-}
-tim-tape .robotEditArea {
-   height: calc(100% - 40px);
-   width: 150px;
-   white-space: pre;
-   overflow-wrap: normal;
-   overflow-x: scroll;
-}
-
-tim-tape .robotPresets {
-    margin-top: 30px;
-    display: inline-block;
-    vertical-align: top;
-    margin-left: 2em;
-}
-
-tim-tape .commandListContainer {
-   width: 150px;
-}
-
-tim-tape .tapeItem {
-   direction: ltr;
-}
-
-</style>
-    <div class="no-highlight robotMainDiv fullinv">
-        <div class="tapeAndRobotDiv">
-            <div class="outputbelt" >
-                <div class="outputvalues">
-                    <div class="output">
-                    <div ng-repeat="n in $ctrl.state.output track by $index" class="tapeItem">{{n}}</div>
-                    </div>
-               </div>
-                <img src="/static/images/tape/output.png" />
-                <span>Output</span>
-            </div>
-            <div class="robotDiv" >
-                <div class="handItem">
-                    <div class="tapeItem"  ng-bind="$ctrl.getHand()"></div>
-                </div>
-                <div class="robotImage">
-                    <img src="/static/images/tape/robot.png" />
-                    <div class="robotRunButtons">
-                         <button class="timButton" ng-click="$ctrl.step()"><span>Step</span>
-                         <button class="timButton" ng-click="$ctrl.run()"><span ng-bind="$ctrl.getRunButtonText()"></span>
-                         <button class="timButton" ng-click="$ctrl.reset()"><span>Reset</span>
-                    </div>
-                </div>
-            </div>
-            <div class="inputbelt">
-                <div class="inputvalues">
-                    <span class="input">
-                        <div ng-repeat="n in $ctrl.state.input track by $index" class="tapeItem">{{n}}</div>
-                    </span>
-                </div>
-                <img src="/static/images/tape/input.png" />
-                <span>Input</span>
-            </div>
-        </div>
-        <div class="memoryArea">
-            <div>Memory:</div>
-            <div ng-repeat="n in $ctrl.state.memory track by $index" class="memoryContainer">
-                <div ng-bind="n" class="memoryValue"></div>
-                <div ng-bind="$ctrl.getMemoryText($index)" class="memoryIndex"></div>
-            </div>
-        </div>
-        <div class="programArea">
-            <span class="commandListContainer newCommandList" ng-hide="$ctrl.data.hideCommands">
-                Commands:
-                <ul class="list-unstyled listBox">
-                <li ng-repeat="c in $ctrl.possibleCommandList" class="command" ng-style="{'color': $ctrl.getNewCommandColor($index)}"
-                    ng-click="$ctrl.onCommandClick($index)">{{c.name}}</li>
-                </ul>
-            </span>
-            <div class="commandAddArea" ng-hide="$ctrl.data.hideCommands" >
-                 <div class="commandParamArea">
-                     <span class="commandParameterArea" ng-show="$ctrl.showNewCommandParameter">
-                        <span>{{$ctrl.newCommandParameterText}}</span>
-                        <input size="5em" ng-model="$ctrl.newCommandParameter">
-                     </span>
-                 </div>
-                 <div class="commandButtons">
-                     <button class="timButton" ng-click="$ctrl.insertCommandButtonClick()"><span>Insert -&gt;</span>
-                     <button class="timButton" ng-click="$ctrl.removeCommand()"><span>&lt;- Remove</span></button>
-                     <button class="timButton" ng-click="$ctrl.copyAll()" ng-hide="$ctrl.data.hideCopyAll"><span>Copy all</span></button>
-                     <!-- <button class="timButton" ng-click="$ctrl.paste()"><span>Paste</span></button> -->
-                 </div>
-            </div>
-            <span class="commandListContainer">
-                Program:
-                <textarea class= "robotEditArea textAreaRobotProgram" ng-model="$ctrl.programAsText" ng-hide="!$ctrl.textmode"></textarea>
-                <ul class="cmditems list-unstyled listBox programCommandList" ng-hide="$ctrl.textmode">
-                <li  ng-repeat="c in $ctrl.commandList" class="command" ng-click="$ctrl.selectedCommandIndex = $index"
-                ng-style="{'color': $ctrl.getCommandColor($index), 'background-color': $ctrl.getCommandBackgroundColor($index)}">{{c.getName()}}</li>
-                <li class="command" ng-style="{'color': $ctrl.getCommandColor($ctrl.commandList.length + 1)}"
-                    ng-click="$ctrl.selectedCommandIndex = ($ctrl.commandList.length + 1)">-</li>
-                </ul>
-                <!--- <select ng-model="$ctrl.selected" size="10">
-                <option ng-repeat="c in $ctrl.commandList" ng-style="{'color': $ctrl.getCommandColor($index)}">{{c.getName()}}</option>
-                </select> --->
-            </span>
-            <div class="robotPresets">
-                <div class="presetInput" ng-hide="$ctrl.data.hidePresetInput" >
-                     <div class="commandParamArea">
-                         <span>
-                            <span>Preset input:</span>
-                            <input size="15em" ng-model="$ctrl.inputString">
-                         </span>
-                     </div>
-                </div>
-                <div class="presetInput" ng-hide="$ctrl.data.hidePresetMem" >
-                     <div class="commandParamArea">
-                         <span>
-                            <span>Preset memory:</span>
-                            <input size="15em" ng-model="$ctrl.memString">
-                         </span>
-                     </div>
-                </div>
-                <span ng-hide="$ctrl.data.hideTextMode"><input type="checkbox" ng-model="$ctrl.textmodeCB" class="belttextbox" name="textmode" value="textmode"  ng-click="$ctrl.changeMode()" /><label for="belttextbox">&nbsp;Text&nbsp;mode</label></div></span>
-            </div>
-        </div>
-        <textarea style= "height: 1px; width: 1px; position: unset;" class="hiddenRobotProgram"></textarea>
-    </div>
-    `,
-});
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                TapePluginModule
+            )
+        ),
+        "timTape",
+        TapePluginContent
+    ),
+];

@@ -13,10 +13,12 @@ import * as viewctrl from "tim/document/viewctrl";
 import {ViewRangeNavigationComponent} from "tim/document/view-range-navigation.component";
 import {environment} from "tim/environments/environment";
 import {FrontPageComponent} from "tim/frontpage/front-page.component";
-import * as loadMap from "tim/gamification/loadMap";
+import * as loadMap from "tim/gamification/gamification-map.component";
+import {GamificationMapComponent} from "tim/gamification/gamification-map.component";
 import * as manageCtrl from "tim/item/manageCtrl";
 import * as rightsEditor from "tim/item/rightsEditor";
-import * as markAllAsRead from "tim/ui/markAllAsRead";
+import * as markAllAsRead from "tim/ui/mark-all-as-read.component";
+import {MarkAllAsReadComponent} from "tim/ui/mark-all-as-read.component";
 import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
 import {LogoComponent} from "tim/ui/logo.component";
 import {LoginMenuComponent} from "tim/user/login-menu.component";
@@ -51,7 +53,8 @@ import {DrawToolbarComponent} from "tim/plugin/drawToolbar";
 import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {DirectoryListComponent} from "tim/folder/directory-list.component";
 import {TemplateListComponent} from "tim/document/editing/template-list.component";
-import * as selfExpire from "tim/item/selfExpire";
+import * as selfExpire from "tim/item/self-expire.component";
+import {SelfExpireComponent} from "tim/item/self-expire.component";
 import {HelpParContent} from "tim/document/editing/help-par-content.component";
 import {DurationPickerComponent} from "tim/ui/duration-picker.component";
 import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
@@ -59,6 +62,7 @@ import {TimMessageViewComponent} from "tim/messaging/tim-message-view.component"
 import {ManageReadReceiptComponent} from "tim/messaging/manage-read-receipt.component";
 import {CopyFolderComponent} from "tim/folder/copy-folder.component";
 import {NotificationOptionsComponent} from "tim/item/manage/notification-options.component";
+import {ParRefComponent} from "tim/document/par-ref.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -124,6 +128,10 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timMessageView", TimMessageViewComponent);
     doDowngrade(dg, "manageReadReceipt", ManageReadReceiptComponent);
     doDowngrade(dg, "timNotificationOptions", NotificationOptionsComponent);
+    doDowngrade(dg, "timParRef", ParRefComponent);
+    doDowngrade(dg, "gamificationMap", GamificationMapComponent);
+    doDowngrade(dg, "timMarkAllAsRead", MarkAllAsReadComponent);
+    doDowngrade(dg, "timSelfExpire", SelfExpireComponent);
     return dg;
 }
 
