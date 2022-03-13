@@ -1,0 +1,32 @@
+Table and fields
+Start peer reviewing
+```
+#- Arviointitilanne
+
+#- {defaultplugin="numericfield" readonly="view" .fieldCell}
+%% 'arvioituLkm=Arvioitu' | gfields('cols: 5') -%%
+%% 'arvioija_' | gfrange(1,arvosteltavia,'cols: 10') -%%
+%% 'arvioitu_' | gfrange(1,arvosteltavia,'cols: 10') %%
+
+
+``` {#demotable plugin="tableForm"}
+groups:
+ - %%group%%
+fields:
+ - arvioituLkm
+ - arvioija_(1,%%arvosteltavia%%)=arvioija_
+ - arvioitu_(1,%%arvosteltavia%%)=arvioitu_
+header: Demotaulukko
+minWidth: 3em
+singleLine: true
+filterRow: true
+cbColumn: true
+nrColumn: true
+maxRows: 40em
+autosave: true
+open: false
+openButtonText: Taulukko arviointitilanteesta
+hideButtonText: Piilota taulukko
+emailUsersButtonText: Lähetä ruksituille sähköpostia
+emailUsersButtonText: "Lähetä sähköpostia"
+```
