@@ -331,7 +331,7 @@ export class DraggableController implements IController {
             return;
         }
         const oldSize = this.sizeStorage.get();
-        if (oldSize && this.canDrag()) {
+        if (oldSize && this.canDrag() && !this.isMinimized()) {
             const vps = getViewPortSize();
             if (oldSize.width) {
                 this.element.css(
