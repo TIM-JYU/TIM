@@ -12,6 +12,7 @@ import {
     OrderByWhenNotEditingPipe,
     VelpSelectionDialog,
 } from "./velp-selection-dialog.component";
+import {VelpWindowComponent} from "./velpWindow";
 
 @NgModule({
     declarations: [
@@ -21,6 +22,7 @@ import {
         FilterByVelpGroupsPipe,
         OrderByWhenNotEditingPipe,
         FilterLabelsByContentPipe,
+        VelpWindowComponent,
     ],
     imports: [
         CommonModule,

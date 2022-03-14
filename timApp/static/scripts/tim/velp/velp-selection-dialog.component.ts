@@ -136,6 +136,22 @@ const sortLang: string = "fi";
                                         (click)="openCreateNewVelpWindow()"
                                         value="">Create new velp
                                 </button>
+                                <tim-dialog-frame [detachable]="true">
+                                    <ng-container header>Available velps</ng-container>
+                                    <ng-container content>
+                                        <div class="velp-stack">
+                                            <tim-velp-window class="velp"
+                                                             *ngIf="newVelp.edit"
+                                                             [velp]="newVelp" 
+                                                             [velpGroups]="velpGroups"
+                                                             [teacherRight]="vctrl.item.rights.teacher"
+                                                             [labels]="labels"
+                                                             [new]="true" 
+                                                             [advancedOn]="advancedOn"></tim-velp-window>
+                                            <tim-velp-window *ngFor="let velp of ((rctrl.velps | filterLabelsByContent:filterVelp) | orderByWhenNotEditing:order)"></tim-velp-window>
+                                        </div>
+                                    </ng-container>
+                                </tim-dialog-frame>
 
                                 <!--                                <div save="%%PAGEID%%selectVelpsDiv"-->
                                 <!--                                     tim-draggable-fixed-->
