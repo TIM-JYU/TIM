@@ -467,7 +467,7 @@ export class ReviewCanvasComponent
     }
 
     /**
-     * Return promise of images' dataUrl presentation
+     * Return promise of images' dataUrl presentation or their original source
      * The returned images are fully rotated to their current rotation value (90deg per one rotation)
      */
     async getVelpImages(): Promise<string[] | undefined> {
@@ -483,7 +483,7 @@ export class ReviewCanvasComponent
         return imgs.map((img, index) => {
             const uploadedFile = this.uploadedFiles[index];
             if (uploadedFile.rotation == undefined) {
-                return "";
+                return img.currentSrc;
             }
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d")!;
