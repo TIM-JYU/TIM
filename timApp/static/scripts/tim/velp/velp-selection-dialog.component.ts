@@ -13,7 +13,10 @@ import * as t from "io-ts";
 import {clone, TimStorage, to} from "tim/util/utils";
 import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {
+    Alignment,
+    AngularDialogComponent,
+} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {NgForm} from "@angular/forms";
 import {ViewCtrl} from "../document/viewctrl";
@@ -281,6 +284,8 @@ export class VelpSelectionDialog extends AngularDialogComponent<
     undefined
 > {
     protected dialogName = "velpSelection";
+    protected initialHorizontalAlign = Alignment.Right;
+    protected initialPosition = {x: 0, y: 50};
 
     initialized = false;
     labels: ILabelUI[];

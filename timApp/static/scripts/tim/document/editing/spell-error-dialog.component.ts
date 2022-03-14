@@ -139,10 +139,10 @@ export class SpellErrorDialogComponent extends AngularDialogComponent<
 
     async ngAfterViewInit() {
         super.ngAfterViewInit();
-        this.frame.setPos({
-            x: this.data.dialogX - this.xOrigin!,
+        this.frame.pos = {
+            x: this.data.dialogX,
             y: this.data.dialogY,
-        });
+        };
         await this.setHeightAutomatic();
     }
 

@@ -5,7 +5,6 @@ import {Size} from "angular2-draggable/lib/models/size";
 import {IPosition, Position} from "angular2-draggable/lib/models/position";
 import {AngularDraggableDirective} from "angular2-draggable";
 import {Subject} from "rxjs";
-import {IResizeEvent} from "angular2-draggable/lib/models/resize-event";
 
 export interface IAngularResizableDirectivePublic {
     _currSize: Size;
@@ -43,6 +42,14 @@ class ResizableDraggableWrapper {
     }
 }
 
+function getElementSize(el: Element) {
+    const computed = el.getBoundingClientRect();
+    return {
+        width: Math.round(computed.width),
+        height: Math.round(computed.height),
+    };
+}
+
 @Component({
     selector: "tim-dialog-frame",
     template: `
@@ -55,7 +62,7 @@ class ResizableDraggableWrapper {
             </div>
             <ng-container *ngSwitchCase="true" [ngTemplateOutlet]="draggableModal"></ng-container>
         </ng-container>
-        
+
         <ng-template #draggableModal>
             <div [ngDraggable]="detached"
                  [ngResizable]="detached && canResize && !areaMinimized"
@@ -69,11 +76,11 @@ class ResizableDraggableWrapper {
                  [handle]="draghandle"
                  [zIndex]="detachedIndex"
                  [position]="position"
-                 (stopped)="onPosChange($event)"
-                 (rzStop)="onSizeChange($event)"
+                 (stopped)="onDragStop()"
+                 (rzStop)="onResizeStop()"
                  [class.attached]="!detached"
                  [class.detachable]="detachable"
-                 [style.position]="(!detachable || detachable && !detached) ? '' : 'fixed'"
+                 [style.position]="!detached ? '' : 'fixed'"
                  [ngStyle]="modalStyle"
                  class="modal-dialog modal-{{size}}"
                  style="pointer-events: auto">
@@ -82,7 +89,7 @@ class ResizableDraggableWrapper {
                         <ng-content select="[header]"></ng-content>
                     </p>
                     <i *ngIf="detachable" (click)="toggleDetach()" title="Attach"
-                       class="glyphicon glyphicon-arrow-left" 
+                       class="glyphicon glyphicon-arrow-left"
                        [class.glyphicon-arrow-left]="detached"
                        [class.glyphicon-arrow-right]="!detached"></i>
                     <i *ngIf="minimizable" title="Minimize dialog" (click)="toggleMinimize()"
@@ -140,6 +147,7 @@ export class DialogFrame {
     @Input() size: "sm" | "md" | "lg" | "xs" = "md"; // xs is custom TIM style
     resizable!: ResizableDraggableWrapper;
     position: IPosition = {x: 0, y: 0};
+    private lastDraggedPosition?: IPosition;
     sizeOrPosChanged = new Subject<void>();
 
     ngOnInit() {
@@ -166,12 +174,20 @@ export class DialogFrame {
         return true;
     }
 
-    setPos(p: IPosition) {
+    set pos(p: IPosition) {
         this.position = p;
     }
 
-    getPos() {
-        return this.position;
+    get pos() {
+        return this.resizable?.getPos() ?? this.position;
+    }
+
+    get lastDraggedPos() {
+        return this.lastDraggedPosition ?? this.position;
+    }
+
+    get currentSize() {
+        return getElementSize(this.dragelem.nativeElement);
     }
 
     toggleDetach() {
@@ -210,11 +226,12 @@ export class DialogFrame {
         res.doResize();
     }
 
-    onSizeChange(e: IResizeEvent) {
+    onResizeStop() {
         this.sizeOrPosChanged.next();
     }
 
-    onPosChange(e: IPosition) {
+    onDragStop() {
+        this.lastDraggedPosition = this.pos;
         this.sizeOrPosChanged.next();
     }
 }

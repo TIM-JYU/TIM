@@ -13,6 +13,7 @@ import {getViewPortSize, ISize, timeout, TimStorage} from "tim/util/utils";
 import * as t from "io-ts";
 import {Subscription} from "rxjs";
 import {Pos} from "tim/ui/pos";
+import {IPosition} from "angular2-draggable/lib/models/position";
 
 export interface IDialogOptions {
     resetSize?: boolean;
@@ -34,15 +35,12 @@ enum SizeNeedsRefresh {
     No,
 }
 
-function getCurrentSize(el: Element) {
-    const computed = el.getBoundingClientRect();
-    return {
-        width: Math.round(computed.width),
-        height: Math.round(computed.height),
-    };
-}
-
 const TwoTuple = t.tuple([t.number, t.number]);
+
+export enum Alignment {
+    Center,
+    Right,
+}
 
 @Directive()
 export abstract class AngularDialogComponent<Params, Result>
@@ -57,16 +55,25 @@ export abstract class AngularDialogComponent<Params, Result>
     protected abstract dialogName: string;
     protected extraVerticalSize = 0;
     protected closed = false;
+    protected initialHorizontalAlign?: Alignment = Alignment.Center;
+    protected initialPosition?: IPosition;
     private sub?: Subscription;
-    protected xOrigin?: number;
     private bodyObserver?: MutationObserver;
     private sizeStorage?: TimStorage<[number, number]>;
     private posStorage?: TimStorage<[number, number]>;
+    private hasCustomPosition: boolean = false;
 
     @HostListener("keydown.esc", ["$event"])
     escPressed(e: KeyboardEvent) {
         this.dismiss();
         e.stopPropagation();
+    }
+
+    @HostListener("window:resize", ["$event"])
+    handleResize() {
+        if (this.fixPosSizeInbounds()) {
+            this.frame.resizable.doResize();
+        }
     }
 
     get result() {
@@ -128,7 +135,10 @@ export abstract class AngularDialogComponent<Params, Result>
         }
         const savedPos = this.getPosStorage().get();
         if (savedPos) {
-            this.frame.setPos({x: savedPos[0], y: savedPos[1]});
+            this.hasCustomPosition = true;
+            this.frame.pos = {x: savedPos[0], y: savedPos[1]};
+        } else if (this.initialPosition) {
+            this.frame.pos = this.initialPosition;
         }
 
         this.sub = this.frame.sizeOrPosChanged.subscribe(() => {
@@ -137,21 +147,23 @@ export abstract class AngularDialogComponent<Params, Result>
 
         this.fixPosSizeInbounds(sizehint);
         this.frame.resizable.doResize();
+
         if (this.dialogOptions?.pos) {
             if (this.dialogOptions.pos) {
-                this.frame.setPos({
-                    x: this.dialogOptions.pos.x - this.xOrigin!,
+                this.frame.pos = {
+                    x: this.dialogOptions.pos.x,
                     y: this.dialogOptions.pos.y,
-                });
+                };
             }
         }
+
         (async () => {
             if (this.frame.mightBeAsync) {
                 await timeout(500);
             } else {
                 await timeout(0);
             }
-            this.fixPosSizeInbounds(null);
+            this.fixPosSizeInbounds();
             this.frame.resizable.doResize();
             if (this.frame.autoHeight || this.frame.initialAutoHeight) {
                 await this.setHeightAutomatic();
@@ -159,37 +171,51 @@ export abstract class AngularDialogComponent<Params, Result>
         })();
     }
 
-    fixPosSizeInbounds(sizeHint: ISize | null): SizeNeedsRefresh {
-        const vp =
-            this.frame.anchor === "fixed"
-                ? getViewPortSize()
-                : {
-                      width: document.documentElement.scrollWidth,
-                      height: document.documentElement.scrollHeight,
-                  };
+    private get viewPort() {
+        return this.frame.anchor === "fixed"
+            ? getViewPortSize()
+            : {
+                  width: document.documentElement.scrollWidth,
+                  height: document.documentElement.scrollHeight,
+              };
+    }
+
+    fixPosSizeInbounds(sizeHint?: ISize | null): SizeNeedsRefresh {
+        const vp = this.viewPort;
 
         // First clamp the frame so it fits inside the viewport
-        const {width, height} =
-            sizeHint ?? getCurrentSize(this.frame.dragelem.nativeElement);
-        const newWidth = Math.min(width, vp.width);
-        const newHeight = Math.min(
+        const {width, height} = sizeHint ?? this.frame.currentSize;
+        const newWidth = clamp(width, 0, vp.width);
+        const newHeight = clamp(
             height + this.extraVerticalSize,
+            0,
             vp.height - 50
         );
         this.extraVerticalSize = 0;
 
         // Then clamp x/y so that the element is at least within the viewport
-        let {x, y} = this.frame.getPos();
-        const xOrigin = vp.width / 2 - width / 2;
-        this.xOrigin = xOrigin;
-        x = clamp(x, 0 - xOrigin, vp.width - newWidth - xOrigin);
-        y = clamp(y, 0, vp.height - newHeight);
+        // Use last position that the user dragged to
+        const lastDraggedPos = this.frame.lastDraggedPos;
+        console.log("last dragged", lastDraggedPos);
+
+        if (!this.hasCustomPosition) {
+            if (this.initialHorizontalAlign == Alignment.Center) {
+                lastDraggedPos.x = vp.width / 2 - width / 2;
+            } else if (this.initialHorizontalAlign == Alignment.Right) {
+                lastDraggedPos.x = vp.width - width;
+            }
+        }
+
+        const newPos = {
+            x: clamp(lastDraggedPos.x, 0, vp.width - newWidth),
+            y: clamp(lastDraggedPos.y, 0, vp.height - newHeight),
+        };
 
         this.frame.resizable.getSize().set({
             width: newWidth,
             height: newHeight,
         });
-        this.frame.setPos({x, y});
+        this.frame.pos = newPos;
         return newWidth !== width || newHeight !== height
             ? SizeNeedsRefresh.Yes
             : SizeNeedsRefresh.No;
@@ -219,6 +245,7 @@ export abstract class AngularDialogComponent<Params, Result>
         try {
             const {x, y} = this.frame.resizable.getPos();
             this.getPosStorage().set([x, y]);
+            this.hasCustomPosition = true;
         } catch {
             console.warn("resizable.getPos threw an error");
         }
