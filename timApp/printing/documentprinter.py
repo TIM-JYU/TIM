@@ -401,7 +401,12 @@ class DocumentPrinter:
                     not pdoc_macros.get("texautonumber")
                     and settings.auto_number_headings()
                 ):
-                    md = add_heading_numbers(md, p, settings.heading_format())
+                    md = add_heading_numbers(
+                        md,
+                        p,
+                        settings.heading_format(),
+                        initial_heading_counts=settings.auto_number_start(),
+                    )
 
                 """
                 if pd['md'].startswith('#'):
@@ -523,6 +528,7 @@ class DocumentPrinter:
                     settings.heading_ref_format(),
                     jump_name,
                     counters,
+                    initial_heading_counts=settings.auto_number_start(),
                 )
             else:
                 add_headings_to_counters(md, jump_name, counters)

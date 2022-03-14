@@ -267,8 +267,17 @@ class DocSettings:
             raise ValueError(f"group must be str, not {type(res)}")
         return res
 
-    def auto_number_start(self) -> int:
-        return self.__dict.get(self.auto_number_start_key, 0)
+    def auto_number_start(self) -> dict[int, int]:
+        result = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
+        val = self.__dict.get(self.auto_number_start_key)
+        if isinstance(val, int):
+            result[1] = val
+        if isinstance(val, dict):
+            for k in result.keys():
+                new_val = val.get(k, None)
+                if isinstance(new_val, int):
+                    result[k] = new_val
+        return result
 
     def heading_format_ret(self, defaults, format_key):
         hformat = self.__dict.get(format_key)
