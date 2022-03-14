@@ -2,8 +2,12 @@
 
 // For Lexer see: https://github.com/aaditmshah/lexer
 class Lexer {
-    deferror(chr) {
-        throw new Error("Unexpected character at index " + (this.index - 1) + ": " + chr);
+// Create lexer, add rexexp rules where to match
+// call lexer.setInput(input) to give input
+// call lexer.lex() to get on token at time until undefined
+// longest match is used if not /g in rule.
+    deferror(chr) {  // default error handler
+        throw new Error(`Unexpected character at index ${this.index - 1}: ${chr}`);
     };
 
 
@@ -60,59 +64,57 @@ class Lexer {
     }
 
     lex() {
-        let token;
-        if (this.tokens.length) return this.tokens.shift();
+        if (this.tokens.length > 0) return this.tokens.shift();
 
         this.reject = true;
 
         while (this.index <= this.input.length) {
+            let token;
             let matches = this.scan().splice(this.remove);
             let index = this.index;
 
             while (matches.length) {
                 if (!this.reject) break;
                 let match = matches.shift();
-                let result = match.result;
-                let length = match.length;
-                this.index += length;
+                this.index += match.length;
                 this.reject = false;
                 this.remove++;
 
-                token = match.action.apply(this, result);
-                if (this.reject) this.index = result.index;
-                else if (typeof token !== "undefined") {
-                    // noinspection FallThroughInSwitchStatementJS
-                    switch (Object.prototype.toString.call(token)) {
-                        case "[object Array]":
-                            this.tokens = token.slice(1);
-                            token = token[0];
-                        default:
-                            if (length) this.remove = 0;
-                            return token;
-                    }
+                token = match.action.apply(this, match.result);
+                if (this.reject) { // action may change this.reject!
+                    this.index = match.result.index;
+                    continue;
                 }
+                if (token === undefined)  continue;
+                if (Array.isArray(token)) {
+                    this.tokens = token.slice(1); // save rest if many
+                    token = token[0]; // and return first one
+                }
+                if (match.length > 0) this.remove = 0;
+                return token;
             }
 
-            let input = this.input;
-
-            if (index < input.length) {
-                if (this.reject) {
-                    this.remove = 0;
-                    token = this.defunct.call(this, input.charAt(this.index++));
-                    if (typeof token !== "undefined") {
-                        if (Object.prototype.toString.call(token) === "[object Array]") {
-                            this.tokens = token.slice(1);
-                            return token[0];
-                        } else return token;
-                    }
-                } else {
-                    if (this.index !== index) this.remove = 0;
-                    this.reject = true;
-                }
-            } else if (matches.length)
+            if (index >= this.input.length) {
+                if (matches.length === 0) return undefined;
                 this.reject = true;
-            else break;
+                continue;
+            }
+
+            if (this.reject) {
+                this.remove = 0;
+                token = this.defunct.call(this, this.input.charAt(this.index++));
+                if (token === undefined)  continue;
+                if (Array.isArray(token)) {
+                    this.tokens = token.slice(1);
+                    token = token[0];
+                }
+                return token;
+            }
+
+            if (this.index !== index) this.remove = 0;
+            this.reject = true;
         }
+        return undefined;
     }
 
     scan() {
@@ -123,39 +125,33 @@ class Lexer {
         let lastIndex = this.index;
         let input = this.input;
 
-        for (let i = 0; i < this.rules.length; i++) {
-            let rule = this.rules[i];
+        for (const rule of this.rules) {
             let start = rule.start;
             let states = start.length;
 
-            if ((!states || start.indexOf(state) >= 0) ||
-                (state % 2 && states === 1 && !start[0])) {
-                let pattern = rule.pattern;
-                pattern.lastIndex = lastIndex;
-                let result = pattern.exec(input);
+            if ((states > 0 && start.indexOf(state) < 0) &&
+                (state % 2 == 0 || states !== 1 || start[0]==1)) continue;
 
-                if (!result || result.index !== lastIndex) continue;
+            rule.pattern.lastIndex = lastIndex;
+            let result = rule.pattern.exec(input);
+            if (!result || result.index !== lastIndex) continue;
 
-                let j = matches.push({
-                    result: result,
-                    action: rule.action,
-                    length: result[0].length
-                });
+            let j = matches.push({
+                result: result,
+                action: rule.action,
+                length: result[0].length
+            });
 
-                if (rule.global) {
-                   // index = j;
-                   matches[0] = matches[j-1];
-                   return  matches;
-                }
+            if (rule.global) index = j; // do not sort prior this
 
-                while (--j > index) {
-                    let k = j - 1;
+            // move to place agording by its lenght, longest firts
+            while (--j > index) {
+                let k = j - 1;
 
-                    if (matches[j].length > matches[k].length) {
-                        let temple = matches[j];
-                        matches[j] = matches[k];
-                        matches[k] = temple;
-                    }
+                if (matches[j].length > matches[k].length) {
+                    let temple = matches[j];
+                    matches[j] = matches[k];
+                    matches[k] = temple;
                 }
             }
         }
@@ -170,52 +166,49 @@ class Parser {
 
     constructor() { }
 
-    parse(input) {
+    parse(tokens) {
         let output = [];
         let stack = [];
-        let index = 0;
 
-        while (index < input.length) {
-            let token = input[index++];
-
-            switch (token.name()) {
-                case "(":
-                    stack.unshift(token);
-                    break;
-                case ")":
-                    while (stack.length) {
-                        token = stack.shift();
-                        if (token.name() === "(") break;
-                        output.push(token);
-                    }
-
-                    if (token.name() !== "(")
-                        throw new Error("Missing (.");
-                    break;
-                default:
-                    if (token.type() === undefined) {
-                        output.push(token);
-                        break;
-                    }
-                    while (stack.length) {
-                        let punctuator = stack[0].name();
-                        if (punctuator === "(") break;
-                        let operator = token.type();
-                        let precedence = operator.precedence;
-                        let antecedence = stack[0].type().precedence;
-
-                        if (precedence > antecedence ||
-                            precedence === antecedence &&
-                            operator.associativity === "right") break;
-                        output.push(stack.shift());
-                    }
-
-                    stack.unshift(token);
+        for (let token of tokens) {
+            if (token.name() ==="(") {
+                stack.push(token);
+                continue;
             }
+            if (token.name() === ")") {
+                while (stack.length) {
+                    token = stack.pop();
+                    if (token.name() === "(") break;
+                    output.push(token);
+                }
+
+                if (token.name() !== "(")
+                    throw new Error("Missing (.");
+                continue;
+            }
+
+            if (token.type() === undefined) {
+                output.push(token);
+                continue;
+            }
+            while (stack.length) {
+                let top = stack[stack.length-1];
+                if (top.name() === "(") break;
+                let operator = token.type();
+                let precedence = operator.precedence;
+                let antecedence = top.type().precedence;
+
+                if (precedence > antecedence ||
+                    precedence === antecedence &&
+                    operator.associativity === "right") break;
+                output.push(stack.pop());
+            }
+
+            stack.push(token);
         }
 
         while (stack.length) {
-            let token = stack.shift();
+            let token = stack.pop();
             if (token.name() !== "(") output.push(token);
             else throw new Error("Missing ).");
         }
@@ -225,18 +218,18 @@ class Parser {
 }
 
 function roundToNearest(num, decimals) {
-  decimals = decimals || 0;
-  let p = Math.pow(10, decimals);
-  let p2 = p;
-  while (Math.abs(num) > 10) {
-      p2 /= 10;
-      num /= 10;
-  }
-  let n = (num * p) * (1 + Number.EPSILON);
-  return Math.round(n) / p2;
+    decimals = decimals || 0;
+    let p = Math.pow(10, decimals);
+    let p2 = p;
+    while (Math.abs(num) > 10) { // normalize
+        p2 /= 10;
+        num /= 10;
+    }
+    let n = (num * p) * (1 + Number.EPSILON);
+    return Math.round(n) / p2;
 }
 
-// Base clasee for all calculatrot operations
+// Base class for all calculator operations
 class CalculatorOp {
 
     static factor = {
@@ -259,32 +252,31 @@ class CalculatorOp {
     }
 
     type() {   }           // if parser should order, return on of above
-    reg() { return "";  }  // regexp to match those opertation
-    params() { return "";} // regexp options for this match
+    reg() { return / /;  }  // regexp to match those opertation
 
-    pop() {
+    pop() {                // pop value from calc stack
         if (this.calculator.stack.length === 0)
             return this.calculator.lastResult;
         return this.calculator.stack.pop();
     }
 
     push(v) { this.calculator.stack.push(this.r(v)); }
-    name() { return this.reg(); } // needed if name is different from op
-    lexname() { return this.name(); } // nae to be used in allowed or illegals list
+    name() { return this.reg().source.replace("\\", ""); } // needed if name is different from op
+    lexname() { return this.name(); } // name to be used in allowed or illegals list
     output(extraBefore) { return ` ${this.name()} `;  } // text to output
     extraSpaceAfter() { return ""; } // need space before some operation?
-    doCalc() {  }
+    doCalc() {  }              // helpper method for doing calc
     calc() { this.doCalc(); }  // what to do when runned
     r(v) { return roundToNearest(v, this.calculator.params.decimals);  }
-    lexfunc(lexme) { return this;  }  // what to be returned for parser
-    allowSignRight() { return true; } // does shen allow sign operatio on right side
-    checkSign(lastToken) { return this; } // deny 2-3 as a sign
+    lexfunc(lexme, lexer) { return this;  }  // what to be returned for lexer if match
+    allowSignRight() { return true; } // does allow sign operation on right side
+    checkSign(lastToken) { return this; } // deny 2-3 as a sign and change to bin opertator -
 
     getnum(s) { // convert s as numeric using p, mem or parse
         if (s === undefined) return this.calculator.lastResult;
         s = (""+s).trim();
         if (s === "") return this.calculator.lastResult;
-        if (s.match(/^p[0-9]*$/)) { // calc index for r
+        if (s.match(/^p[0-9]*$/)) { // from pX calc index for r
             if (s==="p") return this.calculator.lastResult;
             let idx = this.calculator.row - parseInt(s.substring(1));
             idx = Math.max(0, Math.min(idx, this.calculator.row-1));
@@ -346,18 +338,19 @@ class SignOperation extends FuncRROperation{
     type() { return CalculatorOp.func; }
     extraSpaceAfter() { return ""; }
     output(extraBefore) { return extraBefore + this.name().trim(); }
+    newCalcOperation() { return new BinOperation(this.calculator); }
 }
 
 // Thse two are outside of operations list, because
 // they are refered inside the list (SignMinus and SignPlus)
 class Plus extends BinOperation {
-    reg() { return " *\\+ "; }
+    reg() { return / *\+ /; }
     name() { return "+"; }
     doCalc(a, b) { return a + b; }
 }
 
 class Minus extends BinOperation {
-    reg() { return " *- "; }
+    reg() { return / *- /; }
     name() { return "-"; }
     doCalc(a, b) { return a - b; }
 }
@@ -365,39 +358,39 @@ class Minus extends BinOperation {
 const operations = [
 
 class LeftBracketOperation extends  BracketOperation {
-    reg() { return "[(]";}
-    name() { return "("; }
+    reg() { return /\(/;}
     extraSpaceAfter() { return ""; }
 },
 
 class RightBracketOperation extends  BracketOperation {
-    reg() { return "[)]";}
-    name() { return ")"; }
+    reg() { return /\)/;}
     allowSignRight() { return false; }
 },
 
 class SignMinus extends SignOperation {
-    reg() { return " *-"; }
+    reg() { return / *-/; }
     name() { return " -"; }
     lexname() { return "signm"}
     calc() {
         let a = this.pop();
         this.push(-a);
     }
+    newCalcOperation() { return new Minus(this.calculator); }
     checkSign(lastToken) {
         if (lastToken.allowSignRight()) return this;
-        return new Minus(this.calculator);
+        return this.newCalcOperation();
     }
 },
 
 class SignPlus extends SignOperation {
-    reg() { return " *\\+"; }
+    reg() { return / *\+/; }
     name() { return " +"; }
     lexname() { return "signp"}
     calc() {  }
+    newCalcOperation() { return new Plus(this.calculator); }
     checkSign(lastToken) {
         if (lastToken.allowSignRight()) return this;
-        return new Plus(this.calculator);
+        return this.newCalcOperation();
     }
 },
 
@@ -405,57 +398,67 @@ Plus,
 Minus,
 
 class Mul extends BinOperation {
-    reg() { return "\\*"; }
-    name() { return "*"; }
+    reg() { return /\*/; }
     type() { return CalculatorOp.factor; }
     doCalc(a, b) { return a * b; }
 },
 
 class Div extends BinOperation {
-    reg() { return "/"; }
+    reg() { return /\//; }
     type() { return CalculatorOp.factor; }
     doCalc(a, b) { return a / b; }
 },
 
 class Pow extends BinOperation {
-    reg() { return "\\^"; }
-    name() { return "^"; }
+    reg() { return /\^/; }
     type() { return CalculatorOp.factor; }
+    extraSpaceAfter() { return ""; }
+    output(extraBefore) { return this.name().trim(); }
     doCalc(a, b) { return Math.pow(a , b); }
 },
 
 class Sin extends FuncRROperation {
-    reg() { return "sin"; }
+    reg() { return /sin/; }
     doCalc(a) { return Math.sin(this.calculator.toAngle(a)); }
 },
 
 class Cos extends FuncRROperation {
-    reg() { return "cos"; }
+    reg() { return /cos/; }
     doCalc(a) { return Math.cos(this.calculator.toAngle(a)); }
 },
 
 class Sqrt extends FuncRROperation {
-    reg() { return "sqrt"; }
+    reg() { return /sqrt/; }
     doCalc(a) { return Math.sqrt(a); }
 },
 
 class Rad extends Command {
-    reg() { return "rad"; }
+    reg() { return /rad/; }
     calc() { this.calculator.deg = false; }
 },
 
 class Deg extends Command {
-    reg() { return "deg"; }
+    reg() { return /deg/; }
     calc() { this.calculator.deg = true; }
+},
+
+class RPN extends Command {
+    reg() { return /rpn/; }
+    calc() { this.calculator.rpn = true; }
+},
+
+class Infix extends Command {
+    reg() { return /infix/; }
+    calc() { this.calculator.rpn = false; }
 },
 
 class NumOperation extends  ValueOperation {
     reg() {
         // return "((?:(?:[-][0-9]+)|(?:[0-9]*))(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?)"
-        return "([0-9]+(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?)";
+        return /([0-9]+(?:[.,][0-9]*)?(?:[eE]-?[0-9]+)?)/;
     }
     lexname() { return "num"; }
-    lexfunc(lexme) {
+    lexfunc(lexme, lexer) {
         const oper = new NumOperation(this.calculator);
         oper.value = parseFloat(lexme.replace(",", "."))
         return oper;
@@ -463,9 +466,9 @@ class NumOperation extends  ValueOperation {
 },
 
 class PiOperation extends  ValueOperation {
-    reg() { return "pi|π" }
+    reg() { return /pi|π/ }
     lexname() { return "pi"; }
-    lexfunc(lexme) {
+    lexfunc(lexme, lexer) {
         const oper = new PiOperation(this.calculator);
         oper.value = Math.PI;
         return oper;
@@ -473,9 +476,9 @@ class PiOperation extends  ValueOperation {
 },
 
 class MemOperation extends  ValueOperation {
-    reg() { return "[a-z][a-z0-9]*" }
+    reg() { return /[a-z][a-z0-9]*/ }
     lexname() { return "mem"; }
-    lexfunc(lexme) {
+    lexfunc(lexme, lexer) {
         const oper = new MemOperation(this.calculator);
         oper.value = this.getnum(lexme)
         return oper;
@@ -487,7 +490,7 @@ class MemOperation extends  ValueOperation {
 // if index not defined, insert before MemOperation (that
 // matches almost any name)
 function addOperation(oper, index) {
-    if (index === undefined) index = operations.length-2;
+    if (index === undefined) index = operations.length-1;
     if (index < 0) return;
     if (index >= operations.length) index = operations.length-1;
     operations.splice(index,0, oper);
@@ -517,6 +520,25 @@ const operations = [
 */
 
 class Calculator {
+    rpnparse(tokens) {
+        let output = [];
+        let lasttoken = new BracketOperation(this);
+        for (const token of tokens) {
+            if (lasttoken instanceof SignOperation) {
+                const lt = output.pop();
+                output.push(token);
+                output.push(lt)
+            } else output.push(token);
+            lasttoken = token;
+        }
+        if (lasttoken instanceof SignOperation) {
+            output.pop();
+            output.push(lasttoken.newCalcOperation());
+        }
+        return output;
+    }
+
+
     isIn(reglist, cmd, def) {
         let name = cmd.lexname();
         if (!reglist || reglist.length === 0) return def;
@@ -533,6 +555,7 @@ class Calculator {
     constructor(params) {
         this.params = params || {};
         this.params.decimals = this.params.decimals || 13;
+        this.rpn = this.params.rpn || false;
         if (this.params.usemem === undefined) this.params.usemem = true;
         this.deg = this.params.deg;
         if (this.deg === undefined) this.deg = true;
@@ -542,13 +565,9 @@ class Calculator {
         this.row = 0;
         this.stack = [];
         this.lexer = new Lexer();
-        /*
-        this.lexer.addRule(/[()]/, function (lexeme) {
-             return lexeme; // punctuation (i.e. "(", ")")
-        });
-         */
-        for (const op of operations) {
-            const oper = new op(this);
+
+        for (const opClass of operations) {
+            const oper = new opClass(this);
             if (!this.isIn(this.params.allowed, oper, true)) {
                 continue;
             }
@@ -556,8 +575,8 @@ class Calculator {
                 continue;
             }
             this.operations.push(oper);
-            this.lexer.addRule(new RegExp(oper.reg(), oper.params()),function (lexme) {
-               return oper.lexfunc(lexme);
+            this.lexer.addRule(oper.reg(),function (lexme) {
+               return oper.lexfunc(lexme, this);  // this is lexer!
             })
         }
         this.lexer.addRule(/\s+/, function () {
@@ -578,16 +597,19 @@ class Calculator {
             let tokens = [], token;
             let lastToken = new BracketOperation(this);
             while (token = this.lexer.lex()) {
-                token = token.checkSign(lastToken);
+                if (!this.rpn) token = token.checkSign(lastToken);
                 tokens.push(token);
                 lastToken = token;
             }
-            let cmds = this.parser.parse(tokens);
-            let calc = "";
+            let cmds;
+            if (this.rpn) cmds = this.rpnparse(tokens);
+            else cmds = this.parser.parse(tokens);
+
             for (const cmd of cmds) {
                 cmd.calc();
             }
 
+            let calc = "";
             let extraBefore = "";
             for (const cmd of tokens) {
                 calc += cmd.output(extraBefore);
@@ -595,10 +617,14 @@ class Calculator {
             }
 
             let res = "";
-            if (this.stack.length > 0) {
+            if (this.stack.length > 0) {  // is some result
                 res = this.stack.pop();
                 this.lastResult = res;
                 calc += " = " + res;
+                if (this.stack.length > 0) { // is too much left
+                    calc += " extra values!"
+                    res = undefined;
+                }
             }
 
             return {res: res, calc: calc};
@@ -625,11 +651,11 @@ class Calculator {
                     if (name === ex) ex = ""; else ex = "  " +ex
                     result.push({res: "", calc: name + ex});
                 }
-                return result;
+                continue;
             }
             let parts = tline.split("===");
             tline = parts[0].trim();
-            let expected = undefined;
+            let expected = null;
             if (parts.length > 1) expected = parts[1].trim();
 
             let toMem = "";
@@ -647,8 +673,8 @@ class Calculator {
             if (tline)
                 r = this.calcOne(tline);
             r.calc = `r${i}: ${r.calc}${toMem}`;
-            if (expected !== undefined) {
-                if (r.res == expected) r.calc = ""; // OK, do not display
+            if (expected !== null) {
+                if (""+r.res == expected) r.calc = ""; // OK, do not display
                 else r.calc += " expected " + expected;
             }
             if (r.calc) result.push(r);

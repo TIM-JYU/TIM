@@ -8,17 +8,21 @@
 <body>
 <script>
     function setData(data) {
-class Sqr extends FuncRROperation {
-    reg() { return "sqr"; }
-    doCalc(a) { return a*a; }
-}
-class Modulo extends BinOperation {
-    reg() { return "%"; }
-    type() { return CalculatorOp.factor; }
-    doCalc(a,b) { return a % b; }
-}
-addOperation(Sqr);
-addOperation(Modulo);
+        class Sqr extends FuncRROperation {
+            reg() { return /sqr/; }
+            doCalc(a) { return a*a; }
+            lexfunc(lexme, lexer) {
+                // lexer.reject = true;
+                return [this, this];
+            }
+        }
+        class Modulo extends BinOperation {
+            reg() { return /%/; }
+            type() { return CalculatorOp.factor; }
+            doCalc(a,b) { return a % b; }
+        }
+        addOperation(Sqr,0);
+        addOperation(Modulo);
         let calculator = new Calculator(data.params);
         let res = calculator.calc(data.code);
         return res;
@@ -27,10 +31,44 @@ addOperation(Modulo);
 <!-- -->
 <script>
     const code = `
-2*3+4*5-2 -> a === 24
-6-2 -> b === 4
-a/b === 6
-+ 5 === 11
+3^+-2+4^2
+list
+3 4
+`
+    const xcode = `
+5-3 === 3              # tahallaan väärin oleva testi, oikeasti tulee 2
+5 - 3 === 2            # normaali vähennyslasku
+r1 + r2 === 4          # r-viitteen testaus
+5--3 === 8             # operaatio - ja negatiivinen etumerkki
+5+-3 === 2             # operaatio + ja negatiivinen etumerkki
+5-+3 === 2             # operaatio - ja positiivinen etumerkki
+5++3 === 8             # operaatio + ja positiivinen etumerkki
+-5-3 === -8            # etumerkki 1. alkiossa
+(2+3)*(4-1) === 15     # sulkujen toiminnan kokeilu
+3+4*5 === 23           # laskujärjestyksen kokeilu (* voimakkaampi)
+3 + 4 * 5 === 23       # harvaan kirjoitettuna
+rad cos π === -1       # radiaanit ja cos
+deg sin 90 === 1       # asteet ja sin
+sqrt(25) === 5         # neliöjuuri suluilla
+2*3+4*5-2 -> a === 24  # laskujärjestys ja muistiin
+6-2 -> b === 4         # toinen muistipaikka
+a/b === 6              # toimiiko muistipaikat
++ 5 === 11             # edellisen tuloksen käyttäminen
++6 === 6               # pelkkä etumerkki
+p1 + p2 === 17         # p-viitteiden kokeilu
+p + r === 34           # p ja r ilman arvoa (edellinen tulos)
+9 7 + === 16           # RPN tyylinen syntaksi
+sqrt === 4             # funktio käyttää edellistä arvoa
+rpn ===                # vaihdetaan RPN notaatioon
+2 3 4 + * === 14       # RPN lasku
+-2 3 * === -6          # RPN lasku etumerkillä
+-2 -3 * === 6          # RPN lasku kahdella etumerkillä
+3 3 *  === 9           # lasketaan RPN r = 9
+4 4 * + === 25         # käytetään r viimeisessä + (ei saa tulkita etumerkki +)
+infix ===              # takaisin "normaaliin" laskentaan
+5-3 === 2              # toimiiko?
+5 3 === undefined      # kertomerkki puuttuu
+3^--2+4^-+-2 === 25    # ylimääräisiä etumerkkejä
 `;
     let res = setData({code: code.substring(1), params: {xusemem: false, xallowed: ["signm","mem","num", "*", ], xillegals: ["mem", "sin"]}});
     console.log(res);

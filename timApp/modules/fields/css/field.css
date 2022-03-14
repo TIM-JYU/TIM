@@ -1,83 +1,24 @@
-.plugintextfield .timButton {
-    margin-bottom: 5px;
-}
-
-textfield-runner .stem {
-    text-align: left;
-    height: 6px;
-}
-
-.warnFrame {
-    border-right-color: gold;
-    border-right-width: thick;
-}
-
-input:focus.warnFrame, textarea:focus.warnFrame {
-    border-right-color: gold !important;
-}
-
-.alertFrame {
-    border-color: red;
-    border-width: 2px;
-}
-
-input:focus.alertframe {
-    border-color: red !important;
-}
-
-.savedtext {
-    display: inline-block;
-    white-space: nowrap;
-}
-
-@-webkit-keyframes fadeOut {
-    0% { opacity: 1; height: 100%; }
-    99% { opacity: 0.01; height: 100%; }
-    100% { opacity: 0; height: 0%; }
-}
-
-@keyframes fadeOut {
-    0% { opacity: 1; height: 100%; }
-    99% { opacity: 0.01; height: 100%; }
-    100% { opacity: 0; height: 0; }
-}
-
-.plugintextfield p, .plugincbfield p, .pluginrbfield p, .plugincbcountfield p {
-    padding-top: 0px;
-    padding-left: 0px;
-    padding-bottom: 0px;
-    margin-bottom: 0px;
-    margin-top: 0px;
-}
-
-textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
-    text-align: left;
-    height: 6px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.fieldCell  textfield-runner h4, .fieldCell  numericfield-runner h4, .fieldCell cbfield-runner .h4, .fieldCell rbfield-runner .h4,  .fieldCell dropdown-runner .h4    {
+.fieldCell textfield-runner h4,
+.fieldCell numericfield-runner h4,
+.fieldCell cbfield-runner .h4,
+.fieldCell rbfield-runner .h4,
+.fieldCell dropdown-runner .h4 {
     font-size: small;
     background-color: lightgrey;
-    /*outline-style: solid;*/
-    /*outline-width: 1px;*/
-    /*outline-color: #b4b4b4;*/
     border-bottom-style: solid;
     border-bottom-width: 1px;
     border-color: #b4b4b4;
-    /* text-align: center; */
-    /* height: 30px; */
     line-height: 1.5em;
-    margin: 0px;
+    margin: 0;
 }
 
-.fieldCell textfield-runner .stem, .fieldCell numericfield-runner .stem, .fieldCell cbfield-runner .stem, .fieldCell rbfield-runner .stem, .fieldCell dropdown-runner .stem  {
+.fieldCell textfield-runner .stem,
+.fieldCell numericfield-runner .stem,
+.fieldCell cbfield-runner .stem,
+.fieldCell rbfield-runner .stem,
+.fieldCell dropdown-runner .stem {
     font-size: 0.7em;
     background-color: lightgrey;
-    /* outline-style: solid; */
-    /* outline-width: 1px; */
-    /* outline-color: #b4b4b4; */
     border-bottom-style: solid;
     border-bottom-width: 1px;
     border-color: #b4b4b4;
@@ -85,26 +26,26 @@ textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
     height: 1.5em;
     line-height: 1.5em;
     font-weight: 600;
-    margin: 0px;
+    margin: 0;
 }
 
-.fieldCell  .textfieldNoSaveDiv, .fieldCell  .numericfieldNoSaveDiv {
+.fieldCell .textfieldNoSaveDiv,
+.fieldCell .numericfieldNoSaveDiv {
     text-align:center;
 }
 
-
-.fieldCell textfield-runner input, .fieldCell numericfield-runner input {
+.fieldCell textfield-runner input,
+.fieldCell numericfield-runner input {
     margin-left: 2px;
     margin-right: 2px;
     margin-top: 2px;
-    /* text-align: center; */
 }
 
 .fieldCell .plaintext {
     display: inline-block;
 }
 
-.fieldCell  tim-plugin-loader {
+.fieldCell tim-plugin-loader {
     width: auto;
     border-style: solid;
     border-width: 1px;
@@ -114,64 +55,8 @@ textfield-runner .stem, cbfield-runner .stem, rbfield-runner .stem  {
     max-width: 100%;
 }
 
-.fieldCell  tim-plugin-loader:last-child {
-  /*  border-style: solid;
-    border-width: 1px;
-    border-color: #b4b4b4;
-    border-right-width: 1px; */
-}
-
 .singleLine {
-    /*TODO: generic, move this*/
     white-space: nowrap;
-}
-
-.pluginrbfield input[type="radio"],
-.plugincbfield input[type="checkbox"],
-.plugincbcountfield input[type="checkbox"] {
-    margin: 0;
-    line-height: normal;
-    -webkit-box-shadow: none;
-    display: unset;
-    /* width: auto; */
-}
-
-.plugincbfield .warnFrame, .pluginrbfield .warnFrame, .plugincbcountfield .warnFrame {
-    border-bottom-style: solid;
-    border-bottom-color: gold;
-    border-bottom-width: thick;
-}
-
-.plugincbfield .stem, .pluginrbfield .stem, .plugincbcountfield .stem {
-    text-align: center;
-}
-
-.plugincbfield .form-control, .pluginrbfield .form-control, .plugincbcountfield .form-control {
-    width: 100%;
-    height: auto;
-    -webkit-box-shadow: none;
-    top: 2px;
-    position: relative;
-}
-
-.cbfieldcount {
-    font-size: x-small;
-}
-
-numericfield-runner .form-control, textfield-runner .form-control {
-    height: 2em;
-    display: unset;
-    width: unset;
-}
-
-/* Numeric field */
-.pluginnumericfield .timButton {
-    margin-bottom: 5px;
-}
-
-numericfield-runner .stem {
-    text-align: left;
-    height: 6px;
 }
 
 .plaintextFrame {
@@ -179,89 +64,17 @@ numericfield-runner .stem {
     box-shadow: none;
 }
 
-
-.pluginnumericfield p {
-    padding-top: 0px;
-    padding-bottom: 0px;
-    margin-bottom: 0px;
-    margin-top: 0px;
-}
-
-/* Hide HTML5 Up and Down arrows. */
-.noarrows input[type="number"]::-webkit-outer-spin-button,.noarrows  input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.noarrows input[type="number"] {
-    -moz-appearance: textfield;
-}
-
-.inlineplugin label, .numericfield label, .textfield label{
+.inlineplugin label, .inline-form label {
     font-weight: unset;
     margin-left: 2px;
 }
 
-.inlineplugin input, .numericfield input, .textfield input{
-    padding: 0px;
-    padding-left: 2px;
+.inlineplugin input, .inline-form input {
+    padding: 0 0 0 2px;
 }
 
-.inlineplugin textarea, .textfield textarea{
-    padding: 0px;
-    padding-left: 2px;
-    padding-top: 2px;
+.inlineplugin textarea, .inline-form textarea {
+    padding: 2px 0 0 2px;
     overflow:hidden;
     height: auto;
-}
-
-/* multisave */
-
-.pluginmultisave .timButton {
-    margin-bottom: 5px;
-    margin-top: 5px;
-}
-
-.pluginmultisave p {
-    padding-top: 0px;
-    padding-bottom: 0px;
-    margin-bottom: 0px;
-    margin-top: 0px;
-}
-
-/* dropdown */
-
-
-/* GoalTable */
-
-.goalTableDiv .csRunMenuArea {
-    padding-left: 1em;
-}
-
-.goaltable td {
-    border-radius: 3px;
-    padding: 3px !important;
-}
-
-.goalTableDiv label {
-    margin-bottom: unset;
-    font-weight: normal;
-}
-
-.goalTableDiv stem.bloom {
-    font-size: small;
-    color: gray;
-}
-
-.goalspan {
-    width: 1em;
-    border-radius: 10px;
-    display: block;
-    text-align: center;
-}
-
-.notSavedSpan {
-    border-width: 5px;
-    border-color: gold;
-    border-style: solid;
 }

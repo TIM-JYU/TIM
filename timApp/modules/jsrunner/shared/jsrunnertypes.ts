@@ -66,7 +66,12 @@ export interface IError {
     stackTrace?: string;
 }
 
-export type ErrorList = Array<{errors: IError[]; user: string}>;
+export interface ErrorEntry {
+    errors: IError[];
+    user: string;
+}
+
+export type ErrorList = Array<ErrorEntry>;
 export type ExportData = Array<{plugin: string; save?: boolean; data: unknown}>;
 
 interface AnswerReturnSuccess {

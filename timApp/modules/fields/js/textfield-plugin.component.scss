@@ -1,0 +1,44 @@
+@import "fields-box-common";
+
+.form-control {
+    height: 2em;
+    display: unset;
+    width: unset;
+}
+
+p {
+    padding-top: 0px;
+    padding-left: 0px;
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+    margin-top: 0px;
+}
+
+.timButton {
+    margin-bottom: 5px;
+}
+
+.stem {
+    text-align: left;
+    height: 6px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.textfield label{
+    font-weight: unset;
+    margin-left: 2px;
+}
+
+.textfield input{
+    padding: 0px;
+    padding-left: 2px;
+}
+
+.textfield textarea {
+    padding: 0px;
+    padding-left: 2px;
+    padding-top: 2px;
+    overflow:hidden;
+    height: auto;
+}

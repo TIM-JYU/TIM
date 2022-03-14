@@ -61,6 +61,7 @@ export class Annotation implements IAnnotation {
     @JsonProperty() public velp!: number;
     @JsonProperty() public visible_to!: number;
     @JsonProperty() public draw_data?: DrawItem[];
+    @JsonProperty() public style?: number;
 
     constructor() {}
 
@@ -89,6 +90,7 @@ export class Annotation implements IAnnotation {
             color: this.color,
             visible_to: this.visible_to,
             points: this.points,
+            style: this.style,
         };
     }
 }
@@ -97,6 +99,7 @@ export type IAnnotationEditableValues = {
     points: number | null;
     color: string | null;
     visible_to: number;
+    style?: number;
 };
 
 export class NewAnnotation implements IAnnotation {
@@ -127,6 +130,7 @@ export class NewAnnotation implements IAnnotation {
             points: this.velp.points,
             visible_to: this.velp.visible_to,
             color: this.velp.color,
+            style: this.velp.style,
         };
     }
 }
@@ -156,6 +160,7 @@ export type IVelp = {
     color: string | null;
     language_id: string;
     valid_until: string | null;
+    style?: number;
 };
 
 export type ILabel = {

@@ -3,11 +3,13 @@ export function staticDynamicImport(s: string) {
         case "angular-ui-grid":
             return import("angular-ui-grid");
         case "/jsrunner/javascripts/build/jsrunner.js":
-            return import("modules/jsrunner/client/javascripts/jsrunner");
+            return import(
+                "modules/jsrunner/client/javascripts/jsrunner-plugin.component"
+            );
         case "/field/js/build/numericfield.js":
-            return import("modules/fields/js/numericfield");
+            return import("modules/fields/js/numericfield-plugin.component");
         case "/field/js/build/textfield.js":
-            return import("modules/fields/js/textfield");
+            return import("modules/fields/js/textfield-plugin.component");
         case "/pali/js/build/pali.js":
             return import("modules/pali/client/pali");
         case "reviewcanvas":
@@ -21,15 +23,15 @@ export function staticDynamicImport(s: string) {
         case "qst":
             return import("tim/plugin/qst.component");
         case "tape":
-            return import("tim/plugin/tape");
+            return import("tim/plugin/tape-plugin.component");
         case "importData":
             return import("tim/plugin/import-data.component");
         case "timTable":
             return import("tim/plugin/timTable");
         case "cbcountfield":
-            return import("modules/fields/js/cbcountfield");
+            return import("modules/fields/js/cbcountfield-plugin.component");
         case "timMenu":
-            return import("tim/plugin/timMenuController");
+            return import("tim/plugin/tim-menu-plugin.component");
         case "/cs/js/build/csModule.js":
             return import("modules/cs/js/csModule");
         case "/cs/js/build/stack.js":
@@ -47,17 +49,17 @@ export function staticDynamicImport(s: string) {
         case "/svn/js/images.js":
             return import("modules/svn/js/images.component");
         case "/field/js/build/rbfield.js":
-            return import("modules/fields/js/rbfield");
+            return import("modules/fields/js/rbfield-plugin.component");
         case "/field/js/build/cbfield.js":
-            return import("modules/fields/js/cbfield");
+            return import("modules/fields/js/cbfield-plugin.component");
         case "/field/js/build/dropdown.js":
-            return import("modules/fields/js/dropdown");
+            return import("modules/fields/js/dropdown-plugin.component");
         case "/drag/js/build/drag.js":
             return import("modules/drag/client/drag");
         case "/feedback/js/build/feedback.js":
             return import("modules/feedback/js/feedback");
         case "/field/js/build/goaltable.js":
-            return import("modules/fields/js/goaltable");
+            return import("modules/fields/js/goaltable-plugin.component");
         // Redirect mmcq scripts.
         case "/mmcq/script2.js":
         case "/mmcq/SimpleDirective.js":

@@ -2,7 +2,7 @@ import json
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional, Tuple
+from typing import Any
 
 
 class ViewRoute(Enum):
@@ -63,6 +63,7 @@ class ViewContext:
     urlmacros: UrlMacros = ()
     extramacros: str = ""
     origin: OriginInfo | None = None
+    for_cache: bool = False
 
     @property
     def viewmode(self) -> bool:
