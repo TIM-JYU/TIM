@@ -56,6 +56,7 @@ def get_annotations_with_comments_in_document(
             Annotation.visible_to == AnnotationVisibility.owner.value
         )
     answer_filter = true()
+    own_review_filter = true()
     if not user.has_seeanswers_access(d) or only_own:
         answer_filter = (User.id == user.id) | (User.id == None)
         if is_peerreview_enabled(d):
@@ -63,6 +64,9 @@ def get_annotations_with_comments_in_document(
                 get_reviews_for_user_query(d, user)
                 .with_entities(PeerReview.reviewable_id)
                 .subquery()
+            )
+            own_review_filter = (User.id == user.id) | (
+                Annotation.annotator_id == user.id
             )
     anns = (
         set_annotation_query_opts(
@@ -79,6 +83,7 @@ def get_annotations_with_comments_in_document(
             .outerjoin(Answer)
             .outerjoin(User, Answer.users_all)
             .filter(answer_filter)
+            .filter(own_review_filter)
             .order_by(
                 Annotation.depth_start.desc(),
                 Annotation.node_start.desc(),
@@ -123,3 +128,66 @@ def set_annotation_query_opts(q: Query) -> Query:
             .load_only(Velp.color)
         )
     )
+
+def get_test_annotations(
+    user: User, d: DocInfo, only_own: bool = False
+) -> list[Annotation]:
+    """
+    Gets all annotations with comments the user can see / has access to.
+
+    :param user: The user who gets the answers.
+    :param d: The document the answers are searched from.
+    :param only_own: If True, only annotations for this user are searched even if the user has access to more answers.
+    :return: List of annotations.
+    """
+    language_id = "FI"
+    vis_filter = Annotation.visible_to == AnnotationVisibility.everyone.value
+    if user.has_teacher_access(d):
+        vis_filter = vis_filter | (
+            Annotation.visible_to == AnnotationVisibility.teacher.value
+        )
+    if user.has_ownership(d):
+        vis_filter = vis_filter | (
+            Annotation.visible_to == AnnotationVisibility.owner.value
+        )
+    answer_filter = true()
+    if not user.has_seeanswers_access(d) or only_own:
+        answer_filter = (User.id == user.id)
+        if is_peerreview_enabled(d):
+            answer_filter |= User.id.in_(
+                get_reviews_for_user_query(d, user)
+                .with_entities(PeerReview.reviewable_id)
+                .subquery()
+            )
+    anns = (
+        set_annotation_query_opts(
+            Annotation.query.filter_by(document_id=d.id)
+            .filter(
+                (Annotation.valid_until == None)
+                | (Annotation.valid_until >= func.current_timestamp())
+            )
+            .filter((Annotation.annotator_id == user.id) | vis_filter)
+            .join(VelpVersion)
+            .join(Velp)
+            .join(VelpContent)
+            .filter(VelpContent.language_id == language_id)
+            .filter()
+            .outerjoin(Answer)
+            .outerjoin(User, Answer.users_all)
+            .filter(User.id == user.id)
+            .filter(answer_filter)
+            .order_by(
+                Annotation.depth_start.desc(),
+                Annotation.node_start.desc(),
+                Annotation.offset_start.desc(),
+            )
+        )
+        .options(contains_eager(Annotation.velp_content))
+        .options(contains_eager(Annotation.answer).contains_eager(Answer.users_all))
+        .options(
+            contains_eager(Annotation.velp_version).contains_eager(VelpVersion.velp)
+        )
+        .with_entities(Annotation)
+        .all()
+    )
+    return anns

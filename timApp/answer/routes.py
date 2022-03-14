@@ -128,6 +128,7 @@ from timApp.util.logger import log_info
 from timApp.util.utils import get_current_time, approximate_real_name
 from timApp.util.utils import local_timezone
 from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
+from timApp.velp.annotations import get_test_annotations
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import value_or_default
@@ -832,7 +833,7 @@ def post_answer_impl(
     if preprocessor:
         preprocessor(answerdata, curr_user, d, plugin)
 
-    # print(json.dumps(answerdata))  # uncomment this to follow what answers are used in browser tests
+    print(json.dumps(answerdata))  # uncomment this to follow what answers are used in browser tests
 
     answer_call_data = {
         "markup": plugin.values,
@@ -1234,6 +1235,7 @@ def preprocess_jsrunner_answer(
         if runner_req.input.userNames
         else None,
     )
+    answerdata["velps"] = get_test_annotations(curr_user, d, False)
     answerdata.pop(
         "paramComps", None
     )  # This isn't needed by jsrunner server, so don't send it.
