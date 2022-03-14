@@ -87,7 +87,7 @@ let nextId = 0;
         <input #input [disabled]="!!progress" type="file" [hidden]="dragAndDrop" [id]="inputId" (change)="onFileChange($event)" (attr.multiple)="multiple"/>
         <notification *ngIf="!dragAndDrop" class="error" #error></notification>
         <ng-container *ngIf="dragAndDrop">
-            <label title="Drag-and-drop or Click to browse" [for]="inputId" *ngIf="dragAndDrop"
+            <label i18n-title title="Drag-and-drop or Click to browse" [for]="inputId" *ngIf="dragAndDrop"
                     class="drag-and-drop"
                     (drop)="onDrop($event)"
                     (dragover)="onDragOver($event)"
@@ -178,7 +178,7 @@ export class FileSelectComponent {
             return;
         }
         if (this.progress) {
-            this.addError("File upload already in progress", 3000);
+            this.addError($localize`File upload already in progress`, 3000);
             return;
         }
 
@@ -201,7 +201,7 @@ export class FileSelectComponent {
                         (event) => {
                             switch (event.type) {
                                 case HttpEventType.Sent:
-                                    this.progress = "Upload starting... ";
+                                    this.progress = $localize`Upload starting... `;
                                     break;
                                 case HttpEventType.UploadProgress:
                                     const total =
@@ -217,10 +217,9 @@ export class FileSelectComponent {
                                         // If a large PDF is uploaded, its compression will take some time and so
                                         // the progress can sit at 100% for some time, so it's better to show a custom
                                         // message for that.
-                                        this.progress =
-                                            "Post-processing; this may take a while; please wait...";
+                                        this.progress = $localize`Post-processing; this may take a while; please wait...`;
                                     } else {
-                                        this.progress = `Uploading... ${sizeString(
+                                        this.progress = $localize`Uploading... ${sizeString(
                                             event.loaded
                                         )} / ${total} (${percentage} %)`;
                                     }
@@ -229,15 +228,25 @@ export class FileSelectComponent {
                                     this.numUploaded++;
                                     if (file.name == mapping.path) {
                                         this.loadInfo?.push(
-                                            `Uploaded ${
+                                            $localize`Uploaded ${
                                                 file.name
-                                            } at ${timeString()}`
+                                            } at ${timeString()}. ${
+                                                this.multiple
+                                                    ? this.stem ?? ""
+                                                    : ""
+                                            }`
                                         ); // TODO: push to correct file-select
                                     } else {
                                         this.loadInfo?.push(
-                                            `Uploaded ${file.name} as ${
+                                            $localize`Uploaded ${
+                                                file.name
+                                            } as ${
                                                 mapping.path
-                                            } at ${timeString()}`
+                                            } at ${timeString()}. ${
+                                                this.multiple
+                                                    ? this.stem ?? ""
+                                                    : ""
+                                            }`
                                         ); // TODO: push to correct file-select
                                     }
                                     this.uploadEmitter.emit(event.body);
@@ -269,7 +278,7 @@ export class FileSelectComponent {
         const outFiles: IFile[] = [];
         if (files) {
             if (!this.multiple && files.length > 1) {
-                this.addError("You may only upload one file");
+                this.addError($localize`You may only upload one file`);
                 return;
             }
 
@@ -278,7 +287,9 @@ export class FileSelectComponent {
                 for (const file of files) {
                     if (file.size > maxSize) {
                         this.addError(
-                            `Maximum file size is ${sizeString(maxSize)}`
+                            $localize`Maximum file size is ${sizeString(
+                                maxSize
+                            )}`
                         );
                         return;
                     }
@@ -325,11 +336,13 @@ export class FileSelectComponent {
                             this.fileEmitter.emit(f);
                             if (file.name == mapping.path) {
                                 this.loadInfo?.push(
-                                    `Loaded ${file.name} at ${timeString()}`
+                                    $localize`Loaded ${
+                                        file.name
+                                    } at ${timeString()}`
                                 );
                             } else {
                                 this.loadInfo?.push(
-                                    `Loaded ${file.name} as ${
+                                    $localize`Loaded ${file.name} as ${
                                         mapping.path
                                     } at ${timeString()}`
                                 );
@@ -337,7 +350,9 @@ export class FileSelectComponent {
                             resolve();
                         };
                         reader.onerror = (e) => {
-                            this.addError(`Failed to read ${file.name}`);
+                            this.addError(
+                                $localize`Failed to read ${file.name}`
+                            );
                             resolve();
                         };
                         reader.readAsText(file);
@@ -347,7 +362,7 @@ export class FileSelectComponent {
                 await Promise.all(promises);
             } else if (!this.uploadUrl) {
                 this.addError(
-                    "No file upload or observers present. This is a programming/configuration error."
+                    $localize`No file upload or observers present. This is a programming/configuration error.`
                 );
             }
         }
@@ -438,7 +453,7 @@ export class FileSelectManagerComponent {
                             (this.files.length == 1 &&
                             this.files[0].paths.length == 1
                                 ? this.stem
-                                : undefined) ?? `Upload ${path} here`;
+                                : undefined) ?? $localize`Upload ${path} here`;
                         nfileInfo.push({
                             stem: stem,
                             id: id,
@@ -449,7 +464,7 @@ export class FileSelectManagerComponent {
             } else {
                 nfileInfo = [
                     {
-                        stem: this.stem ?? "Upload files here",
+                        stem: this.stem ?? $localize`Upload files here.`,
                         id: "",
                     },
                 ];
@@ -512,7 +527,9 @@ export class FileSelectManagerComponent {
 
             const maxFiles = self.files.flatMap((f) => f.paths).length;
             if (filesArray.length > maxFiles) {
-                child.addError(`You may only upload ${maxFiles} file(s)`);
+                child.addError(
+                    $localize`You may only upload ${maxFiles} file(s)`
+                );
                 return;
             }
 
@@ -545,7 +562,7 @@ export class FileSelectManagerComponent {
                     (this.files[index].maxSize ?? this.maxSize) * 1000;
                 if (maxSize > 0 && file.size > maxSize) {
                     child.addError(
-                        `${file.name} exceeds the maximum ${sizeString(
+                        $localize`${file.name} exceeds the maximum ${sizeString(
                             maxSize
                         )} size limit set for the following files: ${this.files[
                             index
@@ -560,7 +577,7 @@ export class FileSelectManagerComponent {
             if (zeroIndex != -1) {
                 // check that all files have a possible mapping
                 child.addError(
-                    `Failed to match the extension or name of file ${filesArray[zeroIndex].name} to any of the wanted files.`
+                    $localize`Failed to match the extension or name of file ${filesArray[zeroIndex].name} to any of the wanted files.`
                 );
                 return;
             }
@@ -627,7 +644,7 @@ export class FileSelectManagerComponent {
                 if (zIndex != -1) {
                     // check that all files have a possible mapping
                     child.addError(
-                        `Failed to match file ${filesArray[zIndex].name} to any of the wanted files.`
+                        $localize`Failed to match file ${filesArray[zIndex].name} to any of the wanted files.`
                     );
                     return;
                 }
@@ -640,7 +657,7 @@ export class FileSelectManagerComponent {
             ) {
                 // TODO: open a dialog to user for manually mapping the unmapped (length of matching array in canGo greater than one) files
                 child.addError(
-                    "Failed to match given files to wanted files. Check the file extensions and try matching the filenames to the wanted ones."
+                    $localize`Failed to match given files to wanted files. Check the file extensions and try matching the filenames to the wanted ones.`
                 );
                 return;
             }
