@@ -579,19 +579,19 @@ type: upload
             {
                 "file": f"/uploads/{d.id}/{task_name}/{self.current_user.name}/{expect_version}/{filename}",
                 "type": mimetype,
-                "block": ur["block"],
+                "block": ur[0]["block"],
             },
-            ur,
+            ur[0],
         )
-        self.assertIsInstance(ur["block"], int)
+        self.assertIsInstance(ur[0]["block"], int)
         user_input = {
-            "uploadedFile": ur["file"],
+            "uploadedFile": ur[0]["file"],
             "uploadedType": mimetype,
             "type": "upload",
         }
         resp = self.post_answer("csPlugin", task_id, user_input)
         self.check_ok_answer(resp)
-        return mimetype, ur, user_input
+        return mimetype, ur[0], user_input
 
     def check_failed_answer(self, resp, is_new=False):
         self.assertIn("web", resp)

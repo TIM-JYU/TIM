@@ -2384,11 +2384,13 @@ ${fhtml}
             return;
         }
 
-        const response = resp as IUploadResponse;
+        const resps = resp as [IUploadResponse];
         if (!this.markup.files) {
             this.uploadedFiles.clear();
         }
-        this.uploadedFiles.push({path: response.file, type: response.type});
+        for (const response of resps) {
+            this.uploadedFiles.push({path: response.file, type: response.type});
+        }
     }
 
     onUploadDone(success: boolean) {

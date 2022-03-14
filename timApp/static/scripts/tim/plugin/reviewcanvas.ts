@@ -253,8 +253,8 @@ export class ReviewCanvasComponent
             upload: true,
         });
 
-        component.allowMultiple = false; // this.markup.allowMultipleFiles;
-        component.multipleElements = false; // this.markup.multipleUploadElements;
+        component.allowMultiple = true; // this.markup.allowMultipleFiles;
+        component.multipleElements = true; // this.markup.multipleUploadElements;
         component.files = files;
     }
 
@@ -287,9 +287,10 @@ export class ReviewCanvasComponent
         if (!resp) {
             return;
         }
-        const response = resp as IUploadResponse;
-        // this.uploadedFiles.clear();
-        this.uploadedFiles.push({path: response.file, type: response.type});
+        const resps = resp as [IUploadResponse];
+        for (const response of resps) {
+            this.uploadedFiles.push({path: response.file, type: response.type});
+        }
     }
 
     onUploadDone(success: boolean) {

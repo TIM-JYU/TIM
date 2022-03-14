@@ -137,11 +137,16 @@ class UploadedFile(ItemBase):
     @classmethod
     def save_new(
         cls,
-        file_data: bytes,
         file_filename: str,
         block_type: BlockType,
+        file_data: bytes = None,
+        original_file: Path = None,
         upload_info: PluginUploadInfo = None,
     ) -> "UploadedFile":
+        if not file_data and not original_file:
+            raise TimDbException(
+                "Either file data or original file location must be given"
+            )
         if block_type not in DIR_MAPPING:
             raise TimDbException(f"Invalid block type given: {block_type}")
         secured_name = secure_filename(file_filename)
@@ -169,8 +174,11 @@ class UploadedFile(ItemBase):
         f = CLASS_MAPPING[block_type](file_block)
         p = f.filesystem_path
         p.parent.mkdir(parents=True)
-        with p.open(mode="wb") as fi:
-            fi.write(file_data)
+        if file_data:
+            with p.open(mode="wb") as fi:
+                fi.write(file_data)
+        else:
+            original_file.rename(p)
         return f
 
 
