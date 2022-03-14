@@ -586,6 +586,20 @@ a.timButton {
     width: 100%;
 }
 
+.languageLists{
+    display:flex;
+}
+
+.languageLists div {
+    margin-right: 3em;
+}
+
+/* TODO: Make this a bit nicer for wider screens without losing its scalability for narrower screen (such as mobile screens) */
+.languageLists select {
+    min-width: 8em;
+    overflow: auto;
+}
+
 .uiContainer table, .uiContainer td, .uiContainer tr, .uiContainer th {
     border: none !important;
     padding: 0;
