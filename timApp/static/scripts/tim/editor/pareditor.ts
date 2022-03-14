@@ -1533,7 +1533,7 @@ ${backTicks}
                     `/translate/${this.resolve.params.viewCtrl.item.id}/${lang}/translate_block`,
                     {
                         autotranslate: "DeepL", // TODO: Make this not hardcoded
-                        originaltext: this.trdiff.new,
+                        originaltext: this.trdiff.new, // TODO: Get translatorlang to the document and editor
                     }
                 )
             );

@@ -552,6 +552,7 @@ export class PermCtrl implements IController {
             $http.post<IDocument>(`/translate/${this.item.id}/${lang.code}`, {
                 doc_title: this.newTranslation.title,
                 autotranslate: this.newTranslation.translator,
+                translatorlang: this.newTranslation.translatorLanguage,
             })
         );
         if (r.ok) {
