@@ -95,7 +95,7 @@ const sortLang: string = "fi";
                                     </form>
                                     <div>
                                         <div class="fulldiv">
-                                            <p *ngFor="let label of (labels | filterLabelsByContent: filterLabel)"
+                                            <p *ngFor="let label of (labels | filterBy:{content:filterLabel} | assertType: labels)"
                                                class="label tag-false"
                                                [style.background-color]="getColor(label.id)"
                                                (click)="toggleLabel(label)">
@@ -148,7 +148,16 @@ const sortLang: string = "fi";
                                                              [labels]="labels"
                                                              [new]="true" 
                                                              [advancedOn]="advancedOn"></tim-velp-window>
-                                            <tim-velp-window *ngFor="let velp of ((rctrl.velps | filterLabelsByContent:filterVelp) | orderByWhenNotEditing:order)"></tim-velp-window>
+                                            <tim-velp-window 
+                                                    *ngFor="let velp of (rctrl.velps | filterBy:{content:filterVelp} | assertType: rctrl.velps | orderByWhenNotEditing: order | filterByVelpGroups: velpGroups | filterByLabels:labels:advancedOn)" 
+                                                    [advancedOn]="advancedOn"
+                                                    [docId]="docId" 
+                                                    [labels]="labels" 
+                                                    [new]="false"
+                                                    (velpSelect)="rctrl.useVelp(velp)" 
+                                                    [teacherRight]="vctrl.item.rights.teacher"
+                                                    [velpGroups]="velpGroups"
+                                                    [velp]="velp"></tim-velp-window>
                                         </div>
                                     </ng-container>
                                 </tim-dialog-frame>
@@ -1441,14 +1450,10 @@ export class FilterByVelpGroupsPipe implements PipeTransform {
 
 @Pipe({name: "orderByWhenNotEditing"})
 export class OrderByWhenNotEditingPipe implements PipeTransform {
-    transform(
-        velps: INewVelp[],
-        orderStr: string,
-        filteredVelps: IVelp[]
-    ): INewVelp[] | undefined {
+    transform(velps: INewVelp[], orderStr: string): INewVelp[] | undefined {
         for (const v of velps) {
             if (v.edit) {
-                return filteredVelps;
+                return velps;
             }
         }
 
@@ -1491,9 +1496,25 @@ export class OrderByWhenNotEditingPipe implements PipeTransform {
     }
 }
 
-@Pipe({name: "filterLabelsByContent"})
-export class FilterLabelsByContentPipe implements PipeTransform {
-    transform(velps?: ILabelUI[], content?: string): ILabelUI[] | undefined {
-        return velps?.filter((v) => v.content == content);
+@Pipe({name: "filterBy"})
+export class FilterByPipe implements PipeTransform {
+    transform<T>(value: T[], filter?: Partial<T>): T[] | undefined {
+        return value.filter((v) => {
+            for (const key in filter) {
+                if (filter.hasOwnProperty(key)) {
+                    if (v[key] != null && v[key] !== filter[key]) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        });
+    }
+}
+
+@Pipe({name: "assertType"})
+export class AssertTypePipe implements PipeTransform {
+    transform<T>(value: unknown, _: T): T {
+        return value as T;
     }
 }

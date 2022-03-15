@@ -6,9 +6,10 @@ import {FormsModule} from "@angular/forms";
 import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {VelpSummaryComponent} from "./velp-summary.component";
 import {
+    AssertTypePipe,
     FilterByLabelsPipe,
+    FilterByPipe,
     FilterByVelpGroupsPipe,
-    FilterLabelsByContentPipe,
     OrderByWhenNotEditingPipe,
     VelpSelectionDialog,
 } from "./velp-selection-dialog.component";
@@ -21,8 +22,9 @@ import {VelpWindowComponent} from "./velpWindow";
         FilterByLabelsPipe,
         FilterByVelpGroupsPipe,
         OrderByWhenNotEditingPipe,
-        FilterLabelsByContentPipe,
+        FilterByPipe,
         VelpWindowComponent,
+        AssertTypePipe,
     ],
     imports: [
         CommonModule,

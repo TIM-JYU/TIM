@@ -1,9 +1,16 @@
-import {Component, ElementRef, Host, Input} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    EventEmitter,
+    Host,
+    Input,
+    Output,
+} from "@angular/core";
 import {IFormController} from "angular";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {$http, $timeout} from "../util/ngimport";
-import {Binding, clone, to} from "../util/utils";
+import {clone, to} from "../util/utils";
 import {VelpSelectionDialog} from "./velp-selection-dialog.component";
 import {
     ILabel,
@@ -237,9 +244,7 @@ interface IVelpOptionSetting {
 `,
 })
 export class VelpWindowComponent {
-    private onVelpSelect!: Binding<(params: {$VELP: IVelp}) => void, "&">;
     velpLocal!: IVelp;
-    @Input() velp!: IVelpUI;
     newLabel: INewLabel;
     labelToEdit: INewLabel;
     visibleOptions: IVelpOptionSetting;
@@ -253,6 +258,8 @@ export class VelpWindowComponent {
     };
     private submitted: boolean;
     hasEditAccess: boolean;
+    @Output() velpSelect = new EventEmitter();
+    @Input() velp!: IVelpUI;
     @Input() new!: boolean;
     @Input() velpGroups!: IVelpGroupUI[];
     @Input() labels!: ILabelUI[];
