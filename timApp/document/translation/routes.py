@@ -106,10 +106,6 @@ def create_translation_route(tr_doc_id, language):
 
     add_reference_pars(cite_doc, src_doc, "tr")
 
-    # TODO From database, check that the translation language-pair is supported, or just let it through and shift this responsibility to user and the interface, because the API-call should handle unsupported languages anyway?
-    # Use the translator with a different source language if specified
-    src_lang = req_data.get("origlang", src_doc.docinfo.lang_id)
-
     translator_language = req_data.get("translatorlang", None)
     # Check if translator language is the same as document language
     if language == translator_language:
@@ -120,6 +116,9 @@ def create_translation_route(tr_doc_id, language):
     # Select the specified translator
     translator = None
     if translator_code := req_data.get("autotranslate", None):
+        # TODO From database, check that the translation language-pair is supported, or just let it through and shift this responsibility to user and the interface, because the API-call should handle unsupported languages anyway?
+        # Use the translator with a different source language if specified
+        src_lang = req_data.get("origlang", src_doc.docinfo.lang_id)
         if translator_code.lower() == "deepl":
             translator = init_deepl_translator(src_lang, tr_lang)
     # Translate each paragraph sequentially if a translator was created
