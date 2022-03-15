@@ -6,7 +6,7 @@ import {
     IJsRunnerMarkup,
     INumbersObject,
 } from "../../shared/jsrunnertypes";
-import {AliasDataT, UserFieldDataT} from "../servertypes";
+import {AliasDataT, UserFieldDataT, VelpDataT} from "../servertypes";
 
 /**
  * From name=alias list returns two lists
@@ -950,7 +950,8 @@ export class Tools extends ToolsBase {
         protected data: UserFieldDataT,
         currDoc: string,
         markup: IJsRunnerMarkup,
-        aliases: AliasDataT
+        aliases: AliasDataT,
+        protected testvelps: VelpDataT
     ) {
         super(currDoc, markup, aliases);
     }
@@ -1317,4 +1318,18 @@ export class Tools extends ToolsBase {
     getResult(): IToolsResult {
         return {user: this.data.user.id, fields: this.result};
     }
+
+    testName() : string {
+        console.log(this.data)
+        console.log(this.result)
+        this.output += JSON.stringify(this.testvelps)
+        return this.testvelps.name;
+    }
+    testPoints() : number {
+        console.log(this.data)
+        console.log(this.result)
+        this.output += JSON.stringify(this.testvelps)
+        return this.testvelps.points;
+    }
+
 }

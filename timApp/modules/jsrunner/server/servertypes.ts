@@ -18,6 +18,19 @@ export const UserFieldData = t.intersection([
     }),
 ]);
 
+export const VelpData = t.intersection([
+    t.type({
+        points: t.Int,
+        name: t.string,
+    }),
+    t.partial({
+        groupinfo: t.type({
+            membership_end: t.number,
+        }),
+    }),
+]);
+
+
 // export type UserFields = t.type({id: t.Int, fields: t.string});
 
 export type UserFieldDataT = t.TypeOf<typeof UserFieldData>;
@@ -26,11 +39,16 @@ export const AliasData = t.record(t.string, t.string);
 
 export type AliasDataT = t.TypeOf<typeof AliasData>;
 
+
+export type VelpDataT = t.TypeOf<typeof VelpData>;
+
+
 export const JsrunnerAnswer = t.type({
     markup: JsrunnerMarkup,
     input: t.type({
         data: t.array(UserFieldData),
         aliases: AliasData,
+        testvelps: VelpData
     }),
     taskID: t.string,
 });
