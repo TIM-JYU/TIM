@@ -11,7 +11,7 @@
 import {Component, Pipe, PipeTransform} from "@angular/core";
 import * as t from "io-ts";
 import {clone, TimStorage, to} from "tim/util/utils";
-import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
+import {colorPalette, VelpWindowComponent} from "tim/velp/velpWindow";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {
     Alignment,
@@ -31,6 +31,7 @@ import {
     IVelpGroup,
     IVelpGroupCollection,
     IVelpGroupUI,
+    IVelpUI,
     VelpGroupSelectionType,
 } from "./velptypes";
 
@@ -48,7 +49,7 @@ const sortLang: string = "fi";
                           [closeable]="false"
                           [autoHeight]="false"
                           [initialAutoHeight]="true"
-                          [anchor]="'fixed'" 
+                          [anchor]="'fixed'"
                           [modalStyle]="{ maxWidth: '22.5em', minWidth: '15em' }">
             <ng-container header>Velp menu</ng-container>
             <ng-container body>
@@ -138,21 +139,23 @@ const sortLang: string = "fi";
                                 </button>
                                 <tim-dialog-frame [detachable]="true">
                                     <ng-container header>Available velps</ng-container>
-                                    <ng-container content>
+                                    <ng-container body>
                                         <div class="velp-stack">
                                             <tim-velp-window class="velp"
-                                                             *ngIf="newVelp.edit"
-                                                             [velp]="newVelp" 
+                                                             [hidden]="!newVelp.edit"
+                                                             [index]="-1"
+                                                             [velp]="newVelp"
                                                              [velpGroups]="velpGroups"
                                                              [teacherRight]="vctrl.item.rights.teacher"
                                                              [labels]="labels"
-                                                             [new]="true" 
+                                                             [new]="true"
                                                              [advancedOn]="advancedOn"></tim-velp-window>
-                                            <tim-velp-window 
-                                                    *ngFor="let velp of (rctrl.velps | filterBy:{content:filterVelp} | assertType: rctrl.velps | orderByWhenNotEditing: order | filterByVelpGroups: velpGroups | filterByLabels:labels:advancedOn)" 
+                                            <tim-velp-window
+                                                    *ngFor="let velp of (rctrl.velps | filterBy:{content:filterVelp} | assertType: rctrl.velps | orderByWhenNotEditing: order | filterByVelpGroups: velpGroups | filterByLabels:labels:advancedOn); let i = index"
+                                                    [index]="i"
                                                     [advancedOn]="advancedOn"
-                                                    [docId]="docId" 
-                                                    [labels]="labels" 
+                                                    [docId]="docId"
+                                                    [labels]="labels"
                                                     [new]="false"
                                                     (velpSelect)="rctrl.useVelp(velp)" 
                                                     [teacherRight]="vctrl.item.rights.teacher"
@@ -161,37 +164,6 @@ const sortLang: string = "fi";
                                         </div>
                                     </ng-container>
                                 </tim-dialog-frame>
-
-                                <!--                                <div save="%%PAGEID%%selectVelpsDiv"-->
-                                <!--                                     tim-draggable-fixed-->
-                                <!--                                     detachable="true"-->
-                                <!--                                     click="true"-->
-                                <!--                                     resize="false"-->
-                                <!--                                     caption="Available velps">-->
-                                <!--                                    <div class="velp-stack draggable-content">-->
-                                <!--                &lt;!&ndash;                        <velp-window class="velp" [ngStyle]="{top: 0}"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                     *ngIf="newVelp.edit"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                     velp="newVelp"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                     index="-1"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                     velp-groups="velpGroups"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                     teacher-right="vctrl.item.rights.teacher"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                     labels="labels"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                     new="true"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                     advanced-on="advancedOn"></velp-window>&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                        <velp-window&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                *ngFor="let velp of filteredVelps = (rctrl.velps | filter:{content:filterVelp} | orderByWhenNotEditing:order:filteredVelps | filterByVelpGroups:velpGroups | filterByLabels:labels:advancedOn&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                                 ) track by $index"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                advanced-on="advancedOn"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                doc-id="docId"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                index="$index"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                labels="labels"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                new="false"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                on-velp-select="rctrl.useVelp($VELP)"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                teacher-right="vctrl.item.rights.teacher"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                velp-groups="velpGroups"&ndash;&gt;-->
-                                <!--                &lt;!&ndash;                                velp="velp"></velp-window>&ndash;&gt;-->
-                                <!--                                    </div>-->
-                                <!--                                </div>-->
                             </div>
                         </tab>
                         <tab heading="Manage">
@@ -332,7 +304,7 @@ export class VelpSelectionDialog extends AngularDialogComponent<
     private labelAdded: boolean = false;
     vctrl!: ViewCtrl;
     private defaultPersonalVelpGroup: IVelpGroup;
-    newVelpCtrl?: VelpWindowController;
+    newVelpCtrl?: VelpWindowComponent;
     filterLabel: string = "";
     filterVelp: string = "";
 
@@ -667,7 +639,7 @@ export class VelpSelectionDialog extends AngularDialogComponent<
         }
     }
 
-    registerNewVelp(v: VelpWindowController) {
+    registerNewVelp(v: VelpWindowComponent) {
         this.newVelpCtrl = v;
     }
 
@@ -726,7 +698,7 @@ export class VelpSelectionDialog extends AngularDialogComponent<
      * @param velp - Velp information, contains all edited info
      * @param resetFunction - Function to execute in cancel edit
      */
-    setVelpToEdit(velp: IVelp, resetFunction: () => void) {
+    setVelpToEdit(velp: INewVelp, resetFunction: () => void) {
         this.velpToEdit = velp;
         this.resetEditVelp = resetFunction;
     }
@@ -1354,11 +1326,11 @@ export class VelpSelectionDialog extends AngularDialogComponent<
 @Pipe({name: "filterByLabels"})
 export class FilterByLabelsPipe implements PipeTransform {
     transform(
-        velps?: IVelp[],
+        velps?: IVelpUI[],
         labels?: ILabelUI[],
         advancedOn?: boolean
-    ): IVelp[] | undefined {
-        const selectedVelps: Record<number, [IVelp, number]> = {};
+    ): IVelpUI[] | undefined {
+        const selectedVelps: Record<number, [IVelpUI, number]> = {};
         const selectedLabels = [];
 
         if (!advancedOn) {
@@ -1414,10 +1386,10 @@ export class FilterByLabelsPipe implements PipeTransform {
 @Pipe({name: "filterByVelpGroups"})
 export class FilterByVelpGroupsPipe implements PipeTransform {
     transform(
-        velps?: INewVelp[],
+        velps?: IVelpUI[],
         groups?: IVelpGroupUI[]
-    ): INewVelp[] | undefined {
-        const selected: INewVelp[] = [];
+    ): IVelpUI[] | undefined {
+        const selected: IVelpUI[] = [];
         const checkedGroups = [];
 
         if (groups == null || velps == null) {
@@ -1450,7 +1422,7 @@ export class FilterByVelpGroupsPipe implements PipeTransform {
 
 @Pipe({name: "orderByWhenNotEditing"})
 export class OrderByWhenNotEditingPipe implements PipeTransform {
-    transform(velps: INewVelp[], orderStr: string): INewVelp[] | undefined {
+    transform(velps: IVelpUI[], orderStr: string): IVelpUI[] | undefined {
         for (const v of velps) {
             if (v.edit) {
                 return velps;
@@ -1498,7 +1470,10 @@ export class OrderByWhenNotEditingPipe implements PipeTransform {
 
 @Pipe({name: "filterBy"})
 export class FilterByPipe implements PipeTransform {
-    transform<T>(value: T[], filter?: Partial<T>): T[] | undefined {
+    transform<T>(value?: T[], filter?: Partial<T>): T[] {
+        if (!value) {
+            return [];
+        }
         return value.filter((v) => {
             for (const key in filter) {
                 if (filter.hasOwnProperty(key)) {
@@ -1514,7 +1489,7 @@ export class FilterByPipe implements PipeTransform {
 
 @Pipe({name: "assertType"})
 export class AssertTypePipe implements PipeTransform {
-    transform<T>(value: unknown, _: T): T {
+    transform<T>(value: unknown, _?: T): T {
         return value as T;
     }
 }

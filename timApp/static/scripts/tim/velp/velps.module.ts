@@ -3,7 +3,9 @@ import {CommonModule} from "@angular/common";
 import {TabsModule} from "ngx-bootstrap/tabs";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {FormsModule} from "@angular/forms";
+import {PopoverModule} from "ngx-bootstrap/popover";
 import {DialogModule} from "../ui/angulardialog/dialog.module";
+import {TimUtilityModule} from "../ui/tim-utility.module";
 import {VelpSummaryComponent} from "./velp-summary.component";
 import {
     AssertTypePipe,
@@ -32,6 +34,8 @@ import {VelpWindowComponent} from "./velpWindow";
         DialogModule,
         TooltipModule.forRoot(),
         FormsModule,
+        TimUtilityModule,
+        PopoverModule,
     ],
     exports: [VelpSummaryComponent],
 })
