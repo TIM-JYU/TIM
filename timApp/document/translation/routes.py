@@ -18,13 +18,66 @@ from timApp.item.block import copy_default_rights, BlockType
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import verify_json_params, NotExist, RouteException
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import json_response, ok_response, Response
 from timApp.util import logger
-from timApp.document.translation.translator import DeepLTranslator
+from timApp.document.translation.translator import ITranslator, DeepLTranslator
 
 
 def valid_language_id(lang_id):
     return re.match(r"^\w+$", lang_id) is not None
+
+
+def translate(
+    translator: ITranslator, text: str, source_lang: str, target_lang: str
+) -> str:
+    # TODO This helper-function would be better if there was some way to hide the translate-methods on ITranslators. Maybe save for the eventual(?) TranslatorSelector?
+    """
+    Use the specified ITranslator to perform machine translation on text
+    :param translator: The translator to use
+    :param text: The text to translate
+    :param source_lang: The language that text is in
+    :param target_lang: The language that text will be translated into
+    :return: The text in the target language
+    """
+    translated_text = translator.translate(text, source_lang, target_lang)
+    # TODO Maybe log the length of text or other shorter info?
+    logger.log_info(translated_text)
+
+    usage = translator.usage()
+    logger.log_info(
+        "Current DeepL API usage: "
+        + str(usage.character_count)
+        + "/"
+        + str(usage.character_limit)
+    )
+
+    return translated_text
+
+
+def init_deepl_translator(source_lang: str, target_lang: str) -> ITranslator:
+    """
+    Initialize the deepl translator using the API-key from user's configuration
+    :param source_lang: Language that is requested to translate from
+    :param target_lang: Language that is requested to translate into
+    :return: DeepLTranslator instance, that is ready for translate-calls
+    """
+    # Get the API-key from environment variable
+    try:
+        # TODO Get the API-key from user profile or the post-request
+        from os import environ
+
+        api_key = environ["DEEPL_API_KEY"]
+        translator = DeepLTranslator(api_key)
+    except KeyError:
+        raise NotExist("The DEEPL_API_KEY is not set into your configuration")
+
+    # TODO Languages should use common values / standard codes at this point (also applies to any doc.lang_id)
+    if not translator.supports(source_lang, target_lang):
+        raise RouteException(
+            description=f"The language pair from '{source_lang}' to '{target_lang}' is not supported with DeepL"
+        )
+
+    return translator
 
 
 tr_bp = Blueprint("translation", __name__, url_prefix="")
@@ -53,10 +106,28 @@ def create_translation_route(tr_doc_id, language):
 
     add_reference_pars(cite_doc, src_doc, "tr")
 
-    # Select the specified translator and translate if valid
+    translator_language = req_data.get("translatorlang", None)
+    # Check if translator language is the same as document language
+    if language == translator_language:
+        tr_lang = language
+    else:
+        tr_lang = translator_language
+
+    # Select the specified translator
+    translator = None
     if translator_code := req_data.get("autotranslate", None):
+        # TODO From database, check that the translation language-pair is supported, or just let it through and shift this responsibility to user and the interface, because the API-call should handle unsupported languages anyway?
+        # Use the translator with a different source language if specified
+        src_lang = req_data.get("origlang", src_doc.docinfo.lang_id)
         if translator_code.lower() == "deepl":
-            deepl_translate(tr, src_doc.docinfo.lang_id, language)
+            translator = init_deepl_translator(src_lang, tr_lang)
+    # Translate each paragraph sequentially if a translator was created
+    if translator:
+        for orig_par, tr_par in zip(
+            tr.document.get_source_document().get_paragraphs(), tr.document
+        ):
+            translated_text = translate(translator, orig_par.md, src_lang, tr_lang)
+            tr.document.modify_paragraph(tr_par.id, translated_text)
 
     if isinstance(doc, DocEntry):
         de = doc
@@ -71,7 +142,7 @@ def create_translation_route(tr_doc_id, language):
 
 
 @tr_bp.post("/translate/<int:tr_doc_id>/<language>/translate_block")
-def create_block_translation_route(tr_doc_id, language):
+def text_translation_route(tr_doc_id: int, language: str) -> Response:
     req_data = request.get_json()
 
     doc = get_doc_or_abort(tr_doc_id)
@@ -81,15 +152,14 @@ def create_block_translation_route(tr_doc_id, language):
 
     src_doc = doc.src_doc.document
 
-    tr = Translation(doc_id=tr_doc_id, src_docid=src_doc.doc_id, lang_id=language)
     src_text = req_data.get("originaltext", None)
 
     # Select the specified translator and translate if valid
     if translator_code := req_data.get("autotranslate", None):
         if translator_code.lower() == "deepl":
-            block_text = deepl_translate_block(
-                tr, src_doc.docinfo.lang_id, language, src_text
-            )
+            src_lang, target_lang = src_doc.docinfo.lang_id, language
+            translator = init_deepl_translator(src_lang, target_lang)
+            block_text = translate(translator, src_text, src_lang, target_lang)
 
     return json_response(block_text)
 
@@ -159,87 +229,3 @@ def get_translators():
 
     sl = ["Manual", "DeepL"]
     return json_response(sl)
-
-
-def deepl_translate_block(
-    tr: Translation, source_lang: str, target_lang: str, source_text: str
-):
-    """
-    Perform the machine translation of one block using DeepL API
-    :param tr: The version of the document to translate
-    :param source_lang: The language to translate from
-    :param target_lang: The language to translate into
-    :param source_text: The text that needs to be translated
-    """
-    # Get the API-key from environment variable
-    try:
-        # TODO Get the API-key from user profile or the post-request
-        from os import environ
-
-        api_key = environ["DEEPL_API_KEY"]
-        translator = DeepLTranslator(api_key)
-    except KeyError:
-        raise NotExist("The DEEPL_API_KEY is not set into your configuration")
-
-    # TODO Languages should use common values / standard codes at this point (also applies to any doc.lang_id)
-    if not translator.supports(source_lang, target_lang):
-        raise RouteException(
-            description=f"The language pair from {source_lang} to {target_lang} is not supported"
-        )
-
-    usage = translator.usage()
-    logger.log_info(
-        "Current DeepL API usage: "
-        + str(usage.character_count)
-        + "/"
-        + str(usage.character_limit)
-    )
-
-    # Translate the paragraph
-    new_text = translator.translate(
-        [source_text],
-        source_lang,
-        target_lang,
-    )
-    logger.log_info(new_text)
-    # tr.document.modify_paragraph(tr.doc_id, new_text)
-    return new_text
-
-
-def deepl_translate(tr: Translation, source_lang: str, target_lang: str) -> None:
-    """
-    Perform the machine translation using DeepL API
-    :param tr: The version of the document to translate
-    :param source_lang: The language to translate from
-    :param target_lang: The language to translate into
-    """
-    # Get the API-key from environment variable
-    try:
-        # TODO Get the API-key from user profile or the post-request
-        from os import environ
-
-        api_key = environ["DEEPL_API_KEY"]
-        translator = DeepLTranslator(api_key)
-    except KeyError:
-        raise NotExist("The DEEPL_API_KEY is not set into your configuration")
-
-    # TODO Languages should use common values / standard codes at this point (also applies to any doc.lang_id)
-    if not translator.supports(source_lang, target_lang):
-        raise RouteException(
-            description=f"The language pair from {source_lang} to {target_lang} is not supported"
-        )
-
-    usage = translator.usage()
-    logger.log_info(
-        "Current DeepL API usage: "
-        + str(usage.character_count)
-        + "/"
-        + str(usage.character_limit)
-    )
-    # Be careful about closing the underlying file when iterating document
-    with tr.document.get_source_document().__iter__() as doc_iter:
-        # Translate each paragraph sequentially
-        for orig_par, tr_par in zip(doc_iter, tr.document):
-            new_text = translator.translate(orig_par.md, source_lang, target_lang)
-            logger.log_info(new_text)
-            tr.document.modify_paragraph(tr_par.id, new_text)

@@ -116,7 +116,7 @@ class DeepLTranslator(ITranslator):
     def translate(self, text: list[str], source_lang: str, target_lang: str) -> str:
         """
         Uses the DeepL API for translating text between languages
-        :param text: Text to be translated
+        :param text: Text to be translated TODO Why is this a list? For the 50 text-params?
         :param source_lang: DeepL-compliant language code of input text
         :param target_lang: DeepL-compliant language code for target language
         :return: The input text translated into the target language
