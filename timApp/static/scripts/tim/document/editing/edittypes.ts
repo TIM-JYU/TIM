@@ -110,3 +110,12 @@ export async function updateLanguages(
     languages = sources.result.data.toString();
     listLanguages(languages, targetL);
 }
+
+export async function listTranslators(translators: Array<string>) {
+    const sources = await to($http.get<string[]>("/translations/translators"));
+    if (sources.ok) {
+        for (const translator of sources.result.data) {
+            translators.push(translator);
+        }
+    }
+}

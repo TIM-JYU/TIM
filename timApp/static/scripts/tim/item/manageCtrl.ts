@@ -10,7 +10,11 @@ import * as snv from "tim/ui/shortNameValidator";
 import * as tem from "tim/ui/formErrorMessage";
 import {JsonValue} from "tim/util/jsonvalue";
 import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
-import {IManageResponse, updateLanguages} from "../document/editing/edittypes";
+import {
+    IManageResponse,
+    updateLanguages,
+    listTranslators,
+} from "../document/editing/edittypes";
 import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
 import {manageglobals} from "../util/globals";
@@ -46,7 +50,7 @@ export class PermCtrl implements IController {
     private sourceLanguages: Array<ILanguages> = [];
     private targetLanguages: Array<ILanguages> = [];
     private documentLanguages: Array<ILanguages> = [];
-    private translators: Array<string> = ["Manual", "DeepL"]; // TODO: Code
+    private translators: Array<string> = [];
     private newTranslation: {
         language: string;
         title: string;
@@ -103,6 +107,7 @@ export class PermCtrl implements IController {
 
     async $onInit() {
         this.getNotifySettings();
+        await listTranslators(this.translators);
         await updateLanguages(
             this.sourceLanguages,
             this.documentLanguages,

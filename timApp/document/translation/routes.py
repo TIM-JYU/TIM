@@ -151,6 +151,16 @@ def get_target_languages():
     return json_response(sl)
 
 
+@tr_bp.get("/translations/translators")
+def get_translators():
+    """
+    A very rough version of getting the translators.
+    """
+
+    sl = ["Manual", "DeepL"]
+    return json_response(sl)
+
+
 def deepl_translate_block(
     tr: Translation, source_lang: str, target_lang: str, source_text: str
 ):
