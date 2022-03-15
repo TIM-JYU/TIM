@@ -40,8 +40,16 @@ $draghandle-height: 20px;
 
 .modal-dialog.attached {
   margin: 0;
+  width: auto !important;
+  height: auto !important;
+  left: 0 !important;
+  top: 0 !important;
 
   .modal-content {
     box-shadow: none;
+  }
+
+  .modal-body {
+    overflow: initial;
   }
 }

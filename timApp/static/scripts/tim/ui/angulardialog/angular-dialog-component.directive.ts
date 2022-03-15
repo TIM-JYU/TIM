@@ -196,7 +196,6 @@ export abstract class AngularDialogComponent<Params, Result>
         // Then clamp x/y so that the element is at least within the viewport
         // Use last position that the user dragged to
         const lastDraggedPos = this.frame.lastDraggedPos;
-        console.log("last dragged", lastDraggedPos);
 
         if (!this.hasCustomPosition) {
             if (this.initialHorizontalAlign == Alignment.Center) {

@@ -50,6 +50,14 @@ function getElementSize(el: Element) {
     };
 }
 
+function getElementOffset(el: Element) {
+    const c = getComputedStyle(el);
+    return {
+        x: Math.round(parseInt(c.left, 10)),
+        y: Math.round(parseInt(c.top, 10)),
+    };
+}
+
 @Component({
     selector: "tim-dialog-frame",
     template: `
@@ -194,9 +202,12 @@ export class DialogFrame {
         this.detached = !this.detached;
         this.position = {x: 0, y: 0};
         this.detachedIndex = this.detached ? `${1050 + this.index * 10}` : "";
-        if (!this.detached) {
-            this.ngResizable.resetSize();
-        }
+        // if (!this.detached) {
+        //     const offs = getElementOffset(this.dragelem.nativeElement);
+        //     console.log(offs);
+        //     this.ngResizable._currPos.set(offs);
+        //     this.ngResizable.resetSize();
+        // }
     }
 
     toggleMinimize() {
