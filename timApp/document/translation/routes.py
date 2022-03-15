@@ -108,19 +108,26 @@ def create_translation_route(tr_doc_id, language):
 
     # TODO From database, check that the translation language-pair is supported, or just let it through and shift this responsibility to user and the interface, because the API-call should handle unsupported languages anyway?
     # Use the translator with a different source language if specified
-    src_lang = req_data.get("translatorlang", src_doc.docinfo.lang_id)
+    src_lang = req_data.get("origlang", src_doc.docinfo.lang_id)
+
+    translator_language = req_data.get("translatorlang", None)
+    # Check if translator language is the same as document language
+    if language == translator_language:
+        tr_lang = language
+    else:
+        tr_lang = translator_language
 
     # Select the specified translator
     translator = None
     if translator_code := req_data.get("autotranslate", None):
         if translator_code.lower() == "deepl":
-            translator = init_deepl_translator(src_lang, language)
+            translator = init_deepl_translator(src_lang, tr_lang)
     # Translate each paragraph sequentially if a translator was created
     if translator:
         for orig_par, tr_par in zip(
             tr.document.get_source_document().get_paragraphs(), tr.document
         ):
-            translated_text = translate(translator, orig_par.md, src_lang, language)
+            translated_text = translate(translator, orig_par.md, src_lang, tr_lang)
             tr.document.modify_paragraph(tr_par.id, translated_text)
 
     if isinstance(doc, DocEntry):

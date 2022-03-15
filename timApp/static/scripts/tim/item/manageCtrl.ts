@@ -548,11 +548,14 @@ export class PermCtrl implements IController {
 
     async createTranslation() {
         const lang = this.parseLanguage(this.newTranslation.language);
+        const trlang = this.parseLanguage(
+            this.newTranslation.translatorLanguage
+        );
         const r = await to(
             $http.post<IDocument>(`/translate/${this.item.id}/${lang.code}`, {
                 doc_title: this.newTranslation.title,
                 autotranslate: this.newTranslation.translator,
-                translatorlang: this.newTranslation.translatorLanguage,
+                translatorlang: trlang.code,
             })
         );
         if (r.ok) {
