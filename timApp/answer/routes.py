@@ -1235,8 +1235,10 @@ def preprocess_jsrunner_answer(
         if runner_req.input.userNames
         else None,
     )
-    #answerdata["velps"] = get_test_annotations(curr_user, d, False)
-    answerdata["testvelps"] =  {"points": 2, "name": "mikki hiiri"}
+    answerdata["testvelps"] = get_test_annotations(curr_user, d, False)
+    #answerdata["testvelps"] =  [
+    #    {"points": 2, "name": "mikki hiiri"},
+    #    {"points": 2, "name": "minni hiiri"}]
     answerdata.pop(
         "paramComps", None
     )  # This isn't needed by jsrunner server, so don't send it.
