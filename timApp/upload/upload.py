@@ -220,10 +220,10 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
                 "block": f.id,
             }
         )
-    if f.is_content_pdf:
+    elif f.is_content_pdf:
         tempfolder = p.parent / "temp"
         tempfolder.mkdir()
-        result = subprocess.run(
+        subprocess.run(
             [
                 "gs",
                 "-dNOPAUSE",
@@ -253,6 +253,8 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
                 }
             )
         tempfolder.rmdir()
+    else:
+        raise RouteException("Upload needs to be an image or a pdf file")
     return returninfo
 
 

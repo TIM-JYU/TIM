@@ -84,7 +84,12 @@ let nextId = 0;
     selector: "file-select",
     template: `
         <div *ngIf="!dragAndDrop && stem">{{stem}}:</div>
-        <input #input [disabled]="!!progress" type="file" [hidden]="dragAndDrop" [id]="inputId" (change)="onFileChange($event)" (attr.multiple)="multiple"/>
+        <input #input [disabled]="!!progress" type="file" 
+               [hidden]="dragAndDrop" 
+               [id]="inputId" 
+               (change)="onFileChange($event)" 
+               (attr.multiple)="multiple" 
+               [accept]="accept"/>
         <notification *ngIf="!dragAndDrop" class="error" #error></notification>
         <ng-container *ngIf="dragAndDrop">
             <label i18n-title title="Drag-and-drop or Click to browse" [for]="inputId" *ngIf="dragAndDrop"
@@ -113,6 +118,7 @@ export class FileSelectComponent {
     @Input() id: string = "";
     @Input() path?: string;
     @Input() multiple: boolean = false;
+    @Input() accept?: string;
     @Input() dragAndDrop: boolean = true;
     @Input() stem?: string;
     @Input() uploadUrl?: string;
@@ -387,7 +393,8 @@ export class FileSelectComponent {
             (files)="filesEmitter.emit($event)"
             (upload)="uploadEmitter.emit($event)"
             (uploadDone)="uploadDoneEmitter.emit($event)"
-            [mappingFunction]="fileMappings(this)">
+            [mappingFunction]="fileMappings(this)"
+            [accept]="accept">
         </file-select>`,
 })
 export class FileSelectManagerComponent {
@@ -397,6 +404,7 @@ export class FileSelectManagerComponent {
     @Input() uploadUrl?: string;
     @Input() stem?: string;
     @Input() maxSize: number = -1;
+    @Input() accept?: string;
     @Output("file") fileEmitter: EventEmitter<IFile> = new EventEmitter();
     @Output("files") filesEmitter: EventEmitter<IFile[]> = new EventEmitter();
     @Output("upload") uploadEmitter: EventEmitter<unknown> = new EventEmitter();

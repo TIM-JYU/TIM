@@ -145,7 +145,8 @@ const PluginFields = t.intersection([
                                  [stem]="uploadstem"
                                  (file)="onFileLoad($event)"
                                  (upload)="onUploadResponse($event)"
-                                 (uploadDone)="onUploadDone($event)">
+                                 (uploadDone)="onUploadDone($event)"
+                                 [accept]="'image/*,.pdf'">
             </file-select-manager>
             <tim-loading *ngIf="isRunning"></tim-loading>
             <div *ngIf="error" [innerHTML]="error"></div>
@@ -419,6 +420,7 @@ export class ReviewCanvasComponent
         }
 
         this.userErrorMessage = undefined;
+        this.connectionErrorMessage = undefined;
 
         this.isRunning = true;
 
