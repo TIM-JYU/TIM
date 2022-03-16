@@ -1,0 +1,26 @@
+@import "fields-box-common";
+
+.cbfieldcount {
+    font-size: x-small;
+    margin-left: 0.5em;
+}
+
+input[type="checkbox"] {
+    @extend .input-base;
+}
+
+.stem {
+    @extend .stem-center;
+}
+
+.warnFrame {
+    @extend .bottomWarnFrame;
+}
+
+.form-control {
+    width: 100%;
+    height: auto;
+    -webkit-box-shadow: none;
+    top: 2px;
+    position: relative;
+}

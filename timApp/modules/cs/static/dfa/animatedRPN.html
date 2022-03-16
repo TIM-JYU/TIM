@@ -446,18 +446,21 @@
     rpnState.rpn2 = rpn2;
     rpnState.drawrpn();
     rpnState.createButtons();
+    // rpnState.jumpToEnd();
     return {iframe: {height: document.body.scrollHeight + 19}};
   }
 
 </script>
-<!--  ->
+<!--
   <script>
     const code = `
-# SWAP # Vaihtaa 2 päällimmästä
-# POP
+label a
+push 3
+jump a
      `;
     setData({code: code, args: "",
              params: {
+                 maxStep: 10,
                  initial: "3,2",
                  arrow: "POP\n=====>",
                  xstack2Color: "lightblue",
@@ -473,7 +476,7 @@
                  nocode: true,
 
              }});
-    // console.log(rpnState.rpn.accepts("abaa"));
+    // console.log(rpnState.rpn);
   </script>
 -->
 </body>

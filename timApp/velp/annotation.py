@@ -6,6 +6,7 @@ as well as adding comments to the annotations. The module also retrieves the ann
 :version: 1.0.0
 
 """
+import json
 import re
 from dataclasses import dataclass, field
 from typing import Optional
@@ -59,6 +60,7 @@ def add_annotation(
     color: str | None = None,
     answer_id: int | None = None,
     draw_data: list[dict] | None = None,
+    style: int | None = None,
 ) -> Response:
     """Adds a new annotation."""
     d = get_doc_or_abort(doc_id)
@@ -99,6 +101,7 @@ def add_annotation(
         color=color,
         answer_id=answer_id,
         draw_data=draw_data,
+        style=style,
     )
     db.session.add(ann)
     ann.set_position_info(coord)
@@ -152,11 +155,11 @@ def update_annotation(
     color: str | None = None,
     coord: AnnotationPosition | None = None,
     draw_data: list[dict] | None = None,
+    style: int | None = None,
 ) -> Response:
     """Updates the information of an annotation."""
     verify_logged_in()
     user = get_current_user_object()
-
     ann = get_annotation_or_abort(id)
     can_edit, d = check_annotation_edit_access_and_maybe_get_doc(user, ann)
     if not can_edit:
@@ -177,6 +180,8 @@ def update_annotation(
         ann.set_position_info(coord)
     if draw_data:
         ann.draw_data = to_json_str(draw_data)
+    if style:
+        ann.style = style
 
     db.session.commit()
     return json_response(ann, date_conversion=True)
