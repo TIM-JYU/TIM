@@ -3,6 +3,7 @@ import {
     ApplicationRef,
     Component,
     DoBootstrap,
+    ElementRef,
     NgModule,
     ViewChild,
 } from "@angular/core";
@@ -337,7 +338,10 @@ export class VideoComponent extends AngularPluginBase<
     private origSize!: string;
     private origWidth?: number;
     private origHeight?: number;
-    @ViewChild("video") video?: HTMLVideoElement;
+
+    // Removing the ElementRef caused the video's advanced controls not to work properly.
+    @ViewChild("video") video?: ElementRef<HTMLVideoElement>;
+
     private limits!: string | null;
     duration!: string | null;
     startt!: string | null;
@@ -455,12 +459,13 @@ export class VideoComponent extends AngularPluginBase<
         if ($event) {
             $event.preventDefault();
         }
+        const v = this.video.nativeElement;
         if (mult === 0) {
-            this.video.playbackRate = 1.0;
+            v.playbackRate = 1.0;
         } else {
-            this.video.playbackRate *= mult;
+            v.playbackRate *= mult;
         }
-        this.playbackRateString = this.video.playbackRate.toFixed(1);
+        this.playbackRateString = v.playbackRate.toFixed(1);
     }
 
     bookmarks: number[] = [0, 0];
@@ -477,8 +482,9 @@ export class VideoComponent extends AngularPluginBase<
         if ($event) {
             $event.preventDefault();
         }
-        this.bookmarks[nr] = this.video.currentTime;
-        return time02String(this.video.currentTime);
+        const v = this.video.nativeElement;
+        this.bookmarks[nr] = v.currentTime;
+        return time02String(v.currentTime);
     }
 
     markStart($event: Event | undefined = undefined) {
@@ -513,7 +519,8 @@ export class VideoComponent extends AngularPluginBase<
         if ($event) {
             $event.preventDefault();
         }
-        this.video.currentTime = this.bookmarks[value];
+        const v = this.video.nativeElement;
+        v.currentTime = this.bookmarks[value];
     }
 
     jump(value: number, $event: Event | undefined = undefined) {
@@ -523,7 +530,8 @@ export class VideoComponent extends AngularPluginBase<
         if ($event) {
             $event.preventDefault();
         }
-        this.video.currentTime += value;
+        const v = this.video.nativeElement;
+        v.currentTime += value;
     }
 
     zoom(mult: number, $event: Event | undefined = undefined) {
@@ -624,9 +632,12 @@ export class VideoComponent extends AngularPluginBase<
     }
 
     metadataloaded() {
-        this.video!.currentTime = this.start ?? 0;
+        this.video!.nativeElement.currentTime = this.start ?? 0;
         if (this.markup.followid && this.vctrl) {
-            this.vctrl.registerVideo(this.markup.followid, this.video!);
+            this.vctrl.registerVideo(
+                this.markup.followid,
+                this.video!.nativeElement
+            );
         }
 
         this.createSubtitleTracks();
@@ -653,8 +664,9 @@ export class VideoComponent extends AngularPluginBase<
     }
 
     timeupdate() {
-        if (this.watchEnd && this.video!.currentTime > this.watchEnd) {
-            this.video!.pause();
+        const v = this.video!.nativeElement;
+        if (this.watchEnd && v.currentTime > this.watchEnd) {
+            v.pause();
             this.watchEnd = 1000000;
         }
     }
