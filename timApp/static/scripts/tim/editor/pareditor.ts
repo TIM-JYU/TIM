@@ -12,11 +12,17 @@ import {
     getFullscreenElement,
     toggleFullScreen,
 } from "tim/util/fullscreen";
-import {IDocument, ILanguages, redirectToItem} from "tim/item/IItem";
+import {
+    IDocument,
+    ILanguages,
+    ITranslators,
+    redirectToItem,
+} from "tim/item/IItem";
 import {
     IExtraData,
     ITags,
     updateLanguages,
+    listTranslators,
 } from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
@@ -231,6 +237,9 @@ export class PareditorController extends DialogController<
     private lastKnownDialogHeight?: number;
     private sourceLanguages: Array<ILanguages> = [];
     private targetLanguages: Array<ILanguages> = [];
+    private documentLanguages: Array<ILanguages> = [];
+    private translators: Array<ITranslators> = [];
+    private docTranslator: string = "";
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -1081,9 +1090,14 @@ ${backTicks}
 
     $onInit() {
         super.$onInit();
+        this.docSettings = documentglobals().docSettings;
+        if (this.docSettings?.translator != undefined) {
+            this.docTranslator = this.docSettings?.translator;
+        }
+        listTranslators(this.translators);
         updateLanguages(
             this.sourceLanguages,
-            this.targetLanguages,
+            this.documentLanguages,
             this.targetLanguages
         );
         const saveTag = this.getSaveTag();
@@ -1143,7 +1157,6 @@ ${backTicks}
                 this.isAce()?.setAutoCompletion(this.autocomplete);
             }
         );
-        this.docSettings = documentglobals().docSettings;
         this.memoMinutesSettings = documentglobals().memoMinutesSettings;
 
         this.activeAttachments = this.updateAttachments(
@@ -1532,7 +1545,7 @@ ${backTicks}
                 $http.post<IDocument>(
                     `/translate/${this.resolve.params.viewCtrl.item.id}/${lang}/translate_block`,
                     {
-                        autotranslate: "DeepL", // TODO: Make this not hardcoded
+                        autotranslate: this.docTranslator,
                         originaltext: this.trdiff.new, // TODO: Get translatorlang to the document and editor
                     }
                 )

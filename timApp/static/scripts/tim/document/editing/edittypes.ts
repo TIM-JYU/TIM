@@ -1,7 +1,7 @@
 import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
 import {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
 import {ParContext} from "tim/document/structure/parContext";
-import {ILanguages} from "tim/item/IItem";
+import {ILanguages, ITranslators} from "tim/item/IItem";
 import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
 
@@ -111,11 +111,13 @@ export async function updateLanguages(
     listLanguages(languages, targetL);
 }
 
-export async function listTranslators(translators: Array<string>) {
+export async function listTranslators(translators: Array<ITranslators>) {
     const sources = await to($http.get<string[]>("/translations/translators"));
     if (sources.ok) {
+        let num = 0;
         for (const translator of sources.result.data) {
-            translators.push(translator);
+            translators.push({name: translator, id: num});
+            num++;
         }
     }
 }
