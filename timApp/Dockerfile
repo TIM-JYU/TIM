@@ -142,12 +142,13 @@ flask-sqlalchemy \
 flask-testing \
 flask-wtf \
 gevent \
-git+git://github.com/miracle2k/webassets.git \
+git+https://github.com/miracle2k/webassets.git \
 gunicorn \
 html5lib \
 httpagentparser \
 humanize \
 isodate \
+langcodes[data] \
 libsass \
 lxml \
 mailmanclient \
