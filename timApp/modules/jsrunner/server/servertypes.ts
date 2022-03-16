@@ -21,7 +21,11 @@ export const UserFieldData = t.intersection([
 export const VelpData = t.intersection([
     t.type({
         points: t.Int,
-        name: t.string,
+        annotator: t.type({
+            id: t.Int,
+            name: t.string,
+            real_name: nullable(t.string),
+        }),
     }),
     t.partial({
         groupinfo: t.type({
@@ -48,7 +52,7 @@ export const JsrunnerAnswer = t.type({
     input: t.type({
         data: t.array(UserFieldData),
         aliases: AliasData,
-        testvelps: VelpData
+        testvelps: t.array(VelpData)
     }),
     taskID: t.string,
 });

@@ -8,7 +8,21 @@ Start peer reviewing
 %% 'arvioija_' | gfrange(1,arvosteltavia,'cols: 10') -%%
 %% 'arvioitu_' | gfrange(1,arvosteltavia,'cols: 10') %%
 
+\
+#- {area="demo" collapse="true"}
+Arviointitilanne
 
+#- {defaultplugin="textfield" readonly="view" .fieldCell}
+%% 'Pisteet=Pisteet' | gfields('cols: 5') -%%
+\
+Tehtävän arvioineet:\
+%% 'Arvioija_' | gfrange(1,arvosteltavia,'cols: 10') -%%
+\
+Arvioitavat tehtävät:\
+%% 'Arvioitava_' | gfrange(1,arvosteltavia,'cols: 10') %%
+\
+#- {area_end="demo" id="ohWeiC2vLEdw"}
+\
 ``` {#demotable plugin="tableForm"}
 groups:
  - %%group%%
@@ -16,17 +30,35 @@ fields:
  - arvioituLkm
  - arvioija_(1,%%arvosteltavia%%)=arvioija_
  - arvioitu_(1,%%arvosteltavia%%)=arvioitu_
+ - Pisteet
+ - Arvioija_(1,%%arvosteltavia%%)=Arvioija_
+ - Arvioitava_(1,%%arvosteltavia%%)=Arvioitava_
 header: Demotaulukko
 minWidth: 3em
 singleLine: true
-filterRow: true
-cbColumn: true
-nrColumn: true
-maxRows: 40em
-autosave: true
-open: false
-openButtonText: Taulukko arviointitilanteesta
 hideButtonText: Piilota taulukko
 emailUsersButtonText: Lähetä ruksituille sähköpostia
 emailUsersButtonText: "Lähetä sähköpostia"
+```
+\
+``` {#runnerVari plugin="jsrunner"}
+groups:
+ - %%group%%
+buttonText: Päivitä tilanne
+fields:
+ - Pisteet
+ - Arvioija_(1,%%arvosteltavia%%)=Arvioija_
+ - Arvioitava_(1,%%arvosteltavia%%)=Arvioitava_
+updateFields:
+ - Pisteet
+ - Arvioija_(1,%%arvosteltavia%%)=Arvioija_
+ - Arvioitava_(1,%%arvosteltavia%%)=Arvioitava_
+program: |!!
+    a = tools.testPoints()
+    tools.setString("Pisteet", a)
+    b = tools.testNames()
+    for (let i =1; i <= b.length; i++) {
+        tools.setString(`Arvioija_${i}`, b[i-1])
+    }
+!!
 ```

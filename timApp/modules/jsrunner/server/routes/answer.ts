@@ -43,7 +43,7 @@ interface IRunnerData {
     markup: IJsRunnerMarkup;
     program: string;
     compileProgram: (code: string) => string;
-    testvelps: VelpDataT;
+    testvelps: VelpDataT[];
 }
 
 type RunnerResult =

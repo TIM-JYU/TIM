@@ -951,7 +951,7 @@ export class Tools extends ToolsBase {
         currDoc: string,
         markup: IJsRunnerMarkup,
         aliases: AliasDataT,
-        protected testvelps: VelpDataT
+        protected testvelps: VelpDataT[]
     ) {
         super(currDoc, markup, aliases);
     }
@@ -1319,17 +1319,18 @@ export class Tools extends ToolsBase {
         return {user: this.data.user.id, fields: this.result};
     }
 
-    testName() : string {
-        console.log(this.data)
-        console.log(this.result)
-        this.output += JSON.stringify(this.testvelps)
-        return this.testvelps.name;
+    testNames() : string[] {
+        const names = this.testvelps.map(v => v.annotator.name)
+        const uniques = [...new Set(names)]
+        this.output += uniques
+        return uniques;
     }
     testPoints() : number {
-        console.log(this.data)
-        console.log(this.result)
-        this.output += JSON.stringify(this.testvelps)
-        return this.testvelps.points;
+        const points = this.testvelps.map(v => v.points)
+        //this.output += points
+        const sum = points.reduce(function(accumVariable, curValue) {
+            return accumVariable + curValue
+        }, 0);
+        return sum
     }
-
 }

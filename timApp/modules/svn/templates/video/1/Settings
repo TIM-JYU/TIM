@@ -6,9 +6,10 @@ auto_number_headings: 0
 urlmacros:
  group:
 macros:
- arvosteltavia: 3
+ arvosteltavia:
+ demotehtavia:
  group:
-group: group
+group:
 form_mode: true
 peer_review: false
 peer_review_count: arvosteltavia
