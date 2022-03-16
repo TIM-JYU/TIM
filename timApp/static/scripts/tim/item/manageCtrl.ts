@@ -29,6 +29,7 @@ import {
     ILanguages,
     redirectToItem,
     getItemTypeName,
+    ITranslators,
 } from "./IItem";
 
 markAsUsed(snv, tem);
@@ -50,7 +51,7 @@ export class PermCtrl implements IController {
     private sourceLanguages: Array<ILanguages> = [];
     private targetLanguages: Array<ILanguages> = [];
     private documentLanguages: Array<ILanguages> = [];
-    private translators: Array<string> = [];
+    private translators: Array<ITranslators> = [];
     private newTranslation: {
         language: string;
         title: string;
@@ -85,7 +86,7 @@ export class PermCtrl implements IController {
         this.newTranslation = {
             language: "",
             title: "",
-            translator: this.translators[0],
+            translator: this.translators[0].name,
             translatorLanguage: "",
         };
         this.accessTypes = manageglobals().accessTypes;

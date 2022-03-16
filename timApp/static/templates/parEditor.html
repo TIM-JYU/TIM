@@ -34,6 +34,14 @@
             <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#viitteen-katsominen" target="_blank"
                title="Help for references"><i class="helpButton glyphicon glyphicon-question-sign"></i></a>
     </uib-tab>
+    <uib-tab heading="Translator data" index="'translator'">
+        <div>
+            <label for="translator">Translator:</label>
+            <select id="translator" name="translator-select" class="form-control"
+                    ng-model="$ctrl.docTranslator" >
+                <option ng-repeat="option in $ctrl.translators" value="{{option.name}}">{{option.name}}</option>
+            </select></div>
+    </uib-tab>
   </uib-tabset>
     <div class="editorContainer">
     </div>
