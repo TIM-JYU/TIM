@@ -1,13 +1,5 @@
 Table and fields
 Start peer reviewing
-```
-#- Arviointitilanne
-
-#- {defaultplugin="numericfield" readonly="view" .fieldCell}
-%% 'arvioituLkm=Arvioitu' | gfields('cols: 5') -%%
-%% 'arvioija_' | gfrange(1,arvosteltavia,'cols: 10') -%%
-%% 'arvioitu_' | gfrange(1,arvosteltavia,'cols: 10') %%
-
 \
 #- {area="demo" collapse="true"}
 Arviointitilanne
@@ -27,9 +19,6 @@ Arvioitavat tehtävät:\
 groups:
  - %%group%%
 fields:
- - arvioituLkm
- - arvioija_(1,%%arvosteltavia%%)=arvioija_
- - arvioitu_(1,%%arvosteltavia%%)=arvioitu_
  - Pisteet
  - Arvioija_(1,%%arvosteltavia%%)=Arvioija_
  - Arvioitava_(1,%%arvosteltavia%%)=Arvioitava_
