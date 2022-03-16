@@ -47,6 +47,7 @@ class ITranslator:
 class DeepLTranslator(ITranslator):
     api_key: str
     url: str = "https://api-free.deepl.com/v2"
+    IGNORE_TAG: str = "x"
 
     def __post_init__(self) -> None:
         self.headers = {"Authorization": f"DeepL-Auth-Key {self.api_key}"}
@@ -121,7 +122,15 @@ class DeepLTranslator(ITranslator):
         :param target_lang: DeepL-compliant language code for target language
         :return: The input text translated into the target language
         """
-        resp_json = self._translate(text, source_lang, target_lang)
+        # Translate using XML-protection for protected pieces of the text
+        resp_json = self._translate(
+            text,
+            source_lang,
+            target_lang,
+            split_sentences="nonewlines",
+            tag_handling="xml",
+            ignore_tags=[DeepLTranslator.IGNORE_TAG],
+        )
         # TODO Use a special structure to insert the text-parts sent to the API into correct places in original text
         return "".join([tr["text"] for tr in resp_json["translations"]])
 
