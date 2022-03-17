@@ -50,14 +50,6 @@ function getElementSize(el: Element) {
     };
 }
 
-function getElementOffset(el: Element) {
-    const c = getComputedStyle(el);
-    return {
-        x: Math.round(parseInt(c.left, 10)),
-        y: Math.round(parseInt(c.top, 10)),
-    };
-}
-
 @Component({
     selector: "tim-dialog-frame",
     template: `
@@ -155,8 +147,10 @@ export class DialogFrame {
     @Input() size: "sm" | "md" | "lg" | "xs" = "md"; // xs is custom TIM style
     resizable!: ResizableDraggableWrapper;
     position: IPosition = {x: 0, y: 0};
-    private lastDraggedPosition?: IPosition;
-    sizeOrPosChanged = new Subject<void>();
+    private _lastDraggedPosition?: IPosition;
+    private _lastResizedSize?: ISize;
+    sizeChanged = new Subject<void>();
+    posChanged = new Subject<void>();
 
     ngOnInit() {
         if (this.detachable) {
@@ -182,6 +176,21 @@ export class DialogFrame {
         return true;
     }
 
+    initPosition(p: IPosition | null) {
+        if (p) {
+            this.position = p;
+            // Don't set the last dragged position if null to allow for anchoring
+            this._lastDraggedPosition = p;
+        }
+    }
+
+    initSize(s: ISize | null) {
+        if (s) {
+            this.resizable.getSize().set(s);
+        }
+        this._lastResizedSize = s ?? this.currentSize;
+    }
+
     set pos(p: IPosition) {
         this.position = p;
     }
@@ -190,24 +199,22 @@ export class DialogFrame {
         return this.resizable?.getPos() ?? this.position;
     }
 
-    get lastDraggedPos() {
-        return this.lastDraggedPosition ?? this.position;
+    get lastDraggedPosition() {
+        return this._lastDraggedPosition ?? this.position;
     }
 
     get currentSize() {
         return getElementSize(this.dragelem.nativeElement);
     }
 
+    get lastResizedSize() {
+        return this._lastResizedSize ?? this.currentSize;
+    }
+
     toggleDetach() {
         this.detached = !this.detached;
         this.position = {x: 0, y: 0};
         this.detachedIndex = this.detached ? `${1050 + this.index * 10}` : "";
-        // if (!this.detached) {
-        //     const offs = getElementOffset(this.dragelem.nativeElement);
-        //     console.log(offs);
-        //     this.ngResizable._currPos.set(offs);
-        //     this.ngResizable.resetSize();
-        // }
     }
 
     toggleMinimize() {
@@ -238,11 +245,12 @@ export class DialogFrame {
     }
 
     onResizeStop() {
-        this.sizeOrPosChanged.next();
+        this._lastResizedSize = this.currentSize;
+        this.sizeChanged.next();
     }
 
     onDragStop() {
-        this.lastDraggedPosition = this.pos;
-        this.sizeOrPosChanged.next();
+        this._lastDraggedPosition = this.pos;
+        this.posChanged.next();
     }
 }

@@ -57,7 +57,8 @@ export abstract class AngularDialogComponent<Params, Result>
     protected closed = false;
     protected initialHorizontalAlign?: Alignment = Alignment.Center;
     protected initialPosition?: IPosition;
-    private sub?: Subscription;
+    private sizeSub?: Subscription;
+    private posSub?: Subscription;
     private bodyObserver?: MutationObserver;
     private sizeStorage?: TimStorage<[number, number]>;
     private posStorage?: TimStorage<[number, number]>;
@@ -71,7 +72,7 @@ export abstract class AngularDialogComponent<Params, Result>
 
     @HostListener("window:resize", ["$event"])
     handleResize() {
-        if (this.fixPosSizeInbounds()) {
+        if (this.fixPosSizeInbounds() == SizeNeedsRefresh.Yes) {
             this.frame.resizable.doResize();
         }
     }
@@ -100,7 +101,8 @@ export abstract class AngularDialogComponent<Params, Result>
     }
 
     ngOnDestroy() {
-        this.sub?.unsubscribe();
+        this.sizeSub?.unsubscribe();
+        this.posSub?.unsubscribe();
         this.bodyObserver?.disconnect();
     }
 
@@ -130,19 +132,26 @@ export abstract class AngularDialogComponent<Params, Result>
             const savedSize = this.getSizeStorage().get();
             if (savedSize) {
                 sizehint = {width: savedSize[0], height: savedSize[1]};
-                this.frame.resizable.getSize().set(sizehint);
             }
         }
+        this.frame.initSize(sizehint);
+
         const savedPos = this.getPosStorage().get();
+        let posHint = null;
         if (savedPos) {
             this.hasCustomPosition = true;
-            this.frame.pos = {x: savedPos[0], y: savedPos[1]};
+            posHint = {x: savedPos[0], y: savedPos[1]};
         } else if (this.initialPosition) {
+            // Don't initPosition so that the dialog follows the original alignment anchor
             this.frame.pos = this.initialPosition;
         }
+        this.frame.initPosition(posHint);
 
-        this.sub = this.frame.sizeOrPosChanged.subscribe(() => {
-            this.savePosSize();
+        this.posSub = this.frame.posChanged.subscribe(() => {
+            this.savePos();
+        });
+        this.sizeSub = this.frame.sizeChanged.subscribe(() => {
+            this.saveSize();
         });
 
         this.fixPosSizeInbounds(sizehint);
@@ -182,20 +191,21 @@ export abstract class AngularDialogComponent<Params, Result>
 
     fixPosSizeInbounds(sizeHint?: ISize | null): SizeNeedsRefresh {
         const vp = this.viewPort;
+        console.log("viewport", vp);
 
         // First clamp the frame so it fits inside the viewport
-        const {width, height} = sizeHint ?? this.frame.currentSize;
+        const {width, height} = sizeHint ?? this.frame.lastResizedSize;
         const newWidth = clamp(width, 0, vp.width);
         const newHeight = clamp(
             height + this.extraVerticalSize,
             0,
-            vp.height - 50
+            vp.height - 100
         );
         this.extraVerticalSize = 0;
 
         // Then clamp x/y so that the element is at least within the viewport
         // Use last position that the user dragged to
-        const lastDraggedPos = this.frame.lastDraggedPos;
+        const lastDraggedPos = this.frame.lastDraggedPosition;
 
         if (!this.hasCustomPosition) {
             if (this.initialHorizontalAlign == Alignment.Center) {
@@ -214,6 +224,7 @@ export abstract class AngularDialogComponent<Params, Result>
             width: newWidth,
             height: newHeight,
         });
+        console.log("new size: w", newWidth, "h", newHeight);
         this.frame.pos = newPos;
         return newWidth !== width || newHeight !== height
             ? SizeNeedsRefresh.Yes
@@ -224,23 +235,27 @@ export abstract class AngularDialogComponent<Params, Result>
         this.closed = true;
         this.closeWithResult.emit(r);
         this.resultDefer.resolve(r);
-        this.savePosSize();
+        this.saveSize();
+        this.savePos();
     }
 
     dismiss() {
         this.closed = true;
         this.resultDefer.reject("Dialog was closed from the X button");
-        this.savePosSize();
+        this.saveSize();
+        this.savePos();
     }
 
-    private savePosSize() {
+    private saveSize() {
         const {width, height} = this.frame.resizable.getSize();
 
         // Height can sometimes be zero, at least when the dialog is minimized.
         if (height > 0) {
             this.getSizeStorage().set([width, height]);
         }
+    }
 
+    private savePos() {
         try {
             const {x, y} = this.frame.resizable.getPos();
             this.getPosStorage().set([x, y]);
