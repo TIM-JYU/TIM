@@ -216,7 +216,6 @@ const ShowFileAll = t.type({
                        #video
                        class="showVideo"
                        controls
-                       id="video"
                        (loadedmetadata)="metadataloaded()"
                        (timeupdate)="timeupdate()"
                        [style.width.px]="width"
@@ -224,6 +223,9 @@ const ShowFileAll = t.type({
                        [src]="videosettings.src"
                        [autoplay]="markup.autoplay"
                 >
+                    <ng-container *ngFor="let subtitle of markup.subtitles">
+                        <track [src]="subtitle.file" [label]="subtitle.name" />    
+                    </ng-container>
                 </video>
             </ng-container>
             <ng-container *ngIf="isNormalSize">
@@ -638,28 +640,6 @@ export class VideoComponent extends AngularPluginBase<
                 this.markup.followid,
                 this.video!.nativeElement
             );
-        }
-
-        this.createSubtitleTracks();
-    }
-
-    /**
-     * Function creates a following structure:
-     * <video>
-     *   <track label="" src="" />
-     *   <track label="" src="" />
-     *   ...
-     * </video>
-     */
-    private createSubtitleTracks(): void {
-        // Text Track API does not provide a way to load WebVTT source from a file dynamically.
-        // Refer to HTML documentation: https://html.spec.whatwg.org/#dom-media-addtexttrack
-        for (const subtitle of this.markup.subtitles) {
-            const video = document.getElementById("video");
-            const track = document.createElement("track");
-            track.label = subtitle.name;
-            track.src = subtitle.file;
-            video?.appendChild(track);
         }
     }
 
