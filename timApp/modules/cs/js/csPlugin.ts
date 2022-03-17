@@ -3801,7 +3801,7 @@ ${fhtml}
                             class="timButton btn-sm"
                             (click)="fetchExternalFiles()"
                             [innerHTML]="externalFetchText()"></button>
-                    <a href="#" *ngIf="undoButton && isUnSaved()" title="undoTitle"
+                    <a href="#" *ngIf="undoButton && isUnSaved()" [title]="undoTitle"
                        (click)="tryResetChanges(); $event.preventDefault()"> &nbsp;{{undoButton}}</a>
                     &nbsp;&nbsp;
                     <span *ngIf="savedText"
