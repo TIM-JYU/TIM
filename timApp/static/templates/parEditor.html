@@ -43,7 +43,7 @@
             </select></div>
     </uib-tab>
   </uib-tabset>
-  <div id="editorflex" class="sidebyside"><div class="halfsize">
+  <div id="editorflex" class="stacked"><div class="halfsize">
     <div class="editorContainer halfsize">
     </div>
     <div class="editButtonArea">
@@ -53,7 +53,8 @@
         <button class="btn btn-danger" ng-disabled="$ctrl.saving" ng-show="$ctrl.getOptions().showDelete" ng-click="$ctrl.deleteClicked()">Delete</button>
         </span>
         <div class="hidingButtonArea">
-            <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showTranslated()" ng-click="$ctrl.translateClicked()" style="right: 2px;">Translate</button>
+            <p ng-show="$ctrl.translationInProgress">Translating... This may take a while.</p>
+            <button class="timButton" id="translateButton" ng-disabled="$ctrl.saving || $ctrl.translationInProgress" ng-show="$ctrl.showTranslated()" ng-click="$ctrl.translateClicked()" style="right: 2px;">Translate</button>
             <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showUnread()" ng-click="$ctrl.unreadClicked()" style="right: 2px;">Mark as unread</button>
         </div>
     </div>

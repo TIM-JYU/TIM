@@ -12,12 +12,7 @@ import {
     getFullscreenElement,
     toggleFullScreen,
 } from "tim/util/fullscreen";
-import {
-    IDocument,
-    ILanguages,
-    ITranslators,
-    redirectToItem,
-} from "tim/item/IItem";
+import {IDocument, ILanguages, ITranslators} from "tim/item/IItem";
 import {
     IExtraData,
     ITags,
@@ -242,6 +237,7 @@ export class PareditorController extends DialogController<
     private docTranslator: string = "";
     private sideBySide: boolean = false;
     private positionButton: string = "";
+    private translationInProgress: boolean = false;
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -1123,7 +1119,7 @@ ${backTicks}
         const saveTag = this.getSaveTag();
         this.sideBySide = false;
         this.positionButton = "Side by side";
-        this.changePositioning();
+        this.translationInProgress = false;
         this.storage = {
             acebehaviours: new TimStorage("acebehaviours" + saveTag, t.boolean),
             acewrap: new TimStorage("acewrap" + saveTag, t.boolean),
@@ -1563,6 +1559,8 @@ ${backTicks}
                 "There is no original text to be translated. Please check the Difference in original document view."
             );
         } else {
+            this.translationInProgress = true;
+
             const lang = this.resolve.params.viewCtrl.item.lang_id;
             const r = await to(
                 $http.post<IDocument>(
@@ -1581,7 +1579,9 @@ ${backTicks}
                     ) + "\n";
                 // eslint-disable-next-line @typescript-eslint/no-base-to-string
                 this.getEditor()?.setEditorText(ref + r.result.data.toString());
+                this.translationInProgress = false;
             } else {
+                this.translationInProgress = false;
                 await showMessageDialog(r.result.data.error);
             }
         }

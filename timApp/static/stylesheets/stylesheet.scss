@@ -1273,7 +1273,7 @@ p.docsettings {
 .diff {
     position: relative;
     background-color: #f8f8f8;
-    height: 312px;
+    max-height: 312px;
 
     a {
         position: absolute;

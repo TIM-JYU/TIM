@@ -240,9 +240,9 @@
                         <label for="translator">Translator:</label>
                         <select id="translator" name="translator-select" class="form-control"
                                ng-model="$ctrl.newTranslation.translator">
-                                <option ng-repeat="option in $ctrl.translators">{{option}}</option>
+                                <option ng-repeat="option in $ctrl.translators">{{option.name}}</option>
                         </select></div>
-                        <div ng-show="$ctrl.notManual()"> <!-- TODO: Convert ng-show lines to *ngIf (see settings.components.ts)? --!>
+                        <div ng-show="$ctrl.notManual()">
                             <label for="translatorLanguage">Translator language:</label>
                         <select id="translator-language" name="translator-language-select" class="form-control"
                                ng-model="$ctrl.newTranslation.translatorLanguage">
@@ -256,10 +256,11 @@
                     <div ng-show="!$ctrl.checkTranslatability()">
                         <p>This document will not be automatically translated on creation.</p>
                     </div>
-                    <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title"
+                    <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title ||$ctrl.translationInProgress"
                             class="timButton"
-                            ng-click="$ctrl.createTranslation()">Create
+                            ng-click="$ctrl.createTranslation()" id="createbutton">Create
                     </button>
+                    <p ng-show="$ctrl.translationInProgress">Translating... This may take a while.</p>
                 </uib-tab>
 <!--                <uib-tab heading="Create a cited copy">-->
 <!--                    <create-item item-type="document" item-location="{{ $ctrl.item.location }}"-->
