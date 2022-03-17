@@ -240,6 +240,8 @@ export class PareditorController extends DialogController<
     private documentLanguages: Array<ILanguages> = [];
     private translators: Array<ITranslators> = [];
     private docTranslator: string = "";
+    private sideBySide: boolean = false;
+    private positionButton: string = "";
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -1088,6 +1090,24 @@ ${backTicks}
         return this.wrap.n * (this.wrap.auto ? 1 : -1);
     }
 
+    /*
+    Tracks the editing and Difference in original document views' positioning (see pareditor.html).
+     */
+    changePositioning() {
+        const doc = document.getElementById("editorflex");
+        if (doc != null && this.sideBySide) {
+            doc.classList.remove("sidebyside");
+            doc.classList.add("stacked");
+            this.positionButton = "Side by Side";
+            this.sideBySide = false;
+        } else if (doc != null) {
+            doc.classList.remove("stacked");
+            doc.classList.add("sidebyside");
+            this.positionButton = "Stacked";
+            this.sideBySide = true;
+        }
+    }
+
     $onInit() {
         super.$onInit();
         this.docSettings = documentglobals().docSettings;
@@ -1101,6 +1121,9 @@ ${backTicks}
             this.targetLanguages
         );
         const saveTag = this.getSaveTag();
+        this.sideBySide = false;
+        this.positionButton = "Side by side";
+        this.changePositioning();
         this.storage = {
             acebehaviours: new TimStorage("acebehaviours" + saveTag, t.boolean),
             acewrap: new TimStorage("acewrap" + saveTag, t.boolean),

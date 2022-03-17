@@ -846,6 +846,7 @@ br {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
+    overflow-x: auto;
 }
 
 pareditor {
@@ -1265,10 +1266,14 @@ p.docsettings {
     display: inline-flex;
 }
 
+.halfsize {
+    min-width: 50%;
+}
+
 .diff {
     position: relative;
     background-color: #f8f8f8;
-    height: 100%;
+    height: 312px;
 
     a {
         position: absolute;
@@ -1291,6 +1296,16 @@ p.docsettings {
             background: #ffbbbb;
         }
     }
+}
+
+.sidebyside {
+    display: flex;
+    flex-direction: row;
+}
+
+.stacked {
+    display: flex;
+    flex-direction: column;
 }
 
 answerbrowser {
