@@ -236,6 +236,7 @@ const BackgroundProps = t.intersection([
     t.partial({
         a: Angle,
         size: Size,
+        position: ValidCoord,
     }),
     t.type({
         src: t.string,
