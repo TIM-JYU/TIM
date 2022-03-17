@@ -48,6 +48,15 @@ tim-dialog-frame {
     }
 }
 
+.draggable-plugin {
+    z-index: 1200;
+    background-color: $bg-color;
+
+    [data-plugin] {
+        background-color: $bg-color;
+    }
+}
+
 .modal-dialog {
     max-width: 100vw;
 

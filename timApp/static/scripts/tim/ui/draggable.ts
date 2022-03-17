@@ -54,6 +54,7 @@ timApp.directive("timDraggableFixed", [
         return {
             bindToController: {
                 absolute: "<?",
+                anchor: "@?",
                 caption: "@?",
                 click: "<?",
                 detachable: "<?",
@@ -143,6 +144,7 @@ export class DraggableController implements IController {
     private dragClick?: () => void;
     private autoHeight?: boolean;
     private absolute?: Binding<boolean, "<">;
+    private anchor: Binding<string, "<"> = "absolute";
     private parentDraggable?: DraggableController;
     private forceMaximized?: Binding<boolean, "<">;
     private modal?: IModalInstanceService;
@@ -216,7 +218,7 @@ export class DraggableController implements IController {
                 this.element.css(prop, "");
             }
         } else {
-            this.element.css("position", "absolute");
+            this.element.css("position", this.anchor);
             this.element.css("visibility", "visible");
             void this.restoreSizeAndPosition(VisibilityFix.Full);
         }
@@ -228,7 +230,7 @@ export class DraggableController implements IController {
         if (!modal) {
             return;
         }
-        modal.css("position", "absolute");
+        modal.css("position", this.anchor);
     }
 
     private async getModal() {
@@ -253,7 +255,9 @@ export class DraggableController implements IController {
         if (!m) {
             return false;
         }
-        return m.css("position") === "absolute" && this.parentDraggable == null;
+        return (
+            m.css("position") === this.anchor && this.parentDraggable == null
+        );
     }
 
     setDragClickFn(fn: () => void) {
