@@ -962,7 +962,8 @@ def tim_convert_input(
                 f.write(source.replace("\n", "\r\n"))
             elif eol_type == "lf":
                 f.write(source.replace("\r\n", "\n"))
-            f.write(source)
+            else:
+                f.write(source)
     else:
 
         input_file = [source] if not string_input else []
