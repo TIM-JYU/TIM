@@ -314,6 +314,7 @@ def add_velp() -> int:
         - valid_until: time stamp to until velp is still valid
         - labels: labels of the velp
         - visible_to: visibility group of the velp (1-4)
+        - style: layout of the velp
 
     :return: ID of new velp
 
@@ -335,6 +336,7 @@ def add_velp() -> int:
     velp_labels = json_data.get("labels")
     visible_to = json_data.get("visible_to")
     color = json_data.get("color")
+    style = json_data.get("style")
 
     default_points = float(default_points) if default_points is not None else None
 
@@ -360,6 +362,7 @@ def add_velp() -> int:
         language_id,
         visible_to,
         color,
+        style,
     )
 
     if velp_labels is not None:
@@ -404,6 +407,7 @@ def update_velp_route(doc_id: int):
     color = json_data.get("color")
     new_labels = set(json_data.get("labels") or [])
     visible_to = json_data.get("visible_to")
+    style = json_data.get("style")
     verify_logged_in()
     user_id = get_current_user_id()
     edit_access = False
@@ -455,7 +459,7 @@ def update_velp_route(doc_id: int):
         create_velp_content(version, language_id, new_content, default_comment)
     if old_labels != new_labels:
         update_velp_labels(velp_id, new_labels)
-    update_velp(velp_id, default_points, color, visible_to)
+    update_velp(velp_id, default_points, color, visible_to, style)
     db.session.commit()
     return ok_response()
 

@@ -132,6 +132,9 @@ class Annotation(db.Model):
     draw_data = db.Column(db.Text)
     """Drawing information about the annotation (for annotations on images)."""
 
+    style = db.Column(db.Integer)
+    """Appearance of the annotation"""
+
     annotator = db.relationship("User", back_populates="annotations")
     answer = db.relationship("Answer", back_populates="annotations")
     comments = db.relationship("AnnotationComment", order_by="AnnotationComment.id")
@@ -202,6 +205,7 @@ class Annotation(db.Model):
             "valid_until": self.valid_until,
             "velp": self.velp_version.velp_id,
             "visible_to": self.visible_to,
+            "style": self.style,
         }
         if self.draw_data:
             try:

@@ -42,6 +42,8 @@ export class Mode {
     }
 }
 
+export const CURSOR = "⁞";
+
 export interface IEditor {
     content: string;
 
@@ -49,6 +51,7 @@ export interface IEditor {
     doWrap?(wrap: number): void;
     insert?(str: string): void;
     setReadOnly(b: boolean): void;
+    focus(): void;
 }
 
 export interface IEditorFile {
@@ -117,6 +120,7 @@ export class EditorFile {
 export class JSParsonsEditorComponent implements IEditor {
     content: string = "";
     setReadOnly(b: boolean) {}
+    focus() {}
 }
 
 @Component({
@@ -276,6 +280,9 @@ export class EditorComponent implements IMultiEditor {
     @ViewChild(NormalEditorComponent) private set normalEditorViewSetter(
         component: NormalEditorComponent | undefined
     ) {
+        if (component == this.normalEditor) {
+            return;
+        }
         const oldContent = this.normalEditor?.content ?? this.content;
         this.normalEditor = component;
         this.initEditor(oldContent);
@@ -283,6 +290,9 @@ export class EditorComponent implements IMultiEditor {
     @ViewChild(AceEditorComponent) private set aceEditorViewSetter(
         component: AceEditorComponent | undefined
     ) {
+        if (component == this.aceEditor) {
+            return;
+        }
         const oldContent = this.aceEditor?.content ?? this.content;
         this.aceEditor = component;
         this.initEditor(oldContent);
@@ -290,6 +300,9 @@ export class EditorComponent implements IMultiEditor {
     @ViewChild(ParsonsEditorComponent) private set parsonsEditorViewSetter(
         component: ParsonsEditorComponent | undefined
     ) {
+        if (component == this.aceEditor) {
+            return;
+        }
         const oldContent = this.parsonsEditor?.content ?? this.content;
         this.parsonsEditor = component;
         this.initEditor(oldContent);
@@ -753,5 +766,9 @@ export class EditorComponent implements IMultiEditor {
 
     trackByPath(index: number, item: EditorFile) {
         return item.path;
+    }
+
+    focus() {
+        this.editor?.focus();
     }
 }

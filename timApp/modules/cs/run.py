@@ -9,7 +9,8 @@ import uuid
 from pathlib import PurePath, PureWindowsPath
 from subprocess import PIPE, Popen
 
-from tim_common.fileParams import remove, mkdirs, tquote, get_param
+from file_util import write_safe, is_safe_path, rm_safe
+from tim_common.fileParams import mkdirs, tquote, get_param
 
 CS3_TAG = "elixir"
 CS3_TARGET = os.environ.get("CSPLUGIN_TARGET", "")
@@ -132,7 +133,7 @@ class RunCleaner:
             subprocess.run(["docker", "kill", self.container])
 
         for file in self.files:
-            remove(file)
+            rm_safe(file)
 
 
 # noinspection PyBroadException
@@ -234,9 +235,7 @@ def run2(
             + stderrf
             + "\n"
         )
-        codecs.open(compf, "w", "utf-8").write(
-            compile_cmnds
-        )  # kirjoitetaan kääntämisskripti
+        write_safe(compf, compile_cmnds)
         os.chmod(compf, 0o777)
     else:
         cmnds = (
@@ -255,11 +254,7 @@ def run2(
             + s_in
             + "\n"
         )
-        try:
-            os.remove(compf)
-        except:
-            pass
-
+        rm_safe(compf)
     # cmnds = "#!/usr/bin/env bash\n" + ulimit + "\n" + extra + cmnds + " 1>" + "~/" +
     # stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
     # print("============")
@@ -269,7 +264,7 @@ def run2(
     # print(cmdf)
     # print(cmnds)
     # print("============")
-    codecs.open(cmdf, "w", "utf-8").write(cmnds)  # kirjoitetaan komentotiedosto
+    write_safe(cmdf, cmnds)  # kirjoitetaan komentotiedosto
     mkdirs("/tmp/run")  # varmistetaan run-hakemisto
     udir = cwd.replace(
         "/tmp/", ""
@@ -285,8 +280,16 @@ def run2(
 
     extra_mappings = extra_mappings or []
 
+    root_dir_path = root_dir.as_posix()
+
+    def resolve_mapping(p: str) -> list[str]:
+        orig = (
+            p if p.startswith("/cs_data/") else f"{root_dir_path}/timApp/modules/cs/{p}"
+        )
+        return ["-v", f"{orig}:/cs/{p}:ro"]
+
     path_mappings = [
-        ["-v", f"{root_dir.as_posix()}/timApp/modules/cs/{p}:/cs/{p}:ro"]
+        resolve_mapping(p)
         for p in [
             "rcmd.sh",
             "cpp",
@@ -296,8 +299,6 @@ def run2(
             "mathcheck",
             "fs",
             "data",
-            "simcir",
-            "MIRToolbox",
             *extra_mappings,
         ]
     ]
@@ -314,10 +315,14 @@ def run2(
         "--name",
         tmpname,
         "--rm=true",
+        "--tmpfs",
+        "/cs",
         *itertools.chain.from_iterable(path_mappings),
         *itertools.chain.from_iterable(user_mappings),
         "-v",
         f"/tmp/{compose_proj}_uhome/{udir}/:/home/agent/",
+        "-v",
+        f"{compose_proj}_csplugin_data:/cs_data:ro",
         *network_args,
         "-w",
         "/home/agent",
@@ -425,16 +430,19 @@ def run2_subdir(args, dir=None, cwd=None, *kargs, **kwargs):
 
 def copy_file(f1, f2, remove_f1=False, is_optional=False):
     """Copy file.  This function is done, because basic copy2 seems to fail in some cases or to be more specific, the f1
-    may not be ready before starting copy. First if the file is not optional, it is waited to appear.  After appering it
-    should be more than 43 bytes long (seems the not ready file is many times 43 bytes long)
+    may not be ready before starting copy. First if the file is not optional, it is waited to appear.
+    After appearing, it should be more than 43 bytes long (seems the not ready file is many times 43 bytes long)
 
-    :param f1: file name to copyt
+    :param f1: file name to copy
     :param f2:
     :param remove_f1:
     :param is_optional:
     :return:
 
     """
+    if not is_safe_path(f2):
+        return False, f"Cannot write to {f2}"
+
     try:
         # print(f1, f2)
         count = 0
@@ -452,7 +460,7 @@ def copy_file(f1, f2, remove_f1=False, is_optional=False):
             # print(s1.st_size, " ?? ", s2.st_size)
             if s1.st_size == s2.st_size:
                 if remove_f1:
-                    remove(f1)
+                    rm_safe(f1)
                 return True, ""
             # print(s1.st_size, " != ", s2.st_size)
         print("Copy error!!!")

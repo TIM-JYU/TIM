@@ -1,8 +1,15 @@
 /**
  * Defines the client-side implementation of textfield/label plugin.
  */
-import angular, {INgModelOptions} from "angular";
 import * as t from "io-ts";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+    NgZone,
+} from "@angular/core";
 import {
     ChangeType,
     FormModeOption,
@@ -16,12 +23,21 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {getFormBehavior, PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http, $timeout} from "tim/util/ngimport";
-import {defaultErrorMessage, defaultTimeout, to, valueOr} from "tim/util/utils";
-
-const textfieldApp = angular.module("textfieldApp", ["ngSanitize"]);
-export const moduleDefs = [textfieldApp];
+import {getFormBehavior} from "tim/plugin/util";
+import {defaultErrorMessage, timeout, valueOr} from "tim/util/utils";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
+import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
+import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
+import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
+import {
+    createDowngradedModule,
+    doDowngrade,
+} from "../../../static/scripts/tim/downgrade";
 
 const TextfieldMarkup = t.intersection([
     t.partial({
@@ -48,8 +64,9 @@ const TextfieldMarkup = t.intersection([
         rows: withDefault(t.number, 1),
     }),
 ]);
+export const FieldContent = t.union([t.string, t.number, t.null]);
 export const FieldBasicData = t.type({
-    c: t.union([t.string, t.number, t.null]),
+    c: FieldContent,
 });
 export const FieldDataWithStyles = t.intersection([
     FieldBasicData,
@@ -66,9 +83,75 @@ const TextfieldAll = t.intersection([
         state: nullable(FieldDataWithStyles),
     }),
 ]);
+export type TFieldContent = t.TypeOf<typeof FieldContent>;
 
-class TextfieldController
-    extends PluginBase<
+@Component({
+    selector: "tim-textfield-runner",
+    template: `
+<div class="textfieldNoSaveDiv inline-form">
+    <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+    <h4 *ngIf="header" [innerHtml]="header"></h4>
+    <p class="stem" *ngIf="stem">{{stem}}</p>
+    <form #f class="form-inline">
+     <label><span>
+      <span class="inputstem" [innerHtml]="inputstem"></span>
+      <span *ngIf="!isPlainText()" >
+        <input type="text"
+               *ngIf="!isTextArea()"
+               class="form-control"
+               [(ngModel)]="userword"
+               (blur)="autoSave()"
+               (keydown.enter)="saveAndRefocus()"
+               (ngModelChange)="updateInput()"
+               [ngModelOptions]="{standalone: true}"
+               [pattern]="getPattern()"
+               [readonly]="readonly"
+               [tooltip]="errormessage"
+               [placeholder]="placeholder"
+               [class.warnFrame]="isUnSaved() && !redAlert"
+               [class.alertFrame]="redAlert"
+               [ngStyle]="styles"
+               [style.width.em]="cols"
+               >
+       <textarea
+               [rows]="rows"
+               *ngIf="isTextArea()"
+               class="form-control textarea"
+               [(ngModel)]="userword"
+               [ngModelOptions]="{standalone: true}"
+               (blur)="autoSave()"
+               (keydown)="tryAutoGrow()"
+               (keyup)="tryAutoGrow()"
+               (ngModelChange)="updateInput()"
+               [readonly]="readonly"
+               [tooltip]="errormessage"
+               [placeholder]="placeholder"
+               [class.warnFrame]="isUnSaved() && !redAlert"
+               [class.alertFrame]="redAlert"
+               [ngStyle]="styles"
+               [style.width.em]="cols">
+               </textarea>
+         </span>
+         <span *ngIf="isPlainText()" [innerHtml]="userword" class="plaintext" [style.width.em]="cols" style="max-width: 100%"></span>
+         </span></label>
+    </form>
+    <div *ngIf="errormessage" class="error" style="font-size: 12px" [innerHtml]="errormessage"></div>
+    <button class="timButton"
+            *ngIf="!isPlainText() && buttonText()"
+            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly"
+            (click)="saveText()">
+        {{buttonText()}}
+    </button>
+    <a href="" *ngIf="undoButton && isUnSaved() && undoButton" title="{{undoTitle}}"
+            (click)="tryResetChanges($event);">{{undoButton}}</a>    
+    <p class="savedtext" *ngIf="!hideSavedText && buttonText()">Saved!</p>
+    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+</div>
+`,
+    styleUrls: ["textfield-plugin.component.scss"],
+})
+export class TextfieldPluginComponent
+    extends AngularPluginBase<
         t.TypeOf<typeof TextfieldMarkup>,
         t.TypeOf<typeof TextfieldAll>,
         typeof TextfieldAll
@@ -77,24 +160,46 @@ class TextfieldController
 {
     private changes = false;
     private result?: string;
-    private isRunning = false;
-    private userword = "";
-    private modelOpts!: INgModelOptions; // initialized in $onInit, so need to assure TypeScript with "!"
+    isRunning = false;
+    userword = "";
     private vctrl!: ViewCtrl;
     private initialValue = "";
-    private errormessage?: string;
-    private hideSavedText = true;
-    private redAlert = false;
+    errormessage?: string;
+    hideSavedText = true;
+    redAlert = false;
     private saveResponse: {saved: boolean; message: string | undefined} = {
         saved: false,
         message: undefined,
     };
     private preventedAutosave = false;
-    private styles: Record<string, string> = {};
+    styles: Record<string, string> = {};
     private saveCalledExternally = false;
+
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private zone: NgZone
+    ) {
+        super(el, http, domSanitizer);
+    }
+
+    get disableUnchanged() {
+        return this.markup.disableUnchanged;
+    }
+
+    get placeholder() {
+        return this.markup.inputplaceholder ?? "";
+    }
 
     getDefaultMarkup() {
         return {};
+    }
+
+    tryAutoGrow() {
+        if (this.markup.autogrow) {
+            this.autoGrow();
+        }
     }
 
     /**
@@ -104,25 +209,29 @@ class TextfieldController
         return super.buttonText() ?? null;
     }
 
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
+        this.vctrl = vctrlInstance!;
         this.userword = valueOr(
             this.attrsall.state?.c,
-            this.attrs.initword ?? ""
+            this.markup.initword ?? ""
         ).toString();
-        // this.modelOpts = {debounce: this.autoupdate};
-        this.modelOpts = {debounce: {blur: 0}};
-        this.vctrl.addTimComponent(this, this.attrs.tag);
+        this.vctrl.addTimComponent(this, this.markup.tag);
         this.initialValue = this.userword;
-        if (this.attrs.showname) {
+        if (this.markup.showname) {
             this.initCode();
         }
-        if (this.attrsall.state?.styles && !this.attrs.ignorestyles) {
+        if (this.attrsall.state?.styles && !this.markup.ignorestyles) {
             this.applyStyling(this.attrsall.state.styles);
         }
-        if (this.attrs.textarea && this.attrs.autogrow) {
+        if (this.markup.textarea && this.markup.autogrow) {
             this.autoGrow();
         }
+    }
+
+    saveAndRefocus() {
+        this.autoSave();
+        this.changeFocus();
     }
 
     /**
@@ -136,15 +245,19 @@ class TextfieldController
      * Save method for other plugins, needed by e.g. multisave plugin.
      */
     async save() {
-        this.saveCalledExternally = true;
-        return this.saveText();
+        return this.zone.run(() => {
+            this.saveCalledExternally = true;
+            return this.saveText();
+        });
     }
 
     resetField(): undefined {
-        this.initCode();
-        this.applyStyling({});
-        this.errormessage = undefined;
-        return undefined;
+        return this.zone.run(() => {
+            this.initCode();
+            this.applyStyling({});
+            this.errormessage = undefined;
+            return undefined;
+        });
     }
 
     tryResetChanges(e?: Event): void {
@@ -158,80 +271,84 @@ class TextfieldController
     }
 
     resetChanges(): void {
-        this.userword = this.initialValue;
-        this.changes = false;
-        this.updateListeners(ChangeType.Saved);
+        this.zone.run(() => {
+            this.userword = this.initialValue;
+            this.changes = false;
+            this.updateListeners(ChangeType.Saved);
+        });
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
     // TODO: get rid of any (styles can arrive as object)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setAnswer(content: Record<string, any>): ISetAnswerResult {
-        this.errormessage = undefined;
-        let message;
-        let ok = true;
-        // TODO: should receiving empty answer reset to defaultnumber or clear field?
-        if (Object.keys(content).length == 0) {
-            this.resetField();
-        } else {
-            try {
-                this.userword = content.c;
-            } catch (e) {
-                this.userword = "";
-                ok = false;
-                message = `Couldn't find related content ("c") from ${JSON.stringify(
-                    content
-                )}`;
-                this.errormessage = message;
+        return this.zone.run(() => {
+            this.errormessage = undefined;
+            let message;
+            let ok = true;
+            // TODO: should receiving empty answer reset to defaultnumber or clear field?
+            if (Object.keys(content).length == 0) {
+                this.resetField();
+            } else {
+                try {
+                    this.userword = content.c;
+                } catch (e) {
+                    this.userword = "";
+                    ok = false;
+                    message = `Couldn't find related content ("c") from ${JSON.stringify(
+                        content
+                    )}`;
+                    this.errormessage = message;
+                }
+                if (!this.markup.ignorestyles) {
+                    this.applyStyling(content.styles);
+                }
             }
-            if (!this.attrs.ignorestyles) {
-                this.applyStyling(content.styles);
-            }
-        }
-        this.changes = false;
-        this.updateListeners(ChangeType.Saved);
-        return {ok: ok, message: message};
+            this.changes = false;
+            this.updateListeners(ChangeType.Saved);
+            return {ok: ok, message: message};
+        });
     }
 
     /**
      * Method for autoupdating.
      */
     get autoupdate(): number {
-        return this.attrs.autoupdate;
+        return this.markup.autoupdate;
     }
 
     /**
      * Returns (user) set inputstem (textfeed before userinput box).
      */
     get inputstem() {
-        return this.attrs.inputstem ?? "";
+        return this.markup.inputstem ?? "";
     }
 
     /**
      * Returns (user) set col size (size of the field).
      */
     get cols() {
-        return this.attrs.cols;
+        return this.markup.cols;
     }
 
     get rows() {
-        return this.attrs.rows;
+        return this.markup.rows;
     }
 
     /**
      * Initialize content.
      */
     initCode() {
-        if (this.attrs.showname) {
+        if (this.markup.showname) {
             const u = this.vctrl.selectedUser;
-            if (this.attrs.showname == 1) {
+            if (this.markup.showname == 1) {
                 this.userword = u.real_name ?? "";
             }
-            if (this.attrs.showname == 2) {
+            if (this.markup.showname == 2) {
                 this.userword = u.name;
             }
         } else {
-            this.userword = this.attrs.initword ?? "";
+            this.userword = this.markup.initword ?? "";
         }
         this.initialValue = this.userword;
         this.result = undefined;
@@ -241,7 +358,7 @@ class TextfieldController
 
     /**
      * Redirects save request to actual save method.
-     * Used as e.g. timButton ng-click event.
+     * Used as e.g. timButton (click) event.
      */
     async saveText() {
         if (this.isUnSaved()) {
@@ -254,19 +371,15 @@ class TextfieldController
         }
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns validinput attribute, if one is defined.
      * Used by pattern checker in angular.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     getPattern() {
-        if (this.attrs.validinput) {
-            return this.attrs.validinput;
-        }
+        return this.markup.validinput ?? "";
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns focus on next HTML field.
      * Used by keydown (Enter) in angular.
@@ -289,17 +402,16 @@ class TextfieldController
         }
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Returns true value, if label is set to plaintext.
      * Used to define readOnlyStyle in angular, either input or span.
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isPlainText() {
-        if (this.attrs.showname) {
+        if (this.markup.showname) {
             return true;
         }
-        const ros = this.attrs.readOnlyStyle;
+        const ros = this.markup.readOnlyStyle;
         if (ros === "htmlalways") {
             return true;
         }
@@ -309,7 +421,7 @@ class TextfieldController
     }
 
     isTextArea() {
-        if (this.attrs.textarea) {
+        if (this.markup.textarea) {
             return true;
         }
         return false;
@@ -346,7 +458,6 @@ class TextfieldController
         return regExpChecker.test(this.userword);
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Checking if input has been changed since the last Save or initialization.
      * Displays a red thick marker at the right side of the inputfield to notify users
@@ -354,10 +465,9 @@ class TextfieldController
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isUnSaved() {
-        return !this.attrs.nosave && this.changes;
+        return !this.markup.nosave && this.changes;
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
      * Autosaver used by ng-blur in textfieldApp component.
      * Needed to seperate from other save methods because of the if-structure.
@@ -369,7 +479,7 @@ class TextfieldController
             this.preventedAutosave = false;
             return;
         }
-        if (this.attrs.autosave || this.attrs.autosave === undefined) {
+        if (this.markup.autosave || this.markup.autosave === undefined) {
             // noinspection JSIgnoredPromiseFromCall
             this.saveText();
         }
@@ -386,11 +496,11 @@ class TextfieldController
             return this.saveResponse;
         }
         this.errormessage = undefined;
-        if (this.attrs.validinput) {
-            if (!this.validityCheck(this.attrs.validinput)) {
+        if (this.markup.validinput) {
+            if (!this.validityCheck(this.markup.validinput)) {
                 this.errormessage =
-                    this.attrs.errormessage ??
-                    "Input does not pass the RegEx: " + this.attrs.validinput;
+                    this.markup.errormessage ??
+                    "Input does not pass the RegEx: " + this.markup.validinput;
                 this.redAlert = true;
                 this.saveResponse.message = this.errormessage;
                 return this.saveResponse;
@@ -408,19 +518,12 @@ class TextfieldController
         if (nosave) {
             params.input.nosave = true;
         }
-        const url = this.pluginMeta.getAnswerUrl();
-        const r = await to(
-            $http.put<{web: {result: string; error?: string; clear?: boolean}}>(
-                url,
-                params,
-                {timeout: defaultTimeout}
-            )
-        );
+        const r = await this.postAnswer<{
+            web: {result: string; error?: string; clear?: boolean};
+        }>(params);
         this.isRunning = false;
         if (r.ok) {
-            const data = r.result.data;
-            // TODO: Make angular to show tooltip even without user having to move cursor out and back into the input
-            // (Use premade bootstrap method / add listener for enter?)
+            const data = r.result;
             this.errormessage = data.web.error ?? "";
             this.result = data.web.result;
             this.initialValue = this.userword;
@@ -438,7 +541,7 @@ class TextfieldController
                 const taskId = this.getTaskId();
                 if (taskId) {
                     const tid = taskId.docTask().toString();
-                    if (this.attrs.autoUpdateTables) {
+                    if (this.markup.autoUpdateTables) {
                         this.vctrl.updateAllTables([tid]);
                     }
                     if (this.vctrl.docSettings.form_mode) {
@@ -454,8 +557,8 @@ class TextfieldController
             }
         } else {
             this.errormessage =
-                r.result.data?.error ??
-                this.attrs.connectionErrorMessage ??
+                r.result.error.error ??
+                this.markup.connectionErrorMessage ??
                 defaultErrorMessage;
         }
         return this.saveResponse;
@@ -466,7 +569,7 @@ class TextfieldController
     }
 
     async autoGrow() {
-        await $timeout(0);
+        await timeout();
         const ele = this.element.find(".textarea").first();
         const scrollHeight = ele[0].scrollHeight;
         const prevHeight = parseFloat(ele.css("height"));
@@ -477,7 +580,7 @@ class TextfieldController
     }
 
     formBehavior(): FormModeOption {
-        return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
+        return getFormBehavior(this.markup.form, FormModeOption.IsForm);
     }
 
     updateInput() {
@@ -500,84 +603,34 @@ class TextfieldController
         this.vctrl.informChangeListeners(
             taskId,
             state,
-            this.attrs.tag ? this.attrs.tag : undefined
+            this.markup.tag ? this.markup.tag : undefined
         );
     }
 }
 
-// noinspection CssInvalidFunction
-/**
- * Introducing textfieldRunner as HTML component.
- */
-textfieldApp.component("textfieldRunner", {
-    bindings: pluginBindings,
-    controller: TextfieldController,
-    require: {
-        vctrl: "^timView",
-    },
-    template: `
-<div class="textfieldNoSaveDiv">
-    <tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p class="stem" ng-if="::$ctrl.stem">{{::$ctrl.stem}}</p>
-    <form name="$ctrl.f" class="form-inline">
-     <label><span>
-      <span class="inputstem" ng-bind-html="::$ctrl.inputstem"></span>
-      <span ng-if="::!$ctrl.isPlainText()" >
-        <input type="text"
-               style="width: {{::$ctrl.cols}}em"
-               ng-if="::!$ctrl.isTextArea()"
-               class="form-control"
-               ng-model="$ctrl.userword"
-               ng-blur="::$ctrl.autoSave()"
-               ng-keydown="$event.keyCode === 13 && $ctrl.autoSave() && $ctrl.changeFocus()"
-               ng-change="$ctrl.updateInput()"
-               ng-model-options="::$ctrl.modelOpts"
-               ng-trim="false"
-               ng-pattern="$ctrl.getPattern()"
-               ng-readonly="::$ctrl.readonly"
-               uib-tooltip="{{ $ctrl.errormessage }}"
-               tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
-               tooltip-trigger="mouseenter"
-               placeholder="{{::$ctrl.inputplaceholder}}"
-               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }"
-               ng-style="$ctrl.styles">
-       <textarea
-               style="width: {{::$ctrl.cols}}em;"
-               rows="{{::$ctrl.rows}}"
-               ng-if="::$ctrl.isTextArea()"
-               class="form-control textarea"
-               ng-model="$ctrl.userword"
-               ng-blur="::$ctrl.autoSave()"
-               ng-keydown="::$ctrl.attrs.autogrow && $ctrl.autoGrow()"
-               ng-keyup="::$ctrl.attrs.autogrow && $ctrl.autoGrow()"
-               ng-change="$ctrl.updateInput()"
-               ng-model-options="::$ctrl.modelOpts"
-               ng-trim="false"
-               ng-pattern="$ctrl.getPattern()"
-               ng-readonly="::$ctrl.readonly"
-               uib-tooltip="{{ $ctrl.errormessage }}"
-               tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
-               tooltip-trigger="mouseenter"
-               placeholder="{{::$ctrl.inputplaceholder}}"
-               ng-class="{warnFrame: ($ctrl.isUnSaved() && !$ctrl.redAlert), alertFrame: $ctrl.redAlert }"
-               ng-style="$ctrl.styles">
-               </textarea>
-         </span>
-         <span ng-if="::$ctrl.isPlainText()" ng-bind-html="$ctrl.userword" class="plaintext" style="width: {{::$ctrl.cols}}em; max-width: 100%"></span>
-         </span></label>
-    </form>
-    <div ng-if="$ctrl.errormessage" class="error" style="font-size: 12px" ng-bind-html="$ctrl.errormessage"></div>
-    <button class="timButton"
-            ng-if="::!$ctrl.isPlainText() && $ctrl.buttonText()"
-            ng-disabled="($ctrl.disableUnchanged && !$ctrl.isUnSaved()) || $ctrl.isRunning || $ctrl.readonly"
-            ng-click="$ctrl.saveText()">
-        {{::$ctrl.buttonText()}}
-    </button>
-    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved() && $ctrl.undoButton" title="{{::$ctrl.undoTitle}}"
-            ng-click="$ctrl.tryResetChanges($event);">{{::$ctrl.undoButton}}</a>    
-    <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p>
-    <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
-</div>
-`,
-});
+@NgModule({
+    declarations: [TextfieldPluginComponent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        TimUtilityModule,
+        FormsModule,
+        PurifyModule,
+        TooltipModule.forRoot(),
+    ],
+})
+export class TextfieldModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
+
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                TextfieldModule
+            )
+        ),
+        "textfieldRunner",
+        TextfieldPluginComponent
+    ),
+];

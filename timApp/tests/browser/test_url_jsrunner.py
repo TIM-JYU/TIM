@@ -31,7 +31,7 @@ program: |!!
 
         # Try adding answer manually
         grade_input = self.find_element_avoid_staleness(
-            "numericfield-runner input[type='tel']"
+            "numericfield-runner input[type='number']"
         )
         grade_input.send_keys("1")
         grade_input.send_keys(Keys.RETURN)

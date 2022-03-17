@@ -1,11 +1,13 @@
 import $ from "jquery";
 import {documentglobals} from "tim/util/globals";
 import {getParContainerElem} from "tim/document/structure/create";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {EditMode} from "../popup-menu-dialog.component";
 
 export function watchEditMode(newVal: EditMode | null) {
     documentglobals().editMode = newVal;
     showHidden(newVal);
+    vctrlInstance?.emit("editModeChange", newVal);
 }
 
 function showHidden(showParam: EditMode | null) {

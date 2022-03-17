@@ -28,7 +28,7 @@ from timApp.messaging.messagelist.listinfo import Channel
 from timApp.messaging.timMessage.internalmessage_models import (
     InternalMessageReadReceipt,
 )
-from timApp.notification.notification import Notification
+from timApp.notification.notification import Notification, NotificationType
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, TimeStampMixin, is_attribute_loaded
@@ -930,7 +930,19 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         vals: set[int],
         allow_admin: bool = True,
         grace_period: timedelta = timedelta(seconds=0),
+        duration: bool = False,
     ) -> BlockAccess | None:
+        """
+            Check if the user has any possible access to the given item or block.
+
+        :param i: The item or block to check
+        :param vals: Access types to check. See AccessType for available values.
+        :param allow_admin: If True, allow admins to bypass the access check
+        :param grace_period: Grace period for the access check.
+                             If the user has access to the item, extends the end date of the access by this amount.
+        :param duration: If True checks for duration access instead of active accesses.
+        :return: The best access object that user currently has for the given item or block and access types.
+        """
         if allow_admin and self.is_admin:
             return BlockAccess(
                 block_id=i.id,
@@ -968,37 +980,69 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 # so we'll continue looping.
                 if best_access is None or best_access.accessible_to < a.accessible_to:
                     best_access = a
+            if (
+                duration
+                and a.unlockable
+                and ((a.duration_from or maxdate) <= now < (a.duration_to or maxdate))
+            ):
+                return a
         return best_access
 
     def has_access(
         self,
         i: ItemOrBlock,
         access: AccessType,
-        grace_period=timedelta(seconds=0),
+        grace_period: timedelta = timedelta(seconds=0),
+        duration: bool = False,
     ) -> BlockAccess | None:
+        """
+            Check if the user has access to the given item or block.
+
+        :param i: Item or block to check
+        :param access: Access type to check. See AccessType for available values.
+        :param grace_period: Grace period for the access check.
+                             If the user has access to the item, extends the end date of the access by this amount.
+        :param duration: If True checks for duration access instead of active accesses.
+        :return: The best access object that user currently has for the given item or block and access type.
+                 Otherwise, if user has no access, None.
+        """
         from timApp.auth.accesshelper import check_inherited_right
 
         return check_inherited_right(
             self, i, access, grace_period
-        ) or self.has_some_access(i, access_sets[access], grace_period=grace_period)
+        ) or self.has_some_access(
+            i, access_sets[access], grace_period=grace_period, duration=duration
+        )
 
-    def has_view_access(self, i: ItemOrBlock) -> BlockAccess | None:
-        return self.has_some_access(i, view_access_set)
+    def has_view_access(
+        self, i: ItemOrBlock, duration: bool = False
+    ) -> BlockAccess | None:
+        return self.has_some_access(i, view_access_set, duration=duration)
 
-    def has_edit_access(self, i: ItemOrBlock) -> BlockAccess | None:
-        return self.has_some_access(i, edit_access_set)
+    def has_edit_access(
+        self, i: ItemOrBlock, duration: bool = False
+    ) -> BlockAccess | None:
+        return self.has_some_access(i, edit_access_set, duration=duration)
 
-    def has_manage_access(self, i: ItemOrBlock) -> BlockAccess | None:
-        return self.has_some_access(i, manage_access_set)
+    def has_manage_access(
+        self, i: ItemOrBlock, duration: bool = False
+    ) -> BlockAccess | None:
+        return self.has_some_access(i, manage_access_set, duration=duration)
 
-    def has_teacher_access(self, i: ItemOrBlock) -> BlockAccess | None:
-        return self.has_some_access(i, teacher_access_set)
+    def has_teacher_access(
+        self, i: ItemOrBlock, duration: bool = False
+    ) -> BlockAccess | None:
+        return self.has_some_access(i, teacher_access_set, duration=duration)
 
-    def has_seeanswers_access(self, i: ItemOrBlock) -> BlockAccess | None:
-        return self.has_some_access(i, seeanswers_access_set)
+    def has_seeanswers_access(
+        self, i: ItemOrBlock, duration: bool = False
+    ) -> BlockAccess | None:
+        return self.has_some_access(i, seeanswers_access_set, duration=duration)
 
-    def has_copy_access(self, i: ItemOrBlock) -> BlockAccess | None:
-        return self.has_some_access(i, copy_access_set)
+    def has_copy_access(
+        self, i: ItemOrBlock, duration: bool = False
+    ) -> BlockAccess | None:
+        return self.has_some_access(i, copy_access_set, duration=duration)
 
     def has_ownership(
         self, i: ItemOrBlock, allow_admin: bool = True
@@ -1041,28 +1085,79 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             type=get_access_type_id(access_type),
         ).delete()
 
-    def get_notify_settings(self, doc: DocInfo):
-        n = self.notifications.filter_by(doc_id=doc.id).first()
-        if not n:
-            n = Notification(
-                doc_id=doc.id,
-                user_id=self.id,
-                email_doc_modify=False,
-                email_comment_add=False,
-                email_comment_modify=False,
-            )
-            db.session.add(n)
-        return n
+    def get_notify_settings(self, item: DocInfo | Folder) -> dict:
+        # TODO: Instead of conversion, expose all notification types in UI
+        n: list[Notification] = self.notifications.filter_by(block_id=item.id).all()
+
+        result = {
+            "email_doc_modify": False,
+            "email_comment_add": False,
+            "email_comment_modify": False,
+            "email_answer_add": False,
+        }
+
+        for nn in n:
+            if nn.notification_type in (
+                NotificationType.DocModified,
+                NotificationType.ParAdded,
+                NotificationType.ParDeleted,
+                NotificationType.ParModified,
+            ):
+                result["email_doc_modify"] = True
+            if nn.notification_type in (NotificationType.CommentAdded,):
+                result["email_comment_add"] = True
+            if nn.notification_type in (
+                NotificationType.CommentModified,
+                NotificationType.CommentDeleted,
+            ):
+                result["email_comment_modify"] = True
+            if nn.notification_type in (NotificationType.AnswerAdded,):
+                result["email_answer_add"] = True
+
+        return result
 
     def set_notify_settings(
-        self, doc: DocInfo, doc_modify: bool, comment_add: bool, comment_modify: bool
+        self,
+        item: DocInfo | Folder,
+        doc_modify: bool,
+        comment_add: bool,
+        comment_modify: bool,
+        answer_add: bool,
     ):
-        n = self.get_notify_settings(doc)
-        n.email_comment_add = comment_add
-        n.email_doc_modify = doc_modify
-        n.email_comment_modify = comment_modify
-        if not any((doc_modify, comment_add, comment_modify)):
-            db.session.delete(n)
+        # TODO: Instead of conversion, expose all notification types in UI
+        notification_types = []
+        if doc_modify:
+            notification_types.extend(
+                (
+                    NotificationType.DocModified,
+                    NotificationType.ParAdded,
+                    NotificationType.ParDeleted,
+                    NotificationType.ParModified,
+                )
+            )
+        if comment_add:
+            notification_types.extend((NotificationType.CommentAdded,))
+        if comment_modify:
+            notification_types.extend(
+                (
+                    NotificationType.CommentModified,
+                    NotificationType.CommentDeleted,
+                )
+            )
+        if answer_add:
+            notification_types.extend((NotificationType.AnswerAdded,))
+
+        self.notifications.filter((Notification.block_id == item.id)).delete(
+            synchronize_session=False
+        )
+        for nt in notification_types:
+            db.session.add(
+                Notification(
+                    user=self,
+                    block_id=item.id,
+                    notification_type=nt,
+                )
+            )
 
     def get_answers_for_task(self, task_id: str):
         return (

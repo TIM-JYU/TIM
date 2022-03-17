@@ -79,6 +79,7 @@ class Velp(db.Model):
     valid_until = db.Column(db.DateTime(timezone=True))
     color = db.Column(db.Text)
     visible_to = db.Column(db.Integer, nullable=False)
+    style = db.Column(db.Integer)
 
     creator = db.relationship("User", back_populates="velps")
     labels = db.relationship(
@@ -111,6 +112,7 @@ class Velp(db.Model):
             "valid_until": self.valid_until,
             "velp_groups": [vg.id for vg in self.groups.values()],
             "visible_to": self.visible_to,
+            "style": self.style,
         }
 
 

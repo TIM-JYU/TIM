@@ -1,6 +1,8 @@
-import {IController, IFormController} from "angular";
+import {IController, IFormController, IScope} from "angular";
 import {timApp} from "tim/app";
-import {$http} from "../util/ngimport";
+import {ParCompiler} from "tim/editor/parCompiler";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {$http, $timeout} from "../util/ngimport";
 import {Binding, clone, Require, to} from "../util/utils";
 import {VelpSelectionController} from "./velpSelection";
 import {
@@ -35,21 +37,25 @@ export const colorPalette = [
 // TODO: add min and max values for points
 // TODO: user should be able to delete velp without any annotations
 
+interface IVelpOptionSetting {
+    type: string;
+    title: string;
+    values: number[];
+    names: string[];
+}
+
 /**
  * Controller for velp Window
  */
 export class VelpWindowController implements IController {
+    static $inject = ["$scope", "$element"];
     private onVelpSelect!: Binding<(params: {$VELP: IVelp}) => void, "&">;
     private velpLocal!: IVelp;
     private velp!: Binding<IVelpUI, "<">;
     private newLabel: INewLabel;
     private labelToEdit: INewLabel;
-    private visibleOptions: {
-        type: string;
-        title: string;
-        values: [number, number, number, number];
-        names: [string, string, string, string];
-    };
+    private visibleOptions: IVelpOptionSetting;
+    private styleOptions: IVelpOptionSetting;
     private settings: {
         teacherRightsError: string;
         labelContentError: string;
@@ -65,12 +71,16 @@ export class VelpWindowController implements IController {
     private labels!: Binding<ILabelUI[], "<">;
     private docId!: Binding<number, "<">;
     private teacherRight!: Binding<boolean, "<">;
+    private vctrl!: ViewCtrl;
 
     $onInit() {
         this.velpLocal = clone(this.velp);
 
         if (this.velp.visible_to == null) {
             this.velp.visible_to = 4; // Everyone by default
+        }
+        if (this.velp.style == null) {
+            this.velp.style = 1;
         }
 
         // declare edit rights
@@ -82,9 +92,14 @@ export class VelpWindowController implements IController {
                 (g) => (g.edit_access && this.isGroupInVelp(g)) || false
             );
         }
+        $timeout(() => {
+            this.scope.$evalAsync(() => {
+                ParCompiler.processAllMath(this.element.find(".velpContent"));
+            });
+        });
     }
 
-    constructor() {
+    constructor(private scope: IScope, private element: JQLite) {
         this.newLabel = {content: "", selected: true, valid: true, id: null};
         this.labelToEdit = {
             content: "",
@@ -99,6 +114,12 @@ export class VelpWindowController implements IController {
             values: [1, 2, 3, 4],
             names: ["Just me", "Document owner", "Teachers", "Everyone"],
         };
+        this.styleOptions = {
+            type: "select",
+            title: "Style",
+            values: [1, 2, 3],
+            names: ["Default", "Text", "Text (always visible)"],
+        };
         this.settings = {
             teacherRightsError:
                 "You need to have teacher rights to change points in this document.",
@@ -110,6 +131,18 @@ export class VelpWindowController implements IController {
         };
         this.submitted = false;
         this.hasEditAccess = false;
+        scope.$watch(
+            () => this.velp.edit,
+            (newValue, oldValue) => {
+                if (!newValue && oldValue) {
+                    scope.$evalAsync(() => {
+                        ParCompiler.processAllMath(
+                            this.element.find(".velpContent")
+                        );
+                    });
+                }
+            }
+        );
     }
 
     saveButtonText() {
@@ -189,7 +222,7 @@ export class VelpWindowController implements IController {
         if (this.teacherRight) {
             return false;
         } else {
-            if (points == null) {
+            if (points == null || this.vctrl.docSettings.peer_review) {
                 return false;
             } else {
                 return true;
@@ -474,6 +507,7 @@ export class VelpWindowController implements IController {
             color: this.velp.color,
             visible_to: this.velp.visible_to,
             velp_groups: clone(this.velp.velp_groups),
+            style: this.velp.style,
         };
         const json = await to($http.post<number>("/add_velp", data));
         if (!json.ok) {
@@ -562,6 +596,7 @@ timApp.component("velpWindow", {
     },
     require: {
         velpSelection: "^velpSelection",
+        vctrl: "^timView",
     },
     controller: VelpWindowController,
     templateUrl: "/static/templates/velpWindow.html",

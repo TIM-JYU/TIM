@@ -78,11 +78,13 @@ export class UserListController implements IController {
 
         this.viewctrl.users.sort(nameCompare);
 
-        for (const u of this.viewctrl.users) {
-            if (u.velped_task_count > 0) {
-                anyAnnotations = true;
-                smallFieldWidth = 40;
-                break;
+        if (getViewName() !== "review") {
+            for (const u of this.viewctrl.users) {
+                if (u.velped_task_count > 0) {
+                    anyAnnotations = true;
+                    smallFieldWidth = 40;
+                    break;
+                }
             }
         }
 
@@ -155,6 +157,7 @@ export class UserListController implements IController {
                     cellTooltip: true,
                     headerTooltip: true,
                     maxWidth: smallFieldWidth,
+                    visible: getViewName() !== "review",
                     sortingAlgorithm: numericSort,
                 },
             ]);
@@ -216,7 +219,7 @@ export class UserListController implements IController {
                             return;
                         }
                         const unsavedTimComponents =
-                            this.viewctrl.checkUnSavedTimComponents(true);
+                            this.viewctrl.checkUnSavedComponents(true);
                         if (
                             unsavedTimComponents &&
                             !window.confirm(

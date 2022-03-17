@@ -26,9 +26,15 @@ import {DndDropEvent, DndModule} from "ngx-drag-drop";
 import {polyfill} from "mobile-drag-drop";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {ConsentType} from "../ui/consent";
-import {INotification, ISettings, settingsglobals} from "../util/globals";
+import {
+    INotification,
+    ISettings,
+    NotificationType,
+    settingsglobals,
+} from "../util/globals";
 import {IOkResponse, isIOS, timeout, to2, toPromise} from "../util/utils";
 import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
+import {DocumentOrFolder} from "../item/IItem";
 import {ContactOrigin, IFullUser, IUserContact} from "./IUser";
 
 @Component({
@@ -91,6 +97,11 @@ interface StyleDocumentInfo {
     path: string;
     description?: string;
     type?: string;
+}
+
+interface GroupedNotification {
+    item: DocumentOrFolder;
+    notificationTypes: Set<NotificationType>;
 }
 
 type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
@@ -254,15 +265,18 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                         <a href="/manage/{{n.item.path}}">
                             <span *ngIf="n.item.isFolder" class="glyphicon glyphicon-folder-open"></span>
                             {{n.item.title}}</a>
-                        <span *ngIf="n.email_doc_modify"
-                              class="glyphicon glyphicon-pencil"
-                              tooltip="Document modifications" i18n-tooltip></span>
-                        <span *ngIf="n.email_comment_add"
-                              class="glyphicon glyphicon-comment"
-                              tooltip="New comments" i18n-tooltip></span>
-                        <span *ngIf="n.email_comment_modify"
-                              class="glyphicon glyphicon-comment"
-                              tooltip="Comment modifications" i18n-tooltip></span>
+                        <i *ngIf="isDocModify(n)"
+                              class="notification-icon glyphicon glyphicon-pencil"
+                              title="Document modifications" i18n-title></i>
+                        <i *ngIf="isCommentAdd(n)"
+                              class="notification-icon glyphicon glyphicon-send"
+                              title="New comments" i18n-title></i>
+                        <i *ngIf="isCommentModify(n)"
+                              class="notification-icon glyphicon glyphicon-comment"
+                              title="Comment modifications" i18n-title></i>
+                        <i *ngIf="isAnswerAdd(n)"
+                              class="notification-icon glyphicon glyphicon-open-file"
+                              title="Answer posts" i18n-title></i>
                     </li>
                 </ul>
                 <button (click)="getAllNotifications()"
@@ -449,7 +463,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
 export class SettingsComponent implements DoCheck, AfterViewInit {
     saving = false;
     settings: SettingsWithStylePath;
-    notifications: INotification[];
+    notifications: GroupedNotification[];
     storageClear = false;
     user: IFullUser;
     deletingAccount = false;
@@ -494,7 +508,9 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.consent = this.user.consent;
         this.settings = settingsglobals().userPrefs;
         this.settings.style_path = this.currentStyle;
-        this.notifications = settingsglobals().notifications;
+        this.notifications = this.groupNotifications(
+            settingsglobals().notifications
+        );
         this.contacts = settingsglobals().contacts;
 
         const currentCustom = document.querySelector<HTMLStyleElement>(
@@ -973,12 +989,52 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     // region Notifications
 
+    private groupNotifications(notifications: INotification[]) {
+        // Group notifications by the item
+        const grouped = new Map<number, GroupedNotification>();
+        for (const notification of notifications) {
+            const key = notification.item.id;
+            if (!grouped.has(key)) {
+                grouped.set(key, {
+                    item: notification.item,
+                    notificationTypes: new Set(),
+                });
+            }
+            grouped.get(key)!.notificationTypes.add(notification.type);
+        }
+        return Array.from(grouped.values());
+    }
+
+    isDocModify(n: GroupedNotification) {
+        return (
+            n.notificationTypes.has(NotificationType.DocModified) ||
+            n.notificationTypes.has(NotificationType.ParAdded) ||
+            n.notificationTypes.has(NotificationType.ParDeleted) ||
+            n.notificationTypes.has(NotificationType.ParModified)
+        );
+    }
+
+    isCommentAdd(n: GroupedNotification) {
+        return n.notificationTypes.has(NotificationType.CommentAdded);
+    }
+
+    isCommentModify(n: GroupedNotification) {
+        return (
+            n.notificationTypes.has(NotificationType.CommentModified) ||
+            n.notificationTypes.has(NotificationType.CommentDeleted)
+        );
+    }
+
+    isAnswerAdd(n: GroupedNotification) {
+        return n.notificationTypes.has(NotificationType.AnswerAdded);
+    }
+
     async getAllNotifications() {
         const resp = await toPromise(
             this.http.get<INotification[]>("/notify/all")
         );
         if (resp.ok) {
-            this.notifications = resp.result;
+            this.notifications = this.groupNotifications(resp.result);
             this.allNotificationsFetched = true;
         } else {
             await showMessageDialog(resp.result.error.error);

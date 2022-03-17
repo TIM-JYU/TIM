@@ -56,6 +56,9 @@ export class TaskId {
         public access?: TaskIdAccess
     ) {}
 
+    /**
+     * Returns basic task name in form <doc id>.<task name>
+     */
     docTask() {
         if (!this.docId) {
             throw new Error("Task id does not have docId");
@@ -63,9 +66,25 @@ export class TaskId {
         return docIdDotName.wrap(`${this.docId}.${this.name}`);
     }
 
+    /**
+     * Returns a field name of the task in form <doc id>.<task name>[.<field name>]
+     *
+     * If TaskId has no field name, returns <doc id>.<task name>
+     */
     docTaskField() {
         const f = this.field ? `.${this.field}` : "";
         return `${this.docTask().toString()}${f}`;
+    }
+
+    /**
+     * Returns full task id in form <doc id>.<task name>[.<block hint>]
+     * The returned id identifies the block in which the task is located in HTML.
+     *
+     * If TaskId has no block hint, returns <doc id>.<task name>
+     */
+    docTaskIdFull() {
+        const blockHint = this.blockHint ? `.${this.blockHint}` : "";
+        return `${this.docTask().toString()}${blockHint}`;
     }
 
     /**

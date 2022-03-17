@@ -174,10 +174,7 @@ export abstract class PluginBaseCommon {
      * Returns task name of the plugin.
      */
     getName() {
-        const taskId = this.pluginMeta.getTaskId();
-        if (taskId) {
-            return taskId.name;
-        }
+        return this.pluginMeta.getTaskId()?.name;
     }
 
     getTaskId() {

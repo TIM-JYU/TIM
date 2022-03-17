@@ -11,9 +11,9 @@
 
         Show this when velp is NOT being edited
 
-       --><div ng-if="!$ctrl.velp.edit" class="content">
+       --><div ng-if="!$ctrl.velp.edit" class="content velpContent">
             <div>
-                <span class="header">{{ $ctrl.velp.content }}</span>
+                <span class="header math">{{ $ctrl.velp.content }}</span>
 
                 <span ng-click="$ctrl.toggleVelpToEdit(); $event.stopPropagation();"
                       ng-if="$ctrl.hasEditAccess"
@@ -23,7 +23,7 @@
                       ng-attr-title="{{ $ctrl.settings.teacherRightsError }}" >
                 </span>
                 <span class="margin-5-right header pull-right">{{ $ctrl.velp.points }}</span>
-                <p class="velpInfoText truncate">{{ $ctrl.velp.default_comment }}</p>
+                <p class="velpInfoText truncate math">{{ $ctrl.velp.default_comment }}</p>
 
                 <div class="tags">
                     <span class="pull-right" ng-show="$ctrl.advancedOn"
@@ -143,26 +143,35 @@
 
             <p>
                 <label>
+                    <span title="Visible to"
+                          class="glyphicon glyphicon-eye-open visible-icon">
+
+                    </span>
+                    <select ng-model="$ctrl.velp.visible_to" title="Visible to"
+                            ng-options="v as $ctrl.visibleOptions.names[v-1] for v in $ctrl.visibleOptions.values">
+                    </select>
                     <span ng-class="['glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
-                         uib-popover="Who can see the velp as a default?
+                          uib-popover="Who can see the velp as a default?
                                       'Just me' means that the annotation is visible only to yourself.
                                       'Document owner' refers to the person or group who has been named as the document owner.
                                       'Teachers' refers to the users that have teacher access to this document.
                                       'Everyone' means that the annotation is visible to everyone who can view the assessed content."
-                         popover-placement="right">
+                          popover-placement="top">
                     </span>
-
-                    <select ng-model="$ctrl.velp.visible_to" title="Visible to"
-                            ng-options="v as $ctrl.visibleOptions.names[v-1] for v in $ctrl.visibleOptions.values">
-                    </select>
-
                 </label>
                 <span style="float: right">
                 <input type="color" ng-model="$ctrl.velp.color" title="change Velp default color" class="colorchange-button">
                 <input ng-if="$ctrl.isVelpCustomColor()" class="smallButton" type="button" ng-click="$ctrl.clearVelpColor()" title="Reset color to original value" value="R">
                 </span>
             </p>
-
+            <p>
+                <label>
+                    <span>Style</span>
+                    <select ng-model="$ctrl.velp.style" title="Style"
+                            ng-options="v as $ctrl.styleOptions.names[v-1] for v in $ctrl.styleOptions.values">
+                    </select>
+                </label>
+            </p>
             <!-- submit executes 'saveVelp'-function -->
             <p>
             <input type="submit" class="timButton" ng-value="$ctrl.saveButtonText()" ng-disabled="!$ctrl.isVelpValid()"/>

@@ -17,12 +17,15 @@ import {
     Input,
     OnDestroy,
     OnInit,
+    SimpleChanges,
     ViewChild,
 } from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {deserialize} from "typescript-json-serializer";
 import {DrawItem} from "tim/plugin/drawCanvas";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {ParCompiler} from "tim/editor/parCompiler";
+import {luma, parseHexColor} from "tim/util/colorUtils";
 import {ViewCtrl} from "../document/viewctrl";
 import {KEY_CTRL, KEY_ENTER, KEY_S} from "../util/keycodes";
 import {$http} from "../util/ngimport";
@@ -77,35 +80,52 @@ export async function updateAnnotationServer(
     selector: "annotation",
     template: `
         <span #contentSpan (click)="setShowFull(false);toggleAnnotation()"
-              class="no-popup-menu"
-              [ngClass]="['highlighted', 'clickable', 'emphasise', 'default', getClass()]"
-              [ngStyle]="{backgroundColor: getCustomColor()}">
+              class="no-popup-menu highlighted clickable emphasise default"
+              [ngClass]="getClass()"
+              [style.background-color]="getCustomColor()"
+              [class.dark-bg]="darkBg">
             <ng-content></ng-content>
         </span>
         <span #inlineSpan [ngClass]="(isImageAnnotation()) ? 'inlineImageAnnotation' : 'inlineAnnotation'">
-            <div #inlineDiv *ngIf="show"
-                 (click)="updateZIndex()"
+            <div #inlineDiv *ngIf="showTransparentText()"
+                 class="emphasise image-text default"
+                 style="white-space: nowrap; position: absolute;"
+                 (click)="setShowFull(true)"
+                 [style.color]="getCustomColor()"
+                 [ngClass]="getClass()"
+                 [style.z-index]="zIndex">
+                <p class="math" style="font-size: x-large; margin: 0">
+                    {{ annotation.getContent() }}
+                </p>
+                <p class="math" *ngFor="let comment of annotation.comments"
+                   style="margin: 0">
+                    {{ comment.content }}
+                </p>
+            </div>
+            <div #inlineDiv *ngIf="show && !showTransparentText()"
                  class="no-popup-menu annotation-info emphasise default"
                  [ngClass]="getClass()"
                  (keydown)="keyDownFunc($event)"
                  (keyup)="keyUpFunc($event)"
                  [style.backgroundColor]="getCustomColor()"
-                [style.z-index]="zIndex">
-
-    <span class="fulldiv">
-        <span class="div-90 annTopSection" (mouseenter)="setShowFull(true)">
-            <p><span class="annHeader"><strong>{{ annotation.getContent() }}</strong></span></p>
-            <p *ngIf="showFull">
-                <tim-signature [user]="annotation.annotator" [time]="annotation.creation_time"></tim-signature>
-            </p>
-        </span>
-            <tim-close-button class="clickable-icon"
-                  (click)="toggleAnnotationShow();setShowFull(false)"></tim-close-button>
-    </span>
-
+                 [class.dark-bg]="darkBg"
+                 [style.z-index]="zIndex">
+                
+                <span class="fulldiv">
+                    <span class="div-90 annTopSection" (mouseenter)="setShowFull(true)">
+                        <p><span class="annHeader math"><strong>{{ annotation.getContent() }}</strong></span></p>
+                        <p *ngIf="showFull">
+                            <tim-signature [user]="annotation.annotator"
+                                           [time]="annotation.creation_time"></tim-signature>
+                        </p>
+                    </span>
+                    <tim-close-button class="clickable-icon"
+                                      (click)="toggleAnnotationShow(); setShowFull(false)"></tim-close-button>
+                </span>
+                
                 <div>
                     <div *ngIf="showFull">
-                        <p [hidden]="!canEditAnnotation() || !allowChangePoints()"><label>
+                        <p class="points-input" [hidden]="!canEditAnnotation() || !allowChangePoints()"><label>
                             Points: <input type="number"
                                            [(ngModel)]="values.points"
                                            step="any"
@@ -116,80 +136,88 @@ export async function updateAnnotationServer(
                     </div>
                     <div [hidden]="showFull">
                         <div *ngIf="values.points != null">
-                            <p><label>Points: {{ values.points }}</label></p>
+                            <p class="points-input"><label>Points: {{ values.points }}</label></p>
                         </div>
                     </div>
-
-                    <div class="fulldiv">
+                    
+                    <div class="fulldiv" #commentsDiv>
                         <ul class="comments">
                             <li *ngFor="let comment of annotation.comments">
-                                <p>{{ comment.content }}
+                                <p class="math">{{ comment.content }}
                                     &mdash;
                                     <tim-signature [time]="comment.comment_time"
                                                    [user]="comment.commenter"></tim-signature>
                                 </p>
                             </li>
                         </ul>
-
                     </div>
                     <div *ngIf="showFull">
-        <textarea focusMe class="form-control" placeholder="Add comment"
-                  [(ngModel)]="newcomment"></textarea>
+                        <textarea focusMe class="form-control comment-area" placeholder="Add comment"
+                                  [(ngModel)]="newcomment"></textarea>
                         <div>
                             <div class="form-inline adjustAnnForm">
                                 <div>
-                    <span [hidden]="!canEditAnnotation()">
-                        <label [ngClass]="{disabled: !canEditAnnotation()}"><div title="Visible to"
-                                                                           [ngClass]="['glyphicon', 'glyphicon-eye-open' ]"></div></label>
-                        <select [(ngModel)]="values.visible_to" [disabled]="!canEditAnnotation()">
-                            <option *ngFor="let o of visibleOptions.values" [ngValue]="o.id">{{o.name}}</option>
-                        </select>
-                        <div [ngClass]="['glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
-                             (click)="openHelp()">
-                        </div>
-                    </span>
-
+                                    <span [hidden]="!canEditAnnotation()">
+                                        <label [class.disabled]="!canEditAnnotation()">
+                                            <div title="Visible to"
+                                                 class="glyphicon glyphicon-eye-open visible-icon"></div></label>
+                                        <select [(ngModel)]="values.visible_to" [disabled]="!canEditAnnotation()">
+                                            <option *ngFor="let o of visibleOptions.values"
+                                                    [ngValue]="o.id">{{o.name}}</option>
+                                        </select>
+                                        <div class="glyphicon glyphicon-question-sign clickable-icon help-icon"
+                                             (click)="openHelp()">
+                                        </div>
+                                    </span>
                                     <span *ngIf="!canEditAnnotation()" class="annotationVisibleText">
-
-                        <span title="Visible to" [ngClass]="['annqmark', 'glyphicon', 'glyphicon-eye-open' ]"></span>
+                                        <span title="Visible to" class="annqmark glyphicon glyphicon-eye-open"></span>
                                         {{ getSelectedVisibleOption().name }}
-
-                                        <span [ngClass]="['annqmark', 'glyphicon', 'glyphicon-question-sign', 'clickable-icon']"
+                                        <span class="annqmark glyphicon glyphicon-question-sign clickable-icon"
                                               (click)="openHelp()">
-                        </span>
+                                        </span>
 
-                    </span>
+                                    </span>
                                     <span [hidden]="!canEditAnnotation()" style="float: right">
-                        <input type="color" [(ngModel)]="values.color"
-                               class="colorchange-button" title="Change annotation color">
-                        <button *ngIf="isVelpCustomColor()"
-                                class="smallButton"
-                                (click)="clearColor()"
-                                title="Reset color to original value">R</button>
-                        <button
-                                class="smallButton"
-                                (click)="whiteColor()"
-                                title="Reset color to white">W</button>
-                    </span>
+                                        <input type="color" [(ngModel)]="values.color"
+                                               (ngModelChange)="onColorUpdate($event)"
+                                               class="colorchange-button" title="Change annotation color">
+                                        <button *ngIf="isVelpCustomColor()"
+                                                class="smallButton"
+                                                (click)="clearColor()"
+                                                title="Reset color to original value">R</button>
+                                        <button
+                                                class="smallButton"
+                                                (click)="whiteColor()"
+                                                title="Reset color to white">W</button>
+                                    </span>
+                                    <p>
+                                        <span *ngIf="canEditAnnotation() && isImageAnnotation()">
+                                            Style&nbsp;
+                                            <select [(ngModel)]="values.style" [disabled]="!canEditAnnotation()">
+                                                <option *ngFor="let o of styleOptions.values"
+                                                        [ngValue]="o.id">{{o.name}}</option>
+                                            </select>
+                                        </span>
+                                    </p>
                                 </div>
                             </div>
                         </div>
                         <span>
-        <button class="saveChanges timButton" *ngIf="hasChanged()" (click)="saveChanges()">
-            Save
-        </button>
-    </span>
+                            <button class="saveChanges timButton" *ngIf="hasChanged()" (click)="saveChanges()">
+                                Save
+                            </button>
+                        </span>
                     </div>
                     <div *ngIf="showFull">
-        <span class="pull-right glyphicon glyphicon-trash clickable-icon" title="Delete annotation"
-              [hidden]="!canEditAnnotation()"
-              (click)="deleteAnnotation()"></span>
+                        <span class="pull-right glyphicon glyphicon-trash clickable-icon" title="Delete annotation"
+                              [hidden]="!canEditAnnotation()"
+                              (click)="deleteAnnotation()"></span>
                     </div>
                     <div class="annotationVisibleText" [hidden]="showFull">
                         {{ getSelectedVisibleOption().name }}
                     </div>
                 </div>
-
+                
             </div>
         </span>
     `,
@@ -207,6 +235,13 @@ export class AnnotationComponent
             {id: 4, name: "Everyone"},
         ],
     };
+    styleOptions = {
+        values: [
+            {id: 1, name: "Default"},
+            {id: 2, name: "Text"},
+            {id: 3, name: "Text (always visible)"},
+        ],
+    };
     newcomment = "";
     showFull = false;
     public show = false;
@@ -222,14 +257,36 @@ export class AnnotationComponent
     private vctrl!: ViewCtrl;
     private prefix = "x";
     private readonly element: JQuery<HTMLElement>;
+    private refreshMath = false;
     zIndex = 0;
+    darkBg = false;
+
+    imageCoordinates = {top: 0, left: 0}; // location of drawn velp on drawCanvas
+    imageDimensions = {width: 0, height: 0}; // size of annotation border div on drawCanvas
+
     @ViewChild("inlineSpan") inlineSpan!: ElementRef<HTMLSpanElement>;
     @ViewChild("contentSpan") contentSpan!: ElementRef<HTMLSpanElement>;
+    inlineDivRef?: ElementRef<HTMLDivElement>;
 
     @ViewChild("inlineDiv") set inlineDiv(div: ElementRef<HTMLDivElement>) {
         if (div && this.isImageAnnotation()) {
-            this.adjustAnnotationInPicturePosition(div.nativeElement);
+            this.inlineDivRef = div;
+            this.adjustAnnotationInPicturePosition(
+                this.inlineDivRef.nativeElement
+            );
+            ParCompiler.processAllMath($(div.nativeElement));
         }
+    }
+
+    private commentsDivRef?: ElementRef<HTMLDivElement>;
+    @ViewChild("commentsDiv") set commentsDiv(
+        el: ElementRef<HTMLDivElement> | undefined
+    ) {
+        if (!el || this.commentsDivRef == el) {
+            return;
+        }
+        this.commentsDivRef = el;
+        ParCompiler.processAllMath($(el.nativeElement));
     }
 
     constructor(public e: ElementRef) {
@@ -241,9 +298,9 @@ export class AnnotationComponent
         if (v) {
             this.show = true;
             this.updateZIndex();
-            if (this.inlineDiv) {
+            if (this.inlineDivRef) {
                 this.adjustAnnotationInPicturePosition(
-                    this.inlineDiv.nativeElement
+                    this.inlineDivRef.nativeElement
                 );
             }
         }
@@ -286,12 +343,49 @@ export class AnnotationComponent
         if (this.placement == AnnotationPlacement.InMarginOnly) {
             this.vctrl.rejectTextAnnotation(this);
         }
+        if (this.isImageAnnotation()) {
+            const ele = this.element.get()[0];
+            this.imageCoordinates = {top: ele.offsetTop, left: ele.offsetLeft};
+            this.imageDimensions = {
+                width: ele.clientWidth,
+                height: ele.clientHeight,
+            };
+            const aid = this.annotation.getAnswerId();
+            if (aid) {
+                const canvas = this.vctrl.getVelpCanvas(aid);
+                if (canvas) {
+                    this.resizeElementBorder(canvas.zoomLevel);
+                }
+            }
+        }
     }
 
     setAnnotation(a: Annotation) {
         this.annotation = a;
         this.original = a.getEditableValues();
         this.values = clone(this.original);
+        this.onColorUpdate(this.values.color ?? "");
+        this.refreshMath = true;
+    }
+
+    ngOnChanges(changes: SimpleChanges) {
+        if (changes.annotation) {
+            this.refreshMath = true;
+        }
+    }
+
+    ngAfterViewChecked() {
+        if (this.refreshMath) {
+            this.refreshMath = false;
+            if (this.commentsDivRef) {
+                ParCompiler.processAllMath(
+                    $(this.commentsDivRef.nativeElement)
+                );
+            }
+            if (this.inlineDivRef) {
+                ParCompiler.processAllMath($(this.inlineDivRef.nativeElement));
+            }
+        }
     }
 
     private isInMargin() {
@@ -302,6 +396,17 @@ export class AnnotationComponent
         return (
             this.placement == AnnotationPlacement.AccuratelyPositioned &&
             this.annotation.draw_data != undefined
+        );
+    }
+
+    showTransparentText(): boolean {
+        return (
+            // {id: 1, name: "Default/Hidden"},
+            // {id: 2, name: "Text"},
+            // {id: 3, name: "Text (always visible"},
+            this.isImageAnnotation() &&
+            !this.showFull &&
+            ((this.values.style == 2 && this.show) || this.values.style == 3)
         );
     }
 
@@ -321,12 +426,21 @@ export class AnnotationComponent
         if (!this.isImageAnnotation()) {
             return;
         }
+        const aid = this.annotation.getAnswerId();
+        if (aid == undefined) {
+            return;
+        }
+        const canvas = this.vctrl.getVelpCanvas(aid);
+        if (!canvas) {
+            return;
+        }
         let left = 0;
+        const container = canvas.getWrapper();
         const drawingLeft = this.element[0].offsetLeft;
         const annWidth = div.clientWidth;
-        const containerWidth = this.element.parent()[0].clientWidth;
+        const containerWidth = container.clientWidth + container.scrollLeft;
         if (drawingLeft + annWidth > containerWidth) {
-            if (containerWidth - annWidth >= 0) {
+            if (containerWidth - annWidth >= container.scrollLeft) {
                 left = containerWidth - annWidth - drawingLeft;
             }
         }
@@ -334,10 +448,10 @@ export class AnnotationComponent
         const drawingHeight = this.element[0].clientHeight;
         const drawingTop = this.element[0].offsetTop;
         const annHeight = div.clientHeight;
-        const containerHeight = this.element.parent()[0].clientHeight;
+        const containerHeight = container.clientHeight + container.scrollTop;
         let top = drawingHeight;
         if (drawingTop + drawingHeight + annHeight > containerHeight) {
-            if (drawingTop - annHeight >= 0) {
+            if (drawingTop - annHeight >= container.scrollTop) {
                 top = -annHeight;
             }
         }
@@ -371,6 +485,32 @@ export class AnnotationComponent
                 innerRectangle[0].style.border = this.show
                     ? "1px solid #000000"
                     : "none";
+            }
+        }
+    }
+
+    /**
+     * Resize the div around which a drawn velp is wrapped
+     * @param scale new size
+     */
+    resizeElementBorder(scale: number) {
+        if (this.isImageAnnotation()) {
+            const innerRectangle = this.element.find(
+                ".annotation-picture-element"
+            );
+            const rect = innerRectangle[0];
+            const ele = this.element.get()[0];
+            if (!ele || !rect) {
+                return;
+            }
+            rect.style.width = this.imageDimensions.width * scale + "px";
+            rect.style.height = this.imageDimensions.height * scale + "px";
+            ele.style.left = this.imageCoordinates.left * scale + "px";
+            ele.style.top = this.imageCoordinates.top * scale + "px";
+            if (this.inlineDivRef) {
+                this.adjustAnnotationInPicturePosition(
+                    this.inlineDivRef.nativeElement
+                );
             }
         }
     }
@@ -461,6 +601,7 @@ export class AnnotationComponent
         this.annotation = ann;
         this.original = this.annotation.getEditableValues();
         this.rctrl.updateAnnotation(ann);
+        this.refreshMath = true;
     }
 
     getCustomColor() {
@@ -539,5 +680,14 @@ export class AnnotationComponent
         'Document owner' refers to the person or group who has been named as the document owner.
         'Teachers' refers to the users that have teacher access to this document.
         'Everyone' means that the annotation is visible to everyone who can view the assessed content.`);
+    }
+
+    onColorUpdate(newColor: string) {
+        const rgb = parseHexColor(newColor);
+        if (!rgb) {
+            return;
+        }
+        const l = luma(rgb);
+        this.darkBg = l <= 0.5;
     }
 }

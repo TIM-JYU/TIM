@@ -3,7 +3,8 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 import requests
-from bs4 import BeautifulSoup, PageElement
+from bs4 import BeautifulSoup
+from bs4.element import PageElement, Comment, Tag
 
 from timApp.document.prepared_par import PreparedPar
 
@@ -29,7 +30,7 @@ banned_classes = {"math", "mathp", "nospell"}
 
 
 def is_banned(e: PageElement) -> bool:
-    return any(
+    return isinstance(e, Comment) or any(
         p.name in banned_tags or (set(p.get("class", [])) & banned_classes)
         for p in e.parents
     )
@@ -112,10 +113,13 @@ def process_spelling_errors(s: str) -> SpellCheckResult:
             e.replace_with(n)
 
     # Unwrap html and body tags.
-    new_html = (
-        "".join(str(e) for e in bs.contents[0].contents[0].contents)
-        if bs.contents
-        else ""
-    )
+    # Use copy of the list since bs4 will manipulate the original one
+    for c in list(bs.contents):
+        if isinstance(c, Tag) and c.name == "html":
+            body = c.contents[0]
+            if isinstance(body, Tag) and body.name == "body":
+                c.replace_with(*body.contents)
+
+    new_html = str(bs)
 
     return SpellCheckResult(words=words, new_html=new_html)

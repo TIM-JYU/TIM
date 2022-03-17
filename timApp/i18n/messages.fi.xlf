@@ -4776,6 +4776,206 @@
           <context context-type="linenumber">134</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="7668888534271557449" datatype="html">
+        <source>Free hand drawing</source>
+        <target state="translated">Vapaapiirto</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="linenumber">94</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8543119714580512727" datatype="html">
+        <source>Line</source>
+        <target state="translated">Viiva</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="linenumber">101</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6984675258712446825" datatype="html">
+        <source>Rectangle</source>
+        <target state="translated">Suorakulmio</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="linenumber">107</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8917972192085102885" datatype="html">
+        <source>Ellipse</source>
+        <target state="translated">Ellipsi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="linenumber">113</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6565791317520947983" datatype="html">
+        <source>Arrow</source>
+        <target state="translated">Nuoli</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="linenumber">119</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="537773306049192325" datatype="html">
+        <source>Fill object</source>
+        <target state="translated">Täytä kohde</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="linenumber">129</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4717209058677074131" datatype="html">
+        <source>Line width</source>
+        <target state="translated">Viivan leveys</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="linenumber">136</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8036200981586016464" datatype="html">
+        <source>Opacity</source>
+        <target state="translated">Läpinäkyvyys</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="linenumber">149</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7643226167910761075" datatype="html">
+        <source>Color picker</source>
+        <target state="translated">Värivalitsin</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="linenumber">164</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="325122440632178504" datatype="html">
+        <source>Select red</source>
+        <target state="translated">Valitse punainen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="linenumber">174</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7373304585307320962" datatype="html">
+        <source>Select blue</source>
+        <target state="translated">Valitse sininen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="linenumber">180</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7114888198252434819" datatype="html">
+        <source>Select yellow</source>
+        <target state="translated">Valitse keltainen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="linenumber">186</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="883430579201070569" datatype="html">
+        <source>Select green</source>
+        <target state="translated">Valitse vihreä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="linenumber">192</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1790032515357564728" datatype="html">
+        <source>Align to the center</source>
+        <target state="translated">Kohdista keskelle</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/switch-button.component.ts</context>
+          <context context-type="linenumber">8</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6311820510318489653" datatype="html">
+        <source>Align to the left</source>
+        <target state="translated">Kohdista vasemmalle</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/switch-button.component.ts</context>
+          <context context-type="linenumber">17</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8081339872439098904" datatype="html">
+        <source>Previous image</source>
+        <target state="translated">Edellinen kuva</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="linenumber">766</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2171733231818328220" datatype="html">
+        <source>Next image</source>
+        <target state="translated">Seuraava kuva</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="linenumber">768</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6500061599200357251" datatype="html">
+        <source>Zoom in</source>
+        <target state="translated">Suurenna</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="linenumber">772</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3787205057553482493" datatype="html">
+        <source>Reset zoom</source>
+        <target state="translated">Palauta oletuskoko</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="linenumber">776</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="944767796496567082" datatype="html">
+        <source>Zoom out</source>
+        <target state="translated">Pienennä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="linenumber">778</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="631338357809243389" datatype="html">
+        <source>Rotate clockwise</source>
+        <target state="translated">Käännä myötäpäivään</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
+          <context context-type="linenumber">133</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6644632063501552458" datatype="html">
+        <source>Answer posts</source>
+        <target state="translated">Vastauksien lähettäminen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">279</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4226829235700701789" datatype="html">
+        <source>Show map</source>
+        <target state="translated">Näytä kartta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/gamification-map.component.ts</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2333314224059826550" datatype="html">
+        <source>Mark all as read</source>
+        <target state="translated">Merkitse kaikki luetuksi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/mark-all-as-read.component.ts</context>
+          <context context-type="linenumber">31</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8252775200603013346" datatype="html">
+        <source>Content is not a number (<x id="PH" equiv-text="val"/>); showing empty value.</source>
+        <target state="translated">Sisältö ei ole luku (<x id="PH" equiv-text="val"/>); näytetään tyhjä arvo.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/fields/js/numericfield-plugin.component.ts</context>
+          <context context-type="linenumber">231</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

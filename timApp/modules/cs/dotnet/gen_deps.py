@@ -3,8 +3,10 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
-from typing import TypedDict, Optional
+from pathlib import Path
+from typing import TypedDict
 
 
 class DotNetPackage(TypedDict, total=False):
@@ -24,21 +26,21 @@ class DotNetDeps(TypedDict):
     libraries: dict[str, DotNetLibrary]
 
 
-def gen_deps(csproj_file: str, base_dir: str):
+def gen_deps(base_dir: Path, csproj_file: str, deps_dir: str):
     print(f"Generating deps for {csproj_file}")
     name, _ = os.path.splitext(csproj_file)
-    deps_obj: DotNetDeps | None = None
-    with tempfile.TemporaryDirectory(dir=base_dir) as tmp_folder:
+    with tempfile.TemporaryDirectory(dir=base_dir.as_posix()) as tmp_folder:
         with open(os.path.join(tmp_folder, "main.cs"), "w", encoding="utf-8") as f:
             f.write("System.Console.ReadKey();")
-        shutil.copy(os.path.join(base_dir, csproj_file), tmp_folder)
-        shutil.copy(os.path.join(base_dir, "NuGet.Config"), tmp_folder)
+        shutil.copy(os.path.join(deps_dir, csproj_file), tmp_folder)
+        shutil.copy(os.path.join(deps_dir, "Directory.Build.props"), tmp_folder)
+        shutil.copy(os.path.join(deps_dir, "NuGet.Config"), tmp_folder)
         subprocess.run(["dotnet", "build", "-c", "Release", tmp_folder])
         with open(
             os.path.join(tmp_folder, "bin", "Release", f"{name}.deps.json"),
             encoding="utf-8",
         ) as f:
-            deps_obj = json.load(f)
+            deps_obj: DotNetDeps | None = json.load(f)
 
     if not deps_obj:
         return
@@ -81,47 +83,53 @@ def gen_deps(csproj_file: str, base_dir: str):
         lib["sha512"] = ""
         del lib["hashPath"]
 
-    with open(os.path.join("configs", f"{name}.deps.json"), "w", encoding="utf-8") as f:
+    config_path = base_dir / "configs"
+
+    with (config_path / f"{name}.deps.json").open("w", encoding="utf-8") as f:
         json.dump(deps_obj, f, indent=2)
-    with open(
-        os.path.join("configs", f"{name}.build.deps"), "w", encoding="utf-8"
-    ) as f:
+    with (config_path / f"{name}.build.deps").open("w", encoding="utf-8") as f:
         f.writelines([f"{b}\n" for b in build_deps])
 
 
-def should_run():
+def should_run(base_path: Path) -> bool:
     return (
-        not os.path.exists("configs")
-        or not os.path.exists("nuget_cache")
-        or os.path.exists("refresh")
+        not (base_path / "configs").exists()
+        or not (base_path / "nuget_cache").exists()
+        or (base_path / "refresh").exists()
     )
 
 
-def remove(path):
-    if os.path.isfile(path) or os.path.islink(path):
-        os.remove(path)
-    elif os.path.isdir(path):
-        shutil.rmtree(path, ignore_errors=True)
+def remove(p: Path) -> None:
+    if p.is_file() or p.is_symlink():
+        p.unlink(missing_ok=True)
+    elif p.is_dir():
+        shutil.rmtree(p, ignore_errors=True)
 
 
 def main():
-    if not should_run():
+    # Get base directory from first argument
+    if len(sys.argv) < 2:
+        print("Provide base directory as first argument")
+        return
+    base_dir = Path(os.path.abspath(sys.argv[1]))
+    base_dir.mkdir(exist_ok=True)
+    if not should_run(base_dir):
         print(
             "Skipping dotnet run generation, all necessary folders exist. If you want to regenerate, create file "
             "named `refresh`"
         )
         return
-    remove("configs")
-    remove("nuget_cache")
+    remove(base_dir / "configs")
+    remove(base_dir / "nuget_cache")
     print("Generating dependency lists for dotnet")
-    os.makedirs("configs", exist_ok=True)
-    os.makedirs("nuget_cache", exist_ok=True)
+    os.makedirs(base_dir / "configs", exist_ok=True)
+    os.makedirs(base_dir / "nuget_cache", exist_ok=True)
     for dirpath, dirnames, filenames in os.walk("deps"):
         for filename in filenames:
             name, ext = os.path.splitext(filename)
             if ext == ".csproj":
-                gen_deps(filename, dirpath)
-    remove("refresh")
+                gen_deps(base_dir, filename, dirpath)
+    remove(base_dir / "refresh")
 
 
 if __name__ == "__main__":

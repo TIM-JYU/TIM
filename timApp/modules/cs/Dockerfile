@@ -265,9 +265,9 @@ RUN swift --version
 
 RUN echo 'options(repos=structure(c(CRAN="https://cloud.r-project.org/")))' > ~/.Rprofile
 
-RUN bash -c "${APT_INSTALL} cmake git" && \
+RUN bash -c "${APT_INSTALL} cmake" && \
     git clone git://github.com/stevengj/nlopt && \
-    cd nlopt && cmake -DCMAKE_CXX_FLAGS=-std=c++11 . && make && make install && cd .. && rm -r nlopt && apt-get remove -y cmake git && ${APT_CLEANUP}
+    cd nlopt && cmake -DCMAKE_CXX_FLAGS=-std=c++11 . && make && make install && cd .. && rm -r nlopt && apt-get remove -y cmake && ${APT_CLEANUP}
 
 RUN ldconfig
 
