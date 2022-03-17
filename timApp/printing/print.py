@@ -7,7 +7,6 @@ import shutil
 import tempfile
 from dataclasses import field
 from pathlib import Path
-from typing import Optional
 
 from flask import current_app
 from flask import g
@@ -250,8 +249,10 @@ def get_printed_document(
     print_type = PrintFormat(file_type)
     template_doc = None
     orginal_print_type = print_type
+    eol_type = "native"
     if print_type == PrintFormat.ICS:
         print_type = PrintFormat.PLAIN
+        eol_type = "crlf"
     if (
         print_type != PrintFormat.PLAIN
         and print_type != PrintFormat.RST
@@ -285,6 +286,7 @@ def get_printed_document(
                 user_ctx=UserContext.from_one_user(g.user),
                 plugins_user_print=plugins_user_code,
                 urlroot="http://localhost:5000/print/",
+                eol_type=eol_type,
             )  # request.url_root+'print/')
         except PrintingError as err:
             raise RouteException(str(err))
@@ -589,6 +591,7 @@ def create_printed_doc(
     user_ctx: UserContext,
     plugins_user_print: bool = False,
     urlroot: str = "",
+    eol_type: str = "native",
 ) -> str:
     """
     Adds a marking for a printed document to the db
@@ -600,6 +603,7 @@ def create_printed_doc(
     :param temp: Is the document stored only temporarily (gets deleted after some time)
     :param plugins_user_print: use users answers for plugins or not
     :param urlroot: url root for this route
+    :param eol_type: EOL type. Same option as Pandoc (crlf, lf, native)
     :return str: path to the created file
     """
 
@@ -620,6 +624,7 @@ def create_printed_doc(
             target_format=file_type,
             path=path,
             plugins_user_print=plugins_user_print,
+            eol_type=eol_type,
         )
         pdferror = None
     except LaTeXError as err:

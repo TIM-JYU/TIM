@@ -1076,7 +1076,7 @@ export class ReviewController {
             if (answ.length > 0) {
                 const first = answ[0];
                 const isInline = first.classList.contains("inlineplugin");
-                if (isInline && answ.length > 1) {
+                if (!isInline && answ.length > 1) {
                     console.warn(
                         "Paragraph has multiple plugins but the first of them was not inlineplugin?"
                     );
@@ -1564,6 +1564,7 @@ export class ReviewController {
                 points: velp.points,
                 velp_id: newAnnotation.velp.id,
                 visible_to: velp.visible_to,
+                style: velp.style,
             })
         );
         if (!json.ok) {

@@ -766,7 +766,7 @@ class DocParagraph:
          in that paragraph.
         :param macros: Macros to apply for the paragraph.
         :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
-        :param auto_number_start: first heading start number
+        :param auto_number_start: Object of heading start numbers.
         :return: Auto macro values as a dict.
         :param env: Environment for macros.
         :return: A dict(str, dict(int,int)) containing the auto macro information.
@@ -780,10 +780,7 @@ class DocParagraph:
 
         prev_par: DocParagraph = self.doc.get_previous_par(self)
         if prev_par is None:
-            autonumber_start = auto_number_start
-            prev_par_auto_values = {
-                "h": {1: autonumber_start, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
-            }
+            prev_par_auto_values = {"h": auto_number_start}
             heading_cache[self.get_id()] = []
         else:
             prev_par_auto_values = prev_par.get_auto_macro_values(
@@ -828,7 +825,7 @@ class DocParagraph:
                 title_ids.append(title_to_id(title))
                 deltas[level] += 1
                 for i in range(level + 1, 7):
-                    deltas[i] = 0
+                    deltas[i] = auto_number_start.get(i, 0)
         heading_cache[self.get_id()] = title_ids
         result = {"h": deltas}
         auto_macro_cache[key] = result
@@ -1336,6 +1333,7 @@ def add_heading_numbers(
     heading_ref_format: dict = None,
     jump_name: str = None,
     counters: AutoCounters = None,
+    initial_heading_counts: dict[int, int] | None = None,
 ):
     d = ctx.doc
     macro_cache_file = f"/tmp/tim_auto_macros_{ctx.doc.doc_id}"
@@ -1372,6 +1370,7 @@ def add_heading_numbers(
                             heading_ref_format,
                             jump_name,
                             counters,
+                            initial_counts=initial_heading_counts,
                         )
                     )
                     if counters:

@@ -166,36 +166,38 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             }
         }
         const m = this.pluginMarkup();
-        if (
-            m?.hideBrowser ||
-            this.viewctrl?.docSettings.hideBrowser ||
-            this.isUseCurrentUser() ||
-            this.isGlobal() ||
-            this.isInFormMode()
-        ) {
-            this.hideBrowser = true;
-            this.showPlaceholder = false;
-        }
-        if (m?.forceBrowser) {
-            this.forceBrowser = true;
-        }
+        $timeout(() => {
+            if (
+                m?.hideBrowser ||
+                this.viewctrl?.docSettings.hideBrowser ||
+                this.isUseCurrentUser() ||
+                this.isGlobal() ||
+                this.isInFormMode()
+            ) {
+                this.hideBrowser = true;
+                this.showPlaceholder = false;
+            }
+            if (m?.forceBrowser) {
+                this.forceBrowser = true;
+            }
 
-        this.showPlaceholder = !this.isInFormMode() && !this.hideBrowser;
+            this.showPlaceholder = !this.isInFormMode() && !this.hideBrowser;
 
-        if (this.accessDuration && !this.viewctrl?.item.rights.teacher) {
-            this.timed = true;
-            if (!this.accessEnd) {
-                this.unlockable = true;
-                this.hidePlugin();
-            } else {
-                this.endTime = moment(this.accessEnd);
-                if (this.endTime.isBefore(moment.now())) {
-                    this.expireTask();
+            if (this.accessDuration && !this.viewctrl?.item.rights.teacher) {
+                this.timed = true;
+                if (!this.accessEnd) {
+                    this.unlockable = true;
+                    this.hidePlugin();
                 } else {
-                    this.startTask();
+                    this.endTime = moment(this.accessEnd);
+                    if (this.endTime.isBefore(moment.now())) {
+                        this.expireTask();
+                    } else {
+                        this.startTask();
+                    }
                 }
             }
-        }
+        });
     }
 
     $postLink() {

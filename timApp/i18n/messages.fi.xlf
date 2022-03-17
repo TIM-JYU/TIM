@@ -4952,6 +4952,30 @@
           <context context-type="linenumber">279</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4226829235700701789" datatype="html">
+        <source>Show map</source>
+        <target state="translated">Näytä kartta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/gamification/gamification-map.component.ts</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2333314224059826550" datatype="html">
+        <source>Mark all as read</source>
+        <target state="translated">Merkitse kaikki luetuksi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/mark-all-as-read.component.ts</context>
+          <context context-type="linenumber">31</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8252775200603013346" datatype="html">
+        <source>Content is not a number (<x id="PH" equiv-text="val"/>); showing empty value.</source>
+        <target state="translated">Sisältö ei ole luku (<x id="PH" equiv-text="val"/>); näytetään tyhjä arvo.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/fields/js/numericfield-plugin.component.ts</context>
+          <context context-type="linenumber">231</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

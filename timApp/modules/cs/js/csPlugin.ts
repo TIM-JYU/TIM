@@ -1595,7 +1595,7 @@ export class CsController extends CsBase implements ITimComponent {
 
     get isText() {
         const rt = this.rtype;
-        return rt === "text" || rt === "xml" || rt === "css";
+        return rt === "text" || rt === "xml" || rt === "css" || rt === "md";
     }
 
     get argsplaceholder() {

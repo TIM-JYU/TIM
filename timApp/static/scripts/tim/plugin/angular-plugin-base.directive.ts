@@ -142,7 +142,7 @@ export abstract class AngularPluginBase<
         if (!tid) {
             throw Error("Task id missing.");
         }
-        const dt = tid.docTask().toString();
+        const dt = tid.docTaskIdFull();
         const {url, data} = prepareAnswerRequest(
             dt,
             this.pluginMeta.getAnswerUrl()
