@@ -558,7 +558,7 @@ div.error {
     border-radius: 0;
 }
 
-.previewcontent {
+.previewcontent, .previeworiginalcontent {
     @extend .border;
     clear: both;
     overflow-y: auto;

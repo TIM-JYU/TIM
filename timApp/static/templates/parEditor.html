@@ -104,11 +104,21 @@
         </div>
     </div>
   </div>
+  <div class="sidebyside">
     <div tim-draggable-fixed
          detachable="true"
          caption="{{ $ctrl.getPreviewCaption() }}"
          save="{{$ctrl.getOptions().localSaveTag}}Preview"
-         class="previewDiv"
+         class="previewDiv halfsize"
          ng-show="$ctrl.proeditor">
         <div class="previewcontent paragraphs"></div>
+    </div>
+    <div tim-draggable-fixed
+         detachable="true"
+         caption="{{ $ctrl.getPreviewCaption() }}"
+         save="{{$ctrl.getOptions().localSaveTag}}Preview (original block)"
+         class="previewDiv halfsize"
+         ng-show="$ctrl.trdiff.new">
+        <div class="previeworiginalcontent paragraphs">{{$ctrl.trdiff.new}}</div>
+    </div>
     </div>
