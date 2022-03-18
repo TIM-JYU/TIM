@@ -223,9 +223,7 @@ const ShowFileAll = t.type({
                        [src]="videosettings.src"
                        [autoplay]="markup.autoplay"
                 >
-                    <ng-container *ngFor="let subtitle of markup.subtitles">
-                        <track [src]="subtitle.file" [label]="subtitle.name" />    
-                    </ng-container>
+                        <track *ngFor="let subtitle of markup.subtitles" [src]="subtitle.file" [label]="subtitle.name" />    
                 </video>
             </ng-container>
             <ng-container *ngIf="isNormalSize">
