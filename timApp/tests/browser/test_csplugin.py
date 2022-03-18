@@ -1,5 +1,4 @@
 import re
-
 from time import sleep
 
 from selenium.webdriver.common.by import By
@@ -275,8 +274,10 @@ postprogram: |!!
 
         # Let's refresh, should be 4/3 and Uusi button visible and new task
         self.goto_document(d)
+        self.wait_until_present(".csEditArea")
         input = self.find_element(".csEditArea")
         input.click()
+        self.wait_until_present_and_vis(".answer-index-count")
         # self.assertEqual("Uusi", button_new.text) # how to test that there is no new button
         self.assertEqual("Laske: 10 + -3", self.find_element(".stem").text)
         self.assertEqual("4/3", self.find_element(".answer-index-count").text)
