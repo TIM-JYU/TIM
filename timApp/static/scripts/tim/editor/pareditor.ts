@@ -1685,7 +1685,24 @@ ${backTicks}
             this.saving = false;
             return;
         } else {
+            this.setTranslatorSettings();
             this.close({type: "save", text});
+        }
+    }
+
+    async setTranslatorSettings() {
+        if (
+            this.docSettings != undefined &&
+            this.docSettings.translator != this.docTranslator &&
+            this.resolve.params.viewCtrl != undefined
+        ) {
+            await $http.post<string>(
+                `/settings/${this.resolve.params.viewCtrl.item.id}`,
+                {
+                    setting: "translator",
+                    value: this.docTranslator,
+                }
+            );
         }
     }
 

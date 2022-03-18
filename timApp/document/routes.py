@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from flask import Response
+from flask import Response, request
 
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
@@ -34,6 +34,19 @@ def return_doc_content(d: Document, format: str = "md", with_tl: bool = False):
         return json_response(d.export_raw_data())
     else:
         return Response(d.export_markdown(with_tl=with_tl), mimetype="text/plain")
+
+
+@doc_bp.post("settings/<int:doc_id>")
+def set_settings(doc_id: int):
+    d = get_doc_or_abort(doc_id)
+    verify_edit_access(d)
+
+    req_data = request.get_json()
+    setting = req_data.get("setting", "")
+    value = req_data.get("value", "")
+
+    d.document.add_setting(setting, value)
+    return json_response("OK")
 
 
 @doc_bp.get("/download/<int:doc_id>/<int:major>/<int:minor>")

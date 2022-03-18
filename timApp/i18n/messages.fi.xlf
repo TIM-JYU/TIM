@@ -4976,6 +4976,22 @@
           <context context-type="linenumber">432</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4082647858622460612" datatype="html">
+        <source>Mark translations as checked</source>
+        <target state="new">Merkitse käännökset tarkistetuiksi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
+          <context context-type="linenumber">108</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3196267353835684811" datatype="html">
+        <source>Mark all translations as checked </source>
+        <target state="new">Merkitse kaikki käännökset tarkistetuiksi </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
+          <context context-type="linenumber">110,111</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
