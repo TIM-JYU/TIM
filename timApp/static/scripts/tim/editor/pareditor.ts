@@ -1193,9 +1193,6 @@ ${backTicks}
         if (this.trdiff != undefined) {
             text = this.trdiff.new;
         }
-        const previewDiv = angular.element(".previewcontent");
-        this.scrollPos = previewDiv.scrollTop() ?? this.scrollPos;
-        this.outofdate = true;
         const spellCheckInEffect = this.spellcheck && this.isFinnishDoc();
         const data = await this.resolve.params.previewCb(
             text,

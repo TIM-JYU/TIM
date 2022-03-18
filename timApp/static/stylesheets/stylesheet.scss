@@ -1273,7 +1273,7 @@ p.docsettings {
 .diff {
     position: relative;
     background-color: #f8f8f8;
-    max-height: 312px;
+    max-height: 350px;
 
     a {
         position: absolute;
@@ -1283,7 +1283,7 @@ p.docsettings {
     }
 
     pre {
-        height: 100%;
+        max-height: 300px; //This has to be kept around 50px lower than diff's max-height or else it overflows over the preview in editor!
         border: 0;
 
         ins {
