@@ -20,7 +20,11 @@ from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import verify_json_params, NotExist, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, Response
 from timApp.util import logger
-from timApp.document.translation.translator import ITranslator, DeepLTranslator
+from timApp.document.translation.translator import (
+    TranslationService,
+    DeeplTranslationService,
+)
+from timApp.document.translation.language import Language, find_by_str
 
 
 def valid_language_id(lang_id):
@@ -28,8 +32,11 @@ def valid_language_id(lang_id):
 
 
 def translate(
-    translator: ITranslator, text: str, source_lang: str, target_lang: str
-) -> str:
+    translator: TranslationService,
+    text: str,
+    source_lang: Language,
+    target_lang: Language,
+) -> list[str]:
     # TODO This helper-function would be better if there was some way to hide the translate-methods on ITranslators. Maybe save for the eventual(?) TranslatorSelector?
     """
     Use the specified ITranslator to perform machine translation on text
@@ -39,9 +46,9 @@ def translate(
     :param target_lang: The language that text will be translated into
     :return: The text in the target language
     """
-    translated_text = translator.translate(text, source_lang, target_lang)
+    translated_text = translator.translate([text], source_lang, target_lang)
     # TODO Maybe log the length of text or other shorter info?
-    logger.log_info(translated_text)
+    logger.log_info("\n".join(translated_text))
 
     usage = translator.usage()
     logger.log_info(
@@ -54,7 +61,9 @@ def translate(
     return translated_text
 
 
-def init_deepl_translator(source_lang: str, target_lang: str) -> ITranslator:
+def init_deepl_translator(
+    source_lang: Language, target_lang: Language
+) -> TranslationService:
     """
     Initialize the deepl translator using the API-key from user's configuration
     :param source_lang: Language that is requested to translate from
@@ -67,7 +76,11 @@ def init_deepl_translator(source_lang: str, target_lang: str) -> ITranslator:
         from os import environ
 
         api_key = environ["DEEPL_API_KEY"]
-        translator = DeepLTranslator(api_key)
+        # TODO Get the current user's user group
+
+        translator = DeeplTranslationService(
+            user_group=get_current_user_object().get_personal_group()
+        )
     except KeyError:
         raise NotExist("The DEEPL_API_KEY is not set into your configuration")
 
@@ -113,14 +126,21 @@ def create_translation_route(tr_doc_id, language):
     else:
         tr_lang = translator_language
 
+    # Use the translator with a different source language if specified
+    src_lang = req_data.get("origlang", src_doc.docinfo.lang_id)
+
+    # Get the actual Language objects TODO This is dumb here
+    src_lang = find_by_str(src_lang)
+    tr_lang = find_by_str(tr_lang)
+
     # Select the specified translator
     translator = None
     if translator_code := req_data.get("autotranslate", None):
         # TODO From database, check that the translation language-pair is supported, or just let it through and shift this responsibility to user and the interface, because the API-call should handle unsupported languages anyway?
-        # Use the translator with a different source language if specified
-        src_lang = req_data.get("origlang", src_doc.docinfo.lang_id)
         if translator_code.lower() == "deepl":
-            translator = init_deepl_translator(src_lang, tr_lang)
+            translator = init_deepl_translator(
+                find_by_str(src_lang), find_by_str(tr_lang)
+            )
     # Translate each paragraph sequentially if a translator was created
     if translator:
         for orig_par, tr_par in zip(
@@ -152,14 +172,18 @@ def text_translation_route(tr_doc_id: int, language: str) -> Response:
 
     src_doc = doc.src_doc.document
 
-    src_text = req_data.get("originaltext", None)
-
     # Select the specified translator and translate if valid
-    if translator_code := req_data.get("autotranslate", None):
+    if req_data and (translator_code := req_data.get("autotranslate", None)):
+        src_text = req_data.get("originaltext", None)
         if translator_code.lower() == "deepl":
-            src_lang, target_lang = src_doc.docinfo.lang_id, language
+            src_lang: Language = find_by_str(src_doc.docinfo.lang_id)
+            target_lang: Language = find_by_str(language)
             translator = init_deepl_translator(src_lang, target_lang)
             block_text = translate(translator, src_text, src_lang, target_lang)
+    else:
+        raise RouteException(
+            description=f"Please select a translator from the 'Translator data' tab"
+        )
 
     return json_response(block_text)
 
@@ -184,7 +208,7 @@ def update_translation(doc_id):
 
 
 @tr_bp.get("/translations/<int:doc_id>")
-def get_translations(doc_id):
+def get_translations(doc_id: int) -> Response:
     d = get_doc_or_abort(doc_id)
     verify_manage_access(d)
 
@@ -192,7 +216,7 @@ def get_translations(doc_id):
 
 
 @tr_bp.get("/translations/source-languages")
-def get_source_languages():
+def get_source_languages() -> Response:
     """
     A very rough version of getting the languages.
     """
@@ -202,7 +226,7 @@ def get_source_languages():
 
 
 @tr_bp.get("/translations/document-languages")
-def get_document_languages():
+def get_document_languages() -> Response:
     """
     A very rough version of getting the languages.
     """
@@ -212,7 +236,7 @@ def get_document_languages():
 
 
 @tr_bp.get("/translations/target-languages")
-def get_target_languages():
+def get_target_languages() -> Response:
     """
     A very rough version of getting the languages.
     """
@@ -222,7 +246,7 @@ def get_target_languages():
 
 
 @tr_bp.get("/translations/translators")
-def get_translators():
+def get_translators() -> Response:
     """
     A very rough version of getting the translators.
     """

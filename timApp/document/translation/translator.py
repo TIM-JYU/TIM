@@ -1,9 +1,11 @@
 import requests
 
 from dataclasses import dataclass
-from enum import Enum
 from typing import Dict
 from timApp.util.flask.requesthelper import RouteException
+from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
+from timApp.document.translation.language import Language
 
 
 @dataclass
@@ -12,19 +14,8 @@ class Usage:
     character_limit: int
 
 
-# TODO Does dataclass make this unhashable?
-class LangCode(Enum):
-    """
-    Selection of ISO 639-1 two-letter codes as described at: https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes
-    """
-
-    ENGLISH: str = "EN"
-    FINNISH: str = "FI"
-    SWEDISH: str = "SV"
-
-
 # TODO make dataclass?
-class LanguagePairing(Dict[LangCode, list[LangCode]]):
+class LanguagePairing(Dict[Language, list[Language]]):
     """
     Holds the list of supported source language codes mapping to target language codes
     """
@@ -32,8 +23,21 @@ class LanguagePairing(Dict[LangCode, list[LangCode]]):
     ...
 
 
-class ITranslator:
-    def translate(self, text: list[str], src_lang: str, target_lang: str) -> str:
+class TranslationService(db.Model):
+    """Represents the information that must be available from all possible machine translators."""
+
+    __tablename__ = "translationservice"
+
+    id = db.Column(db.Integer, primary_key=True)
+    """Translation service identifier."""
+
+    service_name = db.Column(db.Text, unique=True, nullable=False)
+    """Human-readable name of the machine translator."""
+
+    def translate(
+        self, texts: list[str], src_lang: Language, target_lang: Language
+    ) -> list[str]:
+        """The implementor should return the translated text in the same order as found in the `texts` parameter."""
         raise NotImplementedError
 
     def usage(self) -> Usage:
@@ -42,15 +46,52 @@ class ITranslator:
     def languages(self) -> LanguagePairing:
         raise NotImplementedError
 
+    __mapper_args__ = {"polymorphic_on": service_name}
 
-@dataclass
-class DeepLTranslator(ITranslator):
-    api_key: str
-    url: str = "https://api-free.deepl.com/v2"
-    IGNORE_TAG: str = "x"
 
-    def __post_init__(self) -> None:
-        self.headers = {"Authorization": f"DeepL-Auth-Key {self.api_key}"}
+class TranslationServiceKey(db.Model):
+    """Represents an API-key (or any string value) that is needed for using a machine translator and that one or more users are in possession of."""
+
+    __tablename__ = "translationservicekey"
+
+    id = db.Column(db.Integer, primary_key=True)
+    """Key identifier."""
+
+    # TODO better name?
+    api_key = db.Column(db.Text, nullable=False)
+    """The key needed for using related service."""
+
+    group_id = db.Column(
+        db.Integer, db.ForeignKey("usergroup.id"), nullable=False, uselist=False
+    )
+    group: UserGroup = db.relationship("UserGroup")
+    """The group that can use this key."""
+
+    service_id = db.Column(
+        db.Integer,
+        db.ForeignKey("translationservice.id"),
+        nullable=False,
+        uselist=False,
+    )
+    service: TranslationService = db.relationship("TranslationService")
+    """The service that this key is used in."""
+
+
+class DeeplTranslationService(TranslationService):
+    service_url = db.Column(
+        db.Text, default="https://api-free.deepl.com/v2", nullable=False
+    )
+    """The url base for the API calls (free version)."""
+
+    ignore_tag = db.Column(db.Text, default="x", nullable=False)
+    """The XML-tag name that is used for ignoring pieces of text."""
+
+    def __init__(self, user_group: UserGroup) -> None:
+        api_key = TranslationServiceKey.query.filter(
+            TranslationServiceKey.service_id == self.id
+            and TranslationServiceKey.group_id == user_group.id
+        )
+        self.headers = {"Authorization": f"DeepL-Auth-Key {api_key.api_key}"}
 
     # TODO Change the dict to DeepLTranslateParams or smth
     def _post(self, url_slug: str, data: dict | None = None) -> dict:
@@ -60,7 +101,9 @@ class DeepLTranslator(ITranslator):
         :param data: Data to be transmitted along the request
         :return: The response's JSON TODO Is dict allowed?
         """
-        resp = requests.post(self.url + "/" + url_slug, data=data, headers=self.headers)
+        resp = requests.post(
+            self.service_url + "/" + url_slug, data=data, headers=self.headers
+        )
 
         if resp.ok:
             try:
@@ -75,7 +118,7 @@ class DeepLTranslator(ITranslator):
     def _translate(
         self,
         text: list[str],
-        source_lang: str,
+        source_lang: str | None,
         target_lang: str,
         *,
         split_sentences: str | None = None,
@@ -114,25 +157,27 @@ class DeepLTranslator(ITranslator):
 
         return self._post("translate", data)
 
-    def translate(self, text: list[str], source_lang: str, target_lang: str) -> str:
+    def translate(
+        self, texts: list[str], source_lang: Language | None, target_lang: Language
+    ) -> list[str]:
         """
         Uses the DeepL API for translating text between languages
-        :param text: Text to be translated TODO Why is this a list? For the 50 text-params?
-        :param source_lang: DeepL-compliant language code of input text
+        :param texts: Text to be translated TODO Why is this a list? For the 50 text-params?
+        :param source_lang: DeepL-compliant language code of input text. None value makes DeepL guess it from the text.
         :param target_lang: DeepL-compliant language code for target language
         :return: The input text translated into the target language
         """
         # Translate using XML-protection for protected pieces of the text
         resp_json = self._translate(
-            text,
-            source_lang,
-            target_lang,
+            texts,
+            DeeplTranslationService.supported_repr(source_lang),
+            DeeplTranslationService.supported_repr(target_lang),
             split_sentences="nonewlines",
             tag_handling="xml",
-            ignore_tags=[DeepLTranslator.IGNORE_TAG],
+            ignore_tags=[DeeplTranslationService.IGNORE_TAG],
         )
         # TODO Use a special structure to insert the text-parts sent to the API into correct places in original text
-        return "".join([tr["text"] for tr in resp_json["translations"]])
+        return [tr["text"] for tr in resp_json["translations"]]
 
     def usage(self) -> Usage:
         resp_json = self._post("usage")
@@ -141,18 +186,21 @@ class DeepLTranslator(ITranslator):
             character_limit=int(resp_json["character_limit"]),
         )
 
+    # TODO Cache this
     def languages(self) -> LanguagePairing:
         """
         Asks the DeepL API for the list of supported languages (Note: the supported language _pairings_ are not explicitly specified) and picks the returned language codes that when turned to lowercase match the LangCode-enum's values.
         :return: Dictionary of source langs to lists of target langs, that are supported by the API and also defined in LangCode
         """
         resp_json = self._post("languages")
-        lang_codes: list[LangCode] = list(
+        lang_codes: list[Language] = list(
             filter(
                 None,
                 map(
                     # The DeepL language code might contain '-' for example in 'EN-GB'
-                    lambda x: get_lang_code(x["language"].split("-")[0].upper()),
+                    lambda x: DeeplTranslationService.get_language(
+                        x["language"].split("-")[0].upper()
+                    ),
                     resp_json,
                 ),
             )
@@ -169,27 +217,39 @@ class DeepLTranslator(ITranslator):
         :param target_lang: Language to translate into TODO In what format?
         :return: True, if the pairing is supported
         """
-        source_lang_code = get_lang_code(source_lang)
+        source_lang_code = DeeplTranslationService.get_language(source_lang)
         if source_lang_code is None:
             raise RouteException(
                 description=f"The language '{source_lang}' is not supported"
             )
 
-        target_lang_code = get_lang_code(target_lang)
+        target_lang_code = DeeplTranslationService.get_language(target_lang)
         if target_lang_code is None:
             raise RouteException(
                 description=f"The language '{target_lang}' is not supported"
             )
 
-        supported_languages: list[LangCode] = self.languages()[source_lang_code]
+        supported_languages: list[Language] = self.languages()[source_lang_code]
 
         return target_lang_code in supported_languages
 
+    # TODO Make the value an enum like with Verification?
+    __mapper_args__ = {"polymorphic_identity": "DeepL"}
 
-def get_lang_code(s: str) -> LangCode | None:
-    try:
-        return LangCode(s)
-    except KeyError:
-        return None
-    except ValueError:
-        return None
+    @staticmethod
+    def supported_repr(lang: Language | None) -> str:
+        """
+        :param lang: Standard language from database
+        :return: The language representation that DeepL supports
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    def get_language(s: str) -> Language | None:
+        try:
+            # TODO use langcodes to find the standard code
+            raise NotImplementedError
+        except KeyError:
+            return None
+        except ValueError:
+            return None
