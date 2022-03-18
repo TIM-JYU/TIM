@@ -282,11 +282,9 @@ postprogram: |!!
         self.assertEqual("Laske: 10 + -3", self.find_element(".stem").text)
         self.assertEqual("4/3", self.find_element(".answer-index-count").text)
 
+
+class StackRandomTest(BrowserTest):
     def test_csplugin_answernr_stack1(self):
-
-        if self:  # This is slow! comment this if stack answernr test is needed
-            return  # Also this is a bit unstable with those sleeps, so not good for CI
-
         self.login_browser_quick_test1()
         self.login_test1()
         # Do not change id below because the sequence of question will be with that id:
@@ -343,8 +341,7 @@ response_trees:
 stackversion: 0
 ...    
 !!
-```
-"""
+```"""
         )
 
         def removeTex(s):
@@ -375,6 +372,7 @@ stackversion: 0
 
         # Pick document
         self.goto_document(d)
+        self.wait_until_present(".stackOutput")
         self.assertEqual("4553:15+2", stem_text())
 
         # answer to first (new) question
