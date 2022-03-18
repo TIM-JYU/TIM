@@ -818,6 +818,7 @@ export class TimTableComponent
     private rowStyleCache = new Map<number, Record<string, string>>();
     private rowClassCache = new Map<number, string>();
     private shouldSelectInputText = false;
+    private columnResolveState: boolean[] = [];
 
     constructor(
         private el: ElementRef,
@@ -4599,8 +4600,30 @@ export class TimTableComponent
         return this.dataView?.rowHeight;
     }
 
-    getColumnWidth(columnIndex: number): number | undefined {
-        return this.dataView?.columnWidths?.[`${columnIndex}`];
+    getColumnWidth(columnIndex: number): [number, boolean] {
+        if (!this.dataView) {
+            return [0, false];
+        }
+        if (!this.dataView.columnWidths) {
+            this.dataView.columnWidths = {};
+        }
+        const idx = `${columnIndex}`;
+        const res = this.dataView.columnWidths[idx];
+        if (res) {
+            let resolveState = this.columnResolveState[columnIndex];
+            if (resolveState === undefined) {
+                this.columnResolveState[columnIndex] = true;
+                resolveState = true;
+            }
+            return [res, resolveState];
+        }
+        if (columnIndex <= 0) {
+            return [0, false];
+        }
+        const [w, _] = this.getColumnWidth(columnIndex - 1);
+        this.columnResolveState[columnIndex] = false;
+        this.dataView.columnWidths[idx] = w;
+        return [w, false];
     }
 
     getCellContents(rowIndex: number, columnIndex: number): string {
