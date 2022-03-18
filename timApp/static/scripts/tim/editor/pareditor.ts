@@ -1147,6 +1147,7 @@ ${backTicks}
         }
         this.wrap = {n: Math.abs(n), auto: n > 0};
 
+        this.compileOriginalPreview();
         if (this.getOptions().touchDevice) {
             if (!this.oldmeta) {
                 const meta = $("meta[name='viewport']");
@@ -1182,6 +1183,30 @@ ${backTicks}
             true,
             undefined,
             undefined
+        );
+    }
+
+    async compileOriginalPreview() {
+        const previewOriginalDiv = angular.element(".previeworiginalcontent");
+
+        let text = "";
+        if (this.trdiff != undefined) {
+            text = this.trdiff.new;
+        }
+        const previewDiv = angular.element(".previewcontent");
+        this.scrollPos = previewDiv.scrollTop() ?? this.scrollPos;
+        this.outofdate = true;
+        const spellCheckInEffect = this.spellcheck && this.isFinnishDoc();
+        const data = await this.resolve.params.previewCb(
+            text,
+            spellCheckInEffect
+        );
+
+        await ParCompiler.compileAndAppendTo(
+            previewOriginalDiv,
+            data,
+            this.scope,
+            this.resolve.params.viewCtrl
         );
     }
 
@@ -1446,6 +1471,7 @@ ${backTicks}
         }
         this.getEditorContainer().resize();
         this.scope.$applyAsync();
+        this.compileOriginalPreview();
     }
 
     wrapFn(func: (() => void) | null = null) {
