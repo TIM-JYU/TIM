@@ -40,6 +40,10 @@ PREV_ANSWER = "answerbrowser .prevAnswer"
 options = webdriver.ChromeOptions()
 options.headless = True
 options.add_argument("--window-size=1024x768")
+# We run unit tests in CI environment, so we can generally skip sandboxing to achieve better stability
+options.add_argument("--no-sandbox")
+# This may slow down unit tests but generally is more stable when running browser tests in Docker
+options.add_argument("--disable-dev-shm-usage")
 
 
 class BrowserTest(TimLiveServer, TimRouteTest):
@@ -61,7 +65,13 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.drv.set_script_timeout(60)
         self.wait = WebDriverWait(self.drv, 30)
 
-    def login_browser_as(self, email: str, password: str, name: str):
+    def login_browser_as(self, email: str, password: str, name: str) -> None:
+        """Logs in as a user with the given email and password and tests that the user is logged in.
+
+        :param email: User email
+        :param password: User password
+        :param name: User's full name. Used to test that the user is logged in properly.
+        """
         self.client.__exit__(None, None, None)
         self.goto("")
         elem = self.drv.find_element(By.XPATH, "//tim-login-menu/button")
