@@ -145,7 +145,8 @@ const PluginFields = t.intersection([
                                  [stem]="uploadstem"
                                  (file)="onFileLoad($event)"
                                  (upload)="onUploadResponse($event)"
-                                 (uploadDone)="onUploadDone($event)">
+                                 (uploadDone)="onUploadDone($event)"
+                                 [accept]="'image/*,.pdf'">
             </file-select-manager>
             <tim-loading *ngIf="isRunning"></tim-loading>
             <div *ngIf="error" [innerHTML]="error"></div>
@@ -253,8 +254,8 @@ export class ReviewCanvasComponent
             upload: true,
         });
 
-        component.allowMultiple = false; // this.markup.allowMultipleFiles;
-        component.multipleElements = false; // this.markup.multipleUploadElements;
+        component.allowMultiple = true; // this.markup.allowMultipleFiles;
+        component.multipleElements = true; // this.markup.multipleUploadElements;
         component.files = files;
     }
 
@@ -287,9 +288,10 @@ export class ReviewCanvasComponent
         if (!resp) {
             return;
         }
-        const response = resp as IUploadResponse;
-        // this.uploadedFiles.clear();
-        this.uploadedFiles.push({path: response.file, type: response.type});
+        const resps = resp as [IUploadResponse];
+        for (const response of resps) {
+            this.uploadedFiles.push({path: response.file, type: response.type});
+        }
     }
 
     onUploadDone(success: boolean) {
@@ -418,6 +420,7 @@ export class ReviewCanvasComponent
         }
 
         this.userErrorMessage = undefined;
+        this.connectionErrorMessage = undefined;
 
         this.isRunning = true;
 
@@ -466,7 +469,7 @@ export class ReviewCanvasComponent
     }
 
     /**
-     * Return promise of images' dataUrl presentation
+     * Return promise of images' dataUrl presentation or their original source
      * The returned images are fully rotated to their current rotation value (90deg per one rotation)
      */
     async getVelpImages(): Promise<string[] | undefined> {
@@ -482,7 +485,7 @@ export class ReviewCanvasComponent
         return imgs.map((img, index) => {
             const uploadedFile = this.uploadedFiles[index];
             if (uploadedFile.rotation == undefined) {
-                return "";
+                return img.currentSrc;
             }
             const canvas = document.createElement("canvas");
             const ctx = canvas.getContext("2d")!;

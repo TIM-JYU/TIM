@@ -2384,11 +2384,13 @@ ${fhtml}
             return;
         }
 
-        const response = resp as IUploadResponse;
+        const resps = resp as [IUploadResponse];
         if (!this.markup.files) {
             this.uploadedFiles.clear();
         }
-        this.uploadedFiles.push({path: response.file, type: response.type});
+        for (const response of resps) {
+            this.uploadedFiles.push({path: response.file, type: response.type});
+        }
     }
 
     onUploadDone(success: boolean) {
@@ -3801,7 +3803,7 @@ ${fhtml}
                             class="timButton btn-sm"
                             (click)="fetchExternalFiles()"
                             [innerHTML]="externalFetchText()"></button>
-                    <a href="#" *ngIf="undoButton && isUnSaved()" title="undoTitle"
+                    <a href="#" *ngIf="undoButton && isUnSaved()" [title]="undoTitle"
                        (click)="tryResetChanges(); $event.preventDefault()"> &nbsp;{{undoButton}}</a>
                     &nbsp;&nbsp;
                     <span *ngIf="savedText"

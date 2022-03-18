@@ -80,6 +80,7 @@ class KnownMarkupFields(HiddenFieldsMixin):
     cache: bool | None | Missing = missing
     deadline: PluginDateTime | datetime | None | Missing = missing
     fields: list[str] | None | Missing = missing
+    floatHeader: str | None | Missing = missing
     header: str | None | Missing = missing
     headerText: str | None | Missing = missing
     hideBrowser: bool | Missing | None = missing
