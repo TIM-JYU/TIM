@@ -56,6 +56,7 @@ def get_annotations_with_comments_in_document(
             Annotation.visible_to == AnnotationVisibility.owner.value
         )
     answer_filter = true()
+    own_review_filter = true()
     if not user.has_seeanswers_access(d) or only_own:
         answer_filter = (User.id == user.id) | (User.id == None)
         if is_peerreview_enabled(d):
@@ -63,6 +64,9 @@ def get_annotations_with_comments_in_document(
                 get_reviews_for_user_query(d, user)
                 .with_entities(PeerReview.reviewable_id)
                 .subquery()
+            )
+            own_review_filter = (User.id == user.id) | (
+                Annotation.annotator_id == user.id
             )
     anns = (
         set_annotation_query_opts(
@@ -79,6 +83,7 @@ def get_annotations_with_comments_in_document(
             .outerjoin(Answer)
             .outerjoin(User, Answer.users_all)
             .filter(answer_filter)
+            .filter(own_review_filter)
             .order_by(
                 Annotation.depth_start.desc(),
                 Annotation.node_start.desc(),

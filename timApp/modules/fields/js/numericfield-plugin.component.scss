@@ -1,0 +1,48 @@
+@import "fields-box-common";
+
+.form-control {
+    height: 2em;
+    display: unset;
+    width: unset;
+}
+
+.stem {
+    text-align: left;
+    height: 6px;
+}
+
+.timButton {
+    margin-bottom: 5px;
+}
+
+.plaintextFrame {
+    border: none;
+    box-shadow: none;
+}
+
+p {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    margin-bottom: 0px;
+    margin-top: 0px;
+}
+
+/* Hide HTML5 Up and Down arrows. */
+.noarrows input[type="number"]::-webkit-outer-spin-button,.noarrows  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.noarrows input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+.numericfield label {
+    font-weight: unset;
+    margin-left: 2px;
+}
+
+.numericfield input {
+    padding: 0px;
+    padding-left: 2px;
+}

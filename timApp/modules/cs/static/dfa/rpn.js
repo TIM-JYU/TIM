@@ -314,6 +314,7 @@ class RPN {
         let initial = params["initial"] || "";
         this.allowed = params["allowed"] || [];
         this.illegals = params["illegals"] || [];
+        this.params.maxStep = this.params.maxStep || 10000;
         this.errorlevel = 3;
         this.stack = [];
         this.commands = [];
@@ -329,7 +330,7 @@ class RPN {
     }
 
     maxStep() {
-        return 10000;
+        return this.params.maxStep;
     }
 
     isIn(reglist, cmd, def, err) {

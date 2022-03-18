@@ -1508,7 +1508,7 @@ export class ImageXComponent
                         src: this.markup.background.src,
                         textbox: false,
                     },
-                    position: [0, 0],
+                    position: this.markup.background.position ?? [0, 0],
                     size: this.markup.background.size,
                     type: "img",
                 },

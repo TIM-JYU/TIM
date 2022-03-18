@@ -352,29 +352,64 @@ label.disabled {
     color: grey;
 }
 
+$default: gainsboro;
+$positive: palegreen;
+$neutral: khaki;
+$negative: lightpink;
+$new: lightskyblue;
+$inactive: whitesmoke;
+
 .emphasise {
     &.default {
-        background: gainsboro;
+        background: $default;
     }
 
     &.positive {
-        background: palegreen;
+        background: $positive;
     }
 
     &.neutral {
-        background: khaki;
+        background: $neutral;
     }
 
     &.negative {
-        background: lightpink;
+        background: $negative;
     }
 
     &.new {
-        background: lightskyblue;
+        background: $new;
     }
 
     &.inactive {
-        background: whitesmoke;
+        background: $inactive;
+    }
+
+    &.image-text {
+        background: transparent;
+
+        &.default {
+            color: $default;
+        }
+
+        &.positive {
+            color: $positive;
+        }
+
+        &.neutral {
+            color: $neutral;
+        }
+
+        &.negative {
+            color: $negative;
+        }
+
+        &.new {
+            color: $new;
+        }
+
+        &.inactive {
+            color: $inactive;
+        }
     }
 }
 

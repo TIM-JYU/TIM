@@ -930,7 +930,19 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         vals: set[int],
         allow_admin: bool = True,
         grace_period: timedelta = timedelta(seconds=0),
+        duration: bool = False,
     ) -> BlockAccess | None:
+        """
+            Check if the user has any possible access to the given item or block.
+
+        :param i: The item or block to check
+        :param vals: Access types to check. See AccessType for available values.
+        :param allow_admin: If True, allow admins to bypass the access check
+        :param grace_period: Grace period for the access check.
+                             If the user has access to the item, extends the end date of the access by this amount.
+        :param duration: If True checks for duration access instead of active accesses.
+        :return: The best access object that user currently has for the given item or block and access types.
+        """
         if allow_admin and self.is_admin:
             return BlockAccess(
                 block_id=i.id,
@@ -968,37 +980,69 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 # so we'll continue looping.
                 if best_access is None or best_access.accessible_to < a.accessible_to:
                     best_access = a
+            if (
+                duration
+                and a.unlockable
+                and ((a.duration_from or maxdate) <= now < (a.duration_to or maxdate))
+            ):
+                return a
         return best_access
 
     def has_access(
         self,
         i: ItemOrBlock,
         access: AccessType,
-        grace_period=timedelta(seconds=0),
+        grace_period: timedelta = timedelta(seconds=0),
+        duration: bool = False,
     ) -> BlockAccess | None:
+        """
+            Check if the user has access to the given item or block.
+
+        :param i: Item or block to check
+        :param access: Access type to check. See AccessType for available values.
+        :param grace_period: Grace period for the access check.
+                             If the user has access to the item, extends the end date of the access by this amount.
+        :param duration: If True checks for duration access instead of active accesses.
+        :return: The best access object that user currently has for the given item or block and access type.
+                 Otherwise, if user has no access, None.
+        """
         from timApp.auth.accesshelper import check_inherited_right
 
         return check_inherited_right(
             self, i, access, grace_period
-        ) or self.has_some_access(i, access_sets[access], grace_period=grace_period)
+        ) or self.has_some_access(
+            i, access_sets[access], grace_period=grace_period, duration=duration
+        )
 
-    def has_view_access(self, i: ItemOrBlock) -> BlockAccess | None:
-        return self.has_some_access(i, view_access_set)
+    def has_view_access(
+        self, i: ItemOrBlock, duration: bool = False
+    ) -> BlockAccess | None:
+        return self.has_some_access(i, view_access_set, duration=duration)
 
-    def has_edit_access(self, i: ItemOrBlock) -> BlockAccess | None:
-        return self.has_some_access(i, edit_access_set)
+    def has_edit_access(
+        self, i: ItemOrBlock, duration: bool = False
+    ) -> BlockAccess | None:
+        return self.has_some_access(i, edit_access_set, duration=duration)
 
-    def has_manage_access(self, i: ItemOrBlock) -> BlockAccess | None:
-        return self.has_some_access(i, manage_access_set)
+    def has_manage_access(
+        self, i: ItemOrBlock, duration: bool = False
+    ) -> BlockAccess | None:
+        return self.has_some_access(i, manage_access_set, duration=duration)
 
-    def has_teacher_access(self, i: ItemOrBlock) -> BlockAccess | None:
-        return self.has_some_access(i, teacher_access_set)
+    def has_teacher_access(
+        self, i: ItemOrBlock, duration: bool = False
+    ) -> BlockAccess | None:
+        return self.has_some_access(i, teacher_access_set, duration=duration)
 
-    def has_seeanswers_access(self, i: ItemOrBlock) -> BlockAccess | None:
-        return self.has_some_access(i, seeanswers_access_set)
+    def has_seeanswers_access(
+        self, i: ItemOrBlock, duration: bool = False
+    ) -> BlockAccess | None:
+        return self.has_some_access(i, seeanswers_access_set, duration=duration)
 
-    def has_copy_access(self, i: ItemOrBlock) -> BlockAccess | None:
-        return self.has_some_access(i, copy_access_set)
+    def has_copy_access(
+        self, i: ItemOrBlock, duration: bool = False
+    ) -> BlockAccess | None:
+        return self.has_some_access(i, copy_access_set, duration=duration)
 
     def has_ownership(
         self, i: ItemOrBlock, allow_admin: bool = True

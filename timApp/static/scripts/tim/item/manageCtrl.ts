@@ -1,6 +1,5 @@
 import {IController, IFormController, IHttpResponse} from "angular";
 import {timApp} from "tim/app";
-
 import {
     isManageResponse,
     showRenameDialog,
