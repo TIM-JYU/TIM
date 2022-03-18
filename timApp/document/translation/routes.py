@@ -2,6 +2,7 @@ import re
 
 from flask import request, Blueprint
 from sqlalchemy.exc import IntegrityError
+import langcodes
 
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
@@ -25,6 +26,7 @@ from timApp.document.translation.translator import (
     DeeplTranslationService,
 )
 from timApp.document.translation.language import Language, find_by_str
+from timApp.user.usergroup import UserGroup
 
 
 def valid_language_id(lang_id):
@@ -70,19 +72,10 @@ def init_deepl_translator(
     :param target_lang: Language that is requested to translate into
     :return: DeepLTranslator instance, that is ready for translate-calls
     """
-    # Get the API-key from environment variable
-    try:
-        # TODO Get the API-key from user profile or the post-request
-        from os import environ
-
-        api_key = environ["DEEPL_API_KEY"]
-        # TODO Get the current user's user group
-
-        translator = DeeplTranslationService(
-            user_group=get_current_user_object().get_personal_group()
-        )
-    except KeyError:
-        raise NotExist("The DEEPL_API_KEY is not set into your configuration")
+    # Get the API-key from database
+    translator = DeeplTranslationService.query.filter(
+        UserGroup.id == get_current_user_object().get_personal_group().id
+    ).first()
 
     # TODO Languages should use common values / standard codes at this point (also applies to any doc.lang_id)
     if not translator.supports(source_lang, target_lang):

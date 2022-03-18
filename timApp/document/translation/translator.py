@@ -61,19 +61,16 @@ class TranslationServiceKey(db.Model):
     api_key = db.Column(db.Text, nullable=False)
     """The key needed for using related service."""
 
-    group_id = db.Column(
-        db.Integer, db.ForeignKey("usergroup.id"), nullable=False, uselist=False
-    )
-    group: UserGroup = db.relationship("UserGroup")
+    group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"), nullable=False)
+    group: UserGroup = db.relationship("UserGroup", uselist=False)
     """The group that can use this key."""
 
     service_id = db.Column(
         db.Integer,
         db.ForeignKey("translationservice.id"),
         nullable=False,
-        uselist=False,
     )
-    service: TranslationService = db.relationship("TranslationService")
+    service: TranslationService = db.relationship("TranslationService", uselist=False)
     """The service that this key is used in."""
 
 
@@ -89,8 +86,7 @@ class DeeplTranslationService(TranslationService):
     def __init__(self, user_group: UserGroup) -> None:
         api_key = TranslationServiceKey.query.filter(
             TranslationServiceKey.service_id == self.id
-            and TranslationServiceKey.group_id == user_group.id
-        )
+        ).first()
         self.headers = {"Authorization": f"DeepL-Auth-Key {api_key.api_key}"}
 
     # TODO Change the dict to DeepLTranslateParams or smth
