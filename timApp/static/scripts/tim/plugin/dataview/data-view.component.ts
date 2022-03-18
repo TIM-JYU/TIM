@@ -174,7 +174,7 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
         </tim-alert>
         <div class="data-view" [class.virtual]="isVirtual" [style.width]="tableMaxWidth" #dataViewContainer>
             <div class="header" #headerContainer>
-                <table [ngStyle]="tableStyle" #headerTable>
+                <table class="timTableHeader" [ngStyle]="tableStyle" #headerTable>
                     <thead #headerIdBody></thead>
                     <tbody #filterBody></tbody>
                 </table>
@@ -888,6 +888,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         );
         const makeHeader = (cell: HTMLTableCellElement) => {
             applyBasicStyle(cell, this.headerStyle);
+            cell.classList.add("headers");
             cell.appendChild(el("span")); // Header text
             cell.appendChild(
                 el("span", {
