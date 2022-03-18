@@ -457,7 +457,7 @@ export function getOutOffsetFully(el: Element): IBounds {
 }
 
 export function getOutOffsetVisible(el: Element) {
-    const minVisiblePixels = 20;
+    const minVisiblePixels = 50;
     const rect = getVisualBoundingRect(el);
     const bounds = {left: 0, top: 0, right: 0, bottom: 0};
     if (rect.top < 0) {
@@ -731,7 +731,21 @@ function getBrowserKind() {
     return BrowserKind.Unknown;
 }
 
+const iDevices = new Set([
+    "iPad Simulator",
+    "iPhone Simulator",
+    "iPod Simulator",
+    "iPad",
+    "iPhone",
+    "iPod",
+]);
+
 export function isIOS() {
+    // navigator.platform is legacy but still the only option is some browsers
+    if (!!navigator.platform) {
+        return iDevices.has(navigator.platform);
+    }
+
     // New iPads can report MacIntel as platform
     // https://stackoverflow.com/a/58979271
     return !!(

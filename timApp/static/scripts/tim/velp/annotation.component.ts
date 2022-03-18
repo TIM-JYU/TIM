@@ -87,8 +87,22 @@ export async function updateAnnotationServer(
             <ng-content></ng-content>
         </span>
         <span #inlineSpan [ngClass]="(isImageAnnotation()) ? 'inlineImageAnnotation' : 'inlineAnnotation'">
-            <div #inlineDiv *ngIf="show"
-                 (click)="updateZIndex()"
+            <div #inlineDiv *ngIf="showTransparentText()"
+                 class="emphasise image-text default"
+                 style="white-space: nowrap; position: absolute;"
+                 (click)="setShowFull(true)"
+                 [style.color]="getCustomColor()"
+                 [ngClass]="getClass()"
+                 [style.z-index]="zIndex">
+                <p class="math" style="font-size: x-large; margin: 0">
+                    {{ annotation.getContent() }}
+                </p>
+                <p class="math" *ngFor="let comment of annotation.comments"
+                   style="margin: 0">
+                    {{ comment.content }}
+                </p>
+            </div>
+            <div #inlineDiv *ngIf="show && !showTransparentText()"
                  class="no-popup-menu annotation-info emphasise default"
                  [ngClass]="getClass()"
                  (keydown)="keyDownFunc($event)"
@@ -96,19 +110,19 @@ export async function updateAnnotationServer(
                  [style.backgroundColor]="getCustomColor()"
                  [class.dark-bg]="darkBg"
                  [style.z-index]="zIndex">
-
+                
                 <span class="fulldiv">
                     <span class="div-90 annTopSection" (mouseenter)="setShowFull(true)">
-                        <p><span class="annHeader"><strong>{{ annotation.getContent() }}</strong></span></p>
+                        <p><span class="annHeader math"><strong>{{ annotation.getContent() }}</strong></span></p>
                         <p *ngIf="showFull">
                             <tim-signature [user]="annotation.annotator"
                                            [time]="annotation.creation_time"></tim-signature>
                         </p>
                     </span>
-                        <tim-close-button class="clickable-icon"
-                                          (click)="toggleAnnotationShow(); setShowFull(false)"></tim-close-button>
+                    <tim-close-button class="clickable-icon"
+                                      (click)="toggleAnnotationShow(); setShowFull(false)"></tim-close-button>
                 </span>
-
+                
                 <div>
                     <div *ngIf="showFull">
                         <p class="points-input" [hidden]="!canEditAnnotation() || !allowChangePoints()"><label>
@@ -125,8 +139,8 @@ export async function updateAnnotationServer(
                             <p class="points-input"><label>Points: {{ values.points }}</label></p>
                         </div>
                     </div>
-
-                    <div class="fulldiv"  #commentsDiv>
+                    
+                    <div class="fulldiv" #commentsDiv>
                         <ul class="comments">
                             <li *ngFor="let comment of annotation.comments">
                                 <p class="math">{{ comment.content }}
@@ -138,64 +152,72 @@ export async function updateAnnotationServer(
                         </ul>
                     </div>
                     <div *ngIf="showFull">
-                    <textarea focusMe class="form-control comment-area" placeholder="Add comment" 
-                              [(ngModel)]="newcomment"></textarea>
+                        <textarea focusMe class="form-control comment-area" placeholder="Add comment"
+                                  [(ngModel)]="newcomment"></textarea>
                         <div>
                             <div class="form-inline adjustAnnForm">
                                 <div>
-                    <span [hidden]="!canEditAnnotation()">
-                        <label [class.disabled]="!canEditAnnotation()">
-                            <div title="Visible to"
-                                 class="glyphicon glyphicon-eye-open visible-icon"></div></label>
-                        <select [(ngModel)]="values.visible_to" [disabled]="!canEditAnnotation()">
-                            <option *ngFor="let o of visibleOptions.values" [ngValue]="o.id">{{o.name}}</option>
-                        </select>
-                        <div class="glyphicon glyphicon-question-sign clickable-icon help-icon"
-                             (click)="openHelp()">
-                        </div>
-                    </span>
-
+                                    <span [hidden]="!canEditAnnotation()">
+                                        <label [class.disabled]="!canEditAnnotation()">
+                                            <div title="Visible to"
+                                                 class="glyphicon glyphicon-eye-open visible-icon"></div></label>
+                                        <select [(ngModel)]="values.visible_to" [disabled]="!canEditAnnotation()">
+                                            <option *ngFor="let o of visibleOptions.values"
+                                                    [ngValue]="o.id">{{o.name}}</option>
+                                        </select>
+                                        <div class="glyphicon glyphicon-question-sign clickable-icon help-icon"
+                                             (click)="openHelp()">
+                                        </div>
+                                    </span>
                                     <span *ngIf="!canEditAnnotation()" class="annotationVisibleText">
-
-                        <span title="Visible to" class="annqmark glyphicon glyphicon-eye-open"></span>
+                                        <span title="Visible to" class="annqmark glyphicon glyphicon-eye-open"></span>
                                         {{ getSelectedVisibleOption().name }}
-
                                         <span class="annqmark glyphicon glyphicon-question-sign clickable-icon"
                                               (click)="openHelp()">
-                        </span>
+                                        </span>
 
-                    </span>
+                                    </span>
                                     <span [hidden]="!canEditAnnotation()" style="float: right">
-                        <input type="color" [(ngModel)]="values.color" (ngModelChange)="onColorUpdate($event)"
-                               class="colorchange-button" title="Change annotation color">
-                        <button *ngIf="isVelpCustomColor()"
-                                class="smallButton"
-                                (click)="clearColor()"
-                                title="Reset color to original value">R</button>
-                        <button
-                                class="smallButton"
-                                (click)="whiteColor()"
-                                title="Reset color to white">W</button>
-                    </span>
+                                        <input type="color" [(ngModel)]="values.color"
+                                               (ngModelChange)="onColorUpdate($event)"
+                                               class="colorchange-button" title="Change annotation color">
+                                        <button *ngIf="isVelpCustomColor()"
+                                                class="smallButton"
+                                                (click)="clearColor()"
+                                                title="Reset color to original value">R</button>
+                                        <button
+                                                class="smallButton"
+                                                (click)="whiteColor()"
+                                                title="Reset color to white">W</button>
+                                    </span>
+                                    <p>
+                                        <span *ngIf="canEditAnnotation() && isImageAnnotation()">
+                                            Style&nbsp;
+                                            <select [(ngModel)]="values.style" [disabled]="!canEditAnnotation()">
+                                                <option *ngFor="let o of styleOptions.values"
+                                                        [ngValue]="o.id">{{o.name}}</option>
+                                            </select>
+                                        </span>
+                                    </p>
                                 </div>
                             </div>
                         </div>
                         <span>
-        <button class="saveChanges timButton" *ngIf="hasChanged()" (click)="saveChanges()">
-            Save
-        </button>
-    </span>
+                            <button class="saveChanges timButton" *ngIf="hasChanged()" (click)="saveChanges()">
+                                Save
+                            </button>
+                        </span>
                     </div>
                     <div *ngIf="showFull">
-        <span class="pull-right glyphicon glyphicon-trash clickable-icon" title="Delete annotation"
-              [hidden]="!canEditAnnotation()"
-              (click)="deleteAnnotation()"></span>
+                        <span class="pull-right glyphicon glyphicon-trash clickable-icon" title="Delete annotation"
+                              [hidden]="!canEditAnnotation()"
+                              (click)="deleteAnnotation()"></span>
                     </div>
                     <div class="annotationVisibleText" [hidden]="showFull">
                         {{ getSelectedVisibleOption().name }}
                     </div>
                 </div>
-
+                
             </div>
         </span>
     `,
@@ -211,6 +233,13 @@ export class AnnotationComponent
             {id: 2, name: "Document owner"},
             {id: 3, name: "Teachers"},
             {id: 4, name: "Everyone"},
+        ],
+    };
+    styleOptions = {
+        values: [
+            {id: 1, name: "Default"},
+            {id: 2, name: "Text"},
+            {id: 3, name: "Text (always visible)"},
         ],
     };
     newcomment = "";
@@ -245,6 +274,7 @@ export class AnnotationComponent
             this.adjustAnnotationInPicturePosition(
                 this.inlineDivRef.nativeElement
             );
+            ParCompiler.processAllMath($(div.nativeElement));
         }
     }
 
@@ -345,9 +375,16 @@ export class AnnotationComponent
     }
 
     ngAfterViewChecked() {
-        if (this.refreshMath && this.commentsDivRef) {
+        if (this.refreshMath) {
             this.refreshMath = false;
-            ParCompiler.processAllMath($(this.commentsDivRef.nativeElement));
+            if (this.commentsDivRef) {
+                ParCompiler.processAllMath(
+                    $(this.commentsDivRef.nativeElement)
+                );
+            }
+            if (this.inlineDivRef) {
+                ParCompiler.processAllMath($(this.inlineDivRef.nativeElement));
+            }
         }
     }
 
@@ -359,6 +396,17 @@ export class AnnotationComponent
         return (
             this.placement == AnnotationPlacement.AccuratelyPositioned &&
             this.annotation.draw_data != undefined
+        );
+    }
+
+    showTransparentText(): boolean {
+        return (
+            // {id: 1, name: "Default/Hidden"},
+            // {id: 2, name: "Text"},
+            // {id: 3, name: "Text (always visible"},
+            this.isImageAnnotation() &&
+            !this.showFull &&
+            ((this.values.style == 2 && this.show) || this.values.style == 3)
         );
     }
 

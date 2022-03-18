@@ -12,12 +12,7 @@ import {
     getFullscreenElement,
     toggleFullScreen,
 } from "tim/util/fullscreen";
-import {
-    IDocument,
-    ILanguages,
-    ITranslators,
-    redirectToItem,
-} from "tim/item/IItem";
+import {IDocument, ILanguages, ITranslators} from "tim/item/IItem";
 import {
     IExtraData,
     ITags,
@@ -240,6 +235,9 @@ export class PareditorController extends DialogController<
     private documentLanguages: Array<ILanguages> = [];
     private translators: Array<ITranslators> = [];
     private docTranslator: string = "";
+    private sideBySide: boolean = false;
+    private positionButton: string = "";
+    private translationInProgress: boolean = false;
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -1088,6 +1086,24 @@ ${backTicks}
         return this.wrap.n * (this.wrap.auto ? 1 : -1);
     }
 
+    /*
+    Tracks the editing and Difference in original document views' positioning (see pareditor.html).
+     */
+    changePositioning() {
+        const doc = document.getElementById("editorflex");
+        if (doc != null && this.sideBySide) {
+            doc.classList.remove("sidebyside");
+            doc.classList.add("stacked");
+            this.positionButton = "Side by Side";
+            this.sideBySide = false;
+        } else if (doc != null) {
+            doc.classList.remove("stacked");
+            doc.classList.add("sidebyside");
+            this.positionButton = "Stacked";
+            this.sideBySide = true;
+        }
+    }
+
     $onInit() {
         super.$onInit();
         this.docSettings = documentglobals().docSettings;
@@ -1101,6 +1117,9 @@ ${backTicks}
             this.targetLanguages
         );
         const saveTag = this.getSaveTag();
+        this.sideBySide = false;
+        this.positionButton = "Side by side";
+        this.translationInProgress = false;
         this.storage = {
             acebehaviours: new TimStorage("acebehaviours" + saveTag, t.boolean),
             acewrap: new TimStorage("acewrap" + saveTag, t.boolean),
@@ -1128,6 +1147,7 @@ ${backTicks}
         }
         this.wrap = {n: Math.abs(n), auto: n > 0};
 
+        this.compileOriginalPreview();
         if (this.getOptions().touchDevice) {
             if (!this.oldmeta) {
                 const meta = $("meta[name='viewport']");
@@ -1163,6 +1183,30 @@ ${backTicks}
             true,
             undefined,
             undefined
+        );
+    }
+
+    async compileOriginalPreview() {
+        const previewOriginalDiv = angular.element(".previeworiginalcontent");
+
+        let text = "";
+        if (this.trdiff != undefined) {
+            text = this.trdiff.new;
+        }
+        const previewDiv = angular.element(".previewcontent");
+        this.scrollPos = previewDiv.scrollTop() ?? this.scrollPos;
+        this.outofdate = true;
+        const spellCheckInEffect = this.spellcheck && this.isFinnishDoc();
+        const data = await this.resolve.params.previewCb(
+            text,
+            spellCheckInEffect
+        );
+
+        await ParCompiler.compileAndAppendTo(
+            previewOriginalDiv,
+            data,
+            this.scope,
+            this.resolve.params.viewCtrl
         );
     }
 
@@ -1427,6 +1471,7 @@ ${backTicks}
         }
         this.getEditorContainer().resize();
         this.scope.$applyAsync();
+        this.compileOriginalPreview();
     }
 
     wrapFn(func: (() => void) | null = null) {
@@ -1540,6 +1585,8 @@ ${backTicks}
                 "There is no original text to be translated. Please check the Difference in original document view."
             );
         } else {
+            this.translationInProgress = true;
+
             const lang = this.resolve.params.viewCtrl.item.lang_id;
             const r = await to(
                 $http.post<IDocument>(
@@ -1558,7 +1605,9 @@ ${backTicks}
                     ) + "\n";
                 // eslint-disable-next-line @typescript-eslint/no-base-to-string
                 this.getEditor()?.setEditorText(ref + r.result.data.toString());
+                this.translationInProgress = false;
             } else {
+                this.translationInProgress = false;
                 await showMessageDialog(r.result.data.error);
             }
         }
@@ -1662,7 +1711,24 @@ ${backTicks}
             this.saving = false;
             return;
         } else {
+            this.setTranslatorSettings();
             this.close({type: "save", text});
+        }
+    }
+
+    async setTranslatorSettings() {
+        if (
+            this.docSettings != undefined &&
+            this.docSettings.translator != this.docTranslator &&
+            this.resolve.params.viewCtrl != undefined
+        ) {
+            await $http.post<string>(
+                `/settings/${this.resolve.params.viewCtrl.item.id}`,
+                {
+                    setting: "translator",
+                    value: this.docTranslator,
+                }
+            );
         }
     }
 

@@ -68,25 +68,7 @@
             Want to quickly get notifications from multiple documents?
             Subscribe to <a href=".">the entire folder</a>.
         </tim-alert>
-        <form>
-            <p>Send me email on</p>
-            <div class="checkbox"><label>
-                <input type="checkbox" ng-model="$ctrl.notifySettings.email_doc_modify"
-                       ng-change="$ctrl.notifyChanged()"/>Document modifications
-            </label></div>
-            <div class="checkbox"><label>
-                <input type="checkbox" ng-model="$ctrl.notifySettings.email_comment_add"
-                       ng-change="$ctrl.notifyChanged()"/>New comments
-            </label></div>
-            <div class="checkbox"><label>
-                <input type="checkbox" ng-model="$ctrl.notifySettings.email_comment_modify"
-                       ng-change="$ctrl.notifyChanged()"/>Edited comments
-            </label></div>
-            <div class="checkbox" ng-if="$ctrl.item.rights.teacher"><label>
-                <input type="checkbox" ng-model="$ctrl.notifySettings.email_answer_add"
-                       ng-change="$ctrl.notifyChanged()"/>New answers to tasks
-            </label></div>
-        </form>
+        <tim-notification-options></tim-notification-options>
     </div>
 </div>
 
@@ -240,9 +222,9 @@
                         <label for="translator">Translator:</label>
                         <select id="translator" name="translator-select" class="form-control"
                                ng-model="$ctrl.newTranslation.translator">
-                                <option ng-repeat="option in $ctrl.translators">{{option}}</option>
+                                <option ng-repeat="option in $ctrl.translators">{{option.name}}</option>
                         </select></div>
-                        <div ng-show="$ctrl.notManual()"> <!-- TODO: Convert ng-show lines to *ngIf (see settings.components.ts)? --!>
+                        <div ng-show="$ctrl.notManual()">
                             <label for="translatorLanguage">Translator language:</label>
                         <select id="translator-language" name="translator-language-select" class="form-control"
                                ng-model="$ctrl.newTranslation.translatorLanguage">
@@ -256,10 +238,11 @@
                     <div ng-show="!$ctrl.checkTranslatability()">
                         <p>This document will not be automatically translated on creation.</p>
                     </div>
-                    <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title"
+                    <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title ||$ctrl.translationInProgress"
                             class="timButton"
-                            ng-click="$ctrl.createTranslation()">Create
+                            ng-click="$ctrl.createTranslation()" id="createbutton">Create
                     </button>
+                    <p ng-show="$ctrl.translationInProgress">Translating... This may take a while.</p>
                 </uib-tab>
 <!--                <uib-tab heading="Create a cited copy">-->
 <!--                    <create-item item-type="document" item-location="{{ $ctrl.item.location }}"-->

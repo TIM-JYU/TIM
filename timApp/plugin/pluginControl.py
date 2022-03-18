@@ -503,6 +503,7 @@ def pluginify(
         if is_gamified:
             md = block.get_expanded_markdown(macroinfo=macroinfo)
             try:
+                # TODO: Gamification map should be its own plugin
                 gd = YamlBlock.from_markdown(md).values
                 runner = "gamification-map"
                 html_pars[

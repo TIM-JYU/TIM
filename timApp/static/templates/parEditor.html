@@ -43,7 +43,8 @@
             </select></div>
     </uib-tab>
   </uib-tabset>
-    <div class="editorContainer">
+  <div id="editorflex" class="stacked"><div class="halfsize">
+    <div class="editorContainer halfsize">
     </div>
     <div class="editButtonArea">
         <button class="timButton save" ng-disabled="$ctrl.saving" title="Save (Ctrl-S)" ng-click="$ctrl.saveClicked()">Save</button>
@@ -52,7 +53,8 @@
         <button class="btn btn-danger" ng-disabled="$ctrl.saving" ng-show="$ctrl.getOptions().showDelete" ng-click="$ctrl.deleteClicked()">Delete</button>
         </span>
         <div class="hidingButtonArea">
-            <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showTranslated()" ng-click="$ctrl.translateClicked()" style="right: 2px;">Translate</button>
+            <p ng-show="$ctrl.translationInProgress">Translating... This may take a while.</p>
+            <button class="timButton" id="translateButton" ng-disabled="$ctrl.saving || $ctrl.translationInProgress" ng-show="$ctrl.showTranslated()" ng-click="$ctrl.translateClicked()" style="right: 2px;">Translate</button>
             <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showUnread()" ng-click="$ctrl.unreadClicked()" style="right: 2px;">Mark as unread</button>
         </div>
     </div>
@@ -82,28 +84,41 @@
             <input type="checkbox" title="Check for automatic wrapping" ng-model="$ctrl.wrap.auto"/>
             <input type="text" title="Choose linelength for text.  0=no wrap" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
         </span>
-    </div>
+    </div></div>
     <!--
     <label class="pull-right font-weight-normal" title="Put 0 to no wrap" ng-click="$ctrl.editor.forceWrap(true)">Wrap:
         <input type="text" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
     </label>
     -->
     <div ng-if="$ctrl.trdiff"
+          class="halfsize"
          tim-draggable-fixed
          detachable="true"
          caption="Difference in original document"
          save="{{$ctrl.getOptions().localSaveTag}}Trdiff"
     >
         <div class="diff border">
+            <button class="timButton" ng-model="$ctrl.sideBySide" ng-click="$ctrl.changePositioning()">View {{$ctrl.positionButton}}</button>
             <pre diff left-obj="$ctrl.trdiff.old" right-obj="$ctrl.trdiff.new"></pre>
             <a href="{{ $ctrl.getSourceDocumentLink() }}"><i class="glyphicon glyphicon-link"></i></a>
         </div>
     </div>
+  </div>
+  <div class="sidebyside">
     <div tim-draggable-fixed
          detachable="true"
          caption="{{ $ctrl.getPreviewCaption() }}"
          save="{{$ctrl.getOptions().localSaveTag}}Preview"
-         class="previewDiv"
+         class="previewDiv halfsize"
          ng-show="$ctrl.proeditor">
         <div class="previewcontent paragraphs"></div>
+    </div>
+    <div tim-draggable-fixed
+         detachable="true"
+         caption="{{ $ctrl.getPreviewCaption() }}"
+         save="{{$ctrl.getOptions().localSaveTag}}Preview (original block)"
+         class="previewDiv halfsize"
+         ng-show="$ctrl.trdiff.new">
+        <div class="previeworiginalcontent paragraphs">{{$ctrl.trdiff.new}}</div>
+    </div>
     </div>

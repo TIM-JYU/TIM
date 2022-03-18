@@ -1,6 +1,5 @@
 import {IController, IFormController, IHttpResponse} from "angular";
 import {timApp} from "tim/app";
-
 import {
     isManageResponse,
     showRenameDialog,
@@ -58,6 +57,7 @@ export class PermCtrl implements IController {
         translator: string;
         translatorLanguage: string;
     };
+    private translationInProgress: boolean = false;
     private accessTypes: Array<unknown>; // TODO proper type
     private orgs: IGroup[];
     private item: IFullDocument | IFolder;
@@ -86,7 +86,7 @@ export class PermCtrl implements IController {
         this.newTranslation = {
             language: "",
             title: "",
-            translator: this.translators[0].name,
+            translator: "",
             translatorLanguage: "",
         };
         this.accessTypes = manageglobals().accessTypes;
@@ -107,6 +107,7 @@ export class PermCtrl implements IController {
     }
 
     async $onInit() {
+        this.translationInProgress = false;
         this.getNotifySettings();
         await listTranslators(this.translators);
         await updateLanguages(
@@ -553,6 +554,9 @@ export class PermCtrl implements IController {
     }
 
     async createTranslation() {
+        if (this.newTranslation.translator != "Manual") {
+            this.translationInProgress = true;
+        }
         const lang = this.parseLanguage(this.newTranslation.language);
         const trlang = this.parseLanguage(
             this.newTranslation.translatorLanguage
@@ -568,6 +572,7 @@ export class PermCtrl implements IController {
             const data = r.result.data;
             redirectToItem(data);
         } else {
+            this.translationInProgress = false;
             await showMessageDialog(r.result.data.error);
         }
     }

@@ -1,10 +1,9 @@
-import {IController} from "angular";
+import {Component, ElementRef, Input} from "@angular/core";
 import {ILayerData} from "tim/gamification/ILayerData";
 import {IMapResponse} from "tim/gamification/IMapResponse";
 import {ITileSet} from "tim/gamification/ITileSet";
-import {timApp} from "../app";
-import {$http} from "../util/ngimport";
-import {Binding, to} from "../util/utils";
+import {HttpClient} from "@angular/common/http";
+import {toPromise} from "tim/util/utils";
 import {Tile} from "./tile";
 
 export interface ITile {
@@ -43,14 +42,41 @@ type IParsedData = {
 
 // A global variable because Tile-class uses this too.
 let scale: number = 0.5;
-const defaultButtonText: string = "Show map";
+const defaultButtonText: string = $localize`Show map`;
 
-export class GamificationMapCtrl implements IController {
-    // noinspection JSUnusedLocalSymbols
-    static $inject = ["$element"];
-    private displayMap: boolean = false;
+@Component({
+    selector: "tim-gamification-map",
+    template: `
+<div class="no-highlight hidden-print">
+    <button class="timButton"
+            (click)="clickShowMap()"
+            [disabled]="loading">{{buttonText}}</button>
+    <tim-loading *ngIf="loading"></tim-loading>
+    <tim-alert *ngIf="errorMessage">
+        {{errorMessage}}
+    </tim-alert>
+    <div class="uiContainer" [hidden]="!displayMap || errorMessage">
+        <table>
+            <tr><td>Goals <input type="checkbox" class="showFrames" (click)="clickShowFrames()"></td></tr>
+            <tr><td>Zoom </td><td><input type="range" max="1" min="0.3" step="0.05" class="mapZoom"
+            [(ngModel)]="scaleInput" (ngModelChange)="update()"></td></tr>
+            <tr><td>Goal Transparency</td><td><input type="range" max="1" min="0" step="0.05" class="alphaRange"
+            [(ngModel)]="alpha" (ngModelChange)="update()"></td></tr>
+        </table>
+    </div>
+    <div class="mapContainer" [hidden]="!displayMap" (click)="clickCanvas($event)"
+        style="position:relative; z-index:0;">
+        <p class="infoBoxTitle" style="position: absolute;"></p>
+        <p class="infoBoxDescription" style="position: absolute;"></p>
+    </div>
+</div>
+`,
+})
+export class GamificationMapComponent {
+    @Input() private data!: string;
+    displayMap: boolean = false;
     private sources: string[] = [];
-    private scaleInput = scale;
+    scaleInput = scale;
 
     // List of canvases that are used to help with drawing the full map
     private canvases: HTMLCanvasElement[] = [];
@@ -61,7 +87,7 @@ export class GamificationMapCtrl implements IController {
     // Used for drawing the map
     private bottomCanvas!: HTMLCanvasElement;
     private json!: IMapResponse;
-    private alpha: number = 0.2; // Alpha value for the building frames.
+    alpha: number = 0.2; // Alpha value for the building frames.
     private showAll: boolean = false; // Show all building frames.
     private tiles: ITile[] = []; // Array of tile objects on the map.
     private images: Record<number, HTMLImageElement> = {};
@@ -81,15 +107,20 @@ export class GamificationMapCtrl implements IController {
 
     private roofFrameSet!: ITileSet;
     private roofImage!: HTMLImageElement;
-    private data!: Binding<string, "@">;
     private parsedData!: IParsedData;
-    private buttonText: string = "";
-    private errorMessage: string | undefined;
-    private loading = false;
+    private element: JQuery<HTMLElement>;
+    buttonText: string = "";
+    errorMessage: string | undefined;
+    loading = false;
 
-    constructor(protected element: JQLite) {}
+    constructor(
+        hostElement: ElementRef<HTMLElement>,
+        private http: HttpClient
+    ) {
+        this.element = $(hostElement.nativeElement);
+    }
 
-    $onInit() {
+    ngOnInit() {
         this.parsedData = JSON.parse(this.data) as IParsedData;
         this.buttonText = this.parsedData.buttonText;
         if (!this.buttonText) {
@@ -100,13 +131,13 @@ export class GamificationMapCtrl implements IController {
     async loadMap() {
         // Configure data and generate the JSON map file.
         this.loading = true;
-        const r = await to(
-            $http.post<IMapResponse>("/generateMap", this.parsedData)
+        const r = await toPromise(
+            this.http.post<IMapResponse>("/generateMap", this.parsedData)
         );
         this.loading = false;
         if (r.ok) {
             this.errorMessage = undefined;
-            this.json = r.result.data;
+            this.json = r.result;
             // Fill the sources array with tileset image sources.
             for (const tileset of this.json.tilesets) {
                 this.sources.push(tileset.image);
@@ -115,7 +146,7 @@ export class GamificationMapCtrl implements IController {
             // Preload the images and draw the map.
             this.loadImages((p) => this.callback(p));
         } else {
-            this.errorMessage = r.result.data.error;
+            this.errorMessage = r.result.error.error;
         }
     }
 
@@ -659,11 +690,10 @@ export class GamificationMapCtrl implements IController {
         }
     }
 
-    // noinspection JSUnusedLocalSymbols
     /**
      * Add click-event listener to the top canvas
      */
-    private clickCanvas(event: MouseEvent) {
+    clickCanvas(event: MouseEvent) {
         // Add event listener for `click` events on top canvas.
         // this.topCanvas.addEventListener("click", function(event) {
         const pos = absolutePosition(this.topCanvas);
@@ -885,11 +915,10 @@ export class GamificationMapCtrl implements IController {
         this.drawMap();
     }
 
-    // noinspection JSUnusedLocalSymbols
     /**
      * Button click function for showing frames on all possible tiles.
      */
-    private clickShowFrames() {
+    clickShowFrames() {
         this.showAll = !this.showAll;
         this.clearSelection();
 
@@ -899,11 +928,10 @@ export class GamificationMapCtrl implements IController {
         }
     }
 
-    // noinspection JSUnusedLocalSymbols
     /**
      * Called when user changes settings.
      */
-    private update() {
+    update() {
         // Change global variable so tiles get the new value.
         scale = this.scaleInput;
         // console.log(`showAll: ${this.showAll}, scale: ${scale}, alpha: ${this.alpha}`);
@@ -912,11 +940,10 @@ export class GamificationMapCtrl implements IController {
         this.drawMap();
     }
 
-    // noinspection JSUnusedLocalSymbols
     /**
      * Toggle map and UI.
      */
-    private async clickShowMap() {
+    async clickShowMap() {
         if (!this.json && !this.errorMessage) {
             await this.loadMap();
         }
@@ -1015,35 +1042,3 @@ function hasOwnProperty(
         (tile.dataIndex + datadelta).toString()
     );
 }
-
-timApp.component("gamificationMap", {
-    bindings: {
-        data: "@",
-    },
-    controller: GamificationMapCtrl,
-    template: `
-<div class="no-highlight hidden-print">
-    <button class="timButton"
-            ng-click="$ctrl.clickShowMap()"
-            ng-disabled="$ctrl.loading">{{$ctrl.buttonText}}</button>
-    <tim-loading ng-if="$ctrl.loading"></tim-loading>
-    <tim-alert ng-if="$ctrl.errorMessage">
-        {{$ctrl.errorMessage}}
-    </tim-alert>
-    <div class="uiContainer" ng-show="$ctrl.displayMap && !$ctrl.errorMessage">
-        <table>
-            <tr><td>Goals <input type="checkbox" class="showFrames" ng-click="$ctrl.clickShowFrames()"></td></tr>
-            <tr><td>Zoom </td><td><input type="range" max="1" min="0.3" step="0.05" class="mapZoom"
-            ng-model="$ctrl.scaleInput" ng-change="$ctrl.update()"></td></tr>
-            <tr><td>Goal Transparency</td><td><input type="range" max="1" min="0" step="0.05" class="alphaRange"
-            ng-model="$ctrl.alpha" ng-change="$ctrl.update()"></td></tr>
-        </table>
-    </div>
-    <div class="mapContainer" ng-show="$ctrl.displayMap" ng-click="$ctrl.clickCanvas($event)"
-        style="position:relative; z-index:0;">
-        <p class="infoBoxTitle" style="position: absolute;"></p>
-        <p class="infoBoxDescription" style="position: absolute;"></p>
-    </div>
-</div>
-`,
-});

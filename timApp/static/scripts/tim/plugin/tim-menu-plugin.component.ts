@@ -1,18 +1,24 @@
 /**
  * Defines the client-side implementation of JavaScript runner plugin.
  */
-import angular from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
+import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import {BrowserModule} from "@angular/platform-browser";
+import {HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {onClick, OnClickArg} from "../document/eventhandlers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IRights} from "../user/IRights";
 import {genericglobals} from "../util/globals";
-import {injectStyle, Require} from "../util/utils";
+import {vctrlInstance} from "../document/viewctrlinstance";
+import {TimUtilityModule} from "../ui/tim-utility.module";
+import {AnswerSheetModule} from "../document/question/answer-sheet.component";
+import {PurifyModule} from "../util/purify.module";
+import {createDowngradedModule, doDowngrade} from "../downgrade";
+import {AngularPluginBase} from "./angular-plugin-base.directive";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
-
-injectStyle("/static/scripts/tim/plugin/timMenu.css");
 
 // this.attrs
 const TimMenuMarkup = t.intersection([
@@ -74,29 +80,79 @@ const TimMenuAll = t.intersection([
     }),
 ]);
 
-class TimMenuController extends PluginBase<
+@Component({
+    selector: "tim-menu-runner",
+    template: `
+        <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
+        <span *ngIf="topMenu" class="tim-menu-placeholder"></span>
+        <span *ngIf="topMenu" class="tim-menu-placeholder-content tim-menu-hidden"><br></span>
+        <div class="tim-menu" [ngClass]="{'bgtim white': basicColors, 'hide-link-colors': !keepLinkColors}"
+             style="{{barStyle}}" (mouseleave)="mouseLeave()" (mouseenter)="mouseEnter()">
+    <span class="tim-menu-links" *ngFor="let t1 of menu; let last = last">
+        <span *ngIf="t1.items && t1.items.length > 0 && hasRights(t1)" class="btn-group" style="{{setStyle(t1)}}">
+          <span [innerHtml]="t1.text+openingSymbol" (click)="toggleSubmenu(t1, undefined, undefined, true)"
+                (mouseenter)="toggleSubmenu(t1, undefined, undefined, false)"></span>
+          <ul class="tim-menu-dropdown" *ngIf="t1.open" [ngClass]="openDirection(t1.id)" id="{{t1.id}}">
+            <li class="tim-menu-list-item" *ngFor="let t2 of t1.items" style="{{setStyle(t2)}}">
+                <span class="tim-menu-item" *ngIf="t2.items && t2.items.length > 0 && hasRights(t2)">
+                    <span class="tim-menu-item" [innerHtml]="t2.text+openingSymbol"
+                          (click)="toggleSubmenu(t2, t1, undefined, true)"
+                          (mouseenter)="toggleSubmenu(t2, t1, undefined, false)"></span>
+                    <ul class="tim-menu-dropdown" id="{{t2.id}}" [ngClass]="openDirection(t2.id)" *ngIf="t2.open">
+                        <li class="tim-menu-list-item" *ngFor="let t3 of t2.items" style="{{setStyle(t3)}}">
+                            <span class="tim-menu-item" *ngIf="t3.items && t3.items.length > 0 && hasRights(t3)">
+                                <span class="tim-menu-item" [innerHtml]="t3.text+openingSymbol"
+                                      (click)="toggleSubmenu(t3, t2, t1, true)"
+                                      (mouseenter)="toggleSubmenu(t3, t2, t1, false)"></span>
+                                <ul class="tim-menu-dropdown" id="{{t3.id}}" [ngClass]="openDirection(t3.id)"
+                                    *ngIf="t3.open">
+                                    <ng-container *ngFor="let t4 of t3.items">
+                                        <li class="tim-menu-list-item" [innerHtml]="t4.text" style="{{setStyle(t4)}}"
+                                            *ngIf="hasRights(t4)"></li>
+                                    </ng-container>
+                                </ul>
+                            </span>
+                            <span class="tim-menu-item" *ngIf="t3.items && t3.items.length < 1  && hasRights(t3)"
+                                  [innerHtml]="t3.text"></span>
+                        </li>
+                    </ul>
+                </span>
+                <span class="tim-menu-item" *ngIf="t2.items && t2.items.length < 1 && hasRights(t2)"
+                      [innerHtml]="t2.text"></span>
+            </li>
+          </ul>
+        </span>
+        <span *ngIf="t1.items && t1.items.length < 1 && hasRights(t1)" class="btn-group" style="{{setStyle(t1)}}"
+              [innerHtml]="t1.text"></span>
+        <span *ngIf="!last && hasRights(t1)" [innerHtml]="separator"></span>
+    </span>
+        </div>
+    `,
+    styleUrls: ["tim-menu-plugin.component.scss"],
+})
+export class TimMenuPluginComponent extends AngularPluginBase<
     t.TypeOf<typeof TimMenuMarkup>,
     t.TypeOf<typeof TimMenuAll>,
     typeof TimMenuAll
 > {
-    private menu: ITimMenuItem[] = [];
-    private vctrl?: Require<ViewCtrl>;
-    private openingSymbol: string = "";
+    menu: ITimMenuItem[] = [];
+    private vctrl!: ViewCtrl;
+    openingSymbol: string = "";
     private hoverOpen: boolean = true;
-    private separator: string = "";
-    private topMenu: boolean = false;
-    private basicColors: boolean = false;
+    separator: string = "";
+    topMenu: boolean = false;
+    basicColors: boolean = false;
     private openAbove: boolean = false;
-    private keepLinkColors: boolean = false;
+    keepLinkColors: boolean = false;
     private previousScroll: number | undefined = 0; // Store y-value of previous scroll event for comparison.
     private previouslyClicked: ITimMenuItem | undefined;
-    private barStyle: string = "";
+    barStyle: string = "";
     private mouseInside: boolean = false; // Whether mouse cursor is inside the menu.
     private clickedInside: boolean = false; // Whether a menu has been opened with mouse click.
     private userRights: IRights | undefined;
     private previousSwitch: number | undefined;
-    private topMenuTriggerHeight: number | undefined; // Pixels to scroll before topMenu appears.
-    private topMenuVisible: boolean = false; // Meant to curb unnecessary topMenu state changes.
+    topMenuTriggerHeight: number | undefined; // Pixels to scroll before topMenu appears.
+    topMenuVisible: boolean = false; // Meant to curb unnecessary topMenu state changes.
     private previouslyScrollingDown: boolean = true;
     private userPrefersHoverDisabled: boolean = false;
     private touchMode: boolean = false; // If a touch event has been detected in HTML body.
@@ -105,8 +161,9 @@ class TimMenuController extends PluginBase<
         return {};
     }
 
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
+        this.vctrl = vctrlInstance!;
         if (this.vctrl == null || this.vctrl.isSlideOrShowSlideView()) {
             return;
         }
@@ -114,20 +171,20 @@ class TimMenuController extends PluginBase<
             return;
         }
         this.menu = this.attrsall.menu;
-        this.separator = this.attrs.separator;
-        this.topMenu = this.attrs.topMenu;
-        this.openAbove = this.attrs.openAbove;
-        this.keepLinkColors = this.attrs.keepLinkColors;
-        this.basicColors = this.attrs.basicColors;
-        this.openingSymbol = this.attrs.openingSymbol;
+        this.separator = this.markup.separator;
+        this.topMenu = this.markup.topMenu;
+        this.openAbove = this.markup.openAbove;
+        this.keepLinkColors = this.markup.keepLinkColors;
+        this.basicColors = this.markup.basicColors;
+        this.openingSymbol = this.markup.openingSymbol;
         // Turn default symbol upwards if menu opens above.
-        if (this.attrs.openAbove && this.openingSymbol == "&#9662;") {
+        if (this.markup.openAbove && this.openingSymbol == "&#9662;") {
             this.openingSymbol = "&#9652;";
         }
         if (this.topMenu && !this.attrsall.preview) {
             // Divided by two because the check is half of the user given height towards either direction.
             this.topMenuTriggerHeight = Math.floor(
-                this.attrs.topMenuTriggerHeight / 2
+                this.markup.topMenuTriggerHeight / 2
             );
             if (this.topMenuTriggerHeight == 0) {
                 // Logic doesn't work if the height is zero. Negative number makes it stay after appearing
@@ -148,7 +205,8 @@ class TimMenuController extends PluginBase<
             this.userPrefersHoverDisabled =
                 genericglobals().userPrefs.disable_menu_hover;
         }
-        this.hoverOpen = this.attrs.hoverOpen && !this.userPrefersHoverDisabled;
+        this.hoverOpen =
+            this.markup.hoverOpen && !this.userPrefersHoverDisabled;
         this.userRights = this.vctrl.item.rights;
         this.setBarStyles();
     }
@@ -304,7 +362,6 @@ class TimMenuController extends PluginBase<
             placeholderContent.classList.add("tim-menu-hidden");
             this.topMenuVisible = false;
         }
-        this.scope.$evalAsync();
     }
 
     /**
@@ -312,14 +369,14 @@ class TimMenuController extends PluginBase<
      * Includes adjusting topMenu width to fit document area width.
      */
     private setBarStyles() {
-        if (this.attrs.backgroundColor) {
-            this.barStyle += `background-color: ${this.attrs.backgroundColor}; `;
+        if (this.markup.backgroundColor) {
+            this.barStyle += `background-color: ${this.markup.backgroundColor}; `;
         }
-        if (this.attrs.textColor) {
-            this.barStyle += `color: ${this.attrs.textColor}; `;
+        if (this.markup.textColor) {
+            this.barStyle += `color: ${this.markup.textColor}; `;
         }
-        if (this.attrs.fontSize) {
-            this.barStyle += `font-size: ${this.attrs.fontSize}; `;
+        if (this.markup.fontSize) {
+            this.barStyle += `font-size: ${this.markup.fontSize}; `;
         }
         // If menu isn't sticky, default width is fine.
         if (this.topMenu) {
@@ -330,14 +387,13 @@ class TimMenuController extends PluginBase<
                 this.barStyle = `width: 100%; `;
             }
         }
-        this.scope.$evalAsync();
     }
 
     /**
      * Sets style based on the object's attributes.
      * @param item Menu item.
      */
-    private setStyle(item: ITimMenuItem) {
+    setStyle(item: ITimMenuItem) {
         let style = "";
         if (item.width) {
             style += `width: ${item.width}; `;
@@ -353,7 +409,7 @@ class TimMenuController extends PluginBase<
      * If no requirements have been set, return true.
      * @param item Menu item.
      */
-    private hasRights(item: ITimMenuItem) {
+    hasRights(item: ITimMenuItem) {
         // TODO: Limit the amount of checks.
         // If item has no set rights, show to everyone.
         if (!item.rights) {
@@ -390,7 +446,7 @@ class TimMenuController extends PluginBase<
      * Decide what direction submenus open towards.
      * @param id Element id.
      */
-    private openDirection(id: string) {
+    openDirection(id: string) {
         const horizontal = ""; // Default: centered.
         let vertical = ""; // Default: below.
         // If true, opens all menus above.
@@ -419,7 +475,7 @@ class TimMenuController extends PluginBase<
     /**
      * Handle mouseleave event.
      */
-    private mouseLeave() {
+    mouseLeave() {
         // console.log("mouseLeave");
         this.mouseInside = false;
         // Only close menus on mouseleave, if hoverOpen is enabled and menu hasn't been clicked.
@@ -428,7 +484,7 @@ class TimMenuController extends PluginBase<
         }
     }
 
-    private mouseEnter() {
+    mouseEnter() {
         // console.log("mouseEnter");
         this.mouseInside = true;
     }
@@ -440,51 +496,32 @@ class TimMenuController extends PluginBase<
         for (const t1 of this.menu) {
             this.closeAllInMenuItem(t1);
         }
-        // Plugin won't update if clicked outside document area without this.
-        this.scope.$evalAsync();
     }
 }
 
-const menuApp = angular.module("menuApp", ["ngSanitize"]);
-export const moduleDefs = [menuApp];
+@NgModule({
+    declarations: [TimMenuPluginComponent],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        AnswerSheetModule,
+        PurifyModule,
+    ],
+})
+export class TimMenuPluginModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
 
-menuApp.component("timmenuRunner", {
-    bindings: pluginBindings,
-    controller: TimMenuController,
-    require: {
-        vctrl: "^timView",
-    },
-    template: `
-<tim-markup-error ng-if="::$ctrl.markupError" [data]="::$ctrl.markupError"></tim-markup-error>
-<span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder"></span>
-<span ng-cloak ng-if="$ctrl.topMenu" class="tim-menu-placeholder-content tim-menu-hidden"><br></span>
-<div id="{{$ctrl.menuId}}" class="tim-menu" ng-class="{'bgtim white': $ctrl.basicColors, 'hide-link-colors': !$ctrl.keepLinkColors}" style="{{$ctrl.barStyle}}" ng-mouseleave="$ctrl.mouseLeave()" ng-mouseenter="$ctrl.mouseEnter()">
-    <span ng-repeat="t1 in $ctrl.menu">
-        <span ng-if="t1.items.length > 0 && $ctrl.hasRights(t1)" class="btn-group" style="{{$ctrl.setStyle(t1)}}">
-          <span ng-disabled="disabled" ng-bind-html="t1.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t1, undefined, undefined, true)" ng-mouseenter="$ctrl.toggleSubmenu(t1, undefined, undefined, false)"></span>
-          <ul class="tim-menu-dropdown" ng-if="t1.open" ng-class="$ctrl.openDirection(t1.id)" id="{{t1.id}}">
-            <li class="tim-menu-list-item" ng-repeat="t2 in t1.items" style="{{$ctrl.setStyle(t2)}}">
-                <span class="tim-menu-item" ng-if="t2.items.length > 0 && $ctrl.hasRights(t2)">
-                    <span class="tim-menu-item" ng-bind-html="t2.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t2, t1, undefined, true)" ng-mouseenter="$ctrl.toggleSubmenu(t2, t1, undefined, false)"></span>
-                    <ul class="tim-menu-dropdown" id="{{t2.id}}" ng-class="$ctrl.openDirection(t2.id)" ng-if="t2.open">
-                        <li class="tim-menu-list-item" ng-repeat="t3 in t2.items" style="{{$ctrl.setStyle(t3)}}">
-                            <span class="tim-menu-item" ng-if="t3.items.length > 0 && $ctrl.hasRights(t3)">
-                                <span class="tim-menu-item" ng-bind-html="t3.text+$ctrl.openingSymbol" ng-click="$ctrl.toggleSubmenu(t3, t2, t1, true)" ng-mouseenter="$ctrl.toggleSubmenu(t3, t2, t1, false)"></span>
-                                <ul class="tim-menu-dropdown" id="{{t3.id}}" ng-class="$ctrl.openDirection(t3.id)" ng-if="t3.open">
-                                    <li class="tim-menu-list-item" ng-repeat="t4 in t3.items" ng-bind-html="t4.text" style="{{$ctrl.setStyle(t4)}}" ng-if="$ctrl.hasRights(t4)"></li>
-                                </ul>
-                            </span>
-                            <span class="tim-menu-item" ng-if="t3.items.length < 1  && $ctrl.hasRights(t3)" ng-bind-html="t3.text"></span>
-                        </li>
-                    </ul>
-                </span>
-                <span class="tim-menu-item" ng-if="t2.items.length < 1 && $ctrl.hasRights(t2)" ng-bind-html="t2.text"></span>
-            </li>
-          </ul>
-        </span>
-        <span ng-if="t1.items.length < 1 && $ctrl.hasRights(t1)" class="btn-group" style="{{$ctrl.setStyle(t1)}}" ng-bind-html="t1.text"></span>
-        <span ng-if="!$last && $ctrl.hasRights(t1)" ng-bind-html="$ctrl.separator"></span>
-    </span>
-</div>
-`,
-});
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                TimMenuPluginModule
+            )
+        ),
+        "timmenuRunner",
+        TimMenuPluginComponent
+    ),
+];

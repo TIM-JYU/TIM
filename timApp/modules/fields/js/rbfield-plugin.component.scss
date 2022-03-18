@@ -1,0 +1,16 @@
+@import "fields-box-common";
+
+input[type="radio"] {
+    margin: 0;
+    line-height: normal;
+    box-shadow: none;
+    display: unset;
+}
+
+.stem {
+    @extend .stem-center;
+}
+
+.warnFrame {
+    @extend .bottomWarnFrame;
+}

@@ -109,6 +109,12 @@ const DEFAULT_PIECE_SIZE = 20;
                     (click)="markTranslated()"
                     i18n>Mark all as translated
             </button>
+            <button *ngIf="vctrl?.isTranslation()"
+                    class="timButton btn-block"
+                    title="Mark translations as checked" i18n-title
+                    (click)="markTranslationChecked()"
+                    i18n>Mark all translations as checked
+            </button>
             <button *ngIf="docSettings?.exam_mode && item.rights.manage"
                     class="timButton btn-block"
                     title="Delete all read marks from all users who visited this document" i18n-title
@@ -384,7 +390,6 @@ export class SettingsTabComponent implements OnInit {
         );
     }
 
-    // TODO: Localize this
     async markTranslationChecked() {
         await this.confirmPost(
             $localize`This will mark the translations in all paragraphs in this document as checked. Continue?`,
