@@ -6,6 +6,7 @@ import {
     Component,
     DoBootstrap,
     ElementRef,
+    Injectable,
     // Injectable,
     NgModule,
     OnInit,
@@ -16,6 +17,7 @@ import * as t from "io-ts";
 import {
     CalendarDateFormatter,
     CalendarEvent,
+    CalendarEventTitleFormatter,
     // CalendarEventTitleFormatter,
     CalendarModule,
     CalendarView,
@@ -31,7 +33,6 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek} from "date-fns";
-import {MetaType} from "@angular/compiler-cli/src/ngtsc/metadata";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
@@ -64,20 +65,22 @@ const CalendarFields = t.intersection([
 ]);
 registerLocaleData(localeFr);
 
-/* @Injectable()
+@Injectable()
 export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
-    weekTooltip(event: CalendarEvent, title: string) {
-        if (!event.meta.tmpEvent) {
+    weekTooltip(event: CalendarEvent<{tmpEvent?: boolean}>, title: string) {
+        if (!event.meta?.tmpEvent) {
             return super.weekTooltip(event, title);
         }
+        return "";
     }
 
-    dayTooltip(event: CalendarEvent, title: string) {
-        if (!event.meta.tmpEvent) {
+    dayTooltip(event: CalendarEvent<{tmpEvent?: boolean}>, title: string) {
+        if (!event.meta?.tmpEvent) {
             return super.dayTooltip(event, title);
         }
+        return "";
     }
-}*/
+}
 
 @Component({
     selector: "mwl-calendar-component",
@@ -87,10 +90,10 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             provide: CalendarDateFormatter,
             useClass: CustomDateFormatter,
         },
-        // {
-        //     provide: CalendarEventTitleFormatter,
-        //     useClass: CustomEventTitleFormatter,
-        // },
+        {
+            provide: CalendarEventTitleFormatter,
+            useClass: CustomEventTitleFormatter,
+        },
     ],
     template: `
         <mwl-utils-calendar-header [(view)]="view" [(viewDate)]="viewDate">
@@ -208,13 +211,13 @@ export class CalendarComponent
         mouseDownEvent: MouseEvent,
         segmentElement: HTMLElement
     ) {
-        const dragToSelectEvent: CalendarEvent<MetaType> = {
+        const dragToSelectEvent: CalendarEvent<{tmpEvent?: boolean}> = {
             id: this.events.length,
             title: "New event",
             start: segment.date,
-            // meta: {
-            //    tmpEvent: true,
-            // },
+            meta: {
+                tmpEvent: true,
+            },
         };
         this.events = [...this.events, dragToSelectEvent];
         const segmentPosition = segmentElement.getBoundingClientRect();
@@ -223,10 +226,12 @@ export class CalendarComponent
             weekStartsOn: this.weekStartsOn,
         });
 
-        fromEvent(document, "mousemove")
+        fromEvent<MouseEvent>(document, "mousemove")
             .pipe(
                 finalize(() => {
-                    // delete dragToSelectEvent.meta.tmpEvent;
+                    if (dragToSelectEvent.meta) {
+                        delete dragToSelectEvent.meta.tmpEvent;
+                    }
                     this.dragToCreateActive = false;
                     this.refresh();
                 }),
@@ -235,7 +240,7 @@ export class CalendarComponent
             .subscribe((mouseMoveEvent: MouseEvent) => {
                 const minutesDiff = ceilToNearest(
                     mouseMoveEvent.clientY - segmentPosition.top,
-                    30
+                    20
                 );
 
                 const daysDiff =
