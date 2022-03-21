@@ -87,11 +87,11 @@ const NumericfieldAll = t.intersection([
     template: `
 <div class="numericfieldNoSaveDiv inline-form">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <h4 *ngIf="header" [innerHtml]="header"></h4>
-    <p class="stem" *ngIf="stem" [innerHtml]="stem"></p>
+    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
+    <p class="stem" *ngIf="stem" [innerHtml]="stem | purify"></p>
     <div class="form-inline">
      <label><span>
-      <span [innerHtml]="inputstem"></span>
+      <span class="inputstem" [innerHtml]="inputstem | purify"></span>
       <span *ngIf="!isPlainText()" [class.noarrows]="!arrows">
         <input type="number"
                [style.width.em]="cols"
@@ -118,7 +118,7 @@ const NumericfieldAll = t.intersection([
     </button>
     <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event);">{{undoButton}}</a>
     <p class="savedtext" *ngIf="!hideSavedText && buttonText()">Saved!</p>
-    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
 </div> `,
     styleUrls: ["./numericfield-plugin.component.scss"],
 })
