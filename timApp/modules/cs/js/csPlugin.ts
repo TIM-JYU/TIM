@@ -2200,7 +2200,9 @@ ${fhtml}
         this.initSaved();
         this.isViz = this.type.startsWith("viz");
         this.isVars = this.type.startsWith("vars");
-        this.vctrl.addTimComponent(this);
+        if (!this.attrsall.preview) {
+            this.vctrl.addTimComponent(this);
+        }
         this.height = this.markup.height;
         if (this.markup.width) {
             this.csRunDivStyle = {width: this.markup.width.toString()};
@@ -2216,6 +2218,12 @@ ${fhtml}
         //  It's unclear if getCode should handle this already.
         this.showCodeNow();
         this.updateRunChanged();
+    }
+
+    ngOnDestroy() {
+        if (!this.attrsall.preview) {
+            this.vctrl.removeTimComponent(this);
+        }
     }
 
     async ngAfterViewInit() {

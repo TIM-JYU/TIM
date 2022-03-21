@@ -216,7 +216,9 @@ export class GoalTablePluginComponent
         }
         this.calcContent();
         this.initialValue = this.getContent();
-        this.vctrl.addTimComponent(this);
+        if (!this.attrsall.preview) {
+            this.vctrl.addTimComponent(this);
+        }
 
         // make translated words
         if (this.markup.goalscale) {
@@ -244,6 +246,12 @@ export class GoalTablePluginComponent
         this.editText = this.markup.editText ?? goalTableWords.editText[lang];
         this.goalText = this.markup.goalText ?? goalTableWords.goalText[lang];
         this.editTitle = goalTableWords.editTitle[lang];
+    }
+
+    ngOnDestroy() {
+        if (!this.attrsall.preview) {
+            this.vctrl.removeTimComponent(this);
+        }
     }
 
     private getJSContent() {

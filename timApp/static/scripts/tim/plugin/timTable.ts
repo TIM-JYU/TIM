@@ -974,7 +974,9 @@ export class TimTableComponent
             if (this.data.task) {
                 this.task = true;
                 this.forcedEditMode = true;
-                this.viewctrl.addTimComponent(this);
+                if (!this.isPreview()) {
+                    this.viewctrl.addTimComponent(this);
+                }
             }
 
             await $timeout(0);
@@ -1051,6 +1053,9 @@ export class TimTableComponent
      * Removes listener and cleans up
      */
     ngOnDestroy() {
+        if (this.data.task && !this.isPreview()) {
+            this.viewctrl?.removeTimComponent(this);
+        }
         this.inputSub?.unsubscribe();
         this.removeEventListeners();
         // document.removeEventListener("click", this.onClick);

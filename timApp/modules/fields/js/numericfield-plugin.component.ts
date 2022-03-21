@@ -103,6 +103,7 @@ const NumericfieldAll = t.intersection([
                (ngModelChange)="updateInput()"
                [readonly]="readonly"
                [tooltip]="errormessage"
+               [disabled]="attrsall['preview']"
                placeholder="{{inputplaceholder}}"
                [ngClass]="{warnFrame: (isUnSaved() && !redAlert), alertFrame: redAlert}"
                [ngStyle]="styles">
@@ -112,7 +113,7 @@ const NumericfieldAll = t.intersection([
     </div>
     <button class="timButton"
             *ngIf="!isPlainText() && buttonText()"
-            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly"
+            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
             (click)="saveText()">
         {{buttonText()}}
     </button>
@@ -260,10 +261,18 @@ export class NumericfieldPluginComponent
                 }
             });
         }
-        this.vctrl.addTimComponent(this, this.markup.tag);
+        if (!this.attrsall.preview) {
+            this.vctrl.addTimComponent(this, this.markup.tag);
+        }
         this.initialValue = this.numericvalue;
         if (this.attrsall.state?.styles && !this.markup.ignorestyles) {
             this.applyStyling(this.attrsall.state.styles);
+        }
+    }
+
+    ngOnDestroy() {
+        if (!this.attrsall.preview) {
+            this.vctrl.removeTimComponent(this, this.markup.tag);
         }
     }
 

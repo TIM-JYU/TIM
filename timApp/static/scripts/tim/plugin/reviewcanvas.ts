@@ -211,7 +211,9 @@ export class ReviewCanvasComponent
     ngOnInit() {
         super.ngOnInit();
         this.vctrl = vctrlInstance!;
-        this.vctrl.addTimComponent(this, this.markup.tag);
+        if (!this.attrsall.preview) {
+            this.vctrl.addTimComponent(this, this.markup.tag);
+        }
         const taskId = this.pluginMeta.getTaskId();
         if (taskId?.docId) {
             this.uploadUrl = `/pluginUpload/${taskId.docId}/${taskId.name}/`;
@@ -237,6 +239,9 @@ export class ReviewCanvasComponent
     }
 
     ngOnDestroy() {
+        if (!this.attrsall.preview) {
+            this.vctrl.removeTimComponent(this, this.markup.tag);
+        }
         this.modelChangeSub.unsubscribe();
     }
 

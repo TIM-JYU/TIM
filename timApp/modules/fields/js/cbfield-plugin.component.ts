@@ -84,7 +84,7 @@ const CbfieldAll = t.intersection([
                class="form-control"
                [(ngModel)]="userword"
                (ngModelChange)="autoSave()"
-               [disabled]="readonly"
+               [disabled]="readonly || attrsall['preview']"
                [tooltip]="errormessage"
                [isOpen]="errormessage !== undefined"
                triggers="mouseenter"
@@ -163,14 +163,26 @@ export class CbfieldPluginComponent
         ).toString();
         this.userword = CbfieldPluginComponent.makeBoolean(uw);
 
-        if (this.markup.tag) {
-            this.vctrl.addTimComponent(this, this.markup.tag);
-        } else {
-            this.vctrl.addTimComponent(this);
+        if (!this.attrsall.preview) {
+            if (this.markup.tag) {
+                this.vctrl.addTimComponent(this, this.markup.tag);
+            } else {
+                this.vctrl.addTimComponent(this);
+            }
         }
         this.initialValue = this.userword;
         if (this.markup.showname) {
             this.initCode();
+        }
+    }
+
+    ngOnDestroy() {
+        if (!this.attrsall.preview) {
+            if (this.markup.tag) {
+                this.vctrl.removeTimComponent(this, this.markup.tag);
+            } else {
+                this.vctrl.removeTimComponent(this);
+            }
         }
     }
 

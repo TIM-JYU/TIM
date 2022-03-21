@@ -87,7 +87,7 @@ const CbcountfieldAll = t.intersection([
                class="form-control"
                [(ngModel)]="userword"
                (ngModelChange)="autoSave()"
-               [disabled]="disabled"
+               [disabled]="disabled || this.attrsall['preview']"
                [tooltip]="errormessage"
                [isOpen]="errormessage !== undefined"
                triggers="mouseenter"
@@ -171,16 +171,28 @@ export class CbcountfieldPluginComponent
         this.userword = CbcountfieldPluginComponent.makeBoolean(uw);
         this.count = this.attrsall.count ?? 0;
 
-        if (this.markup.tag) {
-            this.vctrl.addTimComponent(this, this.markup.tag);
-        } else {
-            this.vctrl.addTimComponent(this);
+        if (!this.attrsall.preview) {
+            if (this.markup.tag) {
+                this.vctrl.addTimComponent(this, this.markup.tag);
+            } else {
+                this.vctrl.addTimComponent(this);
+            }
         }
         this.initialValue = this.userword;
         if (this.markup.showname) {
             this.initCode();
         }
         this.checkDisabled();
+    }
+
+    ngOnDestroy() {
+        if (!this.attrsall.preview) {
+            if (this.markup.tag) {
+                this.vctrl.removeTimComponent(this, this.markup.tag);
+            } else {
+                this.vctrl.removeTimComponent(this);
+            }
+        }
     }
 
     checkDisabled() {
