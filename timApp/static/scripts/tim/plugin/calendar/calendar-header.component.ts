@@ -2,6 +2,7 @@ import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
 import {CalendarModule, CalendarView} from "angular-calendar";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
+import {ShowWeekComponent} from "./show-week.component";
 
 @Component({
     selector: "mwl-utils-calendar-header",
@@ -9,60 +10,61 @@ import {FormsModule} from "@angular/forms";
     <div class="row text-center">
       <div class="col-md-4">
         <div class="btn-group time-period-btn">
-          <div
+          <button
             class="btn btn-primary"
             mwlCalendarPreviousView
             [view]="view"
             [(viewDate)]="viewDate"
             (viewDateChange)="viewDateChange.next(viewDate)"
           >
-            Edellinen
-          </div>
-          <div
+              <span class="glyphicon glyphicon-arrow-left"></span>
+          </button>
+          <button
             class="btn btn-outline-secondary"
             mwlCalendarToday
             [(viewDate)]="viewDate"
             (viewDateChange)="viewDateChange.next(viewDate)"
           >
             Tänään
-          </div>
-          <div
+          </button>
+          <button
             class="btn btn-primary"
             mwlCalendarNextView
             [view]="view"
             [(viewDate)]="viewDate"
             (viewDateChange)="viewDateChange.next(viewDate)"
           >
-            Seuraava
-          </div>
+              <span class="glyphicon glyphicon-arrow-right"></span>
+          </button>
         </div>
       </div>
       <div class="col-md-4">
-        <h3>{{ viewDate | calendarDate: view + 'ViewTitle':locale }}</h3>
+          <h3>{{ viewDate | calendarDate:(view + 'ViewTitle'):locale:weekStartsOn }}</h3>
+              <app-show-week [hidden] = "view == CalendarView.Month" [(view)]="view" [(viewDate)]="viewDate"></app-show-week>
       </div>
       <div class="col-md-4">
         <div class="btn-group">
-          <div
+          <button
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Month)"
             [class.active]="view === CalendarView.Month"
           >
             Kuukausi
-          </div>
-          <div
+          </button>
+          <button
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Week)"
             [class.active]="view === CalendarView.Week"
           >
             Viikko
-          </div>
-          <div
+          </button>
+          <button
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Day)"
             [class.active]="view === CalendarView.Day"
           >
             Päivä
-          </div>
+          </button>
         </div>
       </div>
     </div>
@@ -77,6 +79,8 @@ export class CalendarHeaderComponent {
 
     @Input() locale: string = "fi-FI";
 
+    @Input() weekStartsOn: number = 1;
+
     @Output() viewChange = new EventEmitter<CalendarView>();
 
     @Output() viewDateChange = new EventEmitter<Date>();
@@ -86,7 +90,7 @@ export class CalendarHeaderComponent {
 
 @NgModule({
     imports: [CommonModule, FormsModule, CalendarModule],
-    declarations: [CalendarHeaderComponent],
+    declarations: [CalendarHeaderComponent, ShowWeekComponent],
     exports: [CalendarHeaderComponent],
 })
 export class CalendarHeaderModule {}
