@@ -1,9 +1,11 @@
 import {
     ApplicationRef,
     ChangeDetectionStrategy,
+    ChangeDetectorRef,
     // ChangeDetectorRef,
     Component,
     DoBootstrap,
+    ElementRef,
     // Injectable,
     NgModule,
     OnInit,
@@ -24,11 +26,11 @@ import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {CommonModule, registerLocaleData} from "@angular/common";
 import localeFr from "@angular/common/locales/fi";
-import {HttpClientModule} from "@angular/common/http";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
-// import {addDays, addMinutes, endOfWeek} from "date-fns";
+import {addDays, addMinutes, endOfWeek} from "date-fns";
 import {MetaType} from "@angular/compiler-cli/src/ngtsc/metadata";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
@@ -36,13 +38,13 @@ import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 
-// function floorToNearest(amount: number, precision: number) {
-//    return Math.floor(amount / precision) * precision;
-// }
+function floorToNearest(amount: number, precision: number) {
+    return Math.floor(amount / precision) * precision;
+}
 
-// function ceilToNearest(amount: number, precision: number) {
-//    return Math.ceil(amount / precision) * precision;
-// }
+function ceilToNearest(amount: number, precision: number) {
+    return Math.ceil(amount / precision) * precision;
+}
 
 const CalendarItem = t.type({
     done: t.boolean,
@@ -192,9 +194,14 @@ export class CalendarComponent
 
     weekStartsOn: 0 = 0;
 
-    // constructor(private cdr: ChangeDetectorRef) {
-    //
-    // }
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private cdr: ChangeDetectorRef
+    ) {
+        super(el, http, domSanitizer);
+    }
 
     startDragToCreate(
         segment: WeekViewHourSegment,
@@ -210,21 +217,22 @@ export class CalendarComponent
             // },
         };
         this.events = [...this.events, dragToSelectEvent];
-        // const segmentPosition = segmentElement.getBoundingClientRect();
+        const segmentPosition = segmentElement.getBoundingClientRect();
         this.dragToCreateActive = true;
-        // const endOfView = endOfWeek(this.viewDate, {
-        //    weekStartsOn: this.weekStartsOn,
-        // });
+        const endOfView = endOfWeek(this.viewDate, {
+            weekStartsOn: this.weekStartsOn,
+        });
 
-        fromEvent(document, "mousemove").pipe(
-            finalize(() => {
-                // delete dragToSelectEvent.meta.tmpEvent;
-                this.dragToCreateActive = false;
-                this.refresh();
-            }),
-            takeUntil(fromEvent(document, "mouseup"))
-        );
-        /* .subscribe((mouseMoveEvent: MouseEvent) => {
+        fromEvent(document, "mousemove")
+            .pipe(
+                finalize(() => {
+                    // delete dragToSelectEvent.meta.tmpEvent;
+                    this.dragToCreateActive = false;
+                    this.refresh();
+                }),
+                takeUntil(fromEvent(document, "mouseup"))
+            )
+            .subscribe((mouseMoveEvent: MouseEvent) => {
                 const minutesDiff = ceilToNearest(
                     mouseMoveEvent.clientY - segmentPosition.top,
                     30
@@ -244,12 +252,12 @@ export class CalendarComponent
                     dragToSelectEvent.end = newEnd;
                 }
                 this.refresh();
-            });*/
+            });
     }
 
     private refresh() {
         this.events = [...this.events];
-        // this.cdr.detectChanges();
+        this.cdr.detectChanges();
     }
 
     getAttributeType() {
