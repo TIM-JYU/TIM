@@ -55,6 +55,11 @@ tim-dialog-frame {
     [data-plugin] {
         background-color: $bg-color;
     }
+
+    &.draggable-detached .csRunDiv {
+        max-width: $paragraph-preferred-width;
+        background-color: $bg-color;
+    }
 }
 
 .modal-dialog {
