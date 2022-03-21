@@ -10,6 +10,7 @@ from timApp.auth.accesshelper import (
     verify_manage_access,
     has_manage_access,
     AccessDenied,
+    verify_logged_in,
 )
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import create_document_and_block, DocEntry
@@ -24,6 +25,7 @@ from timApp.util import logger
 from timApp.document.translation.translator import (
     TranslationService,
     DeeplTranslationService,
+    TranslationServiceKey,
 )
 from timApp.document.translation.language import Language
 from timApp.user.usergroup import UserGroup
@@ -93,6 +95,7 @@ def init_deepl_translator(
 
 
 tr_bp = Blueprint("translation", __name__, url_prefix="")
+api_keys = Blueprint("apikeys", __name__, url_prefix="")
 
 
 @tr_bp.post("/translate/<int:tr_doc_id>/<language>")
@@ -254,3 +257,80 @@ def get_translators() -> Response:
 
     sl = ["Manual", "DeepL"]
     return json_response(sl)
+
+
+@api_keys.post("apikeys/add")
+def add_api_key() -> Response:
+    """
+    The function for adding API keys.
+    """
+
+    req_data = request.get_json()
+    translator = req_data.get("translator", "")
+    key = req_data.get("apikey", "")
+
+    tr = TranslationService.query.filter(translator == TranslationService.service_name)
+
+    verify_logged_in()
+    user = get_current_user_object()
+    duplicate = TranslationServiceKey.query.filter(
+        tr.id
+        == TranslationServiceKey.service_id & user.get_personal_group().id
+        == TranslationServiceKey.group_id
+    )
+    if duplicate:
+        raise RouteException("There is already a key for this translator for this user")
+
+    # Add the new API key
+    new_key = TranslationServiceKey(
+        api_key=key,
+        group_id=user.get_personal_group().id,
+        service_id=tr.id,
+    )
+    db.session.add(new_key)
+    db.session.commit()
+    return ok_response()
+
+
+@api_keys.post("apikeys/remove")
+def remove_api_key() -> Response:
+    """
+    The function for removing API keys.
+    """
+
+    verify_logged_in()
+    user = get_current_user_object()
+
+    req_data = request.get_json()
+    translator = req_data.get("translator", "")
+    key = req_data.get("apikey", "")
+
+    to_be_removed = TranslationServiceKey.query.filter(
+        key
+        == TranslationServiceKey.api_key & TranslationServiceKey.group_id
+        == user.get_personal_group().id & translator
+        == TranslationService.service_name
+    )
+
+    if not to_be_removed:
+        raise RouteException("The key does not exist for the user")
+
+    db.session.delete(to_be_removed)
+    db.session.commit()
+    return ok_response()
+
+
+@api_keys.post("/apikeys/quota")
+def get_quota():
+    verify_logged_in()
+
+    req_data = request.get_json()
+    translator = req_data.get("translator", "")
+    key = req_data.get("apikey", "")
+
+    tr = TranslationService.query.filter(
+        key
+        == TranslationServiceKey.api_key & translator
+        == TranslationService.service_name
+    )
+    return json_response(tr.usage)
