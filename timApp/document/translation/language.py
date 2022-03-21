@@ -44,5 +44,5 @@ class Language(db.Model):
         return Language(
             lang_code=lang.to_tag(),
             lang_name=lang.language_name(),
-            antonym=lang.autonym(),
+            autonym=lang.autonym(),
         )
