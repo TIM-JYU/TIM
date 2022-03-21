@@ -435,6 +435,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                             <div class="contact-info" *ngFor="let APIkey of userAPIKeyEntries">
                                 <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>
                                 <input type="text" class="form-control" [value]="APIkey.translator" disabled>
+                                <button class="btn" type="button" (click)="checkQuota(APIkey)" i18n>Check key's quota</button>
                                 <button class="btn btn-danger" type="button"
                                         (click)="deleteKey(APIkey)">
                                     <i class="glyphicon glyphicon-trash"></i>
@@ -1017,6 +1018,21 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         }
         // TODO: Figure out why this is needed for change detection
         this.cdr.detectChanges();
+    }
+
+    async checkQuota(key: IUserAPIKey) {
+        const r = await toPromise(
+            this.http.post("/apikeys/quota", {
+                translator: key.translator,
+                apikey: key.APIkey,
+            })
+        );
+        if (r.ok) {
+            await showMessageDialog(r.result.toString());
+            // TODO: Figure out how to get the quota here, probably a JSON response from server?
+        } else {
+            await showMessageDialog(r.result.error.error);
+        }
     }
 
     saveUserAccountInfo = async () => {
