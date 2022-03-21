@@ -9,7 +9,7 @@ export class CustomDateFormatter extends CalendarDateFormatter {
     }
 
     public monthViewTitle({date, locale}: DateFormatterParams): string {
-        return formatDate(date, "MMM y", "Fi-fi");
+        return formatDate(date, "MMMM y", "Fi-fi");
     }
 
     public weekViewColumnHeader({date, locale}: DateFormatterParams): string {
