@@ -99,6 +99,7 @@ class MacroInfo:
                 "realname": f"{self.macro_delimiter}realname{self.macro_delimiter}",
                 "useremail": f"{self.macro_delimiter}useremail{self.macro_delimiter}",
                 "loggedUsername": f"{self.macro_delimiter}loggedUsername{self.macro_delimiter}",
+                "userfolder": f"{self.macro_delimiter}userfolder{self.macro_delimiter}",
             }
         )
         return macros
@@ -120,6 +121,9 @@ def get_user_specific_macros(user_ctx: UserContext) -> dict[str, str | None]:
         "realname": escape(user.real_name) if user.real_name else None,
         "useremail": escape(user.email) if user.email else None,
         "loggedUsername": escape(user_ctx.logged_user.name),
+        "userfolder": escape(
+            user.get_personal_folder().path
+        ),  # personal folder object is cached and usually reused
     }
 
 
