@@ -1,9 +1,12 @@
+import langcodes as lc
 from timApp.timdb.sqa import db
-from timApp.document.translation.translation import Translation
 
 
 class Language(db.Model):
-    """Represents a standardized language code used for example with translation documents"""
+    """Represents a standardized language code used for example with translation documents.
+
+    NOTE: You should always use the provided class-methods for creating new instances!
+    """
 
     __tablename__ = "language"
 
@@ -18,9 +21,28 @@ class Language(db.Model):
     flag_uri = db.Column(db.Text)
     """Path to a picture representing the language."""
 
-    antonym = db.Column(db.Text, nullable=False)
+    autonym = db.Column(db.Text, nullable=False)
     """Native name for the language."""
 
+    @classmethod
+    def query_by_code(cls, code: str) -> "Language":
+        """
+        Query the database to find a single match for language tag
+        :param code: The IETF tag for the language
+        :return: The corresponding Language-object in database
+        """
+        return cls.query.filter(cls.lang_code == code).first_or_404()
 
-def find_by_str(s: str) -> Language:
-    return Language.query.filter(Language.lang_code == s)
+    @classmethod
+    def create_from_name(cls, s: str) -> "Language":
+        """
+        Create an instance of Language that follows a standard. Note that this should always be used when creating a new Language especially when adding it to database.
+        :param s: Natural name of the language
+        :return: A corresponding Language-object newly created
+        """
+        lang = lc.find(s)
+        return Language(
+            lang_code=lang.to_tag(),
+            lang_name=lang.language_name(),
+            antonym=lang.autonym(),
+        )

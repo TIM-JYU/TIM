@@ -1,3 +1,4 @@
+import langcodes as lc
 import requests
 
 from dataclasses import dataclass
@@ -153,21 +154,26 @@ class DeeplTranslationService(TranslationService):
 
         return self._post("translate", data)
 
+    # TODO Cache this
+    def _languages(self) -> dict:
+        return self._post("languages")
+
     def translate(
         self, texts: list[str], source_lang: Language | None, target_lang: Language
     ) -> list[str]:
         """
         Uses the DeepL API for translating text between languages
         :param texts: Text to be translated TODO Why is this a list? For the 50 text-params?
-        :param source_lang: DeepL-compliant language code of input text. None value makes DeepL guess it from the text.
-        :param target_lang: DeepL-compliant language code for target language
+        :param source_lang: Language of input text. None value makes DeepL guess it from the text.
+        :param target_lang: Language for target language
         :return: The input text translated into the target language
         """
+        source_lang_code = source_lang.lang_code if source_lang else None
         # Translate using XML-protection for protected pieces of the text
         resp_json = self._translate(
             texts,
-            DeeplTranslationService.supported_repr(source_lang),
-            DeeplTranslationService.supported_repr(target_lang),
+            source_lang_code,
+            target_lang.lang_code,
             split_sentences="nonewlines",
             tag_handling="xml",
             ignore_tags=[DeeplTranslationService.IGNORE_TAG],
@@ -182,24 +188,21 @@ class DeeplTranslationService(TranslationService):
             character_limit=int(resp_json["character_limit"]),
         )
 
-    # TODO Cache this
+    # TODO Cache this maybe?
     def languages(self) -> LanguagePairing:
         """
-        Asks the DeepL API for the list of supported languages (Note: the supported language _pairings_ are not explicitly specified) and picks the returned language codes that when turned to lowercase match the LangCode-enum's values.
-        :return: Dictionary of source langs to lists of target langs, that are supported by the API and also defined in LangCode
+        Asks the DeepL API for the list of supported languages (Note: the supported language _pairings_ are not explicitly specified) and turns the returned language codes to Languages found in the database.
+        :return: Dictionary of source langs to lists of target langs, that are supported by the API and also found in database.
         """
-        resp_json = self._post("languages")
+        resp_json = self._languages()
         lang_codes: list[Language] = list(
             filter(
                 None,
                 map(
-                    # The DeepL language code might contain '-' for example in 'EN-GB'
-                    lambda x: DeeplTranslationService.get_language(
-                        x["language"].split("-")[0].upper()
-                    ),
+                    lambda x: Language.find_by_str(lc.find(x["language"]).to_tag()),
                     resp_json,
                 ),
-            )
+            ),
         )
         # NOTE it is assumed, that DeepL supports all its languages translated both ways,
         # thus all selected languages are mapped to all selected languages
@@ -231,21 +234,3 @@ class DeeplTranslationService(TranslationService):
 
     # TODO Make the value an enum like with Verification?
     __mapper_args__ = {"polymorphic_identity": "DeepL"}
-
-    @staticmethod
-    def supported_repr(lang: Language | None) -> str:
-        """
-        :param lang: Standard language from database
-        :return: The language representation that DeepL supports
-        """
-        raise NotImplementedError
-
-    @staticmethod
-    def get_language(s: str) -> Language | None:
-        try:
-            # TODO use langcodes to find the standard code
-            raise NotImplementedError
-        except KeyError:
-            return None
-        except ValueError:
-            return None
