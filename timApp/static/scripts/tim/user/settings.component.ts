@@ -14,6 +14,7 @@ import {
 } from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAddContactDialog} from "tim/user/showAddContactDialog";
+import {showAddAPIKeyDialog} from "tim/user/showAddAPIDialog";
 import {Channel} from "tim/messaging/listOptionTypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
@@ -900,8 +901,26 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
      * Opens a dialog for user to add API keys for translators.
      */
     openAPIKeyDialog() {
-        // TODO: Reuse openContactInfoDialog() for this
-        window.alert("This function is currently unavailable.");
+        void to2(
+            showAddAPIKeyDialog((key) => {
+                this.updateKeys(key, (keys) => [...keys, key]);
+                this.cdr.detectChanges();
+            })
+        );
+    }
+
+    private updateKeys(
+        key: IUserAPIKey,
+        update: (keys: IUserAPIKey[]) => IUserAPIKey[]
+    ) {
+        /* if (key == ) {
+            this.userAPIKeys = newKeys;
+        } */
+        // TODO: test that this function works; I have little idea how exactly this stuff works
+        // since it was copied off of code that uses enum instead of interface and it broke
+        // when I just replaced stuff.
+        // Testing needs the backend done first, though.
+        this.userAPIKeys.push(key);
     }
 
     private getContactsFor(channel: Channel): IUserContact[] {
@@ -982,9 +1001,22 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.cdr.detectChanges();
     }
 
-    // TODO: Reuse deleteContact() for this
-    deleteKey(key: IUserAPIKey) {
-        window.alert("This is unavailable right now.");
+    async deleteKey(key: IUserAPIKey) {
+        this.saving = true;
+        const r = await toPromise(
+            this.http.post("/apikeys/remove", {
+                translator: key.translator,
+                apikey: key.APIkey,
+            })
+        );
+        this.saving = false;
+        if (r.ok) {
+            this.updateKeys(key, (keys) => keys.filter((c) => c != key));
+        } else {
+            await showMessageDialog(r.result.error.error);
+        }
+        // TODO: Figure out why this is needed for change detection
+        this.cdr.detectChanges();
     }
 
     saveUserAccountInfo = async () => {
