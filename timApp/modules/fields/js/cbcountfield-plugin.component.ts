@@ -78,7 +78,7 @@ const CbcountfieldAll = t.intersection([
     <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
     <p class="stem" *ngIf="stem">{{stem}}</p>
      <span style="width: 100%">
-      <span class="inputstem" [innerHtml]="inputstem"></span>
+      <span class="inputstem" *ngIf="inputstem" [innerHtml]="inputstem | purify"></span>
       <span  *ngIf="!isPlainText()" [ngClass]="{warnFrame: (isUnSaved() )  }">
         <!-- <span *ngIf="isUnSaved()"  [ngClass]="{warnFrame: (isUnSaved() )  }">&nbsp;</span> -->
         <input type="checkbox"

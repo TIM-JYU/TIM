@@ -91,7 +91,7 @@ const NumericfieldAll = t.intersection([
     <p class="stem" *ngIf="stem" [innerHtml]="stem | purify"></p>
     <div class="form-inline">
      <label><span>
-      <span class="inputstem" [innerHtml]="inputstem | purify"></span>
+      <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
       <span *ngIf="!isPlainText()" [class.noarrows]="!arrows">
         <input type="number"
                [style.width.em]="cols"

@@ -75,11 +75,11 @@ const RbfieldAll = t.intersection([
     template: `
 <div class="textfieldNoSaveDiv" [ngStyle]="cols">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <h4 *ngIf="header" [innerHtml]="header"></h4>
+    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
     <p class="stem" *ngIf="stem">{{stem}}</p>
      <span style="width: 100%">
-      <span class="inputstem" [innerHtml]="inputstem"></span>
-      <span  *ngIf="!isPlainText()" [ngClass]="{warnFrame: (isUnSaved() )  }">
+      <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
+      <span *ngIf="!isPlainText()" [ngClass]="{warnFrame: (isUnSaved() )  }">
         <input type="radio"
                *ngIf="!isPlainText()"
                name="{{getName()}}"
@@ -98,7 +98,7 @@ const RbfieldAll = t.intersection([
          </span>
          <span *ngIf="isPlainText()" style="">{{userword}}</span>
       </span>
-    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
 </div>
 `,
     styleUrls: ["./rbfield-plugin.component.scss"],

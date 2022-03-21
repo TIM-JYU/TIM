@@ -90,11 +90,11 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
     template: `
 <div class="textfieldNoSaveDiv inline-form">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <h4 *ngIf="header" [innerHtml]="header"></h4>
+    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
     <p class="stem" *ngIf="stem">{{stem}}</p>
     <form #f class="form-inline">
      <label><span>
-      <span class="inputstem" [innerHtml]="inputstem"></span>
+      <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
       <span *ngIf="!isPlainText()" >
         <input type="text"
                *ngIf="!isTextArea()"
@@ -147,7 +147,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
     <a href="" *ngIf="undoButton && isUnSaved() && undoButton" title="{{undoTitle}}"
             (click)="tryResetChanges($event);">{{undoButton}}</a>    
     <p class="savedtext" *ngIf="!hideSavedText && buttonText()">Saved!</p>
-    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
 </div>
 `,
     styleUrls: ["textfield-plugin.component.scss"],
