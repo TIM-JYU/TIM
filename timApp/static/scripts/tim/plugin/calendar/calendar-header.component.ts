@@ -40,7 +40,7 @@ import {ShowWeekComponent} from "./show-week.component";
       </div>
       <div class="col-md-4">
           <h3>{{ viewDate | calendarDate:(view + 'ViewTitle'):locale }}</h3>
-          <app-show-week [(view)]="view" [(viewDate)]="viewDate"></app-show-week>
+              <app-show-week [hidden] = "view == CalendarView.Month" [(view)]="view" [(viewDate)]="viewDate"></app-show-week>
       </div>
       <div class="col-md-4">
         <div class="btn-group">
