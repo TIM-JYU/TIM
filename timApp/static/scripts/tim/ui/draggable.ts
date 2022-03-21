@@ -34,7 +34,7 @@ const draggableTemplate = `
        ng-click="d.toggleDetach()"
        title="{{ d.canDrag() ? 'Attach' : 'Detach' }}"
        class="glyphicon glyphicon-arrow-{{ d.canDrag() ? 'left' : 'right' }}"></i>
-    <i ng-show="d.click"
+    <i ng-show="d.click && d.canDrag()"
        title="{{ d.areaMinimized ? 'Maximize' : 'Minimize' }} dialog"
        ng-click="d.toggleMinimize()"
        class="glyphicon glyphicon-{{ d.areaMinimized ? 'unchecked' : 'minus' }}"></i>
@@ -183,6 +183,11 @@ export class DraggableController implements IController {
         });
         // User may have refreshed the document after resizing the window.
         void this.restoreSizeAndPosition(VisibilityFix.Full);
+        if (this.canDrag()) {
+            this.element.addClass("draggable-detached");
+        } else {
+            this.element.addClass("draggable-attached");
+        }
     }
 
     private setVisibility(v: "visible" | "hidden" | "inherit") {
@@ -212,15 +217,22 @@ export class DraggableController implements IController {
 
     private toggleDetach() {
         if (this.canDrag()) {
+            if (this.areaMinimized) {
+                this.toggleMinimize();
+            }
             this.element.css("position", "static");
             this.element.css("visibility", "inherit");
             for (const prop of ["width", "height"]) {
                 this.element.css(prop, "");
             }
+            this.element.removeClass("draggable-detached");
+            this.element.addClass("draggable-attached");
         } else {
             this.element.css("position", this.anchor);
             this.element.css("visibility", "visible");
             void this.restoreSizeAndPosition(VisibilityFix.Full);
+            this.element.removeClass("draggable-attached");
+            this.element.addClass("draggable-detached");
         }
         this.detachStorage.set(this.canDrag());
     }
