@@ -31,11 +31,11 @@ from timApp.user.usergroup import UserGroup
 
 def valid_language_id(lang_id: str) -> bool:
     """Check that the id is recognized by the langcodes library."""
-    # TODO Handle non langcodes-supported languages
     try:
         tag = langcodes.standardize_tag(lang_id)
-        return Language.find_by_str(tag) is not None
-    except (langcodes.LanguageTagError, LookupError):
+        lang = Language.query_by_code(tag)
+        return lang is not None
+    except langcodes.LanguageTagError:
         return False
 
 
@@ -79,9 +79,9 @@ def init_deepl_translator(
     :return: DeepLTranslator instance, that is ready for translate-calls
     """
     # Get the API-key from database
-    translator = DeeplTranslationService.query.filter(
-        UserGroup.id == get_current_user_object().get_personal_group().id
-    ).first()
+    # TODO Is this cool or should the service be its own class separate from the db model?
+    translator = DeeplTranslationService.query.first()
+    translator.register(get_current_user_object().get_personal_group())
 
     # TODO Languages should use common values / standard codes at this point (also applies to any doc.lang_id)
     if not translator.supports(source_lang, target_lang):
@@ -133,8 +133,8 @@ def create_translation_route(tr_doc_id, language):
     if translator_code := req_data.get("autotranslate", None):
         # Get the actual Language objects TODO This is dumb here
         # TODO Add the language to database if not already found
-        src_lang = Language.find_by_str(src_lang)
-        tr_lang = Language.find_by_str(tr_lang)
+        src_lang = Language.query_by_code(src_lang)
+        tr_lang = Language.query_by_code(tr_lang)
         # TODO From database, check that the translation language-pair is supported, or just let it through and shift this responsibility to user and the interface, because the API-call should handle unsupported languages anyway?
         if translator_code.lower() == "deepl":
             translator = init_deepl_translator(src_lang, tr_lang)
@@ -142,8 +142,8 @@ def create_translation_route(tr_doc_id, language):
     if translator:
         # Get the actual Language objects TODO This is dumb here
         # TODO Add the language to database if not already found
-        src_lang = Language.find_by_str(src_lang)
-        tr_lang = Language.find_by_str(tr_lang)
+        src_lang = Language.query_by_code(src_lang)
+        tr_lang = Language.query_by_code(tr_lang)
         for orig_par, tr_par in zip(
             tr.document.get_source_document().get_paragraphs(), tr.document
         ):
@@ -177,8 +177,8 @@ def text_translation_route(tr_doc_id: int, language: str) -> Response:
     if req_data and (translator_code := req_data.get("autotranslate", None)):
         src_text = req_data.get("originaltext", None)
         if translator_code.lower() == "deepl":
-            src_lang = Language.find_by_str(src_doc.docinfo.lang_id)
-            target_lang = Language.find_by_str(language)
+            src_lang = Language.query_by_code(src_doc.docinfo.lang_id)
+            target_lang = Language.query_by_code(language)
             translator = init_deepl_translator(src_lang, target_lang)
             block_text = translate(translator, src_text, src_lang, target_lang)
     else:
@@ -219,30 +219,33 @@ def get_translations(doc_id: int) -> Response:
 @tr_bp.get("/translations/source-languages")
 def get_source_languages() -> Response:
     """
-    A very rough version of getting the languages.
+    Query the database for the possible source languages.
     """
 
-    sl = ["Finnish-FI", "English-EN"]
+    langs = Language.query.all()
+    sl = list(map(lambda x: f"{x.lang_name}-{x.lang_code}", langs))
     return json_response(sl)
 
 
 @tr_bp.get("/translations/document-languages")
 def get_document_languages() -> Response:
     """
-    A very rough version of getting the languages.
+    Query the database for the languages of existing documents.
     """
 
-    sl = ["Finnish-FI", "English-EN", "French-FR", "German-GE"]
+    langs = Language.query.all()
+    sl = list(map(lambda x: f"{x.lang_name}-{x.lang_code}", langs))
     return json_response(sl)
 
 
 @tr_bp.get("/translations/target-languages")
 def get_target_languages() -> Response:
     """
-    A very rough version of getting the languages.
+    Query the database for the possible target languages.
     """
 
-    sl = ["Finnish-FI", "English-EN", "German-GE"]
+    langs = Language.query.all()
+    sl = list(map(lambda x: f"{x.lang_name}-{x.lang_code}", langs))
     return json_response(sl)
 
 

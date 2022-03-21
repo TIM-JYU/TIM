@@ -2,8 +2,7 @@ import langcodes as lc
 import requests
 
 from dataclasses import dataclass
-from typing import Dict
-from timApp.util.flask.requesthelper import RouteException
+from typing import Dict, Optional
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.document.translation.language import Language
@@ -21,7 +20,14 @@ class LanguagePairing(Dict[Language, list[Language]]):
     Holds the list of supported source language codes mapping to target language codes
     """
 
-    ...
+    def __getitem__(self, key: Language) -> list[Language]:
+        """
+        Override indexing operator ("obj[i]") with using lang_code (type str) instead of the object (type Language).
+        :param key: Source language.
+        :return: List of supported target languages.
+        """
+        # FIXME self is str???
+        return self[key.lang_code]
 
 
 class TranslationService(db.Model):
@@ -84,9 +90,16 @@ class DeeplTranslationService(TranslationService):
     ignore_tag = db.Column(db.Text, default="x", nullable=False)
     """The XML-tag name that is used for ignoring pieces of text."""
 
-    def __init__(self, user_group: UserGroup) -> None:
+    headers: dict[str, str]
+
+    def register(self, user_group: UserGroup) -> None:
+        """Set headers to use the user group's API-key ready for translation calls
+        :param user_group: The user group whose API key will be used
+        """
+        # One key should match one service per one user group TODO is that correct?
         api_key = TranslationServiceKey.query.filter(
-            TranslationServiceKey.service_id == self.id
+            TranslationServiceKey.service_id == self.id,
+            TranslationServiceKey.group_id == user_group.id,
         ).first()
         self.headers = {"Authorization": f"DeepL-Auth-Key {api_key.api_key}"}
 
@@ -194,43 +207,32 @@ class DeeplTranslationService(TranslationService):
         Asks the DeepL API for the list of supported languages (Note: the supported language _pairings_ are not explicitly specified) and turns the returned language codes to Languages found in the database.
         :return: Dictionary of source langs to lists of target langs, that are supported by the API and also found in database.
         """
+
+        def get_lang(d: dict) -> Language | None:
+            try:
+                code = lc.find(d["name"]).to_tag()
+                return Language.query_by_code(code)
+            except LookupError:
+                return None
+
         resp_json = self._languages()
-        lang_codes: list[Language] = list(
-            filter(
-                None,
-                map(
-                    lambda x: Language.find_by_str(lc.find(x["language"]).to_tag()),
-                    resp_json,
-                ),
-            ),
-        )
+        lang_codes: list[Language] = list(filter(None, map(get_lang, resp_json)))
         # NOTE it is assumed, that DeepL supports all its languages translated both ways,
         # thus all selected languages are mapped to all selected languages
         d = {code: lang_codes for code in lang_codes}
         return LanguagePairing(d)
 
-    def supports(self, source_lang: str, target_lang: str) -> bool:
+    def supports(self, source_lang: Language, target_lang: Language) -> bool:
         """
         Check that the source language can be translated into target language by the translation API
         :param source_lang: Language of original text TODO In what format?
         :param target_lang: Language to translate into TODO In what format?
         :return: True, if the pairing is supported
         """
-        source_lang_code = DeeplTranslationService.get_language(source_lang)
-        if source_lang_code is None:
-            raise RouteException(
-                description=f"The language '{source_lang}' is not supported"
-            )
 
-        target_lang_code = DeeplTranslationService.get_language(target_lang)
-        if target_lang_code is None:
-            raise RouteException(
-                description=f"The language '{target_lang}' is not supported"
-            )
+        supported_languages: list[Language] = self.languages()[source_lang]
 
-        supported_languages: list[Language] = self.languages()[source_lang_code]
-
-        return target_lang_code in supported_languages
+        return target_lang in supported_languages
 
     # TODO Make the value an enum like with Verification?
     __mapper_args__ = {"polymorphic_identity": "DeepL"}
