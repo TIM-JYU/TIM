@@ -39,7 +39,7 @@ import {ShowWeekComponent} from "./show-week.component";
         </div>
       </div>
       <div class="col-md-4">
-          <h3>{{ viewDate | calendarDate:(view + 'ViewTitle'):locale }}</h3>
+          <h3>{{ viewDate | calendarDate:(view + 'ViewTitle'):locale:weekStartsOn }}</h3>
               <app-show-week [hidden] = "view == CalendarView.Month" [(view)]="view" [(viewDate)]="viewDate"></app-show-week>
       </div>
       <div class="col-md-4">
@@ -78,6 +78,8 @@ export class CalendarHeaderComponent {
     @Input() viewDate: Date = new Date();
 
     @Input() locale: string = "fi-FI";
+
+    @Input() weekStartsOn: number = 1;
 
     @Output() viewChange = new EventEmitter<CalendarView>();
 
