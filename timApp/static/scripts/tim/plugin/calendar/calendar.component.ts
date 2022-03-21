@@ -6,7 +6,6 @@ import {
     Component,
     DoBootstrap,
     ElementRef,
-    Injectable,
     // Injectable,
     NgModule,
     OnInit,
@@ -17,7 +16,6 @@ import * as t from "io-ts";
 import {
     CalendarDateFormatter,
     CalendarEvent,
-    CalendarEventTitleFormatter,
     // CalendarEventTitleFormatter,
     CalendarModule,
     CalendarView,
@@ -65,7 +63,10 @@ const CalendarFields = t.intersection([
 ]);
 registerLocaleData(localeFr);
 
-@Injectable()
+/**
+ * For customizing the event tooltip
+ */
+/* @Injectable()
 export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
     weekTooltip(event: CalendarEvent<{tmpEvent?: boolean}>, title: string) {
         if (!event.meta?.tmpEvent) {
@@ -80,7 +81,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
         }
         return "";
     }
-}
+}*/
 
 @Component({
     selector: "mwl-calendar-component",
@@ -90,10 +91,10 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             provide: CalendarDateFormatter,
             useClass: CustomDateFormatter,
         },
-        {
-            provide: CalendarEventTitleFormatter,
-            useClass: CustomEventTitleFormatter,
-        },
+        // {
+        //     provide: CalendarEventTitleFormatter,
+        //     useClass: CustomEventTitleFormatter,
+        // },
     ],
     template: `
         <mwl-utils-calendar-header [(view)]="view" [(viewDate)]="viewDate">
@@ -195,7 +196,7 @@ export class CalendarComponent
 
     dragToCreateActive = false;
 
-    weekStartsOn: 0 = 0;
+    weekStartsOn: 1 = 1;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -213,15 +214,20 @@ export class CalendarComponent
     ) {
         const dragToSelectEvent: CalendarEvent<{tmpEvent?: boolean}> = {
             id: this.events.length,
-            title: "New event",
+            title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
+                segment.date,
+                20
+            )
+                .toTimeString()
+                .substr(0, 5)} Varattava aika`,
             start: segment.date,
             meta: {
                 tmpEvent: true,
             },
         };
         this.events = [...this.events, dragToSelectEvent];
-        const segmentPosition = segmentElement.getBoundingClientRect();
         this.dragToCreateActive = true;
+        const segmentPosition = segmentElement.getBoundingClientRect();
         const endOfView = endOfWeek(this.viewDate, {
             weekStartsOn: this.weekStartsOn,
         });
@@ -255,6 +261,11 @@ export class CalendarComponent
                 );
                 if (newEnd > segment.date && newEnd < endOfView) {
                     dragToSelectEvent.end = newEnd;
+                    dragToSelectEvent.title = `${segment.date
+                        .toTimeString()
+                        .substr(0, 5)}–${newEnd
+                        .toTimeString()
+                        .substr(0, 5)} Varattava aika`;
                 }
                 this.refresh();
             });
