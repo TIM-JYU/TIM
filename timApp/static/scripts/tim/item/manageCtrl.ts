@@ -608,8 +608,8 @@ export class PermCtrl implements IController {
         return {
             name: language.substring(0, language.indexOf(" ")),
             code: language.substring(
-                language.indexOf("(") + 1,
-                language.indexOf(")")
+                language.lastIndexOf("(") + 1,
+                language.lastIndexOf(")")
             ),
         };
     }

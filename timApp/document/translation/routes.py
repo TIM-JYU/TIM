@@ -235,7 +235,7 @@ def get_source_languages() -> Response:
     """
 
     langs = Language.query.all()
-    sl = list(map(lambda x: f"{x.lang_name}-{x.lang_code}", langs))
+    sl = list(map(lambda x: f"{x.autonym}-{x.lang_code}", langs))
     return json_response(sl)
 
 
@@ -246,7 +246,7 @@ def get_document_languages() -> Response:
     """
 
     langs = Language.query.all()
-    sl = list(map(lambda x: f"{x.lang_name}-{x.lang_code}", langs))
+    sl = list(map(lambda x: f"{x.autonym}-{x.lang_code}", langs))
     return json_response(sl)
 
 
@@ -257,7 +257,7 @@ def get_target_languages() -> Response:
     """
 
     langs = Language.query.all()
-    sl = list(map(lambda x: f"{x.lang_name}-{x.lang_code}", langs))
+    sl = list(map(lambda x: f"{x.autonym}-{x.lang_code}", langs))
     return json_response(sl)
 
 
@@ -267,7 +267,9 @@ def get_translators() -> Response:
     A very rough version of getting the translators.
     """
 
-    sl = ["Manual", "DeepL"]
+    translationservices = TranslationService.query.all()
+    translationservice_names = list(map(lambda x: x.service_name, translationservices))
+    sl = ["Manual"] + translationservice_names
     return json_response(sl)
 
 
@@ -286,9 +288,8 @@ def add_api_key() -> Response:
     verify_logged_in()
     user = get_current_user_object()
     duplicate = TranslationServiceKey.query.filter(
-        tr.id
-        == TranslationServiceKey.service_id & user.get_personal_group().id
-        == TranslationServiceKey.group_id
+        tr.id == TranslationServiceKey.service_id,
+        user.get_personal_group().id == TranslationServiceKey.group_id,
     )
     if duplicate:
         raise RouteException("There is already a key for this translator for this user")
@@ -318,10 +319,9 @@ def remove_api_key() -> Response:
     key = req_data.get("apikey", "")
 
     to_be_removed = TranslationServiceKey.query.filter(
-        key
-        == TranslationServiceKey.api_key & TranslationServiceKey.group_id
-        == user.get_personal_group().id & translator
-        == TranslationService.service_name
+        key == TranslationServiceKey.api_key,
+        TranslationServiceKey.group_id == user.get_personal_group().id,
+        translator == TranslationService.service_name,
     )
 
     if not to_be_removed:
@@ -341,8 +341,7 @@ def get_quota():
     key = req_data.get("apikey", "")
 
     tr = TranslationService.query.filter(
-        key
-        == TranslationServiceKey.api_key & translator
-        == TranslationService.service_name
+        key == TranslationServiceKey.api_key,
+        translator == TranslationService.service_name,
     )
     return json_response(tr.usage)
