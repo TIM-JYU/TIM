@@ -1556,9 +1556,9 @@ ${backTicks}
 
     checkIfSupported(orig: string, tr: string) {
         for (const target of this.targetLanguages) {
-            if (target.code == tr.toUpperCase()) {
+            if (target.code.toUpperCase() == tr.toUpperCase()) {
                 for (const source of this.sourceLanguages) {
-                    if (source.code == orig.toUpperCase()) {
+                    if (source.code.toUpperCase() == orig.toUpperCase()) {
                         return true;
                     }
                 }

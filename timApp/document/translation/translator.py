@@ -15,19 +15,12 @@ class Usage:
 
 
 # TODO make dataclass?
-class LanguagePairing(Dict[Language, list[Language]]):
+class LanguagePairing(Dict[str, list[Language]]):
     """
     Holds the list of supported source language codes mapping to target language codes
     """
 
-    def __getitem__(self, key: Language) -> list[Language]:
-        """
-        Override indexing operator ("obj[i]") with using lang_code (type str) instead of the object (type Language).
-        :param key: Source language.
-        :return: List of supported target languages.
-        """
-        # FIXME self is str???
-        return self[key.lang_code]
+    ...
 
 
 class TranslationService(db.Model):
@@ -189,7 +182,7 @@ class DeeplTranslationService(TranslationService):
             target_lang.lang_code,
             split_sentences="nonewlines",
             tag_handling="xml",
-            ignore_tags=[DeeplTranslationService.IGNORE_TAG],
+            ignore_tags=[self.ignore_tag],
         )
         # TODO Use a special structure to insert the text-parts sent to the API into correct places in original text
         return [tr["text"] for tr in resp_json["translations"]]
@@ -208,19 +201,19 @@ class DeeplTranslationService(TranslationService):
         :return: Dictionary of source langs to lists of target langs, that are supported by the API and also found in database.
         """
 
-        def get_lang(d: dict) -> Language | None:
+        def get_lang(deepl_lang: dict) -> Language | None:
             try:
-                code = lc.find(d["name"]).to_tag()
+                code = lc.find(deepl_lang["name"]).to_tag()
                 return Language.query_by_code(code)
             except LookupError:
                 return None
 
         resp_json = self._languages()
-        lang_codes: list[Language] = list(filter(None, map(get_lang, resp_json)))
+        db_langs: list[Language] = list(filter(None, map(get_lang, resp_json)))
         # NOTE it is assumed, that DeepL supports all its languages translated both ways,
         # thus all selected languages are mapped to all selected languages
-        d = {code: lang_codes for code in lang_codes}
-        return LanguagePairing(d)
+        langs_map = {lang.lang_code: db_langs for lang in db_langs}
+        return LanguagePairing(langs_map)
 
     def supports(self, source_lang: Language, target_lang: Language) -> bool:
         """
@@ -230,9 +223,11 @@ class DeeplTranslationService(TranslationService):
         :return: True, if the pairing is supported
         """
 
-        supported_languages: list[Language] = self.languages()[source_lang]
+        supported_languages: list[Language] = self.languages()[source_lang.lang_code]
 
-        return target_lang in supported_languages
+        # The target language is found by the primary key
+        # TODO is this too much? Can't strings be just as good? Maybe better would be to handle Languages by their database id's?
+        return any(x.lang_code == target_lang.lang_code for x in supported_languages)
 
     # TODO Make the value an enum like with Verification?
     __mapper_args__ = {"polymorphic_identity": "DeepL"}
