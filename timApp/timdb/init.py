@@ -15,6 +15,8 @@ from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
+from timApp.document.translation.translator import DeeplTranslationService
+from timApp.document.translation.language import Language
 from timApp.document.documents import import_document_from_file
 from timApp.document.specialnames import (
     TEMPLATE_FOLDER_NAME,
@@ -181,6 +183,13 @@ def initialize_database(create_docs: bool = True) -> None:
             )
 
             create_style_docs()
+
+        # Add a machine-translator and some languages for the demo-machine
+        sess.add(DeeplTranslationService())
+        sess.add(Language.create_from_name("british english"))
+        sess.add(Language.create_from_name("american english"))
+        sess.add(Language.create_from_name("finnish"))
+        sess.add(Language.create_from_name("swedish"))
 
         sess.commit()
         log_info("Database initialization done.")

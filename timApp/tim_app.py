@@ -29,6 +29,12 @@ from timApp.celery_sqlalchemy_scheduler import (
 from timApp.document.docentry import DocEntry
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
+from timApp.document.translation.language import Language
+from timApp.document.translation.translator import (
+    TranslationService,
+    TranslationServiceKey,
+    DeeplTranslationService,
+)
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.blockassociation import BlockAssociation
@@ -134,6 +140,7 @@ all_models = (
     ConsentChange,
     ContactAddVerification,
     SetPrimaryContactVerification,
+    DeeplTranslationService,
     DocEntry,
     DocumentNotification,
     Folder,
@@ -142,6 +149,7 @@ all_models = (
     InternalMessageReadReceipt,
     InternalMessageDisplay,
     LabelInVelp,
+    Language,
     Lecture,
     LectureAnswer,
     LectureUsers,
@@ -171,6 +179,8 @@ all_models = (
     Tag,
     TaskBlock,
     Translation,
+    TranslationService,
+    TranslationServiceKey,
     User,
     Useractivity,
     UserAnswer,

@@ -1,7 +1,9 @@
 import re
+import langcodes
 
 from flask import request, Blueprint
 from sqlalchemy.exc import IntegrityError
+from typing import Callable
 
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
@@ -9,6 +11,7 @@ from timApp.auth.accesshelper import (
     verify_manage_access,
     has_manage_access,
     AccessDenied,
+    verify_logged_in,
 )
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import create_document_and_block, DocEntry
@@ -20,56 +23,74 @@ from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import verify_json_params, NotExist, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, Response
 from timApp.util import logger
-from timApp.document.translation.translator import ITranslator, DeepLTranslator
+from timApp.document.translation.translator import (
+    TranslationService,
+    DeeplTranslationService,
+    TranslationServiceKey,
+)
+from timApp.document.translation.language import Language
 
 
-def valid_language_id(lang_id):
-    return re.match(r"^\w+$", lang_id) is not None
+def valid_language_id(lang_id: str) -> bool:
+    """Check that the id is recognized by the langcodes library."""
+    try:
+        tag = langcodes.standardize_tag(lang_id)
+        lang = Language.query_by_code(tag)
+        return lang is not None
+    except langcodes.LanguageTagError:
+        return False
 
 
-def translate(
-    translator: ITranslator, text: str, source_lang: str, target_lang: str
-) -> str:
+def init_translate(
+    translator: TranslationService,
+    source_lang: Language,
+    target_lang: Language,
+) -> Callable[[list[str]], list[str]]:
     # TODO This helper-function would be better if there was some way to hide the translate-methods on ITranslators. Maybe save for the eventual(?) TranslatorSelector?
     """
-    Use the specified ITranslator to perform machine translation on text
+    Use the specified TranslationService to initialize machine translation
     :param translator: The translator to use
-    :param text: The text to translate
     :param source_lang: The language that text is in
     :param target_lang: The language that text will be translated into
-    :return: The text in the target language
+    :return: A partially applied function for translating text with the specified languages using the specified TranslationService
     """
-    translated_text = translator.translate(text, source_lang, target_lang)
-    # TODO Maybe log the length of text or other shorter info?
-    logger.log_info(translated_text)
 
-    usage = translator.usage()
-    logger.log_info(
-        "Current DeepL API usage: "
-        + str(usage.character_count)
-        + "/"
-        + str(usage.character_limit)
-    )
+    def generic_translate(text: list[str]) -> list[str]:
+        """
+        Wraps the TranslationService, source and target languages into a function that can be used to call a translation on different TranslationService-instances. TODO Maybe move this to TranslationService for clarity ":D"
+        :param text: Pieces of text to translate
+        :return: The input text translated according to the outer functions inputs.
+        """
+        translated_text = translator.translate(text, source_lang, target_lang)
+        # TODO Maybe log the length of text or other shorter info?
+        logger.log_info("\n".join(translated_text))
 
-    return translated_text
+        usage = translator.usage()
+        logger.log_info(
+            "Current DeepL API usage: "
+            + str(usage.character_count)
+            + "/"
+            + str(usage.character_limit)
+        )
+
+        return translated_text
+
+    return generic_translate
 
 
-def init_deepl_translator(source_lang: str, target_lang: str) -> ITranslator:
+def init_deepl_translate(
+    source_lang: Language, target_lang: Language
+) -> Callable[[list[str]], list[str]]:
     """
-    Initialize the deepl translator using the API-key from user's configuration
+    Initialize the deepl translator using the API-key from user's configuration and return a partially applied function for translating
     :param source_lang: Language that is requested to translate from
     :param target_lang: Language that is requested to translate into
-    :return: DeepLTranslator instance, that is ready for translate-calls
+    :return: A function for translating text with the specified languages using a DeepLTranslator instance.
     """
-    # Get the API-key from environment variable
-    try:
-        # TODO Get the API-key from user profile or the post-request
-        from os import environ
-
-        api_key = environ["DEEPL_API_KEY"]
-        translator = DeepLTranslator(api_key)
-    except KeyError:
-        raise NotExist("The DEEPL_API_KEY is not set into your configuration")
+    # Get the API-key from database
+    # TODO Is this cool or should the service be its own class separate from the db model?
+    translator = DeeplTranslationService.query.first()
+    translator.register(get_current_user_object().get_personal_group())
 
     # TODO Languages should use common values / standard codes at this point (also applies to any doc.lang_id)
     if not translator.supports(source_lang, target_lang):
@@ -77,10 +98,14 @@ def init_deepl_translator(source_lang: str, target_lang: str) -> ITranslator:
             description=f"The language pair from '{source_lang}' to '{target_lang}' is not supported with DeepL"
         )
 
-    return translator
+    translate_func: Callable[[list[str]], list[str]] = init_translate(
+        translator, source_lang, target_lang
+    )
+    return translate_func
 
 
 tr_bp = Blueprint("translation", __name__, url_prefix="")
+api_keys = Blueprint("apikeys", __name__, url_prefix="")
 
 
 @tr_bp.post("/translate/<int:tr_doc_id>/<language>")
@@ -113,21 +138,29 @@ def create_translation_route(tr_doc_id, language):
     else:
         tr_lang = translator_language
 
+    # Use the translator with a different source language if specified
+    src_lang = req_data.get("origlang", src_doc.docinfo.lang_id)
+
     # Select the specified translator
-    translator = None
+    translator_func = None
     if translator_code := req_data.get("autotranslate", None):
+        # Get the actual Language objects TODO This is dumb here
+        # TODO Add the language to database if not already found
+        src_lang = Language.query_by_code(src_lang)
+        tr_lang = Language.query_by_code(tr_lang)
         # TODO From database, check that the translation language-pair is supported, or just let it through and shift this responsibility to user and the interface, because the API-call should handle unsupported languages anyway?
-        # Use the translator with a different source language if specified
-        src_lang = req_data.get("origlang", src_doc.docinfo.lang_id)
         if translator_code.lower() == "deepl":
-            translator = init_deepl_translator(src_lang, tr_lang)
+            translator_func = init_deepl_translate(src_lang, tr_lang)
     # Translate each paragraph sequentially if a translator was created
-    if translator:
-        for orig_par, tr_par in zip(
-            tr.document.get_source_document().get_paragraphs(), tr.document
-        ):
-            translated_text = translate(translator, orig_par.md, src_lang, tr_lang)
-            tr.document.modify_paragraph(tr_par.id, translated_text)
+    if translator_func:
+        # HACK Skip first paragraph to protect settings-block from mangling
+        orig_paragraphs = list(tr.document.get_source_document().get_paragraphs())
+        tr_blocks = list(tr.document)
+        for i in range(1, len(orig_paragraphs)):
+            # Call the partially applied function, that contains languages selected earlier, to translate text
+            # TODO Call with the whole document and let preprocessing handle the conversion into list[str]?
+            translated_text = translator_func([orig_paragraphs[i].md])[0]
+            tr.document.modify_paragraph(tr_blocks[i].id, translated_text)
 
     if isinstance(doc, DocEntry):
         de = doc
@@ -152,14 +185,18 @@ def text_translation_route(tr_doc_id: int, language: str) -> Response:
 
     src_doc = doc.src_doc.document
 
-    src_text = req_data.get("originaltext", None)
-
     # Select the specified translator and translate if valid
-    if translator_code := req_data.get("autotranslate", None):
+    if req_data and (translator_code := req_data.get("autotranslate", None)):
+        src_text = req_data.get("originaltext", None)
         if translator_code.lower() == "deepl":
-            src_lang, target_lang = src_doc.docinfo.lang_id, language
-            translator = init_deepl_translator(src_lang, target_lang)
-            block_text = translate(translator, src_text, src_lang, target_lang)
+            src_lang = Language.query_by_code(src_doc.docinfo.lang_id)
+            target_lang = Language.query_by_code(language)
+            translator_func = init_deepl_translate(src_lang, target_lang)
+            block_text = translator_func([src_text])[0]
+    else:
+        raise RouteException(
+            description=f"Please select a translator from the 'Translator data' tab"
+        )
 
     return json_response(block_text)
 
@@ -184,7 +221,7 @@ def update_translation(doc_id):
 
 
 @tr_bp.get("/translations/<int:doc_id>")
-def get_translations(doc_id):
+def get_translations(doc_id: int) -> Response:
     d = get_doc_or_abort(doc_id)
     verify_manage_access(d)
 
@@ -192,40 +229,119 @@ def get_translations(doc_id):
 
 
 @tr_bp.get("/translations/source-languages")
-def get_source_languages():
+def get_source_languages() -> Response:
     """
-    A very rough version of getting the languages.
+    Query the database for the possible source languages.
     """
 
-    sl = ["Finnish-FI", "English-EN"]
+    langs = Language.query.all()
+    sl = list(map(lambda x: f"{x.autonym}-{x.lang_code}", langs))
     return json_response(sl)
 
 
 @tr_bp.get("/translations/document-languages")
-def get_document_languages():
+def get_document_languages() -> Response:
     """
-    A very rough version of getting the languages.
+    Query the database for the languages of existing documents.
     """
 
-    sl = ["Finnish-FI", "English-EN", "French-FR", "German-GE"]
+    langs = Language.query.all()
+    sl = list(map(lambda x: f"{x.autonym}-{x.lang_code}", langs))
     return json_response(sl)
 
 
 @tr_bp.get("/translations/target-languages")
-def get_target_languages():
+def get_target_languages() -> Response:
     """
-    A very rough version of getting the languages.
+    Query the database for the possible target languages.
     """
 
-    sl = ["Finnish-FI", "English-EN", "German-GE"]
+    langs = Language.query.all()
+    sl = list(map(lambda x: f"{x.autonym}-{x.lang_code}", langs))
     return json_response(sl)
 
 
 @tr_bp.get("/translations/translators")
-def get_translators():
+def get_translators() -> Response:
     """
     A very rough version of getting the translators.
     """
 
-    sl = ["Manual", "DeepL"]
+    translationservices = TranslationService.query.all()
+    translationservice_names = list(map(lambda x: x.service_name, translationservices))
+    sl = ["Manual"] + translationservice_names
     return json_response(sl)
+
+
+@api_keys.post("apikeys/add")
+def add_api_key() -> Response:
+    """
+    The function for adding API keys.
+    """
+
+    req_data = request.get_json()
+    translator = req_data.get("translator", "")
+    key = req_data.get("apikey", "")
+
+    tr = TranslationService.query.filter(translator == TranslationService.service_name)
+
+    verify_logged_in()
+    user = get_current_user_object()
+    duplicate = TranslationServiceKey.query.filter(
+        tr.id == TranslationServiceKey.service_id,
+        user.get_personal_group().id == TranslationServiceKey.group_id,
+    )
+    if duplicate:
+        raise RouteException("There is already a key for this translator for this user")
+
+    # Add the new API key
+    new_key = TranslationServiceKey(
+        api_key=key,
+        group_id=user.get_personal_group().id,
+        service_id=tr.id,
+    )
+    db.session.add(new_key)
+    db.session.commit()
+    return ok_response()
+
+
+@api_keys.post("apikeys/remove")
+def remove_api_key() -> Response:
+    """
+    The function for removing API keys.
+    """
+
+    verify_logged_in()
+    user = get_current_user_object()
+
+    req_data = request.get_json()
+    translator = req_data.get("translator", "")
+    key = req_data.get("apikey", "")
+
+    to_be_removed = TranslationServiceKey.query.filter(
+        key == TranslationServiceKey.api_key,
+        TranslationServiceKey.group_id == user.get_personal_group().id,
+        translator == TranslationService.service_name,
+    )
+
+    if not to_be_removed:
+        raise RouteException("The key does not exist for the user")
+
+    db.session.delete(to_be_removed)
+    db.session.commit()
+    return ok_response()
+
+
+@api_keys.post("/apikeys/quota")
+def get_quota():
+    verify_logged_in()
+
+    req_data = request.get_json()
+    translator = req_data.get("translator", "")
+    key = req_data.get("apikey", "")
+
+    tr = TranslationService.query.filter(
+        key == TranslationServiceKey.api_key,
+        translator == TranslationService.service_name,
+    )
+    return json_response(tr.usage)
