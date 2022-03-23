@@ -350,3 +350,24 @@ def get_quota():
     tr.register(get_current_user_object().get_personal_group())
 
     return json_response(tr.usage())
+
+
+@tr_bp.get("/apikeys/get")
+def get_keys() -> Response:
+    verify_logged_in()
+
+    user = get_current_user_object()
+    keys = TranslationServiceKey.query.filter(
+        TranslationServiceKey.group_id == user.get_personal_group().id
+    ).all()
+
+    result = []
+    for x in keys:
+        result.append(
+            {
+                "translator": x.service.service_name,
+                "APIkey": x.api_key,
+            }
+        )
+
+    return json_response(result)

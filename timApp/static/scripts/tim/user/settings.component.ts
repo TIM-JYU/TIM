@@ -33,7 +33,7 @@ import {
     NotificationType,
     settingsglobals,
 } from "../util/globals";
-import {IOkResponse, isIOS, timeout, to2, toPromise} from "../util/utils";
+import {IOkResponse, isIOS, timeout, to, to2, toPromise} from "../util/utils";
 import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
 import {DocumentOrFolder, ITranslatorUsage} from "../item/IItem";
 import {ContactOrigin, IFullUser, IUserAPIKey, IUserContact} from "./IUser";
@@ -521,6 +521,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     styleError?: {title: string; message: string};
 
     constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
+        this.getKeys();
         this.user = settingsglobals().current_user;
         this.consent = this.user.consent;
         this.settings = settingsglobals().userPrefs;
@@ -548,6 +549,13 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     }
 
     // region Styles tab
+
+    async getKeys() {
+        const r = await toPromise(this.http.get<IUserAPIKey[]>("/apikeys/get"));
+        if (r.ok) {
+            this.userAPIKeys = r.result;
+        }
+    }
 
     async deleteSelectedStyle(style: StyleDocumentInfo) {
         if (!this.currentStyles) {
@@ -1029,7 +1037,10 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         );
         if (r.ok) {
             await showMessageDialog(
-                "Used characters: " + r.result.character_count + "\nCharacter limit: " + r.result.character_limit
+                "Used characters: " +
+                    r.result.character_count +
+                    "\nCharacter limit: " +
+                    r.result.character_limit
             );
             // TODO: Figure out how to get the quota here, probably a JSON response from server?
         } else {
