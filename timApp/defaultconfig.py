@@ -349,3 +349,10 @@ VERIFICATION_UNREACTED_CLEANUP_INTERVAL = 10 * 60
 # How long reacted verifications should be persisted for in seconds
 # Default: 30 days
 VERIFICATION_REACTED_CLEANUP_INTERVAL = 30 * 24 * 60 * 60
+
+LANGUAGES = [
+    "finnish",
+    "british english",
+    "american english",
+    "swedish",
+]

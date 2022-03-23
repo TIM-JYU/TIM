@@ -184,15 +184,28 @@ def initialize_database(create_docs: bool = True) -> None:
 
             create_style_docs()
 
-        # Add a machine-translator and some languages for the demo-machine
+        # Add the DeepL machine-translator to database with its default values
         sess.add(DeeplTranslationService())
-        sess.add(Language.create_from_name("british english"))
-        sess.add(Language.create_from_name("american english"))
-        sess.add(Language.create_from_name("finnish"))
-        sess.add(Language.create_from_name("swedish"))
 
         sess.commit()
         log_info("Database initialization done.")
+
+    # Add to the database the languages found in config and skip existing ones
+    langset = {x[0] for x in Language.query.with_entities(Language.lang_code).all()}
+    for l in app.config["LANGUAGES"]:
+        try:
+            lang = Language.create_from_name(l)
+        except Exception as e:
+            # TODO Tell user if language cannot be created from given code
+            log_error(f"Failed to create language; try some other value: {str(e)}")
+        if lang.lang_code not in langset:
+            log_info(f"Adding new language '{lang.lang_name} ({lang.lang_code})'")
+            sess.add(lang)
+        else:
+            log_info(
+                f"Skipping language '{lang.lang_name} ({lang.lang_code})': Already in database"
+            )
+    sess.commit()
 
     if not app.config["TESTING"]:
         exit_if_not_db_up_to_date()
