@@ -21,11 +21,19 @@ class TranslationParser:
         match = re.findall(r"(?<!\\)\$\S.*?(?<!\\)\S\$", newtext)
         # finds between double $-signs correctly
         match2 = re.findall(r"(?<!\\)\$(?<!\\)\$.+?(?<!\\)\$(?<!\\)\$", newtext)
-        # TODO broken and cannot find formula areas
-        match3 = re.findall(r"\\begin\{.*?\}.*?\\end\{.*?\}", newtext)
+        # TODO only finds begin/end for latex
+        match3 = re.findall(r"(\\begin{.*?})(?s).*?(\\end{.*?})", newtext)
         # TODO make it self.translator specific
         for word in match:
             newtext = newtext.replace(word, "<protect>" + word + "</protect>")
+        # replaces at the start and end of found begin and end tags.
+        for tags in match3:
+            for tuplepair in tags:
+                if tags.index(tuplepair) % 2 == 0:
+                    newtext = newtext.replace(tuplepair, "<protect>" + tuplepair)
+                elif tags.index(tuplepair) % 2 == 1:
+                    newtext = newtext.replace(tuplepair, tuplepair + "</protect>")
+
         return newtext
 
 
