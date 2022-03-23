@@ -10,6 +10,28 @@ p.stem {
   margin-bottom: 1em;
 }
 
+.csRunSnippets {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: 0.25em;
+  margin-right: 0.25em;
+
+  button {
+    margin-top: 0.5em;
+    &:not(:last-child) {
+      margin-right: 0.25em;
+    }
+  }
+
+  .katex-display {
+    margin: 0;
+  }
+}
+
+.miniSnippets .csRunSnippets button {
+  border: 0;
+}
+
 .reveal {
   .csRunChanged {
     display: none;

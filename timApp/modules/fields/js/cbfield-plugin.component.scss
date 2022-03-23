@@ -1,0 +1,13 @@
+@import "fields-box-common";
+
+input[type="checkbox"] {
+    @extend .input-base;
+}
+
+.stem {
+    @extend .stem-center;
+}
+
+.warnFrame {
+    @extend .bottomWarnFrame;
+}

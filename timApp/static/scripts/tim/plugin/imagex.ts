@@ -20,18 +20,23 @@ import {
     IDrawOptions,
     IDrawVisibleOptions,
 } from "tim/plugin/drawToolbar";
-import {$http, $sce, $timeout} from "../util/ngimport";
+import {$http, $sce} from "../util/ngimport";
 import {TimDefer} from "../util/timdefer";
 import {
     defaultTimeout,
     MouseOrTouch,
     posToRelative,
+    timeout,
     to,
     touchEventToTouch,
     valueOr,
 } from "../util/utils";
 import {editorChangeValue} from "../editor/editorScope";
-import {ITimComponent, ViewCtrl} from "../document/viewctrl";
+import {
+    ITimComponent,
+    IVelpableComponent,
+    ViewCtrl,
+} from "../document/viewctrl";
 import {vctrlInstance} from "../document/viewctrlinstance";
 import {
     CommonPropsT,
@@ -1317,7 +1322,7 @@ export class ImageXComponent
         t.TypeOf<typeof ImageXAll>,
         typeof ImageXAll
     >
-    implements OnInit, ITimComponent
+    implements OnInit, ITimComponent, IVelpableComponent
 {
     public imageLoadError?: string | null;
 
@@ -1419,6 +1424,7 @@ export class ImageXComponent
     private answer?: IAnswerResponse;
     private prevAnswer?: string;
     private embed: boolean = false;
+    private init = false;
 
     draw() {
         this.dt.drawDragTask();
@@ -1429,6 +1435,13 @@ export class ImageXComponent
         this.muokattu = false;
         this.result = "";
         this.cursor = "\u0383"; // "\u0347"; // "\u02FD";
+    }
+
+    async getVelpImages() {
+        while (!this.init) {
+            await timeout();
+        }
+        return [this.canvas.toDataURL()];
     }
 
     getCanvas(): HTMLCanvasElement {
@@ -1444,7 +1457,7 @@ export class ImageXComponent
         this.vctrl = vctrlInstance!;
         this.vctrl.addTimComponent(this, this.markup.tag);
         // timeout required; otherwise the canvas element will be overwritten with another by Angular
-        await $timeout();
+        await timeout();
         this.canvas = this.element.find(".canvas")[0] as HTMLCanvasElement;
         this.element[0].addEventListener("touchstart", (event) => {
             // event.preventDefault();
@@ -1495,7 +1508,7 @@ export class ImageXComponent
                         src: this.markup.background.src,
                         textbox: false,
                     },
-                    position: [0, 0],
+                    position: this.markup.background.position ?? [0, 0],
                     size: this.markup.background.size,
                     type: "img",
                 },
@@ -1594,6 +1607,7 @@ export class ImageXComponent
 
         this.previewColor = globalPreviewColor;
         this.prevAnswer = this.getContent();
+        this.init = true;
     }
 
     initCode() {

@@ -17,7 +17,7 @@ from zipfile import ZipFile
 
 import requests
 
-from file_util import File, default_filename
+from file_util import File, default_filename, write_safe, rm_safe
 from modifiers import Modifier
 from points import give_points
 from run import (
@@ -36,7 +36,6 @@ from tim_common.fileParams import (
     get_param,
     get_json_param,
     hash_user_dir,
-    remove,
     find_cs_class,
     remove_before,
     find_java_package,
@@ -285,9 +284,7 @@ class Language:
                 userinput = ""
             if self.inputfilename.find("input.txt") >= 0:
                 stdin_default = "input.txt"
-            input_absolue = os.path.abspath(self.inputfilename)
-            if not input_absolue.startswith("/cs/"):
-                codecs.open(self.inputfilename, "w", "utf-8").write(userinput)
+            write_safe(self.inputfilename, userinput)
         self.stdin = get_param(self.query, "stdin", stdin_default)
 
     def before_save(self, s):
@@ -430,7 +427,7 @@ class Language:
             if e:
                 err = str(err) + "\n" + str(e) + "\n" + str(out)
             # print(self.is_optional_image, image_ok)
-            remove(self.imgsource)
+            rm_safe(self.imgsource)
             if image_ok:
                 web = result["web"]
                 if self.imgname:
@@ -502,7 +499,7 @@ class All(Language):
     ttype = "all"
 
 
-GLOBAL_NUGET_PACKAGES_PATH = "/cs/dotnet/nuget_cache"
+GLOBAL_NUGET_PACKAGES_PATH = "/cs_data/dotnet/nuget_cache"
 
 
 class CS(Language):
@@ -614,7 +611,7 @@ class Jypeli(CS, Modifier):
     @staticmethod
     @functools.cache
     def get_build_refs():
-        with open("/cs/dotnet/configs/jypeli.build.deps", encoding="utf-8") as f:
+        with open("/cs_data/dotnet/configs/jypeli.build.deps", encoding="utf-8") as f:
             dep_paths = [
                 os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip())
                 for dep_line in f.readlines()
@@ -624,7 +621,7 @@ class Jypeli(CS, Modifier):
     @staticmethod
     @functools.cache
     def get_run_args():
-        return ["--depsfile", "/cs/dotnet/configs/jypeli.deps.json"]
+        return ["--depsfile", "/cs_data/dotnet/configs/jypeli.deps.json"]
 
     def get_cmdline(self):
         mainfile = ""
@@ -637,9 +634,7 @@ class Jypeli(CS, Modifier):
             if not classname:
                 classname = find_cs_class(sourcecode)
                 mainfile = "/tmp/{}/{}.cs".format(self.basename, "MainProgram")
-                codecs.open(mainfile, "w", "utf-8").write(
-                    f"using var game = new {classname}();game.Run();"
-                )
+                write_safe(mainfile, f"using var game = new {classname}();game.Run();")
 
         cmdline = f"{self.compiler} -nologo -out:{self.exename} {Jypeli.get_build_refs()} {options} {self.get_sourcefiles(mainfile)}"
         return cmdline
@@ -704,6 +699,7 @@ class Jypeli(CS, Modifier):
         if (save_hash == old_hash or self.hash_by_code) and os.path.isfile(saved_file):
             out = state.get("save_out", "")
             code, out, err, pwddir = 0, out, "", ""
+            self.imgdest += f"?{save_hash}"
             result["nosave"] = True
         else:
             code, out, err, pwddir = self.runself(
@@ -739,9 +735,9 @@ class Jypeli(CS, Modifier):
                 self.imgdest = ""
             else:
                 wait_file(self.imgsource)
-                remove(self.imgdest)
+                rm_safe(self.imgdest)
                 run(["mv", "-f", self.imgsource, self.imgdest], timeout=50)
-                remove(self.imgsource)
+                rm_safe(self.imgsource)
                 self.videodest = ""
                 self.imgdest += f"?{time_tag}"
         result["save"]["save_hash"] = save_hash
@@ -769,8 +765,8 @@ class Jypeli(CS, Modifier):
             give_points(points_rule, "run")
             self.run_points_given = True
         if self.delete_tmp:
-            remove(self.sourcefilename)
-            remove(self.exename)
+            rm_safe(self.sourcefilename)
+            rm_safe(self.exename)
         return code, out, err, pwddir
 
 
@@ -787,7 +783,9 @@ class CSComtest(
     @staticmethod
     @functools.cache
     def get_build_refs():
-        with open("/cs/dotnet/configs/nunit_test.build.deps", encoding="utf-8") as f:
+        with open(
+            "/cs_data/dotnet/configs/nunit_test.build.deps", encoding="utf-8"
+        ) as f:
             dep_paths = [
                 os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip())
                 for dep_line in f.readlines()
@@ -797,7 +795,7 @@ class CSComtest(
     def get_cmdline(self):
         testcs = f"/tmp/{self.basename}/{self.filename}Test.cs"
         cmdline = (
-            f"java -jar /cs/java/cs/ComTest.jar nunit {self.sourcefilename} && "
+            f"java -jar /cs_data/java/cs/ComTest.jar nunit {self.sourcefilename} && "
             f"{self.compiler} -nologo -out:{self.testdll} -target:library {CSComtest.get_build_refs()} "
             f"{Jypeli.get_build_refs()} {self.sourcefilename} {testcs} /cs/dotnet/shims/TIMconsole.cs"
         )
@@ -811,7 +809,7 @@ class CSComtest(
                 "exec",
                 *CS.runtime_config(),
                 "--additional-deps",
-                "/cs/dotnet/configs/jypeli.deps.json:/cs/dotnet/configs/nunit_test.deps.json",
+                "/cs_data/dotnet/configs/jypeli.deps.json:/cs_data/dotnet/configs/nunit_test.deps.json",
                 "--roll-forward",
                 "LatestMajor",  # Force to use latest available .NET
                 "/dotnet_tools/nunit.console.dll",
@@ -1172,7 +1170,7 @@ class CComtest(Language):
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(
-            ["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", self.testcs]
+            ["java", "-jar", "/cs_data/java/comtestcpp.jar", "-nq", self.testcs]
         )
         out, err = check_comtest(self, "ccomtest", code, out, err, result, points_rule)
         return code, out, err, pwddir
@@ -1526,8 +1524,7 @@ class CQL(Language):
         # Remove any USE statements from cleaned_source
         cleaned_source = CQL.use_cmd_pattern.sub("", cleaned_source)
 
-        with open(self.sourcefilename, "w") as f:
-            f.write(cleaned_source)
+        write_safe(self.sourcefilename, cleaned_source)
 
         code, out, err, pwddir = self.runself(
             [
@@ -1558,7 +1555,7 @@ class Alloy(Language):
         runcmd = [
             "java",
             "-cp",
-            "/cs/java/alloy-dev.jar:/cs/java",
+            "/cs/java/alloy-dev.jar:/cs/java:/cs_data/java",
             "RunAll",
             self.pure_exename,
         ]
@@ -1857,8 +1854,8 @@ class R(Language):
         err = re.sub("^This is vegan .*\n", "", err, flags=re.M)
         out, err = self.copy_image(result, code, out, err, points_rule)
         if self.delete_tmp:
-            remove(self.sourcefilename)
-            remove(self.exename)
+            rm_safe(self.sourcefilename)
+            rm_safe(self.exename)
 
         return code, out, err, pwddir
 
@@ -2144,7 +2141,7 @@ class Octave(Language):
             print("err2: ", err)
         out, err = self.copy_image(result, code, out, err, points_rule)
         if self.wavsource and self.wavdest:
-            remove(self.wavdest)
+            rm_safe(self.wavdest)
             wav_ok, e = copy_file(
                 self.filepath + "/" + self.wavsource,
                 self.wavdest,
@@ -2154,7 +2151,7 @@ class Octave(Language):
             if e:
                 err = str(err) + "\n" + str(e) + "\n" + str(out)
             # print("WAV: ", self.is_optional_image, wav_ok, self.wavname, self.wavsource, self.wavdest)
-            remove(self.wavsource)
+            rm_safe(self.wavsource)
             web = result["web"]
             if wav_ok:
                 web["wav"] = "/csgenerated/" + self.wavname

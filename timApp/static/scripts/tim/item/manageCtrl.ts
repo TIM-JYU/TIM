@@ -7,7 +7,6 @@ import {
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as snv from "tim/ui/shortNameValidator";
 import * as tem from "tim/ui/formErrorMessage";
-import {JsonValue} from "tim/util/jsonvalue";
 import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
 import {IManageResponse} from "../document/editing/edittypes";
 import {IGroup} from "../user/IUser";
@@ -16,13 +15,13 @@ import {manageglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
 import {capitalizeFirstLetter, clone, markAsUsed, to, to2} from "../util/utils";
 import {
+    getItemTypeName,
     IDocument,
+    IEditableTranslation,
     IFolder,
     IFullDocument,
     IItem,
-    IEditableTranslation,
     redirectToItem,
-    getItemTypeName,
 } from "./IItem";
 
 markAsUsed(snv, tem);
@@ -61,7 +60,6 @@ export class PermCtrl implements IController {
     private readUpdating: boolean = false;
     private file?: File;
     private newAliasForm!: IFormController; // initialized in the template
-    private notifySettings: JsonValue = {}; // TODO proper type
     private objName: string;
     private progress?: number;
     private result?: boolean;
@@ -86,7 +84,6 @@ export class PermCtrl implements IController {
     }
 
     async $onInit() {
-        this.getNotifySettings();
         if (this.item.isFolder) {
             this.newName = this.item.name;
             this.newFolderName = this.item.location;
@@ -539,33 +536,6 @@ export class PermCtrl implements IController {
             redirectToItem(data);
         } else {
             await showMessageDialog(r.result.data.error);
-        }
-    }
-
-    async getNotifySettings() {
-        if (!this.loggedIn()) {
-            return;
-        }
-        const r = await to($http.get<JsonValue>("/notify/" + this.item.id));
-        if (r.ok) {
-            this.notifySettings = r.result.data;
-        } else {
-            await showMessageDialog(
-                `Could not get notification settings. Error message is: ${r.result.data.error}`
-            );
-        }
-    }
-
-    async notifyChanged() {
-        const r = await to(
-            $http.post("/notify/" + this.item.id, this.notifySettings)
-        );
-        if (r.ok) {
-            // nothing to do
-        } else {
-            await showMessageDialog(
-                `Could not change notification settings. Error message is: ${r.result.data.error}`
-            );
         }
     }
 

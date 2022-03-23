@@ -2,12 +2,11 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
-from typing import DefaultDict, Optional
+from typing import DefaultDict
 
 import pytz
 
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
-from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.areainfo import AreaStart, AreaEnd
 from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
@@ -33,7 +32,7 @@ from timApp.readmark.readings import (
 from timApp.readmark.readmarkcollection import ReadMarkCollection
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.user.user import User, has_no_higher_right
-from timApp.util.flask.responsehelper import flash_if_not_preview
+from timApp.util.flask.responsehelper import flash_if_visible
 from timApp.util.timtiming import taketime
 from timApp.util.utils import getdatetime, get_boolean
 
@@ -187,7 +186,9 @@ def post_process_pars(
         usergroup_ids = [user_ctx.logged_user.get_personal_group().id]
 
         # If we're in exam mode and we're visiting the page for the first time, mark everything read
-        if should_auto_read(doc, usergroup_ids, user_ctx.logged_user):
+        if should_auto_read(
+            doc, usergroup_ids, user_ctx.logged_user, view_ctx.for_cache
+        ):
             should_mark_all_read = True
             readings = []
         else:
@@ -294,14 +295,14 @@ def process_areas(
             current_areas.append(cur_area)
             if not p.ref_chain:
                 if area_start in encountered_areas:
-                    flash_if_not_preview(
+                    flash_if_visible(
                         f"Area {area_start} appears more than once in this document. {fix}",
                         view_ctx,
                     )
                 encountered_areas[area_start] = cur_area
         if area_end is not None:
             if area_start is not None:
-                flash_if_not_preview(
+                flash_if_visible(
                     f"The paragraph {p.get_id()} has both area and area_end. {fix}",
                     view_ctx,
                 )
@@ -315,13 +316,13 @@ def process_areas(
             try:
                 latest_area = current_areas.pop()
             except IndexError:
-                flash_if_not_preview(
+                flash_if_visible(
                     f'area_end found for "{area_end}" without corresponding start. {fix}',
                     view_ctx,
                 )
             else:
                 if latest_area.name != area_end:
-                    flash_if_not_preview(
+                    flash_if_visible(
                         f'area_end found for "{area_end}" without corresponding start. {fix}',
                         view_ctx,
                     )
@@ -411,7 +412,7 @@ def process_areas(
 
     # Complete unbalanced areas.
     if current_areas and not is_single:
-        flash_if_not_preview(
+        flash_if_visible(
             f"{len(current_areas)} areas are missing area_end: {current_areas}",
             view_ctx,
         )
@@ -429,11 +430,13 @@ def process_areas(
     return new_pars
 
 
-def should_auto_read(doc: Document, usergroup_ids: list[int], user: User) -> bool:
+def should_auto_read(
+    doc: Document, usergroup_ids: list[int], user: User, for_cache: bool = False
+) -> bool:
     return not has_anything_read(usergroup_ids, doc) and (
         has_no_higher_right(
             doc.get_settings().exam_mode(),
-            get_user_rights_for_item(doc.docinfo, get_current_user_object()),
+            get_user_rights_for_item(doc.docinfo, user, allow_duration=for_cache),
         )
         or user.get_prefs().auto_mark_all_read
     )

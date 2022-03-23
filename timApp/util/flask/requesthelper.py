@@ -5,7 +5,7 @@ import pprint
 import time
 import warnings
 from dataclasses import is_dataclass, dataclass
-from typing import Optional, TypeVar, Callable, Any, Union
+from typing import TypeVar, Callable, Any
 from urllib.parse import urlparse
 
 import requests
@@ -128,7 +128,10 @@ def get_request_time() -> str | None:
 
 
 def get_request_message(
-    status_code: int | None = None, include_body: bool = False
+    status_code: int | None = None,
+    include_body: bool = False,
+    include_time: bool = True,
+    is_before: bool = False,
 ) -> str:
     name = get_current_user_name()
     if current_app.config["LOG_HOST"]:
@@ -142,9 +145,10 @@ def get_request_message(
 {request.method}
 {url_or_path}
 {status_code or ""}
-{get_request_time()}
+{get_request_time() if include_time else ""}
 {ua.platform}/{ua.browser}/{ua.version}
 {os.getpid()}
+{"BEFORE" if is_before else ""}
 """.replace(
         "\n", " "
     ).strip()

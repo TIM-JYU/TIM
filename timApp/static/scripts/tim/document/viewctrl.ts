@@ -62,13 +62,15 @@ import {EditingHandler} from "./editing/editing";
 import {PendingCollection} from "./editing/edittypes";
 import {onClick} from "./eventhandlers";
 import {IDocSettings} from "./IDocSettings";
-import {ParRefController} from "./parRef";
-import {PopupMenuDialogComponent} from "./popup-menu-dialog.component";
+import {
+    EditMode,
+    PopupMenuDialogComponent,
+} from "./popup-menu-dialog.component";
 import {initSlideView} from "./slide";
 import {ViewRangeInfo} from "./viewRangeInfo";
 import {ICtrlWithMenuFunctionEntry, IMenuFunctionEntry} from "./viewutils";
 
-markAsUsed(interceptor, ParRefController);
+markAsUsed(interceptor);
 
 export interface IChangeListener {
     informAboutChanges: (
@@ -78,7 +80,11 @@ export interface IChangeListener {
     ) => void;
 }
 
-export interface ITimComponent {
+export interface IUnsavedComponent {
+    isUnSaved: (userChange?: boolean) => boolean;
+}
+
+export interface ITimComponent extends IUnsavedComponent {
     attrsall?: IGenericPluginTopLevelFields<IGenericPluginMarkup>; // TimTable does not have attrsall - that's why it's optional.
     getName: () => string | undefined;
     getContent: () => string | undefined;
@@ -87,7 +93,6 @@ export interface ITimComponent {
     getTaskId: () => TaskId | undefined;
     belongsToArea: (area: string) => boolean;
     formBehavior: () => FormModeOption;
-    isUnSaved: (userChange?: boolean) => boolean;
     save: () => Promise<{saved: boolean; message: string | undefined}>;
     getPar: () => ParContext | undefined;
     setPluginWords?: (words: string[]) => void;
@@ -96,6 +101,29 @@ export interface ITimComponent {
     resetChanges: () => void;
     setAnswer: (content: Record<string, unknown>) => ISetAnswerResult;
     setData?(data: unknown, save: boolean): void;
+}
+
+/**
+ * Interface for components that can be Velped.
+ */
+export interface IVelpableComponent extends ITimComponent {
+    // TODO: Allow to velp components directly by inserting them under the velp canvas.
+    /**
+     * Resolves Base64 encoded image representation of the component for Velping.
+     */
+    getVelpImages(): Promise<string[] | undefined>;
+}
+
+/**
+ * Checks if the given component is a velpable.
+ * @param obj TIM component to check.
+ */
+export function isVelpable(obj?: ITimComponent): obj is IVelpableComponent {
+    return (
+        obj !== undefined &&
+        (obj as IVelpableComponent).getVelpImages !== undefined &&
+        typeof (obj as IVelpableComponent).getVelpImages === "function"
+    );
 }
 
 export interface ISetAnswerResult {
@@ -160,6 +188,16 @@ export enum FormModeOption {
     IsForm,
     NoForm,
 }
+
+/**
+ * Map of valid TIM document events and event data.
+ *
+ * NOTE: TIM document events are meant to be general-purpose events for common global TIM components.
+ * As such, avoid defining events that are specific to a particular plugin unless really needed.
+ */
+export type EventListeners = {
+    editModeChange: (editMode: EditMode | null) => void;
+};
 
 export class ViewCtrl implements IController {
     private hideVars: IVisibilityVars = getVisibilityVars();
@@ -242,6 +280,11 @@ export class ViewCtrl implements IController {
     // Form-mode related attributes.
     private formTaskInfosLoaded = false;
     private hide = getVisibilityVars();
+
+    private eventListeners: Map<
+        keyof EventListeners,
+        EventListeners[keyof EventListeners][]
+    > = new Map();
 
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
@@ -422,7 +465,8 @@ export class ViewCtrl implements IController {
 
             if (
                 (!this.editing &&
-                    !this.checkUnSavedTimComponents() &&
+                    // TODO: Visual info / scroll to unsaved if user stays on page after prompt
+                    !this.checkUnSavedComponents() &&
                     !this.doingTask) ||
                 documentglobals().IS_TESTING
             ) {
@@ -778,6 +822,10 @@ export class ViewCtrl implements IController {
         return this.velpCanvases.get(id);
     }
 
+    public removeVelpCanvas(id: number) {
+        this.velpCanvases.delete(id);
+    }
+
     /**
      * Registers an ITimComponent to the view controller by its name attribute if it has one.
      * @param {ITimComponent} component The component to be registered.
@@ -904,19 +952,22 @@ export class ViewCtrl implements IController {
     }
 
     /**
-     * Check whether ITimComponents could lose data when leaving page or changing user
+     * Check whether certain components could lose data when leaving page or changing user
      * @param userChange true if changing user, otherwise undefined or false
      * @returns {boolean} True if at least one registered ITimComponent was in unsaved state
      */
-    public checkUnSavedTimComponents(userChange?: boolean): boolean {
-        let unsavedTimComponents = false;
-        for (const component of this.timComponents.values()) {
-            if (component.isUnSaved(userChange)) {
-                unsavedTimComponents = true;
-                break;
+    public checkUnSavedComponents(userChange?: boolean): boolean {
+        for (const canvas of this.velpCanvases.values()) {
+            if (canvas.isUnSaved()) {
+                return true;
             }
         }
-        return unsavedTimComponents;
+        for (const component of this.timComponents.values()) {
+            if (component.isUnSaved(userChange)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     isEmptyDocument() {
@@ -1409,6 +1460,62 @@ export class ViewCtrl implements IController {
         const prefix = a.getKeyPrefix();
         const key = prefix + a.annotation.id;
         this.anns.delete(key);
+    }
+
+    /**
+     * Registers an event listener for a TIM document event.
+     *
+     * @param event Event type to listen to.
+     * @param callback Callback function to call when event is triggered.
+     */
+    listen<T extends keyof EventListeners>(
+        event: T,
+        callback: EventListeners[T]
+    ): void {
+        let eventList = this.eventListeners.get(event);
+        if (!eventList) {
+            eventList = [];
+            this.eventListeners.set(event, eventList);
+        }
+        eventList.push(callback);
+    }
+
+    /**
+     * Unregisters an event listener for a TIM document event.
+     *
+     * @param event Event type to unregister.
+     * @param callback Callback function to unregister.
+     */
+    removeListener<T extends keyof EventListeners>(
+        event: T,
+        callback: EventListeners[T]
+    ): void {
+        const eventList = this.eventListeners.get(event);
+        if (eventList) {
+            const index = eventList.indexOf(callback);
+            if (index >= 0) {
+                eventList.splice(index, 1);
+            }
+        }
+    }
+
+    /**
+     * Emits a TIM document event.
+     *
+     * @param event Event type to emit.
+     * @param args Arguments to pass to the event listeners.
+     */
+    emit<T extends keyof EventListeners>(
+        event: T,
+        ...args: Parameters<EventListeners[T]>
+    ): void {
+        const eventList = this.eventListeners.get(event);
+        if (eventList) {
+            eventList.forEach((callback) => {
+                // direct call does not work because Parameters is not able to infer full type
+                callback.apply(null, args);
+            });
+        }
     }
 }
 
