@@ -486,9 +486,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     deleteConfirmName = "";
     contacts: IUserContact[];
     userContacts = new Map<Channel, IUserContact[]>();
-    userAPIKeys: IUserAPIKey[] = [
-        {translator: "DeepL", APIkey: "This is a test key"},
-    ];
+    userAPIKeys: IUserAPIKey[] = [];
     userEmailContacts: IUserContact[] = [];
     canRemoveCustomContacts = true;
     primaryEmail!: IUserContact;
@@ -1011,8 +1009,10 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
             })
         );
         this.saving = false;
+        this.saving = false;
         if (r.ok) {
-            this.updateKeys(key, (keys) => keys.filter((c) => c != key));
+            this.userAPIKeys.splice(this.userAPIKeys.indexOf(key));
+            // this.updateKeys(key, (keys) => keys.filter((c) => c != key));
         } else {
             await showMessageDialog(r.result.error.error);
         }
