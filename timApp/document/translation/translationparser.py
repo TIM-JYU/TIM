@@ -13,24 +13,21 @@ x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\\text{ ratkaistaan x}\\
 
 
 class TranslationParser:
-    def __init__(self, translator: str):
-        translator = translator
-
-    def latexparse(self, text: str):
-
+    def latexparse(self, text: str, translator: str):
+        newtext = text
         # TODO currently match and match2 have overlaps
         # finds between singular $-signs correctly but also some $$
         # areas as well
-        match = re.findall(r"(?<!\\)\$\S.*?(?<!\\)\S\$", text)
+        match = re.findall(r"(?<!\\)\$\S.*?(?<!\\)\S\$", newtext)
         # finds between double $-signs correctly
-        match2 = re.findall(r"(?<!\\)\$(?<!\\)\$.+?(?<!\\)\$(?<!\\)\$", text)
+        match2 = re.findall(r"(?<!\\)\$(?<!\\)\$.+?(?<!\\)\$(?<!\\)\$", newtext)
         # TODO broken and cannot find formula areas
-        match3 = re.findall(r"\\begin\{.*?\}.*?\\end\{.*?\}", text)
+        match3 = re.findall(r"\\begin\{.*?\}.*?\\end\{.*?\}", newtext)
         # TODO make it self.translator specific
         for word in match:
-            text.replace(word, "<protect>" + word + "</protect>")
+            newtext = newtext.replace(word, "<protect>" + word + "</protect>")
+        return newtext
 
 
-deepltrans = TranslationParser("deepl")
-deepltrans.latexparse(textblock)
+textblock = TranslationParser().latexparse(textblock, "deepl")
 print(textblock)
