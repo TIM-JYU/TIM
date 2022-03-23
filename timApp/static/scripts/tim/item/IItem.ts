@@ -170,3 +170,8 @@ export interface ITranslators {
     name: string;
     id: number;
 }
+
+export interface ITranslatorUsage {
+    character_count: number;
+    character_limit: number;
+}

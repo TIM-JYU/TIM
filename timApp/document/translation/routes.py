@@ -342,8 +342,10 @@ def get_quota():
     translator = req_data.get("translator", "")
     key = req_data.get("apikey", "")
 
+    # Get the translation service by the provided service name TODO Maybe change to use id instead?
     tr = TranslationService.query.filter(
-        key == TranslationServiceKey.api_key,
         translator == TranslationService.service_name,
     ).first()
-    return json_response(tr.usage)
+    tr.register(get_current_user_object().get_personal_group())
+
+    return json_response(tr.usage())

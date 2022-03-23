@@ -35,7 +35,7 @@ import {
 } from "../util/globals";
 import {IOkResponse, isIOS, timeout, to2, toPromise} from "../util/utils";
 import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
-import {DocumentOrFolder} from "../item/IItem";
+import {DocumentOrFolder, ITranslatorUsage} from "../item/IItem";
 import {ContactOrigin, IFullUser, IUserAPIKey, IUserContact} from "./IUser";
 
 @Component({
@@ -1022,13 +1022,15 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     async checkQuota(key: IUserAPIKey) {
         const r = await toPromise(
-            this.http.post("/apikeys/quota", {
+            this.http.post<ITranslatorUsage>("/apikeys/quota", {
                 translator: key.translator,
                 apikey: key.APIkey,
             })
         );
         if (r.ok) {
-            await showMessageDialog(r.result.toString());
+            await showMessageDialog(
+                "Used characters: " + r.result.character_count + "\nCharacter limit: " + r.result.character_limit
+            );
             // TODO: Figure out how to get the quota here, probably a JSON response from server?
         } else {
             await showMessageDialog(r.result.error.error);
