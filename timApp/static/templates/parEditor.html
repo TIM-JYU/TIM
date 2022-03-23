@@ -40,7 +40,10 @@
             <select id="translator" name="translator-select" class="form-control"
                     ng-model="$ctrl.docTranslator" >
                 <option ng-repeat="option in $ctrl.translators" value="{{option.name}}">{{option.name}}</option>
-            </select></div>
+            </select>
+                <p ng-show="$ctrl.translationInProgress">Translating... This may take a while.</p>
+                <button class="timButton" id="translateButton" ng-disabled="$ctrl.saving || $ctrl.translationInProgress" ng-show="$ctrl.showTranslated()" ng-click="$ctrl.translateClicked()" style="right: 2px;">Translate</button>
+        </div>
     </uib-tab>
   </uib-tabset>
   <div id="editorflex" class="stacked"><div class="halfsize">
@@ -53,8 +56,6 @@
         <button class="btn btn-danger" ng-disabled="$ctrl.saving" ng-show="$ctrl.getOptions().showDelete" ng-click="$ctrl.deleteClicked()">Delete</button>
         </span>
         <div class="hidingButtonArea">
-            <p ng-show="$ctrl.translationInProgress">Translating... This may take a while.</p>
-            <button class="timButton" id="translateButton" ng-disabled="$ctrl.saving || $ctrl.translationInProgress" ng-show="$ctrl.showTranslated()" ng-click="$ctrl.translateClicked()" style="right: 2px;">Translate</button>
             <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showUnread()" ng-click="$ctrl.unreadClicked()" style="right: 2px;">Mark as unread</button>
         </div>
     </div>
