@@ -138,12 +138,21 @@
                                     <input type="checkbox" ng-change="$ctrl.toggleInput()" ng-model="$ctrl.saveTeacher">Save teacher's fix
                                 </label>
                             </span>
-                            <div ng-show="$ctrl.selectedAnswer">
+                            <div class="flex" ng-show="$ctrl.selectedAnswer">
                             <span ng-show="$ctrl.showVelpsCheckBox()">
                             <label class="checkbox-inline" >
                                 <input type="checkbox" ng-model="$ctrl.review" ng-change="$ctrl.reviewToggled()">Velps
                             </label>
                             </span>
+                            <div class="input-group input-group-xs" ng-show="$ctrl.review && $ctrl.reviewerUsers.length > 1">
+                                    <select class="form-control"
+                                            title="List of reviewers"
+                                            ng-change="$ctrl.changeReviewerUser()"
+                                            ng-model="$ctrl.reviewerUser">
+                                         <option ng-value="undefined">All velpers</option>
+                                         <option ng-repeat="user in $ctrl.reviewerUsers track by user.id" ng-value="{{user}}">{{(user.real_name + ' (' + user.name + ')')}}</option>
+                                    </select>
+                           </div>
                             <button ng-if="$ctrl.showDelete"
                                     title="Delete answer"
                                     ng-click="$ctrl.deleteAnswer()"

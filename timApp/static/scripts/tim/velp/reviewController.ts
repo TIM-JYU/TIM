@@ -20,6 +20,7 @@ import {
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ParContext} from "tim/document/structure/parContext";
 import {createParContext} from "tim/document/structure/create";
+import {IUser} from "../user/IUser";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -28,7 +29,7 @@ import {documentglobals} from "../util/globals";
 import {$compile, $http, $rootScope} from "../util/ngimport";
 import {
     angularWait,
-    assertIsText,
+    isText,
     checkIfElement,
     getElementParent,
     log,
@@ -80,7 +81,8 @@ function tryCreateRange(
     try {
         range.setEnd(endElem ?? startElem, end.offset);
     } catch {
-        // Ignore exception; it is still possibly useful to put the annotation in text even though it's zero sized.
+        // Ignore exception; overlapping text annotations may cause zero sized annotations,
+        // which can be opened only via margin but still retain their approximate position in text
     }
     return range;
 }
@@ -327,23 +329,51 @@ export class ReviewController {
     }
 
     /**
-     * Loads the annotations to the answer if given and removes answer annotations not associated with the answer.
+     * Removes <Annotation> elements from an answer
+     * @param answerId answer to clear
+     */
+    clearAnswerAnnotationElements(answerId: number): void {
+        const annotations = this.getAnnotationsByAnswerId(answerId);
+        for (const a of annotations) {
+            const ann = this.vctrl.getAnnotation(`t${a.id}`);
+            if (ann?.annotation.answer) {
+                this.removeAnnotation(a.id);
+            }
+        }
+    }
+
+    /**
+     * Clears any annotations from an answer par and loads new annotations if possible.
+     * Cleared annotations include margin annotations, annotation elements in answer and any drawn annotations
+     * Loads the annotation elements and drawings to the answer if answer is given
      * @param answerId - Optional answer ID
      * @param par - Paragraph element
+     * @param user - Optional user to filter loaded annotations with
      */
     loadAnnotationsToAnswer(
         answerId: number | undefined,
-        par: ParContext
+        par: ParContext,
+        user?: IUser
     ): void {
         this.clearAnswerAnnotationsFromParMargin(par);
         if (answerId == undefined) {
             return;
         }
-        const annotations = this.getAnnotationsByAnswerId(answerId);
+        this.clearAnswerAnnotationElements(answerId);
+        const canvas = this.vctrl.getVelpCanvas(answerId);
+        if (canvas) {
+            canvas.clearObjectContainer();
+        }
+        let annotations = this.getAnnotationsByAnswerId(answerId);
+        if (user) {
+            annotations = annotations.filter((a) => a.annotator.id == user.id);
+        }
+        const drawings: DrawItem[] = [];
         for (const a of annotations) {
             const placeInfo = a.coord;
             let added = false;
             if (a.draw_data) {
+                drawings.push(...a.draw_data);
                 const targ = par.par.htmlElement.querySelector(
                     ".canvasObjectContainer"
                 );
@@ -432,6 +462,9 @@ export class ReviewController {
                     : AnnotationPlacement.InMarginOnly
             );
         }
+        if (canvas) {
+            canvas.setPersistentDrawData(drawings);
+        }
         $rootScope.$applyAsync(); // TODO: run only if we are in Angular zone
     }
 
@@ -448,6 +481,19 @@ export class ReviewController {
             (a, b) => (b.coord.start.offset ?? 0) - (a.coord.start.offset ?? 0)
         );
         return annotations;
+    }
+
+    /**
+     * Gets all users who made annotations to a given answer
+     * @param id - Answer id
+     * @returns {IUser[]} - List of users
+     */
+    getAnnotationersByAnswerId(id: number): IUser[] {
+        const uniqueUsers = new Map<number, IUser>();
+        this.getAnnotationsByAnswerId(id).forEach((ann) => {
+            uniqueUsers.set(ann.annotator.id, ann.annotator);
+        });
+        return Array.from(uniqueUsers.values());
     }
 
     /**
@@ -597,38 +643,56 @@ export class ReviewController {
      * @param id - Annotation ID
      */
     async deleteAnnotation(id: number) {
+        this.annotations = this.annotations.filter((a) => a.id !== id);
+        this.removeAnnotation(id);
+        await to($http.post("/invalidate_annotation", {id: id}));
+    }
+
+    /**
+     * Visually removes an annotation
+     * Removes the annotation from the margin
+     * Removes the annotation in text if present
+     * Redraws any canvas annotations if deleted annotation was a drawn annotation
+     * @param id - Annotation to remove
+     */
+    removeAnnotation(id: number) {
         const annotationParents = document.querySelectorAll(`[aid="${id}"]`);
+        if (annotationParents.length == 0) {
+            return;
+        }
         const annotationHighlights =
             annotationParents[0].getElementsByClassName("highlighted");
         const annotation = this.annotations.find((a) => a.id == id);
-        this.annotations = this.annotations.filter((a) => a.id !== id);
         if (
             annotation?.draw_data &&
             annotation?.answer?.id &&
             annotationParents.length > 1
         ) {
-            // const canvas = this.getElementParentUntilAttribute(annotationParents[0], "lol");
             const canvas = this.vctrl.getVelpCanvas(annotation.answer.id);
             if (canvas) {
                 this.drawAnnotationsOnCanvas(canvas, annotation.answer.id);
             }
             $(annotationParents).remove();
-        } else if (annotationParents.length > 1) {
-            let savedHTML = "";
-            for (const a of annotationHighlights) {
-                let addHTML = a.innerHTML.replace(
-                    '<span class="ng-scope">',
-                    ""
-                );
-                addHTML = addHTML.replace("</span>", "");
-                savedHTML += addHTML;
-            }
-            annotationParents[0].outerHTML = savedHTML;
-            $(annotationParents[1]).remove();
         } else {
-            $(annotationParents[0]).remove();
+            for (const annParent of annotationParents) {
+                const parent = annParent.parentElement;
+                if (parent?.classList.contains("notes")) {
+                    $(annParent).remove();
+                } else {
+                    let savedHTML = "";
+                    for (const a of annotationHighlights) {
+                        let addHTML = a.innerHTML.replace(
+                            '<span class="ng-scope">',
+                            ""
+                        );
+                        addHTML = addHTML.replace("</span>", "");
+                        savedHTML += addHTML;
+                    }
+                    annParent.outerHTML = savedHTML;
+                    parent?.normalize();
+                }
+            }
         }
-        await to($http.post("/invalidate_annotation", {id: id}));
     }
 
     /**
@@ -963,7 +1027,7 @@ export class ReviewController {
             if (innerDiv.childElementCount === 0) {
                 const lastChild =
                     innerDiv.childNodes[innerDiv.childNodes.length - 1];
-                if (assertIsText(lastChild)) {
+                if (isText(lastChild)) {
                     endOffset = startoffset + lastChild.length;
                 }
             }
@@ -1167,7 +1231,7 @@ export class ReviewController {
                     el.getElementsByClassName("highlighted")[0];
                 const lastInnerLastChild =
                     this.getLastChildUntilNull(innerElements);
-                if (assertIsText(lastInnerLastChild)) {
+                if (isText(lastInnerLastChild)) {
                     storedOffset += lastInnerLastChild.length;
                 }
 
@@ -1181,7 +1245,7 @@ export class ReviewController {
             } else if (el.nodeName !== startType) {
                 return storedOffset;
             } else {
-                if (assertIsText(el)) {
+                if (isText(el)) {
                     storedOffset += el.length;
                 }
             }
@@ -1433,7 +1497,6 @@ export class ReviewController {
         canvas.clearObjectContainer();
         canvas.id = answerId;
         this.vctrl.addVelpCanvas(answerId, canvas);
-        this.drawAnnotationsOnCanvas(canvas, answerId);
     }
 
     /**
