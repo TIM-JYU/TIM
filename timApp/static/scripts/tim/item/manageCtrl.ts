@@ -557,16 +557,16 @@ export class PermCtrl implements IController {
         if (this.newTranslation.translator != "Manual") {
             this.translationInProgress = true;
         }
-        const lang = this.parseLanguage(this.newTranslation.language);
-        const trlang = this.parseLanguage(
-            this.newTranslation.translatorLanguage
-        );
+
         const r = await to(
-            $http.post<IDocument>(`/translate/${this.item.id}/${lang.code}`, {
-                doc_title: this.newTranslation.title,
-                autotranslate: this.newTranslation.translator,
-                translatorlang: trlang.code,
-            })
+            $http.post<IDocument>(
+                `/translate/${this.item.id}/${this.newTranslation.language}`,
+                {
+                    doc_title: this.newTranslation.title,
+                    autotranslate: this.newTranslation.translator,
+                    translatorlang: this.newTranslation.translatorLanguage,
+                }
+            )
         );
         if (r.ok) {
             const data = r.result.data;
@@ -591,7 +591,8 @@ export class PermCtrl implements IController {
     }
 
     /*
-    Checks whether the translator chosen for the document is Manual (in which case a translator language is not shown) or not
+    Checks whether the translator chosen for the document is Manual
+    (in which case a translator language is not shown) or not
      */
     notManual() {
         if (this.newTranslation.translator == "Manual") {
@@ -600,38 +601,19 @@ export class PermCtrl implements IController {
         return true;
     }
 
-    /*
-    The dropdown for choosing languages returns strings that somehow go over the ILanguages typing in newTranslation,
-    making using string within newTranslation and this function necessary.
-    */
-    parseLanguage(language: string) {
-        return {
-            name: language.substring(0, language.indexOf(" ")),
-            code: language.substring(
-                language.lastIndexOf("(") + 1,
-                language.lastIndexOf(")")
-            ),
-        };
-    }
-
     checkTranslatability() {
-        // TODO: Check if user has the API key (check needs to be done in initialization to a boolean of its own)
         if (
             this.newTranslation.title == "" ||
             this.newTranslation.translator == "Manual"
         ) {
             return false;
         } else {
-            const translateLanguage = this.parseLanguage(
-                this.newTranslation.translatorLanguage
-            );
             const position = this.findSourceDoc();
             for (const target of this.targetLanguages) {
-                if (target.code == translateLanguage.code) {
+                if (target.code == this.newTranslation.translatorLanguage) {
                     for (const source of this.sourceLanguages) {
                         if (
-                            source.code ==
-                            this.translations[position].lang_id.toUpperCase()
+                            source.code == this.translations[position].lang_id
                         ) {
                             return true;
                         }

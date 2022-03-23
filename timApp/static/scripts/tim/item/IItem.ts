@@ -168,7 +168,6 @@ export interface ILanguages {
 
 export interface ITranslators {
     name: string;
-    id: number;
 }
 
 export interface ITranslatorUsage {
