@@ -164,8 +164,15 @@ class DeeplTranslationService(TranslationService):
         return self._post("translate", data)
 
     # TODO Cache this
-    def _languages(self) -> dict:
-        return self._post("languages")
+    def _languages(self, *, is_source: bool) -> dict:
+        """
+        Get languages supported by the API
+        :param is_source: Flag to query for supported source-languages
+        :return: Languages supported in translations by type (source or target)
+        """
+        return self._post(
+            "languages", data={"type": "source" if is_source else "target"}
+        )
 
     def translate(
         self, texts: list[str], source_lang: Language | None, target_lang: Language
@@ -181,8 +188,9 @@ class DeeplTranslationService(TranslationService):
         # Translate using XML-protection for protected pieces of the text
         resp_json = self._translate(
             texts,
-            source_lang_code,
-            target_lang.lang_code,
+            # Send uppercase, because it is used in DeepL documentation
+            source_lang_code.upper(),
+            target_lang.lang_code.upper(),
             split_sentences="nonewlines",
             tag_handling="xml",
             ignore_tags=[self.ignore_tag],
@@ -206,16 +214,20 @@ class DeeplTranslationService(TranslationService):
 
         def get_lang(deepl_lang: dict) -> Language | None:
             try:
-                code = lc.find(deepl_lang["name"]).to_tag()
+                language = deepl_lang["language"]
+                code = lc.get(language).to_tag()
                 return Language.query_by_code(code)
             except LookupError:
                 return None
 
-        resp_json = self._languages()
-        db_langs: list[Language] = list(filter(None, map(get_lang, resp_json)))
-        # NOTE it is assumed, that DeepL supports all its languages translated both ways,
-        # thus all selected languages are mapped to all selected languages
-        langs_map = {lang.lang_code: db_langs for lang in db_langs}
+        # Query API for supported source and target languages and transform them into suitable format
+        resp_json_src = self._languages(is_source=True)
+        resp_json_target = self._languages(is_source=False)
+        db_langs_src: list[Language] = list(filter(None, map(get_lang, resp_json_src)))
+        db_langs_target: list[Language] = list(
+            filter(None, map(get_lang, resp_json_target))
+        )
+        langs_map = {lang.lang_code: db_langs_target for lang in db_langs_src}
         return LanguagePairing(langs_map)
 
     def supports(self, source_lang: Language, target_lang: Language) -> bool:

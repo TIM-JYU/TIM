@@ -94,8 +94,9 @@ def init_deepl_translate(
 
     # TODO Languages should use common values / standard codes at this point (also applies to any doc.lang_id)
     if not translator.supports(source_lang, target_lang):
+        # TODO use langcodes for a friendlier error message (name + region/variant)
         raise RouteException(
-            description=f"The language pair from '{source_lang}' to '{target_lang}' is not supported with DeepL"
+            description=f"The language pair from '{source_lang.autonym}' to '{target_lang.autonym}' is not supported with DeepL"
         )
 
     translate_func: Callable[[list[str]], list[str]] = init_translate(
@@ -105,7 +106,6 @@ def init_deepl_translate(
 
 
 tr_bp = Blueprint("translation", __name__, url_prefix="")
-api_keys = Blueprint("apikeys", __name__, url_prefix="")
 
 
 @tr_bp.post("/translate/<int:tr_doc_id>/<language>")
@@ -273,7 +273,7 @@ def get_translators() -> Response:
     return json_response(sl)
 
 
-@api_keys.post("apikeys/add")
+@tr_bp.post("apikeys/add")
 def add_api_key() -> Response:
     """
     The function for adding API keys.
@@ -283,14 +283,16 @@ def add_api_key() -> Response:
     translator = req_data.get("translator", "")
     key = req_data.get("apikey", "")
 
-    tr = TranslationService.query.filter(translator == TranslationService.service_name)
+    tr = TranslationService.query.filter(
+        translator == TranslationService.service_name
+    ).first()
 
     verify_logged_in()
     user = get_current_user_object()
     duplicate = TranslationServiceKey.query.filter(
         tr.id == TranslationServiceKey.service_id,
         user.get_personal_group().id == TranslationServiceKey.group_id,
-    )
+    ).first()
     if duplicate:
         raise RouteException("There is already a key for this translator for this user")
 
@@ -305,7 +307,7 @@ def add_api_key() -> Response:
     return ok_response()
 
 
-@api_keys.post("apikeys/remove")
+@tr_bp.post("apikeys/remove")
 def remove_api_key() -> Response:
     """
     The function for removing API keys.
@@ -322,7 +324,7 @@ def remove_api_key() -> Response:
         key == TranslationServiceKey.api_key,
         TranslationServiceKey.group_id == user.get_personal_group().id,
         translator == TranslationService.service_name,
-    )
+    ).first()
 
     if not to_be_removed:
         raise RouteException("The key does not exist for the user")
@@ -332,7 +334,7 @@ def remove_api_key() -> Response:
     return ok_response()
 
 
-@api_keys.post("/apikeys/quota")
+@tr_bp.post("/apikeys/quota")
 def get_quota():
     verify_logged_in()
 
@@ -343,5 +345,5 @@ def get_quota():
     tr = TranslationService.query.filter(
         key == TranslationServiceKey.api_key,
         translator == TranslationService.service_name,
-    )
+    ).first()
     return json_response(tr.usage)

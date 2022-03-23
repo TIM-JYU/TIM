@@ -46,6 +46,7 @@ class Language(db.Model):
         :param code: The IETF tag for the language
         :return: The corresponding Language-object in database or None if not found
         """
+        # TODO Instead of type str -code, could langcodes.Language type lessen boilerplate at caller?
         return cls.query.get(code)
 
     @classmethod
