@@ -52,8 +52,11 @@ class Language(db.Model):
     @classmethod
     def query_all(cls) -> list["Language"]:
         """
-        Query the database to find a single match for language tag
-        :param code: The IETF tag for the language
-        :return: The corresponding Language-object in database or None if not found
+        Query the database for all the languages
+        :return: All the languages found from database
         """
         return cls.query.all()
+
+    def __str__(self) -> str:
+        """:return: Nice format for users to read"""
+        return lc.get(self.lang_code).display_name()

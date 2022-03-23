@@ -92,11 +92,10 @@ def init_deepl_translate(
     translator = DeeplTranslationService.query.first()
     translator.register(get_current_user_object().get_personal_group())
 
-    # TODO Languages should use common values / standard codes at this point (also applies to any doc.lang_id)
     if not translator.supports(source_lang, target_lang):
         # TODO use langcodes for a friendlier error message (name + region/variant)
         raise RouteException(
-            description=f"The language pair from '{source_lang.autonym}' to '{target_lang.autonym}' is not supported with DeepL"
+            description=f"The language pair from '{source_lang}' to '{target_lang}' is not supported with DeepL"
         )
 
     translate_func: Callable[[list[str]], list[str]] = init_translate(
@@ -131,36 +130,35 @@ def create_translation_route(tr_doc_id, language):
 
     add_reference_pars(cite_doc, src_doc, "tr")
 
-    translator_language = req_data.get("translatorlang", None)
-    # Check if translator language is the same as document language
-    if language == translator_language:
-        tr_lang = language
-    else:
-        tr_lang = translator_language
-
-    # Use the translator with a different source language if specified
-    src_lang = req_data.get("origlang", src_doc.docinfo.lang_id)
-
     # Select the specified translator
     translator_func = None
     if translator_code := req_data.get("autotranslate", None):
-        # Get the actual Language objects TODO This is dumb here
-        # TODO Add the language to database if not already found
-        src_lang = Language.query_by_code(src_lang)
-        tr_lang = Language.query_by_code(tr_lang)
-        # TODO From database, check that the translation language-pair is supported, or just let it through and shift this responsibility to user and the interface, because the API-call should handle unsupported languages anyway?
+        # Use the translator with a different source language if specified
+        # and get the actual Language objects from database TODO Is database-query dumb here?
+        src_lang = Language.query_by_code(
+            # TODO is it necessary to send the origlang parameter?
+            req_data.get("origlang", src_doc.docinfo.lang_id)
+        )
+        if not src_lang:
+            raise RouteException(description="The source language is not set.")
+
+        tr_lang = Language.query_by_code(req_data.get("translatorlang", language))
+
+        # Select the translator TODO Maybe move to somewhere else so this does not blow up with if-else?
         if translator_code.lower() == "deepl":
             translator_func = init_deepl_translate(src_lang, tr_lang)
+
     # Translate each paragraph sequentially if a translator was created
     if translator_func:
+        zipped_paragraphs = list(
+            zip(tr.document.get_source_document().get_paragraphs(), tr.document)
+        )
         # HACK Skip first paragraph to protect settings-block from mangling
-        orig_paragraphs = list(tr.document.get_source_document().get_paragraphs())
-        tr_blocks = list(tr.document)
-        for i in range(1, len(orig_paragraphs)):
+        for orig_paragraph, tr_block in zipped_paragraphs[1:]:
             # Call the partially applied function, that contains languages selected earlier, to translate text
             # TODO Call with the whole document and let preprocessing handle the conversion into list[str]?
-            translated_text = translator_func([orig_paragraphs[i].md])[0]
-            tr.document.modify_paragraph(tr_blocks[i].id, translated_text)
+            translated_text = translator_func([orig_paragraph.md])[0]
+            tr.document.modify_paragraph(tr_block.id, translated_text)
 
     if isinstance(doc, DocEntry):
         de = doc
@@ -232,6 +230,7 @@ def get_translations(doc_id: int) -> Response:
 def get_source_languages() -> Response:
     """
     Query the database for the possible source languages.
+    TODO Select by translator
     """
 
     langs = Language.query.all()
@@ -243,6 +242,7 @@ def get_source_languages() -> Response:
 def get_document_languages() -> Response:
     """
     Query the database for the languages of existing documents.
+    TODO Select from documents
     """
 
     langs = Language.query.all()
@@ -254,6 +254,7 @@ def get_document_languages() -> Response:
 def get_target_languages() -> Response:
     """
     Query the database for the possible target languages.
+    TODO Select by translator
     """
 
     langs = Language.query.all()
@@ -264,7 +265,7 @@ def get_target_languages() -> Response:
 @tr_bp.get("/translations/translators")
 def get_translators() -> Response:
     """
-    A very rough version of getting the translators.
+    Query the database for the possible machine translators.
     """
 
     translationservices = TranslationService.query.all()

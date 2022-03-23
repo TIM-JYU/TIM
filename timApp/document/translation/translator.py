@@ -6,7 +6,7 @@ from typing import Dict, Optional
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.document.translation.language import Language
-from timApp.util.flask.requesthelper import NotExist
+from timApp.util.flask.requesthelper import NotExist, RouteException
 
 
 @dataclass
@@ -47,6 +47,7 @@ class TranslationService(db.Model):
     def languages(self) -> LanguagePairing:
         raise NotImplementedError
 
+    # Polymorphism allows querying multiple objects by their class eg. TranslationService.query
     __mapper_args__ = {"polymorphic_on": service_name}
 
 
@@ -86,6 +87,7 @@ class DeeplTranslationService(TranslationService):
 
     headers: dict[str, str]
 
+    # TODO Register by API-key; Translator should not care about users
     def register(self, user_group: UserGroup) -> None:
         """Set headers to use the user group's API-key ready for translation calls
         :param user_group: The user group whose API key will be used
@@ -119,7 +121,14 @@ class DeeplTranslationService(TranslationService):
         else:
             # TODO Handle the various HTTP error codes that API can return
             # (Using Python 3.10's match-statement would be cool here...)
-            raise Exception(f"DeepL API / {url_slug} responded with {resp.status_code}")
+            # TODO Do not show the user such implementation-specific errors
+            debug_exception = Exception(
+                f"DeepL API / {url_slug} responded with {resp.status_code}"
+            )
+            raise RouteException(
+                description="Machine translation failed NOTE this is a DEBUG VERSION and the following should probably not reach the user: "
+                + str(debug_exception)
+            )
 
     def _translate(
         self,
