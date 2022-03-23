@@ -18,6 +18,11 @@ export const UserFieldData = t.intersection([
     }),
 ]);
 
+export const User = t.interface({
+    id: t.Int,
+    name: t.string,
+})
+
 export const VelpData = t.intersection([
     t.type({
         points: t.Int,
@@ -26,6 +31,10 @@ export const VelpData = t.intersection([
             name: t.string,
             real_name: nullable(t.string),
         }),
+        answer: t.type({
+            id: t.Int,
+            users: t.array(User)
+        })
     }),
     t.partial({
         groupinfo: t.type({
@@ -42,7 +51,6 @@ export type UserFieldDataT = t.TypeOf<typeof UserFieldData>;
 export const AliasData = t.record(t.string, t.string);
 
 export type AliasDataT = t.TypeOf<typeof AliasData>;
-
 
 export type VelpDataT = t.TypeOf<typeof VelpData>;
 

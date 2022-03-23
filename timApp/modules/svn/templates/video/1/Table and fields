@@ -4,16 +4,18 @@ Start peer reviewing
 #- {area="demo" collapse="true"}
 Arviointitilanne
 
-#- {defaultplugin="textfield" readonly="view" .fieldCell}
+#- {defaultplugin="numericfield" readonly="view" .fieldCell}
 %% 'Pisteet=Pisteet' | gfields('cols: 5') -%%
 \
+#- {defaultplugin="textfield" readonly="view" .fieldCell}
 Tehtävän arvioineet:\
 %% 'Arvioija_' | gfrange(1,arvosteltavia,'cols: 10') -%%
 \
+#- {defaultplugin="textfield" readonly="view" .fieldCell}
 Arvioitavat tehtävät:\
 %% 'Arvioitava_' | gfrange(1,arvosteltavia,'cols: 10') %%
 \
-#- {area_end="demo" id="ohWeiC2vLEdw"}
+#- {area_end="demo"}
 \
 ``` {#demotable plugin="tableForm"}
 groups:

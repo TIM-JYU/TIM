@@ -128,7 +128,7 @@ from timApp.util.logger import log_info
 from timApp.util.utils import get_current_time, approximate_real_name
 from timApp.util.utils import local_timezone
 from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
-from timApp.velp.annotations import get_test_annotations
+from timApp.velp.annotations import get_annotations_with_comments_in_document
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import value_or_default
@@ -1235,7 +1235,7 @@ def preprocess_jsrunner_answer(
         if runner_req.input.userNames
         else None,
     )
-    answerdata["testvelps"] = get_test_annotations(curr_user, d, False)
+    answerdata["testvelps"] = get_annotations_with_comments_in_document(curr_user, d, False)
     #answerdata["testvelps"] =  [
     #    {"points": 2, "name": "mikki hiiri"},
     #    {"points": 2, "name": "minni hiiri"}]

@@ -1320,17 +1320,19 @@ export class Tools extends ToolsBase {
     }
 
     testNames() : string[] {
-        const names = this.testvelps.map(v => v.annotator.name)
+        const velps = this.testvelps.filter(v => v.answer.users[0].id === this.data.user.id)
+        const names = velps.map(v => v.annotator.name)
         const uniques = [...new Set(names)]
-        this.output += uniques
+        // this.output += uniques
         return uniques;
     }
     testPoints() : number {
-        const points = this.testvelps.map(v => v.points)
-        //this.output += points
+        const velps = this.testvelps.filter(v => v.answer.users[0].id === this.data.user.id)
+        const points = velps.map(v => v.points)
+        // this.output += points
         const sum = points.reduce(function(accumVariable, curValue) {
             return accumVariable + curValue
         }, 0);
-        return sum
+        return sum/velps.length
     }
 }
