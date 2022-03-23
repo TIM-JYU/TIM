@@ -486,9 +486,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     deleteConfirmName = "";
     contacts: IUserContact[];
     userContacts = new Map<Channel, IUserContact[]>();
-    userAPIKeys: IUserAPIKey[] = [
-        {translator: "DeepL", APIkey: "This is a test key"},
-    ];
+    userAPIKeys: IUserAPIKey[] = [];
     userEmailContacts: IUserContact[] = [];
     canRemoveCustomContacts = true;
     primaryEmail!: IUserContact;

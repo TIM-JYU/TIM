@@ -41,7 +41,7 @@
                     ng-model="$ctrl.docTranslator" >
                 <option ng-repeat="option in $ctrl.translators" value="{{option.name}}">{{option.name}}</option>
             </select>
-                <p ng-show="$ctrl.translationInProgress">Translating... This may take a while.</p>
+                <p ng-show="$ctrl.translationInProgress"><tim-loading></tim-loading> Translating... This may take a while.</p>
                 <button class="timButton" id="translateButton" ng-disabled="$ctrl.saving || $ctrl.translationInProgress" ng-show="$ctrl.showTranslated()" ng-click="$ctrl.translateClicked()" style="right: 2px;">Translate</button>
         </div>
     </uib-tab>
