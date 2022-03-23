@@ -1009,8 +1009,10 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
             })
         );
         this.saving = false;
+        this.saving = false;
         if (r.ok) {
-            this.updateKeys(key, (keys) => keys.filter((c) => c != key));
+            this.userAPIKeys.splice(this.userAPIKeys.indexOf(key));
+            // this.updateKeys(key, (keys) => keys.filter((c) => c != key));
         } else {
             await showMessageDialog(r.result.error.error);
         }

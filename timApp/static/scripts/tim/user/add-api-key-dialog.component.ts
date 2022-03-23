@@ -104,6 +104,7 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
                 translator: this.chosenTranslator,
                 APIkey: this.apiKey!,
             });
+            this.dismiss();
         } else {
             this.addError = result.result.error.error;
         }
