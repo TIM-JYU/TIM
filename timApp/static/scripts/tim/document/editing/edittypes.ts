@@ -114,10 +114,8 @@ export async function updateLanguages(
 export async function listTranslators(translators: Array<ITranslators>) {
     const sources = await to($http.get<string[]>("/translations/translators"));
     if (sources.ok) {
-        let num = 0;
         for (const translator of sources.result.data) {
-            translators.push({name: translator, id: num});
-            num++;
+            translators.push({name: translator});
         }
     }
 }

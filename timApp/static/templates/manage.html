@@ -216,19 +216,19 @@
                         <label for="documentLanguage">Document language:</label>
                         <select id="document-language" name="document-language-select" class="form-control"
                                ng-model="$ctrl.newTranslation.language">
-                                <option ng-repeat="option in $ctrl.documentLanguages">{{option.name}} ({{option.code}})</option>
+                                <option ng-repeat="option in $ctrl.documentLanguages" value="{{option.code}}">{{option.name}} ({{option.code}})</option>
                         </select></div>
                         <div>
                         <label for="translator">Translator:</label>
                         <select id="translator" name="translator-select" class="form-control"
                                ng-model="$ctrl.newTranslation.translator">
-                                <option ng-repeat="option in $ctrl.translators">{{option.name}}</option>
+                                <option ng-repeat="option in $ctrl.translators" value="{{option.name}}">{{option.name}}</option>
                         </select></div>
                         <div ng-show="$ctrl.notManual()">
                             <label for="translatorLanguage">Translator language:</label>
                         <select id="translator-language" name="translator-language-select" class="form-control"
                                ng-model="$ctrl.newTranslation.translatorLanguage">
-                                <option ng-repeat="option in $ctrl.targetLanguages">{{option.name}} ({{option.code}})</option>
+                                <option ng-repeat="option in $ctrl.targetLanguages" value="{{option.code}}">{{option.name}} ({{option.code}})</option>
                         </select>
                             </div>
                     </div>
