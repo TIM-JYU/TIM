@@ -33,6 +33,7 @@ from timApp.document.specialnames import (
 )
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
+from timApp.document.translation.language import Language
 from timApp.item.item import Item
 from timApp.item.routes import create_item_direct
 from timApp.messaging.messagelist.listinfo import ArchiveType
@@ -118,6 +119,22 @@ class TimRouteTest(TimDbTest):
     def setUpClass(cls):
         super().setUpClass()
         cls.client = testclient
+        # Default language on create_translation NOTE not same as british or american english
+        cls.add_language("english")
+        # For test_copy_cite.test_copy_translations
+        cls.add_language("german")
+        db.session.commit()
+
+    @classmethod
+    def add_language(cls, lang_name: str) -> Language:
+        """
+        Add a Language to the database
+        :param lang_name: Name that langcodes could recognize
+        :return: the new Language
+        """
+        lang = Language.create_from_name(lang_name)
+        db.session.add(lang)
+        return lang
 
     def get(
         self,
