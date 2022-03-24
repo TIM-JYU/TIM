@@ -1,6 +1,8 @@
 import re
 
-textblock = """KING CLAUDIUS
+# quick manual test cases before unit tests
+
+latexblock = """KING CLAUDIUS
 [Aside] O, 'tis $too$ true!
 $How$ $ smart$ a $$lash $$ that [speech] $$doth$$ [give] my conscience!
 a) \\begin{align*} asd
@@ -11,8 +13,53 @@ x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\\text{ ratkaistaan x}\\
 &\;\;\;\;\;\,\;\;\;\;x=7\;\\text{tai}\;x=-7
 \\end{align*} """
 
+styleblock = """
+![pieni kuusikolmio](/images/187297/kuusikulmio_esim.png){width=40%}
+
+[yliopiston sivut](https://www.jyu.fi/fi)
+
+[tämä teksti on punainen]{.red}
+
+[tätä tekstiä ei saisi kääntää]{.notranslate}
+"""
+
+mdtableblock = """
+Yksinkertainen  Taulukko   Ilman      Rajauksia
+--------------  ---------  ---------  ---------
+1.rivi          2. sarake  3. sarake  4. sarake
+2.rivi          2. sarake  3. sarake  4. sarake
+"""
+
+pluginblock = """
+``` {#p213a plugin="mcq"}
+answerLimit: 1
+headerText: ''
+buttonText: 'Tallenna'
+stem: 'a) Yhtälöllä ei ole ratkaisua luonnollisten lukujen joukossa ja se saadaan ratkeavaksi lisäämällä
+negatiiviset luvut lukujoukkoomme eli ts. teemme lukulaajennuksen $\mathbb{N} \rightarrow \mathbb{Z}$.'
+choices:
+  -
+    correct: false
+    text: 'md:$x+4=7$'
+    reason: 'Yhtälön ratkaisu $x=3$ kuuluu luonnollisiin lukuihin.'
+  -
+    correct: false
+    text: 'md:$x+\dfrac{1}{2}=\dfrac{3}{2}$'
+    reason: 'Yhtälön ratkaisu $x=1$ kuuluu luonnollisiin lukuihin.'
+  -
+    correct: true
+    text: 'md:$x+3=0$'
+    reason: 'Yhtälön ratkaisu $x=-3$ ei kuulu luonnollisiin lukuihin.'
+```
+"""
+
 
 class TranslationParser:
+    """Handles parsing full text block utilizing the defined functions inside it"""
+
+    # manual testing of latexparse
+    # textblock = TranslationParser().latex_parse(latexblock, "deepl")
+
     def latex_parse(self, text: str, translator: str):
         # TODO add table for all the text areas to translate, currently only translates \text{}
         # TODO add table for all the formulas, currently only does \begin{} \end{} -pair
@@ -61,15 +108,12 @@ class TranslationParser:
         # print(textblock)
         return newtext
 
-        # manual testing of latexparse
-        # textblock = TranslationParser().latex_parse(textblock, "deepl")
-
         def styles_parse(self, text: str, translator: str):
-            """Parses all styles, this includes {.nostyle}, which is not yet implemented in TIM"""
+            """Parses all styles, this includes {.notranslate}, which is not yet implemented in TIM"""
             # might be good to separate or just have as separate ways for each edge case?
             # pictures, links, styles, etc. all function quite similarly
 
-            # {.nostyle}
+            # {.notranslate}
 
             # normal styles (pictures, links, styles)
 
