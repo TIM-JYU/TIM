@@ -244,7 +244,7 @@ def get_all_answers(
 
     qq: Iterable[tuple[Answer, User, int]] = q
     cnt = 0
-    hidden_user_names = {}
+    hidden_user_names: dict[str, str] = {}
     for a, u, n in qq:
         points = str(a.points)
         if points == "None":
