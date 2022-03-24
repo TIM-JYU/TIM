@@ -130,7 +130,7 @@ class TranslationParser:
         lastline = lines[-1]
         if firstline[0:3] == "```" and lastline[0:3] == "```":
             newtext = text
-            if ("{" and "}") in firstline:
+            if ("{" and "}" and "plugin=") in firstline:
                 newtext = "<protected>" + newtext + "</protected>"
                 return newtext
         return text
