@@ -1570,6 +1570,16 @@ ${backTicks}
     }
 
     async translateClicked() {
+        const apuhel = this.getEditor();
+        let hel = "";
+        if (apuhel != undefined) {
+            hel = apuhel.getEditorText();
+        }
+
+        const edittext = hel.substring(hel.indexOf("\n") + 1);
+
+        let mayContinue = true;
+
         if (
             this.resolve.params.viewCtrl == undefined ||
             this.resolve.params.viewCtrl.item.lang_id == undefined
@@ -1581,6 +1591,17 @@ ${backTicks}
             window.alert(
                 "There is no original text to be translated. Please check the Difference in original document view."
             );
+        } else if (this.trdiff.new != edittext && this.trdiff.old != edittext) {
+            mayContinue = window.confirm(
+                "Do you want to overwrite previous changes?"
+            );
+        }
+        if (!mayContinue) {
+        } else if (
+            this.resolve.params.viewCtrl == undefined ||
+            this.resolve.params.viewCtrl.item.lang_id == undefined ||
+            this.trdiff == undefined
+        ) {
         } else {
             this.translationInProgress = true;
 
