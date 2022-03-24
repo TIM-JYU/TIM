@@ -5016,6 +5016,54 @@
           <context context-type="linenumber">110,111</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="8856893104265509267" datatype="html">
+        <source> Add new translator API key </source>
+        <target state="new"> Lisää uusi kääntäjä-API-avain </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">22,24</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3735755360481797574" datatype="html">
+        <source>Translator</source>
+        <target state="new">Kääntäjä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">29</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4671562292257026998" datatype="html">
+        <source>API key</source>
+        <target state="new">API-avain</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1082620254802126635" datatype="html">
+        <source> The API key was added successfully! </source>
+        <target state="new"> API-avain lisättiin onnistuneesti! </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">41,43</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4620843381482583521" datatype="html">
+        <source> Could not add the new API key: <x id="INTERPOLATION" equiv-text="{{addError}}"/> </source>
+        <target state="new"> Ei voitu lisätä uutta API-avainta: <x id="INTERPOLATION" equiv-text="{{addError}}"/> </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">44,46</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4446937931353910304" datatype="html">
+        <source>Check key&apos;s quota</source>
+        <target state="new">Tarkista avaimen käyttökiintiö</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">438</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
