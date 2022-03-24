@@ -119,7 +119,8 @@ class TranslationParser:
         # to be included into the function itself, since we might have to use the beta features
         # of deepl to translate
 
-    def plugin_parse(self, text: str, translator: str):
+    @staticmethod
+    def plugin_parse(text: str, translator: str, protection_tag: str) -> str:
         """Parses plugins, which are always individual code blocks."""
         # TODO: extremely simple plugin protection... iterate and improve.
         # possible to use documentparser: is_beginning_of_code_block()
@@ -131,7 +132,7 @@ class TranslationParser:
         if firstline[0:3] == "```" and lastline[0:3] == "```":
             newtext = text
             if ("{" and "}" and "plugin=") in firstline:
-                newtext = "<protected>" + newtext + "</protected>"
+                newtext = f"<{protection_tag}>" + newtext + f"</{protection_tag}>"
                 return newtext
         return text
 
