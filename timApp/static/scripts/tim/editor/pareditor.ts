@@ -1138,6 +1138,9 @@ ${backTicks}
             this.storage.proeditor.get() ??
             (saveTag === "par" || saveTag === TIM_TABLE_CELL);
         this.activeTab = this.storage.editortab.get() ?? "navigation";
+        if(this.checkIfOriginal() && this.activeTab == "translator"){
+            this.activeTab = "navigation";
+        }
         this.lastTab = this.activeTab;
         this.citeText = this.getCiteText();
         const sn = this.storage.wrap.get();
