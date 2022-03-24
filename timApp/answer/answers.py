@@ -244,15 +244,19 @@ def get_all_answers(
 
     qq: Iterable[tuple[Answer, User, int]] = q
     cnt = 0
+    hidden_user_names = {}
     for a, u, n in qq:
-        cnt += 1
         points = str(a.points)
         if points == "None":
             points = ""
         name = u.name
         ns = str(int(n))  # n may be a boolean, so convert to int (0/1) first
         if hide_names:
-            name = "user" + str(cnt)
+            name = hidden_user_names.get(u.name, None)
+            if not name:
+                cnt += 1
+                name = f"user{cnt}"
+                hidden_user_names[u.name] = name
         line = json.loads(a.content)
         header = "; ".join(
             [
