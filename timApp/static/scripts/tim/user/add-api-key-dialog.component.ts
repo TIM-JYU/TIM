@@ -29,7 +29,7 @@ import {listTranslators} from "../document/editing/edittypes";
                             <label class="control-label" for="name-select" i18n>Translator</label>
                             <select class="form-control" name="channel-select" [(ngModel)]="chosenTranslator">
                                 <option *ngFor="let translator of this.translators" [hidden]="translator.name ==='Manual'" value="{{translator.name}}"
-                                        i18n>{{translator.name}}</option>
+                                        >{{translator.name}}</option>
                             </select>
                         </div>
                         <div class="form-group">
