@@ -1,4 +1,5 @@
 import re
+from timApp.document.documentparser import DocumentParser
 
 # quick manual test cases before unit tests
 
@@ -30,8 +31,7 @@ Yksinkertainen  Taulukko   Ilman      Rajauksia
 2.rivi          2. sarake  3. sarake  4. sarake
 """
 
-pluginblock = """
-``` {#p213a plugin="mcq"}
+pluginblock = """``` {#p213a plugin="mcq"}
 answerLimit: 1
 headerText: ''
 buttonText: 'Tallenna'
@@ -50,15 +50,11 @@ choices:
     correct: true
     text: 'md:$x+3=0$'
     reason: 'Yhtälön ratkaisu $x=-3$ ei kuulu luonnollisiin lukuihin.'
-```
-"""
+```"""
 
 
 class TranslationParser:
     """Handles parsing full text block utilizing the defined functions inside it"""
-
-    # manual testing of latexparse
-    # textblock = TranslationParser().latex_parse(latexblock, "deepl")
 
     def latex_parse(self, text: str, translator: str):
         # TODO add table for all the text areas to translate, currently only translates \text{}
@@ -108,23 +104,39 @@ class TranslationParser:
         # print(textblock)
         return newtext
 
-        def styles_parse(self, text: str, translator: str):
-            """Parses all styles, this includes {.notranslate}, which is not yet implemented in TIM"""
-            # might be good to separate or just have as separate ways for each edge case?
-            # pictures, links, styles, etc. all function quite similarly
+    def styles_parse(self, text: str, translator: str):
+        """Parses all styles, this includes {.notranslate}, which is not yet implemented in TIM"""
+        # might be good to separate or just have as separate ways for each edge case?
+        # pictures, links, styles, etc. all function quite similarly
 
-            # {.notranslate}
+        # {.notranslate}
 
-            # normal styles (pictures, links, styles)
+        # normal styles (pictures, links, styles)
 
-        def md_table_parse(self, text: str, translator: str):
-            """Parses MD tables, workflow is PanDoc => HTML => DeepL => PanDoc => MD"""
-            # this works in a more unique way and might require the translator
-            # to be included into the function itself, since we might have to use the beta features
-            # of deepl to translate
+    def md_table_parse(self, text: str, translator: str):
+        """Parses MD tables, workflow is PanDoc => HTML => DeepL => PanDoc => MD"""
+        # this works in a more unique way and might require the translator
+        # to be included into the function itself, since we might have to use the beta features
+        # of deepl to translate
 
-        def plugin_parse(self, text: str, translator: str):
-            """Parses plugins, which are always individual code blocks."""
-            # possible to use documentparser: is_beginning_of_code_block()
-            # then you can just place protection at start and end, if you confirm it is a plugin
-            # find {} on first row, which contains plugin?
+    def plugin_parse(self, text: str, translator: str):
+        """Parses plugins, which are always individual code blocks."""
+        # TODO: extremely simple plugin protection... iterate and improve.
+        # possible to use documentparser: is_beginning_of_code_block()
+        # then you can just place protection at start and end, if you confirm it is a plugin
+        # find {} on first row, which contains plugin?
+        lines = text.split("\n")
+        firstline = lines[0]
+        lastline = lines[-1]
+        if firstline[0:3] == "```" and lastline[0:3] == "```":
+            newtext = text
+            if ("{" and "}") in firstline:
+                newtext = "<protected>" + newtext + "</protected>"
+                return newtext
+        return text
+
+
+# manual testing of latexparse
+# textblock = TranslationParser().latex_parse(latexblock, "deepl")
+# textblock = TranslationParser().plugin_parse(pluginblock, "deepl")
+# print(textblock)
