@@ -61,11 +61,11 @@ class TranslationParser:
         # TODO add table for all the formulas, currently only does \begin{} \end{} -pair
 
         newtext = text
-        # TODO currently dollartag and doubledollartag have overlaps
-        # finds between singular $-signs correctly but also some $$.
-        # areas as well
-        dollartag = re.findall(r"(?<!\\)\$\S.*?(?<!\\)\S\$", newtext)
-        # finds between double $-signs correctly.
+        # finds areas between single $-tags, includes the tags
+        dollartag = re.findall(
+            r"(?<![\\])(?<=\s)\$(?![\s\$]).*?(?<![\\\$])\$(?!\S)", newtext
+        )
+        # finds areas between double $-tags, includes the tags
         doubledollartag = re.findall(
             r"(?<!\\)\$(?<!\\)\$.+?(?<!\\)\$(?<!\\)\$", newtext
         )
@@ -78,6 +78,8 @@ class TranslationParser:
 
         # TODO make it self.translator specific
         for formula in dollartag:
+            newtext = newtext.replace(formula, "<protect>" + formula + "</protect>")
+        for formula in doubledollartag:
             newtext = newtext.replace(formula, "<protect>" + formula + "</protect>")
         # protects at the start and end of found begin and end tags.
         for tags in croptags:
