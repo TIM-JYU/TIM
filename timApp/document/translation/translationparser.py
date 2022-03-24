@@ -61,11 +61,11 @@ class TranslationParser:
         # TODO add table for all the formulas, currently only does \begin{} \end{} -pair
 
         newtext = text
-        # finds areas between single $-tags, includes the tags
+        # finds the areas enclosed by singular $-tag, includes the tags in.
         dollartag = re.findall(
             r"(?<![\\])(?<=\s)\$(?![\s\$]).*?(?<![\\\$])\$(?!\S)", newtext
         )
-        # finds areas between double $-tags, includes the tags
+        # finds the areas enclosed by double $-tag, includes the tags in.
         doubledollartag = re.findall(
             r"(?<!\\)\$(?<!\\)\$.+?(?<!\\)\$(?<!\\)\$", newtext
         )
