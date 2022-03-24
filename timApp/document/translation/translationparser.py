@@ -13,7 +13,7 @@ x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\\text{ ratkaistaan x}\\
 
 
 class TranslationParser:
-    def latexparse(self, text: str, translator: str):
+    def latex_parse(self, text: str, translator: str):
         # TODO add table for all the text areas to translate, currently only translates \text{}
         # TODO add table for all the formulas, currently only does \begin{} \end{} -pair
 
@@ -57,8 +57,30 @@ class TranslationParser:
                 elif tags.index(tuplepair) == 2:
                     newtext = newtext.replace(tuplepair, tuplepair + "</protect>")
 
+        # manual testing of latexparse
+        # print(textblock)
         return newtext
 
+        # manual testing of latexparse
+        # textblock = TranslationParser().latex_parse(textblock, "deepl")
 
-textblock = TranslationParser().latexparse(textblock, "deepl")
-print(textblock)
+        def styles_parse(self, text: str, translator: str):
+            """Parses all styles, this includes {.nostyle}, which is not yet implemented in TIM"""
+            # might be good to separate or just have as separate ways for each edge case?
+            # pictures, links, styles, etc. all function quite similarly
+
+            # {.nostyle}
+
+            # normal styles (pictures, links, styles)
+
+        def md_table_parse(self, text: str, translator: str):
+            """Parses MD tables, workflow is PanDoc => HTML => DeepL => PanDoc => MD"""
+            # this works in a more unique way and might require the translator
+            # to be included into the function itself, since we might have to use the beta features
+            # of deepl to translate
+
+        def plugin_parse(self, text: str, translator: str):
+            """Parses plugins, which are always individual code blocks."""
+            # possible to use documentparser: is_beginning_of_code_block()
+            # then you can just place protection at start and end, if you confirm it is a plugin
+            # find {} on first row, which contains plugin?
