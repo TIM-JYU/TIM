@@ -596,8 +596,12 @@ class Plugin:
     def wrap_draggable(self, html_str: str, doc_task_id: str) -> str:
         if self.known.floatHeader is missing or self.options.preview:
             return html_str
+        size = ""
+        if self.known.floatSize is not missing and self.known.floatSize:
+            size = f"initial-size=\"{{width:'{self.known.floatSize[0]}px',height:'{self.known.floatSize[1]}px'}}\""
+
         return f"""
-            <div class="draggable-plugin" anchor="fixed" click="true" save="%%PAGEID%%Plugin{doc_task_id}" tim-draggable-fixed detachable="true" caption="{self.known.floatHeader}">
+            <div class="draggable-plugin" tim-draggable-fixed anchor="fixed" click="true" {size} save="%%PAGEID%%PluginDraggable{doc_task_id}" detachable="true" caption="{self.known.floatHeader}">
                 <div class="draggable-content">
                     {html_str}
                 </div>

@@ -62,6 +62,7 @@ timApp.directive("timDraggableFixed", [
                 resize: "<?",
                 draggable: "<?",
                 save: "@?",
+                initialSize: "<?",
             },
             controller: DraggableController,
             controllerAs: "d", // default $ctrl does not work, possibly because of some ng-init
@@ -145,6 +146,7 @@ export class DraggableController implements IController {
     private autoHeight?: boolean;
     private absolute?: Binding<boolean, "<">;
     private anchor: Binding<string, "<"> = "absolute";
+    private initialSize?: Binding<t.TypeOf<typeof SizeType>, "<">;
     private parentDraggable?: DraggableController;
     private forceMaximized?: Binding<boolean, "<">;
     private modal?: IModalInstanceService;
@@ -346,7 +348,7 @@ export class DraggableController implements IController {
         if (!this.posKey) {
             return;
         }
-        const oldSize = this.sizeStorage.get();
+        const oldSize = this.sizeStorage.get() ?? this.initialSize;
         if (oldSize && this.canDrag() && !this.isMinimized()) {
             const vps = getViewPortSize();
             if (oldSize.width) {

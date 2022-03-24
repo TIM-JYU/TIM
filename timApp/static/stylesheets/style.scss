@@ -60,6 +60,12 @@ tim-dialog-frame {
         max-width: $paragraph-preferred-width;
         background-color: $bg-color;
     }
+
+    &.draggable-detached .draggable-content {
+        height: inherit;
+        overflow-y: auto;
+        max-height: 90vh;
+    }
 }
 
 .modal-dialog {
