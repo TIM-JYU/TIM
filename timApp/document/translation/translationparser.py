@@ -110,10 +110,35 @@ class TranslationParser:
         """Parses all styles, this includes {.notranslate}, which is not yet implemented in TIM"""
         # might be good to separate or just have as separate ways for each edge case?
         # pictures, links, styles, etc. all function quite similarly
+        """
+        Some styles:
+        Color styles -> []{}
+        Links -> []()
+        Image links -> ![]()
+        """
 
+        # TODO
         # {.notranslate}
 
         # normal styles (pictures, links, styles)
+        new_text = text
+        # TODO Change the protext tags to go between the URLs/style names and the translatable text
+        # Right now, the entire line gets protected
+        styled = re.findall(r"\[\S.*?\}", new_text)
+        # image_styled = re.findall(r"\!\[\S.*?\)", new_text)
+        link_styled = re.findall(r"\[\S.*?\)", new_text)
+
+        for styles in styled:
+            new_text = new_text.replace(styles, "<protect>" + styles + "</protect>")
+        # for images in image_styled:
+        # new_text = new_text.replace(images, "<protect>" + images + "</protect>")
+        for links in link_styled:
+            new_text = new_text.replace(links, "<protect>" + links + "</protect>")
+
+        # manual testing of styles_parse
+        # print(styleblock)
+
+        return new_text
 
     def md_table_parse(self, text: str, translator: str):
         """Parses MD tables, workflow is PanDoc => HTML => DeepL => PanDoc => MD"""
