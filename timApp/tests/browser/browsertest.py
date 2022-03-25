@@ -398,23 +398,20 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         click=False,
         parent=None,
     ) -> WebElement:
-        while True:
-            try:
-                e = self.find_element(selector=selector, xpath=xpath, parent=parent)
-                if click:
-                    e.click()
-                else:
-                    self.touch(e)
-            except (
+        locator = (By.CSS_SELECTOR, selector) if selector else (By.XPATH, xpath)
+        e = WebDriverWait(
+            self.drv if not parent else parent,
+            30,
+            ignored_exceptions=(
                 StaleElementReferenceException,
                 ElementNotInteractableException,
-            ):
-                tries -= 1
-                if tries == 0:
-                    raise
-                continue
-            else:
-                return e
+            ),
+        ).until(ec.presence_of_element_located(locator))
+        if click:
+            e.click()
+        else:
+            self.touch(e)
+        return e
 
     def find_element_by_text(
         self,
