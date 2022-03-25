@@ -137,33 +137,30 @@ const sortLang: string = "fi";
                                         (click)="openCreateNewVelpWindow()"
                                         value="">Create new velp
                                 </button>
-                                <tim-dialog-frame [detachable]="true">
-                                    <ng-container header>Available velps</ng-container>
-                                    <ng-container body>
-                                        <div class="velp-stack">
-                                            <tim-velp-window class="velp"
-                                                             [hidden]="!newVelp.edit"
-                                                             [index]="-1"
-                                                             [velp]="newVelp"
-                                                             [velpGroups]="velpGroups"
-                                                             [teacherRight]="vctrl.item.rights.teacher"
-                                                             [labels]="labels"
-                                                             [new]="true"
-                                                             [advancedOn]="advancedOn"></tim-velp-window>
-                                            <tim-velp-window
-                                                    *ngFor="let velp of (rctrl.velps | filterBy:{content:filterVelp} | assertType: rctrl.velps | orderByWhenNotEditing: order | filterByVelpGroups: velpGroups | filterByLabels:labels:advancedOn); let i = index"
-                                                    [index]="i"
-                                                    [advancedOn]="advancedOn"
-                                                    [docId]="docId"
-                                                    [labels]="labels"
-                                                    [new]="false"
-                                                    (velpSelect)="rctrl.useVelp(velp)" 
-                                                    [teacherRight]="vctrl.item.rights.teacher"
-                                                    [velpGroups]="velpGroups"
-                                                    [velp]="velp"></tim-velp-window>
-                                        </div>
-                                    </ng-container>
-                                </tim-dialog-frame>
+                                <tim-draggable-window [detachable]="true" title="Available velps">
+                                    <div class="velp-stack">
+                                        <tim-velp-window class="velp"
+                                                         [hidden]="!newVelp.edit"
+                                                         [index]="-1"
+                                                         [velp]="newVelp"
+                                                         [velpGroups]="velpGroups"
+                                                         [teacherRight]="vctrl.item.rights.teacher"
+                                                         [labels]="labels"
+                                                         [new]="true"
+                                                         [advancedOn]="advancedOn"></tim-velp-window>
+                                        <tim-velp-window
+                                                *ngFor="let velp of (rctrl.velps | filterBy:{content:filterVelp} | assertType: rctrl.velps | orderByWhenNotEditing: order | filterByVelpGroups: velpGroups | filterByLabels:labels:advancedOn); let i = index"
+                                                [index]="i"
+                                                [advancedOn]="advancedOn"
+                                                [docId]="docId"
+                                                [labels]="labels"
+                                                [new]="false"
+                                                (velpSelect)="rctrl.useVelp(velp)" 
+                                                [teacherRight]="vctrl.item.rights.teacher"
+                                                [velpGroups]="velpGroups"
+                                                [velp]="velp"></tim-velp-window>
+                                    </div>
+                                </tim-draggable-window>
                             </div>
                         </tab>
                         <tab heading="Manage">
