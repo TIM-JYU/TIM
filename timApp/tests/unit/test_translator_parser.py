@@ -92,9 +92,9 @@ choices:
 ```"""
         self.assertEqual(
             translationparser.TranslationParser().plugin_parse(
-                pluginblock, "deepl", "protected"
+                pluginblock, "deepl", "protect"
             ),
-            """<protected>``` {#p213a plugin="mcq"}
+            """<protect>``` {#p213a plugin="mcq"}
 answerLimit: 1
 headerText: ''
 buttonText: 'Tallenna'
@@ -113,7 +113,7 @@ choices:
     correct: true
     text: 'md:$x+3=0$'
     reason: 'Yhtälön ratkaisu $x=-3$ ei kuulu luonnollisiin lukuihin.'
-```</protected>""",
+```</protect>""",
         )
 
 

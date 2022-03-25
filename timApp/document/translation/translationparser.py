@@ -70,18 +70,22 @@ class TranslationParser:
             r"(?<!\\)\$(?<!\\)\$.+?(?<!\\)\$(?<!\\)\$", newtext
         )
         # TODO only finds BEGIN/END tags for LaTeX
+        # TODO: consider format change without tables, as a single string in list
         # saves the area as 3 variables within a tuple.
         # First is begin tag
         # Second is text within the LaTeX area
         # Third is end tag
+        # \\begin{.*?}(?s).*?\\end{.*?} without arrays...
         croptags = re.findall(r"(\\begin{.*?})(?s)(.*?)(\\end{.*?})", newtext)
 
-        # TODO make it self.translator specific
+        # TODO transfer protection tags to preprocessing.
         for formula in dollartag:
             newtext = newtext.replace(formula, "<protect>" + formula + "</protect>")
         for formula in doubledollartag:
             newtext = newtext.replace(formula, "<protect>" + formula + "</protect>")
         # protects at the start and end of found begin and end tags.
+        # TODO: transfer protection to preprocessing
+        # TODO: consider format change to without tables, as a single string in list
         for tags in croptags:
             for tuplepair in tags:
                 # begin tag indicates protection start
@@ -131,8 +135,10 @@ class TranslationParser:
         lines = text.split("\n")
         firstline = lines[0]
         lastline = lines[-1]
+        # TODO: check if document block allows empty lines before and after code block section
         if firstline[0:3] == "```" and lastline[0:3] == "```":
             newtext = text
+            # TODO: transfer protection tags to preprocessing
             if ("{" and "}" and "plugin=") in firstline:
                 newtext = f"<{protection_tag}>" + newtext + f"</{protection_tag}>"
                 return newtext

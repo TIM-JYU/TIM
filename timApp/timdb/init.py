@@ -186,7 +186,6 @@ def initialize_database(create_docs: bool = True) -> None:
 
         # Add the DeepL machine-translator to database with its default values
         sess.add(DeeplTranslationService())
-
         sess.commit()
         log_info("Database initialization done.")
 
