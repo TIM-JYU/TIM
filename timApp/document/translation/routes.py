@@ -151,6 +151,7 @@ def create_translation_route(tr_doc_id, language):
     # Translate each paragraph sequentially if a translator was created
     if translator_func:
         zipped_paragraphs = list(
+            # FIXME The parsing done before translation might need id etc values found in the markdown, but not found in the paragraphs, that get_paragraphs() returns...
             zip(tr.document.get_source_document().get_paragraphs(), tr.document)
         )
         # HACK Skip first paragraph to protect settings-block from mangling

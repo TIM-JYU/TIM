@@ -6,6 +6,7 @@ from typing import Dict, Optional
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.document.translation.language import Language
+from timApp.document.translation.translationparser import TranslationParser
 from timApp.util.flask.requesthelper import NotExist, RouteException
 
 
@@ -101,7 +102,7 @@ class DeeplTranslationService(TranslationService):
             raise NotExist("Please add a DeepL API key into your account")
         self.headers = {"Authorization": f"DeepL-Auth-Key {api_key.api_key}"}
 
-    # TODO Change the dict to DeepLTranslateParams or smth
+    # TODO Change the dicts to DeepLTranslateParams and DeeplResponse or smth
     def _post(self, url_slug: str, data: dict | None = None) -> dict:
         """
         Perform a authorized post-request to the DeepL-API
@@ -121,7 +122,7 @@ class DeeplTranslationService(TranslationService):
         else:
             # TODO Handle the various HTTP error codes that API can return
             # (Using Python 3.10's match-statement would be cool here...)
-            # TODO Do not show the user such implementation-specific errors
+            # FIXME / DEBUG Do not show the end user these kind of  implementation-specific errors
             debug_exception = Exception(
                 f"DeepL API / {url_slug} responded with {resp.status_code}"
             )
@@ -183,6 +184,24 @@ class DeeplTranslationService(TranslationService):
             "languages", data={"type": "source" if is_source else "target"}
         )
 
+    def preprocess(self, text: str) -> str:
+        """
+        Protect parts of text that the translation could or is shown to mangle.
+        :param text: The text to add XML-protection-tags to.
+        :return: Text with protecting XML-tags added into needed places
+        """
+        return TranslationParser.parse(text, self.ignore_tag)
+
+    def postprocess(self, text: str) -> str:
+        """
+        Remove unnecessary protection tags from the text.
+        :param text: The text to remove XML-protection-tags from.
+        :return: Text without the previously added protecting XML-tags.
+        """
+        return text.replace(f"<{self.ignore_tag}>", "").replace(
+            f"</{self.ignore_tag}>", ""
+        )
+
     def translate(
         self, texts: list[str], source_lang: Language | None, target_lang: Language
     ) -> list[str]:
@@ -194,18 +213,24 @@ class DeeplTranslationService(TranslationService):
         :return: The input text translated into the target language
         """
         source_lang_code = source_lang.lang_code if source_lang else None
+
+        protected_texts = [self.preprocess(text) for text in texts]
         # Translate using XML-protection for protected pieces of the text
         resp_json = self._translate(
-            texts,
+            protected_texts,
             # Send uppercase, because it is used in DeepL documentation
             source_lang_code.upper(),
             target_lang.lang_code.upper(),
+            # TODO keep original formatting especially related to empty space and newlines (for example translation still breaks md lists)
             split_sentences="nonewlines",
             tag_handling="xml",
             ignore_tags=[self.ignore_tag],
         )
         # TODO Use a special structure to insert the text-parts sent to the API into correct places in original text
-        return [tr["text"] for tr in resp_json["translations"]]
+        post_processed_texts = [
+            self.postprocess(x["text"]) for x in resp_json["translations"]
+        ]
+        return post_processed_texts
 
     def usage(self) -> Usage:
         resp_json = self._post("usage")

@@ -56,7 +56,22 @@ choices:
 class TranslationParser:
     """Handles parsing full text block utilizing the defined functions inside it"""
 
-    def latex_parse(self, text: str, translator: str):
+    @staticmethod
+    def parse(text: str, protection_tag: str) -> str:
+        text_to_translate: str = TranslationParser.latex_parse(text, protection_tag)
+        text_to_translate = TranslationParser.styles_parse(
+            text_to_translate, protection_tag
+        )
+        text_to_translate = TranslationParser.md_table_parse(
+            text_to_translate, protection_tag
+        )
+        text_to_translate = TranslationParser.plugin_parse(
+            text_to_translate, protection_tag
+        )
+        return text_to_translate
+
+    @staticmethod
+    def latex_parse(text: str, protection_tag: str) -> str:
         # TODO add table for all the text areas to translate, currently only translates \text{}
         # TODO add table for all the formulas, currently only does \begin{} \end{} -pair
 
@@ -80,9 +95,13 @@ class TranslationParser:
 
         # TODO transfer protection tags to preprocessing.
         for formula in dollartag:
-            newtext = newtext.replace(formula, "<protect>" + formula + "</protect>")
+            newtext = newtext.replace(
+                formula, f"<{protection_tag}>" + formula + f"</{protection_tag}>"
+            )
         for formula in doubledollartag:
-            newtext = newtext.replace(formula, "<protect>" + formula + "</protect>")
+            newtext = newtext.replace(
+                formula, f"<{protection_tag}>" + formula + f"</{protection_tag}>"
+            )
         # protects at the start and end of found begin and end tags.
         # TODO: transfer protection to preprocessing
         # TODO: consider format change to without tables, as a single string in list
@@ -90,7 +109,9 @@ class TranslationParser:
             for tuplepair in tags:
                 # begin tag indicates protection start
                 if tags.index(tuplepair) == 0:
-                    newtext = newtext.replace(tuplepair, "<protect>" + tuplepair)
+                    newtext = newtext.replace(
+                        tuplepair, f"<{protection_tag}>" + tuplepair
+                    )
                 # the translation protection removal for text areas within the protected areas
                 # currently separates text area as { text }
                 if tags.index(tuplepair) == 1:
@@ -100,17 +121,21 @@ class TranslationParser:
                     for textarea in textcrop:
                         # protection is swapped, since it is within another protection
                         newtext = newtext.replace(
-                            textarea, "</protect>" + textarea + "<protect>"
+                            textarea,
+                            f"</{protection_tag}>" + textarea + f"<{protection_tag}>",
                         )
                 # ending tag indicates protection end
                 elif tags.index(tuplepair) == 2:
-                    newtext = newtext.replace(tuplepair, tuplepair + "</protect>")
+                    newtext = newtext.replace(
+                        tuplepair, tuplepair + f"</{protection_tag}>"
+                    )
 
         # manual testing of latexparse
         # print(textblock)
         return newtext
 
-    def styles_parse(self, text: str, translator: str):
+    @staticmethod
+    def styles_parse(text: str, protection_tag: str) -> str:
         """Parses all styles, this includes {.notranslate}, which is not yet implemented in TIM"""
         # might be good to separate or just have as separate ways for each edge case?
         # pictures, links, styles, etc. all function quite similarly
@@ -136,15 +161,25 @@ class TranslationParser:
         # linebreaks = re.findall(r"(\\)", new_text)
 
         for no in no_translate:
-            new_text = new_text.replace(no, "<protect>" + no + "</protect>")
+            new_text = new_text.replace(
+                no, f"<{protection_tag}>" + no + f"</{protection_tag}>"
+            )
         for styles in styles_and_ids:
-            new_text = new_text.replace(styles, "<protect>" + styles + "</protect>")
+            new_text = new_text.replace(
+                styles, f"<{protection_tag}>" + styles + f"</{protection_tag}>"
+            )
         for images in image_styled:
-            new_text = new_text.replace(images, "<protect>" + images + "</protect>")
+            new_text = new_text.replace(
+                images, f"<{protection_tag}>" + images + f"</{protection_tag}>"
+            )
         for links in link_styled:
-            new_text = new_text.replace(links, "<protect>" + links + "</protect>")
+            new_text = new_text.replace(
+                links, f"<{protection_tag}>" + links + f"</{protection_tag}>"
+            )
         for header in headers:
-            new_text = new_text.replace(header, "<protect>" + header + "</protect>")
+            new_text = new_text.replace(
+                header, f"<{protection_tag}>" + header + f"</{protection_tag}>"
+            )
         # for linebreak in linebreaks:
         # new_text = new_text.replace(linebreak, "<protect>" + linebreak + "</protect>")
 
@@ -153,29 +188,32 @@ class TranslationParser:
 
         return new_text
 
-    def md_table_parse(self, text: str, translator: str):
+    @staticmethod
+    def md_table_parse(text: str, protection_tag: str) -> str:
         """Parses MD tables, workflow is PanDoc => HTML => DeepL => PanDoc => MD"""
         # this works in a more unique way and might require the translator
         # to be included into the function itself, since we might have to use the beta features
         # of deepl to translate
+        return text
 
     @staticmethod
-    def plugin_parse(text: str, translator: str, protection_tag: str) -> str:
+    def plugin_parse(text: str, protection_tag: str) -> str:
         """Parses plugins, which are always individual code blocks."""
         # TODO: extremely simple plugin protection... iterate and improve.
         # possible to use documentparser: is_beginning_of_code_block()
         # then you can just place protection at start and end, if you confirm it is a plugin
         # find {} on first row, which contains plugin?
-        lines = text.split("\n")
+        lines = text.strip().split("\n")
         firstline = lines[0]
         lastline = lines[-1]
         # TODO: check if document block allows empty lines before and after code block section
         if firstline[0:3] == "```" and lastline[0:3] == "```":
             newtext = text
             # TODO: transfer protection tags to preprocessing
-            if ("{" and "}" and "plugin=") in firstline:
-                newtext = f"<{protection_tag}>" + newtext + f"</{protection_tag}>"
-                return newtext
+            # TODO Handle plugin by selecting translatable parts based on its (YAML) keys
+            # if ("{" and "}" and "plugin=") in firstline:
+            newtext = f"<{protection_tag}>" + newtext + f"</{protection_tag}>"
+            return newtext
         return text
 
 
