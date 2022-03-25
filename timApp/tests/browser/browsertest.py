@@ -1,5 +1,6 @@
 import math
 import os
+import warnings
 from base64 import b64decode
 from contextlib import contextmanager
 from io import BytesIO
@@ -316,6 +317,12 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.drv.refresh()
 
     def tearDown(self):
+        scn_path = f"post_test/{self.id()}"
+        try:
+            os.makedirs(f"{self.screenshot_dir}/post_test", exist_ok=True)
+            self.save_screenshot(scn_path)
+        except Exception as e:
+            warnings.warn(f"Failed to save screenshot to {scn_path}: {e}")
         TimLiveServer.tearDown(self)
         self.drv.quit()
 
