@@ -4,13 +4,15 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from re import Pattern
-from typing import Generator, Optional, Union
+from typing import Generator
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
 from flask import redirect
 from flask import render_template, Response
 from flask import request
 from isodate import Duration
+from sqlalchemy import inspect
+from sqlalchemy.orm.state import InstanceState
 
 from timApp.auth.accesshelper import (
     verify_manage_access,
@@ -257,12 +259,25 @@ def add_permission_basic(
             confirm=False,
         ),
         i,
+        replace_active_duration=False,
     )
+    res_message = ""
     if accs:
         a = accs[0]
-        log_right(f"added {a.info_str} for {username} in {i.path}")
+        a_info: InstanceState = inspect(a)
+        if a_info.transient or a_info.pending:
+            log_right(f"added {a.info_str} for {username} in {i.path}")
+            res_message = "Added right"
+        elif a_info.modified:
+            log_right(f"updated to {a.info_str} for {username} in {i.path}")
+            res_message = "Updated existing right"
+        else:
+            log_right(
+                f"skipped {a.info_str} for {username} in {i.path} because an active right already exists"
+            )
+            res_message = "Skipped, because an active right already exists. Expire the active right first."
         db.session.commit()
-    return ok_response()
+    return json_response({"message": res_message})
 
 
 @manage_page.put("/permissions/add", model=PermissionSingleEditModel)
@@ -411,6 +426,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
 def add_perm(
     p: PermissionEditModel,
     item: Item,
+    replace_active_duration: bool = True,
 ) -> list[BlockAccess]:
     if get_current_user_object().get_personal_folder().id == item.id:
         if p.type == AccessType.owner:
@@ -428,6 +444,7 @@ def add_perm(
             duration_to=opt.durationTo,
             duration=opt.duration,
             require_confirm=p.confirm,
+            replace_active_duration=replace_active_duration,
         )
         accs.append(a)
     return accs
