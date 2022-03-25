@@ -117,23 +117,43 @@ class TranslationParser:
         Image links -> ![]()
         """
 
+        new_text = text
         # TODO
         # {.notranslate}
+        # Finds all places marked not to be translated with {.notranslate}
+        no_translate = re.findall((r"\[.*?\{.notranslate\}"), new_text)
 
         # normal styles (pictures, links, styles)
-        new_text = text
         # TODO Change the protext tags to go between the URLs/style names and the translatable text
         # Right now, the entire line gets protected
-        styled = re.findall(r"\[\S.*?\}", new_text)
-        # image_styled = re.findall(r"\!\[\S.*?\)", new_text)
-        link_styled = re.findall(r"\[\S.*?\)", new_text)
+        # Finds all styles that are not {.notranslate} and IDs (which also use {})
+        styles_and_ids = re.findall(r"(?<!\))\{(?!.notranslate)\S.*?\}", new_text)
 
-        for styles in styled:
+        # Finds image links with styles added to the image (e.g.[image](link){width=10%})
+        image_styled = re.findall(r"(?<=\])\(.*?\)(?<=\))\{.*?\}", new_text)
+
+        # Finds all links that don't have styles added, style-less image links included
+        link_styled = re.findall(r"(?<=\])\(.*?\)(?!\{)", new_text)
+
+        # Finds all headers
+        headers = re.findall(r"(\#.*?)(?=\ )", new_text)
+
+        # Finds all linebreaks done with \
+        # Doesn't work in practice right now because regex ignores the \ despite the correct line
+        # linebreaks = re.findall(r"(\\)", new_text)
+
+        for no in no_translate:
+            new_text = new_text.replace(no, "<protect>" + no + "</protect>")
+        for styles in styles_and_ids:
             new_text = new_text.replace(styles, "<protect>" + styles + "</protect>")
-        # for images in image_styled:
-        # new_text = new_text.replace(images, "<protect>" + images + "</protect>")
+        for images in image_styled:
+            new_text = new_text.replace(images, "<protect>" + images + "</protect>")
         for links in link_styled:
             new_text = new_text.replace(links, "<protect>" + links + "</protect>")
+        for header in headers:
+            new_text = new_text.replace(header, "<protect>" + header + "</protect>")
+        # for linebreak in linebreaks:
+        # new_text = new_text.replace(linebreak, "<protect>" + linebreak + "</protect>")
 
         # manual testing of styles_parse
         # print(styleblock)

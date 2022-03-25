@@ -29,28 +29,32 @@ class MyTestCase(unittest.TestCase):
             \\end{align*}</protect> """,
         )
 
-    # def test_styles_parse1(self):
-    #     styleblock = """
-    #     ![pieni kuusikolmio](/images/187297/kuusikulmio_esim.png){width=40%}
-    #
-    #     [yliopiston sivut](https://www.jyu.fi/fi)
-    #
-    #     [tämä teksti on punainen]{.red}
-    #
-    #     [tätä tekstiä ei saisi kääntää]{.notranslate}
-    #     """
-    #     self.assertEqual(
-    #         translationparser.TranslationParser().styles_parse(styleblock, "deepl"),
-    #         """
-    #                      ![pieni kuusikolmio]<protected>(/images/187297/kuusikulmio_esim.png){width=40%}</protected>
-    #
-    #                      [yliopiston sivut]<protected>(https://www.jyu.fi/fi)</protected>
-    #
-    #                      [tämä teksti on punainen]<protected>{.red}</protected>
-    #
-    #                      <protected>[tätä tekstiä ei saisi kääntää]{.notranslate}</protected>
-    #                      """,
-    #     )
+    def test_styles_parse1(self):
+        styleblock = """
+        ![pieni kuusikolmio](/images/187297/kuusikulmio_esim.png){width=40%}
+    
+        [yliopiston sivut](https://www.jyu.fi/fi)
+    
+        [tämä teksti on punainen]{.red}
+    
+        [tätä tekstiä ei saisi kääntää]{.notranslate}
+    
+        ## Tämän otsikon merkinnän pitää pysyä kunnossa
+        """
+        self.assertEqual(
+            translationparser.TranslationParser().styles_parse(styleblock, "deepl"),
+            """
+        ![pieni kuusikolmio]<protect>(/images/187297/kuusikulmio_esim.png){width=40%}</protect>
+    
+        [yliopiston sivut]<protect>(https://www.jyu.fi/fi)</protect>
+    
+        [tämä teksti on punainen]<protect>{.red}</protect>
+    
+        <protect>[tätä tekstiä ei saisi kääntää]{.notranslate}</protect>
+    
+        <protect>##</protect> Tämän otsikon merkinnän pitää pysyä kunnossa
+        """,
+        )
 
     # def test_md_table_parse1(self):
     #     mdtableblock = """
