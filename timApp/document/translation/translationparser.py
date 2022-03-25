@@ -110,22 +110,11 @@ class TranslationParser:
         """Parses all styles, this includes {.notranslate}, which is not yet implemented in TIM"""
         # might be good to separate or just have as separate ways for each edge case?
         # pictures, links, styles, etc. all function quite similarly
-        """
-        Some styles:
-        Color styles -> []{}
-        Links -> []()
-        Image links -> ![]()
-        """
 
         new_text = text
-        # TODO
-        # {.notranslate}
         # Finds all places marked not to be translated with {.notranslate}
         no_translate = re.findall((r"\[.*?\{.notranslate\}"), new_text)
 
-        # normal styles (pictures, links, styles)
-        # TODO Change the protext tags to go between the URLs/style names and the translatable text
-        # Right now, the entire line gets protected
         # Finds all styles that are not {.notranslate} and IDs (which also use {})
         styles_and_ids = re.findall(r"(?<!\))\{(?!.notranslate)\S.*?\}", new_text)
 
