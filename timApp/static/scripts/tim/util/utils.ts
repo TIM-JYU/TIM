@@ -970,3 +970,25 @@ export const MomentFromString = new t.Type<moment.Moment, string, unknown>(
         }),
     (a) => a.toISOString()
 );
+
+/**
+ * Return a lazily initialized proxy for an object.
+ *
+ * The returned value is a proxy that will call the initializer function on first access.
+ * After that, the proxy will delegate all getters to the original object.
+ *
+ * @param init Initializer function to call on first access.
+ * @returns A proxy object which will call the initializer function on first access.
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function lazy<T extends Object>(init: () => T) {
+    let value: T | undefined;
+    return new Proxy<T>({} as T, {
+        get(target, prop, receiver) {
+            if (value === undefined) {
+                value = init();
+            }
+            return Reflect.get(value, prop, receiver);
+        },
+    });
+}

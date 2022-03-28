@@ -9,7 +9,13 @@ import {
 } from "@angular/core";
 import {DialogFrame} from "tim/ui/angulardialog/dialog-frame.component";
 import {TimDefer} from "tim/util/timdefer";
-import {getViewPortSize, ISize, timeout, TimStorage} from "tim/util/utils";
+import {
+    getViewPortSize,
+    ISize,
+    lazy,
+    timeout,
+    TimStorage,
+} from "tim/util/utils";
 import * as t from "io-ts";
 import {Subscription} from "rxjs";
 import {Pos} from "tim/ui/pos";
@@ -60,9 +66,17 @@ export abstract class AngularDialogComponent<Params, Result>
     protected detachable = false;
     private sizeSub?: Subscription;
     private posSub?: Subscription;
+    private detachSub?: Subscription;
     private bodyObserver?: MutationObserver;
-    private sizeStorage?: TimStorage<[number, number]>;
-    private posStorage?: TimStorage<[number, number]>;
+    private readonly sizeStorage = lazy(
+        () => new TimStorage(`${this.savePrefix}Size`, TwoTuple)
+    );
+    private readonly posStorage = lazy(
+        () => new TimStorage(`${this.savePrefix}Pos`, TwoTuple)
+    );
+    private readonly detachedStateStorage = lazy(
+        () => new TimStorage(`${this.savePrefix}Detached`, t.boolean)
+    );
     private hasCustomPosition: boolean = false;
 
     @HostListener("keydown.esc", ["$event"])
@@ -82,22 +96,11 @@ export abstract class AngularDialogComponent<Params, Result>
         return this.resultDefer.promise;
     }
 
-    getSizeStorage() {
-        return (this.sizeStorage ??= new TimStorage(
-            this.getSizeKey(),
-            TwoTuple
-        ));
-    }
-
-    getPosStorage() {
-        return (this.posStorage ??= new TimStorage(this.getPosKey(), TwoTuple));
-    }
-
     isClosed() {
         return this.closed;
     }
 
-    getSavePrefix() {
+    private get savePrefix() {
         return this.dialogName;
     }
 
@@ -105,6 +108,7 @@ export abstract class AngularDialogComponent<Params, Result>
         this.sizeSub?.unsubscribe();
         this.posSub?.unsubscribe();
         this.bodyObserver?.disconnect();
+        this.detachSub?.unsubscribe();
     }
 
     ngOnInit() {
@@ -115,7 +119,12 @@ export abstract class AngularDialogComponent<Params, Result>
         }
         this.frame.detachable = this.detachable;
         if (this.detachable) {
-            this.frame.detached = false;
+            this.frame.detached = this.detachedStateStorage.get() ?? false;
+            this.detachSub = this.frame.detachStateChanged.subscribe(
+                (detached) => {
+                    this.detachedStateStorage.set(detached);
+                }
+            );
         }
     }
 
@@ -137,22 +146,30 @@ export abstract class AngularDialogComponent<Params, Result>
         if (this.dialogOptions?.resetSize) {
             this.frame.resizable.resetSize();
         } else {
-            const savedSize = this.getSizeStorage().get();
+            const savedSize = this.sizeStorage.get();
             if (savedSize) {
                 sizehint = {width: savedSize[0], height: savedSize[1]};
             }
         }
         this.frame.initSize(sizehint);
 
-        const savedPos = this.getPosStorage().get();
+        const savedPos = this.posStorage.get();
         let posHint = null;
         if (savedPos) {
             this.hasCustomPosition = true;
             posHint = {x: savedPos[0], y: savedPos[1]};
         } else if (this.initialPosition) {
-            // Don't initPosition so that the dialog follows the original alignment anchor
+            // Don't set posHint so that the dialog will follow the original alignment anchor
             this.frame.pos = this.initialPosition;
         }
+
+        if (this.dialogOptions?.pos) {
+            posHint = {
+                x: this.dialogOptions.pos.x,
+                y: this.dialogOptions.pos.y,
+            };
+        }
+
         this.frame.initPosition(posHint);
 
         this.posSub = this.frame.posChanged.subscribe(() => {
@@ -164,15 +181,6 @@ export abstract class AngularDialogComponent<Params, Result>
 
         this.fixPosSizeInbounds(sizehint);
         this.frame.resizable.doResize();
-
-        if (this.dialogOptions?.pos) {
-            if (this.dialogOptions.pos) {
-                this.frame.pos = {
-                    x: this.dialogOptions.pos.x,
-                    y: this.dialogOptions.pos.y,
-                };
-            }
-        }
 
         (async () => {
             if (this.frame.mightBeAsync) {
@@ -198,11 +206,10 @@ export abstract class AngularDialogComponent<Params, Result>
     }
 
     fixPosSizeInbounds(sizeHint?: ISize | null): SizeNeedsRefresh {
-        if (this.frame.detachable && !this.frame.detached) {
+        if (this.frame.detachable) {
             return SizeNeedsRefresh.No;
         }
         const vp = this.viewPort;
-        console.log("viewport", vp);
 
         // First clamp the frame so it fits inside the viewport
         const {width, height} = sizeHint ?? this.frame.lastResizedSize;
@@ -235,7 +242,6 @@ export abstract class AngularDialogComponent<Params, Result>
             width: newWidth,
             height: newHeight,
         });
-        console.log("new size: w", newWidth, "h", newHeight);
         this.frame.pos = newPos;
         return newWidth !== width || newHeight !== height
             ? SizeNeedsRefresh.Yes
@@ -262,26 +268,18 @@ export abstract class AngularDialogComponent<Params, Result>
 
         // Height can sometimes be zero, at least when the dialog is minimized.
         if (height > 0) {
-            this.getSizeStorage().set([width, height]);
+            this.sizeStorage.set([width, height]);
         }
     }
 
     private savePos() {
         try {
             const {x, y} = this.frame.resizable.getPos();
-            this.getPosStorage().set([x, y]);
+            this.posStorage.set([x, y]);
             this.hasCustomPosition = true;
         } catch {
             console.warn("resizable.getPos threw an error");
         }
-    }
-
-    private getPosKey() {
-        return `${this.getSavePrefix()}Pos`;
-    }
-
-    private getSizeKey() {
-        return `${this.getSavePrefix()}Size`;
     }
 
     protected async setHeightAutomatic() {
