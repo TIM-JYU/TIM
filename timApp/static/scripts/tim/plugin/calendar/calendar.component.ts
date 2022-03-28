@@ -173,7 +173,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
         </div>
     `,
     encapsulation: ViewEncapsulation.None,
-    // styleUrls: ["calendar.component.scss"],
+    styleUrls: ["calendar.component.scss"],
     // templateUrl: "template.html",
 })
 export class CalendarComponent

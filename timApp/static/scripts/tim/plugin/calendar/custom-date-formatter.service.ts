@@ -16,6 +16,13 @@ export class CustomDateFormatter extends CalendarDateFormatter {
         return formatDate(date, "EEE", "Fi-fi");
     }
 
+    public weekViewColumnSubHeader({
+        date,
+        locale,
+    }: DateFormatterParams): string {
+        return formatDate(date, "d.M", "Fi-fi");
+    }
+
     public dayViewHour({date, locale}: DateFormatterParams): string {
         return formatDate(date, "HH:mm", "Fi-fi");
     }
