@@ -92,7 +92,7 @@ function getElementSize(el: Element) {
                        class="glyphicon glyphicon-arrow-left"
                        [class.glyphicon-arrow-left]="detached"
                        [class.glyphicon-arrow-right]="!detached"></i>
-                    <i *ngIf="minimizable" title="Minimize dialog" (click)="toggleMinimize()"
+                    <i *ngIf="!detachable && minimizable || detachable && detached" title="Minimize dialog" (click)="toggleMinimize()"
                        class="glyphicon"
                        [class.glyphicon-minus]="!areaMinimized"
                        [class.glyphicon-unchecked]="areaMinimized"
@@ -152,6 +152,7 @@ export class DialogFrame {
     private _lastResizedSize?: ISize;
     sizeChanged = new Subject<void>();
     posChanged = new Subject<void>();
+    detachStateChanged = new Subject<boolean>();
 
     ngAfterViewInit() {
         this.resizable = new ResizableDraggableWrapper(
@@ -172,8 +173,7 @@ export class DialogFrame {
 
     initPosition(p: IPosition | null) {
         if (p) {
-            this.position = p;
-            this._lastDetachedPosition = p;
+            this.pos = p;
             // Don't set the last dragged position if null to allow for anchoring
             this._lastDraggedPosition = p;
         }
@@ -191,6 +191,7 @@ export class DialogFrame {
             this.position = p;
         }
         this._lastDetachedPosition = p;
+        console.log(this._lastDetachedPosition);
     }
 
     get pos() {
@@ -215,7 +216,9 @@ export class DialogFrame {
 
     set detached(value: boolean) {
         this._detached = value;
+        this.detachStateChanged.next(value);
         if (!value) {
+            this.minimized = false;
             this.position = {x: 0, y: 0};
             this.detachedIndex = "";
         } else {
@@ -230,9 +233,16 @@ export class DialogFrame {
         this.detached = !this.detached;
     }
 
-    toggleMinimize() {
+    get minimized() {
+        return this.areaMinimized;
+    }
+
+    set minimized(value: boolean) {
+        if (this.areaMinimized == value) {
+            return;
+        }
         const res = this.ngResizable;
-        this.areaMinimized = !this.areaMinimized;
+        this.areaMinimized = value;
         const cs = res._currSize;
         const cp = res._currPos;
         const minimizedWidth = 100;
@@ -257,6 +267,10 @@ export class DialogFrame {
         res.doResize();
     }
 
+    toggleMinimize() {
+        this.minimized = !this.minimized;
+    }
+
     onResizeStop() {
         this._lastResizedSize = this.currentSize;
         this.sizeChanged.next();
@@ -264,6 +278,9 @@ export class DialogFrame {
 
     onDragStop() {
         this._lastDraggedPosition = this.pos;
+        if (this.detachable && this.detached) {
+            this._lastDetachedPosition = this.pos;
+        }
         this.posChanged.next();
     }
 }
