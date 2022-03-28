@@ -118,10 +118,20 @@ $menuTab-border: 1px solid lighten($gray-base, 88%);
     }
 }
 
+// Style for translation-tab
+#translationtab{
 
- #translator, #translateButton {
-     display: inline-block;
- }
+    display: flex;
+    align-items: baseline;
+
+    span{
+        display: inline-block;
+    }
+    & > * {
+        margin: 2px;
+    }
+}
+
 
 // TODO: Figure out a way to get theme variables into Angular easily. Potential solution is to use CSS variables.
 .points-list {
