@@ -16,7 +16,6 @@ class MyTestCase(unittest.TestCase):
             &\;\;\;\;\;\,\;\;\;\;x=7\;\\text{tai}\;x=-7
             \\end{align*} """
         self.assertEqual(
-            translationparser.TranslationParser().latex_parse(latexblock, "deepl"),
             """KING CLAUDIUS
             [Aside] O, 'tis <deepl>$too$</deepl> true!
             <deepl>$How$</deepl> $ smart$ a <deepl>$$lash $$</deepl> that [speech] <deepl>$$doth$$</deepl> [give] my conscience!
@@ -27,6 +26,14 @@ class MyTestCase(unittest.TestCase):
             &\;\;\;\;\;\,\;\;x^2=49 \\
             &\;\;\;\;\;\,\;\;\;\;x=7\;\\text</deepl>{tai}<deepl>\;x=-7
             \\end{align*}</deepl> """,
+            translationparser.TranslationParser().latex_parse(latexblock, "deepl"),
+        )
+
+    def test_latex_parse2(self):
+        latexblock = """$How$ $ smart$ a $$lash $$ that [speech] $$doth$$ [give] my conscience!"""
+        self.assertEqual(
+            """<deepl>$How$</deepl> $ smart$ a <deepl>$$lash $$</deepl> that [speech] <deepl>$$doth$$</deepl> [give] my conscience!""",
+            translationparser.TranslationParser().latex_parse(latexblock, "deepl"),
         )
 
     def test_styles_parse1(self):
@@ -42,7 +49,6 @@ class MyTestCase(unittest.TestCase):
         ## Tämän otsikon merkinnän pitää pysyä kunnossa
         """
         self.assertEqual(
-            translationparser.TranslationParser().styles_parse(styleblock, "deepl"),
             """
         ![pieni kuusikolmio]<deepl>(/images/187297/kuusikulmio_esim.png){width=40%}</deepl>
 
@@ -54,6 +60,7 @@ class MyTestCase(unittest.TestCase):
 
         <deepl>##</deepl> Tämän otsikon merkinnän pitää pysyä kunnossa
         """,
+            translationparser.TranslationParser().styles_parse(styleblock, "deepl"),
         )
 
     # def test_md_table_parse1(self):
@@ -95,7 +102,6 @@ choices:
     reason: 'Yhtälön ratkaisu $x=-3$ ei kuulu luonnollisiin lukuihin.'
 ```"""
         self.assertEqual(
-            translationparser.TranslationParser().plugin_parse(pluginblock, "deepl"),
             """<deepl>``` {#p213a plugin="mcq"}
 answerLimit: 1
 headerText: ''
@@ -116,6 +122,7 @@ choices:
     text: 'md:$x+3=0$'
     reason: 'Yhtälön ratkaisu $x=-3$ ei kuulu luonnollisiin lukuihin.'
 ```</deepl>""",
+            translationparser.TranslationParser().plugin_parse(pluginblock, "deepl"),
         )
 
 

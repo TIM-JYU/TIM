@@ -77,8 +77,10 @@ class TranslationParser:
 
         newtext = text
         # finds the areas enclosed by singular $-tag, includes the tags in.
+        # TODO: Can this be made more intelligent than simple an or between two almost identical lines?
         dollartag = re.findall(
-            r"(?<![\\])(?<=\s)\$(?![\s\$]).*?(?<![\\\$])\$(?!\S)", newtext
+            r"(?<![\\])(?<=\s)\$(?![\s\$]).*?(?<![\\\$])\$(?!\S)|^\$(?![\s\$]).*?(?<![\\\$])\$(?!\S)",
+            newtext,
         )
         # finds the areas enclosed by double $-tag, includes the tags in.
         doubledollartag = re.findall(
@@ -143,61 +145,14 @@ class TranslationParser:
         new_text = text
 
         everything = re.findall(
-            r"(\[.*?\{.notranslate\})|((?<!\))\{(?!.notranslate)\S.*?\})|((?<=\])\(.*?\)(?<=\))\{.*?\})|((?<=\])\(.*?\)(?!\{))|(\#.*?(?=\ ))",
+            r"\[.*?\{.notranslate\}|(?<!\))\{(?!.notranslate)\S.*?\}|(?<=\])\(.*?\)(?<=\))\{.*?\}|(?<=\])\(.*?\)(?!\{)|\#.*?(?=\ )",
             new_text,
         )
 
         for thing in everything:
-            for tuple in thing:
-                if tuple != "":
-                    new_text = new_text.replace(
-                        tuple, f"<{protection_tag}>" + tuple + f"</{protection_tag}>"
-                    )
-
-        """
-        # Finds all places marked not to be translated with {.notranslate}
-        no_translate = re.findall((r"\[.*?\{.notranslate\}"), new_text)
-
-        # Finds all styles that are not {.notranslate} and IDs (which also use {})
-        styles_and_ids = re.findall(r"(?<!\))\{(?!.notranslate)\S.*?\}", new_text)
-
-        # Finds image links with styles added to the image (e.g.[image](link){width=10%})
-        image_styled = re.findall(r"(?<=\])\(.*?\)(?<=\))\{.*?\}", new_text)
-
-        # Finds all links that don't have styles added, style-less image links included
-        link_styled = re.findall(r"(?<=\])\(.*?\)(?!\{)", new_text)
-
-        # Finds all headers
-        headers = re.findall(r"(\#.*?)(?=\ )", new_text)
-
-        # Finds all linebreaks done with \
-        # Doesn't work in practice right now because regex ignores the \ despite the correct line
-        # linebreaks = re.findall(r"(\\)", new_text)
-
-        for no in no_translate:
             new_text = new_text.replace(
-                no, f"<{protection_tag}>" + no + f"</{protection_tag}>"
+                thing, f"<{protection_tag}>" + thing + f"</{protection_tag}>"
             )
-        for styles in styles_and_ids:
-            new_text = new_text.replace(
-                styles, f"<{protection_tag}>" + styles + f"</{protection_tag}>"
-            )
-        for images in image_styled:
-            new_text = new_text.replace(
-                images, f"<{protection_tag}>" + images + f"</{protection_tag}>"
-            )
-        for links in link_styled:
-            new_text = new_text.replace(
-                links, f"<{protection_tag}>" + links + f"</{protection_tag}>"
-            )
-        for header in headers:
-            new_text = new_text.replace(
-                header, f"<{protection_tag}>" + header + f"</{protection_tag}>"
-            )
-        # for linebreak in linebreaks:
-        # new_text = new_text.replace(linebreak, "<protect>" + linebreak + "</protect>")
-        
-        """
 
         # manual testing of styles_parse
         # print(styleblock)
