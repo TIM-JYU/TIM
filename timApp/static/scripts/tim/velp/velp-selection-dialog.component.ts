@@ -137,7 +137,7 @@ const sortLang: string = "fi";
                                         (click)="openCreateNewVelpWindow()"
                                         value="">Create new velp
                                 </button>
-                                <tim-draggable-window [detachable]="true" title="Available velps">
+                                <tim-detachable-window dialogName="availableVelpsDialog" title="Available velps">
                                     <div class="velp-stack">
                                         <tim-velp-window class="velp"
                                                          [hidden]="!newVelp.edit"
@@ -160,7 +160,7 @@ const sortLang: string = "fi";
                                                 [velpGroups]="velpGroups"
                                                 [velp]="velp"></tim-velp-window>
                                     </div>
-                                </tim-draggable-window>
+                                </tim-detachable-window>
                             </div>
                         </tab>
                         <tab heading="Manage">

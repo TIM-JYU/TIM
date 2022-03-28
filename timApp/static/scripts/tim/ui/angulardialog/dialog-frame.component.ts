@@ -97,7 +97,7 @@ function getElementSize(el: Element) {
                        [class.glyphicon-minus]="!areaMinimized"
                        [class.glyphicon-unchecked]="areaMinimized"
                     ></i>
-                    <tim-close-button *ngIf="closeFn && closeable" (click)="closeFn!()">
+                    <tim-close-button *ngIf="!detachable && closeable && closeFn" (click)="closeFn!()">
                     </tim-close-button>
                 </div>
                 <div class="draggable-content modal-content" [class.minimized]="areaMinimized">
@@ -117,7 +117,7 @@ function getElementSize(el: Element) {
     ],
 })
 export class DialogFrame {
-    @Input() detachable = false;
+    detachable = false;
     @Input() minimizable = true;
     @Input() canResize = true;
     @Input() closeable: boolean = true;
@@ -136,7 +136,7 @@ export class DialogFrame {
     index = 1;
     detachedIndex: string = "";
     areaMinimized = false;
-    detached = true;
+    private _detached = true;
     private oldSize: ISize = {width: 600, height: 400};
     @ViewChild("resizable")
     private ngResizable!: IAngularResizableDirectivePublic;
@@ -148,16 +148,10 @@ export class DialogFrame {
     resizable!: ResizableDraggableWrapper;
     position: IPosition = {x: 0, y: 0};
     private _lastDraggedPosition?: IPosition;
+    private _lastDetachedPosition?: IPosition;
     private _lastResizedSize?: ISize;
     sizeChanged = new Subject<void>();
     posChanged = new Subject<void>();
-
-    ngOnInit() {
-        if (this.detachable) {
-            this.detachedIndex = `${1050 + this.index * 10}`;
-            this.detached = false;
-        }
-    }
 
     ngAfterViewInit() {
         this.resizable = new ResizableDraggableWrapper(
@@ -179,6 +173,7 @@ export class DialogFrame {
     initPosition(p: IPosition | null) {
         if (p) {
             this.position = p;
+            this._lastDetachedPosition = p;
             // Don't set the last dragged position if null to allow for anchoring
             this._lastDraggedPosition = p;
         }
@@ -192,7 +187,10 @@ export class DialogFrame {
     }
 
     set pos(p: IPosition) {
-        this.position = p;
+        if (!this.detachable || (this.detachable && this.detached)) {
+            this.position = p;
+        }
+        this._lastDetachedPosition = p;
     }
 
     get pos() {
@@ -211,10 +209,25 @@ export class DialogFrame {
         return this._lastResizedSize ?? this.currentSize;
     }
 
+    get detached() {
+        return this._detached;
+    }
+
+    set detached(value: boolean) {
+        this._detached = value;
+        if (!value) {
+            this.position = {x: 0, y: 0};
+            this.detachedIndex = "";
+        } else {
+            this.detachedIndex = `${1050 + this.index * 10}`;
+            if (this._lastDetachedPosition) {
+                this.position = this._lastDetachedPosition;
+            }
+        }
+    }
+
     toggleDetach() {
         this.detached = !this.detached;
-        this.position = {x: 0, y: 0};
-        this.detachedIndex = this.detached ? `${1050 + this.index * 10}` : "";
     }
 
     toggleMinimize() {

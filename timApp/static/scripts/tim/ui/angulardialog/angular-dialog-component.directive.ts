@@ -48,7 +48,7 @@ export abstract class AngularDialogComponent<Params, Result>
 {
     @Input() data!: Params;
     @Output() closeWithResult = new EventEmitter<Result>();
-    @ViewChild(DialogFrame) frame!: DialogFrame;
+    @ViewChild(DialogFrame, {static: true}) frame!: DialogFrame;
     @Input() dialogOptions?: IDialogOptions;
 
     private resultDefer = new TimDefer<Result>();
@@ -57,6 +57,7 @@ export abstract class AngularDialogComponent<Params, Result>
     protected closed = false;
     protected initialHorizontalAlign?: Alignment = Alignment.Center;
     protected initialPosition?: IPosition;
+    protected detachable = false;
     private sizeSub?: Subscription;
     private posSub?: Subscription;
     private bodyObserver?: MutationObserver;
@@ -106,12 +107,19 @@ export abstract class AngularDialogComponent<Params, Result>
         this.bodyObserver?.disconnect();
     }
 
-    ngAfterViewInit() {
+    ngOnInit() {
         if (!this.frame) {
             throw Error(
                 "All AngularDialogComponents must have tim-angular-dialog component in their template."
             );
         }
+        this.frame.detachable = this.detachable;
+        if (this.detachable) {
+            this.frame.detached = false;
+        }
+    }
+
+    ngAfterViewInit() {
         if (this.frame.autoHeight) {
             this.bodyObserver = new MutationObserver(async (record) => {
                 if (this.isDetachedDialogMutation(record)) {
@@ -190,6 +198,9 @@ export abstract class AngularDialogComponent<Params, Result>
     }
 
     fixPosSizeInbounds(sizeHint?: ISize | null): SizeNeedsRefresh {
+        if (this.frame.detachable && !this.frame.detached) {
+            return SizeNeedsRefresh.No;
+        }
         const vp = this.viewPort;
         console.log("viewport", vp);
 
