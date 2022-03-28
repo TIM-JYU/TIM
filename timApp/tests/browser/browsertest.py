@@ -314,7 +314,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def use_left_menu(self):
         # TODO: remove once tests have been updated to use the new edit menu format
         self.drv.execute_script("localStorage.setItem('editMenu_openOnLeft', 'true');")
+        self.drv.implicitly_wait(0.5)
         self.drv.refresh()
+        self.drv.implicitly_wait(5)
 
     def tearDown(self):
         scn_path = f"post_test/{self.id()}"
