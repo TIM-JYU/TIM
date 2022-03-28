@@ -399,6 +399,11 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         parent=None,
     ) -> WebElement:
         locator = (By.CSS_SELECTOR, selector) if selector else (By.XPATH, xpath)
+        until_condition = (
+            ec.presence_of_element_located(locator)
+            if click
+            else ec.visibility_of_element_located(locator)
+        )
         e = WebDriverWait(
             self.drv if not parent else parent,
             30,
@@ -406,7 +411,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
                 StaleElementReferenceException,
                 ElementNotInteractableException,
             ),
-        ).until(ec.presence_of_element_located(locator))
+        ).until(until_condition)
         if click:
             e.click()
         else:
