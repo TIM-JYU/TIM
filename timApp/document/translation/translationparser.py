@@ -141,6 +141,20 @@ class TranslationParser:
         # pictures, links, styles, etc. all function quite similarly
 
         new_text = text
+
+        everything = re.findall(
+            r"(\[.*?\{.notranslate\})|((?<!\))\{(?!.notranslate)\S.*?\})|((?<=\])\(.*?\)(?<=\))\{.*?\})|((?<=\])\(.*?\)(?!\{))|(\#.*?(?=\ ))",
+            new_text,
+        )
+
+        for thing in everything:
+            for tuple in thing:
+                if tuple != "":
+                    new_text = new_text.replace(
+                        tuple, f"<{protection_tag}>" + tuple + f"</{protection_tag}>"
+                    )
+
+        """
         # Finds all places marked not to be translated with {.notranslate}
         no_translate = re.findall((r"\[.*?\{.notranslate\}"), new_text)
 
@@ -182,6 +196,8 @@ class TranslationParser:
             )
         # for linebreak in linebreaks:
         # new_text = new_text.replace(linebreak, "<protect>" + linebreak + "</protect>")
+        
+        """
 
         # manual testing of styles_parse
         # print(styleblock)
