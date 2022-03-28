@@ -152,7 +152,6 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             [viewDate]="viewDate"
             [events]="events"
             [hourSegmentHeight]="30"
-            [style.height.px]="60"
             [hourDuration]="60"
             [hourSegments]="3"
             [dayStartHour]="8"
