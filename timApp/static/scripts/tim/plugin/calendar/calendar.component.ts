@@ -37,16 +37,29 @@ import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 
-function floorToNearest(amount: number, precision: number) {
-    return Math.floor(amount / precision) * precision;
+/**
+ * Helps calculate the size of a horizontally dragged event on the calendar view.
+ *
+ * @param amount movement of mouse in pixels
+ * @param segmentWidth the width of a single day in week view
+ */
+function floorToNearest(amount: number, segmentWidth: number) {
+    return Math.floor(amount / segmentWidth) * segmentWidth;
 }
 
+/**
+ * Helps calculate the size of a vertically dragged event on the calendar view.
+ *
+ * @param amount movement of mouse in pixels
+ * @param minutesInSegment the length of a single segment in calendar in minutes. An hour is divided into slots in view.
+ * @param segmentHeight the height of a single slot in calendar in pixels
+ */
 function ceilToNearest(
     amount: number,
-    minutesInSlot: number,
-    slotHeight: number
+    minutesInSegment: number,
+    segmentHeight: number
 ) {
-    return Math.ceil(amount / slotHeight) * minutesInSlot;
+    return Math.ceil(amount / segmentHeight) * minutesInSegment;
 }
 
 const CalendarItem = t.type({
@@ -65,6 +78,10 @@ const CalendarFields = t.intersection([
     getTopLevelFields(CalendarMarkup),
     t.type({}),
 ]);
+
+const segmentHeight = 30;
+const minutesInSegment = 20;
+
 registerLocaleData(localeFr);
 
 /**
@@ -251,8 +268,8 @@ export class CalendarComponent
             .subscribe((mouseMoveEvent: MouseEvent) => {
                 const minutesDiff = ceilToNearest(
                     mouseMoveEvent.clientY - segmentPosition.top,
-                    20,
-                    30
+                    minutesInSegment,
+                    segmentHeight
                 );
                 const daysDiff =
                     floorToNearest(
