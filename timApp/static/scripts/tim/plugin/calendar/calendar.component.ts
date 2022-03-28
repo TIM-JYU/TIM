@@ -41,8 +41,12 @@ function floorToNearest(amount: number, precision: number) {
     return Math.floor(amount / precision) * precision;
 }
 
-function ceilToNearest(amount: number, precision: number) {
-    return Math.ceil(amount / precision) * precision;
+function ceilToNearest(
+    amount: number,
+    minutesInSlot: number,
+    slotHeight: number
+) {
+    return Math.ceil(amount / slotHeight) * minutesInSlot;
 }
 
 const CalendarItem = t.type({
@@ -147,6 +151,8 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             *ngSwitchCase="'week'"
             [viewDate]="viewDate"
             [events]="events"
+            [hourSegmentHeight]="30"
+            [style.height.px]="60"
             [hourDuration]="60"
             [hourSegments]="3"
             [dayStartHour]="8"
@@ -246,9 +252,9 @@ export class CalendarComponent
             .subscribe((mouseMoveEvent: MouseEvent) => {
                 const minutesDiff = ceilToNearest(
                     mouseMoveEvent.clientY - segmentPosition.top,
-                    20
+                    20,
+                    30
                 );
-
                 const daysDiff =
                     floorToNearest(
                         mouseMoveEvent.clientX - segmentPosition.left,
