@@ -18,41 +18,41 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(
             translationparser.TranslationParser().latex_parse(latexblock, "deepl"),
             """KING CLAUDIUS
-            [Aside] O, 'tis <protect>$too$</protect> true!
-            <protect>$How$</protect> $ smart$ a <protect>$$lash $$</protect> that [speech] <protect>$$doth$$</protect> [give] my conscience!
-            a) <protect>\\begin{align*} asd
-            x^3-49x&=0 &&|\\text</protect>{ erotetaan yhteinen tekijä x}<protect>\\
-            x(x^2-49)&=0 &&|\\text</protect>{ käytetään tulon nollasääntöä}<protect>\\
-            x=0\;\;\;\\text</protect>{tai}<protect>\;\;\;&x^2-49=0 &&|\\text</protect>{ ratkaistaan x}<protect>\\
+            [Aside] O, 'tis <deepl>$too$</deepl> true!
+            <deepl>$How$</deepl> $ smart$ a <deepl>$$lash $$</deepl> that [speech] <deepl>$$doth$$</deepl> [give] my conscience!
+            a) <deepl>\\begin{align*} asd
+            x^3-49x&=0 &&|\\text</deepl>{ erotetaan yhteinen tekijä x}<deepl>\\
+            x(x^2-49)&=0 &&|\\text</deepl>{ käytetään tulon nollasääntöä}<deepl>\\
+            x=0\;\;\;\\text</deepl>{tai}<deepl>\;\;\;&x^2-49=0 &&|\\text</deepl>{ ratkaistaan x}<deepl>\\
             &\;\;\;\;\;\,\;\;x^2=49 \\
-            &\;\;\;\;\;\,\;\;\;\;x=7\;\\text</protect>{tai}<protect>\;x=-7
-            \\end{align*}</protect> """,
+            &\;\;\;\;\;\,\;\;\;\;x=7\;\\text</deepl>{tai}<deepl>\;x=-7
+            \\end{align*}</deepl> """,
         )
 
     def test_styles_parse1(self):
         styleblock = """
         ![pieni kuusikolmio](/images/187297/kuusikulmio_esim.png){width=40%}
-    
+
         [yliopiston sivut](https://www.jyu.fi/fi)
-    
+
         [tämä teksti on punainen]{.red}
-    
+
         [tätä tekstiä ei saisi kääntää]{.notranslate}
-    
+
         ## Tämän otsikon merkinnän pitää pysyä kunnossa
         """
         self.assertEqual(
             translationparser.TranslationParser().styles_parse(styleblock, "deepl"),
             """
-        ![pieni kuusikolmio]<protect>(/images/187297/kuusikulmio_esim.png){width=40%}</protect>
-    
-        [yliopiston sivut]<protect>(https://www.jyu.fi/fi)</protect>
-    
-        [tämä teksti on punainen]<protect>{.red}</protect>
-    
-        <protect>[tätä tekstiä ei saisi kääntää]{.notranslate}</protect>
-    
-        <protect>##</protect> Tämän otsikon merkinnän pitää pysyä kunnossa
+        ![pieni kuusikolmio]<deepl>(/images/187297/kuusikulmio_esim.png){width=40%}</deepl>
+
+        [yliopiston sivut]<deepl>(https://www.jyu.fi/fi)</deepl>
+
+        [tämä teksti on punainen]<deepl>{.red}</deepl>
+
+        <deepl>[tätä tekstiä ei saisi kääntää]{.notranslate}</deepl>
+
+        <deepl>##</deepl> Tämän otsikon merkinnän pitää pysyä kunnossa
         """,
         )
 
@@ -66,10 +66,10 @@ class MyTestCase(unittest.TestCase):
     #     self.assertEqual(
     #         translationparser.TranslationParser().md_table_parse(mdtableblock, "deepl"),
     #         """
-    #     <protected>Yksinkertainen  Taulukko   Ilman      Rajauksia
+    #     <deepled>Yksinkertainen  Taulukko   Ilman      Rajauksia
     #     --------------  ---------  ---------  ---------
     #     1.rivi          2. sarake  3. sarake  4. sarake
-    #     2.rivi          2. sarake  3. sarake  4. sarake</protected>
+    #     2.rivi          2. sarake  3. sarake  4. sarake</deepled>
     #     """,
     #     )
 
@@ -95,10 +95,8 @@ choices:
     reason: 'Yhtälön ratkaisu $x=-3$ ei kuulu luonnollisiin lukuihin.'
 ```"""
         self.assertEqual(
-            translationparser.TranslationParser().plugin_parse(
-                pluginblock, "deepl", "protect"
-            ),
-            """<protect>``` {#p213a plugin="mcq"}
+            translationparser.TranslationParser().plugin_parse(pluginblock, "deepl"),
+            """<deepl>``` {#p213a plugin="mcq"}
 answerLimit: 1
 headerText: ''
 buttonText: 'Tallenna'
@@ -117,7 +115,7 @@ choices:
     correct: true
     text: 'md:$x+3=0$'
     reason: 'Yhtälön ratkaisu $x=-3$ ei kuulu luonnollisiin lukuihin.'
-```</protect>""",
+```</deepl>""",
         )
 
 
