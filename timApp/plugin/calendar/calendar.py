@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict
 from flask import Response, Request
 
 from timApp.auth.accesshelper import verify_logged_in
-from timApp.auth.sessioninfo import get_current_user_id
+from timApp.auth.sessioninfo import get_current_user_id, get_current_user_object
 from timApp.plugin.calendar.models import Event
 from timApp.timdb.sqa import db
 from timApp.util.flask.responsehelper import json_response
@@ -84,9 +84,29 @@ def get_todos() -> Response:
     )
 
 
-@calendar_plugin.post("/add")
+@calendar_plugin.get("/events")
+def get_events() -> Response:
+    verify_logged_in()
+    cur_user = get_current_user_id()
+    events: list[Event] = Event.query.filter(Event.creator_user_id == cur_user).all()
+
+    event_objs = []
+    for i, event in enumerate(events):
+        event_objs.append(
+            {
+                "id": i,
+                "title": event.title,
+                "start": event.start_time,
+                "end": event.end_time,
+            }
+        )
+    return json_response(event_objs)
+
+
+@calendar_plugin.post("/events")
 def add_events(events: str) -> Response:
     verify_logged_in()
+    # TODO: use get_current_user_object() to access more user information, e.g. user's groups
     cur_user = get_current_user_id()
     events_json = json.loads(events)
     print(events_json[0]["start"])

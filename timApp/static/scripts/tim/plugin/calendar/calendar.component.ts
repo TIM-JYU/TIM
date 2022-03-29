@@ -36,6 +36,7 @@ import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
 import {toPromise} from "../../util/utils";
+import {Users} from "../../user/userService";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 
@@ -319,6 +320,35 @@ export class CalendarComponent
 
     ngOnInit() {
         super.ngOnInit();
+        if (Users.isLoggedIn()) {
+            console.log(Users.getCurrent().name);
+            void this.loadEvents();
+        }
+    }
+
+    private async loadEvents() {
+        const result = await toPromise(
+            this.http.get<CalendarEvent<{end: Date}>[]>("/calendar/events")
+        );
+        if (result.ok) {
+            console.log(result.result);
+            result.result.forEach((event) => {
+                event.start = new Date(event.start);
+                if (event.end) {
+                    event.end = new Date(event.end);
+                }
+            });
+            console.log(result.result);
+            // const resultjson = JSON.stringify(result.result);
+            // console.log(JSON.parse(resultjson));
+            // console.log(JSON.parse(result.result))
+            // this.events = JSON.parse(resultjson);
+            this.events = result.result;
+            console.log(this.events);
+            this.refresh();
+        } else {
+            console.error(result.result.error.error);
+        }
     }
 
     async saveChanges() {
@@ -327,7 +357,7 @@ export class CalendarComponent
 
         if (this.events.length > 0) {
             const result = await toPromise(
-                this.http.post<CalendarEvent[]>("/calendar/add", {
+                this.http.post<CalendarEvent[]>("/calendar/events", {
                     events: JSON.stringify(this.events),
                 })
             );
