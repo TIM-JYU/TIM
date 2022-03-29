@@ -120,5 +120,5 @@ py_format:
   stage: lint
   image: python:3.10-slim
   script:
-  - pip install black==22.1.0
+  - pip install black==22.3.0
   - black --check .
