@@ -6,7 +6,11 @@ from typing import Dict, Callable
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.document.translation.language import Language
-from timApp.document.translation.translationparser import TranslationParser
+from timApp.document.translation.translationparser import (
+    ObjectX,
+    parse_pandoc_md,
+    md_from_pandoc_ast,
+)
 from timApp.util import logger
 from timApp.util.flask.requesthelper import NotExist, RouteException
 
@@ -38,8 +42,8 @@ class TranslationService(db.Model):
     """Human-readable name of the machine translator."""
 
     def translate(
-        self, texts: list[str], src_lang: Language, target_lang: Language
-    ) -> list[str]:
+        self, texts: list[ObjectX], src_lang: Language, target_lang: Language
+    ) -> list[ObjectX]:
         """The implementor should return the translated text in the same order as found in the `texts` parameter."""
         raise NotImplementedError
 
@@ -187,11 +191,11 @@ class DeeplTranslationService(TranslationService):
 
     def preprocess(self, text: str) -> str:
         """
-        Protect parts of text that the translation could or is shown to mangle.
+        Protect the text with XML-tags from mangling in translation.
         :param text: The text to add XML-protection-tags to.
         :return: Text with protecting XML-tags added into needed places
         """
-        return TranslationParser.parse(text, self.ignore_tag)
+        return f"<{self.ignore_tag}>{text}</{self.ignore_tag}>"
 
     def postprocess(self, text: str) -> str:
         """
@@ -204,8 +208,8 @@ class DeeplTranslationService(TranslationService):
         )
 
     def translate(
-        self, texts: list[str], source_lang: Language | None, target_lang: Language
-    ) -> list[str]:
+        self, texts: list[ObjectX], source_lang: Language | None, target_lang: Language
+    ) -> list[ObjectX]:
         """
         Uses the DeepL API for translating text between languages
         :param texts: Text to be translated TODO Why is this a list? For the 50 text-params?
@@ -215,8 +219,10 @@ class DeeplTranslationService(TranslationService):
         """
         source_lang_code = source_lang.lang_code if source_lang else None
 
-        protected_texts = [self.preprocess(text) for text in texts]
-        # Translate using XML-protection for protected pieces of the text
+        # Get the translatable text of objects and add protection to them
+        protected_texts = list(map(lambda x: self.preprocess(x.text), texts))
+
+        # Translate texts using XML-protection
         resp_json = self._translate(
             protected_texts,
             # Send uppercase, because it is used in DeepL documentation
@@ -229,11 +235,14 @@ class DeeplTranslationService(TranslationService):
             tag_handling="xml",
             ignore_tags=[self.ignore_tag],
         )
-        # TODO Use a special structure to insert the text-parts sent to the API into correct places in original text
-        post_processed_texts = [
-            self.postprocess(x["text"]) for x in resp_json["translations"]
-        ]
-        return post_processed_texts
+
+        # Insert the text-parts sent to the API into correct places in original elements
+        for translated_text, element in zip(resp_json["translations"], texts):
+            clean_text = self.postprocess(translated_text["text"])
+            element.replace_text(clean_text)
+
+        # FIXME WARNING changing the values of object could be wrong and act funny on upper level. In other words: returning this should not be needed, as the transformations are done on the input list of objects (which are references(?))
+        return texts
 
     def usage(self) -> Usage:
         resp_json = self._post("usage")
@@ -299,15 +308,30 @@ def init_translate(
     :return: A partially applied function for translating text with the specified languages using the specified TranslationService
     """
 
-    def generic_translate(text: list[str]) -> list[str]:
+    def generic_translate(texts: list[str]) -> list[str]:
         """
-        Wraps the TranslationService, source and target languages into a function that can be used to call a translation on different TranslationService-instances. TODO Maybe move this to TranslationService for clarity ":D"
-        :param text: Pieces of text to translate
-        :return: The input text translated according to the outer functions inputs.
+        Wraps the TranslationService, source and target languages into a function that can be used to call a translation on different TranslationService-instances.
+        :param texts: Markdown paragraphs or TIM blocks to translate.
+        :return: The translatable text contained in input paragraphs translated according to the outer functions inputs (the languages).
         """
-        translated_text = translator.translate(text, source_lang, target_lang)
+        # Parse the texts into objects containing the translatable and non-translatable parts
+        # TODO There are more than just the one element
+        blocks: list[list[ObjectX]] = [parse_pandoc_md(texts[0])]
+
+        # Pass object with translatable text to the machine translator object.
+        # If supported, the translator protects and removes the protection from the text (for example adding XML-ignore-tags in DeepL's case).
+        # TODO There are more than just the one element
+        translated_blocks: list[list[ObjectX]] = [
+            translator.translate(blocks[0], source_lang, target_lang)
+        ]
+
+        # The translator object returns the same Pandoc AST but parts of it are translated.
+        # Transform AST back to a Markdown string
+        # TODO There are more than just the one element
+        translated_texts: list[str] = [md_from_pandoc_ast(translated_blocks[0])]
+
         # TODO Maybe log the length of text or other shorter info?
-        logger.log_info("\n".join(translated_text))
+        logger.log_info("\n".join(translated_texts))
 
         usage = translator.usage()
         logger.log_info(
@@ -317,7 +341,7 @@ def init_translate(
             + str(usage.character_limit)
         )
 
-        return translated_text
+        return translated_texts
 
     return generic_translate
 
@@ -327,8 +351,8 @@ def init_deepl_translate(
 ) -> Callable[[list[str]], list[str]]:
     """
     Initialize the deepl translator using the API-key from user's configuration and return a partially applied function for translating
-    :param user_group: User group that owns the API-key to use in translation
-    :param source_lang: The language that text is in
+    :param user_group: User whose API-key will be used to make translations TODO Make just the key
+    :param source_lang: Language that is requested to translate from
     :param target_lang: Language that is requested to translate into
     :return: A function for translating text with the specified languages using a DeepLTranslator instance.
     """

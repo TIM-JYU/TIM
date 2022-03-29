@@ -1,4 +1,9 @@
 import re
+import pypandoc
+import json
+from typing import Callable
+from dataclasses import dataclass
+
 from timApp.document.documentparser import DocumentParser
 
 # quick manual test cases before unit tests
@@ -192,3 +197,111 @@ class TranslationParser:
 # textblock = TranslationParser().latex_parse(latexblock, "deepl")
 # textblock = TranslationParser().plugin_parse(pluginblock, "deepl")
 # print(textblock)
+
+
+@dataclass
+class ObjectX:
+    _obj: dict
+
+    @property
+    def text(self) -> str:
+        """
+        :return: The parts of text that can be translated in the element.
+        """
+        raise NotImplementedError
+
+    def replace_text(self, value: str) -> None:
+        """
+        Creates a correct representation of the text that conforms to Pandoc AST
+        and sets it to the content of this element.
+        :param value: New text content for the element.
+        """
+        raise NotImplementedError
+
+
+class Paragraph(ObjectX):
+    """This might be the most straightforward to translate"""
+
+    @property
+    def text(self) -> str:
+        s = ""
+        for o in self._obj:
+            ot = o["t"]
+            if ot == "Str":
+                s += o["c"]
+            elif ot == "Space":
+                s += " "
+            elif ot == "SoftBreak":
+                s += "\n"
+            # TODO Handle the rest of the
+            else:
+                s += o["c"]
+        return s
+
+    def replace_text(self, value: str) -> None:
+        pass
+
+
+# def rekurs(o):
+#    if o.t == "Para":
+#        for o.c muuta stringiksi
+#
+#
+#
+#        ...
+#    elif o.t == "BulletList":
+#        jokaista c:n alkiota kohti c_a
+#          jokaista c_a:n  alkiota kohti c_a_a
+#            if c_a_a.t == "Para":
+#                rekurs(c_a_a)
+#
+#    elif o.
+
+
+class Other(ObjectX):
+    """These types of objects will not be translated"""
+
+    def text(self) -> str:
+        pass
+
+    def replace_text(self, value: str) -> None:
+        pass
+
+
+def parse_pandoc_md(source: str) -> list[ObjectX]:
+    """
+    Uses Pandoc to convert Markdown-text into JSON representing Pandoc's AST
+    :param source: Markdown-text to parse
+    :return: Object that represents the parts of Markdown
+    """
+    # TODO If the text should not be translated or handled as markdown at all (ie. plugins, which are YAML) return None
+    # TODO This function should probably return objects instead of dict
+    d = json.loads(pypandoc.convert_text(source, format="md", to="json"))
+    blocks = d["blocks"]
+    elements: list[ObjectX] = list()
+    for block in blocks:
+        if block["t"] == "Para":
+            elements.append(Paragraph(_obj=block))
+        else:
+            elements.append(Other(_obj=block))
+    return elements
+
+
+def md_from_pandoc_ast(ast: list[ObjectX]) -> str:
+    """
+    Reverse operation for parse_pandoc_md
+    :param ast: The JSON representation of Pandoc's AST
+    :return:
+    """
+    # FIXME This ain't right
+    return pypandoc.convert_text(ast, format="json", to="md")
+
+
+def map_text_elems(f: Callable[[str], str], element: ObjectX) -> list[str]:
+    """
+    Apply a function to the text element.
+    :param f: The function to apply (in DeepL's case surrounding text with XML protection)
+    :param element: Some representation X of the element TODO what?
+    :return: The input element but text parts transformed
+    """
+    raise NotImplementedError

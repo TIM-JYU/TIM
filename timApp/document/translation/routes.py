@@ -16,6 +16,7 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import create_document_and_block, DocEntry
 from timApp.document.documents import add_reference_pars
 from timApp.document.translation.translation import Translation
+
 from timApp.item.block import copy_default_rights, BlockType
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
@@ -30,7 +31,7 @@ from timApp.document.translation.language import Language
 
 
 def valid_language_id(lang_id: str) -> bool:
-    """Check that the id is recognized by the langcodes library."""
+    """Check that the id is recognized by the langcodes library and found in database."""
     try:
         tag = langcodes.standardize_tag(lang_id)
         lang = Language.query_by_code(tag)
