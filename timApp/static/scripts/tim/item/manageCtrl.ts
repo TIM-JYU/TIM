@@ -570,6 +570,9 @@ export class PermCtrl implements IController {
         );
         if (r.ok) {
             const data = r.result.data;
+            if(this.newTranslation.translator != "Manual") {
+                await $http.post(`/markTranslated/${data.id}`, {doc_id: data.id});
+            }
             redirectToItem(data);
         } else {
             this.translationInProgress = false;
