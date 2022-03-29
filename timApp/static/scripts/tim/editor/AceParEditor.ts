@@ -446,6 +446,11 @@ export class AceParEditor extends BaseParEditor {
         );
     }
 
+    checkTranslationSelection() {
+        return this.editor.session.getTextRange(
+            this.editor.getSelectionRange()
+        );
+    }
     /**
      * @param descDefault Placeholder for description
      * @param linkDefault Placeholder for link address

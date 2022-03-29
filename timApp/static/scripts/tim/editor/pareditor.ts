@@ -1138,7 +1138,7 @@ ${backTicks}
             this.storage.proeditor.get() ??
             (saveTag === "par" || saveTag === TIM_TABLE_CELL);
         this.activeTab = this.storage.editortab.get() ?? "navigation";
-        if(this.checkIfOriginal() && this.activeTab == "translator"){
+        if (this.checkIfOriginal() && this.activeTab == "translator") {
             this.activeTab = "navigation";
         }
         this.lastTab = this.activeTab;
@@ -1574,6 +1574,7 @@ ${backTicks}
 
     async translateClicked() {
         const apuhel = this.getEditor();
+        const translatabletext = this.translationSelector();
         let hel = "";
         if (apuhel != undefined) {
             hel = apuhel.getEditorText();
@@ -1614,7 +1615,7 @@ ${backTicks}
                     `/translate/${this.resolve.params.viewCtrl.item.id}/${lang}/translate_block`,
                     {
                         autotranslate: this.docTranslator,
-                        originaltext: this.trdiff.new, // TODO: Get translatorlang to the document and editor
+                        originaltext: translatabletext, // TODO: Get translatorlang to the document and editor
                     }
                 )
             );
@@ -1632,6 +1633,11 @@ ${backTicks}
                 await showMessageDialog(r.result.data.error);
             }
         }
+    }
+
+    translationSelector() {
+        const selection = this.editor!.checkTranslationSelection();
+        return selection;
     }
 
     close(r: IEditorResult) {
