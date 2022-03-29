@@ -21,14 +21,6 @@ calendar_plugin = TypedBlueprint("calendar_plugin", __name__, url_prefix="/calen
 
 
 @dataclass
-class CalendarEvents:
-    title: str
-
-    def to_json(self) -> dict:
-        return asdict(self)
-
-
-@dataclass
 class CalendarItem:
     done: bool
     text: str
