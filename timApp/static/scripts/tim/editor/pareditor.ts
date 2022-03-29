@@ -1573,14 +1573,10 @@ ${backTicks}
     }
 
     async translateClicked() {
-        const apuhel = this.getEditor();
         const translatabletext = this.translationSelector();
-        let hel = "";
-        if (apuhel != undefined) {
-            hel = apuhel.getEditorText();
-        }
+        const helper = this.getEditor()!.getEditorText();
 
-        const edittext = hel.substring(hel.indexOf("\n") + 1);
+        const edittext = helper.substring(helper.indexOf("\n") + 1);
 
         let mayContinue = true;
 
@@ -1642,7 +1638,7 @@ ${backTicks}
 
     translationSelector() {
         const selection = this.editor!.checkTranslationSelection();
-        if (selection == ""){
+        if (selection == "") {
             return this.trdiff!.new;
         }
         return selection;
