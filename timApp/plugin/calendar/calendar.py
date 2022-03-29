@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass, asdict
 
-from flask import Response, Request
+from flask import Response
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_id, get_current_user_object
@@ -109,7 +109,6 @@ def add_events(events: str) -> Response:
     # TODO: use get_current_user_object() to access more user information, e.g. user's groups
     cur_user = get_current_user_id()
     events_json = json.loads(events)
-    print(events_json[0]["start"])
 
     for event in events_json:
         event = Event(

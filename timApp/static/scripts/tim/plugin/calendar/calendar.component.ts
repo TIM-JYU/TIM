@@ -201,7 +201,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
           </mwl-calendar-day-view>
         </div>
         <div>
-            <button class="timButton" id="saveBtn" (click)="saveChanges()" [disabled]="this.events.length === 0">Save changes</button>
+            <button class="timButton" id="saveBtn" (click)="saveChanges()" [disabled]="this.events.length <= lastEvent">Save changes</button>
         </div>
     `,
     encapsulation: ViewEncapsulation.None,
@@ -229,6 +229,8 @@ export class CalendarComponent
     dragToCreateActive = false;
 
     weekStartsOn: 1 = 1;
+
+    lastEvent: number = 0;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -307,7 +309,6 @@ export class CalendarComponent
     private refresh() {
         this.events = [...this.events];
         this.cdr.detectChanges();
-        console.log(this.events);
     }
 
     getAttributeType() {
@@ -321,7 +322,6 @@ export class CalendarComponent
     ngOnInit() {
         super.ngOnInit();
         if (Users.isLoggedIn()) {
-            console.log(Users.getCurrent().name);
             void this.loadEvents();
         }
     }
@@ -331,40 +331,35 @@ export class CalendarComponent
             this.http.get<CalendarEvent<{end: Date}>[]>("/calendar/events")
         );
         if (result.ok) {
-            console.log(result.result);
             result.result.forEach((event) => {
                 event.start = new Date(event.start);
                 if (event.end) {
                     event.end = new Date(event.end);
                 }
             });
-            console.log(result.result);
-            // const resultjson = JSON.stringify(result.result);
-            // console.log(JSON.parse(resultjson));
-            // console.log(JSON.parse(result.result))
-            // this.events = JSON.parse(resultjson);
             this.events = result.result;
-            console.log(this.events);
+            this.lastEvent = result.result.length;
             this.refresh();
         } else {
+            // TODO: Handle error responses properly
             console.error(result.result.error.error);
         }
     }
 
     async saveChanges() {
-        console.log(this.events);
-        console.log(JSON.stringify(this.events));
-
-        if (this.events.length > 0) {
+        const eventsToAdd = this.events.slice(this.lastEvent);
+        if (eventsToAdd.length > 0) {
             const result = await toPromise(
                 this.http.post<CalendarEvent[]>("/calendar/events", {
-                    events: JSON.stringify(this.events),
+                    events: JSON.stringify(eventsToAdd),
                 })
             );
             // TODO: handle server responses properly
             if (result.ok) {
                 console.log("events sent");
                 console.log(result.result);
+                this.lastEvent = this.events.length;
+                this.refresh();
             } else {
                 console.error(result.result.error.error);
             }
