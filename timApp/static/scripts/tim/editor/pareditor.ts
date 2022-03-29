@@ -1138,7 +1138,7 @@ ${backTicks}
             this.storage.proeditor.get() ??
             (saveTag === "par" || saveTag === TIM_TABLE_CELL);
         this.activeTab = this.storage.editortab.get() ?? "navigation";
-        if(this.checkIfOriginal() && this.activeTab == "translator"){
+        if (this.checkIfOriginal() && this.activeTab == "translator") {
             this.activeTab = "navigation";
         }
         this.lastTab = this.activeTab;
@@ -1573,13 +1573,10 @@ ${backTicks}
     }
 
     async translateClicked() {
-        const apuhel = this.getEditor();
-        let hel = "";
-        if (apuhel != undefined) {
-            hel = apuhel.getEditorText();
-        }
+        const translatabletext = this.translationSelector();
+        const helper = this.getEditor()!.getEditorText();
 
-        const edittext = hel.substring(hel.indexOf("\n") + 1);
+        const edittext = helper.substring(helper.indexOf("\n") + 1);
 
         let mayContinue = true;
 
@@ -1614,24 +1611,37 @@ ${backTicks}
                     `/translate/${this.resolve.params.viewCtrl.item.id}/${lang}/translate_block`,
                     {
                         autotranslate: this.docTranslator,
-                        originaltext: this.trdiff.new, // TODO: Get translatorlang to the document and editor
+                        originaltext: translatabletext, // TODO: Get translatorlang to the document and editor
                     }
                 )
             );
             if (r.ok) {
+                // eslint-disable-next-line @typescript-eslint/no-base-to-string
+                const resultText = r.result.data.toString();
                 const ref =
                     this.resolve.params.initialText?.substring(
                         0,
                         this.resolve.params.initialText?.indexOf("}") + 1
                     ) + "\n";
-                // eslint-disable-next-line @typescript-eslint/no-base-to-string
-                this.getEditor()?.setEditorText(ref + r.result.data.toString());
+                if (translatabletext != this.trdiff.new) {
+                    this.editor!.replaceTranslation(resultText);
+                } else {
+                    this.getEditor()?.setEditorText(ref + resultText);
+                }
                 this.translationInProgress = false;
             } else {
                 this.translationInProgress = false;
                 await showMessageDialog(r.result.data.error);
             }
         }
+    }
+
+    translationSelector() {
+        const selection = this.editor!.checkTranslationSelection();
+        if (selection == "") {
+            return this.trdiff!.new;
+        }
+        return selection;
     }
 
     close(r: IEditorResult) {
@@ -2134,10 +2144,12 @@ ${backTicks}
 
             interface ILanguageTools {
                 setCompleters(completers: unknown[]): void;
+
                 snippetCompleter: unknown;
                 textCompleter: unknown;
                 keyWordCompleter: unknown;
             }
+
             const langTools = ace.require(
                 "ace/ext/language_tools"
             ) as ILanguageTools;

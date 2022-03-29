@@ -1,16 +1,14 @@
-import {Component, NgModule, OnInit} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
 import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
 import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {toPromise} from "../util/utils";
-import {Channel} from "../messaging/listOptionTypes";
 import {TimUtilityModule} from "../ui/tim-utility.module";
-import {ContactOrigin, IUserAPIKey} from "./IUser";
-import {async} from "@angular/core/testing";
 import {ITranslators} from "../item/IItem";
 import {listTranslators} from "../document/editing/edittypes";
+import {IUserAPIKey} from "./IUser";
 
 /**
  * User can add translator API keys to be stored in TIM. (code source: add-contact-dialog.component.ts)
@@ -28,8 +26,9 @@ import {listTranslators} from "../document/editing/edittypes";
                         <div class="form-group">
                             <label class="control-label" for="name-select" i18n>Translator</label>
                             <select class="form-control" name="channel-select" [(ngModel)]="chosenTranslator">
-                                <option *ngFor="let translator of this.translators" [hidden]="translator.name ==='Manual'" value="{{translator.name}}"
-                                        >{{translator.name}}</option>
+                                <option *ngFor="let translator of this.translators"
+                                        [hidden]="translator.name ==='Manual'" value="{{translator.name}}"
+                                >{{translator.name}}</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -66,6 +65,7 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
     void
 > {
     translators: Array<ITranslators> = [];
+
     ngOnInit() {
         listTranslators(this.translators);
     }
