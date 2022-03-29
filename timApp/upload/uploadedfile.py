@@ -143,7 +143,7 @@ class UploadedFile(ItemBase):
         original_file: Path = None,
         upload_info: PluginUploadInfo = None,
     ) -> "UploadedFile":
-        if not file_data and not original_file:
+        if file_data is None and original_file is None:
             raise TimDbException(
                 "Either file data or original file location must be given"
             )
