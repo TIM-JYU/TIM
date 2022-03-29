@@ -120,14 +120,58 @@ class DeeplTranslationService(TranslationService):
             except requests.exceptions.JSONDecodeError as e:
                 raise Exception(f"DeepL API returned malformed JSON: {e}")
         else:
-            # TODO Handle the various HTTP error codes that API can return
-            # (Using Python 3.10's match-statement would be cool here...)
-            # FIXME / DEBUG Do not show the end user these kind of  implementation-specific errors
-            debug_exception = Exception(
-                f"DeepL API / {url_slug} responded with {resp.status_code}"
-            )
+            status_code = resp.status_code
+
+            # Handle the status codes given by DeepL API
+            # Using Python 3.10's match-statement would be cool here but Black did not support it
+
+            if status_code == 400:
+                debug_exception = Exception(
+                    f"The request to the DeepL API was bad. Please check your parameters."
+                )
+            elif status_code == 403:
+                debug_exception = Exception(
+                    f"Authorization failed. Please check your DeepL API key for typos."
+                )
+            elif status_code == 404:
+                debug_exception = Exception(
+                    f"The requested translator could not be found. Please try again later."
+                )
+            elif status_code == 413:
+                debug_exception = Exception(
+                    f"The request size exceeds the API's limit. Please try again with a smaller document."
+                )
+            elif status_code == 414:
+                debug_exception = Exception(
+                    f"The request URL is too long. Please contact TIM support."
+                )
+            elif status_code == 429:
+                debug_exception = Exception(
+                    f"Too many requests were sent. Please wait and resend the request later."
+                )
+            elif status_code == 456:
+                debug_exception = Exception(
+                    f"You have exceeded your character quota. Please try again when your quota has reset."
+                )
+            elif status_code == 503:
+                debug_exception = Exception(
+                    f"Translator currently unavailable. Please try again later."
+                )
+            elif status_code == 529:
+                debug_exception = Exception(
+                    f"Too many requests were sent. Please wait and resend the request later."
+                )
+            elif status_code >= 500 & status_code < 600:
+                debug_exception = Exception(
+                    f"An internal error occurred on the DeepL server. Please try again."
+                )
+            else:
+                debug_exception = Exception(
+                    f"DeepL API / {url_slug} responded with {resp.status_code}"
+                )
+
             raise RouteException(
-                description="Machine translation failed NOTE this is a DEBUG VERSION and the following should probably not reach the user: "
+                description="Automatic translation failed. Error message: "
                 + str(debug_exception)
             )
 
