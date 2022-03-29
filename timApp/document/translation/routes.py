@@ -3,7 +3,6 @@ import langcodes
 
 from flask import request, Blueprint
 from sqlalchemy.exc import IntegrityError
-from typing import Callable
 
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
@@ -22,11 +21,10 @@ from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import verify_json_params, NotExist, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, Response
-from timApp.util import logger
 from timApp.document.translation.translator import (
     TranslationService,
-    DeeplTranslationService,
     TranslationServiceKey,
+    init_deepl_translate,
 )
 from timApp.document.translation.language import Language
 
@@ -39,69 +37,6 @@ def valid_language_id(lang_id: str) -> bool:
         return lang is not None
     except langcodes.LanguageTagError:
         return False
-
-
-def init_translate(
-    translator: TranslationService,
-    source_lang: Language,
-    target_lang: Language,
-) -> Callable[[list[str]], list[str]]:
-    # TODO This helper-function would be better if there was some way to hide the translate-methods on ITranslators. Maybe save for the eventual(?) TranslatorSelector?
-    """
-    Use the specified TranslationService to initialize machine translation
-    :param translator: The translator to use
-    :param source_lang: The language that text is in
-    :param target_lang: The language that text will be translated into
-    :return: A partially applied function for translating text with the specified languages using the specified TranslationService
-    """
-
-    def generic_translate(text: list[str]) -> list[str]:
-        """
-        Wraps the TranslationService, source and target languages into a function that can be used to call a translation on different TranslationService-instances. TODO Maybe move this to TranslationService for clarity ":D"
-        :param text: Pieces of text to translate
-        :return: The input text translated according to the outer functions inputs.
-        """
-        translated_text = translator.translate(text, source_lang, target_lang)
-        # TODO Maybe log the length of text or other shorter info?
-        logger.log_info("\n".join(translated_text))
-
-        usage = translator.usage()
-        logger.log_info(
-            "Current DeepL API usage: "
-            + str(usage.character_count)
-            + "/"
-            + str(usage.character_limit)
-        )
-
-        return translated_text
-
-    return generic_translate
-
-
-def init_deepl_translate(
-    source_lang: Language, target_lang: Language
-) -> Callable[[list[str]], list[str]]:
-    """
-    Initialize the deepl translator using the API-key from user's configuration and return a partially applied function for translating
-    :param source_lang: Language that is requested to translate from
-    :param target_lang: Language that is requested to translate into
-    :return: A function for translating text with the specified languages using a DeepLTranslator instance.
-    """
-    # Get the API-key from database
-    # TODO Is this cool or should the service be its own class separate from the db model?
-    translator = DeeplTranslationService.query.first()
-    translator.register(get_current_user_object().get_personal_group())
-
-    if not translator.supports(source_lang, target_lang):
-        # TODO use langcodes for a friendlier error message (name + region/variant)
-        raise RouteException(
-            description=f"The language pair from '{source_lang}' to '{target_lang}' is not supported with DeepL"
-        )
-
-    translate_func: Callable[[list[str]], list[str]] = init_translate(
-        translator, source_lang, target_lang
-    )
-    return translate_func
 
 
 tr_bp = Blueprint("translation", __name__, url_prefix="")
@@ -147,7 +82,9 @@ def create_translation_route(tr_doc_id, language):
 
         # Select the translator TODO Maybe move to somewhere else so this does not blow up with if-else?
         if translator_code.lower() == "deepl":
-            translator_func = init_deepl_translate(src_lang, tr_lang)
+            translator_func = init_deepl_translate(
+                get_current_user_object().get_personal_group(), src_lang, tr_lang
+            )
 
     # Translate each paragraph sequentially if a translator was created
     if translator_func:
@@ -191,7 +128,9 @@ def text_translation_route(tr_doc_id: int, language: str) -> Response:
         if translator_code.lower() == "deepl":
             src_lang = Language.query_by_code(src_doc.docinfo.lang_id)
             target_lang = Language.query_by_code(language)
-            translator_func = init_deepl_translate(src_lang, target_lang)
+            translator_func = init_deepl_translate(
+                get_current_user_object().get_personal_group(), src_lang, target_lang
+            )
             block_text = translator_func([src_text])[0]
     else:
         raise RouteException(

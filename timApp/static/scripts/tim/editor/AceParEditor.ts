@@ -451,6 +451,12 @@ export class AceParEditor extends BaseParEditor {
             this.editor.getSelectionRange()
         );
     }
+    replaceTranslation(descDefault: string) {
+        // $ is a special symbol in TextMate/Sublime Text snippets and should be escaped
+        // https://forum.sublimetext.com/t/escaping-dollar-sign-in-snippets/31078
+        descDefault = descDefault.replace(/\$/g, "\\$");
+        this.snippetManager.insertSnippet(this.editor, descDefault);
+    }
     /**
      * @param descDefault Placeholder for description
      * @param linkDefault Placeholder for link address

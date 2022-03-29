@@ -1573,14 +1573,10 @@ ${backTicks}
     }
 
     async translateClicked() {
-        const apuhel = this.getEditor();
         const translatabletext = this.translationSelector();
-        let hel = "";
-        if (apuhel != undefined) {
-            hel = apuhel.getEditorText();
-        }
+        const helper = this.getEditor()!.getEditorText();
 
-        const edittext = hel.substring(hel.indexOf("\n") + 1);
+        const edittext = helper.substring(helper.indexOf("\n") + 1);
 
         let mayContinue = true;
 
@@ -1620,13 +1616,18 @@ ${backTicks}
                 )
             );
             if (r.ok) {
+                // eslint-disable-next-line @typescript-eslint/no-base-to-string
+                const resultText = r.result.data.toString();
                 const ref =
                     this.resolve.params.initialText?.substring(
                         0,
                         this.resolve.params.initialText?.indexOf("}") + 1
                     ) + "\n";
-                // eslint-disable-next-line @typescript-eslint/no-base-to-string
-                this.getEditor()?.setEditorText(ref + r.result.data.toString());
+                if (translatabletext != this.trdiff.new) {
+                    this.editor!.replaceTranslation(resultText);
+                } else {
+                    this.getEditor()?.setEditorText(ref + resultText);
+                }
                 this.translationInProgress = false;
             } else {
                 this.translationInProgress = false;
@@ -1637,6 +1638,9 @@ ${backTicks}
 
     translationSelector() {
         const selection = this.editor!.checkTranslationSelection();
+        if (selection == "") {
+            return this.trdiff!.new;
+        }
         return selection;
     }
 
