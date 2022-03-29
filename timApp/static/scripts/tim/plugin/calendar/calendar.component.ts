@@ -36,6 +36,7 @@ import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
+import {TimeViewSelectorComponent} from "./timeviewselector.component";
 
 /**
  * Helps calculate the size of a horizontally dragged event on the calendar view.
@@ -80,7 +81,7 @@ const CalendarFields = t.intersection([
 ]);
 
 const segmentHeight = 30;
-const minutesInSegment = 20;
+// const minutesInSegment = 20;
 
 registerLocaleData(localeFr);
 
@@ -170,9 +171,9 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             [events]="events"
             [hourSegmentHeight]="30"
             [hourDuration]="60"
-            [hourSegments]="3"
-            [dayStartHour]="8"
-            [dayEndHour]="19"
+            [hourSegments]="segmentsInHour"
+            [dayStartHour]="dayStartHour"
+            [dayEndHour]="dayEndHour"
             [locale]="'fi-FI'"
             [weekStartsOn]= "1"
             (dayHeaderClicked)="clickedDate = $event.day.date"
@@ -185,14 +186,15 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             [viewDate]="viewDate"
             [events]="events"
             [hourDuration]="60"
-            [hourSegments]="3"
-            [dayStartHour]="8" 
-            [dayEndHour]="19"
+            [hourSegments]="segmentsInHour"
+            [dayStartHour]="dayStartHour" 
+            [dayEndHour]="dayEndHour"
             [locale]="'fi-FI'"
             (hourSegmentClicked)="clickedDate = $event.date"
           >
           </mwl-calendar-day-view>
         </div>
+        <app-timeview-selectors (accuracy)="getAccuracy($event)" (morning)="getMorning($event)" (evening)="getEvening($event)"></app-timeview-selectors>
     `,
     encapsulation: ViewEncapsulation.None,
     styleUrls: ["calendar.component.scss"],
@@ -220,6 +222,12 @@ export class CalendarComponent
 
     weekStartsOn: 1 = 1;
 
+    /* The default values of calendar view that can be adjusted with the time view selector -component. */
+    dayStartHour: number = 8;
+    dayEndHour: number = 16;
+    segmentMinutes: number = 20;
+    segmentsInHour: number = 3;
+
     constructor(
         el: ElementRef<HTMLElement>,
         http: HttpClient,
@@ -227,6 +235,19 @@ export class CalendarComponent
         private cdr: ChangeDetectorRef
     ) {
         super(el, http, domSanitizer);
+    }
+
+    getAccuracy(accuracy: number) {
+        this.segmentMinutes = accuracy;
+        this.segmentsInHour = 60 / this.segmentMinutes;
+    }
+
+    getMorning(morning: number) {
+        this.dayStartHour = morning;
+    }
+
+    getEvening(evening: number) {
+        this.dayEndHour = evening;
     }
 
     startDragToCreate(
@@ -268,7 +289,7 @@ export class CalendarComponent
             .subscribe((mouseMoveEvent: MouseEvent) => {
                 const minutesDiff = ceilToNearest(
                     mouseMoveEvent.clientY - segmentPosition.top,
-                    minutesInSegment,
+                    this.segmentMinutes,
                     segmentHeight
                 );
                 const daysDiff =
@@ -324,7 +345,7 @@ export class CalendarComponent
         }),
         CalendarHeaderModule,
     ],
-    declarations: [CalendarComponent],
+    declarations: [CalendarComponent, TimeViewSelectorComponent],
     exports: [CalendarComponent],
 })
 export class KATTIModule implements DoBootstrap {
