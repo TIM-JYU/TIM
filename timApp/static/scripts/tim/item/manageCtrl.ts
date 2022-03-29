@@ -86,7 +86,7 @@ export class PermCtrl implements IController {
         this.newTranslation = {
             language: "",
             title: "",
-            translator: "",
+            translator: "Manual", // Default
             translatorLanguage: "",
         };
         this.accessTypes = manageglobals().accessTypes;
