@@ -1620,13 +1620,18 @@ ${backTicks}
                 )
             );
             if (r.ok) {
+                // eslint-disable-next-line @typescript-eslint/no-base-to-string
+                const resultText = r.result.data.toString();
                 const ref =
                     this.resolve.params.initialText?.substring(
                         0,
                         this.resolve.params.initialText?.indexOf("}") + 1
                     ) + "\n";
-                // eslint-disable-next-line @typescript-eslint/no-base-to-string
-                this.getEditor()?.setEditorText(ref + r.result.data.toString());
+                if (translatabletext != this.trdiff.new) {
+                    this.editor!.replaceTranslation(resultText);
+                } else {
+                    this.getEditor()?.setEditorText(ref + resultText);
+                }
                 this.translationInProgress = false;
             } else {
                 this.translationInProgress = false;
