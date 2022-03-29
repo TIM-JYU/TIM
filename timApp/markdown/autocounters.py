@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Optional, Union, TYPE_CHECKING, Any
+from typing import Union, TYPE_CHECKING, Any
 
 import attr
 from jinja2.sandbox import SandboxedEnvironment
@@ -50,6 +50,13 @@ class TOneCounterType:
 
 
 TCounters = dict[str, TOneCounterType]
+
+YAML_KEY_TRANSLATE = str.maketrans({"'": "\\'", '"': '\\"'})
+
+
+def escape_yaml_key(key: str) -> str:
+    key = key.translate(YAML_KEY_TRANSLATE)
+    return f'"{key}"'
 
 
 @attr.s(auto_attribs=True, init=False)
@@ -736,7 +743,7 @@ macros:
             for name in counter_type.counters:
                 counter = counter_type.counters[name]
                 jso = json.dumps(counter)
-                result += "    " + name + ": " + jso + "\n"
+                result += "    " + escape_yaml_key(name) + ": " + jso + "\n"
         result += "  autonames:"
         jso = json.dumps(self.new_autonames)
         result += "   " + jso + "\n"
