@@ -4976,6 +4976,14 @@
           <context context-type="linenumber">231</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4302420491905014187" datatype="html">
+        <source>This will mark the translations in all paragraphs in this document as checked. Continue?</source>
+        <target state="new">This will mark the translations in all paragraphs in this document as checked. Continue?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
+          <context context-type="linenumber">389</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
