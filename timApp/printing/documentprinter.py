@@ -172,7 +172,7 @@ class DocumentPrinter:
         """
         Gets the content of the DocEntry assigned for this DocumentPrinter object.
         Fetches the markdown for the documents paragraphs, checks whether the
-        paragraph should be printed (determined by a boolean 'print'-attribute,
+        paragraph should be printed determined by a boolean 'print'-attribute,
         and returns the markdown for all the paragraphs that should be printed.
 
         Returns the (markdown) contents of the file as a single string, as that's the
@@ -401,7 +401,12 @@ class DocumentPrinter:
                     not pdoc_macros.get("texautonumber")
                     and settings.auto_number_headings()
                 ):
-                    md = add_heading_numbers(md, p, settings.heading_format())
+                    md = add_heading_numbers(
+                        md,
+                        p,
+                        settings.heading_format(),
+                        initial_heading_counts=settings.auto_number_start(),
+                    )
 
                 """
                 if pd['md'].startswith('#'):
@@ -421,7 +426,8 @@ class DocumentPrinter:
             export_pars.append(md)
 
         if self.texplain or self.textplain:
-            content = "\n".join(export_pars)
+            # Paragraphs are separated by a blank line in the Markdown format.
+            content = "\n\n".join(export_pars)
         else:
             content = settings.get_doctexmacros() + "\n" + "\n\n".join(export_pars)
 
@@ -523,6 +529,7 @@ class DocumentPrinter:
                     settings.heading_ref_format(),
                     jump_name,
                     counters,
+                    initial_heading_counts=settings.auto_number_start(),
                 )
             else:
                 add_headings_to_counters(md, jump_name, counters)
@@ -956,7 +963,8 @@ def tim_convert_input(
                 f.write(source.replace("\n", "\r\n"))
             elif eol_type == "lf":
                 f.write(source.replace("\r\n", "\n"))
-            f.write(source)
+            else:
+                f.write(source)
     else:
 
         input_file = [source] if not string_input else []

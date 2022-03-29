@@ -179,6 +179,12 @@ export class DragComponent
         }
     }
 
+    ngOnDestroy() {
+        if (!this.attrsall.preview) {
+            this.vctrl?.removeTimComponent(this);
+        }
+    }
+
     /**
      * Creates word-object-models that have attributes essential to the functionality of drag and drop actions.
      * In addition, initializes program logic.

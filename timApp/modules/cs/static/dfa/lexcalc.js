@@ -64,30 +64,32 @@ class Lexer {
     }
 
     lex() {
+        // There might be tokens from last action returned array
         if (this.tokens.length > 0) return this.tokens.shift();
 
         this.reject = true;
 
         while (this.index <= this.input.length) {
-            let token;
+            let token;  // remove in next is for removing used empty matches
             let matches = this.scan().splice(this.remove);
             let index = this.index;
 
-            while (matches.length) {
+            while (matches.length > 0) {
                 if (!this.reject) break;
                 let match = matches.shift();
                 this.index += match.length;
                 this.reject = false;
-                this.remove++;
+                this.remove++;  // this is used for empty matches
 
                 token = match.action.apply(this, match.result);
                 if (this.reject) { // action may change this.reject!
                     this.index = match.result.index;
                     continue;
                 }
-                if (token === undefined)  continue;
-                if (Array.isArray(token)) {
-                    this.tokens = token.slice(1); // save rest if many
+                if (token === undefined)
+                    continue;
+                if (Array.isArray(token)) { // save rest if many
+                    this.tokens = token.slice(1);
                     token = token[0]; // and return first one
                 }
                 if (match.length > 0) this.remove = 0;
@@ -96,7 +98,7 @@ class Lexer {
 
             if (index >= this.input.length) {
                 if (matches.length === 0) return undefined;
-                this.reject = true;
+                this.reject = true; // opportunity for empty match at end
                 continue;
             }
 
@@ -129,8 +131,9 @@ class Lexer {
             let start = rule.start;
             let states = start.length;
 
+            // The use of states is not very clear???
             if ((states > 0 && start.indexOf(state) < 0) &&
-                (state % 2 == 0 || states !== 1 || start[0]==1)) continue;
+                (state % 2 === 0 || states > 1 || start[0] === 1)) continue;
 
             rule.pattern.lastIndex = lastIndex;
             let result = rule.pattern.exec(input);
@@ -144,7 +147,7 @@ class Lexer {
 
             if (rule.global) index = j; // do not sort prior this
 
-            // move to place agording by its lenght, longest firts
+            // move to place agording by its length, longest firts
             while (--j > index) {
                 let k = j - 1;
 
@@ -191,7 +194,7 @@ class Parser {
                 output.push(token);
                 continue;
             }
-            while (stack.length) {
+            while (stack.length > 0) {
                 let top = stack[stack.length-1];
                 if (top.name() === "(") break;
                 let operator = token.type();
@@ -207,7 +210,7 @@ class Parser {
             stack.push(token);
         }
 
-        while (stack.length) {
+        while (stack.length > 0) {
             let token = stack.pop();
             if (token.name() !== "(") output.push(token);
             else throw new Error("Missing ).");

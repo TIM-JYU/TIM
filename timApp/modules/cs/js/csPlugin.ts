@@ -1595,7 +1595,7 @@ export class CsController extends CsBase implements ITimComponent {
 
     get isText() {
         const rt = this.rtype;
-        return rt === "text" || rt === "xml" || rt === "css";
+        return rt === "text" || rt === "xml" || rt === "css" || rt === "md";
     }
 
     get argsplaceholder() {
@@ -2200,7 +2200,9 @@ ${fhtml}
         this.initSaved();
         this.isViz = this.type.startsWith("viz");
         this.isVars = this.type.startsWith("vars");
-        this.vctrl.addTimComponent(this);
+        if (!this.attrsall.preview) {
+            this.vctrl.addTimComponent(this);
+        }
         this.height = this.markup.height;
         if (this.markup.width) {
             this.csRunDivStyle = {width: this.markup.width.toString()};
@@ -2216,6 +2218,12 @@ ${fhtml}
         //  It's unclear if getCode should handle this already.
         this.showCodeNow();
         this.updateRunChanged();
+    }
+
+    ngOnDestroy() {
+        if (!this.attrsall.preview) {
+            this.vctrl.removeTimComponent(this);
+        }
     }
 
     async ngAfterViewInit() {
@@ -2384,11 +2392,13 @@ ${fhtml}
             return;
         }
 
-        const response = resp as IUploadResponse;
+        const resps = resp as [IUploadResponse];
         if (!this.markup.files) {
             this.uploadedFiles.clear();
         }
-        this.uploadedFiles.push({path: response.file, type: response.type});
+        for (const response of resps) {
+            this.uploadedFiles.push({path: response.file, type: response.type});
+        }
     }
 
     onUploadDone(success: boolean) {
@@ -3801,7 +3811,7 @@ ${fhtml}
                             class="timButton btn-sm"
                             (click)="fetchExternalFiles()"
                             [innerHTML]="externalFetchText()"></button>
-                    <a href="#" *ngIf="undoButton && isUnSaved()" title="undoTitle"
+                    <a href="#" *ngIf="undoButton && isUnSaved()" [title]="undoTitle"
                        (click)="tryResetChanges(); $event.preventDefault()"> &nbsp;{{undoButton}}</a>
                     &nbsp;&nbsp;
                     <span *ngIf="savedText"

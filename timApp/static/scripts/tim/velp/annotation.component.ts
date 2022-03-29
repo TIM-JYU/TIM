@@ -25,7 +25,7 @@ import {deserialize} from "typescript-json-serializer";
 import {DrawItem} from "tim/plugin/drawCanvas";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {luma, parseHexColor} from "tim/util/colorUtils";
+import {parseHexColor, shouldUseDarkText} from "tim/util/colorUtils";
 import {ViewCtrl} from "../document/viewctrl";
 import {KEY_CTRL, KEY_ENTER, KEY_S} from "../util/keycodes";
 import {$http} from "../util/ngimport";
@@ -687,7 +687,6 @@ export class AnnotationComponent
         if (!rgb) {
             return;
         }
-        const l = luma(rgb);
-        this.darkBg = l <= 0.5;
+        this.darkBg = !shouldUseDarkText(rgb);
     }
 }
