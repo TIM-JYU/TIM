@@ -31,9 +31,11 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek} from "date-fns";
+import moment from "moment";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
+import {toPromise} from "../../util/utils";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 
@@ -83,6 +85,10 @@ const segmentHeight = 30;
 const minutesInSegment = 20;
 
 registerLocaleData(localeFr);
+
+Date.prototype.toJSON = function () {
+    return moment(this).format();
+};
 
 /**
  * For customizing the event tooltip
@@ -193,6 +199,9 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
           >
           </mwl-calendar-day-view>
         </div>
+        <div>
+            <button class="timButton" id="saveBtn" (click)="saveChanges()" [disabled]="this.events.length === 0">Save changes</button>
+        </div>
     `,
     encapsulation: ViewEncapsulation.None,
     styleUrls: ["calendar.component.scss"],
@@ -238,11 +247,12 @@ export class CalendarComponent
             id: this.events.length,
             title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
                 segment.date,
-                20
+                minutesInSegment
             )
                 .toTimeString()
                 .substr(0, 5)} Varattava aika`,
             start: segment.date,
+            end: addMinutes(segment.date, minutesInSegment),
             meta: {
                 tmpEvent: true,
             },
@@ -296,6 +306,7 @@ export class CalendarComponent
     private refresh() {
         this.events = [...this.events];
         this.cdr.detectChanges();
+        console.log(this.events);
     }
 
     getAttributeType() {
@@ -308,6 +319,26 @@ export class CalendarComponent
 
     ngOnInit() {
         super.ngOnInit();
+    }
+
+    async saveChanges() {
+        console.log(this.events);
+        console.log(JSON.stringify(this.events));
+
+        if (this.events.length > 0) {
+            const result = await toPromise(
+                this.http.post<CalendarEvent[]>("/calendar/add", {
+                    events: JSON.stringify(this.events),
+                })
+            );
+            // TODO: handle server responses properly
+            if (result.ok) {
+                console.log("events sent");
+                console.log(result.result);
+            } else {
+                console.error(result.result.error.error);
+            }
+        }
     }
 }
 

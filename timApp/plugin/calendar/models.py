@@ -36,6 +36,9 @@ class Event(db.Model):
         db.Integer, db.ForeignKey("useraccount.id"), nullable=False
     )
 
+    # def __json__(self):
+    #   return ["event_id", "title", "start_time", "end_time"]
+
     enrolled_users: list[UserGroup] = db.relationship(
         UserGroup,
         Enrollment.__table__,
