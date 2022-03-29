@@ -222,7 +222,9 @@ class DeeplTranslationService(TranslationService):
             source_lang_code.upper(),
             target_lang.lang_code.upper(),
             # TODO keep original formatting especially related to empty space and newlines (for example translation still breaks md lists)
-            split_sentences="nonewlines",
+            split_sentences="1",  # "1" (for example) keeps original document's empty newlines
+            # TODO Preserve formatting=1 might remove punctuation
+            preserve_formatting="0",  # "1" DeepL does not make guesses of the desired sentence
             tag_handling="xml",
             ignore_tags=[self.ignore_tag],
         )
