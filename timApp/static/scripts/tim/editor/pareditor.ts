@@ -1642,6 +1642,9 @@ ${backTicks}
 
     translationSelector() {
         const selection = this.editor!.checkTranslationSelection();
+        if (selection == ""){
+            return this.trdiff!.new;
+        }
         return selection;
     }
 
