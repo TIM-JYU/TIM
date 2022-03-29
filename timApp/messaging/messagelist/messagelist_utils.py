@@ -5,7 +5,7 @@ from datetime import datetime
 from email.utils import parsedate_to_datetime
 from enum import Enum
 from re import Match
-from typing import Optional, Iterator
+from typing import Iterator
 from urllib.error import HTTPError
 from urllib.parse import SplitResult, parse_qs, urlsplit
 
@@ -296,7 +296,12 @@ def message_body_to_md(body: str) -> str:
             qs = parse_qs(url.query)
             real_url = qs.get("url", [""])[0]
         real_url = real_url or url.geturl()
-        return f"<{real_url}>" if not code_block else real_url
+        extra = ""
+        # Usually URLs don't end with a dot, so it's reasonable to move it outside the link
+        if real_url.endswith("."):
+            real_url = real_url[:-1]
+            extra = "."
+        return f"<{real_url}>{extra}" if not code_block else real_url
 
     def handle_md_url(m: Match) -> str:
         md_url, raw_url = m.group(1), m.group(5)
@@ -326,6 +331,9 @@ def message_body_to_md(body: str) -> str:
                 s = s[index + 1 :]
         return s
 
+    def is_list_start(s: str) -> bool:
+        return s.startswith("-") or s.startswith("*")
+
     for i, line in enumerate(body_lines):
         # plaintext boundary if it's present, simply ignore since we'd rather save just the plaintext mail
         if line == "--- mail_boundary ---":
@@ -339,6 +347,10 @@ def message_body_to_md(body: str) -> str:
         line = strip_quotes(line)
         cur = line.strip()
         prev = prev.strip()
+
+        # Headers are not common in emails, so it's better to just paste them verbatim
+        if cur.startswith("#"):
+            line = line.replace("#", "\\#")
 
         # Code block start/end
         if cur.startswith("```"):
@@ -369,9 +381,13 @@ def message_body_to_md(body: str) -> str:
             cur = line.strip()
             prev = ""
 
-        is_list = cur.startswith("-") or cur.startswith("*")
+        cur_is_list_start = is_list_start(cur)
+        # If the current line starts a list and prev line is not empty,
+        # add a newline => forces a new paragraph for a list in markdown
+        if cur_is_list_start and prev:
+            append_line()
         # Previous and current lines are non-empty lists => force newline on previous line
-        if not is_list and prev and cur:
+        if not cur_is_list_start and prev and cur:
             result[-1] += "  "
 
         append_line(line)

@@ -520,6 +520,7 @@ def par_list_to_html_list(
                     m,
                     settings.auto_number_headings() > 0,
                     settings.heading_format(),
+                    initial_heading_counts=settings.auto_number_start(),
                 )
             processed.append(final_html)
         raw = processed
@@ -664,6 +665,7 @@ def insert_heading_numbers(
     heading_info,
     auto_number_headings: int | bool = True,
     heading_format: dict | None = None,
+    initial_heading_counts: dict[int, int] | None = None,
 ):
     """Applies the given heading_format to the HTML if it is a heading, based on the given heading_info. Additionally
     corrects the id attribute of the heading in case it has been used earlier.
@@ -673,6 +675,7 @@ def insert_heading_numbers(
     :param html_str: The HTML string to be processed.
     :param auto_number_headings: Whether the headings should be formatted at all.
     :param heading_format: A dict(int,str) of the heading formats to be used.
+    :param initial_heading_counts: Initial heading counter value for each level
     :return: The HTML with the formatted headings.
 
     """
@@ -691,7 +694,13 @@ def insert_heading_numbers(
             except KeyError:
                 e.set("id", f"{curr_id}-{hcount}")
         if auto_number_headings:
-            e.text = format_heading(e.text or "", int(e.tag[1]), counts, heading_format)
+            e.text = format_heading(
+                e.text or "",
+                int(e.tag[1]),
+                counts,
+                heading_format,
+                initial_counts=initial_heading_counts,
+            )
     final_html = etree.tostring(tree)
     return final_html
 
@@ -704,10 +713,11 @@ def format_heading(
     heading_ref_format: dict = None,
     jump_name: str = None,
     counters: AutoCounters = None,
+    initial_counts: dict[int, int] | None = None,
 ):
     counts[level] += 1
     for i in range(level + 1, 7):
-        counts[i] = 0
+        counts[i] = initial_counts.get(i, 0)
     values = {"text": text}
     add_h_values(counts, values)
     try:

@@ -16,7 +16,7 @@ from webargs.flaskparser import use_args
 from werkzeug.exceptions import HTTPException
 from werkzeug.user_agent import UserAgent
 
-from timApp.auth.sessioninfo import get_current_user_name
+from timApp.auth.sessioninfo import get_current_user_name, get_current_session_id
 from timApp.document.viewcontext import ViewRoute, ViewContext
 from timApp.user.user import Consent
 from tim_common.marshmallow_dataclass import class_schema
@@ -134,13 +134,18 @@ def get_request_message(
     is_before: bool = False,
 ) -> str:
     name = get_current_user_name()
+    session_id = get_current_session_id()
+    if session_id:
+        session_id = f" ({session_id})"
+    else:
+        session_id = ""
     if current_app.config["LOG_HOST"]:
         url_or_path = request.url
     else:
         url_or_path = request.full_path if request.query_string else request.path
     ua: UserAgent = request.user_agent
     msg = f"""
-{name}
+{name}{session_id}
 [{request.remote_addr}]:
 {request.method}
 {url_or_path}

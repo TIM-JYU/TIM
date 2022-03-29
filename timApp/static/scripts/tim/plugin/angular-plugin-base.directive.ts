@@ -71,7 +71,10 @@ export abstract class AngularPluginBase<
     }
 
     get readonly(): boolean {
-        return this.attrsall.access === "readonly";
+        return (
+            this.attrsall.access === "readonly" ||
+            (this.markup.readonly ?? false)
+        );
     }
 
     constructor(

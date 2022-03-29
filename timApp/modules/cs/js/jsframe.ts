@@ -408,6 +408,12 @@ export class JsframeComponent
         }
     }
 
+    ngOnDestroy() {
+        if (!this.isPreview()) {
+            this.viewctrl.removeTimComponent(this);
+        }
+    }
+
     isDrawio(): boolean {
         return this.markup.type?.toLowerCase() == "drawio";
     }

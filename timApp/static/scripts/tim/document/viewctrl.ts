@@ -863,6 +863,38 @@ export class ViewCtrl implements IController {
         }
     }
 
+    /**
+     * Unregisters an ITimComponent from the view controller by its name attribute if it has one.
+     * @param {ITimComponent} component The component to be unregistered.
+     * @param {string | undefined} tag for accessing  group of ITimComponents
+     */
+    public removeTimComponent(component: ITimComponent, tag?: string | null) {
+        const taskId = component.getTaskId();
+        if (taskId) {
+            const name = taskId.docTaskField();
+            const res = this.timComponents.get(name);
+            if (res == component) {
+                this.timComponents.delete(name);
+            }
+            if (tag) {
+                const prev = this.timComponentTags.get(tag);
+                if (prev != undefined) {
+                    this.timComponentTags.set(
+                        name,
+                        prev.filter((n) => n != name)
+                    );
+                }
+            }
+            const previousComps = this.getTimComponentArray(name);
+            if (previousComps != undefined) {
+                this.timComponentArrays.set(
+                    name,
+                    previousComps.filter((c) => c != component)
+                );
+            }
+        }
+    }
+
     public getTimComponentArray(name: string): ITimComponent[] | undefined {
         if (!name) {
             return undefined;
@@ -1386,6 +1418,12 @@ export class ViewCtrl implements IController {
         //     this.abs.set(ab.taskId + index, ab);
         // } else { this.abs.set(ab.taskId, ab); }
         this.abs.set(dtf, ab);
+    }
+
+    unregisterAnswerBrowser(ab: AnswerBrowserController) {
+        const dtf = ab.taskId.docTaskField();
+        this.abs.delete(dtf);
+        this.formAbs.delete(dtf);
     }
 
     getAnswerBrowser(taskId: string) {

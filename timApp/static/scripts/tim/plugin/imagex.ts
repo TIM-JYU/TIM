@@ -1455,7 +1455,9 @@ export class ImageXComponent
     async ngOnInit() {
         super.ngOnInit();
         this.vctrl = vctrlInstance!;
-        this.vctrl.addTimComponent(this, this.markup.tag);
+        if (!this.attrsall.preview) {
+            this.vctrl.addTimComponent(this, this.markup.tag);
+        }
         // timeout required; otherwise the canvas element will be overwritten with another by Angular
         await timeout();
         this.canvas = this.element.find(".canvas")[0] as HTMLCanvasElement;
@@ -1508,7 +1510,7 @@ export class ImageXComponent
                         src: this.markup.background.src,
                         textbox: false,
                     },
-                    position: [0, 0],
+                    position: this.markup.background.position ?? [0, 0],
                     size: this.markup.background.size,
                     type: "img",
                 },
@@ -1608,6 +1610,12 @@ export class ImageXComponent
         this.previewColor = globalPreviewColor;
         this.prevAnswer = this.getContent();
         this.init = true;
+    }
+
+    ngOnDestroy() {
+        if (!this.attrsall.preview) {
+            this.vctrl.removeTimComponent(this, this.markup.tag);
+        }
     }
 
     initCode() {

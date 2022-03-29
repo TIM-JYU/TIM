@@ -4976,6 +4976,174 @@
           <context context-type="linenumber">231</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5880578431228288838" datatype="html">
+        <source>Drag-and-drop or Click to browse</source>
+        <target state="translated">Raahaa tiedosto tähän tai avaa tiedostoselain painamalla tästä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">90</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7953945655244514334" datatype="html">
+        <source>File upload already in progress</source>
+        <target state="translated">Tiedoston lataaminen on jo käynnissä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">181</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6692672754656409173" datatype="html">
+        <source>Upload starting... </source>
+        <target state="translated">Lataus alkaa...</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">204</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1399538963495873664" datatype="html">
+        <source>Post-processing; this may take a while; please wait...</source>
+        <target state="translated">Jälkikäsitellään; tämä voi kestää hetken; ole hyvä ja odota...</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">220</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3353122254290728761" datatype="html">
+        <source>Uploading... <x id="PH" equiv-text="sizeString(                                             event.loaded                                         )"/> / <x id="PH_1" equiv-text="total"/> (<x id="PH_2" equiv-text="percentage"/> %)</source>
+        <target state="translated">Ladataan... <x id="PH" equiv-text="sizeString(                                             event.loaded                                         )"/> / <x id="PH_1" equiv-text="total"/> (<x id="PH_2" equiv-text="percentage"/> %)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">222,224</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2831208374909602436" datatype="html">
+        <source>Uploaded <x id="PH" equiv-text="file.name"/> as <x id="PH_1" equiv-text="mapping.path"/> at <x id="PH_2" equiv-text="timeString()"/>. <x id="PH_3" equiv-text="this.multiple                                                     ? this.stem ?? &quot;&quot;                                                     : &quot;&quot;"/></source>
+        <target state="translated">Ladattiin tiedosto <x id="PH" equiv-text="file.name"/> tiedostonimellä <x id="PH_1" equiv-text="mapping.path"/> ({timeString())}. <x id="PH_3" equiv-text="this.multiple                                                     ? this.stem ?? &quot;&quot;                                                     : &quot;&quot;"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">244,252</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8245036865879179471" datatype="html">
+        <source>You may only upload one file</source>
+        <target state="translated">Voit ladata vain yhden tiedoston</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">284</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5108197608757432527" datatype="html">
+        <source>Maximum file size is <x id="PH" equiv-text="sizeString(                                 maxSize                             )"/></source>
+        <target state="translated">Tiedoston suurin sallittu koko on <x id="PH" equiv-text="sizeString(                                 maxSize                             )"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">293,295</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3097473873003171984" datatype="html">
+        <source>Loaded <x id="PH" equiv-text="file.name"/> at <x id="PH_1" equiv-text="timeString()"/></source>
+        <target state="translated">Ladattiin <x id="PH" equiv-text="file.name"/> (<x id="PH_1" equiv-text="timeString()"/>)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">342,344</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="246681584214905823" datatype="html">
+        <source>Loaded <x id="PH" equiv-text="file.name"/> as <x id="PH_1" equiv-text="mapping.path"/> at <x id="PH_2" equiv-text="timeString()"/></source>
+        <target state="translated">Ladattiin <x id="PH" equiv-text="file.name"/> tiedostonimellä <x id="PH_1" equiv-text="mapping.path"/> (<x id="PH_2" equiv-text="timeString()"/>)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">348,350</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6355323984408352914" datatype="html">
+        <source>Failed to read <x id="PH" equiv-text="file.name"/></source>
+        <target state="translated">Tiedoston <x id="PH" equiv-text="file.name"/> lukeminen epäonnistui</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">357</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6301051693086852927" datatype="html">
+        <source>No file upload or observers present. This is a programming/configuration error.</source>
+        <target state="translated">Ei tiedoston latausta tai tarkkailijoita. Tämä on ohjelmointi- tai konfiguraatiovirhe.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">368</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6334740459034690597" datatype="html">
+        <source>Upload <x id="PH" equiv-text="path"/> here</source>
+        <target state="translated">Lataa <x id="PH" equiv-text="path"/> tähän</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">459</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7547971725857051424" datatype="html">
+        <source>Upload files here.</source>
+        <target state="translated">Lataa tiedostoja tähän.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">470</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1026207028471895508" datatype="html">
+        <source>You may only upload <x id="PH" equiv-text="maxFiles"/> file(s)</source>
+        <target state="translated">Voit ladata korkeintaan <x id="PH" equiv-text="maxFiles"/> tiedostoa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">534</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3472580164795390907" datatype="html">
+        <source><x id="PH" equiv-text="file.name"/> exceeds the maximum <x id="PH_1" equiv-text="sizeString(                             maxSize                         )"/> size limit set for the following files: <x id="PH_2" equiv-text="this.files[                             index                         ].paths.join(&quot;, &quot;)"/></source>
+        <target state="translated"><x id="PH" equiv-text="file.name"/> ylittää korkeimman <x id="PH_1" equiv-text="sizeString(                             maxSize                         )"/> seuraaville tiedostoille asetetun kokorajan: <x id="PH_2" equiv-text="this.files[                             index                         ].paths.join(&quot;, &quot;)"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">568,572</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3198561168756113265" datatype="html">
+        <source>Failed to match the extension or name of file <x id="PH" equiv-text="filesArray[zeroIndex].name"/> to any of the wanted files.</source>
+        <target state="translated">Tiedoston <x id="PH" equiv-text="filesArray[zeroIndex].name"/> nimi tai tiedostotunnistetta ei voitu yhdistää mihinkään halutuista tiedostoista.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">583</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1466695990493018418" datatype="html">
+        <source>Failed to match file <x id="PH" equiv-text="filesArray[zIndex].name"/> to any of the wanted files.</source>
+        <target state="translated">Tiedostoa <x id="PH" equiv-text="filesArray[zIndex].name"/> ei voitu yhdistää mihinkään halutuista tiedostoista.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">650</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7272475122815399062" datatype="html">
+        <source>Failed to match given files to wanted files. Check the file extensions and try matching the filenames to the wanted ones.</source>
+        <target state="translated">Annettujen tiedostojen yhdistäminen haluttuihin tiedostoihin epäonnistui. Tarkista tiedostotunnisteet ja koita yhdistää tiedostonimet haluamiisi.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">663</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3754878083775157899" datatype="html">
+        <source>Uploaded <x id="PH" equiv-text="file.name"/> at <x id="PH_1" equiv-text="timeString()"/>. <x id="PH_2" equiv-text="this.multiple                                                     ? this.stem ?? &quot;&quot;                                                     : &quot;&quot;"/></source>
+        <target state="translated">Ladattiin <x id="PH" equiv-text="file.name"/> (<x id="PH_1" equiv-text="timeString()"/>). <x id="PH_2" equiv-text="this.multiple                                                     ? this.stem ?? &quot;&quot;                                                     : &quot;&quot;"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">234,240</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3372236332154985924" datatype="html">
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>The column count has changed since the last time.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Remove this warning by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event, true)&quot;>"/> setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Sarakkeiden lukumäärä muuttui viime kerrasta.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Poista tämä varoitus <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event, true)&quot;>"/> päivittämällä sarakkeiden leveydet<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/dataview/data-view.component.ts</context>
+          <context context-type="linenumber">176,178</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
