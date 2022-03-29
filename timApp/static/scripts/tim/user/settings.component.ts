@@ -33,7 +33,7 @@ import {
     NotificationType,
     settingsglobals,
 } from "../util/globals";
-import {IOkResponse, isIOS, timeout, to, to2, toPromise} from "../util/utils";
+import {IOkResponse, isIOS, timeout, to2, toPromise} from "../util/utils";
 import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
 import {DocumentOrFolder, ITranslatorUsage} from "../item/IItem";
 import {ContactOrigin, IFullUser, IUserAPIKey, IUserContact} from "./IUser";
