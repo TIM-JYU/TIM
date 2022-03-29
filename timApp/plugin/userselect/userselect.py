@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Optional, Union, Literal, Callable
+from typing import Literal, Callable
 
 from flask import render_template_string, Response, current_app
 
@@ -585,6 +585,7 @@ def apply_permission_actions(
                 to_add.type, to_add.time, [user_group.name], to_add.confirm
             ),
             doc_entry,
+            replace_active_duration=False,
         )
         if accs:
             update_messages.append(

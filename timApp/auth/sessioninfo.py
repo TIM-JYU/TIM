@@ -1,5 +1,4 @@
 from textwrap import dedent
-from typing import Optional
 
 from flask import session, g, request, current_app
 from sqlalchemy.orm import joinedload
@@ -94,6 +93,10 @@ def get_current_user_name() -> str:
         session["user_name"] = u.name
         name = u.name
     return name
+
+
+def get_current_session_id() -> str | None:
+    return session.get("session_id", None)
 
 
 def get_current_user_group():

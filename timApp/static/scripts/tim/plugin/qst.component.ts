@@ -161,6 +161,12 @@ export class QstComponent
         this.button = this.buttonText() ?? "Save";
     }
 
+    ngOnDestroy() {
+        if (!this.pluginMeta.isPreview()) {
+            this.vctrl.removeTimComponent(this);
+        }
+    }
+
     getHeader() {
         return this.attrsall.markup.header;
     }

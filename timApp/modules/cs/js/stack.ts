@@ -238,7 +238,15 @@ export class StackPluginComponent
             this.runGetTask();
         }
         this.vctrl = vctrlInstance!;
-        this.vctrl.addTimComponent(this);
+        if (!this.attrsall.preview) {
+            this.vctrl.addTimComponent(this);
+        }
+    }
+
+    ngOnDestroy() {
+        if (!this.attrsall.preview) {
+            this.vctrl.removeTimComponent(this);
+        }
     }
 
     processNodes(

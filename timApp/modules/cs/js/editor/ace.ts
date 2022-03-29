@@ -1,10 +1,9 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "languageMode_", "disabled_"] }] */
 import $ from "jquery";
 import {Ace} from "ace-builds/src-noconflict/ace";
-import {ElementRef, ViewChild, Component, Input} from "@angular/core";
+import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import {wrapText} from "tim/document/editing/utils";
-import {CURSOR} from "./editor";
-import {IEditor} from "./editor";
+import {CURSOR, IEditor} from "./editor";
 
 type IAceEditor = Ace.Editor;
 
@@ -87,7 +86,7 @@ export class AceEditorComponent implements IEditor {
     }
 
     setReadOnly(b: boolean) {
-        this.aceEditor?.setReadOnly(b);
+        this.disabled = b;
         this.editorreadonly = b;
     }
 
@@ -96,7 +95,6 @@ export class AceEditorComponent implements IEditor {
 
         const editor = ace.edit(this.area.nativeElement);
         this.aceEditor = editor;
-        this.aceEditor.setReadOnly(this.editorreadonly);
 
         const session = editor.getSession();
         session.setUndoManager(new ace.UndoManager());

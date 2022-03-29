@@ -26,28 +26,29 @@ stages:
   DOCKER_DRIVER: overlay2
   GIT_SUBMODULE_STRATEGY: normal
 
-browser_tests:
-  variables:
-   <<: *dockervars
-  services:
-  - docker:dind
-  stage: test
-  before_script:
-  - *setup
-  script:
-  - TEST_PARAMS="discover -v tests/browser 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
-  artifacts:
-    name: failed_screenshots
-    when: always
-    paths:
-    - screenshots
-  timeout: 50m  # usually takes less than 40 minutes
-  retry:
-    max: 2
-    when:
-      - script_failure
-      - stuck_or_timeout_failure
-      - runner_system_failure
+# Browser tests currently fail badly, see: https://gitlab.com/tim-jyu/tim/-/issues/2559
+#browser_tests:
+#  variables:
+#   <<: *dockervars
+#  services:
+#  - docker:dind
+#  stage: test
+#  before_script:
+#  - *setup
+#  script:
+#  - TEST_PARAMS="discover -v tests/browser 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
+#  artifacts:
+#    name: failed_screenshots
+#    when: always
+#    paths:
+#    - screenshots
+#  timeout: 50m  # usually takes less than 40 minutes
+#  retry:
+#    max: 2
+#    when:
+#      - script_failure
+#      - stuck_or_timeout_failure
+#      - runner_system_failure
 
 other_tests:
   variables:
@@ -119,5 +120,5 @@ py_format:
   stage: lint
   image: python:3.10-slim
   script:
-  - pip install black==22.1.0
+  - pip install black==22.3.0
   - black --check .

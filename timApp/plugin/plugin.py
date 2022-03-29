@@ -4,15 +4,15 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional, Union, Iterable, Generator, Match, Any
+from typing import Iterable, Generator, Match, Any
 
 import yaml
 from jinja2 import Environment, BaseLoader
 from marshmallow import missing, ValidationError
 
+from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
-from timApp.answer.answer import Answer
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
@@ -53,7 +53,8 @@ PLG_RTEMPLATE = JINJAENV.from_string(
 {{unlock_info or ''}}
 answer-id="{{aid or ''}}"
 class="{{plgclass}}"
-task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>""".replace(
+task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>
+""".replace(
         "\n", " "
     )
 )
@@ -591,6 +592,22 @@ class Plugin:
                     return
                 self.access_end_for_user = ba.accessible_to
 
+    # TODO: Instead of using AngularJS draggable, define dragging on Angular side
+    def wrap_draggable(self, html_str: str, doc_task_id: str) -> str:
+        if self.known.floatHeader is missing or self.options.preview:
+            return html_str
+        size = ""
+        if self.known.floatSize is not missing and self.known.floatSize:
+            size = f"initial-size=\"{{width:'{self.known.floatSize[0]}px',height:'{self.known.floatSize[1]}px'}}\""
+
+        return f"""
+            <div class="draggable-plugin" tim-draggable-fixed anchor="fixed" click="true" {size} save="%%PAGEID%%PluginDraggable{doc_task_id}" detachable="true" caption="{self.known.floatHeader}">
+                <div class="draggable-content">
+                    {html_str}
+                </div>
+            </div>
+        """
+
     def get_final_output(self):
         out = self.output
         if self.is_lazy() and out.find(LAZYSTART) < 0:
@@ -630,7 +647,7 @@ class Plugin:
                 unlock_info = f"""access-duration='{self.known.accessDuration}' access-end="{access_end or ""}" 
                 access-header='{self.known.header or ""}' access-end-text='{self.known.accessEndText or ''}'"""
             if abtype and self.options.wraptype == PluginWrap.Full and False:
-                return (
+                return self.wrap_draggable(
                     f"""
 <tim-plugin-loader type="{abtype}" answer-id="{self.answer.id if self.answer else None or ''}"
                    class="{self.get_container_class()}"
@@ -638,38 +655,45 @@ class Plugin:
                         "\n", ""
                     )
                     + cont
-                    + "</tim-plugin-loader>"
+                    + "</tim-plugin-loader>",
+                    doc_task_id or "",
                 )  # 0.001 sec
             if abtype and self.options.wraptype == PluginWrap.Full:  # and False
-                ret = render_template_string3(  # TODO: 0.05 sec
-                    PLG_RTEMPLATE,
-                    abtype=abtype,
-                    plgclass=self.get_container_class(),
-                    doc_task_id=doc_task_id,
-                    cont=cont,
-                    aid=self.answer.id if self.answer else None,
-                    unlock_info=unlock_info,
+                ret = self.wrap_draggable(
+                    render_template_string3(  # TODO: 0.05 sec
+                        PLG_RTEMPLATE,
+                        abtype=abtype,
+                        plgclass=self.get_container_class(),
+                        doc_task_id=doc_task_id,
+                        cont=cont,
+                        aid=self.answer.id if self.answer else None,
+                        unlock_info=unlock_info,
+                    ),
+                    doc_task_id or "",
                 )
                 return ret  # .replace("\n", "") # TODO: for some reason this is important for tables
             if abtype and self.options.wraptype == PluginWrap.Full:
-                return render_template_string2(
-                    # TODO: 0.05 sec with rts3 2.3 sec with rts2, 8.5 sec with rts, 0.0001 sec with f
-                    """
+                return self.wrap_draggable(
+                    render_template_string2(
+                        # TODO: 0.05 sec with rts3 2.3 sec with rts2, 8.5 sec with rts, 0.0001 sec with f
+                        """
 <tim-plugin-loader type="{{abtype}}"
                    answer-id="{{aid or ''}}"
                    class="{{plgclass}}"
                    task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>""",
-                    abtype=abtype,
-                    answer_count=self.answer_count,
-                    html_task_id=html_task_id,
-                    out=out,
-                    plgclass=self.get_container_class(),
-                    style=style,
-                    tag=tag,
-                    type=self.type,
-                    doc_task_id=doc_task_id,
-                    cont=cont,
-                    aid=self.answer.id if self.answer else None,
+                        abtype=abtype,
+                        answer_count=self.answer_count,
+                        html_task_id=html_task_id,
+                        out=out,
+                        plgclass=self.get_container_class(),
+                        style=style,
+                        tag=tag,
+                        type=self.type,
+                        doc_task_id=doc_task_id,
+                        cont=cont,
+                        aid=self.answer.id if self.answer else None,
+                    ),
+                    doc_task_id or "",
                 ).replace("\n", "")
             else:
                 return cont
