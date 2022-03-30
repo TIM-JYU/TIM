@@ -90,11 +90,11 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
     template: `
 <div class="textfieldNoSaveDiv inline-form">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <h4 *ngIf="header" [innerHtml]="header"></h4>
+    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
     <p class="stem" *ngIf="stem">{{stem}}</p>
     <form #f class="form-inline">
      <label><span>
-      <span class="inputstem" [innerHtml]="inputstem"></span>
+      <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
       <span *ngIf="!isPlainText()" >
         <input type="text"
                *ngIf="!isTextArea()"
@@ -107,6 +107,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                [pattern]="getPattern()"
                [readonly]="readonly"
                [tooltip]="errormessage"
+               [disabled]="attrsall['preview']"
                [placeholder]="placeholder"
                [class.warnFrame]="isUnSaved() && !redAlert"
                [class.alertFrame]="redAlert"
@@ -126,6 +127,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                [readonly]="readonly"
                [tooltip]="errormessage"
                [placeholder]="placeholder"
+               [disabled]="attrsall['preview']"
                [class.warnFrame]="isUnSaved() && !redAlert"
                [class.alertFrame]="redAlert"
                [ngStyle]="styles"
@@ -138,14 +140,14 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
     <div *ngIf="errormessage" class="error" style="font-size: 12px" [innerHtml]="errormessage"></div>
     <button class="timButton"
             *ngIf="!isPlainText() && buttonText()"
-            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly"
+            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
             (click)="saveText()">
         {{buttonText()}}
     </button>
     <a href="" *ngIf="undoButton && isUnSaved() && undoButton" title="{{undoTitle}}"
             (click)="tryResetChanges($event);">{{undoButton}}</a>    
     <p class="savedtext" *ngIf="!hideSavedText && buttonText()">Saved!</p>
-    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
 </div>
 `,
     styleUrls: ["textfield-plugin.component.scss"],
@@ -216,7 +218,9 @@ export class TextfieldPluginComponent
             this.attrsall.state?.c,
             this.markup.initword ?? ""
         ).toString();
-        this.vctrl.addTimComponent(this, this.markup.tag);
+        if (!this.attrsall.preview) {
+            this.vctrl.addTimComponent(this, this.markup.tag);
+        }
         this.initialValue = this.userword;
         if (this.markup.showname) {
             this.initCode();
@@ -226,6 +230,12 @@ export class TextfieldPluginComponent
         }
         if (this.markup.textarea && this.markup.autogrow) {
             this.autoGrow();
+        }
+    }
+
+    ngOnDestroy() {
+        if (!this.attrsall.preview) {
+            this.vctrl.removeTimComponent(this, this.markup.tag);
         }
     }
 

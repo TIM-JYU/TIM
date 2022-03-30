@@ -2,11 +2,12 @@ import langcodes as lc
 import requests
 
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, Callable
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.document.translation.language import Language
 from timApp.document.translation.translationparser import TranslationParser
+from timApp.util import logger
 from timApp.util.flask.requesthelper import NotExist, RouteException
 
 
@@ -326,3 +327,67 @@ class DeeplTranslationService(TranslationService):
 
     # TODO Make the value an enum like with Verification?
     __mapper_args__ = {"polymorphic_identity": "DeepL"}
+
+
+def init_translate(
+    translator: TranslationService,
+    source_lang: Language,
+    target_lang: Language,
+) -> Callable[[list[str]], list[str]]:
+    # TODO This helper-function would be better if there was some way to hide the translate-methods on ITranslators. Maybe save for the eventual(?) TranslatorSelector?
+    """
+    Use the specified TranslationService to initialize machine translation
+    :param translator: The translator to use
+    :param source_lang: The language that text is in
+    :param target_lang: The language that text will be translated into
+    :return: A partially applied function for translating text with the specified languages using the specified TranslationService
+    """
+
+    def generic_translate(text: list[str]) -> list[str]:
+        """
+        Wraps the TranslationService, source and target languages into a function that can be used to call a translation on different TranslationService-instances. TODO Maybe move this to TranslationService for clarity ":D"
+        :param text: Pieces of text to translate
+        :return: The input text translated according to the outer functions inputs.
+        """
+        translated_text = translator.translate(text, source_lang, target_lang)
+        # TODO Maybe log the length of text or other shorter info?
+        logger.log_info("\n".join(translated_text))
+
+        usage = translator.usage()
+        logger.log_info(
+            "Current DeepL API usage: "
+            + str(usage.character_count)
+            + "/"
+            + str(usage.character_limit)
+        )
+
+        return translated_text
+
+    return generic_translate
+
+
+def init_deepl_translate(
+    user_group: UserGroup, source_lang: Language, target_lang: Language
+) -> Callable[[list[str]], list[str]]:
+    """
+    Initialize the deepl translator using the API-key from user's configuration and return a partially applied function for translating
+    :param user_group: User group that owns the API-key to use in translation
+    :param source_lang: The language that text is in
+    :param target_lang: Language that is requested to translate into
+    :return: A function for translating text with the specified languages using a DeepLTranslator instance.
+    """
+    # Get the API-key from database
+    # TODO Is this cool or should the service be its own class separate from the db model?
+    translator = DeeplTranslationService.query.first()
+    translator.register(user_group)
+
+    if not translator.supports(source_lang, target_lang):
+        # TODO use langcodes for a friendlier error message (name + region/variant)
+        raise RouteException(
+            description=f"The language pair from '{source_lang}' to '{target_lang}' is not supported with DeepL"
+        )
+
+    translate_func: Callable[[list[str]], list[str]] = init_translate(
+        translator, source_lang, target_lang
+    )
+    return translate_func

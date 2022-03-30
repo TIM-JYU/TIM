@@ -1,13 +1,30 @@
+from time import sleep
+
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 
 from timApp.tests.browser.browsertest import BrowserTest
+from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
+from timApp.user.user import User, UserInfo
 
 
 class JsRunnerTest(BrowserTest):
     def test_area_visibility_toggle(self):
-        self.login_test1()
+        User.create_with_group(
+            UserInfo(
+                username="js_runner_testuser",
+                password="testpassword",
+                email="js_runner_test@example.com",
+                full_name="JS Runner Test User",
+            )
+        )
+        db.session.commit()
+
+        TimRouteTest.login(
+            self, "js_runner_test@example.com", "testpassword", "js_runner_testuser"
+        )
         d = self.create_doc(
             initial_par="""
 ``` {#qst1 dquestion="true" plugin="qst"}
@@ -53,7 +70,9 @@ Test
 """
         )
 
-        self.login_browser_quick_test1()
+        self.login_browser_as(
+            "js_runner_test@example.com", "testpassword", "JS Runner Test User"
+        )
         self.goto_document(d)
 
         def screenshot(name: str) -> None:
@@ -76,12 +95,16 @@ Test
             wait_jsrunner_done()
 
         def wait_jsrunner_output(text: str):
-            self.wait_until_present(f"js-runner .jsrunner-output")
-            self.wait.until(
-                expected_conditions.text_to_be_present_in_element(
-                    (By.CSS_SELECTOR, "js-runner .jsrunner-output"), text
+            try:
+                self.wait_until_present(f"js-runner .jsrunner-output")
+                self.wait.until(
+                    expected_conditions.text_to_be_present_in_element(
+                        (By.CSS_SELECTOR, "js-runner .jsrunner-output"), text
+                    )
                 )
-            )
+            except:
+                self.save_screenshot("wait_jsrunner_output_timeout")
+                raise
 
         wait_refresh_done()
         screenshot("initial")
@@ -90,18 +113,20 @@ Test
         wait_jsrunner_output("You need to say Yes to see the hidden content!")
         screenshot("no_answer_click")
 
-        element = self.drv.find_element(
+        qst_option_1 = self.drv.find_element(
             By.CSS_SELECTOR, ".qst-tr:nth-child(1) .qst-normal"
         )
-        actions = ActionChains(self.drv)
-        actions.move_to_element(element).perform()
-        self.drv.find_element(
-            By.CSS_SELECTOR, ".qst-tr:nth-child(1) .qst-normal"
-        ).click()
-        element = self.drv.find_element(By.CSS_SELECTOR, "body")
-        actions = ActionChains(self.drv)
-        actions.move_to_element(element).perform()
-        self.drv.find_element(By.CSS_SELECTOR, ".csRunDiv > .timButton").click()
+        qst_save_button = self.drv.find_element(
+            By.CSS_SELECTOR, ".csRunDiv > .timButton"
+        )
+        body_element = self.drv.find_element(By.CSS_SELECTOR, "body")
+        actions = ActionChains(self.drv, duration=1000)
+        actions.move_to_element(qst_option_1)
+        actions.click(qst_option_1)
+        actions.move_to_element(body_element)
+        actions.click(qst_save_button)
+        actions.perform()
+        sleep(1)
         click_jsrunner()
         wait_jsrunner_output("You can now see the hidden content!")
         screenshot("yes_click")
@@ -110,10 +135,19 @@ Test
         wait_refresh_done()
         screenshot("yes_click_refresh")
 
-        self.drv.find_element(
+        qst_option_2 = self.drv.find_element(
             By.CSS_SELECTOR, ".qst-tr:nth-child(2) .qst-normal"
-        ).click()
-        self.drv.find_element(By.CSS_SELECTOR, ".csRunDiv > .timButton").click()
+        )
+        qst_save_button = self.drv.find_element(
+            By.CSS_SELECTOR, ".csRunDiv > .timButton"
+        )
+        actions = ActionChains(self.drv, duration=1000)
+        actions.move_to_element(qst_option_2)
+        actions.click(qst_option_2)
+        actions.move_to_element(qst_save_button)
+        actions.click(qst_save_button)
+        actions.perform()
+        sleep(1)
         click_jsrunner()
         wait_jsrunner_output("You need to say Yes to see the hidden content!")
         screenshot("no_click")
