@@ -1,5 +1,7 @@
 import json
 from dataclasses import dataclass, asdict
+from datetime import datetime
+from typing import Any
 
 from flask import Response
 
@@ -95,18 +97,26 @@ def get_events() -> Response:
     return json_response(event_objs)
 
 
+@dataclass
+class CalendarEvent:
+    id: Any
+    meta: Any
+    title: str
+    start: datetime
+    end: datetime
+
+
 @calendar_plugin.post("/events")
-def add_events(events: str) -> Response:
+def add_events(events: list[CalendarEvent]) -> Response:
     verify_logged_in()
     # TODO: use get_current_user_object() to access more user information, e.g. user's groups
     cur_user = get_current_user_id()
-    events_json = json.loads(events)
 
-    for event in events_json:
+    for event in events:
         event = Event(
-            title=event["title"],
-            start_time=event["start"],
-            end_time=event["end"],
+            title=event.title,
+            start_time=event.start,
+            end_time=event.end,
             creator_user_id=cur_user,
         )
         db.session.add(event)

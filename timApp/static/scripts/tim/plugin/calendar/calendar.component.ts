@@ -328,7 +328,7 @@ export class CalendarComponent
 
     private async loadEvents() {
         const result = await toPromise(
-            this.http.get<CalendarEvent<{end: Date}>[]>("/calendar/events")
+            this.http.get<CalendarEvent[]>("/calendar/events")
         );
         if (result.ok) {
             result.result.forEach((event) => {
@@ -351,7 +351,7 @@ export class CalendarComponent
         if (eventsToAdd.length > 0) {
             const result = await toPromise(
                 this.http.post<CalendarEvent[]>("/calendar/events", {
-                    events: JSON.stringify(eventsToAdd),
+                    events: eventsToAdd,
                 })
             );
             // TODO: handle server responses properly
