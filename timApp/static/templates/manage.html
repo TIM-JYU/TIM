@@ -195,7 +195,7 @@
 
             <uib-tabset active="-1">
                 <uib-tab heading="Create a translation">
-                    <uib-tabset active="-1">
+                    <!-- <uib-tabset active="-1">
                         <uib-tab heading="Languages available for automatic translation">
                             <p>Source languages:</p>
                             <ul>
@@ -206,7 +206,7 @@
                                 <li ng-repeat="li in $ctrl.targetLanguages">{{li.name}} ({{li.code}})</li>
                             </ul>
                         </uib-tab>
-                    </uib-tabset>
+                    </uib-tabset> Maybe delete this altogether? --!>
                     <div class="form-group"><label for="translationTitle">Title:</label>
                         <input id="translationTitle" class="form-control" type="text"
                                ng-model="$ctrl.newTranslation.title"/>

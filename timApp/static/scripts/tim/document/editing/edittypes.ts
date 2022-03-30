@@ -67,50 +67,51 @@ export function extraDataForServer(data: IExtraData) {
     return {...data, par: data.par?.originalPar.id};
 }
 
+/*
+Goes through the given language list (languages) and inserts each of its members into languageArray.
+ */
 export function listLanguages(
-    languages: string,
+    languages: Array<ILanguages>,
     languageArray: Array<ILanguages>
 ) {
-    while (languages.includes(",")) {
-        languageArray.push({
-            name: languages.substring(0, languages.indexOf("-")),
-            code: languages.substring(
-                languages.indexOf("-") + 1,
-                languages.indexOf(",")
-            ),
-        });
-        languages = languages.substr(languages.indexOf(",") + 1);
+    for (const lang of languages) {
+        languageArray.push(lang);
     }
-
-    languageArray.push({
-        name: languages.substring(0, languages.indexOf("-")),
-        code: languages.substring(languages.indexOf("-") + 1),
-    });
 }
 
+/*
+Fetches the lists of the languages and lists them to front-end's language lists.
+ */
 export async function updateLanguages(
     sourceL: Array<ILanguages>,
     docL: Array<ILanguages>,
     targetL: Array<ILanguages>
 ) {
     let sources = await to(
-        $http.get<string[]>("/translations/source-languages")
+        $http.get<ILanguages[]>("/translations/source-languages")
     );
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string
-    let languages = sources.result.data.toString();
-    listLanguages(languages, sourceL);
+    if (sources.ok) {
+        listLanguages(sources.result.data, sourceL);
+    }
 
-    sources = await to($http.get<string[]>("/translations/document-languages"));
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string
-    languages = sources.result.data.toString();
-    listLanguages(languages, docL);
+    sources = await to(
+        $http.get<ILanguages[]>("/translations/document-languages")
+    );
+    if (sources.ok) {
+        listLanguages(sources.result.data, docL);
+    }
 
-    sources = await to($http.get<string[]>("/translations/target-languages"));
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string
-    languages = sources.result.data.toString();
-    listLanguages(languages, targetL);
+    sources = await to(
+        $http.get<ILanguages[]>("/translations/target-languages")
+    );
+    if (sources.ok) {
+        listLanguages(sources.result.data, targetL);
+    }
 }
 
+/*
+Fetches the list of the available translators and adds them to front-end's list of them.
+ */
 export async function listTranslators(translators: Array<ITranslators>) {
     const sources = await to($http.get<string[]>("/translations/translators"));
     if (sources.ok) {

@@ -61,4 +61,4 @@ class Language(db.Model):
 
     def __str__(self) -> str:
         """:return: Nice format for users to read"""
-        return langcodes.get(self.lang_code).display_name()
+        return f"'{self.lang_name}' ({self.lang_code})"

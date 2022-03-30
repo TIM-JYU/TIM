@@ -382,9 +382,8 @@ def init_deepl_translate(
     translator.register(user_group)
 
     if not translator.supports(source_lang, target_lang):
-        # TODO use langcodes for a friendlier error message (name + region/variant)
         raise RouteException(
-            description=f"The language pair from '{source_lang}' to '{target_lang}' is not supported with DeepL"
+            description=f"The language pair from {source_lang} to {target_lang} is not supported with DeepL"
         )
 
     translate_func: Callable[[list[str]], list[str]] = init_translate(

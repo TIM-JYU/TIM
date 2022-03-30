@@ -175,7 +175,7 @@ def get_source_languages() -> Response:
     """
 
     langs = Language.query.all()
-    sl = list(map(lambda x: f"{x.autonym}-{x.lang_code}", langs))
+    sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
     return json_response(sl)
 
 
@@ -187,7 +187,7 @@ def get_document_languages() -> Response:
     """
 
     langs = Language.query.all()
-    sl = list(map(lambda x: f"{x.autonym}-{x.lang_code}", langs))
+    sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
     return json_response(sl)
 
 
@@ -199,7 +199,7 @@ def get_target_languages() -> Response:
     """
 
     langs = Language.query.all()
-    sl = list(map(lambda x: f"{x.autonym}-{x.lang_code}", langs))
+    sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
     return json_response(sl)
 
 
