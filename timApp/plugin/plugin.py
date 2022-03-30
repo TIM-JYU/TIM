@@ -600,7 +600,7 @@ class Plugin:
         if self.known.floatSize is not missing and self.known.floatSize:
             size = f"initial-size=\"{{width:'{self.known.floatSize[0]}px',height:'{self.known.floatSize[1]}px'}}\""
 
-        return f"""
+        return f""" 
             <div class="draggable-plugin" tim-draggable-fixed anchor="fixed" click="true" {size} save="%%PAGEID%%PluginDraggable{doc_task_id}" detachable="true" caption="{self.known.floatHeader}">
                 <div class="draggable-content">
                     {html_str}
@@ -656,7 +656,7 @@ class Plugin:
                     )
                     + cont
                     + "</tim-plugin-loader>",
-                    doc_task_id or "",
+                    html_task_id or "",
                 )  # 0.001 sec
             if abtype and self.options.wraptype == PluginWrap.Full:  # and False
                 ret = self.wrap_draggable(
@@ -669,7 +669,7 @@ class Plugin:
                         aid=self.answer.id if self.answer else None,
                         unlock_info=unlock_info,
                     ),
-                    doc_task_id or "",
+                    html_task_id or "",
                 )
                 return ret  # .replace("\n", "") # TODO: for some reason this is important for tables
             if abtype and self.options.wraptype == PluginWrap.Full:
@@ -693,10 +693,10 @@ class Plugin:
                         cont=cont,
                         aid=self.answer.id if self.answer else None,
                     ),
-                    doc_task_id or "",
+                    html_task_id or "",
                 ).replace("\n", "")
             else:
-                return cont
+                return self.wrap_draggable(cont, html_task_id or "")
         return out
 
 
