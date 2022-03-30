@@ -50,15 +50,15 @@ tim-dialog-frame {
 
 .draggable-plugin {
     z-index: 1200;
-    background-color: $bg-color;
+    background-color: $material-bg;
 
     [data-plugin] {
-        background-color: $bg-color;
+        background-color: $material-bg;
     }
 
     &.draggable-detached .csRunDiv {
         max-width: $paragraph-preferred-width;
-        background-color: $bg-color;
+        background-color: $material-bg;
     }
 
     &.draggable-detached .draggable-content {
