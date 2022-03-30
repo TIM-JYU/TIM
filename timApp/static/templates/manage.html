@@ -179,7 +179,9 @@
                     <th>Actions</th>
                 </tr>
                 <tr ng-repeat="tr in $ctrl.translations">
-                    <td><input type="text" class="form-control" ng-model="tr.lang_id" placeholder="Language"/></td>
+                    <td><select id="old-document-language" name="old-document-language-select" class="form-control"
+                               ng-model="tr.lang_id">
+                        <option ng-repeat="option in $ctrl.documentLanguages" value="{{option.code}}">{{option.name}} ({{option.code}})</option></select></td>
                     <td><input type="text" class="form-control" ng-model="tr.title" placeholder="Title"/></td>
                     <td>{{tr.owner.name}}</td>
                     <td>{{tr.id}}</td>
