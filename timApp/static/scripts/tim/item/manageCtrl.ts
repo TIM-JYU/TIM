@@ -554,6 +554,20 @@ export class PermCtrl implements IController {
     }
 
     async createTranslation() {
+        const srcPosition = this.findSourceDoc();
+        if (
+            this.newTranslation.translatorLanguage ==
+            this.translations[srcPosition].lang_id
+        ) {
+            if (
+                window.confirm(
+                    "You are about to automatically translate to the same language as the original language. This will not have any effect on the result. Are you sure you want to continue?"
+                )
+            ) {
+            } else {
+                return;
+            }
+        }
         if (this.newTranslation.translator != "Manual") {
             this.translationInProgress = true;
         }
@@ -570,8 +584,10 @@ export class PermCtrl implements IController {
         );
         if (r.ok) {
             const data = r.result.data;
-            if(this.newTranslation.translator != "Manual") {
-                await $http.post(`/markTranslated/${data.id}`, {doc_id: data.id});
+            if (this.newTranslation.translator != "Manual") {
+                await $http.post(`/markTranslated/${data.id}`, {
+                    doc_id: data.id,
+                });
             }
             redirectToItem(data);
         } else {
@@ -580,6 +596,9 @@ export class PermCtrl implements IController {
         }
     }
 
+    /*
+    Finds the id of the source document in the translations list.
+     */
     findSourceDoc() {
         let begin: number;
         for (begin = 0; begin < this.translations.length; begin++) {
