@@ -170,7 +170,7 @@ python3-saml \
 pytz \
 recommonmark \
 responses \
-selenium \
+selenium==4.1.0 \
 sphinx \
 sqlalchemy\<1.4.0 \
 sqlalchemy-utils \
@@ -231,7 +231,7 @@ RUN wget -q http://mirrors.ctan.org/support/latexmk/latexmk.pl -O /usr/bin/latex
 
 # Chromedriver (for running tests)
 # Taken from https://github.com/SeleniumHQ/docker-selenium/blob/trunk/NodeChrome/Dockerfile
-ARG CHROME_VERSION="google-chrome-stable"
+ARG CHROME_VERSION="98.0.4758.102"
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
   && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
   && apt-get update -qqy \
@@ -243,7 +243,7 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
 RUN wget -q https://raw.githubusercontent.com/SeleniumHQ/docker-selenium/trunk/NodeChrome/wrap_chrome_binary -O /usr/local/bin/wrap_chrome_binary && chmod +x /usr/local/bin/wrap_chrome_binary
 RUN /usr/local/bin/wrap_chrome_binary
 
-ARG CHROME_DRIVER_VERSION
+ARG CHROME_DRIVER_VERSION="98.0.4758.102"
 RUN if [ -z "$CHROME_DRIVER_VERSION" ]; \
   then CHROME_MAJOR_VERSION=$(google-chrome --version | sed -E "s/.* ([0-9]+)(\.[0-9]+){3}.*/\1/") \
     && CHROME_DRIVER_VERSION=$(wget --no-verbose -O - "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_VERSION}"); \
