@@ -355,4 +355,5 @@ LANGUAGES = [
     "british english",
     "american english",
     "swedish",
+    {"lang_code": "FI-SiMpLe", "lang_name": "Simple Finnish", "autonym": "selkosuomi"},
 ]

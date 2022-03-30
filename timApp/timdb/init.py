@@ -4,6 +4,7 @@ import logging
 import sys
 
 import flask_migrate
+import langcodes
 import sqlalchemy
 import sqlalchemy.exc
 from alembic.runtime.environment import EnvironmentContext
@@ -192,11 +193,20 @@ def initialize_database(create_docs: bool = True) -> None:
     # Add to the database the languages found in config and skip existing ones
     langset = {x[0] for x in Language.query.with_entities(Language.lang_code).all()}
     for l in app.config["LANGUAGES"]:
-        try:
-            lang = Language.create_from_name(l)
-        except Exception as e:
-            # TODO Tell user if language cannot be created from given code
-            log_error(f"Failed to create language; try some other value: {str(e)}")
+        if type(l) is dict:
+            # Standardize the primary key with langcodes before inserting into db
+            standard_code = langcodes.standardize_tag(l["lang_code"])
+            lang = Language(
+                lang_code=standard_code,
+                lang_name=l["lang_name"],
+                autonym=l["autonym"],
+            )
+        else:
+            try:
+                lang = Language.create_from_name(l)
+            except Exception as e:
+                # TODO Tell user if language cannot be created from given code
+                log_error(f"Failed to create language; try some other value: {str(e)}")
         if lang.lang_code not in langset:
             log_info(f"Adding new language '{lang.lang_name} ({lang.lang_code})'")
             sess.add(lang)

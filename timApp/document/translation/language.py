@@ -1,8 +1,10 @@
-import langcodes as lc
+import langcodes
 from timApp.timdb.sqa import db
 from typing import Optional
+from dataclasses import dataclass
 
 
+@dataclass
 class Language(db.Model):
     """Represents a standardized language code used for example with translation documents.
 
@@ -32,7 +34,7 @@ class Language(db.Model):
         :param s: Natural name of the language
         :return: A corresponding Language-object newly created
         """
-        lang = lc.find(s)
+        lang = langcodes.find(s)
         return Language(
             lang_code=lang.to_tag(),
             lang_name=lang.language_name(),
@@ -59,4 +61,4 @@ class Language(db.Model):
 
     def __str__(self) -> str:
         """:return: Nice format for users to read"""
-        return lc.get(self.lang_code).display_name()
+        return langcodes.get(self.lang_code).display_name()

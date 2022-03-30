@@ -1,4 +1,4 @@
-import langcodes as lc
+import langcodes
 import requests
 
 from dataclasses import dataclass
@@ -296,7 +296,7 @@ class DeeplTranslationService(TranslationService):
         def get_lang(deepl_lang: dict) -> Language | None:
             try:
                 language = deepl_lang["language"]
-                code = lc.get(language).to_tag()
+                code = langcodes.get(language).to_tag()
                 return Language.query_by_code(code)
             except LookupError:
                 return None
