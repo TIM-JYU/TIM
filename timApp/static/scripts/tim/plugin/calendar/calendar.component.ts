@@ -31,9 +31,12 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek} from "date-fns";
+import moment from "moment";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
+import {toPromise} from "../../util/utils";
+import {Users} from "../../user/userService";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
@@ -84,6 +87,10 @@ const segmentHeight = 30;
 // const minutesInSegment = 20;
 
 registerLocaleData(localeFr);
+
+Date.prototype.toJSON = function () {
+    return moment(this).format();
+};
 
 /**
  * For customizing the event tooltip
@@ -194,6 +201,9 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
           >
           </mwl-calendar-day-view>
         </div>
+        <div>
+            <button class="timButton" id="saveBtn" (click)="saveChanges()" [disabled]="this.events.length <= lastEvent">Save changes</button>
+        </div>
         <app-timeview-selectors (accuracy)="getAccuracy($event)" (morning)="getMorning($event)" (evening)="getEvening($event)"></app-timeview-selectors>
     `,
     encapsulation: ViewEncapsulation.None,
@@ -228,6 +238,8 @@ export class CalendarComponent
     segmentMinutes: number = 20;
     segmentsInHour: number = 3;
 
+    lastEvent: number = 0;
+
     constructor(
         el: ElementRef<HTMLElement>,
         http: HttpClient,
@@ -259,11 +271,12 @@ export class CalendarComponent
             id: this.events.length,
             title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
                 segment.date,
-                20
+                this.segmentMinutes
             )
                 .toTimeString()
                 .substr(0, 5)} Varattava aika`,
             start: segment.date,
+            end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
                 tmpEvent: true,
             },
@@ -329,6 +342,49 @@ export class CalendarComponent
 
     ngOnInit() {
         super.ngOnInit();
+        if (Users.isLoggedIn()) {
+            void this.loadEvents();
+        }
+    }
+
+    private async loadEvents() {
+        const result = await toPromise(
+            this.http.get<CalendarEvent<{end: Date}>[]>("/calendar/events")
+        );
+        if (result.ok) {
+            result.result.forEach((event) => {
+                event.start = new Date(event.start);
+                if (event.end) {
+                    event.end = new Date(event.end);
+                }
+            });
+            this.events = result.result;
+            this.lastEvent = result.result.length;
+            this.refresh();
+        } else {
+            // TODO: Handle error responses properly
+            console.error(result.result.error.error);
+        }
+    }
+
+    async saveChanges() {
+        const eventsToAdd = this.events.slice(this.lastEvent);
+        if (eventsToAdd.length > 0) {
+            const result = await toPromise(
+                this.http.post<CalendarEvent[]>("/calendar/events", {
+                    events: JSON.stringify(eventsToAdd),
+                })
+            );
+            // TODO: handle server responses properly
+            if (result.ok) {
+                console.log("events sent");
+                console.log(result.result);
+                this.lastEvent = this.events.length;
+                this.refresh();
+            } else {
+                console.error(result.result.error.error);
+            }
+        }
     }
 }
 

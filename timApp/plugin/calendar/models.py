@@ -36,6 +36,9 @@ class Event(db.Model):
         db.Integer, db.ForeignKey("useraccount.id"), nullable=False
     )
 
+    # def __json__(self):
+    #   return ["event_id", "title", "start_time", "end_time"]
+
     enrolled_users: list[UserGroup] = db.relationship(
         UserGroup,
         Enrollment.__table__,
@@ -43,7 +46,7 @@ class Event(db.Model):
         lazy="select",
     )
 
-    groups_in_events: list[UserGroup] = db.relationship(
+    groups_in_event: list[UserGroup] = db.relationship(
         UserGroup,
         Eventgroup.__table__,
         primaryjoin=event_id == Eventgroup.event_id,

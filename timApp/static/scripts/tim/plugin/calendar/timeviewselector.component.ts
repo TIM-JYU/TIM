@@ -20,8 +20,9 @@ const eveningHours: number[] = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
         <select [(ngModel)]="selectedEnd">
             <option *ngFor="let hour of eveningHours" [value]="hour">{{ hour | number:'2.0' }}</option>
         </select>
-        <div><button  (click)="submit(selectedAccuracy, selectedStart, selectedEnd)" class="btn btn-primary">Käytä</button></div>
+        <div><button id="selectorsBtn" (click)="submit(selectedAccuracy, selectedStart, selectedEnd)" class="btn btn-primary">Käytä</button></div>
     </ng-container>`,
+    styleUrls: ["calendar.component.scss"],
 })
 export class TimeViewSelectorComponent implements OnInit {
     selectedAccuracy: number = 20;
