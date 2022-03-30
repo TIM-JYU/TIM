@@ -7,9 +7,9 @@ from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.document.translation.language import Language
 from timApp.document.translation.translationparser import (
-    ObjectX,
-    parse_pandoc_md,
-    md_from_pandoc_ast,
+    NoTranslate,
+    TranslateApproval,
+    get_translate_approvals,
 )
 from timApp.util import logger
 from timApp.util.flask.requesthelper import NotExist, RouteException
@@ -42,8 +42,8 @@ class TranslationService(db.Model):
     """Human-readable name of the machine translator."""
 
     def translate(
-        self, texts: list[ObjectX], src_lang: Language, target_lang: Language
-    ) -> list[ObjectX]:
+        self, texts: list[TranslateApproval], src_lang: Language, target_lang: Language
+    ) -> list[TranslateApproval]:
         """The implementor should return the translated text in the same order as found in the `texts` parameter."""
         raise NotImplementedError
 
@@ -189,13 +189,13 @@ class DeeplTranslationService(TranslationService):
             "languages", data={"type": "source" if is_source else "target"}
         )
 
-    def preprocess(self, text: str) -> str:
+    def preprocess(self, elem: TranslateApproval) -> None:
         """
-        Protect the text with XML-tags from mangling in translation.
-        :param text: The text to add XML-protection-tags to.
-        :return: Text with protecting XML-tags added into needed places
+        Protect the text inside element with XML-tags from mangling in translation.
+        :param elem: The element to add XML-protection-tags to.
         """
-        return f"<{self.ignore_tag}>{text}</{self.ignore_tag}>"
+        if type(elem) is NoTranslate:
+            elem.text = f"<{self.ignore_tag}>{elem.text}</{self.ignore_tag}>"
 
     def postprocess(self, text: str) -> str:
         """
@@ -208,8 +208,11 @@ class DeeplTranslationService(TranslationService):
         )
 
     def translate(
-        self, texts: list[ObjectX], source_lang: Language | None, target_lang: Language
-    ) -> list[ObjectX]:
+        self,
+        texts: list[TranslateApproval],
+        source_lang: Language | None,
+        target_lang: Language,
+    ) -> list[TranslateApproval]:
         """
         Uses the DeepL API for translating text between languages
         :param texts: Text to be translated TODO Why is this a list? For the 50 text-params?
@@ -220,7 +223,9 @@ class DeeplTranslationService(TranslationService):
         source_lang_code = source_lang.lang_code if source_lang else None
 
         # Get the translatable text of objects and add protection to them
-        protected_texts = list(map(lambda x: self.preprocess(x.text), texts))
+        for elem in texts:
+            self.preprocess(elem)
+        protected_texts = list(map(lambda x: x.text, texts))
 
         # Translate texts using XML-protection
         resp_json = self._translate(
@@ -239,7 +244,7 @@ class DeeplTranslationService(TranslationService):
         # Insert the text-parts sent to the API into correct places in original elements
         for translated_text, element in zip(resp_json["translations"], texts):
             clean_text = self.postprocess(translated_text["text"])
-            element.replace_text(clean_text)
+            element.text = clean_text
 
         # FIXME WARNING changing the values of object could be wrong and act funny on upper level. In other words: returning this should not be needed, as the transformations are done on the input list of objects (which are references(?))
         return texts
@@ -308,27 +313,38 @@ def init_translate(
     :return: A partially applied function for translating text with the specified languages using the specified TranslationService
     """
 
+    # TODO This is only named "paragraph" to make reasoning about the problem easier
+    def translate_paragraph(md: str) -> str:
+        """
+        Translate a single piece of Markdown roughly the size of a generic paragraph.
+        :param md: Markdown-text to parse.
+        :return: The markdown elements that are contained in the text.
+        """
+        # Turn the text into lists of objects that describe whether they can be translated or not
+        elements: list[list[TranslateApproval]] = get_translate_approvals(md)
+        # Pass object-lists with translatable text to the machine translator object.
+        # If supported, the translator protects and removes the protection from the text (for example adding XML-ignore-tags in DeepL's case).
+        translated_elements: list[list[TranslateApproval]] = [
+            translator.translate(xs, source_lang, target_lang) for xs in elements
+        ]
+        # The translator object returns the same structure as input but their content has been translated accordingly
+        # Transform the objects back to a Markdown string
+        translated_md = ""
+        for paragraph in translated_elements:
+            for elem in paragraph:
+                translated_md += elem.text
+            # TODO Are the paragraphs actually separated by "\n\n"? Seems like this would need more handling in regard to TIM's block separation and id's etc
+            translated_md += "\n\n"
+        return translated_md
+
     def generic_translate(texts: list[str]) -> list[str]:
         """
         Wraps the TranslationService, source and target languages into a function that can be used to call a translation on different TranslationService-instances.
         :param texts: Markdown paragraphs or TIM blocks to translate.
         :return: The translatable text contained in input paragraphs translated according to the outer functions inputs (the languages).
         """
-        # Parse the texts into objects containing the translatable and non-translatable parts
-        # TODO There are more than just the one element
-        blocks: list[list[ObjectX]] = [parse_pandoc_md(texts[0])]
-
-        # Pass object with translatable text to the machine translator object.
-        # If supported, the translator protects and removes the protection from the text (for example adding XML-ignore-tags in DeepL's case).
-        # TODO There are more than just the one element
-        translated_blocks: list[list[ObjectX]] = [
-            translator.translate(blocks[0], source_lang, target_lang)
-        ]
-
-        # The translator object returns the same Pandoc AST but parts of it are translated.
-        # Transform AST back to a Markdown string
-        # TODO There are more than just the one element
-        translated_texts: list[str] = [md_from_pandoc_ast(translated_blocks[0])]
+        # TODO Translator should be able to translate multiple texts at once (ie. DeepL request can have 50 text-params)
+        translated_texts = [translate_paragraph(x) for x in texts]
 
         # TODO Maybe log the length of text or other shorter info?
         logger.log_info("\n".join(translated_texts))

@@ -225,7 +225,7 @@ def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
     :return: Lists containing the translatable parts of each block in a list
     """
     # Parse the string into an ast
-    ast = pypandoc.convert_text(md, format="md", to="json")
+    ast = json.loads(pypandoc.convert_text(md, format="md", to="json"))
     # By walking the ast, glue continuous translatable parts together into Translate-object and non-translatable parts into NoTranslate object
     # Add the objects into a list where they alternate T|NT, NT, T, NT ... T|NT
     block_approvals = [collect_approvals(block) for block in ast["blocks"]]
@@ -243,7 +243,8 @@ def quoted_collect(content: dict) -> list[TranslateApproval]:
     )
 
     arr.append(quote)
-    arr += inline_collect(content[1])
+    for inline in content[1]:
+        arr += inline_collect(inline)
     arr.append(quote)
 
     return arr
@@ -251,7 +252,10 @@ def quoted_collect(content: dict) -> list[TranslateApproval]:
 
 def cite_collect(content: dict) -> list[TranslateApproval]:
     # At the moment not needed and will break FIXME Implement this
-    return inline_collect(content[1])
+    arr: list[TranslateApproval] = list()
+    for inline in content[1]:
+        arr += inline_collect(inline)
+    return arr
 
 
 def code_collect(content: dict) -> list[TranslateApproval]:
@@ -261,7 +265,7 @@ def code_collect(content: dict) -> list[TranslateApproval]:
 
 def math_collect(content: dict) -> list[TranslateApproval]:
     # TODO Handle "MathType"
-    return [NoTranslate(content[1])]
+    return [NoTranslate("$"), NoTranslate(content[1]), NoTranslate("$")]
 
 
 def rawinline_collect(content: dict) -> list[TranslateApproval]:
@@ -272,10 +276,14 @@ def rawinline_collect(content: dict) -> list[TranslateApproval]:
 
 def link_collect(content: dict) -> list[TranslateApproval]:
     arr: list[TranslateApproval] = list()
+    arr.append(NoTranslate("["))
     # TODO Handle "Attr"
-    arr += inline_collect(content[1])
+    for inline in content[1]:
+        arr += inline_collect(inline)
+    arr.append(NoTranslate("]("))
     # Do not translate URL
     arr.append(NoTranslate(content[2][0]))
+    arr.append(NoTranslate(")"))
     # TODO Handle title in "Target"
     return arr
 
@@ -284,7 +292,8 @@ def image_collect(content: dict) -> list[TranslateApproval]:
     # TODO This is same as link_collect -> combine the functions?
     arr: list[TranslateApproval] = list()
     # TODO Handle "Attr"
-    arr += inline_collect(content[1])
+    for inline in content[1]:
+        arr += inline_collect(inline)
     # Do not translate URL
     arr.append(NoTranslate(content[2][0]))
     # TODO Handle title in "Target"
@@ -294,13 +303,14 @@ def image_collect(content: dict) -> list[TranslateApproval]:
 def span_collect(content: dict) -> list[TranslateApproval]:
     arr: list[TranslateApproval] = list()
     # TODO Handle "Attr"
-    arr += inline_collect(content[1])
+    for inline in content[1]:
+        arr += inline_collect(inline)
     return arr
 
 
 def inline_collect(top_inline: dict) -> list[TranslateApproval]:
     type_ = top_inline["t"]
-    content = top_inline["c"]
+    content = top_inline.get("c")
     arr: list[TranslateApproval] = list()
     if type_ == "Str":
         arr.append(Translate(content))
