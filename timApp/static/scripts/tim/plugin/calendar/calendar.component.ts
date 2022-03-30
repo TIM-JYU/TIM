@@ -204,7 +204,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
         <div>
             <button class="timButton" id="saveBtn" (click)="saveChanges()" [disabled]="this.events.length <= lastEvent">Save changes</button>
         </div>
-        <app-timeview-selectors (accuracy)="getAccuracy($event)" (morning)="getMorning($event)" (evening)="getEvening($event)"></app-timeview-selectors>
+        <app-timeview-selectors (accuracy)="setAccuracy($event)" (morning)="setMorning($event)" (evening)="setEvening($event)"></app-timeview-selectors>
     `,
     encapsulation: ViewEncapsulation.None,
     styleUrls: ["calendar.component.scss"],
@@ -249,16 +249,16 @@ export class CalendarComponent
         super(el, http, domSanitizer);
     }
 
-    getAccuracy(accuracy: number) {
+    setAccuracy(accuracy: number) {
         this.segmentMinutes = accuracy;
         this.segmentsInHour = 60 / this.segmentMinutes;
     }
 
-    getMorning(morning: number) {
+    setMorning(morning: number) {
         this.dayStartHour = morning;
     }
 
-    getEvening(evening: number) {
+    setEvening(evening: number) {
         this.dayEndHour = evening;
     }
 
