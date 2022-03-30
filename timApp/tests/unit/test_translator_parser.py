@@ -1,6 +1,11 @@
 import unittest
 
-from timApp.document.translation import translationparser
+from timApp.document.translation.translationparser import (
+    Translate,
+    NoTranslate,
+    TranslationParser,
+    get_translate_approvals,
+)
 
 
 class MyTestCase(unittest.TestCase):
@@ -26,14 +31,14 @@ class MyTestCase(unittest.TestCase):
             &\;\;\;\;\;\,\;\;x^2=49 \\
             &\;\;\;\;\;\,\;\;\;\;x=7\;\\text</deepl>{tai}<deepl>\;x=-7
             \\end{align*}</deepl> """,
-            translationparser.TranslationParser().latex_parse(latexblock, "deepl"),
+            TranslationParser().latex_parse(latexblock, "deepl"),
         )
 
     def test_latex_parse2(self):
         latexblock = """$How$ $ smart$ a $$lash $$ that [speech] $$doth$$ [give] my conscience!"""
         self.assertEqual(
             """<deepl>$How$</deepl> $ smart$ a <deepl>$$lash $$</deepl> that [speech] <deepl>$$doth$$</deepl> [give] my conscience!""",
-            translationparser.TranslationParser().latex_parse(latexblock, "deepl"),
+            TranslationParser().latex_parse(latexblock, "deepl"),
         )
 
     def test_styles_parse1(self):
@@ -60,7 +65,7 @@ class MyTestCase(unittest.TestCase):
 
         <deepl>##</deepl> Tämän otsikon merkinnän pitää pysyä kunnossa
         """,
-            translationparser.TranslationParser().styles_parse(styleblock, "deepl"),
+            TranslationParser().styles_parse(styleblock, "deepl"),
         )
 
     # def test_md_table_parse1(self):
@@ -122,7 +127,60 @@ choices:
     text: 'md:$x+3=0$'
     reason: 'Yhtälön ratkaisu $x=-3$ ei kuulu luonnollisiin lukuihin.'
 ```</deepl>""",
-            translationparser.TranslationParser().plugin_parse(pluginblock, "deepl"),
+            TranslationParser().plugin_parse(pluginblock, "deepl"),
+        )
+
+
+class TestParser(unittest.TestCase):
+    def test_get_translate_approvals_attribute(self):
+        text = "Tässä on kuva ![kissasta](/kuvat/kissa.png). [Tosi]{.red} hieno, eikös?"
+        self.assertEqual(
+            get_translate_approvals(text),
+            [
+                Translate("Tässä on kuva "),
+                NoTranslate("!["),
+                Translate("kissasta"),
+                NoTranslate("](/kuvat/kissa.png)"),
+                Translate(". "),
+                NoTranslate("["),
+                Translate("Tosi"),
+                NoTranslate("]{.red}"),
+                Translate(" hieno, eikös?"),
+            ],
+        )
+
+    def test_get_translate_approvals_latex(self):
+        latexblock = """KING CLAUDIUS
+[Aside] O, 'tis $too$ true!
+$How$ $ smart$ a $$lash $$ that [speech] $$doth$$ [give] my conscience!
+a) \\begin{align*} asd
+x^3-49x&=0 &&|\\text{ erotetaan yhteinen tekijä x}\\
+x(x^2-49)&=0 &&|\\text{ käytetään tulon nollasääntöä}\\
+x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\\text{ ratkaistaan x}\\
+&\;\;\;\;\;\,\;\;x^2=49 \\
+&\;\;\;\;\;\,\;\;\;\;x=7\;\\text{tai}\;x=-7
+\\end{align*} """
+        self.assertEqual(
+            get_translate_approvals(latexblock),
+            [
+                Translate("KING CLAUDIUS\n[Aside] O, 'tis $too$ true!\n"),
+                NoTranslate("$How$"),
+                Translate("$ smart$ a "),
+                NoTranslate("$$lash $$"),
+                Translate("that [speech] "),
+                NoTranslate("$$doth$$"),
+                Translate("[give] my conscience!\n a)"),
+                # TODO content in \text{<content>} should be marked as translate
+                NoTranslate(
+                    """\\begin{align*} asd
+x^3-49x&=0 &&|\\text{ erotetaan yhteinen tekijä x}\\
+x(x^2-49)&=0 &&|\\text{ käytetään tulon nollasääntöä}\\
+x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\\text{ ratkaistaan x}\\
+&\;\;\;\;\;\,\;\;x^2=49 \\
+&\;\;\;\;\;\,\;\;\;\;x=7\;\\text{tai}\;x=-7
+\\end{align*} """
+                ),
+            ],
         )
 
 

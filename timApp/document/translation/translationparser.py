@@ -199,109 +199,264 @@ class TranslationParser:
 # print(textblock)
 
 
+# TODO This name is kinda bad. Better would be along the lines of translate-flag or a whole new list-type data structure, that describes alternating between Yes's and No's
 @dataclass
-class ObjectX:
-    _obj: dict
+class TranslateApproval:
+    """Superclass for text that should or should not be
+    passed to a machine translator"""
 
-    @property
-    def text(self) -> str:
-        """
-        :return: The parts of text that can be translated in the element.
-        """
-        raise NotImplementedError
-
-    def replace_text(self, value: str) -> None:
-        """
-        Creates a correct representation of the text that conforms to Pandoc AST
-        and sets it to the content of this element.
-        :param value: New text content for the element.
-        """
-        raise NotImplementedError
+    text: str = ""
 
 
-class Paragraph(ObjectX):
-    """This might be the most straightforward to translate"""
+@dataclass
+class Translate(TranslateApproval):
+    ...
 
-    @property
-    def text(self) -> str:
-        s = ""
-        for o in self._obj:
-            ot = o["t"]
-            if ot == "Str":
-                s += o["c"]
-            elif ot == "Space":
-                s += " "
-            elif ot == "SoftBreak":
-                s += "\n"
-            # TODO Handle the rest of the
-            else:
-                s += o["c"]
-        return s
 
-    def replace_text(self, value: str) -> None:
+@dataclass
+class NoTranslate(TranslateApproval):
+    ...
+
+
+def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
+    """
+    By parsing the input text, identify parts that should and should not be passed to a machine translator
+    :param md: The input text to eventually translate
+    :return: Lists containing the translatable parts of each block in a list
+    """
+    # Parse the string into an ast
+    ast = pypandoc.convert_text(md, format="md", to="json")
+    # By walking the ast, glue continuous translatable parts together into Translate-object and non-translatable parts into NoTranslate object
+    # Add the objects into a list where they alternate T|NT, NT, T, NT ... T|NT
+    block_approvals = [collect_approvals(block) for block in ast["blocks"]]
+    # Return the list
+    return block_approvals
+
+
+def quoted_collect(content: dict) -> list[TranslateApproval]:
+    arr: list[TranslateApproval] = list()
+    # TODO Are quotes translate?
+    quote = (
+        Translate("'")
+        if content[0]["t"] == "SingleQuote"
+        else Translate('"')  # == "DoubleQuote"
+    )
+
+    arr.append(quote)
+    arr += inline_collect(content[1])
+    arr.append(quote)
+
+    return arr
+
+
+def cite_collect(content: dict) -> list[TranslateApproval]:
+    # At the moment not needed and will break FIXME Implement this
+    return inline_collect(content[1])
+
+
+def code_collect(content: dict) -> list[TranslateApproval]:
+    # TODO Handle "Attr"
+    return [NoTranslate(content[1])]
+
+
+def math_collect(content: dict) -> list[TranslateApproval]:
+    # TODO Handle "MathType"
+    return [NoTranslate(content[1])]
+
+
+def rawinline_collect(content: dict) -> list[TranslateApproval]:
+    # TODO Handle "Format"
+    # TODO Should this be Translate instead? Could contain words enclosed in underline-tags (<u>text</u>)?
+    return [NoTranslate(content[1])]
+
+
+def link_collect(content: dict) -> list[TranslateApproval]:
+    arr: list[TranslateApproval] = list()
+    # TODO Handle "Attr"
+    arr += inline_collect(content[1])
+    # Do not translate URL
+    arr.append(NoTranslate(content[2][0]))
+    # TODO Handle title in "Target"
+    return arr
+
+
+def image_collect(content: dict) -> list[TranslateApproval]:
+    # TODO This is same as link_collect -> combine the functions?
+    arr: list[TranslateApproval] = list()
+    # TODO Handle "Attr"
+    arr += inline_collect(content[1])
+    # Do not translate URL
+    arr.append(NoTranslate(content[2][0]))
+    # TODO Handle title in "Target"
+    return arr
+
+
+def span_collect(content: dict) -> list[TranslateApproval]:
+    arr: list[TranslateApproval] = list()
+    # TODO Handle "Attr"
+    arr += inline_collect(content[1])
+    return arr
+
+
+def inline_collect(top_inline: dict) -> list[TranslateApproval]:
+    type_ = top_inline["t"]
+    content = top_inline["c"]
+    arr: list[TranslateApproval] = list()
+    if type_ == "Str":
+        arr.append(Translate(content))
+    elif type_ == "Emph":
+        # NOTE Recursion
+        arr.append(NoTranslate("*"))
+        for inline in content:
+            arr += inline_collect(inline)
+        arr.append(NoTranslate("*"))
+    elif type_ == "Underline":
+        # NOTE Recursion
+        # TODO Is this just <u>text</u> == RawInline?
+        # TODO Feed example to pypandoc to learn more
+        arr.append(NoTranslate("<u>"))
+        for inline in content:
+            arr += inline_collect(inline)
+        arr.append(NoTranslate("</u>"))
+    elif type_ == "Strong":
+        arr.append(NoTranslate("**"))
+        for inline in content:
+            arr += inline_collect(inline)
+        arr.append(NoTranslate("**"))
+    elif type_ == "Strikeout":
+        # NOTE Recursion
+        # TODO Maybe same as UnderLine?
+        arr.append(NoTranslate("<s>"))
+        for inline in content:
+            arr += inline_collect(inline)
+        arr.append(NoTranslate("</s>"))
+    elif type_ == "Superscript":
+        arr.append(NoTranslate("^"))
+        for inline in content:
+            arr += inline_collect(inline)
+        arr.append(NoTranslate("^"))
+    elif type_ == "Subscript":
+        arr.append(NoTranslate("~"))
+        for inline in content:
+            arr += inline_collect(inline)
+        arr.append(NoTranslate("~"))
+    elif type_ == "SmallCaps":
+        # TODO What even is this?
+        for inline in content:
+            # TODO if figured out remove this notranslate
+            arr += list(map(lambda x: NoTranslate(x.text), inline_collect(inline)))
+    elif type_ == "Quoted":
+        arr += quoted_collect(content)
+    elif type_ == "Cite":
+        arr += cite_collect(content)
+    elif type_ == "Code":
+        arr += code_collect(content)
+    elif type_ == "Space":
+        arr.append(Translate(" "))
+    elif type_ == "SoftBreak":
+        # TODO Are newlines translated or not?
+        arr.append(Translate("\n"))
+    elif type_ == "LineBreak":
+        arr.append(NoTranslate("\\"))
+        # TODO Are newlines translated or not?
+        arr.append(Translate("\n"))
+    elif type_ == "Math":
+        arr += math_collect(content)
+    elif type_ == "RawInline":
+        arr += rawinline_collect(content)
+    elif type_ == "Link":
+        arr += link_collect(content)
+    elif type_ == "Image":
+        arr += image_collect(content)
+    elif type_ == "Note":
+        # NOTE Scary?
+        for block in content:
+            arr += collect_approvals(block)
+    elif type_ == "Span":
+        arr += span_collect(content)
+
+    return arr
+
+
+def codeblock_collect(content: dict) -> list[TranslateApproval]:
+    pass
+
+
+def rawblock_collect(content: dict) -> list[TranslateApproval]:
+    pass
+
+
+def orderedlist_collect(content: dict) -> list[TranslateApproval]:
+    pass
+
+
+def definitionlist_collect(content: dict) -> list[TranslateApproval]:
+    pass
+
+
+def header_collect(content: dict) -> list[TranslateApproval]:
+    pass
+
+
+def table_collect(content: dict) -> list[TranslateApproval]:
+    pass
+
+
+def div_collect(content: dict) -> list[TranslateApproval]:
+    pass
+
+
+def collect_approvals(top_block: dict) -> list[TranslateApproval]:
+    """
+    Walks the whole block and appends each translatable and non-translatable string-part into a list in order.
+    :param top_block: The block to collect strings from
+    :return: List of strings inside the correct approval-type.
+    """
+    arr: list[TranslateApproval] = list()
+    type_ = top_block["t"]
+    content = top_block["c"]
+    # Based on the pandoc AST-spec at
+    # https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
+    if type_ == "Plain" or type_ == "Para":
+        # TODO Need different literals before?
+        for inline in content:
+            arr += inline_collect(inline)
+    elif type_ == "LineBlock":
+        for inline_list in content:
+            for inline in inline_list:
+                arr += inline_collect(inline)
+    elif type_ == "CodeBlock":
+        # Code blocks are not translated TODO but plugins' YAML could partly be
+        arr += codeblock_collect(content)
+    elif type_ == "RawBlock":
+        arr += rawblock_collect(content)
+    elif type_ == "BlockQuote":
+        # NOTE Recursion
+        for block in content:
+            arr += collect_approvals(block)
+    elif type_ == "OrderedList":
+        # NOTE Recursion
+        arr += orderedlist_collect(content)
+    elif type_ == "BulletList":
+        # NOTE Recursion
+        for block_list in content:
+            for block in block_list:
+                arr += collect_approvals(block)
+    elif type_ == "DefinitionList":
+        arr += definitionlist_collect(content)
+    elif type_ == "Header":
+        arr += header_collect(content)
+    elif type_ == "HorizontalRule":
+        arr.append(NoTranslate("***"))
+    elif type_ == "Table":
+        arr += table_collect(content)
+    elif type_ == "Div":
+        arr += div_collect(content)
+    elif type_ == "Null":
         pass
 
-
-# def rekurs(o):
-#    if o.t == "Para":
-#        for o.c muuta stringiksi
-#
-#
-#
-#        ...
-#    elif o.t == "BulletList":
-#        jokaista c:n alkiota kohti c_a
-#          jokaista c_a:n  alkiota kohti c_a_a
-#            if c_a_a.t == "Para":
-#                rekurs(c_a_a)
-#
-#    elif o.
-
-
-class Other(ObjectX):
-    """These types of objects will not be translated"""
-
-    def text(self) -> str:
-        pass
-
-    def replace_text(self, value: str) -> None:
-        pass
-
-
-def parse_pandoc_md(source: str) -> list[ObjectX]:
-    """
-    Uses Pandoc to convert Markdown-text into JSON representing Pandoc's AST
-    :param source: Markdown-text to parse
-    :return: Object that represents the parts of Markdown
-    """
-    # TODO If the text should not be translated or handled as markdown at all (ie. plugins, which are YAML) return None
-    # TODO This function should probably return objects instead of dict
-    d = json.loads(pypandoc.convert_text(source, format="md", to="json"))
-    blocks = d["blocks"]
-    elements: list[ObjectX] = list()
-    for block in blocks:
-        if block["t"] == "Para":
-            elements.append(Paragraph(_obj=block))
-        else:
-            elements.append(Other(_obj=block))
-    return elements
-
-
-def md_from_pandoc_ast(ast: list[ObjectX]) -> str:
-    """
-    Reverse operation for parse_pandoc_md
-    :param ast: The JSON representation of Pandoc's AST
-    :return:
-    """
-    # FIXME This ain't right
-    return pypandoc.convert_text(ast, format="json", to="md")
-
-
-def map_text_elems(f: Callable[[str], str], element: ObjectX) -> list[str]:
-    """
-    Apply a function to the text element.
-    :param f: The function to apply (in DeepL's case surrounding text with XML protection)
-    :param element: Some representation X of the element TODO what?
-    :return: The input element but text parts transformed
-    """
-    raise NotImplementedError
+    # TODO merge all subsequent Translates or NoTranslates into continuous strings inside the correct object type
+    # ie. [T("foo"), T(" "), T("bar"), NT("\n"), NT("["), T("click"), NT("](www.example.com)")]
+    # ==>
+    # [T("foo bar"), NT("\n["), T("click"), NT("](www.example.com)")]
+    return arr
