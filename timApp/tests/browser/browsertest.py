@@ -5,6 +5,7 @@ from base64 import b64decode
 from contextlib import contextmanager
 from io import BytesIO
 from pprint import pprint
+from time import sleep
 from typing import Any
 from urllib.parse import urlencode
 
@@ -61,7 +62,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         TimLiveServer.setUp(self)
         self.drv = webdriver.Chrome(options=options)
         # Some CI browser tests run slower and can cause render timeouts without a longer script timeout
-        self.drv.implicitly_wait(60)
+        self.drv.implicitly_wait(10)
         self.drv.set_page_load_timeout(60)
         self.drv.set_script_timeout(60)
         self.wait = WebDriverWait(self.drv, 30)
@@ -396,29 +397,29 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self,
         selector: str | None = None,
         xpath: str | None = None,
-        tries: int = 10,
+        tries: int = 20,
         click=False,
         parent=None,
+        poll_rate=0.5,
     ) -> WebElement:
-        locator = (By.CSS_SELECTOR, selector) if selector else (By.XPATH, xpath)
-        until_condition = (
-            ec.presence_of_element_located(locator)
-            if click
-            else ec.visibility_of_element_located(locator)
-        )
-        e = WebDriverWait(
-            self.drv if not parent else parent,
-            30,
-            ignored_exceptions=(
+        while True:
+            try:
+                e = self.find_element(selector=selector, xpath=xpath, parent=parent)
+                if click:
+                    e.click()
+                else:
+                    self.touch(e)
+            except (
                 StaleElementReferenceException,
                 ElementNotInteractableException,
-            ),
-        ).until(until_condition)
-        if click:
-            e.click()
-        else:
-            self.touch(e)
-        return e
+            ):
+                tries -= 1
+                sleep(poll_rate)
+                if tries == 0:
+                    raise
+                continue
+            else:
+                return e
 
     def find_element_by_text(
         self,

@@ -464,10 +464,9 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
         return goto_view(item_path, vp)
 
     if has_special_chars(item_path):
+        qs = request.query_string.decode("utf8")
         return redirect(
-            remove_path_special_chars(request.path)
-            + "?"
-            + request.query_string.decode("utf8")
+            remove_path_special_chars(request.path) + (f"?{qs}" if qs else "")
         )
 
     save_last_page()
