@@ -423,7 +423,8 @@ def get_answers_for_tasks(tasks: list[str], user_id: int):
             tid = TaskId.parse(task_id)
             if tid.doc_id not in doc_map:
                 dib = get_doc_or_abort(tid.doc_id, f"Document {tid.doc_id} not found")
-                verify_seeanswers_access(dib)
+                if not dib.document.get_settings().peer_review():
+                    verify_seeanswers_access(dib)
                 doc_map[tid.doc_id] = dib.document
             if tid.is_global:
                 gtids.append(tid)

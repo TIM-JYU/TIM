@@ -1,32 +1,43 @@
 Table and fields
 Start peer reviewing
+``` {#demo plugin="reviewcanvas"}
+header: Header
+stem: Stem
+```
 \
 #- {area="demo" collapse="true"}
 Arviointitilanne
 
-#- {defaultplugin="numericfield" readonly="view" .fieldCell}
+#- {defaultplugin="numericfield" readonly="view" .fieldCell visible="%% False | isview%%" nocache="true"}
 %% 'Pisteet=Pisteet' | gfields('cols: 5') -%%
 \
-#- {defaultplugin="textfield" readonly="view" .fieldCell}
+#- {defaultplugin="textfield" readonly="view" .fieldCell visible="%% False | isview%%" nocache="true"}
 Tehtävän arvioineet:\
-%% 'Arvioija_' | gfrange(1,arvosteltavia,'cols: 10') -%%
+{%for i in range(0, arvosteltavia)%}
+{#Arvioija_%%i+1%% stem: Arvioija %%i+1%%, cols: 10 #}
+{#P_%%i+1%% stem: P, cols: 2 #}
+{% endfor -%}
 \
-#- {defaultplugin="textfield" readonly="view" .fieldCell}
-Arvioitavat tehtävät:\
-%% 'Arvioitava_' | gfrange(1,arvosteltavia,'cols: 10') %%
+#- {defaultplugin="textfield" readonly="view" .fieldCell visible="%% False | isview%%" nocache="true"}
+%% 'Riita=Riita' | gfields('cols: 5') -%%
 \
+#- {defaultplugin="numericfield" .fieldCell id="NpxcUSWlElhH"}
+%% 'Riitautus=Riitautus' | gfields('cols: 5') -%%
 #- {area_end="demo"}
 \
-``` {#demotable plugin="tableForm"}
+``` {#demotable plugin="tableForm" visible="%% False | isview%%" nocache="true"}
 groups:
  - %%group%%
 fields:
  - Pisteet
- - Arvioija_(1,%%arvosteltavia%%)=Arvioija_
- - Arvioitava_(1,%%arvosteltavia%%)=Arvioitava_
+ - Arvioija_(1,%%arvosteltavia%%)=Arvioija
+ - P_(1,%%arvosteltavia%%)=P
+ - Riita
+ - Riitautus
 header: Demotaulukko
 minWidth: 3em
 singleLine: true
+open: false
 hideButtonText: Piilota taulukko
 emailUsersButtonText: Lähetä ruksituille sähköpostia
 emailUsersButtonText: "Lähetä sähköpostia"
@@ -38,18 +49,34 @@ groups:
 buttonText: Päivitä tilanne
 fields:
  - Pisteet
- - Arvioija_(1,%%arvosteltavia%%)=Arvioija_
- - Arvioitava_(1,%%arvosteltavia%%)=Arvioitava_
+ - Arvioija_(1,%%arvosteltavia%%)
+ - P_(1,%%arvosteltavia%%)
+ - Riitautus
 updateFields:
  - Pisteet
- - Arvioija_(1,%%arvosteltavia%%)=Arvioija_
- - Arvioitava_(1,%%arvosteltavia%%)=Arvioitava_
+ - Arvioija_(1,%%arvosteltavia%%)
+ - P_(1,%%arvosteltavia%%)
+ - Riita
+ - Riitautus
 program: |!!
-    a = tools.testPoints()
+    a = tools.getTaskPoints()
     tools.setString("Pisteet", a)
-    b = tools.testNames()
+    b = tools.getReviews()
     for (let i =1; i <= b.length; i++) {
-        tools.setString(`Arvioija_${i}`, b[i-1])
+        tools.setString(`Arvioija_${i}`, b[i-1].name)
+        points = b[i-1].points
+        totalPoints = 0
+        for (let j=0; j<points.length; j++) {
+            totalPoints += points[j]
+        }
+        avg = totalPoints / points.length
+        tools.setString(`P_${i}`, avg)
     }
+    if (tools.getDouble("Riitautus", -100) != -100) {
+        tools.setString("Riitautus.styles", '{"backgroundColor": "red"}')
+        }
+        else {
+            tools.setString("Riitautus.styles", '{}')
+        }
 !!
 ```

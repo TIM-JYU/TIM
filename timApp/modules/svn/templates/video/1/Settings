@@ -12,6 +12,6 @@ macros:
 group:
 form_mode: true
 peer_review: false
-peer_review_count: arvosteltavia
+peer_review_count:
 ```
 ````

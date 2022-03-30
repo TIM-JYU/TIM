@@ -946,6 +946,7 @@ export interface IToolsResult {
 
 export class Tools extends ToolsBase {
     private result: Record<string, unknown> = {};
+
     constructor(
         protected data: UserFieldDataT,
         currDoc: string,
@@ -1319,20 +1320,41 @@ export class Tools extends ToolsBase {
         return {user: this.data.user.id, fields: this.result};
     }
 
-    testNames() : string[] {
-        const velps = this.testvelps.filter(v => v.answer.users[0].id === this.data.user.id)
-        const names = velps.map(v => v.annotator.name)
-        const uniques = [...new Set(names)]
-        // this.output += uniques
-        return uniques;
+    getReviews(): object[] {
+        const velps = this.testvelps
+            .filter((v) => v.answer.users[0].id === this.data.user.id)
+            .map((v) => ({
+                id: v.annotator.id,
+                name: v.annotator.name,
+                points: v.points,
+            }));
+        // this.output += velps;
+
+        const result = Array.from(new Set(velps.map((s) => s.id))).map((id) => {
+            const reviewer = velps.find((s) => s.id === id);
+            const points = velps
+                .filter((s) => s.id === id)
+                .map((velp) => velp.points);
+            return {
+                id: id,
+                name: reviewer ? reviewer.name : "",
+                points: points,
+            };
+        });
+        return result;
     }
-    testPoints() : number {
-        const velps = this.testvelps.filter(v => v.answer.users[0].id === this.data.user.id)
-        const points = velps.map(v => v.points)
+
+    getTaskPoints(): number {
+        const velps = this.testvelps
+            .filter((v) => v.answer.users[0].id === this.data.user.id)
+            .map((v) => ({
+                id: v.annotator.id,
+                name: v.annotator.name,
+                points: v.points,
+            }));
+        const points = velps.map((v) => v.points);
         // this.output += points
-        const sum = points.reduce(function(accumVariable, curValue) {
-            return accumVariable + curValue
-        }, 0);
-        return sum/velps.length
+        const sum = points.reduce((a, b) => a + b, 0);
+        return sum / velps.length ? sum / velps.length : 0;
     }
 }
