@@ -234,7 +234,7 @@ export class CalendarComponent
 
     /* The default values of calendar view that can be adjusted with the time view selector -component. */
     dayStartHour: number = 8;
-    dayEndHour: number = 16;
+    dayEndHour: number = 19;
     segmentMinutes: number = 20;
     segmentsInHour: number = 3;
 
@@ -259,7 +259,7 @@ export class CalendarComponent
     }
 
     setEvening(evening: number) {
-        this.dayEndHour = evening;
+        this.dayEndHour = evening - 1;
     }
 
     startDragToCreate(

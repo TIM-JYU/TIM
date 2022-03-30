@@ -27,7 +27,7 @@ const eveningHours: number[] = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
 export class TimeViewSelectorComponent implements OnInit {
     selectedAccuracy: number = 20;
     selectedStart: number = 8;
-    selectedEnd: number = 16;
+    selectedEnd: number = 20;
 
     accuracies = accuracies;
     eveningHours = eveningHours;
