@@ -55,6 +55,8 @@ const TextfieldMarkup = t.intersection([
         clearstyles: t.boolean,
         textarea: t.boolean,
         autogrow: t.boolean,
+        downloadButton: t.string,
+        downloadButtonFile: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -95,7 +97,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
     <form #f class="form-inline">
      <label><span>
       <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
-      <span *ngIf="!isPlainText()" >
+        <span *ngIf="!isPlainText() && !isDownloadButton" >
         <input type="text"
                *ngIf="!isTextArea()"
                class="form-control"
@@ -134,10 +136,11 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                [style.width.em]="cols">
                </textarea>
          </span>
-         <span *ngIf="isPlainText()" [innerHtml]="userword" class="plaintext" [style.width.em]="cols" style="max-width: 100%"></span>
+         <span *ngIf="isPlainText() && !downloadButton" [innerHtml]="userword | purify" class="plaintext" [style.width.em]="cols" style="max-width: 100%"></span>
+         <a *ngIf="isDownloadButton" class="timButton" [href]="userWordBlobUrl" [download]="downloadButtonFile">{{downloadButton}}</a>
          </span></label>
     </form>
-    <div *ngIf="errormessage" class="error" style="font-size: 12px" [innerHtml]="errormessage"></div>
+    <div *ngIf="errormessage" class="error" style="font-size: 12px" [innerHtml]="errormessage | purify"></div>
     <button class="timButton"
             *ngIf="!isPlainText() && buttonText()"
             [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
@@ -164,6 +167,7 @@ export class TextfieldPluginComponent
     private result?: string;
     isRunning = false;
     userword = "";
+    userWordBlobUrlStore?: {word: string; blobUrl: string};
     private vctrl!: ViewCtrl;
     private initialValue = "";
     errormessage?: string;
@@ -184,6 +188,38 @@ export class TextfieldPluginComponent
         private zone: NgZone
     ) {
         super(el, http, domSanitizer);
+    }
+
+    get userWordBlobUrl() {
+        if (
+            this.userWordBlobUrlStore &&
+            this.userWordBlobUrlStore.word != this.userword
+        ) {
+            URL.revokeObjectURL(this.userWordBlobUrlStore.blobUrl);
+            this.userWordBlobUrlStore = undefined;
+        }
+
+        if (!this.userWordBlobUrlStore) {
+            this.userWordBlobUrlStore = {
+                word: this.userword,
+                blobUrl: URL.createObjectURL(
+                    new Blob([this.userword], {
+                        type: "text/plain;charset=utf-8",
+                    })
+                ),
+            };
+        }
+        return this.domSanitizer.bypassSecurityTrustUrl(
+            this.userWordBlobUrlStore.blobUrl
+        );
+    }
+
+    get downloadButton() {
+        return this.markup.downloadButton ?? $localize`Download`;
+    }
+
+    get downloadButtonFile() {
+        return this.markup.downloadButtonFile ?? "file.txt";
     }
 
     get disableUnchanged() {
@@ -427,6 +463,13 @@ export class TextfieldPluginComponent
         }
         return (
             ros === "plaintext" && window.location.pathname.startsWith("/view/")
+        );
+    }
+
+    get isDownloadButton() {
+        return (
+            this.markup.readOnlyStyle === "download" &&
+            window.location.pathname.startsWith("/view/")
         );
     }
 

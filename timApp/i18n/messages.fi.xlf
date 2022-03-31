@@ -5144,6 +5144,14 @@
           <context context-type="linenumber">176,178</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3099741642167775297" datatype="html">
+        <source>Download</source>
+        <target state="translated">Lataa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/fields/js/textfield-plugin.component.ts</context>
+          <context context-type="linenumber">218</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
