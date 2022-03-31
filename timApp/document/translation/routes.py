@@ -191,16 +191,26 @@ def get_document_languages() -> Response:
     return json_response(sl)
 
 
-@tr_bp.get("/translations/target-languages")
+@tr_bp.post("/translations/target-languages")
 def get_target_languages() -> Response:
     """
     Query the database for the possible target languages.
     TODO Select by translator
     """
 
-    langs = Language.query.all()
-    sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
-    return json_response(sl)
+    req_data = request.get_json()
+    translator = req_data.get("translator", "")
+
+    if translator.lower() == "manual":
+        return json_response("")
+    elif translator.lower() == "deepl":
+        langs = Language.query.all()
+        sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
+        return json_response(sl)
+    else:
+        langs = Language.query.all()
+        sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
+        return json_response(sl)
 
 
 @tr_bp.get("/translations/translators")

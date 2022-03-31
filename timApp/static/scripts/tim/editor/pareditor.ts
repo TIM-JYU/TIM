@@ -18,6 +18,7 @@ import {
     ITags,
     updateLanguages,
     listTranslators,
+    listLanguages,
 } from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
@@ -1114,7 +1115,8 @@ ${backTicks}
         updateLanguages(
             this.sourceLanguages,
             this.documentLanguages,
-            this.targetLanguages
+            this.targetLanguages,
+            this.docTranslator
         );
         const saveTag = this.getSaveTag();
         this.sideBySide = false;
@@ -1535,6 +1537,18 @@ ${backTicks}
         }
     }
 
+    async updateTranslatorLanguages() {
+        const sources = await to(
+            $http.post<ILanguages[]>("/translations/target-languages", {
+                translator: this.docTranslator,
+            })
+        );
+        if (sources.ok) {
+            this.targetLanguages = [];
+            listLanguages(sources.result.data, this.targetLanguages);
+        }
+    }
+
     showTranslated() {
         let isTranslated = false;
         if (this.checkIfOriginal()) {
@@ -1751,7 +1765,8 @@ ${backTicks}
         if (
             this.docSettings != undefined &&
             this.docSettings.translator != this.docTranslator &&
-            this.resolve.params.viewCtrl != undefined
+            this.resolve.params.viewCtrl != undefined &&
+            !this.checkIfOriginal()
         ) {
             await $http.post<string>(
                 `/settings/${this.resolve.params.viewCtrl.item.id}`,
