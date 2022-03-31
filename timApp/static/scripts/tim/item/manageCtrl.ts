@@ -13,6 +13,7 @@ import {
     IManageResponse,
     updateLanguages,
     listTranslators,
+    listLanguages,
 } from "../document/editing/edittypes";
 import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
@@ -113,7 +114,8 @@ export class PermCtrl implements IController {
         await updateLanguages(
             this.sourceLanguages,
             this.documentLanguages,
-            this.targetLanguages
+            this.targetLanguages,
+            this.newTranslation.translator
         );
         if (this.item.isFolder) {
             this.newName = this.item.name;
@@ -553,6 +555,53 @@ export class PermCtrl implements IController {
         }
     }
 
+    testt() {
+        window.alert("This works now?!");
+    }
+
+    async updateTranslatorLanguages() {
+        const sources = await to(
+            $http.post<ILanguages[]>("/translations/target-languages", {
+                translator: this.newTranslation.translator,
+            })
+        );
+        if (sources.ok) {
+            this.targetLanguages = [];
+            listLanguages(sources.result.data, this.targetLanguages);
+            this.updateLangChoice();
+        }
+    }
+
+    updateLangChoice() {
+        if (this.targetLanguages != []) {
+            let langIndex = this.findTrLangIndex();
+            if (langIndex < 0) {
+                return;
+            }
+            this.newTranslation.translatorLanguage =
+                this.targetLanguages[langIndex].code;
+            const trSelect = document.querySelector("#translator-language");
+            let trSelection = trSelect!.querySelectorAll("option")[langIndex];
+            if (trSelection.value != this.newTranslation.language) {
+                langIndex = langIndex + 1;
+                trSelection = trSelect!.querySelectorAll("option")[langIndex];
+            }
+            trSelection.selected = true;
+        }
+    }
+
+    findTrLangIndex() {
+        let begin: number;
+        for (begin = 0; begin < this.targetLanguages.length; begin++) {
+            if (
+                this.targetLanguages[begin].code == this.newTranslation.language
+            ) {
+                return begin;
+            }
+        }
+        return -1;
+    }
+
     async createTranslation() {
         const srcPosition = this.findSourceDoc();
         if (
@@ -570,6 +619,19 @@ export class PermCtrl implements IController {
         }
         if (this.newTranslation.translator != "Manual") {
             this.translationInProgress = true;
+            if (this.newTranslation.translatorLanguage == "") {
+                let langIndex = this.findTrLangIndex();
+                if (langIndex < 0) {
+                    return;
+                }
+                const trSelect = document.querySelector("#translator-language");
+                if (trSelect!.querySelectorAll("option")[0].text == "") {
+                    langIndex = langIndex + 1;
+                }
+                const trSelection =
+                    trSelect!.querySelectorAll("option")[langIndex];
+                this.newTranslation.translatorLanguage = trSelection.value;
+            }
         }
 
         const r = await to(

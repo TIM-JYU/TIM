@@ -1114,7 +1114,8 @@ ${backTicks}
         updateLanguages(
             this.sourceLanguages,
             this.documentLanguages,
-            this.targetLanguages
+            this.targetLanguages,
+            this.docTranslator
         );
         const saveTag = this.getSaveTag();
         this.sideBySide = false;

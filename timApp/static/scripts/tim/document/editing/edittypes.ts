@@ -85,7 +85,8 @@ Fetches the lists of the languages and lists them to front-end's language lists.
 export async function updateLanguages(
     sourceL: Array<ILanguages>,
     docL: Array<ILanguages>,
-    targetL: Array<ILanguages>
+    targetL: Array<ILanguages>,
+    translator: string
 ) {
     let sources = await to(
         $http.get<ILanguages[]>("/translations/source-languages")
@@ -102,7 +103,9 @@ export async function updateLanguages(
     }
 
     sources = await to(
-        $http.get<ILanguages[]>("/translations/target-languages")
+        $http.post<ILanguages[]>("/translations/target-languages", {
+            translator: translator,
+        })
     );
     if (sources.ok) {
         listLanguages(sources.result.data, targetL);
