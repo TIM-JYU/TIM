@@ -233,6 +233,29 @@ def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
     return block_approvals
 
 
+def attr_collect(content: dict) -> list[TranslateApproval]:
+    """
+    :param content: Pandoc-ASTs JSON form of Attr (attributes)
+    """
+    arr: list[TranslateApproval] = list()
+    # https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Attr
+    identifier = content[0]
+    classes = content[1]
+    kv_pairs = content[2]
+    # Return nothing if there's no attrs
+    if not (identifier or classes or kv_pairs):
+        return []
+
+    arr.append(NoTranslate("{"))
+    # TODO Are spaces needed between the attributes?
+    if identifier:
+        arr.append(NoTranslate(f"#{identifier}"))
+    arr += [NoTranslate(f".{x}") for x in classes]
+    arr += [NoTranslate(f"{k}={v}") for k, v in kv_pairs]
+    arr.append(NoTranslate("}"))
+    return arr
+
+
 def quoted_collect(content: dict) -> list[TranslateApproval]:
     arr: list[TranslateApproval] = list()
     # TODO Are quotes translate?
@@ -275,41 +298,45 @@ def rawinline_collect(content: dict) -> list[TranslateApproval]:
 
 
 def link_collect(content: dict) -> list[TranslateApproval]:
+    return link_or_image_collect(content, True)
+
+
+def image_collect(content: dict) -> list[TranslateApproval]:
+    return link_or_image_collect(content, False)
+
+
+def link_or_image_collect(content: dict, islink: bool) -> list[TranslateApproval]:
     arr: list[TranslateApproval] = list()
-    arr.append(NoTranslate("["))
-    # TODO Handle "Attr"
+    arr.append(NoTranslate("[" if islink else "!["))
     for inline in content[1]:
         arr += inline_collect(inline)
     arr.append(NoTranslate("]("))
     # Do not translate URL
     arr.append(NoTranslate(content[2][0]))
     arr.append(NoTranslate(")"))
-    # TODO Handle title in "Target"
-    return arr
 
+    arr += attr_collect(content[0])
 
-def image_collect(content: dict) -> list[TranslateApproval]:
-    # TODO This is same as link_collect -> combine the functions?
-    arr: list[TranslateApproval] = list()
-    # TODO Handle "Attr"
-    for inline in content[1]:
-        arr += inline_collect(inline)
-    # Do not translate URL
-    arr.append(NoTranslate(content[2][0]))
     # TODO Handle title in "Target"
     return arr
 
 
 def span_collect(content: dict) -> list[TranslateApproval]:
+    # TODO Generalize this func like with links and images
     arr: list[TranslateApproval] = list()
-    # TODO Handle "Attr"
+    arr.append(NoTranslate("["))
     for inline in content[1]:
         arr += inline_collect(inline)
+    arr.append(NoTranslate("]"))
+
+    arr += attr_collect(content[0])
+
     return arr
 
 
 def inline_collect(top_inline: dict) -> list[TranslateApproval]:
     type_ = top_inline["t"]
+    # TODO Dynamic typing would be easy here but Mypy doesn't like this
     content = top_inline.get("c")
     arr: list[TranslateApproval] = list()
     if type_ == "Str":
@@ -389,31 +416,32 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
 
 
 def codeblock_collect(content: dict) -> list[TranslateApproval]:
-    pass
+    # TODO plugins can be identified by Attr's 3rd index; key-value -pair for example plugin="csplugin"
+    raise NotImplementedError  # TODO
 
 
 def rawblock_collect(content: dict) -> list[TranslateApproval]:
-    pass
+    raise NotImplementedError  # TODO
 
 
 def orderedlist_collect(content: dict) -> list[TranslateApproval]:
-    pass
+    raise NotImplementedError  # TODO
 
 
 def definitionlist_collect(content: dict) -> list[TranslateApproval]:
-    pass
+    raise NotImplementedError  # TODO
 
 
 def header_collect(content: dict) -> list[TranslateApproval]:
-    pass
+    raise NotImplementedError  # TODO
 
 
 def table_collect(content: dict) -> list[TranslateApproval]:
-    pass
+    raise NotImplementedError  # TODO
 
 
 def div_collect(content: dict) -> list[TranslateApproval]:
-    pass
+    raise NotImplementedError  # TODO
 
 
 def collect_approvals(top_block: dict) -> list[TranslateApproval]:
@@ -465,8 +493,19 @@ def collect_approvals(top_block: dict) -> list[TranslateApproval]:
     elif type_ == "Null":
         pass
 
-    # TODO merge all subsequent Translates or NoTranslates into continuous strings inside the correct object type
+    # TODO this function could be good for unit-testing
     # ie. [T("foo"), T(" "), T("bar"), NT("\n"), NT("["), T("click"), NT("](www.example.com)")]
     # ==>
     # [T("foo bar"), NT("\n["), T("click"), NT("](www.example.com)")]
+    if len(arr) > 0:
+        merged_arr = [arr[0]]
+        for elem in arr[1:]:
+            if isinstance(elem, type(merged_arr[-1])):
+                # Combine the texts of element and previously added if they are the same type
+                merged_arr[-1].text = merged_arr[-1].text + elem.text
+            else:
+                # If element is different type to last, add new one
+                merged_arr.append(elem)
+        return merged_arr
+
     return arr

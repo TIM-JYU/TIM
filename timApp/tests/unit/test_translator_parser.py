@@ -132,21 +132,24 @@ choices:
 
 
 class TestParser(unittest.TestCase):
-    def test_get_translate_approvals_attribute(self):
+    def test_get_translate_approvals_attr(self):
+        # TODO Add cases for identifiers, key-value -pairs and multiple classes as well
         text = "Tässä on kuva ![kissasta](/kuvat/kissa.png). [Tosi]{.red} hieno, eikös?"
         self.assertEqual(
-            get_translate_approvals(text),
             [
-                Translate("Tässä on kuva "),
-                NoTranslate("!["),
-                Translate("kissasta"),
-                NoTranslate("](/kuvat/kissa.png)"),
-                Translate(". "),
-                NoTranslate("["),
-                Translate("Tosi"),
-                NoTranslate("]{.red}"),
-                Translate(" hieno, eikös?"),
+                [
+                    Translate("Tässä on kuva "),
+                    NoTranslate("!["),
+                    Translate("kissasta"),
+                    NoTranslate("](/kuvat/kissa.png)"),
+                    Translate(". "),
+                    NoTranslate("["),
+                    Translate("Tosi"),
+                    NoTranslate("]{.red}"),
+                    Translate(" hieno, eikös?"),
+                ]
             ],
+            get_translate_approvals(text),
         )
 
     def test_get_translate_approvals_latex(self):
