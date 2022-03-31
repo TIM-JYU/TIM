@@ -44,7 +44,14 @@ class TranslationService(db.Model):
     def translate(
         self, texts: list[TranslateApproval], src_lang: Language, target_lang: Language
     ) -> list[TranslateApproval]:
-        """The implementor should return the translated text in the same order as found in the `texts` parameter."""
+        """
+        The implementor should return the translated text in the same order as found in the `texts` parameter.
+        :param texts: The texts marked for translation or not.
+        :param src_lang: Language to from.
+        :param target_lang: Language to translate into.
+        :return: List of the translated FIXME WARNING changing the values of object could be wrong and act funny on upper level. In other words: returning this should not be needed, as the transformations are done on the input list of objects (which are references(?))
+        """
+
         raise NotImplementedError
 
     def usage(self) -> Usage:
@@ -215,7 +222,7 @@ class DeeplTranslationService(TranslationService):
     ) -> list[TranslateApproval]:
         """
         Uses the DeepL API for translating text between languages
-        :param texts: Text to be translated TODO Why is this a list? For the 50 text-params?
+        :param texts: Text to be translated TODO This should probably be a list of lists (each sublist is a paragraph(?))
         :param source_lang: Language of input text. None value makes DeepL guess it from the text.
         :param target_lang: Language for target language
         :return: The input text translated into the target language
@@ -246,7 +253,6 @@ class DeeplTranslationService(TranslationService):
             clean_text = self.postprocess(translated_text["text"])
             element.text = clean_text
 
-        # FIXME WARNING changing the values of object could be wrong and act funny on upper level. In other words: returning this should not be needed, as the transformations are done on the input list of objects (which are references(?))
         return texts
 
     def usage(self) -> Usage:
