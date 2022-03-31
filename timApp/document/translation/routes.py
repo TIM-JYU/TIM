@@ -221,7 +221,7 @@ def get_translators() -> Response:
 
     translationservices = TranslationService.query.all()
     translationservice_names = list(map(lambda x: x.service_name, translationservices))
-    sl = ["Manual"] + translationservice_names
+    sl = translationservice_names
     return json_response(sl)
 
 
