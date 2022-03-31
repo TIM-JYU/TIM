@@ -7,7 +7,6 @@ urlmacros:
  group:
 macros:
  arvosteltavia:
- demotehtavia:
  group:
 group:
 form_mode: true

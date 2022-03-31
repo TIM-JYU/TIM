@@ -1,37 +1,42 @@
 Table and fields
 Start peer reviewing
-``` {#demo plugin="reviewcanvas"}
-header: Header
-stem: Stem
-```
 \
-#- {area="demo" collapse="true"}
+
+#- {defaultplugin="textfield" .fieldCell}
+%% 'Riitauta=Riitauta: Kirjoita tähän, jos et tykkää arvioista' | gfields('cols: 25') -%%
+\
+#- {area="demo" visible="%% False | isview%%" nocache="true"}
+Tehtävä:
+#- {area="fields" collapse="true"}
 Arviointitilanne
 
-#- {defaultplugin="numericfield" readonly="view" .fieldCell visible="%% False | isview%%" nocache="true"}
+#- {defaultplugin="numericfield" readonly="view" .fieldCell}
 %% 'Pisteet=Pisteet' | gfields('cols: 5') -%%
 \
-#- {defaultplugin="textfield" readonly="view" .fieldCell visible="%% False | isview%%" nocache="true"}
+#- {defaultplugin="textfield" readonly="view" .fieldCell}
 Tehtävän arvioineet:\
 {%for i in range(0, arvosteltavia)%}
 {#Arvioija_%%i+1%% stem: Arvioija %%i+1%%, cols: 10 #}
 {#P_%%i+1%% stem: P, cols: 2 #}
 {% endfor -%}
 \
-#- {defaultplugin="textfield" readonly="view" .fieldCell visible="%% False | isview%%" nocache="true"}
+#- {defaultplugin="textfield" readonly="view" .fieldCell}
 %% 'Riita=Riita' | gfields('cols: 5') -%%
 \
-#- {defaultplugin="numericfield" .fieldCell id="NpxcUSWlElhH"}
-%% 'Riitautus=Riitautus' | gfields('cols: 5') -%%
+#- {area_end="fields"}
 #- {area_end="demo"}
 \
 ``` {#demotable plugin="tableForm" visible="%% False | isview%%" nocache="true"}
 groups:
  - %%group%%
 fields:
+ - Arviointi
+ - Ope
  - Pisteet
- - Arvioija_(1,%%arvosteltavia%%)=Arvioija
- - P_(1,%%arvosteltavia%%)=P
+{% for i in range(1,arvosteltavia+1) %}
+ - Arvioija_%%i%%=Arvioija%%i%%
+ - P_%%i%%=P%%i%%
+{% endfor %}
  - Riita
  - Riitautus
 header: Demotaulukko
@@ -48,35 +53,54 @@ groups:
  - %%group%%
 buttonText: Päivitä tilanne
 fields:
+ - Ope
  - Pisteet
+ - Arviointi
  - Arvioija_(1,%%arvosteltavia%%)
  - P_(1,%%arvosteltavia%%)
- - Riitautus
+ - Riitauta
 updateFields:
+ - Ope
  - Pisteet
+ - Arviointi
  - Arvioija_(1,%%arvosteltavia%%)
  - P_(1,%%arvosteltavia%%)
- - Riita
- - Riitautus
+ - Riitauta
 program: |!!
-    a = tools.getTaskPoints()
-    tools.setString("Pisteet", a)
-    b = tools.getReviews()
-    for (let i =1; i <= b.length; i++) {
-        tools.setString(`Arvioija_${i}`, b[i-1].name)
-        points = b[i-1].points
+
+    arviotLkm = tools.getReviewCount() // Opiskelijan tekemien arvioiden lkm
+    hyvitys = 1 // Arvioinnista saatu hyvityspiste
+    tools.setDouble("Arviointi", arviotLkm * hyvitys)
+
+    pisteet = tools.getTaskPoints() // Keskiarvo vertaisarviointien pistemääristä
+    ope = tools.getDouble("Ope", -100) //Opettajan tekemä korjaus pisteytykseen
+    if (ope != -100) {
+        tools.setDouble("Pisteet", ope)
+    }
+    else {
+        tools.setString("Pisteet", a)
+    }
+
+    arvioinnit = tools.getReviews()
+    for (let i =1; i <= arviointi.length; i++) {
+        tools.setString(`Arvioija_${i}`, arviointi[i-1].name)
+        points = arviointi[i-1].points
         totalPoints = 0
         for (let j=0; j<points.length; j++) {
             totalPoints += points[j]
         }
         avg = totalPoints / points.length
         tools.setString(`P_${i}`, avg)
+
+        pointsArray.push(avg)
+        max = Math.max(...pointsArray)
+        min = Math.min(...pointsArray)
+        delta = max - min
+        value = 0 // Suurin sallittu ero pisteiden välillä
+        if (delta >= value && pointsArray.length > 1 ) {
+            tools.setDouble("Riita", delta)
+            tools.setString("Riita.styles", '{"backgroundColor": "red"}')
+        }
     }
-    if (tools.getDouble("Riitautus", -100) != -100) {
-        tools.setString("Riitautus.styles", '{"backgroundColor": "red"}')
-        }
-        else {
-            tools.setString("Riitautus.styles", '{}')
-        }
 !!
 ```

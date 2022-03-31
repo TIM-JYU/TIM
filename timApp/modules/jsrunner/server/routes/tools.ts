@@ -1326,7 +1326,7 @@ export class Tools extends ToolsBase {
             .map((v) => ({
                 id: v.annotator.id,
                 name: v.annotator.name,
-                points: v.points,
+                points: v.points ? v.points : NaN,
             }));
         // this.output += velps;
 
@@ -1334,7 +1334,8 @@ export class Tools extends ToolsBase {
             const reviewer = velps.find((s) => s.id === id);
             const points = velps
                 .filter((s) => s.id === id)
-                .map((velp) => velp.points);
+                .map((velp) => (velp.points ? velp.points : NaN))
+                .filter((n) => !isNaN(n));
             return {
                 id: id,
                 name: reviewer ? reviewer.name : "",
@@ -1350,11 +1351,27 @@ export class Tools extends ToolsBase {
             .map((v) => ({
                 id: v.annotator.id,
                 name: v.annotator.name,
-                points: v.points,
+                points: v.points ? v.points : NaN,
             }));
-        const points = velps.map((v) => v.points);
+        const points = velps.map((v) => v.points).filter((n) => !isNaN(n));
         // this.output += points
         const sum = points.reduce((a, b) => a + b, 0);
         return sum / velps.length ? sum / velps.length : 0;
+    }
+
+    getReviewCount(): number {
+        const velps = this.testvelps
+            .filter((v) => v.annotator.id === this.data.user.id)
+            .map((v) => ({
+                id: v.annotator.id,
+                answer: v.answer.id,
+            }));
+        const seen = new Set();
+        const tasks = velps.filter((el) => {
+            const duplicate = seen.has(el.answer);
+            seen.add(el.answer);
+            return !duplicate;
+        });
+        return seen.size;
     }
 }

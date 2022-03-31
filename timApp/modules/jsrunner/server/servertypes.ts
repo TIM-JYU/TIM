@@ -21,11 +21,11 @@ export const UserFieldData = t.intersection([
 export const User = t.interface({
     id: t.Int,
     name: t.string,
-})
+});
 
 export const VelpData = t.intersection([
     t.type({
-        points: t.Int,
+        points: nullable(t.Int),
         annotator: t.type({
             id: t.Int,
             name: t.string,
@@ -33,8 +33,8 @@ export const VelpData = t.intersection([
         }),
         answer: t.type({
             id: t.Int,
-            users: t.array(User)
-        })
+            users: t.array(User),
+        }),
     }),
     t.partial({
         groupinfo: t.type({
@@ -42,7 +42,6 @@ export const VelpData = t.intersection([
         }),
     }),
 ]);
-
 
 // export type UserFields = t.type({id: t.Int, fields: t.string});
 
@@ -54,13 +53,12 @@ export type AliasDataT = t.TypeOf<typeof AliasData>;
 
 export type VelpDataT = t.TypeOf<typeof VelpData>;
 
-
 export const JsrunnerAnswer = t.type({
     markup: JsrunnerMarkup,
     input: t.type({
         data: t.array(UserFieldData),
         aliases: AliasData,
-        testvelps: t.array(VelpData)
+        testvelps: t.array(VelpData),
     }),
     taskID: t.string,
 });
