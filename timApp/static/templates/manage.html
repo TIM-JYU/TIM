@@ -226,8 +226,8 @@
                                ng-model="$ctrl.newTranslation.translator" ng-change="$ctrl.updateTranslatorLanguages()">
                                 <option ng-repeat="option in $ctrl.translators" value="{{option.name}}">{{option.name}}</option>
                         </select></div>
-                        <div ng-show="$ctrl.notManual()">
-                            <label for="translatorLanguage">Translator language:</label>
+                        <div ng-show="$ctrl.notManual()&&$ctrl.findTrLangIndex()<0">
+                            <label for="translatorLanguage">Translator's language:</label>
                         <select id="translator-language" name="translator-language-select" class="form-control"
                                ng-model="$ctrl.newTranslation.translatorLanguage">
                                 <option ng-repeat="option in $ctrl.targetLanguages" value="{{option.code}}">{{option.name}} ({{option.code}})</option>
