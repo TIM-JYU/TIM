@@ -222,7 +222,7 @@ export class VelpWindowController implements IController {
         if (this.teacherRight) {
             return false;
         } else {
-            if (points == null || this.vctrl.docSettings.peer_review) {
+            if (points == null || this.vctrl.peerReviewInProcess()) {
                 return false;
             } else {
                 return true;
