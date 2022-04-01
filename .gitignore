@@ -78,3 +78,5 @@ yubi.key
 /mailman/core/logs/
 /mailman/plugins/
 venv/
+/test/
+/docs/
