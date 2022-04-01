@@ -136,7 +136,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                [style.width.em]="cols">
                </textarea>
          </span>
-         <span *ngIf="isPlainText() && !downloadButton" [innerHtml]="userword | purify" class="plaintext" [style.width.em]="cols" style="max-width: 100%"></span>
+         <span *ngIf="isPlainText() && !isDownloadButton" [innerHtml]="userword | purify" class="plaintext" [style.width.em]="cols" style="max-width: 100%"></span>
          <a *ngIf="isDownloadButton" class="timButton" [href]="userWordBlobUrl" [download]="downloadButtonFile">{{downloadButton}}</a>
          </span></label>
     </form>
