@@ -1,11 +1,13 @@
-<p align="center">
+<div align="center">
   <img src="https://gitlab.com/tim-jyu/tim-extra/-/raw/main/docs/logot/tim-logo-with-text.svg" alt="TIM">
-</p>
+
+# TIM - The Interactive Material
+</div>
 
 ![Gitlab pipeline status](https://img.shields.io/gitlab/pipeline-status/tim-jyu/tim?branch=master&style=for-the-badge)
 ***
 
-# TIM - The Interactive Material
+
 
 **TIM** (***T**he **I**nteractive **M**aterial*) is an open-source cloud-based platform
 for creating interactive learning documents such as:
