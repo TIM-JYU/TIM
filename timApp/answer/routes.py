@@ -1036,6 +1036,7 @@ def post_answer_impl(
 
             if postprogram:
                 data = {
+                    "users": [u.to_json() for u in users],
                     "answer_call_data": answer_call_data,
                     "points": points,
                     "save_object": save_object,
@@ -1140,6 +1141,7 @@ def post_answer_impl(
             result["savedNew"] = None
             if postprogram:
                 data = {
+                    "users": [u.to_json() for u in users],
                     "answer_call_data": answer_call_data,
                     "points": points,
                     "save_object": save_object,
