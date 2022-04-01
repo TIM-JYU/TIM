@@ -7,6 +7,7 @@ image: timimages/ci
 stages:
   - lint
   - test
+  - deploy
 
 .setup: &setup
   - docker info
@@ -121,3 +122,10 @@ py_format:
   script:
   - pip install black==22.3.0
   - black --check .
+
+build_docs:
+  stage: deploy
+  trigger:
+    project: tim-jyu/tim-api-docs
+    branch: main
+  allow_failure: true
