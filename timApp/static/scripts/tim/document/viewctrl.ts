@@ -1649,7 +1649,6 @@ export class ViewCtrl implements IController {
             const currentTimeFixed = new Date(
                 currentTime.getTime() - currentTime.getTimezoneOffset() * 60000
             ).toISOString();
-
             if (
                 !this.docSettings.peer_review_start ||
                 !this.docSettings.peer_review_stop
