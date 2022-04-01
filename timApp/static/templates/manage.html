@@ -219,6 +219,7 @@
                         <select id="document-language" name="document-language-select" class="form-control"
                                ng-model="$ctrl.newTranslation.language" ng-change="$ctrl.updateLangChoice()">
                                 <option ng-repeat="option in $ctrl.documentLanguages" value="{{option.code}}">{{option.name}} ({{option.code}})</option>
+                        <option value="te">test</option>
                         </select></div>
                         <div>
                         <label for="translator">Translator:</label>
@@ -240,7 +241,7 @@
                     <div ng-show="!$ctrl.checkTranslatability()">
                         <p>This document will not be automatically translated on creation.</p>
                     </div>
-                    <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title ||$ctrl.translationInProgress"
+                    <button ng-disabled="!$ctrl.newTranslation.language || (!$ctrl.newTranslation.translatorLanguage && $ctrl.notManual()) || !$ctrl.newTranslation.title ||$ctrl.translationInProgress"
                             class="timButton"
                             ng-click="$ctrl.createTranslation()" id="createbutton">Create
                     </button>
