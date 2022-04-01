@@ -1517,6 +1517,26 @@ export class ViewCtrl implements IController {
             });
         }
     }
+
+    peerReviewInProcess(): boolean {
+        if (this.docSettings.peer_review) {
+            const currentTime = new Date();
+            if (
+                !this.docSettings.peer_review_start ||
+                !this.docSettings.peer_review_stop
+            ) {
+                return false;
+            }
+            if (
+                this.docSettings.peer_review_start <= currentTime &&
+                currentTime < this.docSettings.peer_review_stop
+            ) {
+                return true;
+            }
+            return false;
+        }
+        return false;
+    }
 }
 
 class EntityRegistry<K, V> {

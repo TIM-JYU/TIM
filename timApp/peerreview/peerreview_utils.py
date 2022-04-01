@@ -37,8 +37,8 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
     review_count = settings.peer_review_count()
 
     # TODO: [Kuvio] get timestamps from doc settings
-    start_time_reviews = datetime.now()
-    end_time_reviews = datetime.now()
+    start_time_reviews = settings.peer_review_start()
+    end_time_reviews = settings.peer_review_stop()
 
     # Dictionary containing review pairs,
     # has reviewer user ID as key and value is list containing reviewable user IDs
@@ -168,4 +168,14 @@ def check_review_grouping(doc: DocInfo) -> bool:
 
 
 def is_peerreview_enabled(doc: DocInfo) -> bool:
-    return doc.document.get_settings().peer_review()
+    settings = doc.document.get_settings()
+    start = settings.peer_review_start()
+    stop = settings.peer_review_stop()
+    current_time = datetime.now()
+
+    if not start or not stop:
+        return False
+    if start <= current_time < stop:
+        return True
+    else:
+        return False
