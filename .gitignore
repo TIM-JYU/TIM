@@ -80,3 +80,5 @@ yubi.key
 venv/
 /test/
 /docs/
+/python_docs/
+build_docs.sh
