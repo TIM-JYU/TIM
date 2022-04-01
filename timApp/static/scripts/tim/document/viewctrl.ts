@@ -1665,7 +1665,6 @@ export class ViewCtrl implements IController {
             if (startTime <= currentTime && currentTime < endTime) {
                 return true;
             }
-
             return false;
         }
         return false;
