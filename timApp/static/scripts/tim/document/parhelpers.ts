@@ -81,7 +81,7 @@ export function saveCurrentScreenPar() {
  * Get paragraph header hash if available, otherwise use the id as hash.
  */
 export function getParAnchor(par: Paragraph) {
-    const headerlink = par.htmlElement.querySelector(".headerlink");
+    const headerlink = par.htmlElement.querySelector(".headerlink > a");
     if (headerlink) {
         return headerlink.getAttribute("href");
     }
