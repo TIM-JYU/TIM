@@ -129,3 +129,6 @@ build_docs:
     project: tim-jyu/tim-api-docs
     branch: main
   allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
