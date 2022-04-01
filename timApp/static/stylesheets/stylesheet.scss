@@ -1271,6 +1271,10 @@ p.docsettings {
     min-width: 50%;
 }
 
+.forceHalfSize{
+    max-width: 50% !important;
+}
+
 .diff {
     position: relative;
     background-color: #f8f8f8;

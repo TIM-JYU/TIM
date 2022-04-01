@@ -1092,17 +1092,26 @@ ${backTicks}
      */
     changePositioning() {
         const doc = document.getElementById("editorflex");
+        const editdoc = document.getElementById("editorbox");
         if (doc != null && this.sideBySide) {
             doc.classList.remove("sidebyside");
             doc.classList.add("stacked");
             this.positionButton = "Side by Side";
             this.sideBySide = false;
+            if (editdoc != null) {
+                editdoc.classList.remove("forceHalfSize");
+            }
         } else if (doc != null) {
             doc.classList.remove("stacked");
             doc.classList.add("sidebyside");
             this.positionButton = "Stacked";
             this.sideBySide = true;
+            if (editdoc != null) {
+                editdoc.classList.add("forceHalfSize");
+            }
         }
+
+        this.refreshEditorSize();
     }
 
     $onInit() {
@@ -1231,11 +1240,11 @@ ${backTicks}
             } // TODO: get a better value here
             const lines = remainingSpace / lh;
             ace.editor.setOptions({
-                maxLines: Math.max(lines, 5),
+                maxLines: Math.max(lines, 10),
                 minLines: Math.min(lines, 5),
             });
         } else if (this.editor?.type == EditorType.Textarea) {
-            this.editor.editor.height(remainingSpace);
+            this.editor.editor.height(Math.abs(remainingSpace));
         }
     }
 

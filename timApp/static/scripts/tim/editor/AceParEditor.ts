@@ -51,7 +51,7 @@ export class AceParEditor extends BaseParEditor {
             maxLines: max,
             minLines: 5,
             autoScrollEditorIntoView: true,
-            hScrollBarAlwaysVisible: false,
+            hScrollBarAlwaysVisible: true,
             vScrollBarAlwaysVisible: false,
             enableBasicAutocompletion: true,
             enableLiveAutocompletion: true,
