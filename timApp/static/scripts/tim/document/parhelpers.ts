@@ -52,7 +52,7 @@ export function saveCurrentScreenPar() {
     }
     let par;
     for (const p of enumPars(DerefOption.NoDeref)) {
-        if (!isInViewport(p.htmlElement)) {
+        if (!isInViewport(p.htmlElement, true)) {
             continue;
         }
         const d = p.parent;
