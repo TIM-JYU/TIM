@@ -3,7 +3,6 @@ TimMenu-plugin.
 """
 import uuid
 from dataclasses import dataclass, asdict
-from typing import Union, Optional
 
 from flask import render_template_string
 from marshmallow.utils import missing
@@ -40,6 +39,7 @@ class TimMenuIndentation:
     def is_this_level(self, index: int) -> bool:
         """
         Check whether the given number of spaces is within the closed range of the indentation level.
+
         :param index: First index of the hyphen marking i.e. number of spaces preceding it.
         :return: True if index is part of the level.
         """
@@ -149,13 +149,16 @@ def decide_menu_level(
     """
     Parse menu level from indentations by comparing to previously used, i.e. if user
     used (for first instances) 1 space for level 0, 3 spaces for level 1 and 5 spaces for level 2, then:
+
     - 0 spaces > 'YAML is malformed'; going below first indentation of an attribute is not allowed in YAML
     - 1 space > level 0
     - 2-3 spaces > level 1
     - 4-5 spaces > level 2
     - 6+ spaces > level 3
+
     Following level is always at most one greater than the previous, since skipping a level
     would make that menu unreachable by the user.
+
     :param index: Number of spaces before beginning of the list.
     :param previous_level: Previous menu's level.
     :param level_indentations: List of previously used level indentations.
@@ -189,6 +192,7 @@ def set_attributes(line: str, item: TimMenuItem) -> None:
     """
     Adds attributes recognized from non-list line to the above menu item.
     Note: supports only one attribute per line.
+
     :param line: Attribute line in menu attribute.
     :param item: Previous menu item.
     """
@@ -209,6 +213,7 @@ def set_attributes(line: str, item: TimMenuItem) -> None:
 def get_attribute(line: str, attr_name: str) -> str | None:
     """
     Tries parsing given attributes value, if the string contains it.
+
     :param line: String in format "attribute_name: value".
     :param attr_name: Name of the attribute to get.
     :return: Attribute value, or None, if the line doesn't contain it.
@@ -224,21 +229,21 @@ def parse_menu_string(menu_str: str, replace_tabs: bool = False) -> list[TimMenu
     Converts menu-attribute string into a menu structure with html content.
     Note: string uses a custom syntax similar to markdown lists, with hyphen (-) marking
     a menu item and indentation its level. For example:
-
-     - Menu title 1
-       width: 100px
-       - [Menu item 1](item_1_address)
-       - [Menu item 2](item_2_address)
-       - *Non-link item*
-     - Menu title 2
-       - Submenu title 1
-         height: 60px
-         - [Submenu item 1](submenu_item_1_address)
-         - [Submenu item 2](submenu_item_2_address)
-     - [Menu title as link](menu_title_address)
+    ::
+         - Menu title 1
+           width: 100px
+           - [Menu item 1](item_1_address)
+           - [Menu item 2](item_2_address)
+           - *Non-link item*
+         - Menu title 2
+           - Submenu title 1
+             height: 60px
+             - [Submenu item 1](submenu_item_1_address)
+             - [Submenu item 2](submenu_item_2_address)
+         - [Menu title as link](menu_title_address)
 
     :param menu_str: Menu as a single string.
-    :param replace_tabs Replace tabs with four spaces each.
+    :param replace_tabs: Replace tabs with four spaces each.
     :return: Converted menu as list of menu item objects.
     """
     menu_split = menu_str.split("\n")

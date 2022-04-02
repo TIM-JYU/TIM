@@ -89,6 +89,7 @@ def get_content(element: HtmlElement, selector: str = ".parContent") -> list[str
 def get_cookie_value(resp: Response, key: str) -> str | None:
     """
     Get value of the cookie with given key.
+
     :param resp: Response.
     :param key: Cookie key.
     :return: Cookie value as string, or None if not found.
@@ -876,6 +877,7 @@ class TimRouteTest(TimDbTest):
     ):
         """
         Check a JavaScript variable from view_html.jinja2.
+
         :param element: HTML-tree.
         :param variable_name: Variable name as it's in the <script>.
         :param expect_content: Expected content.

@@ -45,6 +45,7 @@ def tape_multihtml() -> Response:
 def tape_get_html(jso: dict[Any, Any]) -> str:
     """
     Returns the HTML of a single tape paragraph.
+
     :param jso:
     :param review:
     :return:

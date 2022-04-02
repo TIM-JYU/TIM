@@ -248,6 +248,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         attempts=1,
     ):
         """Asserts that the provided element looks the same as in the provided screenshot.
+
         :param attempts: Number of comparison attempts.
         :param element: The element to check.
         :param filename: The filename of the expected screenshot.

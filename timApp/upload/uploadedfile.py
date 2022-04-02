@@ -59,6 +59,7 @@ class UploadedFile(ItemBase):
     def get_by_url(url: str) -> Optional["UploadedFile"]:
         """
         Get file matching the given URL string.
+
         :param url: File url as a string.
         :return: UploadedFile, StampedPDF, or None, if neither was found.
         """
@@ -75,6 +76,7 @@ class UploadedFile(ItemBase):
     ) -> Union["UploadedFile", "StampedPDF"] | None:
         """
         Get uploaded file or its stamped version in case file name differs (i.e. it has "_stamped" in it).
+
         :param file_id: File id.
         :param filename: File name, which may contain "_stamped".
         :return: UploadedFile, StampedPDF, or None, if neither was found.

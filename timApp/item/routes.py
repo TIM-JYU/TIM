@@ -1189,6 +1189,7 @@ def get_item(item_id: int):
 def set_blockrelevance(item_id: int, value: int):
     """
     Add block relevance or edit if it already exists for the block.
+
     :param value: The relevance value.
     :param item_id: Item id.
     :return: Ok response.
@@ -1227,6 +1228,7 @@ def set_blockrelevance(item_id: int, value: int):
 def reset_blockrelevance(item_id: int):
     """
     Reset (delete) block relevance.
+
     :param item_id: Item id.
     :return: Ok response.
     """
@@ -1253,6 +1255,7 @@ def get_relevance_route(item_id: int):
     """
     Returns item relevance or first non-null parent relevance. If no relevance was found until root,
     return default relevance.
+
     :param item_id: Item id.
     :return: Relevance object and whether it was inherited or not set (default).
     """
@@ -1299,6 +1302,7 @@ def get_document_relevance(i: DocInfo) -> int:
     """
     Returns document relevance value or first non-null parent relevance value.
     If no relevance was found until root, return default relevance value.
+
     :param i: Document.
     :return: Relevance value.
     """
@@ -1367,6 +1371,7 @@ def get_viewrange(doc_id: int, index: int, forwards: int):
 def get_viewrange_with_header_id(doc_id: int, header_id: str):
     """
     Route for getting suitable view range for index links.
+
     :param doc_id: Document id.
     :param header_id: Header id (HTML-attribute id, not the paragraph id).
     :return: View range starting from the header paragraph.

@@ -161,6 +161,7 @@ def get_fields_and_users(
 ) -> tuple[list[UserFieldObj], dict[str, str], list[str], list[UserGroup] | None]:
     """
     Return fielddata, aliases, field_names
+
     :param view_ctx: The view context.
     :param user_filter: Additional filter to use.
     :param member_filter_type: Whether to use all, current or deleted users in groups.

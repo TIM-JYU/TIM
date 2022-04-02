@@ -989,6 +989,7 @@ def get_simple_hash_from_par_and_user(
 ) -> int:
     """
     Get simple int hash from TIM's document block and user.
+
     :param block: TIM's document block
     :param uc: The user context.
     :return: simple hash that can be used for example as a seed for random number generator

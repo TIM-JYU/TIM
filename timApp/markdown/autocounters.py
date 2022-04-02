@@ -110,6 +110,7 @@ class AutoCounters:
     def __init__(self, macros: dict | None, doc: Document | None = None):
         """
         Initialize autonumber counters to use macros
+
         :param macros: macros to use for these counters
         :param doc: document we are handling
         """
@@ -144,6 +145,7 @@ class AutoCounters:
     def do_char_macros(self, text: str) -> str:
         """
         Do counters charmacros
+
         :param text: what to convert
         :return: converted text
         """
@@ -159,6 +161,7 @@ class AutoCounters:
     def set_auto_name(self, base_name: str) -> str:
         """
         Set start of autonames
+
         :param base_name: base name for counters in this block
         :return: emtpy string because used from filter
         """
@@ -168,6 +171,7 @@ class AutoCounters:
     def set_auto_names(self, base_name: TName | None, ctype: str = "eq") -> str:
         """
         Set start of autonames
+
         :param base_name: base name for counters in this block
         :param ctype: default type for counters in this block
         :return: emtpy string because used from filter
@@ -205,7 +209,8 @@ class AutoCounters:
 
     def get_base_name(self, name: str) -> str:
         """
-        Returns basename that is udes for name
+        Returns basename for name
+
         :param name: name to use
         :return: basename
         """
@@ -218,6 +223,7 @@ class AutoCounters:
     def get_auto_name(self, name: str, ctype: str) -> tuple[str, str, str | None]:
         """
         Get automatic name and ctype if not given
+
         :param name: if empty, give autoname
         :param ctype: if empty give ctype from auto name
         :return: name, ctype, error
@@ -252,6 +258,7 @@ class AutoCounters:
         Set from what level the headings are numbered.
         Make also the dafault counter number template for that level
         like "{h2}.{v}" if counting start from level 2.
+
         :param n: from what level to start heading counting
         :return: none
         """
@@ -269,7 +276,8 @@ class AutoCounters:
 
     def error(self, s: str) -> str:
         """
-        return string as md red
+        Return string as md red
+
         :param s: string to show as red
         :return: s surrounded be []{.red}
         """
@@ -282,6 +290,7 @@ class AutoCounters:
         """
         Separate from "t1|name|t2" t1, name and t2.
         If like "name" jsu return "", name, t2
+
         :param name: counter name where pre and post texts are separated
         :return: t1, name, t2
         """
@@ -355,7 +364,8 @@ class AutoCounters:
 
     def show_pref_value(self, name: TName, showtype: str = "") -> str:
         """
-        return pure reference for counter name (without jump link)
+        Return pure reference for counter name (without jump link)
+
         :param name: counter's name
         :param showtype: how to show counter
         :return: string for reference
@@ -365,7 +375,8 @@ class AutoCounters:
 
     def show_ref_value(self, name: TName, showtype: str = "") -> str:
         """
-        return reference to counter using hyper link
+        Return reference to counter using hyperlink
+
         :param name: counter's name
         :param showtype: how to show counter
         :return: string for reference
@@ -376,7 +387,8 @@ class AutoCounters:
 
     def show_lref_value(self, name: TName, showtype: str = "l") -> str:
         """
-        return long reference to counter using hyper link
+        Return long reference to counter using hyperlink
+
         :param name: counter's name
         :param showtype: how to show counter
         :return: string for reference
@@ -388,8 +400,9 @@ class AutoCounters:
         Get type counter, so with value of how many has been totally
         during the whole document.  If this is first call for ctype,
         create new type counter.
+
         :param ctype: counter's type
-        :return: type counter with value-
+        :return: type counter with value.
         """
         counters_type = self.counters.get(ctype)
         if not counters_type:  # first of this type
@@ -402,6 +415,7 @@ class AutoCounters:
     ) -> dict | None:
         """
         Used to add chapter and paragraph counters.
+
         :param ctype: usually "chap"
         :param name: counters name
         :param show_val: value like 2.4
@@ -444,6 +458,7 @@ class AutoCounters:
     ) -> tuple[str, str, TMacroCounter]:
         """
         Create new counter as text that has name and ctype
+
         :param name: counters name, can include pre text t1 and post text t2
         :param ctype: counters type
         :return: counter as text and name
@@ -507,7 +522,8 @@ class AutoCounters:
 
     def new_counter(self, name: TName, ctype: str = "") -> str:
         """
-        For filter c_n
+        Creates a counter for filter c_n
+
         :param name: counter's name
         :param ctype: counter's type
         :return: counter as text
@@ -517,7 +533,8 @@ class AutoCounters:
 
     def new_label_counter(self, name: TName, ctype: str = "") -> str:
         """
-        For filter c_
+        Creates a counter for filter c_
+
         :param name: counter's name can be also "text|name"
         :param ctype: counter's type
         :return: counter as text with label where to jump
@@ -536,6 +553,7 @@ class AutoCounters:
         """
         For filter labels
         Creates a a-tag or LaTeX label list from counter names.
+
         :param names: list of counter names that are converted to labels
         :return: string to output either a-tag's or LaTeX labels
         """
@@ -555,8 +573,9 @@ class AutoCounters:
     def eq_counter(self, name: TName) -> str:
         """
         For filter c_eq, same as   "name" | c_n(eq")
+
         :param name: counter's name
-        :return:
+        :return: tag counter
         """
         return self.new_counter(name, "eq")
 
@@ -564,6 +583,7 @@ class AutoCounters:
         """
         For filter c_tag
         Counter inside LaTeX \tag{}
+
         :param name: counter's name
         :param ctype: type for the counter, default for eq
         :param lf: what is coming to the end of counterline
@@ -581,6 +601,7 @@ class AutoCounters:
     def label_place_holder(n: int) -> str:
         """
         Placeholder for labels that should come before \begin
+
         :param n: What is the number of this olaceholder in this block
         :return: string like <!-- LABEL002 -->
         """
@@ -590,6 +611,7 @@ class AutoCounters:
         """
         Replace label placeholders by actual labels.
         This should be called when block is totally converted.
+
         :param text: block text where to replace labels
         :return: text with labels inserted
         """
@@ -635,6 +657,7 @@ class AutoCounters:
     ) -> str:
         """
         Crete LaTeX environment begin with label before
+
         :param name: base name for equations
         :param what: what LaTeX environment to start
         :param ctype: type for counters
@@ -676,6 +699,7 @@ class AutoCounters:
         For filter c_begin1
         Creates one label, LaTeX environment begin
         and counter for first equation
+
         :param name: name + base name for autoname
         :param what: what LaTeX environment to start
         :param ctype: what is default type for counters
@@ -693,6 +717,7 @@ class AutoCounters:
         """
         For filter c_begin
         Cretes placfeholder for labels and LaTeX environment begin
+
         :param name: base name for autoname
         :param what: what LaTeX environment to start
         :param ctype: what is default type for counters
@@ -705,6 +730,7 @@ class AutoCounters:
         For filter c_end
         End last started LaTeX \begin command
         Move last used labels to cache
+
         :param _dummy: this filter has no parameters
         :return: LaTeX environment end command
         """
@@ -730,6 +756,7 @@ class AutoCounters:
     def get_counter_macros(self, _dummy: TName = 0) -> str:
         """
         Return counter values as string to be appended to settings
+
         :param _dummy:  if used as filter
         :return: counter values as settigs macro
         """
@@ -752,7 +779,8 @@ macros:
     def set_counter(self, value: int, ctype: str) -> str:
         """
         For filter c_set
-        Set's the type counter value
+        Sets the type counter value
+
         :param value: new value
         :param ctype: for what type of counters
         :return: ""
@@ -766,7 +794,8 @@ macros:
     def get_counter_value(self, ctype: str) -> int:
         """
         For filter c_get
-        Get's the value of counter while renumbering
+        Gets the value of counter while renumbering
+
         :param ctype: for what type of counters
         :return: 0 in view, but value of counter in renumbering
         """
@@ -778,7 +807,8 @@ macros:
     def set_renumbering(self, value: bool) -> None:
         """
         This should be called from print command that generates new values
-        :param value: is renumebring true or false
+
+        :param value: is renumbering true or false
         :return: None
         """
         self.renumbering = value
@@ -790,7 +820,8 @@ macros:
     ) -> str:
         """
         Get how to show counter with type name ctype
-        :param ctype: countres type name
+
+        :param ctype: counter's type name
         :param name: name of counter
         :param value: value of counter to show
         :param showtype: for what purpose value is formated
@@ -834,6 +865,7 @@ macros:
         """
         Reset all counters that should be reset when heading level n
         changes
+
         :param n: what heading level to check
         :return: None
         """
@@ -857,6 +889,7 @@ macros:
         """
         This should be called every time when handling heading line.
         Check whta counters should be reseted when heading numebrs changes
+
         :param vals: new values for current heading numbers
         :return: None
         """
@@ -873,6 +906,7 @@ macros:
     def set_env_filters(self, env: SandboxedEnvironment) -> None:
         """
         Add new filters to environment
+
         :param env: to what environment to add values
         :return: None
         """
@@ -937,6 +971,7 @@ HEADING_TAGS = ["h1", "h2", "h3", "h4", "h5", "h6"]
 def add_h_values(counts: dict, values: dict) -> None:
     """
     Add all non-zero h-value from counts to values
+
     :param counts: where to finds h-values
     :param values: where to add h-values
     :return: None
