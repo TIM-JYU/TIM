@@ -277,7 +277,11 @@ def change_default_selection(
 
 
 def add_groups_to_selection_table(
-    velp_group: VelpGroup, doc_id: int, user_id: int, target_type: int, target_id: str
+    velp_group: VelpGroup,
+    doc_id: int,
+    user_id: int,
+    target_type: int,
+    target_id: str,
 ):
     """Adds velp groups to VelpGroupSelection table."""
     vgs = VelpGroupSelection.query.filter_by(

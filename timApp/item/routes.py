@@ -27,6 +27,7 @@ from timApp.auth.accesshelper import (
     AccessDenied,
     ItemLockedException,
 )
+from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, save_last_page
@@ -103,7 +104,7 @@ from timApp.user.usergroup import (
     UserGroupWithSisuInfo,
 )
 from timApp.user.users import get_rights_holders_all
-from timApp.user.userutils import DeletedUserException
+from timApp.user.userutils import DeletedUserException, grant_access
 from timApp.util.flask.requesthelper import (
     view_ctx_with_urlmacros,
     RouteException,
@@ -117,8 +118,10 @@ from timApp.util.flask.responsehelper import (
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.timtiming import taketime
-from timApp.util.utils import get_error_message, cache_folder_path
+from timApp.util.utils import get_error_message, cache_folder_path, split_location
 from timApp.util.utils import remove_path_special_chars, seq_to_str
+from timApp.velp.velp import check_velp_group_folder_path
+from timApp.velp.velpgroups import change_default_selection
 from tim_common.html_sanitize import sanitize_html
 
 DEFAULT_RELEVANCE = 10
@@ -811,6 +814,21 @@ def render_doc_view(
                     generate_review_groups(doc_info, post_process_result.plugins)
                 except PeerReviewException as e:
                     flash(str(e))
+                full_path = doc_info.path
+                doc_path, doc_name = split_location(full_path)
+                velps_folder_path = check_velp_group_folder_path(
+                    doc_path, doc_info.block.owners[0], doc_name
+                )
+                velp_group_name = doc_name + "_default"
+                velp_group = DocEntry.find_by_path(
+                    velps_folder_path + "/" + velp_group_name
+                )
+                if velp_group:
+                    grant_access(
+                        UserGroup.get_logged_in_group(), velp_group, AccessType.view
+                    )
+                    change_default_selection(doc.id, velp_group.id, 0, "0", True)
+                    db.session.commit()
             reviews = get_reviews_for_user(doc_info, current_user)
             for review in reviews:
                 user_list.append(review.reviewable_id)
