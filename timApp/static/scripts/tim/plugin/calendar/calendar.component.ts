@@ -10,6 +10,8 @@ import {
     NgModule,
     OnInit,
     ViewEncapsulation,
+    TemplateRef,
+    ViewChild,
 } from "@angular/core";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import * as t from "io-ts";
@@ -20,6 +22,7 @@ import {
     CalendarModule,
     CalendarView,
     DateAdapter,
+    CalendarEventAction,
 } from "angular-calendar";
 import {WeekViewHourSegment} from "calendar-utils";
 import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
@@ -32,6 +35,7 @@ import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek} from "date-fns";
 import moment from "moment";
+import {NgbModal, NgbModalModule} from "@ng-bootstrap/ng-bootstrap";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
@@ -186,6 +190,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             (dayHeaderClicked)="clickedDate = $event.day.date"
             (hourSegmentClicked)="clickedDate = $event.date"
             [hourSegmentTemplate]="weekViewHourSegmentTemplate"
+            (eventClicked)="handleEvent('Clicked', $event.event)"
           >
           </mwl-calendar-week-view>
           <mwl-calendar-day-view
@@ -205,6 +210,33 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             <button class="timButton" id="saveBtn" (click)="saveChanges()" [disabled]="this.events.length <= lastEvent">Save changes</button>
         </div>
         <app-timeview-selectors (accuracy)="setAccuracy($event)" (morning)="setMorning($event)" (evening)="setEvening($event)"></app-timeview-selectors>
+        
+        <ng-template #modalContent let-close="close">
+          <div class="modal-header">
+            <h5 class="modal-title">Event action occurred</h5>
+            <button type="button" class="close" (click)="close()">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div>
+              Action:
+              <pre>{{ modalData?.action }}</pre>
+            </div>
+            <div>
+              Event:
+              <pre>{{ modalData?.event | json }}</pre>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary timButton" (click)=" close(); deleteEvent(modalData?.event)">
+              Delete
+            </button>  
+            <button type="button" class="btn btn-outline-secondary timButton" (click)="close()">
+              OK
+            </button>
+          </div>
+        </ng-template>
     `,
     encapsulation: ViewEncapsulation.None,
     styleUrls: ["calendar.component.scss"],
@@ -218,6 +250,8 @@ export class CalendarComponent
     >
     implements OnInit
 {
+    @ViewChild("modalContent", {static: true})
+    modalContent?: TemplateRef<never>;
     view: CalendarView = CalendarView.Week;
 
     viewDate: Date = new Date();
@@ -240,11 +274,35 @@ export class CalendarComponent
 
     lastEvent: number = 0;
 
+    modalData?: {
+        action: string;
+        event: CalendarEvent;
+    };
+
+    actions: CalendarEventAction[] = [
+        {
+            label: '<i class="fas fa-fw fa-pencil-alt"></i>',
+            a11yLabel: "Edit",
+            onClick: ({event}: {event: CalendarEvent}): void => {
+                this.handleEvent("Edited", event);
+            },
+        },
+        {
+            label: '<i class="fas fa-fw fa-trash-alt"></i>',
+            a11yLabel: "Delete",
+            onClick: ({event}: {event: CalendarEvent}): void => {
+                this.events = this.events.filter((iEvent) => iEvent !== event);
+                this.handleEvent("Deleted", event);
+            },
+        },
+    ];
+
     constructor(
         el: ElementRef<HTMLElement>,
         http: HttpClient,
         domSanitizer: DomSanitizer,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        private modal: NgbModal
     ) {
         super(el, http, domSanitizer);
     }
@@ -280,6 +338,7 @@ export class CalendarComponent
             meta: {
                 tmpEvent: true,
             },
+            actions: this.actions,
         };
         this.events = [...this.events, dragToSelectEvent];
         this.dragToCreateActive = true;
@@ -357,6 +416,7 @@ export class CalendarComponent
                 if (event.end) {
                     event.end = new Date(event.end);
                 }
+                event.actions = this.actions;
             });
             this.events = result.result;
             this.lastEvent = result.result.length;
@@ -386,6 +446,15 @@ export class CalendarComponent
             }
         }
     }
+
+    deleteEvent(event?: CalendarEvent) {
+        console.log(event);
+    }
+
+    handleEvent(action: string, event: CalendarEvent): void {
+        this.modalData = {event, action};
+        this.modal.open(this.modalContent, {size: "md"});
+    }
 }
 
 @NgModule({
@@ -400,6 +469,7 @@ export class CalendarComponent
             useFactory: adapterFactory,
         }),
         CalendarHeaderModule,
+        NgbModalModule,
     ],
     declarations: [CalendarComponent, TimeViewSelectorComponent],
     exports: [CalendarComponent],
