@@ -287,8 +287,16 @@ def code_collect(content: dict) -> list[TranslateApproval]:
 
 
 def math_collect(content: dict) -> list[TranslateApproval]:
-    # TODO Handle "MathType"
-    return [NoTranslate("$"), NoTranslate(content[1]), NoTranslate("$")]
+    mathtype = content[0]
+    # Double $-sign LaTeX area is InlineMath -type
+    if mathtype == "DisplayMath":
+        return [NoTranslate("$$"), NoTranslate(content[1]), NoTranslate("$$")]
+    # Single $-sign LaTeX area is InlineMath -type
+    elif mathtype == "InlineMath":
+        return [NoTranslate("$"), NoTranslate(content[1]), NoTranslate("$")]
+    # Only mathtypes in hasekll are DisplayMath and InlineMath
+    else:
+        raise NotImplementedError
 
 
 def rawinline_collect(content: dict) -> list[TranslateApproval]:
