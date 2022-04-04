@@ -239,6 +239,7 @@ export class PareditorController extends DialogController<
     private sideBySide: boolean = false;
     private positionButton: string = "";
     private translationInProgress: boolean = false;
+    private nothingSelected: boolean = false;
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -1614,10 +1615,15 @@ ${backTicks}
             window.alert(
                 "There is no original text to be translated. Please check the Difference in original document view."
             );
-        } else if (this.trdiff.new != edittext && this.trdiff.old != edittext) {
+        } else if (
+            this.trdiff.new != edittext &&
+            this.trdiff.old != edittext &&
+            this.nothingSelected
+        ) {
             mayContinue = window.confirm(
                 "Do you want to overwrite previous changes?"
             );
+            this.nothingSelected = false;
         }
         if (!mayContinue) {
         } else if (
@@ -1662,6 +1668,7 @@ ${backTicks}
     translationSelector() {
         const selection = this.editor!.checkTranslationSelection();
         if (selection == "") {
+            this.nothingSelected = true;
             return this.trdiff!.new;
         }
         return selection;
