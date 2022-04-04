@@ -194,9 +194,6 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
           >
           </mwl-calendar-day-view>
         </div>
-        <div>
-            <button class="timButton" id="saveBtn" [style.visibility]="editEnabled ? 'visible' : 'hidden'" (click)="saveChanges()" [disabled]="this.events.length <= lastEvent">Save changes</button>
-        </div>
         <app-timeview-selectors (accuracy)="setAccuracy($event)" (morning)="setMorning($event)" (evening)="setEvening($event)"></app-timeview-selectors>
     `,
     encapsulation: ViewEncapsulation.None,
