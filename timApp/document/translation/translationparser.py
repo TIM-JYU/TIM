@@ -287,6 +287,12 @@ def code_collect(content: dict) -> list[TranslateApproval]:
 
 
 def math_collect(content: dict) -> list[TranslateApproval]:
+    """
+    Collect and separate translatable and untranslatable areas within
+    a math element.
+    :param content: TeX math (literal) from Inline
+    :return: List containing the parsed collection of math content
+    """
     mathtype = content[0]
     # Double $-sign LaTeX area is InlineMath -type
     if mathtype == "DisplayMath":
@@ -294,12 +300,18 @@ def math_collect(content: dict) -> list[TranslateApproval]:
     # Single $-sign LaTeX area is InlineMath -type
     elif mathtype == "InlineMath":
         return [NoTranslate("$"), NoTranslate(content[1]), NoTranslate("$")]
-    # Only mathtypes in hasekll are DisplayMath and InlineMath
+    # Only mathtypes in haskell are DisplayMath and InlineMath
     else:
         raise NotImplementedError
 
 
 def rawinline_collect(content: dict) -> list[TranslateApproval]:
+    """
+    Collect and separate translatable and untranslatable areas within
+    a rawinline element.
+    :param content: RawInline from Inline
+    :return: List containing the parsed collection of rawinline content
+    """
     # TODO Handle "Format"
     # TODO Should this be Translate instead? Could contain words enclosed in underline-tags (<u>text</u>)?
     return [NoTranslate(content[1])]
