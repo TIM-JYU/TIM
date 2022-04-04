@@ -236,6 +236,7 @@ export class PareditorController extends DialogController<
     private documentLanguages: Array<ILanguages> = [];
     private translators: Array<ITranslators> = [];
     private docTranslator: string = "";
+    private docTrLang: string = "";
     private sideBySide: boolean = false;
     private positionButton: string = "";
     private translationInProgress: boolean = false;
@@ -1121,6 +1122,9 @@ ${backTicks}
         if (this.docSettings?.translator != undefined) {
             this.docTranslator = this.docSettings?.translator;
         }
+        if (this.docSettings?.translatorLanguage != undefined) {
+            this.docTrLang = this.docSettings.translatorLanguage;
+        }
         listTranslators(this.translators);
         updateLanguages(
             this.sourceLanguages,
@@ -1199,6 +1203,10 @@ ${backTicks}
             undefined,
             undefined
         );
+        const view = this.resolve.params.viewCtrl;
+        if (this.docTrLang == "" && view != undefined) {
+            this.docTrLang = view.item.lang_id!;
+        }
     }
 
     async compileOriginalPreview() {
@@ -1635,12 +1643,17 @@ ${backTicks}
             this.translationInProgress = true;
 
             const lang = this.resolve.params.viewCtrl.item.lang_id;
+            let translatorLang = lang;
+            if (this.docTrLang != "" && lang != this.docTrLang) {
+                translatorLang = this.docTrLang;
+            }
             const r = await to(
                 $http.post<IDocument>(
                     `/translate/${this.resolve.params.viewCtrl.item.id}/${lang}/translate_block`,
                     {
                         autotranslate: this.docTranslator,
-                        originaltext: translatabletext, // TODO: Get translatorlang to the document and editor
+                        originaltext: translatabletext,
+                        translatorlang: translatorLang,
                     }
                 )
             );
@@ -1773,6 +1786,7 @@ ${backTicks}
             return;
         } else {
             this.setTranslatorSettings();
+            this.setTranslatorLanguageSettings();
             this.close({type: "save", text});
         }
     }
@@ -1780,6 +1794,7 @@ ${backTicks}
     async setTranslatorSettings() {
         if (
             this.docSettings != undefined &&
+            this.docTranslator != "" &&
             this.docSettings.translator != this.docTranslator &&
             this.resolve.params.viewCtrl != undefined &&
             !this.checkIfOriginal()
@@ -1792,6 +1807,35 @@ ${backTicks}
                 }
             );
         }
+    }
+
+    async setTranslatorLanguageSettings() {
+        if (
+            this.docSettings != undefined &&
+            this.docTrLang != "" &&
+            this.docSettings.translatorLanguage != this.docTrLang &&
+            this.resolve.params.viewCtrl != undefined &&
+            !this.checkIfOriginal()
+        ) {
+            await $http.post<string>(
+                `/settings/${this.resolve.params.viewCtrl.item.id}`,
+                {
+                    setting: "translatorLanguage",
+                    value: this.docTrLang,
+                }
+            );
+        }
+    }
+
+    findTrLangIndex() {
+        let begin: number;
+        const origTrLang = this.resolve.params.viewCtrl?.item.lang_id;
+        for (begin = 0; begin < this.targetLanguages.length; begin++) {
+            if (this.targetLanguages[begin].code == origTrLang) {
+                return begin;
+            }
+        }
+        return -1;
     }
 
     isAce(): AceParEditor | undefined {

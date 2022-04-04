@@ -606,7 +606,8 @@ export class PermCtrl implements IController {
         const srcPosition = this.findSourceDoc();
         if (
             this.newTranslation.translatorLanguage ==
-            this.translations[srcPosition].lang_id
+                this.translations[srcPosition].lang_id &&
+            this.newTranslation.translatorLanguage != ""
         ) {
             if (
                 window.confirm(
@@ -655,6 +656,23 @@ export class PermCtrl implements IController {
             await $http.post<string>(`/settings/${data.id}`, {
                 setting: "translator",
                 value: this.newTranslation.translator,
+            });
+
+            let tr_lang = "";
+
+            if (
+                this.newTranslation.language !=
+                    this.newTranslation.translatorLanguage &&
+                this.newTranslation.translatorLanguage != ""
+            ) {
+                tr_lang = this.newTranslation.translatorLanguage;
+            } else {
+                tr_lang = this.newTranslation.language;
+            }
+
+            await $http.post<string>(`/settings/${data.id}`, {
+                setting: "translatorLanguage",
+                value: tr_lang,
             });
 
             redirectToItem(data);
