@@ -45,7 +45,6 @@ from timApp.upload.uploadedfile import (
     get_mimetype,
 )
 from timApp.user.user import User
-from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import use_model, RouteException, NotExist
 from timApp.util.flask.responsehelper import (
     json_response,
@@ -153,11 +152,11 @@ def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
 # noinspection PyUnusedLocal
 @upload.post("/pluginUpload/<int:doc_id>/<task_id>/<user_id>/")
 def pluginupload_file2(doc_id: int, task_id: str, user_id):
-    return pluginupload_file(doc_id, task_id, user_id)
+    return pluginupload_file(doc_id, task_id)
 
 
 @upload.post("/pluginUpload/<int:doc_id>/<task_id>/")
-def pluginupload_file(doc_id: int, task_id: str, target_user_id: int | None = None):
+def pluginupload_file(doc_id: int, task_id: str):
     d = get_doc_or_abort(doc_id)
     try:
         tid = TaskId.parse(task_id, require_doc_id=False, allow_block_hint=False)
@@ -177,11 +176,6 @@ def pluginupload_file(doc_id: int, task_id: str, target_user_id: int | None = No
         raise RouteException("Missing file")
     content = file.read()
     u = get_current_user_object()
-    target_user: User | None = None
-    if target_user_id:
-        target_user = User.get_by_id(target_user_id)
-        if not target_user:
-            raise RouteException("Non-existent user")
     f = UploadedFile.save_new(
         file.filename,
         BlockType.Upload,
@@ -189,8 +183,6 @@ def pluginupload_file(doc_id: int, task_id: str, target_user_id: int | None = No
         upload_info=PluginUploadInfo(task_id_name=task_id, user=u, doc=d),
     )
     f.block.set_owner(u.get_personal_group())
-    if target_user is not None:
-        grant_access(target_user.get_personal_group(), f, AccessType.manage)
     grant_access_to_session_users(f)
     if f.is_content_pdf:
         try:

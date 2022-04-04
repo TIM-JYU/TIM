@@ -142,7 +142,6 @@ const PluginFields = t.intersection([
             <file-select-manager class="small"
                                  [dragAndDrop]="dragAndDrop"
                                  [uploadUrl]="uploadUrl"
-                                 [uploadUrlUpdate]="uploadUrlUpdate"
                                  [stem]="uploadstem"
                                  (file)="onFileLoad($event)"
                                  (upload)="onUploadResponse($event)"
@@ -200,20 +199,6 @@ export class ReviewCanvasComponent
     uploadedFileName(url: string) {
         return url.split("/").slice(6).join("/");
     }
-
-    uploadUrlUpdate = () => {
-        const taskId = this.pluginMeta.getTaskId();
-        if (taskId) {
-            const ab = this.vctrl.getAnswerBrowser(taskId.name);
-            const abdata = ab?.getBrowserData();
-            if (abdata && "userId" in abdata && taskId?.docId) {
-                if (taskId?.docId) {
-                    return `/pluginUpload/${taskId.docId}/${taskId.name}/${abdata.userId}/`;
-                }
-            }
-        }
-        return undefined;
-    };
 
     getDefaultMarkup() {
         return {};

@@ -761,48 +761,11 @@ def post_answer_impl(
         trimmed_file = file.replace("/uploads/", "")
         type = answerdata.get("type", "")
         if trimmed_file and type == "upload":
-            # The initial upload entry was created in /pluginUpload route, so we need to check that the owner matches
-            # what the browser is saying. Additionally, we'll associate the answer with the uploaded file later
-            # in this route.
-            block = Block.query.filter(
-                (Block.description == trimmed_file)
-                & (Block.type_id == BlockType.Upload.value)
-            ).first()
-            if block is None:
-                raise PluginException(f"Non-existent upload: {trimmed_file}")
-            verify_view_access(
-                block,
-                message="You don't have permission to touch this file.",
-                user=curr_user,
-            )
-            uploads = [
-                AnswerUpload.query.filter(
-                    AnswerUpload.upload_block_id == block.id
-                ).first()
-            ]
-            # if upload.answer_id is not None:
-            #    raise PluginException(f'File was already uploaded: {file}')
-
+            uploads = files_to_answeruploads([trimmed_file], curr_user)
         files: list[int] = answerdata.get("uploadedFiles", None)
         if files is not None:
-            for file in files:
-                trimmed_file = file["path"].replace("/uploads/", "")
-                block = Block.query.filter(
-                    (Block.description == trimmed_file)
-                    & (Block.type_id == BlockType.Upload.value)
-                ).first()
-                if block is None:
-                    raise PluginException(f"Non-existent upload: {trimmed_file}")
-                verify_view_access(
-                    block,
-                    message="You don't have permission to touch this file.",
-                    user=curr_user,
-                )
-                uploads.append(
-                    AnswerUpload.query.filter(
-                        AnswerUpload.upload_block_id == block.id
-                    ).first()
-                )
+            trimmed_files = [f["path"].replace("/uploads/", "") for f in files]
+            uploads = files_to_answeruploads(trimmed_files, curr_user)
 
     # Load old answers
 
@@ -1187,6 +1150,39 @@ def post_answer_impl(
         pass
 
     return AnswerRouteResult(result=result, plugin=plugin)
+
+
+def files_to_answeruploads(files: list[str], curr_user: User):
+    uploads = []
+    doc_map = {}
+    for file in files:
+        block = Block.query.filter(
+            (Block.description == file) & (Block.type_id == BlockType.Upload.value)
+        ).first()
+        if block is None:
+            raise PluginException(f"Non-existent upload: {file}")
+        if not verify_view_access(block, user=curr_user, require=False):
+            answerupload = block.answerupload.first()
+            if answerupload is None:
+                raise AccessDenied()
+            answer = answerupload.answer
+            if not answer:
+                raise RouteException(
+                    "Upload has not been associated with any answer; it should be re-uploaded"
+                )
+            if curr_user not in answer.users_all:
+                did = TaskId.parse(answer.task_id).doc_id
+                if did not in doc_map:
+                    d = get_doc_or_abort(did)
+                    if not verify_teacher_access(d, require=False):
+                        raise AccessDenied(
+                            "You don't have permission to touch this file."
+                        )
+                    doc_map[did] = d
+        uploads.append(
+            AnswerUpload.query.filter(AnswerUpload.upload_block_id == block.id).first()
+        )
+    return uploads
 
 
 def preprocess_jsrunner_answer(

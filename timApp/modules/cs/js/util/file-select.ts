@@ -122,7 +122,6 @@ export class FileSelectComponent {
     @Input() dragAndDrop: boolean = true;
     @Input() stem?: string;
     @Input() uploadUrl?: string;
-    @Input() uploadUrlUpdate?: () => string | undefined;
     @Input() maxSize: number = -1;
     @Input() mappingFunction?: MappingFunction;
     @Output("file") fileEmitter: EventEmitter<IFile> = new EventEmitter(true);
@@ -181,11 +180,7 @@ export class FileSelectComponent {
     }
 
     uploadFiles(files: File[], mappings: IMapping[]) {
-        let url = this.uploadUrl;
-        if (this.uploadUrlUpdate) {
-            url = this.uploadUrlUpdate();
-        }
-        if (!url) {
+        if (!this.uploadUrl) {
             return;
         }
         if (this.progress) {
@@ -204,7 +199,7 @@ export class FileSelectComponent {
                 const formdata = new FormData();
                 formdata.append("file", file, mapping.path);
                 const _ = this.http
-                    .post(url!, formdata, {
+                    .post(this.uploadUrl!, formdata, {
                         reportProgress: true,
                         observe: "events",
                     })
@@ -394,7 +389,6 @@ export class FileSelectComponent {
             [id]="info.id"
             [multiple]="allowMultiple || (fileInfo.length > 1 && (files.length > 1 || files[0].paths.length > 1))"
             [uploadUrl]="uploadUrl"
-            [uploadUrlUpdate]="uploadUrlUpdate"
             (file)="onFileLoad($event)"
             (files)="filesEmitter.emit($event)"
             (upload)="uploadEmitter.emit($event)"
@@ -408,7 +402,6 @@ export class FileSelectManagerComponent {
     @Input() allowMultiple: boolean = true;
     @Input() dragAndDrop: boolean = true;
     @Input() uploadUrl?: string;
-    @Input() uploadUrlUpdate?: () => string | undefined;
     @Input() stem?: string;
     @Input() maxSize: number = -1;
     @Input() accept?: string;
