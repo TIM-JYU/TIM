@@ -204,6 +204,9 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
         <div>
             <button class="timButton" id="saveBtn" (click)="saveChanges()" [disabled]="this.events.length <= lastEvent">Save changes</button>
         </div>
+        <div>
+            <button class="timButton" id="icsBtn" (click)="exportICS()">Vie kalenterin tiedot</button>
+        </div>
         <app-timeview-selectors (accuracy)="setAccuracy($event)" (morning)="setMorning($event)" (evening)="setEvening($event)"></app-timeview-selectors>
     `,
     encapsulation: ViewEncapsulation.None,
@@ -384,6 +387,20 @@ export class CalendarComponent
             } else {
                 console.error(result.result.error.error);
             }
+        }
+    }
+
+    async exportICS() {
+        const result = await toPromise(
+            this.http.get<string>("/calendar/events?file_type=ics")
+        );
+        if (result.ok) {
+            // this.refresh();
+            console.log(result);
+            console.log("Tiedot viety");
+        } else {
+            // TODO: Handle error responses properly
+            console.error(result.result.error.error);
         }
     }
 }

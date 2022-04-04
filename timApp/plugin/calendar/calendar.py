@@ -1,9 +1,11 @@
 import json
+import tempfile, os
+import uuid
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import Any
 
-from flask import Response
+from flask import Response, request
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_id, get_current_user_object
@@ -83,6 +85,29 @@ def get_events() -> Response:
     verify_logged_in()
     cur_user = get_current_user_id()
     events: list[Event] = Event.query.filter(Event.creator_user_id == cur_user).all()
+
+    file_type = request.args.get("file_type")
+    if file_type == "ics":
+        ics_file = ""
+        ics_file = ics_file + "BEGIN:VCALENDAR\n"
+        ics_file = ics_file + "PRODID:-//TIM Katti-kalenteri//iCal4j 1.0//EN\n"
+        ics_file = ics_file + "VERSION:2.0\n"
+        ics_file = ics_file + "CALSCALE:GREGORIAN\n"
+        for event in events:
+            dts = event.start_time.strftime("%Y%m%dT%H%M%S")
+            dtend = event.end_time.strftime("%Y%m%dT%H%M%S")
+
+            ics_file = ics_file + "BEGIN:VEVENT\n"
+            ics_file = ics_file + "DTSTART:" + dts + "Z\n"
+            ics_file = ics_file + "DTEND:" + dtend + "Z\n"
+            ics_file = ics_file + "DTSTAMP:" + dts + "Z\n"
+            ics_file = ics_file + "UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\n"
+            ics_file = ics_file + "CREATED:" + dts + "\n"
+            ics_file = ics_file + "SUMMARY:" + event.title + "\n"
+            ics_file = ics_file + "END:VEVENT\n"
+
+        ics_file = ics_file + "END:VCALENDAR\n"
+        return ics_file
 
     event_objs = []
     for i, event in enumerate(events):
