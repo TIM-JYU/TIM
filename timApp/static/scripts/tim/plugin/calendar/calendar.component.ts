@@ -128,17 +128,10 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
     template: `
         <mwl-utils-calendar-header [(view)]="view" [(viewDate)]="viewDate">
         </mwl-utils-calendar-header>
-        
-        <div class="alert alert-info">
-          Click on a day or time slot on the view.
-          <strong *ngIf="clickedDate"
-            >You clicked on this time: {{ clickedDate | date:'medium' }}</strong
-          >
-          <strong *ngIf="clickedColumn !== undefined"
-            >You clicked on this column: {{ clickedColumn }}</strong
-          >
+        <div class="btn-group edit-btn">
+            <button (click)="enableEditing()" [class.active]="editEnabled" class="btn btn-primary">Edit</button>
+            <button (click)="disableEditing()" [class.active]="!editEnabled" class="btn btn-primary">View</button>
         </div>
-        
         <ng-template
           #weekViewHourSegmentTemplate
           let-segment="segment"
@@ -153,7 +146,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             [class.cal-hour-start]="segment.isStart"
             [class.cal-after-hour-start]="!segment.isStart"
             [ngClass]="segment.cssClass"
-            (mousedown)="startDragToCreate(segment, $event, segmentElement)"
+            (mousedown)="editEnabled && startDragToCreate(segment, $event, segmentElement)"
           >
             <div class="cal-time" *ngIf="isTimeLabel">
               {{ segment.date | calendarDate:'weekViewHour':locale }}
@@ -202,7 +195,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
           </mwl-calendar-day-view>
         </div>
         <div>
-            <button class="timButton" id="saveBtn" (click)="saveChanges()" [disabled]="this.events.length <= lastEvent">Save changes</button>
+            <button class="timButton" id="saveBtn" [style.visibility]="editEnabled ? 'visible' : 'hidden'" (click)="saveChanges()" [disabled]="this.events.length <= lastEvent">Save changes</button>
         </div>
         <app-timeview-selectors (accuracy)="setAccuracy($event)" (morning)="setMorning($event)" (evening)="setEvening($event)"></app-timeview-selectors>
     `,
@@ -229,6 +222,8 @@ export class CalendarComponent
     clickedColumn?: number;
 
     dragToCreateActive = false;
+
+    editEnabled: boolean = false;
 
     weekStartsOn: 1 = 1;
 
@@ -260,6 +255,14 @@ export class CalendarComponent
 
     setEvening(evening: number) {
         this.dayEndHour = evening - 1;
+    }
+
+    enableEditing() {
+        this.editEnabled = true;
+    }
+
+    disableEditing() {
+        this.editEnabled = false;
     }
 
     startDragToCreate(
@@ -295,7 +298,8 @@ export class CalendarComponent
                         delete dragToSelectEvent.meta.tmpEvent;
                     }
                     this.dragToCreateActive = false;
-                    this.refresh();
+                    // The promise is resolved inside saveChanges -function
+                    this.saveChanges();
                 }),
                 takeUntil(fromEvent(document, "mouseup"))
             )
