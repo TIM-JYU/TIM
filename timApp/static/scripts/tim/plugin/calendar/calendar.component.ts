@@ -133,8 +133,13 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             <button (click)="enableEditing()" [class.active]="editEnabled" class="btn timButton">Edit</button>
             <button (click)="disableEditing()" [class.active]="!editEnabled" class="btn timButton">View</button>
         </div>
+            <div class="col-md-4"> Show events:
+                <div *ngFor="let box of checkboxEvents">
+                    <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value" [(ngModel)]="box.checked" [checked]="" >{{box.name}}
+                </div>
+        </div>
         <div [style.visibility] = "editEnabled ? 'visible' : 'hidden'" class="btn-group event-btn col-md-4">
-        <button (click)="setEventType($event)" *ngFor="let button of eventTypes" [class.active]="eventType == (button.valueOf() +eventTypes.indexOf((button)))" class="btn timButton" id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button.valueOf()}}</button>
+        <button (click)="setEventType($event)" *ngFor="let button of eventTypes" [class.active]="selectedEvent == (button.valueOf() +eventTypes.indexOf((button)))" class="btn timButton" id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button.valueOf()}}</button>
         </div>
         </div>
         
@@ -229,7 +234,14 @@ export class CalendarComponent
     editEnabled: boolean = false;
 
     eventTypes: string[] = ["Ohjaus", "Luento", "Opetusryhmä"];
-    eventType: string = this.eventTypes[0] + 0;
+    eventType: string = this.eventTypes[0];
+    selectedEvent: string = this.eventType + 0;
+
+    checkboxEvents = [
+        {name: "Ohjaus", value: "1", checked: true},
+        {name: "Luento", value: "2", checked: true},
+        {name: "Opetusryhmä", value: "3", checked: true},
+    ];
 
     weekStartsOn: 1 = 1;
 
@@ -250,11 +262,13 @@ export class CalendarComponent
         super(el, http, domSanitizer);
     }
 
+    /**
+     * Set type of event user wants to add while in edit-mode
+     * @param event
+     */
     setEventType(event: Event) {
-        console.log(this.eventType);
         const elementId: string = (event.target as Element).id;
-        console.log(elementId);
-        this.eventType = elementId;
+        this.selectedEvent = elementId;
     }
 
     setAccuracy(accuracy: number) {
@@ -276,6 +290,17 @@ export class CalendarComponent
 
     disableEditing() {
         this.editEnabled = false;
+    }
+
+    /**
+     * Get what type of events user wants to view in view-mode
+     */
+    getEventsToView() {
+        const viewEvents = this.checkboxEvents
+            .filter((box) => box.checked)
+            .map((box) => box.name);
+        console.log(viewEvents);
+        return viewEvents;
     }
 
     startDragToCreate(
