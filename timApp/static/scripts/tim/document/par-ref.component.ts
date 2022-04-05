@@ -15,7 +15,8 @@ interface IParInfo {
     selector: "tim-par-ref",
     template: `
         <ng-template #tooltipHtml>
-            <div style="text-align: left; white-space: nowrap;">
+            <tim-loading color="white" *ngIf="loading"></tim-loading>
+            <div *ngIf="data !== undefined" style="text-align: left; white-space: nowrap;">
                 This paragraph references another document.
                 <ul class="list-unstyled">
                     <li><b>Title:</b> {{title}}</li>
@@ -28,11 +29,8 @@ interface IParInfo {
             <i class="glyphicon glyphicon-share-alt"
                (mouseover)="loadData()"
                [tooltip]="tooltipHtml"
-               [tooltipEnable]="data !== undefined"
-               [isOpen]="isOpen"
             ></i>
         </a>
-        <tim-loading style="position: absolute" *ngIf="loading"></tim-loading>
     `,
 })
 export class ParRefComponent {
@@ -43,7 +41,6 @@ export class ParRefComponent {
     data?: IParInfo;
     private loaded = false;
     url!: string;
-    isOpen = false;
 
     constructor(private http: HttpClient) {}
 
@@ -61,7 +58,6 @@ export class ParRefComponent {
             this.http.get<IParInfo>(`/par_info/${this.docid}/${this.parid}`)
         );
         this.loading = false;
-        this.isOpen = true;
         if (r.ok) {
             this.data = r.result;
             this.url = `/view/${this.data.item.path}#${this.parid}`;

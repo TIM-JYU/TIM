@@ -43,6 +43,7 @@ minutes_blueprint = Blueprint("minutes", __name__, url_prefix="/minutes")
 def create_minute_extracts(doc: str) -> Response:
     """
     A route for creating extracts of faculty council minutes.
+
     :param doc:
     :return:
     """
@@ -268,6 +269,7 @@ def create_or_get_and_wipe_document(path: str, title: str) -> DocInfo:
     """Creates a document to the given path and returns the DocEntry.
     If a document already exists in the given path, the already existing document is wiped clean and then its DocEntry
     is returned.
+
     :param path: The path to the document.
     :param title: The title of the document.
     :return: The DocEntry of a new document or an already existing document that has been wiped clean.
@@ -289,6 +291,7 @@ def get_attachment_list(doc: str) -> Response:
     """
     Gets the list of all attachments in the document, their macro-types, possible errors,
     and whether they are selected by default.
+
     :param doc:
     :return: List of Attachment objects.
     """
@@ -318,6 +321,7 @@ class MergeAttachmentsModel:
 def merge_selected_attachments(args: MergeAttachmentsModel) -> Response:
     """
     A route for merging a list of urls.
+
     :param args Doc id and list of pdf paths.
     :return: URL for the GET-route to open the merged file.
     """
@@ -359,6 +363,7 @@ def merge_selected_attachments(args: MergeAttachmentsModel) -> Response:
 def open_merged_file(args: MergeAttachmentsModel) -> Response:
     """
     Open a merged file.
+
     :param args Doc id and list of pdf urls used in the merge.
     :return: Opens the file in the browser.
     """

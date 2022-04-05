@@ -1,7 +1,7 @@
 import logging
 import os
 from datetime import timedelta
-from typing import Optional, TypedDict
+from typing import TypedDict
 
 from celery.schedules import crontab
 

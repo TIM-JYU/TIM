@@ -2269,15 +2269,19 @@ ${fhtml}
         return url.split("/").slice(6).join("/");
     }
 
-    initSaved() {
-        this.savedvals = {
-            files: this.editor?.files.map((f) => f.content) ?? [this.usercode],
-            args: this.userargs,
-            input: this.userinput,
+    initSaved(clear = false) {
+        if (!this.savedvals || (this.savedvals && !clear)) {
+            this.savedvals = {
+                files: this.editor?.files.map((f) => f.content) ?? [
+                    this.usercode,
+                ],
+                args: this.userargs,
+                input: this.userinput,
 
-            // NOTE: "type: text/tiny" needs this because there is no editor in that case.
-            usercode: this.usercode,
-        };
+                // NOTE: "type: text/tiny" needs this because there is no editor in that case.
+                usercode: this.usercode,
+            };
+        }
         this.edited = false;
         this.isSimcirUnsaved = false;
         this.updateListeners(ChangeType.Saved);
@@ -3043,7 +3047,7 @@ ${fhtml}
         return this.canReset;
     }
 
-    async initCode() {
+    async initCode(clear = false) {
         this.muokattu = false;
         this.imgURL = "";
         this.videoURL = "";
@@ -3063,7 +3067,7 @@ ${fhtml}
             await this.setCircuitData();
             await this.initSimcirCircuitListener();
         }
-        this.initSaved();
+        this.initSaved(clear);
     }
 
     async initSage(firstTime: boolean) {
@@ -3838,7 +3842,7 @@ ${fhtml}
                     <a href="#" *ngIf="!nocode && (file || program)"
                        (click)="showCode(); $event.preventDefault()">{{showCodeLink}}</a>&nbsp;&nbsp;
                     <a href="#" *ngIf="canReset"
-                       (click)="initCode(); $event.preventDefault()">{{resetText}} </a>
+                       (click)="initCode(true); $event.preventDefault()">{{resetText}} </a>
                     <a href="#" *ngIf="toggleEditor"
                        (click)="hideShowEditor(); $event.preventDefault()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
                     <a href="#" *ngIf="!noeditor && editor && editor.nextModeText"

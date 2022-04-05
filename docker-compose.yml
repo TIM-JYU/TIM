@@ -426,7 +426,7 @@ services:
   profiles:
    - test
   image: timimages/tim:${TIM_IMAGE_TAG:?}
-  command: "python3 -m unittest ${TEST_PARAMS:-discover tests/ 'test_*.py' .}"
+  command: "${TEST_COMMAND:-python3 -m unittest discover tests/ 'test_*.py' .}"
   volumes:
    - .:/service:rw
   environment:

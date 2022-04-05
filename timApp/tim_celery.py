@@ -38,6 +38,7 @@ logger: Logger = get_task_logger(__name__)
 def make_celery(appl):
     """
     Initializes Celery.
+
     :param appl: Flask app.
     :return: Celery.
     """

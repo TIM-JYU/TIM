@@ -51,6 +51,7 @@ def genfields(flds, attrs="", stemfield="stem"):
     """
     Generates fields from namelist like ['se1', 'd1', 'd2=demo2']
     See usescases from: /tim/timApp/tests/server/test_genfields.py
+
     :param flds: list of fields, maybe with aliases to show in stem
     :param attrs: possible list of attributes
     :param stemfield: field to use to show filed ste, like sten, header or inputstem
@@ -112,6 +113,7 @@ def gfrange(s, i1, i2, attrs="", stemfield="stem"):
 def srange(s, i1, i2, step=1, *argv):
     """
     Jinja2 filter for generating indexed names
+
     :param s: format string for item
     :param i1: start index
     :param i2: exclusive end index
@@ -142,6 +144,7 @@ def Pz(i):
     """
     Returns number as a string so that from 0 comes "", postive number comes like " + 1"
     and negative comes like " - 1"
+
     :param i: number to convert
     :return: number as a string suitable for expressions
     """
@@ -172,6 +175,7 @@ def week_to_date(week_nr, daynr=1, year=None, frmt=None):
     """
     date object for week
     see: timApp/tests/unit/test_datefilters.py
+
     :param week_nr:  week number to get the date object
     :param daynr: day of week to get date
     :param year: year to get date
@@ -197,6 +201,7 @@ def month_to_week(month, daynr=1, year=None):
     """
     get week number for month
     see: timApp/tests/unit/test_datefilters.py
+
     :param month: month numer starting from 1
     :param daynr: day number of month
     :param year: from what year
@@ -219,6 +224,7 @@ def now(frmt=0):
     """
     Used in Jinja macros like tomorrow: %%1 | now%%
     Or this week %% "%w" | now %%
+
     :param frmt: format for current date or delta for current date
     :return: current date + (fmt as int) if fmt is int, otherwise current timestamp formated
     """
@@ -231,6 +237,7 @@ def fmt_date(d, frmt=""):
     """
     Format date using extended %d1 and %m1 for one number values
     see: timApp/tests/unit/test_datefilters.py
+
     :param d: date to format
     :param frmt: Python format
     :return: string from d an format
@@ -249,6 +256,7 @@ def week_to_text(
     """
     Convert week to clendar header format
     see: timApp/tests/unit/test_datefilters.py
+
     :param week_nr: what week to convert
     :param year: what year
     :param frmt: extended Python  date format
