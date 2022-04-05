@@ -761,11 +761,11 @@ def post_answer_impl(
         trimmed_file = file.replace("/uploads/", "")
         type = answerdata.get("type", "")
         if trimmed_file and type == "upload":
-            uploads = files_to_answeruploads([trimmed_file], curr_user)
+            uploads = check_answerupload_file_accesses([trimmed_file], curr_user)
         files: list[int] = answerdata.get("uploadedFiles", None)
         if files is not None:
             trimmed_files = [f["path"].replace("/uploads/", "") for f in files]
-            uploads = files_to_answeruploads(trimmed_files, curr_user)
+            uploads = check_answerupload_file_accesses(trimmed_files, curr_user)
 
     # Load old answers
 
@@ -1152,8 +1152,13 @@ def post_answer_impl(
     return AnswerRouteResult(result=result, plugin=plugin)
 
 
-def files_to_answeruploads(files: list[str], curr_user: User):
-    uploads = []
+def check_answerupload_file_accesses(
+    files: list[str], curr_user: User
+) -> list[AnswerUpload]:
+    """
+    Checks user's access to uploads by checking access to the answers associated with them
+    """
+    uploads: list[AnswerUpload] = []
     doc_map = {}
     for file in files:
         block = Block.query.filter(
@@ -1174,10 +1179,9 @@ def files_to_answeruploads(files: list[str], curr_user: User):
                 did = TaskId.parse(answer.task_id).doc_id
                 if did not in doc_map:
                     d = get_doc_or_abort(did)
-                    if not verify_teacher_access(d, require=False):
-                        raise AccessDenied(
-                            "You don't have permission to touch this file."
-                        )
+                    verify_teacher_access(
+                        d, message="You don't have permission to touch this file."
+                    )
                     doc_map[did] = d
         uploads.append(
             AnswerUpload.query.filter(AnswerUpload.upload_block_id == block.id).first()
