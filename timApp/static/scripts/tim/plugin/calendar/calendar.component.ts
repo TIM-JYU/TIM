@@ -113,7 +113,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
 }*/
 
 @Component({
-    selector: "mwl-calendar-component",
+    selector: "tim-calendar",
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [
         {
