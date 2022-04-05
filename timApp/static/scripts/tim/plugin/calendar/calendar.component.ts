@@ -134,9 +134,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             <button (click)="disableEditing()" [class.active]="!editEnabled" class="btn timButton">View</button>
         </div>
         <div [style.visibility] = "editEnabled ? 'visible' : 'hidden'" class="btn-group event-btn col-md-4">
-        <button (click)="setEventType($event)" [class.active]="true" class="btn timButton" id="event1">Event1</button>
-        <button (click)="setEventType($event)" [class.active]="false" class="btn timButton" id="event2">Event2</button>
-        <button (click)="setEventType($event)" [class.active]="false" class="btn timButton" id="event3">Event3</button>
+        <button (click)="setEventType($event)" *ngFor="let button of eventTypes" [class.active]="eventType == (button.valueOf() +eventTypes.indexOf((button)))" class="btn timButton" id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button.valueOf()}}</button>
         </div>
         </div>
         
@@ -229,7 +227,9 @@ export class CalendarComponent
     dragToCreateActive = false;
 
     editEnabled: boolean = false;
-    eventType: string = "event1";
+
+    eventTypes: string[] = ["Ohjaus", "Luento", "Opetusryhmä"];
+    eventType: string = this.eventTypes[0] + 0;
 
     weekStartsOn: 1 = 1;
 
@@ -251,6 +251,7 @@ export class CalendarComponent
     }
 
     setEventType(event: Event) {
+        console.log(this.eventType);
         const elementId: string = (event.target as Element).id;
         console.log(elementId);
         this.eventType = elementId;
