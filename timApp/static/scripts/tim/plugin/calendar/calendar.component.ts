@@ -352,7 +352,7 @@ export class CalendarComponent
 
     private async loadEvents() {
         const result = await toPromise(
-            this.http.get<CalendarEvent[]>("/calendar/events")
+            this.http.get<CalendarEvent[]>("/calendar/events?file_type=json")
         );
         if (result.ok) {
             result.result.forEach((event) => {
