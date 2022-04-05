@@ -103,12 +103,12 @@
          tim-draggable-fixed
          detachable="true"
          caption="Difference in original document"
-         save="{{$ctrl.getOptions().localSaveTag}}Trdiff"
-    >
+         save="{{$ctrl.getOptions().localSaveTag}}Trdiff">
         <div class="border">
-        <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.sideBySide" ng-click="$ctrl.changePositioning()"/> View {{$ctrl.positionButton}} </label>
+            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.sideBySide" ng-click="$ctrl.changePositioning()"/> View {{$ctrl.positionButton}} </label>
+            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.hideDiff"/> Hide this area </label>
         </div>
-        <div class="diff border">
+        <div class="diff border" ng-hide="$ctrl.hideDiff">
             <pre diff left-obj="$ctrl.trdiff.old" right-obj="$ctrl.trdiff.new"></pre>
             <a href="{{ $ctrl.getSourceDocumentLink() }}"><i class="glyphicon glyphicon-link"></i></a>
         </div>
@@ -121,7 +121,10 @@
          save="{{$ctrl.getOptions().localSaveTag}}Preview"
          class="previewDiv halfsize"
          ng-show="$ctrl.proeditor">
-        <div class="previewcontent paragraphs"></div>
+        <div class="border">
+            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.hidePreview"/> Hide this area </label>
+        </div>
+        <div class="previewcontent paragraphs" ng-hide="$ctrl.hidePreview"></div>
     </div>
     <div tim-draggable-fixed
          detachable="true"
@@ -130,7 +133,10 @@
          class="previewDiv halfsize"
          ng-show="$ctrl.trdiff.new"
          ng-show="$ctrl.proeditor">
-        <div class="previeworiginalcontent paragraphs">
+        <div class="border">
+            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.hideOriginalPreview"/> Hide this area </label>
+        </div>
+        <div class="previeworiginalcontent paragraphs" ng-hide="$ctrl.hideOriginalPreview">
             <div class="par">
             <div class="parContent">
             <p>{{$ctrl.trdiff.new}}</p>

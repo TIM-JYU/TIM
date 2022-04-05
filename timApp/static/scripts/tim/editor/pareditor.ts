@@ -215,6 +215,9 @@ export class PareditorController extends DialogController<
         wrap: TimStorage<string>;
         oldMode: TimStorage<string>;
         diffSideBySide: TimStorage<boolean>;
+        hideDiff: TimStorage<boolean>;
+        hidePreview: TimStorage<boolean>;
+        hideOriginalPreview: TimStorage<boolean>;
     };
     private touchDevice: boolean;
     private autocomplete!: boolean; // $onInit
@@ -240,6 +243,9 @@ export class PareditorController extends DialogController<
     private docTrLang: string = "";
     private sideBySide: boolean = false;
     private positionButton: string = "";
+    private hideDiff: boolean = true;
+    private hidePreview: boolean = false;
+    private hideOriginalPreview: boolean = false;
     private translationInProgress: boolean = false;
     private nothingSelected: boolean = false;
 
@@ -1156,6 +1162,12 @@ ${backTicks}
                 "diffSideBySide" + saveTag,
                 t.boolean
             ),
+            hideDiff: new TimStorage("hideDiff" + saveTag, t.boolean),
+            hidePreview: new TimStorage("hidePreview" + saveTag, t.boolean),
+            hideOriginalPreview: new TimStorage(
+                "hideOriginalPreview" + saveTag,
+                t.boolean
+            ),
         };
         setCurrentEditor(this);
         this.spellcheck = this.storage.spellcheck.get() ?? false;
@@ -1167,8 +1179,12 @@ ${backTicks}
         if (this.checkIfOriginal() && this.activeTab == "translator") {
             this.activeTab = "navigation";
         }
-        this.sideBySide = this.storage.diffSideBySide.get() ?? false;
+        this.sideBySide = this.storage.diffSideBySide.get() ?? true;
         this.changePositioning();
+        this.hideDiff = this.storage.hideDiff.get() ?? true;
+        this.hidePreview = this.storage.hidePreview.get() ?? false;
+        this.hideOriginalPreview =
+            this.storage.hideOriginalPreview.get() ?? false;
         this.lastTab = this.activeTab;
         this.citeText = this.getCiteText();
         const sn = this.storage.wrap.get();
@@ -2361,7 +2377,10 @@ ${backTicks}
         const ace = this.isAce();
         this.storage.oldMode.set(ace ? "ace" : "text");
         this.storage.wrap.set("" + this.wrapValue());
-        this.storage.diffSideBySide.set(this.sideBySide);
+        this.storage.diffSideBySide.set(!this.sideBySide);
+        this.storage.hideDiff.set(this.hideDiff);
+        this.storage.hidePreview.set(this.hidePreview);
+        this.storage.hideOriginalPreview.set(this.hideOriginalPreview);
         const acc = this.getExtraData().access;
         if (acc != null) {
             this.storage.noteAccess.set(acc);
