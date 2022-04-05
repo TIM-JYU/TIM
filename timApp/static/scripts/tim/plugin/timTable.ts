@@ -100,7 +100,7 @@ import {
     KEY_TAB,
     KEY_UP,
 } from "../util/keycodes";
-import {$http, $timeout} from "../util/ngimport";
+import {$http} from "../util/ngimport";
 import {
     clone,
     copyToClipboard,
@@ -109,6 +109,7 @@ import {
     maxContentOrFitContent,
     scrollToViewInsideParent,
     StringOrNumber,
+    timeout,
     to,
 } from "../util/utils";
 import {TaskId} from "./taskid";
@@ -979,7 +980,10 @@ export class TimTableComponent
                 }
             }
 
-            await $timeout(0);
+            // Ensure we're not in the middle of document update
+            await this.viewctrl.documentUpdate;
+            // Also wait for the element to be attached to the DOM
+            await timeout();
             const par = this.getPar();
             if (par) {
                 this.viewctrl.addTable(this, par);

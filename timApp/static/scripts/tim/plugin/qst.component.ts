@@ -228,7 +228,7 @@ export class QstComponent
     }
 
     questionClicked() {
-        this.showQuestionNew(this.getPar().originalPar.id);
+        this.showQuestionNew(this.getPar()!.originalPar.id);
     }
 
     private async showQuestionNew(parId: string) {
