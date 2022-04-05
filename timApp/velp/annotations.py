@@ -82,6 +82,7 @@ def get_annotations_with_comments_in_document(
             .filter(VelpContent.language_id == language_id)
             .outerjoin(Answer)
             .outerjoin(User, Answer.users_all)
+
             .filter(answer_filter)
             .filter(own_review_filter)
             .order_by(
@@ -92,6 +93,7 @@ def get_annotations_with_comments_in_document(
         )
         .options(contains_eager(Annotation.velp_content))
         .options(contains_eager(Annotation.answer).contains_eager(Answer.users_all))
+        .options()
         .options(
             contains_eager(Annotation.velp_version).contains_eager(VelpVersion.velp)
         )

@@ -1247,9 +1247,6 @@ def preprocess_jsrunner_answer(
         else None,
     )
     answerdata["testvelps"] = get_annotations_with_comments_in_document(curr_user, d, False)
-    #answerdata["testvelps"] =  [
-    #    {"points": 2, "name": "mikki hiiri"},
-    #    {"points": 2, "name": "minni hiiri"}]
     answerdata.pop(
         "paramComps", None
     )  # This isn't needed by jsrunner server, so don't send it.
