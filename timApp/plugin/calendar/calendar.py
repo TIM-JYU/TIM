@@ -102,7 +102,7 @@ def get_events() -> Response:
             ics_file = ics_file + "DTEND:" + dtend + "Z\n"
             ics_file = ics_file + "DTSTAMP:" + dts + "Z\n"
             ics_file = ics_file + "UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\n"
-            ics_file = ics_file + "CREATED:" + dts + "\n"
+            ics_file = ics_file + "CREATED:" + dts + "Z\n"
             ics_file = ics_file + "SUMMARY:" + event.title + "\n"
             ics_file = ics_file + "END:VEVENT\n"
 

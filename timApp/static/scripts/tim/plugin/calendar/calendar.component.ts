@@ -392,11 +392,13 @@ export class CalendarComponent
 
     async exportICS() {
         const result = await toPromise(
-            this.http.get<string>("/calendar/events?file_type=ics")
+            this.http.get("/calendar/events?file_type=ics", {
+                responseType: "text",
+            })
         );
         if (result.ok) {
-            // this.refresh();
-            console.log(result);
+            this.refresh();
+            console.log(result.result);
             console.log("Tiedot viety");
         } else {
             // TODO: Handle error responses properly
