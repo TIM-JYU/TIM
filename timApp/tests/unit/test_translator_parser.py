@@ -192,6 +192,51 @@ x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\text{ ratkaistaan x}\\
             ],
         )
 
+    def test_bulletlist(self):
+        md = r"""- Mieleni minun [tekevi](www.example.com)
+- [Aivoni]{.huomio} ajattelevi
+- 
+    - Kerran
+    - [Toisen](www.esimerkki.fi)
+        - Kolmannen
+    - Koko kappale:\
+        Mieleni minun tekevi\
+        Aivoni ajattelevi\
+            Kerran
+            Toisen
+                Kolmannen
+"""
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [
+                    # TODO/FIXME does a list need to start with newline?
+                    NoTranslate("\n- "),
+                    Translate("Mieleni minun "),
+                    NoTranslate("["),
+                    Translate("tekevi"),
+                    NoTranslate("](www.example.com)\n- ["),
+                    Translate("Aivoni"),
+                    NoTranslate("]{.huomio}"),
+                    Translate(" ajattelevi"),
+                    NoTranslate("\n- \n\t- "),
+                    Translate("Kerran"),
+                    NoTranslate("\n\t- ["),
+                    Translate("Toisen"),
+                    NoTranslate("](www.esimerkki.fi)\n\t\t- "),
+                    Translate("Kolmannen"),
+                    NoTranslate("\n\t- "),
+                    Translate("Koko kappale:"),
+                    NoTranslate("\\"),
+                    Translate("\nMieleni minun tekevi"),
+                    NoTranslate("\\"),
+                    Translate("\nAivoni ajattelevi"),
+                    NoTranslate("\\"),
+                    Translate("\nKerran\nToisen\nKolmannen"),
+                ]
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -228,7 +228,7 @@ def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
     ast = json.loads(pypandoc.convert_text(md, format="md", to="json"))
     # By walking the ast, glue continuous translatable parts together into Translate-object and non-translatable parts into NoTranslate object
     # Add the objects into a list where they alternate T|NT, NT, T, NT ... T|NT
-    block_approvals = [collect_approvals(block) for block in ast["blocks"]]
+    block_approvals = [block_collect(block) for block in ast["blocks"]]
     # Return the list
     return block_approvals
 
@@ -441,7 +441,7 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
     elif type_ == "Note":
         # NOTE Scary?
         for block in content:
-            arr += collect_approvals(block)
+            arr += block_collect(block)
     elif type_ == "Span":
         arr += span_collect(content)
 
@@ -472,6 +472,7 @@ def notranslate_all(type_: str, content: dict) -> list[TranslateApproval]:
 
 def codeblock_collect(content: dict) -> list[TranslateApproval]:
     # TODO plugins can be identified by Attr's 3rd index; key-value -pair for example plugin="csplugin"
+    # TODO Handle "fenced code block" (https://www.markdownguide.org/extended-syntax/#syntax-highlighting). Maybe if there is just 1 class (for example "cs" in "```cs\nvar x;\n```") then do NOT put it inside braces (like "{.cs}")
     return notranslate_all("CodeBlock", content)  # TODO
 
 
@@ -499,13 +500,14 @@ def div_collect(content: dict) -> list[TranslateApproval]:
     return notranslate_all("Div", content)  # TODO
 
 
-def collect_approvals(top_block: dict) -> list[TranslateApproval]:
+def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
     """
     Walks the whole block and appends each translatable and non-translatable string-part into a list in order.
 
     Based on the pandoc AST-spec at:
     https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
     :param top_block: The block to collect strings from
+    :param depth: The depth of the recursion if it is needed for example with list-indentation
     :return: List of strings inside the correct approval-type.
     """
     arr: list[TranslateApproval] = list()
@@ -527,15 +529,19 @@ def collect_approvals(top_block: dict) -> list[TranslateApproval]:
     elif type_ == "BlockQuote":
         # NOTE Recursion
         for block in content:
-            arr += collect_approvals(block)
+            arr += block_collect(block)
     elif type_ == "OrderedList":
         # NOTE Recursion
         arr += orderedlist_collect(content)
     elif type_ == "BulletList":
         # NOTE Recursion
         for block_list in content:
+            # Next list item
+            arr.append(NoTranslate("\n"))
+            # Indentation and list item start
+            arr.append(NoTranslate(("\t" * depth) + "- "))
             for block in block_list:
-                arr += collect_approvals(block)
+                arr += block_collect(block, depth + 1)
     elif type_ == "DefinitionList":
         arr += definitionlist_collect(content)
     elif type_ == "Header":
