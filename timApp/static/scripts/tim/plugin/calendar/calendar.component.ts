@@ -128,10 +128,18 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
     template: `
         <mwl-utils-calendar-header [(view)]="view" [(viewDate)]="viewDate">
         </mwl-utils-calendar-header>
-        <div class="btn-group edit-btn">
-            <button (click)="enableEditing()" [class.active]="editEnabled" class="btn btn-primary">Edit</button>
-            <button (click)="disableEditing()" [class.active]="!editEnabled" class="btn btn-primary">View</button>
+        <div class="row text-center">
+        <div class="btn-group edit-btn col-md-4">
+            <button (click)="enableEditing()" [class.active]="editEnabled" class="btn timButton">Edit</button>
+            <button (click)="disableEditing()" [class.active]="!editEnabled" class="btn timButton">View</button>
         </div>
+        <div [style.visibility] = "editEnabled ? 'visible' : 'hidden'" class="btn-group event-btn col-md-4">
+        <button (click)="setEventType($event)" [class.active]="true" class="btn timButton" id="event1">Event1</button>
+        <button (click)="setEventType($event)" [class.active]="false" class="btn timButton" id="event2">Event2</button>
+        <button (click)="setEventType($event)" [class.active]="false" class="btn timButton" id="event3">Event3</button>
+        </div>
+        </div>
+        
         <ng-template
           #weekViewHourSegmentTemplate
           let-segment="segment"
@@ -221,6 +229,7 @@ export class CalendarComponent
     dragToCreateActive = false;
 
     editEnabled: boolean = false;
+    eventType: string = "event1";
 
     weekStartsOn: 1 = 1;
 
@@ -239,6 +248,12 @@ export class CalendarComponent
         private cdr: ChangeDetectorRef
     ) {
         super(el, http, domSanitizer);
+    }
+
+    setEventType(event: Event) {
+        const elementId: string = (event.target as Element).id;
+        console.log(elementId);
+        this.eventType = elementId;
     }
 
     setAccuracy(accuracy: number) {
