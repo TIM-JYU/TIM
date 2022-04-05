@@ -105,8 +105,10 @@
          caption="Difference in original document"
          save="{{$ctrl.getOptions().localSaveTag}}Trdiff"
     >
+        <div class="border">
+        <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.sideBySide" ng-click="$ctrl.changePositioning()"/> View {{$ctrl.positionButton}} </label>
+        </div>
         <div class="diff border">
-            <button class="timButton" ng-model="$ctrl.sideBySide" ng-click="$ctrl.changePositioning()">View {{$ctrl.positionButton}}</button>
             <pre diff left-obj="$ctrl.trdiff.old" right-obj="$ctrl.trdiff.new"></pre>
             <a href="{{ $ctrl.getSourceDocumentLink() }}"><i class="glyphicon glyphicon-link"></i></a>
         </div>

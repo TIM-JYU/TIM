@@ -214,6 +214,7 @@ export class PareditorController extends DialogController<
         editortab: TimStorage<string>;
         wrap: TimStorage<string>;
         oldMode: TimStorage<string>;
+        diffSideBySide: TimStorage<boolean>;
     };
     private touchDevice: boolean;
     private autocomplete!: boolean; // $onInit
@@ -1090,6 +1091,13 @@ ${backTicks}
     }
 
     /*
+    Returns the name of the positionButton (currently only "Next to Editor", used to include "Stacked").
+     */
+    positionButtonName() {
+        return "Next to Editor";
+    }
+
+    /*
     Tracks the editing and Difference in original document views' positioning (see pareditor.html).
      */
     changePositioning() {
@@ -1098,16 +1106,16 @@ ${backTicks}
         if (doc != null && this.sideBySide) {
             doc.classList.remove("sidebyside");
             doc.classList.add("stacked");
-            this.positionButton = "Side by Side";
             this.sideBySide = false;
+            this.positionButton = this.positionButtonName();
             if (editdoc != null) {
                 editdoc.classList.remove("forceHalfSize");
             }
         } else if (doc != null) {
             doc.classList.remove("stacked");
             doc.classList.add("sidebyside");
-            this.positionButton = "Stacked";
             this.sideBySide = true;
+            this.positionButton = this.positionButtonName();
             if (editdoc != null) {
                 editdoc.classList.add("forceHalfSize");
             }
@@ -1133,8 +1141,6 @@ ${backTicks}
             this.docTranslator
         );
         const saveTag = this.getSaveTag();
-        this.sideBySide = false;
-        this.positionButton = "Side by side";
         this.translationInProgress = false;
         this.storage = {
             acebehaviours: new TimStorage("acebehaviours" + saveTag, t.boolean),
@@ -1146,6 +1152,10 @@ ${backTicks}
             proeditor: new TimStorage("proeditor" + saveTag, t.boolean),
             spellcheck: new TimStorage("spellcheck" + saveTag, t.boolean),
             wrap: new TimStorage("wrap" + saveTag, t.string),
+            diffSideBySide: new TimStorage(
+                "diffSideBySide" + saveTag,
+                t.boolean
+            ),
         };
         setCurrentEditor(this);
         this.spellcheck = this.storage.spellcheck.get() ?? false;
@@ -1157,6 +1167,8 @@ ${backTicks}
         if (this.checkIfOriginal() && this.activeTab == "translator") {
             this.activeTab = "navigation";
         }
+        this.sideBySide = this.storage.diffSideBySide.get() ?? false;
+        this.changePositioning();
         this.lastTab = this.activeTab;
         this.citeText = this.getCiteText();
         const sn = this.storage.wrap.get();
@@ -2349,6 +2361,7 @@ ${backTicks}
         const ace = this.isAce();
         this.storage.oldMode.set(ace ? "ace" : "text");
         this.storage.wrap.set("" + this.wrapValue());
+        this.storage.diffSideBySide.set(this.sideBySide);
         const acc = this.getExtraData().access;
         if (acc != null) {
             this.storage.noteAccess.set(acc);
