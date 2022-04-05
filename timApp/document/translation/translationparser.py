@@ -233,6 +233,12 @@ def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
     return block_approvals
 
 
+def tex_collect(content: str) -> list[TranslateApproval]:
+    # TODO Collect parts of LaTeX into the translation list
+    # Maybe use the regex-implementation of identifying text-areas
+    return [NoTranslate(content)]
+
+
 def attr_collect(content: dict) -> list[TranslateApproval]:
     """
     :param content: Pandoc-ASTs JSON form of Attr (attributes)
@@ -249,9 +255,11 @@ def attr_collect(content: dict) -> list[TranslateApproval]:
     arr.append(NoTranslate("{"))
     # TODO Are spaces needed between the attributes?
     if identifier:
-        arr.append(NoTranslate(f"#{identifier}"))
-    arr += [NoTranslate(f".{x}") for x in classes]
-    arr += [NoTranslate(f"{k}={v}") for k, v in kv_pairs]
+        arr.append(NoTranslate(f"#{identifier} "))
+    arr += [NoTranslate(f".{x} ") for x in classes]
+    arr += [NoTranslate(f"{k}={v} ") for k, v in kv_pairs]
+    # Remove extra space from last element
+    arr[-1].text = arr[-1].text.strip()
     arr.append(NoTranslate("}"))
     return arr
 
@@ -287,7 +295,8 @@ def code_collect(content: dict) -> list[TranslateApproval]:
 
 
 def math_collect(content: dict) -> list[TranslateApproval]:
-    mathtype = content[0]
+    mathtype = content[0]["t"]
+    # TODO Go deeper to find translatable text
     # Double $-sign LaTeX area is InlineMath -type
     if mathtype == "DisplayMath":
         return [NoTranslate("$$"), NoTranslate(content[1]), NoTranslate("$$")]
@@ -300,9 +309,13 @@ def math_collect(content: dict) -> list[TranslateApproval]:
 
 
 def rawinline_collect(content: dict) -> list[TranslateApproval]:
-    # TODO Handle "Format"
+    # TODO Handle "Format", for example when Latex blocks are in \begin->\end the format is "tex"
     # TODO Should this be Translate instead? Could contain words enclosed in underline-tags (<u>text</u>)?
-    return [NoTranslate(content[1])]
+    format_ = content[0]
+    if format_ == "tex":
+        return tex_collect(content[1])
+    else:
+        return [NoTranslate(content[1])]
 
 
 def link_collect(content: dict) -> list[TranslateApproval]:
@@ -423,46 +436,69 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
     return arr
 
 
+def notranslate_all(type_: str, content: dict) -> list[TranslateApproval]:
+    """
+    Mark the whole element as non-translatable.
+    :param type_: Pandoc AST-type of the content
+    :param content: Pandoc AST-content of the type
+    :return: List of single NoTranslate -element containing Markdown representation of content
+    """
+    # The conversion requires the pandoc-api-version TODO This feels kinda hacky...
+    ast_content = {
+        "pandoc-api-version": json.loads(
+            pypandoc.convert_text("", to="json", format="md")
+        )["pandoc-api-version"],
+        "meta": {},
+        "blocks": [{"t": type_, "c": content}],
+    }
+    # TODO Test this. Could have problems with newlines or other coding of characters?
+    json_str = json.dumps(ast_content)
+    # FIXME This conversion needs to know the pandoc api version -> add into a parser-class?
+    md = pypandoc.convert_text(json_str, to="md", format="json")
+    return [NoTranslate(md)]
+
+
 def codeblock_collect(content: dict) -> list[TranslateApproval]:
     # TODO plugins can be identified by Attr's 3rd index; key-value -pair for example plugin="csplugin"
-    raise NotImplementedError  # TODO
+    return notranslate_all("CodeBlock", content)  # TODO
 
 
 def rawblock_collect(content: dict) -> list[TranslateApproval]:
-    raise NotImplementedError  # TODO
+    return notranslate_all("RawBlock", content)
 
 
 def orderedlist_collect(content: dict) -> list[TranslateApproval]:
-    raise NotImplementedError  # TODO
+    return notranslate_all("OrderedList", content)  # TODO
 
 
 def definitionlist_collect(content: dict) -> list[TranslateApproval]:
-    raise NotImplementedError  # TODO
+    return notranslate_all("DefinitionList", content)  # TODO
 
 
 def header_collect(content: dict) -> list[TranslateApproval]:
-    raise NotImplementedError  # TODO
+    return notranslate_all("Header", content)  # TODO
 
 
 def table_collect(content: dict) -> list[TranslateApproval]:
-    raise NotImplementedError  # TODO
+    return notranslate_all("Table", content)  # TODO
 
 
 def div_collect(content: dict) -> list[TranslateApproval]:
-    raise NotImplementedError  # TODO
+    return notranslate_all("Div", content)  # TODO
 
 
 def collect_approvals(top_block: dict) -> list[TranslateApproval]:
     """
     Walks the whole block and appends each translatable and non-translatable string-part into a list in order.
+
+    Based on the pandoc AST-spec at:
+    https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
     :param top_block: The block to collect strings from
     :return: List of strings inside the correct approval-type.
     """
     arr: list[TranslateApproval] = list()
     type_ = top_block["t"]
     content = top_block["c"]
-    # Based on the pandoc AST-spec at
-    # https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
     if type_ == "Plain" or type_ == "Para":
         # TODO Need different literals before?
         for inline in content:

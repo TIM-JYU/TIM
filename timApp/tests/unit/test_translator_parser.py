@@ -136,6 +136,7 @@ class TestParser(unittest.TestCase):
         # TODO Add cases for identifiers, key-value -pairs and multiple classes as well
         text = "Tässä on kuva ![kissasta](/kuvat/kissa.png). [Tosi]{.red} hieno, eikös?"
         self.assertEqual(
+            get_translate_approvals(text),
             [
                 [
                     Translate("Tässä on kuva "),
@@ -149,40 +150,45 @@ class TestParser(unittest.TestCase):
                     Translate(" hieno, eikös?"),
                 ]
             ],
-            get_translate_approvals(text),
         )
 
     def test_get_translate_approvals_latex(self):
-        latexblock = """KING CLAUDIUS
+        # NOTE Pandoc does not seem to account for trailing whitespace, so the single space ' ' at the end of this test-text will disappear
+        latexblock = r"""KING CLAUDIUS
 [Aside] O, 'tis $too$ true!
 $How$ $ smart$ a $$lash $$ that [speech] $$doth$$ [give] my conscience!
-a) \\begin{align*} asd
-x^3-49x&=0 &&|\\text{ erotetaan yhteinen tekijä x}\\
-x(x^2-49)&=0 &&|\\text{ käytetään tulon nollasääntöä}\\
-x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\\text{ ratkaistaan x}\\
+a) \begin{align*} asd
+x^3-49x&=0 &&|\text{ erotetaan yhteinen tekijä x}\\
+x(x^2-49)&=0 &&|\text{ käytetään tulon nollasääntöä}\\
+x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\text{ ratkaistaan x}\\
 &\;\;\;\;\;\,\;\;x^2=49 \\
-&\;\;\;\;\;\,\;\;\;\;x=7\;\\text{tai}\;x=-7
-\\end{align*} """
+&\;\;\;\;\;\,\;\;\;\;x=7\;\text{tai}\;x=-7
+\end{align*} """
         self.assertEqual(
             get_translate_approvals(latexblock),
             [
-                Translate("KING CLAUDIUS\n[Aside] O, 'tis $too$ true!\n"),
-                NoTranslate("$How$"),
-                Translate("$ smart$ a "),
-                NoTranslate("$$lash $$"),
-                Translate("that [speech] "),
-                NoTranslate("$$doth$$"),
-                Translate("[give] my conscience!\n a)"),
-                # TODO content in \text{<content>} should be marked as translate
-                NoTranslate(
-                    """\\begin{align*} asd
-x^3-49x&=0 &&|\\text{ erotetaan yhteinen tekijä x}\\
-x(x^2-49)&=0 &&|\\text{ käytetään tulon nollasääntöä}\\
-x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\\text{ ratkaistaan x}\\
+                [
+                    # NOTE Pandoc seems to convert a single quote into U+2019
+                    Translate("KING CLAUDIUS\n[Aside] O, ’tis "),
+                    NoTranslate("$too$"),
+                    Translate(" true!\n"),
+                    NoTranslate("$How$"),
+                    Translate(" $ smart$ a "),
+                    NoTranslate("$$lash $$"),
+                    Translate(" that [speech] "),
+                    NoTranslate("$$doth$$"),
+                    Translate(" [give] my conscience!\na) "),
+                    # TODO content in \text{<content>} should be marked as translate
+                    NoTranslate(
+                        r"""\begin{align*} asd
+x^3-49x&=0 &&|\text{ erotetaan yhteinen tekijä x}\\
+x(x^2-49)&=0 &&|\text{ käytetään tulon nollasääntöä}\\
+x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\text{ ratkaistaan x}\\
 &\;\;\;\;\;\,\;\;x^2=49 \\
-&\;\;\;\;\;\,\;\;\;\;x=7\;\\text{tai}\;x=-7
-\\end{align*} """
-                ),
+&\;\;\;\;\;\,\;\;\;\;x=7\;\text{tai}\;x=-7
+\end{align*}"""
+                    ),
+                ]
             ],
         )
 
