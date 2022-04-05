@@ -34,6 +34,7 @@ export const VelpData = t.intersection([
         answer: t.type({
             id: t.Int,
             users: t.array(User),
+            task_id: t.string,
         }),
     }),
     t.partial({

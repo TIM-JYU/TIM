@@ -1374,4 +1374,79 @@ export class Tools extends ToolsBase {
         });
         return seen.size;
     }
+
+    getTaskPointsTest(task: string): number {
+        const velps = this.testvelps
+            .filter(
+                (v) =>
+                    v.answer.users[0].id === this.data.user.id &&
+                    v.answer.task_id.substr(
+                        v.answer.task_id.indexOf(".") + 1
+                    ) === task
+            )
+            .map((v) => ({
+                id: v.annotator.id,
+                name: v.annotator.name,
+                points: v.points ? v.points : NaN,
+                task: v.answer.task_id,
+            }));
+
+        const points = velps.map((v) => v.points).filter((n) => !isNaN(n));
+        // this.output += points
+        const sum = points.reduce((a, b) => a + b, 0);
+        return sum / velps.length ? sum / velps.length : 0;
+    }
+
+    getReviewCountTest(task: string): number {
+        const velps = this.testvelps
+            .filter(
+                (v) =>
+                    v.annotator.id === this.data.user.id &&
+                    v.answer.task_id.substr(
+                        v.answer.task_id.indexOf(".") + 1
+                    ) === task
+            )
+            .map((v) => ({
+                id: v.annotator.id,
+                answer: v.answer.id,
+            }));
+        const seen = new Set();
+        const tasks = velps.filter((el) => {
+            const duplicate = seen.has(el.answer);
+            seen.add(el.answer);
+            return !duplicate;
+        });
+        return seen.size;
+    }
+
+    getReviewsTest(task: string): object[] {
+        const velps = this.testvelps
+            .filter(
+                (v) =>
+                    v.answer.users[0].id === this.data.user.id &&
+                    v.answer.task_id.substr(
+                        v.answer.task_id.indexOf(".") + 1
+                    ) === task
+            )
+            .map((v) => ({
+                id: v.annotator.id,
+                name: v.annotator.name,
+                points: v.points ? v.points : NaN,
+            }));
+        // this.output += velps;
+
+        const result = Array.from(new Set(velps.map((s) => s.id))).map((id) => {
+            const reviewer = velps.find((s) => s.id === id);
+            const points = velps
+                .filter((s) => s.id === id)
+                .map((velp) => (velp.points ? velp.points : NaN))
+                .filter((n) => !isNaN(n));
+            return {
+                id: id,
+                name: reviewer ? reviewer.name : "",
+                points: points,
+            };
+        });
+        return result;
+    }
 }
