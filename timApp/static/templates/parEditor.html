@@ -114,7 +114,7 @@
         </div>
     </div>
   </div>
-  <div class="sidebyside">
+  <div id="previews">
     <div tim-draggable-fixed
          detachable="true"
          caption="Current Block {{ $ctrl.getPreviewCaption() }}"
@@ -122,21 +122,21 @@
          class="previewDiv halfsize"
          ng-show="$ctrl.proeditor">
         <div class="border">
-            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.hidePreview"/> Hide this area </label>
+            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.hidePreview" ng-click="$ctrl.updatePreviewHide()"/> Hide this area </label>
         </div>
-        <div class="previewcontent paragraphs" ng-hide="$ctrl.hidePreview"></div>
+        <div class="previewcontent paragraphs fullsize" ng-hide="$ctrl.hidePreview"></div>
     </div>
     <div tim-draggable-fixed
          detachable="true"
          caption="Original Block {{ $ctrl.getPreviewCaption() }}"
          save="{{$ctrl.getOptions().localSaveTag}}Preview (original block)"
          class="previewDiv halfsize"
-         ng-show="$ctrl.trdiff.new"
+         ng-if="$ctrl.trdiff.new"
          ng-show="$ctrl.proeditor">
         <div class="border">
-            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.hideOriginalPreview"/> Hide this area </label>
+            <label class="font-weight-normal margin-5-right"><input type="checkbox" id="origprev" ng-model="$ctrl.hideOriginalPreview" ng-click="$ctrl.updateOriginalPreviewHide()"/> Hide this area </label>
         </div>
-        <div class="previeworiginalcontent paragraphs" ng-hide="$ctrl.hideOriginalPreview">
+        <div class="previeworiginalcontent paragraphs fullsize" ng-hide="$ctrl.hideOriginalPreview">
             <div class="par">
             <div class="parContent">
             <p>{{$ctrl.trdiff.new}}</p>

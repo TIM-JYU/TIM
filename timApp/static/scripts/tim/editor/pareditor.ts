@@ -1130,6 +1130,36 @@ ${backTicks}
         this.refreshEditorSize();
     }
 
+    /*
+    Updates this.hidePreview and calls for a change of positioning because ng-model updates it too slow.
+     */
+    updatePreviewHide() {
+        this.hidePreview = !this.hidePreview;
+        this.changePreviewPositions();
+    }
+
+    /*
+    Updates this.hideOriginalPreview and calls for a change of positioning because ng-model updates it too slow.
+     */
+    updateOriginalPreviewHide() {
+        this.hideOriginalPreview = !this.hideOriginalPreview;
+        this.changePreviewPositions();
+    }
+
+    /*
+    Tracks the previews' positioning (see pareditor.html).
+     */
+    changePreviewPositions() {
+        const doc = document.getElementById("previews");
+        if (doc != null && (this.hidePreview || this.hideOriginalPreview)) {
+            doc.classList.remove("sidebyside");
+            doc.classList.add("stacked");
+        } else if (doc != null) {
+            doc.classList.remove("stacked");
+            doc.classList.add("sidebyside");
+        }
+    }
+
     $onInit() {
         super.$onInit();
         this.docSettings = documentglobals().docSettings;
@@ -1235,6 +1265,7 @@ ${backTicks}
         if (this.docTrLang == "" && view != undefined) {
             this.docTrLang = view.item.lang_id!;
         }
+        this.changePreviewPositions();
     }
 
     async compileOriginalPreview() {
