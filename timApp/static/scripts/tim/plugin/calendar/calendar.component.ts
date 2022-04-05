@@ -133,7 +133,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             <button (click)="enableEditing()" [class.active]="editEnabled" class="btn timButton">Edit</button>
             <button (click)="disableEditing()" [class.active]="!editEnabled" class="btn timButton">View</button>
         </div>
-            <div class="col-md-4"> Show events:
+            <div class="col-md-4"> Näytä:
                 <div *ngFor="let box of checkboxEvents">
                     <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value" [(ngModel)]="box.checked" [checked]="" >{{box.name}}
                 </div>
