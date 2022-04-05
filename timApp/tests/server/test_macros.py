@@ -45,7 +45,7 @@ class MacroTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc(
             initial_par=r"""
-Username is %%username%% and real name is %%realname%% and email is %%useremail%% and logged name is %%loggedUsername%%
+Username is %%username%% and real name is %%realname%% and email is %%useremail%% and logged name is %%loggedUsername%% and id is %%userid%%
 
 #-
 Percents: \%\%
@@ -63,7 +63,7 @@ header: %%username%% and %%realname%%
 
         pars = self.get(d.url, as_tree=True).cssselect(".parContent")
         self.assertEqual(
-            "Username is testuser1 and real name is Test user 1 and email is test1@example.com and logged name is testuser1",
+            f"Username is {self.test_user_1.name} and real name is {self.test_user_1.real_name} and email is {self.test_user_1.email} and logged name is {self.test_user_1.name} and id is {self.test_user_1.id}",
             pars[0].text_content().strip(),
         )
         self.assertEqual("Percents: %%", pars[1].text_content().strip())
@@ -79,7 +79,7 @@ header: %%username%% and %%realname%%
         self.assertEqual("testuser1 and Test user 1", p.values["header"])
         self.login_test2()
         self.assertEqual(
-            "Username is testuser2 and real name is Test user 2 and email is test2@example.com and logged name is testuser2",
+            f"Username is {self.test_user_2.name} and real name is {self.test_user_2.real_name} and email is {self.test_user_2.email} and logged name is {self.test_user_2.name} and id is {self.test_user_2.id}",
             self.get(f"/view/{d.id}", as_tree=True)
             .cssselect(".parContent")[0]
             .text_content()

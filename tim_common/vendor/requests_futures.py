@@ -98,6 +98,7 @@ class FuturesSession(Session):
         The background_callback param allows you to do some processing on the
         response in the background, e.g. call resp.json() so that json parsing
         happens in the background thread.
+
         :rtype : concurrent.futures.Future
         """
 
@@ -137,65 +138,66 @@ class FuturesSession(Session):
             session.close()
 
     def get(self, url, **kwargs):
-        r"""
+        """
         Sends a GET request. Returns :class:`Future` object.
+
         :param url: URL for the new :class:`Request` object.
-        :param \*\*kwargs: Optional arguments that ``request`` takes.
         :rtype : concurrent.futures.Future
         """
         return super().get(url, **kwargs)
 
     def options(self, url, **kwargs):
-        r"""Sends a OPTIONS request. Returns :class:`Future` object.
+        """
+        Sends a OPTIONS request. Returns :class:`Future` object.
+
         :param url: URL for the new :class:`Request` object.
-        :param \*\*kwargs: Optional arguments that ``request`` takes.
         :rtype : concurrent.futures.Future
         """
         return super().options(url, **kwargs)
 
     def head(self, url, **kwargs):
-        r"""Sends a HEAD request. Returns :class:`Future` object.
+        """Sends a HEAD request. Returns :class:`Future` object.
+
         :param url: URL for the new :class:`Request` object.
-        :param \*\*kwargs: Optional arguments that ``request`` takes.
         :rtype : concurrent.futures.Future
         """
         return super().head(url, **kwargs)
 
     def post(self, url, data=None, json=None, **kwargs) -> Future:
-        r"""Sends a POST request. Returns :class:`Future` object.
+        """Sends a POST request. Returns :class:`Future` object.
+
         :param url: URL for the new :class:`Request` object.
         :param data: (optional) Dictionary, list of tuples, bytes, or file-like
             object to send in the body of the :class:`Request`.
         :param json: (optional) json to send in the body of the :class:`Request`.
-        :param \*\*kwargs: Optional arguments that ``request`` takes.
         :rtype : concurrent.futures.Future
         """
         return super().post(url, data=data, json=json, **kwargs)
 
     def put(self, url, data=None, **kwargs) -> Future:
-        r"""Sends a PUT request. Returns :class:`Future` object.
+        """Sends a PUT request. Returns :class:`Future` object.
+
         :param url: URL for the new :class:`Request` object.
         :param data: (optional) Dictionary, list of tuples, bytes, or file-like
             object to send in the body of the :class:`Request`.
-        :param \*\*kwargs: Optional arguments that ``request`` takes.
         :rtype : concurrent.futures.Future
         """
         return super().put(url, data=data, **kwargs)
 
     def patch(self, url, data=None, **kwargs):
-        r"""Sends a PATCH request. Returns :class:`Future` object.
+        """Sends a PATCH request. Returns :class:`Future` object.
+
         :param url: URL for the new :class:`Request` object.
         :param data: (optional) Dictionary, list of tuples, bytes, or file-like
             object to send in the body of the :class:`Request`.
-        :param \*\*kwargs: Optional arguments that ``request`` takes.
         :rtype : concurrent.futures.Future
         """
         return super().patch(url, data=data, **kwargs)
 
     def delete(self, url, **kwargs):
-        r"""Sends a DELETE request. Returns :class:`Future` object.
+        """Sends a DELETE request. Returns :class:`Future` object.
+
         :param url: URL for the new :class:`Request` object.
-        :param \*\*kwargs: Optional arguments that ``request`` takes.
         :rtype : concurrent.futures.Future
         """
         return super().delete(url, **kwargs)

@@ -323,7 +323,7 @@ def getproxy(m: GetProxyModel):
         return send_file(
             BytesIO(r.content),
             as_attachment=True,
-            attachment_filename=filename,
+            download_name=filename,
             mimetype=mimetype,
         )
 
@@ -426,9 +426,10 @@ def preprocess_request():
     if request.method == "GET":
         p = request.path
         if "//" in p or (p.endswith("/") and p != "/"):
-            fixed_url = (
-                p.rstrip("/").replace("//", "/") + "?" + request.query_string.decode()
-            )
+            query_str = request.query_string.decode()
+            fixed_url = p.rstrip("/").replace("//", "/")
+            if query_str:
+                fixed_url = f"{fixed_url}?{query_str}"
             return redirect(fixed_url)
 
 

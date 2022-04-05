@@ -2,7 +2,6 @@ import ipaddress
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from typing import Optional, Union
 
 from flask import flash, current_app
 from flask import request, g
@@ -490,7 +489,7 @@ def get_plugin_from_request(
 
 
 def get_origin_from_request() -> OriginInfo | None:
-    ref_from = (request.get_json() or {}).get("ref_from") or {}
+    ref_from = (request.get_json(silent=True) or {}).get("ref_from") or {}
     doc_id = ref_from.get(
         "docId", get_option(request, "ref_from_doc_id", default=None, cast=int)
     )

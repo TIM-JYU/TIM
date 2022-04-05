@@ -1,0 +1,11 @@
+python
+Python program
+``` {#PLUGINNAMEHERE plugin="csPlugin"}
+type: py
+path: user
+fullprogram: |!!
+# BYCODEBEGIN
+print('Hello world!')
+# BYCODEEND
+!!
+```

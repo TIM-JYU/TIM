@@ -1632,6 +1632,7 @@ def html_change(s, old, jso, item_id, repfmt, default, valdef=None, delta=0):
     tekstillä kun se muokataan repfmt formaatilla.  Mikäli avainta
     ei löydy (edes - alkuisena), käytetään korvauksena default-jonoa.
     Jos default == None ei tehdä mitään
+
     :param s: jono josta korvataan
     :param old: teksti jota etsitään
     :param jso: dict josta etsitään avainta (kokeillaan myös - alkuun)
