@@ -441,14 +441,31 @@ export class CalendarComponent
                 console.log(result.result);
                 this.lastEvent = this.events.length;
                 this.refresh();
+                await this.loadEvents();
             } else {
                 console.error(result.result.error.error);
             }
         }
     }
 
-    deleteEvent(event?: CalendarEvent) {
+    async deleteEvent(event?: CalendarEvent) {
         console.log(event);
+        if (!event) {
+            return;
+        }
+        if (!event.id) {
+            return;
+        }
+        const result = await toPromise(
+            this.http.delete(`/calendar/events/${event.id}`)
+        );
+        if (result.ok) {
+            console.log(result.result);
+            this.events.splice(this.events.indexOf(event), 1);
+            this.refresh();
+        } else {
+            console.error(result.result.error.error);
+        }
     }
 
     handleEvent(action: string, event: CalendarEvent): void {

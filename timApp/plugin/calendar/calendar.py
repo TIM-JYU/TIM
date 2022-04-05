@@ -9,7 +9,8 @@ from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_id, get_current_user_object
 from timApp.plugin.calendar.models import Event
 from timApp.timdb.sqa import db
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.requesthelper import RouteException
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
@@ -85,10 +86,10 @@ def get_events() -> Response:
     events: list[Event] = Event.query.filter(Event.creator_user_id == cur_user).all()
 
     event_objs = []
-    for i, event in enumerate(events):
+    for event in events:
         event_objs.append(
             {
-                "id": i,
+                "id": event.event_id,
                 "title": event.title,
                 "start": event.start_time,
                 "end": event.end_time,
@@ -124,6 +125,17 @@ def add_events(events: list[CalendarEvent]) -> Response:
 
     db.session.commit()
     return json_response(events)
+
+
+@calendar_plugin.delete("/events/<int:event_id>")
+def delete_event(event_id: int) -> Response:
+    verify_logged_in()
+    event = Event.get_event_by_id(event_id)
+    if not event:
+        raise RouteException("Event not found")
+    db.session.delete(event)
+    db.session.commit()
+    return ok_response()
 
 
 register_html_routes(calendar_plugin, class_schema(CalendarHtmlModel), reqs_handle)
