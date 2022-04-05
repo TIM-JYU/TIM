@@ -4,6 +4,7 @@ from time import sleep
 from selenium.webdriver.common.by import By
 
 from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
+from timApp.tests.db.timdbtest import running_in_gitlab
 
 
 class CsPluginTest(BrowserTest):
@@ -285,6 +286,8 @@ postprogram: |!!
 
 class StackRandomTest(BrowserTest):
     def test_csplugin_answernr_stack1(self):
+        if running_in_gitlab():
+            self.skipTest("Not running in GitLab")
         self.login_browser_quick_test1()
         self.login_test1()
         # Do not change id below because the sequence of question will be with that id:

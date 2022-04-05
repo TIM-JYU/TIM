@@ -9,7 +9,7 @@ def register_testing_routes(app: Flask) -> None:
 
     @bp.post("/config")
     def config() -> Response:
-        json = request.get_json()
+        json = request.get_json(silent=True)
         if isinstance(json, dict):
             for k, v in json.items():
                 app.config[k] = v

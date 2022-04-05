@@ -398,6 +398,7 @@ def upload_and_stamp_attachment(
 ):
     """
     Uploads the file and makes a stamped version of it into the same folder.
+
     :param d: Document info.
     :param file: The file to upload and stamp.
     :param stamp_data: Stamp data object (attachment and list ids) without the path.

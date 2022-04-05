@@ -136,7 +136,7 @@ function queueParagraphForReading() {
     ): e is HelpPar | ParContext =>
         e !== undefined && !e.isHelp && isAlreadyRead(e, ReadingType.OnScreen);
     const visiblePars = $(".par:not(.preamble)")
-        .filter((i, e) => isInViewport(e))
+        .filter((i, e) => isInViewport(e, true))
         .toArray()
         .map((e) => tryCreateParContextOrHelp(e))
         .filter(isRead);

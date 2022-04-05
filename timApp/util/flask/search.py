@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Match, Union
+from typing import Match
 
 from flask import Blueprint, json
 from flask import request
@@ -74,6 +74,7 @@ def get_subfolders(m: GetFoldersModel):
 def get_common_search_params(req) -> tuple[str, str, bool, bool, bool, bool]:
     """
     Picks parameters that are common in the search routes from a request.
+
     :param req: Request.
     :return: A tuple with six values.
     """
@@ -97,6 +98,7 @@ def log_search_error(
 ) -> None:
     """
     Forms an error report and sends it to timLog.
+
     :param error: The error's message
     :param query: Search word.
     :param doc: Document identifier.
@@ -133,6 +135,7 @@ def preview_result(
 ) -> str:
     """
     Forms preview of the match paragraph.
+
     :param md: Paragraph markdown to preview.
     :param query: Search word.
     :param m: Match object.
@@ -164,6 +167,7 @@ class WordResult:
     def __init__(self, match_word: str, match_start: int, match_end: int):
         """
         Title or paragraph word result object constructor.
+
         :param match_word: String that matched query.
         :param match_start: Match start index.
         :param match_end: Match end index.
@@ -193,6 +197,7 @@ class ParResult:
     ):
         """
         Paragraph result object constructor.
+
         :param par_id: Paragrapg id.
         :param preview: A snippet from paragraph markdown.
         :param word_results: List of word search results in the paragraph.
@@ -208,6 +213,7 @@ class ParResult:
     def add_result(self, result: WordResult) -> None:
         """
         Add new word result.
+
         :param result: New word result from paragraph markdown.
         :return: None.
         """
@@ -251,6 +257,7 @@ class TitleResult:
     def __init__(self, word_results=None, alt_num_results: int = 0):
         """
         Title result object constructor.
+
         :param word_results: List of word results from the title string.
         :param alt_num_results: Alternative to listing word results.
         """
@@ -262,6 +269,7 @@ class TitleResult:
     def add_result(self, result: WordResult) -> None:
         """
         Add new result to the list.
+
         :param result: New word result.
         :return: None.
         """
@@ -312,6 +320,7 @@ class DocResult:
     def add_par_result(self, result: ParResult) -> None:
         """
         Add new paragraph search result to the list.
+
         :param result: New paragraph result.
         :return: None.
         """
@@ -320,6 +329,7 @@ class DocResult:
     def add_title_result(self, result: TitleResult) -> None:
         """
         Add new title search result to the list.
+
         :param result: New title result.
         :return: None.
         """
@@ -395,6 +405,7 @@ def result_response(
 def validate_query(query: str, search_whole_words: bool) -> None:
     """
     Abort if query is too short.
+
     :param query: Search word(s).
     :param search_whole_words: Whole words search has different limits.
     :return: None.
@@ -421,6 +432,7 @@ docentry_eager_relevance_opt = (
 def add_doc_info_title_line(doc_id: int) -> str | None:
     """
     Forms a JSON-compatible string with doc id, title and path.
+
     :param doc_id: Document id.
     :return: String with doc data.
     """
@@ -444,6 +456,7 @@ def add_doc_info_content_line(
 ) -> str | None:
     """
     Forms a JSON-compatible string with doc_id and list of paragraph data with id and md attributes.
+
     :param doc_id: Document id.
     :param par_data: List of paragraph dictionaries.
     :param remove_deleted_pars: Check paragraph existence and leave deleted ones out.
@@ -499,6 +512,7 @@ def add_doc_info_content_line(
 def get_doc_par_id(line: str) -> tuple[int, str, str] | None:
     """
     Takes doc id, par id and par data from one grep search result line.
+
     :param line: Tim pars grep search result line.
     :return: Triple containing ids and par data.
     """
@@ -517,7 +531,8 @@ def create_search_files(remove_deleted_pars=True):
     """
     Groups all TIM-paragraphs under documents and combines them into a single file.
     Creates also a similar file for title searches and a raw file without grouping.
-    :remove_deleted_pars: Check paragraph existence before adding.
+
+    :param remove_deleted_pars: Check paragraph existence before adding.
     :return: Status code and a message confirming success of file creation.
     """
 
@@ -619,6 +634,7 @@ def create_search_files_route():
     Route for grouping all TIM-paragraphs under documents and combining them into a single file.
     Creates also a similar file for title searches and a raw file without grouping.
     Note: may take several minutes, so timeout settings need to be lenient.
+
     :return: A message confirming success of file creation.
     """
     verify_admin()
@@ -808,6 +824,7 @@ def compile_regex(
 ):
     """
     Set flags and compile regular expression. Abort if invalid or empty regex.
+
     :param query: Search word.
     :param regex: Regex search.
     :param case_sensitive: Distinguish between upper and lower case in search.
@@ -839,6 +856,7 @@ def path_search():
     """
     Document path search. Path results are treated as title results and use
     TitleResult objects and content & title search interface.
+
     :return: Path results.
     """
     (
@@ -927,6 +945,7 @@ def path_search():
 def is_excluded(relevance: int, relevance_threshold: int) -> bool:
     """
     Exclude if relevance is less than relevance threshold.
+
     :param relevance: Document relevance value.
     :param relevance_threshold: Min included relevance.
     :return: True if document relevance is less than relevance threshold.
@@ -939,6 +958,7 @@ def is_excluded(relevance: int, relevance_threshold: int) -> bool:
 def is_timeouted(start_time: float, timeout: float) -> bool:
     """
     Compares elapsed time and timeout limit.
+
     :param start_time: The time comparison starts from.
     :param timeout: Maximum allowed elapsed time.
     :return: True if timeout has been passed, false if not.
@@ -951,6 +971,7 @@ def is_timeouted(start_time: float, timeout: float) -> bool:
 def search():
     """
     Perform document word search on a combined and grouped par file using grep.
+
     :return: Document paragraph search results with total result count.
     """
     # If the file containing all TIM content doesn't exists, give warning immediately.

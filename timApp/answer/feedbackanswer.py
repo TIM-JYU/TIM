@@ -34,6 +34,7 @@ def get_all_feedback_answers(
 ):
     """
     Get feedback answer results.
+
     :param task_ids: List of task ids.
     :param hide_names: Parameter for whether to show users anonymously.
     :param printname: Parameter for whether to show full name.
@@ -70,6 +71,7 @@ def compile_csv(
 ):
     """
     Compile data into more csv friendly form.
+
     :param qq: List of Tuples containing Answers and Users.
     :param printname: Parameter whether to show full name.
     :param hide_names: Parameter whether to show users anonymously.
@@ -213,6 +215,7 @@ def compile_csv(
 def print_feedback_report(doc_path):
     """
     Route to Feedback report.
+
     :param doc_path: URL for the document.
     :return: report in a CSV-form.
     """

@@ -50,7 +50,7 @@ def verify_json_params(
         DeprecationWarning,
     )
     result = []
-    json_params = request.get_json() or {}
+    json_params = request.get_json(silent=True) or {}
     if error_msgs is not None:
         assert len(args) == len(error_msgs)
     for arg, err in zip(args, error_msgs or itertools.repeat(None, len(args))):
