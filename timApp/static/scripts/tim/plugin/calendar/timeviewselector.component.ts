@@ -5,7 +5,7 @@ const morningHours: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const eveningHours: number[] = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
 
 @Component({
-    selector: "app-timeview-selectors",
+    selector: "tim-time-view-selector",
     template: `
     <ng-container>
         <span>Näytä tarkkuudella </span>
