@@ -5,7 +5,7 @@ import {FormsModule} from "@angular/forms";
 import {ShowWeekComponent} from "./show-week.component";
 
 @Component({
-    selector: "mwl-utils-calendar-header",
+    selector: "tim-calendar-header",
     template: `
     <div class="row text-center">
       <div class="col-md-4">
