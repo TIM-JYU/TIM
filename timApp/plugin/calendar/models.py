@@ -2,7 +2,7 @@ from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 
 
-class Eventgroup(db.Model):
+class EventGroup(db.Model):
     __tablename__ = "eventgroup"
     event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
     usergroup_id = db.Column(
@@ -48,8 +48,8 @@ class Event(db.Model):
 
     groups_in_event: list[UserGroup] = db.relationship(
         UserGroup,
-        Eventgroup.__table__,
-        primaryjoin=event_id == Eventgroup.event_id,
+        EventGroup.__table__,
+        primaryjoin=event_id == EventGroup.event_id,
         lazy="select",
     )
 
