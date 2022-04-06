@@ -341,6 +341,12 @@ export class CalendarComponent
                         .substr(0, 5)}–${newEnd
                         .toTimeString()
                         .substr(0, 5)} Varattava aika`;
+                    if (dragToSelectEvent.end) {
+                        dragToSelectEvent.end = new Date(dragToSelectEvent.end);
+                        if (Date.now() > dragToSelectEvent.start.getTime()) {
+                            dragToSelectEvent.color = colors.gray;
+                        }
+                    }
                 }
                 this.refresh();
             });
