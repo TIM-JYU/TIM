@@ -1,3 +1,6 @@
+from typing import Optional
+
+from timApp.auth.sessioninfo import get_current_user_id
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 
@@ -52,6 +55,12 @@ class Event(db.Model):
         primaryjoin=event_id == Eventgroup.event_id,
         lazy="select",
     )
+
+    def get_event_by_id(event_id: int) -> Optional["Event"]:
+        cur_user = get_current_user_id()
+        return Event.query.filter(
+            (Event.creator_user_id == cur_user) & (Event.event_id == event_id)
+        ).one_or_none()
 
 
 class Enrollmenttype(db.Model):

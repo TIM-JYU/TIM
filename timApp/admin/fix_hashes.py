@@ -10,6 +10,7 @@ from timApp.document.docinfo import DocInfo
 def fix_hashes(doc: DocInfo, args: DryrunnableArguments) -> int:
     """Due to bugs, the computed hashes in a paragraph file or paragraph list may be incorrect.
     This fixes them.
+
     :param doc: The document to fix.
     :param args: The arguments.
     """

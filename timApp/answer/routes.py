@@ -358,7 +358,8 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int) -> Response:
 def get_useranswers_for_task(user: User, task_ids: list[TaskId], answer_map):
     """
     Performs a query for latest valid answers by given user for given task
-    Similar to pluginControl.get_answers but without counting
+    Similar to :func:`timApp.plugin.pluginControl.get_answers` but without counting
+
     :param user: user
     :param task_ids: tasks to be queried
     :param answer_map: a dict where to add each taskID: Answer
@@ -1036,6 +1037,7 @@ def post_answer_impl(
 
             if postprogram:
                 data = {
+                    "users": [u.to_json() for u in users],
                     "answer_call_data": answer_call_data,
                     "points": points,
                     "save_object": save_object,
@@ -1140,6 +1142,7 @@ def post_answer_impl(
             result["savedNew"] = None
             if postprogram:
                 data = {
+                    "users": [u.to_json() for u in users],
                     "answer_call_data": answer_call_data,
                     "points": points,
                     "save_object": save_object,

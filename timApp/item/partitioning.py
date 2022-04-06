@@ -3,7 +3,7 @@ Functions related to document partitioning.
 """
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Union
+from typing import Union
 
 from flask import json, Request
 from lxml import html
@@ -102,6 +102,7 @@ def partition_texts(
 ):
     """
     Partition document with preambles taken into account.
+
     :param texts: List of processed paragraphs.
     :param view_range: Range of normal paragraphs to include.
     :param preamble_count: Number of preamble paragraphs to insert.
@@ -123,6 +124,7 @@ def partition_texts(
 def get_doc_version_hash(doc_info: DocInfo) -> str:
     """
     Gets version numbers from document and its preambles and creates a hash from them.
+
     :param doc_info: Document.
     :return: Version number hash as a string.
     """
@@ -135,6 +137,7 @@ def get_doc_version_hash(doc_info: DocInfo) -> str:
 def load_index(file_path: Path) -> dict | None:
     """
     Load headers from a file.
+
     :param file_path: Cache file path.
     :return: Parsed contents or None.
     """
@@ -148,6 +151,7 @@ def load_index(file_path: Path) -> dict | None:
 def save_index(index, file_path: Path):
     """
     Save document header data as json.
+
     :param index: Headers.
     :param file_path: File path.
     """
@@ -159,6 +163,7 @@ def save_index(index, file_path: Path):
 def get_index_with_header_id(doc_info: DocInfo, header_id: str) -> int | None:
     """
     Returns first index containing the given HTML header id.
+
     :param doc_info: Document.
     :param header_id: HTML header id.
     :return: Index of the corresponding paragraph or None if not found.
@@ -179,6 +184,7 @@ def get_index_with_header_id(doc_info: DocInfo, header_id: str) -> int | None:
 def get_piece_size_from_cookie(request: Request) -> int | None:
     """
     Reads piece size from cookie, if it exists.
+
     :param request: Request.
     :return: Piece size integer or None, if cookie not found.
     """
@@ -192,6 +198,7 @@ def get_piece_size_from_cookie(request: Request) -> int | None:
 def get_preamble_count(d: DocInfo) -> int:
     """
     Get the amount of preambles in the document.
+
     :param d: Document.
     :return: Preamble count; zero if none were found.
     """
@@ -202,7 +209,9 @@ def get_preamble_count(d: DocInfo) -> int:
 def get_document_areas(doc: DocInfo) -> list[Range]:
     """
     Get a list of areas in the document.
-    Note: Areas inside areas are ignored.
+
+    .. note:: Areas inside areas are ignored.
+
     :param doc: Document.
     :return: List of area ranges.
     """
@@ -223,6 +232,7 @@ def get_document_areas(doc: DocInfo) -> list[Range]:
 def adjust_to_areas(areas: list[Range], b: int, e: int) -> Range:
     """
     Ensure range doesn't cut any areas.
+
     :param areas: List of areas.
     :param b: Begin index.
     :param e: End index.

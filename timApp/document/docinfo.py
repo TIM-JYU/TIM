@@ -112,6 +112,7 @@ class DocInfo(Item):
     def get_preamble_pars_with_class(self, class_names: list[str]):
         """
         Get all preamble pars with any of the given classes.
+
         :param class_names: Class names.
         :return: Filtered pars from the preamble document.
         """
@@ -243,6 +244,7 @@ def get_pars_with_class_from_docs(
 ) -> Generator[DocParagraph, None, None]:
     """
     Loads all non-settings pars that have the given class.
+
     :param docs: Document.
     :param class_names: Class name list.
     :return: Pars that have any of the filtering class names.

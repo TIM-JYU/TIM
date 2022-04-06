@@ -86,10 +86,9 @@ manage_page = TypedBlueprint(
 @manage_page.get("/manage/<path:path>")
 def manage(path: str) -> Response | str:
     if has_special_chars(path):
+        qs = request.query_string.decode("utf-8")
         return redirect(
-            remove_path_special_chars(request.path)
-            + "?"
-            + request.query_string.decode("utf8")
+            remove_path_special_chars(request.path) + (f"?{qs}" if qs else "")
         )
     item = DocEntry.find_by_path(path, fallback_to_id=True)
     if item is None:
