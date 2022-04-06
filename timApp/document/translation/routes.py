@@ -16,6 +16,8 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import create_document_and_block, DocEntry
 from timApp.document.documents import add_reference_pars
 from timApp.document.translation.translation import Translation
+from timApp.document.translation.translationparser import attr_collect
+
 from timApp.item.block import copy_default_rights, BlockType
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
@@ -30,7 +32,7 @@ from timApp.document.translation.language import Language
 
 
 def valid_language_id(lang_id: str) -> bool:
-    """Check that the id is recognized by the langcodes library."""
+    """Check that the id is recognized by the langcodes library and found in database."""
     try:
         tag = langcodes.standardize_tag(lang_id)
         lang = Language.query_by_code(tag)
@@ -88,15 +90,33 @@ def create_translation_route(tr_doc_id, language):
 
     # Translate each paragraph sequentially if a translator was created
     if translator_func:
+        orig_doc = tr.document.get_source_document()
         zipped_paragraphs = list(
             # FIXME The parsing done before translation might need id etc values found in the markdown, but not found in the paragraphs, that get_paragraphs() returns...
-            zip(tr.document.get_source_document().get_paragraphs(), tr.document)
+            zip(orig_doc.get_paragraphs(), tr.document)
         )
         # HACK Skip first paragraph to protect settings-block from mangling
         for orig_paragraph, tr_block in zipped_paragraphs[1:]:
+            md = orig_paragraph.md
+
+            if orig_paragraph.is_plugin():
+                # Add the attributes to the content so that parser can identify the code block as a plugin
+                # NOTE that the parser should only use the attributes for identification and deletes them from the translated result ie. this is a special case!
+
+                # Form the Pandoc-AST representation of a code-block's Attr and glue the parts returned as is back together into a string of Markdown
+                taskid = orig_paragraph.attrs.get("taskId", "")
+                classes = orig_paragraph.attrs.get("classes", [])
+                kv_pairs = [
+                    (k, v) for k, v in orig_paragraph.attrs.items() if k != "taskId"
+                ]
+                attr_str = "".join(
+                    map(lambda x: x.text, attr_collect([taskid, classes, kv_pairs]))
+                )
+                md = md.replace("```\n", f"``` {attr_str}\n", 1)
+
             # Call the partially applied function, that contains languages selected earlier, to translate text
             # TODO Call with the whole document and let preprocessing handle the conversion into list[str]?
-            translated_text = translator_func([orig_paragraph.md])[0]
+            translated_text = translator_func([md])[0]
             tr.document.modify_paragraph(tr_block.id, translated_text)
 
     if isinstance(doc, DocEntry):
