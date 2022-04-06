@@ -351,10 +351,10 @@ class DistRightsTest(TimRouteTest):
         check(r, 3, False, 0, 10 * m, 4 * h, None, None)
         with self.assertRaises(RouteException):
             r = processor.undoquit(1, twosecs)
-        r = quit(1, twosecs)
+        r = processor.quit(1, twosecs)
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, unlock_time, 2 * 16)
         with self.assertRaises(RouteException):
-            quit(1, twosecs)
+            processor.quit(1, twosecs)
         with self.assertRaises(RouteException):
             processor.changetime(1, twosecs, 20)
         with self.assertRaises(RouteException):
