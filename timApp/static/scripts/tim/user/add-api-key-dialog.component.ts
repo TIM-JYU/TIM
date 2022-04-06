@@ -72,7 +72,6 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
 
     dialogName: string = "AddAPIKey";
 
-    // Email is the only channel for now
     chosenTranslator: string = "";
     apiKey?: string;
 
@@ -86,7 +85,7 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
         super();
     }
 
-    // Send a new contact information for a user to server.
+    // Send a new API key for a user to server.
     async addNewAPIKey() {
         this.saving = true;
         // Call the server.
