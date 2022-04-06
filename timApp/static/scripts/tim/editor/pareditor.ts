@@ -582,6 +582,12 @@ ${backTicks}
                         func: () => this.editor!.headerClicked("#####"),
                         name: "H5",
                     },
+                    {
+                        title: "Notranslate",
+                        func: () =>
+                            this.editor!.styleClicked("Teksti", "notranslate"),
+                        name: "Notranslate",
+                    },
                 ],
                 name: "Style",
             },
