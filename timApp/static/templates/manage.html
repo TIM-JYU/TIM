@@ -197,25 +197,13 @@
 
             <uib-tabset active="-1">
                 <uib-tab heading="Create a translation">
-                    <!-- <uib-tabset active="-1">
-                        <uib-tab heading="Languages available for automatic translation">
-                            <p>Source languages:</p>
-                            <ul>
-                                <li ng-repeat="li in $ctrl.sourceLanguages">{{li.name}} ({{li.code}})</li>
-                            </ul>
-                            <p>Target languages:</p>
-                            <ul>
-                                <li ng-repeat="li in $ctrl.targetLanguages">{{li.name}} ({{li.code}})</li>
-                            </ul>
-                        </uib-tab>
-                    </uib-tabset> Maybe delete this altogether? --!>
                     <div class="form-group"><label for="translationTitle">Title:</label>
                         <input id="translationTitle" class="form-control" type="text"
                                ng-model="$ctrl.newTranslation.title"/>
                     </div>
                     <div class="languageLists">
                         <div>
-                        <label for="documentLanguage">Document language:</label>
+                        <label for="documentLanguage">Target language:</label>
                         <select id="document-language" name="document-language-select" class="form-control"
                                ng-model="$ctrl.newTranslation.language" ng-change="$ctrl.updateLangChoice()">
                                 <option ng-repeat="option in $ctrl.documentLanguages" value="{{option.code}}">{{option.name}} ({{option.code}})</option>

@@ -1224,7 +1224,6 @@ ${backTicks}
         }
         this.wrap = {n: Math.abs(n), auto: n > 0};
 
-        this.compileOriginalPreview();
         if (this.getOptions().touchDevice) {
             if (!this.oldmeta) {
                 const meta = $("meta[name='viewport']");
@@ -1287,6 +1286,9 @@ ${backTicks}
             this.scope,
             this.resolve.params.viewCtrl
         );
+        if (previewOriginalDiv.length == 0) {
+            await this.editorChanged();
+        }
     }
 
     private refreshEditorSize() {
@@ -1548,9 +1550,9 @@ ${backTicks}
                     $compile(e)(this.scope);
                 });
         }
+        this.compileOriginalPreview();
         this.getEditorContainer().resize();
         this.scope.$applyAsync();
-        this.compileOriginalPreview();
     }
 
     wrapFn(func: (() => void) | null = null) {
