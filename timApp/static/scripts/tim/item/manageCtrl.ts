@@ -110,7 +110,7 @@ export class PermCtrl implements IController {
     async $onInit() {
         this.translationInProgress = false;
         this.getNotifySettings();
-        await listTranslators(this.translators);
+        await listTranslators(this.translators, true);
         await updateLanguages(
             this.sourceLanguages,
             this.documentLanguages,

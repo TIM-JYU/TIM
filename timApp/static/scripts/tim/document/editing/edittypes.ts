@@ -115,10 +115,16 @@ export async function updateLanguages(
 /*
 Fetches the list of the available translators and adds them to front-end's list of them.
  */
-export async function listTranslators(translators: Array<ITranslators>) {
+export async function listTranslators(
+    translators: Array<ITranslators>,
+    includeManual: boolean
+) {
     const sources = await to($http.get<string[]>("/translations/translators"));
     if (sources.ok) {
         for (const translator of sources.result.data) {
+            if (translator == "Manual" && !includeManual) {
+                continue;
+            }
             translators.push({name: translator});
         }
     }

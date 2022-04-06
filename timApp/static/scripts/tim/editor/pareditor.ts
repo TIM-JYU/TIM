@@ -1169,7 +1169,7 @@ ${backTicks}
         if (this.docSettings?.translatorLanguage != undefined) {
             this.docTrLang = this.docSettings.translatorLanguage;
         }
-        listTranslators(this.translators);
+        listTranslators(this.translators, false);
         updateLanguages(
             this.sourceLanguages,
             this.documentLanguages,
