@@ -968,6 +968,54 @@ tools.print(tools.getLeaveDate());
             },
         )
 
+    def test_add_time_log(self):
+        d = self.create_jsrun(
+            """
+fields: []
+group: testusers_addtest
+includeUsers: all
+selectIncludeUsers: true
+program: |!!
+tools.print(tools.getAddDate());
+!!"""
+        )
+
+        ug = UserGroup.create("testusers_addtest")
+        ug.current_memberships[self.test_user_1.id] = UserGroupMember(
+            user=self.test_user_1,
+            membership_added=datetime(2010, 1, 1).replace(tzinfo=timezone.utc),
+        )
+        ug.current_memberships[self.test_user_2.id] = UserGroupMember(
+            user=self.test_user_2,
+            membership_added=datetime(2020, 1, 1).replace(tzinfo=timezone.utc),
+            membership_end=datetime(2020, 2, 1).replace(tzinfo=timezone.utc),
+        )
+        gd = self.create_doc()
+        UserGroup.get_by_name("testusers_addtest").admin_doc = gd.block
+        db.session.commit()
+        self.do_jsrun(
+            d,
+            user_input={"includeUsers": "current"},
+            expect_content={
+                "web": {
+                    "errors": [],
+                    "outdata": {},
+                    "output": "1262304000\n",
+                }
+            },
+        )
+        self.do_jsrun(
+            d,
+            user_input={"includeUsers": "all"},
+            expect_content={
+                "web": {
+                    "errors": [],
+                    "outdata": {},
+                    "output": "1262304000\n1577836800\n",
+                }
+            },
+        )
+
     def test_collaborators(self):
         d = self.create_jsrun(
             """
