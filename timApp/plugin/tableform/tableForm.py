@@ -1,7 +1,6 @@
 """
 TIM example plugin: a tableFormndrome checker.
 """
-import datetime
 import json
 from dataclasses import dataclass, asdict, field
 from typing import Any, TypedDict, Sequence
@@ -683,8 +682,8 @@ class TableFormUserInfo(TypedDict):
 class TableFormObj(TypedDict):
     rows: dict[str, UserFields]
     users: dict[str, TableFormUserInfo]
-    membership_add: dict[str, datetime.datetime | None]
-    membership_end: dict[str, datetime.datetime | None]
+    membership_add: dict[str, str | None]
+    membership_end: dict[str, str | None]
     fields: list[str]
     aliases: dict[str, str]
     styles: dict[str, dict[str, str | None]]
@@ -717,8 +716,8 @@ def tableform_get_fields(
     users: dict[str, TableFormUserInfo] = {}
     styles = {}
     group_ids = {g.id for g in groups} if groups else None
-    membership_add_map = {}
-    membership_end_map = {}
+    membership_add_map: dict[str, str | None] = {}
+    membership_end_map: dict[str, str | None] = {}
     for f in fielddata:
         u: User = f["user"]
         username = u.name
@@ -734,19 +733,20 @@ def tableform_get_fields(
             email=email if email is not None else "",
         )
         styles[username] = dict(f["styles"])
-        if group_ids and group_filter_type != MembershipFilter.Current:
-            membership_end = get_membership_end(u, group_ids)
-            if membership_end:
-                membership_end = membership_end.astimezone(fin_timezone).strftime(
-                    "%Y-%m-%d %H:%M"
+        if group_ids:
+            if group_filter_type != MembershipFilter.Current:
+                membership_end = get_membership_end(u, group_ids)
+                membership_end_map[username] = (
+                    membership_end.astimezone(fin_timezone).strftime("%Y-%m-%d %H:%M")
+                    if membership_end
+                    else None
                 )
-            membership_end_map[username] = membership_end
-        membership_added = get_membership_added(u, group_ids)
-        if membership_added:
-            membership_added = membership_added.astimezone(fin_timezone).strftime(
-                "%Y-%m-%d %H:%M"
+            membership_added = get_membership_added(u, group_ids)
+            membership_add_map[username] = (
+                membership_added.astimezone(fin_timezone).strftime("%Y-%m-%d %H:%M")
+                if membership_added
+                else None
             )
-        membership_add_map[username] = membership_added
     r = TableFormObj(
         rows=rows,
         users=users,
