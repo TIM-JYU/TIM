@@ -870,6 +870,8 @@ export class TableFormComponent
             }
             this.data.lockedColumns.push(userNameColumn);
             this.data.lockedColumns.push(emailColumn);
+            this.data.lockedColumns.push(membershipAddedColumn);
+            this.data.lockedColumns.push(membershipEndColumn);
             // }
             if (this.attrsall.markup.sisugroups) {
                 // These require unique names, otherwise could just use empty strings in place of "invisibleX".
@@ -894,44 +896,33 @@ export class TableFormComponent
             };
 
             if (this.fields) {
-                this.data.table.countCol = this.fields.length + 3;
+                this.data.table.countCol = this.fields.length + 5;
             }
             this.data.table.countRow = Object.keys(this.rows).length;
             let y = 1;
             for (const r of this.rowKeys) {
                 this.data.userdata.cells[userNameColumn + y] = {
                     cell: r,
-                    // backgroundColor: this.fixedColor,
                     class: this.fixedColor,
                 };
                 this.userLocations[y] = r;
                 const userInfo = this.users[r];
                 this.data.userdata.cells[realNameColumn + y] = {
                     cell: userInfo.real_name,
-                    // backgroundColor: this.fixedColor,
                     class: this.fixedColor,
                 };
                 this.data.userdata.cells[emailColumn + y] = {
                     cell: userInfo.email,
-                    // backgroundColor: this.fixedColor,
                     class: this.fixedColor,
                 };
-                const membershipAddTime = this.membershipAdd[r];
-                if (membershipAddTime) {
-                    this.data.userdata.cells[membershipAddedColumn + y] = {
-                        cell: membershipAddTime,
-                        // backgroundColor: this.fixedColor,
-                        class: this.fixedColor,
-                    };
-                }
-                const membershipEndTime = this.membershipEnd[r];
-                if (membershipEndTime) {
-                    this.data.userdata.cells[membershipEndColumn + y] = {
-                        cell: membershipEndTime,
-                        // backgroundColor: this.fixedColor,
-                        class: this.fixedColor,
-                    };
-                }
+                this.data.userdata.cells[membershipAddedColumn + y] = {
+                    cell: this.membershipAdd[r],
+                    class: this.fixedColor,
+                };
+                this.data.userdata.cells[membershipEndColumn + y] = {
+                    cell: this.membershipEnd[r],
+                    class: this.fixedColor,
+                };
                 y++;
             }
             // TODO: Load default cell colors from tableForm's private answer?
@@ -945,12 +936,6 @@ export class TableFormComponent
                         this.data.lockedColumns.push(currentCol);
                     }
                     this.data.headers.push(colheader);
-                    /*
-                    this.data.userdata.cells[colnumToLetters(x + xOffset) + 1] = {
-                        cell: colheader,
-                        backgroundColor: this.fixedColor,
-                    };
-                    */
 
                     let contentalias;
                     if (this.aliases && colheader in this.aliases) {
@@ -960,16 +945,7 @@ export class TableFormComponent
                     }
                     this.taskLocations[colnumToLetters(x + xOffset)] =
                         contentalias;
-                    // this.data.lockedCells.push(colnumToLetters(x + xOffset) + 1);
-                    // y = 0;
-                    // for (const [u, r] of Object.entries(this.rows)) {
-                    //     if (r[this.attrsall.fields[x]]) {
-                    //         this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 2)] = r[this.attrsall.fields[x]];
-                    //     }
-                    //     y++;
-                    // }
                     for (y = 0; y < this.rowKeys.length; y++) {
-                        // this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
                         if (this.styles && !angular.equals(this.styles, {})) {
                             this.data.userdata.cells[currentCol + (y + 1)] = {
                                 cell: this.rows[this.rowKeys[y]][
@@ -1109,7 +1085,6 @@ export class TableFormComponent
             filterParams = {filterFields, filterValues};
         }
 
-        console.log(filterParams);
         const win = window.open(
             "/tableForm/generateCSV?" +
                 $httpParamSerializer({
