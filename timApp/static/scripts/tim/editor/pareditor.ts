@@ -242,7 +242,6 @@ export class PareditorController extends DialogController<
     private docTranslator: string = "";
     private docTrLang: string = "";
     private sideBySide: boolean = false;
-    private positionButton: string = "";
     private hideDiff: boolean = true;
     private hidePreview: boolean = false;
     private hideOriginalPreview: boolean = false;
@@ -582,6 +581,12 @@ ${backTicks}
                         title: "Heading 5 (Ctrl-5)",
                         func: () => this.editor!.headerClicked("#####"),
                         name: "H5",
+                    },
+                    {
+                        title: "Notranslate",
+                        func: () =>
+                            this.editor!.styleClicked("Teksti", "notranslate"),
+                        name: "Notranslate",
                     },
                 ],
                 name: "Style",
@@ -1096,15 +1101,8 @@ ${backTicks}
         return this.wrap.n * (this.wrap.auto ? 1 : -1);
     }
 
-    /*
-    Returns the name of the positionButton (currently only "Next to Editor", used to include "Stacked").
-     */
-    positionButtonName() {
-        return "Next to Editor";
-    }
-
-    /*
-    Tracks the editing and Difference in original document views' positioning (see pareditor.html).
+    /**
+     * Tracks the editing and Difference in original document views' positioning (see pareditor.html).
      */
     changePositioning() {
         const doc = document.getElementById("editorflex");
@@ -1113,7 +1111,6 @@ ${backTicks}
             doc.classList.remove("sidebyside");
             doc.classList.add("stacked");
             this.sideBySide = false;
-            this.positionButton = this.positionButtonName();
             if (editdoc != null) {
                 editdoc.classList.remove("forceHalfSize");
             }
@@ -1121,7 +1118,6 @@ ${backTicks}
             doc.classList.remove("stacked");
             doc.classList.add("sidebyside");
             this.sideBySide = true;
-            this.positionButton = this.positionButtonName();
             if (editdoc != null) {
                 editdoc.classList.add("forceHalfSize");
             }
@@ -1130,8 +1126,8 @@ ${backTicks}
         this.refreshEditorSize();
     }
 
-    /*
-    Updates this.hidePreview and calls for a change of positioning because ng-model updates it too slow.
+    /**
+     * Updates this.hidePreview and calls for a change of positioning because ng-model updates it too slow.
      */
     updatePreviewHide() {
         this.hidePreview = !this.hidePreview;
@@ -1146,8 +1142,8 @@ ${backTicks}
         this.changePreviewPositions();
     }
 
-    /*
-    Tracks the previews' positioning (see pareditor.html).
+    /**
+     * Tracks the previews' positioning (see pareditor.html).
      */
     changePreviewPositions() {
         const doc = document.getElementById("previews");
@@ -1267,6 +1263,9 @@ ${backTicks}
         this.changePreviewPositions();
     }
 
+    /**
+     * Compiles the preview of the source block (the original document's block the current block is based on) in translation documents.
+     */
     async compileOriginalPreview() {
         const previewOriginalDiv = angular.element(".previeworiginalcontent");
 
@@ -1616,6 +1615,9 @@ ${backTicks}
         }
     }
 
+    /**
+     * Updates the list of target languages based on the selected translator.
+     */
     async updateTranslatorLanguages() {
         const sources = await to(
             $http.post<ILanguages[]>("/translations/target-languages", {
@@ -1628,6 +1630,10 @@ ${backTicks}
         }
     }
 
+    /**
+     * Checks if the document is a translation document and if its languages are supported by the selected translator.
+     * @returns Whether or not the document can be translated automatically
+     */
     showTranslated() {
         let isTranslated = false;
         if (this.checkIfOriginal()) {
@@ -1647,6 +1653,12 @@ ${backTicks}
         return isTranslated;
     }
 
+    /**
+     * Checks whether the language combination is supported by the selected translator.
+     * @param orig The source document's language code
+     * @param tr The curent document's language code
+     * @returns Whether or not the language combination is supported
+     */
     checkIfSupported(orig: string, tr: string) {
         for (const target of this.targetLanguages) {
             if (target.code.toUpperCase() == tr.toUpperCase()) {
@@ -1660,13 +1672,19 @@ ${backTicks}
         return false;
     }
 
+    /**
+     * Checks whether or not the document is the original document.
+     */
     checkIfOriginal() {
         const tags = this.getExtraData().tags;
         return tags.marktranslated == undefined;
     }
 
+    /**
+     * Handles sending either the source block's text or the selected editor text to the translator.
+     */
     async translateClicked() {
-        const translatabletext = this.translationSelector();
+        const translatableText = this.translationSelector();
         const helper = this.getEditor()!.getEditorText();
 
         const edittext = helper.substring(helper.indexOf("\n") + 1);
@@ -1713,7 +1731,7 @@ ${backTicks}
                     `/translate/${this.resolve.params.viewCtrl.item.id}/${lang}/translate_block`,
                     {
                         autotranslate: this.docTranslator,
-                        originaltext: translatabletext,
+                        originaltext: translatableText,
                         translatorlang: translatorLang,
                     }
                 )
@@ -1726,7 +1744,7 @@ ${backTicks}
                         0,
                         this.resolve.params.initialText?.indexOf("}") + 1
                     ) + "\n";
-                if (translatabletext != this.trdiff.new) {
+                if (translatableText != this.trdiff.new) {
                     this.editor!.replaceTranslation(resultText);
                 } else {
                     this.getEditor()?.setEditorText(ref + resultText);
@@ -1739,6 +1757,10 @@ ${backTicks}
         }
     }
 
+    /**
+     * Gets the text to be sent to the translator.
+     * @returns The selected text, the source block's text or nothing if there is neither
+     */
     translationSelector() {
         const selection = this.editor!.checkTranslationSelection();
         if (selection == "") {
@@ -1854,6 +1876,9 @@ ${backTicks}
         }
     }
 
+    /**
+     * Saves the selected translator to the document's settings. Requires a refresh to take proper effect on the page.
+     */
     async setTranslatorSettings() {
         if (
             this.docSettings != undefined &&
@@ -1872,6 +1897,10 @@ ${backTicks}
         }
     }
 
+    /**
+     * Saves the selected translator language (or the document's language if supported) to the document's settings.
+     * Requires a refresh to take proper effect on the page.
+     */
     async setTranslatorLanguageSettings() {
         if (
             this.docSettings != undefined &&
@@ -1890,6 +1919,11 @@ ${backTicks}
         }
     }
 
+    /**
+     * Looks for the index of the translation document's language in target languages.
+     * TODO: Refactor this and its counterpart in manageCtrl.ts to take a string and the target language list as its parameters?
+     * @returns The index of the language in targetLanguages or -1 if it was not found
+     */
     findTrLangIndex() {
         let begin: number;
         const origTrLang = this.resolve.params.viewCtrl?.item.lang_id;
