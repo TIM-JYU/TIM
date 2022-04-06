@@ -902,16 +902,12 @@ tools.print(tools.getLeaveDate());
         self.do_jsrun(
             d,
             user_input={"includeUsers": "current"},
-            expect_content={
-                "web": {"output": "undefined\n", "errors": [], "outdata": {}}
-            },
+            expect_content={"web": {"output": "null\n", "errors": [], "outdata": {}}},
         )
         self.do_jsrun(
             d,
             user_input={"includeUsers": "all"},
-            expect_content={
-                "web": {"output": "undefined\n", "errors": [], "outdata": {}}
-            },
+            expect_content={"web": {"output": "null\n", "errors": [], "outdata": {}}},
         )
         gd = self.create_doc()
         UserGroup.get_by_name("testusers").admin_doc = gd.block
@@ -923,7 +919,7 @@ tools.print(tools.getLeaveDate());
                 "web": {
                     "errors": [],
                     "outdata": {},
-                    "output": "undefined\n1262304000\n",
+                    "output": "null\n1262304000\n",
                 }
             },
         )
@@ -944,7 +940,7 @@ tools.print(tools.getLeaveDate());
                 "web": {
                     "errors": [],
                     "outdata": {},
-                    "output": "undefined\n1262304000\n",
+                    "output": "null\n1262304000\n",
                 }
             },
         )
@@ -963,7 +959,7 @@ tools.print(tools.getLeaveDate());
                 "web": {
                     "errors": [],
                     "outdata": {},
-                    "output": "undefined\n1262304000\n",
+                    "output": "null\n1262304000\n",
                 }
             },
         )
