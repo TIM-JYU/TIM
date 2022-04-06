@@ -10,6 +10,8 @@ import {
     NgModule,
     OnInit,
     ViewEncapsulation,
+    TemplateRef,
+    ViewChild,
 } from "@angular/core";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import * as t from "io-ts";
@@ -20,6 +22,7 @@ import {
     CalendarModule,
     CalendarView,
     DateAdapter,
+    CalendarEventAction,
 } from "angular-calendar";
 import {WeekViewHourSegment} from "calendar-utils";
 import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
@@ -32,6 +35,7 @@ import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek} from "date-fns";
 import moment from "moment";
+import {NgbModal, NgbModalModule} from "@ng-bootstrap/ng-bootstrap";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
@@ -128,83 +132,115 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
     template: `
         <mwl-utils-calendar-header [(view)]="view" [(viewDate)]="viewDate">
         </mwl-utils-calendar-header>
-        
+
         <div class="alert alert-info">
-          Click on a day or time slot on the view.
-          <strong *ngIf="clickedDate"
+            Click on a day or time slot on the view.
+            <strong *ngIf="clickedDate"
             >You clicked on this time: {{ clickedDate | date:'medium' }}</strong
-          >
-          <strong *ngIf="clickedColumn !== undefined"
+            >
+            <strong *ngIf="clickedColumn !== undefined"
             >You clicked on this column: {{ clickedColumn }}</strong
-          >
+            >
         </div>
-        
+
         <ng-template
-          #weekViewHourSegmentTemplate
-          let-segment="segment"
-          let-locale="locale"
-          let-segmentHeight="segmentHeight"
-          let-isTimeLabel="isTimeLabel"
+                #weekViewHourSegmentTemplate
+                let-segment="segment"
+                let-locale="locale"
+                let-segmentHeight="segmentHeight"
+                let-isTimeLabel="isTimeLabel"
         >
-          <div
-            #segmentElement
-            class="cal-hour-segment"
-            [style.height.px]="segmentHeight"
-            [class.cal-hour-start]="segment.isStart"
-            [class.cal-after-hour-start]="!segment.isStart"
-            [ngClass]="segment.cssClass"
-            (mousedown)="startDragToCreate(segment, $event, segmentElement)"
-          >
-            <div class="cal-time" *ngIf="isTimeLabel">
-              {{ segment.date | calendarDate:'weekViewHour':locale }}
+            <div
+                    #segmentElement
+                    class="cal-hour-segment"
+                    [style.height.px]="segmentHeight"
+                    [class.cal-hour-start]="segment.isStart"
+                    [class.cal-after-hour-start]="!segment.isStart"
+                    [ngClass]="segment.cssClass"
+                    (mousedown)="startDragToCreate(segment, $event, segmentElement)"
+            >
+                <div class="cal-time" *ngIf="isTimeLabel">
+                    {{ segment.date | calendarDate:'weekViewHour':locale }}
+                </div>
             </div>
-          </div>
         </ng-template>
-        
+
         <div [ngSwitch]="view">
-          <mwl-calendar-month-view
-            *ngSwitchCase="'month'"
-            [viewDate]="viewDate"
-            [events]="events"
-            [locale]="'fi-FI'"
-            [weekStartsOn]= "1"
-            (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
-            (dayClicked)="clickedDate = $event.day.date"
-          >
-          </mwl-calendar-month-view>
-          <mwl-calendar-week-view
-            *ngSwitchCase="'week'"
-            [viewDate]="viewDate"
-            [events]="events"
-            [hourSegmentHeight]="30"
-            [hourDuration]="60"
-            [hourSegments]="segmentsInHour"
-            [dayStartHour]="dayStartHour"
-            [dayEndHour]="dayEndHour"
-            [locale]="'fi-FI'"
-            [weekStartsOn]= "1"
-            (dayHeaderClicked)="clickedDate = $event.day.date"
-            (hourSegmentClicked)="clickedDate = $event.date"
-            [hourSegmentTemplate]="weekViewHourSegmentTemplate"
-          >
-          </mwl-calendar-week-view>
-          <mwl-calendar-day-view
-            *ngSwitchCase="'day'"
-            [viewDate]="viewDate"
-            [events]="events"
-            [hourDuration]="60"
-            [hourSegments]="segmentsInHour"
-            [dayStartHour]="dayStartHour" 
-            [dayEndHour]="dayEndHour"
-            [locale]="'fi-FI'"
-            (hourSegmentClicked)="clickedDate = $event.date"
-          >
-          </mwl-calendar-day-view>
+            <mwl-calendar-month-view
+                    *ngSwitchCase="'month'"
+                    [viewDate]="viewDate"
+                    [events]="events"
+                    [locale]="'fi-FI'"
+                    [weekStartsOn]="1"
+                    (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
+                    (dayClicked)="clickedDate = $event.day.date"
+            >
+            </mwl-calendar-month-view>
+            <mwl-calendar-week-view
+                    *ngSwitchCase="'week'"
+                    [viewDate]="viewDate"
+                    [events]="events"
+                    [hourSegmentHeight]="30"
+                    [hourDuration]="60"
+                    [hourSegments]="segmentsInHour"
+                    [dayStartHour]="dayStartHour"
+                    [dayEndHour]="dayEndHour"
+                    [locale]="'fi-FI'"
+                    [weekStartsOn]="1"
+                    (dayHeaderClicked)="clickedDate = $event.day.date"
+                    (hourSegmentClicked)="clickedDate = $event.date"
+                    [hourSegmentTemplate]="weekViewHourSegmentTemplate"
+                    (eventClicked)="handleEvent('Clicked', $event.event)"
+            >
+            </mwl-calendar-week-view>
+            <mwl-calendar-day-view
+                    *ngSwitchCase="'day'"
+                    [viewDate]="viewDate"
+                    [events]="events"
+                    [hourDuration]="60"
+                    [hourSegments]="segmentsInHour"
+                    [dayStartHour]="dayStartHour"
+                    [dayEndHour]="dayEndHour"
+                    [locale]="'fi-FI'"
+                    (hourSegmentClicked)="clickedDate = $event.date"
+            >
+            </mwl-calendar-day-view>
         </div>
         <div>
-            <button class="timButton" id="saveBtn" (click)="saveChanges()" [disabled]="this.events.length <= lastEvent">Save changes</button>
+            <button class="timButton" id="saveBtn" (click)="saveChanges()"
+                    [disabled]="!this.events.some(this.isTempEvent)">Save changes
+            </button>
         </div>
-        <app-timeview-selectors (accuracy)="setAccuracy($event)" (morning)="setMorning($event)" (evening)="setEvening($event)"></app-timeview-selectors>
+        <app-timeview-selectors (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
+                                (evening)="setEvening($event)"></app-timeview-selectors>
+
+        <ng-template #modalContent let-close="close">
+            <div class="modal-header">
+                <h5 class="modal-title">Event action occurred</h5>
+                <button type="button" class="close" (click)="close()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    Action:
+                    <pre>{{ modalData?.action }}</pre>
+                </div>
+                <div>
+                    Event:
+                    <pre>{{ modalData?.event | json }}</pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary timButton"
+                        (click)=" close(); deleteEvent(modalData?.event)">
+                    Delete
+                </button>
+                <button type="button" class="btn btn-outline-secondary timButton" (click)="close()">
+                    OK
+                </button>
+            </div>
+        </ng-template>
     `,
     encapsulation: ViewEncapsulation.None,
     styleUrls: ["calendar.component.scss"],
@@ -218,6 +254,8 @@ export class CalendarComponent
     >
     implements OnInit
 {
+    @ViewChild("modalContent", {static: true})
+    modalContent?: TemplateRef<never>;
     view: CalendarView = CalendarView.Week;
 
     viewDate: Date = new Date();
@@ -238,15 +276,45 @@ export class CalendarComponent
     segmentMinutes: number = 20;
     segmentsInHour: number = 3;
 
-    lastEvent: number = 0;
+    // lastEvent: number = 0;
+
+    modalData?: {
+        action: string;
+        event: CalendarEvent;
+    };
+
+    actions: CalendarEventAction[] = [
+        {
+            label: '<i class="fas fa-fw fa-pencil-alt"></i>',
+            a11yLabel: "Edit",
+            onClick: ({event}: {event: CalendarEvent}): void => {
+                this.handleEvent("Edited", event);
+            },
+        },
+        {
+            label: '<i class="fas fa-fw fa-trash-alt"></i>',
+            a11yLabel: "Delete",
+            onClick: ({event}: {event: CalendarEvent}): void => {
+                this.events = this.events.filter((iEvent) => iEvent !== event);
+                this.handleEvent("Deleted", event);
+            },
+        },
+    ];
 
     constructor(
         el: ElementRef<HTMLElement>,
         http: HttpClient,
         domSanitizer: DomSanitizer,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        private modal: NgbModal
     ) {
         super(el, http, domSanitizer);
+    }
+
+    isTempEvent(event: CalendarEvent<{tmpEvent: boolean}>) {
+        if (event.meta) {
+            return event.meta.tmpEvent;
+        }
     }
 
     setAccuracy(accuracy: number) {
@@ -280,6 +348,7 @@ export class CalendarComponent
             meta: {
                 tmpEvent: true,
             },
+            actions: this.actions,
         };
         this.events = [...this.events, dragToSelectEvent];
         this.dragToCreateActive = true;
@@ -291,9 +360,9 @@ export class CalendarComponent
         fromEvent<MouseEvent>(document, "mousemove")
             .pipe(
                 finalize(() => {
-                    if (dragToSelectEvent.meta) {
-                        delete dragToSelectEvent.meta.tmpEvent;
-                    }
+                    // if (dragToSelectEvent.meta) {
+                    //    delete dragToSelectEvent.meta.tmpEvent;
+                    // }
                     this.dragToCreateActive = false;
                     this.refresh();
                 }),
@@ -349,7 +418,9 @@ export class CalendarComponent
 
     private async loadEvents() {
         const result = await toPromise(
-            this.http.get<CalendarEvent[]>("/calendar/events")
+            this.http.get<CalendarEvent<{tmpEvent: boolean}>[]>(
+                "/calendar/events"
+            )
         );
         if (result.ok) {
             result.result.forEach((event) => {
@@ -357,9 +428,11 @@ export class CalendarComponent
                 if (event.end) {
                     event.end = new Date(event.end);
                 }
+                event.actions = this.actions;
+                event.meta = {tmpEvent: false};
             });
             this.events = result.result;
-            this.lastEvent = result.result.length;
+            // this.lastEvent = result.result.length;
             this.refresh();
         } else {
             // TODO: Handle error responses properly
@@ -368,7 +441,10 @@ export class CalendarComponent
     }
 
     async saveChanges() {
-        const eventsToAdd = this.events.slice(this.lastEvent);
+        const eventsToAdd = this.events.filter(
+            (event: CalendarEvent<{tmpEvent: boolean}>) =>
+                this.isTempEvent(event)
+        ); // slice(this.lastEvent);
         if (eventsToAdd.length > 0) {
             const result = await toPromise(
                 this.http.post<CalendarEvent[]>("/calendar/events", {
@@ -379,12 +455,40 @@ export class CalendarComponent
             if (result.ok) {
                 console.log("events sent");
                 console.log(result.result);
-                this.lastEvent = this.events.length;
+                // this.lastEvent = this.events.length;
                 this.refresh();
+                await this.loadEvents();
             } else {
                 console.error(result.result.error.error);
             }
         }
+    }
+
+    async deleteEvent(event?: CalendarEvent<{tmpEvent: boolean}>) {
+        if (!event) {
+            return;
+        }
+        if (!event.id || !event.meta) {
+            return;
+        }
+        if (!event.meta.tmpEvent) {
+            const result = await toPromise(
+                this.http.delete(`/calendar/events/${event.id}`)
+            );
+            if (result.ok) {
+                console.log(result.result);
+            } else {
+                console.error(result.result.error.error);
+            }
+        }
+        this.events.splice(this.events.indexOf(event), 1);
+        // this.lastEvent--;
+        this.refresh();
+    }
+
+    handleEvent(action: string, event: CalendarEvent): void {
+        this.modalData = {event, action};
+        this.modal.open(this.modalContent, {size: "md"});
     }
 }
 
@@ -400,6 +504,7 @@ export class CalendarComponent
             useFactory: adapterFactory,
         }),
         CalendarHeaderModule,
+        NgbModalModule,
     ],
     declarations: [CalendarComponent, TimeViewSelectorComponent],
     exports: [CalendarComponent],
