@@ -234,9 +234,52 @@ def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
 
 
 def tex_collect(content: str) -> list[TranslateApproval]:
-    # TODO Collect parts of LaTeX into the translation list
-    # Maybe use the regex-implementation of identifying text-areas
-    return [NoTranslate(content)]
+    """
+    Collect and separate translatable and untranslatable areas within
+    a LaTeX element.
+    :param content: String which contains LaTeX area
+    :return: List containing the parsed collection of LaTeX content
+    """
+    # Temp content to traverse through and remove parsed sections for loop
+    edit_tex = content
+    # Variable containing NoTranslate and Translate objects
+    parsed_tex: list[TranslateApproval] = list()
+    # Regex table for all searched sections for translation
+    regex_to_translate = [
+        r"(\\text{)(.*?)(})",  # text
+        r"(\\textrm{)(.*?)(})",  # textrm
+        r"(\\textsf{)(.*?)(})",  # textsf
+        r"(\\textnormal{)(.*?)(})",  # textnormal
+        r"(\\mathrm{)(.*?)(})",  # mathrm
+        r"(\\mathsf{)(.*?)(})",  # mathsf
+        r"(<span>)(.*?)(<\/span>)",  # span
+    ]
+    # Full collection of all found sections for translation as or statement
+    regex_collection = "|".join(regex_to_translate)
+    regex_pattern = re.compile(regex_collection)
+    # TODO: findall includes empty matches, research if another way of doing it.
+    # Format of [NT][Translate][NT] for each list-element
+    no_translate_textblocks = list(re.findall(regex_pattern, content))
+    # If any translatable areas were found in LaTeX
+    if len(no_translate_textblocks) != 0:
+        for block in no_translate_textblocks:
+            # Filter out empty groups
+            block = list(filter(None, block))
+            # Recollect the separated regex for identification in string
+            full_tex_text = block[0] + block[1] + block[2]
+            # Find first case of the recollection
+            temp_tex_list = edit_tex.split(full_tex_text, 1)
+            # Add LaTeX text identification to NoTranslate section
+            parsed_tex.append(NoTranslate(temp_tex_list[0] + block[0]))
+            # Add Translatable area
+            parsed_tex.append(Translate(block[1]))
+            # Include closing statement of the LaTeX area to next NoTranslate section
+            edit_tex = block[2] + temp_tex_list[1]
+        # Include last area left from split to not be Translated
+        parsed_tex.append(NoTranslate(edit_tex))
+        return parsed_tex
+    else:
+        return [NoTranslate(content)]
 
 
 def attr_collect(content: dict) -> list[TranslateApproval]:
@@ -303,14 +346,21 @@ def math_collect(content: dict) -> list[TranslateApproval]:
     :param content: TeX math (literal) from Inline
     :return: List containing the parsed collection of math content
     """
+    arr: list[TranslateApproval] = list()
     mathtype = content[0]["t"]
     # TODO Go deeper to find translatable text
     # Double $-sign LaTeX area is InlineMath -type
     if mathtype == "DisplayMath":
-        return [NoTranslate("$$"), NoTranslate(content[1]), NoTranslate("$$")]
+        arr.append(NoTranslate("$$"))
+        arr += tex_collect(content[1])
+        arr.append(NoTranslate("$$"))
+        return arr
     # Single $-sign LaTeX area is InlineMath -type
     elif mathtype == "InlineMath":
-        return [NoTranslate("$"), NoTranslate(content[1]), NoTranslate("$")]
+        arr.append(NoTranslate("$"))
+        arr += tex_collect(content[1])
+        arr.append(NoTranslate("$"))
+        return arr
     # Only mathtypes in haskell are DisplayMath and InlineMath
     else:
         raise NotImplementedError
@@ -323,8 +373,7 @@ def rawinline_collect(content: dict) -> list[TranslateApproval]:
     :param content: RawInline from Inline
     :return: List containing the parsed collection of rawinline content
     """
-    # TODO Handle "Format", for example when Latex blocks are in \begin->\end the format is "tex"
-    # TODO Should this be Translate instead? Could contain words enclosed in underline-tags (<u>text</u>)?
+    # HTML currently as "else" path (<u></u> and <s></s>)
     format_ = content[0]
     if format_ == "tex":
         return tex_collect(content[1])

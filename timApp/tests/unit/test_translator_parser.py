@@ -5,6 +5,8 @@ from timApp.document.translation.translationparser import (
     NoTranslate,
     TranslationParser,
     get_translate_approvals,
+    tex_collect,
+    span_collect,
 )
 
 
@@ -149,6 +151,40 @@ class TestParser(unittest.TestCase):
                     NoTranslate("]{.red}"),
                     Translate(" hieno, eikös?"),
                 ]
+            ],
+        )
+
+    # For .notranslate style, might move elsewhere. For future use.
+    def test_span_collect(self):
+        text = r"tässä on [teksti]{.notranslate}, jota ei käännetä."
+        self.assertEqual(
+            span_collect(text),
+            [
+                Translate(r"tässä on ["),
+                NoTranslate(r"[teksti]{.notranslate}"),
+                Translate(r", jota ei käännetä."),
+            ],
+        )
+
+    def test_tex_collect(self):
+        # TODO Add cases for identifiers, key-value -pairs and multiple classes as well
+        text = r"x^3-49x&=0 &&|\text{ erotetaan yhteinen tekijä x}\x(x^2-49)&=0 &&|\text{ käytetään tulon nollasääntöä}\x=0\;\;\;\textrm{tai}\;\;\;&x^2-49=0 &&|\textsf{ ratkaistaan x}\&\;\;\;\;\;\,\;\;x^2=49 \&\;\;\;\;\;\,\;\;\;\;x=7\;\mathsf{tai}\;x=-7"
+        self.assertEqual(
+            tex_collect(text),
+            [
+                NoTranslate(r"x^3-49x&=0 &&|\text{"),
+                Translate(r" erotetaan yhteinen tekijä x"),
+                NoTranslate(r"}\x(x^2-49)&=0 &&|\text{"),
+                Translate(r" käytetään tulon nollasääntöä"),
+                NoTranslate(r"}\x=0\;\;\;\textrm{"),
+                Translate(r"tai"),
+                NoTranslate(r"}\;\;\;&x^2-49=0 &&|\textsf{"),
+                Translate(r" ratkaistaan x"),
+                NoTranslate(
+                    r"}\&\;\;\;\;\;\,\;\;x^2=49 \&\;\;\;\;\;\,\;\;\;\;x=7\;\mathsf{"
+                ),
+                Translate(r"tai"),
+                NoTranslate(r"}\;x=-7"),
             ],
         )
 
