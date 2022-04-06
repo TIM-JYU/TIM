@@ -83,6 +83,25 @@ const CalendarFields = t.intersection([
     t.type({}),
 ]);
 
+const colors = {
+    red: {
+        primary: "#ad2121",
+        secondary: "#FAE3E3",
+    },
+    blue: {
+        primary: "#1e90ff",
+        secondary: "#D1E8FF",
+    },
+    yellow: {
+        primary: "#e3bc08",
+        secondary: "#FDF1BA",
+    },
+    gray: {
+        primary: "#d5d5d5",
+        secondary: "#d5d5d5",
+    },
+};
+
 const segmentHeight = 30;
 // const minutesInSegment = 20;
 
@@ -356,6 +375,9 @@ export class CalendarComponent
                 event.start = new Date(event.start);
                 if (event.end) {
                     event.end = new Date(event.end);
+                    if (Date.now() > event.start.getTime()) {
+                        event.color = colors.gray;
+                    }
                 }
             });
             this.events = result.result;
