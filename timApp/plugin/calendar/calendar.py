@@ -100,9 +100,6 @@ def get_events() -> Response:
 
 @dataclass
 class CalendarEvent:
-    id: Any
-    meta: Any
-    actions: Any
     title: str
     start: datetime
     end: datetime
