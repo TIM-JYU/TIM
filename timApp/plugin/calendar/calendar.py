@@ -115,10 +115,10 @@ def get_events() -> Response:
             return text_response(ics_file)
         case "json":
             event_objs = []
-            for i, event in enumerate(events):
+            for event in events:
                 event_objs.append(
                     {
-                        "id": i,
+                        "id": event.event_id,
                         "title": event.title,
                         "start": event.start_time,
                         "end": event.end_time,
