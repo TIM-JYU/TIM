@@ -1153,23 +1153,28 @@ def post_answer_impl(
 
 
 def check_answerupload_file_accesses(
-    files: list[str], curr_user: User
+    filelist: list[str], curr_user: User
 ) -> list[AnswerUpload]:
     """
     Checks user's access to uploads by checking access to the answers associated with them
     """
     uploads: list[AnswerUpload] = []
     doc_map = {}
-    for file in files:
-        block = Block.query.filter(
-            (Block.description == file) & (Block.type_id == BlockType.Upload.value)
-        ).first()
-        if block is None:
-            raise PluginException(f"Non-existent upload: {file}")
+    blocks = Block.query.filter(
+        Block.description.in_(filelist) & (Block.type_id == BlockType.Upload.value)
+    ).all()
+    if len(blocks) != len(filelist):
+        block_filelist = [b.description for b in blocks]
+        for f in filelist:
+            if f not in block_filelist:
+                raise PluginException(f"Non-existent upload: {f}")
+    for block in blocks:
         if not verify_view_access(block, user=curr_user, require=False):
             answerupload = block.answerupload.first()
             if answerupload is None:
-                raise AccessDenied()
+                raise RouteException(
+                    "Upload has not been associated with any answer; it should be re-uploaded"
+                )
             answer = answerupload.answer
             if not answer:
                 raise RouteException(
@@ -1183,9 +1188,7 @@ def check_answerupload_file_accesses(
                         d, message="You don't have permission to touch this file."
                     )
                     doc_map[did] = d
-        uploads.append(
-            AnswerUpload.query.filter(AnswerUpload.upload_block_id == block.id).first()
-        )
+        uploads.append(block.answerupload.first())
     return uploads
 
 

@@ -60,10 +60,8 @@ def set_default_velp_group_rights(doc_id: int, velp_group: DocInfo):
     rights = get_rights_holders(doc_id)
     # Copy all rights but view
     for right in rights:
-        # TODO once someone implements a grant_access that takes access ids instead of strings, change to that
-        # function.
-        if not right.atype.name == "view":
-            grant_access(right.usergroup, velp_group, right.atype.to_enum())
+        if right.access_type != AccessType.view:
+            grant_access(right.usergroup, velp_group, right.access_type)
 
 
 def get_document_default_velp_group_info(doc_info: DocInfo):
