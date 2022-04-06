@@ -126,8 +126,8 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
         // },
     ],
     template: `
-        <mwl-utils-calendar-header [(view)]="view" [(viewDate)]="viewDate">
-        </mwl-utils-calendar-header>
+        <tim-calendar-header [(view)]="view" [(viewDate)]="viewDate">
+        </tim-calendar-header>
         
         <div class="alert alert-info">
           Click on a day or time slot on the view.
