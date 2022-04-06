@@ -32,3 +32,16 @@
 #selectorsBtn{
   margin-top: 5px;
 }
+
+.modal{
+  opacity: 1;
+  z-index: 1056;
+}
+
+.modal-dialog{
+  margin-top: 25%;
+}
+
+.modal-backdrop.fade {
+    opacity: 0.5;
+}

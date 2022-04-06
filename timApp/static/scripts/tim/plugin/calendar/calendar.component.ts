@@ -2,13 +2,13 @@ import {
     ApplicationRef,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
-    // ChangeDetectorRef,
     Component,
     DoBootstrap,
     ElementRef,
-    // Injectable,
     NgModule,
     OnInit,
+    TemplateRef,
+    ViewChild,
     ViewEncapsulation,
 } from "@angular/core";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
@@ -16,7 +16,7 @@ import * as t from "io-ts";
 import {
     CalendarDateFormatter,
     CalendarEvent,
-    // CalendarEventTitleFormatter,
+    CalendarEventAction,
     CalendarModule,
     CalendarView,
     DateAdapter,
@@ -32,6 +32,7 @@ import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek} from "date-fns";
 import moment from "moment";
+import {NgbModal, NgbModalModule} from "@ng-bootstrap/ng-bootstrap";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
@@ -83,6 +84,25 @@ const CalendarFields = t.intersection([
     t.type({}),
 ]);
 
+const colors = {
+    red: {
+        primary: "#ad2121",
+        secondary: "#FAE3E3",
+    },
+    blue: {
+        primary: "#1e90ff",
+        secondary: "#D1E8FF",
+    },
+    yellow: {
+        primary: "#e3bc08",
+        secondary: "#FDF1BA",
+    },
+    gray: {
+        primary: "#d5d5d5",
+        secondary: "#d5d5d5",
+    },
+};
+
 const segmentHeight = 30;
 // const minutesInSegment = 20;
 
@@ -129,26 +149,26 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
         <mwl-utils-calendar-header [(view)]="view" [(viewDate)]="viewDate">
         </mwl-utils-calendar-header>
         <div class="row text-center">
-        <div class="btn-group edit-btn col-md-4">
-            <button (click)="enableEditing()" [class.active]="editEnabled" class="btn timButton">Edit</button>
-            <button (click)="disableEditing()" [class.active]="!editEnabled" class="btn timButton">View</button>
+            <div class="btn-group edit-btn col-md-4">
+                <button (click)="disableEditing()" [class.active]="!editEnabled" class="btn timButton">View</button>
+                <button (click)="enableEditing()" [class.active]="editEnabled" class="btn timButton">Edit</button>
+            </div>
+                <div class="col-md-4"> Näytä:
+                    <div *ngFor="let box of checkboxEvents">
+                        <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value" [(ngModel)]="box.checked" [checked]="" >{{box.name}}
+                    </div>
+            </div>
+            <div [style.visibility] = "editEnabled ? 'visible' : 'hidden'" class="btn-group event-btn col-md-4">
+            <button (click)="setEventType($event)" *ngFor="let button of eventTypes" [class.active]="selectedEvent == (button.valueOf() +eventTypes.indexOf((button)))" class="btn timButton" id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button.valueOf()}}</button>
+            </div>
         </div>
-            <div class="col-md-4"> Näytä:
-                <div *ngFor="let box of checkboxEvents">
-                    <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value" [(ngModel)]="box.checked" [checked]="" >{{box.name}}
-                </div>
-        </div>
-        <div [style.visibility] = "editEnabled ? 'visible' : 'hidden'" class="btn-group event-btn col-md-4">
-        <button (click)="setEventType($event)" *ngFor="let button of eventTypes" [class.active]="selectedEvent == (button.valueOf() +eventTypes.indexOf((button)))" class="btn timButton" id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button.valueOf()}}</button>
-        </div>
-        </div>
-        
+
         <ng-template
-          #weekViewHourSegmentTemplate
-          let-segment="segment"
-          let-locale="locale"
-          let-segmentHeight="segmentHeight"
-          let-isTimeLabel="isTimeLabel"
+                #weekViewHourSegmentTemplate
+                let-segment="segment"
+                let-locale="locale"
+                let-segmentHeight="segmentHeight"
+                let-isTimeLabel="isTimeLabel"
         >
           <div
             #segmentElement
@@ -164,48 +184,82 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             </div>
           </div>
         </ng-template>
-        
+
         <div [ngSwitch]="view">
-          <mwl-calendar-month-view
-            *ngSwitchCase="'month'"
-            [viewDate]="viewDate"
-            [events]="events"
-            [locale]="'fi-FI'"
-            [weekStartsOn]= "1"
-            (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
-            (dayClicked)="clickedDate = $event.day.date"
-          >
-          </mwl-calendar-month-view>
-          <mwl-calendar-week-view
-            *ngSwitchCase="'week'"
-            [viewDate]="viewDate"
-            [events]="events"
-            [hourSegmentHeight]="30"
-            [hourDuration]="60"
-            [hourSegments]="segmentsInHour"
-            [dayStartHour]="dayStartHour"
-            [dayEndHour]="dayEndHour"
-            [locale]="'fi-FI'"
-            [weekStartsOn]= "1"
-            (dayHeaderClicked)="clickedDate = $event.day.date"
-            (hourSegmentClicked)="clickedDate = $event.date"
-            [hourSegmentTemplate]="weekViewHourSegmentTemplate"
-          >
-          </mwl-calendar-week-view>
-          <mwl-calendar-day-view
-            *ngSwitchCase="'day'"
-            [viewDate]="viewDate"
-            [events]="events"
-            [hourDuration]="60"
-            [hourSegments]="segmentsInHour"
-            [dayStartHour]="dayStartHour" 
-            [dayEndHour]="dayEndHour"
-            [locale]="'fi-FI'"
-            (hourSegmentClicked)="clickedDate = $event.date"
-          >
-          </mwl-calendar-day-view>
+            <mwl-calendar-month-view
+                    *ngSwitchCase="'month'"
+                    [viewDate]="viewDate"
+                    [events]="events"
+                    [locale]="'fi-FI'"
+                    [weekStartsOn]="1"
+                    (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
+                    (dayClicked)="clickedDate = $event.day.date"
+            >
+            </mwl-calendar-month-view>
+            <mwl-calendar-week-view
+                    *ngSwitchCase="'week'"
+                    [viewDate]="viewDate"
+                    [events]="events"
+                    [hourSegmentHeight]="30"
+                    [hourDuration]="60"
+                    [hourSegments]="segmentsInHour"
+                    [dayStartHour]="dayStartHour"
+                    [dayEndHour]="dayEndHour"
+                    [locale]="'fi-FI'"
+                    [weekStartsOn]="1"
+                    (dayHeaderClicked)="clickedDate = $event.day.date"
+                    (hourSegmentClicked)="clickedDate = $event.date"
+                    [hourSegmentTemplate]="weekViewHourSegmentTemplate"
+                    (eventClicked)="handleEvent('Clicked', $event.event)"
+            >
+            </mwl-calendar-week-view>
+            <mwl-calendar-day-view
+                    *ngSwitchCase="'day'"
+                    [viewDate]="viewDate"
+                    [events]="events"
+                    [hourDuration]="60"
+                    [hourSegments]="segmentsInHour"
+                    [dayStartHour]="dayStartHour"
+                    [dayEndHour]="dayEndHour"
+                    [locale]="'fi-FI'"
+                    (hourSegmentClicked)="clickedDate = $event.date"
+            >
+            </mwl-calendar-day-view>
         </div>
         <app-timeview-selectors (accuracy)="setAccuracy($event)" (morning)="setMorning($event)" (evening)="setEvening($event)"></app-timeview-selectors>
+        <div hidden>
+            <button class="timButton" id="saveBtn" (click)="saveChanges()"
+                    [disabled]="!this.events.some(this.isTempEvent)">Save changes
+            </button>
+        </div>
+
+        <ng-template #modalContent let-close="close">
+            <div class="modal-header">
+                <h5 class="modal-title">Event action occurred</h5>
+                <button type="button" class="close" (click)="close()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div>
+                    Action:
+                    <pre>{{ modalData?.action }}</pre>
+                </div>
+                <div>
+                    Event:
+                    <pre>{{ modalData?.event | json }}</pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button [style.visibility] = "editEnabled ? 'visible' : 'hidden'" type="button" class="btn btn-outline-secondary timButton"
+                        (click)=" close(); deleteEvent(modalData?.event)">
+                    Delete
+                </button>
+                <button type="button" class="btn btn-outline-secondary timButton" (click)="close()">
+                    OK
+                </button>
+            </div>
+        </ng-template>
     `,
     encapsulation: ViewEncapsulation.None,
     styleUrls: ["calendar.component.scss"],
@@ -219,6 +273,8 @@ export class CalendarComponent
     >
     implements OnInit
 {
+    @ViewChild("modalContent", {static: true})
+    modalContent?: TemplateRef<never>;
     view: CalendarView = CalendarView.Week;
 
     viewDate: Date = new Date();
@@ -251,13 +307,37 @@ export class CalendarComponent
     segmentMinutes: number = 20;
     segmentsInHour: number = 3;
 
-    lastEvent: number = 0;
+    // lastEvent: number = 0;
+
+    modalData?: {
+        action: string;
+        event: CalendarEvent;
+    };
+
+    actions: CalendarEventAction[] = [
+        {
+            label: '<i class="fas fa-fw fa-pencil-alt"></i>',
+            a11yLabel: "Edit",
+            onClick: ({event}: {event: CalendarEvent}): void => {
+                this.handleEvent("Edited", event);
+            },
+        },
+        {
+            label: '<i class="fas fa-fw fa-trash-alt"></i>',
+            a11yLabel: "Delete",
+            onClick: ({event}: {event: CalendarEvent}): void => {
+                this.events = this.events.filter((iEvent) => iEvent !== event);
+                this.handleEvent("Deleted", event);
+            },
+        },
+    ];
 
     constructor(
         el: ElementRef<HTMLElement>,
         http: HttpClient,
         domSanitizer: DomSanitizer,
-        private cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef,
+        private modal: NgbModal
     ) {
         super(el, http, domSanitizer);
     }
@@ -267,8 +347,12 @@ export class CalendarComponent
      * @param event
      */
     setEventType(event: Event) {
-        const elementId: string = (event.target as Element).id;
-        this.selectedEvent = elementId;
+        this.selectedEvent = (event.target as Element).id;
+    }
+    isTempEvent(event: CalendarEvent<{tmpEvent: boolean}>) {
+        if (event.meta) {
+            return event.meta.tmpEvent;
+        }
     }
 
     setAccuracy(accuracy: number) {
@@ -321,6 +405,7 @@ export class CalendarComponent
             meta: {
                 tmpEvent: true,
             },
+            actions: this.actions,
         };
         this.events = [...this.events, dragToSelectEvent];
         this.dragToCreateActive = true;
@@ -332,9 +417,9 @@ export class CalendarComponent
         fromEvent<MouseEvent>(document, "mousemove")
             .pipe(
                 finalize(() => {
-                    if (dragToSelectEvent.meta) {
-                        delete dragToSelectEvent.meta.tmpEvent;
-                    }
+                    // if (dragToSelectEvent.meta) {
+                    //    delete dragToSelectEvent.meta.tmpEvent;
+                    // }
                     this.dragToCreateActive = false;
                     // The promise is resolved inside saveChanges -function
                     this.saveChanges();
@@ -364,6 +449,12 @@ export class CalendarComponent
                         .substr(0, 5)}–${newEnd
                         .toTimeString()
                         .substr(0, 5)} Varattava aika`;
+                    if (dragToSelectEvent.end) {
+                        dragToSelectEvent.end = new Date(dragToSelectEvent.end);
+                        if (Date.now() > dragToSelectEvent.start.getTime()) {
+                            dragToSelectEvent.color = colors.gray;
+                        }
+                    }
                 }
                 this.refresh();
             });
@@ -389,19 +480,33 @@ export class CalendarComponent
         }
     }
 
+    trimEventData(event: CalendarEvent) {
+        delete event.meta;
+        delete event.id;
+        delete event.actions;
+        delete event.color;
+    }
+
     private async loadEvents() {
         const result = await toPromise(
-            this.http.get<CalendarEvent[]>("/calendar/events")
+            this.http.get<CalendarEvent<{tmpEvent: boolean}>[]>(
+                "/calendar/events"
+            )
         );
         if (result.ok) {
             result.result.forEach((event) => {
                 event.start = new Date(event.start);
                 if (event.end) {
                     event.end = new Date(event.end);
+                    if (Date.now() > event.start.getTime()) {
+                        event.color = colors.gray;
+                    }
                 }
+                event.actions = this.actions;
+                event.meta = {tmpEvent: false};
             });
             this.events = result.result;
-            this.lastEvent = result.result.length;
+            // this.lastEvent = result.result.length;
             this.refresh();
         } else {
             // TODO: Handle error responses properly
@@ -410,8 +515,13 @@ export class CalendarComponent
     }
 
     async saveChanges() {
-        const eventsToAdd = this.events.slice(this.lastEvent);
+        const eventsToAdd = this.events.filter(
+            (event: CalendarEvent<{tmpEvent: boolean}>) =>
+                this.isTempEvent(event)
+        ); // slice(this.lastEvent);
         if (eventsToAdd.length > 0) {
+            eventsToAdd.map((event) => this.trimEventData(event));
+            console.log(eventsToAdd);
             const result = await toPromise(
                 this.http.post<CalendarEvent[]>("/calendar/events", {
                     events: eventsToAdd,
@@ -421,12 +531,40 @@ export class CalendarComponent
             if (result.ok) {
                 console.log("events sent");
                 console.log(result.result);
-                this.lastEvent = this.events.length;
+                // this.lastEvent = this.events.length;
                 this.refresh();
+                await this.loadEvents();
             } else {
                 console.error(result.result.error.error);
             }
         }
+    }
+
+    async deleteEvent(event?: CalendarEvent<{tmpEvent: boolean}>) {
+        if (!event) {
+            return;
+        }
+        if (!event.id || !event.meta) {
+            return;
+        }
+        if (!event.meta.tmpEvent) {
+            const result = await toPromise(
+                this.http.delete(`/calendar/events/${event.id}`)
+            );
+            if (result.ok) {
+                console.log(result.result);
+            } else {
+                console.error(result.result.error.error);
+            }
+        }
+        this.events.splice(this.events.indexOf(event), 1);
+        // this.lastEvent--;
+        this.refresh();
+    }
+
+    handleEvent(action: string, event: CalendarEvent): void {
+        this.modalData = {event, action};
+        this.modal.open(this.modalContent, {size: "md"});
     }
 }
 
@@ -442,6 +580,7 @@ export class CalendarComponent
             useFactory: adapterFactory,
         }),
         CalendarHeaderModule,
+        NgbModalModule,
     ],
     declarations: [CalendarComponent, TimeViewSelectorComponent],
     exports: [CalendarComponent],

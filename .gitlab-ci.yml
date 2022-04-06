@@ -130,5 +130,4 @@ build_docs:
     branch: main
   allow_failure: true
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-
+    - if: $CI_PROJECT_NAMESPACE == "tim-jyu" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
