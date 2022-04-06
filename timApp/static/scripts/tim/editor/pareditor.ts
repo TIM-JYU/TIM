@@ -1671,16 +1671,16 @@ ${backTicks}
 
         let mayContinue = true;
 
-        if (
+        if (this.trdiff == undefined) {
+            await showMessageDialog(
+                "There is no original text to be translated. Please check the Difference in original document view."
+            );
+        } else if (
             this.resolve.params.viewCtrl == undefined ||
             this.resolve.params.viewCtrl.item.lang_id == undefined
         ) {
-            window.alert(
+            await showMessageDialog(
                 "This document does not have a language set. Please set a language and try again."
-            );
-        } else if (this.trdiff == undefined) {
-            window.alert(
-                "There is no original text to be translated. Please check the Difference in original document view."
             );
         } else if (
             this.trdiff.new != edittext &&
@@ -1741,7 +1741,11 @@ ${backTicks}
         const selection = this.editor!.checkTranslationSelection();
         if (selection == "") {
             this.nothingSelected = true;
-            return this.trdiff!.new;
+            if (this.trdiff == null) {
+                return selection;
+            } else {
+                return this.trdiff.new;
+            }
         }
         return selection;
     }
@@ -1844,8 +1848,6 @@ ${backTicks}
             this.saving = false;
             return;
         } else {
-            this.setTranslatorSettings();
-            this.setTranslatorLanguageSettings();
             this.close({type: "save", text});
         }
     }
@@ -2402,6 +2404,8 @@ ${backTicks}
     }
 
     private saveOptions() {
+        this.setTranslatorSettings();
+        this.setTranslatorLanguageSettings();
         this.storage.spellcheck.set(this.spellcheck);
         this.storage.editortab.set(this.activeTab ?? "navigation");
         this.storage.autocomplete.set(this.autocomplete);

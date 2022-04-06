@@ -555,10 +555,6 @@ export class PermCtrl implements IController {
         }
     }
 
-    testt() {
-        window.alert("This works now?!");
-    }
-
     async updateTranslatorLanguages() {
         const sources = await to(
             $http.post<ILanguages[]>("/translations/target-languages", {
