@@ -154,6 +154,19 @@ def add_events(events: list[CalendarEvent]) -> Response:
     return json_response(events)
 
 
+@calendar_plugin.put("/events/<int:event_id>")
+def edit_event(event_id: int, event: CalendarEvent) -> Response:
+    verify_logged_in()
+    old_event = Event.get_event_by_id(event_id)
+    if not old_event:
+        raise RouteException("Event not found")
+    old_event.title = event.title
+    old_event.start_time = event.start
+    old_event.end_time = event.end
+    db.session.commit()
+    return ok_response()
+
+
 @calendar_plugin.delete("/events/<int:event_id>")
 def delete_event(event_id: int) -> Response:
     verify_logged_in()

@@ -17,6 +17,7 @@ import {
     CalendarDateFormatter,
     CalendarEvent,
     CalendarEventAction,
+    CalendarEventTimesChangedEvent,
     CalendarModule,
     CalendarView,
     DateAdapter,
@@ -150,8 +151,8 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
         </mwl-utils-calendar-header>
         <div class="row text-center">
             <div class="btn-group edit-btn col-md-4">
-                <button (click)="disableEditing()" [class.active]="!editEnabled" class="btn timButton">View</button>
-                <button (click)="enableEditing()" [class.active]="editEnabled" class="btn timButton">Edit</button>
+                <button (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
+                <button (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
             </div>
                 <div class="col-md-4"> Näytä:
                     <div *ngFor="let box of checkboxEvents">
@@ -178,6 +179,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             [class.cal-after-hour-start]="!segment.isStart"
             [ngClass]="segment.cssClass"
             (mousedown)="editEnabled && startDragToCreate(segment, $event, segmentElement)"
+            
           >
             <div class="cal-time" *ngIf="isTimeLabel">
               {{ segment.date | calendarDate:'weekViewHour':locale }}
@@ -211,6 +213,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
                     (hourSegmentClicked)="clickedDate = $event.date"
                     [hourSegmentTemplate]="weekViewHourSegmentTemplate"
                     (eventClicked)="handleEvent('Clicked', $event.event)"
+                    (eventTimesChanged)="eventTimesChanged($event)"
             >
             </mwl-calendar-week-view>
             <mwl-calendar-day-view
@@ -223,6 +226,10 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
                     [dayEndHour]="dayEndHour"
                     [locale]="'fi-FI'"
                     (hourSegmentClicked)="clickedDate = $event.date"
+                    [hourSegmentTemplate]="weekViewHourSegmentTemplate"
+                    (eventClicked)="handleEvent('Clicked', $event.event)"
+                    (eventTimesChanged)="eventTimesChanged($event)"
+
             >
             </mwl-calendar-day-view>
         </div>
@@ -314,7 +321,7 @@ export class CalendarComponent
 
     modalData?: {
         action: string;
-        event: CalendarEvent;
+        event?: CalendarEvent<{tmpEvent: boolean}>;
     };
 
     actions: CalendarEventAction[] = [
@@ -371,12 +378,23 @@ export class CalendarComponent
         this.dayEndHour = evening - 1;
     }
 
-    enableEditing() {
-        this.editEnabled = true;
-    }
-
-    disableEditing() {
-        this.editEnabled = false;
+    enableEditing(enabled: boolean) {
+        this.editEnabled = enabled;
+        if (enabled) {
+            this.events.forEach((event) => {
+                event.resizable = {
+                    beforeStart: true,
+                    afterEnd: true,
+                };
+            });
+        } else {
+            this.events.forEach((event) => {
+                event.resizable = {
+                    beforeStart: false,
+                    afterEnd: false,
+                };
+            });
+        }
     }
 
     /**
@@ -410,6 +428,9 @@ export class CalendarComponent
             },
             actions: this.actions,
         };
+        if (Date.now() > dragToSelectEvent.start.getTime()) {
+            dragToSelectEvent.color = colors.gray;
+        }
         this.events = [...this.events, dragToSelectEvent];
         this.dragToCreateActive = true;
         const segmentPosition = segmentElement.getBoundingClientRect();
@@ -454,17 +475,38 @@ export class CalendarComponent
                         .substr(0, 5)} Varattava aika`;
                     if (dragToSelectEvent.end) {
                         dragToSelectEvent.end = new Date(dragToSelectEvent.end);
-                        if (Date.now() > dragToSelectEvent.start.getTime()) {
-                            dragToSelectEvent.color = colors.gray;
-                        }
                     }
                 }
                 this.refresh();
             });
     }
 
+    async eventTimesChanged({
+        event,
+        newStart,
+        newEnd,
+    }: CalendarEventTimesChangedEvent) {
+        event.start = newStart;
+        event.end = newEnd;
+        if (event.end) {
+            event.title = `${event.start
+                .toTimeString()
+                .substr(0, 5)}–${event.end
+                .toTimeString()
+                .substr(0, 5)} Varattava aika`;
+        }
+
+        this.refresh();
+        await this.editEvent(event);
+    }
+
     private refresh() {
         this.events = [...this.events];
+        this.events.forEach((event) => {
+            if (Date.now() > event.start.getTime()) {
+                event.color = colors.gray;
+            }
+        });
         this.cdr.detectChanges();
     }
 
@@ -484,10 +526,11 @@ export class CalendarComponent
     }
 
     trimEventData(event: CalendarEvent) {
-        delete event.meta;
         delete event.id;
+        delete event.meta;
         delete event.actions;
         delete event.color;
+        delete event.resizable;
     }
 
     private async loadEvents() {
@@ -507,6 +550,17 @@ export class CalendarComponent
                 }
                 event.actions = this.actions;
                 event.meta = {tmpEvent: false};
+                if (this.editEnabled) {
+                    event.resizable = {
+                        beforeStart: true,
+                        afterEnd: true,
+                    };
+                } else {
+                    event.resizable = {
+                        beforeStart: false,
+                        afterEnd: false,
+                    };
+                }
             });
             this.events = result.result;
             // this.lastEvent = result.result.length;
@@ -543,6 +597,38 @@ export class CalendarComponent
         }
     }
 
+    async editEvent(event: CalendarEvent) {
+        if (!event.id) {
+            return;
+        }
+        console.log(event);
+        const id = event.id;
+        this.trimEventData(event);
+        console.log(event);
+        const result = await toPromise(
+            this.http.put(`/calendar/events/${id}`, {
+                event: event,
+            })
+        );
+        if (result.ok) {
+            console.log(result.result);
+            event.resizable = {
+                beforeStart: true,
+                afterEnd: true,
+            };
+            event.id = id;
+            event.meta = {
+                tmpEvent: false,
+            };
+            if (Date.now() > event.start.getTime()) {
+                event.color = colors.gray;
+            }
+        } else {
+            // TODO: Handle error responses properly
+            console.error(result.result.error.error);
+        }
+    }
+
     async exportICS() {
         const result = await toPromise(
             this.http.get("/calendar/events?file_type=ics", {
@@ -563,6 +649,7 @@ export class CalendarComponent
         if (!event) {
             return;
         }
+
         if (!event.id || !event.meta) {
             return;
         }
