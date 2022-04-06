@@ -6,6 +6,7 @@ from timApp.document.translation.translationparser import (
     TranslationParser,
     get_translate_approvals,
     tex_collect,
+    span_collect,
 )
 
 
@@ -150,6 +151,18 @@ class TestParser(unittest.TestCase):
                     NoTranslate("]{.red}"),
                     Translate(" hieno, eikös?"),
                 ]
+            ],
+        )
+
+    # For .notranslate style, might move elsewhere. For future use.
+    def test_span_collect(self):
+        text = r"tässä on [teksti]{.notranslate}, jota ei käännetä."
+        self.assertEqual(
+            span_collect(text),
+            [
+                Translate(r"tässä on ["),
+                NoTranslate(r"[teksti]{.notranslate}"),
+                Translate(r", jota ei käännetä."),
             ],
         )
 
