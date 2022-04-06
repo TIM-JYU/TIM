@@ -326,16 +326,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         else:
             p.set_attr("rt", None)
 
-        tr_opt = edit_request.mark_translation_checked
-        if tr_opt is None:
-            pass
-        elif tr_opt:
-            if p.is_translation():
-                deref = mark_translation_as_checked(p)
-                if not deref:
-                    raise RouteException("Paragraph is not a translation.")
-        else:
-            p.set_attr("rc", None)
+        deref = mark_translation_as_checked(p)
 
         if p.is_different_from(original_par):
             verify_par_edit_access(original_par)
@@ -388,7 +379,7 @@ def mark_translation_as_checked(p: DocParagraph):
     except TimDbException:
         deref = None
     if deref:
-        p.set_attr("rc", deref[0].get_hash())
+        p.set_attr("mt", None)
     return deref
 
 
@@ -1015,9 +1006,9 @@ def mark_checked_route(doc_id):
     verify_edit_access(d)
     for p in d.document_as_current_user.get_paragraphs():
         if p.is_translation() and not p.is_setting():
-            old_rc = p.get_attr("rc")
+            old_rc = p.get_attr("mt")
             mark_translation_as_checked(p)
-            if old_rc != p.get_attr("rc"):
+            if old_rc is None:
                 p.save()
     return ok_response()
 

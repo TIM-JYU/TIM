@@ -49,7 +49,7 @@
                         </select>
                 </div>
                 <p ng-show="$ctrl.translationInProgress"><tim-loading></tim-loading> Translating... This may take a while.</p>
-                <button class="timButton" id="translateButton" ng-disabled="$ctrl.saving || $ctrl.translationInProgress" ng-show="$ctrl.showTranslated()" ng-click="$ctrl.translateClicked()" style="right: 2px;">Translate</button>
+                <button class="timButton" id="translateButton" ng-disabled="$ctrl.saving || $ctrl.translationInProgress || $ctrl.docTranslator == ''" ng-show="$ctrl.showTranslated()" ng-click="$ctrl.translateClicked()" style="right: 2px;">Translate</button>
         </div>
     </uib-tab>
   </uib-tabset>
@@ -99,13 +99,14 @@
     </label>
     -->
     <div ng-if="$ctrl.trdiff"
+         ng-show="$ctrl.proeditor"
           class="halfsize"
          tim-draggable-fixed
          detachable="true"
          caption="Difference in original document"
          save="{{$ctrl.getOptions().localSaveTag}}Trdiff">
         <div class="border">
-            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.sideBySide" ng-click="$ctrl.changePositioning()"/> View {{$ctrl.positionButton}} </label>
+            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.sideBySide" ng-click="$ctrl.changePositioning()"/> View Next to Editor </label>
             <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.hideDiff"/> Hide this area </label>
         </div>
         <div class="diff border" ng-hide="$ctrl.hideDiff">
@@ -114,7 +115,7 @@
         </div>
     </div>
   </div>
-  <div class="sidebyside">
+  <div id="previews">
     <div tim-draggable-fixed
          detachable="true"
          caption="Current Block {{ $ctrl.getPreviewCaption() }}"
@@ -122,21 +123,21 @@
          class="previewDiv halfsize"
          ng-show="$ctrl.proeditor">
         <div class="border">
-            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.hidePreview"/> Hide this area </label>
+            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.hidePreview" ng-click="$ctrl.updatePreviewHide()"/> Hide this area </label>
         </div>
-        <div class="previewcontent paragraphs" ng-hide="$ctrl.hidePreview"></div>
+        <div class="previewcontent paragraphs fullsize" ng-hide="$ctrl.hidePreview"></div>
     </div>
     <div tim-draggable-fixed
          detachable="true"
-         caption="Original Block {{ $ctrl.getPreviewCaption() }}"
+         caption="Source Block {{ $ctrl.getPreviewCaption() }}"
          save="{{$ctrl.getOptions().localSaveTag}}Preview (original block)"
          class="previewDiv halfsize"
-         ng-show="$ctrl.trdiff.new"
+         ng-if="$ctrl.trdiff.new"
          ng-show="$ctrl.proeditor">
         <div class="border">
-            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.hideOriginalPreview"/> Hide this area </label>
+            <label class="font-weight-normal margin-5-right"><input type="checkbox" id="origprev" ng-model="$ctrl.hideOriginalPreview" ng-click="$ctrl.updateOriginalPreviewHide()"/> Hide this area </label>
         </div>
-        <div class="previeworiginalcontent paragraphs" ng-hide="$ctrl.hideOriginalPreview">
+        <div class="previeworiginalcontent paragraphs fullsize" ng-hide="$ctrl.hideOriginalPreview">
             <div class="par">
             <div class="parContent">
             <p>{{$ctrl.trdiff.new}}</p>

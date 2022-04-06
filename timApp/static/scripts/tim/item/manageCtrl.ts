@@ -110,7 +110,7 @@ export class PermCtrl implements IController {
     async $onInit() {
         this.translationInProgress = false;
         this.getNotifySettings();
-        await listTranslators(this.translators);
+        await listTranslators(this.translators, true);
         await updateLanguages(
             this.sourceLanguages,
             this.documentLanguages,
@@ -555,10 +555,9 @@ export class PermCtrl implements IController {
         }
     }
 
-    testt() {
-        window.alert("This works now?!");
-    }
-
+    /**
+     * Updates the list of available target languages when translator is changed.
+     */
     async updateTranslatorLanguages() {
         const sources = await to(
             $http.post<ILanguages[]>("/translations/target-languages", {
@@ -572,6 +571,9 @@ export class PermCtrl implements IController {
         }
     }
 
+    /**
+     * Updates the selection for the translator language when the translator of target language is changed.
+     */
     updateLangChoice() {
         if (this.targetLanguages != []) {
             let langIndex = this.findTrLangIndex();
@@ -583,6 +585,7 @@ export class PermCtrl implements IController {
             const trSelect = document.querySelector("#translator-language");
             let trSelection = trSelect!.querySelectorAll("option")[langIndex];
             if (trSelection.value != this.newTranslation.language) {
+                // In case there is a temporary empty option in the option list
                 langIndex = langIndex + 1;
                 trSelection = trSelect!.querySelectorAll("option")[langIndex];
             }
@@ -590,6 +593,11 @@ export class PermCtrl implements IController {
         }
     }
 
+    /**
+     * Looks for the index of the translation document's language in target languages.
+     * TODO: Refactor this and its counterpart in pareditor.ts to take a string and the target language list as its parameters?
+     * @returns The index of the language in targetLanguages or -1 if it was not found
+     */
     findTrLangIndex() {
         let begin: number;
         for (begin = 0; begin < this.targetLanguages.length; begin++) {
@@ -682,8 +690,9 @@ export class PermCtrl implements IController {
         }
     }
 
-    /*
-    Finds the id of the source document in the translations list.
+    /**
+     * Finds the id of the source document in the translations list.
+     * @returns the source document's ID or -1 if it for some reason was not found
      */
     findSourceDoc() {
         let begin: number;
@@ -698,9 +707,9 @@ export class PermCtrl implements IController {
         return -1;
     }
 
-    /*
-    Checks whether the translator chosen for the document is Manual
-    (in which case a translator language is not shown) or not
+    /**
+     * Checks whether the translator chosen for the document is Manual (in which case a translator language is not shown) or not
+     * @returns whether or not the chosen translator is Manual
      */
     notManual() {
         if (this.newTranslation.translator == "Manual") {
@@ -709,6 +718,10 @@ export class PermCtrl implements IController {
         return true;
     }
 
+    /**
+     * Checks if the document can be translated automatically.
+     * @returns Whether or not the document can be translated automatically with the selected translator
+     */
     checkTranslatability() {
         if (
             this.newTranslation.title == "" ||

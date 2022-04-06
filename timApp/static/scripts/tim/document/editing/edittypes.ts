@@ -34,7 +34,6 @@ export interface IParInfo {
 export type ITags = {
     markread?: boolean;
     marktranslated?: boolean;
-    markchecked?: boolean;
 };
 
 export interface IExtraData extends IParInfo {
@@ -67,8 +66,10 @@ export function extraDataForServer(data: IExtraData) {
     return {...data, par: data.par?.originalPar.id};
 }
 
-/*
-Goes through the given language list (languages) and inserts each of its members into languageArray.
+/**
+ * Goes through the given language list and inserts each of its members into it.
+ * @param languages The list of languages to be added
+ * @param languageArray The list the languages need to be added to
  */
 export function listLanguages(
     languages: Array<ILanguages>,
@@ -79,8 +80,12 @@ export function listLanguages(
     }
 }
 
-/*
-Fetches the lists of the languages and lists them to front-end's language lists.
+/**
+ * Fetches the lists of the languages supported by the chosen translator and lists them to front-end's language lists.
+ * @param sourceL The list of supported source languages
+ * @param docL The list of document languages available
+ * @param targetL The list of supported target languages
+ * @param translator The chosen translator
  */
 export async function updateLanguages(
     sourceL: Array<ILanguages>,
@@ -112,13 +117,21 @@ export async function updateLanguages(
     }
 }
 
-/*
-Fetches the list of the available translators and adds them to front-end's list of them.
+/**
+ * Fetches the list of the available translators and adds them to front-end's list of them.
+ * @param translators The list the translators will be added to
+ * @param includeManual Whether or not the option for manual translation should be included in the list
  */
-export async function listTranslators(translators: Array<ITranslators>) {
+export async function listTranslators(
+    translators: Array<ITranslators>,
+    includeManual: boolean
+) {
     const sources = await to($http.get<string[]>("/translations/translators"));
     if (sources.ok) {
         for (const translator of sources.result.data) {
+            if (translator == "Manual" && !includeManual) {
+                continue;
+            }
             translators.push({name: translator});
         }
     }

@@ -27,7 +27,7 @@ import {IUserAPIKey} from "./IUser";
                             <label class="control-label" for="name-select" i18n>Translator</label>
                             <select class="form-control" name="channel-select" [(ngModel)]="chosenTranslator">
                                 <option *ngFor="let translator of this.translators"
-                                        [hidden]="translator.name ==='Manual'" value="{{translator.name}}"
+                                        value="{{translator.name}}"
                                 >{{translator.name}}</option>
                             </select>
                         </div>
@@ -67,12 +67,11 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
     translators: Array<ITranslators> = [];
 
     ngOnInit() {
-        listTranslators(this.translators);
+        listTranslators(this.translators, false);
     }
 
     dialogName: string = "AddAPIKey";
 
-    // Email is the only channel for now
     chosenTranslator: string = "";
     apiKey?: string;
 
@@ -86,7 +85,7 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
         super();
     }
 
-    // Send a new contact information for a user to server.
+    // Send a new API key for a user to server.
     async addNewAPIKey() {
         this.saving = true;
         // Call the server.
