@@ -232,7 +232,9 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
                     [disabled]="!this.events.some(this.isTempEvent)">Save changes
             </button>
         </div>
-
+        <div>
+            <button class="timButton" id="icsBtn" (click)="exportICS()">Vie kalenterin tiedot</button>
+        </div>
         <ng-template #modalContent let-close="close">
             <div class="modal-header">
                 <h5 class="modal-title">Event action occurred</h5>
@@ -260,6 +262,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
                 </button>
             </div>
         </ng-template>
+
     `,
     encapsulation: ViewEncapsulation.None,
     styleUrls: ["calendar.component.scss"],
@@ -490,7 +493,7 @@ export class CalendarComponent
     private async loadEvents() {
         const result = await toPromise(
             this.http.get<CalendarEvent<{tmpEvent: boolean}>[]>(
-                "/calendar/events"
+                "/calendar/events?file_type=json"
             )
         );
         if (result.ok) {
@@ -537,6 +540,22 @@ export class CalendarComponent
             } else {
                 console.error(result.result.error.error);
             }
+        }
+    }
+
+    async exportICS() {
+        const result = await toPromise(
+            this.http.get("/calendar/events?file_type=ics", {
+                responseType: "text",
+            })
+        );
+        if (result.ok) {
+            this.refresh();
+            console.log(result.result);
+            console.log("Tiedot viety");
+        } else {
+            // TODO: Handle error responses properly
+            console.error(result.result.error.error);
         }
     }
 
