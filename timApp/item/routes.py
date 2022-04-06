@@ -119,6 +119,7 @@ from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
+from timApp.velp.velpgroups import set_default_velp_group_selected_and_visible
 from tim_common.html_sanitize import sanitize_html
 
 DEFAULT_RELEVANCE = 10
@@ -809,6 +810,7 @@ def render_doc_view(
             if not check_review_grouping(doc_info):
                 try:
                     generate_review_groups(doc_info, post_process_result.plugins)
+                    set_default_velp_group_selected_and_visible(doc_info)
                 except PeerReviewException as e:
                     flash(str(e))
             reviews = get_reviews_for_user(doc_info, current_user)
