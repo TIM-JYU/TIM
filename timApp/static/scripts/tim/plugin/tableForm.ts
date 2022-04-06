@@ -885,7 +885,7 @@ export class TableFormComponent
                     $localize`Username`,
                     $localize`E-mail`,
                     $localize`Added`,
-                    $localize`Removed`,
+                    $localize`:@@userGroupRemoved:Removed`,
                 ];
             }
             this.data.headersStyle = {
