@@ -1361,7 +1361,6 @@ export class Tools extends ToolsBase {
         });
         return seen.size;
     }
-
     getReviews(task: string): object[] {
         const velps = this.testvelps
             .filter(
