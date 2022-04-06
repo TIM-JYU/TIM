@@ -54,7 +54,7 @@ class Event(db.Model):
     )
 
 
-class EnrollmentType(db.Model):
+class Enrollmenttype(db.Model):
     __tablename__ = "enrollmenttype"
     enroll_type_id = db.Column(db.Integer, primary_key=True)
     enroll_type = db.Column(db.Text, nullable=False)
