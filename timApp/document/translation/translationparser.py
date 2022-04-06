@@ -371,7 +371,7 @@ def rawinline_collect(content: dict) -> list[TranslateApproval]:
     :param content: RawInline from Inline
     :return: List containing the parsed collection of rawinline content
     """
-    # TODO Handle html cases (format_ = html), html styles are <u></u> and <s></s> tags (<u>text</u>).
+    # HTML currently as "else" path (<u></u> and <s></s>)
     format_ = content[0]
     if format_ == "tex":
         return tex_collect(content[1])
