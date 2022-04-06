@@ -237,6 +237,56 @@ x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\text{ ratkaistaan x}\\
             ],
         )
 
+    def test_tim_plugin(self):
+        md = r"""``` {plugin="csPlugin" #btn-tex2 .miniSnippets}
+header: Harjoittele matemaattisen vastauksen kirjoittamista.
+stem: |!!
+md:
+Kirjoita teksti:
+
+>Toisen asteen ratkaisukaava on:
+
+$$
+x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$
+
+>josta on huomattava että useimmilla $a$, $b$ ja $c$ arvoilla voi tulla kaksi
+eri ratkaisua.  Vain jos diskriminantti $D = \sqrt{b^2 - 4ac}$ on nolla, on ratkaisuja yksi kappale.
+!!
+%%matikka%%
+```"""
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [
+                    # NOTE At the moment, the attributes are discarded
+                    NoTranslate(
+                        r"""```
+header:"""
+                    ),
+                    Translate(" Harjoittele matemaattisen vastauksen kirjoittamista."),
+                    NoTranslate(
+                        r"""
+stem: |!!
+md:
+Kirjoita teksti:
+
+>Toisen asteen ratkaisukaava on:
+
+$$
+x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$
+
+>josta on huomattava että useimmilla $a$, $b$ ja $c$ arvoilla voi tulla kaksi
+eri ratkaisua.  Vain jos diskriminantti $D = \sqrt{b^2 - 4ac}$ on nolla, on ratkaisuja yksi kappale.
+!!
+%%matikka%%
+```"""
+                    ),
+                ]
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

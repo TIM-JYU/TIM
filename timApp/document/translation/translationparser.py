@@ -243,6 +243,7 @@ def attr_collect(content: dict) -> list[TranslateApproval]:
     """
     :param content: Pandoc-ASTs JSON form of Attr (attributes)
     """
+    # FIXME(?) WARNING It is crucial, that the attributes do not include the TIM-identifier eg. id="SAs3EK96oQtL" from {plugin="csPlugin" id="SAs3EK96oQtL"}, because Pandoc has earlier deleted extra identifiers contained in attributes like #btn-tex2 and id="SAs3EK96oQtL" with {plugin="csPlugin" #btn-tex2 id="SAs3EK96oQtL"}
     arr: list[TranslateApproval] = list()
     # https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Attr
     identifier = content[0]
@@ -257,7 +258,8 @@ def attr_collect(content: dict) -> list[TranslateApproval]:
     if identifier:
         arr.append(NoTranslate(f"#{identifier} "))
     arr += [NoTranslate(f".{x} ") for x in classes]
-    arr += [NoTranslate(f"{k}={v} ") for k, v in kv_pairs]
+    # NOTE Is seems to be convention with TIM to surround the value with double quotes
+    arr += [NoTranslate(f'{k}="{v}" ') for k, v in kv_pairs]
     # Remove extra space from last element
     arr[-1].text = arr[-1].text.strip()
     arr.append(NoTranslate("}"))
@@ -451,6 +453,8 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
 def notranslate_all(type_: str, content: dict) -> list[TranslateApproval]:
     """
     Mark the whole element as non-translatable.
+
+    TODO NOTE This function does not seem to produce markdown consistent with TIM's practices, and using this should eventually be replaced with the specific *_collect -functions!
     :param type_: Pandoc AST-type of the content
     :param content: Pandoc AST-content of the type
     :return: List of single NoTranslate -element containing Markdown representation of content
@@ -470,8 +474,79 @@ def notranslate_all(type_: str, content: dict) -> list[TranslateApproval]:
     return [NoTranslate(md)]
 
 
+# TODO make attrs into a class
+def collect_tim_plugin(attrs: dict, content: str) -> list[TranslateApproval]:
+    """
+    Special case to collect translatable and non-translatable parts of a TIM-plugin based on its (YAML) contents
+    :param attrs: Pandoc-AST defined Attr -attributes of the plugin-block for example plugin="csPlugin"
+    :param content: The raw markdown content of the plugin-defined paragraph.
+    :return: List of the translatable and non-translatable parts
+    """
+    keys = [
+        "stem",
+        "buttonText",
+        "button",
+        "text",
+        "reason",
+        "placeholder",
+        "header",
+        "headerText",
+        "questionText",
+        "questionTitle",
+        # Starts a list of translatable texts
+        # "rows", # TODO Handle separately?
+        "button",
+        "inputstem",
+        "inputplaceholder",
+        "argsstem",
+        "argsplaceholder",
+        "showCodeOn",
+        "showCodeOff",
+        "footer",
+        # "id", # TODO Allowing translation unsure
+        "hidetext",
+        "videoname",
+        "correctText",
+        "wrongText",
+    ]
+
+    arr: list[TranslateApproval] = list()
+    for line in content.splitlines():
+        for key in map(lambda x: f"{x}:", keys):
+            if line.lstrip().startswith(key):
+                nt, text = line.split(key)
+                arr.append(NoTranslate(nt))
+                if not text.lstrip().startswith("|"):
+                    arr.append(NoTranslate(key))
+                    arr.append(Translate(text))
+                else:
+                    # TODO handle multiline strings
+                    arr.append(NoTranslate(line))
+                break
+        # No keys were matched if the inner for-loop does not terminate early -> the line does not contain a known key for translatable text
+        else:
+            arr.append(NoTranslate(line))
+        arr.append(NoTranslate("\n"))
+    return arr
+
+
 def codeblock_collect(content: dict) -> list[TranslateApproval]:
-    # TODO plugins can be identified by Attr's 3rd index; key-value -pair for example plugin="csplugin"
+    # NOTE Attr identifier is set to the last occurrence and rest are discarded in Pandoc-parsing eg. from #foo id=bar id=baz only baz is saved and foo and bar are lost! To fix this in regard to TIM's block ids, the id needs to be saved and injected into md after parsing with Pandoc NOTE that such an approach requires that the critical information is saved BEFORE giving the md to Pandoc
+    # TODO Different plugins can be identified by Attr's 3rd index; key-value -pair for example plugin="csplugin", but this information might be unnecessary
+    attr = content[0]
+    attr_kv_pairs = dict(attr[2])
+    if "plugin" in attr_kv_pairs:
+        # NOTE Here, the attributes of codeblock are DISCARDED (as mentioned in comment above) and will not be included in the result when markdown is reconstructed ie. caller should save needed attributes
+        arr: list[TranslateApproval] = list()
+        arr.append(NoTranslate("```"))
+        arr.append(NoTranslate("\n"))
+
+        # TODO Maybe parse the YAML to be translated based on keys for more exact translations?
+        arr += collect_tim_plugin(attr, content[1])
+
+        arr.append(NoTranslate("```"))
+        return arr
+
     # TODO Handle "fenced code block" (https://www.markdownguide.org/extended-syntax/#syntax-highlighting). Maybe if there is just 1 class (for example "cs" in "```cs\nvar x;\n```") then do NOT put it inside braces (like "{.cs}")
     return notranslate_all("CodeBlock", content)  # TODO
 
