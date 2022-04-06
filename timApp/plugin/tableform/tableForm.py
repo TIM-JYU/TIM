@@ -4,7 +4,7 @@ TIM example plugin: a tableFormndrome checker.
 import datetime
 import json
 from dataclasses import dataclass, asdict, field
-from typing import Union, Optional, Any, TypedDict, Sequence
+from typing import Any, TypedDict, Sequence
 
 from flask import render_template_string, Response
 from marshmallow.utils import missing
@@ -30,7 +30,7 @@ from timApp.plugin.taskid import TaskId
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.sisu import get_potential_groups
 from timApp.tim_app import csrf
-from timApp.user.user import User, get_membership_end
+from timApp.user.user import User, get_membership_end, get_membership_added
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import (
     RouteException,
@@ -103,6 +103,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     cbColumn: bool | Missing | None = missing
     dataCollection: str | Missing | None = missing
     emails: bool | Missing = missing
+    addedDates: bool | Missing = missing
     emailUsersButtonText: str | Missing | None = missing
     filterRow: bool | Missing | None = missing
     fixedColor: str | Missing | None = missing
@@ -222,7 +223,8 @@ def get_sisugroups(user: User, sisu_id: str | None) -> "TableFormObj":
             "Kurssisivu": "Kurssisivu",
         },
         styles={g.external_id.external_id: {} for g in gs},
-        membershipmap={},
+        membership_add={},
+        membership_end={},
     )
 
 
@@ -344,6 +346,7 @@ maxRows: 40em     # max height for the table before scrollbar
 realnames: true   # Show full name in 2nd column, true or false
 usernames: false  # Show user name column
 emails: false     # Show email column
+addedDates: false # Show the date the user was added
 #buttonText: Tallenna    # Name your save button here
 cbColumn: true    # show checkboxes
 nrColumn: true    # show numbers
@@ -680,7 +683,8 @@ class TableFormUserInfo(TypedDict):
 class TableFormObj(TypedDict):
     rows: dict[str, UserFields]
     users: dict[str, TableFormUserInfo]
-    membershipmap: dict[str, datetime.datetime | None]
+    membership_add: dict[str, datetime.datetime | None]
+    membership_end: dict[str, datetime.datetime | None]
     fields: list[str]
     aliases: dict[str, str]
     styles: dict[str, dict[str, str | None]]
@@ -713,7 +717,8 @@ def tableform_get_fields(
     users: dict[str, TableFormUserInfo] = {}
     styles = {}
     group_ids = {g.id for g in groups} if groups else None
-    membershipmap = {}
+    membership_add_map = {}
+    membership_end_map = {}
     for f in fielddata:
         u: User = f["user"]
         username = u.name
@@ -735,11 +740,18 @@ def tableform_get_fields(
                 membership_end = membership_end.astimezone(fin_timezone).strftime(
                     "%Y-%m-%d %H:%M"
                 )
-            membershipmap[username] = membership_end
+            membership_end_map[username] = membership_end
+        membership_added = get_membership_added(u, group_ids)
+        if membership_added:
+            membership_added = membership_added.astimezone(fin_timezone).strftime(
+                "%Y-%m-%d %H:%M"
+            )
+        membership_add_map[username] = membership_added
     r = TableFormObj(
         rows=rows,
         users=users,
-        membershipmap=membershipmap,
+        membership_add=membership_add_map,
+        membership_end=membership_end_map,
         fields=field_names,
         aliases=aliases,
         styles=styles,
