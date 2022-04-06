@@ -204,7 +204,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
         <div>
             <button class="timButton" id="saveBtn" (click)="saveChanges()" [disabled]="this.events.length <= lastEvent">Save changes</button>
         </div>
-        <app-timeview-selectors (accuracy)="setAccuracy($event)" (morning)="setMorning($event)" (evening)="setEvening($event)"></app-timeview-selectors>
+        <tim-time-view-selector (accuracy)="setAccuracy($event)" (morning)="setMorning($event)" (evening)="setEvening($event)"></tim-time-view-selector>
     `,
     encapsulation: ViewEncapsulation.None,
     styleUrls: ["calendar.component.scss"],
