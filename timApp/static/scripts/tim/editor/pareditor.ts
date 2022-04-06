@@ -2457,7 +2457,7 @@ ${backTicks}
             this.storage.noteAccess.set(acc);
         }
         const tags = this.getExtraData().tags;
-        const tagKeys = ["markread", "marktranslated", "markchecked"] as const;
+        const tagKeys = ["markread", "marktranslated"] as const;
         for (const key of tagKeys) {
             const v = tags[key];
             if (v != null) {

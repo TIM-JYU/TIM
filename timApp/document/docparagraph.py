@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from timApp.document.document import Document
     from timApp.document.docinfo import DocInfo
 
-SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "rc", "settings"}
+SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "mt", "settings"}
 
 # TODO: a bit short name for global variable
 se = SandboxedEnvironment(autoescape=True)
@@ -153,18 +153,28 @@ class DocParagraph:
         return self.attrs.get("nocache", False)
 
     def create_reference(
-        self, doc, r: str | None = None, add_rd: bool = True
+        self,
+        doc,
+        translator: str | None = None,
+        r: str | None = None,
+        add_rd: bool = True,
     ) -> DocParagraph:
         """Creates a reference paragraph to this paragraph.
 
         :param doc: The Document object in which the reference paragraph will reside.
         :param r: The kind of the reference.
         :param add_rd: If True, sets the rd attribute for the reference paragraph.
+        :param translator: The translator set to mt on machine translation.
         :return: The created DocParagraph.
 
         """
         return create_reference(
-            doc, doc_id=self.get_doc_id(), par_id=self.get_id(), r=r, add_rd=add_rd
+            doc,
+            doc_id=self.get_doc_id(),
+            par_id=self.get_id(),
+            r=r,
+            add_rd=add_rd,
+            translator=translator,
         )
 
     @staticmethod
@@ -1186,7 +1196,7 @@ class DocParagraph:
             and reached_par.get_hash() != last_ref.get_attr("rt")
         )
 
-    def is_translation_checked(self):
+    def is_translation_unchecked(self):
         if not self.ref_chain:
             return False
         last_ref = self.ref_chain.prev_deref
@@ -1194,7 +1204,7 @@ class DocParagraph:
         return (
             last_ref.is_translation()
             and not reached_par.is_setting()
-            and reached_par.get_hash() != last_ref.get_attr("rc")
+            and last_ref.get_attr("mt") is not None
         )
 
 
@@ -1212,6 +1222,7 @@ def create_reference(
     doc: DocumentType,
     doc_id: int,
     par_id: str,
+    translator: str | None = None,
     r: str | None = None,
     add_rd: bool = True,
 ) -> DocParagraph:
@@ -1222,6 +1233,7 @@ def create_reference(
     :param doc: The Document object in which the reference paragraph will reside.
     :param r: The kind of the reference.
     :param add_rd: If True, sets the rd attribute for the reference paragraph.
+    :param translator: The translator set to mt on machine translation.
     :return: The created DocParagraph.
 
     """
@@ -1231,6 +1243,7 @@ def create_reference(
     par.set_attr("rd", str(doc_id) if add_rd else None)
     par.set_attr("rp", par_id)
     par.set_attr("ra", None)
+    par.set_attr("mt", translator)
 
     par._cache_props()
     return par

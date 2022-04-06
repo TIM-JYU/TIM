@@ -450,7 +450,7 @@ def pluginify(
             if p.is_translation_out_of_date():
                 p.add_class("troutofdate")
             else:
-                if p.is_translation_checked():
+                if p.is_translation_unchecked():
                     p.add_class("checktr")
     if sanitize:
         for par in pars:

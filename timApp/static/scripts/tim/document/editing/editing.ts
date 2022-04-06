@@ -221,13 +221,7 @@ export class EditingHandler {
             tagKeys.push("marktranslated");
             tagsDescs.push({
                 name: "marktranslated",
-                desc: "Mark as translated",
-            });
-
-            tagKeys.push("markchecked");
-            tagsDescs.push({
-                name: "markchecked",
-                desc: "Mark translation as checked",
+                desc: "Mark as translated/checked",
             });
         }
         for (const k of tagKeys) {

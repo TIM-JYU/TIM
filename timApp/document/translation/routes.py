@@ -63,7 +63,14 @@ def create_translation_route(tr_doc_id, language):
     tr = Translation(doc_id=cite_doc.doc_id, src_docid=src_doc.doc_id, lang_id=language)
     tr.title = title
 
-    add_reference_pars(cite_doc, src_doc, "tr")
+    translator = req_data.get("autotranslate", None)
+
+    add_reference_pars(
+        cite_doc,
+        src_doc,
+        "tr",
+        translator=translator if translator != "Manual" else None,
+    )
 
     # Select the specified translator
     translator_func = None
