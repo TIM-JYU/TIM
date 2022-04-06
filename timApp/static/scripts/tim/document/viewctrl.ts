@@ -1639,21 +1639,32 @@ export class ViewCtrl implements IController {
         }
     }
 
+    // TODO: Timezones may cause some problems with this solution
     peerReviewInProcess(): boolean {
         if (this.docSettings.peer_review) {
             const currentTime = new Date();
+            const currentTimeFixed = new Date(
+                currentTime.getTime() - currentTime.getTimezoneOffset() * 60000
+            ).toISOString();
+
             if (
                 !this.docSettings.peer_review_start ||
                 !this.docSettings.peer_review_stop
             ) {
                 return false;
             }
-            if (
-                this.docSettings.peer_review_start <= currentTime &&
-                currentTime < this.docSettings.peer_review_stop
-            ) {
+
+            const startTime = new Date(
+                this.docSettings.peer_review_start
+            ).toISOString();
+            const endTime = new Date(
+                this.docSettings.peer_review_stop
+            ).toISOString();
+
+            if (startTime <= currentTimeFixed && currentTimeFixed < endTime) {
                 return true;
             }
+
             return false;
         }
         return false;
