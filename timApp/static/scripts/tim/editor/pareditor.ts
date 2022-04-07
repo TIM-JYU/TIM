@@ -1541,7 +1541,9 @@ ${backTicks}
                     $compile(e)(this.scope);
                 });
         }
-        this.compileOriginalPreview();
+        if (this.trdiff != undefined) {
+            this.compileOriginalPreview();
+        }
         this.getEditorContainer().resize();
         this.scope.$applyAsync();
     }
