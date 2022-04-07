@@ -33,6 +33,7 @@ viewmode_routes = {
     ViewRoute.Slide,
     ViewRoute.Velp,
     ViewRoute.View,
+    ViewRoute.Review,
 }
 
 DEFAULT_VIEWMODE_TEMPLATE = "view_html"

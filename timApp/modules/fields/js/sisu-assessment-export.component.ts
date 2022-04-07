@@ -224,8 +224,8 @@ class AssessmentTableModel implements DataModelProvider {
         }
     }
 
-    getColumnWidth(columnIndex: number): number | undefined {
-        return undefined;
+    getColumnWidth(columnIndex: number): [number, boolean] {
+        return [0, true];
     }
 
     getDimension(): {rows: number; columns: number} {

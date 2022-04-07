@@ -1,7 +1,7 @@
 from argparse import ArgumentTypeError
 from copy import copy
 from dataclasses import dataclass
-from typing import Generator, Optional, Union
+from typing import Generator
 
 import attr
 from yaml import YAMLError
@@ -113,7 +113,7 @@ def perform_replace(
     d: DocInfo,
     args: ReplaceArguments,
 ) -> Generator[ReplacementResult | AttrModification, None, None]:
-    """Performs a search-and-replace operation for the specified document, yielding ReplacementResults.
+    """Performs a search-and-replace operation for the specified document, yielding list of :class:`ReplacementResult` or :class:`AttrModification`.
 
     :param args: The replacement arguments. If args.dryrun is True, no actual replacement will occur.
     :param d: The document to process.

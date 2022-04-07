@@ -6,7 +6,7 @@ import json
 import time
 from dataclasses import dataclass
 from random import Random
-from typing import Optional, Union, Callable, TypeVar, Tuple
+from typing import Union, Callable, TypeVar
 
 MAX_RND_LIST_LEN = 100
 
@@ -36,6 +36,7 @@ def sep_n_and_jso(jso: str) -> tuple[int, str]:
     For example:
         "3*7" -> 3, [[7]]
         "3"   -> -1, [[3]]
+
     :param jso: string to check
     :return: repeat factor and json-str that stands for a list
     """
@@ -59,6 +60,7 @@ def sep_n_and_jso(jso: str) -> tuple[int, str]:
 def get_sample_list(myrandom: Random, jso: str) -> list[int]:
     """
     Returns a list of unique ints from the given interval.
+
     :param myrandom: random number generator
     :param jso: string to find the values
     :return: list of unique ints
@@ -116,6 +118,7 @@ def get_sample_list(myrandom: Random, jso: str) -> list[int]:
 def get_int_list(myrandom: Random, jso: str) -> list[int]:
     """
     Returns list of random ints from given interval.
+
     :param myrandom: random number generator
     :param jso: string to find the values
     :return: list of random ints ints
@@ -140,6 +143,7 @@ def get_int_list(myrandom: Random, jso: str) -> list[int]:
 def get_uniform_list(myrandom: Random, jso: str) -> list[float]:
     """
     Returns list of uniformely distributed random floats from given interval.
+
     :param myrandom: random number generator
     :param jso: string to find the values
     :return: list of random ints ints
@@ -205,6 +209,7 @@ def get_rnds(
 ) -> tuple[list[float] | list[int] | None, SeedType | None, State | None]:
     """
     Returns list of random numbers based on attribute name (def: rnd) and rnd_seed.
+
     :param attrs: dict of attributes
     :param name: name in attribute dict to use as instructions for the random numbers
     :param rnd_seed: random number initializion seed, if seed is None, use time
@@ -262,6 +267,7 @@ def get_rands_as_dict(
 ) -> tuple[dict | None, SeedType | None, State | None]:
     """
     Returns a dict of random numbers variables (each is a list of random numbers).
+
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
                   is assumed
     :param rnd_seed: seed to initialize the generator
@@ -288,6 +294,7 @@ def get_rands_as_str(
 ) -> tuple[str, SeedType | None, State | None]:
     """
     Returns a Jinja2 str of random numbers variables (each is a list of random numbers).
+
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
                   is assumed
     :param rnd_seed: seed to initialize the generator
@@ -310,6 +317,7 @@ def get_rands_as_str(
 def myhash(s: str) -> int:
     """
     Simple hash function to give always same hash for same input.
+
     :param s: string to hash
     :return: simple hash
     """

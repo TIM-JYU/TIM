@@ -87,11 +87,11 @@ const NumericfieldAll = t.intersection([
     template: `
 <div class="numericfieldNoSaveDiv inline-form">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <h4 *ngIf="header" [innerHtml]="header"></h4>
-    <p class="stem" *ngIf="stem" [innerHtml]="stem"></p>
+    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
+    <p class="stem" *ngIf="stem" [innerHtml]="stem | purify"></p>
     <div class="form-inline">
      <label><span>
-      <span [innerHtml]="inputstem"></span>
+      <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
       <span *ngIf="!isPlainText()" [class.noarrows]="!arrows">
         <input type="number"
                [style.width.em]="cols"
@@ -103,6 +103,7 @@ const NumericfieldAll = t.intersection([
                (ngModelChange)="updateInput()"
                [readonly]="readonly"
                [tooltip]="errormessage"
+               [disabled]="attrsall['preview']"
                placeholder="{{inputplaceholder}}"
                [ngClass]="{warnFrame: (isUnSaved() && !redAlert), alertFrame: redAlert}"
                [ngStyle]="styles">
@@ -112,13 +113,13 @@ const NumericfieldAll = t.intersection([
     </div>
     <button class="timButton"
             *ngIf="!isPlainText() && buttonText()"
-            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly"
+            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
             (click)="saveText()">
         {{buttonText()}}
     </button>
     <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event);">{{undoButton}}</a>
     <p class="savedtext" *ngIf="!hideSavedText && buttonText()">Saved!</p>
-    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
 </div> `,
     styleUrls: ["./numericfield-plugin.component.scss"],
 })
@@ -260,10 +261,18 @@ export class NumericfieldPluginComponent
                 }
             });
         }
-        this.vctrl.addTimComponent(this, this.markup.tag);
+        if (!this.attrsall.preview) {
+            this.vctrl.addTimComponent(this, this.markup.tag);
+        }
         this.initialValue = this.numericvalue;
         if (this.attrsall.state?.styles && !this.markup.ignorestyles) {
             this.applyStyling(this.attrsall.state.styles);
+        }
+    }
+
+    ngOnDestroy() {
+        if (!this.attrsall.preview) {
+            this.vctrl.removeTimComponent(this, this.markup.tag);
         }
     }
 

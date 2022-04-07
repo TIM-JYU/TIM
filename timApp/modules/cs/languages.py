@@ -797,7 +797,7 @@ class CSComtest(
         cmdline = (
             f"java -jar /cs_data/java/cs/ComTest.jar nunit {self.sourcefilename} && "
             f"{self.compiler} -nologo -out:{self.testdll} -target:library {CSComtest.get_build_refs()} "
-            f"{Jypeli.get_build_refs()} {self.sourcefilename} {testcs} /cs/dotnet/shims/TIMconsole.cs"
+            f"{Jypeli.get_build_refs()} {self.get_sourcefiles()} {testcs} /cs/dotnet/shims/TIMconsole.cs"
         )
         return cmdline
 
@@ -1632,6 +1632,7 @@ def html_change(s, old, jso, item_id, repfmt, default, valdef=None, delta=0):
     tekstillä kun se muokataan repfmt formaatilla.  Mikäli avainta
     ei löydy (edes - alkuisena), käytetään korvauksena default-jonoa.
     Jos default == None ei tehdä mitään
+
     :param s: jono josta korvataan
     :param old: teksti jota etsitään
     :param jso: dict josta etsitään avainta (kokeillaan myös - alkuun)

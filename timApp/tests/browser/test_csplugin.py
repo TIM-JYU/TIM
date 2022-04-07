@@ -1,10 +1,10 @@
 import re
-
 from time import sleep
 
 from selenium.webdriver.common.by import By
 
 from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
+from timApp.tests.db.timdbtest import running_in_gitlab
 
 
 class CsPluginTest(BrowserTest):
@@ -275,17 +275,19 @@ postprogram: |!!
 
         # Let's refresh, should be 4/3 and Uusi button visible and new task
         self.goto_document(d)
+        self.wait_until_present(".csEditArea")
         input = self.find_element(".csEditArea")
         input.click()
+        self.wait_until_present_and_vis(".answer-index-count")
         # self.assertEqual("Uusi", button_new.text) # how to test that there is no new button
         self.assertEqual("Laske: 10 + -3", self.find_element(".stem").text)
         self.assertEqual("4/3", self.find_element(".answer-index-count").text)
 
+
+class StackRandomTest(BrowserTest):
     def test_csplugin_answernr_stack1(self):
-
-        if self:  # This is slow! comment this if stack answernr test is needed
-            return  # Also this is a bit unstable with those sleeps, so not good for CI
-
+        if running_in_gitlab():
+            self.skipTest("Not running in GitLab")
         self.login_browser_quick_test1()
         self.login_test1()
         # Do not change id below because the sequence of question will be with that id:
@@ -342,8 +344,7 @@ response_trees:
 stackversion: 0
 ...    
 !!
-```
-"""
+```"""
         )
 
         def removeTex(s):
@@ -374,6 +375,7 @@ stackversion: 0
 
         # Pick document
         self.goto_document(d)
+        self.wait_until_present(".stackOutput")
         self.assertEqual("4553:15+2", stem_text())
 
         # answer to first (new) question

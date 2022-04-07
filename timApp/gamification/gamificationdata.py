@@ -27,6 +27,7 @@ def gamify(initial_data: YamlBlock):
 def get_doc_data(gamify_data: YamlBlock):
     """
     Parses json to find and link appropriate data into lecture and demo documents.
+
     :param gamify_data = Checked documents in JSON
     :returns: Arrays of lecture and demo documents
 
@@ -45,6 +46,7 @@ def get_doc_data(gamify_data: YamlBlock):
 def get_lecture_data(lecture_paths):
     """
     Configure data of all lecture documents.
+
     :param lecture_paths: Lecture path dicts.
     :return: List of lecture data dicts.
     """
@@ -65,6 +67,7 @@ def get_sorted_lists(items, item_name: str):
     """
     Fetches document list from a dictionary list and sorts it and the dictionary list.
     Checks also whether every path was founf from database and raises error accordingly.
+
     :param items: Dictionary list with 'path' keys.
     :param item_name: Name of the item type (demo, lecture, etc.).
     :return: Documents and original items as lists sorted by paths.
@@ -98,6 +101,7 @@ def get_sorted_lists(items, item_name: str):
 def get_demo_data(demo_paths, default_max):
     """
     Configure data of all demos.
+
     :param demo_paths: Demo path dicts.
     :param default_max: default maximum points.
     :return: List of demo data dicts.

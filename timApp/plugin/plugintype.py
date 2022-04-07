@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Any
 
+import filelock
+
 import timApp
 from timApp.timdb.sqa import db
 
@@ -36,9 +38,21 @@ class PluginType(db.Model, PluginTypeBase):
 
     @staticmethod
     def resolve(p_type: str) -> "PluginType":
-        return PluginType.query.filter_by(type=p_type).first() or PluginType(
-            type=p_type
-        )
+        pt = PluginType.query.filter_by(type=p_type).first()
+        if pt:
+            return pt
+
+        # Add plugin type to database via separate session to preserve the original one created by Flask-SQLAlchemy
+        # Use a lock to prevent concurrent access
+        with filelock.FileLock("/tmp/plugin_type_create.lock"):
+            tmp_session = db.create_session({})
+            session = tmp_session()
+            session.add(PluginType(type=p_type))
+            session.commit()
+            session.close()
+
+        # We have to re-query the database since the other session was closed
+        return PluginType.query.filter_by(type=p_type).first()
 
     def get_type(self) -> str:
         return self.type
