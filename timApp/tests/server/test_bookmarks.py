@@ -266,6 +266,8 @@ class BookmarkTest2(BookmarkTestBase):
         ug = UserGroup(name="ohj1opiskelijat", display_name="asd asd")
         tu1 = self.test_user_1
         tu1.groups.append(ug)
+        # Flush here to simulate separate group add events
+        db.session.flush()
         ug.external_id = ScimUserGroup(external_id="jy-CUR-4668-students")
         ug = UserGroup(name="ohj2opiskelijat", display_name="asd asd")
         tu1.groups.append(ug)
