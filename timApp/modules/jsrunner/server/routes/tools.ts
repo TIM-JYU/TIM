@@ -1393,4 +1393,25 @@ export class Tools extends ToolsBase {
         });
         return result;
     }
+    getPoints(task: string) {
+        const velps = this.testvelps
+            .filter(
+                (v) =>
+                    v.answer.users[0].id === this.data.user.id &&
+                    v.answer.task_id.substr(
+                        v.answer.task_id.indexOf(".") + 1
+                    ) === task
+            )
+            .map((v) => ({
+                id: v.annotator.id,
+                name: v.annotator.name,
+                points: v.points ? v.points : NaN,
+                task: v.answer.task_id,
+            }));
+
+        const points = velps.map((v) => v.points).filter((n) => !isNaN(n));
+        // this.output += points
+        const sum = points.reduce((a, b) => a + b, 0);
+        return sum;
+    }
 }
