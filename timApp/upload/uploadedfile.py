@@ -59,6 +59,7 @@ class UploadedFile(ItemBase):
     def get_by_url(url: str) -> Optional["UploadedFile"]:
         """
         Get file matching the given URL string.
+
         :param url: File url as a string.
         :return: UploadedFile, StampedPDF, or None, if neither was found.
         """
@@ -75,6 +76,7 @@ class UploadedFile(ItemBase):
     ) -> Union["UploadedFile", "StampedPDF"] | None:
         """
         Get uploaded file or its stamped version in case file name differs (i.e. it has "_stamped" in it).
+
         :param file_id: File id.
         :param filename: File name, which may contain "_stamped".
         :return: UploadedFile, StampedPDF, or None, if neither was found.
@@ -137,11 +139,16 @@ class UploadedFile(ItemBase):
     @classmethod
     def save_new(
         cls,
-        file_data: bytes,
         file_filename: str,
         block_type: BlockType,
+        file_data: bytes = None,
+        original_file: Path = None,
         upload_info: PluginUploadInfo = None,
     ) -> "UploadedFile":
+        if file_data is None and original_file is None:
+            raise TimDbException(
+                "Either file data or original file location must be given"
+            )
         if block_type not in DIR_MAPPING:
             raise TimDbException(f"Invalid block type given: {block_type}")
         secured_name = secure_filename(file_filename)
@@ -169,8 +176,11 @@ class UploadedFile(ItemBase):
         f = CLASS_MAPPING[block_type](file_block)
         p = f.filesystem_path
         p.parent.mkdir(parents=True)
-        with p.open(mode="wb") as fi:
-            fi.write(file_data)
+        if file_data:
+            with p.open(mode="wb") as fi:
+                fi.write(file_data)
+        else:
+            original_file.rename(p)
         return f
 
 

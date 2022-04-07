@@ -1,6 +1,5 @@
 import hashlib
 from datetime import datetime, timedelta
-from typing import Optional, Union
 
 import bcrypt
 
@@ -79,6 +78,7 @@ def grant_access(
     duration_to: datetime | None = None,
     duration: timedelta | None = None,
     require_confirm: bool | None = None,
+    replace_active_duration: bool = True,
 ) -> BlockAccess:
     """Grants access to a group for a block.
 
@@ -91,6 +91,9 @@ def grant_access(
     :param group: The group to which to grant view access.
     :param block: The block for which to grant view access.
     :param access_type: The kind of access. Possible values are listed in accesstype table.
+    :param replace_active_duration: If true, replaces any existing access with the new one.
+            If false and the access being granted is duration, modifies the end time of the permission
+            to account for new duration.
     :return: The BlockAccess object.
 
     """
@@ -104,6 +107,17 @@ def grant_access(
     key = (block.id, access_id)
     b = group.accesses_alt.get(key)
     if b:
+        if (
+            not replace_active_duration
+            and not b.expired
+            and not b.unlockable
+            and b.accessible_from is not None
+            and duration is not None
+        ):
+            b.accessible_to = b.accessible_from + duration
+            if duration_to:
+                b.accessible_to = min(b.accessible_to, duration_to)
+            return b
         b.accessible_from = accessible_from
         b.accessible_to = accessible_to
         b.duration = duration

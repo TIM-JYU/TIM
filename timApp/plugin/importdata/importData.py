@@ -5,7 +5,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, asdict, field
 from enum import Enum
-from typing import Union, DefaultDict, Generator, Any, Optional
+from typing import DefaultDict, Generator, Any
 
 import requests
 from flask import render_template_string
@@ -193,6 +193,7 @@ def conv_data_csv(
     Convert csv format "akankka;1,2,3" to TIM format ["akankka;d1;1", "akankka;d2;2" ...]
     using field names.  If there are too few fields on data, only those
     are used.  If there are more columns in data than fields, omit extra columns.
+
     :param data: data in CSV format to convert
     :param field_names: list of fieldnames to use for columns
     :param separator: separator to use to separate items
@@ -219,6 +220,7 @@ def conv_data_field_names(
     """
     Converts field names on TIM format akankka;demo;2 so that demo is changed if
     found from field_names.
+
     :param data: data to convert
     :param field_names: list of fields and aliases in format "demo=d1"
     :param separator: separator for items
@@ -261,6 +263,7 @@ def convert_data(
     """
     If there is field_names, then convert data either by changing names (field_names has =)
     or csv data
+
     :param data: data to convert
     :param field_names: list of fieldnames or fieldnames and aliases
     :param separator: separator to use between items

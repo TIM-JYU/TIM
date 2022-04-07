@@ -40,11 +40,15 @@ This is a newline!
 This is a new paragraph.
 
 - List item 1
+
 - List item 2
+
 - List item 3
 
 * List item 1
+
 * List item 2
+
 * List item 3
 
 > Foo  
@@ -205,4 +209,42 @@ Some message
             """
 Some message
 """,
+        )
+
+    def test_list_spacing(self):
+        self.assertEqual(
+            message_body_to_md(
+                """
+This is a list
+- Point 1
+- Point 2
+"""
+            ),
+            """
+This is a list
+
+- Point 1
+
+- Point 2""",
+        )
+
+    def test_hash_convert(self):
+        self.assertEqual(
+            message_body_to_md(
+                """
+# This is not a header
+## This isn't one either
+"""
+            ),
+            """
+\\# This is not a header  
+\\#\\# This isn't one either""",
+        )
+
+    def test_link_at_end_of_sentence(self):
+        self.assertEqual(
+            message_body_to_md(
+                """This is a sentence that ends with a link: https://example.com/test."""
+            ),
+            """This is a sentence that ends with a link: <https://example.com/test>.""",
         )

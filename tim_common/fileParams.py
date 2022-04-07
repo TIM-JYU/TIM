@@ -961,9 +961,9 @@ def get_templates(dirname: str) -> object:
     template text - first line
     template explanation - second line
     template content - rest of lines
+
     :param dirname: the directory name where to find template files
     :return: list of template items, one item is file: text: explanation
-
     """
     result = []
     for filename in os.listdir(dirname):

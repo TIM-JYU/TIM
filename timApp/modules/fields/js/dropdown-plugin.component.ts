@@ -78,6 +78,7 @@ const DropdownAll = t.intersection([
                           name="selection"
                           value="{{item}}"
                           [(ngModel)]="selectedWord"
+                          [disabled]="attrsall['preview']"
                           (ngModelChange)="updateSelection()">
                 {{item}}
             </label>        
@@ -85,7 +86,8 @@ const DropdownAll = t.intersection([
         <select *ngIf="!radio"
                 [(ngModel)]="selectedWord"
                 (ngModelChange)="updateSelection()"
-                [ngClass]="{warnFrame: isUnSaved()}">
+                [ngClass]="{warnFrame: isUnSaved()}"
+                [disabled]="attrsall['preview']">
             <option *ngFor="let item of wordList" [value]="item">{{item}}</option>
         </select>
     </div>
@@ -151,6 +153,12 @@ export class DropdownPluginComponent
      */
     addToCtrl() {
         this.vctrl.addTimComponent(this, this.markup.tag);
+    }
+
+    ngOnDestroy() {
+        if (!this.attrsall.preview) {
+            this.vctrl.removeTimComponent(this, this.markup.tag);
+        }
     }
 
     /**

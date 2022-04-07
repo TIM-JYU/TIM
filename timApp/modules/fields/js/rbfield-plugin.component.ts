@@ -9,6 +9,7 @@ import {
     ElementRef,
     NgModule,
     NgZone,
+    OnDestroy,
 } from "@angular/core";
 import {
     ChangeType,
@@ -74,11 +75,11 @@ const RbfieldAll = t.intersection([
     template: `
 <div class="textfieldNoSaveDiv" [ngStyle]="cols">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-    <h4 *ngIf="header" [innerHtml]="header"></h4>
+    <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
     <p class="stem" *ngIf="stem">{{stem}}</p>
      <span style="width: 100%">
-      <span class="inputstem" [innerHtml]="inputstem"></span>
-      <span  *ngIf="!isPlainText()" [ngClass]="{warnFrame: (isUnSaved() )  }">
+      <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
+      <span *ngIf="!isPlainText()" [ngClass]="{warnFrame: (isUnSaved() )  }">
         <input type="radio"
                *ngIf="!isPlainText()"
                name="{{getName()}}"
@@ -88,7 +89,7 @@ const RbfieldAll = t.intersection([
                class="form-control"
                [(ngModel)]="userword"
                (ngModelChange)="autoSave()"
-               [disabled]="readonly"
+               [disabled]="readonly || attrsall['preview']"
                [readonly]="readonly"
                [tooltip]="errormessage"
                [isOpen]="errormessage !== undefined"
@@ -97,7 +98,7 @@ const RbfieldAll = t.intersection([
          </span>
          <span *ngIf="isPlainText()" style="">{{userword}}</span>
       </span>
-    <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+    <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
 </div>
 `,
     styleUrls: ["./rbfield-plugin.component.scss"],
@@ -108,7 +109,7 @@ export class RbfieldPluginComponent
         t.TypeOf<typeof RbfieldAll>,
         typeof RbfieldAll
     >
-    implements ITimComponent
+    implements ITimComponent, OnDestroy
 {
     private result?: string;
     private isRunning = false;
@@ -163,10 +164,12 @@ export class RbfieldPluginComponent
         ).toString();
         this.userword = uw; // this.makeBoolean(uw);
 
-        if (this.markup.tag) {
-            this.vctrl.addTimComponent(this, this.markup.tag);
-        } else {
-            this.vctrl.addTimComponent(this);
+        if (!this.attrsall.preview) {
+            if (this.markup.tag) {
+                this.vctrl.addTimComponent(this, this.markup.tag);
+            } else {
+                this.vctrl.addTimComponent(this);
+            }
         }
         this.initialValue = this.userword;
         if (this.markup.showname) {
@@ -435,6 +438,16 @@ export class RbfieldPluginComponent
             state,
             this.markup.tag ? this.markup.tag : undefined
         );
+    }
+
+    ngOnDestroy(): void {
+        if (!this.attrsall.preview) {
+            if (this.markup.tag) {
+                this.vctrl.removeTimComponent(this, this.markup.tag);
+            } else {
+                this.vctrl.removeTimComponent(this);
+            }
+        }
     }
 }
 

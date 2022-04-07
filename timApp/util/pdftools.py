@@ -252,6 +252,7 @@ class AttachmentStampData:
     ):
         """
         Attachment data, for example: '/files/123/liite-1.pdf', '12.3.2018', 'B', '2'.
+
         :param file_path: Attachment file path.
         :param date: Meeting date.
         :param attachment: Letter to separate attachments in same list.
@@ -325,6 +326,7 @@ def escape_tex(text: str):
     """
     Escapes special characters in a TeX string.
     Idea taken from https://stackoverflow.com/a/25875504.
+
     :param text: A plain text message.
     :return: The message escaped to appear correctly in LaTeX.
     """
@@ -334,6 +336,7 @@ def escape_tex(text: str):
 def test_pdf(pdf_path: Path, timeout_seconds: int = pdfmerge_timeout) -> str:
     """
     Test pdf file suitability for qpdf.
+
     :param pdf_path: Pdf to test.
     :param timeout_seconds: Timeout after which error is raised.
     :return: Return error message (empty string if no error).
@@ -354,6 +357,7 @@ def test_pdf(pdf_path: Path, timeout_seconds: int = pdfmerge_timeout) -> str:
 def parse_error(message: str) -> str:
     """
     Shortens known long PDFtk error messages and logs unexpected ones.
+
     :param message: Error message string from qpdf.
     :return: Pre-written error message.
     """
@@ -380,6 +384,7 @@ def parse_error(message: str) -> str:
 def merge_pdfs(pdf_file_list: list[UploadedFile], output_path: Path):
     """
     Merges a list of PDFs using qpdf.
+
     :param pdf_file_list: List of the uploaded files (as objects) to merge.
     :param output_path: Merged output file path.
     """
@@ -408,6 +413,7 @@ def parse_tim_url(par_file: str) -> Path | None:
     """
     Parses TIM-links to point to the corresponding file on the server.
     Note: Changes in upload folder need to be updated here as well.
+
     :param par_file: Link from the macro.
     :return: TIM upload file path if the link was within TIM, otherwise pass on unchanged.
     """
@@ -427,6 +433,7 @@ def get_attachments_from_pars(paragraphs: list[DocParagraph]) -> list[Attachment
     """
     Goes through paragraphs and gets attachments from showPdf-macros.
     Checks file validity with qpdf.
+
     :param paragraphs: Document paragraphs.
     :return: List of pdf paths and whether the list is complete.
     """
@@ -465,6 +472,7 @@ def get_attachments_from_pars(paragraphs: list[DocParagraph]) -> list[Attachment
 def check_pdf_validity(pdf_path: Path) -> None:
     """
     Raises error if pdf file doesn't exist or isn't really a pdf.
+
     :param pdf_path: Pdf to check.
     :return: None if not interrupted by error.
     """
@@ -478,6 +486,7 @@ def check_pdf_validity(pdf_path: Path) -> None:
 def get_stamp_text(item: AttachmentStampData, text_format: str) -> str:
     """
     Gives formatted stamp text; note: may not work properly with non-ascii.
+
     :param item: AttachmentStampData with 'date','attachment' and 'issue' attributes
            or alternatively just 'text'.
     :param text_format: Formatting for filename, meeting date,
@@ -520,6 +529,7 @@ def create_stamp(
 ) -> Path:
     """
     Creates a stamp pdf file with given text into temp folder.
+
     :param model_path: Model stamp tex file's complete path; contains
            '%TEXT_HERE' to locate the stamp text area.
     :param work_dir: The folder where stamp output and temp files will be.
@@ -572,6 +582,7 @@ def stamp_pdf(
 ) -> Path:
     """
     Creates a new stamped pdf file (with stamp overlay on each page).
+
     :param pdf_path: Path of the pdf to stamp.
     :param stamp_path: Path of the stamp file.
     :param output_path: Path of the new stamped pdf.
@@ -602,6 +613,7 @@ def qpdf_popen(args: list[str], timeout_seconds=default_subprocess_timeout) -> N
     """
     Calls Popen with args list for QPDF, checks QPDF-specific error code and
     raises error if timeouted.
+
     :param args: List of arguments.
     :param timeout_seconds: Timeout after which error is raised.
     :return: None.
@@ -620,6 +632,7 @@ def qpdf_popen(args: list[str], timeout_seconds=default_subprocess_timeout) -> N
 def remove_temp_files(dir_path: Path, temp_file_name: str, ext_list: list[str]) -> None:
     """
     Deletes temp files created for the stamping process.
+
     :param dir_path: Temp-file folder path.
     :param temp_file_name: Common part of the names.
     :param ext_list: List of extensions (after the common part) for files to remove.
@@ -637,6 +650,7 @@ def remove_temp_files(dir_path: Path, temp_file_name: str, ext_list: list[str]) 
 def check_stamp_data_validity(stamp_data_list: list[AttachmentStampData]) -> None:
     """
     Raises a specific error if stamp_data is invalid.
+
     :param stamp_data_list: List of objects containing the stamp data.
     :return: None, but will raise error if something invalid.
     """
@@ -650,6 +664,7 @@ def check_stamp_data_validity(stamp_data_list: list[AttachmentStampData]) -> Non
 def create_tex_file(content: str, folder: Path = temp_folder_path) -> Path:
     """
     Creates tex file with random name and input content.
+
     :param content: LaTeX content in string.format.
     :param folder: Folder where new file will be added.
     :return: Path-object for the new file.
@@ -668,6 +683,7 @@ def stamp_pdfs(
     """
     Creates new stamps and stamps the corresponding pdfs based on
     the data in a list of AttachmentStampData objects.
+
     :param stamp_data: List of objects containing pdf-paths and stamp-attributes.
     :param stamp_model_path: Tex file to be used as model for stamps.
     :param stamp_text_format: Formatting for stamp text, with attributes:

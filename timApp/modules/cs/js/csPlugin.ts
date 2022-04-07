@@ -2200,7 +2200,9 @@ ${fhtml}
         this.initSaved();
         this.isViz = this.type.startsWith("viz");
         this.isVars = this.type.startsWith("vars");
-        this.vctrl.addTimComponent(this);
+        if (!this.attrsall.preview) {
+            this.vctrl.addTimComponent(this);
+        }
         this.height = this.markup.height;
         if (this.markup.width) {
             this.csRunDivStyle = {width: this.markup.width.toString()};
@@ -2216,6 +2218,12 @@ ${fhtml}
         //  It's unclear if getCode should handle this already.
         this.showCodeNow();
         this.updateRunChanged();
+    }
+
+    ngOnDestroy() {
+        if (!this.attrsall.preview) {
+            this.vctrl.removeTimComponent(this);
+        }
     }
 
     async ngAfterViewInit() {
@@ -2261,15 +2269,19 @@ ${fhtml}
         return url.split("/").slice(6).join("/");
     }
 
-    initSaved() {
-        this.savedvals = {
-            files: this.editor?.files.map((f) => f.content) ?? [this.usercode],
-            args: this.userargs,
-            input: this.userinput,
+    initSaved(clear = false) {
+        if (!this.savedvals || (this.savedvals && !clear)) {
+            this.savedvals = {
+                files: this.editor?.files.map((f) => f.content) ?? [
+                    this.usercode,
+                ],
+                args: this.userargs,
+                input: this.userinput,
 
-            // NOTE: "type: text/tiny" needs this because there is no editor in that case.
-            usercode: this.usercode,
-        };
+                // NOTE: "type: text/tiny" needs this because there is no editor in that case.
+                usercode: this.usercode,
+            };
+        }
         this.edited = false;
         this.isSimcirUnsaved = false;
         this.updateListeners(ChangeType.Saved);
@@ -2384,11 +2396,13 @@ ${fhtml}
             return;
         }
 
-        const response = resp as IUploadResponse;
+        const resps = resp as [IUploadResponse];
         if (!this.markup.files) {
             this.uploadedFiles.clear();
         }
-        this.uploadedFiles.push({path: response.file, type: response.type});
+        for (const response of resps) {
+            this.uploadedFiles.push({path: response.file, type: response.type});
+        }
     }
 
     onUploadDone(success: boolean) {
@@ -3033,7 +3047,7 @@ ${fhtml}
         return this.canReset;
     }
 
-    async initCode() {
+    async initCode(clear = false) {
         this.muokattu = false;
         this.imgURL = "";
         this.videoURL = "";
@@ -3053,7 +3067,7 @@ ${fhtml}
             await this.setCircuitData();
             await this.initSimcirCircuitListener();
         }
-        this.initSaved();
+        this.initSaved(clear);
     }
 
     async initSage(firstTime: boolean) {
@@ -3801,7 +3815,7 @@ ${fhtml}
                             class="timButton btn-sm"
                             (click)="fetchExternalFiles()"
                             [innerHTML]="externalFetchText()"></button>
-                    <a href="#" *ngIf="undoButton && isUnSaved()" title="undoTitle"
+                    <a href="#" *ngIf="undoButton && isUnSaved()" [title]="undoTitle"
                        (click)="tryResetChanges(); $event.preventDefault()"> &nbsp;{{undoButton}}</a>
                     &nbsp;&nbsp;
                     <span *ngIf="savedText"
@@ -3828,7 +3842,7 @@ ${fhtml}
                     <a href="#" *ngIf="!nocode && (file || program)"
                        (click)="showCode(); $event.preventDefault()">{{showCodeLink}}</a>&nbsp;&nbsp;
                     <a href="#" *ngIf="canReset"
-                       (click)="initCode(); $event.preventDefault()">{{resetText}} </a>
+                       (click)="initCode(true); $event.preventDefault()">{{resetText}} </a>
                     <a href="#" *ngIf="toggleEditor"
                        (click)="hideShowEditor(); $event.preventDefault()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
                     <a href="#" *ngIf="!noeditor && editor && editor.nextModeText"

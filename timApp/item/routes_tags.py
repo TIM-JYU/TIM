@@ -3,7 +3,6 @@ Routes related to tags.
 """
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
 
 from flask import request, Response
 from sqlalchemy import func
@@ -51,7 +50,8 @@ class TagInfo:
 def add_tag(doc: str, tags: list[TagInfo]) -> Response:
     """
     Adds a tag-document entry into the database.
-    :param doc The target document.
+
+    :param doc: The target document.
     :param tags: Tags to add.
     :returns Tag adding success response.
     """
@@ -84,6 +84,7 @@ def check_tag_access(tag: Tag, check_group: bool = True) -> None:
     """
     Checks whether the user is allowed to make changes to the tag type.
     If not allowed, gives abort response.
+
     :param check_group: Whether to check group tag right. Should be false when deleting a tag.
     :param tag: The tag to check.
     """
@@ -135,7 +136,8 @@ def set_group_tags(
 def edit_tag(doc: str, old_tag: TagInfo, new_tag: TagInfo) -> Response:
     """
     Replaces a tag-document entry in the database with new one.
-    :param doc The target document.
+
+    :param doc: The target document.
     :param old_tag: Tag to remove
     :param new_tag: Tag to replace old tag with
     :returns Edit success response.
@@ -170,7 +172,8 @@ def edit_tag(doc: str, old_tag: TagInfo, new_tag: TagInfo) -> Response:
 def remove_tag(doc: str, tag: TagInfo) -> Response:
     """
     Removes a tag-document entry from the database.
-    :param doc The target document.
+
+    :param doc: The target document.
     :param tag: Tag to remove
     :returns Removal success response.
     """
@@ -196,7 +199,8 @@ def remove_tag(doc: str, tag: TagInfo) -> Response:
 def get_tags(doc: str) -> Response:
     """
     Gets the list of a document's tags.
-    :param doc The target document.
+
+    :param doc: The target document.
     :returns The list of document's Tag-objects converted into JSON.
     """
     d = DocEntry.find_by_path(doc)

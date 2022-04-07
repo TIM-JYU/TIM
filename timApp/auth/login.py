@@ -1,8 +1,8 @@
 """Routes related to email signup and login."""
+import hashlib
 import random
 import re
 import string
-from typing import Optional, Union
 
 from flask import current_app, Response
 from flask import flash
@@ -39,7 +39,7 @@ from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_error, log_warning, log_info
-from timApp.util.utils import is_valid_email
+from timApp.util.utils import is_valid_email, get_current_time
 
 login_page = TypedBlueprint(
     "login_page",
@@ -156,7 +156,15 @@ def set_single_user_to_session(user: User) -> None:
 
     # We also store user name to session because we don't want to have to access the database every request
     # just to get the user name. Otherwise we would have to access the database for logging the request.
+    # TODO: Proper session management
     session["user_name"] = user.name
+    h = hashlib.shake_128()
+    h.update(user.name.encode("utf-8"))
+    h.update(str(user.id).encode("utf-8"))
+    h.update(get_current_time().isoformat().encode("utf-8"))
+    session["session_id"] = h.hexdigest(4)
+
+    # Compute a hash of user_id, user_name and current time as a preliminary session ID
 
     session.pop("other_users", None)
 

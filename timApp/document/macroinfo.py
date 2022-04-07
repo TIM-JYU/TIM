@@ -95,10 +95,12 @@ class MacroInfo:
         macros = deepcopy(self.macro_map)
         macros.update(
             {
+                "userid": f"{self.macro_delimiter}userid{self.macro_delimiter}",
                 "username": f"{self.macro_delimiter}username{self.macro_delimiter}",
                 "realname": f"{self.macro_delimiter}realname{self.macro_delimiter}",
                 "useremail": f"{self.macro_delimiter}useremail{self.macro_delimiter}",
                 "loggedUsername": f"{self.macro_delimiter}loggedUsername{self.macro_delimiter}",
+                "userfolder": f"{self.macro_delimiter}userfolder{self.macro_delimiter}",
             }
         )
         return macros
@@ -114,12 +116,30 @@ class MacroInfo:
 
 
 def get_user_specific_macros(user_ctx: UserContext) -> dict[str, str | None]:
+    """
+    Gets the macros that are specific to the user.
+
+    The user macros are defined as follows:
+         - userid: The user id of the user.
+         - username: The username of the user.
+         - realname: The real name of the user.
+         - useremail: The email address of the user.
+         - loggedUsername: The username of the user that is logged in.
+         - userfolder: The personal folder of the user.
+
+    :param user_ctx: User context to get the macros for.
+    :return: Dictionary of user macros.
+    """
     user = user_ctx.user
     return {
+        "userid": escape(str(user.id)),
         "username": escape(user.name),
         "realname": escape(user.real_name) if user.real_name else None,
         "useremail": escape(user.email) if user.email else None,
         "loggedUsername": escape(user_ctx.logged_user.name),
+        "userfolder": escape(
+            user.get_personal_folder().path
+        ),  # personal folder object is cached and usually reused
     }
 
 
