@@ -132,7 +132,6 @@ const TableFormMarkup = t.intersection([
         usernames: withDefault(t.boolean, true),
         realnames: withDefault(t.boolean, true),
         emails: withDefault(t.boolean, false),
-        addedDates: withDefault(t.boolean, false),
         maxCols: withDefault(t.string, maxContentOrFitContent()),
         openButtonText: withDefault(t.string, "Avaa Taulukko/Raporttinäkymä"),
         open: withDefault(t.boolean, true),
@@ -165,8 +164,7 @@ const TableFormAll = t.intersection([
             t.string,
             t.type({id: t.number, email: t.string, real_name: t.string})
         ),
-        membership_add: t.record(t.string, nullable(t.string)),
-        membership_end: t.record(t.string, nullable(t.string)),
+        membershipmap: t.record(t.string, nullable(t.string)),
         rows: Rows,
         styles: Styles,
     }),
@@ -177,13 +175,11 @@ const TableFormAll = t.intersection([
 const realNameColumn = "A";
 const userNameColumn = "B";
 const emailColumn = "C";
-const membershipAddedColumn = "D";
-const membershipEndColumn = "E";
+const membershipColumn = "D";
 const realNameColIndex = 0;
 const userNameColIndex = 1;
 const emailColIndex = 2;
-const memberShipAddColIndex = 3;
-const memberShipEndColIndex = 4;
+const memberShipColIndex = 3;
 const sortLang = "fi";
 
 @Component({
@@ -322,8 +318,7 @@ export class TableFormComponent
     private fields!: string[];
     private lockedFields!: string[];
     private users!: Record<string, ITableFormUser>;
-    private membershipAdd!: Record<string, string | null>;
-    private membershipEnd!: Record<string, string | null>;
+    private membershipmap!: Record<string, string | null>;
     private aliases!: Record<string, string>;
     private realnames = false;
     private usernames = false;
@@ -575,10 +570,9 @@ export class TableFormComponent
             emailColIndex,
             false
         );
-        this.checkToShow(this.markup.addedDates, memberShipAddColIndex, false);
         this.checkToShow(
             this.markup.includeUsers !== "current",
-            memberShipEndColIndex,
+            memberShipColIndex,
             false
         );
 
@@ -588,8 +582,7 @@ export class TableFormComponent
         this.fields = this.attrsall.fields ?? [];
         this.lockedFields = this.markup.lockedFields ?? [];
         this.users = this.attrsall.users ?? {};
-        this.membershipAdd = this.attrsall.membership_add ?? {};
-        this.membershipEnd = this.attrsall.membership_end ?? {};
+        this.membershipmap = this.attrsall.membershipmap ?? {};
         this.aliases = this.attrsall.aliases ?? {};
 
         this.setDataMatrix();
@@ -692,8 +685,7 @@ export class TableFormComponent
             aliases: Record<string, string>;
             fields: string[];
             users: Record<string, ITableFormUser>;
-            membership_add: Record<string, string | null>;
-            membership_end: Record<string, string | null>;
+            membershipmap: Record<string, string>;
             rows: IRowsType;
             styles: t.TypeOf<typeof Styles>;
         }
@@ -731,8 +723,7 @@ export class TableFormComponent
             const tableResponse = r.result;
             // TODO: Generic reset function
             this.aliases = tableResponse.data.aliases || {};
-            this.membershipAdd = tableResponse.data.membership_add;
-            this.membershipEnd = tableResponse.data.membership_end;
+            this.membershipmap = tableResponse.data.membershipmap;
             this.rows = tableResponse.data.rows || {};
             this.rowKeys = Object.keys(tableResponse.data.rows);
             this.fields = tableResponse.data.fields || [];
@@ -870,24 +861,21 @@ export class TableFormComponent
             }
             this.data.lockedColumns.push(userNameColumn);
             this.data.lockedColumns.push(emailColumn);
-            this.data.lockedColumns.push(membershipAddedColumn);
-            this.data.lockedColumns.push(membershipEndColumn);
             // }
             if (this.attrsall.markup.sisugroups) {
                 // These require unique names, otherwise could just use empty strings in place of "invisibleX".
                 this.data.headers = [
-                    $localize`Description`,
-                    $localize`Sisu name`,
+                    "Kuvaus",
+                    "Sisu-nimi",
                     "invisible1",
                     "invisible2",
                 ];
             } else {
                 this.data.headers = [
-                    $localize`User's name`,
-                    $localize`Username`,
-                    $localize`E-mail`,
-                    $localize`Added`,
-                    $localize`:@@userGroupRemoved:Removed`,
+                    "Henkilön nimi",
+                    "Käyttäjänimi",
+                    "eMail",
+                    "Poistunut?",
                 ];
             }
             this.data.headersStyle = {
@@ -896,37 +884,43 @@ export class TableFormComponent
             };
 
             if (this.fields) {
-                this.data.table.countCol = this.fields.length + 5;
+                this.data.table.countCol = this.fields.length + 3;
             }
             this.data.table.countRow = Object.keys(this.rows).length;
             let y = 1;
             for (const r of this.rowKeys) {
                 this.data.userdata.cells[userNameColumn + y] = {
                     cell: r,
+                    // backgroundColor: this.fixedColor,
                     class: this.fixedColor,
                 };
                 this.userLocations[y] = r;
                 const userInfo = this.users[r];
                 this.data.userdata.cells[realNameColumn + y] = {
                     cell: userInfo.real_name,
+                    // backgroundColor: this.fixedColor,
                     class: this.fixedColor,
                 };
                 this.data.userdata.cells[emailColumn + y] = {
                     cell: userInfo.email,
+                    // backgroundColor: this.fixedColor,
                     class: this.fixedColor,
                 };
-                this.data.userdata.cells[membershipAddedColumn + y] = {
-                    cell: this.membershipAdd[r],
-                    class: this.fixedColor,
-                };
-                this.data.userdata.cells[membershipEndColumn + y] = {
-                    cell: this.membershipEnd[r],
-                    class: this.fixedColor,
-                };
+                for (const [map, col] of [
+                    [this.membershipmap, membershipColumn],
+                ] as const) {
+                    if (map) {
+                        this.data.userdata.cells[col + y] = {
+                            cell: map[r],
+                            // backgroundColor: this.fixedColor,
+                            class: this.fixedColor,
+                        };
+                    }
+                }
                 y++;
             }
             // TODO: Load default cell colors from tableForm's private answer?
-            const xOffset = memberShipEndColIndex + 1;
+            const xOffset = memberShipColIndex + 1;
             if (this.fields) {
                 for (let x = 0; x < this.fields.length; x++) {
                     const colheader = this.fields[x];
@@ -936,6 +930,12 @@ export class TableFormComponent
                         this.data.lockedColumns.push(currentCol);
                     }
                     this.data.headers.push(colheader);
+                    /*
+                    this.data.userdata.cells[colnumToLetters(x + xOffset) + 1] = {
+                        cell: colheader,
+                        backgroundColor: this.fixedColor,
+                    };
+                    */
 
                     let contentalias;
                     if (this.aliases && colheader in this.aliases) {
@@ -945,7 +945,16 @@ export class TableFormComponent
                     }
                     this.taskLocations[colnumToLetters(x + xOffset)] =
                         contentalias;
+                    // this.data.lockedCells.push(colnumToLetters(x + xOffset) + 1);
+                    // y = 0;
+                    // for (const [u, r] of Object.entries(this.rows)) {
+                    //     if (r[this.attrsall.fields[x]]) {
+                    //         this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 2)] = r[this.attrsall.fields[x]];
+                    //     }
+                    //     y++;
+                    // }
                     for (y = 0; y < this.rowKeys.length; y++) {
+                        // this.data.userdata.cells[colnumToLetters(x + xOffset) + (y + 1)] = this.rows[this.rowKeys[y]][this.attrsall.fields[x]];
                         if (this.styles && !angular.equals(this.styles, {})) {
                             this.data.userdata.cells[currentCol + (y + 1)] = {
                                 cell: this.rows[this.rowKeys[y]][
@@ -1055,7 +1064,7 @@ export class TableFormComponent
             const filterFields: string[] = [];
             const filterValues: string[] = [];
 
-            const xOffset = memberShipEndColIndex + 1;
+            const xOffset = memberShipColIndex + 1;
 
             timTable.filters.forEach((value, index) => {
                 if (!value) {
@@ -1071,11 +1080,8 @@ export class TableFormComponent
                     case emailColIndex:
                         filterFields.push("email");
                         break;
-                    case memberShipAddColIndex:
-                        filterFields.push("membership_add");
-                        break;
-                    case memberShipEndColIndex:
-                        filterFields.push("membership_end");
+                    case memberShipColIndex:
+                        filterFields.push("membership");
                         break;
                     default:
                         filterFields.push(this.fields[index - xOffset]);

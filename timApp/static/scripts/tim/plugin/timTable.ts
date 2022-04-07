@@ -115,8 +115,6 @@ import {
 import {TaskId} from "./taskid";
 import {PluginMeta} from "./util";
 
-const timDateRegex = /^\d{4}-\d{2}-\d{2}[ T]?\d{2}:\d{2}(:\d{2})?$/;
-
 function replaceAll(s: string, s1: string, s2: string): string {
     const re = new RegExp(s1, "g");
     return s.replace(re, s2);
@@ -1310,11 +1308,6 @@ export class TimTableComponent
         const ccb = cb.cell;
         const va = "" + cca;
         const vb = "" + ccb;
-
-        if (timDateRegex.test(va) && timDateRegex.test(vb)) {
-            return va.localeCompare(vb, sortLang) * dir;
-        }
-
         // changes:  1,20 -> 1.20,  12:03 -> 12.03 TODO: 12:31:15 not handled correctly
         const na = parseFloat(va.replace(",", ".").replace(":", "."));
         const nb = parseFloat(vb.replace(",", ".").replace(":", "."));

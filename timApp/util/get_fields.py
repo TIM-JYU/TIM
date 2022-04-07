@@ -29,7 +29,7 @@ from timApp.plugin.plugin import find_task_ids, CachedPluginFinder
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.user.groups import verify_group_view_access
-from timApp.user.user import User, get_membership_end, get_membership_added
+from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.utils import widen_fields, get_alias, seq_to_str, fin_timezone
@@ -385,16 +385,12 @@ def get_fields_and_users(
             assert user.id == uid
             obj = {"user": user, "fields": user_tasks, "styles": user_fieldstyles}
             res.append(obj)
-            m_add = get_membership_added(user, group_id_set)
-            m_end = (
-                get_membership_end(user, group_id_set)
-                if member_filter_type != MembershipFilter.Current
-                else None
-            )
-            obj["groupinfo"] = {
-                "membership_add": time.mktime(m_add.timetuple()) if m_add else None,
-                "membership_end": time.mktime(m_end.timetuple()) if m_end else None,
-            }
+            if member_filter_type != MembershipFilter.Current:
+                m_end = get_membership_end(user, group_id_set)
+                if m_end:
+                    obj["groupinfo"] = {
+                        "membership_end": time.mktime(m_end.timetuple())
+                    }
             last_user = uid
             if not a:
                 continue

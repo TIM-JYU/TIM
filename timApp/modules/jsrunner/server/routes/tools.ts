@@ -994,11 +994,9 @@ export class Tools extends ToolsBase {
     }
 
     getLeaveDate() {
-        return this.data.groupinfo?.membership_end;
-    }
-
-    getAddDate() {
-        return this.data.groupinfo?.membership_add;
+        return this.data.groupinfo
+            ? this.data.groupinfo.membership_end
+            : undefined;
     }
 
     getDouble(fieldName: unknown, defa: unknown = 0): number {
