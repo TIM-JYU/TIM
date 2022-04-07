@@ -240,7 +240,6 @@ export class PareditorController extends DialogController<
     private documentLanguages: Array<ILanguages> = [];
     private translators: Array<ITranslators> = [];
     private docTranslator: string = "";
-    private docTrLang: string = "";
     private sideBySide: boolean = false;
     private hideDiff: boolean = true;
     private hidePreview: boolean = false;
@@ -1162,9 +1161,6 @@ ${backTicks}
         if (this.docSettings?.translator != undefined) {
             this.docTranslator = this.docSettings?.translator;
         }
-        if (this.docSettings?.translatorLanguage != undefined) {
-            this.docTrLang = this.docSettings.translatorLanguage;
-        }
         listTranslators(this.translators, false);
         updateLanguages(
             this.sourceLanguages,
@@ -1256,10 +1252,6 @@ ${backTicks}
             undefined,
             undefined
         );
-        const view = this.resolve.params.viewCtrl;
-        if (this.docTrLang == "" && view != undefined) {
-            this.docTrLang = view.item.lang_id!;
-        }
         this.changePreviewPositions();
     }
 
@@ -1722,17 +1714,12 @@ ${backTicks}
             this.translationInProgress = true;
 
             const lang = this.resolve.params.viewCtrl.item.lang_id;
-            let translatorLang = lang;
-            if (this.docTrLang != "" && lang != this.docTrLang) {
-                translatorLang = this.docTrLang;
-            }
             const r = await to(
                 $http.post<IDocument>(
                     `/translate/${this.resolve.params.viewCtrl.item.id}/${lang}/translate_block`,
                     {
                         autotranslate: this.docTranslator,
                         originaltext: translatableText,
-                        translatorlang: translatorLang,
                     }
                 )
             );
@@ -1892,28 +1879,6 @@ ${backTicks}
                 {
                     setting: "translator",
                     value: this.docTranslator,
-                }
-            );
-        }
-    }
-
-    /**
-     * Saves the selected translator language (or the document's language if supported) to the document's settings.
-     * Requires a refresh to take proper effect on the page.
-     */
-    async setTranslatorLanguageSettings() {
-        if (
-            this.docSettings != undefined &&
-            this.docTrLang != "" &&
-            this.docSettings.translatorLanguage != this.docTrLang &&
-            this.resolve.params.viewCtrl != undefined &&
-            !this.checkIfOriginal()
-        ) {
-            await $http.post<string>(
-                `/settings/${this.resolve.params.viewCtrl.item.id}`,
-                {
-                    setting: "translatorLanguage",
-                    value: this.docTrLang,
                 }
             );
         }
@@ -2441,7 +2406,6 @@ ${backTicks}
 
     private saveOptions() {
         this.setTranslatorSettings();
-        this.setTranslatorLanguageSettings();
         this.storage.spellcheck.set(this.spellcheck);
         this.storage.editortab.set(this.activeTab ?? "navigation");
         this.storage.autocomplete.set(this.autocomplete);

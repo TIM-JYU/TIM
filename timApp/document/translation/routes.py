@@ -87,7 +87,7 @@ def create_translation_route(tr_doc_id, language):
             # TODO Better describe what the problem is for user
             raise RouteException(description="The source language is not found.")
 
-        tr_lang = Language.query_by_code(req_data.get("translatorlang", language))
+        tr_lang = Language.query_by_code(language)
 
         # Select the translator TODO Maybe move to somewhere else so this does not blow up with if-else?
         if translator_code.lower() == "deepl":

@@ -56,7 +56,6 @@ export class PermCtrl implements IController {
         language: string;
         title: string;
         translator: string;
-        translatorLanguage: string;
     };
     private translationInProgress: boolean = false;
     private accessTypes: Array<unknown>; // TODO proper type
@@ -88,7 +87,6 @@ export class PermCtrl implements IController {
             language: "",
             title: "",
             translator: "Manual", // Default
-            translatorLanguage: "",
         };
         this.accessTypes = manageglobals().accessTypes;
         this.orgs = manageglobals().orgs;
@@ -567,29 +565,6 @@ export class PermCtrl implements IController {
         if (sources.ok) {
             this.targetLanguages = [];
             listLanguages(sources.result.data, this.targetLanguages);
-            this.updateLangChoice();
-        }
-    }
-
-    /**
-     * Updates the selection for the translator language when the translator of target language is changed.
-     */
-    updateLangChoice() {
-        if (this.targetLanguages != []) {
-            let langIndex = this.findTrLangIndex();
-            if (langIndex < 0) {
-                return;
-            }
-            this.newTranslation.translatorLanguage =
-                this.targetLanguages[langIndex].code;
-            const trSelect = document.querySelector("#translator-language");
-            let trSelection = trSelect!.querySelectorAll("option")[langIndex];
-            if (trSelection.value != this.newTranslation.language) {
-                // In case there is a temporary empty option in the option list
-                langIndex = langIndex + 1;
-                trSelection = trSelect!.querySelectorAll("option")[langIndex];
-            }
-            trSelection.selected = true;
         }
     }
 
@@ -611,36 +586,8 @@ export class PermCtrl implements IController {
     }
 
     async createTranslation() {
-        const srcPosition = this.findSourceDoc();
-        if (
-            this.newTranslation.translatorLanguage ==
-                this.translations[srcPosition].lang_id &&
-            this.newTranslation.translatorLanguage != ""
-        ) {
-            if (
-                window.confirm(
-                    "You are about to automatically translate to the same language as the original language. This will not have any effect on the result. Are you sure you want to continue?"
-                )
-            ) {
-            } else {
-                return;
-            }
-        }
         if (this.newTranslation.translator != "Manual") {
             this.translationInProgress = true;
-            if (this.newTranslation.translatorLanguage == "") {
-                let langIndex = this.findTrLangIndex();
-                if (langIndex < 0) {
-                    return;
-                }
-                const trSelect = document.querySelector("#translator-language");
-                if (trSelect!.querySelectorAll("option")[0].text == "") {
-                    langIndex = langIndex + 1;
-                }
-                const trSelection =
-                    trSelect!.querySelectorAll("option")[langIndex];
-                this.newTranslation.translatorLanguage = trSelection.value;
-            }
         }
 
         const r = await to(
@@ -649,7 +596,6 @@ export class PermCtrl implements IController {
                 {
                     doc_title: this.newTranslation.title,
                     autotranslate: this.newTranslation.translator,
-                    translatorlang: this.newTranslation.translatorLanguage,
                 }
             )
         );
@@ -664,23 +610,6 @@ export class PermCtrl implements IController {
             await $http.post<string>(`/settings/${data.id}`, {
                 setting: "translator",
                 value: this.newTranslation.translator,
-            });
-
-            let tr_lang = "";
-
-            if (
-                this.newTranslation.language !=
-                    this.newTranslation.translatorLanguage &&
-                this.newTranslation.translatorLanguage != ""
-            ) {
-                tr_lang = this.newTranslation.translatorLanguage;
-            } else {
-                tr_lang = this.newTranslation.language;
-            }
-
-            await $http.post<string>(`/settings/${data.id}`, {
-                setting: "translatorLanguage",
-                value: tr_lang,
             });
 
             redirectToItem(data);
@@ -731,7 +660,7 @@ export class PermCtrl implements IController {
         } else {
             const position = this.findSourceDoc();
             for (const target of this.targetLanguages) {
-                if (target.code == this.newTranslation.translatorLanguage) {
+                if (target.code == this.newTranslation.language) {
                     for (const source of this.sourceLanguages) {
                         if (
                             source.code == this.translations[position].lang_id
