@@ -335,7 +335,6 @@ export class TableFormComponent
     private taskLocations: Record<string, string> = {};
     private changedCells: string[] = []; // Use same type as data.userdata?
     private clearStylesCells = new Set<string>();
-    private displayedExtraFieldCount = 0;
 
     runScripts?: RunScriptType[];
 
@@ -430,7 +429,6 @@ export class TableFormComponent
             param = def;
         }
         if (param) {
-            this.displayedExtraFieldCount++;
             return true;
         }
 
@@ -898,8 +896,7 @@ export class TableFormComponent
             };
 
             if (this.fields) {
-                this.data.table.countCol =
-                    this.fields.length + this.displayedExtraFieldCount;
+                this.data.table.countCol = this.fields.length + 3;
             }
             this.data.table.countRow = Object.keys(this.rows).length;
             let y = 1;
