@@ -38,7 +38,6 @@ export interface IDocSettings {
     max_uncollapsed_toc_items?: number;
     description?: string;
     translator?: string;
-    translatorLanguage?: string;
 }
 
 export interface ISlideDocSettings extends IDocSettings {
