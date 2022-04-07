@@ -100,6 +100,10 @@ function runner(d: IRunnerData): RunnerResult {
                 real_name: "",
                 email: "",
             },
+            groupinfo: {
+                membership_add: null,
+                membership_end: null,
+            },
             fields: {},
             styles: {},
         };
