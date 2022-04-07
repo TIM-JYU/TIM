@@ -325,3 +325,41 @@ c
         self.create_translation(d)
         self.json_put(f"/alias/{d.id}/users%2Ftest-user-1%2Falias")
         self.json_delete(f"/alias/users%2Ftest-user-1%2Falias")
+
+    def test_paragraph_translation_route(self):
+        from timApp.document.translation.language import Language
+        from timApp.tests.unit.test_translator_generic import (
+            ReversingTranslationService,
+        )
+
+        db.session.add(ReversingTranslationService())
+        lang = Language(lang_code="rev-Erse", lang_name="Reverse", autonym="esreveR")
+        db.session.add(lang)
+        db.session.commit()
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+Foo
+#-
+Bar
+#-
+Baz
+"""
+        )
+        tr = self.create_translation(d)
+        id1, id2, id3, *_ = [x.id for x in tr.document.get_paragraphs()]
+        data = {"autotranslate": "Reversing"}
+        r = self.json_post(f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}", data)
+        self.assertEqual(r, tr.id)
+        self.assertEqual(tr.document.get_paragraph(id1).md, "ooF")
+        self.assertEqual(tr.document.get_paragraph(id2).md, "Bar")
+        self.assertEqual(tr.document.get_paragraph(id3).md, "Baz")
+
+        self.json_post(f"/translate/paragraph/{tr.id}/{id2}/{lang.lang_code}", data)
+        self.assertEqual(tr.document.get_paragraph(id2).md, "raB")
+
+        self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}", data)
+        self.assertEqual(tr.document.get_paragraph(id3).md, "zaB")
+
+        self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}", data)
+        self.assertEqual(tr.document.get_paragraph(id3).md, "Baz")

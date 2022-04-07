@@ -55,7 +55,10 @@ class ReversingTranslationService(TranslationService):
         return texts
 
     def usage(self) -> Usage:
-        raise NotImplementedError
+        """Infinite quota"""
+        import sys
+
+        return Usage(character_count=0, character_limit=sys.maxsize)
 
     def languages(self) -> LanguagePairing:
         raise NotImplementedError
@@ -68,6 +71,16 @@ class ReversingTranslationService(TranslationService):
         :return: List of translated text
         """
         return [x[::-1] for x in texts]
+
+    @classmethod
+    def init_translate(cls) -> "ReversingTranslationService":
+        # TODO importing here is dumb -> add factory method to the TranslationService-interface
+        from timApp.document.translation.translator import init_translate
+
+        none_lang = Language(lang_code="", lang_name="", autonym="")
+        return init_translate(ReversingTranslationService(), none_lang, none_lang)
+
+    __mapper_args__ = {"polymorphic_identity": "Reversing"}
 
 
 TR = Translate
