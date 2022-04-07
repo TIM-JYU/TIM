@@ -21,7 +21,6 @@ def upgrade():
         sa.Column(
             "membership_added",
             sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
             nullable=True,
         ),
     )

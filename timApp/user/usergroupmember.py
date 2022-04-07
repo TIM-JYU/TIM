@@ -39,7 +39,7 @@ class UserGroupMember(db.Model):
               If the end timestamp is present, the user is considered deleted from the group.
     """
 
-    membership_added = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    membership_added = db.Column(db.DateTime(timezone=True), default=get_current_time)
     """Timestamp for when the user was last time added as the active member.
     
     .. note:: The timestamp is used **for logging purposes only**.
