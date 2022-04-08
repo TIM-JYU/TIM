@@ -57,6 +57,7 @@ export class PermCtrl implements IController {
         title: string;
         translator: string;
     };
+    private mayTranslate = false;
     private translationInProgress: boolean = false;
     private accessTypes: Array<unknown>; // TODO proper type
     private orgs: IGroup[];
@@ -77,7 +78,6 @@ export class PermCtrl implements IController {
     private readUpdating: boolean = false;
     private file?: File;
     private newAliasForm!: IFormController; // initialized in the template
-    private notifySettings: JsonValue = {}; // TODO proper type
     private objName: string;
     private progress?: number;
     private result?: boolean;
@@ -107,7 +107,6 @@ export class PermCtrl implements IController {
 
     async $onInit() {
         this.translationInProgress = false;
-        this.getNotifySettings();
         await listTranslators(this.translators, true);
         await updateLanguages(
             this.sourceLanguages,
@@ -565,24 +564,8 @@ export class PermCtrl implements IController {
         if (sources.ok) {
             this.targetLanguages = [];
             listLanguages(sources.result.data, this.targetLanguages);
+            this.checkTranslatability();
         }
-    }
-
-    /**
-     * Looks for the index of the translation document's language in target languages.
-     * TODO: Refactor this and its counterpart in pareditor.ts to take a string and the target language list as its parameters?
-     * @returns The index of the language in targetLanguages or -1 if it was not found
-     */
-    findTrLangIndex() {
-        let begin: number;
-        for (begin = 0; begin < this.targetLanguages.length; begin++) {
-            if (
-                this.targetLanguages[begin].code == this.newTranslation.language
-            ) {
-                return begin;
-            }
-        }
-        return -1;
     }
 
     async createTranslation() {
@@ -620,20 +603,16 @@ export class PermCtrl implements IController {
     }
 
     /**
-     * Finds the id of the source document in the translations list.
-     * @returns the source document's ID or -1 if it for some reason was not found
+     * Finds the language of the source document in the translations list.
+     * @returns the source document's language or an empty string if for some reason was not found
      */
-    findSourceDoc() {
-        let begin: number;
-        for (begin = 0; begin < this.translations.length; begin++) {
-            if (
-                this.translations[begin].id ==
-                this.translations[begin].src_docid
-            ) {
-                return begin;
+    findSourceDocLang() {
+        for (const translation of this.translations) {
+            if (translation.id == translation.src_docid) {
+                return translation.lang_id;
             }
         }
-        return -1;
+        return "";
     }
 
     /**
@@ -649,56 +628,32 @@ export class PermCtrl implements IController {
 
     /**
      * Checks if the document can be translated automatically.
+     * TODO: Change the value of target language dropdown to ILanguage object rather than just the code and
+     * handle finding languages with .find or .includes or something?
      * @returns Whether or not the document can be translated automatically with the selected translator
      */
     checkTranslatability() {
-        if (
-            this.newTranslation.title == "" ||
-            this.newTranslation.translator == "Manual"
-        ) {
-            return false;
+        let targetFound = false;
+        if (this.newTranslation.translator == "Manual") {
+            this.mayTranslate = false;
         } else {
-            const position = this.findSourceDoc();
+            const src_lang = this.findSourceDocLang();
             for (const target of this.targetLanguages) {
                 if (target.code == this.newTranslation.language) {
-                    for (const source of this.sourceLanguages) {
-                        if (
-                            source.code == this.translations[position].lang_id
-                        ) {
-                            return true;
-                        }
+                    targetFound = true;
+                    break;
+                }
+            }
+            if (targetFound) {
+                for (const source of this.sourceLanguages) {
+                    if (source.code == src_lang) {
+                        this.mayTranslate = true;
+                        return;
                     }
                 }
             }
         }
-        return false;
-    }
-
-    async getNotifySettings() {
-        if (!this.loggedIn()) {
-            return;
-        }
-        const r = await to($http.get<JsonValue>("/notify/" + this.item.id));
-        if (r.ok) {
-            this.notifySettings = r.result.data;
-        } else {
-            await showMessageDialog(
-                `Could not get notification settings. Error message is: ${r.result.data.error}`
-            );
-        }
-    }
-
-    async notifyChanged() {
-        const r = await to(
-            $http.post("/notify/" + this.item.id, this.notifySettings)
-        );
-        if (r.ok) {
-            // nothing to do
-        } else {
-            await showMessageDialog(
-                `Could not change notification settings. Error message is: ${r.result.data.error}`
-            );
-        }
+        this.mayTranslate = false;
     }
 
     loggedIn() {

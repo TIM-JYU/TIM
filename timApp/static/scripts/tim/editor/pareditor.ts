@@ -1635,11 +1635,7 @@ ${backTicks}
         }
         const trs = documentglobals().translations;
         const orig = trs.find((tab) => tab.id === tab.src_docid);
-        if (
-            orig != undefined &&
-            this.resolve.params.viewCtrl != undefined &&
-            this.resolve.params.viewCtrl.item.lang_id != undefined
-        ) {
+        if (orig && this.resolve.params.viewCtrl?.item.lang_id) {
             const orig_lang = orig.lang_id;
             const tr_lang = this.resolve.params.viewCtrl.item.lang_id;
             isTranslated = this.checkIfSupported(orig_lang, tr_lang);
@@ -1689,10 +1685,7 @@ ${backTicks}
             await showMessageDialog(
                 "There is no original text to be translated. Please check the Difference in original document view."
             );
-        } else if (
-            this.resolve.params.viewCtrl == undefined ||
-            this.resolve.params.viewCtrl.item.lang_id == undefined
-        ) {
+        } else if (!this.resolve.params.viewCtrl?.item.lang_id) {
             await showMessageDialog(
                 "This document does not have a language set. Please set a language and try again."
             );
@@ -1884,22 +1877,6 @@ ${backTicks}
                 }
             );
         }
-    }
-
-    /**
-     * Looks for the index of the translation document's language in target languages.
-     * TODO: Refactor this and its counterpart in manageCtrl.ts to take a string and the target language list as its parameters?
-     * @returns The index of the language in targetLanguages or -1 if it was not found
-     */
-    findTrLangIndex() {
-        let begin: number;
-        const origTrLang = this.resolve.params.viewCtrl?.item.lang_id;
-        for (begin = 0; begin < this.targetLanguages.length; begin++) {
-            if (this.targetLanguages[begin].code == origTrLang) {
-                return begin;
-            }
-        }
-        return -1;
     }
 
     isAce(): AceParEditor | undefined {

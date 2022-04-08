@@ -72,8 +72,8 @@ export function extraDataForServer(data: IExtraData) {
  * @param languageArray The list the languages need to be added to
  */
 export function listLanguages(
-    languages: Array<ILanguages>,
-    languageArray: Array<ILanguages>
+    languages: ILanguages[],
+    languageArray: ILanguages[]
 ) {
     for (const lang of languages) {
         languageArray.push(lang);
@@ -88,9 +88,9 @@ export function listLanguages(
  * @param translator The chosen translator
  */
 export async function updateLanguages(
-    sourceL: Array<ILanguages>,
-    docL: Array<ILanguages>,
-    targetL: Array<ILanguages>,
+    sourceL: ILanguages[],
+    docL: ILanguages[],
+    targetL: ILanguages[],
     translator: string
 ) {
     let sources = await to(
@@ -123,7 +123,7 @@ export async function updateLanguages(
  * @param includeManual Whether or not the option for manual translation should be included in the list
  */
 export async function listTranslators(
-    translators: Array<ITranslators>,
+    translators: ITranslators[],
     includeManual: boolean
 ) {
     const sources = await to($http.get<string[]>("/translations/translators"));
