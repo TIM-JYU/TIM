@@ -141,7 +141,8 @@ def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
                 and get_current_user_object() not in answer.users_all
             ):
                 raise AccessDenied(
-                    "Sorry, you don't have permission to access this upload.")
+                    "Sorry, you don't have permission to access this upload."
+                )
         if (
             not verify_seeanswers_access(d, require=False)
             and get_current_user_object() not in answer.users_all

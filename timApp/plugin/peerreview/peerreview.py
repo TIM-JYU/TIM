@@ -170,9 +170,6 @@ emailUsersButtonText: Lähetä ruksituille sähköpostia
 emailUsersButtonText: "Lähetä sähköpostia"
 ```
 """
-
-
-
     ]
     editor_tabs: list[EditorTab] = [
         {

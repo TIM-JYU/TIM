@@ -82,7 +82,6 @@ def get_annotations_with_comments_in_document(
             .filter(VelpContent.language_id == language_id)
             .outerjoin(Answer)
             .outerjoin(User, Answer.users_all)
-
             .filter(answer_filter)
             .filter(own_review_filter)
             .order_by(
@@ -131,6 +130,7 @@ def set_annotation_query_opts(q: Query) -> Query:
         )
     )
 
+
 def get_test_annotations(
     user: User, d: DocInfo, only_own: bool = False
 ) -> list[Annotation]:
@@ -154,7 +154,7 @@ def get_test_annotations(
         )
     answer_filter = true()
     if not user.has_seeanswers_access(d) or only_own:
-        answer_filter = (User.id == user.id)
+        answer_filter = User.id == user.id
         if is_peerreview_enabled(d):
             answer_filter |= User.id.in_(
                 get_reviews_for_user_query(d, user)
