@@ -35,7 +35,7 @@
                title="Help for references"><i class="helpButton glyphicon glyphicon-question-sign"></i></a>
     </uib-tab>
     <uib-tab ng-show="!$ctrl.checkIfOriginal()" heading="Translator data" index="'translator'">
-        <div id="translationtab">
+        <div id="translationTab">
             <label for="translator">Translator:</label>
             <select id="translator" name="translator-select" class="form-control"
                     ng-model="$ctrl.docTranslator" ng-change="$ctrl.updateTranslatorLanguages()">

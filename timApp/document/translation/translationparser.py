@@ -1,7 +1,7 @@
 import re
 import pypandoc
 import json
-from typing import Callable
+from typing import Tuple
 from dataclasses import dataclass
 
 from timApp.document.documentparser import DocumentParser
@@ -240,42 +240,50 @@ def tex_collect(content: str) -> list[TranslateApproval]:
     :param content: String which contains LaTeX area
     :return: List containing the parsed collection of LaTeX content
     """
-    # Temp content to traverse through and remove parsed sections for loop
+    # Temp content to traverse through and remove parsed sections for loop.
     edit_tex = content
-    # Variable containing NoTranslate and Translate objects
+    # Variable containing NoTranslate and Translate objects.
     parsed_tex: list[TranslateApproval] = list()
-    # Regex table for all searched sections for translation
+    # Regex table for all searched sections for translation. Expand if necessary.
     regex_to_translate = [
         r"(\\text{)(.*?)(})",  # text
         r"(\\textrm{)(.*?)(})",  # textrm
         r"(\\textsf{)(.*?)(})",  # textsf
+        r"(\\textbf{)(.*?)(})",  # textbf
+        r"(\\textit{)(.*?)(})",  # textit
+        r"(\\textup{)(.*?)(})",  # textup
         r"(\\textnormal{)(.*?)(})",  # textnormal
         r"(\\mathrm{)(.*?)(})",  # mathrm
         r"(\\mathsf{)(.*?)(})",  # mathsf
+        r"(\\mathcal{)(.*?)(})",  # mathcal
+        r"(\\mathit{)(.*?)(})",  # mathit
+        r"(\\mathbf{)(.*?)(})",  # mathbf
         r"(<span>)(.*?)(<\/span>)",  # span
     ]
-    # Full collection of all found sections for translation as or statement
+    # Full collection of all found sections for translation as or statement.
     regex_collection = "|".join(regex_to_translate)
+    # Compile collection for efficiency.
     regex_pattern = re.compile(regex_collection)
-    # TODO: findall includes empty matches, research if another way of doing it.
-    # Format of [NT][Translate][NT] for each list-element
+    # re.findall includes empty matches, which seems the only way of resolving the issue.
+    # Contains format for each list-element in the format of [NoTranslate] and [Translate] combinations.
     no_translate_textblocks = list(re.findall(regex_pattern, content))
-    # If any translatable areas were found in LaTeX
+    # Check if given LaTeX contains any areas for translation translatable.
     if len(no_translate_textblocks) != 0:
         for block in no_translate_textblocks:
-            # Filter out empty groups
+            # Filter out empty groups due to re.findall().
             block = list(filter(None, block))
-            # Recollect the separated regex for identification in string
+            # Collect the separated regex for identification in string.
+            # This area is originally split as command, text, closing statement.
             full_tex_text = block[0] + block[1] + block[2]
-            # Find first case of the recollection
+            # Find the first case of the collected translatable LaTeX.
             temp_tex_list = edit_tex.split(full_tex_text, 1)
-            # Add LaTeX text identification to NoTranslate section
+            # Add LaTeX command to NoTranslate section.
             parsed_tex.append(NoTranslate(temp_tex_list[0] + block[0]))
-            # Add Translatable area
+            # Add LaTeX text to Translate section.
             parsed_tex.append(Translate(block[1]))
-            # Include closing statement of the LaTeX area to next NoTranslate section
+            # Add LaTeX closing statement to next NoTranslate section.
             edit_tex = block[2] + temp_tex_list[1]
-        # Include last area left from split to not be Translated
+        # Include last area left from split as NoTranslate.
         parsed_tex.append(NoTranslate(edit_tex))
         return parsed_tex
     else:
@@ -286,6 +294,13 @@ def attr_collect(content: dict) -> list[TranslateApproval]:
     """
     :param content: Pandoc-ASTs JSON form of Attr (attributes)
     """
+    if (
+        not isinstance(content[0], str)
+        or not (content[1], list[str])
+        or not (content[2], list[list[str]])
+    ):
+        assert False, "PanDoc link content is not [ str, [str], [(str, str)] ]."
+
     # FIXME(?) WARNING It is crucial, that the attributes do not include the TIM-identifier eg. id="SAs3EK96oQtL" from {plugin="csPlugin" id="SAs3EK96oQtL"}, because Pandoc has earlier deleted extra identifiers contained in attributes like #btn-tex2 and id="SAs3EK96oQtL" with {plugin="csPlugin" #btn-tex2 id="SAs3EK96oQtL"}
     arr: list[TranslateApproval] = list()
     # https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Attr
@@ -310,6 +325,9 @@ def attr_collect(content: dict) -> list[TranslateApproval]:
 
 
 def quoted_collect(content: dict) -> list[TranslateApproval]:
+    if not isinstance(content[0]["t"], str) or not isinstance(content[1], list):
+        assert False, "PanDoc format is of wrong type"
+
     arr: list[TranslateApproval] = list()
     # TODO Are quotes translate?
     quote = (
@@ -327,6 +345,8 @@ def quoted_collect(content: dict) -> list[TranslateApproval]:
 
 
 def cite_collect(content: dict) -> list[TranslateApproval]:
+    if not isinstance(content[0], list) or not isinstance(content[1], list):
+        assert False, "PanDoc cite content is not [ [Citation], [Inline] ]."
     # At the moment not needed and will break FIXME Implement this
     arr: list[TranslateApproval] = list()
     for inline in content[1]:
@@ -335,6 +355,8 @@ def cite_collect(content: dict) -> list[TranslateApproval]:
 
 
 def code_collect(content: dict) -> list[TranslateApproval]:
+    if not isinstance(content[0], list) or not isinstance(content[1], str):
+        assert False, "PanDoc code content is not [ Attr, Text ]."
     # TODO Handle "Attr"
     return [NoTranslate(content[1])]
 
@@ -346,6 +368,8 @@ def math_collect(content: dict) -> list[TranslateApproval]:
     :param content: TeX math (literal) from Inline
     :return: List containing the parsed collection of math content
     """
+    if not isinstance(content[0]["t"], str) or not isinstance(content[1], str):
+        assert False, "PanDoc math content is not [ MathType, Text ]."
     arr: list[TranslateApproval] = list()
     mathtype = content[0]["t"]
     # TODO Go deeper to find translatable text
@@ -373,6 +397,8 @@ def rawinline_collect(content: dict) -> list[TranslateApproval]:
     :param content: RawInline from Inline
     :return: List containing the parsed collection of rawinline content
     """
+    if not isinstance(content[0], str) or not isinstance(content[1], str):
+        assert False, "PanDoc rawinline content is not [ Format, Text ]."
     # HTML currently as "else" path (<u></u> and <s></s>)
     format_ = content[0]
     if format_ == "tex":
@@ -382,10 +408,22 @@ def rawinline_collect(content: dict) -> list[TranslateApproval]:
 
 
 def link_collect(content: dict) -> list[TranslateApproval]:
+    if (
+        not isinstance(content[0], list)
+        or not isinstance(content[1], list)
+        or not isinstance(content[2], list)
+    ):
+        assert False, "PanDoc link content is not [ Attr, [Inline], Target ]."
     return link_or_image_collect(content, True)
 
 
 def image_collect(content: dict) -> list[TranslateApproval]:
+    if (
+        not isinstance(content[0], list)
+        or not isinstance(content[1], list)
+        or not isinstance(content[2], list)
+    ):
+        assert False, "PanDoc image content is not [ Attr, [Inline], Target ]."
     return link_or_image_collect(content, False)
 
 
@@ -406,6 +444,10 @@ def link_or_image_collect(content: dict, islink: bool) -> list[TranslateApproval
 
 
 def span_collect(content: dict) -> list[TranslateApproval]:
+    # Attr check in attr_collect
+    if not isinstance(content[1], list):
+        assert False, "PanDoc link content is not [ [Inline] ]."
+
     # TODO Generalize this func like with links and images
     arr: list[TranslateApproval] = list()
     arr.append(NoTranslate("["))
@@ -421,11 +463,15 @@ def span_collect(content: dict) -> list[TranslateApproval]:
 def inline_collect(top_inline: dict) -> list[TranslateApproval]:
     type_ = top_inline["t"]
     # TODO Dynamic typing would be easy here but Mypy doesn't like this
-    content = top_inline.get("c")
+    content = top_inline.get("c", list())
     arr: list[TranslateApproval] = list()
+    # Change to str
     if type_ == "Str":
+        if not isinstance(content, str):
+            assert False, "PanDoc inline content is not [ str ]."
         arr.append(Translate(content))
-    elif type_ == "Emph":
+    # What?
+    if type_ == "Emph":
         # NOTE Recursion
         arr.append(NoTranslate("*"))
         for inline in content:
@@ -466,12 +512,14 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
         for inline in content:
             # TODO if figured out remove this notranslate
             arr += list(map(lambda x: NoTranslate(x.text), inline_collect(inline)))
+    elif type_ == "Note":
+        # NOTE Scary?
+        for block in content:
+            arr += block_collect(block)
     elif type_ == "Quoted":
         arr += quoted_collect(content)
     elif type_ == "Cite":
         arr += cite_collect(content)
-    elif type_ == "Code":
-        arr += code_collect(content)
     elif type_ == "Space":
         arr.append(Translate(" "))
     elif type_ == "SoftBreak":
@@ -481,18 +529,19 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
         arr.append(NoTranslate("\\"))
         # TODO Are newlines translated or not?
         arr.append(Translate("\n"))
+    elif type_ == "Code":
+        arr += code_collect(content)
     elif type_ == "Math":
         arr += math_collect(content)
     elif type_ == "RawInline":
         arr += rawinline_collect(content)
+
+    # Dict[any, any, any]
     elif type_ == "Link":
         arr += link_collect(content)
     elif type_ == "Image":
         arr += image_collect(content)
-    elif type_ == "Note":
-        # NOTE Scary?
-        for block in content:
-            arr += block_collect(block)
+
     elif type_ == "Span":
         arr += span_collect(content)
 
@@ -604,8 +653,56 @@ def rawblock_collect(content: dict) -> list[TranslateApproval]:
     return notranslate_all("RawBlock", content)
 
 
-def orderedlist_collect(content: dict) -> list[TranslateApproval]:
-    return notranslate_all("OrderedList", content)  # TODO
+def orderedlist_collect(content: dict, depth: int) -> list[TranslateApproval]:
+    # TODO: how to check the tuple.
+    if (
+        not isinstance(content[0], tuple)
+        or not isinstance(content[0][0], int)
+        or not isinstance(content[0][1], str)
+        or not isinstance(content[0][2], str)
+        or not isinstance(content[1], list)
+    ):
+        assert False, "PanDoc orderedlist content is not [ ListAttributes, [Block]  ]."
+    # TODO: fix after tuple check as content[0].
+    return list_collect(
+        content[1], depth, (int(content[0][0]), str(content[0][1]), str(content[0][2]))
+    )
+
+
+def bulletlist_collect(content: dict, depth: int) -> list[TranslateApproval]:
+    if not isinstance(content, list):
+        assert False, "PanDoc bulletlist content is not [ [Block] ]."
+    return list_collect(content, depth, None)
+
+
+def list_collect(
+    blocks: list[list[dict]], depth: int, attrs: Tuple[int, str, str] | None
+) -> list[TranslateApproval]:
+    """
+    General method for handling both bullet- and ordered lists.
+
+    :param blocks: The [[Block]] found in Pandoc definition for the lists.
+    :param depth: The depth of recursion with lists (can contain lists of lists of lists ...).
+    :param attrs: Information related to the style of the OrderedList items.
+    :return: List containing the translatable parts of the list.
+    """
+    # Select the string that list items are prepended with ie. -, 1., i) etc.
+    if attrs:
+        start_num, num_style, num_delim = attrs
+        # TODO Implement the rest of list styles
+        list_style = "1. "
+    else:
+        list_style = "- "
+
+    arr: list[TranslateApproval] = list()
+    for block_list in blocks:
+        # Next list item
+        arr.append(NoTranslate("\n"))
+        # Indentation and list item start
+        arr.append(NoTranslate(("\t" * depth) + list_style))
+        for block in block_list:
+            arr += block_collect(block, depth + 1)
+    return arr
 
 
 def definitionlist_collect(content: dict) -> list[TranslateApproval]:
@@ -613,6 +710,12 @@ def definitionlist_collect(content: dict) -> list[TranslateApproval]:
 
 
 def header_collect(content: dict) -> list[TranslateApproval]:
+    if (
+        not isinstance(content[0], int)
+        or not isinstance(content[1], list)
+        or not isinstance(content[2], list)
+    ):
+        assert False, "PanDoc orderedlist content is not [ int, Attr, [Block]  ]"
     return notranslate_all("Header", content)  # TODO
 
 
@@ -656,16 +759,10 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
             arr += block_collect(block)
     elif type_ == "OrderedList":
         # NOTE Recursion
-        arr += orderedlist_collect(content)
+        arr += orderedlist_collect(content, depth)
     elif type_ == "BulletList":
         # NOTE Recursion
-        for block_list in content:
-            # Next list item
-            arr.append(NoTranslate("\n"))
-            # Indentation and list item start
-            arr.append(NoTranslate(("\t" * depth) + "- "))
-            for block in block_list:
-                arr += block_collect(block, depth + 1)
+        arr += bulletlist_collect(content, depth)
     elif type_ == "DefinitionList":
         arr += definitionlist_collect(content)
     elif type_ == "Header":

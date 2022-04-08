@@ -1497,3 +1497,17 @@ tim-rights-editor {
 .toggle-margin-left {
     margin-left: 0;
 }
+
+// Style for translation-tab in parEditor
+#translationTab{
+
+    display: flex;
+    align-items: baseline;
+
+    span{
+        display: inline-block;
+    }
+    & > * {
+        margin: 2px;
+    }
+}
