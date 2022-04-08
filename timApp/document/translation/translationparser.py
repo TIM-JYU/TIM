@@ -1,7 +1,7 @@
 import re
 import pypandoc
 import json
-from typing import Callable
+from typing import Tuple
 from dataclasses import dataclass
 
 from timApp.document.documentparser import DocumentParser
@@ -604,8 +604,42 @@ def rawblock_collect(content: dict) -> list[TranslateApproval]:
     return notranslate_all("RawBlock", content)
 
 
-def orderedlist_collect(content: dict) -> list[TranslateApproval]:
-    return notranslate_all("OrderedList", content)  # TODO
+def orderedlist_collect(content: dict, depth: int) -> list[TranslateApproval]:
+    return list_collect(content[1], depth, content[0])
+
+
+def bulletlist_collect(content: dict, depth: int) -> list[TranslateApproval]:
+    return list_collect(content, depth, None)
+
+
+def list_collect(
+    blocks: list[list[dict]], depth: int, attrs: Tuple[int, str, str] | None
+) -> list[TranslateApproval]:
+    """
+    General method for handling both bullet- and ordered lists.
+
+    :param blocks: The [[Block]] found in Pandoc definition for the lists.
+    :param depth: The depth of recursion with lists (can contain lists of lists of lists ...).
+    :param attrs: Information related to the style of the OrderedList items.
+    :return: List containing the translatable parts of the list.
+    """
+    # Select the string that list items are prepended with ie. -, 1., i) etc.
+    if attrs:
+        start_num, num_style, num_delim = attrs
+        # TODO Implement the rest of list styles
+        list_style = "1. "
+    else:
+        list_style = "- "
+
+    arr: list[TranslateApproval] = list()
+    for block_list in blocks:
+        # Next list item
+        arr.append(NoTranslate("\n"))
+        # Indentation and list item start
+        arr.append(NoTranslate(("\t" * depth) + list_style))
+        for block in block_list:
+            arr += block_collect(block, depth + 1)
+    return arr
 
 
 def definitionlist_collect(content: dict) -> list[TranslateApproval]:
@@ -656,16 +690,10 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
             arr += block_collect(block)
     elif type_ == "OrderedList":
         # NOTE Recursion
-        arr += orderedlist_collect(content)
+        arr += orderedlist_collect(content, depth)
     elif type_ == "BulletList":
         # NOTE Recursion
-        for block_list in content:
-            # Next list item
-            arr.append(NoTranslate("\n"))
-            # Indentation and list item start
-            arr.append(NoTranslate(("\t" * depth) + "- "))
-            for block in block_list:
-                arr += block_collect(block, depth + 1)
+        arr += bulletlist_collect(content, depth)
     elif type_ == "DefinitionList":
         arr += definitionlist_collect(content)
     elif type_ == "Header":
