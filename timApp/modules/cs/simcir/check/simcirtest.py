@@ -1,4 +1,3 @@
-# -*- coding:utf-8; -*-
 import json
 
 
@@ -118,7 +117,7 @@ class Connector:
         return (self.to_id, self.from_id)
 
     def __str__(self):
-        return '{"from":"%s.%s","to":"%s.%s"}' % (
+        return '{{"from":"{}.{}","to":"{}.{}"}}'.format(
             self.from_id,
             self.from_port,
             self.to_id,
@@ -606,8 +605,8 @@ def totuustaulu_muotoilu(totuustaulu):
         # pyöristetään ylös, totuustaulussa ei välttämättä kaikkia rivejä
         count = int(ceil(log2(len(totuustaulu) - 1)))
         nimet = totuustaulu[0].split()
-        maxlenmuuttujat = max([len(item) for item in nimet[:count]])
-        maxlenulostulot = max([len(item) for item in nimet[count:]])
+        maxlenmuuttujat = max(len(item) for item in nimet[:count])
+        maxlenulostulot = max(len(item) for item in nimet[count:])
         # Muokkauksia tulostusta varten... sotkuista, mutta kaikki totuustaulut
         # käy tätä kautta, joten tulee samanlainen muotoilu
         frmt1 = (i.center(maxlenmuuttujat) for i in nimet[:count])
@@ -1009,8 +1008,8 @@ def testaa(testidata, oikeadata, maksimipisteet, hyvportit=[], tulosta=True):
     :param tulosta: True/False - tulostetaanko tieto arvostelusta vai ei (esim. kokeessa) palauttaa kuitenkin pisteet aina!
     :return: (double, string) - pisteet doublena, ja string:n, jossa 'oikein'-teksti, virheelliset totuustaulun rivit tai muuta virheinformaatiota
     """
-    testattava = open(testidata, "r").read()
-    oikea = open(oikeadata, "r").read()
+    testattava = open(testidata).read()
+    oikea = open(oikeadata).read()
     if "\n\n" in oikea:
         hyvportit = [item.strip() for item in oikea.split("\n\n")[1].split(",")]
         if hyvportit == [""]:  # löytyi useita tyhjiä rivejä (ei pitäisi olla)
