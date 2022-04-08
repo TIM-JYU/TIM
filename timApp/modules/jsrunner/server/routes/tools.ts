@@ -1321,6 +1321,7 @@ export class Tools extends ToolsBase {
     getResult(): IToolsResult {
         return {user: this.data.user.id, fields: this.result};
     }
+
     getTaskPoints(task: string): number {
         const velps = this.testvelps
             .filter(
@@ -1342,6 +1343,7 @@ export class Tools extends ToolsBase {
         const sum = points.reduce((a, b) => a + b, 0);
         return sum / velps.length ? sum / velps.length : 0;
     }
+
     getReviewCount(task: string): number {
         const velps = this.testvelps
             .filter(
@@ -1355,14 +1357,10 @@ export class Tools extends ToolsBase {
                 id: v.annotator.id,
                 answer: v.answer.id,
             }));
-        const seen = new Set();
-        const tasks = velps.filter((el) => {
-            const duplicate = seen.has(el.answer);
-            seen.add(el.answer);
-            return !duplicate;
-        });
+        const seen = new Set(velps.filter((v) => v.answer));
         return seen.size;
     }
+
     getReviews(task: string): object[] {
         const velps = this.testvelps
             .filter(
@@ -1393,6 +1391,7 @@ export class Tools extends ToolsBase {
         });
         return result;
     }
+
     getPoints(task: string) {
         const velps = this.testvelps
             .filter(
