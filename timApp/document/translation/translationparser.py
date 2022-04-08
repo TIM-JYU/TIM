@@ -356,7 +356,7 @@ def cite_collect(content: dict) -> list[TranslateApproval]:
 
 def code_collect(content: dict) -> list[TranslateApproval]:
     if not isinstance(content[0], list) or not isinstance(content[1], str):
-        assert False, "PanDoc Attr content is not [ Attr, Text ]."
+        assert False, "PanDoc code content is not [ Attr, Text ]."
     # TODO Handle "Attr"
     return [NoTranslate(content[1])]
 
@@ -654,18 +654,24 @@ def rawblock_collect(content: dict) -> list[TranslateApproval]:
 
 
 def orderedlist_collect(content: dict, depth: int) -> list[TranslateApproval]:
+    # TODO: how to check the tuple.
     if (
-        not (content[0], list)
-        or not (content[1], list)
-        or not isinstance(content[2], (int, str, str))
+        not isinstance(content[0], tuple)
+        or not isinstance(content[0][0], int)
+        or not isinstance(content[0][1], str)
+        or not isinstance(content[0][2], str)
+        or not isinstance(content[1], list)
     ):
-        assert False, "PanDoc link content is not [ [Inline] ]."
-    return list_collect(content[1], depth, content[0])
+        assert False, "PanDoc orderedlist content is not [ ListAttributes, [Block]  ]."
+    # TODO: fix after tuple check as content[0].
+    return list_collect(
+        content[1], depth, (int(content[0][0]), str(content[0][1]), str(content[0][2]))
+    )
 
 
 def bulletlist_collect(content: dict, depth: int) -> list[TranslateApproval]:
     if not isinstance(content, list):
-        assert False, "PanDoc link content is not [ [Inline] ]."
+        assert False, "PanDoc bulletlist content is not [ [Block] ]."
     return list_collect(content, depth, None)
 
 
@@ -704,6 +710,12 @@ def definitionlist_collect(content: dict) -> list[TranslateApproval]:
 
 
 def header_collect(content: dict) -> list[TranslateApproval]:
+    if (
+        not isinstance(content[0], int)
+        or not isinstance(content[1], list)
+        or not isinstance(content[2], list)
+    ):
+        assert False, "PanDoc orderedlist content is not [ int, Attr, [Block]  ]"
     return notranslate_all("Header", content)  # TODO
 
 
