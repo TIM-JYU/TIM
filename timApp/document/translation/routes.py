@@ -32,7 +32,12 @@ from timApp.document.translation.language import Language
 
 
 def valid_language_id(lang_id: str) -> bool:
-    """Check that the id is recognized by the langcodes library and found in database."""
+    """
+    Check that the id is recognized by the langcodes library and found in database.
+    :param lang_id: Language id (or "tag") to check
+    :return: True, if id is found in database
+    """
+    # TODO This could return the queried language if found (to reduce db-queries)
     try:
         tag = langcodes.standardize_tag(lang_id)
         lang = Language.query_by_code(tag)
@@ -98,12 +103,13 @@ def create_translation_route(tr_doc_id, language):
     # Translate each paragraph sequentially if a translator was created
     if translator_func:
         orig_doc = tr.document.get_source_document()
-        zipped_paragraphs = list(
-            # FIXME The parsing done before translation might need id etc values found in the markdown, but not found in the paragraphs, that get_paragraphs() returns...
-            zip(orig_doc.get_paragraphs(), tr.document)
+        # FIXME The parsing done before translation might need id etc values found in the markdown, but not found in the paragraphs, that get_paragraphs() returns...
+        # Ignore the settings paragraphs entirely to protect them from mangling
+        translatable_paragraphs = filter(
+            lambda x: not x.is_setting(), orig_doc.get_paragraphs()
         )
-        # HACK Skip first paragraph to protect settings-block from mangling
-        for orig_paragraph, tr_block in zipped_paragraphs[1:]:
+        zipped_paragraphs = zip(translatable_paragraphs, tr.document)
+        for orig_paragraph, tr_block in zipped_paragraphs:
             md = orig_paragraph.md
 
             if orig_paragraph.is_plugin():
@@ -136,6 +142,66 @@ def create_translation_route(tr_doc_id, language):
     copy_default_rights(tr, BlockType.Document)
     db.session.commit()
     return json_response(tr)
+
+
+@tr_bp.post("/translate/paragraph/<int:tr_doc_id>/<string:tr_par_id>/<string:language>")
+def paragraph_translation_route(
+    tr_doc_id: int, tr_par_id: str, language: str
+) -> Response:
+    """
+    Replace the content of paragraph with requested translation.
+    :param tr_doc_id: ID of the document that the paragraph is in.
+    :param tr_par_id: ID of the paragraph in the Translation NOTE: NOT the original paragraph!
+    :param language: Language to translate into.
+    :return: Response to the request.
+    """
+    translator_code = request.get_json().get("autotranslate")
+
+    # TODO Why should get_doc_or_abort be used?
+    tr = Translation.query.get(get_doc_or_abort(tr_doc_id).id)
+    src_doc = tr.src_doc
+
+    if not isinstance(tr, Translation):
+        assert False, "doc has unexpected type"
+    # TODO Do these checks follow TIM conventions?
+    verify_view_access(tr)
+    verify_manage_access(src_doc)
+
+    if not valid_language_id(language):
+        raise NotExist("Invalid language identifier")
+
+    if translator_code:
+        # Paragraph in Translation is always assumed to be a reference and raise an exception otherwise
+        tr_par = tr.document.get_paragraph(tr_par_id)
+        if not tr_par.is_reference():
+            raise RouteException(
+                description="Cannot translate because paragraph missing reference to original"
+            )
+
+        src_md = src_doc.document.get_paragraph(tr_par.get_attr("rp")).md
+        # TODO Wrap this selection into a function to also use with the other *_translation_route -functions
+        if translator_code.lower() == "deepl":
+            src_lang = Language.query_by_code(tr.lang_id)
+            target_lang = Language.query_by_code(language)
+            translator_func = init_deepl_translate(
+                get_current_user_object().get_personal_group(), src_lang, target_lang
+            )
+        elif translator_code.lower() == "reversing":
+            # TODO DUMB DUMB DUMB, add the factory-method (ie. the translator.init_*_translate) into TranslationService-interface and select the translator by matching into db query: TranslationService.query.with_entities(TranslationService.service_name).all()
+            from timApp.tests.unit.test_translator_generic import (
+                ReversingTranslationService,
+            )
+
+            translator_func = ReversingTranslationService.init_translate()
+
+        translated_text = translator_func([src_md])[0]
+        tr.document.modify_paragraph(tr_par_id, translated_text)
+        # TODO Maybe this is needed for modifying paragraphs???
+        db.session.commit()
+
+    # TODO (maybe duplicate) Could this cause unhandled exception if translator_code is not recognised and tries to return json_response(block_text) when block_text is not defined
+    # TODO What should this even return?
+    return json_response(tr_doc_id)
 
 
 @tr_bp.post("/translate/<int:tr_doc_id>/<language>/translate_block")

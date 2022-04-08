@@ -188,6 +188,93 @@ class TestParser(unittest.TestCase):
             ],
         )
 
+    # Testing simple text inside latex
+    def test_tex_collect_simple_text(self):
+        text = r"\text{testi}\x"
+        self.assertEqual(
+            tex_collect(text),
+            [
+                NoTranslate(r"\text{"),
+                Translate(r"testi"),
+                NoTranslate(r"}\x")
+
+            ]
+        ),
+
+    # Testing text with style inside latex
+    def test_tex_collect_style_text(self):
+        text = r"\textrm{another test}\x"
+        self.assertEqual(
+            tex_collect(text),
+            [
+                NoTranslate(r"\textrm{"),
+                Translate(r"another test"),
+                NoTranslate(r"}\x")
+            ]
+        ),
+
+    # Testing a math function inside latex using dollar signs
+    def test_tex_collect_math_function(self):
+        text = r"\text{Testataan kaaviota: }\x$1\;\text{prosentti}=1\;\% =\frac{1}{100}=0,01$"
+        self.assertEqual(
+            tex_collect(text),
+            [
+                NoTranslate(r"\text{"),
+                Translate(r"Testataan kaaviota: "),
+                NoTranslate(r"}\x$1\;\text{"),
+                Translate(r"prosentti"),
+                NoTranslate(r"}=1\;\% =\frac{1}{100}=0,01$")
+            ]
+        ),
+
+    # Testing a math function mathrm inside latex using double dollar signs
+    def test_tex_collect_math_function2(self):
+        text = r"$$\mathrm{Muuttuja e} = \sum_{n=0}^{\infty} \dfrac{1}{n!}$$"
+        self.assertEqual(
+            tex_collect(text),
+            [
+                NoTranslate(r"$$\mathrm{"),
+                Translate(r"Muuttuja e"),
+                NoTranslate(r"} = \sum_{n=0}^{\infty} \dfrac{1}{n!}$$")
+            ]
+        ),
+
+    # Testing matrices inside latex
+    def test_tex_collect_math_function3(self):
+        text = r""""$$M = 
+        \begin{bmatrix}
+        \frac{5}{6} & \frac{1}{6} & 0 \\[0.3em]
+        \frac{5}{6} & 0 & \frac{1}{6} \\[0.3em]
+        0 & \frac{5}{6} & \frac{1}{6}
+        \end{bmatrix}
+        $$"""
+        self.assertEqual(
+            tex_collect(text),
+            [
+                NoTranslate(r""""$$M = 
+        \begin{bmatrix}
+        \frac{5}{6} & \frac{1}{6} & 0 \\[0.3em]
+        \frac{5}{6} & 0 & \frac{1}{6} \\[0.3em]
+        0 & \frac{5}{6} & \frac{1}{6}
+        \end{bmatrix}
+        $$""")
+            ],
+        )
+
+    # Testing bold and italics formatting
+    def test_tex_collect_formatted(self):
+        text = r"\textbf{oranges}\x\times 100 \textit{something}\x"
+        self.assertEqual(
+            tex_collect(text),
+            [
+                NoTranslate(r"\textbf{"),
+                Translate(r"oranges"),
+                NoTranslate(r"}\x\times 100 \textit{"),
+                Translate(r"something"),
+                NoTranslate(r"}\x")
+            ]
+        ),
+
     def test_get_translate_approvals_latex(self):
         # NOTE Pandoc does not seem to account for trailing whitespace, so the single space ' ' at the end of this test-text will disappear
         latexblock = r"""KING CLAUDIUS
@@ -326,3 +413,5 @@ eri ratkaisua.  Vain jos diskriminantti $D = \sqrt{b^2 - 4ac}$ on nolla, on ratk
 
 if __name__ == "__main__":
     unittest.main()
+
+
