@@ -92,7 +92,6 @@ def get_annotations_with_comments_in_document(
         )
         .options(contains_eager(Annotation.velp_content))
         .options(contains_eager(Annotation.answer).contains_eager(Answer.users_all))
-        .options()
         .options(
             contains_eager(Annotation.velp_version).contains_eager(VelpVersion.velp)
         )
