@@ -656,13 +656,15 @@ def rawblock_collect(content: dict) -> list[TranslateApproval]:
 def orderedlist_collect(content: dict, depth: int) -> list[TranslateApproval]:
     # TODO: how to check the tuple.
     if (
-        not isinstance(content[0], tuple)
+        not isinstance(content[0], list)
         or not isinstance(content[0][0], int)
-        or not isinstance(content[0][1], str)
-        or not isinstance(content[0][2], str)
+        or "t" not in content[0][1]
+        and isinstance(content[0][1]["t"], str)
+        or "t" not in content[0][2]
+        and isinstance(content[0][2]["t"], str)
         or not isinstance(content[1], list)
     ):
-        assert False, "PanDoc orderedlist content is not [ ListAttributes, [Block]  ]."
+        assert False, "PanDoc orderedlist content is not [ ListAttributes, [[Block]] ]."
     # TODO: fix after tuple check as content[0].
     return list_collect(
         content[1], depth, (int(content[0][0]), str(content[0][1]), str(content[0][2]))
