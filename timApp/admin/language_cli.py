@@ -10,7 +10,12 @@ language_cli = AppGroup("language")
 @language_cli.command()
 @click.argument("lang_code")
 def remove(lang_code: str) -> None:
-    """Remove a specific language from the database by specifying its language code."""
+    """
+    Remove a specific language from the database by specifying its language code.
+
+    :param lang_code: IETF language tag for the language.
+    :return: None
+    """
 
     exists = Language.query.filter(lang_code == Language.lang_code).first()
     if exists:
@@ -29,12 +34,18 @@ def remove(lang_code: str) -> None:
 @language_cli.command()
 @click.argument("lang_name")
 def add(lang_name: str) -> None:
-    """Add a standard language to the language database based on the language name."""
+    """
+    Add a standard language to the language database based on the language name.
+
+    :param lang_name: Natural name of the language.
+    :return: None
+    """
 
     try:
         lang = Language.create_from_name(lang_name)
     except Exception as e:
-        click.echo(f"Failed to create language; try some other value: {str(e)}")
+        click.echo(f"Failed to create language: {str(e)}")
+        return
 
     exists = Language.query.filter(lang.lang_code == Language.lang_code).first()
     if exists:
@@ -46,19 +57,31 @@ def add(lang_name: str) -> None:
 
 
 @language_cli.command()
-@click.option("--langcode", prompt="IANA language code")
-@click.option(
-    "--langname", prompt="Natural name for the language in English", default=""
-)
-@click.option("--autonym", prompt="Native name for the language", default="")
+@click.option("--langcode", prompt="IETF language tag")
+@click.option("--langname", prompt="Natural name for the language in English")
+@click.option("--autonym", prompt="Native name for the language")
 @click.option("--flag_uri", prompt="URI for an image file", default="")
 def create(langcode: str, langname: str, autonym: str, flag_uri: str) -> None:
-    """Creates a new custom language and adds it to the database."""
+    """
+    Creates a new custom language and adds it to the database.
+
+    :param langcode: IETF custom language tag.
+    :param langname: Natural name for the language in English.
+    :param autonym: Native name for the language.
+    :param flag_uri: Optional URI for an image file, representing the country of the language.
+    :return: None
+    """
 
     # Standardize the primary key with langcodes before inserting into db.
     # Note: variant name must not exceed 8 characters in length.
     #       Example: "en-gibberis" is acceptable while "en-gibberish" is not.
-    standard_code = langcodes.standardize_tag(langcode)
+    # TODO only allow IETF-format custom language tags
+    try:
+        standard_code = langcodes.standardize_tag(langcode)
+    except Exception as e:
+        click.echo(f"Failed to create new language: {str(e)}")
+        return
+
     exists = Language.query.filter(standard_code == Language.lang_code).first()
     if exists:
         click.echo(f"Language code '{standard_code}' already exists in the database.")
@@ -73,3 +96,6 @@ def create(langcode: str, langname: str, autonym: str, flag_uri: str) -> None:
         click.echo("New custom language created.")
         db.session.add(lang)
         db.session.commit()
+        click.echo(
+            f"Custom language '{langname} ({standard_code})' has been added to the database."
+        )
