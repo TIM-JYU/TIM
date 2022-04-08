@@ -105,11 +105,11 @@ def create_translation_route(tr_doc_id, language):
         orig_doc = tr.document.get_source_document()
         # FIXME The parsing done before translation might need id etc values found in the markdown, but not found in the paragraphs, that get_paragraphs() returns...
         # Ignore the settings paragraphs entirely to protect them from mangling
-        translatable_paragraphs = filter(
-            lambda x: not x.is_setting(), orig_doc.get_paragraphs()
+        zipped_paragraphs = zip(orig_doc.get_paragraphs(), tr.document)
+        translatable_zipped_paragraphs = filter(
+            lambda x: not (x[0].is_setting() or x[1].is_setting()), zipped_paragraphs
         )
-        zipped_paragraphs = zip(translatable_paragraphs, tr.document)
-        for orig_paragraph, tr_block in zipped_paragraphs:
+        for orig_paragraph, tr_block in translatable_zipped_paragraphs:
             md = orig_paragraph.md
 
             if orig_paragraph.is_plugin():
