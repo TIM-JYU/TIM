@@ -1,3 +1,11 @@
+/**
+ * Created by noemjoke on 21.3.2022
+ * The dialog component for adding translator API keys to user settings
+ * @author Noora Jokela
+ * @licence MIT
+ * @copyright 2022 TIMTra project authors
+ */
+
 import {Component, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -8,7 +16,7 @@ import {toPromise} from "../util/utils";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {ITranslators} from "../item/IItem";
 import {listTranslators} from "../document/editing/edittypes";
-import {IUserAPIKey} from "./IUser";
+import {IUserApiKey} from "./IUser";
 
 /**
  * User can add translator API keys to be stored in TIM. (code source: add-contact-dialog.component.ts)
@@ -37,7 +45,7 @@ import {IUserAPIKey} from "./IUser";
                                    [(ngModel)]="apiKey">
                         </div>
                         <div>
-                            <tim-alert *ngIf="verificationSent" severity="success" i18n>
+                            <tim-alert *ngIf="added" severity="success" i18n>
                                 The API key was added successfully!
                             </tim-alert>
                             <tim-alert *ngIf="addError" severity="danger" i18n>
@@ -61,7 +69,7 @@ import {IUserAPIKey} from "./IUser";
     `,
 })
 export class AddAPIKeyDialogComponent extends AngularDialogComponent<
-    {onAdd: (key: IUserAPIKey) => void},
+    {onAdd: (key: IUserApiKey) => void},
     void
 > {
     translators: Array<ITranslators> = [];
@@ -75,10 +83,10 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
     chosenTranslator: string = "";
     apiKey?: string;
 
-    verificationSent = false;
     saved = false;
     saving = false;
     addError?: string;
+    added = false;
 
     // Used only to get HttpClient initialized.
     constructor(private http: HttpClient) {
@@ -90,21 +98,23 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
         this.saving = true;
         // Call the server.
         const result = await toPromise(
-            this.http.post<{requireVerification: boolean}>("/apikeys/add", {
+            this.http.post("/apikeys/add", {
                 translator: this.chosenTranslator,
                 apikey: this.apiKey,
             })
         );
         this.saving = false;
+        this.added = true;
         if (result.ok) {
-            this.verificationSent = result.result.requireVerification;
             this.saved = true;
             this.data.onAdd({
                 translator: this.chosenTranslator,
                 APIkey: this.apiKey!,
             });
             this.dismiss();
+            this.added = false;
         } else {
+            this.added = false;
             this.addError = result.result.error.error;
         }
     }

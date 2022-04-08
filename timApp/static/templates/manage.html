@@ -199,13 +199,13 @@
                 <uib-tab heading="Create a translation">
                     <div class="form-group"><label for="translationTitle">Title:</label>
                         <input id="translationTitle" class="form-control" type="text"
-                               ng-model="$ctrl.newTranslation.title"/>
+                               ng-model="$ctrl.newTranslation.title" />
                     </div>
                     <div class="languageLists">
                         <div>
                         <label for="documentLanguage">Target language:</label>
                         <select id="document-language" name="document-language-select" class="form-control"
-                               ng-model="$ctrl.newTranslation.language" ng-change="$ctrl.updateLangChoice()">
+                               ng-model="$ctrl.newTranslation.language" ng-change="$ctrl.checkTranslatability()">
                                 <option ng-repeat="option in $ctrl.documentLanguages" value="{{option.code}}">{{option.name}} ({{option.code}})</option>
                         </select></div>
                         <div>
@@ -215,10 +215,10 @@
                                 <option ng-repeat="option in $ctrl.translators" value="{{option.name}}">{{option.name}}</option>
                         </select></div>
                     </div>
-                    <div ng-show="$ctrl.checkTranslatability()">
+                    <div ng-show="$ctrl.mayTranslate && $ctrl.newTranslation.title">
                         <p>This document will be automatically translated on creation. Note: A human should check the translation for any errors and fix them!</p>
                     </div>
-                    <div ng-show="!$ctrl.checkTranslatability()">
+                    <div ng-show="!$ctrl.mayTranslate || !$ctrl.newTranslation.title">
                         <p>This document will not be automatically translated on creation.</p>
                     </div>
                     <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title ||$ctrl.translationInProgress"

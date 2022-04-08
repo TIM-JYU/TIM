@@ -35,7 +35,7 @@ export interface IUserContact {
     primary: boolean;
 }
 
-export interface IUserAPIKey {
+export interface IUserApiKey {
     translator: string;
     APIkey: string;
 }

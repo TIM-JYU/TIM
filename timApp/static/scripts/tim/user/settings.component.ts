@@ -36,7 +36,7 @@ import {
 import {IOkResponse, isIOS, timeout, to2, toPromise} from "../util/utils";
 import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
 import {DocumentOrFolder, ITranslatorUsage} from "../item/IItem";
-import {ContactOrigin, IFullUser, IUserAPIKey, IUserContact} from "./IUser";
+import {ContactOrigin, IFullUser, IUserApiKey, IUserContact} from "./IUser";
 
 @Component({
     selector: "settings-button-panel",
@@ -432,7 +432,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                     <ng-container>
                         <span class="form-label" i18n>Translator API Keys</span>
                         <div class="contact-collection">
-                            <div class="contact-info" *ngFor="let APIkey of userAPIKeyEntries">
+                            <div class="contact-info" *ngFor="let APIkey of userAPIKeys">
                                 <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>
                                 <input type="text" class="form-control buttonBorder" [value]="APIkey.translator" disabled>
                                 <div *ngIf="quotaChecked" class="stacked quotaProgressBar">
@@ -495,7 +495,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     deleteConfirmName = "";
     contacts: IUserContact[];
     userContacts = new Map<Channel, IUserContact[]>();
-    userAPIKeys: IUserAPIKey[] = [];
+    userAPIKeys: IUserApiKey[] = [];
     userEmailContacts: IUserContact[] = [];
     canRemoveCustomContacts = true;
     primaryEmail!: IUserContact;
@@ -563,7 +563,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     // region Styles tab
 
     async getKeys() {
-        const r = await toPromise(this.http.get<IUserAPIKey[]>("/apikeys/get"));
+        const r = await toPromise(this.http.get<IUserApiKey[]>("/apikeys/get"));
         if (r.ok) {
             this.userAPIKeys = r.result;
         }
@@ -654,9 +654,6 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         return [...this.userContacts.entries()];
     }
 
-    get userAPIKeyEntries() {
-        return [...this.userAPIKeys];
-    }
     cbChanged = (cbs: boolean[], n: number, index: number) => {
         this.cbCount = n;
         if (n == 0) {
@@ -922,24 +919,10 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     openAPIKeyDialog() {
         void to2(
             showAddAPIKeyDialog((key) => {
-                this.updateKeys(key, (keys) => [...keys, key]);
+                this.userAPIKeys.push(key);
                 this.cdr.detectChanges();
             })
         );
-    }
-
-    private updateKeys(
-        key: IUserAPIKey,
-        update: (keys: IUserAPIKey[]) => IUserAPIKey[]
-    ) {
-        /* if (key == ) {
-            this.userAPIKeys = newKeys;
-        } */
-        // TODO: test that this function works; I have little idea how exactly this stuff works
-        // since it was copied off of code that uses enum instead of interface and it broke
-        // when I just replaced stuff.
-        // Testing needs the backend done first, though.
-        this.userAPIKeys.push(key);
     }
 
     private getContactsFor(channel: Channel): IUserContact[] {
@@ -1020,7 +1003,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.cdr.detectChanges();
     }
 
-    async deleteKey(key: IUserAPIKey) {
+    async deleteKey(key: IUserApiKey) {
         this.saving = true;
         const r = await toPromise(
             this.http.post("/apikeys/remove", {
@@ -1040,7 +1023,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.cdr.detectChanges();
     }
 
-    async checkQuota(key: IUserAPIKey) {
+    async checkQuota(key: IUserApiKey) {
         const r = await toPromise(
             this.http.post<ITranslatorUsage>("/apikeys/quota", {
                 translator: key.translator,
@@ -1051,13 +1034,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
             this.quotaChecked = true;
             this.availableQuota = r.result.character_limit;
             this.usedQuota = r.result.character_count;
-            const quotaBar = document.getElementById(
-                "quota"
-            ) as HTMLProgressElement;
-            if (quotaBar != undefined) {
-                quotaBar.max = this.availableQuota;
-                quotaBar.value = this.usedQuota;
-            }
+
             // TODO: Figure out why this is needed for change detection
             this.cdr.detectChanges();
         } else {
