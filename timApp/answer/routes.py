@@ -130,6 +130,7 @@ from timApp.util.logger import log_info
 from timApp.util.utils import get_current_time, approximate_real_name
 from timApp.util.utils import local_timezone
 from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
+from timApp.velp.annotations import get_annotations_with_comments_in_document
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import value_or_default
@@ -423,7 +424,8 @@ def get_answers_for_tasks(tasks: list[str], user_id: int):
             tid = TaskId.parse(task_id)
             if tid.doc_id not in doc_map:
                 dib = get_doc_or_abort(tid.doc_id, f"Document {tid.doc_id} not found")
-                verify_seeanswers_access(dib)
+                if not dib.document.get_settings().peer_review():
+                    verify_seeanswers_access(dib)
                 doc_map[tid.doc_id] = dib.document
             if tid.is_global:
                 gtids.append(tid)
@@ -1249,6 +1251,9 @@ def preprocess_jsrunner_answer(
         user_filter=User.name.in_(runner_req.input.userNames)
         if runner_req.input.userNames
         else None,
+    )
+    answerdata["testvelps"] = get_annotations_with_comments_in_document(
+        curr_user, d, False
     )
     answerdata.pop(
         "paramComps", None

@@ -1,0 +1,16 @@
+Settings
+Start peer reviewing
+```` {settings="" atom="true"}
+```
+auto_number_headings: 0
+urlmacros:
+ group:
+macros:
+ arvosteltavia:
+ group:
+group:
+form_mode: true
+peer_review: false
+peer_review_count:
+```
+````

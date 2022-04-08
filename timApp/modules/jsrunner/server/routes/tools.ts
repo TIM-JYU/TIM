@@ -6,7 +6,7 @@ import {
     IJsRunnerMarkup,
     INumbersObject,
 } from "../../shared/jsrunnertypes";
-import {AliasDataT, UserFieldDataT} from "../servertypes";
+import {AliasDataT, UserFieldDataT, VelpDataT} from "../servertypes";
 
 /**
  * From name=alias list returns two lists
@@ -946,11 +946,13 @@ export interface IToolsResult {
 
 export class Tools extends ToolsBase {
     private result: Record<string, unknown> = {};
+
     constructor(
         protected data: UserFieldDataT,
         currDoc: string,
         markup: IJsRunnerMarkup,
-        aliases: AliasDataT
+        aliases: AliasDataT,
+        protected testvelps: VelpDataT[]
     ) {
         super(currDoc, markup, aliases);
     }
@@ -1318,5 +1320,97 @@ export class Tools extends ToolsBase {
 
     getResult(): IToolsResult {
         return {user: this.data.user.id, fields: this.result};
+    }
+
+    getTaskPoints(task: string): number {
+        const velps = this.testvelps
+            .filter(
+                (v) =>
+                    v.answer.users[0].id === this.data.user.id &&
+                    v.answer.task_id.substr(
+                        v.answer.task_id.indexOf(".") + 1
+                    ) === task
+            )
+            .map((v) => ({
+                id: v.annotator.id,
+                name: v.annotator.name,
+                points: v.points ? v.points : NaN,
+                task: v.answer.task_id,
+            }));
+
+        const points = velps.map((v) => v.points).filter((n) => !isNaN(n));
+        // this.output += points
+        const sum = points.reduce((a, b) => a + b, 0);
+        return sum / velps.length ? sum / velps.length : 0;
+    }
+
+    getReviewCount(task: string): number {
+        const velps = this.testvelps
+            .filter(
+                (v) =>
+                    v.annotator.id === this.data.user.id &&
+                    v.answer.task_id.substr(
+                        v.answer.task_id.indexOf(".") + 1
+                    ) === task
+            )
+            .map((v) => ({
+                id: v.annotator.id,
+                answer: v.answer.id,
+            }));
+        const seen = new Set(velps.filter((v) => v.answer));
+        return seen.size;
+    }
+
+    getReviews(task: string): object[] {
+        const velps = this.testvelps
+            .filter(
+                (v) =>
+                    v.answer.users[0].id === this.data.user.id &&
+                    v.answer.task_id.substr(
+                        v.answer.task_id.indexOf(".") + 1
+                    ) === task
+            )
+            .map((v) => ({
+                id: v.annotator.id,
+                name: v.annotator.name,
+                points: v.points ? v.points : NaN,
+            }));
+        // this.output += velps;
+
+        const result = Array.from(new Set(velps.map((s) => s.id))).map((id) => {
+            const reviewer = velps.find((s) => s.id === id);
+            const points = velps
+                .filter((s) => s.id === id)
+                .map((velp) => (velp.points ? velp.points : NaN))
+                .filter((n) => !isNaN(n));
+            return {
+                id: id,
+                name: reviewer ? reviewer.name : "",
+                points: points,
+            };
+        });
+        return result;
+    }
+
+    getPoints(task: string) {
+        const velps = this.testvelps
+            .filter(
+                (v) =>
+                    v.answer.users[0].id === this.data.user.id &&
+                    v.answer.task_id.substr(
+                        v.answer.task_id.indexOf(".") + 1
+                    ) === task
+            )
+            .map((v) => ({
+                id: v.annotator.id,
+                name: v.annotator.name,
+                points: v.points ? v.points : NaN,
+                task: v.answer.task_id,
+            }));
+
+        const points = velps.map((v) => v.points).filter((n) => !isNaN(n));
+        // this.output += points
+        const sum = points.reduce((a, b) => a + b, 0);
+        return sum;
     }
 }
