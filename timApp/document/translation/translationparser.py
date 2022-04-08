@@ -654,10 +654,18 @@ def rawblock_collect(content: dict) -> list[TranslateApproval]:
 
 
 def orderedlist_collect(content: dict, depth: int) -> list[TranslateApproval]:
+    if (
+        not (content[0], list)
+        or not (content[1], list)
+        or not isinstance(content[2], (int, str, str))
+    ):
+        assert False, "PanDoc link content is not [ [Inline] ]."
     return list_collect(content[1], depth, content[0])
 
 
 def bulletlist_collect(content: dict, depth: int) -> list[TranslateApproval]:
+    if not isinstance(content, list):
+        assert False, "PanDoc link content is not [ [Inline] ]."
     return list_collect(content, depth, None)
 
 
