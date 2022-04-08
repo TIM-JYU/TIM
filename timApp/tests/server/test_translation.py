@@ -347,19 +347,25 @@ Baz
 """
         )
         tr = self.create_translation(d)
-        id1, id2, id3, *_ = [x.id for x in tr.document.get_paragraphs()]
+        tr_doc = tr.document
+        id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
         data = {"autotranslate": "Reversing"}
         r = self.json_post(f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}", data)
+        tr_doc.clear_mem_cache()
         self.assertEqual(r, tr.id)
-        self.assertEqual(tr.document.get_paragraph(id1).md, "ooF")
-        self.assertEqual(tr.document.get_paragraph(id2).md, "Bar")
-        self.assertEqual(tr.document.get_paragraph(id3).md, "Baz")
+        self.assertEqual(tr_doc.get_paragraph(id1).md, "ooF")
+        self.assertEqual(tr_doc.get_paragraph(id2).md, "")
+        self.assertEqual(tr_doc.get_paragraph(id3).md, "")
 
         self.json_post(f"/translate/paragraph/{tr.id}/{id2}/{lang.lang_code}", data)
-        self.assertEqual(tr.document.get_paragraph(id2).md, "raB")
+        tr_doc.clear_mem_cache()
+        self.assertEqual(tr_doc.get_paragraph(id2).md, "raB")
 
         self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}", data)
-        self.assertEqual(tr.document.get_paragraph(id3).md, "zaB")
+        tr_doc.clear_mem_cache()
+        self.assertEqual(tr_doc.get_paragraph(id3).md, "zaB")
 
         self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}", data)
-        self.assertEqual(tr.document.get_paragraph(id3).md, "Baz")
+        tr_doc.clear_mem_cache()
+        # Applying translation again uses the SOURCE paragraph, so the result is the same
+        self.assertEqual(tr_doc.get_paragraph(id3).md, "zaB")

@@ -385,6 +385,8 @@ def init_translate(
                 translated_md += elem.text
             # TODO Are the paragraphs actually separated by "\n\n"? Seems like this would need more handling in regard to TIM's block separation and id's etc
             translated_md += "\n\n"
+        translated_md = translated_md.strip()
+
         return translated_md
 
     def generic_translate(texts: list[str]) -> list[str]:
