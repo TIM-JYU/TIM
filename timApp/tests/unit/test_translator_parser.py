@@ -193,12 +193,7 @@ class TestParser(unittest.TestCase):
         text = r"\text{testi}\x"
         self.assertEqual(
             tex_collect(text),
-            [
-                NoTranslate(r"\text{"),
-                Translate(r"testi"),
-                NoTranslate(r"}\x")
-
-            ]
+            [NoTranslate(r"\text{"), Translate(r"testi"), NoTranslate(r"}\x")],
         ),
 
     # Testing text with style inside latex
@@ -206,11 +201,7 @@ class TestParser(unittest.TestCase):
         text = r"\textrm{another test}\x"
         self.assertEqual(
             tex_collect(text),
-            [
-                NoTranslate(r"\textrm{"),
-                Translate(r"another test"),
-                NoTranslate(r"}\x")
-            ]
+            [NoTranslate(r"\textrm{"), Translate(r"another test"), NoTranslate(r"}\x")],
         ),
 
     # Testing a math function inside latex using dollar signs
@@ -223,8 +214,8 @@ class TestParser(unittest.TestCase):
                 Translate(r"Testataan kaaviota: "),
                 NoTranslate(r"}\x$1\;\text{"),
                 Translate(r"prosentti"),
-                NoTranslate(r"}=1\;\% =\frac{1}{100}=0,01$")
-            ]
+                NoTranslate(r"}=1\;\% =\frac{1}{100}=0,01$"),
+            ],
         ),
 
     # Testing a math function mathrm inside latex using double dollar signs
@@ -235,8 +226,8 @@ class TestParser(unittest.TestCase):
             [
                 NoTranslate(r"$$\mathrm{"),
                 Translate(r"Muuttuja e"),
-                NoTranslate(r"} = \sum_{n=0}^{\infty} \dfrac{1}{n!}$$")
-            ]
+                NoTranslate(r"} = \sum_{n=0}^{\infty} \dfrac{1}{n!}$$"),
+            ],
         ),
 
     # Testing matrices inside latex
@@ -251,13 +242,15 @@ class TestParser(unittest.TestCase):
         self.assertEqual(
             tex_collect(text),
             [
-                NoTranslate(r""""$$M = 
+                NoTranslate(
+                    r""""$$M = 
         \begin{bmatrix}
         \frac{5}{6} & \frac{1}{6} & 0 \\[0.3em]
         \frac{5}{6} & 0 & \frac{1}{6} \\[0.3em]
         0 & \frac{5}{6} & \frac{1}{6}
         \end{bmatrix}
-        $$""")
+        $$"""
+                )
             ],
         )
 
@@ -271,8 +264,8 @@ class TestParser(unittest.TestCase):
                 Translate(r"oranges"),
                 NoTranslate(r"}\x\times 100 \textit{"),
                 Translate(r"something"),
-                NoTranslate(r"}\x")
-            ]
+                NoTranslate(r"}\x"),
+            ],
         ),
 
     def test_get_translate_approvals_latex(self):
@@ -363,6 +356,9 @@ x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\text{ ratkaistaan x}\\
     def test_tim_plugin(self):
         md = r"""``` {plugin="csPlugin" #btn-tex2 .miniSnippets}
 header: Harjoittele matemaattisen vastauksen kirjoittamista.
+questionText: "Voit harjoitella
+              sitä vaikkapa kirjoittamalla"
+              
 stem: |!!
 md:
 Kirjoita teksti:
@@ -377,6 +373,7 @@ $$
 eri ratkaisua.  Vain jos diskriminantti $D = \sqrt{b^2 - 4ac}$ on nolla, on ratkaisuja yksi kappale.
 !!
 %%matikka%%
+questionTitle: 'Vinkkejä harjoitteluun'
 ```"""
         self.assertEqual(
             get_translate_approvals(md),
@@ -385,12 +382,21 @@ eri ratkaisua.  Vain jos diskriminantti $D = \sqrt{b^2 - 4ac}$ on nolla, on ratk
                     # NOTE At the moment, the attributes are discarded
                     NoTranslate(
                         r"""```
-header:"""
+header: """
                     ),
-                    Translate(" Harjoittele matemaattisen vastauksen kirjoittamista."),
+                    Translate("Harjoittele matemaattisen vastauksen kirjoittamista."),
+                    NoTranslate('\nquestionText: "'),
+                    Translate(
+                        "Voit harjoitella\n              sitä vaikkapa kirjoittamalla"
+                    ),
                     NoTranslate(
+                        '"'
+                        + r"""
+              
+stem: |!!"""
+                    ),
+                    Translate(
                         r"""
-stem: |!!
 md:
 Kirjoita teksti:
 
@@ -401,11 +407,16 @@ x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
 $$
 
 >josta on huomattava että useimmilla $a$, $b$ ja $c$ arvoilla voi tulla kaksi
-eri ratkaisua.  Vain jos diskriminantti $D = \sqrt{b^2 - 4ac}$ on nolla, on ratkaisuja yksi kappale.
+eri ratkaisua.  Vain jos diskriminantti $D = \sqrt{b^2 - 4ac}$ on nolla, on ratkaisuja yksi kappale."""
+                    ),
+                    NoTranslate(
+                        """
 !!
 %%matikka%%
-```"""
+questionTitle: '"""
                     ),
+                    Translate("Vinkkejä harjoitteluun"),
+                    NoTranslate("'\n```"),
                 ]
             ],
         )
@@ -413,5 +424,3 @@ eri ratkaisua.  Vain jos diskriminantti $D = \sqrt{b^2 - 4ac}$ on nolla, on ratk
 
 if __name__ == "__main__":
     unittest.main()
-
-

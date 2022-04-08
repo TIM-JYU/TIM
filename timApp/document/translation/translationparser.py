@@ -560,17 +560,51 @@ def collect_tim_plugin(attrs: dict, content: str) -> list[TranslateApproval]:
     ]
 
     arr: list[TranslateApproval] = list()
-    for line in content.splitlines():
-        for key in map(lambda x: f"{x}:", keys):
-            if line.lstrip().startswith(key):
-                nt, text = line.split(key)
+    lines = iter(content.splitlines())
+    while (line := next(lines, None)) is not None:
+        for key_s in map(lambda x: f"{x}:", keys):
+            if line.lstrip().startswith(key_s):
+                nt, text = line.split(key_s, 1)
                 arr.append(NoTranslate(nt))
-                if not text.lstrip().startswith("|"):
-                    arr.append(NoTranslate(key))
-                    arr.append(Translate(text))
+                arr.append(NoTranslate(key_s))
+                if text_start := text.lstrip():
+                    text_start_i = text.index(text_start)
+                    nt, text = text[:text_start_i], text[text_start_i:]
+                    arr.append(NoTranslate(nt))
+                    start_char = text_start[0]
                 else:
+                    # Value is whitespace.
+                    arr.append(NoTranslate(text))
+                    break
+                if start_char == '"' or start_char == "'":
                     # TODO handle multiline strings
-                    arr.append(NoTranslate(line))
+                    # Line is a multiline (quoted) value.
+                    arr.append(NoTranslate(start_char))
+                    # Skip the start_char
+                    text = text[1:]
+                    # Get text until next occurrence of the quote.
+                    # NOTE Translation could worsen because of YAML indentation
+                    while (line := next(lines, None)) is not None:
+                        text += "\n" + line
+                        if start_char in text:
+                            break
+                    # Add the lines content, that included the start_char
+                    text = text[: text.index(start_char)]
+                    arr.append(Translate(text))
+                    arr.append(NoTranslate(start_char))
+                elif start_char == "|":
+                    # Line is a multiline (ie. "|xx .* xx") value.
+                    start_symbol = text_start[1:]
+                    arr.append(NoTranslate(start_char + start_symbol))
+                    while (line := next(lines, None)) is not None:
+                        if start_symbol in line:
+                            # Add the end of multiline
+                            arr.append(NoTranslate("\n" + line))
+                            break
+                        arr.append(Translate("\n" + line))
+                else:
+                    # Line is a single line value.
+                    arr.append(Translate(text))
                 break
         # No keys were matched if the inner for-loop does not terminate early -> the line does not contain a known key for translatable text
         else:
@@ -587,6 +621,7 @@ def codeblock_collect(content: dict) -> list[TranslateApproval]:
     if "plugin" in attr_kv_pairs:
         # NOTE Here, the attributes of codeblock are DISCARDED (as mentioned in comment above) and will not be included in the result when markdown is reconstructed ie. caller should save needed attributes
         arr: list[TranslateApproval] = list()
+        # TODO Does DocParagraph.modify_paragraph include the ``` for (plugin) codeblocks already?
         arr.append(NoTranslate("```"))
         arr.append(NoTranslate("\n"))
 
