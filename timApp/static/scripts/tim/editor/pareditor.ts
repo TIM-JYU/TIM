@@ -1670,6 +1670,33 @@ ${backTicks}
         return tags.marktranslated == undefined;
     }
 
+    async translateParagraph() {
+        const parId = this.getExtraData().par!.originalPar.id;
+        const docId = this.resolve.params.viewCtrl!.item.id;
+        this.translationInProgress = true;
+
+        const lang = this.resolve.params.viewCtrl!.item.lang_id!;
+        const r = await to(
+            $http.post<IDocument>(
+                `/translate/paragraph/${docId}/${parId}/${lang}`,
+                {
+                    autotranslate: this.docTranslator,
+                    originaltext: this.trdiff!.new,
+                }
+            )
+        );
+        if (r.ok) {
+            const response = await to(
+                $http.get<{text: string}>(`/getBlock/${docId}/${parId}`)
+            );
+            if (response.ok) {
+                this.getEditor()!.setEditorText(response.result.data.text);
+            }
+        } else {
+            await showMessageDialog(r.result.data.error);
+        }
+    }
+
     /**
      * Handles sending either the source block's text or the selected editor text to the translator.
      */
@@ -1694,10 +1721,10 @@ ${backTicks}
             this.trdiff.old != edittext &&
             this.nothingSelected
         ) {
+            // TODO: Improve this message! The overwriting is permanent and cannot be cancelled or CTRL+Z'ed!!
             mayContinue = window.confirm(
                 "Do you want to overwrite previous changes?"
             );
-            this.nothingSelected = false;
         }
         if (!mayContinue) {
         } else if (
@@ -1707,35 +1734,30 @@ ${backTicks}
         ) {
         } else {
             this.translationInProgress = true;
-
-            const lang = this.resolve.params.viewCtrl.item.lang_id;
-            const r = await to(
-                $http.post<IDocument>(
-                    `/translate/${this.resolve.params.viewCtrl.item.id}/${lang}/translate_block`,
-                    {
-                        autotranslate: this.docTranslator,
-                        originaltext: translatableText,
-                    }
-                )
-            );
-            if (r.ok) {
-                // eslint-disable-next-line @typescript-eslint/no-base-to-string
-                const resultText = r.result.data.toString();
-                const ref =
-                    this.resolve.params.initialText?.substring(
-                        0,
-                        this.resolve.params.initialText?.indexOf("}") + 1
-                    ) + "\n";
-                if (translatableText != this.trdiff.new) {
-                    this.editor!.replaceTranslation(resultText);
-                } else {
-                    this.getEditor()?.setEditorText(ref + resultText);
-                }
-                this.translationInProgress = false;
+            if (this.nothingSelected) {
+                await this.translateParagraph();
             } else {
-                this.translationInProgress = false;
-                await showMessageDialog(r.result.data.error);
+                const lang = this.resolve.params.viewCtrl.item.lang_id;
+                const r = await to(
+                    $http.post<string>(
+                        `/translate/${this.resolve.params.viewCtrl.item.id}/${lang}/translate_block`,
+                        {
+                            autotranslate: this.docTranslator,
+                            originaltext: translatableText,
+                        }
+                    )
+                );
+                if (r.ok) {
+                    const resultText = r.result.data;
+                    if (translatableText != this.trdiff.new) {
+                        this.editor!.replaceTranslation(resultText);
+                    } else {
+                    }
+                } else {
+                    await showMessageDialog(r.result.data.error);
+                }
             }
+            this.translationInProgress = false;
         }
     }
 
@@ -1753,6 +1775,7 @@ ${backTicks}
                 return this.trdiff.new;
             }
         }
+        this.nothingSelected = false;
         return selection;
     }
 
