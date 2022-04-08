@@ -134,15 +134,6 @@ def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
             )
         tid = TaskId.parse(answer.task_id)
         d = get_doc_or_abort(tid.doc_id)
-        peer_review = d.document.get_settings().peer_review()
-        if not peer_review:
-            if (
-                not verify_seeanswers_access(d, require=False)
-                and get_current_user_object() not in answer.users_all
-            ):
-                raise AccessDenied(
-                    "Sorry, you don't have permission to access this upload."
-                )
         if (
             not verify_seeanswers_access(d, require=False)
             and get_current_user_object() not in answer.users_all
