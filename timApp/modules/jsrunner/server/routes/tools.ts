@@ -1337,7 +1337,7 @@ export class Tools extends ToolsBase {
             .map((v) => v.points)
             .reduce((acc, p) => acc + (p !== null ? p : 0), 0);
         const count = this.getVelpedCount(task);
-        this.println(sum, count);
+        // this.println(sum, count);
         return count ? sum / count : NaN;
         // return sum / velps.length ? sum / velps.length : 0;
     }
