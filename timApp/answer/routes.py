@@ -2145,7 +2145,9 @@ def get_state(
     elif task_id:
         tid = TaskId.parse(task_id)
         d = get_doc_or_abort(tid.doc_id)
-        if get_current_user_id() != user_id:
+        if get_current_user_id() != user_id and not has_review_access(
+            d, get_current_user_object(), None, user
+        ):
             verify_seeanswers_access(d)
         else:
             verify_view_access(d)
