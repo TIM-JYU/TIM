@@ -1373,7 +1373,7 @@ export class Tools extends ToolsBase {
             .map((v) => ({
                 id: v.annotator.id,
                 name: v.annotator.name,
-                points: v.points ? v.points : NaN,
+                points: v.points !== null ? v.points : NaN,
             }));
         // this.output += velps;
 
@@ -1381,7 +1381,7 @@ export class Tools extends ToolsBase {
             const reviewer = velps.find((s) => s.id === id);
             const points = velps
                 .filter((s) => s.id === id)
-                .map((velp) => (velp.points ? velp.points : NaN))
+                .map((velp) => (velp.points !== null ? velp.points : NaN))
                 .filter((n) => !isNaN(n));
             return {
                 id: id,

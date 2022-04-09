@@ -1,0 +1,24 @@
+Table And Fields by macros
+Things needed for review results for one task
+\
+
+#- {defaultplugin="textfield" .fieldCell}
+%% 'XX_Riitauta=Riitauta: Kirjoita tähän, jos et tykkää arvioista' | gfields('cols: 25') -%%
+\
+
+#- {area="XX_fields" visible="%% False | isview%%" nocache="true" collapse="true"}
+Arviointitilanne XX
+
+#- {defaultplugin="numericfield" readonly="view" .fieldCell}
+%%REVIEW_FIELDS("XX", arvosteltavia)%%
+
+#- {area_end="XX_fields"}
+\
+
+``` {#XX_demotable plugin="tableForm" visible="%% False | isview%%" nocache="true"}
+%%REVIEW_TABLE("XX",arvosteltavia)%%
+```
+
+``` {#reviewUpdateRunner_XX plugin="jsrunner"}
+%%REVIEW_UPDATE("XX",arvosteltavia,1,6)%%
+```
