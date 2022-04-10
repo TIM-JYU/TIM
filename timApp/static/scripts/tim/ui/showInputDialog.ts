@@ -71,12 +71,13 @@ export async function doTemplateQueries(data: string): Promise<string> {
     const replaceList: ITemplateParam[] = [];
     const rows = data.split("\n");
     while (rows?.[0].startsWith('- {"what"')) {
+        const s = rows[0].substring(2);
         try {
-            const jso = JSON.parse(rows[0].substring(2));
+            const jso = JSON.parse(s);
             replaceList.push(jso);
             rows.shift();
         } catch (e) {
-            return "" + e + " " + rows[0];
+            return "" + e + "\n" + s;
         }
     }
     if (!replaceList) {
