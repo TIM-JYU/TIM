@@ -622,20 +622,10 @@ def render_doc_view(
     contents_have_changed = False
     doc_hash = get_doc_version_hash(doc_info)
     # db.session.close()
-    full_document_for_review = None
     index = load_index(index_cache_folder / f"{doc_hash}.json")
     if index is not None:
         # If cached header is up to date, partition document here.
         xs, view_range = get_document(doc_info, view_range or r_view_range)
-        if (
-            not r_view_range.is_full
-            and view_ctx.route.is_review
-            and is_peerreview_enabled(doc_info)
-            and not check_review_grouping(doc_info)
-        ):
-            full_document_for_review, _ = get_document(
-                doc_info, RequestedViewRange(b=None, e=None, size=None)
-            )
     else:
         # Otherwise the partitioning is done after forming the index.
         contents_have_changed = True
@@ -651,6 +641,7 @@ def render_doc_view(
     # Used later to get partitioning with preambles included correct.
     # Includes either only special class preambles, or all of them if b=0.
     preamble_count = 0
+    preamble_pars = None
     if (
         load_preamble
         or view_range.starts_from_beginning
@@ -666,16 +657,10 @@ def render_doc_view(
             flash(e)
         else:
             xs = preamble_pars + xs
-            if full_document_for_review:
-                full_document_for_review = preamble_pars + full_document_for_review
             preamble_count = len(preamble_pars)
 
     # Preload htmls here to make dereferencing faster
     DocParagraph.preload_htmls(xs, doc_settings, view_ctx, clear_cache)
-    if full_document_for_review:
-        DocParagraph.preload_htmls(
-            full_document_for_review, doc_settings, view_ctx, clear_cache
-        )
     src_doc = doc.get_source_document()
     if src_doc is not None:
         DocParagraph.preload_htmls(
@@ -690,10 +675,6 @@ def render_doc_view(
     )
     # We need to deference paragraphs at this point already to get the correct task ids
     xs = dereference_pars(xs, context_doc=doc, view_ctx=view_ctx)
-    if full_document_for_review:
-        full_document_for_review = dereference_pars(
-            full_document_for_review, context_doc=doc, view_ctx=view_ctx
-        )
     total_points = None
     tasks_done = None
     task_groups = None
@@ -823,23 +804,42 @@ def render_doc_view(
         do_lazy=do_lazy,
         load_plugin_states=not hide_answers,
     )
-    if full_document_for_review:
-        full_document_for_review = post_process_pars(
-            doc,
-            full_document_for_review,
-            user_ctx,
-            view_ctx,
-            sanitize=False,
-            do_lazy=do_lazy,
-            load_plugin_states=not hide_answers,
-        )
 
     if view_ctx.route.is_review:
         user_list = []
         if is_peerreview_enabled(doc_info):
             if not check_review_grouping(doc_info):
                 try:
-                    if full_document_for_review:
+                    if not r_view_range.is_full:
+                        # peer_review pairing generation may be called when only a part of the document is requested,
+                        # however we need to know answerers from every task in the document, so we generate full
+                        # document here
+                        # TODO: alternative approach (separate route, timer etc) for launching peer_review generation
+                        full_document_for_review = get_document(
+                            doc_info, RequestedViewRange(b=None, e=None, size=None)
+                        )
+                        if preamble_pars:
+                            full_document_for_review = (
+                                preamble_pars + full_document_for_review
+                            )
+                        DocParagraph.preload_htmls(
+                            full_document_for_review,
+                            doc_settings,
+                            view_ctx,
+                            clear_cache,
+                        )
+                        full_document_for_review = dereference_pars(
+                            full_document_for_review, context_doc=doc, view_ctx=view_ctx
+                        )
+                        full_document_for_review = post_process_pars(
+                            doc,
+                            full_document_for_review,
+                            user_ctx,
+                            view_ctx,
+                            sanitize=False,
+                            do_lazy=do_lazy,
+                            load_plugin_states=not hide_answers,
+                        )
                         generate_review_groups(
                             doc_info,
                             full_document_for_review.plugins,
