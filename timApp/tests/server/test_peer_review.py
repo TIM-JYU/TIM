@@ -16,7 +16,8 @@ class PeerReviewTest(TimRouteTest):
 #- {#t2 plugin=textfield}
 """,
         )
-        r = self.get(d.get_url_for_view("review"))
+        url = d.get_url_for_view("review")
+        r = self.get(url)
         self.assertIn(
             "Not enough users to form pairs (0 but at least 2 users needed)", r
         )
@@ -24,14 +25,14 @@ class PeerReviewTest(TimRouteTest):
         self.assertEqual(0, len(rq.all()))
         self.add_answer(d, "t", "x", user=self.test_user_1)
         db.session.commit()
-        r = self.get(d.get_url_for_view("review"))
+        r = self.get(url)
         self.assertIn(
             "Not enough users to form pairs (1 but at least 2 users needed)", r
         )
         self.assertEqual(0, len(rq.all()))
         self.add_answer(d, "t2", "x", user=self.test_user_2)
         db.session.commit()
-        r = self.get(d.get_url_for_view("review"))
+        r = self.get(url)
         self.assertNotIn(
             "Not enough users to form pairs (1 but at least 2 users needed)", r
         )
@@ -57,7 +58,7 @@ class PeerReviewTest(TimRouteTest):
         rq.delete()
         d.document.add_setting("group", "testusers1")
         db.session.commit()
-        self.get(d.get_url_for_view("review"))
+        self.get(url)
         # pairing with group ignores group members who haven't answered the document
         check_peerreview_rows()
         rq.delete()
@@ -67,6 +68,13 @@ class PeerReviewTest(TimRouteTest):
         ug.users.append(self.test_user_2)
         d.document.add_setting("group", "testuser3isnothere")
         db.session.commit()
-        self.get(d.get_url_for_view("review"))
+        self.get(url)
         # pairing with group setting ignores users who answered but aren't in the group
+        check_peerreview_rows()
+        pars = d.document.get_paragraphs()
+        rq.delete()
+        db.session.commit()
+        part = self.get(f"{url}?b={pars[1].id}&size=1")
+        self.assertNotIn('id="t2"', part)
+        # testuser2 is in pairings even though pairing generating request didn't include #t2
         check_peerreview_rows()
