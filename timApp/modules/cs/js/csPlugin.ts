@@ -43,7 +43,12 @@ import {TimDefer} from "tim/util/timdefer";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import deepEqual from "deep-equal";
 import {SimcirConnectorDef, SimcirDeviceInstance} from "../simcir/simcir-all";
-import {showInputDialog} from "../../../static/scripts/tim/ui/showInputDialog";
+import {
+    ITemplateParam,
+    showInputDialog,
+    TemplateParam,
+    templateQueryAndReplace,
+} from "../../../static/scripts/tim/ui/showInputDialog";
 import {InputDialogKind} from "../../../static/scripts/tim/ui/input-dialog.kind";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
@@ -448,17 +453,6 @@ interface IUploadResponse {
     block: number;
 }
 
-const TemplateParam = t.intersection([
-    t.type({
-        default: t.string,
-        text: t.string,
-    }),
-    t.partial({
-        pattern: t.string,
-        error: t.string,
-    }),
-]);
-
 const TemplateButton = t.intersection([
     t.type({
         data: t.string,
@@ -471,7 +465,6 @@ const TemplateButton = t.intersection([
     }),
 ]);
 
-interface ITemplateParam extends t.TypeOf<typeof TemplateParam> {}
 interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
 
 /**
@@ -2840,30 +2833,10 @@ ${fhtml}
             if (item.placeholders && ip < item.placeholders.length) {
                 param = item.placeholders[ip];
             }
-            const re = new RegExp(param.pattern ?? ".*");
-            const replace = await to2(
-                showInputDialog({
-                    isInput: InputDialogKind.InputAndValidator,
-                    text: param.text,
-                    title: "Parameter",
-                    okText: "OK",
-                    defaultValue: param.default,
-                    validator: (input) =>
-                        new Promise<Result<string, string>>((res) => {
-                            if (!input.match(re)) {
-                                return res({
-                                    ok: false,
-                                    result: param.error ?? "",
-                                });
-                            }
-                            return res({ok: true, result: input});
-                        }),
-                })
-            );
-            if (!replace.ok) {
-                return "";
+            s = await templateQueryAndReplace(s, param);
+            if (!s) {
+                return;
             }
-            s = s.replace("\\?", replace.result);
             ip++;
         }
         const text = s.replace(/\\n/g, "\n");
