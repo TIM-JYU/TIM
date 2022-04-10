@@ -12,11 +12,7 @@ import {
     getFullscreenElement,
     toggleFullScreen,
 } from "tim/util/fullscreen";
-import {
-    doTemplateQueries,
-    ITemplateParam,
-    templateQueryAndReplace,
-} from "tim/ui/showInputDialog";
+import {doTemplateQueries} from "tim/ui/showInputDialog";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
@@ -1815,8 +1811,12 @@ ${backTicks}
         }
     }
 
-    putTemplate(data: string) {
+    async putTemplate(data: string) {
         this.focusEditor();
+        data = await doTemplateQueries(data);
+        if (!data) {
+            return;
+        }
         this.editor!.insertTemplate(data);
     }
 
