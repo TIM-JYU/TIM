@@ -31,10 +31,8 @@ import {
     copyToClipboard,
     defaultErrorMessage,
     defaultTimeout,
-    Result,
     timeout,
     to,
-    to2,
     toPromise,
     valueDefu,
     valueOr,
@@ -45,11 +43,9 @@ import deepEqual from "deep-equal";
 import {SimcirConnectorDef, SimcirDeviceInstance} from "../simcir/simcir-all";
 import {
     ITemplateParam,
-    showInputDialog,
+    showTemplateReplaceDialog,
     TemplateParam,
-    templateQueryAndReplace,
-} from "../../../static/scripts/tim/ui/showInputDialog";
-import {InputDialogKind} from "../../../static/scripts/tim/ui/input-dialog.kind";
+} from "../../../static/scripts/tim/ui/showTemplateReplaceDialog";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import {CURSOR, EditorComponent, EditorFile, Mode} from "./editor/editor";
@@ -2833,7 +2829,7 @@ ${fhtml}
             if (item.placeholders && ip < item.placeholders.length) {
                 param = item.placeholders[ip];
             }
-            s = await templateQueryAndReplace(s, param);
+            s = await showTemplateReplaceDialog(s, param);
             if (!s) {
                 return;
             }
