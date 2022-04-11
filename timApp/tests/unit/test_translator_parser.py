@@ -176,13 +176,17 @@ x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 && |\text{ ratkaistaan x}\\
                     Translate(" erotetaan yhteinen tekijä x"),
                     NoTranslate("}\nx(x^2-49)&=0 &&|\\text{"),
                     Translate("käytetään tulon nollasääntöä"),
-                    NoTranslate("}\\\\\nx=0\;\;\;\\\\text{"),
+                    NoTranslate(r"""}\\
+x=0\;\;\;\\text{"""),
                     Translate("tai"),
-                    NoTranslate("}\;\;\;&x^2-49=0 && |\\text{"),
+                    NoTranslate(r"""}\;\;\;&x^2-49=0 && |\text{"""),
                     Translate(" ratkaistaan x"),
-                    NoTranslate("}\\\\\n&\;\;\;\;\;\,\;\;x^2=49 \\\\\n&\;\;\;\;\;\,\;\;\;\;x=7\;\\text{"),
+                    NoTranslate(r"""}\\
+&\;\;\;\;\;\,\;\;x^2=49 \\
+&\;\;\;\;\;\,\;\;\;\;x=7\;\text{"""),
                     Translate("tai"),
-                    NoTranslate("}\;x=-7\n\end{align*}")
+                    NoTranslate(r"""}\;x=-7
+\end{align*}""")
 
                 ]
             ],
@@ -334,7 +338,7 @@ buttons: ""
         )
 
     # Test for multiple choice plugin.
-    def test_tim_plugin(self):
+    def test_tim_plugin2(self):
         md = r"""```{#mcq2 plugin="mmcq"}
 lazy: false
 answerLimit:
