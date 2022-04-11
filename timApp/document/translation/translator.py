@@ -378,6 +378,13 @@ class DeeplProTranslationService(DeeplTranslationService):
     __mapper_args__ = {"polymorphic_identity": "DeepL Pro"}
 
 
+# TODO Remove this when crisis is over
+class DeeplPlaceholderTranslationService(DeeplTranslationService):
+
+    # TODO Make the value an enum like with Verification?
+    __mapper_args__ = {"polymorphic_identity": "DeepL"}
+
+
 def init_translate(
     translator: TranslationService,
     source_lang: Language,
