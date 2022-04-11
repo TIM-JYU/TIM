@@ -6,7 +6,12 @@ import {
     IJsRunnerMarkup,
     INumbersObject,
 } from "../../shared/jsrunnertypes";
-import {AliasDataT, UserFieldDataT, VelpDataT} from "../servertypes";
+import {
+    AliasDataT,
+    PeerReviewDataT,
+    UserFieldDataT,
+    VelpDataT,
+} from "../servertypes";
 
 /**
  * From name=alias list returns two lists
@@ -952,7 +957,8 @@ export class Tools extends ToolsBase {
         currDoc: string,
         markup: IJsRunnerMarkup,
         aliases: AliasDataT,
-        protected testvelps: VelpDataT[]
+        protected testvelps: VelpDataT[],
+        protected peerreviews: PeerReviewDataT[]
     ) {
         super(currDoc, markup, aliases);
     }
@@ -1406,5 +1412,21 @@ export class Tools extends ToolsBase {
         // this.output += points
         const sum = points.reduce((a, b) => a + b, 0);
         return sum;
+    }
+
+    getAllPeerReviews(): PeerReviewDataT[] {
+        return this.peerreviews;
+    }
+
+    getPeerReviewsByUser(): PeerReviewDataT[] {
+        return this.getAllPeerReviews().filter(
+            (rev) => rev.reviewer_id == this.data.user.id
+        );
+    }
+
+    getPeerReviewsForUser(): PeerReviewDataT[] {
+        return this.getAllPeerReviews().filter(
+            (rev) => rev.reviewable_id == this.data.user.id
+        );
     }
 }
