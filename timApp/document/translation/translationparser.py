@@ -432,7 +432,6 @@ def collect_tim_plugin(attrs: dict, content: str) -> list[TranslateApproval]:
                     arr.append(NoTranslate(text))
                     break
                 if start_char == '"' or start_char == "'":
-                    # TODO handle multiline strings
                     # Line is a multiline (quoted) value.
                     arr.append(NoTranslate(start_char))
                     # Skip the start_char
@@ -561,7 +560,16 @@ def header_collect(content: dict) -> list[TranslateApproval]:
         or not isinstance(content[2], list)
     ):
         assert False, "PanDoc orderedlist content is not [ int, Attr, [Block]  ]"
-    return notranslate_all("Header", content)  # TODO
+
+    level = content[0]
+    arr: list[TranslateApproval] = list()
+
+    arr.append(NoTranslate(f"{'#' * level} "))
+    for inline in content[2]:
+        arr += inline_collect(inline)
+    arr += attr_collect(content[1])
+
+    return arr
 
 
 def table_collect(content: dict) -> list[TranslateApproval]:
