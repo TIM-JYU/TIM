@@ -89,8 +89,11 @@ def create_translation_route(tr_doc_id, language):
             req_data.get("origlang", src_doc.docinfo.lang_id)
         )
         if not src_lang:
-            # TODO Better describe what the problem is for user
-            raise RouteException(description="The source language is not found.")
+            # Manual translation can be done without the original language.
+            if translator_code.lower() != "manual":
+                raise RouteException(
+                    description="The source language has not been set to the original document."
+                )
 
         tr_lang = Language.query_by_code(language)
 
