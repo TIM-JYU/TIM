@@ -16,7 +16,10 @@ from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
-from timApp.document.translation.translator import DeeplTranslationService
+from timApp.document.translation.translator import (
+    DeeplTranslationService,
+    DeeplProTranslationService,
+)
 from timApp.document.translation.language import Language
 from timApp.document.documents import import_document_from_file
 from timApp.document.specialnames import (
@@ -187,8 +190,17 @@ def initialize_database(create_docs: bool = True) -> None:
 
         # Add the DeepL machine-translator to database with its default values
         sess.add(DeeplTranslationService())
+        log_info(f"Adding new translator '{DeeplTranslationService.service_name}'")
+        sess.add(DeeplProTranslationService())
+        log_info(f"Adding new translator '{DeeplProTranslationService.service_name}'")
         sess.commit()
         log_info("Database initialization done.")
+
+    # Add the DeepL machine-translator to database with its default values
+    sess.add(DeeplTranslationService())
+    log_info(f"Adding new translator '{DeeplTranslationService.service_name}'")
+    sess.add(DeeplProTranslationService(service_url="https://api.deepl.com/v2"))
+    log_info(f"Adding new translator '{DeeplProTranslationService.service_name}'")
 
     # Add to the database the languages found in config and skip existing ones
     langset = {x[0] for x in Language.query.with_entities(Language.lang_code).all()}
