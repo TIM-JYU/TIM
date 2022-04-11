@@ -27,6 +27,7 @@ from timApp.document.translation.translator import (
     TranslationService,
     TranslationServiceKey,
     init_deepl_translate,
+    init_deepl_pro_translate,
 )
 from timApp.document.translation.language import Language
 
@@ -181,10 +182,16 @@ def paragraph_translation_route(
 
         src_md = src_doc.document.get_paragraph(tr_par.get_attr("rp")).md
         # TODO Wrap this selection into a function to also use with the other *_translation_route -functions
-        if translator_code.lower() == "deepl":
+        if translator_code.lower() == "deepl free":
             src_lang = Language.query_by_code(src_doc.lang_id)
             target_lang = Language.query_by_code(language)
             translator_func = init_deepl_translate(
+                get_current_user_object().get_personal_group(), src_lang, target_lang
+            )
+        elif translator_code.lower() == "deepl pro":
+            src_lang = Language.query_by_code(src_doc.lang_id)
+            target_lang = Language.query_by_code(language)
+            translator_func = init_deepl_pro_translate(
                 get_current_user_object().get_personal_group(), src_lang, target_lang
             )
         elif translator_code.lower() == "reversing":

@@ -369,7 +369,15 @@ class DeeplTranslationService(TranslationService):
         return any(x.lang_code == target_lang.lang_code for x in supported_languages)
 
     # TODO Make the value an enum like with Verification?
-    __mapper_args__ = {"polymorphic_identity": "DeepL"}
+    __mapper_args__ = {"polymorphic_identity": "DeepL Free"}
+
+
+class DeeplProTranslationService(DeeplTranslationService):
+    service_url = "https://api.deepl.com/v2"
+    """The url base for the API calls (Pro version)."""
+
+    # TODO Make the value an enum like with Verification?
+    __mapper_args__ = {"polymorphic_identity": "DeepL Pro"}
 
 
 def init_translate(
@@ -450,6 +458,33 @@ def init_deepl_translate(
     # Get the API-key from database
     # TODO Is this cool or should the service be its own class separate from the db model?
     translator = DeeplTranslationService.query.first()
+    translator.register(user_group)
+
+    if not translator.supports(source_lang, target_lang):
+        raise RouteException(
+            description=f"The language pair from {source_lang} to {target_lang} is not supported with DeepL"
+        )
+
+    translate_func: Callable[[list[str]], list[str]] = init_translate(
+        translator, source_lang, target_lang
+    )
+    return translate_func
+
+
+# TODO Is it a bad idea to just make a copy of the free DeepL functions for the Pro side?
+def init_deepl_pro_translate(
+    user_group: UserGroup, source_lang: Language, target_lang: Language
+) -> Callable[[list[str]], list[str]]:
+    """
+    Initialize the deepl translator using the API-key from user's configuration and return a partially applied function for translating
+    :param user_group: User whose API-key will be used to make translations TODO Make just the key
+    :param source_lang: Language that is requested to translate from
+    :param target_lang: Language that is requested to translate into
+    :return: A function for translating text with the specified languages using a DeepLTranslator instance.
+    """
+    # Get the API-key from database
+    # TODO Is this cool or should the service be its own class separate from the db model?
+    translator = DeeplProTranslationService.query.first()
     translator.register(user_group)
 
     if not translator.supports(source_lang, target_lang):
