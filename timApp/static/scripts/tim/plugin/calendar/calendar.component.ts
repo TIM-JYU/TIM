@@ -37,11 +37,12 @@ import {NgbModal, NgbModalModule} from "@ng-bootstrap/ng-bootstrap";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
-import {toPromise} from "../../util/utils";
+import {toPromise, to2} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
+import {showCalendarEventDialog} from "./showCalendarEventDialog";
 
 /**
  * Helps calculate the size of a horizontally dragged event on the calendar view.
@@ -668,9 +669,13 @@ export class CalendarComponent
         this.refresh();
     }
 
-    handleEvent(action: string, event: CalendarEvent): void {
-        this.modalData = {event, action};
-        this.modal.open(this.modalContent, {size: "md"});
+    async handleEvent(action: string, event: CalendarEvent): Promise<void> {
+        // this.modalData = {event, action};
+        // this.modal.open(this.modalContent, {size: "md"});
+        const doc = await to2(showCalendarEventDialog(event));
+        if (doc.ok) {
+            console.log(doc.result);
+        }
     }
 }
 
