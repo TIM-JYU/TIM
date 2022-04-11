@@ -97,8 +97,15 @@ def create_translation_route(tr_doc_id, language):
         tr_lang = Language.query_by_code(language)
 
         # Select the translator TODO Maybe move to somewhere else so this does not blow up with if-else?
-        if translator_code.lower() == "deepl":
+        if (
+            translator_code.lower() == "deepl"
+            or translator_code.lower() == "deepl free"
+        ):
             translator_func = init_deepl_translate(
+                get_current_user_object().get_personal_group(), src_lang, tr_lang
+            )
+        elif translator_code.lower() == "deepl pro":
+            translator_func = init_deepl_pro_translate(
                 get_current_user_object().get_personal_group(), src_lang, tr_lang
             )
 
