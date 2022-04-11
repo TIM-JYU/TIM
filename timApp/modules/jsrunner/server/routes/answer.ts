@@ -13,7 +13,12 @@ import {
     IGroupData,
     IJsRunnerMarkup,
 } from "../../shared/jsrunnertypes";
-import {AliasDataT, JsrunnerAnswer, UserFieldDataT, VelpDataT} from "../servertypes";
+import {
+    AliasDataT,
+    JsrunnerAnswer,
+    UserFieldDataT,
+    VelpDataT,
+} from "../servertypes";
 import {GTools, IToolsResult, Tools, ToolsBase} from "./tools";
 
 console.log("answer");
@@ -274,7 +279,6 @@ router.put("/", async (req, res, next) => {
         program: value.markup.program ?? "",
         compileProgram: compileProgram,
         testvelps: value.input.testvelps,
-
     };
     await ctx.global.set("g", JSON.stringify(runnerData));
     let r: AnswerReturn;

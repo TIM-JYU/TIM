@@ -800,7 +800,7 @@ def post_answer_impl(
     if preprocessor:
         preprocessor(answerdata, curr_user, d, plugin)
 
-    #print(json.dumps(answerdata))  # uncomment this to follow what answers are used in browser tests
+    # print(json.dumps(answerdata))  # uncomment this to follow what answers are used in browser tests
 
     answer_call_data = {
         "markup": plugin.values,
@@ -1252,7 +1252,9 @@ def preprocess_jsrunner_answer(
         if runner_req.input.userNames
         else None,
     )
-    answerdata["testvelps"] = get_annotations_with_comments_in_document(curr_user, d, False)
+    answerdata["testvelps"] = get_annotations_with_comments_in_document(
+        curr_user, d, False
+    )
     answerdata.pop(
         "paramComps", None
     )  # This isn't needed by jsrunner server, so don't send it.

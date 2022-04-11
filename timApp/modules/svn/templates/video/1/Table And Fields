@@ -1,5 +1,6 @@
 Table And Fields
 Plugins for one task
+- {"what": "XX", "text": "Arvioitavan tehtävän nimi", "default": ""}
 \
 
 #- {defaultplugin="textfield" .fieldCell}
@@ -70,8 +71,10 @@ updateFields:
  - XX_Pisteet
  - XX_Vp
  - XX_VpOpe
- - XX_Arvioija_(1,%%arvosteltavia%%)
- - XX_P_(1,%%arvosteltavia%%)
+{% for i in range(1,arvosteltavia+1) %}
+ - XX_Arvioija_%%i%%
+ - XX_P_%%i%%
+{% endfor %}
  - XX_Riitauta
 program: |!!
 

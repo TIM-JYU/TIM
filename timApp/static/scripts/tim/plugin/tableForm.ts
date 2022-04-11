@@ -896,7 +896,7 @@ export class TableFormComponent
             };
 
             if (this.fields) {
-                this.data.table.countCol = this.fields.length + 5;
+                this.data.table.countCol = this.fields.length + 3;
             }
             this.data.table.countRow = Object.keys(this.rows).length;
             let y = 1;

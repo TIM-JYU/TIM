@@ -1313,6 +1313,8 @@ def has_no_higher_right(access_type: str | None, rights: UserItemRights) -> bool
     :return True if access_type is one of view, edit, see_answers or teacher and there is no higher right in the
      UserItemRights, False otherwise.
     """
+    if not access_type:
+        return False
     return {
         "view": not rights["editable"] and not rights["see_answers"],
         "edit": not rights["see_answers"],

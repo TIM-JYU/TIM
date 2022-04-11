@@ -178,6 +178,8 @@ services:
   environment:
    # We're not going to enable replication, so it's fine to listen to localhost
    CASSANDRA_LISTEN_ADDRESS: localhost
+   HEAP_NEWSIZE: ${CSPLUGIN_CASSANDRA_HEAP_NEWSIZE:-128M}
+   MAX_HEAP_SIZE: ${CSPLUGIN_CASSANDRA_MAX_HEAP_SIZE:-1024M}
   volumes:
    - csplugin_db_data:/var/lib/cassandra
    - ./timApp/modules/cs/cassandra/cassandra.yaml:/etc/cassandra/cassandra.yaml
