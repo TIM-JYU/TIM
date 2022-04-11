@@ -182,7 +182,10 @@ def paragraph_translation_route(
 
         src_md = src_doc.document.get_paragraph(tr_par.get_attr("rp")).md
         # TODO Wrap this selection into a function to also use with the other *_translation_route -functions
-        if translator_code.lower() == "deepl free":
+        if (
+            translator_code.lower() == "deepl free"
+            or translator_code.lower() == "deepl"
+        ):
             src_lang = Language.query_by_code(src_doc.lang_id)
             target_lang = Language.query_by_code(language)
             translator_func = init_deepl_translate(
@@ -226,13 +229,24 @@ def text_translation_route(tr_doc_id: int, language: str) -> Response:
     # Select the specified translator and translate if valid
     if req_data and (translator_code := req_data.get("autotranslate", None)):
         src_text = req_data.get("originaltext", None)
-        if translator_code.lower() == "deepl":
+        if (
+            translator_code.lower() == "deepl free"
+            or translator_code.lower() == "deepl"
+        ):
             src_lang = Language.query_by_code(src_doc.docinfo.lang_id)
             target_lang = Language.query_by_code(language)
             translator_func = init_deepl_translate(
                 get_current_user_object().get_personal_group(), src_lang, target_lang
             )
             block_text = translator_func([src_text])[0]
+        elif translator_code.lower() == "deepl pro":
+            src_lang = Language.query_by_code(src_doc.docinfo.lang_id)
+            target_lang = Language.query_by_code(language)
+            translator_func = init_deepl_pro_translate(
+                get_current_user_object().get_personal_group(), src_lang, target_lang
+            )
+            block_text = translator_func([src_text])[0]
+
     else:
         raise RouteException(
             description=f"Please select a translator from the 'Translator data' tab"
