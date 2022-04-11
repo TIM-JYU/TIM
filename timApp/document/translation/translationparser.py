@@ -96,9 +96,13 @@ def tex_collect(content: str) -> list[TranslateApproval]:
         return [NoTranslate(content)]
 
 
-def attr_collect(content: dict) -> list[TranslateApproval]:
+def attr_collect(content: dict) -> Tuple[list[TranslateApproval], bool]:
     """
+    Collect the parts of Attr into Markdown.
+
     :param content: Pandoc-ASTs JSON form of Attr (attributes)
+    :return: List of non/translatable parts and boolean indicating, whether the .notranslate
+        -style was found in the element.
     """
     if (
         not isinstance(content[0], str)
@@ -113,9 +117,13 @@ def attr_collect(content: dict) -> list[TranslateApproval]:
     identifier = content[0]
     classes = content[1]
     kv_pairs = content[2]
+
+    # Handle the special style in TIM, that allows user to opt out from translating some text
+    is_notranslate = "notranslate" in classes
+
     # Return nothing if there's no attrs
     if not (identifier or classes or kv_pairs):
-        return []
+        return [], is_notranslate
 
     arr.append(NoTranslate("{"))
     # TODO Are spaces needed between the attributes?
@@ -127,7 +135,7 @@ def attr_collect(content: dict) -> list[TranslateApproval]:
     # Remove extra space from last element
     arr[-1].text = arr[-1].text.strip()
     arr.append(NoTranslate("}"))
-    return arr
+    return arr, is_notranslate
 
 
 def quoted_collect(content: dict) -> list[TranslateApproval]:
@@ -243,7 +251,10 @@ def link_or_image_collect(content: dict, islink: bool) -> list[TranslateApproval
     arr.append(NoTranslate(content[2][0]))
     arr.append(NoTranslate(")"))
 
-    arr += attr_collect(content[0])
+    attrs, is_notranslate = attr_collect(content[0])
+    arr += attrs
+    if is_notranslate:
+        return [x if isinstance(x, NoTranslate) else NoTranslate(x.text) for x in arr]
 
     # TODO Handle title in "Target"
     return arr
@@ -261,7 +272,10 @@ def span_collect(content: dict) -> list[TranslateApproval]:
         arr += inline_collect(inline)
     arr.append(NoTranslate("]"))
 
-    arr += attr_collect(content[0])
+    attrs, is_notranslate = attr_collect(content[0])
+    arr += attrs
+    if is_notranslate:
+        return [x if isinstance(x, NoTranslate) else NoTranslate(x.text) for x in arr]
 
     return arr
 
@@ -470,25 +484,45 @@ def collect_tim_plugin(attrs: dict, content: str) -> list[TranslateApproval]:
 
 
 def codeblock_collect(content: dict) -> list[TranslateApproval]:
-    # NOTE Attr identifier is set to the last occurrence and rest are discarded in Pandoc-parsing eg. from #foo id=bar id=baz only baz is saved and foo and bar are lost! To fix this in regard to TIM's block ids, the id needs to be saved and injected into md after parsing with Pandoc NOTE that such an approach requires that the critical information is saved BEFORE giving the md to Pandoc
-    # TODO Different plugins can be identified by Attr's 3rd index; key-value -pair for example plugin="csplugin", but this information might be unnecessary
+    # TODO where to typecheck Attr?
+    if not isinstance(content[1], str):
+        assert False, "PanDoc codeblock content is not [ Attr, [Block] ]."
+
     attr = content[0]
     attr_kv_pairs = dict(attr[2])
-    if "plugin" in attr_kv_pairs:
+    is_plugin = "plugin" in attr_kv_pairs
+    attrs, is_notranslate = attr_collect(attr)
+
+    arr: list[TranslateApproval] = list()
+
+    arr.append(NoTranslate("```"))
+
+    if is_plugin:
+        # NOTE Attr identifier is set to the last occurrence and rest are discarded in Pandoc-parsing eg. from #foo id=bar id=baz only baz is saved and foo and bar are lost! To fix this in regard to TIM's block ids, the id needs to be saved and injected into md after parsing with Pandoc NOTE that such an approach requires that the critical information is saved BEFORE giving the md to Pandoc
+        # TODO Different plugins can be identified by Attr's 3rd index; key-value -pair for example plugin="csplugin", but this information might be unnecessary
         # NOTE Here, the attributes of codeblock are DISCARDED (as mentioned in comment above) and will not be included in the result when markdown is reconstructed ie. caller should save needed attributes
-        arr: list[TranslateApproval] = list()
         # TODO Does DocParagraph.modify_paragraph include the ``` for (plugin) codeblocks already?
-        arr.append(NoTranslate("```"))
-        arr.append(NoTranslate("\n"))
 
         # TODO Maybe parse the YAML to be translated based on keys for more exact translations?
+        arr.append(NoTranslate("\n"))
         arr += collect_tim_plugin(attr, content[1])
+    else:
+        # TODO Should the plugins contain the attributes or not?
+        arr += attrs
+        arr.append(NoTranslate("\n"))
+        arr.append(NoTranslate(content[1]))
 
-        arr.append(NoTranslate("```"))
-        return arr
+    arr.append(NoTranslate("```"))
 
-    # TODO Handle "fenced code block" (https://www.markdownguide.org/extended-syntax/#syntax-highlighting). Maybe if there is just 1 class (for example "cs" in "```cs\nvar x;\n```") then do NOT put it inside braces (like "{.cs}")
-    return notranslate_all("CodeBlock", content)  # TODO
+    if is_notranslate:
+        return [x if isinstance(x, NoTranslate) else NoTranslate(x.text) for x in arr]
+
+    # TODO Handle "fenced code block"
+    #  (https://www.markdownguide.org/extended-syntax/#syntax-highlighting). Maybe if there is
+    #  just 1 class (for example "cs" in "```cs\nvar x;\n```") then do NOT put it inside braces
+    #  (like "{.cs}")
+
+    return arr
 
 
 def rawblock_collect(content: dict) -> list[TranslateApproval]:
@@ -554,11 +588,8 @@ def definitionlist_collect(content: dict) -> list[TranslateApproval]:
 
 
 def header_collect(content: dict) -> list[TranslateApproval]:
-    if (
-        not isinstance(content[0], int)
-        or not isinstance(content[1], list)
-        or not isinstance(content[2], list)
-    ):
+    # Attr check in attr_collect TODO Should we follow this convention? ATM other funcs like link_collect make the check at their level...
+    if not isinstance(content[0], int) or not isinstance(content[2], list):
         assert False, "PanDoc orderedlist content is not [ int, Attr, [Block]  ]"
 
     level = content[0]
@@ -567,7 +598,11 @@ def header_collect(content: dict) -> list[TranslateApproval]:
     arr.append(NoTranslate(f"{'#' * level} "))
     for inline in content[2]:
         arr += inline_collect(inline)
-    arr += attr_collect(content[1])
+
+    attrs, is_notranslate = attr_collect(content[1])
+    arr += attrs
+    if is_notranslate:
+        return [x if isinstance(x, NoTranslate) else NoTranslate(x.text) for x in arr]
 
     return arr
 

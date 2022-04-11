@@ -31,14 +31,44 @@ class TestParser(unittest.TestCase):
         )
 
     # For .notranslate style, might move elsewhere. For future use.
-    def test_span_collect(self):
+    def test_notranslate_style(self):
         text = r"tässä on [teksti]{.notranslate}, jota ei käännetä."
         self.assertEqual(
-            span_collect(text),
+            get_translate_approvals(text),
             [
-                Translate(r"tässä on ["),
-                NoTranslate(r"[teksti]{.notranslate}"),
-                Translate(r", jota ei käännetä."),
+                [
+                    Translate(r"tässä on "),
+                    NoTranslate(r"[teksti]{.notranslate}"),
+                    Translate(r", jota ei käännetä."),
+                ]
+            ],
+        )
+
+        text = """``` {plugin="csPlugin" #btn-tex2 .notranslate .miniSnippets}
+header: Harjoittele matemaattisen vastauksen kirjoittamista.
+```"""
+        self.assertEqual(
+            get_translate_approvals(text),
+            [
+                [
+                    # TODO Should the plugins contain the attributes or no?
+                    NoTranslate(
+                        """```
+header: Harjoittele matemaattisen vastauksen kirjoittamista.
+```"""
+                    )
+                ]
+            ],
+        )
+
+        text = "Jyväskylän yliopisto sijaitsee paikassa nimeltä [Keski-Suomi]{.notranslate}"
+        self.assertEqual(
+            get_translate_approvals(text),
+            [
+                [
+                    Translate("Jyväskylän yliopisto sijaitsee paikassa nimeltä "),
+                    NoTranslate("[Keski-Suomi]{.notranslate}"),
+                ]
             ],
         )
 
