@@ -10,10 +10,10 @@ class PeerReview(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     """Review identifier."""
 
-    answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"))
+    answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), nullable=True)
     """Answer id."""
 
-    task_name = db.Column(db.Text, nullable=False)
+    task_name = db.Column(db.Text, nullable=True)
     """Task name"""
 
     block_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)

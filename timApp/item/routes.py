@@ -641,6 +641,7 @@ def render_doc_view(
     # Used later to get partitioning with preambles included correct.
     # Includes either only special class preambles, or all of them if b=0.
     preamble_count = 0
+    preamble_pars = None
     if (
         load_preamble
         or view_range.starts_from_beginning
@@ -809,7 +810,45 @@ def render_doc_view(
         if is_peerreview_enabled(doc_info):
             if not check_review_grouping(doc_info):
                 try:
-                    generate_review_groups(doc_info, post_process_result.plugins)
+                    if not r_view_range.is_full:
+                        # peer_review pairing generation may be called when only a part of the document is requested,
+                        # however we need to know answerers from every task in the document, so we generate full
+                        # document here
+                        # TODO: alternative approach (separate route, timer etc) for launching peer_review generation
+                        full_document_for_review, _ = get_document(
+                            doc_info, RequestedViewRange(b=None, e=None, size=None)
+                        )
+                        if preamble_pars:
+                            full_document_for_review = (
+                                preamble_pars + full_document_for_review
+                            )
+                        DocParagraph.preload_htmls(
+                            full_document_for_review,
+                            doc_settings,
+                            view_ctx,
+                            clear_cache,
+                        )
+                        full_document_for_review = dereference_pars(
+                            full_document_for_review, context_doc=doc, view_ctx=view_ctx
+                        )
+                        full_document_for_review = post_process_pars(
+                            doc,
+                            full_document_for_review,
+                            user_ctx,
+                            view_ctx,
+                            sanitize=False,
+                            do_lazy=do_lazy,
+                            load_plugin_states=not hide_answers,
+                        )
+                        generate_review_groups(
+                            doc_info,
+                            full_document_for_review.plugins,
+                            doc_settings.group(),
+                        )
+                    else:
+                        generate_review_groups(
+                            doc_info, post_process_result.plugins, doc_settings.group()
+                        )
                     set_default_velp_group_selected_and_visible(doc_info)
                 except PeerReviewException as e:
                     flash(str(e))
