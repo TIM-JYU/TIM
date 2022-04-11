@@ -147,8 +147,8 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
         // },
     ],
     template: `
-        <mwl-utils-calendar-header [(view)]="view" [(viewDate)]="viewDate">
-        </mwl-utils-calendar-header>
+        <tim-calendar-header [(view)]="view" [(viewDate)]="viewDate">
+        </tim-calendar-header>
         <div class="row text-center">
             <div class="btn-group edit-btn col-md-4">
                 <button (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
@@ -233,11 +233,8 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             >
             </mwl-calendar-day-view>
         </div>
-<<<<<<< HEAD
         <tim-time-view-selector (accuracy)="setAccuracy($event)" (morning)="setMorning($event)" (evening)="setEvening($event)"></tim-time-view-selector>
-=======
-        <app-timeview-selectors (accuracy)="setAccuracy($event)" (morning)="setMorning($event)" (evening)="setEvening($event)"></app-timeview-selectors>
-        <div hidden>
+     <div hidden>
             <button class="timButton" id="saveBtn" (click)="saveChanges()"
                     [disabled]="!this.events.some(this.isTempEvent)">Save changes
             </button>
@@ -272,8 +269,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
                 </button>
             </div>
         </ng-template>
-
->>>>>>> 455771f4719ed92d5c194ffde86913bf3546c6fe
+        
     `,
     encapsulation: ViewEncapsulation.None,
     styleUrls: ["calendar.component.scss"],
