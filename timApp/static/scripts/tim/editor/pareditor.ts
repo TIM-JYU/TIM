@@ -1691,6 +1691,8 @@ ${backTicks}
             );
             if (response.ok) {
                 this.getEditor()!.setEditorText(response.result.data.text);
+            } else {
+                await showMessageDialog(response.result.data.error);
             }
         } else {
             await showMessageDialog(r.result.data.error);
@@ -1698,49 +1700,27 @@ ${backTicks}
     }
 
     /**
-     * Handles sending either the source block's text or the selected editor text to the translator.
+     * Handles sending either the selected editor text or the entire block to the translator.
      */
     async translateClicked() {
         const translatableText = this.translationSelector();
         const helper = this.getEditor()!.getEditorText();
+        const editText = helper.substring(helper.indexOf("\n") + 1);
 
-        const edittext = helper.substring(helper.indexOf("\n") + 1);
+        const mayContinue: boolean = await this.checkMayTranslate(editText);
 
-        let mayContinue = true;
-
-        if (this.trdiff == undefined) {
-            await showMessageDialog(
-                "There is no original text to be translated. Please check the Difference in original document view."
-            );
-        } else if (!this.resolve.params.viewCtrl?.item.lang_id) {
-            await showMessageDialog(
-                "This document does not have a language set. Please set a language and try again."
-            );
-        } else if (
-            this.trdiff.new != edittext &&
-            this.trdiff.old != edittext &&
-            this.nothingSelected
-        ) {
-            // TODO: Improve this message! The overwriting is permanent and cannot be cancelled or CTRL+Z'ed!!
-            mayContinue = window.confirm(
-                "Do you want to overwrite previous changes?"
-            );
-        }
         if (!mayContinue) {
-        } else if (
-            this.resolve.params.viewCtrl == undefined ||
-            this.resolve.params.viewCtrl.item.lang_id == undefined ||
-            this.trdiff == undefined
-        ) {
         } else {
             this.translationInProgress = true;
             if (this.nothingSelected) {
                 await this.translateParagraph();
             } else {
-                const lang = this.resolve.params.viewCtrl.item.lang_id;
+                const lang = this.resolve.params.viewCtrl!.item.lang_id!;
                 const r = await to(
                     $http.post<string>(
-                        `/translate/${this.resolve.params.viewCtrl.item.id}/${lang}/translate_block`,
+                        `/translate/${
+                            this.resolve.params.viewCtrl!.item.id
+                        }/${lang}/translate_block`,
                         {
                             autotranslate: this.docTranslator,
                             originaltext: translatableText,
@@ -1749,7 +1729,7 @@ ${backTicks}
                 );
                 if (r.ok) {
                     const resultText = r.result.data;
-                    if (translatableText != this.trdiff.new) {
+                    if (translatableText != this.trdiff!.new) {
                         this.editor!.replaceTranslation(resultText);
                     } else {
                     }
@@ -1759,6 +1739,36 @@ ${backTicks}
             }
             this.translationInProgress = false;
         }
+    }
+
+    /**
+     * Checks whether translation may be done.
+     * @param editText The editor's text, used for comparison to original block's text in trdiff
+     * @returns True if translation may be done, false if not
+     */
+    async checkMayTranslate(editText: string) {
+        let mayTranslate = true;
+        if (this.trdiff == undefined) {
+            await showMessageDialog(
+                "There is no original text to be translated. Please check the Difference in original document view."
+            );
+            mayTranslate = false;
+        } else if (!this.resolve.params.viewCtrl?.item.lang_id) {
+            await showMessageDialog(
+                "This document does not have a language set. Please set a language and try again."
+            );
+            return false;
+        } else if (
+            this.trdiff.new != editText &&
+            this.trdiff.old != editText &&
+            this.nothingSelected
+        ) {
+            mayTranslate = window.confirm(
+                "This will overwrite all previous changes to this block and cannot be undone!" +
+                    " Do you want to continue?"
+            );
+        }
+        return mayTranslate;
     }
 
     /**
