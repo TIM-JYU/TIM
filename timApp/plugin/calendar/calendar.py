@@ -3,6 +3,7 @@ import tempfile, os
 import uuid
 from dataclasses import dataclass, asdict
 from datetime import datetime
+from io import StringIO
 from typing import Any
 
 from flask import Response, request
@@ -85,34 +86,34 @@ def get_todos() -> Response:
 
 
 @calendar_plugin.get("/events")
-def get_events() -> Response:
+def get_events(file_type: str = "json") -> Response:
     verify_logged_in()
     cur_user = get_current_user_id()
     events: list[Event] = Event.query.filter(Event.creator_user_id == cur_user).all()
 
-    file_type = request.args.get("file_type")
     match file_type:
         case "ics":
-            ics_file = ""
-            ics_file = ics_file + "BEGIN:VCALENDAR\n"
-            ics_file = ics_file + "PRODID:-//TIM Katti-kalenteri//iCal4j 1.0//EN\n"
-            ics_file = ics_file + "VERSION:2.0\n"
-            ics_file = ics_file + "CALSCALE:GREGORIAN\n"
+            buf = StringIO()
+            buf.write("BEGIN:VCALENDAR\n")
+            buf.write("PRODID:-//TIM Katti-kalenteri//iCal4j 1.0//EN\n")
+            buf.write("VERSION:2.0\n")
+            buf.write("CALSCALE:GREGORIAN\n")
             for event in events:
                 dts = event.start_time.strftime("%Y%m%dT%H%M%S")
                 dtend = event.end_time.strftime("%Y%m%dT%H%M%S")
 
-                ics_file = ics_file + "BEGIN:VEVENT\n"
-                ics_file = ics_file + "DTSTART:" + dts + "Z\n"
-                ics_file = ics_file + "DTEND:" + dtend + "Z\n"
-                ics_file = ics_file + "DTSTAMP:" + dts + "Z\n"
-                ics_file = ics_file + "UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\n"
-                ics_file = ics_file + "CREATED:" + dts + "Z\n"
-                ics_file = ics_file + "SUMMARY:" + event.title + "\n"
-                ics_file = ics_file + "END:VEVENT\n"
+                buf.write("BEGIN:VEVENT\n")
+                buf.write("DTSTART:" + dts + "Z\n")
+                buf.write("DTEND:" + dtend + "Z\n")
+                buf.write("DTSTAMP:" + dts + "Z\n")
+                buf.write("UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\n")
+                buf.write("CREATED:" + dts + "Z\n")
+                buf.write("SUMMARY:" + event.title + "\n")
+                buf.write("END:VEVENT\n")
 
-            ics_file = ics_file + "END:VCALENDAR\n"
-            return text_response(ics_file)
+            buf.write("END:VCALENDAR\n")
+            result = buf.getvalue()
+            return text_response(result)
         case "json":
             event_objs = []
             for event in events:
