@@ -16,7 +16,6 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import create_document_and_block, DocEntry
 from timApp.document.documents import add_reference_pars
 from timApp.document.translation.translation import Translation
-from timApp.document.translation.translationparser import attr_collect
 
 from timApp.item.block import copy_default_rights, BlockType
 from timApp.timdb.exceptions import ItemAlreadyExistsException
@@ -28,6 +27,7 @@ from timApp.document.translation.translator import (
     TranslationServiceKey,
     init_deepl_translate,
     init_deepl_pro_translate,
+    TranslationTarget,
 )
 from timApp.document.translation.language import Language
 
@@ -119,26 +119,10 @@ def create_translation_route(tr_doc_id, language):
             lambda x: not (x[0].is_setting() or x[1].is_setting()), zipped_paragraphs
         )
         for orig_paragraph, tr_block in translatable_zipped_paragraphs:
-            md = orig_paragraph.md
-
-            if orig_paragraph.is_plugin():
-                # Add the attributes to the content so that parser can identify the code block as a plugin
-                # NOTE that the parser should only use the attributes for identification and deletes them from the translated result ie. this is a special case!
-
-                # Form the Pandoc-AST representation of a code-block's Attr and glue the parts returned as is back together into a string of Markdown
-                taskid = orig_paragraph.attrs.get("taskId", "")
-                classes = orig_paragraph.attrs.get("classes", [])
-                kv_pairs = [
-                    (k, v) for k, v in orig_paragraph.attrs.items() if k != "taskId"
-                ]
-                attr_str = "".join(
-                    map(lambda x: x.text, attr_collect([taskid, classes, kv_pairs]))
-                )
-                md = md.replace("```\n", f"``` {attr_str}\n", 1)
 
             # Call the partially applied function, that contains languages selected earlier, to translate text
             # TODO Call with the whole document and let preprocessing handle the conversion into list[str]?
-            translated_text = translator_func([md])[0]
+            translated_text = translator_func([TranslationTarget(orig_paragraph)])[0]
             tr.document.modify_paragraph(tr_block.id, translated_text)
 
     if isinstance(doc, DocEntry):
@@ -187,7 +171,7 @@ def paragraph_translation_route(
                 description="Cannot translate because paragraph missing reference to original"
             )
 
-        src_md = src_doc.document.get_paragraph(tr_par.get_attr("rp")).md
+        src_par = src_doc.document.get_paragraph(tr_par.get_attr("rp"))
         # TODO Wrap this selection into a function to also use with the other *_translation_route -functions
         if (
             translator_code.lower() == "deepl free"
@@ -212,7 +196,7 @@ def paragraph_translation_route(
 
             translator_func = ReversingTranslationService.init_translate()
 
-        translated_text = translator_func([src_md])[0]
+        translated_text = translator_func([TranslationTarget(src_par)])[0]
         tr.document.modify_paragraph(tr_par_id, translated_text)
         # TODO Maybe this is needed for modifying paragraphs???
         db.session.commit()
@@ -243,16 +227,20 @@ def text_translation_route(tr_doc_id: int, language: str) -> Response:
             src_lang = Language.query_by_code(src_doc.docinfo.lang_id)
             target_lang = Language.query_by_code(language)
             translator_func = init_deepl_translate(
-                get_current_user_object().get_personal_group(), src_lang, target_lang
+                get_current_user_object().get_personal_group(),
+                src_lang,
+                target_lang,
             )
-            block_text = translator_func([src_text])[0]
+            block_text = translator_func([TranslationTarget(src_text)])[0]
         elif translator_code.lower() == "deepl pro":
             src_lang = Language.query_by_code(src_doc.docinfo.lang_id)
             target_lang = Language.query_by_code(language)
             translator_func = init_deepl_pro_translate(
-                get_current_user_object().get_personal_group(), src_lang, target_lang
+                get_current_user_object().get_personal_group(),
+                src_lang,
+                target_lang,
             )
-            block_text = translator_func([src_text])[0]
+            block_text = translator_func([TranslationTarget(src_text)])[0]
 
     else:
         raise RouteException(
