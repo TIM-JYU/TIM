@@ -60,12 +60,13 @@ class TranslationService(db.Model):
     def languages(self) -> LanguagePairing:
         raise NotImplementedError
 
-    # Polymorphism allows querying multiple objects by their class eg. TranslationService.query
+    # Polymorphism allows querying multiple objects by their class e.g. TranslationService.query
     __mapper_args__ = {"polymorphic_on": service_name}
 
 
 class TranslationServiceKey(db.Model):
-    """Represents an API-key (or any string value) that is needed for using a machine translator and that one or more users are in possession of."""
+    """Represents an API-key (or any string value) that is needed for using a machine translator and that one or more
+    users are in possession of."""
 
     __tablename__ = "translationservicekey"
 
@@ -99,6 +100,9 @@ class DeeplTranslationService(TranslationService):
     """The XML-tag name that is used for ignoring pieces of text."""
 
     headers: dict[str, str]
+
+    source_Language_code: str
+    """The source language's code (helps handling regional variants that DeepL doesn't differentiate)"""
 
     # TODO Register by API-key; Translator should not care about users
     def register(self, user_group: UserGroup) -> None:
@@ -215,9 +219,15 @@ class DeeplTranslationService(TranslationService):
         :return: The DeepL API response JSON
         """
         # TODO Limit the amount of `text` parameters according to DeepL spec (50 per request?)
+
+        src_lang = source_lang
+
+        if source_lang.lower() == "en-gb" or source_lang.lower() == "en-us":
+            src_lang = "en"
+
         data = {
             "text": text,
-            "source_lang": source_lang,
+            "source_lang": src_lang,
             "target_lang": target_lang,
             "split_sentences": split_sentences,
             "preserve_formatting": preserve_formatting,
@@ -317,6 +327,10 @@ class DeeplTranslationService(TranslationService):
             try:
                 language = deepl_lang["language"]
                 code = langcodes.get(language).to_tag()
+
+                # This is needed because DeepL's source languages only include English (EN) and not regional variants
+                if code.lower() == "en":
+                    code = self.source_Language_code
                 return Language.query_by_code(code)
             except LookupError:
                 return None
@@ -339,7 +353,16 @@ class DeeplTranslationService(TranslationService):
         :return: True, if the pairing is supported
         """
 
-        supported_languages: list[Language] = self.languages()[source_lang.lang_code]
+        self.source_Language_code = source_lang.lang_code
+
+        try:
+            supported_languages: list[Language] = self.languages()[
+                self.source_Language_code
+            ]
+        except KeyError as e:
+            raise RouteException(
+                f"The language code {e} was not found in supported source languages."
+            )
 
         # The target language is found by the primary key
         # TODO is this too much? Can't strings be just as good? Maybe better would be to handle Languages by their database id's?

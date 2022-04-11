@@ -84,10 +84,8 @@ def create_translation_route(tr_doc_id, language):
     if translator_code := req_data.get("autotranslate", None):
         # Use the translator with a different source language if specified
         # and get the actual Language objects from database TODO Is database-query dumb here?
-        src_lang = Language.query_by_code(
-            # TODO is it necessary to send the origlang parameter?
-            req_data.get("origlang", src_doc.docinfo.lang_id)
-        )
+        src_lang = Language.query_by_code(src_doc.docinfo.lang_id)
+
         if not src_lang:
             # Manual translation can be done without the original language.
             if translator_code.lower() != "manual":
