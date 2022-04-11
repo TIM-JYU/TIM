@@ -121,7 +121,7 @@ def generate_review_groups(
 def save_review(
     doc: DocInfo,
     reviewer_id: int,
-    revievable_id: int,
+    reviewable_id: int,
     start_time: datetime,
     end_time: datetime,
     answer: Answer | None = None,
@@ -132,6 +132,7 @@ def save_review(
 
     :param doc: Document containing reviewable answers.
     :param reviewer_id: User ID for the reviewer user.
+    :param reviewable_id: User ID for the review target user.
     :param start_time: Timestamp for starting the review period.
     :param end_time: Timestamp for ending the review period.
     :param answer: Answer object for answer id.
@@ -143,7 +144,7 @@ def save_review(
         task_name=task_id.task_name if task_id else None,
         block_id=doc.id,
         reviewer_id=reviewer_id,
-        reviewable_id=revievable_id,
+        reviewable_id=reviewable_id,
         start_time=start_time,
         end_time=end_time,
         reviewed=reviewed,
