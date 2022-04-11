@@ -1,5 +1,6 @@
 Table And Fields
 Plugins for one task
+- {"what": "XX", "text": "Arvioitavan tehtävän nimi", "default": ""}
 \
 
 #- {defaultplugin="textfield" .fieldCell}

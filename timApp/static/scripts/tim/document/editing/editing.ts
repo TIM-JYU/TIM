@@ -55,6 +55,7 @@ import {
     getContextualAreaInfo,
     ParAreaInclusionKind,
 } from "tim/document/structure/areaContext";
+import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
 import {IMenuFunctionEntry, MenuFunctionList} from "../viewutils";
 import {ViewCtrl} from "../viewctrl";
 import {handleUnread} from "../readings";
@@ -241,6 +242,7 @@ export class EditingHandler {
         let cursorPos;
         if (options.initialText) {
             initialText = options.initialText;
+            initialText = await replaceTemplateValues(initialText);
             cursorPos = initialText.indexOf(CURSOR);
             initialText = initialText.replace(CURSOR, "");
         } else if (options.showDelete && ctx) {
