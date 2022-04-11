@@ -438,11 +438,13 @@ def collect_tim_plugin(attrs: dict, content: str) -> list[TranslateApproval]:
                     # Skip the start_char
                     text = text[1:]
                     # Get text until next occurrence of the quote.
+                    # NOTE An area prone to bugs seems to be when multiline-values are after each other
                     # NOTE Translation could worsen because of YAML indentation
-                    while (line := next(lines, None)) is not None:
+                    while (
+                        start_char not in text
+                        and (line := next(lines, None)) is not None
+                    ):
                         text += "\n" + line
-                        if start_char in text:
-                            break
                     # Add the lines content, that included the start_char
                     text = text[: text.index(start_char)]
                     arr.append(Translate(text))

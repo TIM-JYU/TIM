@@ -297,6 +297,38 @@ questionTitle: '"""
             ],
         )
 
+        md = r"""``` {#lasku plugin="csPlugin"}
+%%laskin%%
+stem: 'md:foo'
+fullprogram: |!!
+rad
+sin(π / 2)
+!!
+buttons: ""
+```"""
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [
+                    NoTranslate(
+                        """```
+%%laskin%%
+stem: '"""
+                    ),
+                    Translate(r"md:foo"),
+                    NoTranslate(
+                        """'
+fullprogram: |!!
+rad
+sin(π / 2)
+!!
+buttons: ""
+```"""
+                    ),
+                ]
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
