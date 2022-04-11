@@ -136,7 +136,7 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             ],
         ),
 
-    # Testing matrices inside latex
+    #  Testing matrices inside latex
     def test_tex_collect_math_function3(self):
         text = r""""$$M = 
         \begin{bmatrix}
@@ -174,15 +174,16 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             ],
         ),
 
+    # Testing multiple translate approvals
     def test_get_translate_approvals_latex(self):
-        # NOTE Pandoc does not seem to account for trailing whitespace, so the single space ' ' at the end of this test-text will disappear
+        # NOTE Pandoc does not seem to account for trailing whitespace,
+        # so the single space ' ' at the end of this test-text will disappear
         latexblock = r"""KING CLAUDIUS
 [Aside] O, 'tis $too$ true!
 $How$ $ smart$ a $$lash $$ that [speech] $$doth$$ [give] my conscience!
-a) \begin{align*} asd
-x^3-49x&=0 &&|\text{ erotetaan yhteinen tekijä x}\\
-x(x^2-49)&=0 &&|\text{ käytetään tulon nollasääntöä}\\
-x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\text{ ratkaistaan x}\\
+a) \begin{align*} asd\x^3-49x&=0 &&|\text{ erotetaan yhteinen tekijä x}
+x(x^2-49)&=0 &&|\text{käytetään tulon nollasääntöä}\\
+x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 && |\text{ ratkaistaan x}\\
 &\;\;\;\;\;\,\;\;x^2=49 \\
 &\;\;\;\;\;\,\;\;\;\;x=7\;\text{tai}\;x=-7
 \end{align*} """
@@ -201,15 +202,22 @@ x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\text{ ratkaistaan x}\\
                     NoTranslate("$$doth$$"),
                     Translate(" [give] my conscience!\na) "),
                     # TODO content in \text{<content>} should be marked as translate
-                    NoTranslate(
-                        r"""\begin{align*} asd
-x^3-49x&=0 &&|\text{ erotetaan yhteinen tekijä x}\\
-x(x^2-49)&=0 &&|\text{ käytetään tulon nollasääntöä}\\
-x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 &&|\text{ ratkaistaan x}\\
+                    NoTranslate(r"\begin{align*} asd\x^3-49x&=0 &&|\text{"),
+                    Translate(" erotetaan yhteinen tekijä x"),
+                    NoTranslate("}\nx(x^2-49)&=0 &&|\\text{"),
+                    Translate("käytetään tulon nollasääntöä"),
+                    NoTranslate(r"""}\\
+x=0\;\;\;\\text{"""),
+                    Translate("tai"),
+                    NoTranslate(r"""}\;\;\;&x^2-49=0 && |\text{"""),
+                    Translate(" ratkaistaan x"),
+                    NoTranslate(r"""}\\
 &\;\;\;\;\;\,\;\;x^2=49 \\
-&\;\;\;\;\;\,\;\;\;\;x=7\;\text{tai}\;x=-7
-\end{align*}"""
-                    ),
+&\;\;\;\;\;\,\;\;\;\;x=7\;\text{"""),
+                    Translate("tai"),
+                    NoTranslate(r"""}\;x=-7
+\end{align*}""")
+
                 ]
             ],
         )
@@ -355,6 +363,53 @@ sin(π / 2)
 buttons: ""
 ```"""
                     ),
+                ]
+            ],
+        )
+
+    # Test for multiple choice plugin.
+    def test_tim_plugin2(self):
+        md = r"""```{#mcq2 plugin="mmcq"}
+lazy: false
+answerLimit:
+stem: "Vastaa seuraaviin väittämiin."
+choices:
+  -
+    correct: false
+    reason: "Väärin. Vastaus ei kelpaa."
+    text: "Esimerkkiselitys."
+  -
+    correct: true
+    reason: "Totta. Näin on." 
+    text: "Esimerkkiselitys."
+    
+```"""
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [
+                    NoTranslate(
+                        r"""```
+lazy: false
+answerLimit:
+stem: """ + '"'
+                    ),
+                    Translate("Vastaa seuraaviin väittämiin."),
+                    NoTranslate('"\nchoices:\n  -\n    correct: false\n    reason: "'
+                                ),
+                    Translate("Väärin. Vastaus ei kelpaa."),
+                    NoTranslate('"\n    text: "'),
+                    Translate("Esimerkkiselitys."),
+                    NoTranslate("""\"
+  -
+    correct: true
+    reason: \""""),
+                    Translate("Totta. Näin on."),
+                    NoTranslate("""\"\n    text: \""""),
+                    Translate("Esimerkkiselitys."),
+                    NoTranslate(""""
+    
+```""""")
                 ]
             ],
         )

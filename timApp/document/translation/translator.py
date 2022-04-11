@@ -373,11 +373,16 @@ class DeeplTranslationService(TranslationService):
 
 
 class DeeplProTranslationService(DeeplTranslationService):
-    service_url = "https://api.deepl.com/v2"
-    """The url base for the API calls (Pro version)."""
 
     # TODO Make the value an enum like with Verification?
     __mapper_args__ = {"polymorphic_identity": "DeepL Pro"}
+
+
+# TODO Remove this when crisis is over
+class DeeplPlaceholderTranslationService(DeeplTranslationService):
+
+    # TODO Make the value an enum like with Verification?
+    __mapper_args__ = {"polymorphic_identity": "DeepL"}
 
 
 def init_translate(
