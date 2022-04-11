@@ -815,7 +815,7 @@ def render_doc_view(
                         # however we need to know answerers from every task in the document, so we generate full
                         # document here
                         # TODO: alternative approach (separate route, timer etc) for launching peer_review generation
-                        full_document_for_review = get_document(
+                        full_document_for_review, _ = get_document(
                             doc_info, RequestedViewRange(b=None, e=None, size=None)
                         )
                         if preamble_pars:
