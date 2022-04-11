@@ -11,6 +11,19 @@
   font-size: 10px;
 }
 
+.edit-btn {
+  margin-bottom: 20px;
+}
+
+
+.event-btn {
+  margin-bottom: 20px;
+}
+
+.event-btn button {
+  padding: 6px 5px;
+}
+
 #saveBtn{
   margin-top: 20px;
   margin-bottom: 20px;
@@ -18,4 +31,17 @@
 
 #selectorsBtn{
   margin-top: 5px;
+}
+
+.modal{
+  opacity: 1;
+  z-index: 1056;
+}
+
+.modal-dialog{
+  margin-top: 15em;
+}
+
+.modal-backdrop.fade {
+    opacity: 0.5;
 }

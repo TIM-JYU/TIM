@@ -1,15 +1,21 @@
 import json
+import tempfile, os
+import uuid
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import Any
 
-from flask import Response
+from flask import Response, request
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_id, get_current_user_object
 from timApp.plugin.calendar.models import Event
 from timApp.timdb.sqa import db
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.requesthelper import RouteException
+
+
+from timApp.util.flask.responsehelper import json_response, ok_response, text_response
+
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
@@ -84,23 +90,46 @@ def get_events() -> Response:
     cur_user = get_current_user_id()
     events: list[Event] = Event.query.filter(Event.creator_user_id == cur_user).all()
 
-    event_objs = []
-    for i, event in enumerate(events):
-        event_objs.append(
-            {
-                "id": i,
-                "title": event.title,
-                "start": event.start_time,
-                "end": event.end_time,
-            }
-        )
-    return json_response(event_objs)
+    file_type = request.args.get("file_type")
+    match file_type:
+        case "ics":
+            ics_file = ""
+            ics_file = ics_file + "BEGIN:VCALENDAR\n"
+            ics_file = ics_file + "PRODID:-//TIM Katti-kalenteri//iCal4j 1.0//EN\n"
+            ics_file = ics_file + "VERSION:2.0\n"
+            ics_file = ics_file + "CALSCALE:GREGORIAN\n"
+            for event in events:
+                dts = event.start_time.strftime("%Y%m%dT%H%M%S")
+                dtend = event.end_time.strftime("%Y%m%dT%H%M%S")
+
+                ics_file = ics_file + "BEGIN:VEVENT\n"
+                ics_file = ics_file + "DTSTART:" + dts + "Z\n"
+                ics_file = ics_file + "DTEND:" + dtend + "Z\n"
+                ics_file = ics_file + "DTSTAMP:" + dts + "Z\n"
+                ics_file = ics_file + "UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\n"
+                ics_file = ics_file + "CREATED:" + dts + "Z\n"
+                ics_file = ics_file + "SUMMARY:" + event.title + "\n"
+                ics_file = ics_file + "END:VEVENT\n"
+
+            ics_file = ics_file + "END:VCALENDAR\n"
+            return text_response(ics_file)
+        case "json":
+            event_objs = []
+            for event in events:
+                event_objs.append(
+                    {
+                        "id": event.event_id,
+                        "title": event.title,
+                        "start": event.start_time,
+                        "end": event.end_time,
+                    }
+                )
+            return json_response(event_objs)
+    raise RouteException("Unsupported file type")
 
 
 @dataclass
 class CalendarEvent:
-    id: Any
-    meta: Any
     title: str
     start: datetime
     end: datetime
@@ -123,6 +152,30 @@ def add_events(events: list[CalendarEvent]) -> Response:
 
     db.session.commit()
     return json_response(events)
+
+
+@calendar_plugin.put("/events/<int:event_id>")
+def edit_event(event_id: int, event: CalendarEvent) -> Response:
+    verify_logged_in()
+    old_event = Event.get_event_by_id(event_id)
+    if not old_event:
+        raise RouteException("Event not found")
+    old_event.title = event.title
+    old_event.start_time = event.start
+    old_event.end_time = event.end
+    db.session.commit()
+    return ok_response()
+
+
+@calendar_plugin.delete("/events/<int:event_id>")
+def delete_event(event_id: int) -> Response:
+    verify_logged_in()
+    event = Event.get_event_by_id(event_id)
+    if not event:
+        raise RouteException("Event not found")
+    db.session.delete(event)
+    db.session.commit()
+    return ok_response()
 
 
 register_html_routes(calendar_plugin, class_schema(CalendarHtmlModel), reqs_handle)
