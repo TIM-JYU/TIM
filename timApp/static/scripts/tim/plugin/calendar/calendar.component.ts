@@ -134,6 +134,8 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
     }
 }*/
 
+type TIMCalendarEvent = CalendarEvent<{tmpEvent: boolean}>;
+
 @Component({
     selector: "mwl-calendar-component",
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -290,7 +292,7 @@ export class CalendarComponent
 
     viewDate: Date = new Date();
 
-    events: CalendarEvent[] = [];
+    events: TIMCalendarEvent[] = [];
 
     clickedDate?: Date;
 
@@ -322,7 +324,7 @@ export class CalendarComponent
 
     modalData?: {
         action: string;
-        event?: CalendarEvent<{tmpEvent: boolean}>;
+        event?: TIMCalendarEvent;
     };
 
     actions: CalendarEventAction[] = [
@@ -360,7 +362,7 @@ export class CalendarComponent
     setEventType(event: Event) {
         this.selectedEvent = (event.target as Element).id;
     }
-    isTempEvent(event: CalendarEvent<{tmpEvent: boolean}>) {
+    isTempEvent(event: TIMCalendarEvent) {
         if (event.meta) {
             return event.meta.tmpEvent;
         }
@@ -414,7 +416,7 @@ export class CalendarComponent
         mouseDownEvent: MouseEvent,
         segmentElement: HTMLElement
     ) {
-        const dragToSelectEvent: CalendarEvent<{tmpEvent?: boolean}> = {
+        const dragToSelectEvent: TIMCalendarEvent = {
             id: this.events.length,
             title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
                 segment.date,
@@ -526,19 +528,17 @@ export class CalendarComponent
         }
     }
 
-    trimEventData(event: CalendarEvent) {
-        delete event.id;
-        delete event.meta;
-        delete event.actions;
-        delete event.color;
-        delete event.resizable;
-    }
+    // trimEventData(event: CalendarEvent) {
+    //     delete event.id;
+    //     delete event.meta;
+    //     delete event.actions;
+    //     delete event.color;
+    //     delete event.resizable;
+    // }
 
     private async loadEvents() {
         const result = await toPromise(
-            this.http.get<CalendarEvent<{tmpEvent: boolean}>[]>(
-                "/calendar/events?file_type=json"
-            )
+            this.http.get<TIMCalendarEvent[]>("/calendar/events?file_type=json")
         );
         if (result.ok) {
             result.result.forEach((event) => {
@@ -573,25 +573,36 @@ export class CalendarComponent
     }
 
     async saveChanges() {
-        const eventsToAdd = this.events.filter(
-            (event: CalendarEvent<{tmpEvent: boolean}>) =>
-                this.isTempEvent(event)
+        let eventsToAdd = this.events.filter((event: TIMCalendarEvent) =>
+            this.isTempEvent(event)
         ); // slice(this.lastEvent);
         if (eventsToAdd.length > 0) {
-            eventsToAdd.map((event) => this.trimEventData(event));
+            // eventsToAdd.map((event) => this.trimEventData(event));
+            eventsToAdd = eventsToAdd.map<CalendarEvent>((event) => {
+                return {
+                    title: event.title,
+                    start: event.start,
+                    end: event.end,
+                };
+            });
             console.log(eventsToAdd);
             const result = await toPromise(
-                this.http.post<CalendarEvent[]>("/calendar/events", {
+                this.http.post<TIMCalendarEvent>("/calendar/events", {
                     events: eventsToAdd,
                 })
             );
             // TODO: handle server responses properly
             if (result.ok) {
+                this.events.forEach((event) => {
+                    if (event.meta) {
+                        event.meta.tmpEvent = false;
+                    }
+                });
                 console.log("events sent");
                 console.log(result.result);
                 // this.lastEvent = this.events.length;
                 this.refresh();
-                await this.loadEvents();
+                // await this.loadEvents();
             } else {
                 console.error(result.result.error.error);
             }
@@ -604,26 +615,31 @@ export class CalendarComponent
         }
         console.log(event);
         const id = event.id;
-        this.trimEventData(event);
+        // this.trimEventData(event);
         console.log(event);
+        const eventToEdit = {
+            title: event.title,
+            start: event.start,
+            end: event.end,
+        };
         const result = await toPromise(
             this.http.put(`/calendar/events/${id}`, {
-                event: event,
+                event: eventToEdit,
             })
         );
         if (result.ok) {
             console.log(result.result);
-            event.resizable = {
-                beforeStart: true,
-                afterEnd: true,
-            };
-            event.id = id;
-            event.meta = {
-                tmpEvent: false,
-            };
-            if (Date.now() > event.start.getTime()) {
-                event.color = colors.gray;
-            }
+            // event.resizable = {
+            //     beforeStart: true,
+            //     afterEnd: true,
+            // };
+            // event.id = id;
+            // event.meta = {
+            //     tmpEvent: false,
+            // };
+            // if (Date.now() > event.start.getTime()) {
+            //     event.color = colors.gray;
+            // }
         } else {
             // TODO: Handle error responses properly
             console.error(result.result.error.error);
@@ -646,7 +662,7 @@ export class CalendarComponent
         }
     }
 
-    async deleteEvent(event?: CalendarEvent<{tmpEvent: boolean}>) {
+    async deleteEvent(event?: TIMCalendarEvent) {
         if (!event) {
             return;
         }
