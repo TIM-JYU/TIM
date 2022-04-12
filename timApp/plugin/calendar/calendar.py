@@ -140,7 +140,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
     verify_logged_in()
     # TODO: use get_current_user_object() to access more user information, e.g. user's groups
     cur_user = get_current_user_id()
-
+    added_events = []
     for event in events:
         event = Event(
             title=event.title,
@@ -149,9 +149,21 @@ def add_events(events: list[CalendarEvent]) -> Response:
             creator_user_id=cur_user,
         )
         db.session.add(event)
+        added_events.append(event)
 
     db.session.commit()
-    return json_response(events)
+    event_list = []
+    for event in added_events:
+        event_list.append(
+            {
+                "id": event.event_id,
+                "title": event.title,
+                "start": event.start_time,
+                "end": event.end_time,
+            }
+        )
+
+    return json_response(event_list)
 
 
 @calendar_plugin.put("/events/<int:event_id>")

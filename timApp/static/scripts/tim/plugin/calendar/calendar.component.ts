@@ -32,7 +32,6 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek} from "date-fns";
-import moment from "moment";
 import {NgbModal, NgbModalModule} from "@ng-bootstrap/ng-bootstrap";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
@@ -110,33 +109,32 @@ const segmentHeight = 30;
 
 registerLocaleData(localeFr);
 
-Date.prototype.toJSON = function () {
-    return moment(this).format();
-};
-
 /**
  * For customizing the event tooltip
  */
-/* @Injectable()
-export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
-    weekTooltip(event: CalendarEvent<{tmpEvent?: boolean}>, title: string) {
-        if (!event.meta?.tmpEvent) {
-            return super.weekTooltip(event, title);
-        }
-        return "";
-    }
-
-    dayTooltip(event: CalendarEvent<{tmpEvent?: boolean}>, title: string) {
-        if (!event.meta?.tmpEvent) {
-            return super.dayTooltip(event, title);
-        }
-        return "";
-    }
-}*/
+// @Injectable()
+// export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
+//     weekTooltip(event: TIMCalendarEvent, title: string) {
+//         if (event.end) {
+//             return `${event.start.toTimeString().substr(0, 5)}-${event.end
+//                 .toTimeString()
+//                 .substr(0, 5)}`;
+//         }
+//         return "";
+//     }
+//
+//     dayTooltip(event: CalendarEvent<{tmpEvent?: boolean}>, title: string) {
+//         if (!event.meta?.tmpEvent) {
+//             return super.dayTooltip(event, title);
+//         }
+//         return "";
+//     }
+// }
 
 export type TIMCalendarEvent = CalendarEvent<{
     tmpEvent: boolean;
     deleted?: boolean;
+    editEnabled?: boolean;
 }>;
 
 @Component({
@@ -160,13 +158,17 @@ export type TIMCalendarEvent = CalendarEvent<{
                 <button (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
                 <button (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
             </div>
-                <div class="col-md-4"> Näytä:
-                    <div *ngFor="let box of checkboxEvents">
-                        <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value" [(ngModel)]="box.checked" [checked]="" >{{box.name}}
-                    </div>
+            <div class="col-md-4"> Näytä:
+                <div *ngFor="let box of checkboxEvents">
+                    <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
+                           [(ngModel)]="box.checked" [checked]="">{{box.name}}
+                </div>
             </div>
-            <div [style.visibility] = "editEnabled ? 'visible' : 'hidden'" class="btn-group event-btn col-md-4">
-            <button (click)="setEventType($event)" *ngFor="let button of eventTypes" [class.active]="selectedEvent == (button.valueOf() +eventTypes.indexOf((button)))" class="btn timButton" id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button.valueOf()}}</button>
+            <div [style.visibility]="editEnabled ? 'visible' : 'hidden'" class="btn-group event-btn col-md-4">
+                <button (click)="setEventType($event)" *ngFor="let button of eventTypes"
+                        [class.active]="selectedEvent == (button.valueOf() +eventTypes.indexOf((button)))"
+                        class="btn timButton"
+                        id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button.valueOf()}}</button>
             </div>
         </div>
 
@@ -177,20 +179,20 @@ export type TIMCalendarEvent = CalendarEvent<{
                 let-segmentHeight="segmentHeight"
                 let-isTimeLabel="isTimeLabel"
         >
-          <div
-            #segmentElement
-            class="cal-hour-segment"
-            [style.height.px]="segmentHeight"
-            [class.cal-hour-start]="segment.isStart"
-            [class.cal-after-hour-start]="!segment.isStart"
-            [ngClass]="segment.cssClass"
-            (mousedown)="editEnabled && startDragToCreate(segment, $event, segmentElement)"
-            
-          >
-            <div class="cal-time" *ngIf="isTimeLabel">
-              {{ segment.date | calendarDate:'weekViewHour':locale }}
+            <div
+                    #segmentElement
+                    class="cal-hour-segment"
+                    [style.height.px]="segmentHeight"
+                    [class.cal-hour-start]="segment.isStart"
+                    [class.cal-after-hour-start]="!segment.isStart"
+                    [ngClass]="segment.cssClass"
+                    (mousedown)="editEnabled && startDragToCreate(segment, $event, segmentElement)"
+
+            >
+                <div class="cal-time" *ngIf="isTimeLabel">
+                    {{ segment.date | calendarDate:'weekViewHour':locale }}
+                </div>
             </div>
-          </div>
         </ng-template>
 
         <div [ngSwitch]="view">
@@ -218,7 +220,7 @@ export type TIMCalendarEvent = CalendarEvent<{
                     (dayHeaderClicked)="clickedDate = $event.day.date"
                     (hourSegmentClicked)="clickedDate = $event.date"
                     [hourSegmentTemplate]="weekViewHourSegmentTemplate"
-                    (eventClicked)="handleEvent('Clicked', $event.event)"
+                    (eventClicked)="handleEventClick($event.event)"
                     (eventTimesChanged)="eventTimesChanged($event)"
             >
             </mwl-calendar-week-view>
@@ -233,13 +235,14 @@ export type TIMCalendarEvent = CalendarEvent<{
                     [locale]="'fi-FI'"
                     (hourSegmentClicked)="clickedDate = $event.date"
                     [hourSegmentTemplate]="weekViewHourSegmentTemplate"
-                    (eventClicked)="handleEvent('Clicked', $event.event)"
+                    (eventClicked)="handleEventClick($event.event)"
                     (eventTimesChanged)="eventTimesChanged($event)"
 
             >
             </mwl-calendar-day-view>
         </div>
-        <app-timeview-selectors (accuracy)="setAccuracy($event)" (morning)="setMorning($event)" (evening)="setEvening($event)"></app-timeview-selectors>
+        <app-timeview-selectors (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
+                                (evening)="setEvening($event)"></app-timeview-selectors>
         <div hidden>
             <button class="timButton" id="saveBtn" (click)="saveChanges()"
                     [disabled]="!this.events.some(this.isTempEvent)">Save changes
@@ -323,30 +326,28 @@ export class CalendarComponent
     segmentMinutes: number = 20;
     segmentsInHour: number = 3;
 
-    // lastEvent: number = 0;
-
     modalData?: {
         action: string;
         event?: TIMCalendarEvent;
     };
 
-    actions: CalendarEventAction[] = [
-        {
-            label: '<i class="fas fa-fw fa-pencil-alt"></i>',
-            a11yLabel: "Edit",
-            onClick: ({event}: {event: CalendarEvent}): void => {
-                this.handleEvent("Edited", event);
-            },
-        },
-        {
-            label: '<i class="fas fa-fw fa-trash-alt"></i>',
-            a11yLabel: "Delete",
-            onClick: ({event}: {event: CalendarEvent}): void => {
-                this.events = this.events.filter((iEvent) => iEvent !== event);
-                this.handleEvent("Deleted", event);
-            },
-        },
-    ];
+    // actions: CalendarEventAction[] = [
+    //     {
+    //         label: '<i class="fas fa-fw fa-pencil-alt"></i>',
+    //         a11yLabel: "Edit",
+    //         onClick: ({event}: {event: CalendarEvent}): void => {
+    //             this.handleEventClick(event);
+    //         },
+    //     },
+    //     {
+    //         label: '<i class="fas fa-fw fa-trash-alt"></i>',
+    //         a11yLabel: "Delete",
+    //         onClick: ({event}: {event: CalendarEvent}): void => {
+    //             this.events = this.events.filter((iEvent) => iEvent !== event);
+    //             this.handleEventClick(event);
+    //         },
+    //     },
+    // ];
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -386,21 +387,15 @@ export class CalendarComponent
 
     enableEditing(enabled: boolean) {
         this.editEnabled = enabled;
-        if (enabled) {
-            this.events.forEach((event) => {
-                event.resizable = {
-                    beforeStart: true,
-                    afterEnd: true,
-                };
-            });
-        } else {
-            this.events.forEach((event) => {
-                event.resizable = {
-                    beforeStart: false,
-                    afterEnd: false,
-                };
-            });
-        }
+        this.events.forEach((event) => {
+            event.resizable = {
+                beforeStart: enabled,
+                afterEnd: enabled,
+            };
+            if (event.meta) {
+                event.meta.editEnabled = enabled;
+            }
+        });
     }
 
     /**
@@ -432,7 +427,7 @@ export class CalendarComponent
             meta: {
                 tmpEvent: true,
             },
-            actions: this.actions,
+            // actions: this.actions,
         };
         if (Date.now() > dragToSelectEvent.start.getTime()) {
             dragToSelectEvent.color = colors.gray;
@@ -492,18 +487,26 @@ export class CalendarComponent
         newStart,
         newEnd,
     }: CalendarEventTimesChangedEvent) {
-        event.start = newStart;
-        event.end = newEnd;
-        if (event.end) {
-            event.title = `${event.start
-                .toTimeString()
-                .substr(0, 5)}–${event.end
-                .toTimeString()
-                .substr(0, 5)} Varattava aika`;
+        if (newEnd) {
+            event.start = newStart;
+            event.end = newEnd;
+            this.updateEventTitle(event);
+            await this.editEvent(event);
         }
+    }
 
+    private updateEventTitle(event: TIMCalendarEvent) {
+        const rExp: RegExp = /[0-9]{2}:[0-9]{2}–[0-9]{2}:[0-9]{2}/;
+        if (rExp.test(event.title)) {
+            if (event.end) {
+                event.title = `${event.start
+                    .toTimeString()
+                    .substr(0, 5)}–${event.end
+                    .toTimeString()
+                    .substr(0, 5)} ${event.title.substr(12)}`;
+            }
+        }
         this.refresh();
-        await this.editEvent(event);
     }
 
     private refresh() {
@@ -531,14 +534,10 @@ export class CalendarComponent
         }
     }
 
-    // trimEventData(event: CalendarEvent) {
-    //     delete event.id;
-    //     delete event.meta;
-    //     delete event.actions;
-    //     delete event.color;
-    //     delete event.resizable;
-    // }
-
+    /**
+     * Loads the user's events from the TIM server
+     * @private
+     */
     private async loadEvents() {
         const result = await toPromise(
             this.http.get<TIMCalendarEvent[]>("/calendar/events?file_type=json")
@@ -552,22 +551,14 @@ export class CalendarComponent
                         event.color = colors.gray;
                     }
                 }
-                event.actions = this.actions;
+                // event.actions = this.actions;
                 event.meta = {tmpEvent: false};
-                if (this.editEnabled) {
-                    event.resizable = {
-                        beforeStart: true,
-                        afterEnd: true,
-                    };
-                } else {
-                    event.resizable = {
-                        beforeStart: false,
-                        afterEnd: false,
-                    };
-                }
+                event.resizable = {
+                    beforeStart: this.editEnabled,
+                    afterEnd: this.editEnabled,
+                };
             });
             this.events = result.result;
-            // this.lastEvent = result.result.length;
             this.refresh();
         } else {
             // TODO: Handle error responses properly
@@ -575,12 +566,15 @@ export class CalendarComponent
         }
     }
 
+    /**
+     * Sends the newly added event to the TIM server to be persisted.
+     * Handles sending multiple events at the same time.
+     */
     async saveChanges() {
         let eventsToAdd = this.events.filter((event: TIMCalendarEvent) =>
             this.isTempEvent(event)
-        ); // slice(this.lastEvent);
+        );
         if (eventsToAdd.length > 0) {
-            // eventsToAdd.map((event) => this.trimEventData(event));
             eventsToAdd = eventsToAdd.map<CalendarEvent>((event) => {
                 return {
                     title: event.title,
@@ -588,38 +582,56 @@ export class CalendarComponent
                     end: event.end,
                 };
             });
-            console.log(eventsToAdd);
             const result = await toPromise(
-                this.http.post<TIMCalendarEvent>("/calendar/events", {
+                this.http.post<TIMCalendarEvent[]>("/calendar/events", {
                     events: eventsToAdd,
                 })
             );
-            // TODO: handle server responses properly
             if (result.ok) {
-                this.events.forEach((event) => {
-                    if (event.meta) {
-                        event.meta.tmpEvent = false;
+                // Remove added events with wrong id from the event list
+                eventsToAdd.forEach((event) => {
+                    this.events.splice(this.events.indexOf(event), 1);
+                });
+                // Push new events with updated id to the event list
+                result.result.forEach((event) => {
+                    if (event.end) {
+                        this.events.push({
+                            id: event.id,
+                            title: event.title,
+                            start: new Date(event.start),
+                            end: new Date(event.end),
+                            meta: {
+                                tmpEvent: false,
+                                editEnabled: this.editEnabled,
+                            },
+                            // actions: this.actions,
+                            resizable: {
+                                beforeStart: true,
+                                afterEnd: true,
+                            },
+                        });
                     }
                 });
+
                 console.log("events sent");
                 console.log(result.result);
-                // this.lastEvent = this.events.length;
                 this.refresh();
-                // await this.loadEvents();
             } else {
+                // TODO: Handle error responses properly
                 console.error(result.result.error.error);
             }
         }
     }
 
+    /**
+     * Sends the updated event to the TIM server after resizing by dragging
+     * @param event Resized event
+     */
     async editEvent(event: CalendarEvent) {
         if (!event.id) {
             return;
         }
-        console.log(event);
         const id = event.id;
-        // this.trimEventData(event);
-        console.log(event);
         const eventToEdit = {
             title: event.title,
             start: event.start,
@@ -632,17 +644,6 @@ export class CalendarComponent
         );
         if (result.ok) {
             console.log(result.result);
-            // event.resizable = {
-            //     beforeStart: true,
-            //     afterEnd: true,
-            // };
-            // event.id = id;
-            // event.meta = {
-            //     tmpEvent: false,
-            // };
-            // if (Date.now() > event.start.getTime()) {
-            //     event.color = colors.gray;
-            // }
         } else {
             // TODO: Handle error responses properly
             console.error(result.result.error.error);
@@ -665,42 +666,20 @@ export class CalendarComponent
         }
     }
 
-    // async deleteEvent(event?: TIMCalendarEvent) {
-    //     if (!event) {
-    //         return;
-    //     }
-    //
-    //     if (!event.id || !event.meta) {
-    //         return;
-    //     }
-    //     if (!event.meta.tmpEvent) {
-    //         const result = await toPromise(
-    //             this.http.delete(`/calendar/events/${event.id}`)
-    //         );
-    //         if (result.ok) {
-    //             console.log(result.result);
-    //         } else {
-    //             console.error(result.result.error.error);
-    //         }
-    //     }
-    //     this.events.splice(this.events.indexOf(event), 1);
-    //     // this.lastEvent--;
-    //     this.refresh();
-    // }
-
-    async handleEvent(action: string, event: TIMCalendarEvent): Promise<void> {
-        // this.modalData = {event, action};
-        // this.modal.open(this.modalContent, {size: "md"});
+    /**
+     * Opens the event dialog when event is clicked
+     * @param event Clicked event
+     */
+    async handleEventClick(event: TIMCalendarEvent): Promise<void> {
         const result = await to2(showCalendarEventDialog(event));
-        console.log(result);
         if (result.ok) {
             const modifiedEvent = result.result;
             if (modifiedEvent.meta) {
                 if (modifiedEvent.meta.deleted) {
                     console.log("deleted");
                     this.events.splice(this.events.indexOf(modifiedEvent), 1);
-                    this.refresh();
                 }
+                this.updateEventTitle(modifiedEvent);
             }
         }
     }
