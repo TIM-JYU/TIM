@@ -1,12 +1,13 @@
 """"""
 from collections import defaultdict
 from datetime import datetime
-from typing import Optional, DefaultDict
+from random import shuffle
+from typing import DefaultDict
 
 from sqlalchemy.orm import joinedload, Query
 
 from timApp.answer.answer import Answer
-from timApp.answer.answers import get_points_by_rule, get_latest_valid_answers_query
+from timApp.answer.answers import get_points_by_rule
 from timApp.document.docinfo import DocInfo
 from timApp.peerreview.peerreview import PeerReview
 from timApp.plugin.plugin import Plugin
@@ -46,6 +47,7 @@ def generate_review_groups(
         for user in points:
             users.append(user["user"])
 
+    shuffle(users)
     settings = doc.document.get_settings()
     review_count = settings.peer_review_count()
 
@@ -189,3 +191,9 @@ def check_review_grouping(doc: DocInfo) -> bool:
 
 def is_peerreview_enabled(doc: DocInfo) -> bool:
     return doc.document.get_settings().peer_review()
+
+
+def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
+    return PeerReview.query.filter_by(
+        block_id=doc.id,
+    ).all()

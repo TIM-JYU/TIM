@@ -82,6 +82,7 @@ from timApp.peerreview.peerreview_utils import (
     has_review_access,
     get_reviews_for_user,
     is_peerreview_enabled,
+    get_reviews_for_document,
 )
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.importdata.importData import MissingUser
@@ -471,6 +472,7 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     updateFields: list[str] | Missing = missing
     nextRunner: str | Missing = missing
     timeZoneDiff: int | Missing = missing
+    peerReview: bool | Missing = missing
 
     @validates_schema(skip_on_field_errors=True)
     def validate_schema(self, data, **_):
@@ -1252,6 +1254,13 @@ def preprocess_jsrunner_answer(
         if runner_req.input.userNames
         else None,
     )
+    if runnermarkup.peerReview:
+        if not curr_user.has_teacher_access(d):
+            raise AccessDenied("Teacher access required to browse all peer reviews")
+        answerdata["peerreviews"] = get_reviews_for_document(d)
+    else:
+        answerdata["peerreviews"] = []
+
     answerdata["testvelps"] = get_annotations_with_comments_in_document(
         curr_user, d, False
     )
