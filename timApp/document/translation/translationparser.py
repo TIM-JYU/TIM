@@ -24,6 +24,13 @@ class NoTranslate(TranslateApproval):
     ...
 
 
+@dataclass
+class Table(TranslateApproval):
+    """Hacky way to translate tables by identifying them at translation and setting html-tag handling on"""
+
+    ...
+
+
 def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
     """
     By parsing the input text, identify parts that should and should not be passed to a machine translator
@@ -96,7 +103,7 @@ def tex_collect(content: str) -> list[TranslateApproval]:
         return [NoTranslate(content)]
 
 
-def attr_collect(content: dict) -> Tuple[list[TranslateApproval], bool]:
+def attr_collect(content: list) -> Tuple[list[TranslateApproval], bool]:
     """
     Collect the parts of Attr into Markdown.
 
@@ -397,7 +404,7 @@ def notranslate_all(type_: str, content: dict) -> list[TranslateApproval]:
     json_str = json.dumps(ast_content)
     # FIXME This conversion needs to know the pandoc api version -> add into a parser-class?
     md = pypandoc.convert_text(json_str, to="md", format="json")
-    return [NoTranslate(md)]
+    return [Table(md) if type_ == "Table" else NoTranslate(md)]
 
 
 # TODO make attrs into a class
@@ -651,6 +658,8 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
         arr += rawblock_collect(content)
     elif type_ == "BlockQuote":
         # NOTE Recursion
+        # TODO See that this implementation actually works
+        arr.append(NoTranslate("> "))
         for block in content:
             arr += block_collect(block)
     elif type_ == "OrderedList":
