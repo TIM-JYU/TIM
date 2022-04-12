@@ -187,8 +187,7 @@ class DeeplTranslationService(TranslationService):
                 )
 
             raise RouteException(
-                description="Automatic translation failed. Error message: "
-                + str(debug_exception)
+                description="The request failed. Error message: " + str(debug_exception)
             )
 
     def _translate(
@@ -316,6 +315,43 @@ class DeeplTranslationService(TranslationService):
             character_limit=int(resp_json["character_limit"]),
         )
 
+    def get_languages(self, source_langs: bool) -> list[Language]:
+        """
+        Fetches the source or target languages from DeepL.
+        :param source_langs: Whether source languages must be fetched
+        :return: The list of source of target languages from DeepL.
+        """
+
+        def get_langs_from_db(deepl_lang: dict) -> Language | None:
+            try:
+                language = deepl_lang["language"]
+                code = langcodes.get(language).to_tag()
+
+                # This is needed because DeepL's source languages only include English (EN) and not regional variants
+                if code.lower() == "en":
+                    code = self.source_Language_code
+                return Language.query_by_code(code)
+            except LookupError:
+                return None
+
+        self.source_Language_code = "en-GB"
+        langs = self._languages(is_source=source_langs)
+        return_langs = list(filter(None, map(get_langs_from_db, langs)))
+        if source_langs:
+            self.source_Language_code = "en-US"
+            en = Language(
+                flag_uri="",
+                lang_code="",
+                lang_name="",
+                autonym="",
+            )
+            for lang in langs:
+                if lang.get("language").lower() == "en":
+                    en = get_langs_from_db(lang)
+            if en is not None:
+                return_langs = return_langs + [en]
+        return return_langs
+
     # TODO Cache this maybe?
     def languages(self) -> LanguagePairing:
         """
@@ -373,14 +409,12 @@ class DeeplTranslationService(TranslationService):
 
 
 class DeeplProTranslationService(DeeplTranslationService):
-
     # TODO Make the value an enum like with Verification?
     __mapper_args__ = {"polymorphic_identity": "DeepL Pro"}
 
 
 # TODO Remove this when crisis is over
 class DeeplPlaceholderTranslationService(DeeplTranslationService):
-
     # TODO Make the value an enum like with Verification?
     __mapper_args__ = {"polymorphic_identity": "DeepL"}
 
@@ -448,6 +482,15 @@ def init_translate(
         return translated_texts
 
     return generic_translate
+
+
+def get_lang_lists(translator: str, source_langs: bool) -> list[Language]:
+    if translator.lower() == "deepl free":
+        tr = DeeplTranslationService.query.first()
+    elif translator.lower() == "deepl pro":
+        tr = DeeplProTranslationService.query.first()
+
+    return tr.get_languages(source_langs)
 
 
 def init_deepl_translate(
