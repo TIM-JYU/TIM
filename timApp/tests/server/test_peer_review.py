@@ -55,13 +55,17 @@ class PeerReviewTest(TimRouteTest):
 
         # pairing without group works using everyone who answered the document
         check_peerreview_rows()
-        rq.delete()
+        PeerReview.query.filter_by(block_id=d.id).delete()
         d.document.add_setting("group", "testusers1")
+        ug = UserGroup.create("testusers1")
+        ug.users.append(self.test_user_1)
+        ug.users.append(self.test_user_2)
+        ug.users.append(self.test_user_3)
         db.session.commit()
         self.get(url)
         # pairing with group ignores group members who haven't answered the document
         check_peerreview_rows()
-        rq.delete()
+        PeerReview.query.filter_by(block_id=d.id).delete()
         self.add_answer(d, "t", "x", user=self.test_user_3)
         ug = UserGroup.create("testuser3isnothere")
         ug.users.append(self.test_user_1)
@@ -72,7 +76,7 @@ class PeerReviewTest(TimRouteTest):
         # pairing with group setting ignores users who answered but aren't in the group
         check_peerreview_rows()
         pars = d.document.get_paragraphs()
-        rq.delete()
+        PeerReview.query.filter_by(block_id=d.id).delete()
         db.session.commit()
         part = self.get(f"{url}?b={pars[1].id}&size=1")
         self.assertNotIn('id="t2"', part)

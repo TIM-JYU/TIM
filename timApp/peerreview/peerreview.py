@@ -44,7 +44,6 @@ class PeerReview(db.Model):
     reviewer = db.relationship("User", foreign_keys=[reviewer_id])
     reviewable = db.relationship("User", foreign_keys=[reviewable_id])
 
-    @property
     def to_json(self) -> dict[str, Any]:
         return {
             "id": self.id,
