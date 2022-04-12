@@ -1414,16 +1414,27 @@ export class Tools extends ToolsBase {
         return sum;
     }
 
+    /**
+     * Print every row in peer_review table where document_id matches jsrunner origin doc id
+     */
     getAllPeerReviews(): PeerReviewDataT[] {
         return this.peerreviews;
     }
 
+    /**
+     * Print every row from peer_review table where document_id matches
+     * jsrunner origin doc id and reviewer is current user
+     */
     getPeerReviewsByUser(): PeerReviewDataT[] {
         return this.getAllPeerReviews().filter(
             (rev) => rev.reviewer_id == this.data.user.id
         );
     }
 
+    /**
+     * Print every row from peer_review table where document_id matches
+     * jsrunner origin doc id and target is current user
+     */
     getPeerReviewsForUser(): PeerReviewDataT[] {
         return this.getAllPeerReviews().filter(
             (rev) => rev.reviewable_id == this.data.user.id
