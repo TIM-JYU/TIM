@@ -157,7 +157,10 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (!eventToDelete.id || !eventToDelete.meta) {
             return;
         }
-        if (!eventToDelete.meta.tmpEvent) {
+        if (
+            !eventToDelete.meta.tmpEvent &&
+            confirm("Are you sure you want to delete the event?") // TODO: make more sophisticated confirmation dialog
+        ) {
             const result = await toPromise(
                 this.http.delete(`/calendar/events/${eventToDelete.id}`)
             );
@@ -169,6 +172,8 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 console.error(result.result.error.error);
                 this.setMessage(result.result.error.error);
             }
+        } else {
+            this.close(eventToDelete);
         }
         // this.events.splice(this.events.indexOf(event), 1);
         // this.lastEvent--;
