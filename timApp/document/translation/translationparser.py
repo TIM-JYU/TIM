@@ -172,7 +172,15 @@ def code_collect(content: dict) -> list[TranslateApproval]:
     if not isinstance(content[0], list) or not isinstance(content[1], str):
         assert False, "PanDoc code content is not [ Attr, Text ]."
     # TODO Handle "Attr"
-    return [NoTranslate(content[1])]
+    arr: list[TranslateApproval] = list()
+    arr.append(NoTranslate(f"`{content[1]}`"))
+
+    attrs, is_notranslate = attr_collect(content[0])
+    arr += attrs
+    if is_notranslate:
+        return [x if isinstance(x, NoTranslate) else NoTranslate(x.text) for x in arr]
+
+    return arr
 
 
 def math_collect(content: dict) -> list[TranslateApproval]:
@@ -747,7 +755,7 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
     """
     arr: list[TranslateApproval] = list()
     type_ = top_block["t"]
-    content = top_block["c"]
+    content = top_block.get("c", None)
     if type_ == "Plain" or type_ == "Para":
         # TODO Need different literals before?
         for inline in content:

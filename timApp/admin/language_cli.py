@@ -75,9 +75,14 @@ def create(langcode: str, langname: str, autonym: str, flag_uri: str) -> None:
     # Standardize the primary key with langcodes before inserting into db.
     # Note: variant name must not exceed 8 characters in length.
     #       Example: "en-gibberis" is acceptable while "en-gibberish" is not.
-    # TODO only allow IETF-format custom language tags
     try:
         standard_code = langcodes.standardize_tag(langcode)
+        valid = langcodes.tag_is_valid(standard_code)
+        if not valid:
+            click.echo(
+                f"Invalid custom language code {standard_code}. Code must be a valid IETF language tag."
+            )
+            return
     except Exception as e:
         click.echo(f"Failed to create new language: {str(e)}")
         return
