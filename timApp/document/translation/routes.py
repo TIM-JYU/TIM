@@ -132,7 +132,7 @@ def create_translation_route(tr_doc_id, language):
                     (k, v) for k, v in orig_paragraph.attrs.items() if k != "taskId"
                 ]
                 attr_str = "".join(
-                    map(lambda x: x.text, attr_collect([taskid, classes, kv_pairs]))
+                    map(lambda x: x.text, attr_collect([taskid, classes, kv_pairs])[0])
                 )
                 md = md.replace("```\n", f"``` {attr_str}\n", 1)
 
