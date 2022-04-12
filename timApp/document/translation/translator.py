@@ -443,8 +443,11 @@ def init_translate(
         for paragraph in translated_elements:
             for elem in paragraph:
                 translated_md += elem.text
-            # TODO Are the paragraphs actually separated by "\n\n"? Seems like this would need more handling in regard to TIM's block separation and id's etc
-            translated_md += "\n\n"
+            # TODO what are the paragraphs separated by? "\n\n"? Seems like this would need more handling in regard to
+            #  TIM's block separation and id's etc
+            # TODO Do some MD-elements (from parser) not include newline postfix and should this newline-addition then
+            #  be placed into parser-module?
+            translated_md += "\n"
         translated_md = translated_md.strip()
 
         return translated_md

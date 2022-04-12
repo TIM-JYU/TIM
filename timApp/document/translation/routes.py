@@ -241,6 +241,14 @@ def text_translation_route(tr_doc_id: int, language: str) -> Response:
                 target_lang,
             )
             block_text = translator_func([TranslationTarget(src_text)])[0]
+        elif translator_code.lower() == "reversing":
+            # TODO DUMB DUMB DUMB, add the factory-method (ie. the translator.init_*_translate) into TranslationService-interface and select the translator by matching into db query: TranslationService.query.with_entities(TranslationService.service_name).all()
+            from timApp.tests.unit.test_translator_generic import (
+                ReversingTranslationService,
+            )
+
+            translator_func = ReversingTranslationService.init_translate()
+            block_text = translator_func([TranslationTarget(src_text)])[0]
 
     else:
         raise RouteException(

@@ -599,6 +599,10 @@ def header_collect(content: dict) -> list[TranslateApproval]:
     for inline in content[2]:
         arr += inline_collect(inline)
 
+    # NOTE Apparently Pandoc likes to add to headers their text-content as identifier,
+    # which does not seem to be a TIM-convention (which could be a problem?).
+    # TODO Remove the extra identifier that Pandoc automatically adds (Needs handling [Inline])
+
     attrs, is_notranslate = attr_collect(content[1])
     arr += attrs
     if is_notranslate:
@@ -637,7 +641,7 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
             for inline in inline_list:
                 arr += inline_collect(inline)
     elif type_ == "CodeBlock":
-        # Code blocks are not translated TODO but plugins' YAML could partly be
+        # Code blocks are not translated
         arr += codeblock_collect(content)
     elif type_ == "RawBlock":
         arr += rawblock_collect(content)
