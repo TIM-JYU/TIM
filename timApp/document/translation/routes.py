@@ -25,9 +25,8 @@ from timApp.util.flask.responsehelper import json_response, ok_response, Respons
 from timApp.document.translation.translator import (
     TranslationService,
     TranslationServiceKey,
-    init_deepl_translate,
-    init_deepl_pro_translate,
     TranslationTarget,
+    TranslateMethodFactory,
 )
 from timApp.document.translation.language import Language
 
@@ -85,29 +84,12 @@ def create_translation_route(tr_doc_id, language):
     if translator_code := req_data.get("autotranslate", None):
         # Use the translator with a different source language if specified
         # and get the actual Language objects from database TODO Is database-query dumb here?
-        src_lang = Language.query_by_code(src_doc.docinfo.lang_id)
-
-        if not src_lang:
-            # Manual translation can be done without the original language.
-            if translator_code.lower() != "manual":
-                raise RouteException(
-                    description="The source language has not been set to the original document."
-                )
-
-        tr_lang = Language.query_by_code(language)
-
-        # Select the translator TODO Maybe move to somewhere else so this does not blow up with if-else?
-        if (
-            translator_code.lower() == "deepl"
-            or translator_code.lower() == "deepl free"
-        ):
-            translator_func = init_deepl_translate(
-                get_current_user_object().get_personal_group(), src_lang, tr_lang
-            )
-        elif translator_code.lower() == "deepl pro":
-            translator_func = init_deepl_pro_translate(
-                get_current_user_object().get_personal_group(), src_lang, tr_lang
-            )
+        translator_func = TranslateMethodFactory.create(
+            translator_code,
+            src_doc.docinfo.lang_id,
+            language,
+            get_current_user_object().get_personal_group(),
+        )
 
     # Translate each paragraph sequentially if a translator was created
     if translator_func:
@@ -172,29 +154,12 @@ def paragraph_translation_route(
             )
 
         src_par = src_doc.document.get_paragraph(tr_par.get_attr("rp"))
-        # TODO Wrap this selection into a function to also use with the other *_translation_route -functions
-        if (
-            translator_code.lower() == "deepl free"
-            or translator_code.lower() == "deepl"
-        ):
-            src_lang = Language.query_by_code(src_doc.lang_id)
-            target_lang = Language.query_by_code(language)
-            translator_func = init_deepl_translate(
-                get_current_user_object().get_personal_group(), src_lang, target_lang
-            )
-        elif translator_code.lower() == "deepl pro":
-            src_lang = Language.query_by_code(src_doc.lang_id)
-            target_lang = Language.query_by_code(language)
-            translator_func = init_deepl_pro_translate(
-                get_current_user_object().get_personal_group(), src_lang, target_lang
-            )
-        elif translator_code.lower() == "reversing":
-            # TODO DUMB DUMB DUMB, add the factory-method (ie. the translator.init_*_translate) into TranslationService-interface and select the translator by matching into db query: TranslationService.query.with_entities(TranslationService.service_name).all()
-            from timApp.tests.unit.test_translator_generic import (
-                ReversingTranslationService,
-            )
-
-            translator_func = ReversingTranslationService.init_translate()
+        translator_func = TranslateMethodFactory.create(
+            translator_code,
+            src_doc.lang_id,
+            language,
+            get_current_user_object().get_personal_group(),
+        )
 
         translated_text = translator_func([TranslationTarget(src_par)])[0]
         tr.document.modify_paragraph(tr_par_id, translated_text)
@@ -220,36 +185,13 @@ def text_translation_route(tr_doc_id: int, language: str) -> Response:
     # Select the specified translator and translate if valid
     if req_data and (translator_code := req_data.get("autotranslate", None)):
         src_text = req_data.get("originaltext", None)
-        if (
-            translator_code.lower() == "deepl free"
-            or translator_code.lower() == "deepl"
-        ):
-            src_lang = Language.query_by_code(src_doc.docinfo.lang_id)
-            target_lang = Language.query_by_code(language)
-            translator_func = init_deepl_translate(
-                get_current_user_object().get_personal_group(),
-                src_lang,
-                target_lang,
-            )
-            block_text = translator_func([TranslationTarget(src_text)])[0]
-        elif translator_code.lower() == "deepl pro":
-            src_lang = Language.query_by_code(src_doc.docinfo.lang_id)
-            target_lang = Language.query_by_code(language)
-            translator_func = init_deepl_pro_translate(
-                get_current_user_object().get_personal_group(),
-                src_lang,
-                target_lang,
-            )
-            block_text = translator_func([TranslationTarget(src_text)])[0]
-        elif translator_code.lower() == "reversing":
-            # TODO DUMB DUMB DUMB, add the factory-method (ie. the translator.init_*_translate) into TranslationService-interface and select the translator by matching into db query: TranslationService.query.with_entities(TranslationService.service_name).all()
-            from timApp.tests.unit.test_translator_generic import (
-                ReversingTranslationService,
-            )
-
-            translator_func = ReversingTranslationService.init_translate()
-            block_text = translator_func([TranslationTarget(src_text)])[0]
-
+        translator_func = TranslateMethodFactory.create(
+            translator_code,
+            src_doc.docinfo.lang_id,
+            language,
+            get_current_user_object().get_personal_group(),
+        )
+        block_text = translator_func([TranslationTarget(src_text)])[0]
     else:
         raise RouteException(
             description=f"Please select a translator from the 'Translator data' tab"
@@ -339,6 +281,7 @@ def get_translators() -> Response:
 
     translationservices = TranslationService.query.all()
     translationservice_names = list(map(lambda x: x.service_name, translationservices))
+    # TODO Add Manual to the TranslationService-table
     sl = ["Manual"] + translationservice_names
     return json_response(sl)
 

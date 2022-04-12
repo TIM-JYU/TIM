@@ -62,6 +62,9 @@ class TranslationService(db.Model):
     def languages(self) -> LanguagePairing:
         raise NotImplementedError
 
+    def supports(self, source_lang: Language, target_lang: Language) -> bool:
+        raise NotImplementedError
+
     # Polymorphism allows querying multiple objects by their class e.g. TranslationService.query
     __mapper_args__ = {"polymorphic_on": service_name}
 
@@ -91,8 +94,34 @@ class TranslationServiceKey(db.Model):
     service: TranslationService = db.relationship("TranslationService", uselist=False)
     """The service that this key is used in."""
 
+    @staticmethod
+    def get_by_user_group(
+        user_group: UserGroup | None,
+    ) -> "TranslationServiceKey":
+        return TranslationServiceKey.query.get(
+            TranslationServiceKey.group_id == user_group
+        )
 
-class DeeplTranslationService(TranslationService):
+
+class RegisteredTranslationService(TranslationService):
+    """A translation service whose use is constrained by user group."""
+
+    def register(self, user_group: UserGroup) -> None:
+        raise NotImplementedError
+
+    def translate(
+        self, texts: list[TranslateApproval], src_lang: Language, target_lang: Language
+    ) -> list[TranslateApproval]:
+        raise NotImplementedError
+
+    def usage(self) -> Usage:
+        raise NotImplementedError
+
+    def languages(self) -> LanguagePairing:
+        raise NotImplementedError
+
+
+class DeeplTranslationService(RegisteredTranslationService):
     service_url = db.Column(
         db.Text, default="https://api-free.deepl.com/v2", nullable=False
     )
@@ -106,18 +135,24 @@ class DeeplTranslationService(TranslationService):
     source_Language_code: str
     """The source language's code (helps handling regional variants that DeepL doesn't differentiate)"""
 
-    # TODO Register by API-key; Translator should not care about users
     def register(self, user_group: UserGroup) -> None:
         """Set headers to use the user group's API-key ready for translation calls
-        :param user_group: The user group whose API key will be used
+
+        :param user_group: The user group whose API key will be used.
         """
         # One key should match one service per one user group TODO is that correct?
         api_key = TranslationServiceKey.query.filter(
             TranslationServiceKey.service_id == self.id,
             TranslationServiceKey.group_id == user_group.id,
-        ).first()
+        ).all()
+        # TODO does all() return empty list or None if query is empty?
         if api_key is None:
             raise NotExist("Please add a DeepL API key into your account")
+        if len(api_key) > 1:
+            # TODO Does telling this information compromise security in any way?
+            raise RouteException(
+                "A user should not have more than one (1) API-key per service."
+            )
         self.headers = {"Authorization": f"DeepL-Auth-Key {api_key.api_key}"}
 
     # TODO Change the dicts to DeepLTranslateParams and DeeplResponse or smth
@@ -409,159 +444,137 @@ class TranslationTarget:
             return False
 
 
-def init_translate(
-    translator: TranslationService,
-    source_lang: Language,
-    target_lang: Language,
-) -> Callable[[list[TranslationTarget]], list[str]]:
-    # TODO This helper-function would be better if there was some way to hide the translate-methods on ITranslators. Maybe save for the eventual(?) TranslatorSelector?
-    """
-    Use the specified TranslationService to initialize machine translation
-    :param translator: The translator to use
-    :param source_lang: The language that text is in
-    :param target_lang: The language that text will be translated into
-    :return: A partially applied function for translating text with the specified languages using the specified TranslationService
-    """
-
-    def translate_raw_text(md: str) -> str:
+class TranslateMethodFactory:
+    @staticmethod
+    def create(
+        translator_code: str, s_lang: str, t_lang: str, user_group: UserGroup | None
+    ) -> Callable[[list[TranslationTarget]], list[str]]:
         """
-        Most primitive translate-func -version to translate text between languages.
+        Based on a name, get the correct TranslationService from database and perform needed initializations on it.
 
-        :param md: The text to translate.
-        :return: The translated text.
-        """
-        # Turn the text into lists of objects that describe whether they can be translated or not
-        elements: list[list[TranslateApproval]] = get_translate_approvals(md)
-        # Pass object-lists with translatable text to the machine translator object.
-        # If supported, the translator protects and removes the protection from the text (for example adding XML-ignore-tags in DeepL's case).
-        translated_elements: list[list[TranslateApproval]] = [
-            translator.translate(xs, source_lang, target_lang) for xs in elements
-        ]
-        # The translator object returns the same structure as input but their content has been translated accordingly
-        # Transform the objects back to a Markdown string
-        translated_md = ""
-        for paragraph in translated_elements:
-            for elem in paragraph:
-                translated_md += elem.text
-            # TODO what are the paragraphs separated by? "\n\n"? Seems like this would need more handling in regard to
-            #  TIM's block separation and id's etc
-            # TODO Do some MD-elements (from parser) not include newline postfix and should this newline-addition then
-            #  be placed into parser-module?
-            translated_md += "\n"
-        translated_md = translated_md.strip()
-
-        return translated_md
-
-    def translate_paragraph(target: TranslationTarget) -> str:
-        """
-        Translate a single piece of Markdown roughly the size of a generic paragraph.
-        :param target: The object whose Markdown-text-value to parse.
-        :return: The markdown elements that are contained in the text.
+        :param translator_code: Name that separates the different TranslationServices.
+        :param s_lang: Source language of translatable text.
+        :param t_lang: Target language to translate text into.
+        :param user_group: Identification of user, that can be allowed to use some TranslationServices (for example
+        DeepL requires an API-key)
+        :return: Function that when called, uses the selected parameters in translating text.
         """
 
-        md = target.get_text()
-        is_plugin = target.is_plugin()
+        # TODO Find out if this is used correctly. Would rather use Query.get, but did not work...
+        translator = TranslationService.query.with_polymorphic("*").filter(
+            TranslationService.service_name == translator_code
+        )[0]
 
-        if is_plugin:
-            # Add the attributes to the content so that parser can identify the code block as a plugin
-            # NOTE that the parser should only use the attributes for identification and deletes them from the translated result ie. this is a special case!
+        if isinstance(translator, RegisteredTranslationService):
+            translator.register(user_group)
 
-            # Form the Pandoc-AST representation of a code-block's Attr and glue the parts returned as is back together into a string of Markdown
-            # TODO Is par.attrs trusted to not be None?
-            taskid = target.value.attrs.get("taskId", "") if target.value.attrs else ""
-            classes: list[str] = (
-                x
-                if target.value.attrs
-                and isinstance(x := target.value.attrs.get("classes"), list)
-                else []
+        source_lang = Language.query_by_code(s_lang)
+        target_lang = Language.query_by_code(t_lang)
+
+        if not translator.supports(source_lang, target_lang):
+            raise RouteException(
+                description=f"The language pair from {source_lang} to {target_lang} is not supported with {translator.service_name}"
             )
-            kv_pairs = (
-                [(k, v) for k, v in target.value.attrs.items() if k != "taskId"]
-                if target.value.attrs
-                else []
-            )
-            attr_str = "".join(
-                # TODO Making the list into dict like this to appease mypy looks bad
-                map(
-                    lambda x: x.text,
-                    attr_collect({0: taskid, 1: classes, 2: kv_pairs})[0],
+
+        # TODO This helper-function would be better if there was some way to hide the translate-methods on ITranslators. Maybe save for the eventual(?) TranslatorSelector?
+        """
+        Use the specified TranslationService to initialize machine translation
+        :param translator: The translator to use
+        :param source_lang: The language that text is in
+        :param target_lang: The language that text will be translated into
+        :return: A partially applied function for translating text with the specified languages using the specified TranslationService
+        """
+
+        def translate_raw_text(md: str) -> str:
+            """
+            Most primitive translate-func -version to translate text between languages.
+
+            :param md: The text to translate.
+            :return: The translated text.
+            """
+            # Turn the text into lists of objects that describe whether they can be translated or not
+            elements: list[list[TranslateApproval]] = get_translate_approvals(md)
+            # Pass object-lists with translatable text to the machine translator object.
+            # If supported, the translator protects and removes the protection from the text (for example adding XML-ignore-tags in DeepL's case).
+            translated_elements: list[list[TranslateApproval]] = [
+                translator.translate(xs, source_lang, target_lang) for xs in elements
+            ]
+            # The translator object returns the same structure as input but their content has been translated accordingly
+            # Transform the objects back to a Markdown string
+            translated_md = ""
+            for paragraph in translated_elements:
+                for elem in paragraph:
+                    translated_md += elem.text
+                # TODO what are the paragraphs separated by? "\n\n"? Seems like this would need more handling in regard to
+                #  TIM's block separation and id's etc
+                # TODO Do some MD-elements (from parser) not include newline postfix and should this newline-addition then
+                #  be placed into parser-module?
+                translated_md += "\n"
+            translated_md = translated_md.strip()
+
+            return translated_md
+
+        def translate_paragraph(target: TranslationTarget) -> str:
+            """
+            Translate a single piece of Markdown roughly the size of a generic paragraph.
+            :param target: The object whose Markdown-text-value to parse.
+            :return: The markdown elements that are contained in the text.
+            """
+
+            md = target.get_text()
+            is_plugin = target.is_plugin()
+
+            if is_plugin:
+                # Add the attributes to the content so that parser can identify the code block as a plugin
+                # NOTE that the parser should only use the attributes for identification and deletes them from the translated result ie. this is a special case!
+
+                # Form the Pandoc-AST representation of a code-block's Attr and glue the parts returned as is back together into a string of Markdown
+                # TODO Is par.attrs trusted to not be None?
+                taskid = (
+                    target.value.attrs.get("taskId", "") if target.value.attrs else ""
                 )
+                classes: list[str] = (
+                    x
+                    if target.value.attrs
+                    and isinstance(x := target.value.attrs.get("classes"), list)
+                    else []
+                )
+                kv_pairs = (
+                    [(k, v) for k, v in target.value.attrs.items() if k != "taskId"]
+                    if target.value.attrs
+                    else []
+                )
+                attr_str = "".join(
+                    # TODO Making the list into dict like this to appease mypy looks bad
+                    map(
+                        lambda x: x.text,
+                        attr_collect({0: taskid, 1: classes, 2: kv_pairs})[0],
+                    )
+                )
+                md = md.replace("```\n", f"``` {attr_str}\n", 1)
+
+            return translate_raw_text(md)
+
+        def generic_translate(paras: list[TranslationTarget]) -> list[str]:
+            """
+            Wraps the TranslationService, source and target languages into a function that can be used to call a translation on different TranslationService-instances.
+            :param paras: TIM-paragraphs containing Markdown to translate.
+            :return: The translatable text contained in input paragraphs translated according to the outer functions inputs (the languages).
+            """
+            # TODO Translator should be able to translate multiple texts at once (ie. DeepL request can have 50 text-params)
+            translated_texts = [translate_paragraph(x) for x in paras]
+
+            # TODO Maybe log the length of text or other shorter info?
+            logger.log_info("\n".join(translated_texts))
+
+            usage = translator.usage()
+            logger.log_info(
+                "Current DeepL API usage: "
+                + str(usage.character_count)
+                + "/"
+                + str(usage.character_limit)
             )
-            md = md.replace("```\n", f"``` {attr_str}\n", 1)
 
-        return translate_raw_text(md)
+            return translated_texts
 
-    def generic_translate(paras: list[TranslationTarget]) -> list[str]:
-        """
-        Wraps the TranslationService, source and target languages into a function that can be used to call a translation on different TranslationService-instances.
-        :param paras: TIM-paragraphs containing Markdown to translate.
-        :return: The translatable text contained in input paragraphs translated according to the outer functions inputs (the languages).
-        """
-        # TODO Translator should be able to translate multiple texts at once (ie. DeepL request can have 50 text-params)
-        translated_texts = [translate_paragraph(x) for x in paras]
-
-        # TODO Maybe log the length of text or other shorter info?
-        logger.log_info("\n".join(translated_texts))
-
-        usage = translator.usage()
-        logger.log_info(
-            "Current DeepL API usage: "
-            + str(usage.character_count)
-            + "/"
-            + str(usage.character_limit)
-        )
-
-        return translated_texts
-
-    return generic_translate
-
-
-def init_deepl_translate(
-    user_group: UserGroup,
-    source_lang: Language,
-    target_lang: Language,
-) -> Callable[[list[TranslationTarget]], list[str]]:
-    """
-    Initialize the deepl translator using the API-key from user's configuration and return a partially applied function for translating
-    :param user_group: User whose API-key will be used to make translations TODO Make just the key
-    :param source_lang: Language that is requested to translate from
-    :param target_lang: Language that is requested to translate into
-    :return: A function for translating text with the specified languages using a DeepLTranslator instance.
-    """
-    # Get the API-key from database
-    # TODO Is this cool or should the service be its own class separate from the db model?
-    translator = DeeplTranslationService.query.first()
-    translator.register(user_group)
-
-    if not translator.supports(source_lang, target_lang):
-        raise RouteException(
-            description=f"The language pair from {source_lang} to {target_lang} is not supported with DeepL"
-        )
-
-    translate_func = init_translate(translator, source_lang, target_lang)
-    return translate_func
-
-
-# TODO Is it a bad idea to just make a copy of the free DeepL functions for the Pro side?
-def init_deepl_pro_translate(
-    user_group: UserGroup, source_lang: Language, target_lang: Language
-) -> Callable[[list[TranslationTarget]], list[str]]:
-    """
-    Initialize the deepl translator using the API-key from user's configuration and return a partially applied function for translating
-    :param user_group: User whose API-key will be used to make translations TODO Make just the key
-    :param source_lang: Language that is requested to translate from
-    :param target_lang: Language that is requested to translate into
-    :return: A function for translating text with the specified languages using a DeepLTranslator instance.
-    """
-    # Get the API-key from database
-    # TODO Is this cool or should the service be its own class separate from the db model?
-    translator = DeeplProTranslationService.query.first()
-    translator.register(user_group)
-
-    if not translator.supports(source_lang, target_lang):
-        raise RouteException(
-            description=f"The language pair from {source_lang} to {target_lang} is not supported with DeepL"
-        )
-
-    translate_func = init_translate(translator, source_lang, target_lang)
-    return translate_func
+        return generic_translate

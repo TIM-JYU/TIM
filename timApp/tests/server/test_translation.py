@@ -356,6 +356,7 @@ Baz
         tr = self.create_translation(d)
         tr_doc = tr.document
         id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
+        # TODO Would rather use RevesingTranslationService.service_name but is not str
         data = {"autotranslate": "Reversing"}
         r = self.json_post(f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}", data)
         tr_doc.clear_mem_cache()
@@ -432,7 +433,10 @@ notexistingkey: Bar baz
 Baz qux [qux](www.example.com)
 """
 
-        data = {"autotranslate": "Reversing", "originaltext": md}
+        data = {
+            "autotranslate": "Reversing",
+            "originaltext": md,
+        }
         resp = self.json_post(
             f"/translate/{tr.id}/{lang.lang_code}/translate_block", data
         )
