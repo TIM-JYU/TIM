@@ -28,6 +28,7 @@ from timApp.document.translation.translator import (
     TranslationServiceKey,
     init_deepl_translate,
     init_deepl_pro_translate,
+    get_lang_lists,
 )
 from timApp.document.translation.language import Language
 
@@ -217,8 +218,9 @@ def paragraph_translation_route(
         # TODO Maybe this is needed for modifying paragraphs???
         db.session.commit()
 
-    # TODO (maybe duplicate) Could this cause unhandled exception if translator_code is not recognised and tries to return json_response(block_text) when block_text is not defined
-    # TODO What should this even return?
+    # TODO (maybe duplicate) Could this cause unhandled exception if translator_code is not recognised and tries to
+    #  return json_response(block_text) when block_text is not defined
+    # TODO What should this even return? Maybe an ok_response?
     return json_response(tr_doc_id)
 
 
@@ -256,7 +258,7 @@ def text_translation_route(tr_doc_id: int, language: str) -> Response:
 
     else:
         raise RouteException(
-            description=f"Please select a translator from the 'Translator data' tab"
+            description=f"Please select a translator from the 'Translator data' tab."
         )
 
     return json_response(block_text)
@@ -289,16 +291,32 @@ def get_translations(doc_id: int) -> Response:
     return json_response(d.translations)
 
 
-@tr_bp.get("/translations/source-languages")
+@tr_bp.post("/translations/source-languages")
 def get_source_languages() -> Response:
     """
     Query the database for the possible source languages.
-    TODO Select by translator
     """
 
-    langs = Language.query.all()
-    sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
-    return json_response(sl)
+    req_data = request.get_json()
+    translator = req_data.get("translator", "")
+
+    # Get the translation service by the provided service name TODO Maybe change to use id instead?
+    tr = TranslationService.query.filter(
+        translator == TranslationService.service_name,
+    ).first()
+    if translator.lower() != "manual":
+        tr.register(get_current_user_object().get_personal_group())
+
+    if translator.lower() == "manual":
+        return json_response("")
+    elif translator.lower() == "deepl free" or translator.lower() == "deepl pro":
+        langs = get_lang_lists(translator, True)
+        sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
+        return json_response(sl)
+    else:
+        langs = Language.query.all()
+        sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
+        return json_response(sl)
 
 
 @tr_bp.get("/translations/document-languages")
@@ -317,16 +335,22 @@ def get_document_languages() -> Response:
 def get_target_languages() -> Response:
     """
     Query the database for the possible target languages.
-    TODO Select by translator
     """
 
     req_data = request.get_json()
     translator = req_data.get("translator", "")
 
+    # Get the translation service by the provided service name TODO Maybe change to use id instead?
+    tr = TranslationService.query.filter(
+        translator == TranslationService.service_name,
+    ).first()
+    if translator.lower() != "manual":
+        tr.register(get_current_user_object().get_personal_group())
+
     if translator.lower() == "manual":
         return json_response("")
-    elif translator.lower() == "deepl":
-        langs = Language.query.all()
+    elif translator.lower() == "deepl free" or translator.lower() == "deepl pro":
+        langs = get_lang_lists(translator, False)
         sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
         return json_response(sl)
     else:

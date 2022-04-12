@@ -635,7 +635,7 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
     """
     arr: list[TranslateApproval] = list()
     type_ = top_block["t"]
-    content = top_block["c"]
+    content = top_block.get("c", None)
     if type_ == "Plain" or type_ == "Para":
         # TODO Need different literals before?
         for inline in content:

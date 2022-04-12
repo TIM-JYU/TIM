@@ -94,7 +94,9 @@ export async function updateLanguages(
     translator: string
 ) {
     let sources = await to(
-        $http.get<ILanguages[]>("/translations/source-languages")
+        $http.post<ILanguages[]>("/translations/source-languages", {
+            translator: translator,
+        })
     );
     if (sources.ok) {
         listLanguages(sources.result.data, sourceL);

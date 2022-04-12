@@ -556,7 +556,7 @@ export class PermCtrl implements IController {
      * Updates the list of available target languages when translator is changed.
      */
     async updateTranslatorLanguages() {
-        const sources = await to(
+        let sources = await to(
             $http.post<ILanguages[]>("/translations/target-languages", {
                 translator: this.newTranslation.translator,
             })
@@ -564,6 +564,14 @@ export class PermCtrl implements IController {
         if (sources.ok) {
             this.targetLanguages = [];
             listLanguages(sources.result.data, this.targetLanguages);
+        }
+        sources = await to(
+            $http.post<ILanguages[]>("/translations/source-languages", {
+                translator: this.newTranslation.translator,
+            })
+        );
+        if (sources.ok) {
+            listLanguages(sources.result.data, this.sourceLanguages);
             this.checkTranslatability();
         }
     }
