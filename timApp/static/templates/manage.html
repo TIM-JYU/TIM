@@ -268,7 +268,8 @@
                title="Export document and all untranslated text as markdown">Export document with original text</a>
             <button class="timButton" ng-click="$ctrl.markAllAsRead()">Mark document as read</button>
             <button ng-show="$ctrl.item.rights.owner" class="btn btn-danger"
-                    ng-click="$ctrl.deleteDocument()">Delete document
+                    ng-click="$ctrl.deleteDocument()">
+                {{ !$ctrl.item.isFolder && !$ctrl.item.src_docid ? 'Delete document' : 'Delete translation' }}
             </button>
             <span ng-show="$ctrl.readUpdating">Marking document as read...</span>
         </div>

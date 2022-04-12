@@ -36,6 +36,7 @@ from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document, find_free_name, DocInfo
 from timApp.document.exceptions import ValidationException
+from timApp.document.translation.translation import Translation
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType, Block
@@ -692,7 +693,16 @@ def del_document(doc_id: int) -> Response:
     d = get_doc_or_abort(doc_id)
     verify_ownership(d)
     f = get_trash_folder()
-    move_document(d, f)
+    if d.path.startswith(f.path):
+        return ok_response()
+    if isinstance(d, Translation):
+        deleted_doc = DocEntry.create(
+            f"{f.path}/tl_{d.id}_{d.src_docid}_{d.lang_id}_deleted",
+            title=f"Deleted translation (src_docid: {d.src_docid}, lang_id: {d.lang_id})",
+        )
+        d.docentry = deleted_doc
+    else:
+        move_document(d, f)
     db.session.commit()
     return ok_response()
 
