@@ -29,67 +29,54 @@ import {TIMCalendarEvent} from "./calendar.component";
                                    id="title" name="title"
                                    class="form-control"
                                    placeholder="Set title"
-                                   [disabled]="!editEnabled()"/>
-                            </div>
+                                   [disabled]="!isEditEnabled()"/>
+                        </div>
                     </div>
-
-                    <!--
-                    Do not mix form groups or grid column classes directly with input groups.
-                    Instead, nest the input group inside of the form group or grid-related element.
-                    Refer to documentation: https://getbootstrap.com/docs/3.3/components/#input-groups
-                    -->
 
                     <div class="form-group">
                         <label i18n for="from" class="col-sm-2 control-label">From</label>
                         <div class="col-sm-10">
                             <div class="input-group">
-                                
+
                                 <input i18n-placeholder type="date"
                                        [(ngModel)]="startDate"
                                        (ngModelChange)="setMessage()"
                                        id="startDate" name="startDate"
                                        class="form-control"
-                                       [disabled]="!editEnabled()">
-                                
+                                       [disabled]="!isEditEnabled()">
+
                                 <input i18n-placeholder type="time"
                                        [(ngModel)]="startTime"
                                        (ngModelChange)="setMessage()"
                                        id="startTime" name="startTime"
                                        class="form-control"
-                                       [disabled]="!editEnabled()">
+                                       [disabled]="!isEditEnabled()">
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="form-group">
                         <label i18n for="to" class="col-sm-2 control-label">To</label>
                         <div class="col-sm-10">
                             <div class="input-group">
-                                
+
                                 <input i18n-placeholder type="date"
                                        [(ngModel)]="endDate"
                                        (ngModelChange)="setMessage()"
                                        id="endDate" name="endDate"
                                        class="form-control"
-                                       [disabled]="!editEnabled()">
+                                       [disabled]="!isEditEnabled()">
                                 <input i18n-placeholder type="time"
                                        [(ngModel)]="endTime"
                                        (ngModelChange)="setMessage()"
                                        id="endTime" name="endTime"
                                        class="form-control"
-                                       [disabled]="!editEnabled()">
+                                       [disabled]="!isEditEnabled()">
                             </div>
                         </div>
                     </div>
                 </form>
-
-                <!--
-                User group validation has two (2) stages.
-                1) Browser validates that at least a name is required and does not contain a character slash
-                before sending a request to the server.
-                2) Server responses with an error message if a given folder or name of the user group failed.
-                Refer to documentation: https://angular.io/guide/form-validation#validating-form-input
-                -->
+                
 
                 <tim-alert *ngIf="ngModelTitle.invalid && ngModelTitle.dirty" severity="danger">
                     <ng-container i18n *ngIf="ngModelTitle.errors?.['required']">
@@ -110,10 +97,12 @@ import {TIMCalendarEvent} from "./calendar.component";
 
             </ng-container>
             <ng-container footer>
-                <button i18n class="timButton" type="button" style="background-color: red; float: left" (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!editEnabled()">
+                <button i18n class="timButton" type="button" style="background-color: red; float: left"
+                        (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!isEditEnabled()">
                     Delete
                 </button>
-                <button i18n class="timButton" type="button" (click)="saveChanges()" [disabled]="form.invalid" [hidden]="!editEnabled()">
+                <button i18n class="timButton" type="button" (click)="saveChanges()" [disabled]="form.invalid"
+                        [hidden]="!isEditEnabled()">
                     Save
                 </button>
                 <button i18n class="btn btn-default" type="button" (click)="dismiss()">
@@ -129,9 +118,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 > {
     protected dialogName = "CalendarEventEdit";
 
-    // name = "";
     title = "";
-    // folder = "";
     message?: string;
     startDate = "";
     startTime = "";
@@ -142,12 +129,12 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         super();
     }
 
+    /**
+     * Sends the event information to the TIM server to be persisted
+     */
     async saveChanges(): Promise<void> {
-        console.log(this.title);
-
         const id = this.data.id;
-        console.log(this.startDate);
-        console.log(this.startTime);
+
         if (!id) {
             return;
         }
@@ -157,7 +144,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             start: new Date(`${this.startDate}T${this.startTime}`),
             end: new Date(`${this.endDate}T${this.endTime}`),
         };
-        console.log(eventToEdit);
+
         const result = await toPromise(
             this.http.put(`/calendar/events/${id}`, {
                 event: eventToEdit,
@@ -169,17 +156,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.data.start = eventToEdit.start;
             this.data.end = eventToEdit.end;
             this.close(this.data);
-            // event.resizable = {
-            //     beforeStart: true,
-            //     afterEnd: true,
-            // };
-            // event.id = id;
-            // event.meta = {
-            //     tmpEvent: false,
-            // };
-            // if (Date.now() > event.start.getTime()) {
-            //     event.color = colors.gray;
-            // }
         } else {
             // TODO: Handle error responses properly
             console.error(result.result.error.error);
@@ -187,12 +163,11 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         }
     }
 
+    /**
+     * Sends the delete request for the event to the TIM server
+     */
     async deleteEvent() {
         const eventToDelete = this.data;
-
-        if (!eventToDelete) {
-            return;
-        }
 
         if (!eventToDelete.id || !eventToDelete.meta) {
             return;
@@ -217,10 +192,17 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         }
     }
 
+    /**
+     * Sets the error message to the dialog
+     * @param message Error message
+     */
     setMessage(message?: string): void {
         this.message = message;
     }
 
+    /**
+     * Sets the dialog data with event information when loaded
+     */
     ngOnInit() {
         this.title = this.data.title;
         const startOffset = this.data.start.getTimezoneOffset();
@@ -228,30 +210,27 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.data.start.getTime() - startOffset * 60 * 1000
         );
         const startDateTime = startDate.toISOString().split("T");
-        console.log(startDateTime[1]);
+
         this.startDate = startDateTime[0];
-        console.log(startDateTime[1].split(".")[0]);
+
         this.startTime = startDateTime[1].split(".")[0];
 
         if (this.data.end) {
-            console.log(this.data.end);
             const endOffset = this.data.start.getTimezoneOffset();
             const endDate = new Date(
                 this.data.end.getTime() - endOffset * 60 * 1000
             );
             const endDateTime = endDate.toISOString().split("T");
-            console.log(endDateTime);
+
             this.endDate = endDateTime[0];
             this.endTime = endDateTime[1].split(".")[0];
         }
     }
 
-    // validateAfter() {
-    //     if (new Date(`${this.startDate}T${this.startTime}`).getTime() > new Date(`${this.endDate}T${this.endTime}`).getTime()){
-    //
-    //     }
-    // }
-    editEnabled() {
+    /**
+     * True if editing is enabled for the event, otherwise false
+     */
+    isEditEnabled() {
         if (this.data.meta) {
             return this.data.meta.editEnabled;
         }

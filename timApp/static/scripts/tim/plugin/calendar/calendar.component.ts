@@ -16,7 +16,6 @@ import * as t from "io-ts";
 import {
     CalendarDateFormatter,
     CalendarEvent,
-    CalendarEventAction,
     CalendarEventTimesChangedEvent,
     CalendarModule,
     CalendarView,
@@ -32,7 +31,7 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek} from "date-fns";
-import {NgbModal, NgbModalModule} from "@ng-bootstrap/ng-bootstrap";
+import {NgbModalModule} from "@ng-bootstrap/ng-bootstrap";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
@@ -353,8 +352,7 @@ export class CalendarComponent
         el: ElementRef<HTMLElement>,
         http: HttpClient,
         domSanitizer: DomSanitizer,
-        private cdr: ChangeDetectorRef,
-        private modal: NgbModal
+        private cdr: ChangeDetectorRef
     ) {
         super(el, http, domSanitizer);
     }
@@ -385,6 +383,10 @@ export class CalendarComponent
         this.dayEndHour = evening - 1;
     }
 
+    /**
+     * Sets the view/edit mode in the UI
+     * @param enabled whether the edit mode is enabled
+     */
     enableEditing(enabled: boolean) {
         this.editEnabled = enabled;
         this.events.forEach((event) => {
@@ -409,6 +411,13 @@ export class CalendarComponent
         return viewEvents;
     }
 
+    /**
+     * Called when the user starts creating a new event by clicking and dragging
+     *
+     * @param segment
+     * @param mouseDownEvent
+     * @param segmentElement
+     */
     startDragToCreate(
         segment: WeekViewHourSegment,
         mouseDownEvent: MouseEvent,
@@ -441,13 +450,9 @@ export class CalendarComponent
 
         fromEvent<MouseEvent>(document, "mousemove")
             .pipe(
-                finalize(() => {
-                    // if (dragToSelectEvent.meta) {
-                    //    delete dragToSelectEvent.meta.tmpEvent;
-                    // }
+                finalize(async () => {
                     this.dragToCreateActive = false;
-                    // The promise is resolved inside saveChanges -function
-                    this.saveChanges();
+                    await this.saveChanges();
                 }),
                 takeUntil(fromEvent(document, "mouseup"))
             )
@@ -482,6 +487,13 @@ export class CalendarComponent
             });
     }
 
+    /**
+     * Called when the event is resized by dragging
+     *
+     * @param event Resized event
+     * @param newStart New starting datetime
+     * @param newEnd New ending datetime
+     */
     async eventTimesChanged({
         event,
         newStart,
@@ -495,6 +507,14 @@ export class CalendarComponent
         }
     }
 
+    /**
+     * Updates the event's title if the begin matches the regular expression, e.g. "10:00-11.00"
+     *
+     * TODO: handle localized time expressions (e.g. AM and PM)
+     *
+     * @param event Event to be updated
+     * @private
+     */
     private updateEventTitle(event: TIMCalendarEvent) {
         const rExp: RegExp = /[0-9]{2}:[0-9]{2}–[0-9]{2}:[0-9]{2}/;
         if (rExp.test(event.title)) {
@@ -509,6 +529,10 @@ export class CalendarComponent
         this.refresh();
     }
 
+    /**
+     * Refreshes the view
+     * @private
+     */
     private refresh() {
         this.events = [...this.events];
         this.events.forEach((event) => {
@@ -527,6 +551,9 @@ export class CalendarComponent
         return {};
     }
 
+    /**
+     * Called when the plugin is loaded. Loads the user's events
+     */
     ngOnInit() {
         super.ngOnInit();
         if (Users.isLoggedIn()) {
@@ -668,6 +695,7 @@ export class CalendarComponent
 
     /**
      * Opens the event dialog when event is clicked
+     *
      * @param event Clicked event
      */
     async handleEventClick(event: TIMCalendarEvent): Promise<void> {
