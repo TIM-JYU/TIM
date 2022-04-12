@@ -134,7 +134,10 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
     }
 }*/
 
-type TIMCalendarEvent = CalendarEvent<{tmpEvent: boolean}>;
+export type TIMCalendarEvent = CalendarEvent<{
+    tmpEvent: boolean;
+    deleted?: boolean;
+}>;
 
 @Component({
     selector: "mwl-calendar-component",
@@ -263,10 +266,10 @@ type TIMCalendarEvent = CalendarEvent<{tmpEvent: boolean}>;
                 </div>
             </div>
             <div class="modal-footer">
-                <button [style.visibility] = "editEnabled ? 'visible' : 'hidden'" type="button" class="btn btn-outline-secondary timButton"
+                <!-- <button [style.visibility] = "editEnabled ? 'visible' : 'hidden'" type="button" class="btn btn-outline-secondary timButton"
                         (click)=" close(); deleteEvent(modalData?.event)">
                     Delete
-                </button>
+                </button> -->
                 <button type="button" class="btn btn-outline-secondary timButton" (click)="close()">
                     OK
                 </button>
@@ -662,35 +665,43 @@ export class CalendarComponent
         }
     }
 
-    async deleteEvent(event?: TIMCalendarEvent) {
-        if (!event) {
-            return;
-        }
+    // async deleteEvent(event?: TIMCalendarEvent) {
+    //     if (!event) {
+    //         return;
+    //     }
+    //
+    //     if (!event.id || !event.meta) {
+    //         return;
+    //     }
+    //     if (!event.meta.tmpEvent) {
+    //         const result = await toPromise(
+    //             this.http.delete(`/calendar/events/${event.id}`)
+    //         );
+    //         if (result.ok) {
+    //             console.log(result.result);
+    //         } else {
+    //             console.error(result.result.error.error);
+    //         }
+    //     }
+    //     this.events.splice(this.events.indexOf(event), 1);
+    //     // this.lastEvent--;
+    //     this.refresh();
+    // }
 
-        if (!event.id || !event.meta) {
-            return;
-        }
-        if (!event.meta.tmpEvent) {
-            const result = await toPromise(
-                this.http.delete(`/calendar/events/${event.id}`)
-            );
-            if (result.ok) {
-                console.log(result.result);
-            } else {
-                console.error(result.result.error.error);
-            }
-        }
-        this.events.splice(this.events.indexOf(event), 1);
-        // this.lastEvent--;
-        this.refresh();
-    }
-
-    async handleEvent(action: string, event: CalendarEvent): Promise<void> {
+    async handleEvent(action: string, event: TIMCalendarEvent): Promise<void> {
         // this.modalData = {event, action};
         // this.modal.open(this.modalContent, {size: "md"});
-        const doc = await to2(showCalendarEventDialog(event));
-        if (doc.ok) {
-            console.log(doc.result);
+        const result = await to2(showCalendarEventDialog(event));
+        console.log(result);
+        if (result.ok) {
+            const modifiedEvent = result.result;
+            if (modifiedEvent.meta) {
+                if (modifiedEvent.meta.deleted) {
+                    console.log("deleted");
+                    this.events.splice(this.events.indexOf(modifiedEvent), 1);
+                    this.refresh();
+                }
+            }
         }
     }
 }

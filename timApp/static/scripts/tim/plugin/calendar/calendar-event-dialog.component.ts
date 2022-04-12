@@ -6,6 +6,8 @@ import {CalendarEvent} from "angular-calendar";
 import {DialogModule} from "../../ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {AngularDialogComponent} from "../../ui/angulardialog/angular-dialog-component.directive";
+import {toPromise} from "../../util/utils";
+import {TIMCalendarEvent} from "./calendar.component";
 
 @Component({
     selector: "tim-calendar-event-dialog",
@@ -101,6 +103,9 @@ import {AngularDialogComponent} from "../../ui/angulardialog/angular-dialog-comp
 
             </ng-container>
             <ng-container footer>
+                <button i18n class="timButton" type="button" style="background-color: red; float: left" (click)="deleteEvent()" [disabled]="form.invalid">
+                    Delete
+                </button>
                 <button i18n class="timButton" type="button" (click)="saveChanges()" [disabled]="form.invalid">
                     Save
                 </button>
@@ -112,8 +117,8 @@ import {AngularDialogComponent} from "../../ui/angulardialog/angular-dialog-comp
     `,
 })
 export class CalendarEventDialogComponent extends AngularDialogComponent<
-    CalendarEvent,
-    unknown
+    TIMCalendarEvent,
+    TIMCalendarEvent
 > {
     protected dialogName = "CalendarEventEdit";
 
@@ -140,6 +145,34 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         // } else {
         //     this.setMessage(response.result.error.error);
         // }
+    }
+
+    async deleteEvent() {
+        const eventToDelete = this.data;
+
+        if (!eventToDelete) {
+            return;
+        }
+
+        if (!eventToDelete.id || !eventToDelete.meta) {
+            return;
+        }
+        if (!eventToDelete.meta.tmpEvent) {
+            const result = await toPromise(
+                this.http.delete(`/calendar/events/${eventToDelete.id}`)
+            );
+            if (result.ok) {
+                console.log(result.result);
+                eventToDelete.meta.deleted = true;
+                this.close(eventToDelete);
+            } else {
+                console.error(result.result.error.error);
+                this.setMessage(result.result.error.error);
+            }
+        }
+        // this.events.splice(this.events.indexOf(event), 1);
+        // this.lastEvent--;
+        // this.refresh();
     }
 
     /**
@@ -200,4 +233,4 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     ],
     exports: [CalendarEventDialogComponent],
 })
-export class UserGroupDialogModule {}
+export class CalendarEventDialogModule {}
