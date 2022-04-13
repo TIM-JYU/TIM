@@ -597,12 +597,6 @@ export class PermCtrl implements IController {
                     doc_id: data.id,
                 });
             }
-
-            await $http.post<string>(`/settings/${data.id}`, {
-                setting: "translator",
-                value: this.newTranslation.translator,
-            });
-
             redirectToItem(data);
         } else {
             this.translationInProgress = false;
