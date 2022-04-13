@@ -710,7 +710,12 @@ export class TextAreaParEditor extends BaseParEditor {
         const selector = this.getSelection().text;
         return selector;
     }
-    replaceTranslation(descDefault: string) {
-        this.replaceSelected("", descDefault, "", "", "");
+
+    /**
+     * Replaces the selected text in the editor with the translation of the selected text.
+     * @param translatedText
+     */
+    replaceTranslation(translatedText: string) {
+        this.replaceSelectedText(translatedText, "select");
     }
 }
