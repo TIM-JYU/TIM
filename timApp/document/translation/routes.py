@@ -249,6 +249,8 @@ def get_source_languages() -> Response:
         tr = TranslationService.query.filter(
             translator == TranslationService.service_name,
         ).first()
+        # TODO This crashes(?) if the translation service does not implement register-method (ie. does not inherit
+        #  from RegisteredTranslationService)
         tr.register(get_current_user_object().get_personal_group())
 
     if translator.lower() == "deepl free" or translator.lower() == "deepl pro":

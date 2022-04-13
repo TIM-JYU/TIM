@@ -454,6 +454,8 @@ Baz qux [qux](www.example.com)
         )
         # NOTE Apparently Pandoc likes to add to headers their text-content as identifier,
         # which does not seem to be a TIM-convention (which could be a problem?).
+        # TODO How closely should the translation follow the whitespace-formatting of original text?
+        #  ATM the translation parsing separates the parts with two newlines "\n\n"
         self.assertEqual(
             resp,
             r"""# ooF{#foo}
@@ -461,3 +463,6 @@ Baz qux [qux](www.example.com)
 
  xuq zaB[xuq](www.example.com)""",
         )
+
+
+# TODO Add cases for all 3 translation routes for the special cases (basically just for plugins and tables)

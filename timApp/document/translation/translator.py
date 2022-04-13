@@ -126,6 +126,12 @@ class TranslationServiceKey(db.Model):
 class RegisteredTranslationService(TranslationService):
     """A translation service whose use is constrained by user group."""
 
+    def supports(self, source_lang: Language, target_lang: Language) -> bool:
+        raise NotImplementedError
+
+    def supports_tag_handling(self, tag_type: str) -> bool:
+        raise NotImplementedError
+
     def register(self, user_group: UserGroup) -> None:
         raise NotImplementedError
 
@@ -169,8 +175,7 @@ class DeeplTranslationService(RegisteredTranslationService):
             TranslationServiceKey.service_id == self.id,
             TranslationServiceKey.group_id == user_group.id,
         ).all()
-        # TODO does all() return empty list or None if query is empty?
-        if api_key is None:
+        if len(api_key) == 0:
             raise NotExist(
                 "Please add a DeepL API key that corresponds the chosen plan into your account"
             )
@@ -179,7 +184,7 @@ class DeeplTranslationService(RegisteredTranslationService):
             raise RouteException(
                 "A user should not have more than one (1) API-key per service."
             )
-        self.headers = {"Authorization": f"DeepL-Auth-Key {api_key.api_key}"}
+        self.headers = {"Authorization": f"DeepL-Auth-Key {api_key[0].api_key}"}
 
     # TODO Change the dicts to DeepLTranslateParams and DeeplResponse or smth
     def _post(self, url_slug: str, data: dict | None = None) -> dict:
@@ -284,7 +289,9 @@ class DeeplTranslationService(RegisteredTranslationService):
 
         src_lang = source_lang
 
-        if source_lang.lower() == "en-gb" or source_lang.lower() == "en-us":
+        if source_lang is not None and (
+            source_lang.lower() == "en-gb" or source_lang.lower() == "en-us"
+        ):
             src_lang = "en"
 
         data = {
@@ -622,11 +629,11 @@ class TranslateMethodFactory:
             for paragraph in translated_elements:
                 for elem in paragraph:
                     translated_md += elem.text
-                # TODO what are the paragraphs separated by? "\n\n"? Seems like this would need more handling in regard to
-                #  TIM's block separation and id's etc
-                # TODO Do some MD-elements (from parser) not include newline postfix and should this newline-addition then
-                #  be placed into parser-module?
-                translated_md += "\n"
+                # TODO what are the paragraphs separated by? "\n\n"? Seems like this would need more handling in regard
+                #  to TIM's block separation and id's etc
+                # TODO Do some MD-elements (from parser) not include newline postfix and should this newline-addition
+                #  then be placed into parser-module?
+                translated_md += "\n\n"
             translated_md = translated_md.strip()
 
             return translated_md
