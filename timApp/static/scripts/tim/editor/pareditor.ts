@@ -240,6 +240,7 @@ export class PareditorController extends DialogController<
     private documentLanguages: Array<ILanguages> = [];
     private translators: Array<ITranslators> = [];
     private docTranslator: string = "";
+    private translatorAvailable = true;
     private sideBySide: boolean = false;
     private hideDiff: boolean = true;
     private hidePreview: boolean = false;
@@ -1161,13 +1162,15 @@ ${backTicks}
         if (this.docSettings?.translator != undefined) {
             this.docTranslator = this.docSettings?.translator;
         }
-        listTranslators(this.translators, false);
-        updateLanguages(
-            this.sourceLanguages,
-            this.documentLanguages,
-            this.targetLanguages,
-            this.docTranslator
-        );
+        if (!this.checkIfOriginal()) {
+            listTranslators(this.translators, false);
+            updateLanguages(
+                this.sourceLanguages,
+                this.documentLanguages,
+                this.targetLanguages,
+                this.docTranslator
+            );
+        }
         const saveTag = this.getSaveTag();
         this.translationInProgress = false;
         this.storage = {
@@ -1613,7 +1616,7 @@ ${backTicks}
      * Updates the list of target languages based on the selected translator.
      */
     async updateTranslatorLanguages() {
-        const sources = await to(
+        let sources = await to(
             $http.post<ILanguages[]>("/translations/target-languages", {
                 translator: this.docTranslator,
             })
@@ -1621,6 +1624,25 @@ ${backTicks}
         if (sources.ok) {
             this.targetLanguages = [];
             listLanguages(sources.result.data, this.targetLanguages);
+            this.translatorAvailable = true;
+        } else {
+            this.translatorAvailable = false;
+            await showMessageDialog(sources.result.data.error);
+            return;
+        }
+        sources = await to(
+            $http.post<ILanguages[]>("/translations/source-languages", {
+                translator: this.docTranslator,
+            })
+        );
+        if (sources.ok) {
+            this.sourceLanguages = [];
+            listLanguages(sources.result.data, this.sourceLanguages);
+            this.translatorAvailable = true;
+        } else {
+            this.translatorAvailable = false;
+            await showMessageDialog(sources.result.data.error);
+            return;
         }
     }
 
