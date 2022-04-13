@@ -110,6 +110,9 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
             this.data.onAdd({
                 translator: this.chosenTranslator,
                 APIkey: this.apiKey!,
+                availableQuota: 0,
+                usedQuota: 0,
+                quotaChecked: false,
             });
             this.dismiss();
             this.added = false;
