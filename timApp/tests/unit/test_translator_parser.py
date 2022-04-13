@@ -72,6 +72,65 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             ],
         )
 
+    # Testing notranslate style with brackets and parenthesis inside. Will fail if it contains unclosed "[" or "]"
+    def test_notranslate_style2(self):
+        text = "Käännettävää tekstiä[Ei(){}( { käännettävää [x],[y],[x, y] `tekstiä`]{.notranslate}"
+        self.assertEqual(
+            get_translate_approvals(text),
+            [
+                [
+                    Translate("Käännettävää tekstiä"),
+                    NoTranslate("[Ei(){}( { käännettävää [x],[y],[x, y] `tekstiä`]{.notranslate}")
+                ]
+            ]
+        )
+
+    # testing notranslate along with multiple other styles
+    def test_notranslate_style3(self):
+        text = r"""***<u><s>Teksti, jossa on kaikki tyylit paitsi notranslate</s></u>*** 
+        ***<u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>***"""
+
+        self.assertEqual(
+            get_translate_approvals(text),
+            [
+                [
+                    NoTranslate("""***<u><s>"""),
+                    Translate("Teksti, jossa on kaikki tyylit paitsi notranslate"),
+                    NoTranslate(r"""</s></u>***"""),
+                    Translate("\n"),
+                    NoTranslate("""\
+***<u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>***""")
+
+                ]
+            ]
+        )
+
+    # Testing different headers
+    def test_header(self):
+        text = """r”# otsikko1
+## otsikko2
+### otsikko3
+#### otsikko4
+##### otsikko 5
+###### otsikko 6
+# otsikko1.2
+# otsikko jossa sana header ja ## merkkejä"""""
+        self.assertEqual(
+            get_translate_approvals(text),
+            [
+                [
+                    Translate("""r”# otsikko1
+## otsikko2
+### otsikko3
+#### otsikko4
+##### otsikko 5
+###### otsikko 6
+# otsikko1.2
+# otsikko jossa sana header ja ## merkkejä""")
+                ]
+            ]
+        )
+
     def test_tex_collect(self):
         # TODO Add cases for identifiers, key-value -pairs and multiple classes as well
         text = r"x^3-49x&=0 &&|\text{ erotetaan yhteinen tekijä x}\x(x^2-49)&=0 &&|\text{ käytetään tulon nollasääntöä}\x=0\;\;\;\textrm{tai}\;\;\;&x^2-49=0 &&|\textsf{ ratkaistaan x}\&\;\;\;\;\;\,\;\;x^2=49 \&\;\;\;\;\;\,\;\;\;\;x=7\;\mathsf{tai}\;x=-7"
