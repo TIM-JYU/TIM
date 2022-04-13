@@ -28,6 +28,7 @@ const TICK_TENTH_SECOND = 100;
 })
 export class CountdownComponent implements OnInit, OnChanges {
     @Input() endTime?: ReadonlyMoment;
+    @Input() parseEndTime?: string;
     @Input() seconds?: number;
     @Input() displayUnits: humanizeDuration.Unit[] = ["h", "m", "s"];
     @Input() autoStart = true;
@@ -110,6 +111,10 @@ export class CountdownComponent implements OnInit, OnChanges {
     }
 
     ngOnInit() {
+        if (this.parseEndTime) {
+            this.endTime = moment(this.parseEndTime, "YYYY-MM-DD HH:mm:ss");
+        }
+
         if (!this.autoStart) {
             return;
         }

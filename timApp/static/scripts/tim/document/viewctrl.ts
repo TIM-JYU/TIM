@@ -1639,7 +1639,10 @@ export class ViewCtrl implements IController {
         }
     }
 
-    // TODO: Timezones may cause some problems with this solution
+    /**
+     * Checks if peer review is on
+     * TODO: Timezones may cause some problems with this solution
+     */
     peerReviewInProcess(): boolean {
         if (this.docSettings.peer_review) {
             const currentTime = new Date();
