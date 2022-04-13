@@ -620,6 +620,7 @@ def list_collect(
 
     # Select the string that list items are prepended with ie. -, 1., i) etc.
     list_style = ""
+    start_num = 0
     if attrs:
         start_num, num_style, num_delim = attrs
 
@@ -631,13 +632,13 @@ def list_collect(
         # Next list item
         arr.append(NoTranslate("\n"))
         # Indentation and list item start
-        if list_style != "- ":
-            arr.append(
-                NoTranslate(
-                    ("\t" * depth)
-                    + ordered_list_styling(start_num, num_style, num_delim)
-                )
+        arr.append(
+            NoTranslate(
+                ("\t" * depth)
+                + (ordered_list_styling(start_num, num_style, num_delim) if not list_style else list_style)
             )
+        )
+
         for block in block_list:
             start_num = start_num + 1
             arr += block_collect(block, depth + 1)

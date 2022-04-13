@@ -1,0 +1,22 @@
+Settings
+Start peer reviewing
+```` {settings=""}
+auto_number_headings: 0
+group:
+urlmacros:
+  group:
+macros:
+  group:
+  tasks:
+     - t1
+     - t2
+     - t3
+     - t4
+     - t5
+     - t6
+  arvosteltavia: 2
+  maxEro: 1
+form_mode: true
+peer_review: false
+peer_review_count: 2
+````

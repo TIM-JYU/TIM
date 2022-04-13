@@ -183,9 +183,14 @@ export abstract class PluginBaseCommon {
 
     /**
      * Returns the plugin's parent paragraph.
+     * If the plugin is not attached to a paragraph or the paragraph is not attached to a document, returns null.
      */
     public getPar() {
-        return createParContext(this.element.parents(".par")[0]);
+        const parElement = this.element.parents(".par")[0];
+        if (!parElement.parentElement) {
+            return undefined;
+        }
+        return createParContext(parElement);
     }
 
     /**

@@ -343,10 +343,26 @@ export class PermCtrl implements IController {
     }
 
     async deleteDocument() {
-        if (window.confirm("Are you sure you want to delete this document?")) {
+        if (
+            window.confirm(
+                `Are you sure you want to delete this ${
+                    !this.item.isFolder && !this.item.src_docid
+                        ? "document"
+                        : "translation"
+                }?`
+            )
+        ) {
             const r = await to($http.delete("/documents/" + this.item.id));
             if (r.ok) {
-                location.replace(`/view/${this.item.location}`);
+                if (!this.item.isFolder && this.item.src_docid) {
+                    const originalDoc = this.item.path.substring(
+                        0,
+                        this.item.path.lastIndexOf("/")
+                    );
+                    location.replace(`/manage/${originalDoc}`);
+                } else {
+                    location.replace(`/view/${this.item.location}`);
+                }
             } else {
                 await showMessageDialog(r.result.data.error);
             }
@@ -613,12 +629,6 @@ export class PermCtrl implements IController {
                     doc_id: data.id,
                 });
             }
-
-            await $http.post<string>(`/settings/${data.id}`, {
-                setting: "translator",
-                value: this.newTranslation.translator,
-            });
-
             redirectToItem(data);
         } else {
             this.translationInProgress = false;

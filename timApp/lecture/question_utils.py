@@ -1,5 +1,5 @@
 import random
-from typing import Optional, TypeVar, Union
+from typing import TypeVar
 
 from tim_common.utils import Missing
 
@@ -12,7 +12,8 @@ def qst_rand_array(
     locks: int | list[int] | None = None,
 ) -> list[int]:
     """
-    get array of count integers between 1 and max_count (incl.) using word and extra number as seed
+    Get array of count integers between 1 and max_count (incl.) using word and extra number as seed.
+
     :param max_count: highest possible number (incl.) and max return list length
     :param randoms: how many random numbers to fill the array with
     :param seed_word: input word to generate random seed
@@ -165,7 +166,8 @@ def qst_filter_markup_points(
 def qst_handle_randomization(jso: dict) -> None:
     """
     Check if markup calls for randomization, or previous state contains randomization data
-    Update answer options, explanations and points accordingly
+    Update answer options, explanations and points accordingly.
+
     :param jso: request json to modify
     """
     markup = jso["markup"]

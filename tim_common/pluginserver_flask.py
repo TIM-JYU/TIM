@@ -21,8 +21,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from json import JSONEncoder
 from typing import (
-    Optional,
-    Union,
     TypeVar,
     Generic,
     Any,
@@ -431,7 +429,7 @@ def register_html_routes(
 
     @app.post("/multihtml")
     def multihtml() -> Response:
-        args = request.get_json()
+        args = request.get_json(silent=True)
         if not isinstance(args, list):
             args = [args]
         ret = render_multihtml(args, html_schema())
@@ -439,7 +437,7 @@ def register_html_routes(
 
     @app.post("/multimd")
     def multimd() -> Response:
-        args = request.get_json()
+        args = request.get_json(silent=True)
         if not isinstance(args, list):
             args = [args]
         ret = render_multimd(args, html_schema())

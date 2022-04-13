@@ -5144,6 +5144,54 @@
           <context context-type="linenumber">176,178</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3099741642167775297" datatype="html">
+        <source>Download</source>
+        <target state="translated">Lataa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/fields/js/textfield-plugin.component.ts</context>
+          <context context-type="linenumber">218</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4212275615873242409" datatype="html">
+        <source>Sisu name</source>
+        <target state="translated">Sisu-nimi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm.ts</context>
+          <context context-type="linenumber">878</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1550164164596518424" datatype="html">
+        <source>User's name</source>
+        <target state="translated">Käyttäjän nimi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm.ts</context>
+          <context context-type="linenumber">884</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1890300073702152532" datatype="html">
+        <source>E-mail</source>
+        <target state="translated">Sähköposti</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm.ts</context>
+          <context context-type="linenumber">886</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="231679111972850796" datatype="html">
+        <source>Added</source>
+        <target state="translated">Lisätty</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm.ts</context>
+          <context context-type="linenumber">887</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="userGroupRemoved" datatype="html">
+        <source>Removed</source>
+        <target state="translated">Poistunut</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm.ts</context>
+          <context context-type="linenumber">888</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="4302420491905014187" datatype="html">
         <source>This will mark the translations in all paragraphs in this document as checked. Continue?</source>
         <target state="new">Tämä merkitsee käännökset kaikissa tämän dokumentin kappaleissa tarkistetuiksi. Jatketaanko?</target>

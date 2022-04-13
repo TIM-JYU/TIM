@@ -1,7 +1,6 @@
 # const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w.,]*) *(!?) */g;
 import re
 from operator import ge, gt, ne, eq, le, lt
-from typing import Union
 
 num_filter_expression = "([<=>!]=?) *(-?[\\w.,]*) *(!?) *"
 
@@ -24,6 +23,7 @@ def float_or_str_tuple(
 ) -> tuple[str, str] | tuple[float, float]:
     """
     Attempts to convert two parameters to float
+
     :param a: first parameter to convert
     :param b: second parameter to convert
     :return: Pair of floats if both succeed, else pair of strings

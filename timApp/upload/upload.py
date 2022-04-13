@@ -137,6 +137,7 @@ def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
         if (
             not verify_seeanswers_access(d, require=False)
             and get_current_user_object() not in answer.users_all
+            and not d.document.get_settings().peer_review()
         ):
             raise AccessDenied(
                 "Sorry, you don't have permission to access this upload."
@@ -398,6 +399,7 @@ def upload_and_stamp_attachment(
 ):
     """
     Uploads the file and makes a stamped version of it into the same folder.
+
     :param d: Document info.
     :param file: The file to upload and stamp.
     :param stamp_data: Stamp data object (attachment and list ids) without the path.

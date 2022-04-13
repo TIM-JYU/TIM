@@ -12,6 +12,8 @@ import {
     getFullscreenElement,
     toggleFullScreen,
 } from "tim/util/fullscreen";
+import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
+import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocument, ILanguages, ITranslators} from "tim/item/IItem";
 import {
     IExtraData,
@@ -1918,27 +1920,6 @@ ${backTicks}
         }
     }
 
-    /**
-     * Saves the selected translator to the document's settings. Requires a refresh to take proper effect on the page.
-     */
-    async setTranslatorSettings() {
-        if (
-            this.docSettings != undefined &&
-            this.docTranslator != "" &&
-            this.docSettings.translator != this.docTranslator &&
-            this.resolve.params.viewCtrl != undefined &&
-            !this.checkIfOriginal()
-        ) {
-            await $http.post<string>(
-                `/settings/${this.resolve.params.viewCtrl.item.id}`,
-                {
-                    setting: "translator",
-                    value: this.docTranslator,
-                }
-            );
-        }
-    }
-
     isAce(): AceParEditor | undefined {
         return this.editor?.type == EditorType.Ace ? this.editor : undefined;
     }
@@ -2182,8 +2163,12 @@ ${backTicks}
         }
     }
 
-    putTemplate(data: string) {
+    async putTemplate(data: string) {
         this.focusEditor();
+        data = await replaceTemplateValues(data);
+        if (!data) {
+            return;
+        }
         this.editor!.insertTemplate(data);
     }
 
@@ -2196,6 +2181,10 @@ ${backTicks}
         }
         let data = response.result.data;
         data = data.replace(/\\/g, "\\\\");
+        data = await replaceTemplateValues(data);
+        if (!data) {
+            return;
+        }
         this.editor!.insertTemplate(data);
         this.focusEditor();
     }
@@ -2320,12 +2309,10 @@ ${backTicks}
 
             interface ILanguageTools {
                 setCompleters(completers: unknown[]): void;
-
                 snippetCompleter: unknown;
                 textCompleter: unknown;
                 keyWordCompleter: unknown;
             }
-
             const langTools = ace.require(
                 "ace/ext/language_tools"
             ) as ILanguageTools;
@@ -2444,7 +2431,6 @@ ${backTicks}
     }
 
     private saveOptions() {
-        this.setTranslatorSettings();
         this.storage.spellcheck.set(this.spellcheck);
         this.storage.editortab.set(this.activeTab ?? "navigation");
         this.storage.autocomplete.set(this.autocomplete);

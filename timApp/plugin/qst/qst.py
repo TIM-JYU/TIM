@@ -2,7 +2,7 @@
 import json
 import re
 from dataclasses import dataclass, asdict
-from typing import Optional, Union, Any
+from typing import Union, Any
 
 import yaml
 from flask import Blueprint, render_template_string
@@ -477,6 +477,7 @@ def qst_str(state):
 def mcq_get_md(jso):
     """
     Gives question in format:
+    ::
         \\mcq{Onko kuu}{Valitse tosi lause}
         {|l l|}
         {
@@ -571,6 +572,8 @@ def format_qst_tex(header, stem, question_text, texcolumns, cstr, footer):
 def mmcq_get_md(jso):
     """
     Gives question in format:
+    ::
+
         \\mcq{Onko kuu}{Valitse tosi lause}
         {|l l|}
         {
@@ -701,6 +704,7 @@ def qst_get_html(jso, review):
 def qst_try_hide_points(jso):
     """
     Checks whether to remove points and explanations from markup or keep them
+
     :param jso: request json with info and markup
     :return: true if user has reached answer limit
     """

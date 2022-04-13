@@ -132,7 +132,7 @@ export class VelpSelectionController implements IController {
         this.settings = {selectedAllShows: false, selectedAllDefault: false};
         this.submitted = {velp: false, velpGroup: false};
 
-        this.groupAttachment = {target_type: 1, id: null};
+        this.groupAttachment = {target_type: 0, id: null};
 
         this.groupSelections = {};
         this.groupDefaults = {};

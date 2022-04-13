@@ -115,7 +115,15 @@ def reqs() -> PluginReqs:
 ``` {#rc plugin="reviewcanvas"}
 header: Header
 stem: Stem
-```"""
+```""",
+        """
+``` {#t1 plugin="reviewcanvas" .csRunDiv}
+header: Tehtävä 1
+stem: |!!
+md:
+⁞
+!!
+```""",
     ]
     editor_tabs: list[EditorTab] = [
         {
@@ -128,6 +136,11 @@ stem: Stem
                             "data": templates[0].strip(),
                             "text": "Review Canvas",
                             "expl": "Add a review canvas",
+                        },
+                        {
+                            "data": templates[1].strip(),
+                            "text": "Review Canvas for math",
+                            "expl": "Add a review canvas with LaTeX question",
                         },
                     ],
                 },

@@ -2,7 +2,7 @@
 TIM plugin: a textfield
 """
 from dataclasses import dataclass, asdict
-from typing import Union, Any
+from typing import Any
 
 from flask import render_template_string
 from marshmallow.utils import missing
@@ -41,6 +41,8 @@ class TextfieldMarkupModel(GenericMarkupModel):
     tag: str | Missing | None = missing
     textarea: bool | Missing = missing
     validinput: str | Missing | None = missing
+    downloadButton: str | Missing = missing
+    downloadButtonFile: str | Missing = missing
 
 
 @dataclass
