@@ -301,16 +301,16 @@ def get_source_languages() -> Response:
     req_data = request.get_json()
     translator = req_data.get("translator", "")
 
-    if translator.lower() != "manual" or translator != "":
+    if translator.lower() == "manual" or translator.lower() == "":
+        return json_response("")
+    else:
         # Get the translation service by the provided service name TODO Maybe change to use id instead?
         tr = TranslationService.query.filter(
             translator == TranslationService.service_name,
         ).first()
         tr.register(get_current_user_object().get_personal_group())
 
-    if translator.lower() == "manual" or translator == "":
-        return json_response("")
-    elif translator.lower() == "deepl free" or translator.lower() == "deepl pro":
+    if translator.lower() == "deepl free" or translator.lower() == "deepl pro":
         langs = get_lang_lists(translator, True)
         sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
         return json_response(sl)
@@ -341,16 +341,16 @@ def get_target_languages() -> Response:
     req_data = request.get_json()
     translator = req_data.get("translator", "")
 
-    if translator.lower() != "manual" or translator != "":
+    if translator.lower() == "manual" or translator.lower() == "":
+        return json_response("")
+    else:
         # Get the translation service by the provided service name TODO Maybe change to use id instead?
         tr = TranslationService.query.filter(
             translator == TranslationService.service_name,
         ).first()
         tr.register(get_current_user_object().get_personal_group())
 
-    if translator.lower() == "manual" or translator == "":
-        return json_response("")
-    elif translator.lower() == "deepl free" or translator.lower() == "deepl pro":
+    if translator.lower() == "deepl free" or translator.lower() == "deepl pro":
         langs = get_lang_lists(translator, False)
         sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
         return json_response(sl)
