@@ -206,18 +206,23 @@ x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 && |\text{ ratkaistaan x}\\
                     Translate(" erotetaan yhteinen tekijä x"),
                     NoTranslate("}\nx(x^2-49)&=0 &&|\\text{"),
                     Translate("käytetään tulon nollasääntöä"),
-                    NoTranslate(r"""}\\
-x=0\;\;\;\\text{"""),
+                    NoTranslate(
+                        r"""}\\
+x=0\;\;\;\\text{"""
+                    ),
                     Translate("tai"),
                     NoTranslate(r"""}\;\;\;&x^2-49=0 && |\text{"""),
                     Translate(" ratkaistaan x"),
-                    NoTranslate(r"""}\\
+                    NoTranslate(
+                        r"""}\\
 &\;\;\;\;\;\,\;\;x^2=49 \\
-&\;\;\;\;\;\,\;\;\;\;x=7\;\text{"""),
+&\;\;\;\;\;\,\;\;\;\;x=7\;\text{"""
+                    ),
                     Translate("tai"),
-                    NoTranslate(r"""}\;x=-7
-\end{align*}""")
-
+                    NoTranslate(
+                        r"""}\;x=-7
+\end{align*}"""
+                    ),
                 ]
             ],
         )
@@ -263,6 +268,56 @@ x=0\;\;\;\\text{"""),
                     Translate("\nAivoni ajattelevi"),
                     NoTranslate("\\"),
                     Translate("\nKerran\nToisen\nKolmannen"),
+                ]
+            ],
+        )
+
+    def test_ordered_list(self):
+        md = r"""1. Tässä ollaan
+    2. Jotain tehdään
+    3. Ainakin nyt
+    #) Kivaa on
+    III. Roomalaisia numeroita
+    IV) Ihan liikaa roomalaisia numeroita
+    V) Ei olla edes Roomassa
+    (ix) tai koomassa
+    (a) Aakkosia
+    (b) Niitäkin on liikaa
+    (c) Liikaa, liikaa
+    A) Ihan hirveesti
+    B) Liikaa
+"""
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [
+                    # TODO/FIXME does a list need to start with newline?
+                    NoTranslate("\n1. "),
+                    Translate("Tässä ollaan"),
+                    NoTranslate("\n\t2. "),
+                    Translate("Jotain tehdään"),
+                    NoTranslate("\n\t3. "),
+                    Translate("Ainakin nyt"),
+                    NoTranslate("\n\t#) "),
+                    Translate("Kivaa on"),
+                    NoTranslate("\n\tIII. "),
+                    Translate("Roomalaisia numeroita"),
+                    NoTranslate("\n\tIV) "),
+                    Translate("Ihan liikaa roomalaisia numeroita"),
+                    NoTranslate("\n\tV) "),
+                    Translate("Ei olla edes Roomassa"),
+                    NoTranslate("\n\t(ix) "),
+                    Translate("tai koomassa"),
+                    NoTranslate("\n\t(a) "),
+                    Translate("Aakkosia"),
+                    NoTranslate("\n\t(b) "),
+                    Translate("Niitäkin on liikaa"),
+                    NoTranslate("\n\t(c) "),
+                    Translate("Liikaa, liikaa"),
+                    NoTranslate("\n\tA) "),
+                    Translate("Ihan hirveesti"),
+                    NoTranslate("\n\tB) "),
+                    Translate("Liikaa"),
                 ]
             ],
         )
@@ -392,24 +447,29 @@ choices:
                         r"""```
 lazy: false
 answerLimit:
-stem: """ + '"'
+stem: """
+                        + '"'
                     ),
                     Translate("Vastaa seuraaviin väittämiin."),
-                    NoTranslate('"\nchoices:\n  -\n    correct: false\n    reason: "'
-                                ),
+                    NoTranslate('"\nchoices:\n  -\n    correct: false\n    reason: "'),
                     Translate("Väärin. Vastaus ei kelpaa."),
                     NoTranslate('"\n    text: "'),
                     Translate("Esimerkkiselitys."),
-                    NoTranslate("""\"
+                    NoTranslate(
+                        """\"
   -
     correct: true
-    reason: \""""),
+    reason: \""""
+                    ),
                     Translate("Totta. Näin on."),
                     NoTranslate("""\"\n    text: \""""),
                     Translate("Esimerkkiselitys."),
-                    NoTranslate(""""
+                    NoTranslate(
+                        """"
     
-```""""")
+```"""
+                        ""
+                    ),
                 ]
             ],
         )

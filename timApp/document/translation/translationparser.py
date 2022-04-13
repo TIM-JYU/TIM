@@ -24,6 +24,13 @@ class NoTranslate(TranslateApproval):
     ...
 
 
+@dataclass
+class Table(TranslateApproval):
+    """Hacky way to translate tables by identifying them at translation and setting html-tag handling on"""
+
+    ...
+
+
 def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
     """
     By parsing the input text, identify parts that should and should not be passed to a machine translator
@@ -96,7 +103,7 @@ def tex_collect(content: str) -> list[TranslateApproval]:
         return [NoTranslate(content)]
 
 
-def attr_collect(content: dict) -> Tuple[list[TranslateApproval], bool]:
+def attr_collect(content: list) -> Tuple[list[TranslateApproval], bool]:
     """
     Collect the parts of Attr into Markdown.
 
@@ -172,7 +179,15 @@ def code_collect(content: dict) -> list[TranslateApproval]:
     if not isinstance(content[0], list) or not isinstance(content[1], str):
         assert False, "PanDoc code content is not [ Attr, Text ]."
     # TODO Handle "Attr"
-    return [NoTranslate(content[1])]
+    arr: list[TranslateApproval] = list()
+    arr.append(NoTranslate(f"`{content[1]}`"))
+
+    attrs, is_notranslate = attr_collect(content[0])
+    arr += attrs
+    if is_notranslate:
+        return [x if isinstance(x, NoTranslate) else NoTranslate(x.text) for x in arr]
+
+    return arr
 
 
 def math_collect(content: dict) -> list[TranslateApproval]:
@@ -389,7 +404,7 @@ def notranslate_all(type_: str, content: dict) -> list[TranslateApproval]:
     json_str = json.dumps(ast_content)
     # FIXME This conversion needs to know the pandoc api version -> add into a parser-class?
     md = pypandoc.convert_text(json_str, to="md", format="json")
-    return [NoTranslate(md)]
+    return [Table(md) if type_ == "Table" else NoTranslate(md)]
 
 
 # TODO make attrs into a class
@@ -553,6 +568,44 @@ def bulletlist_collect(content: dict, depth: int) -> list[TranslateApproval]:
     return list_collect(content, depth, None)
 
 
+def ordered_list_styling(start_num: int, num_style: str, num_delim: str):
+    """
+    Makes the style for the ordered lists.
+    Different styles for ordered lists:
+    num_styles - Decimal (1,2,3), LowerRoman(i,ii,iii), LowerAlpha(a,b,c), UpperRoman (I,III,III), UpperAlpha(A,B,C),
+                 DefaultStyle (#)
+    num_delims - Period( . ), OneParen( ) ), DefaultDelim ( . ), TwoParens ( (#) )
+
+    :param start_num: The number that starts the list
+    :param num_style: The numbering style
+    :param num_delim: The punctuation for list
+    :returns: The list style that needs to be used
+    """
+
+    list_style = ""
+    if "DefaultStyle" in num_style:
+        list_style = "#"
+    elif "Decimal" in num_style:
+        list_style = str(start_num)
+    elif "LowerRoman" in num_style:
+        list_style = to_roman_numeral(start_num).lower()
+    elif "UpperRoman" in num_style:
+        list_style = to_roman_numeral(start_num).upper()
+    elif "LowerAlpha" in num_style:
+        list_style = to_alphabet(start_num).lower()
+    elif "UpperAlpha" in num_style:
+        list_style = to_alphabet(start_num).upper()
+
+    if "Period" in num_delim or "DefaultDelim" in num_delim:
+        list_style = list_style + ". "
+    elif "OneParen" in num_delim:
+        list_style = list_style + ") "
+    elif "TwoParens" in num_delim:
+        list_style = "(" + list_style + ") "
+
+    return list_style
+
+
 def list_collect(
     blocks: list[list[dict]], depth: int, attrs: Tuple[int, str, str] | None
 ) -> list[TranslateApproval]:
@@ -564,11 +617,12 @@ def list_collect(
     :param attrs: Information related to the style of the OrderedList items.
     :return: List containing the translatable parts of the list.
     """
+
     # Select the string that list items are prepended with ie. -, 1., i) etc.
+    list_style = ""
     if attrs:
         start_num, num_style, num_delim = attrs
-        # TODO Implement the rest of list styles
-        list_style = "1. "
+
     else:
         list_style = "- "
 
@@ -577,10 +631,91 @@ def list_collect(
         # Next list item
         arr.append(NoTranslate("\n"))
         # Indentation and list item start
-        arr.append(NoTranslate(("\t" * depth) + list_style))
+        if list_style != "- ":
+            arr.append(
+                NoTranslate(
+                    ("\t" * depth)
+                    + ordered_list_styling(start_num, num_style, num_delim)
+                )
+            )
         for block in block_list:
+            start_num = start_num + 1
             arr += block_collect(block, depth + 1)
     return arr
+
+
+def to_roman_numeral(num: int) -> str:
+    """
+    Converts the start number from Pandoc's Roman number list to the corresponding number.
+    Source: https://stackoverflow.com/questions/28777219/basic-program-to-convert-integer-to-roman-numerals
+
+    :param num: The list's starting number
+    :returns: The Roman number corresponding the starting number
+    """
+    romans = [
+        (1000, "M"),
+        (900, "CM"),
+        (500, "D"),
+        (400, "CD"),
+        (100, "C"),
+        (90, "XC"),
+        (50, "L"),
+        (40, "XL"),
+        (10, "X"),
+        (9, "IX"),
+        (5, "V"),
+        (4, "IV"),
+        (1, "I"),
+    ]
+
+    roman = ""
+
+    while num > 0:
+        for i, r in romans:
+            while num >= i:
+                roman += r
+                num -= i
+
+    return roman
+
+
+def to_alphabet(num: int) -> str:
+    """
+    Converts the start number from Pandoc's alphabet list to the corresponding character.
+
+    :param num: The list's starting number
+    :returns: The alphabet corresponding the starting number
+    """
+    alphabets = [
+        "",
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+        "k",
+        "l",
+        "m",
+        "n",
+        "o",
+        "p",
+        "q",
+        "r",
+        "s",
+        "t",
+        "u",
+        "v",
+        "w",
+        "x",
+        "y",
+        "z",
+    ]
+    return alphabets[num]
 
 
 def definitionlist_collect(content: dict) -> list[TranslateApproval]:
@@ -643,6 +778,8 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
         arr += rawblock_collect(content)
     elif type_ == "BlockQuote":
         # NOTE Recursion
+        # TODO See that this implementation actually works
+        arr.append(NoTranslate("> "))
         for block in content:
             arr += block_collect(block)
     elif type_ == "OrderedList":
