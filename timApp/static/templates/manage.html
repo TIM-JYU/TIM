@@ -224,7 +224,7 @@
                         <p>This document will not be automatically translated on creation.</p>
                     </div>
                     <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title ||
-                    $ctrl.translationInProgress || (!$ctrl.mayTranslate && $ctrl.notManual)"
+                    $ctrl.translationInProgress || (!$ctrl.mayTranslate && $ctrl.notManual) || !$ctrl.translatorAvailable"
                             class="timButton"
                             ng-click="$ctrl.createTranslation()" id="createbutton">Create
                     </button>
