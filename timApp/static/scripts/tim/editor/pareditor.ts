@@ -1776,7 +1776,6 @@ ${backTicks}
      * @returns The selected text, the source block's text or nothing if there is neither
      */
     translationSelector() {
-        // const selection = this.editor!.checkTranslationSelection();
         const selection = this.getEditor()!.checkTranslationSelection();
         if (selection == "") {
             this.nothingSelected = true;
