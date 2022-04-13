@@ -218,6 +218,7 @@ export class PareditorController extends DialogController<
         hideDiff: TimStorage<boolean>;
         hidePreview: TimStorage<boolean>;
         hideOriginalPreview: TimStorage<boolean>;
+        translator: TimStorage<string>;
     };
     private touchDevice: boolean;
     private autocomplete!: boolean; // $onInit
@@ -240,6 +241,7 @@ export class PareditorController extends DialogController<
     private documentLanguages: Array<ILanguages> = [];
     private translators: Array<ITranslators> = [];
     private docTranslator: string = "";
+    private translatorAvailable = true;
     private sideBySide: boolean = false;
     private hideDiff: boolean = true;
     private hidePreview: boolean = false;
@@ -1158,16 +1160,15 @@ ${backTicks}
     $onInit() {
         super.$onInit();
         this.docSettings = documentglobals().docSettings;
-        if (this.docSettings?.translator != undefined) {
-            this.docTranslator = this.docSettings?.translator;
+        if (!this.checkIfOriginal()) {
+            listTranslators(this.translators, false);
+            updateLanguages(
+                this.sourceLanguages,
+                this.documentLanguages,
+                this.targetLanguages,
+                this.docTranslator
+            );
         }
-        listTranslators(this.translators, false);
-        updateLanguages(
-            this.sourceLanguages,
-            this.documentLanguages,
-            this.targetLanguages,
-            this.docTranslator
-        );
         const saveTag = this.getSaveTag();
         this.translationInProgress = false;
         this.storage = {
@@ -1190,6 +1191,10 @@ ${backTicks}
                 "hideOriginalPreview" + saveTag,
                 t.boolean
             ),
+            translator: new TimStorage<string>(
+                "translator" + saveTag,
+                t.string
+            ),
         };
         setCurrentEditor(this);
         this.spellcheck = this.storage.spellcheck.get() ?? false;
@@ -1207,6 +1212,7 @@ ${backTicks}
         this.hidePreview = this.storage.hidePreview.get() ?? false;
         this.hideOriginalPreview =
             this.storage.hideOriginalPreview.get() ?? false;
+        this.docTranslator = this.storage.translator.get() ?? "";
         this.lastTab = this.activeTab;
         this.citeText = this.getCiteText();
         const sn = this.storage.wrap.get();
@@ -1613,7 +1619,7 @@ ${backTicks}
      * Updates the list of target languages based on the selected translator.
      */
     async updateTranslatorLanguages() {
-        const sources = await to(
+        let sources = await to(
             $http.post<ILanguages[]>("/translations/target-languages", {
                 translator: this.docTranslator,
             })
@@ -1621,6 +1627,25 @@ ${backTicks}
         if (sources.ok) {
             this.targetLanguages = [];
             listLanguages(sources.result.data, this.targetLanguages);
+            this.translatorAvailable = true;
+        } else {
+            this.translatorAvailable = false;
+            await showMessageDialog(sources.result.data.error);
+            return;
+        }
+        sources = await to(
+            $http.post<ILanguages[]>("/translations/source-languages", {
+                translator: this.docTranslator,
+            })
+        );
+        if (sources.ok) {
+            this.sourceLanguages = [];
+            listLanguages(sources.result.data, this.sourceLanguages);
+            this.translatorAvailable = true;
+        } else {
+            this.translatorAvailable = false;
+            await showMessageDialog(sources.result.data.error);
+            return;
         }
     }
 
@@ -1776,7 +1801,7 @@ ${backTicks}
      * @returns The selected text, the source block's text or nothing if there is neither
      */
     translationSelector() {
-        const selection = this.editor!.checkTranslationSelection();
+        const selection = this.getEditor()!.checkTranslationSelection();
         if (selection == "") {
             this.nothingSelected = true;
             if (this.trdiff == null) {
@@ -2406,6 +2431,7 @@ ${backTicks}
         this.storage.hideDiff.set(this.hideDiff);
         this.storage.hidePreview.set(this.hidePreview);
         this.storage.hideOriginalPreview.set(this.hideOriginalPreview);
+        this.storage.translator.set(this.docTranslator);
         const acc = this.getExtraData().access;
         if (acc != null) {
             this.storage.noteAccess.set(acc);
