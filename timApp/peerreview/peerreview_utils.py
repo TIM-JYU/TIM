@@ -170,29 +170,16 @@ def check_review_grouping(doc: DocInfo) -> bool:
 
 def is_peerreview_enabled(doc: DocInfo) -> bool:
     settings = doc.document.get_settings()
-    start = (
-        settings.peer_review_start()
-        .replace(tzinfo=pytz.utc)
-        .strftime("%Y-%m-%d %H:%M:%S")
-    )
-    stop = (
-        settings.peer_review_stop()
-        .replace(tzinfo=pytz.utc)
-        .strftime("%Y-%m-%d %H:%M:%S")
-    )
 
     # TODO: create better solution
-    current_time = datetime.now(pytz.timezone("Europe/Helsinki")).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
+    tz = pytz.timezone("Europe/Helsinki")
 
-    print("first date is smaller than second_date: ", start <= current_time < stop)
-    print("Currentime ", current_time)
-    print("Start ", start)
-    print("Stop ", stop)
+    start = tz.localize((settings.peer_review_start()), is_dst=None)
+    stop = tz.localize((settings.peer_review_stop()), is_dst=None)
+    current_time = datetime.now(pytz.timezone("UTC"))
 
     if not start or not stop:
-        return False
+        return doc.document.get_settings().peer_review()
     if start <= current_time < stop:
         return True
     else:
