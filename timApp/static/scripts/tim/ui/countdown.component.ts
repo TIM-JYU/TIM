@@ -112,7 +112,7 @@ export class CountdownComponent implements OnInit, OnChanges {
 
     ngOnInit() {
         if (this.parseEndTime) {
-            this.endTime = moment.utc(this.parseEndTime);
+            this.endTime = moment(this.parseEndTime, "YYYY-MM-DD HH:mm:ss");
         }
 
         if (!this.autoStart) {
