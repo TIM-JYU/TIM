@@ -29,6 +29,10 @@ export class TimDocument {
         return this.sections;
     }
 
+    getRoot() {
+        return this.root;
+    }
+
     getSectionFor(par: Paragraph): ParContext[] | undefined {
         const pars = this.sections.get(par.htmlElement);
         if (pars) {
