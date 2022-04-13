@@ -7,7 +7,6 @@ import {
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as snv from "tim/ui/shortNameValidator";
 import * as tem from "tim/ui/formErrorMessage";
-import {JsonValue} from "tim/util/jsonvalue";
 import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
 import {
     IManageResponse,

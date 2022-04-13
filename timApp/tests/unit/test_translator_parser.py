@@ -80,9 +80,11 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             [
                 [
                     Translate("Käännettävää tekstiä"),
-                    NoTranslate("[Ei(){}( { käännettävää [x],[y],[x, y] `tekstiä`]{.notranslate}")
+                    NoTranslate(
+                        "[Ei(){}( { käännettävää [x],[y],[x, y] `tekstiä`]{.notranslate}"
+                    ),
                 ]
-            ]
+            ],
         )
 
     # testing notranslate along with multiple other styles
@@ -98,37 +100,43 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
                     Translate("Teksti, jossa on kaikki tyylit paitsi notranslate"),
                     NoTranslate(r"""</s></u>***"""),
                     Translate("\n"),
-                    NoTranslate("""\
-***<u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>***""")
-
+                    NoTranslate(
+                        """\
+***<u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>***"""
+                    ),
                 ]
-            ]
+            ],
         )
 
     # Testing different headers
     def test_header(self):
-        text = """r”# otsikko1
+        text = (
+            """r”# otsikko1
 ## otsikko2
 ### otsikko3
 #### otsikko4
 ##### otsikko 5
 ###### otsikko 6
 # otsikko1.2
-# otsikko jossa sana header ja ## merkkejä"""""
+# otsikko jossa sana header ja ## merkkejä"""
+            ""
+        )
         self.assertEqual(
             get_translate_approvals(text),
             [
                 [
-                    Translate("""r”# otsikko1
+                    Translate(
+                        """r”# otsikko1
 ## otsikko2
 ### otsikko3
 #### otsikko4
 ##### otsikko 5
 ###### otsikko 6
 # otsikko1.2
-# otsikko jossa sana header ja ## merkkejä""")
+# otsikko jossa sana header ja ## merkkejä"""
+                    )
                 ]
-            ]
+            ],
         )
 
     def test_tex_collect(self):
@@ -358,7 +366,7 @@ x=0\;\;\;\\text{"""
             ]
         )
 
-    def test_ordered_list(self):
+    def test_ordered_list1(self):
         md = r"""1. Tässä ollaan
     2. Jotain tehdään
     3. Ainakin nyt
@@ -399,6 +407,56 @@ x=0\;\;\;\\text{"""
                     NoTranslate("\n\t(b) "),
                     Translate("Niitäkin on liikaa"),
                     NoTranslate("\n\t(c) "),
+                    Translate("Liikaa, liikaa"),
+                    NoTranslate("\n\tA) "),
+                    Translate("Ihan hirveesti"),
+                    NoTranslate("\n\tB) "),
+                    Translate("Liikaa"),
+                ]
+            ],
+        )
+
+    def test_ordered_list2(self):
+        md = r"""1. Tässä ollaan
+    2. Jotain tehdään
+    3. Ainakin nyt
+    #) Kivaa on
+        III. Roomalaisia numeroita
+        IV) Ihan liikaa roomalaisia numeroita
+        V) Ei olla edes Roomassa
+    (ix) tai koomassa
+    (a) Aakkosia
+        (b) Niitäkin on liikaa
+        (c) Liikaa, liikaa
+    A) Ihan hirveesti
+    B) Liikaa
+"""
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [
+                    # TODO/FIXME does a list need to start with newline?
+                    NoTranslate("\n1. "),
+                    Translate("Tässä ollaan"),
+                    NoTranslate("\n\t2. "),
+                    Translate("Jotain tehdään"),
+                    NoTranslate("\n\t3. "),
+                    Translate("Ainakin nyt"),
+                    NoTranslate("\n\t#) "),
+                    Translate("Kivaa on"),
+                    NoTranslate("\n\t\tIII. "),
+                    Translate("Roomalaisia numeroita"),
+                    NoTranslate("\n\t\tIV) "),
+                    Translate("Ihan liikaa roomalaisia numeroita"),
+                    NoTranslate("\n\t\tV) "),
+                    Translate("Ei olla edes Roomassa"),
+                    NoTranslate("\n\t(ix) "),
+                    Translate("tai koomassa"),
+                    NoTranslate("\n\t(a) "),
+                    Translate("Aakkosia"),
+                    NoTranslate("\n\t\t(b) "),
+                    Translate("Niitäkin on liikaa"),
+                    NoTranslate("\n\t\t(c) "),
                     Translate("Liikaa, liikaa"),
                     NoTranslate("\n\tA) "),
                     Translate("Ihan hirveesti"),

@@ -392,7 +392,10 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     isPreview() {
-        return this.element.parents(".previewcontent").length > 0;
+        return (
+            this.element.parents(".previewcontent").length > 0 ||
+            this.element.parents(".previeworiginalcontent").length > 0
+        );
     }
 
     isInFormMode() {
