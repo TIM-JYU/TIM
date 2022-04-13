@@ -635,7 +635,11 @@ def list_collect(
         arr.append(
             NoTranslate(
                 ("\t" * depth)
-                + (ordered_list_styling(start_num, num_style, num_delim) if not list_style else list_style)
+                + (
+                    ordered_list_styling(start_num, num_style, num_delim)
+                    if not list_style
+                    else list_style
+                )
             )
         )
 

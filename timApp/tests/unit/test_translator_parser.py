@@ -80,9 +80,11 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             [
                 [
                     Translate("Käännettävää tekstiä"),
-                    NoTranslate("[Ei(){}( { käännettävää [x],[y],[x, y] `tekstiä`]{.notranslate}")
+                    NoTranslate(
+                        "[Ei(){}( { käännettävää [x],[y],[x, y] `tekstiä`]{.notranslate}"
+                    ),
                 ]
-            ]
+            ],
         )
 
     # testing notranslate along with multiple other styles
@@ -98,37 +100,43 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
                     Translate("Teksti, jossa on kaikki tyylit paitsi notranslate"),
                     NoTranslate(r"""</s></u>***"""),
                     Translate("\n"),
-                    NoTranslate("""\
-***<u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>***""")
-
+                    NoTranslate(
+                        """\
+***<u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>***"""
+                    ),
                 ]
-            ]
+            ],
         )
 
     # Testing different headers
     def test_header(self):
-        text = """r”# otsikko1
+        text = (
+            """r”# otsikko1
 ## otsikko2
 ### otsikko3
 #### otsikko4
 ##### otsikko 5
 ###### otsikko 6
 # otsikko1.2
-# otsikko jossa sana header ja ## merkkejä"""""
+# otsikko jossa sana header ja ## merkkejä"""
+            ""
+        )
         self.assertEqual(
             get_translate_approvals(text),
             [
                 [
-                    Translate("""r”# otsikko1
+                    Translate(
+                        """r”# otsikko1
 ## otsikko2
 ### otsikko3
 #### otsikko4
 ##### otsikko 5
 ###### otsikko 6
 # otsikko1.2
-# otsikko jossa sana header ja ## merkkejä""")
+# otsikko jossa sana header ja ## merkkejä"""
+                    )
                 ]
-            ]
+            ],
         )
 
     def test_tex_collect(self):
