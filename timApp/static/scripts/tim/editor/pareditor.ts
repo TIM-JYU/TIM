@@ -12,6 +12,7 @@ import {
     getFullscreenElement,
     toggleFullScreen,
 } from "tim/util/fullscreen";
+import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
 import {IDocument, ILanguages, ITranslators} from "tim/item/IItem";
 import {
     IExtraData,
@@ -218,6 +219,7 @@ export class PareditorController extends DialogController<
         hideDiff: TimStorage<boolean>;
         hidePreview: TimStorage<boolean>;
         hideOriginalPreview: TimStorage<boolean>;
+        translator: TimStorage<string>;
     };
     private touchDevice: boolean;
     private autocomplete!: boolean; // $onInit
@@ -240,6 +242,7 @@ export class PareditorController extends DialogController<
     private documentLanguages: Array<ILanguages> = [];
     private translators: Array<ITranslators> = [];
     private docTranslator: string = "";
+    private translatorAvailable = true;
     private sideBySide: boolean = false;
     private hideDiff: boolean = true;
     private hidePreview: boolean = false;
@@ -1158,16 +1161,6 @@ ${backTicks}
     $onInit() {
         super.$onInit();
         this.docSettings = documentglobals().docSettings;
-        if (this.docSettings?.translator != undefined) {
-            this.docTranslator = this.docSettings?.translator;
-        }
-        listTranslators(this.translators, false);
-        updateLanguages(
-            this.sourceLanguages,
-            this.documentLanguages,
-            this.targetLanguages,
-            this.docTranslator
-        );
         const saveTag = this.getSaveTag();
         this.translationInProgress = false;
         this.storage = {
@@ -1190,8 +1183,24 @@ ${backTicks}
                 "hideOriginalPreview" + saveTag,
                 t.boolean
             ),
+            translator: new TimStorage<string>(
+                "translator" + saveTag,
+                t.string
+            ),
         };
         setCurrentEditor(this);
+
+        this.docTranslator = this.storage.translator.get() ?? "";
+        if (!this.checkIfOriginal()) {
+            listTranslators(this.translators, false);
+            updateLanguages(
+                this.sourceLanguages,
+                this.documentLanguages,
+                this.targetLanguages,
+                this.docTranslator
+            );
+        }
+
         this.spellcheck = this.storage.spellcheck.get() ?? false;
         this.autocomplete = this.storage.autocomplete.get() ?? false;
         this.proeditor =
@@ -1613,7 +1622,7 @@ ${backTicks}
      * Updates the list of target languages based on the selected translator.
      */
     async updateTranslatorLanguages() {
-        const sources = await to(
+        let sources = await to(
             $http.post<ILanguages[]>("/translations/target-languages", {
                 translator: this.docTranslator,
             })
@@ -1621,6 +1630,25 @@ ${backTicks}
         if (sources.ok) {
             this.targetLanguages = [];
             listLanguages(sources.result.data, this.targetLanguages);
+            this.translatorAvailable = true;
+        } else {
+            this.translatorAvailable = false;
+            await showMessageDialog(sources.result.data.error);
+            return;
+        }
+        sources = await to(
+            $http.post<ILanguages[]>("/translations/source-languages", {
+                translator: this.docTranslator,
+            })
+        );
+        if (sources.ok) {
+            this.sourceLanguages = [];
+            listLanguages(sources.result.data, this.sourceLanguages);
+            this.translatorAvailable = true;
+        } else {
+            this.translatorAvailable = false;
+            await showMessageDialog(sources.result.data.error);
+            return;
         }
     }
 
@@ -1776,7 +1804,7 @@ ${backTicks}
      * @returns The selected text, the source block's text or nothing if there is neither
      */
     translationSelector() {
-        const selection = this.editor!.checkTranslationSelection();
+        const selection = this.getEditor()!.checkTranslationSelection();
         if (selection == "") {
             this.nothingSelected = true;
             if (this.trdiff == null) {
@@ -1888,27 +1916,6 @@ ${backTicks}
             return;
         } else {
             this.close({type: "save", text});
-        }
-    }
-
-    /**
-     * Saves the selected translator to the document's settings. Requires a refresh to take proper effect on the page.
-     */
-    async setTranslatorSettings() {
-        if (
-            this.docSettings != undefined &&
-            this.docTranslator != "" &&
-            this.docSettings.translator != this.docTranslator &&
-            this.resolve.params.viewCtrl != undefined &&
-            !this.checkIfOriginal()
-        ) {
-            await $http.post<string>(
-                `/settings/${this.resolve.params.viewCtrl.item.id}`,
-                {
-                    setting: "translator",
-                    value: this.docTranslator,
-                }
-            );
         }
     }
 
@@ -2155,8 +2162,12 @@ ${backTicks}
         }
     }
 
-    putTemplate(data: string) {
+    async putTemplate(data: string) {
         this.focusEditor();
+        data = await replaceTemplateValues(data);
+        if (!data) {
+            return;
+        }
         this.editor!.insertTemplate(data);
     }
 
@@ -2169,6 +2180,10 @@ ${backTicks}
         }
         let data = response.result.data;
         data = data.replace(/\\/g, "\\\\");
+        data = await replaceTemplateValues(data);
+        if (!data) {
+            return;
+        }
         this.editor!.insertTemplate(data);
         this.focusEditor();
     }
@@ -2293,12 +2308,10 @@ ${backTicks}
 
             interface ILanguageTools {
                 setCompleters(completers: unknown[]): void;
-
                 snippetCompleter: unknown;
                 textCompleter: unknown;
                 keyWordCompleter: unknown;
             }
-
             const langTools = ace.require(
                 "ace/ext/language_tools"
             ) as ILanguageTools;
@@ -2417,7 +2430,6 @@ ${backTicks}
     }
 
     private saveOptions() {
-        this.setTranslatorSettings();
         this.storage.spellcheck.set(this.spellcheck);
         this.storage.editortab.set(this.activeTab ?? "navigation");
         this.storage.autocomplete.set(this.autocomplete);
@@ -2428,6 +2440,7 @@ ${backTicks}
         this.storage.hideDiff.set(this.hideDiff);
         this.storage.hidePreview.set(this.hidePreview);
         this.storage.hideOriginalPreview.set(this.hideOriginalPreview);
+        this.storage.translator.set(this.docTranslator);
         const acc = this.getExtraData().access;
         if (acc != null) {
             this.storage.noteAccess.set(acc);

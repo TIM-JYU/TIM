@@ -180,7 +180,7 @@
                 </tr>
                 <tr ng-repeat="tr in $ctrl.translations">
                     <td><select id="old-document-language" name="old-document-language-select" class="form-control"
-                               ng-model="tr.lang_id">
+                               ng-model="tr.lang_id" ng-change="$ctrl.updateTranslation(tr)" >
                         <option ng-repeat="option in $ctrl.documentLanguages" value="{{option.code}}">{{option.name}} ({{option.code}})</option></select></td>
                     <td><input type="text" class="form-control" ng-model="tr.title" placeholder="Title"/></td>
                     <td>{{tr.owner.name}}</td>
@@ -219,9 +219,12 @@
                         <p>This document will be automatically translated on creation. Note: A human should check the translation for any errors and fix them!</p>
                     </div>
                     <div ng-show="!$ctrl.mayTranslate || !$ctrl.newTranslation.title">
+                        <b ng-show="$ctrl.notManual && !$ctrl.mayTranslate && $ctrl.translatorAvailable">The chosen translator does not support the chosen language. </b>
+                        <b ng-show="!$ctrl.translatorAvailable">You cannot use this translator because you don't have an API key. </b>
                         <p>This document will not be automatically translated on creation.</p>
                     </div>
-                    <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title ||$ctrl.translationInProgress"
+                    <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title ||
+                    $ctrl.translationInProgress || (!$ctrl.mayTranslate && $ctrl.notManual) || !$ctrl.translatorAvailable"
                             class="timButton"
                             ng-click="$ctrl.createTranslation()" id="createbutton">Create
                     </button>
@@ -287,7 +290,8 @@
                title="Export document and all untranslated text as markdown">Export document with original text</a>
             <button class="timButton" ng-click="$ctrl.markAllAsRead()">Mark document as read</button>
             <button ng-show="$ctrl.item.rights.owner" class="btn btn-danger"
-                    ng-click="$ctrl.deleteDocument()">Delete document
+                    ng-click="$ctrl.deleteDocument()">
+                {{ !$ctrl.item.isFolder && !$ctrl.item.src_docid ? 'Delete document' : 'Delete translation' }}
             </button>
             <span ng-show="$ctrl.readUpdating">Marking document as read...</span>
         </div>

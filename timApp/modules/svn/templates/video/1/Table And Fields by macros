@@ -1,0 +1,25 @@
+Table And Fields by macros
+Things needed for review results for one task
+- {"what": "TASK", "text": "Arvioitavan tehtävän nimi", "default": ""}
+\
+
+#- {defaultplugin="textfield" .fieldCell}
+%% 'TASK_Riitauta=Riitauta: Kirjoita tähän, jos et tykkää arvioista' | gfields('cols: 25') -%%
+\
+
+#- {area="TASK_fields" visible="%% False | isview%%" nocache="true" collapse="true"}
+Arviointitilanne TASK
+
+#- {defaultplugin="numericfield" readonly="view" .fieldCell}
+%%REVIEW_FIELDS("TASK", arvosteltavia)%%
+
+#- {area_end="TASK_fields"}
+\
+
+``` {#TASK_demotable plugin="tableForm" visible="%% False | isview%%" nocache="true"}
+%%REVIEW_TABLE("TASK",arvosteltavia)%%
+```
+
+``` {#reviewUpdateRunner_TASK plugin="jsrunner"}
+%%REVIEW_UPDATE("TASK",arvosteltavia,1,6)%%
+```

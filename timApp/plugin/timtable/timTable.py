@@ -1,7 +1,7 @@
 import copy
 import json
 import re
-from typing import Any, Optional, Union
+from typing import Any
 from xml.sax.saxutils import quoteattr
 
 from flask import Blueprint
@@ -94,6 +94,7 @@ def tim_table_reqs():
 def tim_table_multihtml_direct(jsondata):
     """
     Directly callable method for getting the HTML of all TimTable plugins.
+
     :param jsondata: The data of the plugins.
     :return: The data of the plugins converted to HTML.
     """
@@ -108,6 +109,7 @@ def tim_table_multihtml_direct(jsondata):
 def convert_export_data():
     """
     Route for getting save JSON from exportdata
+
     :return: JSON to save or {} if nothing to save
     """
     jsondata = request.get_json()
@@ -140,6 +142,7 @@ def tim_table_multihtml():
 def prepare_multi_for_dumbo(timtable_list):
     """
     Prepares multiple TimTables (given in a request) for Dumbo.
+
     :param timtable_list:
     :return:
     """
@@ -153,10 +156,12 @@ CELL_FINDER = re.compile("([A-Z]+)([0-9]+)[!0-9]*")
 def row_key(s):
     """
     Make a sort key for table cell address.  For example
-       AB3: cat => 0003 AB
-       E17: dog => 0017  E
-       A => A
-       23 => 23
+
+       * AB3: cat => 0003 AB
+       * E17: dog => 0017  E
+       * A => A
+       * 23 => 23
+
     :param s: string whre key is calculated
     :return: key for sorting by row numbers
     """
@@ -183,6 +188,7 @@ def matrix_to_cells(matrix):
 def tim_table_get_html(jso, review):
     """
     Returns the HTML of a single TimTable paragraph.
+
     :param jso:
     :param review:
     :return:
@@ -349,6 +355,7 @@ def make_empty_row():
 def add_row(plug: Plugin, row_id: int):
     """
     Generic function for adding a row.
+
     :param plug: The plugin.
     :param row_id: The place (index) where the row should be added. -1 can be used for appending
      rows to the end of the table.
@@ -408,6 +415,7 @@ def add_row(plug: Plugin, row_id: int):
 def pop_unique_row_id(plug: Plugin) -> int:
     """
     Returns an unique ID for a new row.
+
     :param plug: The plugin instance.
     :return:
     """
@@ -740,6 +748,7 @@ def clear_attributes(cell):
 def set_cell_style_attribute(doc_id, par_id, cells_to_save):
     """
     Sets a style attribute for a cell.
+
     :param doc_id: Document ID
     :param par_id: Paragraph ID
     :param cells_to_save: list of cells to save
@@ -859,6 +868,7 @@ def set_cell_style_attribute(doc_id, par_id, cells_to_save):
 def set_value_to_table(plug, row_id, col_id, value):
     """
     Set value in the description part of table
+
     :param plug: plugin to use
     :param row_id: row where to set
     :param col_id: col where to set
@@ -902,6 +912,7 @@ def set_value_to_table(plug, row_id, col_id, value):
 def get_plugin_from_paragraph(doc_id, par_id) -> (DocEntry, Plugin):
     """
     Returns the DocEntry and the plugin instance from a document and paragraph ID.
+
     :param doc_id: The document ID
     :param par_id: The paragraph ID
     :return: Tuple of a DocEntry and the plugin instance.
@@ -919,6 +930,7 @@ def get_plugin_from_paragraph(doc_id, par_id) -> (DocEntry, Plugin):
 def is_datablock(yaml: dict[str, Any]) -> bool:
     """
     Checks if tableDataBlock exists
+
     :param yaml:
     :return: Boolean indicating the existance of tabledatablock
     """
@@ -934,6 +946,7 @@ def is_datablock(yaml: dict[str, Any]) -> bool:
 def create_datablock(table: dict[str, Any]):
     """
     Creates tableDatablock
+
     :param table:
     :return:
     """
@@ -1054,6 +1067,7 @@ def save_cell(
 ):
     """
     Updates datablock with the content and the coordinate of a cell.
+
     :param datablock:
     :param row: Row index
     :param col: Column index
@@ -1077,6 +1091,7 @@ def save_cell(
 def find_cell(rows: list, row: int, col: int) -> str:
     """
     Gets cell from index place if it exists, otherwise returns an empty string
+
     :param rows: List of cells
     :param row: Row index
     :param col: Column index
@@ -1104,6 +1119,7 @@ def cell_coordinate(row: int, col: int) -> str:
 def find_cell_from_datablock(cells: dict, row: int, col: int) -> str | None:
     """
     Finds cell from datablock
+
     :param cells: all cells
     :param row: Row index
     :param col: Column index
@@ -1122,6 +1138,7 @@ def find_cell_from_datablock(cells: dict, row: int, col: int) -> str | None:
 def colnum_to_letters(column_index: int) -> str:
     """
     Transforms column index to letter
+
     :param column_index: ex. 2
     :return: column index as letter
     """
@@ -1140,6 +1157,7 @@ def colnum_to_letters(column_index: int) -> str:
 def datablock_key_to_indexes(datablock_key: str) -> tuple[int, int]:
     """
     Gets the column and row indexes from a single relative datablock entry.
+
     :param datablock_key: The entry in the relative datablock.
     :return: Column and row indexes in a tuple.
     """
@@ -1169,6 +1187,7 @@ def is_in_global_append_mode(plug: Plugin) -> bool:
     Checks whether global append mode is enabled.
     In global append mode even users without edit rights can add rows,
     but they can only edit the content of rows that they've added.
+
     :param plug: The plugin instance.
     :return: True if global append mode is enabled, otherwise false.
     """
@@ -1178,6 +1197,7 @@ def is_in_global_append_mode(plug: Plugin) -> bool:
 def is_in_datainput_mode(plug: Plugin) -> bool:
     """
     Checks whether the table is in data input mode.
+
     :param plug: The plugin instance.
     :return: True if the table is in data input mode, otherwise false.
     """
@@ -1187,6 +1207,7 @@ def is_in_datainput_mode(plug: Plugin) -> bool:
 def is_review(request):
     """
     Check if request is review
+
     :param request:
     :return:
     """
@@ -1198,6 +1219,7 @@ def prepare_for_and_call_dumbo(plug: Plugin):
     """
     Prepares the table's markdown for Dumbo conversion and
     runs it through Dumbo.
+
     :param plug: The plugin instance.
     :return: The conversion result from Dumbo.
     """
@@ -1220,6 +1242,7 @@ def prepare_for_and_call_dumbo(plug: Plugin):
 def prepare_for_dumbo(values):
     """
     Prepares the table's markdown for Dumbo conversion when automd is enabled.
+
     :param values: The plugin paragraph's markdown.
     :return: The table's markdown, prepared for dumbo conversion.
     """
@@ -1295,6 +1318,7 @@ def construct_datablock_entry_list_from_yaml(
     """
     Parses a relative datablock and returns its data as a list of
     RelativeDataBlockValue instances.
+
     :param plug: The plugin instance.
     :return: A list of RelativeDataBlockValues.
     """
@@ -1318,6 +1342,7 @@ def create_datablock_from_entry_list(
 ) -> dict[str, Any]:
     """
     Creates the datablock from a list of RelativeDataBlockValues.
+
     :param relative_data_block_values: The list of RelativeDataBlockValues.
     :return: The datablock as a dict.
     """

@@ -435,14 +435,14 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                             <div class="contact-info" *ngFor="let APIkey of userAPIKeys">
                                 <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>
                                 <input type="text" class="form-control buttonBorder" [value]="APIkey.translator" disabled>
-                                <div *ngIf="quotaChecked" class="stacked quotaProgressBar">
-                                    <progress id="quota" value="{{usedQuota}}" max="{{availableQuota}}"></progress>
-                                    <p>{{usedQuota}} / {{availableQuota}}</p>
+                                <div *ngIf="APIkey.quotaChecked" class="stacked quotaProgressBar">
+                                    <progress value="{{APIkey.usedQuota}}" max="{{APIkey.availableQuota}}"></progress>
+                                    <p>{{APIkey.usedQuota}} / {{APIkey.availableQuota}}</p>
                                 </div>
-                                <button *ngIf="!quotaChecked" class="btn" type="button" (click)="checkQuota(APIkey)" i18n>
+                                <button *ngIf="!APIkey.quotaChecked" class="btn" type="button" (click)="checkQuota(APIkey)" i18n>
                                     Check key's quota 
                                 </button>
-                                    <button *ngIf="quotaChecked" class="btn" type="button" (click)="checkQuota(APIkey)">
+                                    <button *ngIf="APIkey.quotaChecked" class="btn" type="button" (click)="checkQuota(APIkey)">
                                         <i class="glyphicon glyphicon-refresh"></i>
                                     </button>
                                 <button class="btn btn-danger" type="button"
@@ -508,9 +508,6 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     private readonly style: HTMLStyleElement;
     private readonly consent: ConsentType | undefined;
     private allNotificationsFetched = false;
-    usedQuota = 0;
-    availableQuota = 0;
-    quotaChecked = false;
     cbCount = 0;
     tableData: TimTable = {
         hide: {edit: false, insertMenu: true, editMenu: true},
@@ -1030,9 +1027,9 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
             })
         );
         if (r.ok) {
-            this.quotaChecked = true;
-            this.availableQuota = r.result.character_limit;
-            this.usedQuota = r.result.character_count;
+            key.quotaChecked = true;
+            key.availableQuota = r.result.character_limit;
+            key.usedQuota = r.result.character_count;
 
             // TODO: Figure out why this is needed for change detection
             this.cdr.detectChanges();

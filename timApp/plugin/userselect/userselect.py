@@ -520,7 +520,9 @@ def undo_group_actions(
         user_acc.add_to_group(ug, cur_user)
 
     for ug in add_groups:
-        ug.memberships.filter_by(user=user_acc).delete()
+        membership = ug.current_memberships.get(user_acc.id, None)
+        if membership:
+            membership.set_expired()
 
 
 @user_select_plugin.post("/undo")
@@ -532,16 +534,22 @@ def undo(
     if not model.actions:
         return ok_response()
 
+    # Undo the group actions before dist rights because dist rights can might depend on the group
+    # Moreover, undoing is generally a soft action, so we can always manually restore the group safely
+    undo_group_actions(
+        user_acc, cur_user, model.actions.addToGroups, model.actions.removeFromGroups
+    )
+    # Flush so that right distribution is handled correctly
+    db.session.flush()
+
     errors = undo_dist_right_actions(user_acc, model.actions.distributeRight)
 
     # If there are errors undoing, don't reset the fields because it may have been caused by a race condition
     if errors:
+        db.session.rollback()
         return json_response({"distributionErrors": errors})
 
     undo_field_actions(user_group, user_acc, model.actions.setValue)
-    undo_group_actions(
-        user_acc, cur_user, model.actions.addToGroups, model.actions.removeFromGroups
-    )
 
     db.session.commit()
 
@@ -689,19 +697,22 @@ def apply(
     if not model.actions:
         return ok_response()
 
+    apply_group_actions(
+        user_acc, cur_user, model.actions.addToGroups, model.actions.removeFromGroups
+    )
+    db.session.flush()
+
+    apply_field_actions(user_acc, cur_user, model.actions.setValue)
+    right_dist_errors = apply_dist_right_actions(
+        user_acc, model.actions.distributeRight
+    )
+
     update_messages = apply_permission_actions(
         user_group,
         model.actions.addPermission,
         model.actions.removePermission,
         model.actions.confirmPermission,
         model.actions.changePermissionTime,
-    )
-    apply_field_actions(user_acc, cur_user, model.actions.setValue)
-    right_dist_errors = apply_dist_right_actions(
-        user_acc, model.actions.distributeRight
-    )
-    apply_group_actions(
-        user_acc, cur_user, model.actions.addToGroups, model.actions.removeFromGroups
     )
 
     db.session.commit()

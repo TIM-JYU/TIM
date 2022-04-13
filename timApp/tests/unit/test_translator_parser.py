@@ -72,6 +72,65 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             ],
         )
 
+    # Testing notranslate style with brackets and parenthesis inside. Will fail if it contains unclosed "[" or "]"
+    def test_notranslate_style2(self):
+        text = "Käännettävää tekstiä[Ei(){}( { käännettävää [x],[y],[x, y] `tekstiä`]{.notranslate}"
+        self.assertEqual(
+            get_translate_approvals(text),
+            [
+                [
+                    Translate("Käännettävää tekstiä"),
+                    NoTranslate("[Ei(){}( { käännettävää [x],[y],[x, y] `tekstiä`]{.notranslate}")
+                ]
+            ]
+        )
+
+    # testing notranslate along with multiple other styles
+    def test_notranslate_style3(self):
+        text = r"""***<u><s>Teksti, jossa on kaikki tyylit paitsi notranslate</s></u>*** 
+        ***<u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>***"""
+
+        self.assertEqual(
+            get_translate_approvals(text),
+            [
+                [
+                    NoTranslate("""***<u><s>"""),
+                    Translate("Teksti, jossa on kaikki tyylit paitsi notranslate"),
+                    NoTranslate(r"""</s></u>***"""),
+                    Translate("\n"),
+                    NoTranslate("""\
+***<u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>***""")
+
+                ]
+            ]
+        )
+
+    # Testing different headers
+    def test_header(self):
+        text = """r”# otsikko1
+## otsikko2
+### otsikko3
+#### otsikko4
+##### otsikko 5
+###### otsikko 6
+# otsikko1.2
+# otsikko jossa sana header ja ## merkkejä"""""
+        self.assertEqual(
+            get_translate_approvals(text),
+            [
+                [
+                    Translate("""r”# otsikko1
+## otsikko2
+### otsikko3
+#### otsikko4
+##### otsikko 5
+###### otsikko 6
+# otsikko1.2
+# otsikko jossa sana header ja ## merkkejä""")
+                ]
+            ]
+        )
+
     def test_tex_collect(self):
         # TODO Add cases for identifiers, key-value -pairs and multiple classes as well
         text = r"x^3-49x&=0 &&|\text{ erotetaan yhteinen tekijä x}\x(x^2-49)&=0 &&|\text{ käytetään tulon nollasääntöä}\x=0\;\;\;\textrm{tai}\;\;\;&x^2-49=0 &&|\textsf{ ratkaistaan x}\&\;\;\;\;\;\,\;\;x^2=49 \&\;\;\;\;\;\,\;\;\;\;x=7\;\mathsf{tai}\;x=-7"
@@ -206,18 +265,23 @@ x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 && |\text{ ratkaistaan x}\\
                     Translate(" erotetaan yhteinen tekijä x"),
                     NoTranslate("}\nx(x^2-49)&=0 &&|\\text{"),
                     Translate("käytetään tulon nollasääntöä"),
-                    NoTranslate(r"""}\\
-x=0\;\;\;\\text{"""),
+                    NoTranslate(
+                        r"""}\\
+x=0\;\;\;\\text{"""
+                    ),
                     Translate("tai"),
                     NoTranslate(r"""}\;\;\;&x^2-49=0 && |\text{"""),
                     Translate(" ratkaistaan x"),
-                    NoTranslate(r"""}\\
+                    NoTranslate(
+                        r"""}\\
 &\;\;\;\;\;\,\;\;x^2=49 \\
-&\;\;\;\;\;\,\;\;\;\;x=7\;\text{"""),
+&\;\;\;\;\;\,\;\;\;\;x=7\;\text{"""
+                    ),
                     Translate("tai"),
-                    NoTranslate(r"""}\;x=-7
-\end{align*}""")
-
+                    NoTranslate(
+                        r"""}\;x=-7
+\end{align*}"""
+                    ),
                 ]
             ],
         )
@@ -263,6 +327,56 @@ x=0\;\;\;\\text{"""),
                     Translate("\nAivoni ajattelevi"),
                     NoTranslate("\\"),
                     Translate("\nKerran\nToisen\nKolmannen"),
+                ]
+            ],
+        )
+
+    def test_ordered_list(self):
+        md = r"""1. Tässä ollaan
+    2. Jotain tehdään
+    3. Ainakin nyt
+    #) Kivaa on
+    III. Roomalaisia numeroita
+    IV) Ihan liikaa roomalaisia numeroita
+    V) Ei olla edes Roomassa
+    (ix) tai koomassa
+    (a) Aakkosia
+    (b) Niitäkin on liikaa
+    (c) Liikaa, liikaa
+    A) Ihan hirveesti
+    B) Liikaa
+"""
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [
+                    # TODO/FIXME does a list need to start with newline?
+                    NoTranslate("\n1. "),
+                    Translate("Tässä ollaan"),
+                    NoTranslate("\n\t2. "),
+                    Translate("Jotain tehdään"),
+                    NoTranslate("\n\t3. "),
+                    Translate("Ainakin nyt"),
+                    NoTranslate("\n\t#) "),
+                    Translate("Kivaa on"),
+                    NoTranslate("\n\tIII. "),
+                    Translate("Roomalaisia numeroita"),
+                    NoTranslate("\n\tIV) "),
+                    Translate("Ihan liikaa roomalaisia numeroita"),
+                    NoTranslate("\n\tV) "),
+                    Translate("Ei olla edes Roomassa"),
+                    NoTranslate("\n\t(ix) "),
+                    Translate("tai koomassa"),
+                    NoTranslate("\n\t(a) "),
+                    Translate("Aakkosia"),
+                    NoTranslate("\n\t(b) "),
+                    Translate("Niitäkin on liikaa"),
+                    NoTranslate("\n\t(c) "),
+                    Translate("Liikaa, liikaa"),
+                    NoTranslate("\n\tA) "),
+                    Translate("Ihan hirveesti"),
+                    NoTranslate("\n\tB) "),
+                    Translate("Liikaa"),
                 ]
             ],
         )
@@ -392,24 +506,29 @@ choices:
                         r"""```
 lazy: false
 answerLimit:
-stem: """ + '"'
+stem: """
+                        + '"'
                     ),
                     Translate("Vastaa seuraaviin väittämiin."),
-                    NoTranslate('"\nchoices:\n  -\n    correct: false\n    reason: "'
-                                ),
+                    NoTranslate('"\nchoices:\n  -\n    correct: false\n    reason: "'),
                     Translate("Väärin. Vastaus ei kelpaa."),
                     NoTranslate('"\n    text: "'),
                     Translate("Esimerkkiselitys."),
-                    NoTranslate("""\"
+                    NoTranslate(
+                        """\"
   -
     correct: true
-    reason: \""""),
+    reason: \""""
+                    ),
                     Translate("Totta. Näin on."),
                     NoTranslate("""\"\n    text: \""""),
                     Translate("Esimerkkiselitys."),
-                    NoTranslate(""""
+                    NoTranslate(
+                        """"
     
-```""""")
+```"""
+                        ""
+                    ),
                 ]
             ],
         )

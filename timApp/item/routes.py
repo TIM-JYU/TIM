@@ -119,6 +119,7 @@ from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
+from timApp.velp.velpgroups import set_default_velp_group_selected_and_visible
 from tim_common.html_sanitize import sanitize_html
 
 DEFAULT_RELEVANCE = 10
@@ -464,10 +465,9 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
         return goto_view(item_path, vp)
 
     if has_special_chars(item_path):
+        qs = request.query_string.decode("utf8")
         return redirect(
-            remove_path_special_chars(request.path)
-            + "?"
-            + request.query_string.decode("utf8")
+            remove_path_special_chars(request.path) + (f"?{qs}" if qs else "")
         )
 
     save_last_page()
@@ -641,6 +641,7 @@ def render_doc_view(
     # Used later to get partitioning with preambles included correct.
     # Includes either only special class preambles, or all of them if b=0.
     preamble_count = 0
+    preamble_pars = None
     if (
         load_preamble
         or view_range.starts_from_beginning
@@ -809,7 +810,46 @@ def render_doc_view(
         if is_peerreview_enabled(doc_info):
             if not check_review_grouping(doc_info):
                 try:
-                    generate_review_groups(doc_info, post_process_result.plugins)
+                    if not r_view_range.is_full:
+                        # peer_review pairing generation may be called when only a part of the document is requested,
+                        # however we need to know answerers from every task in the document, so we generate full
+                        # document here
+                        # TODO: alternative approach (separate route, timer etc) for launching peer_review generation
+                        full_document_for_review, _ = get_document(
+                            doc_info, RequestedViewRange(b=None, e=None, size=None)
+                        )
+                        if preamble_pars:
+                            full_document_for_review = (
+                                preamble_pars + full_document_for_review
+                            )
+                        DocParagraph.preload_htmls(
+                            full_document_for_review,
+                            doc_settings,
+                            view_ctx,
+                            clear_cache,
+                        )
+                        full_document_for_review = dereference_pars(
+                            full_document_for_review, context_doc=doc, view_ctx=view_ctx
+                        )
+                        full_document_for_review = post_process_pars(
+                            doc,
+                            full_document_for_review,
+                            user_ctx,
+                            view_ctx,
+                            sanitize=False,
+                            do_lazy=do_lazy,
+                            load_plugin_states=not hide_answers,
+                        )
+                        generate_review_groups(
+                            doc_info,
+                            full_document_for_review.plugins,
+                            doc_settings.group(),
+                        )
+                    else:
+                        generate_review_groups(
+                            doc_info, post_process_result.plugins, doc_settings.group()
+                        )
+                    set_default_velp_group_selected_and_visible(doc_info)
                 except PeerReviewException as e:
                     flash(str(e))
             reviews = get_reviews_for_user(doc_info, current_user)
@@ -1190,6 +1230,7 @@ def get_item(item_id: int):
 def set_blockrelevance(item_id: int, value: int):
     """
     Add block relevance or edit if it already exists for the block.
+
     :param value: The relevance value.
     :param item_id: Item id.
     :return: Ok response.
@@ -1228,6 +1269,7 @@ def set_blockrelevance(item_id: int, value: int):
 def reset_blockrelevance(item_id: int):
     """
     Reset (delete) block relevance.
+
     :param item_id: Item id.
     :return: Ok response.
     """
@@ -1254,6 +1296,7 @@ def get_relevance_route(item_id: int):
     """
     Returns item relevance or first non-null parent relevance. If no relevance was found until root,
     return default relevance.
+
     :param item_id: Item id.
     :return: Relevance object and whether it was inherited or not set (default).
     """
@@ -1300,6 +1343,7 @@ def get_document_relevance(i: DocInfo) -> int:
     """
     Returns document relevance value or first non-null parent relevance value.
     If no relevance was found until root, return default relevance value.
+
     :param i: Document.
     :return: Relevance value.
     """
@@ -1368,6 +1412,7 @@ def get_viewrange(doc_id: int, index: int, forwards: int):
 def get_viewrange_with_header_id(doc_id: int, header_id: str):
     """
     Route for getting suitable view range for index links.
+
     :param doc_id: Document id.
     :param header_id: Header id (HTML-attribute id, not the paragraph id).
     :return: View range starting from the header paragraph.

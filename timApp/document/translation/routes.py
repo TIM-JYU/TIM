@@ -27,6 +27,7 @@ from timApp.document.translation.translator import (
     TranslationServiceKey,
     TranslationTarget,
     TranslateMethodFactory,
+    get_lang_lists,
 )
 from timApp.document.translation.language import Language
 
@@ -84,24 +85,27 @@ def create_translation_route(tr_doc_id, language):
     if translator_code := req_data.get("autotranslate", None):
         # Use the translator with a different source language if specified
         # and get the actual Language objects from database TODO Is database-query dumb here?
-        translator_func = TranslateMethodFactory.create(
-            translator_code,
-            src_doc.docinfo.lang_id,
-            language,
-            get_current_user_object().get_personal_group(),
-        )
+
+        # Manual translation can still be done without source language
+        # TODO This could probably be handled nicer...
+        if translator_code != "Manual":
+            translator_func = TranslateMethodFactory.create(
+                translator_code,
+                src_doc.docinfo.lang_id,
+                language,
+                get_current_user_object().get_personal_group(),
+            )
 
     # Translate each paragraph sequentially if a translator was created
     if translator_func:
         orig_doc = tr.document.get_source_document()
-        # FIXME The parsing done before translation might need id etc values found in the markdown, but not found in the paragraphs, that get_paragraphs() returns...
+        # TODO The parsing done before translation might need id etc values found in the markdown, but not found in the paragraphs, that get_paragraphs() returns...
         # Ignore the settings paragraphs entirely to protect them from mangling
         zipped_paragraphs = zip(orig_doc.get_paragraphs(), tr.document)
         translatable_zipped_paragraphs = filter(
             lambda x: not (x[0].is_setting() or x[1].is_setting()), zipped_paragraphs
         )
         for orig_paragraph, tr_block in translatable_zipped_paragraphs:
-
             # Call the partially applied function, that contains languages selected earlier, to translate text
             # TODO Call with the whole document and let preprocessing handle the conversion into list[str]?
             translated_text = translator_func([TranslationTarget(orig_paragraph)])[0]
@@ -166,8 +170,10 @@ def paragraph_translation_route(
         # TODO Maybe this is needed for modifying paragraphs???
         db.session.commit()
 
-    # TODO (maybe duplicate) Could this cause unhandled exception if translator_code is not recognised and tries to return json_response(block_text) when block_text is not defined
-    # TODO What should this even return?
+    # TODO (maybe duplicate) Could this cause unhandled exception if translator_code is not recognised and tries to
+    #  return json_response(block_text) when block_text is not defined
+    # TODO What should this even return? Maybe an ok_response?
+    #  Or string_response?
     return json_response(tr_doc_id)
 
 
@@ -194,7 +200,7 @@ def text_translation_route(tr_doc_id: int, language: str) -> Response:
         block_text = translator_func([TranslationTarget(src_text)])[0]
     else:
         raise RouteException(
-            description=f"Please select a translator from the 'Translator data' tab"
+            description=f"Please select a translator from the 'Translator data' tab."
         )
 
     return json_response(block_text)
@@ -227,16 +233,32 @@ def get_translations(doc_id: int) -> Response:
     return json_response(d.translations)
 
 
-@tr_bp.get("/translations/source-languages")
+@tr_bp.post("/translations/source-languages")
 def get_source_languages() -> Response:
     """
     Query the database for the possible source languages.
-    TODO Select by translator
     """
 
-    langs = Language.query.all()
-    sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
-    return json_response(sl)
+    req_data = request.get_json()
+    translator = req_data.get("translator", "")
+
+    if translator.lower() == "manual" or translator.lower() == "":
+        return json_response("")
+    else:
+        # Get the translation service by the provided service name TODO Maybe change to use id instead?
+        tr = TranslationService.query.filter(
+            translator == TranslationService.service_name,
+        ).first()
+        tr.register(get_current_user_object().get_personal_group())
+
+    if translator.lower() == "deepl free" or translator.lower() == "deepl pro":
+        langs = get_lang_lists(translator, True)
+        sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
+        return json_response(sl)
+    else:
+        langs = Language.query.all()
+        sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
+        return json_response(sl)
 
 
 @tr_bp.get("/translations/document-languages")
@@ -255,16 +277,22 @@ def get_document_languages() -> Response:
 def get_target_languages() -> Response:
     """
     Query the database for the possible target languages.
-    TODO Select by translator
     """
 
     req_data = request.get_json()
     translator = req_data.get("translator", "")
 
-    if translator.lower() == "manual":
+    if translator.lower() == "manual" or translator.lower() == "":
         return json_response("")
-    elif translator.lower() == "deepl":
-        langs = Language.query.all()
+    else:
+        # Get the translation service by the provided service name TODO Maybe change to use id instead?
+        tr = TranslationService.query.filter(
+            translator == TranslationService.service_name,
+        ).first()
+        tr.register(get_current_user_object().get_personal_group())
+
+    if translator.lower() == "deepl free" or translator.lower() == "deepl pro":
+        langs = get_lang_lists(translator, False)
         sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
         return json_response(sl)
     else:
@@ -281,7 +309,7 @@ def get_translators() -> Response:
 
     translationservices = TranslationService.query.all()
     translationservice_names = list(map(lambda x: x.service_name, translationservices))
-    # TODO Add Manual to the TranslationService-table
+    # TODO Add Manual to the TranslationService-table?
     sl = ["Manual"] + translationservice_names
     return json_response(sl)
 

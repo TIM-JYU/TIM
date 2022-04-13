@@ -1,8 +1,9 @@
 import langcodes
 import requests
+import pypandoc
 
 from dataclasses import dataclass
-from typing import Dict, Callable, Any
+from typing import Dict, Callable
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.document.docparagraph import DocParagraph
@@ -12,6 +13,8 @@ from timApp.document.translation.translationparser import (
     TranslateApproval,
     get_translate_approvals,
     attr_collect,
+    Table,
+    Translate,
 )
 from timApp.util import logger
 from timApp.util.flask.requesthelper import NotExist, RouteException
@@ -44,13 +47,19 @@ class TranslationService(db.Model):
     """Human-readable name of the machine translator."""
 
     def translate(
-        self, texts: list[TranslateApproval], src_lang: Language, target_lang: Language
+        self,
+        texts: list[TranslateApproval],
+        src_lang: Language,
+        target_lang: Language,
+        *,
+        tag_handling: str = "",
     ) -> list[TranslateApproval]:
         """
         The implementor should return the translated text in the same order as found in the `texts` parameter.
         :param texts: The texts marked for translation or not.
         :param src_lang: Language to from.
         :param target_lang: Language to translate into.
+        :param tag_handling: TODO HACKy way to handle special case with (html) table-translations
         :return: List of the translated FIXME WARNING changing the values of object could be wrong and act funny on upper level. In other words: returning this should not be needed, as the transformations are done on the input list of objects (which are references(?))
         """
 
@@ -63,6 +72,17 @@ class TranslationService(db.Model):
         raise NotImplementedError
 
     def supports(self, source_lang: Language, target_lang: Language) -> bool:
+        raise NotImplementedError
+
+    def supports_tag_handling(self, tag_type: str) -> bool:
+        """
+        Returns whether the TranslationService supports tag handling in translations
+        for example with XML or HTML as input.
+        TODO This is related to the kinda hacky way of handling Markdown-tables in translation
+
+        :param tag_type: Type of the tag.
+        :return: True, if tag type is supported.
+        """
         raise NotImplementedError
 
     # Polymorphism allows querying multiple objects by their class e.g. TranslationService.query
@@ -110,7 +130,11 @@ class RegisteredTranslationService(TranslationService):
         raise NotImplementedError
 
     def translate(
-        self, texts: list[TranslateApproval], src_lang: Language, target_lang: Language
+        self,
+        texts: list[TranslateApproval],
+        src_lang: Language,
+        target_lang: Language,
+        tag_handling: str = "xml",
     ) -> list[TranslateApproval]:
         raise NotImplementedError
 
@@ -147,7 +171,9 @@ class DeeplTranslationService(RegisteredTranslationService):
         ).all()
         # TODO does all() return empty list or None if query is empty?
         if api_key is None:
-            raise NotExist("Please add a DeepL API key into your account")
+            raise NotExist(
+                "Please add a DeepL API key that corresponds the chosen plan into your account"
+            )
         if len(api_key) > 1:
             # TODO Does telling this information compromise security in any way?
             raise RouteException(
@@ -224,8 +250,7 @@ class DeeplTranslationService(RegisteredTranslationService):
                 )
 
             raise RouteException(
-                description="Automatic translation failed. Error message: "
-                + str(debug_exception)
+                description="The request failed. Error message: " + str(debug_exception)
             )
 
     def _translate(
@@ -310,19 +335,22 @@ class DeeplTranslationService(RegisteredTranslationService):
         texts: list[TranslateApproval],
         source_lang: Language | None,
         target_lang: Language,
+        tag_handling: str = "xml",
     ) -> list[TranslateApproval]:
         """
         Uses the DeepL API for translating text between languages
         :param texts: Text to be translated TODO This should probably be a list of lists (each sublist is a paragraph(?))
         :param source_lang: Language of input text. None value makes DeepL guess it from the text.
         :param target_lang: Language for target language
+        :param tag_handling: See superclass comment
         :return: The input text translated into the target language
         """
         source_lang_code = source_lang.lang_code if source_lang else None
 
         # Get the translatable text of objects and add protection to them
-        for elem in texts:
-            self.preprocess(elem)
+        if tag_handling == "xml":
+            for elem in texts:
+                self.preprocess(elem)
         protected_texts = list(map(lambda x: x.text, texts))
 
         # Translate texts using XML-protection
@@ -331,17 +359,20 @@ class DeeplTranslationService(RegisteredTranslationService):
             # Send uppercase, because it is used in DeepL documentation
             source_lang_code.upper(),
             target_lang.lang_code.upper(),
-            # TODO keep original formatting especially related to empty space and newlines (for example translation still breaks md lists)
             split_sentences="1",  # "1" (for example) keeps original document's empty newlines
-            # TODO Preserve formatting=1 might remove punctuation
+            # NOTE Preserve formatting=1 might remove punctuation
             preserve_formatting="0",  # "1" DeepL does not make guesses of the desired sentence
-            tag_handling="xml",
+            tag_handling=tag_handling,
             ignore_tags=[self.ignore_tag],
         )
 
         # Insert the text-parts sent to the API into correct places in original elements
         for translated_text, element in zip(resp_json["translations"], texts):
-            clean_text = self.postprocess(translated_text["text"])
+            clean_text = (
+                self.postprocess(translated_text["text"])
+                if tag_handling == "xml"
+                else translated_text["text"]
+            )
             element.text = clean_text
 
         return texts
@@ -352,6 +383,43 @@ class DeeplTranslationService(RegisteredTranslationService):
             character_count=int(resp_json["character_count"]),
             character_limit=int(resp_json["character_limit"]),
         )
+
+    def get_languages(self, source_langs: bool) -> list[Language]:
+        """
+        Fetches the source or target languages from DeepL.
+        :param source_langs: Whether source languages must be fetched
+        :return: The list of source of target languages from DeepL.
+        """
+
+        def get_langs_from_db(deepl_lang: dict) -> Language | None:
+            try:
+                language = deepl_lang["language"]
+                code = langcodes.get(language).to_tag()
+
+                # This is needed because DeepL's source languages only include English (EN) and not regional variants
+                if code.lower() == "en":
+                    code = self.source_Language_code
+                return Language.query_by_code(code)
+            except LookupError:
+                return None
+
+        self.source_Language_code = "en-GB"
+        langs = self._languages(is_source=source_langs)
+        return_langs = list(filter(None, map(get_langs_from_db, langs)))
+        if source_langs:
+            self.source_Language_code = "en-US"
+            en = Language(
+                flag_uri="",
+                lang_code="",
+                lang_name="",
+                autonym="",
+            )
+            for lang in langs:
+                if lang.get("language").lower() == "en":
+                    en = get_langs_from_db(lang)
+            if en is not None:
+                return_langs = return_langs + [en]
+        return return_langs
 
     # TODO Cache this maybe?
     def languages(self) -> LanguagePairing:
@@ -385,8 +453,8 @@ class DeeplTranslationService(RegisteredTranslationService):
     def supports(self, source_lang: Language, target_lang: Language) -> bool:
         """
         Check that the source language can be translated into target language by the translation API
-        :param source_lang: Language of original text TODO In what format?
-        :param target_lang: Language to translate into TODO In what format?
+        :param source_lang: Language of original text
+        :param target_lang: Language to translate into
         :return: True, if the pairing is supported
         """
 
@@ -402,17 +470,36 @@ class DeeplTranslationService(RegisteredTranslationService):
             )
 
         # The target language is found by the primary key
-        # TODO is this too much? Can't strings be just as good? Maybe better would be to handle Languages by their database id's?
+        # TODO is this too much? Can't strings be just as good?
+        #  Maybe better would be to handle Languages by their database id's?
         return any(x.lang_code == target_lang.lang_code for x in supported_languages)
+
+    def supports_tag_handling(self, tag_type: str) -> bool:
+        return tag_type in ["xml", "html"]
 
     # TODO Make the value an enum like with Verification?
     __mapper_args__ = {"polymorphic_identity": "DeepL Free"}
 
 
 class DeeplProTranslationService(DeeplTranslationService):
-
     # TODO Make the value an enum like with Verification?
     __mapper_args__ = {"polymorphic_identity": "DeepL Pro"}
+
+
+def init_translate(
+    translator: TranslationService,
+    source_lang: Language,
+    target_lang: Language,
+) -> Callable[[list[str]], list[str]]:
+    # TODO This helper-function would be better if there was some way to hide the
+    #  translate-methods on ITranslators. Maybe save for the eventual(?) TranslatorSelector?
+    """
+    Use the specified TranslationService to initialize machine translation
+    :param translator: The translator to use
+    :param source_lang: The language that text is in
+    :param target_lang: The language that text will be translated into
+    :return: A partially applied function for translating text with the specified languages using the specified TranslationService
+    """
 
 
 # TODO Remove this when crisis is over
@@ -437,12 +524,6 @@ class TranslationTarget:
         else:
             assert False, "Translatable paragraph had unexpected type"
 
-    def is_plugin(self) -> bool:
-        if isinstance(self.value, DocParagraph):
-            return self.value.is_plugin()
-        else:
-            return False
-
 
 class TranslateMethodFactory:
     @staticmethod
@@ -465,7 +546,9 @@ class TranslateMethodFactory:
             TranslationService.service_name == translator_code
         )[0]
 
-        if isinstance(translator, RegisteredTranslationService):
+        if user_group is not None and isinstance(
+            translator, RegisteredTranslationService
+        ):
             translator.register(user_group)
 
         source_lang = Language.query_by_code(s_lang)
@@ -496,9 +579,43 @@ class TranslateMethodFactory:
             elements: list[list[TranslateApproval]] = get_translate_approvals(md)
             # Pass object-lists with translatable text to the machine translator object.
             # If supported, the translator protects and removes the protection from the text (for example adding XML-ignore-tags in DeepL's case).
-            translated_elements: list[list[TranslateApproval]] = [
-                translator.translate(xs, source_lang, target_lang) for xs in elements
-            ]
+            translated_elements: list[list[TranslateApproval]] = list()
+
+            for xs in elements:
+                # Pick the table out for special translation and handle the rest normally
+                tr_sublist: list[TranslateApproval] = list()
+                for x in xs:
+                    if isinstance(x, Table):
+                        if translator.supports_tag_handling("html"):
+                            # Special (HACKY) case, where md-tables are translated as html (if supported)
+                            # TODO Actually implement table_collect at translationparser.py so that
+                            #  non-html-handling translators can be used as well
+                            # Turn the markdown into html
+                            table_html: str = pypandoc.convert_text(
+                                x.text, to="html", format="md"
+                            )
+                            # Translate as HTML
+                            table_html_tr = translator.translate(
+                                [Translate(table_html)],
+                                source_lang,
+                                target_lang,
+                                tag_handling="html",
+                            )[0]
+                            # Turn the html back into md
+                            table_md_tr = pypandoc.convert_text(
+                                table_html_tr.text, to="md", format="html"
+                            )
+                            # Now mark the table as NoTranslate, so it doesn't get translated when
+                            # the list is passed on to mass-translation
+                            tr_sublist.append(NoTranslate(table_md_tr))
+                        else:
+                            # The table cannot be translated and is handled as is
+                            tr_sublist.append(NoTranslate(x.text))
+                    else:
+                        tr_sublist.append(x)
+                translated_elements.append(
+                    translator.translate(tr_sublist, source_lang, target_lang)
+                )
             # The translator object returns the same structure as input but their content has been translated accordingly
             # Transform the objects back to a Markdown string
             translated_md = ""
@@ -522,9 +639,8 @@ class TranslateMethodFactory:
             """
 
             md = target.get_text()
-            is_plugin = target.is_plugin()
 
-            if is_plugin:
+            if isinstance(target.value, DocParagraph) and target.value.is_plugin():
                 # Add the attributes to the content so that parser can identify the code block as a plugin
                 # NOTE that the parser should only use the attributes for identification and deletes them from the translated result ie. this is a special case!
 
@@ -545,10 +661,9 @@ class TranslateMethodFactory:
                     else []
                 )
                 attr_str = "".join(
-                    # TODO Making the list into dict like this to appease mypy looks bad
                     map(
-                        lambda x: x.text,
-                        attr_collect({0: taskid, 1: classes, 2: kv_pairs})[0],
+                        lambda y: y.text,
+                        attr_collect([taskid, classes, kv_pairs])[0],
                     )
                 )
                 md = md.replace("```\n", f"``` {attr_str}\n", 1)
@@ -578,3 +693,12 @@ class TranslateMethodFactory:
             return translated_texts
 
         return generic_translate
+
+
+def get_lang_lists(translator: str, source_langs: bool) -> list[Language]:
+    if translator.lower() == "deepl free":
+        tr = DeeplTranslationService.query.first()
+    elif translator.lower() == "deepl pro":
+        tr = DeeplProTranslationService.query.first()
+
+    return tr.get_languages(source_langs)

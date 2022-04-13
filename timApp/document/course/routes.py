@@ -30,6 +30,7 @@ def get_course_settings() -> Response:
 def get_documents_from_bookmark_folder(foldername: str) -> Response:
     """
     Gets documents and their tags based on a bookmark folder name.
+
     :param foldername:
     :return:
     """

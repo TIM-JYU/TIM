@@ -38,6 +38,9 @@ export interface IUserContact {
 export interface IUserApiKey {
     translator: string;
     APIkey: string;
+    usedQuota: number;
+    availableQuota: number;
+    quotaChecked: boolean;
 }
 
 export interface IFullUser extends IUser {

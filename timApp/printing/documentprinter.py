@@ -79,6 +79,7 @@ def add_nonumber(md: str) -> str:
                 - the unnumbered must be added before first cr
             - line starting with # may continue next line and have \ at the end
                  - undefined
+
     :param md: markdown to be converted
     :return: markdown with headings marked as unnumbered
     """
@@ -556,6 +557,7 @@ class DocumentPrinter:
     ):
         """
         Converts the document to latex and returns the converted document as a bytearray
+
         :param user_ctx: The user context.
         :param target_format: The target file format
         :param plugins_user_print: Whether or not to print user input from plugins (instead of default values)
@@ -880,6 +882,7 @@ def tim_convert_text(
     eol_type="native",
 ):
     """Converts given `source` from `format` to `to`.
+
     :param str source: Unicode string or bytes (see encoding)
     :param str to: format into which the input should be converted; can be one of
             `pypandoc.get_pandoc_formats()[1]`

@@ -8,7 +8,7 @@ import warnings
 from base64 import b64encode
 from contextlib import contextmanager
 from functools import lru_cache
-from typing import Union, Optional, Any
+from typing import Union, Any
 from urllib.parse import urlparse
 
 import responses
@@ -90,6 +90,7 @@ def get_content(element: HtmlElement, selector: str = ".parContent") -> list[str
 def get_cookie_value(resp: Response, key: str) -> str | None:
     """
     Get value of the cookie with given key.
+
     :param resp: Response.
     :param key: Cookie key.
     :return: Cookie value as string, or None if not found.
@@ -893,6 +894,7 @@ class TimRouteTest(TimDbTest):
     ):
         """
         Check a JavaScript variable from view_html.jinja2.
+
         :param element: HTML-tree.
         :param variable_name: Variable name as it's in the <script>.
         :param expect_content: Expected content.
