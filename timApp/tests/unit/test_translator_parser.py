@@ -331,6 +331,33 @@ x=0\;\;\;\\text{"""
             ],
         )
 
+    # Testing bulletlist with different intendation and with a code block in between the list
+    def test_bulletlist2(self):
+        md = """- Yksi kohta
+    - Kaksi kohtaa
+    -   Kolme kohtaa
+
+    -   
+    ```
+    Koodia välissä
+    ```
+    - Jotain"""
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [
+                    NoTranslate("\n- "),
+                    Translate("Yksi kohta"),
+                    NoTranslate("\n\t- "),
+                    Translate("Kaksi kohtaa"),
+                    NoTranslate("\n\t- "),
+                    Translate("Kolme kohtaa"),
+                    NoTranslate("\n\t- ```\nKoodia välissä```\n\t- "),
+                    Translate("Jotain")
+                ],
+            ]
+        )
+
     def test_ordered_list(self):
         md = r"""1. Tässä ollaan
     2. Jotain tehdään
@@ -531,6 +558,34 @@ stem: """
                     ),
                 ]
             ],
+        )
+
+    # Testing a big sized video plugin
+    def test_tim_plugin3(self):
+        md = r"""``` {plugin="showVideo"}
+footer: "Video footer here"
+#iframe: true
+width: 800
+height: 600
+file: VIDEOURLHERE
+```
+"""
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [
+                    NoTranslate('```\nfooter: "'),
+                    Translate("Video footer here"),
+                    NoTranslate(""""
+#iframe: true
+width: 800
+height: 600
+file: VIDEOURLHERE
+```""")
+
+
+                ]
+            ]
         )
 
 
