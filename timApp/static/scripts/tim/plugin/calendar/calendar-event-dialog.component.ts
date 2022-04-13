@@ -12,7 +12,7 @@ import {TIMCalendarEvent} from "./calendar.component";
     selector: "tim-calendar-event-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container i18n header>
+            <ng-container header>
                 Edit event
             </ng-container>
             <ng-container body>
@@ -20,9 +20,9 @@ import {TIMCalendarEvent} from "./calendar.component";
                     <div class="form-group"
                          [ngClass]="{'has-error': ngModelTitle.invalid && ngModelTitle.dirty}">
 
-                        <label i18n for="title" class="col-sm-2 control-label">Title</label>
+                        <label for="title" class="col-sm-2 control-label">Title</label>
                         <div class="col-sm-10">
-                            <input i18n-placeholder type="text" required
+                            <input type="text" required
                                    [(ngModel)]="title" #ngModelTitle="ngModel"
                                    (ngModelChange)="setMessage()"
                                    pattern="[^/]*"
@@ -34,7 +34,7 @@ import {TIMCalendarEvent} from "./calendar.component";
                     </div>
 
                     <div class="form-group">
-                        <label i18n for="from" class="col-sm-2 control-label">From</label>
+                        <label for="from" class="col-sm-2 control-label">From</label>
                         <div class="col-sm-10">
                             <div class="input-group">
 
@@ -56,7 +56,7 @@ import {TIMCalendarEvent} from "./calendar.component";
                     </div>
 
                     <div class="form-group">
-                        <label i18n for="to" class="col-sm-2 control-label">To</label>
+                        <label for="to" class="col-sm-2 control-label">To</label>
                         <div class="col-sm-10">
                             <div class="input-group">
 
@@ -79,10 +79,10 @@ import {TIMCalendarEvent} from "./calendar.component";
                 
 
                 <tim-alert *ngIf="ngModelTitle.invalid && ngModelTitle.dirty" severity="danger">
-                    <ng-container i18n *ngIf="ngModelTitle.errors?.['required']">
+                    <ng-container *ngIf="ngModelTitle.errors?.['required']">
                         Title is required.
                     </ng-container>
-                    <ng-container i18n *ngIf="ngModelTitle.errors?.['pattern']">
+                    <ng-container *ngIf="ngModelTitle.errors?.['pattern']">
                         Title should not contain the slash character. <!--TODO: Think about the pattern-->
                     </ng-container>
                     <!-- <ng-container i18n *ngIf="ngModelTitle.errors?.['pattern']">
@@ -97,11 +97,11 @@ import {TIMCalendarEvent} from "./calendar.component";
 
             </ng-container>
             <ng-container footer>
-                <button i18n class="timButton" type="button" style="background-color: red; float: left"
+                <button class="timButton" type="button" style="background-color: red; float: left"
                         (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!isEditEnabled()">
                     Delete
                 </button>
-                <button i18n class="timButton" type="button" (click)="saveChanges()" [disabled]="form.invalid"
+                <button class="timButton" type="button" (click)="saveChanges()" [disabled]="form.invalid"
                         [hidden]="!isEditEnabled()">
                     Save
                 </button>
