@@ -86,7 +86,7 @@ def add_annotation(
                 raise RouteException(
                     "Reviewing answers with multiple collaborators not supported yet"
                 )
-            if not has_review_access(d, annotator, a.parsed_task_id, a.users_all[0]):
+            if not has_review_access(d, annotator, None, a.users_all[0]):
                 raise AccessDenied()
         else:
             if doc_id != ans_doc_id:

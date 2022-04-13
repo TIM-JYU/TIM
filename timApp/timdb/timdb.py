@@ -48,7 +48,7 @@ class TimDb:
     ):
         """Initializes TimDB with the specified files root path, SQLAlchemy session and user name.
 
-        created.
+
         :param current_user_name: The username of the current user.
         :param files_root_path: The root path where all the files will be stored.
         :param route_path: Path for the route requesting the db

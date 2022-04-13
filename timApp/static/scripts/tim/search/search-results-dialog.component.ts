@@ -102,8 +102,8 @@ enum SortOption {
                 </div>
             </ng-container>
             <ng-container footer>
-                <div class="pull-left" id="order-selector-box">
-                    <select id="order-selector"
+                <div class="pull-left">
+                    <select
                             class="form-control"
                             [(ngModel)]="orderByOption"
                             (ngModelChange)="resortResults()"
@@ -116,6 +116,7 @@ enum SortOption {
             </ng-container>
         </tim-dialog-frame>
     `,
+    styleUrls: ["search-results-dialog.component.scss"],
 })
 export class SearchResultsDialogComponent extends AngularDialogComponent<
     SearchBoxComponent,

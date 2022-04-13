@@ -687,6 +687,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         )
         if existing:
             existing.membership_end = None
+            existing.membership_added = get_current_time()
             existing.adder = added_by
             new_add = False
         else:
@@ -1255,7 +1256,18 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return User.get_by_name(current_app.config["MODEL_ANSWER_USER_NAME"])
 
 
-def get_membership_end(u: User, group_ids: set[int]):
+def get_membership_end(u: User, group_ids: set[int]) -> datetime | None:
+    """
+    Get the end of the membership of the user in the given groups.
+
+    .. note:: If the user's membership ended in multiple groups, the latest end date is returned.
+
+    :param u: The user
+    :param group_ids: The IDs of the groups
+    :return: The end of the membership or
+             None if the user is not a member of the groups or if the user's membership hasn't ended yet
+    """
+
     relevant_memberships: list[UserGroupMember] = [
         m for m in u.memberships if m.usergroup_id in group_ids
     ]
@@ -1269,6 +1281,27 @@ def get_membership_end(u: User, group_ids: set[int]):
     return membership_end
 
 
+def get_membership_added(u: User, group_ids: set[int]) -> datetime | None:
+    """
+    Get the earliest time the user was added to the given groups.
+
+    :param u: The user
+    :param group_ids: The IDs of the groups
+    :return: The earliest time the user was added to the given groups
+             or None if the user is not a member of the groups
+    """
+
+    relevant_memberships: list[UserGroupMember] = [
+        m for m in u.memberships if m.usergroup_id in group_ids
+    ]
+    membership_added_times = [
+        m.membership_added
+        for m in relevant_memberships
+        if m.membership_added is not None
+    ]
+    return min(membership_added_times) if membership_added_times else None
+
+
 def has_no_higher_right(access_type: str | None, rights: UserItemRights) -> bool:
     """
     Checks whether the given access type (view, edit, ...) has no higher match in the given UserItemRights.
@@ -1280,6 +1313,8 @@ def has_no_higher_right(access_type: str | None, rights: UserItemRights) -> bool
     :return True if access_type is one of view, edit, see_answers or teacher and there is no higher right in the
      UserItemRights, False otherwise.
     """
+    if not access_type:
+        return False
     return {
         "view": not rights["editable"] and not rights["see_answers"],
         "edit": not rights["see_answers"],

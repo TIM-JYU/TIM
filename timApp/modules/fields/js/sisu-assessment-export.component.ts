@@ -308,6 +308,10 @@ class AssessmentTableModel implements DataModelProvider {
         this.colFilters[columnIndex] = value;
     }
 
+    getRowFilter(columnIndex: number): string {
+        return this.colFilters[columnIndex] ?? "";
+    }
+
     setSelectAll(state: boolean): void {
         for (let i = 0; i < this.assessments.length; ++i) {
             if (this.isRowSelectable(i) && this.showRow(i)) {

@@ -23,7 +23,8 @@ def period_handling(
     task_ids: list[TaskId], doc_ids: set[int], period: str
 ) -> tuple[datetime, datetime]:
     """
-    Returns start and end of an period for answer results.
+    Returns start and end of a period for answer results.
+
     :param task_ids: Task ids containing the answers.
     :param doc_ids: Documents containing the answers.
     :param period: Period options: whenever, sincelast, day, week, month, other.

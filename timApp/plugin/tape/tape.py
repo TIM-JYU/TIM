@@ -1,5 +1,5 @@
 import json
-from typing import Any, Optional, Union
+from typing import Any
 from xml.sax.saxutils import quoteattr
 
 from flask import Blueprint, Response
@@ -30,7 +30,9 @@ def tape_multihtml() -> Response:
     Route for getting the HTML of all tape plugins in a document.
     :return:
     """
-    jsondata: dict[str, Any] | list[dict[str, Any]] | None = request.get_json()
+    jsondata: dict[str, Any] | list[dict[str, Any]] | None = request.get_json(
+        silent=True
+    )
     if not jsondata:
         return json_response([])
     args: list[dict[str, Any]] = jsondata if isinstance(jsondata, list) else [jsondata]
@@ -43,6 +45,7 @@ def tape_multihtml() -> Response:
 def tape_get_html(jso: dict[Any, Any]) -> str:
     """
     Returns the HTML of a single tape paragraph.
+
     :param jso:
     :param review:
     :return:

@@ -3,21 +3,26 @@
 <head>
     <title>Canvas</title>
     <style>
+        * {
+            --jsframe-height: 95%;
+            --jsframe-overflow: hidden;
+        }
+
         body {
-            margin: 0px;
-            padding: 0px;
+            margin: 0;
+            padding: 0;
         }
 
         html, body {
             width: 100%;
-            height: 95%;
-            margin: 0px;
-            overflow: hidden;
+            height: var(--jsframe-height);
+            margin: 0;
+            overflow: var(--jsframe-overflow);
         }
 
         .error, .mycanvas {
             position: fixed;
-            top: 0px;
+            top: 0;
         }
         .mycanvas {
             z-index: -1;
@@ -128,6 +133,11 @@
 
         window.addEventListener('message', function (e) {
             if (e.data.msg === "init") {
+                if (e.data.scroll) {
+                    document.documentElement.style.setProperty('--jsframe-height', 'initial');
+                    document.documentElement.style.setProperty('--jsframe-overflow', 'auto');
+                }
+
                 window.port2 = e.ports[0];
                 window.port2.onmessage = onMessage;
                 window.port2.postMessage({msg: "Inited"});

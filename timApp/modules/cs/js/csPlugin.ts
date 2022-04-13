@@ -31,10 +31,8 @@ import {
     copyToClipboard,
     defaultErrorMessage,
     defaultTimeout,
-    Result,
     timeout,
     to,
-    to2,
     toPromise,
     valueDefu,
     valueOr,
@@ -43,8 +41,11 @@ import {TimDefer} from "tim/util/timdefer";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import deepEqual from "deep-equal";
 import {SimcirConnectorDef, SimcirDeviceInstance} from "../simcir/simcir-all";
-import {showInputDialog} from "../../../static/scripts/tim/ui/showInputDialog";
-import {InputDialogKind} from "../../../static/scripts/tim/ui/input-dialog.kind";
+import {
+    ITemplateParam,
+    showTemplateReplaceDialog,
+    TemplateParam,
+} from "../../../static/scripts/tim/ui/showTemplateReplaceDialog";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import {CURSOR, EditorComponent, EditorFile, Mode} from "./editor/editor";
@@ -448,17 +449,6 @@ interface IUploadResponse {
     block: number;
 }
 
-const TemplateParam = t.intersection([
-    t.type({
-        default: t.string,
-        text: t.string,
-    }),
-    t.partial({
-        pattern: t.string,
-        error: t.string,
-    }),
-]);
-
 const TemplateButton = t.intersection([
     t.type({
         data: t.string,
@@ -471,7 +461,6 @@ const TemplateButton = t.intersection([
     }),
 ]);
 
-interface ITemplateParam extends t.TypeOf<typeof TemplateParam> {}
 interface ITemplateButton extends t.TypeOf<typeof TemplateButton> {}
 
 /**
@@ -724,6 +713,7 @@ const CsMarkupOptional = t.partial({
     wrap: t.number,
     borders: withDefault(t.boolean, true),
     iframeopts: t.string,
+    iframescroll: t.boolean,
     count: CountType,
     hide: t.partial({wrap: t.boolean, changed: t.boolean}),
     savedText: t.string,
@@ -1348,7 +1338,11 @@ export class CsController extends CsBase implements ITimComponent {
             channel.port1.onmessage = this.iframemessageHandler;
         }
 
-        fr.contentWindow.postMessage({msg: "init"}, "*", [channel.port2]);
+        fr.contentWindow.postMessage(
+            {msg: "init", scroll: !!this.markup.iframescroll},
+            "*",
+            [channel.port2]
+        );
         this.iframedefer?.resolve({iframe: fr, channel});
     }
 
@@ -2269,15 +2263,19 @@ ${fhtml}
         return url.split("/").slice(6).join("/");
     }
 
-    initSaved() {
-        this.savedvals = {
-            files: this.editor?.files.map((f) => f.content) ?? [this.usercode],
-            args: this.userargs,
-            input: this.userinput,
+    initSaved(clear = false) {
+        if (!this.savedvals || (this.savedvals && !clear)) {
+            this.savedvals = {
+                files: this.editor?.files.map((f) => f.content) ?? [
+                    this.usercode,
+                ],
+                args: this.userargs,
+                input: this.userinput,
 
-            // NOTE: "type: text/tiny" needs this because there is no editor in that case.
-            usercode: this.usercode,
-        };
+                // NOTE: "type: text/tiny" needs this because there is no editor in that case.
+                usercode: this.usercode,
+            };
+        }
         this.edited = false;
         this.isSimcirUnsaved = false;
         this.updateListeners(ChangeType.Saved);
@@ -2836,30 +2834,10 @@ ${fhtml}
             if (item.placeholders && ip < item.placeholders.length) {
                 param = item.placeholders[ip];
             }
-            const re = new RegExp(param.pattern ?? ".*");
-            const replace = await to2(
-                showInputDialog({
-                    isInput: InputDialogKind.InputAndValidator,
-                    text: param.text,
-                    title: "Parameter",
-                    okText: "OK",
-                    defaultValue: param.default,
-                    validator: (input) =>
-                        new Promise<Result<string, string>>((res) => {
-                            if (!input.match(re)) {
-                                return res({
-                                    ok: false,
-                                    result: param.error ?? "",
-                                });
-                            }
-                            return res({ok: true, result: input});
-                        }),
-                })
-            );
-            if (!replace.ok) {
-                return "";
+            s = await showTemplateReplaceDialog(s, param);
+            if (!s) {
+                return;
             }
-            s = s.replace("\\?", replace.result);
             ip++;
         }
         const text = s.replace(/\\n/g, "\n");
@@ -3043,7 +3021,7 @@ ${fhtml}
         return this.canReset;
     }
 
-    async initCode() {
+    async initCode(clear = false) {
         this.muokattu = false;
         this.imgURL = "";
         this.videoURL = "";
@@ -3063,7 +3041,7 @@ ${fhtml}
             await this.setCircuitData();
             await this.initSimcirCircuitListener();
         }
-        this.initSaved();
+        this.initSaved(clear);
     }
 
     async initSage(firstTime: boolean) {
@@ -3704,7 +3682,7 @@ ${fhtml}
             <div *ngIf="isTauno">
                 <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
                 <iframe *ngIf="iframesettings"
-                        id="iframesettings.id"
+                        [id]="iframesettings.id"
                         class="showTauno"
                         [src]="iframesettings.src"
                         (load)="onIframeLoad($event)"
@@ -3838,7 +3816,7 @@ ${fhtml}
                     <a href="#" *ngIf="!nocode && (file || program)"
                        (click)="showCode(); $event.preventDefault()">{{showCodeLink}}</a>&nbsp;&nbsp;
                     <a href="#" *ngIf="canReset"
-                       (click)="initCode(); $event.preventDefault()">{{resetText}} </a>
+                       (click)="initCode(true); $event.preventDefault()">{{resetText}} </a>
                     <a href="#" *ngIf="toggleEditor"
                        (click)="hideShowEditor(); $event.preventDefault()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
                     <a href="#" *ngIf="!noeditor && editor && editor.nextModeText"
@@ -3915,7 +3893,7 @@ ${fhtml}
                         style="float: right">
                 </tim-close-button>
             </span>
-                    <iframe id="iframesettings.id"
+                    <iframe [id]="iframesettings.id"
                             class="jsCanvas"
                             [src]="iframesettings.src"
                             (load)="onIframeLoad($event)"

@@ -12,6 +12,8 @@ import {
     getFullscreenElement,
     toggleFullScreen,
 } from "tim/util/fullscreen";
+import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
+import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocument, ILanguages, ITranslators} from "tim/item/IItem";
 import {
     IExtraData,
@@ -2159,8 +2161,12 @@ ${backTicks}
         }
     }
 
-    putTemplate(data: string) {
+    async putTemplate(data: string) {
         this.focusEditor();
+        data = await replaceTemplateValues(data);
+        if (!data) {
+            return;
+        }
         this.editor!.insertTemplate(data);
     }
 
@@ -2173,6 +2179,10 @@ ${backTicks}
         }
         let data = response.result.data;
         data = data.replace(/\\/g, "\\\\");
+        data = await replaceTemplateValues(data);
+        if (!data) {
+            return;
+        }
         this.editor!.insertTemplate(data);
         this.focusEditor();
     }
@@ -2297,12 +2307,10 @@ ${backTicks}
 
             interface ILanguageTools {
                 setCompleters(completers: unknown[]): void;
-
                 snippetCompleter: unknown;
                 textCompleter: unknown;
                 keyWordCompleter: unknown;
             }
-
             const langTools = ace.require(
                 "ace/ext/language_tools"
             ) as ILanguageTools;
