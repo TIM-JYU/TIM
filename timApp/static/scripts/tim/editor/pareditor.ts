@@ -13,7 +13,6 @@ import {
     toggleFullScreen,
 } from "tim/util/fullscreen";
 import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
-import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocument, ILanguages, ITranslators} from "tim/item/IItem";
 import {
     IExtraData,
