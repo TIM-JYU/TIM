@@ -1160,15 +1160,6 @@ ${backTicks}
     $onInit() {
         super.$onInit();
         this.docSettings = documentglobals().docSettings;
-        if (!this.checkIfOriginal()) {
-            listTranslators(this.translators, false);
-            updateLanguages(
-                this.sourceLanguages,
-                this.documentLanguages,
-                this.targetLanguages,
-                this.docTranslator
-            );
-        }
         const saveTag = this.getSaveTag();
         this.translationInProgress = false;
         this.storage = {
@@ -1197,6 +1188,18 @@ ${backTicks}
             ),
         };
         setCurrentEditor(this);
+
+        this.docTranslator = this.storage.translator.get() ?? "";
+        if (!this.checkIfOriginal()) {
+            listTranslators(this.translators, false);
+            updateLanguages(
+                this.sourceLanguages,
+                this.documentLanguages,
+                this.targetLanguages,
+                this.docTranslator
+            );
+        }
+
         this.spellcheck = this.storage.spellcheck.get() ?? false;
         this.autocomplete = this.storage.autocomplete.get() ?? false;
         this.proeditor =
@@ -1212,7 +1215,6 @@ ${backTicks}
         this.hidePreview = this.storage.hidePreview.get() ?? false;
         this.hideOriginalPreview =
             this.storage.hideOriginalPreview.get() ?? false;
-        this.docTranslator = this.storage.translator.get() ?? "";
         this.lastTab = this.activeTab;
         this.citeText = this.getCiteText();
         const sn = this.storage.wrap.get();
