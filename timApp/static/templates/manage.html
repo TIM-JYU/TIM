@@ -180,7 +180,7 @@
                 </tr>
                 <tr ng-repeat="tr in $ctrl.translations">
                     <td><select id="old-document-language" name="old-document-language-select" class="form-control"
-                               ng-model="tr.lang_id">
+                               ng-model="tr.lang_id" ng-change="$ctrl.updateTranslation(tr)" >
                         <option ng-repeat="option in $ctrl.documentLanguages" value="{{option.code}}">{{option.name}} ({{option.code}})</option></select></td>
                     <td><input type="text" class="form-control" ng-model="tr.title" placeholder="Title"/></td>
                     <td>{{tr.owner.name}}</td>
