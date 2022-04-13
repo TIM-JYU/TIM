@@ -218,6 +218,7 @@ export class PareditorController extends DialogController<
         hideDiff: TimStorage<boolean>;
         hidePreview: TimStorage<boolean>;
         hideOriginalPreview: TimStorage<boolean>;
+        translator: TimStorage<string>;
     };
     private touchDevice: boolean;
     private autocomplete!: boolean; // $onInit
@@ -1159,9 +1160,6 @@ ${backTicks}
     $onInit() {
         super.$onInit();
         this.docSettings = documentglobals().docSettings;
-        if (this.docSettings?.translator != undefined) {
-            this.docTranslator = this.docSettings?.translator;
-        }
         if (!this.checkIfOriginal()) {
             listTranslators(this.translators, false);
             updateLanguages(
@@ -1193,6 +1191,10 @@ ${backTicks}
                 "hideOriginalPreview" + saveTag,
                 t.boolean
             ),
+            translator: new TimStorage<string>(
+                "translator" + saveTag,
+                t.string
+            ),
         };
         setCurrentEditor(this);
         this.spellcheck = this.storage.spellcheck.get() ?? false;
@@ -1210,6 +1212,7 @@ ${backTicks}
         this.hidePreview = this.storage.hidePreview.get() ?? false;
         this.hideOriginalPreview =
             this.storage.hideOriginalPreview.get() ?? false;
+        this.docTranslator = this.storage.translator.get() ?? "";
         this.lastTab = this.activeTab;
         this.citeText = this.getCiteText();
         const sn = this.storage.wrap.get();
@@ -2450,6 +2453,7 @@ ${backTicks}
         this.storage.hideDiff.set(this.hideDiff);
         this.storage.hidePreview.set(this.hidePreview);
         this.storage.hideOriginalPreview.set(this.hideOriginalPreview);
+        this.storage.translator.set(this.docTranslator);
         const acc = this.getExtraData().access;
         if (acc != null) {
             this.storage.noteAccess.set(acc);
