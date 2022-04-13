@@ -135,7 +135,9 @@ class DeeplTranslationService(TranslationService):
             TranslationServiceKey.group_id == user_group.id,
         ).first()
         if api_key is None:
-            raise NotExist("Please add a DeepL API key into your account")
+            raise NotExist(
+                "Please add a DeepL API key that corresponds the chosen plan into your account"
+            )
         self.headers = {"Authorization": f"DeepL-Auth-Key {api_key.api_key}"}
 
     # TODO Change the dicts to DeepLTranslateParams and DeeplResponse or smth

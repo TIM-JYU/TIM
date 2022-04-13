@@ -58,6 +58,8 @@ export class PermCtrl implements IController {
         translator: string;
     };
     private mayTranslate = false;
+    private notManual = false;
+    private translatorAvailable = true;
     private translationInProgress: boolean = false;
     private accessTypes: Array<unknown>; // TODO proper type
     private orgs: IGroup[];
@@ -564,6 +566,12 @@ export class PermCtrl implements IController {
         if (sources.ok) {
             this.targetLanguages = [];
             listLanguages(sources.result.data, this.targetLanguages);
+            this.translatorAvailable = true;
+        } else {
+            this.mayTranslate = false;
+            this.translatorAvailable = false;
+            await showMessageDialog(sources.result.data.error);
+            return;
         }
         sources = await to(
             $http.post<ILanguages[]>("/translations/source-languages", {
@@ -571,9 +579,17 @@ export class PermCtrl implements IController {
             })
         );
         if (sources.ok) {
+            this.sourceLanguages = [];
             listLanguages(sources.result.data, this.sourceLanguages);
-            this.checkTranslatability();
+            this.translatorAvailable = true;
+        } else {
+            this.mayTranslate = false;
+            this.translatorAvailable = false;
+            await showMessageDialog(sources.result.data.error);
+            return;
         }
+        this.notManualCheck();
+        this.checkTranslatability();
     }
 
     async createTranslation() {
@@ -625,13 +641,14 @@ export class PermCtrl implements IController {
 
     /**
      * Checks whether the translator chosen for the document is Manual (in which case a translator language is not shown) or not
-     * @returns whether or not the chosen translator is Manual
      */
-    notManual() {
+    notManualCheck() {
         if (this.newTranslation.translator == "Manual") {
-            return false;
+            this.notManual = false;
+            this.translatorAvailable = true;
+            return;
         }
-        return true;
+        this.notManual = true;
     }
 
     /**
