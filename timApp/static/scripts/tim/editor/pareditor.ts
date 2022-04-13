@@ -1461,6 +1461,9 @@ ${backTicks}
         window.setTimeout(() => {
             const editor = this.element;
             const previewContent = this.element.find(".previewcontent");
+            const previewOriginalContent = this.element.find(
+                ".previeworiginalcontent"
+            );
             // Check that editor doesn't go out of bounds
             const editorOffset = editor.offset();
             if (!editorOffset) {
@@ -1476,6 +1479,7 @@ ${backTicks}
             editor.offset(newOffset);
             if (this.scrollPos) {
                 previewContent.scrollTop(this.scrollPos);
+                previewOriginalContent.scrollTop(this.scrollPos);
             }
         }, 25);
     }
