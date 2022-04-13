@@ -76,7 +76,10 @@ export class ParContext {
     }
 
     isInPreview() {
-        return this.toJQuery().parents(".previewcontent").length > 0;
+        return (
+            this.toJQuery().parents(".previewcontent").length > 0 ||
+            this.toJQuery().parents(".previeworiginalcontent").length > 0
+        );
     }
 
     textContent() {
