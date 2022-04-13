@@ -38,6 +38,33 @@ export function luma(rgba: RGBA): number {
     return 0.299 * rgba.r + 0.587 * rgba.g + 0.114 * rgba.b;
 }
 
+function lc(c: number) {
+    if (c <= 0.03928) {
+        return c / 12.92;
+    }
+    return Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+// See https://www.w3.org/TR/WCAG21/#dfn-relative-luminance
+function relativeLuma(rgba: RGBA): number {
+    return lc(rgba.r) * 0.2126 + lc(rgba.g) * 0.7152 + lc(rgba.b) * 0.0722;
+}
+
+/**
+ * Check whether dark text should be used for the given background color.
+ *
+ * @param bg Background color.
+ * @returns True if dark text should be used. Otherwise, false.
+ */
+export function shouldUseDarkText(bg: RGBA): boolean {
+    const lumaBg = relativeLuma(bg);
+    const blackTextContrastRatio =
+        Math.max(lumaBg + 0.05, 0.05) / Math.min(lumaBg + 0.05, 0.05);
+    const whiteTextContrastRatio =
+        Math.max(lumaBg + 0.05, 1.05) / Math.min(lumaBg + 0.05, 1.05);
+    return blackTextContrastRatio > whiteTextContrastRatio;
+}
+
 /**
  * Converts a hex color string to an RGBA object.
  * @param color Hex color string.

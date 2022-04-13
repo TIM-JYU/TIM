@@ -4,13 +4,15 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from re import Pattern
-from typing import Generator, Optional, Union
+from typing import Generator
 from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
 from flask import redirect
 from flask import render_template, Response
 from flask import request
 from isodate import Duration
+from sqlalchemy import inspect
+from sqlalchemy.orm.state import InstanceState
 
 from timApp.auth.accesshelper import (
     verify_manage_access,
@@ -34,6 +36,7 @@ from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document, find_free_name, DocInfo
 from timApp.document.exceptions import ValidationException
+from timApp.document.translation.translation import Translation
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType, Block
@@ -84,10 +87,9 @@ manage_page = TypedBlueprint(
 @manage_page.get("/manage/<path:path>")
 def manage(path: str) -> Response | str:
     if has_special_chars(path):
+        qs = request.query_string.decode("utf-8")
         return redirect(
-            remove_path_special_chars(request.path)
-            + "?"
-            + request.query_string.decode("utf8")
+            remove_path_special_chars(request.path) + (f"?{qs}" if qs else "")
         )
     item = DocEntry.find_by_path(path, fallback_to_id=True)
     if item is None:
@@ -257,12 +259,25 @@ def add_permission_basic(
             confirm=False,
         ),
         i,
+        replace_active_duration=False,
     )
+    res_message = ""
     if accs:
         a = accs[0]
-        log_right(f"added {a.info_str} for {username} in {i.path}")
+        a_info: InstanceState = inspect(a)
+        if a_info.transient or a_info.pending:
+            log_right(f"added {a.info_str} for {username} in {i.path}")
+            res_message = "Added right"
+        elif a_info.modified:
+            log_right(f"updated to {a.info_str} for {username} in {i.path}")
+            res_message = "Updated existing right"
+        else:
+            log_right(
+                f"skipped {a.info_str} for {username} in {i.path} because an active right already exists"
+            )
+            res_message = "Skipped, because an active right already exists. Expire the active right first."
         db.session.commit()
-    return ok_response()
+    return json_response({"message": res_message})
 
 
 @manage_page.put("/permissions/add", model=PermissionSingleEditModel)
@@ -411,6 +426,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
 def add_perm(
     p: PermissionEditModel,
     item: Item,
+    replace_active_duration: bool = True,
 ) -> list[BlockAccess]:
     if get_current_user_object().get_personal_folder().id == item.id:
         if p.type == AccessType.owner:
@@ -428,6 +444,7 @@ def add_perm(
             duration_to=opt.durationTo,
             duration=opt.duration,
             require_confirm=p.confirm,
+            replace_active_duration=replace_active_duration,
         )
         accs.append(a)
     return accs
@@ -676,7 +693,16 @@ def del_document(doc_id: int) -> Response:
     d = get_doc_or_abort(doc_id)
     verify_ownership(d)
     f = get_trash_folder()
-    move_document(d, f)
+    if d.path.startswith(f.path):
+        return ok_response()
+    if isinstance(d, Translation):
+        deleted_doc = DocEntry.create(
+            f"{f.path}/tl_{d.id}_{d.src_docid}_{d.lang_id}_deleted",
+            title=f"Deleted translation (src_docid: {d.src_docid}, lang_id: {d.lang_id})",
+        )
+        d.docentry = deleted_doc
+    else:
+        move_document(d, f)
     db.session.commit()
     return ok_response()
 

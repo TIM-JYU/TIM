@@ -1,6 +1,6 @@
 import re
 from argparse import ArgumentParser
-from typing import NamedTuple, Generator, Match, Optional
+from typing import NamedTuple, Generator, Match
 
 import attr
 
@@ -94,7 +94,7 @@ def matches_attr_filter(p: DocParagraph, key: str | None, value: str | None) -> 
 def search(
     d: DocInfo, args: SearchArgumentsBasic, use_exported: bool
 ) -> Generator[SearchResult, None, None]:
-    """Performs a search operation for the specified document, yielding SearchResults.
+    """Performs a search operation for the specified document, yielding list of :class:`SearchResult`.
 
     :param args: The search arguments.
     :param d: The document to process.

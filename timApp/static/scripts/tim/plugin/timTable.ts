@@ -100,7 +100,7 @@ import {
     KEY_TAB,
     KEY_UP,
 } from "../util/keycodes";
-import {$http, $timeout} from "../util/ngimport";
+import {$http} from "../util/ngimport";
 import {
     clone,
     copyToClipboard,
@@ -109,10 +109,13 @@ import {
     maxContentOrFitContent,
     scrollToViewInsideParent,
     StringOrNumber,
+    timeout,
     to,
 } from "../util/utils";
 import {TaskId} from "./taskid";
 import {PluginMeta} from "./util";
+
+const timDateRegex = /^\d{4}-\d{2}-\d{2}[ T]?\d{2}:\d{2}(:\d{2})?$/;
 
 function replaceAll(s: string, s1: string, s2: string): string {
     const re = new RegExp(s1, "g");
@@ -290,7 +293,7 @@ export interface TimTable {
 export const DataViewVirtualScrollingSettingsType = t.type({
     enabled: withDefault(t.boolean, true),
     verticalOverflow: withDefault(t.number, 1),
-    horizontalOverflow: withDefault(t.number, 1),
+    horizontalOverflow: withDefault(t.number, 999), // TODO: Reduce when horizontal scrolling works better
 });
 
 export const DataViewSettingsType = t.type({
@@ -818,6 +821,7 @@ export class TimTableComponent
     private rowStyleCache = new Map<number, Record<string, string>>();
     private rowClassCache = new Map<number, string>();
     private shouldSelectInputText = false;
+    private columnResolveState: boolean[] = [];
 
     constructor(
         private el: ElementRef,
@@ -973,10 +977,15 @@ export class TimTableComponent
             if (this.data.task) {
                 this.task = true;
                 this.forcedEditMode = true;
-                this.viewctrl.addTimComponent(this);
+                if (!this.isPreview()) {
+                    this.viewctrl.addTimComponent(this);
+                }
             }
 
-            await $timeout(0);
+            // Ensure we're not in the middle of document update
+            await this.viewctrl.documentUpdate;
+            // Also wait for the element to be attached to the DOM
+            await timeout();
             const par = this.getPar();
             if (par) {
                 this.viewctrl.addTable(this, par);
@@ -1050,6 +1059,9 @@ export class TimTableComponent
      * Removes listener and cleans up
      */
     ngOnDestroy() {
+        if (this.data.task && !this.isPreview()) {
+            this.viewctrl?.removeTimComponent(this);
+        }
         this.inputSub?.unsubscribe();
         this.removeEventListeners();
         // document.removeEventListener("click", this.onClick);
@@ -1298,6 +1310,11 @@ export class TimTableComponent
         const ccb = cb.cell;
         const va = "" + cca;
         const vb = "" + ccb;
+
+        if (timDateRegex.test(va) && timDateRegex.test(vb)) {
+            return va.localeCompare(vb, sortLang) * dir;
+        }
+
         // changes:  1,20 -> 1.20,  12:03 -> 12.03 TODO: 12:31:15 not handled correctly
         const na = parseFloat(va.replace(",", ".").replace(":", "."));
         const nb = parseFloat(vb.replace(",", ".").replace(":", "."));
@@ -4599,8 +4616,30 @@ export class TimTableComponent
         return this.dataView?.rowHeight;
     }
 
-    getColumnWidth(columnIndex: number): number | undefined {
-        return this.dataView?.columnWidths?.[`${columnIndex}`];
+    getColumnWidth(columnIndex: number): [number, boolean] {
+        if (!this.dataView) {
+            return [0, false];
+        }
+        if (!this.dataView.columnWidths) {
+            this.dataView.columnWidths = {};
+        }
+        const idx = `${columnIndex}`;
+        const res = this.dataView.columnWidths[idx];
+        if (res) {
+            let resolveState = this.columnResolveState[columnIndex];
+            if (resolveState === undefined) {
+                this.columnResolveState[columnIndex] = true;
+                resolveState = true;
+            }
+            return [res, resolveState];
+        }
+        if (columnIndex <= 0) {
+            return [0, false];
+        }
+        const [w, _] = this.getColumnWidth(columnIndex - 1);
+        this.columnResolveState[columnIndex] = false;
+        this.dataView.columnWidths[idx] = w;
+        return [w, false];
     }
 
     getCellContents(rowIndex: number, columnIndex: number): string {
@@ -4617,6 +4656,10 @@ export class TimTableComponent
 
     setRowFilter(columnIndex: number, value: string): void {
         this.filters[columnIndex] = value;
+    }
+
+    getRowFilter(columnIndex: number): string {
+        return this.filters[columnIndex] ?? "";
     }
 
     clearChecked() {

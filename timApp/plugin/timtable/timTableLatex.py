@@ -6,7 +6,7 @@ Visa Naukkarinen
 
 import copy
 import re
-from typing import Union, Callable, Any
+from typing import Callable, Any
 
 # Default values:
 
@@ -103,6 +103,7 @@ class CellBorders:
     def set_all_borders(self, color: tuple[str, bool]) -> None:
         """
         Set all borders visible and with same color.
+
         :param color: Tuple containing color name or hex and whether it's in hex.
         :return: None.
         """
@@ -253,6 +254,7 @@ class Cell:
 def use_default_if_none(value, default):
     """
     Checks whether the value is None and uses default if it is.
+
     :param value: Value to check.
     :param default: Default to use if value is None.
     :return: Value without changes or default, if value was None.
@@ -267,6 +269,7 @@ def format_color(color: str, html_color: bool) -> str:
     """
     Converts color to LaTeX-format depending on whether it's
     html or normal color.
+
     :param color: Color name or hex-code.
     :param html_color: Whether the color is in hex or not.
     :return: Just the color name, or HTML-option and hex code.
@@ -323,6 +326,7 @@ class Row:
     def add_cell(self, i: int, cell: Cell) -> None:
         """
         Adds a cell to index in row and uses the first free index.
+
         :param i: Row index of the cell to add.
         :param cell: The Cell-object to add to the row.
         :return: None.
@@ -357,6 +361,7 @@ class Row:
     def get_cell(self, index: int) -> Cell | None:
         """
         Gives cell with the index number (which may be different from list index).
+
         :param index: Cell index number in the table.
         :return: Cell or None, if not found.
         """
@@ -378,6 +383,7 @@ class HorizontalBorder:
         """
         In LaTeX there can't be duplicate h-lines, so the line needs to be a
         composite of all cell-borders from rows above and below.
+
         :param row_above: The row above the line.
         :param row_below: The row below the line.
         """
@@ -498,6 +504,7 @@ class HorizontalBorder:
 def estimate_cell_width(cell):
     """
     Give estimation of cell width based on content and font size.
+
     :param cell: Cell to estimate.
     :return: Width of cell.
     """
@@ -511,6 +518,7 @@ def estimate_cell_width(cell):
 def estimate_cell_height(cell, width_constraint):
     """
     Gives estimation of cell height with width as constraint.
+
     :param cell: Cell to estimate.
     :param width_constraint: The width is locked before estimating height.
     :return: Height of cell.
@@ -547,6 +555,7 @@ def estimate_col_widths(rows):
     """
     Takes the most large set width of the column's cells,
     or estimation of their needed content size, if all are automatic.
+
     :param rows: Table rows.
     :return: Estimation of column widths.
     """
@@ -644,6 +653,7 @@ class Table:
     def get_or_create_row(self, i: int) -> Row:
         """
         Returns the row in index or creates a new one with said index.
+
         :param i: Row index.
         :return: The row with index i, whether it existed or not.
         """
@@ -657,6 +667,7 @@ class Table:
     def create_hborders(self) -> None:
         """
         Once all rows have been created, create the borders between them.
+
         :return: None.
         """
         self.hborders.append(HorizontalBorder(row_above=None, row_below=self.rows[0]))
@@ -674,6 +685,7 @@ class Table:
     def auto_size_cells(self) -> None:
         """
         Try to set row heights automatically based on cell content length.
+
         :return: None.
         """
         # If table has only few cells and little content, don't resize.
@@ -768,6 +780,7 @@ class Table:
 def get_column_span(item):
     """
     Get column span value.
+
     :param item: Column data.
     :return: Span.
     """
@@ -780,6 +793,7 @@ def get_column_span(item):
 def get_column_color_list(key, table_data):
     """
     Reads all the columns of the table and makes a list of their color formattings.
+
     :param key: Key for color type.
     :param table_data: Table JSON.
     :return: List of column colors.
@@ -802,6 +816,7 @@ def get_column_color_list(key, table_data):
 def get_column_width_list(table_data):
     """
     Forms a list of column widths from the columns data.
+
     :param table_data: Table JSON.
     :return: List of column widths.
     """
@@ -828,6 +843,7 @@ def get_column_width_list(table_data):
 def get_column_style_list(table_data, key):
     """
     Forms a list of styles corresponding to the key from the columns data.
+
     :param table_data: Table JSON.
     :param key: Style key.
     :return: List of column styles.
@@ -853,6 +869,7 @@ def get_column_style_list(table_data, key):
 def get_column_format_list(table_data, f: Callable[[dict, Any], Any]):
     """
     Forms a list of font families from the columns data.
+
     :param table_data:
     :param f: Function to get the format values from the column data.
     :return: List of column formats.
@@ -878,6 +895,7 @@ def get_column_format_list(table_data, f: Callable[[dict, Any], Any]):
 def custom_repr(obj) -> str:
     """
     Extended repr that displays all contents of the object.
+
     :param obj: The object to repr.
     :return: Full contents of the object and the objects it references.
     """
@@ -887,6 +905,7 @@ def custom_repr(obj) -> str:
 def get_content(cell_data) -> str:
     """
     Gets content from a cell.
+
     :param cell_data: Cell JSON.
     :return: Cell content.
     """
@@ -902,6 +921,7 @@ def get_color(
 ) -> (str, bool):
     """
     Parses color-data into LaTeX-format.
+
     :param item:
     :param key: Key for color element (color, backgroundColor, etc.).
     :param default_color: Color to use if key not found.
@@ -928,6 +948,7 @@ def get_color(
 def get_datablock_cell_data(datablock, row: int, cell: int):
     """
     Returns data from datablock index.
+
     :param datablock: Datablock JSON.
     :param row: Row index.
     :param cell: Cell index.
@@ -946,6 +967,7 @@ def convert_datablock_index(datablock_index) -> tuple[int, int]:
     """
     A 1 -> 0, 0
     ZZ13 -> 51, 12
+
     :param datablock_index: Index in format "A1".
     :return: Integer tuple (cell_index, row_index).
     """
@@ -959,6 +981,7 @@ def convert_datablock_index(datablock_index) -> tuple[int, int]:
 def add_missing_elements(table_json, datablock):
     """
     Add cells and rows only present in datablock.
+
     :param table_json: Table data.
     :param datablock: Datablock data.
     :return: table_json with datablock-only cells added.
@@ -1003,6 +1026,7 @@ def get_span(item, default=None) -> (int, int):
     """
     Parses row and column span of the cell.
     If not specified, assume it's 1.
+
     :param item: Cell data.
     :param default: Default used when not found.
     :return: Colspan and rowspan in a tuple.
@@ -1021,6 +1045,7 @@ def get_span(item, default=None) -> (int, int):
 def get_size(item, key: str, default=None) -> str | None:
     """
     Parse width or height into LaTeX-supported format.
+
     :param item: Cell data.
     :param key: Width or heigth.
     :param default: Value to be used if key wasn't found.
@@ -1053,6 +1078,7 @@ def get_font_family(item, default: str | None = default_font_family) -> str | No
 def get_text_horizontal_align(item, default):
     """
     Parses text horizontal alignment.
+
     :param item: Table, row or cell data.
     :param default: Value to be used if no set align.
     :return: Set align or default.
@@ -1069,6 +1095,7 @@ def get_text_horizontal_align(item, default):
 def get_font_size(item, default_size):
     """
     Gets text size if set, and uses default otherwise.
+
     :param item: Cell data item.
     :param default_size: Size to be used if no set font size.
     :return: Font size or default font size.
@@ -1079,6 +1106,7 @@ def get_font_size(item, default_size):
 def get_key_value(item, key, default=None):
     """
     Returns a value from dictionary or default if key doesn't exist.
+
     :param item: Dictionary (JSON).
     :param default: Value that's used in case key cannot be found.
     :param key: Key.
@@ -1094,6 +1122,7 @@ def get_key_value(item, key, default=None):
 def parse_hex_color(color, default_color=None) -> str | None:
     """
     Removes non-hex characters and checks if result is valid.
+
     :param color: Color string.
     :param default_color: Color returned in case valid hex can't be parsed.
     :return: A hex color code of six characters.
@@ -1107,6 +1136,7 @@ def parse_hex_color(color, default_color=None) -> str | None:
 def get_border_color(border_data) -> tuple[str, bool]:
     """
     Parses border color from HTML border format.
+
     :param border_data: HTML border format with line thickness, style, color.
     :return: Border color as tuple containing color name/code and whether its a hex.
     """
@@ -1125,6 +1155,7 @@ def get_border_color(border_data) -> tuple[str, bool]:
 def get_borders(item, default_borders=CellBorders()) -> CellBorders:
     """
     Creates a CellBorder object with corresponding border-data.
+
     :param item: Cell or row data.
     :param default_borders: Borders to be used in case none found.
     :return: CellBorders object for the item.
@@ -1175,6 +1206,7 @@ def get_borders(item, default_borders=CellBorders()) -> CellBorders:
 def copy_cell(cell: Cell) -> Cell:
     """
     Properly copies Cell-object and the objects within.
+
     :param cell: Cell object to copy.
     :return: Copy with new CellBorders-object pointers.
     """
@@ -1186,6 +1218,7 @@ def copy_cell(cell: Cell) -> Cell:
 def get_datablock(table_json):
     """
     Looks for and returns datablock or None, if table has no tabledatablock element.
+
     :param table_json: Table data as json string.
     :return: Datablock or None.
     """
@@ -1200,6 +1233,7 @@ def int_to_datablock_index(i: int) -> str:
     """
     Converts an index integer to corresponding capital letter(s).
     For example: 0 -> A, 25 -> Z, 26 -> AA, 27 -> BB.
+
     :param i: Index starting from 0.
     :return: The index in capital letter format.
     """
@@ -1212,6 +1246,7 @@ def int_to_datablock_index(i: int) -> str:
 def parse_size_attribute(attribute: str) -> str:
     """
     Converts numeric attributes to pts and removes the unit sign.
+
     :param attribute: Size attribute.
     :return: Parsed string.
     """
@@ -1244,6 +1279,7 @@ def parse_size_attribute(attribute: str) -> str:
 def get_table_size(table_data):
     """
     Sets table size attributes and uses default values if not found.
+
     :param table_data: Table data dictionary.
     :return: Table width and height as a tuple.
     """
@@ -1262,6 +1298,7 @@ def get_table_resize(table_data, table_width_estimation, col_count) -> bool:
     """
     Whether table should be resized to fit the page width.
     If the attribute isn't set, automatically decide whether to resize.
+
     :param table_data: Table JSON.
     :param table_width_estimation: Table width and whether it's an estimation as tuple.
     :param col_count Max number of columns (including colspans) in the table.
@@ -1287,6 +1324,7 @@ def get_table_resize(table_data, table_width_estimation, col_count) -> bool:
 def decide_format_size(format_levels):
     """
     Decides which size (column, row, cell, datablock) to use by taking the longest one.
+
     :param format_levels: Table, column, row, cell, datablock.
     :return: Largest size.
     """
@@ -1310,6 +1348,7 @@ def decide_format_tuple(format_levels):
     Goes through a list of formats and returns the last non-empty one.
     The idea is to stack table, column, row and cell formats and take the
     topmost format.
+
     :param format_levels: Table, column, row, cell, datablock.
     :return: Last non-empty format.
     """
@@ -1323,6 +1362,7 @@ def decide_format_tuple(format_levels):
 def decide_format(format_levels):
     """
     Decides which format to use by taking the latest non-empty one.
+
     :param format_levels: Table, column, row, cell, datablock.
     :return: Last non-empty value or None if all are empty.
     """
@@ -1336,8 +1376,8 @@ def decide_format(format_levels):
 def is_close(a, b, rel_tol=1e-09, abs_tol=0.0) -> bool:
     """
     Compares floats and returns true if they are almost same.
-    Source: https://stackoverflow.com/questions/5595425/
-    what-is-the-best-way-to-compare-floats-for-almost-equality-in-python
+    Source: https://stackoverflow.com/questions/5595425/what-is-the-best-way-to-compare-floats-for-almost-equality-in-python
+
     :param a: Number a.
     :param b: Number b.
     :param rel_tol: Relative tolerance.
@@ -1367,6 +1407,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     """
     Converts TimTable-json into LaTeX-compatible object.
     Note: for correct functioning all the other modules should use this.
+
     :param table_json: Table data as json dictionary with
         'rows', 'tabledatablock', etc. at the first level.
     :param draw_html_borders Add light gray default borders around cells similarly to HTML-table.

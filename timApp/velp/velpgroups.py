@@ -11,13 +11,20 @@ selections from the database.
 """
 
 import copy
-from typing import Optional, Union
+from typing import Union
 
+from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.timdb.sqa import db
 from timApp.user.user import User
+from timApp.user.users import get_rights_holders
 from timApp.user.usergroup import UserGroup
+from timApp.user.userutils import grant_access
+from timApp.util.utils import split_location
+from timApp.velp.velp_folders import (
+    check_velp_group_folder_path,
+)
 from timApp.velp.velp_models import (
     VelpGroup,
     VelpGroupsInDocument,
@@ -47,6 +54,53 @@ def create_default_velp_group(
     )
     db.session.add(vg)
     return new_group
+
+
+def set_default_velp_group_rights(doc_id: int, velp_group: DocInfo):
+    rights = get_rights_holders(doc_id)
+    # Copy all rights but view
+    for right in rights:
+        if right.access_type != AccessType.view:
+            grant_access(right.usergroup, velp_group, right.access_type)
+
+
+def get_document_default_velp_group_info(doc_info: DocInfo):
+    """
+    Returns path and name for a document's default group
+    """
+    full_path = doc_info.path
+    doc_path, doc_name = split_location(full_path)
+    user_group = doc_info.block.owners[0]
+    velps_folder_path = check_velp_group_folder_path(doc_path, user_group, doc_name)
+    velp_group_name = doc_name + "_default"
+    return velps_folder_path + "/" + velp_group_name, velp_group_name
+
+
+def get_document_default_velp_group(doc_info: DocInfo):
+    """
+    Returns document default velp group, default velp group path and default name for velp group
+    """
+    velp_group_path, velp_group_name = get_document_default_velp_group_info(doc_info)
+    return DocEntry.find_by_path(velp_group_path), velp_group_path, velp_group_name
+
+
+def set_default_velp_group_selected_and_visible(doc_info: DocInfo):
+    """
+    Makes document's default velp group visible and selected for everyone
+    """
+    (
+        velp_group,
+        default_group_path,
+        default_group_name,
+    ) = get_document_default_velp_group(doc_info)
+    if not velp_group:
+        velp_group = create_default_velp_group(
+            default_group_name, doc_info.block.owners[0], default_group_path
+        )
+        set_default_velp_group_rights(doc_info.document.id, velp_group)
+    grant_access(UserGroup.get_logged_in_group(), velp_group, AccessType.view)
+    change_default_selection(doc_info.document.id, velp_group.id, 0, "0", True)
+    db.session.commit()
 
 
 def create_velp_group(
@@ -277,7 +331,11 @@ def change_default_selection(
 
 
 def add_groups_to_selection_table(
-    velp_group: VelpGroup, doc_id: int, user_id: int, target_type: int, target_id: str
+    velp_group: VelpGroup,
+    doc_id: int,
+    user_id: int,
+    target_type: int,
+    target_id: str,
 ):
     """Adds velp groups to VelpGroupSelection table."""
     vgs = VelpGroupSelection.query.filter_by(

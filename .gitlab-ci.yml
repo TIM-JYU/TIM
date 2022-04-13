@@ -7,6 +7,7 @@ image: timimages/ci
 stages:
   - lint
   - test
+  - deploy
 
 .setup: &setup
   - docker info
@@ -35,17 +36,17 @@ browser_tests:
   before_script:
   - *setup
   script:
-  - TEST_PARAMS="discover -v tests/browser 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
+  - TEST_COMMAND="python3 tests/ci_browser_test_runner.py" ./dc up --exit-code-from tests --abort-on-container-exit tests
   artifacts:
     name: failed_screenshots
     when: always
     paths:
     - screenshots
-  timeout: 50m  # usually takes less than 40 minutes
+    - sql_logs
+  timeout: 40m  # usually takes less than 40 minutes
   retry:
     max: 2
     when:
-      - script_failure
       - stuck_or_timeout_failure
       - runner_system_failure
 
@@ -58,9 +59,9 @@ other_tests:
   before_script:
   - *setup
   script:
-  - TEST_PARAMS="discover -v tests/unit 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
-  - TEST_PARAMS="discover -v tests/db 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
-  - TEST_PARAMS="discover -v tests/server 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
+  - TEST_COMMAND="python3 -m unittest discover -v tests/unit 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
+  - TEST_COMMAND="python3 -m unittest discover -v tests/db 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
+  - TEST_COMMAND="python3 -m unittest discover -v tests/server 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
 
 code_navigation:
   stage: test  # not really a test, but we want to execute this in parallel
@@ -119,5 +120,14 @@ py_format:
   stage: lint
   image: python:3.10-slim
   script:
-  - pip install black==22.1.0
+  - pip install black==22.3.0
   - black --check .
+
+build_docs:
+  stage: deploy
+  trigger:
+    project: tim-jyu/tim-api-docs
+    branch: main
+  allow_failure: true
+  rules:
+    - if: $CI_PROJECT_NAMESPACE == "tim-jyu" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

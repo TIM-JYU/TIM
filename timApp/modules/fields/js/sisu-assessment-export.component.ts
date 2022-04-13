@@ -224,8 +224,8 @@ class AssessmentTableModel implements DataModelProvider {
         }
     }
 
-    getColumnWidth(columnIndex: number): number | undefined {
-        return undefined;
+    getColumnWidth(columnIndex: number): [number, boolean] {
+        return [0, true];
     }
 
     getDimension(): {rows: number; columns: number} {
@@ -306,6 +306,10 @@ class AssessmentTableModel implements DataModelProvider {
 
     setRowFilter(columnIndex: number, value: string): void {
         this.colFilters[columnIndex] = value;
+    }
+
+    getRowFilter(columnIndex: number): string {
+        return this.colFilters[columnIndex] ?? "";
     }
 
     setSelectAll(state: boolean): void {

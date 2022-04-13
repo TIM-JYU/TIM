@@ -1,6 +1,6 @@
 import json
 from copy import deepcopy
-from typing import Optional, Any, Union
+from typing import Any
 
 from timApp.timdb.sqa import db
 
@@ -64,6 +64,7 @@ def normalize_question_json(q: dict[str, Any]):
 
     The question data format has changed a few times over the years. This function normalizes all possible formats
     to a single format that is easier to handle in other code.
+
     :param q: The data to normalize.
     :return: The normalized data.
     """

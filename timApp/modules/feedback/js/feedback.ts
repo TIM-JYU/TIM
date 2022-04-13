@@ -239,13 +239,18 @@ export class FeedbackPluginComponent
 
     ngOnDestroy(): void {
         this.vctrl.removeListener("editModeChange", this.editModeChanged);
+        if (!this.attrsall.preview) {
+            this.vctrl.removeTimComponent(this);
+        }
     }
 
     /**
      * Adds this plugin to ViewCtrl so other plugins can get information about the plugin though it.
      */
     addToCtrl() {
-        this.vctrl.addTimComponent(this);
+        if (!this.attrsall.preview) {
+            this.vctrl.addTimComponent(this);
+        }
     }
 
     get autoupdate(): number {

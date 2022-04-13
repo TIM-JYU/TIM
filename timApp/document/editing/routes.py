@@ -315,6 +315,9 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         abort_if_duplicate_ids(doc, pars_to_add)
 
         p = editor_pars[0]
+        # The ID of the first paragraph needs to match the ID of the paragraph to modify
+        # This is needed for any edit logic that requires the ID of the paragraph (e.g. heading numbering)
+        p.set_id(par_id)
         tr_opt = edit_request.mark_translated
         if tr_opt is None:
             pass
@@ -759,7 +762,7 @@ def mark_pars_as_read_if_chosen(pars, doc):
     :param doc: The document to which the paragraphs belong.
 
     """
-    mr = request.get_json().get("tags", {}).get("markread")
+    mr = (request.get_json(silent=True) or {}).get("tags", {}).get("markread")
     if mr:
         for p in pars:
             mark_read(get_current_user_group(), doc, p)

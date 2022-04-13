@@ -97,20 +97,33 @@ export function checkIfElement(x: Node): x is Element {
 /**
  * Check if element is in view
  * @param el - Element to check
+ * @param allowOverflow - If true, consider overflowing element as in viewport
  * @returns {boolean} true if in view
  */
-export function isInViewport(el: Element) {
+export function isInViewport(el: Element, allowOverflow = false) {
     const rect = el.getBoundingClientRect();
     if (!document.documentElement) {
         return true;
     }
+    // Some elements are not visible
+    if (rect.width == 0 && rect.height == 0 && rect.x == 0 && rect.y == 0) {
+        return false;
+    }
+    const h = window.innerHeight || document.documentElement.clientHeight;
+    const w = window.innerWidth || document.documentElement.clientWidth;
+
+    // Check if element is fully inside the viewport
+    const fullyInside =
+        rect.top >= 0 && rect.left >= 0 && rect.bottom <= h && rect.right <= w;
+    if (fullyInside) {
+        return true;
+    }
+
+    // Check if element fills in the viewport in full in one of the axes
     return (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <=
-            (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <=
-            (window.innerWidth || document.documentElement.clientWidth)
+        allowOverflow &&
+        ((rect.top <= 0 && rect.bottom >= h) ||
+            (rect.left <= 0 && rect.right >= h))
     );
 }
 

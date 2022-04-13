@@ -17,8 +17,8 @@ import {ButtonsModule} from "ngx-bootstrap/buttons";
 import {
     applyOpacity,
     DOCUMENT_BG,
-    luma,
     parseRGBAColor,
+    shouldUseDarkText,
 } from "tim/util/colorUtils";
 
 export interface IDrawVisibleOptions {
@@ -276,8 +276,9 @@ export class DrawToolbarComponent implements AfterViewInit {
                     {...parseRGBAColor(prev)!, a: this.drawSettings.opacity},
                     DOCUMENT_BG
                 );
-                const l = luma(rgb);
-                this.selectorIconColor = l > 0.5 ? "black" : "white";
+                this.selectorIconColor = shouldUseDarkText(rgb)
+                    ? "black"
+                    : "white";
             }
         }
     }

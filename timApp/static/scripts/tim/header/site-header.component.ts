@@ -29,28 +29,13 @@ import * as t from "io-ts";
                  alt="University of Jyväskylä"
                  i18n-alt
                  src="/static/images/jyulogo.png"/>
-            <button *ngIf="!hide.search"
-                    class="timButton button-search"
-                    (click)="displaySearch = !displaySearch"
-                    title="Display search panel"
-                    i18n-title>
-                <i class="glyphicon glyphicon-search"></i>
-                <span i18n>Search</span>
-            </button>
-            <bootstrap-panel *ngIf="displaySearch" [showClose]="true"
-                             class="search-panel"
-                             title="TIM document search"
-                             i18n-title
-                             (closed)="displaySearch = !displaySearch">
-                <tim-search-box></tim-search-box>
-            </bootstrap-panel>
+            <tim-search-button [floating]="true" *ngIf="!hide.search"></tim-search-button>
         </div>
     `,
     styleUrls: ["./site-header.component.scss"],
 })
 export class SiteHeaderComponent implements OnInit {
     hide = getVisibilityVars();
-    displaySearch = false;
     activeView?: string;
     private displayViewHeaderState?: boolean;
     private lastViewHeaderDisplayState = new TimStorage(

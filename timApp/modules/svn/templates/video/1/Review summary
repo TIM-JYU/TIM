@@ -1,0 +1,58 @@
+Review summary
+Button to update all fields ans summary table
+## Arvostelut yhteensä {defaultplugin="numericfield" readonly="view" .fieldCell}
+%% 'vp;points' |  gfields('cols: 3')  %%
+
+``` {#runnerUpdateAll plugin="jsrunner"}
+%%REVIEW_UPDATE(tasks,arvosteltavia,1,maxEro)%%
+```
+
+``` {#tableForm_table plugin="tableForm"}
+# showInView: true # Add attribute  to show the plugin in normal view
+groups:
+ # - "*"          # show all users who have some value on any of fields
+ - %%group%%
+fields:
+ - vp
+ - points;
+{% for TASK in tasks %}
+ - %%TASK%%_Vp=%%TASK%%_V
+{% endfor %}
+{% for TASK in tasks %}
+ - %%TASK%%_Pisteet=%%TASK%%_P
+{% endfor %}
+
+table: true
+report: true
+openButtonText: Avaa taulukko # text for open the table if closed as default
+hideButtonText: Sulje taulukko # tex for closing the table
+open: true        # use false if table is big and you do not want it open automatically
+autosave: true    # save fields automatically
+maxRows: 40em     # max height for the table before scrollbar
+realnames: true   # Show full name in 2nd column, true or false
+usernames: false  # Show user name column
+emails: false     # Show email column
+addedDates: false # Show the date the user was added
+#buttonText: Tallenna    # Name your save button here
+cbColumn: true    # show checkboxes
+nrColumn: true    # show numbers
+# maxRows: 40em   # Hiw long is the table
+# maxCols: fit-content # width of the table
+# maxWidth: 30em  # max for column
+filterRow: true   # show filters
+singleLine: true  # show every line as a single line
+emailUsersButtonText: "Lähetä sähköpostia valituille" # if one wants to send email
+separator: ";"    # Define your value separator here, ";" as default
+anonNames: false  # To show or hide user (and full) names in report, true or false
+reportButton: "Raportti"
+userListButtonText: "Käyttäjälista"
+showToolbar: true # toolbar for editing the table
+# hiddenColumns: [0,1] # which colums are hidden
+
+# forceUpdateButtonText: "Virkistä" # button for refreshing the table
+#dataView:        # uncomment this if table is big or want to use special properties
+#  tableWidth: 90vw
+#  virtual:
+#    enabled: true  # toggles virtual mode on or off; default true
+#  fixedColumns: 1 # how many not scrolling columns in left
+```

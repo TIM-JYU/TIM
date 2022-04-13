@@ -1,0 +1,24 @@
+:host.floating {
+    .search-panel {
+        position: absolute;
+        z-index: 5;
+        right: 0;
+        top: 0;
+        left: auto;
+        max-width: 480px;
+    }
+}
+
+:host:not(.floating) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    button {
+        margin-bottom: 1em;
+    }
+
+    .search-panel {
+        width: 100%;
+    }
+}

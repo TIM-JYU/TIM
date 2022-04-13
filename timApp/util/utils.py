@@ -11,10 +11,10 @@ from concurrent.futures import Future
 from dataclasses import fields, asdict
 from datetime import datetime, timezone
 from enum import Enum
-from itertools import tee, filterfalse
+from itertools import tee
 from pathlib import Path, PurePosixPath
 from types import TracebackType, FrameType
-from typing import Optional, Union, Any, Sequence, Callable, TypeVar, Iterable
+from typing import Any, Sequence, Callable, TypeVar, Iterable
 
 import dateutil.parser
 import jinja2
@@ -324,6 +324,7 @@ def widen_fields(fields: list[str] | str) -> list[str]:
     """
     if there is syntax d(1,3) in fileds, it is made d1,d2
     from d(1,3)=t  would come d1=t1, d2=t2
+
     :param fields: list of fields
     :return: array fields widened
     """
@@ -370,6 +371,7 @@ def widen_fields(fields: list[str] | str) -> list[str]:
 def get_alias(name: str) -> str:
     """
     Get name part form string like 534.d1.points
+
     :param name: full name of field
     :return: just name part of field, like d1
     """

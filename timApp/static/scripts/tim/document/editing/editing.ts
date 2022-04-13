@@ -55,6 +55,7 @@ import {
     getContextualAreaInfo,
     ParAreaInclusionKind,
 } from "tim/document/structure/areaContext";
+import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
 import {IMenuFunctionEntry, MenuFunctionList} from "../viewutils";
 import {ViewCtrl} from "../viewctrl";
 import {handleUnread} from "../readings";
@@ -247,6 +248,7 @@ export class EditingHandler {
         let cursorPos;
         if (options.initialText) {
             initialText = options.initialText;
+            initialText = await replaceTemplateValues(initialText);
             cursorPos = initialText.indexOf(CURSOR);
             initialText = initialText.replace(CURSOR, "");
         } else if (options.showDelete && ctx) {
@@ -343,12 +345,12 @@ This will delete the whole ${
                             })
                         );
                         if (res.ok && !isManageResponse(res.result)) {
-                            await this.addSavedParToDom(res.result, params);
+                            this.addSavedParToDom(res.result, params);
                         } else {
-                            await this.addSavedParToDom(saveData, params);
+                            this.addSavedParToDom(saveData, params);
                         }
                     } else {
-                        await this.addSavedParToDom(saveData, params);
+                        this.addSavedParToDom(saveData, params);
                     }
                 }
                 return {};
@@ -496,11 +498,12 @@ auto_number_headings: 0${CURSOR}
     }
 
     handleDelete(position: EditPosition) {
-        if (position.type === EditType.Edit) {
-            position.pars.remove();
-        }
-        this.viewctrl.areaHandler.cancelSelection();
-        this.viewctrl.beginUpdate();
+        void this.viewctrl.updateDocument(() => {
+            if (position.type === EditType.Edit) {
+                position.pars.remove();
+            }
+            this.viewctrl.areaHandler.cancelSelection();
+        });
     }
 
     showAddParagraphAbove(
@@ -519,49 +522,50 @@ auto_number_headings: 0${CURSOR}
         this.toggleParEditor({type: EditType.AddBelow, par: par}, options);
     }
 
-    async addSavedParToDom(data: IParResponse, position: EditPosition) {
-        let par: JQuery;
-        let action: (e: JQuery, c: JQuery) => void;
-        switch (position.type) {
-            case EditType.Edit:
-                action = replaceAction;
-                par = $(position.pars.removeAllButFirst());
-                break;
-            case EditType.CommentAction:
-                action = replaceAction;
-                par = $(position.par.par.htmlElement);
-                break;
-            case EditType.AddBottom:
-                action = afterAction;
-                par = $(".addBottomContainer").prev();
-                break;
-            case EditType.AddAbove:
-                par = $(position.par.getElementForInsert(EditType.AddAbove));
-                action = beforeAction;
-                break;
-            default:
-                par = $(position.par.getElementForInsert(EditType.AddBelow));
-                action = afterAction;
-                break;
-        }
+    addSavedParToDom(data: IParResponse, position: EditPosition) {
+        void this.viewctrl.updateDocument(async () => {
+            let par: JQuery;
+            let action: (e: JQuery, c: JQuery) => void;
+            switch (position.type) {
+                case EditType.Edit:
+                    action = replaceAction;
+                    par = $(position.pars.removeAllButFirst());
+                    break;
+                case EditType.CommentAction:
+                    action = replaceAction;
+                    par = $(position.par.par.htmlElement);
+                    break;
+                case EditType.AddBottom:
+                    action = afterAction;
+                    par = $(".addBottomContainer").prev();
+                    break;
+                case EditType.AddAbove:
+                    par = $(
+                        position.par.getElementForInsert(EditType.AddAbove)
+                    );
+                    action = beforeAction;
+                    break;
+                default:
+                    par = $(
+                        position.par.getElementForInsert(EditType.AddBelow)
+                    );
+                    action = afterAction;
+                    break;
+            }
 
-        await ParCompiler.compileAndDOMAction(
-            action,
-            par,
-            data,
-            this.viewctrl.scope,
-            this.viewctrl
-        );
+            await ParCompiler.compileAndDOMAction(
+                action,
+                par,
+                data,
+                this.viewctrl.scope,
+                this.viewctrl
+            );
 
-        this.viewctrl.docVersion = data.version;
-        this.viewctrl.areaHandler.cancelSelection();
-        this.removeDefaultPars();
-        markPageDirty();
-
-        // No await here; we want to call getUpdatedPars in the background.
-        // After that, it will also call getActiveDocument().rebuildSections(),
-        // so the parsed document structure is out of sync with the DOM for a short period.
-        this.viewctrl.beginUpdate();
+            this.viewctrl.docVersion = data.version;
+            this.viewctrl.areaHandler.cancelSelection();
+            this.removeDefaultPars();
+            markPageDirty();
+        });
     }
 
     getParEditor(): PareditorController | undefined {

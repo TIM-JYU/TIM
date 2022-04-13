@@ -12,6 +12,7 @@ import {
     getFullscreenElement,
     toggleFullScreen,
 } from "tim/util/fullscreen";
+import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
@@ -1820,8 +1821,12 @@ ${backTicks}
         }
     }
 
-    putTemplate(data: string) {
+    async putTemplate(data: string) {
         this.focusEditor();
+        data = await replaceTemplateValues(data);
+        if (!data) {
+            return;
+        }
         this.editor!.insertTemplate(data);
     }
 
@@ -1834,6 +1839,10 @@ ${backTicks}
         }
         let data = response.result.data;
         data = data.replace(/\\/g, "\\\\");
+        data = await replaceTemplateValues(data);
+        if (!data) {
+            return;
+        }
         this.editor!.insertTemplate(data);
         this.focusEditor();
     }

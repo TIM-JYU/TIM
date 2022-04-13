@@ -56,7 +56,7 @@ import * as DOMPurify from "dompurify";
 import {showCopyWidthsDialog} from "tim/plugin/dataview/copy-table-width-dialog.component";
 import {GridAxisManager} from "tim/plugin/dataview/gridAxisManager";
 import {TableDOMCache} from "tim/plugin/dataview/tableDOMCache";
-import {scrollToViewInsideParent} from "tim/util/utils";
+import {scrollToViewInsideParent, timeout} from "tim/util/utils";
 import {Changes} from "tim/util/angularchanges";
 import {
     applyBasicStyle,
@@ -85,7 +85,7 @@ export interface DataModelProvider {
 
     getRowHeight(rowIndex: number): number | undefined;
 
-    getColumnWidth(columnIndex: number): number | undefined;
+    getColumnWidth(columnIndex: number): [number, boolean];
 
     stylingForRow(rowIndex: number): Record<string, string>;
 
@@ -107,6 +107,8 @@ export interface DataModelProvider {
     showRow(rowIndex: number): boolean;
 
     setRowFilter(columnIndex: number, value: string): void;
+
+    getRowFilter(columnIndex: number): string;
 
     handleChangeFilter(): void;
 
@@ -164,17 +166,23 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
         <div class="loader" *ngIf="isLoading">
             <tim-loading></tim-loading>
         </div>
-        <tim-alert class="data-view-alert" severity="info" *ngIf="showSlowLoadMessage">
+        <tim-alert class="data-view-alert" severity="info" *ngIf="showSlowLoadMessage" [closeable]="true" (closing)="hideSlowMessageDialog()">
             <div class="message" i18n>
                 <strong>Column size computation took {{sizeComputationTime}} seconds.</strong>
                 You can speed up loading by <a href="#" class="alert-link" (click)="showTableWidthExportDialog($event)">setting
                 static column widths</a>.
             </div>
-            <span class="close-icon glyphicon glyphicon-remove" (click)="hideSlowMessageDialog()"></span>
+        </tim-alert>
+        <tim-alert class="data-view-alert" severity="warning" *ngIf="showIncompleteSizeMessage" [closeable]="true" (closing)="hideIncompleteSizeMessageDialog()">
+            <div class="message" i18n>
+                <strong>The column count has changed since the last time.</strong>
+                Remove this warning by <a href="#" class="alert-link" (click)="showTableWidthExportDialog($event, true)"> setting static column widths</a>.
+            </div>
+            <tim-loading *ngIf="recomputingSize"></tim-loading>
         </tim-alert>
         <div class="data-view" [class.virtual]="isVirtual" [style.width]="tableMaxWidth" #dataViewContainer>
             <div class="header" #headerContainer>
-                <table [ngStyle]="tableStyle" #headerTable>
+                <table class="timTableHeader" [ngStyle]="tableStyle" #headerTable>
                     <thead #headerIdBody></thead>
                     <tbody #filterBody></tbody>
                 </table>
@@ -267,6 +275,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() reportSlowLoad = true;
     @Output() selectedIndicesChange = new EventEmitter<Set<number>>();
     showSlowLoadMessage = false;
+    showIncompleteSizeMessage = false;
     sizeComputationTime = 0;
     isLoading = true;
     totalRows: number = 0;
@@ -274,6 +283,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     cbAllVisibleRows = false;
     @Input() cbFilter = false;
     isVirtual: boolean = false;
+    recomputingSize = false;
     dataViewWidth = "100%";
     @ViewChild("headerContainer")
     private headerContainer!: ElementRef<HTMLDivElement>;
@@ -797,14 +807,14 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             rows,
             this.vScroll.enabled,
             VIRTUAL_SCROLL_TABLE_BORDER_SPACING,
-            (i) => this.modelProvider.getRowHeight(i) ?? 0,
+            (i) => [this.modelProvider.getRowHeight(i) ?? 0, true],
             (i) => this.modelProvider.showRow(i)
         );
         this.colAxis = new GridAxisManager(
             columns,
             this.vScroll.enabled,
             VIRTUAL_SCROLL_TABLE_BORDER_SPACING,
-            (i) => this.modelProvider.getColumnWidth(i) ?? 0,
+            (i) => this.modelProvider.getColumnWidth(i),
             (i) => this.modelProvider.showColumn(i),
             (o) => o < this.fixedColumnCount
         );
@@ -812,7 +822,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             columns,
             this.vScroll.enabled,
             VIRTUAL_SCROLL_TABLE_BORDER_SPACING,
-            (i) => this.modelProvider.getColumnWidth(i) ?? 0,
+            (i) => this.modelProvider.getColumnWidth(i),
             (i) => this.modelProvider.showColumn(i),
             (o) => o >= this.fixedColumnCount
         );
@@ -854,9 +864,22 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         await runMultiFrame(this.buildTable());
     }
 
-    async showTableWidthExportDialog(evt: MouseEvent) {
+    async showTableWidthExportDialog(evt: MouseEvent, recompute = false) {
         evt.preventDefault();
-        await showCopyWidthsDialog({columnWidths: this.idealColWidths});
+        if (this.recomputingSize) {
+            return;
+        }
+        let colWidths = this.idealColHeaderWidth;
+        if (recompute) {
+            this.recomputingSize = true;
+            this.cdr.detectChanges();
+            await timeout();
+            colWidths = this.computeIdealColumnWidth(true);
+            this.recomputingSize = false;
+            this.cdr.detectChanges();
+            await timeout();
+        }
+        await showCopyWidthsDialog({columnWidths: colWidths});
     }
 
     private initTableCaches() {
@@ -888,6 +911,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         );
         const makeHeader = (cell: HTMLTableCellElement) => {
             applyBasicStyle(cell, this.headerStyle);
+            cell.classList.add("headers");
             cell.appendChild(el("span")); // Header text
             cell.appendChild(
                 el("span", {
@@ -1531,29 +1555,31 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         yield;
 
         this.updateHeaderCellSizes();
+        const incomplete = this.colAxis.totalSizeIncomplete;
         if (this.vScroll.enabled && !this.colAxis.isVirtual) {
-            this.computeIdealColumnWidth();
+            this.updateIdealColumnWidth();
             this.updateVTable();
             yield;
             this.updateHeaderCellSizes();
         }
-        if (
-            this.reportSlowLoad &&
-            this.sizeComputationTime > SLOW_SIZE_MEASURE_THRESHOLD
-        ) {
-            this.showSlowMessageDialog();
+        if (this.reportSlowLoad) {
+            if (this.sizeComputationTime > SLOW_SIZE_MEASURE_THRESHOLD) {
+                this.showSlowMessageDialog();
+            } else if (incomplete) {
+                this.showIncompleteSizeMessageDialog();
+            }
         }
     }
 
-    private computeIdealColumnWidth(): void {
-        if (!this.vScroll.enabled) {
-            return;
+    private computeIdealColumnWidth(force = false) {
+        if (!this.vScroll.enabled && !force) {
+            return [];
         }
         const start = performance.now();
-        this.idealColWidths = [];
+        const result: number[] = [];
         const measure = (colAxis?: GridAxisManager) => {
-            if (!colAxis || colAxis.isVirtual) {
-                return;
+            if (!colAxis || (colAxis.isVirtual && !force)) {
+                return [];
             }
             for (const col of colAxis.visibleItems) {
                 let cWidth = 0;
@@ -1561,7 +1587,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                     const c = this.measureText(row, col);
                     cWidth = Math.max(c.width, cWidth);
                 }
-                this.idealColWidths[col] = cWidth;
+                result[col] = cWidth;
             }
         };
         measure(this.colAxis);
@@ -1571,6 +1597,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         const end = performance.now();
         this.sizeComputationTime = Math.round((end - start) / 1000.0);
+        return result;
+    }
+
+    private updateIdealColumnWidth(): void {
+        this.idealColWidths = this.computeIdealColumnWidth();
     }
 
     private measureText(row: number, column: number) {
@@ -1589,8 +1620,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 this.sizeContainer
             );
         }
-        const colWidth = this.getDataColumnWidth(column);
-        this.sizeContentContainer.style.minWidth = px(colWidth);
+        const colWidth = this.idealColHeaderWidth[column];
+        if (colWidth) {
+            this.sizeContentContainer.style.minWidth = px(colWidth);
+        }
         this.sizeContentContainer.innerHTML =
             this.modelProvider.getCellContents(row, column);
         const size = this.sizeContentContainer.getBoundingClientRect();
@@ -1717,7 +1750,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
                 const filterCell = filters.getCell(0, column);
                 const input = filterCell.getElementsByTagName("input")[0];
+                input.value = this.modelProvider.getRowFilter(columnIndex);
                 input.oninput = this.onFilterInput(input, columnIndex);
+                input.onfocus = this.onFilterFocus(input, columnIndex);
+                input.onblur = this.onFilterBlur(input);
+                if (this.lastFocusedIndex === columnIndex) {
+                    input.focus();
+                }
             }
             return colIndices;
         };
@@ -1840,6 +1879,26 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         };
     }
 
+    private lastFocusedIndex?: number;
+
+    private onFilterFocus(input: HTMLInputElement, columnIndex: number) {
+        return () => {
+            if (this.modelProvider.isPreview()) {
+                return;
+            }
+            this.lastFocusedIndex = columnIndex;
+        };
+    }
+
+    private onFilterBlur(input: HTMLInputElement) {
+        return () => {
+            if (this.modelProvider.isPreview()) {
+                return;
+            }
+            this.lastFocusedIndex = undefined;
+        };
+    }
+
     // endregion
 
     // region Utils
@@ -1851,6 +1910,16 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     hideSlowMessageDialog() {
         this.showSlowLoadMessage = false;
+        this.cdr.detectChanges();
+    }
+
+    private showIncompleteSizeMessageDialog() {
+        this.showIncompleteSizeMessage = true;
+        this.cdr.detectChanges();
+    }
+
+    hideIncompleteSizeMessageDialog() {
+        this.showIncompleteSizeMessage = false;
         this.cdr.detectChanges();
     }
 
@@ -1940,8 +2009,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     }
 
     private getDataColumnWidth(columnIndex: number): number {
-        const res = this.modelProvider.getColumnWidth(columnIndex);
-        if (res !== undefined) {
+        const [res, _] = this.modelProvider.getColumnWidth(columnIndex);
+        if (res) {
             return res;
         }
         return this.idealColHeaderWidth[columnIndex];
@@ -1962,8 +2031,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         if (this.idealColWidths[columnIndex]) {
             return this.idealColWidths[columnIndex];
         }
-        const res = this.modelProvider.getColumnWidth(columnIndex);
-        if (res !== undefined) {
+        const [res, _] = this.modelProvider.getColumnWidth(columnIndex);
+        if (res) {
             return res;
         }
         const idealHeaderWidth = this.idealColHeaderWidth[columnIndex];

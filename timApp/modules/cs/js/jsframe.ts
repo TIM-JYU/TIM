@@ -400,11 +400,20 @@ export class JsframeComponent
             })();
         }
         if (this.isDrawio()) {
-            this.viewctrl.addParMenuEntry(this, this.getPar());
+            (async () => {
+                await this.viewctrl.documentUpdate;
+                this.viewctrl.addParMenuEntry(this, this.getPar()!);
+            })();
             if (this.isTask() && !this.getTaskId()) {
                 this.error = "Task-mode on but TaskId is missing!";
             }
             this.initFrameData = unwrapAllC(this.markup.data);
+        }
+    }
+
+    ngOnDestroy() {
+        if (!this.isPreview()) {
+            this.viewctrl.removeTimComponent(this);
         }
     }
 
@@ -547,7 +556,7 @@ export class JsframeComponent
             url = "/jsframe/drawIOData";
             params = {
                 data: unwrapAllC(data).c,
-                par_id: this.getPar().originalPar.id,
+                par_id: this.getPar()!.originalPar.id,
                 doc_id: this.viewctrl.docId,
             };
         }
