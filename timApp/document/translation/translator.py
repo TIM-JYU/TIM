@@ -614,7 +614,8 @@ class TranslateMethodFactory:
                             )
                             # Now mark the table as NoTranslate, so it doesn't get translated when
                             # the list is passed on to mass-translation
-                            tr_sublist.append(NoTranslate(table_md_tr))
+                            # TODO Adding this newline is kinda HACKY and not thought out.
+                            tr_sublist.append(NoTranslate("\n" + table_md_tr))
                         else:
                             # The table cannot be translated and is handled as is
                             tr_sublist.append(NoTranslate(x.text))
@@ -633,8 +634,8 @@ class TranslateMethodFactory:
                 #  to TIM's block separation and id's etc
                 # TODO Do some MD-elements (from parser) not include newline postfix and should this newline-addition
                 #  then be placed into parser-module?
-                translated_md += "\n\n"
-            translated_md = translated_md.strip()
+                translated_md += "\n"
+            translated_md = translated_md.rstrip()
 
             return translated_md
 
