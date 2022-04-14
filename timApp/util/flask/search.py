@@ -6,6 +6,7 @@ import subprocess
 import time
 from dataclasses import dataclass
 from datetime import datetime
+from io import StringIO
 from pathlib import Path
 from typing import Match
 
@@ -24,6 +25,7 @@ from timApp.item.block import Block
 from timApp.item.routes import get_document_relevance
 from timApp.item.tag import Tag
 from timApp.timdb.dbaccess import get_files_path
+from timApp.timdb.exceptions import InvalidReferenceException
 from timApp.util.flask.requesthelper import (
     get_option,
     use_model,
@@ -481,8 +483,22 @@ def add_doc_info_content_line(
             # If par can't be found (deleted), don't add it.
             if not doc_info.document.has_paragraph(par_id):
                 continue
+        # Resolve the markdown in full (including references) for better search
+        doc_par = doc_info.document.get_paragraph(par_id)
+        par_md_buf = StringIO()
+        if doc_par.is_par_reference():
+            try:
+                ref_pars = doc_par.get_referenced_pars()
+            except InvalidReferenceException:
+                par_md_buf.write(doc_par.md)
+            else:
+                for p in ref_pars:
+                    par_md_buf.write(f"{p.md}\n")
+        else:
+            par_md_buf.write(doc_par.md)
+
+        par_md = par_md_buf.getvalue().replace("\r", " ").replace("\n", " ")
         # Cherry pick attributes, because others are unnecessary for the search.
-        par_md = par_dict["md"].replace("\r", " ").replace("\n", " ")
         par_attrs = par_dict["attrs"]
         par_json_list.append({"id": par_id, "attrs": par_attrs, "md": par_md})
     if add_title:
@@ -974,7 +990,7 @@ def search():
 
     :return: Document paragraph search results with total result count.
     """
-    # If the file containing all TIM content doesn't exists, give warning immediately.
+    # If the file containing all TIM content doesn't exist, give warning immediately.
     content_search_file_path = PROCESSED_CONTENT_FILE_PATH
     title_search_file_path = PROCESSED_TITLE_FILE_PATH
     (
