@@ -241,11 +241,14 @@ const sortLang = "fi";
                         {{s.button}}
                     </button>
                 </ng-container>
-                <button class="timButton"
-                        (click)="orderSisuGroups()"
-                        *ngIf="sisugroups && cbCount">
-                    Confirm groups
-                </button>
+                <ng-container *ngIf="sisugroups && cbCount">
+                    <button class="timButton"
+                            (click)="orderSisuGroups()"
+                            [disabled]="loading">
+                        Confirm groups
+                    </button>&nbsp;
+                    <tim-loading *ngIf="loading"></tim-loading>
+                </ng-container>
             </div>
             <div class="csRunDiv tableUsers" style="padding: 1em;" *ngIf="userlist"> <!-- userlist -->
                 <tim-close-button (click)="userlist=''"></tim-close-button>
