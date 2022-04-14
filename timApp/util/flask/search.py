@@ -486,7 +486,7 @@ def add_doc_info_content_line(
         # Resolve the markdown in full (including references) for better search
         doc_par = doc_info.document.get_paragraph(par_id)
         par_md_buf = StringIO()
-        if doc_par.is_par_reference():
+        if doc_par.is_reference():
             try:
                 ref_pars = doc_par.get_referenced_pars()
             except InvalidReferenceException:
