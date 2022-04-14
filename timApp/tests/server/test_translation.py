@@ -7,13 +7,28 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import Document
 from timApp.document.translation.translation import Translation
+from timApp.document.translation.language import Language
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.util.utils import static_tim_doc
 
+from timApp.tests.unit.test_translator_generic import (
+    ReversingTranslationService,
+)
+
 
 class TranslationTest(TimRouteTest):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        db.session.add(ReversingTranslationService())
+        cls.reverselang = Language(
+            lang_code="rev-Erse", lang_name="Reverse", autonym="esreveR"
+        )
+        db.session.add(cls.reverselang)
+        db.session.commit()
+
     def test_translation_create(self):
         self.login_test1()
         doc = self.create_doc()
@@ -339,15 +354,7 @@ c
         self.assertEqual(len(d.translations), 2)
 
     def test_paragraph_translation_route(self):
-        from timApp.document.translation.language import Language
-        from timApp.tests.unit.test_translator_generic import (
-            ReversingTranslationService,
-        )
-
-        db.session.add(ReversingTranslationService())
-        lang = Language(lang_code="rev-Erse", lang_name="Reverse", autonym="esreveR")
-        db.session.add(lang)
-        db.session.commit()
+        lang = self.reverselang
         self.login_test1()
         d = self.create_doc(
             initial_par="""
@@ -361,6 +368,7 @@ Baz
         tr = self.create_translation(d)
         tr_doc = tr.document
         id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
+        # TODO Would rather use RevesingTranslationService.service_name but is not str
         data = {"autotranslate": "Reversing"}
         r = self.json_post(f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}", data)
         tr_doc.clear_mem_cache()
@@ -381,3 +389,80 @@ Baz
         tr_doc.clear_mem_cache()
         # Applying translation again uses the SOURCE paragraph, so the result is the same
         self.assertEqual(tr_doc.get_paragraph(id3).md, "zaB")
+
+    def test_paragraph_translation_route_plugin(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+Foo
+``` {plugin="csPlugin" #btn-tex2 .miniSnippets}
+header: Harjoittele matemaattisen vastauksen kirjoittamista.
+notexistingkey: Bar baz
+```
+#-
+Qux
+"""
+        )
+        tr = self.create_translation(d)
+        tr_doc = tr.document
+        id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
+        data = {"autotranslate": "Reversing"}
+
+        self.json_post(f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}", data)
+        tr_doc.clear_mem_cache()
+        self.assertEqual(tr_doc.get_paragraph(id1).md, "ooF")
+
+        self.json_post(f"/translate/paragraph/{tr.id}/{id2}/{lang.lang_code}", data)
+        tr_doc.clear_mem_cache()
+        tr_par2 = tr_doc.get_paragraph(id2)
+        orig_par2 = d.document.get_paragraph(tr_par2.get_attr("rp"))
+        self.assertEqual(orig_par2.get_attr("taskId"), "btn-tex2")
+        self.assertEqual(orig_par2.get_attr("classes"), ["miniSnippets"])
+        self.assertEqual(orig_par2.get_attr("plugin"), "csPlugin")
+        self.assertEqual(
+            tr_par2.md,
+            """```
+header: .atsimattiojrik neskuatsav nesittaametam elettiojraH
+notexistingkey: Bar baz
+```""",
+        )
+
+        self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}", data)
+        tr_doc.clear_mem_cache()
+        self.assertEqual(tr_doc.get_paragraph(id3).md, "xuQ")
+
+    def test_text_translation_route(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc()
+        tr = self.create_translation(d)
+
+        md = r"""
+# Foo
+[Bar]{.notranslate}\
+
+Baz qux [qux](www.example.com)
+"""
+
+        data = {
+            "autotranslate": "Reversing",
+            "originaltext": md,
+        }
+        resp = self.json_post(
+            f"/translate/{tr.id}/{lang.lang_code}/translate_block", data
+        )
+        # NOTE Apparently Pandoc likes to add to headers their text-content as identifier,
+        # which does not seem to be a TIM-convention (which could be a problem?).
+        # TODO How closely should the translation follow the whitespace-formatting of original text?
+        #  ATM the translation parsing separates the parts with two newlines "\n\n"
+        self.assertEqual(
+            resp,
+            r"""# ooF{#foo}
+[Bar]{.notranslate}\
+
+ xuq zaB[xuq](www.example.com)""",
+        )
+
+
+# TODO Add cases for all 3 translation routes for the special cases (basically just for plugins and tables)
