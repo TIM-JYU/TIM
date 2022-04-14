@@ -31,7 +31,7 @@ class TestParser(unittest.TestCase):
         )
 
     # For .notranslate style, might move elsewhere. For future use.
-    def test_notranslate_style(self):
+    def test_notranslate_style1(self):
         text = r"tässä on [teksti]{.notranslate}, jota ei käännetä."
         self.assertEqual(
             get_translate_approvals(text),
@@ -72,8 +72,9 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             ],
         )
 
-    # Testing notranslate style with brackets and parenthesis inside. Will fail if it contains unclosed "[" or "]"
     def test_notranslate_style2(self):
+        """Testing notranslate style with brackets and parenthesis inside.
+        Will fail if it contains unclosed [ or ]"""
         text = "Käännettävää tekstiä[Ei(){}( { käännettävää [x],[y],[x, y] `tekstiä`]{.notranslate}"
         self.assertEqual(
             get_translate_approvals(text),
@@ -87,8 +88,8 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             ],
         )
 
-    # testing notranslate along with multiple other styles
     def test_notranslate_style3(self):
+        """Testing notranslate along with multiple other styles"""
         text = r"""***<u><s>Teksti, jossa on kaikki tyylit paitsi notranslate</s></u>*** 
         ***<u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>***"""
 
@@ -108,8 +109,8 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             ],
         )
 
-    # Testing different headers
     def test_header(self):
+        """Testing different headers"""
         text = (
             """r”# otsikko1
 ## otsikko2
@@ -141,7 +142,9 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
 
     def test_tex_collect(self):
         # TODO Add cases for identifiers, key-value -pairs and multiple classes as well
-        text = r"x^3-49x&=0 &&|\text{ erotetaan yhteinen tekijä x}\x(x^2-49)&=0 &&|\text{ käytetään tulon nollasääntöä}\x=0\;\;\;\textrm{tai}\;\;\;&x^2-49=0 &&|\textsf{ ratkaistaan x}\&\;\;\;\;\;\,\;\;x^2=49 \&\;\;\;\;\;\,\;\;\;\;x=7\;\mathsf{tai}\;x=-7"
+        text = r"x^3-49x&=0 &&|\text{ erotetaan yhteinen tekijä x}\x(x^2-49)&=0 &&|\text{ " \
+               r"käytetään tulon nollasääntöä}\x=0\;\;\;\textrm{tai}\;\;\;&x^2-49=0 &&|\textsf{ ratkaistaan x}" \
+               r"\&\;\;\;\;\;\,\;\;x^2=49 \&\;\;\;\;\;\,\;\;\;\;x=7\;\mathsf{tai}\;x=-7"
         self.assertEqual(
             tex_collect(text),
             [
@@ -161,24 +164,24 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             ],
         )
 
-    # Testing simple text inside latex
     def test_tex_collect_simple_text(self):
+        """Testing simple text inside latex"""
         text = r"\text{testi}\x"
         self.assertEqual(
             tex_collect(text),
             [NoTranslate(r"\text{"), Translate(r"testi"), NoTranslate(r"}\x")],
         ),
 
-    # Testing text with style inside latex
     def test_tex_collect_style_text(self):
+        """Testing text with style inside latex"""
         text = r"\textrm{another test}\x"
         self.assertEqual(
             tex_collect(text),
             [NoTranslate(r"\textrm{"), Translate(r"another test"), NoTranslate(r"}\x")],
         ),
 
-    # Testing a math function inside latex using dollar signs
-    def test_tex_collect_math_function(self):
+    def test_tex_collect_math_function1(self):
+        """Testing a math function inside latex using dollar signs"""
         text = r"\text{Testataan kaaviota: }\x$1\;\text{prosentti}=1\;\% =\frac{1}{100}=0,01$"
         self.assertEqual(
             tex_collect(text),
@@ -191,8 +194,8 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             ],
         ),
 
-    # Testing a math function mathrm inside latex using double dollar signs
     def test_tex_collect_math_function2(self):
+        """Testing a math function mathrm inside latex using double dollar signs"""
         text = r"$$\mathrm{Muuttuja e} = \sum_{n=0}^{\infty} \dfrac{1}{n!}$$"
         self.assertEqual(
             tex_collect(text),
@@ -203,8 +206,8 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             ],
         ),
 
-    #  Testing matrices inside latex
     def test_tex_collect_math_function3(self):
+        """Testing matrices inside latex"""
         text = r""""$$M = 
         \begin{bmatrix}
         \frac{5}{6} & \frac{1}{6} & 0 \\[0.3em]
@@ -227,8 +230,8 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             ],
         )
 
-    # Testing bold and italics formatting
     def test_tex_collect_formatted(self):
+        """Testing bold and italics formatting"""
         text = r"\textbf{oranges}\x\times 100 \textit{something}\x"
         self.assertEqual(
             tex_collect(text),
@@ -241,8 +244,8 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             ],
         ),
 
-    # Testing multiple translate approvals
     def test_get_translate_approvals_latex(self):
+        """Test for multiple translate approvals"""
         # NOTE Pandoc does not seem to account for trailing whitespace,
         # so the single space ' ' at the end of this test-text will disappear
         latexblock = r"""KING CLAUDIUS
@@ -294,7 +297,7 @@ x=0\;\;\;\\text{"""
             ],
         )
 
-    def test_bulletlist(self):
+    def test_bulletlist1(self):
         md = r"""- Mieleni minun [tekevi](www.example.com)
 - [Aivoni]{.huomio} ajattelevi
 - 
@@ -339,8 +342,8 @@ x=0\;\;\;\\text{"""
             ],
         )
 
-    # Testing bulletlist with different intendation and with a code block in between the list
     def test_bulletlist2(self):
+        """Testing bulletlist with different intendation and with a code block in between the list"""
         md = """- Yksi kohta
     - Kaksi kohtaa
     -   Kolme kohtaa
@@ -466,7 +469,7 @@ x=0\;\;\;\\text{"""
             ],
         )
 
-    def test_tim_plugin(self):
+    def test_tim_plugin1(self):
         md = r"""``` {plugin="csPlugin" #btn-tex2 .miniSnippets}
 header: Harjoittele matemaattisen vastauksen kirjoittamista.
 questionText: "Voit harjoitella
@@ -566,8 +569,8 @@ buttons: ""
             ],
         )
 
-    # Test for multiple choice plugin.
     def test_tim_plugin2(self):
+        """Test for multiple choice plugin."""
         md = r"""```{#mcq2 plugin="mmcq"}
 lazy: false
 answerLimit:
@@ -618,8 +621,8 @@ stem: """
             ],
         )
 
-    # Testing a big sized video plugin
     def test_tim_plugin3(self):
+        """Test for a big sized video plugin"""
         md = r"""``` {plugin="showVideo"}
 footer: "Video footer here"
 #iframe: true
@@ -640,7 +643,6 @@ width: 800
 height: 600
 file: VIDEOURLHERE
 ```""")
-
 
                 ]
             ]
