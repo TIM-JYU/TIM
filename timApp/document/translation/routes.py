@@ -16,7 +16,6 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import create_document_and_block, DocEntry
 from timApp.document.documents import add_reference_pars
 from timApp.document.translation.translation import Translation
-from timApp.document.translation.translationparser import attr_collect
 
 from timApp.item.block import copy_default_rights, BlockType
 from timApp.timdb.exceptions import ItemAlreadyExistsException
@@ -26,8 +25,8 @@ from timApp.util.flask.responsehelper import json_response, ok_response, Respons
 from timApp.document.translation.translator import (
     TranslationService,
     TranslationServiceKey,
-    init_deepl_translate,
-    init_deepl_pro_translate,
+    TranslationTarget,
+    TranslateMethodFactory,
     get_lang_lists,
 )
 from timApp.document.translation.language import Language
@@ -86,61 +85,30 @@ def create_translation_route(tr_doc_id, language):
     if translator_code := req_data.get("autotranslate", None):
         # Use the translator with a different source language if specified
         # and get the actual Language objects from database TODO Is database-query dumb here?
-        src_lang = Language.query_by_code(src_doc.docinfo.lang_id)
 
-        if not src_lang:
-            # Manual translation can be done without the original language.
-            if translator_code.lower() != "manual":
-                raise RouteException(
-                    description="The source language has not been set to the original document."
-                )
-
-        tr_lang = Language.query_by_code(language)
-
-        # Select the translator TODO Maybe move to somewhere else so this does not blow up with if-else?
-        if (
-            translator_code.lower() == "deepl"
-            or translator_code.lower() == "deepl free"
-        ):
-            translator_func = init_deepl_translate(
-                get_current_user_object().get_personal_group(), src_lang, tr_lang
-            )
-        elif translator_code.lower() == "deepl pro":
-            translator_func = init_deepl_pro_translate(
-                get_current_user_object().get_personal_group(), src_lang, tr_lang
+        # Manual translation can still be done without source language
+        # TODO This could probably be handled nicer...
+        if translator_code != "Manual":
+            translator_func = TranslateMethodFactory.create(
+                translator_code,
+                src_doc.docinfo.lang_id,
+                language,
+                get_current_user_object().get_personal_group(),
             )
 
     # Translate each paragraph sequentially if a translator was created
     if translator_func:
         orig_doc = tr.document.get_source_document()
-        # FIXME The parsing done before translation might need id etc values found in the markdown, but not found in the paragraphs, that get_paragraphs() returns...
+        # TODO The parsing done before translation might need id etc values found in the markdown, but not found in the paragraphs, that get_paragraphs() returns...
         # Ignore the settings paragraphs entirely to protect them from mangling
-        # FIXME settings should be copied from the original document (see issue #208), figure out the right place to do it
         zipped_paragraphs = zip(orig_doc.get_paragraphs(), tr.document)
         translatable_zipped_paragraphs = filter(
             lambda x: not (x[0].is_setting() or x[1].is_setting()), zipped_paragraphs
         )
         for orig_paragraph, tr_block in translatable_zipped_paragraphs:
-            md = orig_paragraph.md
-
-            if orig_paragraph.is_plugin():
-                # Add the attributes to the content so that parser can identify the code block as a plugin
-                # NOTE that the parser should only use the attributes for identification and deletes them from the translated result ie. this is a special case!
-
-                # Form the Pandoc-AST representation of a code-block's Attr and glue the parts returned as is back together into a string of Markdown
-                taskid = orig_paragraph.attrs.get("taskId", "")
-                classes = orig_paragraph.attrs.get("classes", [])
-                kv_pairs = [
-                    (k, v) for k, v in orig_paragraph.attrs.items() if k != "taskId"
-                ]
-                attr_str = "".join(
-                    map(lambda x: x.text, attr_collect([taskid, classes, kv_pairs])[0])
-                )
-                md = md.replace("```\n", f"``` {attr_str}\n", 1)
-
             # Call the partially applied function, that contains languages selected earlier, to translate text
             # TODO Call with the whole document and let preprocessing handle the conversion into list[str]?
-            translated_text = translator_func([md])[0]
+            translated_text = translator_func([TranslationTarget(orig_paragraph)])[0]
             tr.document.modify_paragraph(tr_block.id, translated_text)
 
     if isinstance(doc, DocEntry):
@@ -189,32 +157,15 @@ def paragraph_translation_route(
                 description="Cannot translate because paragraph missing reference to original"
             )
 
-        src_md = src_doc.document.get_paragraph(tr_par.get_attr("rp")).md
-        # TODO Wrap this selection into a function to also use with the other *_translation_route -functions
-        if (
-            translator_code.lower() == "deepl free"
-            or translator_code.lower() == "deepl"
-        ):
-            src_lang = Language.query_by_code(src_doc.lang_id)
-            target_lang = Language.query_by_code(language)
-            translator_func = init_deepl_translate(
-                get_current_user_object().get_personal_group(), src_lang, target_lang
-            )
-        elif translator_code.lower() == "deepl pro":
-            src_lang = Language.query_by_code(src_doc.lang_id)
-            target_lang = Language.query_by_code(language)
-            translator_func = init_deepl_pro_translate(
-                get_current_user_object().get_personal_group(), src_lang, target_lang
-            )
-        elif translator_code.lower() == "reversing":
-            # TODO DUMB DUMB DUMB, add the factory-method (ie. the translator.init_*_translate) into TranslationService-interface and select the translator by matching into db query: TranslationService.query.with_entities(TranslationService.service_name).all()
-            from timApp.tests.unit.test_translator_generic import (
-                ReversingTranslationService,
-            )
+        src_par = src_doc.document.get_paragraph(tr_par.get_attr("rp"))
+        translator_func = TranslateMethodFactory.create(
+            translator_code,
+            src_doc.lang_id,
+            language,
+            get_current_user_object().get_personal_group(),
+        )
 
-            translator_func = ReversingTranslationService.init_translate()
-
-        translated_text = translator_func([src_md])[0]
+        translated_text = translator_func([TranslationTarget(src_par)])[0]
         tr.document.modify_paragraph(tr_par_id, translated_text)
         # TODO Maybe this is needed for modifying paragraphs???
         db.session.commit()
@@ -222,6 +173,7 @@ def paragraph_translation_route(
     # TODO (maybe duplicate) Could this cause unhandled exception if translator_code is not recognised and tries to
     #  return json_response(block_text) when block_text is not defined
     # TODO What should this even return? Maybe an ok_response?
+    #  Or string_response?
     return json_response(tr_doc_id)
 
 
@@ -239,24 +191,13 @@ def text_translation_route(tr_doc_id: int, language: str) -> Response:
     # Select the specified translator and translate if valid
     if req_data and (translator_code := req_data.get("autotranslate", None)):
         src_text = req_data.get("originaltext", None)
-        if (
-            translator_code.lower() == "deepl free"
-            or translator_code.lower() == "deepl"
-        ):
-            src_lang = Language.query_by_code(src_doc.docinfo.lang_id)
-            target_lang = Language.query_by_code(language)
-            translator_func = init_deepl_translate(
-                get_current_user_object().get_personal_group(), src_lang, target_lang
-            )
-            block_text = translator_func([src_text])[0]
-        elif translator_code.lower() == "deepl pro":
-            src_lang = Language.query_by_code(src_doc.docinfo.lang_id)
-            target_lang = Language.query_by_code(language)
-            translator_func = init_deepl_pro_translate(
-                get_current_user_object().get_personal_group(), src_lang, target_lang
-            )
-            block_text = translator_func([src_text])[0]
-
+        translator_func = TranslateMethodFactory.create(
+            translator_code,
+            src_doc.docinfo.lang_id,
+            language,
+            get_current_user_object().get_personal_group(),
+        )
+        block_text = translator_func([TranslationTarget(src_text)])[0]
     else:
         raise RouteException(
             description=f"Please select a translator from the 'Translator data' tab."
@@ -308,6 +249,8 @@ def get_source_languages() -> Response:
         tr = TranslationService.query.filter(
             translator == TranslationService.service_name,
         ).first()
+        # TODO This crashes(?) if the translation service does not implement register-method (ie. does not inherit
+        #  from RegisteredTranslationService)
         tr.register(get_current_user_object().get_personal_group())
 
     if translator.lower() == "deepl free" or translator.lower() == "deepl pro":
@@ -368,6 +311,7 @@ def get_translators() -> Response:
 
     translationservices = TranslationService.query.all()
     translationservice_names = list(map(lambda x: x.service_name, translationservices))
+    # TODO Add Manual to the TranslationService-table?
     sl = ["Manual"] + translationservice_names
     return json_response(sl)
 
