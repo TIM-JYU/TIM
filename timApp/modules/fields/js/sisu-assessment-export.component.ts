@@ -428,7 +428,7 @@ class AssessmentTableModel implements DataModelProvider {
             <tim-loading *ngIf="loading"></tim-loading>
             <p *ngIf="okAssessments != null && !loading">
                 {{ okAssessments }} arviointia lähetettiin Sisuun.
-                <span *ngIf="errAssessments != null && errAssessments > 0">{{ errAssessments }} virheellistä arviointia torjuttiin.</span>
+                <span *ngIf="errAssessments != null && errAssessments > 0">{{ errAssessments }} virheellistä arviointia torjuttiin.</span><br>
                 Käy korjaamassa ja vahvistamassa arvioinnit Sisun tietojen massamuokkauksessa:
                 <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/ng-evaluation/mass-edit">
                     Arviointien massamuokkaus</a>.<br/>
