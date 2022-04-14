@@ -255,6 +255,7 @@ TIM_SAFE_ATTRS = frozenset(
         "send-global",
         # tim-search-button
         "folder",
+        "button-text",
     ]
 )
 

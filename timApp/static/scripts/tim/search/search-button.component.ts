@@ -9,7 +9,8 @@ import {Component, HostBinding, Input} from "@angular/core";
                 title="Display search panel"
                 i18n-title>
             <i class="glyphicon glyphicon-search"></i>&nbsp;
-            <span i18n>Search</span>
+            <span i18n *ngIf="buttonText === undefined; else customButtonText">Search</span>
+            <ng-template #customButtonText>{{buttonText}}</ng-template>
         </button>
         <bootstrap-panel *ngIf="displaySearch" [showClose]="true"
                          class="search-panel"
@@ -26,4 +27,5 @@ export class SearchButtonComponent {
     displaySearch = false;
     @HostBinding("class.floating") @Input() floating = false;
     @Input() folder?: string;
+    @Input() buttonText?: string;
 }
