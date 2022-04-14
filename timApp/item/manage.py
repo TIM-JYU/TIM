@@ -39,7 +39,7 @@ from timApp.document.exceptions import ValidationException
 from timApp.document.translation.translation import Translation
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder, path_includes
-from timApp.item.block import BlockType, Block
+from timApp.item.block import BlockType, Block, copy_default_rights
 from timApp.item.copy_rights import copy_rights
 from timApp.item.item import Item
 from timApp.item.validation import (
@@ -834,7 +834,7 @@ def copy_folder(
 ) -> list[ValidationException]:
     errors = []
     process_queue: list[tuple[Folder, Folder]] = [(from_folder, to_folder)]
-
+    user_who_copies_group = user_who_copies.get_personal_group()
     while process_queue:
         f_from, f_to = process_queue.pop()
         db.session.flush()
@@ -863,7 +863,10 @@ def copy_folder(
                 copy_active=options.copy_active_rights,
                 copy_expired=options.copy_expired_rights,
             )
-            nd.document.modifier_group_id = user_who_copies.get_personal_group().id
+            copy_default_rights(
+                nd, BlockType.Document, owners_to_skip=[user_who_copies_group]
+            )
+            nd.document.modifier_group_id = user_who_copies_group.id
             try:
                 for tr, new_tr in copy_document_and_enum_translations(
                     d, nd, copy_uploads=True
@@ -874,6 +877,11 @@ def copy_folder(
                         new_owner=user_who_copies,
                         copy_active=options.copy_active_rights,
                         copy_expired=options.copy_expired_rights,
+                    )
+                    copy_default_rights(
+                        new_tr,
+                        BlockType.Document,
+                        owners_to_skip=[user_who_copies_group],
                     )
             except ValidationException as e:
                 errors.append(e)
@@ -899,6 +907,11 @@ def copy_folder(
                     new_owner=user_who_copies,
                     copy_active=options.copy_active_rights,
                     copy_expired=options.copy_expired_rights,
+                )
+                copy_default_rights(
+                    nf,
+                    BlockType.Folder,
+                    owners_to_skip=[user_who_copies_group],
                 )
             process_queue.append((f, nf))
 
