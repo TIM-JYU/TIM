@@ -236,7 +236,34 @@ export class DraggableController implements IController {
             this.element.removeClass("draggable-attached");
             this.element.addClass("draggable-detached");
         }
+        this.element.css("z-index", this.layerProperly());
+
         this.detachStorage.set(this.canDrag());
+    }
+
+    /**
+     * The layering of pareditor's detachable windows acts weird (Source Block Preview's arrow and contents show above
+     * detached windows) so this makes use of z-indexes to work around it.
+     * @returns the layer/z-index for this window.
+     */
+    layerProperly() {
+        const diff = document.getElementById("diff");
+        const preview = document.getElementById("currpreview");
+        const orig = document.getElementById("origprev");
+        let index = 1;
+        if (!this.canDrag()) {
+            return 0;
+        }
+        if (diff?.style.zIndex && diff?.style.zIndex > "0") {
+            index++;
+        }
+        if (preview?.style.zIndex && preview?.style.zIndex > "0") {
+            index++;
+        }
+        if (orig?.style.zIndex && orig?.style.zIndex > "0") {
+            index++;
+        }
+        return index;
     }
 
     private async makeModalPositionAbsolute() {

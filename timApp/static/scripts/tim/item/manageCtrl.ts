@@ -60,6 +60,7 @@ export class PermCtrl implements IController {
     private notManual = false;
     private translatorAvailable = true;
     private translationInProgress: boolean = false;
+    private deleteButtonText = "";
     private accessTypes: Array<unknown>; // TODO proper type
     private orgs: IGroup[];
     private item: IFullDocument | IFolder;
@@ -127,6 +128,7 @@ export class PermCtrl implements IController {
                 await this.getTranslations();
             }
         }
+        this.setDeleteText();
     }
 
     async showMoreChangelog() {
@@ -341,13 +343,22 @@ export class PermCtrl implements IController {
         }
     }
 
+    setDeleteText() {
+        const lang_name = this.findCurrentTrDocLang();
+        if (lang_name == "") {
+            this.deleteButtonText = "Delete document";
+        } else {
+            this.deleteButtonText = "Delete translation: " + lang_name;
+        }
+    }
+
     async deleteDocument() {
         if (
             window.confirm(
                 `Are you sure you want to delete this ${
-                    !this.item.isFolder && !this.item.src_docid
+                    !this.item.isFolder && this.findCurrentTrDocLang() == ""
                         ? "document"
-                        : "translation"
+                        : "translation: " + this.findCurrentTrDocLang()
                 }?`
             )
         ) {
@@ -633,6 +644,22 @@ export class PermCtrl implements IController {
             this.translationInProgress = false;
             await showMessageDialog(r.result.data.error);
         }
+    }
+
+    /**
+     * Finds the language of the current translation document.
+     * @returns The current translation document's language or nothing if not found or is source document.
+     */
+    findCurrentTrDocLang() {
+        for (const translation of this.translations) {
+            if (
+                translation.id == this.item.id &&
+                translation.id != translation.src_docid
+            ) {
+                return translation.lang_id;
+            }
+        }
+        return "";
     }
 
     /**
