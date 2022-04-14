@@ -98,8 +98,9 @@
          tim-draggable-fixed
          detachable="true"
          caption="Difference in original document"
-         save="{{$ctrl.getOptions().localSaveTag}}Trdiff">
-        <div class="border">
+         save="{{$ctrl.getOptions().localSaveTag}}Trdiff"
+    id="diff">
+        <div class="border background">
             <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.sideBySide" ng-click="$ctrl.changePositioning()"/> View Next to Editor </label>
             <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.hideDiff"/> Hide this area </label>
         </div>
@@ -115,8 +116,9 @@
          caption="Current Block {{ $ctrl.getPreviewCaption() }}"
          save="{{$ctrl.getOptions().localSaveTag}}Preview"
          class="previewDiv halfsize"
-         ng-show="$ctrl.proeditor">
-        <div class="border">
+         ng-show="$ctrl.proeditor"
+    id="currpreview">
+        <div class="border background">
             <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.hidePreview" ng-click="$ctrl.updatePreviewHide()"/> Hide this area </label>
         </div>
         <div class="previewcontent paragraphs fullsize" ng-hide="$ctrl.hidePreview"></div>
@@ -127,8 +129,9 @@
          save="{{$ctrl.getOptions().localSaveTag}}Preview (original block)"
          class="previewDiv halfsize"
          ng-if="$ctrl.trdiff.new"
-         ng-show="$ctrl.proeditor">
-        <div class="border">
+         ng-show="$ctrl.proeditor"
+    id="origpreview">
+        <div class="border background">
             <label class="font-weight-normal margin-5-right"><input type="checkbox" id="origprev" ng-model="$ctrl.hideOriginalPreview" ng-click="$ctrl.updateOriginalPreviewHide()"/> Hide this area </label>
         </div>
         <div class="previeworiginalcontent paragraphs fullsize" ng-hide="$ctrl.hideOriginalPreview">

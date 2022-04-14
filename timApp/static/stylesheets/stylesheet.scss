@@ -567,6 +567,10 @@ div.error {
     border-radius: 0;
 }
 
+.background {
+    background-color: $material-bg;
+}
+
 .previewcontent, .previeworiginalcontent {
     @extend .border;
     clear: both;
