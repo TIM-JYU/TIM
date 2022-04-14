@@ -426,8 +426,8 @@ class AssessmentTableModel implements DataModelProvider {
                 </button>
             </div>
             <tim-loading *ngIf="loading"></tim-loading>
-            <ng-container *ngIf="">
-                <p *ngIf="okAssessments != null && !loading">
+            <ng-container *ngIf="okAssessments != null && !loading">
+                <p>
                     {{ okAssessments }} arviointia lähetettiin Sisuun.
                     <span *ngIf="errAssessments != null && errAssessments > 0">{{ errAssessments }} virheellistä arviointia torjuttiin.</span>
                 </p>
