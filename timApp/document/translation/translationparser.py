@@ -735,7 +735,7 @@ def header_collect(content: dict) -> list[TranslateApproval]:
     level = content[0]
     arr: list[TranslateApproval] = list()
 
-    arr.append(NoTranslate(f"{'#' * level} "))
+    arr.append(NoTranslate(f"\n{'#' * level} "))
     for inline in content[2]:
         arr += inline_collect(inline)
 
