@@ -14,7 +14,7 @@ from sass import CompileError
 from timApp.answer.answers import TooLargeAnswerException
 from timApp.auth.accesshelper import AccessDenied, ItemLockedException
 from timApp.auth.login import logout
-from timApp.auth.sessioninfo import get_current_user_object
+from timApp.auth.sessioninfo import get_current_user_object, clear_session
 from timApp.document.docentry import DocEntry
 from timApp.document.docsettings import get_minimal_visibility_settings
 from timApp.folder.folder import Folder
@@ -175,7 +175,7 @@ def register_errorhandlers(app: Flask):
 
     @app.errorhandler(DeletedUserException)
     def handle_user_deleted(error):
-        session.clear()
+        clear_session()
         return redirect("/")
 
     @app.errorhandler(TooLargeAnswerException)

@@ -19,7 +19,8 @@ from timApp.auth.accesshelper import (
     verify_ip_ok,
     check_admin_access,
 )
-from timApp.auth.sessioninfo import get_current_user_id, logged_in
+from timApp.auth.session.util import expire_user_session, add_user_session
+from timApp.auth.sessioninfo import get_current_user_id, logged_in, clear_session
 from timApp.auth.sessioninfo import (
     get_other_users,
     get_session_users_ids,
@@ -60,6 +61,10 @@ def get_real_name(email: str) -> str:
     return " ".join(parts2)
 
 
+def _save_sessions() -> bool:
+    return current_app.config["SESSIONS_ENABLE"]
+
+
 @login_page.post("/logout")
 def logout(user_id: int | None = None) -> Response:
     if user_id is not None and user_id != get_current_user_id():
@@ -67,7 +72,9 @@ def logout(user_id: int | None = None) -> Response:
         group.pop(str(user_id), None)
         session["other_users"] = group
     else:
-        session.clear()
+        expire_user_session(get_current_user_object(), session.get("session_id"))
+        db.session.commit()
+        clear_session()
     return login_response()
 
 
@@ -162,9 +169,10 @@ def set_single_user_to_session(user: User) -> None:
     h.update(user.name.encode("utf-8"))
     h.update(str(user.id).encode("utf-8"))
     h.update(get_current_time().isoformat().encode("utf-8"))
-    session["session_id"] = h.hexdigest(4)
+    session_hash = h.hexdigest(8)
+    session["session_id"] = session_hash
 
-    # Compute a hash of user_id, user_name and current time as a preliminary session ID
+    add_user_session(user, session_hash, request.user_agent.string)
 
     session.pop("other_users", None)
 
@@ -214,6 +222,10 @@ def email_signup(
 
 def is_email_registration_enabled() -> bool:
     return current_app.config["EMAIL_REGISTRATION_ENABLED"]
+
+
+def is_simple_email_login_enabled() -> bool:
+    return current_app.config["SIMPLE_EMAIL_LOGIN"]
 
 
 def do_email_signup_or_password_reset(
@@ -383,9 +395,9 @@ def email_signup_finish(
     NewUser.query.filter(NewUser.email.in_((user.name, user.email))).delete(
         synchronize_session=False
     )
-    db.session.commit()
-
+    db.session.flush()
     set_user_to_session(user)
+    db.session.commit()
     return json_response({"status": success_status})
 
 
@@ -445,9 +457,7 @@ def do_email_login(
 
             set_user_to_session(user)
 
-            # if password hash was updated, save it
-            if old_hash != user.pass_:
-                db.session.commit()
+            db.session.commit()
             return login_user_data()
         else:
             log_warning(f"Failed login (wrong password): {email_or_username}")
@@ -533,10 +543,6 @@ def simple_login_password(email: str, password: str) -> Response:
 def verify_simple_email_login_enabled() -> None:
     if not current_app.config["SIMPLE_EMAIL_LOGIN"]:
         raise RouteException("Simple email login is not enabled.")
-
-
-def is_simple_email_login_enabled() -> bool:
-    return current_app.config["SIMPLE_EMAIL_LOGIN"]
 
 
 def convert_email_to_lower(email_or_username: str) -> str:

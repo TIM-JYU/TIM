@@ -3,13 +3,15 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Optional, Union
+from typing import Optional, Union, MutableMapping
 
 from flask import current_app
 from sqlalchemy import func
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Query, joinedload, defaultload
-from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.orm.collections import (
+    attribute_mapped_collection,
+)
 from sqlalchemy.orm.strategy_options import loader_option
 
 from timApp.answer.answer import Answer
@@ -17,6 +19,7 @@ from timApp.answer.answer_models import UserAnswer
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import UserItemRights
+from timApp.auth.session.model import UserSession
 from timApp.document.docinfo import DocInfo
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.folder.createopts import FolderCreationOptions
@@ -231,9 +234,11 @@ def user_query_with_joined_groups() -> Query:
 
 
 class User(db.Model, TimeStampMixin, SCIMEntity):
-    """A user account.
+    """A user account. Used to identify users.
 
-    A special user 'Anonymous user' denotes a user that is not logged in. Its id is 0.
+    .. note:: Some user IDs are reserved for internal use:
+
+              * ID `0` is used to denote all "Anonymous users"
     """
 
     __tablename__ = "useraccount"
@@ -241,10 +246,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     """User identifier."""
 
     name = db.Column(db.Text, nullable=False, unique=True)
-    """User name (not full name)."""
+    """User name (not full name). Used to identify the user and during log-in."""
 
     given_name = db.Column(db.Text)
+    """User's given name."""
+
     last_name = db.Column(db.Text)
+    """User's last name."""
 
     real_name = db.Column(db.Text)
     """Real (full) name. This may be in the form "Lastname Firstname" or "Firstname Lastname"."""
@@ -269,10 +277,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         back_populates="user",
         collection_class=attribute_mapped_collection("user_collection_key"),
     )
+    """Personal unique codes used to identify the user via Haka Identity Provider."""
 
     internalmessage_readreceipt: InternalMessageReadReceipt | None = db.relationship(
         "InternalMessageReadReceipt", back_populates="user"
     )
+    """User's read receipts for internal messages."""
 
     primary_email_contact = db.relationship(
         UserContact,
@@ -282,6 +292,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         lazy="select",
         uselist=False,
     )
+    """
+    The primary email contact for the user.
+    
+    The primary contact is the preferred email address that the user wants to receive notifications from TIM.
+    """
 
     def _get_email(self) -> str:
         return self._email
@@ -292,6 +307,131 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     # Decorators don't work with mypy yet
     # See https://github.com/dropbox/sqlalchemy-stubs/issues/98
     email = hybrid_property(_get_email, _set_email)
+    """
+    User's primary email address.
+    
+    This is the address the user can log in with and receive notifications from TIM.
+    """
+
+    consents = db.relationship("ConsentChange", back_populates="user", lazy="select")
+    """User's consent changes."""
+
+    contacts: list[UserContact] = db.relationship(
+        "UserContact", back_populates="user", lazy="select"
+    )
+    """User's contacts."""
+
+    notifications = db.relationship(
+        "Notification", back_populates="user", lazy="dynamic"
+    )
+    """Notification settings for the user. Represents what notifications the user wants to receive."""
+
+    groups: list[UserGroup] = db.relationship(
+        UserGroup,
+        UserGroupMember.__table__,
+        primaryjoin=(id == UserGroupMember.user_id) & membership_current,
+        back_populates="users",
+        lazy="select",
+    )
+    """Current groups of the user is a member of."""
+
+    groups_dyn = db.relationship(
+        UserGroup,
+        UserGroupMember.__table__,
+        primaryjoin=id == UserGroupMember.user_id,
+        lazy="dynamic",
+    )
+    """All groups of the user as a dynamic query."""
+
+    groups_inactive = db.relationship(
+        UserGroup,
+        UserGroupMember.__table__,
+        primaryjoin=(id == UserGroupMember.user_id) & membership_deleted,
+        lazy="dynamic",
+    )
+    """All groups the user is no longer a member of as a dynamic query."""
+
+    memberships_dyn = db.relationship(
+        UserGroupMember,
+        foreign_keys="UserGroupMember.user_id",
+        lazy="dynamic",
+    )
+    """User's group memberships as a dynamic query."""
+
+    memberships: list[UserGroupMember] = db.relationship(
+        UserGroupMember,
+        foreign_keys="UserGroupMember.user_id",
+    )
+    """All user's group memberships."""
+
+    active_memberships = db.relationship(
+        UserGroupMember,
+        primaryjoin=(id == UserGroupMember.user_id) & membership_current,
+        collection_class=attribute_mapped_collection("UserGroupMember.usergroup_id"),
+        # back_populates="group",
+    )
+    """Active group memberships mapped by user group ID."""
+
+    lectures = db.relationship(
+        "Lecture",
+        secondary=LectureUsers.__table__,
+        back_populates="users",
+        lazy="select",
+    )
+    """Lectures that the user is attending at the moment."""
+
+    owned_lectures = db.relationship("Lecture", back_populates="owner", lazy="dynamic")
+    """Lectures that the user has created."""
+
+    lectureanswers = db.relationship(
+        "LectureAnswer", back_populates="user", lazy="dynamic"
+    )
+    """Lecture answers that the user sent to lectures as a dynamic query."""
+
+    messages = db.relationship("Message", back_populates="user", lazy="dynamic")
+    """Lecture messages that the user sent to lectures as a dynamic query."""
+
+    questionactivity = db.relationship(
+        "QuestionActivity", back_populates="user", lazy="select"
+    )
+    """User's activity on lecture questions."""
+
+    useractivity = db.relationship("Useractivity", back_populates="user", lazy="select")
+    """User's activity during lectures."""
+
+    answers = db.relationship(
+        "Answer", secondary=UserAnswer.__table__, back_populates="users", lazy="dynamic"
+    )
+    """User's answers to tasks as a dynamic query."""
+
+    annotations = db.relationship(
+        "Annotation", back_populates="annotator", lazy="dynamic"
+    )
+    """User's task annotations as a dynamic query."""
+
+    velps = db.relationship("Velp", back_populates="creator", lazy="dynamic")
+    """Velps created by the user as a dynamic query."""
+
+    sessions: list[UserSession] = db.relationship(
+        "UserSession", back_populates="user", lazy="select"
+    )
+    """All user's sessions as a dynamic query."""
+
+    active_sessions: MutableMapping[str, UserSession] = db.relationship(
+        "UserSession",
+        primaryjoin=(id == UserSession.user_id) & ~UserSession.expired,
+        collection_class=attribute_mapped_collection("session_id"),
+    )
+    """Active sessions mapped by the session ID."""
+
+    # Used for copying
+    notifications_alt = db.relationship("Notification")
+    owned_lectures_alt = db.relationship("Lecture")
+    lectureanswers_alt = db.relationship("LectureAnswer")
+    messages_alt = db.relationship("Message")
+    answers_alt = db.relationship("Answer", secondary=UserAnswer.__table__)
+    annotations_alt = db.relationship("Annotation")
+    velps_alt = db.relationship("Velp")
 
     def update_email(
         self,
@@ -299,6 +439,22 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         create_contact: bool = True,
         notify_message_lists: bool = True,
     ):
+        """
+        Updates the user's primary email address.
+
+        .. note:: Prefer setting :attr:`email` instead of using this method. For example:
+
+                    >>> user = User.get_by_name("testuser1")
+                    >>> user.email = "newemail@example.com"
+                    >>> db.session.commit()
+                    None
+
+        :param new_email: New email address.
+        :param create_contact: Whether to create a new contact for the new email address. Defaults to `True`.
+                                If `False`, updates only the user's email address info without updating the primary contact.
+        :param notify_message_lists: If `True`, send a notification to all message lists that the user is subscribed to.
+                                     Defaults to `True`.
+        """
         from timApp.messaging.messagelist.emaillist import update_mailing_list_address
 
         prev_email = self._email
@@ -327,102 +483,36 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def scim_display_name(self):
+        """User's display name in format used by SCIM API."""
         return last_name_to_last(self.real_name)
 
     @property
     def scim_created(self):
+        """User's creation date in format used by SCIM API."""
         return self.created
 
     @property
     def scim_modified(self):
+        """User's last modification date in format used by SCIM API."""
         return self.modified
 
     @property
     def scim_id(self):
+        """User's identifier in format used by SCIM API."""
         return self.name
 
     @property
     def scim_resource_type(self):
+        """The resource type of the user in format used by SCIM API."""
         return "User"
 
     @property
     def scim_extra_data(self):
+        """Any extra data that should be returned in the SCIM API response."""
         email_contacts = UserContact.query.filter_by(
             user=self, channel=Channel.EMAIL, verified=True
         )
         return {"emails": [{"value": uc.contact} for uc in email_contacts]}
-
-    consents = db.relationship("ConsentChange", back_populates="user", lazy="select")
-    contacts: list[UserContact] = db.relationship(
-        "UserContact", back_populates="user", lazy="select"
-    )
-    notifications = db.relationship(
-        "Notification", back_populates="user", lazy="dynamic"
-    )
-    notifications_alt = db.relationship("Notification")
-
-    groups: list[UserGroup] = db.relationship(
-        UserGroup,
-        UserGroupMember.__table__,
-        primaryjoin=(id == UserGroupMember.user_id) & membership_current,
-        back_populates="users",
-        lazy="select",
-    )
-    groups_dyn = db.relationship(
-        UserGroup,
-        UserGroupMember.__table__,
-        primaryjoin=id == UserGroupMember.user_id,
-        lazy="dynamic",
-    )
-    groups_inactive = db.relationship(
-        UserGroup,
-        UserGroupMember.__table__,
-        primaryjoin=(id == UserGroupMember.user_id) & membership_deleted,
-        lazy="dynamic",
-    )
-    memberships_dyn = db.relationship(
-        UserGroupMember,
-        foreign_keys="UserGroupMember.user_id",
-        lazy="dynamic",
-    )
-    memberships: list[UserGroupMember] = db.relationship(
-        UserGroupMember,
-        foreign_keys="UserGroupMember.user_id",
-    )
-    active_memberships = db.relationship(
-        UserGroupMember,
-        primaryjoin=(id == UserGroupMember.user_id) & membership_current,
-        collection_class=attribute_mapped_collection("UserGroupMember.usergroup_id"),
-        # back_populates="group",
-    )
-    lectures = db.relationship(
-        "Lecture",
-        secondary=LectureUsers.__table__,
-        back_populates="users",
-        lazy="select",
-    )
-    owned_lectures = db.relationship("Lecture", back_populates="owner", lazy="dynamic")
-    owned_lectures_alt = db.relationship("Lecture")
-    lectureanswers = db.relationship(
-        "LectureAnswer", back_populates="user", lazy="dynamic"
-    )
-    lectureanswers_alt = db.relationship("LectureAnswer")
-    messages = db.relationship("Message", back_populates="user", lazy="dynamic")
-    messages_alt = db.relationship("Message")
-    questionactivity = db.relationship(
-        "QuestionActivity", back_populates="user", lazy="select"
-    )
-    useractivity = db.relationship("Useractivity", back_populates="user", lazy="select")
-    answers = db.relationship(
-        "Answer", secondary=UserAnswer.__table__, back_populates="users", lazy="dynamic"
-    )
-    answers_alt = db.relationship("Answer", secondary=UserAnswer.__table__)
-    annotations = db.relationship(
-        "Annotation", back_populates="annotator", lazy="dynamic"
-    )
-    annotations_alt = db.relationship("Annotation")
-    velps = db.relationship("Velp", back_populates="creator", lazy="dynamic")
-    velps_alt = db.relationship("Velp")
 
     def __repr__(self):
         return f"<User(id={self.id}, name={self.name}, email={self.email}, real_name={self.real_name})>"

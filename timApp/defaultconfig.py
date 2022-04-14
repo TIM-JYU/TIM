@@ -1,3 +1,10 @@
+"""
+List and defaults for all configuration options in TIM.
+
+.. note:: Please don't modify this file directly in your server or local development setup.
+          This avoids merge conflicts. Override the values with prodconfig.py or debugconfig.py instead.
+"""
+
 import logging
 import multiprocessing
 import os
@@ -421,3 +428,22 @@ MACHINE_TRANSLATORS = [
     #    None,
     # ),
 ]
+
+# Options related to session management
+
+SESSIONS_ENABLE = False
+"""If enabled, session management information will be stored and logged."""
+
+SESSIONS_EXPIRE_ON_LOGOUT = True
+"""
+If enabled, user session info is expired automatically when logging out.
+Otherwise, the session must be explicitly cleared.
+"""
+
+SESSIONS_MAX_CONCURRENT_SESSIONS_PER_DOCUMENT = None
+"""
+How many concurrent sessions are allowed for a single user for a protected document.
+If this limit is reached, the user is not given an active session which prevents accessing documents.
+
+If None, there is no limit.
+"""
