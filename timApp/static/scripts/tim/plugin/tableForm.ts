@@ -880,6 +880,7 @@ export class TableFormComponent
                     $localize`Sisu name`,
                     "invisible1",
                     "invisible2",
+                    "invisible3",
                 ];
             } else {
                 this.data.headers = [
