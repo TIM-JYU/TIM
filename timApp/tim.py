@@ -69,6 +69,7 @@ from timApp.modules.fields.cbcountfield import cbcountfield_route
 from timApp.note.routes import notes
 from timApp.notification.notify import notify
 from timApp.plugin.importdata.importData import importData_plugin
+from timApp.plugin.peerreviewtable.peerreviewtable import my_plugin
 from timApp.plugin.qst.qst import qst_plugin
 from timApp.plugin.reviewcanvas.reviewcanvas import reviewcanvas_plugin
 from timApp.plugin.routes import plugin_bp
@@ -159,6 +160,7 @@ blueprints = [
     messagelist,
     timMessage,
     verify,
+    my_plugin,
 ]
 
 if app.config["BOOKMARKS_ENABLED"]:
