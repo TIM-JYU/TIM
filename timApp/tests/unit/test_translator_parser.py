@@ -339,6 +339,30 @@ x=0\;\;\;\\text{"""
             ],
         )
 
+        md = """Kissa
+
+     eka
+     toka
+
+Koira
+"""
+
+        # TODO/FIXME? Should get_translate_approvals return 3 blocks (=lists of TranslateApprovals) here?
+        # self.assertEqual(
+        #    get_translate_approvals(md),
+        #    [
+        #        [
+        #            Translate("Kissa"),
+        #            NoTranslate("\n\n```\n"),
+        #            Translate(" eka"),
+        #            NoTranslate("\n"),
+        #            Translate(" toka"),
+        #            NoTranslate("```\n\n"),
+        #            Translate("Koira"),
+        #        ]
+        #    ],
+        # )
+
     def test_ordered_list1(self):
         md = r"""1. Tässä ollaan
     2. Jotain tehdään
@@ -435,6 +459,31 @@ x=0\;\;\;\\text{"""
                     Translate("Ihan hirveesti"),
                     NoTranslate("\n\tB) "),
                     Translate("Liikaa"),
+                ]
+            ],
+        )
+
+    def ordered_list_code_block(self):
+        md = """1. Kissa
+
+       eka
+       toka
+
+2. Koira"""
+
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [
+                    NoTranslate(
+                        """1. Kissa
+                        
+ ```
+ eka
+ toka
+ ```
+2. Koira"""
+                    ),
                 ]
             ],
         )
