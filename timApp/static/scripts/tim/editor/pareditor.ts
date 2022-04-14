@@ -249,6 +249,7 @@ export class PareditorController extends DialogController<
     private hideOriginalPreview: boolean = false;
     private translationInProgress: boolean = false;
     private nothingSelected: boolean = false;
+    private errorMessage = "";
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -1635,9 +1636,10 @@ ${backTicks}
             this.targetLanguages = [];
             listLanguages(sources.result.data, this.targetLanguages);
             this.translatorAvailable = true;
+            this.errorMessage = "";
         } else {
             this.translatorAvailable = false;
-            await showMessageDialog(sources.result.data.error);
+            this.errorMessage = sources.result.data.error;
             return;
         }
         sources = await to(
@@ -1649,9 +1651,10 @@ ${backTicks}
             this.sourceLanguages = [];
             listLanguages(sources.result.data, this.sourceLanguages);
             this.translatorAvailable = true;
+            this.errorMessage = "";
         } else {
             this.translatorAvailable = false;
-            await showMessageDialog(sources.result.data.error);
+            this.errorMessage = sources.result.data.error;
             return;
         }
     }

@@ -61,6 +61,7 @@ export class PermCtrl implements IController {
     private translatorAvailable = true;
     private translationInProgress: boolean = false;
     private deleteButtonText = "";
+    private errorMessage = "";
     private accessTypes: Array<unknown>; // TODO proper type
     private orgs: IGroup[];
     private item: IFullDocument | IFolder;
@@ -593,10 +594,10 @@ export class PermCtrl implements IController {
             this.targetLanguages = [];
             listLanguages(sources.result.data, this.targetLanguages);
             this.translatorAvailable = true;
+            this.errorMessage = "";
         } else {
-            this.mayTranslate = false;
             this.translatorAvailable = false;
-            await showMessageDialog(sources.result.data.error);
+            this.errorMessage = sources.result.data.error;
             return;
         }
         sources = await to(
@@ -608,10 +609,10 @@ export class PermCtrl implements IController {
             this.sourceLanguages = [];
             listLanguages(sources.result.data, this.sourceLanguages);
             this.translatorAvailable = true;
+            this.errorMessage = "";
         } else {
-            this.mayTranslate = false;
             this.translatorAvailable = false;
-            await showMessageDialog(sources.result.data.error);
+            this.errorMessage = sources.result.data.error;
             return;
         }
         this.notManualCheck();

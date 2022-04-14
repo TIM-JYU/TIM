@@ -220,7 +220,7 @@
                     </div>
                     <div ng-show="!$ctrl.mayTranslate || !$ctrl.newTranslation.title">
                         <b ng-show="$ctrl.notManual && !$ctrl.mayTranslate && $ctrl.translatorAvailable">The chosen translator does not support the chosen language. </b>
-                        <b ng-show="!$ctrl.translatorAvailable">You cannot use this translator because you don't have an API key. </b>
+                        <b ng-show="!$ctrl.translatorAvailable">{{$ctrl.errorMessage}} </b>
                         <p>This document will not be automatically translated on creation.</p>
                     </div>
                     <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title ||

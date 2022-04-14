@@ -44,6 +44,7 @@
                 <p ng-show="$ctrl.translationInProgress"><tim-loading></tim-loading> Translating... This may take a while.</p>
                 <button class="timButton" id="translateButton" ng-disabled="$ctrl.saving || $ctrl.translationInProgress
                 || $ctrl.docTranslator == '' || !$ctrl.translatorAvailable" ng-show="$ctrl.showTranslated()" ng-click="$ctrl.translateClicked()" style="right: 2px;">Translate</button>
+            <b ng-show="!$ctrl.translatorAvailable">{{$ctrl.errorMessage}}</b>
         </div>
     </uib-tab>
   </uib-tabset>
