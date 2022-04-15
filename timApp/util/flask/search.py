@@ -640,7 +640,10 @@ def create_search_files(remove_deleted_pars=True):
             f"Combined and processed paragraph files created to "
             f"{PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH}",
         )
-    except:
+    except Exception as e:
+        log_error(
+            f"SEARCH_INDEX: Failed to generate search files: {get_error_message(e)}"
+        )
         return (
             400,
             f"Creating files to {PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH} failed!",
