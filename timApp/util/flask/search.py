@@ -33,7 +33,7 @@ from timApp.util.flask.requesthelper import (
     NotExist,
 )
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.logger import log_error
+from timApp.util.logger import log_error, log_warning
 from timApp.util.utils import get_error_message, cache_folder_path
 
 search_routes = Blueprint("search", __name__, url_prefix="/search")
@@ -486,10 +486,13 @@ def add_doc_info_content_line(
         # Resolve the markdown in full (including references) for better search
         doc_par = doc_info.document.get_paragraph(par_id)
         par_md_buf = StringIO()
-        if doc_par.is_reference():
+        if doc_par.is_par_reference() or doc_par.is_area_reference():
             try:
                 ref_pars = doc_par.get_referenced_pars()
-            except InvalidReferenceException:
+            except InvalidReferenceException as e:
+                log_warning(
+                    f"SEARCH_INDEX: Invalid reference in doc {doc_info.doc_id} par {par_id}: {e}"
+                )
                 par_md_buf.write(doc_par.md)
             else:
                 for p in ref_pars:
