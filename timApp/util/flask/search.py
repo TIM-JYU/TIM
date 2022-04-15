@@ -646,7 +646,7 @@ def create_search_files(remove_deleted_pars=True):
         )
         return (
             400,
-            f"Creating files to {PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH} failed!",
+            f"Creating files to {PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH} failed: {get_error_message(e)}!",
         )
 
 
