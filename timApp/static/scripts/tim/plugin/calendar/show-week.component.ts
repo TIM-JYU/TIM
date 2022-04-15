@@ -6,7 +6,7 @@ import {getISOWeek} from "date-fns";
     selector: "app-show-week",
     template: `
         <ng-container>
-        <h4> {{getWeekNumberFromDate(viewDate)}} </h4>
+        <p> {{getWeekNumberFromDate(viewDate)}} </p>
         </ng-container>`,
     styleUrls: ["calendar.component.scss"],
 })
