@@ -491,7 +491,7 @@ def add_doc_info_content_line(
                 ref_pars = doc_par.get_referenced_pars()
             except InvalidReferenceException as e:
                 log_warning(
-                    f"SEARCH_INDEX: Invalid reference in doc {doc_info.doc_id} par {par_id}: {e}"
+                    f"SEARCH_INDEX: Invalid reference in doc {doc_info.id} par {par_id}: {get_error_message(e)}"
                 )
                 par_md_buf.write(doc_par.md)
             else:
