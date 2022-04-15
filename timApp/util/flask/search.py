@@ -561,6 +561,7 @@ def create_search_files(remove_deleted_pars=True):
     temp_title_file_name = (
         SEARCH_CACHE_FOLDER / f"temp_{PROCESSED_TITLE_FILE_PATH.name}"
     )
+    index_log_file_name = SEARCH_CACHE_FOLDER / "index_log.log"
     f: Path = RAW_CONTENT_FILE_PATH.parent
     f.mkdir(exist_ok=True)
 
@@ -584,13 +585,16 @@ def create_search_files(remove_deleted_pars=True):
             "w+", encoding="utf-8"
         ) as temp_content_file, temp_title_file_name.open(
             "w+", encoding="utf-8"
-        ) as temp_title_file:
+        ) as temp_title_file, index_log_file_name.open(
+            "w+", encoding="utf-8"
+        ) as index_log_file:
 
             current_doc, current_pars = -1, []
 
             for line in raw_file:
                 try:
                     doc_id, par_id, par = get_doc_par_id(line)
+                    index_log_file.write(f"Processing {doc_id}#{par_id}\n")
                     if not doc_id:
                         continue
                     if not current_doc:
@@ -600,10 +604,15 @@ def create_search_files(remove_deleted_pars=True):
                         current_pars.append(par)
                     # Otherwise save the previous one and empty par data.
                     else:
+                        index_log_file.write(
+                            f"Document switch ({current_doc} -> {doc_id}); generating content ({len(current_pars)} pars)\n"
+                        )
                         new_content_line = add_doc_info_content_line(
                             current_doc, current_pars, remove_deleted_pars
                         )
+                        index_log_file.write(f"Generated line, writing title\n")
                         new_title_line = add_doc_info_title_line(current_doc)
+                        index_log_file.write(f"Writing title and line to index\n")
                         if new_content_line:
                             temp_content_file.write(new_content_line)
                         if new_title_line:
@@ -612,8 +621,8 @@ def create_search_files(remove_deleted_pars=True):
                         current_pars.clear()
                         current_pars.append(par)
                 except Exception as e:
-                    print(
-                        f"'{get_error_message(e)}' while writing search file line '{line}''"
+                    log_error(
+                        f"SEARCH_INDEX: '{get_error_message(e)}' while writing search file line '{line}''"
                     )
 
             # Write the last line separately, because loop leaves it unsaved.
