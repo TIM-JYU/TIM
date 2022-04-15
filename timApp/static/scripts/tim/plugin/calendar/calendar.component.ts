@@ -402,8 +402,8 @@ export class CalendarComponent
     }
 
     /**
-     *
-     * @param date
+     * Enables the user to click on a date in the month view to see the week view of that day
+     * @param date the date of clicked day
      */
     changeToDay(date: Date) {
         this.clickedDate = date;
