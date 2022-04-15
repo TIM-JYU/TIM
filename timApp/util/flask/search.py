@@ -489,10 +489,7 @@ def add_doc_info_content_line(
         if doc_par.is_par_reference() or doc_par.is_area_reference():
             try:
                 ref_pars = doc_par.get_referenced_pars()
-            except InvalidReferenceException as e:
-                log_warning(
-                    f"SEARCH_INDEX: Invalid reference in doc {doc_info.id} par {par_id}: {get_error_message(e)}"
-                )
+            except InvalidReferenceException:
                 par_md_buf.write(doc_par.md)
             else:
                 for p in ref_pars:
@@ -594,7 +591,6 @@ def create_search_files(remove_deleted_pars=True):
             for line in raw_file:
                 try:
                     doc_id, par_id, par = get_doc_par_id(line)
-                    index_log_file.write(f"Processing {doc_id}#{par_id}\n")
                     if not doc_id:
                         continue
                     if not current_doc:
@@ -604,15 +600,10 @@ def create_search_files(remove_deleted_pars=True):
                         current_pars.append(par)
                     # Otherwise save the previous one and empty par data.
                     else:
-                        index_log_file.write(
-                            f"Document switch ({current_doc} -> {doc_id}); generating content ({len(current_pars)} pars)\n"
-                        )
                         new_content_line = add_doc_info_content_line(
                             current_doc, current_pars, remove_deleted_pars
                         )
-                        index_log_file.write(f"Generated line, writing title\n")
                         new_title_line = add_doc_info_title_line(current_doc)
-                        index_log_file.write(f"Writing title and line to index\n")
                         if new_content_line:
                             temp_content_file.write(new_content_line)
                         if new_title_line:
@@ -621,9 +612,9 @@ def create_search_files(remove_deleted_pars=True):
                         current_pars.clear()
                         current_pars.append(par)
                 except Exception as e:
-                    log_error(
-                        f"SEARCH_INDEX: '{get_error_message(e)}' while writing search file line '{line}''"
-                    )
+                    err = f"SEARCH_INDEX: '{get_error_message(e)}' while writing search file line '{line}'"
+                    index_log_file.write(f"{err}\n")
+                    print(err)
 
             # Write the last line separately, because loop leaves it unsaved.
             if current_doc and current_pars:
@@ -650,9 +641,6 @@ def create_search_files(remove_deleted_pars=True):
             f"{PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH}",
         )
     except Exception as e:
-        log_error(
-            f"SEARCH_INDEX: Failed to generate search files: {get_error_message(e)}"
-        )
         return (
             400,
             f"Creating files to {PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH} failed: {get_error_message(e)}!",
