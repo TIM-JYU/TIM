@@ -4,7 +4,7 @@ Plugins for one task
 \
 
 #- {defaultplugin="textfield" .fieldCell}
-%% 'XX_Riitauta=Riitauta: Kirjoita tähän, jos et tykkää arvioista' | gfields('cols: 25') -%%
+%% 'XX_Riitauta=Riitauta XX: Kirjoita tähän, jos et tykkää arvioista' | gfields('cols: 25') -%%
 \
 #- {area="XX_demo" visible="%% False | isview%%" nocache="true"}
 Tehtävä: XX
