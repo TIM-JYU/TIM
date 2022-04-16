@@ -203,7 +203,7 @@ export type TIMCalendarEvent = CalendarEvent<{
                     *ngSwitchCase="'month'"
                     [viewDate]="viewDate"
                     [events]="events"
-                    [locale]="'fi-FI'"
+                    [locale]="locale"
                     [weekStartsOn]="1"
                     (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
                     (dayClicked)="changeToDay($event.day.date)"
@@ -218,7 +218,7 @@ export type TIMCalendarEvent = CalendarEvent<{
                     [hourSegments]="segmentsInHour"
                     [dayStartHour]="dayStartHour"
                     [dayEndHour]="dayEndHour"
-                    [locale]="'fi-FI'"
+                    [locale]="locale"
                     [minimumEventHeight]="minimumEventHeight"
                     [weekStartsOn]="1"
                     (dayHeaderClicked)="clickedDate = $event.day.date"
@@ -236,7 +236,7 @@ export type TIMCalendarEvent = CalendarEvent<{
                     [hourSegments]="segmentsInHour"
                     [dayStartHour]="dayStartHour"
                     [dayEndHour]="dayEndHour"
-                    [locale]="'fi-FI'"
+                    [locale]="locale"
                     (hourSegmentClicked)="clickedDate = $event.date"
                     [hourSegmentTemplate]="weekViewHourSegmentTemplate"
                     (eventClicked)="handleEventClick($event.event)"
@@ -318,6 +318,8 @@ export class CalendarComponent
         {name: "Opetusryhmä", value: "3", checked: true},
     ];
 
+    locale: string = "Fi-fi";
+
     weekStartsOn: 1 = 1;
 
     /* The default values of calendar view that can be adjusted with the time view selector -component. */
@@ -383,6 +385,25 @@ export class CalendarComponent
             this.minimumEventHeight = 30;
         }
         this.segmentsInHour = 60 / this.segmentMinutes;
+    }
+
+    setLanguage() {
+        const language = navigator.language;
+        switch (language.toLowerCase()) {
+            case "fi-fi":
+                this.locale = "fi-fi";
+                break;
+            case "fi":
+                this.locale = "fi";
+                break;
+            case "en-us":
+                this.locale = "en-us";
+                break;
+            default:
+                this.locale = "en-us";
+                break;
+        }
+        console.log(navigator.language);
     }
 
     /**
@@ -584,6 +605,7 @@ export class CalendarComponent
      */
     ngOnInit() {
         super.ngOnInit();
+        this.setLanguage();
         if (Users.isLoggedIn()) {
             void this.loadEvents();
         }
