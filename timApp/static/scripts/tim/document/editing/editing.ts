@@ -894,6 +894,9 @@ auto_number_headings: 0${CURSOR}
                     }
                 );
             }
+            if (isTranslation) {
+                fns.push(this.addTrCheck(par));
+            }
             if (
                 refAreaInclusion === ParAreaInclusionKind.Outside ||
                 refAreaInclusion === ParAreaInclusionKind.IsStart
@@ -970,6 +973,25 @@ auto_number_headings: 0${CURSOR}
             show: /* this.viewctrl.lectureMode && */ this.viewctrl.item.rights
                 .editable,
         };
+    }
+
+    private addTrCheck(par: ParContext): IMenuFunctionEntry {
+        return {
+            func: (e) => this.markParagraphChecked(par),
+            desc: "Mark as checked",
+            show: this.viewctrl.item.rights.editable,
+        };
+    }
+
+    async markParagraphChecked(par: ParContext) {
+        const parId = par.originalPar.id;
+        const docId = this.viewctrl.item.id;
+        const r = await to(
+            $http.post<IParResponse>(`/markChecked/${docId}/${parId}`, {})
+        );
+        if (r.ok) {
+            await this.viewctrl.updateDocument();
+        }
     }
 
     removeDefaultPars() {
