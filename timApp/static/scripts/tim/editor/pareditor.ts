@@ -1194,9 +1194,6 @@ ${backTicks}
         setCurrentEditor(this);
 
         this.docTranslator = this.storage.translator.get() ?? "";
-        if (!this.checkIfOriginal()) {
-            this.updateTranslationData();
-        }
 
         this.spellcheck = this.storage.spellcheck.get() ?? false;
         this.autocomplete = this.storage.autocomplete.get() ?? false;
@@ -1259,6 +1256,10 @@ ${backTicks}
             undefined
         );
         this.changePreviewPositions();
+
+        if (!this.checkIfOriginal()) {
+            this.updateTranslationData();
+        }
     }
 
     /**
@@ -1291,6 +1292,10 @@ ${backTicks}
      */
     async compileOriginalPreview() {
         const previewOriginalDiv = angular.element(".previeworiginalcontent");
+        if (previewOriginalDiv.length == 0) {
+            await this.editorChanged();
+            return;
+        }
 
         let text = "";
         if (this.trdiff != undefined) {
@@ -1308,9 +1313,6 @@ ${backTicks}
             this.scope,
             this.resolve.params.viewCtrl
         );
-        if (previewOriginalDiv.length == 0) {
-            await this.editorChanged();
-        }
     }
 
     private refreshEditorSize() {
@@ -1585,7 +1587,7 @@ ${backTicks}
                 });
         }
         if (this.trdiff != undefined) {
-            this.compileOriginalPreview();
+            await this.compileOriginalPreview();
         }
         this.getEditorContainer().resize();
         this.scope.$applyAsync();
