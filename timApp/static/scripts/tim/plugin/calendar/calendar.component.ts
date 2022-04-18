@@ -41,6 +41,7 @@ import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
 import {showCalendarEventDialog} from "./showCalendarEventDialog";
+import {DateTimeValidatorDirective} from "./datetimevalidator.directive";
 
 /**
  * Helps calculate the size of a horizontally dragged event on the calendar view.
@@ -776,8 +777,12 @@ export class CalendarComponent
         CalendarHeaderModule,
         NgbModalModule,
     ],
-    declarations: [CalendarComponent, TimeViewSelectorComponent],
-    exports: [CalendarComponent],
+    declarations: [
+        CalendarComponent,
+        TimeViewSelectorComponent,
+        DateTimeValidatorDirective,
+    ],
+    exports: [CalendarComponent, DateTimeValidatorDirective],
 })
 export class KATTIModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

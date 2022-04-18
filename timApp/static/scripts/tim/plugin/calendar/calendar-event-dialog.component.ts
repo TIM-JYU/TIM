@@ -1,12 +1,12 @@
 import {Component, NgModule} from "@angular/core";
-import {FormsModule} from "@angular/forms";
+import {FormsModule, NgForm} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {DialogModule} from "../../ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {AngularDialogComponent} from "../../ui/angulardialog/angular-dialog-component.directive";
 import {toPromise} from "../../util/utils";
-import {TIMCalendarEvent} from "./calendar.component";
+import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
 
 @Component({
     selector: "tim-calendar-event-dialog",
@@ -16,7 +16,7 @@ import {TIMCalendarEvent} from "./calendar.component";
                 Edit event
             </ng-container>
             <ng-container body>
-                <form #form="ngForm" class="form-horizontal">
+                <form #form="ngForm" class="form-horizontal" timCalDateTimeValidator>
                     <div class="form-group"
                          [ngClass]="{'has-error': ngModelTitle.invalid && ngModelTitle.dirty}">
 
@@ -43,14 +43,16 @@ import {TIMCalendarEvent} from "./calendar.component";
                                        (ngModelChange)="setMessage()"
                                        id="startDate" name="startDate"
                                        class="form-control"
-                                       [disabled]="!isEditEnabled()">
+                                       [disabled]="!isEditEnabled()"
+                                       >
 
                                 <input i18n-placeholder type="time"
                                        [(ngModel)]="startTime"
                                        (ngModelChange)="setMessage()"
                                        id="startTime" name="startTime"
                                        class="form-control"
-                                       [disabled]="!isEditEnabled()">
+                                       [disabled]="!isEditEnabled()"
+                                        >
                             </div>
                         </div>
                     </div>
@@ -59,13 +61,13 @@ import {TIMCalendarEvent} from "./calendar.component";
                         <label for="to" class="col-sm-2 control-label">To</label>
                         <div class="col-sm-10">
                             <div class="input-group">
-
                                 <input i18n-placeholder type="date"
                                        [(ngModel)]="endDate"
                                        (ngModelChange)="setMessage()"
                                        id="endDate" name="endDate"
                                        class="form-control"
-                                       [disabled]="!isEditEnabled()">
+                                       [disabled]="!isEditEnabled()"
+                                        >
                                 <input i18n-placeholder type="time"
                                        [(ngModel)]="endTime"
                                        (ngModelChange)="setMessage()"
@@ -101,7 +103,7 @@ import {TIMCalendarEvent} from "./calendar.component";
                         (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!isEditEnabled()">
                     Delete
                 </button>
-                <button class="timButton" type="button" (click)="saveChanges()" [disabled]="form.invalid"
+                <button class="timButton" type="submit" (click)="onSubmit(form)" [disabled]="form.invalid"
                         [hidden]="!isEditEnabled()">
                     Save
                 </button>
@@ -127,6 +129,11 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 
     constructor(private http: HttpClient) {
         super();
+    }
+
+    async onSubmit(form: NgForm) {
+        console.log(form.errors);
+        await this.saveChanges();
     }
 
     /**
@@ -245,6 +252,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         TimUtilityModule,
         CommonModule,
         HttpClientModule,
+        KATTIModule,
     ],
     exports: [CalendarEventDialogComponent],
 })
