@@ -86,6 +86,7 @@ export function listLanguages(
  * @param docL The list of document languages available
  * @param targetL The list of supported target languages
  * @param translator The chosen translator
+ * @returns The last error message that came up.
  */
 export async function updateLanguages(
     sourceL: ILanguages[],
@@ -93,6 +94,7 @@ export async function updateLanguages(
     targetL: ILanguages[],
     translator: string
 ) {
+    let error = "";
     let sources = await to(
         $http.post<ILanguages[]>("/translations/source-languages", {
             translator: translator,
@@ -100,6 +102,8 @@ export async function updateLanguages(
     );
     if (sources.ok) {
         listLanguages(sources.result.data, sourceL);
+    } else {
+        error = sources.result.data.error;
     }
 
     sources = await to(
@@ -107,6 +111,8 @@ export async function updateLanguages(
     );
     if (sources.ok) {
         listLanguages(sources.result.data, docL);
+    } else {
+        error = sources.result.data.error;
     }
 
     sources = await to(
@@ -116,18 +122,23 @@ export async function updateLanguages(
     );
     if (sources.ok) {
         listLanguages(sources.result.data, targetL);
+    } else {
+        error = sources.result.data.error;
     }
+    return error;
 }
 
 /**
  * Fetches the list of the available translators and adds them to front-end's list of them.
  * @param translators The list the translators will be added to
  * @param includeManual Whether or not the option for manual translation should be included in the list
+ * @returns The error message if the request was unsuccessful.
  */
 export async function listTranslators(
     translators: ITranslators[],
     includeManual: boolean
 ) {
+    let error = "";
     const sources = await to($http.get<string[]>("/translations/translators"));
     if (sources.ok) {
         for (const translator of sources.result.data) {
@@ -136,19 +147,30 @@ export async function listTranslators(
             }
             translators.push({name: translator, available: false});
         }
+    } else {
+        if (includeManual) {
+            translators.push({name: "Manual", available: false});
+        }
+        error = sources.result.data.error;
     }
+    return error;
 }
 
 /**
  * Fetches the translators the user can use
  * @param translators the list the translators will be added to
+ * @returns The error message if the request was unsuccessful.
  */
 export async function availableTranslators(translators: string[]) {
+    let error = "";
     const sources = await to($http.get<string[]>("/apikeys/translators"));
     translators.push("Manual");
     if (sources.ok) {
         for (const translator of sources.result.data) {
             translators.push(translator);
         }
+    } else {
+        error = sources.result.data.error;
     }
+    return error;
 }

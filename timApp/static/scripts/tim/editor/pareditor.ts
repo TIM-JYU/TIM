@@ -1266,14 +1266,21 @@ ${backTicks}
      * an async function right now).
      */
     async updateTranslationData() {
-        await listTranslators(this.translators, false);
-        await updateLanguages(
+        const error = ["", "", ""];
+        error[0] = await listTranslators(this.translators, false);
+        error[1] = await updateLanguages(
             this.sourceLanguages,
             this.documentLanguages,
             this.targetLanguages,
             this.docTranslator
         );
-        await availableTranslators(this.availableTranslators);
+        error[2] = await availableTranslators(this.availableTranslators);
+        for (const errors of error) {
+            if (errors != "") {
+                this.errorMessage = errors;
+                this.translatorAvailable = false;
+            }
+        }
         for (const tr of this.translators) {
             this.isOptionAvailable(tr);
         }

@@ -112,15 +112,21 @@ export class PermCtrl implements IController {
 
     async $onInit() {
         this.translationInProgress = false;
-        await listTranslators(this.translators, true);
-        await updateLanguages(
+        const error = ["", "", ""];
+        error[0] = await listTranslators(this.translators, true);
+        error[1] = await updateLanguages(
             this.sourceLanguages,
             this.documentLanguages,
             this.targetLanguages,
             this.newTranslation.translator
         );
-        await availableTranslators(this.availableTranslators);
-
+        error[2] = await availableTranslators(this.availableTranslators);
+        for (const errors of error) {
+            if (errors != "") {
+                this.errorMessage = errors;
+                this.translatorAvailable = false;
+            }
+        }
         for (const tr of this.translators) {
             this.isOptionAvailable(tr);
         }
