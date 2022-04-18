@@ -153,21 +153,25 @@ export type TIMCalendarEvent = CalendarEvent<{
         <mwl-utils-calendar-header [(view)]="view" [(viewDate)]="viewDate">
         </mwl-utils-calendar-header>
         <div class="row text-center">
-            <div class="btn-group edit-btn col-md-4">
-                <button (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
-                <button (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
-            </div>
-            <div class="col-md-4"> Näytä:
-                <div *ngFor="let box of checkboxEvents">
-                    <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
-                           [(ngModel)]="box.checked" [checked]="">{{box.name}}
+            <div class="col-md-4">
+                <div class="btn-group edit-btn">
+                    <button (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
+                    <button (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
                 </div>
             </div>
-            <div [style.visibility]="editEnabled ? 'visible' : 'hidden'" class="btn-group event-btn col-md-4">
-                <button (click)="setEventType($event)" *ngFor="let button of eventTypes"
-                        [class.active]="selectedEvent == (button.valueOf() +eventTypes.indexOf((button)))"
-                        class="btn timButton"
-                        id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button.valueOf()}}</button>
+            <div class="col-md-4">
+                <div [style.visibility]="editEnabled ? 'visible' : 'hidden'" class="btn-group event-btn">
+                    <button (click)="setEventType($event)" *ngFor="let button of eventTypes"
+                            [class.active]="selectedEvent == (button.valueOf() +eventTypes.indexOf((button)))"
+                            class="btn timButton"
+                            id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button.valueOf()}}</button>
+                </div>
+            </div>
+            <div class="col-md-4">Näytä:
+                    <div *ngFor="let box of checkboxEvents"> 
+                        <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
+                               [(ngModel)]="box.checked" [checked]="">{{box.name}}
+                </div>
             </div>
         </div>
 
@@ -199,10 +203,10 @@ export type TIMCalendarEvent = CalendarEvent<{
                     *ngSwitchCase="'month'"
                     [viewDate]="viewDate"
                     [events]="events"
-                    [locale]="'fi-FI'"
+                    [locale]="locale"
                     [weekStartsOn]="1"
                     (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
-                    (dayClicked)="clickedDate = $event.day.date"
+                    (dayClicked)="changeToDay($event.day.date)"
             >
             </mwl-calendar-month-view>
             <mwl-calendar-week-view
@@ -214,7 +218,8 @@ export type TIMCalendarEvent = CalendarEvent<{
                     [hourSegments]="segmentsInHour"
                     [dayStartHour]="dayStartHour"
                     [dayEndHour]="dayEndHour"
-                    [locale]="'fi-FI'"
+                    [locale]="locale"
+                    [minimumEventHeight]="minimumEventHeight"
                     [weekStartsOn]="1"
                     (dayHeaderClicked)="clickedDate = $event.day.date"
                     (hourSegmentClicked)="clickedDate = $event.date"
@@ -231,7 +236,7 @@ export type TIMCalendarEvent = CalendarEvent<{
                     [hourSegments]="segmentsInHour"
                     [dayStartHour]="dayStartHour"
                     [dayEndHour]="dayEndHour"
-                    [locale]="'fi-FI'"
+                    [locale]="locale"
                     (hourSegmentClicked)="clickedDate = $event.date"
                     [hourSegmentTemplate]="weekViewHourSegmentTemplate"
                     (eventClicked)="handleEventClick($event.event)"
@@ -240,13 +245,9 @@ export type TIMCalendarEvent = CalendarEvent<{
             >
             </mwl-calendar-day-view>
         </div>
-        <app-timeview-selectors (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
+        <app-timeview-selectors [style.visibility]="view == 'month' ? 'hidden' : 'visible'"
+                (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
                                 (evening)="setEvening($event)"></app-timeview-selectors>
-        <div hidden>
-            <button class="timButton" id="saveBtn" (click)="saveChanges()"
-                    [disabled]="!this.events.some(this.isTempEvent)">Save changes
-            </button>
-        </div>
         <div>
             <button class="timButton" id="icsBtn" (click)="exportICS()">Vie kalenterin tiedot</button>
         </div>
@@ -317,6 +318,8 @@ export class CalendarComponent
         {name: "Opetusryhmä", value: "3", checked: true},
     ];
 
+    locale: string = "Fi-fi";
+
     weekStartsOn: 1 = 1;
 
     /* The default values of calendar view that can be adjusted with the time view selector -component. */
@@ -324,6 +327,7 @@ export class CalendarComponent
     dayEndHour: number = 19;
     segmentMinutes: number = 20;
     segmentsInHour: number = 3;
+    minimumEventHeight: number = this.segmentMinutes;
 
     modalData?: {
         action: string;
@@ -370,17 +374,62 @@ export class CalendarComponent
         }
     }
 
+    /**
+     * Sets the desired size of timeslot in the day&week -views
+     * @param accuracy Size of time slot in minutes 15, 20, 30 or 60
+     */
     setAccuracy(accuracy: number) {
+        this.minimumEventHeight = accuracy;
         this.segmentMinutes = accuracy;
+        if (accuracy == 60) {
+            this.minimumEventHeight = 30;
+        }
         this.segmentsInHour = 60 / this.segmentMinutes;
     }
 
+    setLanguage() {
+        const language = navigator.language;
+        switch (language.toLowerCase()) {
+            case "fi-fi":
+                this.locale = "fi-fi";
+                break;
+            case "fi":
+                this.locale = "fi";
+                break;
+            case "en-us":
+                this.locale = "en-us";
+                break;
+            default:
+                this.locale = "en-us";
+                break;
+        }
+        console.log(navigator.language);
+    }
+
+    /**
+     * Set the starting hours of day&week -views
+     * @param morning hour to start the day
+     */
     setMorning(morning: number) {
         this.dayStartHour = morning;
     }
 
+    /**
+     * Set the ending hour of day&week -views
+     * @param evening hour to end the day
+     */
     setEvening(evening: number) {
         this.dayEndHour = evening - 1;
+    }
+
+    /**
+     * Enables the user to click on a date in the month view to see the week view of that day
+     * @param date the date of clicked day
+     */
+    changeToDay(date: Date) {
+        this.clickedDate = date;
+        this.viewDate = date;
+        this.view = CalendarView.Week;
     }
 
     /**
@@ -556,6 +605,7 @@ export class CalendarComponent
      */
     ngOnInit() {
         super.ngOnInit();
+        this.setLanguage();
         if (Users.isLoggedIn()) {
             void this.loadEvents();
         }
@@ -639,7 +689,6 @@ export class CalendarComponent
                         });
                     }
                 });
-
                 console.log("events sent");
                 console.log(result.result);
                 this.refresh();
