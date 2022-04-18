@@ -50,7 +50,12 @@ export async function showTemplateReplaceDialog(
         flags = param.flags ?? "gm";
     }
     const what = param.what ?? "\\\\\\?";
-    return data.replace(new RegExp(what, flags), replace.result);
+
+    // MK 19.4.2022:
+    // if replace.result has spaces, replace them with "_"
+    const result = replace.result.replace(/ /g, "_");
+    return data.replace(new RegExp(what, flags), result);
+    // OLD: return data.replace(new RegExp(what, flags), replace.result);
 }
 
 export async function replaceTemplateValues(data: string): Promise<string> {
@@ -73,6 +78,7 @@ export async function replaceTemplateValues(data: string): Promise<string> {
 
     for (const param of replaceList) {
         data = await showTemplateReplaceDialog(data, param);
+        console.log("data, param", data, param);
         if (!data) {
             return "";
         }

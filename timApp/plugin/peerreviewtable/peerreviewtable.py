@@ -29,7 +29,7 @@ class MyPluginInputModel:
     pass
 
 @dataclass()
-class MyPluginHmlModel(GenericHtmlModel[MyPluginInputModel,MyPluginMarkUp, MyPluginStateModel]):
+class MyPluginHmlModel(GenericHtmlModel[MyPluginInputModel, MyPluginMarkUp, MyPluginStateModel]):
 
     def get_component_html_name(self) -> str:
         return 'tim-peerreview-table'
