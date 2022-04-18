@@ -212,7 +212,7 @@
                         <label for="translator">Translator:</label>
                         <select id="translator" name="translator-select" class="form-control"
                                ng-model="$ctrl.newTranslation.translator" ng-change="$ctrl.updateTranslatorLanguages()">
-                                <option ng-repeat="option in $ctrl.translators" value="{{option.name}}">{{option.name}}</option>
+                                <option ng-repeat="option in $ctrl.translators" ng-disabled="!option.available" value="{{option.name}}">{{option.name}}</option>
                         </select></div>
                     </div>
                     <div ng-show="$ctrl.mayTranslate && $ctrl.newTranslation.title">

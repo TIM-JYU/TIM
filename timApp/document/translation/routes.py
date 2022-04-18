@@ -413,3 +413,19 @@ def get_keys() -> Response:
         )
 
     return json_response(result)
+
+
+@tr_bp.get("/apikeys/translators")
+def get_my_translators() -> Response:
+    verify_logged_in()
+
+    user = get_current_user_object()
+    keys = TranslationServiceKey.query.filter(
+        TranslationServiceKey.group_id == user.get_personal_group().id
+    ).all()
+
+    result = []
+    for x in keys:
+        result.append(x.service.service_name)
+
+    return json_response(result)

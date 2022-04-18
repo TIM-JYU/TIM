@@ -134,7 +134,21 @@ export async function listTranslators(
             if (translator == "Manual" && !includeManual) {
                 continue;
             }
-            translators.push({name: translator});
+            translators.push({name: translator, available: false});
+        }
+    }
+}
+
+/**
+ * Fetches the translators the user can use
+ * @param translators the list the translators will be added to
+ */
+export async function availableTranslators(translators: string[]) {
+    const sources = await to($http.get<string[]>("/apikeys/translators"));
+    translators.push("Manual");
+    if (sources.ok) {
+        for (const translator of sources.result.data) {
+            translators.push(translator);
         }
     }
 }

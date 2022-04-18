@@ -20,6 +20,7 @@ import {
     updateLanguages,
     listTranslators,
     listLanguages,
+    availableTranslators,
 } from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
@@ -250,6 +251,7 @@ export class PareditorController extends DialogController<
     private translationInProgress: boolean = false;
     private nothingSelected: boolean = false;
     private errorMessage = "";
+    private availableTranslators: string[] = [];
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -1193,13 +1195,7 @@ ${backTicks}
 
         this.docTranslator = this.storage.translator.get() ?? "";
         if (!this.checkIfOriginal()) {
-            listTranslators(this.translators, false);
-            updateLanguages(
-                this.sourceLanguages,
-                this.documentLanguages,
-                this.targetLanguages,
-                this.docTranslator
-            );
+            this.updateTranslationData();
         }
 
         this.spellcheck = this.storage.spellcheck.get() ?? false;
@@ -1263,6 +1259,24 @@ ${backTicks}
             undefined
         );
         this.changePreviewPositions();
+    }
+
+    /**
+     * Handles updating data regarding translations (cannot be done in initialization because it cannot be turned into
+     * an async function right now).
+     */
+    async updateTranslationData() {
+        await listTranslators(this.translators, false);
+        await updateLanguages(
+            this.sourceLanguages,
+            this.documentLanguages,
+            this.targetLanguages,
+            this.docTranslator
+        );
+        await availableTranslators(this.availableTranslators);
+        for (const tr of this.translators) {
+            this.isOptionAvailable(tr);
+        }
     }
 
     /**
@@ -1441,6 +1455,14 @@ ${backTicks}
 
     getInitialText() {
         return this.resolve.params.initialText;
+    }
+
+    isOptionAvailable(tr: ITranslators) {
+        for (const translator of this.availableTranslators) {
+            if (tr.name == translator) {
+                tr.available = true;
+            }
+        }
     }
 
     async setInitialText() {

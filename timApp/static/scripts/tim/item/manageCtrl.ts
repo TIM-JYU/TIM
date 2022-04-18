@@ -13,6 +13,7 @@ import {
     updateLanguages,
     listTranslators,
     listLanguages,
+    availableTranslators,
 } from "../document/editing/edittypes";
 import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
@@ -62,6 +63,7 @@ export class PermCtrl implements IController {
     private translationInProgress: boolean = false;
     private deleteButtonText = "";
     private errorMessage = "";
+    private availableTranslators: string[] = [];
     private accessTypes: Array<unknown>; // TODO proper type
     private orgs: IGroup[];
     private item: IFullDocument | IFolder;
@@ -117,6 +119,11 @@ export class PermCtrl implements IController {
             this.targetLanguages,
             this.newTranslation.translator
         );
+        await availableTranslators(this.availableTranslators);
+
+        for (const tr of this.translators) {
+            this.isOptionAvailable(tr);
+        }
         if (this.item.isFolder) {
             this.newName = this.item.name;
             this.newFolderName = this.item.location;
@@ -344,6 +351,17 @@ export class PermCtrl implements IController {
         }
     }
 
+    isOptionAvailable(tr: ITranslators) {
+        for (const translator of this.availableTranslators) {
+            if (tr.name == translator) {
+                tr.available = true;
+            }
+        }
+    }
+
+    /**
+     * Sets the right text for the document deletion button.
+     */
     setDeleteText() {
         const lang_name = this.findCurrentTrDocLang();
         if (lang_name == "") {
