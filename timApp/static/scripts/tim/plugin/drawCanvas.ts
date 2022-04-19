@@ -953,7 +953,7 @@ export class DrawCanvasComponent
     zoomLevel = 1;
     defaultZoomLevel = 1; // adjusted to show full image width after images are loaded
 
-    drawHandler!: Drawing;
+    drawHandler?: Drawing;
 
     // optional function to call when image is loaded to let external users know the canvas is ready for use
     @Input() imgLoadCallback?: (arg0: this) => void;
@@ -1017,7 +1017,39 @@ export class DrawCanvasComponent
         );
     }
 
-    ngAfterViewInit() {
+    ngOnChanges(changes: SimpleChanges) {
+        if (changes.bgSources) {
+            this.bgSourceSizes = new Array<IImageSizes>(this.bgSources.length);
+            this.setBg();
+        }
+    }
+
+    ngOnDestroy() {
+        this.clearObjectContainer();
+        if (this.updateCallback) {
+            this.updateCallback(this, {drawingUpdated: false, deleted: true});
+        }
+    }
+
+    saveSettings() {
+        this.optionsStorage.set(this.drawOptions);
+    }
+
+    /**
+     * Deletes all HTML elements within canvasObjectContainer
+     */
+    clearObjectContainer(): void {
+        $(this.objectContainer.nativeElement.children).remove();
+    }
+
+    /**
+     * Create a new Drawing and set up mouse events
+     */
+    prepareDrawing(): void {
+        this.drawHandler = new Drawing(
+            this.drawOptions,
+            this.canvases.map((c) => c.nativeElement)
+        );
         this.canvasWrapper.nativeElement.addEventListener(
             "mousedown",
             (event) => {
@@ -1065,31 +1097,6 @@ export class DrawCanvasComponent
         );
     }
 
-    ngOnChanges(changes: SimpleChanges) {
-        if (changes.bgSources) {
-            this.bgSourceSizes = new Array<IImageSizes>(this.bgSources.length);
-            this.setBg();
-        }
-    }
-
-    ngOnDestroy() {
-        this.clearObjectContainer();
-        if (this.updateCallback) {
-            this.updateCallback(this, {drawingUpdated: false, deleted: true});
-        }
-    }
-
-    saveSettings() {
-        this.optionsStorage.set(this.drawOptions);
-    }
-
-    /**
-     * Deletes all HTML elements within canvasObjectContainer
-     */
-    clearObjectContainer(): void {
-        $(this.objectContainer.nativeElement.children).remove();
-    }
-
     /**
      * Store dimensions of loaded background images
      */
@@ -1111,10 +1118,8 @@ export class DrawCanvasComponent
      * function after every background image is loaded
      */
     allImagesLoaded(): void {
-        this.drawHandler = new Drawing(
-            this.drawOptions,
-            this.canvases.map((c) => c.nativeElement)
-        );
+        // TODO: Show loading icon until all loaded, show clear error if any image fails loading
+        this.prepareDrawing();
         let offset = 0;
         this.bgOffsets = [offset];
         this.imgHeight = this.bgElement.nativeElement.clientHeight;
@@ -1127,7 +1132,7 @@ export class DrawCanvasComponent
             canvas.height = this.bgSourceSizes[i].height;
             canvas.width = this.imgWidth;
             canvas.style.top = offset + "px";
-            this.drawHandler.setOffSet(
+            this.drawHandler!.setOffSet(
                 i,
                 {w: canvas.width, h: canvas.height},
                 -offset
@@ -1202,7 +1207,7 @@ export class DrawCanvasComponent
             event.preventDefault();
         }
         if (!middleOrRightClick) {
-            this.drawHandler.downEvent(
+            this.drawHandler!.downEvent(
                 this.normalizeCoordinate(
                     posToRelative(this.canvasWrapper.nativeElement, e)
                 )
@@ -1218,7 +1223,7 @@ export class DrawCanvasComponent
         if (!(isTouchEvent(event) && !this.drawOptions.enabled)) {
             event.preventDefault();
         }
-        this.drawHandler.moveEvent(
+        this.drawHandler!.moveEvent(
             this.normalizeCoordinate(
                 posToRelative(this.canvasWrapper.nativeElement, e)
             )
@@ -1232,13 +1237,13 @@ export class DrawCanvasComponent
         const pxy = this.normalizeCoordinate(
             posToRelative(this.canvasWrapper.nativeElement, e)
         );
-        this.drawHandler.upEvent(pxy);
+        this.drawHandler!.upEvent(pxy);
         if (this.updateCallback) {
             this.updateCallback(this, {
                 x: pxy.x,
                 y: pxy.y,
                 drawingUpdated:
-                    this.drawHandler.drawMoved && this.drawOptions.enabled,
+                    this.drawHandler!.drawMoved && this.drawOptions.enabled,
             });
         }
     }
@@ -1250,6 +1255,9 @@ export class DrawCanvasComponent
         if (e) {
             e.preventDefault();
         }
+        if (!this.drawHandler) {
+            return;
+        }
         this.drawHandler.undo();
         if (this.updateCallback) {
             this.updateCallback(this, {drawingUpdated: true});
@@ -1260,6 +1268,9 @@ export class DrawCanvasComponent
      * Returns current drawing progress in an array
      */
     getDrawing(): DrawItem[] {
+        if (!this.drawHandler) {
+            return [];
+        }
         return this.drawHandler.getDrawing();
     }
 
@@ -1280,7 +1291,7 @@ export class DrawCanvasComponent
      * Moves current drawing progress to permanent storage (e.g makes it immune to undo)
      */
     storeDrawing() {
-        this.drawHandler.storeDrawing();
+        this.drawHandler?.storeDrawing();
     }
 
     /**
@@ -1288,7 +1299,7 @@ export class DrawCanvasComponent
      * @param data Drawing to draw
      */
     setAndAdjustPersistentDrawData(data: DrawItem[]): void {
-        this.drawHandler.setPersistentDrawData(data);
+        this.drawHandler?.setPersistentDrawData(data);
     }
 
     /**
