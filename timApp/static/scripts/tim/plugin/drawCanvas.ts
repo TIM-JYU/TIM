@@ -485,9 +485,6 @@ export class Drawing {
     private itemW: number = 0;
     private itemH: number = 0;
 
-    // keep track of how much each canvasContext has been shifted from original location (down, right)
-    offsets: {x: number; y: number}[] = [];
-
     // which contexts need to be re-drawn on draw events
     private activeContexts: offsetContext[] = [];
 
@@ -499,19 +496,19 @@ export class Drawing {
      * Move CanvasRenderingContext by offset
      * @param index Canvas / ctx position in this.canvases / this.ctxs
      * @param dimensions visible dimensions of CanvasRenderingContexts
-     * @param offset amount of pixels to move right or down
+     * @param offset amount of pixels to move down
      */
     setOffSet(
         index: number,
         dimensions: {w: number; h: number},
-        offset: {x: number; y: number}
+        offset: number
     ) {
         const context = this.ctxs[index];
         if (!context) {
             return;
         }
-        context.ctx.translate(offset.x, offset.y);
-        context.yOffset = offset.y;
+        context.ctx.translate(0, offset);
+        context.yOffset = offset;
         context.width = dimensions.w;
         context.height = dimensions.h;
     }
@@ -1132,7 +1129,7 @@ export class DrawCanvasComponent
             this.drawHandler.setOffSet(
                 i,
                 {w: canvas.width, h: canvas.height},
-                {x: 0, y: -offset}
+                -offset
             );
             if (i < this.bgSourceSizes.length - 1) {
                 this.bgOffsets.push(this.bgSourceSizes[i].height + offset);
