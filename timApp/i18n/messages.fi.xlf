@@ -5472,6 +5472,46 @@
           <context context-type="linenumber">268</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1897302956265961273" datatype="html">
+        <source>Pseudonymous username</source>
+        <target state="new">Pseudonymous username</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">176</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7582520939264360836" datatype="html">
+        <source>Key for generating pseudonyms</source>
+        <target state="new">Key for generating pseudonyms</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">180</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="140762725397805137" datatype="html">
+        <source>Generate a random key</source>
+        <target state="new">Generate a random key</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">182</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3095169801210180631" datatype="html">
+        <source>Specify a key to generate pseudonyms. A user will always get the same pseudonym for a key.</source>
+        <target state="new">Specify a key to generate pseudonyms. A user will always get the same pseudonym for a key.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">185</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3361601582508115598" datatype="html">
+        <source>The key should be at least 10 characters long</source>
+        <target state="new">The key should be at least 10 characters long</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">186</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -2052,6 +2052,14 @@ def get_all_answers_as_list(
         task_ids, doc_ids, options
     )
 
+    if options.name == NameOptions.PSEUDO:
+        if not options.salt:
+            raise RouteException("Missing salt for generating pseudonyms")
+        if len(options.salt) < 10:
+            raise RouteException(
+                "For optimal results, use at least 10 characters for the hash"
+            )
+
     if d and hide_names_in_teacher(d):
         # Above, we're requiring teacher access to all documents, so it does not matter which DocInfo we pass here.
         options.name = NameOptions.ANON

@@ -1,4 +1,5 @@
 """"""
+import hashlib
 import json
 from collections import defaultdict, OrderedDict
 from dataclasses import dataclass, field
@@ -188,8 +189,10 @@ class ValidityOptions(Enum):
 
 
 class NameOptions(Enum):
+    USERNAME = "username"
     BOTH = "both"
     ANON = "anonymous"
+    PSEUDO = "pseudonym"
 
 
 class SortOptions(Enum):
@@ -228,6 +231,8 @@ class AllAnswersOptions(AnswerPeriodOptions):
     print: AnswerPrintOptions = field(
         default=AnswerPrintOptions.ALL, metadata={"by_value": True}
     )
+    salt: str | None = None
+    salt_len: int = field(default=32, metadata={"data_key": "saltLen"})
 
 
 def get_all_answers(
@@ -292,17 +297,36 @@ def get_all_answers(
     qq: Iterable[tuple[Answer, User, int]] = q
     cnt = 0
     hidden_user_names: dict[str, str] = {}
+
+    hashes = set()
+
+    def hasher(x: int) -> str:
+        nonlocal cnt
+        cnt += 1
+        return str(cnt)
+
+    if options.name == NameOptions.PSEUDO and options.salt is not None:
+
+        def hasher(x: int) -> str:
+            shake = hashlib.shake_256()
+            shake.update(options.salt.encode("utf-8"))
+            shake.update(str(x).encode("utf-8"))
+            hash_result = shake.hexdigest(options.salt_len)
+            if hash_result in hashes:
+                return f"{hash_result}-DUPLICATE"
+            hashes.add(hash_result)
+            return hash_result
+
     for a, u, n in qq:
         points = str(a.points)
         if points == "None":
             points = ""
         name = u.name
         ns = str(int(n))  # n may be a boolean, so convert to int (0/1) first
-        if options.name == NameOptions.ANON:
+        if options.name == NameOptions.ANON or options.name == NameOptions.PSEUDO:
             name = hidden_user_names.get(u.name, None)
             if not name:
-                cnt += 1
-                name = f"user{cnt}"
+                name = f"user_{hasher(u.id)}"
                 hidden_user_names[u.name] = name
         line = json.loads(a.content)
         header = "; ".join(

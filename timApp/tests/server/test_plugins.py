@@ -758,6 +758,31 @@ type: upload
         self.assertEqual(expected, [r["answer"]["content"] for r in res])
         self.assertEqual(expected, [r["resolved_content"] for r in res])
 
+        # test pseudonyms
+        pseudonym_results = self.get(
+            f"/allDocumentAnswersPlain/{doc.path}",
+            query_string={"name": "pseudonym", "salt": "thisisasalt"},
+        )
+        self.assertRegex(
+            pseudonym_results,
+            rf"""
+user_e26b0683f5dde1cc06e2e90a0f20293e9ea8d55e91e4fd5b1871513660badf4f; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
+\[true, false, false\]
+
+----------------------------------------------------------------------------------
+user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
+\[true, true, true\]
+
+----------------------------------------------------------------------------------
+user_e26b0683f5dde1cc06e2e90a0f20293e9ea8d55e91e4fd5b1871513660badf4f; None; {re.escape(task_id2)}; mmcq; {date_re}; 1; 1\.0
+\[true, false\]
+
+----------------------------------------------------------------------------------
+user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re.escape(task_id2)}; mmcq; {date_re}; 1; 2\.0
+\[false, false\]
+        """.strip(),
+        )
+
     def test_save_points(self):
         cannot_give_custom = {
             "error": "You cannot give yourself custom points in this task."

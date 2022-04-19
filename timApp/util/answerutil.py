@@ -34,11 +34,9 @@ class AnswerPeriodOptions:
         default=PeriodOptions.WHENEVER, metadata={"by_value": True}
     )
     period_from: datetime | None = field(
-        default=None, metadata={"data_key": "periodFrom", "required": False}
+        default=None, metadata={"data_key": "periodFrom"}
     )
-    period_to: datetime | None = field(
-        default=None, metadata={"data_key": "periodTo", "required": False}
-    )
+    period_to: datetime | None = field(default=None, metadata={"data_key": "periodTo"})
 
 
 def get_answer_period(

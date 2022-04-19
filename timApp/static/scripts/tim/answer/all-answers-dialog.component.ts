@@ -10,6 +10,7 @@ import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.compo
 import * as t from "io-ts";
 import {CommonDialogOptions} from "tim/answer/commondialogoptions";
 import {ReadonlyMoment} from "tim/util/readonlymoment";
+import {maybeUndefined} from "tim/plugin/attributes";
 import {$httpParamSerializer} from "../util/ngimport";
 import {TimStorage, toPromise} from "../util/utils";
 
@@ -26,6 +27,7 @@ const AnswersDialogOptions = t.intersection([
         age: t.string,
         consent: t.string,
         format: t.keyof({text: null, json: null}),
+        salt: maybeUndefined(t.string),
     }),
     CommonDialogOptions,
 ]);
@@ -168,6 +170,22 @@ export interface IAllAnswersParams {
                                     <ng-container i18n>Anonymous username</ng-container>
                                 </label>
                             </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" [(ngModel)]="options.name" name="name" value="pseudonym">
+                                    <ng-container i18n>Pseudonymous username</ng-container>
+                                </label>
+                                <ng-container *ngIf="options.name === 'pseudonym'">
+                                    <div class="input-group pseudonym-input">
+                                        <input #salt="ngModel" minlength="10" [(ngModel)]="options.salt" name="salt" type="text" class="form-control" placeholder="Key for generating pseudonyms" i18n-placeholder>
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" type="button" title="Generate a random key" i18n-title (click)="setRandomSalt()"><i class="glyphicon glyphicon-refresh"></i></button>
+                                        </span>
+                                    </div>
+                                    <div *ngIf="salt.value === undefined || salt.value === null || salt.value.length == 0" class="pseudo-info" i18n>Specify a key to generate pseudonyms. A user will always get the same pseudonym for a key.</div>
+                                    <div *ngIf="salt.invalid" class="validation-error" i18n>The key should be at least 10 characters long</div>
+                                </ng-container>
+                            </div>
                         </div>
                     </div>
                     <div class="form-group" *ngIf="showSort">
@@ -249,6 +267,7 @@ export interface IAllAnswersParams {
             </ng-container>
         </tim-dialog-frame>
     `,
+    styleUrls: ["all-answers-dialog.component.scss"],
 })
 export class AllAnswersDialogComponent extends AngularDialogComponent<
     IAllAnswersParams,
@@ -268,6 +287,15 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
         return $localize`Get answers`;
     }
 
+    setRandomSalt() {
+        const salt = new Uint8Array(16);
+        window.crypto.getRandomValues(salt);
+        // Convert to base64
+        this.options.salt = String.fromCharCode(
+            ...salt.map((b) => (b % 62) + (b < 62 ? 48 : 55))
+        );
+    }
+
     ngOnInit() {
         const options = this.data;
         this.showSort = options.allTasks;
@@ -283,6 +311,7 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
             period: "whenever",
             print: "all",
             format: "text",
+            salt: undefined,
         } as const;
 
         this.options = this.storage.get() ?? defs;
@@ -311,6 +340,10 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
             periodTo: this.options.periodTo,
         };
         this.storage.set(this.options);
+        // Don't include the salt in the serialized data if it's not used
+        if (toSerialize.name !== "pseudonym") {
+            toSerialize.salt = undefined;
+        }
         window.open(
             this.data.url + "?" + $httpParamSerializer(toSerialize),
             "_blank"
