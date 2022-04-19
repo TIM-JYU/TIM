@@ -329,7 +329,8 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         else:
             p.set_attr("rt", None)
 
-        deref = mark_translation_as_checked(p)
+        if p.is_translation():
+            deref = mark_translation_as_checked(p)
 
         if p.is_different_from(original_par):
             verify_par_edit_access(original_par)

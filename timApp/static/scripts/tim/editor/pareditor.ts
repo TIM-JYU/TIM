@@ -1797,7 +1797,7 @@ ${backTicks}
                     const resultText = r.result.data;
                     if (
                         this.trdiff == undefined ||
-                        translatableText != this.trdiff!.new
+                        translatableText != this.trdiff.new
                     ) {
                         this.editor!.replaceTranslation(resultText);
                     } else {
