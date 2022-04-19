@@ -371,6 +371,43 @@ x=0\;\;\;\\text{"""
             ],
         )
 
+    def test_bulletlist3(self):
+        """Testing quotation marks inside bulletlist currently ' will change into ’ and " will change into ”"""
+        md = r"""- Ilman mitään
+    - "Lainausmerkit"
+    - 'Erilaiset lainausmerkit'
+    - "Osittain" lainattu
+    - ' Vain osa löytyy
+    - '''Ja näin
+    - Ja nyt näin"
+    - ""\"Lopuksi'
+    - Add"end\'um   """
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [
+                    NoTranslate("\n- "),
+                    Translate("Ilman mitään"),
+                    NoTranslate("\n\t- "),
+                    Translate('"Lainausmerkit"'),
+                    NoTranslate("\n\t- "),
+                    Translate("'Erilaiset lainausmerkit'"),
+                    NoTranslate("\n\t- "),
+                    Translate('"Osittain" lainattu'),
+                    NoTranslate("\n\t- "),
+                    Translate("' Vain osa löytyy"),
+                    NoTranslate("\n\t- "),
+                    Translate("'''Ja näin"),
+                    NoTranslate("\n\t- "),
+                    Translate('Ja nyt näin"'),
+                    NoTranslate("\n\t- "),
+                    Translate('"""Lopuksi’'),
+                    NoTranslate("\n\t- "),
+                    Translate("Add\"end'um"),
+                ]
+            ],
+        )
+
     def test_ordered_list1(self):
         md = r"""1. Tässä ollaan
     2. Jotain tehdään
@@ -467,6 +504,36 @@ x=0\;\;\;\\text{"""
                     Translate("Ihan hirveesti"),
                     NoTranslate("\n\tB) "),
                     Translate("Liikaa"),
+                ]
+            ],
+        )
+
+    def test_ordered_list3(self):
+        """Testing quotation marks with ordered list, ' will change into ’ and " will change into ”"""
+        md = r"""1. Tässä ollaan
+    2. "Jotain" tehdään
+    3. 'Ainakin' nyt
+    #) 'Kivaa on
+    III. Roomalaisia 'numeroita
+    IV) Ihan "liikaa roomalaisia numeroita
+
+    """
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [
+                    NoTranslate("\n1. "),
+                    Translate("Tässä ollaan"),
+                    NoTranslate("\n\t2. "),
+                    Translate('"Jotain" tehdään'),
+                    NoTranslate("\n\t3. "),
+                    Translate("'Ainakin' nyt"),
+                    NoTranslate("\n\t#) "),
+                    Translate("'Kivaa on"),
+                    NoTranslate("\n\tIII. "),
+                    Translate("Roomalaisia 'numeroita"),
+                    NoTranslate("\n\tIV) "),
+                    Translate('Ihan "liikaa roomalaisia numeroita'),
                 ]
             ],
         )
@@ -645,6 +712,117 @@ file: VIDEOURLHERE
 width: 800
 height: 600
 file: VIDEOURLHERE
+```"""
+                    ),
+                ]
+            ],
+        )
+
+    def test_tim_plugin4(self):
+        """Test for geogebra plugin. Currently translates only header and stem, nothing else"""
+        md = r"""``` {plugin="csPlugin" #Plugin1}
+type: geogebra
+#tool: true
+header: Otsikko
+stem: Selite
+-pointsRule:
+   {}
+width: 600
+height: 320
+material_id:
+commands: |!!
+!!
+javascript: |!!
+P.setDataInit = function (api, geostate) {
+    timgeo.setState(api, geostate);
+    timgeo.setAllLabelsVisible(api, false);  // kaikki labelit piiloon
+    api.setVisible("kulmannimi", false);
+    timgeo.setLabelsVisible(api, "D,E,F,β,textkulma", true);  //muutamat takaisin
+    timgeo.setXmlProperty(api, 'textkulma', '<length val="5" />');
+    timgeo.setPointsCoords(api, geostate.userpts); // tilan palautus
+    api.evalCommand(geostate.usercmds);
+}
+
+P.getData = function(){
+    return {
+       "usercode": ggbApplet.getValueString('kulmannimi'),
+       "userpts":  timgeo.getObjValue(ggbApplet,"D,E,F"),
+       "usercmds": timgeo.getObjCommand(ggbApplet, 'kulmannimi'),
+   };
+}
+!!
+-objxml: |!!
+!!
+-data: |!!
+<geogebra format="5.0">
+<euclidianView>
+    <coordSystem xZero="350" yZero="130" scale="25" yscale="25"/>
+    <axis id="0" show="false" />
+    <axis id="1" show="false" />
+</euclidianView>
+<kernel>
+    <decimals val="0"/>
+    <angleUnit val="degree"/>
+</kernel>
+</geogebra>
+!!
+```
+"""
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [
+                    NoTranslate(
+                        """```\ntype: geogebra
+#tool: true
+header: """
+                    ),
+                    Translate("Otsikko"),
+                    NoTranslate("\nstem: "),
+                    Translate("Selite"),
+                    NoTranslate(
+                        r"""
+-pointsRule:
+   {}
+width: 600
+height: 320
+material_id:
+commands: |!!
+!!
+javascript: |!!
+P.setDataInit = function (api, geostate) {
+    timgeo.setState(api, geostate);
+    timgeo.setAllLabelsVisible(api, false);  // kaikki labelit piiloon
+    api.setVisible("kulmannimi", false);
+    timgeo.setLabelsVisible(api, "D,E,F,β,textkulma", true);  //muutamat takaisin
+    timgeo.setXmlProperty(api, 'textkulma', '<length val="5" />');
+    timgeo.setPointsCoords(api, geostate.userpts); // tilan palautus
+    api.evalCommand(geostate.usercmds);
+}
+
+P.getData = function(){
+    return {
+       "usercode": ggbApplet.getValueString('kulmannimi'),
+       "userpts":  timgeo.getObjValue(ggbApplet,"D,E,F"),
+       "usercmds": timgeo.getObjCommand(ggbApplet, 'kulmannimi'),
+   };
+}
+!!
+-objxml: |!!
+!!
+-data: |!!
+<geogebra format="5.0">
+<euclidianView>
+    <coordSystem xZero="350" yZero="130" scale="25" yscale="25"/>
+    <axis id="0" show="false" />
+    <axis id="1" show="false" />
+</euclidianView>
+<kernel>
+    <decimals val="0"/>
+    <angleUnit val="degree"/>
+</kernel>
+</geogebra>
+!!
 ```"""
                     ),
                 ]
