@@ -38,6 +38,20 @@ export const dateCheckedValidator: ValidatorFn = (
     // TODO: Check that startTime + -date is before endTime + -date.
 
     console.log(control.value);
-    // return {dateInvalid: true};
+    const values: {
+        title: string;
+        startDate: string;
+        startTime: string;
+        endDate: string;
+        endTime: string;
+    } = control.value;
+
+    if (
+        new Date(`${values.startDate}T${values.startTime}`).getTime() >
+        new Date(`${values.endDate}T${values.endTime}`).getTime()
+    ) {
+        return {dateInvalid: true};
+    }
+
     return null;
 };
