@@ -952,6 +952,7 @@ export class DrawCanvasComponent
     loadedImages = 0;
     zoomLevel = 1;
     defaultZoomLevel = 1; // adjusted to show full image width after images are loaded
+    eventsAdded = false;
 
     drawHandler?: Drawing;
 
@@ -1050,51 +1051,54 @@ export class DrawCanvasComponent
             this.drawOptions,
             this.canvases.map((c) => c.nativeElement)
         );
-        this.canvasWrapper.nativeElement.addEventListener(
-            "mousedown",
-            (event) => {
-                this.downEvent(event, event);
-            }
-        );
-        this.canvasWrapper.nativeElement.addEventListener(
-            "touchstart",
-            (event) => {
-                if (event.touches.length > 1) {
-                    return;
+        if (!this.eventsAdded) {
+            this.canvasWrapper.nativeElement.addEventListener(
+                "mousedown",
+                (event) => {
+                    this.downEvent(event, event);
                 }
-                this.downEvent(event, touchEventToTouch(event));
-            }
-        );
-        this.canvasWrapper.nativeElement.addEventListener(
-            "mousemove",
-            (event) => {
-                this.moveEvent(event, event);
-            }
-        );
-        this.canvasWrapper.nativeElement.addEventListener(
-            "touchmove",
-            (event) => {
-                if (event.touches.length > 1) {
-                    return;
+            );
+            this.canvasWrapper.nativeElement.addEventListener(
+                "touchstart",
+                (event) => {
+                    if (event.touches.length > 1) {
+                        return;
+                    }
+                    this.downEvent(event, touchEventToTouch(event));
                 }
-                this.moveEvent(event, touchEventToTouch(event));
-            }
-        );
-        this.canvasWrapper.nativeElement.addEventListener(
-            "mouseup",
-            (event) => {
-                this.upEvent(event, event);
-            }
-        );
-        this.canvasWrapper.nativeElement.addEventListener(
-            "touchend",
-            (event) => {
-                if (event.touches.length > 1) {
-                    return;
+            );
+            this.canvasWrapper.nativeElement.addEventListener(
+                "mousemove",
+                (event) => {
+                    this.moveEvent(event, event);
                 }
-                this.upEvent(event, touchEventToTouch(event));
-            }
-        );
+            );
+            this.canvasWrapper.nativeElement.addEventListener(
+                "touchmove",
+                (event) => {
+                    if (event.touches.length > 1) {
+                        return;
+                    }
+                    this.moveEvent(event, touchEventToTouch(event));
+                }
+            );
+            this.canvasWrapper.nativeElement.addEventListener(
+                "mouseup",
+                (event) => {
+                    this.upEvent(event, event);
+                }
+            );
+            this.canvasWrapper.nativeElement.addEventListener(
+                "touchend",
+                (event) => {
+                    if (event.touches.length > 1) {
+                        return;
+                    }
+                    this.upEvent(event, touchEventToTouch(event));
+                }
+            );
+            this.eventsAdded = true;
+        }
     }
 
     /**
