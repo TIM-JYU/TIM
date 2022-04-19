@@ -296,7 +296,7 @@ class Plugin:
         )
         return p
 
-    def is_new_task(self):
+    def is_new_task(self) -> bool:
         return self.par.is_new_task()
 
     def deadline(self, default=None):
@@ -341,7 +341,7 @@ class Plugin:
             return self.known.pointsRule.multiplier
         return default
 
-    def validate_points(self, points: str | float):
+    def validate_points(self, points: str | float | None):
         try:
             points = float(points)
         except (ValueError, TypeError):
@@ -480,7 +480,7 @@ class Plugin:
     def allow_styles_field(self):
         return self.type in ALLOW_STYLES_PLUGINS
 
-    def is_answer_valid(self, old_answers, tim_info):
+    def is_answer_valid(self, old_answers: int, tim_info: dict) -> tuple[bool, str]:
         """Determines whether the currently posted answer should be considered valid.
 
         :param old_answers: The number of old answers for this task for the current user.
