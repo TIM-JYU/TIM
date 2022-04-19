@@ -24,8 +24,8 @@ calendar_plugin = TypedBlueprint("calendar_plugin", __name__, url_prefix="/calen
 
 @dataclass
 class CalendarItem:
-    done: bool
-    text: str
+    opiskelijat: str
+    ohjaajat: str
 
     def to_json(self) -> dict:
         return asdict(self)
@@ -33,7 +33,7 @@ class CalendarItem:
 
 @dataclass
 class CalendarMarkup(GenericMarkupModel):
-    todos: list[CalendarItem] | None = None
+    ryhmat: list[CalendarItem] | None = None
 
 
 @dataclass

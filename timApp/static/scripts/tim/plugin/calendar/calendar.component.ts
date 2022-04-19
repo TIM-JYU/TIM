@@ -69,13 +69,13 @@ function ceilToNearest(
 }
 
 const CalendarItem = t.type({
-    done: t.boolean,
-    text: t.string,
+    opiskelijat: t.string,
+    ohjaajat: t.string,
 });
 
 const CalendarMarkup = t.intersection([
     t.partial({
-        todos: nullable(t.array(CalendarItem)),
+        ryhmat: nullable(t.array(CalendarItem)),
     }),
     GenericPluginMarkup,
 ]);
