@@ -895,7 +895,18 @@ auto_number_headings: 0${CURSOR}
                 );
             }
             if (isTranslation) {
-                fns.push(this.addTrCheck(par));
+                fns.push({
+                    func: (e) =>
+                        this.markParagraphChecked(
+                            e,
+                            par,
+                            isTranslation
+                                ? getExplicitSelection(par)
+                                : getMinimalUnbrokenSelection(par, par)
+                        ),
+                    desc: "Mark as checked",
+                    show: this.viewctrl.item.rights.editable,
+                });
             }
             if (
                 refAreaInclusion === ParAreaInclusionKind.Outside ||
@@ -975,22 +986,21 @@ auto_number_headings: 0${CURSOR}
         };
     }
 
-    private addTrCheck(par: ParContext): IMenuFunctionEntry {
-        return {
-            func: (e) => this.markParagraphChecked(par),
-            desc: "Mark as checked",
-            show: this.viewctrl.item.rights.editable,
-        };
-    }
-
-    async markParagraphChecked(par: ParContext) {
+    async markParagraphChecked(
+        e: MouseEvent,
+        par: ParContext,
+        sel: UnbrokenSelection
+    ) {
         const parId = par.originalPar.id;
         const docId = this.viewctrl.item.id;
         const r = await to(
             $http.post<IParResponse>(`/markChecked/${docId}/${parId}`, {})
         );
         if (r.ok) {
-            await this.viewctrl.updateDocument();
+            this.addSavedParToDom(r.result.data, {
+                type: EditType.Edit,
+                pars: sel,
+            });
         }
     }
 

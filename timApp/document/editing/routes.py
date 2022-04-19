@@ -1028,9 +1028,8 @@ def mark_checked_route(doc_id, par_id):
     mark_translation_as_checked(par)
     if old_rc is not None:
         par.save()
-        # TODO: How do I refresh UI after this?
     return par_response(
-        pars,
+        [par],
         d,
         update_cache=current_app.config["IMMEDIATE_PRELOAD"],
     )
