@@ -353,7 +353,30 @@ c
         self.assertIsNotNone(d)
         self.assertEqual(len(d.translations), 2)
 
-    def test_paragraph_translation_route(self):
+    def test_document_machine_translation_route(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+Foo
+#-
+Bar
+#-
+Baz
+"""
+        )
+        # TODO Would rather use RevesingTranslationService.service_name but is not str
+        data = {"autotranslate": "Reversing"}
+        tr_json = self.json_post(f"/translate/{d.id}/{lang.lang_code}", data)
+        tr_doc = Translation.query.get(tr_json["id"]).document
+        tr_doc.clear_mem_cache()
+        mds = map(lambda x: x.md, tr_doc.get_paragraphs())
+        self.assertEqual(next(mds), "ooF")
+        self.assertEqual(next(mds), "raB")
+        self.assertEqual(next(mds), "zaB")
+        self.assertEqual(next(mds, None), None)
+
+    def test_paragraph_machine_translation_route(self):
         lang = self.reverselang
         self.login_test1()
         d = self.create_doc(
@@ -390,7 +413,7 @@ Baz
         # Applying translation again uses the SOURCE paragraph, so the result is the same
         self.assertEqual(tr_doc.get_paragraph(id3).md, "zaB")
 
-    def test_paragraph_translation_route_plugin(self):
+    def test_paragraph_machine_translation_route_plugin(self):
         lang = self.reverselang
         self.login_test1()
         d = self.create_doc(
@@ -432,7 +455,7 @@ notexistingkey: Bar baz
         tr_doc.clear_mem_cache()
         self.assertEqual(tr_doc.get_paragraph(id3).md, "xuQ")
 
-    def test_text_translation_route(self):
+    def test_text_machine_translation_route(self):
         lang = self.reverselang
         self.login_test1()
         d = self.create_doc()

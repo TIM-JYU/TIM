@@ -1,5 +1,3 @@
-from abc import ABC
-
 import langcodes
 import requests
 import pypandoc
@@ -632,15 +630,16 @@ class TranslateMethodFactory:
                                 x.text, to="html", format="md"
                             )
                             # Translate as HTML
-                            table_html_tr = translator.translate(
-                                [Translate(table_html)],
+                            table_html_tr = [Translate(table_html)]
+                            translator.translate(
+                                table_html_tr,
                                 source_lang,
                                 target_lang,
                                 tag_handling="html",
-                            )[0]
+                            )
                             # Turn the html back into md
                             table_md_tr = pypandoc.convert_text(
-                                table_html_tr.text, to="md", format="html"
+                                table_html_tr[0].text, to="md", format="html"
                             )
                             # Now mark the table as NoTranslate, so it doesn't get translated when
                             # the list is passed on to mass-translation
@@ -651,9 +650,8 @@ class TranslateMethodFactory:
                             tr_sublist.append(NoTranslate(x.text))
                     else:
                         tr_sublist.append(x)
-                translated_elements.append(
-                    translator.translate(tr_sublist, source_lang, target_lang)
-                )
+                translator.translate(tr_sublist, source_lang, target_lang)
+                translated_elements.append(tr_sublist)
             # The translator object returns the same structure as input but their content
             # has been translated accordingly.
             # Transform the objects back to a Markdown string
