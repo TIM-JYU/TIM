@@ -370,7 +370,7 @@ export class PermCtrl implements IController {
      * Sets the right text for the document deletion button.
      */
     setDeleteText() {
-        const lang_name = this.findCurrentTrDocLang();
+        const lang_name = this.findCurrentTrDocLang(this.item.id);
         if (lang_name == "") {
             this.deleteButtonText = "Delete document";
         } else {
@@ -378,26 +378,29 @@ export class PermCtrl implements IController {
         }
     }
 
-    async deleteDocument() {
+    async deleteDocument(id: number) {
+        const trDocLang = this.findCurrentTrDocLang(id);
+        const deletingCurrentDoc = this.item.id == id;
         if (
             window.confirm(
                 `Are you sure you want to delete this ${
-                    !this.item.isFolder && this.findCurrentTrDocLang() == ""
+                    !this.item.isFolder && trDocLang == ""
                         ? "document"
-                        : "translation: " + this.findCurrentTrDocLang()
+                        : "translation: " + trDocLang
                 }?`
             )
         ) {
-            const r = await to($http.delete("/documents/" + this.item.id));
+            const r = await to($http.delete("/documents/" + id));
             if (r.ok) {
-                if (!this.item.isFolder && this.item.src_docid) {
+                if (!this.item.isFolder && deletingCurrentDoc) {
                     const originalDoc = this.item.path.substring(
                         0,
                         this.item.path.lastIndexOf("/")
                     );
                     location.replace(`/manage/${originalDoc}`);
                 } else {
-                    location.replace(`/view/${this.item.location}`);
+                    // TODO: Turn this from what's basically a page refresh to just updating the list of translations
+                    location.replace(`/manage/${this.item.path}`);
                 }
             } else {
                 await showMessageDialog(r.result.data.error);
@@ -673,13 +676,14 @@ export class PermCtrl implements IController {
     }
 
     /**
-     * Finds the language of the current translation document.
+     * Finds the language of the translation document the given ID refers to.
+     * @param the id of the translation document
      * @returns The current translation document's language or nothing if not found or is source document.
      */
-    findCurrentTrDocLang() {
+    findCurrentTrDocLang(id: number) {
         for (const translation of this.translations) {
             if (
-                translation.id == this.item.id &&
+                translation.id == id &&
                 translation.id != translation.src_docid
             ) {
                 return translation.lang_id;
