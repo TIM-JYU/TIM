@@ -449,6 +449,7 @@ export class Drawing {
                 yOffset: 0, // setOffset seems to fail in constructor, so we set this extrnally later
             };
         });
+        this.activeContexts = this.ctxs;
         if (externalClear) {
             this.externalClear = true;
         }
