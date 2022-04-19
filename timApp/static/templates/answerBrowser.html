@@ -70,7 +70,7 @@
                     </div>
                 </div>
                 </div>
-                <a
+                <a ng-if="$ctrl.peerReviewEnabled && !$ctrl.isPeerReview"
                     title="Link to peer review"
                 ng-href="{{ $ctrl.getReviewLink() }}">Review</a>
                 </span>
