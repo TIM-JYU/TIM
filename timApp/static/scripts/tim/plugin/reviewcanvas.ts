@@ -475,41 +475,52 @@ export class ReviewCanvasComponent
      * The returned images are fully rotated to their current rotation value (90deg per one rotation)
      */
     async getVelpImages(): Promise<string[] | undefined> {
-        const imgs = this.uploadedFiles.map((file) => {
+        const rotatedimgsrcs = this.uploadedFiles.filter(
+            (file) => file.rotation != undefined && file.rotation !== 0
+        );
+        const rotatedimgs = rotatedimgsrcs.map((file) => {
             const newImg = new Image();
             newImg.src = file.path;
             return newImg;
         });
-        // TODO: await only rotated images, since non-rotated images end up as src string anyway
-        await Promise.all(imgs.map((img) => img.decode()));
-
-        return imgs.map((img, index) => {
-            const uploadedFile = this.uploadedFiles[index];
-            if (uploadedFile.rotation == undefined) {
-                return img.currentSrc;
+        await Promise.all(rotatedimgs.map((img) => img.decode()));
+        const ret: string[] = [];
+        for (const file of this.uploadedFiles) {
+            const uploadedFile = file;
+            if (
+                uploadedFile.rotation == undefined ||
+                uploadedFile.rotation == 0
+            ) {
+                ret.push(uploadedFile.path);
+            } else {
+                const img = rotatedimgs.shift();
+                if (img == undefined) {
+                    throw Error("Failed to load velp images");
+                }
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d")!;
+                let dx = 0;
+                let dy = 0;
+                if (uploadedFile.rotation == 1) {
+                    dy = -img.height;
+                }
+                if (uploadedFile.rotation == 2) {
+                    dx = -img.width;
+                    dy = -img.height;
+                }
+                if (uploadedFile.rotation == 3) {
+                    dx = -img.width;
+                }
+                canvas.height =
+                    uploadedFile.rotation % 2 == 0 ? img.height : img.width;
+                canvas.width =
+                    uploadedFile.rotation % 2 == 0 ? img.width : img.height;
+                ctx.rotate((Math.PI / 2) * uploadedFile.rotation);
+                ctx.drawImage(img, dx, dy);
+                ret.push(canvas.toDataURL());
             }
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d")!;
-            let dx = 0;
-            let dy = 0;
-            if (uploadedFile.rotation == 1) {
-                dy = -img.height;
-            }
-            if (uploadedFile.rotation == 2) {
-                dx = -img.width;
-                dy = -img.height;
-            }
-            if (uploadedFile.rotation == 3) {
-                dx = -img.width;
-            }
-            canvas.height =
-                uploadedFile.rotation % 2 == 0 ? img.height : img.width;
-            canvas.width =
-                uploadedFile.rotation % 2 == 0 ? img.width : img.height;
-            ctx.rotate((Math.PI / 2) * uploadedFile.rotation);
-            ctx.drawImage(img, dx, dy);
-            return canvas.toDataURL();
-        });
+        }
+        return ret;
     }
 }
 
