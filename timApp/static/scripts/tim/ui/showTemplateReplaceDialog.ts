@@ -2,6 +2,7 @@ import * as t from "io-ts";
 import {Result, to2} from "../util/utils";
 import {InputDialogKind} from "./input-dialog.kind";
 import {showInputDialog} from "./showInputDialog";
+import {slugify} from "tim/util/slugify";
 
 export const TemplateParam = t.intersection([
     t.type({
@@ -51,11 +52,9 @@ export async function showTemplateReplaceDialog(
     }
     const what = param.what ?? "\\\\\\?";
 
-    // MK 19.4.2022:
-    // if replace.result has spaces, replace them with "_"
-    const result = replace.result.replace(/ /g, "_");
-    return data.replace(new RegExp(what, flags), result);
-    // OLD: return data.replace(new RegExp(what, flags), replace.result);
+    // MK 19.4.2022
+    // replace special characters with "legal" characters
+    return data.replace(new RegExp(what, flags), slugify(replace.result));
 }
 
 export async function replaceTemplateValues(data: string): Promise<string> {
