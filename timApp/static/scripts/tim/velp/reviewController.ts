@@ -1449,7 +1449,7 @@ export class ReviewController {
             }
             return arr;
         }, []);
-        canvas.setPersistentDrawData(annotationDrawings);
+        canvas.setAndAdjustPersistentDrawData(annotationDrawings);
     }
 
     /**
@@ -1469,7 +1469,12 @@ export class ReviewController {
             if (canvas.getDrawing().length > 0) {
                 this.selectedArea = undefined;
                 this.selectionIsDrawing = true;
-                const par = $(canvas.canvas.nativeElement).parents(
+                // const par = $(canvas.canvas.nativeElement).parents(
+                //     ".par"
+                // )[0] as Element;
+                // this.selectedElement = createParContext(par);
+                // this.selectedCanvas = canvas;
+                const par = $(canvas.canvasWrapper.nativeElement).parents(
                     ".par"
                 )[0] as Element;
                 this.selectedElement = createParContext(par);

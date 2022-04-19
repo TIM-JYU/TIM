@@ -8,8 +8,10 @@ import {
     OnChanges,
     OnDestroy,
     OnInit,
+    QueryList,
     SimpleChanges,
     ViewChild,
+    ViewChildren,
 } from "@angular/core";
 import {
     BrowserModule,
@@ -404,29 +406,49 @@ interface IImageSizes {
     width: number;
 }
 
+interface offsetContext {
+    ctx: CanvasRenderingContext2D;
+    width: number;
+    height: number;
+    yOffset: number;
+}
+
 /**
  * Draw basic shapes on canvas via manually called movement events
  */
 export class Drawing {
     drawOptions: IDrawOptions;
-    ctx: CanvasRenderingContext2D;
-    canvas: HTMLCanvasElement;
+    // original canvas elements
+    canvases: HTMLCanvasElement[];
+    // CanvasRenderingContexts on canvases and their respective offsets
+    ctxs: offsetContext[] = [];
     externalClear = false;
 
     /**
      * @param drawOptions settings used when drawing new items
-     * @param canvas CanvasElement to draw on
+     * @param canvases CanvasElements to draw on
      * @param externalClear if true, don't automatically clear canvas before redraws
      */
     constructor(
         drawOptions: IDrawOptions,
-        canvas: HTMLCanvasElement,
+        canvases: HTMLCanvasElement[],
         externalClear?: boolean
     ) {
+        if (canvases.length < 1) {
+            console.error("Failed to receive canvases");
+        }
         this.drawOptions = drawOptions;
-        this.canvas = canvas;
-        this.ctx = this.canvas.getContext("2d")!;
-        this.ctx.lineCap = "round";
+        this.canvases = canvases;
+        this.ctxs = this.canvases.map((c) => {
+            const context = c.getContext("2d")!;
+            context.lineCap = "round";
+            return {
+                ctx: context,
+                height: c.height,
+                width: c.width,
+                yOffset: 0, // setOffset seems to fail in constructor, so we set this extrnally later
+            };
+        });
         if (externalClear) {
             this.externalClear = true;
         }
@@ -453,11 +475,46 @@ export class Drawing {
     private endX: number = 0;
     private endY: number = 0;
 
+    // previous move event coordinate
+    private prevStepX: number = 0;
+    private prevStepY: number = 0;
+
     // dimension used when drawing shapes
     private itemX: number = 0;
     private itemY: number = 0;
     private itemW: number = 0;
     private itemH: number = 0;
+
+    // keep track of how much each canvasContext has been shifted from original location (down, right)
+    offsets: {x: number; y: number}[] = [];
+
+    // which contexts need to be re-drawn on draw events
+    private activeContexts: offsetContext[] = [];
+
+    // y-coordinate limits for current move event
+    private minY: number = 0;
+    private maxY: number = 0;
+
+    /**
+     * Move CanvasRenderingContext by offset
+     * @param index Canvas / ctx position in this.canvases / this.ctxs
+     * @param dimensions visible dimensions of CanvasRenderingContexts
+     * @param offset amount of pixels to move right or down
+     */
+    setOffSet(
+        index: number,
+        dimensions: {w: number; h: number},
+        offset: {x: number; y: number}
+    ) {
+        const context = this.ctxs[index];
+        if (!context) {
+            return;
+        }
+        context.ctx.translate(offset.x, offset.y);
+        context.yOffset = offset.y;
+        context.width = dimensions.w;
+        context.height = dimensions.h;
+    }
 
     /**
      * Begin drawing sequence
@@ -469,26 +526,35 @@ export class Drawing {
             this.drawMoved = false;
             this.startX = coords.x;
             this.startY = coords.y;
+            this.minY = coords.y;
+            this.maxY = coords.y;
             this.startSegmentDraw(coords);
         }
     }
 
     /**
-     * Draw preview object based on mouse movement and current drawing settings
+     * Update maximum and minimum y according to current and previous move event
+     * Draw preview object based on mouse movement, min/max y-coordinate and current drawing settings
      * @param coords current location
      */
     public moveEvent(coords: {x: number; y: number}) {
+        // TODO: Drawings with calculations (ellipse/arrow) could be pre-calculated here (or in preview draw function)
+        //  for optimization
         if (!this.drawStarted) {
             return;
         }
         this.drawMoved = true;
         const {x, y} = coords;
+        const w = this.drawOptions.w;
         if (
             this.drawOptions.drawType == DrawType.Ellipse ||
             this.drawOptions.drawType == DrawType.Rectangle
         ) {
+            this.minY = Math.min(this.startY, y, this.prevStepY) - w;
+            this.maxY = Math.max(this.startY, y, this.prevStepY) + w;
+            this.setActiveContexts();
             this.redrawAll();
-            setContextSettingsFromOptions(this.drawOptions, this.ctx);
+            this.setContextSettingsFromOptions();
             this.itemX = Math.min(x, this.startX);
             this.itemY = Math.min(y, this.startY);
             this.itemW = Math.abs(x - this.startX);
@@ -499,24 +565,48 @@ export class Drawing {
                 this.drawPreviewRectangle();
             }
         } else if (this.drawOptions.drawType == DrawType.Arrow) {
+            const points = getArrowPoints({
+                start: {x: this.startX, y: this.startY},
+                end: coords,
+                w: this.drawOptions.w,
+            });
+            this.minY =
+                Math.min(
+                    this.startY,
+                    y,
+                    this.prevStepY,
+                    points.left.y,
+                    points.right.y
+                ) - w;
+            this.maxY =
+                Math.max(
+                    this.startY,
+                    y,
+                    this.prevStepY,
+                    points.left.y,
+                    points.right.y
+                ) + w;
+            this.setActiveContexts();
             this.redrawAll();
-            setContextSettingsFromOptions(this.drawOptions, this.ctx);
-            drawArrow(
-                {
-                    start: {x: this.startX, y: this.startY},
-                    end: coords,
-                    w: this.drawOptions.w,
-                },
-                this.ctx
-            );
+            this.setContextSettingsFromOptions();
+            this.drawPreviewArrow({
+                start: {x: this.startX, y: this.startY},
+                end: coords,
+                w: this.drawOptions.w,
+            });
         } else if (this.prevPos) {
+            this.minY = Math.min(this.startY, this.minY, coords.y) - w;
+            this.maxY = Math.max(this.startY, this.maxY, coords.y) + w;
+            this.setActiveContexts();
             if (this.drawOptions.drawType == DrawType.Line) {
                 this.popPoint(1);
             }
-            setContextSettingsFromOptions(this.drawOptions, this.ctx);
+            this.setContextSettingsFromOptions();
             this.addPoint(coords);
+            // TODO: If we're not in linemode, then just adding a new piece of freehand line to coord might suffice
             this.redrawAll();
         }
+        this.prevStepY = coords.y;
     }
 
     /**
@@ -557,6 +647,15 @@ export class Drawing {
                 this.freeDrawing = undefined;
             }
         }
+    }
+
+    /**
+     * Update CanvasRenderingContext2d settings to match current drawing options
+     */
+    setContextSettingsFromOptions() {
+        this.activeContexts.forEach((c) =>
+            setContextSettingsFromOptions(this.drawOptions, c.ctx)
+        );
     }
 
     /**
@@ -612,14 +711,24 @@ export class Drawing {
      * Draw a rectangle during mouse move
      */
     drawPreviewRectangle() {
-        drawRectangle(this.makeShape(), this.ctx);
+        const shape = this.makeShape();
+        this.activeContexts.forEach((c) => drawRectangle(shape, c.ctx));
     }
 
     /**
      * Draw an ellipse during mouse move
      */
     drawPreviewEllipse() {
-        drawEllipse(this.makeShape(), this.ctx);
+        const shape = this.makeShape();
+        this.activeContexts.forEach((c) => drawEllipse(shape, c.ctx));
+    }
+
+    /**
+     * Draw an arrow during mouse move
+     * @param line current start/end coordinates
+     */
+    drawPreviewArrow(line: ILine) {
+        this.activeContexts.forEach((c) => drawArrow(line, c.ctx));
     }
 
     /**
@@ -649,25 +758,55 @@ export class Drawing {
     }
 
     /**
-     * Clears the entire canvas
+     * Clears the canvases by clearing the visible part of each canvasContext
      */
     clearCanvas(): void {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.activeContexts.forEach((ctx) => {
+            ctx.ctx.clearRect(0, -ctx.yOffset, ctx.width, ctx.height);
+        });
     }
 
     /**
      * Redraws everything (current drawings, permanent drawings, possible freehand drawing)
-     * Canvas will be cleared first unless this.externalClear is true
+     * CanvasContext will be cleared first unless this.externalClear is true
      */
     redrawAll(): void {
         if (!this.externalClear) {
             this.clearCanvas();
         }
-        drawFromArray(this.persistentDrawData, this.drawOptions, this.ctx);
-        drawFromArray(this.drawData, this.drawOptions, this.ctx);
+        this.drawFromArray(this.persistentDrawData);
+        this.drawFromArray(this.drawData);
         if (this.freeDrawing) {
-            drawFreeHand(this.ctx, [this.freeDrawing]);
+            this.drawFreeHand([this.freeDrawing]);
         }
+    }
+
+    /**
+     * Check which canvas contexts are required to update in current draw event
+     * (e.g canvases between this.minY and this.maxY)
+     */
+    setActiveContexts() {
+        const ret: offsetContext[] = [];
+        for (const ctx of this.ctxs) {
+            const top = -ctx.yOffset;
+            const bottom = top + ctx.height;
+            if (top <= this.maxY && bottom >= this.minY) {
+                ret.push(ctx);
+            } else if (top > this.maxY) {
+                break;
+            }
+        }
+        this.activeContexts = ret;
+    }
+
+    drawFromArray(data: DrawItem[]) {
+        this.activeContexts.forEach((ctx) =>
+            drawFromArray(data, this.drawOptions, ctx.ctx)
+        );
+    }
+
+    drawFreeHand(data: ILineSegment[]) {
+        this.activeContexts.forEach((ctx) => drawFreeHand(ctx.ctx, data));
     }
 
     /**
@@ -681,16 +820,6 @@ export class Drawing {
         if (this.freeDrawing.lines.length > minlen) {
             this.freeDrawing.lines.pop();
         }
-    }
-
-    /**
-     * Draws a line between two points
-     */
-    line(p1: TuplePoint, p2: IPoint) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(p1[0], p1[1]);
-        this.ctx.lineTo(p2.x, p2.y);
-        this.ctx.stroke();
     }
 
     /**
@@ -714,6 +843,7 @@ export class Drawing {
      */
     undo(): DrawItem | undefined {
         const ret = this.drawData.pop();
+        this.activeContexts = this.ctxs;
         this.redrawAll();
         return ret;
     }
@@ -738,7 +868,8 @@ export class Drawing {
      * @param data drawings to set
      */
     setPersistentDrawData(data: DrawItem[]) {
-        this.ctx.lineCap = "round";
+        this.activeContexts = this.ctxs;
+        this.ctxs.forEach((c) => (c.ctx.lineCap = "round"));
         this.persistentDrawData = data;
         this.redrawAll();
     }
@@ -793,8 +924,9 @@ const SCROLLBAR_APPROX_WIDTH = 17;
                 <div #objectContainer class="canvasObjectContainer"
                      style="overflow: visible; position: absolute; height: 0; width: 0;">
                 </div>
-                <div class="zoomer" style="-webkit-transform-origin: 0 0;" [style.transform]="getZoomLevel()">
-                    <canvas #drawbase class="drawbase" style="border:1px solid #000000; position: absolute;">
+                <div class="zoomer" #canvasWrapper style="-webkit-transform-origin: 0 0;" [style.transform]="getZoomLevel()">
+                    <canvas #drawbases *ngFor="let item of bgImages; let i = index" class="drawbase" 
+                            style="border:1px solid #000000; margin:-1px; position: absolute;">
                     </canvas>
                 </div>
             </div>
@@ -810,7 +942,10 @@ export class DrawCanvasComponent
     bgSourceSizes: IImageSizes[] = []; // dimensions of loaded background images, sorted
     bgOffsets: number[] = []; // top starting coordinates of each background image, sorted
     bgImages: SafeResourceUrl[] = [];
-    @ViewChild("drawbase") canvas!: ElementRef<HTMLCanvasElement>;
+    @ViewChildren("drawbases") canvases!: QueryList<
+        ElementRef<HTMLCanvasElement>
+    >;
+    @ViewChild("canvasWrapper") canvasWrapper!: ElementRef<HTMLDivElement>;
     @ViewChild("wrapper") wrapper!: ElementRef<HTMLDivElement>;
     @ViewChild("backGround") bgElement!: ElementRef<HTMLDivElement>;
     @ViewChild("objectContainer") objectContainer!: ElementRef<HTMLDivElement>;
@@ -888,35 +1023,53 @@ export class DrawCanvasComponent
     ngAfterViewInit() {
         this.drawHandler = new Drawing(
             this.drawOptions,
-            this.canvas.nativeElement
+            this.canvases.map((c) => c.nativeElement)
         );
-        this.canvas.nativeElement.addEventListener("mousedown", (event) => {
-            this.downEvent(event, event);
-        });
-        this.canvas.nativeElement.addEventListener("touchstart", (event) => {
-            if (event.touches.length > 1) {
-                return;
+        this.canvasWrapper.nativeElement.addEventListener(
+            "mousedown",
+            (event) => {
+                this.downEvent(event, event);
             }
-            this.downEvent(event, touchEventToTouch(event));
-        });
-        this.canvas.nativeElement.addEventListener("mousemove", (event) => {
-            this.moveEvent(event, event);
-        });
-        this.canvas.nativeElement.addEventListener("touchmove", (event) => {
-            if (event.touches.length > 1) {
-                return;
+        );
+        this.canvasWrapper.nativeElement.addEventListener(
+            "touchstart",
+            (event) => {
+                if (event.touches.length > 1) {
+                    return;
+                }
+                this.downEvent(event, touchEventToTouch(event));
             }
-            this.moveEvent(event, touchEventToTouch(event));
-        });
-        this.canvas.nativeElement.addEventListener("mouseup", (event) => {
-            this.upEvent(event, event);
-        });
-        this.canvas.nativeElement.addEventListener("touchend", (event) => {
-            if (event.touches.length > 1) {
-                return;
+        );
+        this.canvasWrapper.nativeElement.addEventListener(
+            "mousemove",
+            (event) => {
+                this.moveEvent(event, event);
             }
-            this.upEvent(event, touchEventToTouch(event));
-        });
+        );
+        this.canvasWrapper.nativeElement.addEventListener(
+            "touchmove",
+            (event) => {
+                if (event.touches.length > 1) {
+                    return;
+                }
+                this.moveEvent(event, touchEventToTouch(event));
+            }
+        );
+        this.canvasWrapper.nativeElement.addEventListener(
+            "mouseup",
+            (event) => {
+                this.upEvent(event, event);
+            }
+        );
+        this.canvasWrapper.nativeElement.addEventListener(
+            "touchend",
+            (event) => {
+                if (event.touches.length > 1) {
+                    return;
+                }
+                this.upEvent(event, touchEventToTouch(event));
+            }
+        );
     }
 
     ngOnChanges(changes: SimpleChanges) {
@@ -966,22 +1119,26 @@ export class DrawCanvasComponent
     allImagesLoaded(): void {
         let offset = 0;
         this.bgOffsets = [offset];
-        for (let i = 0; i < this.bgSourceSizes.length - 1; i++) {
-            this.bgOffsets.push(this.bgSourceSizes[i].height + offset);
-            offset += this.bgSourceSizes[i].height;
-        }
         this.imgHeight = this.bgElement.nativeElement.clientHeight;
         this.imgWidth = this.bgElement.nativeElement.clientWidth;
-        const newWidth = Math.max(
-            this.bgElement.nativeElement.clientWidth,
-            this.wrapper.nativeElement.clientWidth - 50
-        );
-        const newHeight = Math.max(
-            this.bgElement.nativeElement.clientHeight,
-            this.getWrapperHeight() - 5
-        );
-        this.canvas.nativeElement.width = newWidth;
-        this.canvas.nativeElement.height = newHeight;
+        for (let i = 0; i < this.bgSourceSizes.length; i++) {
+            const canvas = this.canvases.get(i)?.nativeElement;
+            if (!canvas) {
+                throw Error(`Missing canvas ${i}`);
+            }
+            canvas.height = this.bgSourceSizes[i].height;
+            canvas.width = this.imgWidth;
+            canvas.style.top = offset + "px";
+            this.drawHandler.setOffSet(
+                i,
+                {w: canvas.width, h: canvas.height},
+                {x: 0, y: -offset}
+            );
+            if (i < this.bgSourceSizes.length - 1) {
+                this.bgOffsets.push(this.bgSourceSizes[i].height + offset);
+                offset += this.bgSourceSizes[i].height;
+            }
+        }
         if (this.imgWidth > this.wrapper.nativeElement.clientWidth) {
             this.defaultZoomLevel =
                 (this.wrapper.nativeElement.clientWidth -
@@ -1049,7 +1206,7 @@ export class DrawCanvasComponent
         if (!middleOrRightClick) {
             this.drawHandler.downEvent(
                 this.normalizeCoordinate(
-                    posToRelative(this.canvas.nativeElement, e)
+                    posToRelative(this.canvasWrapper.nativeElement, e)
                 )
             );
         }
@@ -1065,7 +1222,7 @@ export class DrawCanvasComponent
         }
         this.drawHandler.moveEvent(
             this.normalizeCoordinate(
-                posToRelative(this.canvas.nativeElement, e)
+                posToRelative(this.canvasWrapper.nativeElement, e)
             )
         );
     }
@@ -1075,7 +1232,7 @@ export class DrawCanvasComponent
      */
     upEvent(event: Event, e: MouseOrTouch): void {
         const pxy = this.normalizeCoordinate(
-            posToRelative(this.canvas.nativeElement, e)
+            posToRelative(this.canvasWrapper.nativeElement, e)
         );
         this.drawHandler.upEvent(pxy);
         if (this.updateCallback) {
@@ -1132,7 +1289,7 @@ export class DrawCanvasComponent
      * Sets and draws the given permanent drawing on canvas
      * @param data Drawing to draw
      */
-    setPersistentDrawData(data: DrawItem[]): void {
+    setAndAdjustPersistentDrawData(data: DrawItem[]): void {
         this.drawHandler.setPersistentDrawData(data);
     }
 
