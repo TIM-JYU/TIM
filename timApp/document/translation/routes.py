@@ -102,15 +102,20 @@ def create_translation_route(tr_doc_id, language):
         orig_doc = tr.document.get_source_document()
         # TODO The parsing done before translation might need id etc values found in the markdown, but not found in the paragraphs, that get_paragraphs() returns...
         # Ignore the settings paragraphs entirely to protect them from mangling
-        zipped_paragraphs = zip(orig_doc.get_paragraphs(), tr.document)
-        translatable_zipped_paragraphs = filter(
-            lambda x: not (x[0].is_setting() or x[1].is_setting()), zipped_paragraphs
+        orig_paragraphs = orig_doc.get_paragraphs()
+        translatable_paragraphs = list(
+            map(
+                TranslationTarget, filter(lambda x: not x.is_setting(), orig_paragraphs)
+            )
         )
-        for orig_paragraph, tr_block in translatable_zipped_paragraphs:
-            # Call the partially applied function, that contains languages selected earlier, to translate text
-            # TODO Call with the whole document and let preprocessing handle the conversion into list[str]?
-            translated_text = translator_func([TranslationTarget(orig_paragraph)])[0]
-            tr.document.modify_paragraph(tr_block.id, translated_text)
+
+        # Call the partially applied function, that contains languages selected earlier, to translate texts
+        # TODO Call with the whole document and let preprocessing handle the conversion into list[str]?
+        translated_texts = translator_func(translatable_paragraphs)
+
+        tr_paragraphs = tr.document.get_paragraphs()
+        for text, tr_block in zip(translated_texts, tr_paragraphs):
+            tr.document.modify_paragraph(tr_block.id, text)
 
     if isinstance(doc, DocEntry):
         de = doc
