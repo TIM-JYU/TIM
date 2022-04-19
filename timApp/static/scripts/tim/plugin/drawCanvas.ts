@@ -1018,10 +1018,6 @@ export class DrawCanvasComponent
     }
 
     ngAfterViewInit() {
-        this.drawHandler = new Drawing(
-            this.drawOptions,
-            this.canvases.map((c) => c.nativeElement)
-        );
         this.canvasWrapper.nativeElement.addEventListener(
             "mousedown",
             (event) => {
@@ -1098,6 +1094,7 @@ export class DrawCanvasComponent
      * Store dimensions of loaded background images
      */
     onImgLoad(e: Event, index: number): void {
+        // TODO: This event is called twice when re-opening image review
         const img = e.target as HTMLImageElement;
         const height = img.height;
         const width = img.width;
@@ -1114,6 +1111,10 @@ export class DrawCanvasComponent
      * function after every background image is loaded
      */
     allImagesLoaded(): void {
+        this.drawHandler = new Drawing(
+            this.drawOptions,
+            this.canvases.map((c) => c.nativeElement)
+        );
         let offset = 0;
         this.bgOffsets = [offset];
         this.imgHeight = this.bgElement.nativeElement.clientHeight;
