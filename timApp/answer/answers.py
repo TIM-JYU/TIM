@@ -308,6 +308,7 @@ def get_all_answers(
     if options.name == NameOptions.PSEUDO and options.salt is not None:
 
         def hasher(x: int) -> str:
+            assert options.salt is not None
             shake = hashlib.shake_256()
             shake.update(options.salt.encode("utf-8"))
             shake.update(str(x).encode("utf-8"))
