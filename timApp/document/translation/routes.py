@@ -52,6 +52,7 @@ tr_bp = Blueprint("translation", __name__, url_prefix="")
 
 @tr_bp.post("/translate/<int:tr_doc_id>/<language>")
 def create_translation_route(tr_doc_id, language):
+    # TODO Why is the variable for *original* document's ID named "tr_doc_id"?
     req_data = request.get_json()
     title = req_data.get("doc_title", None)
 
