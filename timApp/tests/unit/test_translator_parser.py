@@ -651,6 +651,62 @@ file: VIDEOURLHERE
             ],
         )
 
+    # TODO Finish this test when there is a clearer picture of the needs
+    def TODO_test_multiple_paragraphs(self):
+        md = """**fet**
+
+
+*kursiv stil*
+
+
+<u>Understrykning</u>
+
+
+<s>strykning</s>
+
+
+[Färg]{.red}
+
+
+[bakgrundsfärg]{.bgred}
+
+
+`koodi`
+kodblock
+
+
+~delindex~
+
+
+^högsta index^"""
+
+        TR = Translate
+        NT = NoTranslate
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [NT("**"), TR("fet"), NT("**\n\n*")],
+                [
+                    TR("kursiv stil"),
+                    NT("*\n\n<u>"),
+                    TR("Understrykning"),
+                    NT("</u>\n\n<s>"),
+                    TR("strykning"),
+                    NT("</s>\n\n["),
+                    TR("Färg"),
+                    NT("]{.red}\n\n["),
+                    TR("bakgrundsfärg"),
+                    NT("]{.bgred}\n\n`"),
+                    TR("koodi"),
+                    NT("`\nkodblock\n\n~"),
+                    TR("delindex"),
+                    NT("~\n\n^"),
+                    TR("högsta index"),
+                    NT("^"),
+                ],
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
