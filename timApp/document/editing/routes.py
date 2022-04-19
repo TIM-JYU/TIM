@@ -1004,16 +1004,36 @@ def mark_translated_route(doc_id):
 
 
 @edit_page.post("/markChecked/<int:doc_id>")
-def mark_checked_route(doc_id):
+def mark_all_checked_route(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_edit_access(d)
     for p in d.document_as_current_user.get_paragraphs():
         if p.is_translation() and not p.is_setting():
             old_rc = p.get_attr("mt")
             mark_translation_as_checked(p)
-            if old_rc is None:
+            if old_rc is not None:
                 p.save()
     return ok_response()
+
+
+@edit_page.post("/markChecked/<int:doc_id>/<string:par_id>")
+def mark_checked_route(doc_id, par_id):
+    d = get_doc_or_abort(doc_id)
+    verify_edit_access(d)
+    doc = d.document_as_current_user
+    pars = doc.get_paragraphs()
+
+    par = doc.get_paragraph(par_id=par_id)
+    old_rc = par.get_attr("mt")
+    mark_translation_as_checked(par)
+    if old_rc is not None:
+        par.save()
+        # TODO: How do I refresh UI after this?
+    return par_response(
+        pars,
+        d,
+        update_cache=current_app.config["IMMEDIATE_PRELOAD"],
+    )
 
 
 @dataclass

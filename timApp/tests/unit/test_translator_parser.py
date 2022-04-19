@@ -142,9 +142,11 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
 
     def test_tex_collect(self):
         # TODO Add cases for identifiers, key-value -pairs and multiple classes as well
-        text = r"x^3-49x&=0 &&|\text{ erotetaan yhteinen tekijä x}\x(x^2-49)&=0 &&|\text{ " \
-               r"käytetään tulon nollasääntöä}\x=0\;\;\;\textrm{tai}\;\;\;&x^2-49=0 &&|\textsf{ ratkaistaan x}" \
-               r"\&\;\;\;\;\;\,\;\;x^2=49 \&\;\;\;\;\;\,\;\;\;\;x=7\;\mathsf{tai}\;x=-7"
+        text = (
+            r"x^3-49x&=0 &&|\text{ erotetaan yhteinen tekijä x}\x(x^2-49)&=0 &&|\text{ "
+            r"käytetään tulon nollasääntöä}\x=0\;\;\;\textrm{tai}\;\;\;&x^2-49=0 &&|\textsf{ ratkaistaan x}"
+            r"\&\;\;\;\;\;\,\;\;x^2=49 \&\;\;\;\;\;\,\;\;\;\;x=7\;\mathsf{tai}\;x=-7"
+        )
         self.assertEqual(
             tex_collect(text),
             [
@@ -364,9 +366,9 @@ x=0\;\;\;\\text{"""
                     NoTranslate("\n\t- "),
                     Translate("Kolme kohtaa"),
                     NoTranslate("\n\t- ```\nKoodia välissä```\n\t- "),
-                    Translate("Jotain")
+                    Translate("Jotain"),
                 ],
-            ]
+            ],
         )
 
     # TODO Test does not work, quotation mark doubles text randomly at the moment. Problem in code?
@@ -701,15 +703,16 @@ file: VIDEOURLHERE
                 [
                     NoTranslate('```\nfooter: "'),
                     Translate("Video footer here"),
-                    NoTranslate(""""
+                    NoTranslate(
+                        """"
 #iframe: true
 width: 800
 height: 600
 file: VIDEOURLHERE
-```""")
-
+```"""
+                    ),
                 ]
-            ]
+            ],
         )
 
     def test_tim_plugin4(self):

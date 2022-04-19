@@ -112,6 +112,20 @@ export class PermCtrl implements IController {
 
     async $onInit() {
         this.translationInProgress = false;
+        if (this.item.isFolder) {
+            this.newName = this.item.name;
+            this.newFolderName = this.item.location;
+            this.oldName = this.newName;
+            this.oldFolderName = this.newFolderName;
+        } else {
+            this.updateFullText(this.item.fulltext);
+            if (this.item.rights.manage) {
+                await this.getAliases();
+                await this.getTranslations();
+            }
+        }
+        this.setDeleteText();
+
         const error = ["", "", ""];
         error[0] = await listTranslators(this.translators, true);
         error[1] = await updateLanguages(
@@ -130,19 +144,6 @@ export class PermCtrl implements IController {
         for (const tr of this.translators) {
             this.isOptionAvailable(tr);
         }
-        if (this.item.isFolder) {
-            this.newName = this.item.name;
-            this.newFolderName = this.item.location;
-            this.oldName = this.newName;
-            this.oldFolderName = this.newFolderName;
-        } else {
-            this.updateFullText(this.item.fulltext);
-            if (this.item.rights.manage) {
-                await this.getAliases();
-                await this.getTranslations();
-            }
-        }
-        this.setDeleteText();
     }
 
     async showMoreChangelog() {

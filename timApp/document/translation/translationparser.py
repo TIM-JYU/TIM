@@ -815,14 +815,24 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
     # ==>
     # [T("foo bar"), NT("\n["), T("click"), NT("](www.example.com)")]
     if len(arr) > 0:
-        merged_arr = [arr[0]]
-        for elem in arr[1:]:
-            if isinstance(elem, type(merged_arr[-1])):
-                # Combine the texts of element and previously added if they are the same type
-                merged_arr[-1].text = merged_arr[-1].text + elem.text
-            else:
-                # If element is different type to last, add new one
-                merged_arr.append(elem)
+        merged_arr: list[TranslateApproval] = list()
+        arr_iter = iter(arr)
+        elem = next(arr_iter, None)
+        if elem:
+            last_elem_s, last_elem_t = elem.text, type(elem)
+            while True:
+                elem = next(arr_iter, None)
+                if isinstance(elem, last_elem_t):
+                    # Combine the texts of element and previously added if they are the same type
+                    last_elem_s += elem.text
+                else:
+                    # If element is different type to last, save last and start collecting the new one
+                    last_obj = last_elem_t(last_elem_s)
+                    merged_arr.append(last_obj)
+                    if elem is None:
+                        break
+                    last_elem_t = type(elem)
+                    last_elem_s = elem.text
         return merged_arr
 
     return arr
