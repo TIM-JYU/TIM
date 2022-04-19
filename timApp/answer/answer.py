@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 
 from sqlalchemy import func
 

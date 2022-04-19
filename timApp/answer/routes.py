@@ -19,10 +19,14 @@ from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import (
     get_existing_answers_info,
     save_answer,
-    get_all_answers,
     valid_answers_query,
     valid_taskid_filter,
     ExistingAnswersInfo,
+    NameOptions,
+    AllAnswersOptions,
+    FormatOptions,
+    AnswerPrintOptions,
+    get_all_answers,
 )
 from timApp.answer.backup import send_answer_backup_if_enabled
 from timApp.answer.exportedanswer import ExportedAnswer
@@ -58,6 +62,7 @@ from timApp.auth.sessioninfo import get_current_user_object, get_current_user_gr
 from timApp.document.caching import clear_doc_cache
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, dereference_pars
 from timApp.document.hide_names import hide_names_in_teacher
 from timApp.document.usercontext import UserContext
@@ -108,7 +113,7 @@ from timApp.user.user import maxdate
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.user.userutils import grant_access
-from timApp.util.answerutil import period_handling
+from timApp.util.answerutil import get_answer_period
 from timApp.util.flask.requesthelper import (
     get_option,
     get_consent_opt,
@@ -117,7 +122,7 @@ from timApp.util.flask.requesthelper import (
     NotExist,
     get_from_url,
 )
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import json_response, ok_response, to_dict
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.get_fields import (
     get_fields_and_users,
@@ -1995,39 +2000,44 @@ def get_answers(task_id: str, user_id: int) -> Response:
     return json_response(user_answers)
 
 
-@answers.get("/allDocumentAnswersPlain/<path:doc_path>")
-def get_document_answers(doc_path):
+@answers.get("/allDocumentAnswersPlain/<path:doc_path>", model=AllAnswersOptions)
+def get_document_answers(doc_path: str, options: AllAnswersOptions) -> Response:
     d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
     pars = d.document.get_dereferenced_paragraphs(default_view_ctx)
     task_ids, _, _ = find_task_ids(
         pars, default_view_ctx, user_context_with_logged_in(None)
     )
-    return get_all_answers_list_plain(task_ids)
+    return get_all_answers_list_plain(task_ids, options)
 
 
-@answers.get("/allAnswersPlain/<task_id>")
-def get_all_answers_plain(task_id):
-    return get_all_answers_list_plain([TaskId.parse(task_id)])
+@answers.get("/allAnswersPlain/<task_id>", model=AllAnswersOptions)
+def get_all_answers_plain(task_id: str, options: AllAnswersOptions) -> Response:
+    return get_all_answers_list_plain([TaskId.parse(task_id)], options)
 
 
-def get_all_answers_list_plain(task_ids: list[TaskId]):
-    all_answers, format_opt = get_all_answers_as_list(task_ids)
-    if format_opt == "json":
+def get_all_answers_list_plain(
+    task_ids: list[TaskId], options: AllAnswersOptions
+) -> Response:
+    all_answers = get_all_answers_as_list(task_ids, options)
+    if options.format == FormatOptions.JSON:
         return json_response(all_answers)
     jointext = "\n"
-    print_opt = get_option(request, "print", "all")
-    print_answers = print_opt == "all" or print_opt == "answers"
+    print_answers = (
+        options.print == AnswerPrintOptions.ALL
+        or options.print == AnswerPrintOptions.ANSWERS
+    )
     if print_answers:
         jointext = "\n\n----------------------------------------------------------------------------------\n"
     text = jointext.join(all_answers)
     return Response(text, mimetype="text/plain")
 
 
-def get_all_answers_as_list(task_ids: list[TaskId]):
+def get_all_answers_as_list(
+    task_ids: list[TaskId], options: AllAnswersOptions
+) -> list[str]:
     verify_logged_in()
-    format_opt = get_option(request, "format", "text")
     if not task_ids:
-        return [], format_opt
+        return []
     doc_ids = set()
     d = None
     for tid in task_ids:
@@ -2036,41 +2046,16 @@ def get_all_answers_as_list(task_ids: list[TaskId]):
         # Require full teacher rights for getting all answers
         verify_teacher_access(d)
 
-    usergroup = get_option(request, "group", None)
-    age = get_option(request, "age", "max")
-    valid = get_option(request, "valid", "1")
-    name_opt = get_option(request, "name", "both")
-    sort_opt = get_option(request, "sort", "task")
-    print_opt = get_option(request, "print", "all")
-    period_opt = get_option(request, "period", "whenever")
-    format_opt = get_option(request, "format", "text")
-    consent = get_consent_opt()
-    printname = name_opt == "both"
-
-    period_from, period_to = period_handling(task_ids, doc_ids, period_opt)
-
-    if not usergroup:
-        usergroup = None
-
-    hide_names = name_opt == "anonymous"
-    if d:
-        # Above, we're requiring teacher access to all documents, so it does not matter which DocInfo we pass here.
-        hide_names = hide_names or hide_names_in_teacher(d)
-    all_answers = get_all_answers(
-        task_ids,
-        usergroup,
-        hide_names,
-        age,
-        valid,
-        printname,
-        sort_opt,
-        print_opt,
-        period_from,
-        period_to,
-        format_opt,
-        consent=consent,
+    # TODO: Integrate directly into AllAnswerOptions
+    options.consent = get_consent_opt()
+    options.period_from, options.period_to = get_answer_period(
+        task_ids, doc_ids, options
     )
-    return all_answers, format_opt
+
+    if d and hide_names_in_teacher(d):
+        # Above, we're requiring teacher access to all documents, so it does not matter which DocInfo we pass here.
+        options.name = NameOptions.ANON
+    return get_all_answers(task_ids, options)
 
 
 class GraphData(TypedDict):

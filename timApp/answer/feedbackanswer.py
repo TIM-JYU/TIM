@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Iterable
 
 from flask import Blueprint, request
+from marshmallow import EXCLUDE
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_all_answer_initial_query
@@ -14,9 +15,10 @@ from timApp.document.viewcontext import default_view_ctx
 from timApp.plugin.plugin import Plugin, find_task_ids
 from timApp.plugin.taskid import TaskId
 from timApp.user.user import User
-from timApp.util.answerutil import period_handling
+from timApp.util.answerutil import get_answer_period, AnswerPeriodOptions
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import csv_response
+from tim_common.marshmallow_dataclass import class_schema
 
 feedback = Blueprint("feedback", __name__, url_prefix="/feedback")
 
@@ -264,14 +266,15 @@ def print_feedback_report(doc_path: str):
         dialect = csv.excel
         dialect == "semicolon"
 
-    period = get_option(request, "period", "whenever")
-
     # Creates list of document ids from task ids.
     doc_ids = set()
     for tid in task_ids:
         doc_ids.add(tid.doc_id)
 
-    period_from, period_to = period_handling(task_ids, doc_ids, period)
+    period_opts: AnswerPeriodOptions = class_schema(AnswerPeriodOptions)().load(
+        request.args, unknown=EXCLUDE
+    )
+    period_from, period_to = get_answer_period(task_ids, doc_ids, period_opts)
 
     answers = []
 

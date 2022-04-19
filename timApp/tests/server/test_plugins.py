@@ -713,10 +713,21 @@ type: upload
             self.get(f"/allAnswersPlain/{task_id}", query_string={"consent": "true"}),
         )
 
-        # make sure invalid date won't throw
+        # make sure invalid date throws
         self.get(
             f"/allDocumentAnswersPlain/{doc.id}",
-            query_string={"period": "other", "periodTo": "asd"},
+            query_string={
+                "period": "other",
+                "periodTo": "asd",
+            },
+            expect_status=422,
+        )
+        self.get(
+            f"/allDocumentAnswersPlain/{doc.id}",
+            query_string={
+                "period": "other",
+                "periodTo": "2020-01-01T00:00:00.000000+00:00",
+            },
         )
         # using document path should work as well
         self.get(f"/allDocumentAnswersPlain/{doc.path}")
@@ -726,10 +737,11 @@ type: upload
             query_string={"age": "all", "valid": "all"},
         )
         self.assertGreater(len(all_text), len(text))
-        invalid_age = self.get(
-            f"/allDocumentAnswersPlain/{doc.path}", query_string={"age": "asd"}
+        self.get(
+            f"/allDocumentAnswersPlain/{doc.path}",
+            query_string={"age": "asd"},
+            expect_status=422,
         )
-        self.assertEqual(invalid_age, text)
 
         # test JSON format
         res = self.get(
