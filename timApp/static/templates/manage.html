@@ -190,6 +190,12 @@
                                 ng-disabled="!$ctrl.trChanged(tr)">Update
                         </button>
                     </td>
+                    <td ng-show="$ctrl.item.rights.owner">
+                        <button ng-show="$ctrl.item.rights.owner" class="btn btn-danger"
+                        ng-click="$ctrl.deleteDocument(tr.id)">
+                            <i class="glyphicon glyphicon-trash"></i>
+                        </button>
+                    </td>
                 </tr>
             </table>
             <span>
@@ -290,7 +296,7 @@
                title="Export document and all untranslated text as markdown">Export document with original text</a>
             <button class="timButton" ng-click="$ctrl.markAllAsRead()">Mark document as read</button>
             <button ng-show="$ctrl.item.rights.owner" class="btn btn-danger"
-                    ng-click="$ctrl.deleteDocument()">
+                    ng-click="$ctrl.deleteDocument($ctrl.item.id)">
                 {{$ctrl.deleteButtonText}}
             </button>
             <span ng-show="$ctrl.readUpdating">Marking document as read...</span>
