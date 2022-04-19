@@ -2,7 +2,7 @@ import csv
 import http.client
 import json
 from io import StringIO
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urlparse, urljoin
 
 from flask import (
@@ -64,7 +64,7 @@ def to_json_str(jsondata) -> str:
     return json.dumps(jsondata, separators=(",", ":"), cls=TimJsonEncoder)
 
 
-def to_dict(jsondata):
+def to_dict(jsondata: Any) -> dict:
     return json.loads(to_json_str(jsondata))
 
 

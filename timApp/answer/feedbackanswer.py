@@ -212,7 +212,7 @@ def compile_csv(
 
 
 @feedback.get("/report/<path:doc_path>")
-def print_feedback_report(doc_path):
+def print_feedback_report(doc_path: str):
     """
     Route to Feedback report.
 

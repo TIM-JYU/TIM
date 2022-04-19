@@ -153,7 +153,7 @@ PointsType = Union[
 
 
 @answers.put("/savePoints/<int:user_id>/<int:answer_id>")
-def save_points(answer_id: int, user_id: int, points: PointsType = None):
+def save_points(answer_id: int, user_id: int, points: PointsType = None) -> Response:
     answer, _ = verify_answer_access(
         answer_id,
         user_id,
@@ -161,6 +161,8 @@ def save_points(answer_id: int, user_id: int, points: PointsType = None):
         require_teacher_if_not_own=True,
     )
     tid = TaskId.parse(answer.task_id)
+    if tid.doc_id is None:
+        raise RouteException("Task ID must include document ID")
     d = get_doc_or_abort(tid.doc_id)
     try:
         plugin, _ = Plugin.from_task_id(
@@ -187,7 +189,7 @@ def save_points(answer_id: int, user_id: int, points: PointsType = None):
 
 
 @answers.put("/answer/saveValidity")
-def save_validity(answer_id: int, valid: bool):
+def save_validity(answer_id: int, valid: bool) -> Response:
     a, doc_id = verify_answer_access(
         answer_id,
         get_current_user_object().id,
@@ -201,7 +203,7 @@ def save_validity(answer_id: int, valid: bool):
 
 
 @answers.post("/answer/delete")
-def delete_answer(answer_id: int):
+def delete_answer(answer_id: int) -> Response:
     """Deletes an answer.
 
     This does not completely delete the answer but only removes user associations from it,
@@ -226,7 +228,7 @@ def delete_answer(answer_id: int):
 
 
 @answers.post("/answer/deleteCollaborator")
-def delete_answer_collab(answer_id: int, user_id: int):
+def delete_answer_collab(answer_id: int, user_id: int) -> Response:
     """Deletes an answer collaborator."""
     a, doc_id = verify_answer_access(
         answer_id,
@@ -248,7 +250,7 @@ def delete_answer_collab(answer_id: int, user_id: int):
     return ok_response()
 
 
-def points_to_float(points: str | float):
+def points_to_float(points: str | float | None) -> float | None:
     if isinstance(points, float):
         return points
     if points == "":
@@ -260,7 +262,7 @@ def points_to_float(points: str | float):
 
 def get_iframehtml_answer_impl(
     plugintype: str, task_id_ext: str, user_id: int, answer_id: int | None = None
-):
+) -> Response:
     """
     Gets the HTML to be used in iframe.
 
@@ -274,6 +276,8 @@ def get_iframehtml_answer_impl(
         tid = TaskId.parse(task_id_ext)
     except PluginException as e:
         raise RouteException(f"Task id error: {e}")
+    if tid.doc_id is None:
+        raise RouteException("Task ID must include document ID")
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
 
@@ -321,7 +325,7 @@ def get_iframehtml_answer_impl(
         d, tid, user_context_with_logged_in(users[0]), default_view_ctx
     )
     if vals:
-        answer_call_data["markup"]["fielddata"] = vals.to_json()
+        answer_call_data["markup"]["fielddata"] = to_dict(vals)
 
     jsonresp = call_plugin_answer_and_parse(answer_call_data, plugintype)
 
@@ -333,7 +337,7 @@ def get_iframehtml_answer_impl(
     return result
 
 
-def call_plugin_answer_and_parse(answer_call_data, plugintype):
+def call_plugin_answer_and_parse(answer_call_data: dict, plugintype: str) -> dict:
     plugin_response = call_plugin_answer(plugintype, answer_call_data)
     try:
         jsonresp = json.loads(plugin_response)
@@ -348,7 +352,7 @@ def call_plugin_answer_and_parse(answer_call_data, plugintype):
 @answers.get("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>/<int:answer_id>")
 def get_iframehtml_answer(
     plugintype: str, task_id_ext: str, user_id: int, answer_id: int | None = None
-):
+) -> Response:
     return get_iframehtml_answer_impl(plugintype, task_id_ext, user_id, answer_id)
 
 
@@ -357,7 +361,9 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int) -> Response:
     return get_iframehtml_answer_impl(plugintype, task_id_ext, user_id)
 
 
-def get_useranswers_for_task(user: User, task_ids: list[TaskId], answer_map):
+def get_useranswers_for_task(
+    user: User, task_ids: list[TaskId], answer_map: dict[str, dict]
+) -> list[Answer]:
     """
     Performs a query for latest valid answers by given user for given task
     Similar to :func:`timApp.plugin.pluginControl.get_answers` but without counting
@@ -378,7 +384,7 @@ def get_useranswers_for_task(user: User, task_ids: list[TaskId], answer_map):
     answs: list[Answer] = Answer.query.join(sub, Answer.id == sub.c.col).all()
     for answer in answs:
         if len(answer.users_all) > 1:
-            answer_map[answer.task_id] = answer
+            answer_map[answer.task_id] = answer.to_json()
         else:
             asd = answer.to_json()
             asd.pop("users")
@@ -386,7 +392,7 @@ def get_useranswers_for_task(user: User, task_ids: list[TaskId], answer_map):
     return answs
 
 
-def get_globals_for_tasks(task_ids: list[TaskId], answer_map):
+def get_globals_for_tasks(task_ids: list[TaskId], answer_map: dict[str, dict]) -> None:
     col = func.max(Answer.id).label("col")
     cnt = func.count(Answer.id).label("cnt")
     sub = (
@@ -401,16 +407,16 @@ def get_globals_for_tasks(task_ids: list[TaskId], answer_map):
         .with_entities(Answer, sub.c.cnt)
         .all()
     )
-    for answer in answers_all:
-        asd = answer.Answer.to_json()
-        answer_map[answer.Answer.task_id] = asd
-    return cnt, answers_all
+    for answer, _ in answers_all:
+        asd = answer.to_json()
+        answer_map[answer.task_id] = asd
 
 
 @answers.post("/userAnswersForTasks")
-def get_answers_for_tasks(tasks: list[str], user_id: int):
+def get_answers_for_tasks(tasks: list[str], user_id: int) -> Response:
     """
     Route for getting latest valid answers for given user and list of tasks
+
     :return: {"answers": {taskID: Answer}, "userId": user_id}
     """
     user = User.get_by_id(user_id)
@@ -423,6 +429,8 @@ def get_answers_for_tasks(tasks: list[str], user_id: int):
         gtids = []
         for task_id in tasks:
             tid = TaskId.parse(task_id)
+            if tid.doc_id is None:
+                raise RouteException(f"Task ID {task_id} is missing document ID.")
             if tid.doc_id not in doc_map:
                 dib = get_doc_or_abort(tid.doc_id, f"Document {tid.doc_id} not found")
                 if not dib.document.get_settings().peer_review():
@@ -432,7 +440,7 @@ def get_answers_for_tasks(tasks: list[str], user_id: int):
                 gtids.append(tid)
             else:
                 tids.append(tid)
-        answer_map = {}
+        answer_map: dict[str, dict] = {}
         if tids:
             get_useranswers_for_task(user, tids, answer_map)
         if gtids:
@@ -475,7 +483,7 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     peerReview: bool | Missing = missing
 
     @validates_schema(skip_on_field_errors=True)
-    def validate_schema(self, data, **_):
+    def validate_schema(self, data: dict, **_: dict) -> None:
         if data.get("fields") is None:
             raise ValidationError(
                 "Missing data for required field.", field_name="fields"
@@ -517,7 +525,14 @@ JsRunnerAnswerSchema = class_schema(JsRunnerAnswerModel)
 
 
 @answers.post("/multiSendEmail/<doc_id>")
-def multisendemail(doc_id: int, bccme: bool = False, replyall: bool = False):
+def multisendemail(
+    doc_id: int,
+    rcpt: str,
+    subject: str,
+    msg: str,
+    bccme: bool = False,
+    replyall: bool = False,
+) -> Response:
     d = get_doc_or_abort(doc_id)
     verify_teacher_access(d)
     mail_from = get_current_user_object().email
@@ -525,9 +540,9 @@ def multisendemail(doc_id: int, bccme: bool = False, replyall: bool = False):
     if bccme:
         bcc = mail_from
     multi_send_email(
-        rcpt=request.json.get("rcpt"),
-        subject=request.json.get("subject"),
-        msg=request.json.get("msg"),
+        rcpt=rcpt,
+        subject=subject,
+        msg=msg,
         mail_from=mail_from,
         reply_to=mail_from if not replyall else None,
         bcc=bcc,
@@ -549,7 +564,7 @@ def post_answer(
     input: InputAnswer,
     abData: dict[str, Any] = field(default_factory=dict),
     options: dict[str, Any] = field(default_factory=dict),
-):
+) -> Response:
     """Saves the answer submitted by user for a plugin in the database.
 
     :param plugintype: The type of the plugin, e.g. csPlugin.
@@ -584,9 +599,9 @@ class AnswerRouteResult:
 def get_postanswer_plugin_etc(
     d: DocInfo,
     tid: TaskId,
-    answer_browser_data,
+    answer_browser_data: dict,
     curr_user: User,
-    ctx_user: UserContext,
+    ctx_user: User | None,
     urlmacros: UrlMacros,
     users: list[User] | None,
     other_session_users: list[User],
@@ -601,6 +616,7 @@ def get_postanswer_plugin_etc(
     doc, found_plugin = get_plugin_from_request(d.document, tid, context_user, view_ctx)
     # newtask = found_plugin.value.get("newtask", False)
     newtask = found_plugin.is_new_task()
+    assert found_plugin.task_id is not None
     if (
         found_plugin.known.useCurrentUser or found_plugin.task_id.is_global
     ):  # For plugins that is saved only for current user
@@ -628,7 +644,6 @@ def get_postanswer_plugin_etc(
         if not ask_new:
             ask_new = answernr == answerinfo.count
             allow_save = ask_new
-        context_user = UserContext(ctx_user or curr_user, curr_user)
 
     try:
         vr = verify_task_access(
@@ -649,8 +664,8 @@ def get_postanswer_plugin_etc(
 def post_answer_impl(
     task_id_ext: str,
     answerdata: InputAnswer,
-    answer_browser_data,
-    answer_options,
+    answer_browser_data: dict,
+    answer_options: dict,
     curr_user: User,
     urlmacros: UrlMacros,
     other_session_users: list[User],
@@ -658,6 +673,8 @@ def post_answer_impl(
 ) -> AnswerRouteResult:
     receive_time = get_current_time()
     tid = TaskId.parse(task_id_ext)
+    if tid.doc_id is None:
+        raise PluginException(f"Task ID is missing document ID: {task_id_ext}")
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
 
@@ -742,6 +759,8 @@ def post_answer_impl(
     plugin = vr.plugin
 
     if tid.is_points_ref:
+        if not isinstance(answerdata, dict):
+            raise PluginException("Invalid answer data format")
         return AnswerRouteResult(
             result=handle_points_ref(answerdata, curr_user, d, plugin.ptype, tid),
             plugin=plugin,
@@ -766,7 +785,7 @@ def post_answer_impl(
         type = answerdata.get("type", "")
         if trimmed_file and type == "upload":
             uploads = check_answerupload_file_accesses([trimmed_file], curr_user)
-        files: list[int] = answerdata.get("uploadedFiles", None)
+        files: list[dict] = answerdata.get("uploadedFiles", None)
         if files is not None:
             trimmed_files = [f["path"].replace("/uploads/", "") for f in files]
             uploads = check_answerupload_file_accesses(trimmed_files, curr_user)
@@ -815,7 +834,7 @@ def post_answer_impl(
     result = {}
     web = ""
 
-    def set_postoutput(result, output, outputname):
+    def set_postoutput(result: dict, output: Any | None, outputname: str) -> None:
         if not outputname or (not output and not preoutput):
             return
         parts = outputname.split(".")
@@ -827,7 +846,7 @@ def post_answer_impl(
             r = r[p]
         r[lastkey] = r.get(lastkey, "") + str(output)
 
-    def add_value(result, key, data):
+    def add_value(result: dict, key: str, data: dict) -> None:
         value = data.get(key, None)
         if value is None:
             return
@@ -835,7 +854,7 @@ def post_answer_impl(
             value = call_dumbo([value[3:]])[0]
         result[key] = result.get(key, "") + value
 
-    def postprogram_result(data, output, outputname):
+    def postprogram_result(data: dict, output: Any | None, outputname: str) -> None:
         result["web"] = data.get("web", web)
         add_value(result, "error", data)
         add_value(result, "feedback", data)
@@ -886,7 +905,7 @@ def post_answer_impl(
         if plugin.type == "importData":
             web["fieldresult"] = saveresult
 
-    def add_reply(obj, key, run_markdown=False):
+    def add_reply(obj: dict, key: str, run_markdown: bool = False) -> None:
         if key not in plugin.values:
             return
         text_to_add = plugin.values[key]
@@ -924,7 +943,7 @@ def post_answer_impl(
         except (TypeError, KeyError):
             pass
 
-        def get_name_and_val(name1, name2=""):
+        def get_name_and_val(name1: str, name2: str = "") -> tuple[str, Any]:
             """
             Try with name1, -name1 amnd name2
             return working name and value or "", None
@@ -1198,7 +1217,7 @@ def check_answerupload_file_accesses(
 
 def preprocess_jsrunner_answer(
     answerdata: AnswerData, curr_user: User, d: DocInfo, plugin: Plugin
-):
+) -> None:
     """Executed before the actual jsrunner answer route is called.
     This is required to fetch the requested data from the database."""
 
@@ -1278,7 +1297,7 @@ def preprocess_jsrunner_answer(
         raise PluginException("Attribute 'program' is required.")
 
 
-def ensure_grade_and_credit(prg, flds):
+def ensure_grade_and_credit(prg: str, flds: list[str]) -> None:
     if not prg:
         return
     if prg.find("grade") >= 0 or prg.find("Grade"):  # add grade to fields if missing
@@ -1310,7 +1329,7 @@ def handle_points_ref(
     d: DocInfo,
     ptype: PluginTypeBase,
     tid: TaskId,
-):
+) -> dict:
     verify_teacher_access(d, user=curr_user)
     given_points = answerdata.get(ptype.get_content_field_name())
     if given_points is not None:
@@ -1356,7 +1375,7 @@ class UserGroupMembersState:
     after: set[int]
 
 
-def handle_jsrunner_groups(groupdata: JsrunnerGroups | None, curr_user: User):
+def handle_jsrunner_groups(groupdata: JsrunnerGroups | None, curr_user: User) -> None:
     if not groupdata:
         return
     groups_created = 0
@@ -1481,7 +1500,7 @@ class FieldSaveRequest(TypedDict, total=False):
     groups: JsrunnerGroups | None
 
 
-def verify_user_create_right(curr_user: User):
+def verify_user_create_right(curr_user: User) -> None:
     if curr_user.is_admin:
         return
     user_creators = UserGroup.get_user_creator_group()
@@ -1757,17 +1776,17 @@ def get_global_answers(parsed_task_ids: dict[str, TaskId]) -> list[Answer]:
     return global_datas
 
 
-def get_hidden_name(user_id):
+def get_hidden_name(user_id: str) -> str:
     return "Student %d" % user_id
 
 
-def should_hide_name(d: DocInfo, user: User, model_u: User | None):
+def should_hide_name(d: DocInfo, user: User, model_u: User | None) -> bool:
     # return True
     # return not user.has_teacher_access(d) and user.id != get_current_user_id()
     return user.id != get_current_user_id() and user != model_u
 
 
-def maybe_hide_name(d: DocInfo, u: User, model_u: User | None):
+def maybe_hide_name(d: DocInfo, u: User, model_u: User | None) -> None:
     if should_hide_name(d, u, model_u):
         # NOTE! To anonymize user, do NOT assign to u's real_name, name, etc. attributes here (or anywhere else either)
         # because it is
@@ -1777,7 +1796,7 @@ def maybe_hide_name(d: DocInfo, u: User, model_u: User | None):
 
 
 @answers.get("/taskinfo/<task_id>")
-def get_task_info(task_id):
+def get_task_info(task_id) -> Response:
     try:
         user_ctx = user_context_with_logged_in(None)
         plugin, d = Plugin.from_task_id(
@@ -1798,7 +1817,7 @@ def get_task_info(task_id):
     return json_response(tim_vars)
 
 
-def find_tim_vars(plugin: Plugin):
+def find_tim_vars(plugin: Plugin) -> dict:
     tim_vars = {
         "maxPoints": plugin.max_points(),
         "userMin": plugin.user_min_points(),
@@ -1816,7 +1835,7 @@ def find_tim_vars(plugin: Plugin):
     return tim_vars
 
 
-def hide_points(a: Answer):
+def hide_points(a: Answer) -> dict:
     j = a.to_json()
     j["points"] = None
 
@@ -1832,7 +1851,7 @@ def hide_points(a: Answer):
 
 
 @answers.get("/exportAnswers/<path:doc_path>")
-def export_answers(doc_path: str):
+def export_answers(doc_path: str) -> Response:
     d = DocEntry.find_by_path(doc_path, try_translation=False)
     if not d:
         raise RouteException("Document not found")
@@ -1864,7 +1883,7 @@ def import_answers(
     answers: list[ExportedAnswer],
     allow_missing_users: bool = False,
     doc_map: dict[str, str] = field(default_factory=dict),
-):
+) -> Response:
     verify_admin()
     doc_paths = {doc_map.get(a.doc, a.doc) for a in answers}
     docs = DocEntry.query.filter(DocEntry.name.in_(doc_paths)).all()
@@ -1940,7 +1959,7 @@ def import_answers(
 
 
 @answers.get("/getAnswers/<task_id>/<int:user_id>")
-def get_answers(task_id: str, user_id: int):
+def get_answers(task_id: str, user_id: int) -> Response:
     verify_logged_in()
     try:
         tid = TaskId.parse(task_id)
@@ -2097,7 +2116,7 @@ def get_plug_vals(
 
 
 @answers.get("/jsframe/userChange/<task_id>/<user_id>")
-def get_jsframe_data(task_id, user_id):
+def get_jsframe_data(task_id: str, user_id: str) -> Response:
     """
     TODO: check proper rights
     """
@@ -2126,7 +2145,7 @@ def get_state(
     task_id: str | None = None,
     answernr: int | None = None,
     ask_new: bool | None = False,
-):
+) -> Response:
     answer = None
     user = User.get_by_id(user_id)
     if user is None:
@@ -2179,7 +2198,7 @@ def get_state(
     plug.par.ask_new = ask_new
     block = plug.par
 
-    def deref():
+    def deref() -> list[DocParagraph]:
         return dereference_pars([block], context_doc=doc, view_ctx=view_ctx)
 
     presult = pluginify(
@@ -2218,7 +2237,7 @@ def verify_answer_access(
     answer_id: int,
     user_id: int,
     view_ctx: ViewContext,
-    require_teacher_if_not_own=False,
+    require_teacher_if_not_own: bool = False,
     required_task_access_level: TaskIdAccess = TaskIdAccess.ReadOnly,
     allow_grace_period: bool = False,
 ) -> tuple[Answer, int]:
@@ -2226,6 +2245,7 @@ def verify_answer_access(
     if answer is None:
         raise RouteException("Non-existent answer")
     tid = TaskId.parse(answer.task_id)
+    assert tid.doc_id is not None
 
     if tid.is_global:
         return answer, tid.doc_id
@@ -2272,8 +2292,10 @@ def verify_answer_access(
 
 
 @answers.get("/getTaskUsers/<task_id>")
-def get_task_users(task_id):
+def get_task_users(task_id: str) -> Response:
     tid = TaskId.parse(task_id)
+    if tid.doc_id is None:
+        raise RouteException("Task is missing document ID")
     d = get_doc_or_abort(tid.doc_id)
     if not verify_seeanswers_access(d, require=False):
         curr_user = get_current_user_object()
@@ -2303,7 +2325,7 @@ def get_task_users(task_id):
 
 
 @answers.get("/renameAnswers/<old_name>/<new_name>/<path:doc_path>")
-def rename_answers(old_name: str, new_name: str, doc_path: str):
+def rename_answers(old_name: str, new_name: str, doc_path: str) -> Response:
     d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
     if not d:
         raise NotExist()
@@ -2325,8 +2347,10 @@ def rename_answers(old_name: str, new_name: str, doc_path: str):
 
 
 @answers.get("/unlockTask")
-def unlock_task(task_id: str):
+def unlock_task(task_id: str) -> Response:
     tid = TaskId.parse(task_id)
+    if tid.doc_id is None:
+        raise RouteException(f"Task ID is missing document: {task_id}")
     d = get_doc_or_abort(tid.doc_id)
     verify_view_access(d)
     doc = d.document
@@ -2340,7 +2364,7 @@ def unlock_task(task_id: str):
     except PluginException as e:
         raise RouteException(str(e))
     access_duration = plug.known.accessDuration
-    if not access_duration:
+    if not isinstance(access_duration, int):
         raise RouteException("Task is not a timed task.")
     b = TaskBlock.get_by_task(tid.doc_task)
     ba = None
