@@ -37,6 +37,7 @@ import {IOkResponse, isIOS, timeout, to2, toPromise} from "../util/utils";
 import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
 import {DocumentOrFolder, ITranslatorUsage} from "../item/IItem";
 import {ContactOrigin, IFullUser, IUserApiKey, IUserContact} from "./IUser";
+import {ProgressbarModule} from "ngx-bootstrap/progressbar";
 
 @Component({
     selector: "settings-button-panel",
@@ -436,8 +437,8 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                 <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>
                                 <input type="text" class="form-control buttonBorder" [value]="APIkey.translator" disabled>
                                 <div *ngIf="APIkey.quotaChecked" class="stacked quotaProgressBar">
-                                    <progress value="{{APIkey.usedQuota}}" max="{{APIkey.availableQuota}}"></progress>
-                                    <p>{{APIkey.usedQuota}} / {{APIkey.availableQuota}}</p>
+                                    <progressbar [value]="APIkey.usedQuota" [max]="APIkey.availableQuota"></progressbar>
+                                        <p>{{APIkey.usedQuota}} / {{APIkey.availableQuota}}</p>
                                 </div>
                                 <button *ngIf="!APIkey.quotaChecked" class="btn" type="button" (click)="checkQuota(APIkey)" i18n>
                                     Check key's quota 
@@ -1233,6 +1234,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         DndModule,
         TooltipModule.forRoot(),
         TabsModule.forRoot(),
+        ProgressbarModule,
     ],
 })
 export class SettingsModule implements DoBootstrap {
