@@ -1795,7 +1795,10 @@ ${backTicks}
                 );
                 if (r.ok) {
                     const resultText = r.result.data;
-                    if (translatableText != this.trdiff!.new) {
+                    if (
+                        this.trdiff == undefined ||
+                        translatableText != this.trdiff!.new
+                    ) {
                         this.editor!.replaceTranslation(resultText);
                     } else {
                     }
@@ -1814,7 +1817,7 @@ ${backTicks}
      */
     async checkMayTranslate(editText: string) {
         let mayTranslate = true;
-        if (this.trdiff == undefined) {
+        if (this.nothingSelected && this.trdiff == undefined) {
             await showMessageDialog(
                 "There is no original text to be translated. Please check the Difference in original document view."
             );
@@ -1825,6 +1828,7 @@ ${backTicks}
             );
             return false;
         } else if (
+            this.trdiff != undefined &&
             this.trdiff.new != editText &&
             this.trdiff.old != editText &&
             this.nothingSelected
