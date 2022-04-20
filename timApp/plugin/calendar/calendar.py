@@ -257,12 +257,18 @@ def delete_event(event_id: int) -> Response:
 
 @calendar_plugin.post("/bookings")
 def book_event(event_id: int) -> Response:
+    """
+    Books the event for current user's personal user group.
+    TODO: implement booking for user's other groups
+
+    :param event_id: Event id
+    :return: HTTP 200 if succeeded, 400 if the event is already full
+    """
     verify_logged_in()
-    # user_id = get_current_user_id()
+    event = Event.get_event_by_id(event_id)
+    if len(event.enrolled_users) >= event.max_size:
+        raise RouteException("Event is already full")
     user_obj = get_current_user_object()
-    # user_group_ids = UserGroupMember.query.filter(
-    #    UserGroupMember.user_id == user_id
-    # ).all()
 
     group_id = None
     for group in user_obj.groups:

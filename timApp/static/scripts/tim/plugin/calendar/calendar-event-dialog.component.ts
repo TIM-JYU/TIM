@@ -44,7 +44,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        id="startDate" name="startDate"
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
-                                       >
+                                >
 
                                 <input i18n-placeholder type="time"
                                        [(ngModel)]="startTime"
@@ -52,7 +52,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        id="startTime" name="startTime"
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
-                                        >
+                                >
                             </div>
                         </div>
                     </div>
@@ -67,7 +67,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        id="endDate" name="endDate"
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
-                                        >
+                                >
                                 <input i18n-placeholder type="time"
                                        [(ngModel)]="endTime"
                                        (ngModelChange)="setMessage()"
@@ -78,7 +78,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     </div>
                 </form>
-                
+
 
                 <tim-alert *ngIf="ngModelTitle.invalid && ngModelTitle.dirty" severity="danger">
                     <ng-container *ngIf="ngModelTitle.errors?.['required']">
@@ -104,8 +104,8 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     Delete
                 </button>
                 <button class="timButton" type="button" style="float: left"
-                        (click)="bookTime()" [disabled]="form.invalid" [hidden]="isEditEnabled()">
-                    Book time
+                        (click)="bookEvent()" [disabled]="eventIsFull()" [hidden]="isEditEnabled()">
+                    Book event
                 </button>
                 <button class="timButton" type="submit" (click)="onSubmit(form)" [disabled]="form.invalid"
                         [hidden]="!isEditEnabled()">
@@ -250,7 +250,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     /**
      * Sends the booking request for the event to the TIM-server
      */
-    async bookTime() {
+    async bookEvent() {
         const eventToBook = this.data;
 
         const result = await toPromise(
@@ -266,6 +266,10 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             console.error(result.result.error.error);
             this.setMessage(result.result.error.error);
         }
+    }
+
+    eventIsFull() {
+        return this.data.meta!.enrollments >= this.data.meta!.maxSize;
     }
 }
 

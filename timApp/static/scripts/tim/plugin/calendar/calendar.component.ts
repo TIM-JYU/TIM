@@ -407,7 +407,6 @@ export class CalendarComponent
                 this.locale = "en-us";
                 break;
         }
-        console.log(navigator.language);
     }
 
     /**
