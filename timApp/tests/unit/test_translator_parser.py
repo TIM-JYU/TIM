@@ -538,6 +538,31 @@ x=0\;\;\;\\text{"""
             ],
         )
 
+    def test_ordered_list_codeblock(self):
+        md = """1. Kissa
+
+       eka
+       toka
+        
+2. Koira"""
+
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [
+                    NoTranslate(
+                        """1. Kissa
+
+ ```
+ eka
+ toka
+ ```
+2. Koira"""
+                    )
+                ]
+            ],
+        )
+
     def test_tim_plugin1(self):
         md = r"""``` {plugin="csPlugin" #btn-tex2 .miniSnippets}
 header: Harjoittele matemaattisen vastauksen kirjoittamista.
