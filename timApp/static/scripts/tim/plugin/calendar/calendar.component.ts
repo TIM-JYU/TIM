@@ -240,7 +240,8 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             </button>
         </div>
         <div>
-            <button class="timButton" id="icsBtn" (click)="exportICS()">Vie kalenterin tiedot</button>
+            <button class="timButton" id="icsBtn" (click)="export()">Vie kalenterin tiedot</button>
+            <input type="textbox" id="icsURL">
         </div>
         <ng-template #modalContent let-close="close">
             <div class="modal-header">
@@ -639,6 +640,26 @@ export class CalendarComponent
             this.refresh();
             console.log(result.result);
             console.log("Tiedot viety");
+        } else {
+            // TODO: Handle error responses properly
+            console.error(result.result.error.error);
+        }
+    }
+
+    async export() {
+        const result = await toPromise(
+            this.http.get("/calendar/export", {
+                responseType: "text",
+            })
+        );
+        if (result.ok) {
+            this.refresh();
+            const urlTextBox = document.getElementById("icsURL");
+            if (urlTextBox != null) {
+                urlTextBox.setAttribute("value", result.result);
+            }
+            console.log(result.result);
+            console.log("url:in palautus");
         } else {
             // TODO: Handle error responses properly
             console.error(result.result.error.error);

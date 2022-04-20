@@ -1,5 +1,8 @@
 import json
+import secrets
 import tempfile, os
+import socket
+from urllib.parse import urlparse
 import uuid
 from dataclasses import dataclass, asdict
 from datetime import datetime
@@ -83,6 +86,21 @@ def get_todos() -> Response:
             ]
         }
     )
+
+
+@calendar_plugin.get("/export")
+def get_url() -> Response:
+    verify_logged_in()
+    cur_user = get_current_user_id()
+    hash_code = secrets.token_urlsafe(16)
+    # TODO add user_id and hash_code to database
+    current_path = request.full_path
+    o = urlparse(current_path)
+    domain = o.hostname
+    if domain == None:
+        domain = ""
+    url = domain + "/calendar/events?user=" + hash_code
+    return text_response(url)
 
 
 @calendar_plugin.get("/events")

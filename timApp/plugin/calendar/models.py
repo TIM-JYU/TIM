@@ -67,3 +67,11 @@ class Enrollmenttype(db.Model):
     __tablename__ = "enrollmenttype"
     enroll_type_id = db.Column(db.Integer, primary_key=True)
     enroll_type = db.Column(db.Text, nullable=False)
+
+
+class ExportedCalendar(db.Model):
+    __tablename__ = "exportedcalendar"
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("useraccount.id"), primary_key=True, nullable=False
+    )
+    calendar_hash = db.Column(db.Text, nullable=False)
