@@ -713,6 +713,7 @@ const CsMarkupOptional = t.partial({
     wrap: t.number,
     borders: withDefault(t.boolean, true),
     iframeopts: t.string,
+    iframescroll: t.boolean,
     count: CountType,
     hide: t.partial({wrap: t.boolean, changed: t.boolean}),
     savedText: t.string,
@@ -1337,7 +1338,11 @@ export class CsController extends CsBase implements ITimComponent {
             channel.port1.onmessage = this.iframemessageHandler;
         }
 
-        fr.contentWindow.postMessage({msg: "init"}, "*", [channel.port2]);
+        fr.contentWindow.postMessage(
+            {msg: "init", scroll: !!this.markup.iframescroll},
+            "*",
+            [channel.port2]
+        );
         this.iframedefer?.resolve({iframe: fr, channel});
     }
 
@@ -3677,7 +3682,7 @@ ${fhtml}
             <div *ngIf="isTauno">
                 <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
                 <iframe *ngIf="iframesettings"
-                        id="iframesettings.id"
+                        [id]="iframesettings.id"
                         class="showTauno"
                         [src]="iframesettings.src"
                         (load)="onIframeLoad($event)"
@@ -3888,7 +3893,7 @@ ${fhtml}
                         style="float: right">
                 </tim-close-button>
             </span>
-                    <iframe id="iframesettings.id"
+                    <iframe [id]="iframesettings.id"
                             class="jsCanvas"
                             [src]="iframesettings.src"
                             (load)="onIframeLoad($event)"

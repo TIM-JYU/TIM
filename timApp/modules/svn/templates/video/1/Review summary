@@ -7,7 +7,7 @@ Button to update all fields ans summary table
 %%REVIEW_UPDATE(tasks,arvosteltavia,1,maxEro)%%
 ```
 
-``` {#tableForm_table plugin="tableForm"}
+``` {#tableReviewSummary plugin="tableForm"}
 # showInView: true # Add attribute  to show the plugin in normal view
 groups:
  # - "*"          # show all users who have some value on any of fields
