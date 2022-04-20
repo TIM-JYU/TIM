@@ -37,6 +37,7 @@ import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
 import {toPromise, to2} from "../../util/utils";
 import {Users} from "../../user/userService";
+import {itemglobals} from "../../util/globals";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
@@ -155,7 +156,7 @@ export type TIMCalendarEvent = CalendarEvent<{
         </mwl-utils-calendar-header>
         <div class="row text-center">
             <div class="col-md-4">
-                <div class="btn-group edit-btn">
+                <div class="btn-group edit-btn" [hidden]="!userIsManager()">
                     <button (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
                     <button (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
                 </div>
@@ -772,6 +773,13 @@ export class CalendarComponent
                 this.updateEventTitle(modifiedEvent);
             }
         }
+    }
+
+    userIsManager(): boolean {
+        return (
+            itemglobals().curr_item.rights.manage ||
+            itemglobals().curr_item.rights.owner
+        );
     }
 }
 
