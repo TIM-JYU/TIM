@@ -477,7 +477,7 @@ Koira
                 [
                     NoTranslate(
                         """1. Kissa
-                        
+
  ```
  eka
  toka
