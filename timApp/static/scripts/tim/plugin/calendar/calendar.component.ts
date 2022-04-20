@@ -311,6 +311,7 @@ export class CalendarComponent
     dragToCreateActive = false;
 
     editEnabled: boolean = false;
+    dialogOpen: boolean = false;
 
     eventTypes: string[] = ["Ohjaus", "Luento", "Opetusryhmä"];
     eventType: string = this.eventTypes[0];
@@ -775,7 +776,12 @@ export class CalendarComponent
      * @param event Clicked event
      */
     async handleEventClick(event: TIMCalendarEvent): Promise<void> {
+        if (this.dialogOpen) {
+            return;
+        }
+        this.dialogOpen = true;
         const result = await to2(showCalendarEventDialog(event));
+        this.dialogOpen = false;
         if (result.ok) {
             const modifiedEvent = result.result;
             if (modifiedEvent.meta) {
