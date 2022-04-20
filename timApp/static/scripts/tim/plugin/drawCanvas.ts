@@ -42,6 +42,7 @@ import {
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
 import {IUnsavedComponent} from "tim/document/viewctrl";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 export type IRectangle = {
     type: "rectangle";
@@ -908,9 +909,12 @@ const SCROLLBAR_APPROX_WIDTH = 17;
                        <i class="glyphicon glyphicon-zoom-out"></i>
                     </button>
                 </div>
-
+            </div>
+            <div *ngIf="loading" style="position: absolute; z-index: 1;">Loading images ({{loadedImages}}/{{bgSources.length}})
+                <tim-loading></tim-loading>
             </div>
             <div #wrapper style="overflow: auto; position: relative; resize: both;"
+                 [style.opacity]="loading ? 0.3 : 1"
                  [style.height.px]="getWrapperHeight(true)">
                 <div class="zoomer" style="-webkit-transform-origin: 0 0;" [style.transform]="getZoomLevel()">
                     <div #backGround style="position: absolute; display:flex; flex-direction: column;">
@@ -954,6 +958,7 @@ export class DrawCanvasComponent
     zoomLevel = 1;
     defaultZoomLevel = 1; // adjusted to show full image width after images are loaded
     eventsAdded = false;
+    loading = false;
 
     drawHandler?: Drawing;
 
@@ -1012,6 +1017,7 @@ export class DrawCanvasComponent
         if (!this.bgSources) {
             return;
         }
+        this.loading = true;
         this.loadedImages = 0;
         // This goes to src of img tag, so there should be no XSS danger because imgs cannot execute scripts.
         this.bgImages = this.bgSources.map((src) =>
@@ -1123,7 +1129,8 @@ export class DrawCanvasComponent
      * function after every background image is loaded
      */
     allImagesLoaded(): void {
-        // TODO: Show loading icon until all loaded, show clear error if any image fails loading
+        // TODO: Show clear error if any image fails loading
+        this.loading = false;
         this.prepareDrawing();
         let offset = 0;
         this.bgOffsets = [offset];
@@ -1385,7 +1392,13 @@ export class DrawCanvasComponent
 
 @NgModule({
     declarations: [DrawCanvasComponent],
-    imports: [BrowserModule, CommonModule, DrawToolbarModule, FormsModule],
+    imports: [
+        BrowserModule,
+        CommonModule,
+        DrawToolbarModule,
+        FormsModule,
+        TimUtilityModule,
+    ],
     exports: [DrawCanvasComponent],
 })
 export class DrawCanvasModule implements DoBootstrap {
