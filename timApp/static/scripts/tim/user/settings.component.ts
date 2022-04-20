@@ -26,6 +26,7 @@ import {TabsetComponent, TabsModule} from "ngx-bootstrap/tabs";
 import {DndDropEvent, DndModule} from "ngx-drag-drop";
 import {polyfill} from "mobile-drag-drop";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
+import {ProgressbarModule} from "ngx-bootstrap/progressbar";
 import {ConsentType} from "../ui/consent";
 import {
     INotification,
@@ -37,7 +38,6 @@ import {IOkResponse, isIOS, timeout, to2, toPromise} from "../util/utils";
 import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
 import {DocumentOrFolder, ITranslatorUsage} from "../item/IItem";
 import {ContactOrigin, IFullUser, IUserApiKey, IUserContact} from "./IUser";
-import {ProgressbarModule} from "ngx-bootstrap/progressbar";
 
 @Component({
     selector: "settings-button-panel",
