@@ -23,6 +23,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         <label for="title" class="col-sm-2 control-label">Title</label>
                         <div class="col-sm-10">
                             <input type="text" required
+                                   maxlength="280"
                                    [(ngModel)]="title" #ngModelTitle="ngModel"
                                    (ngModelChange)="setMessage()"
                                    pattern="[^/]*"
@@ -78,12 +79,15 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     </div>
                 </form>
-
-
+                
+                <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['dateInvalid']">
+                <ng-container *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.</ng-container>
+                </tim-alert>
                 <tim-alert *ngIf="ngModelTitle.invalid && ngModelTitle.dirty" severity="danger">
                     <ng-container *ngIf="ngModelTitle.errors?.['required']">
                         Title is required.
                     </ng-container>
+                    
                     <ng-container *ngIf="ngModelTitle.errors?.['pattern']">
                         Title should not contain the slash character. <!--TODO: Think about the pattern-->
                     </ng-container>
