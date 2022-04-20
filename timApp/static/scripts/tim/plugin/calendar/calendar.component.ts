@@ -622,6 +622,7 @@ export class CalendarComponent
         );
         if (result.ok) {
             result.result.forEach((event) => {
+                console.log();
                 event.start = new Date(event.start);
                 if (event.end) {
                     event.end = new Date(event.end);
@@ -652,14 +653,25 @@ export class CalendarComponent
         let eventsToAdd = this.events.filter((event: TIMCalendarEvent) =>
             this.isTempEvent(event)
         );
+
+        console.log(this.markup.ryhmat);
+        const eventGroups: string[] = [];
+        if (this.markup.ryhmat) {
+            console.log(this.markup.ryhmat[0].opiskelijat);
+            eventGroups.push(this.markup.ryhmat[0].opiskelijat);
+            eventGroups.push(this.markup.ryhmat[0].ohjaajat);
+        }
+
         if (eventsToAdd.length > 0) {
-            eventsToAdd = eventsToAdd.map<CalendarEvent>((event) => {
+            eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
                 return {
                     title: event.title,
                     start: event.start,
                     end: event.end,
+                    event_groups: eventGroups,
                 };
             });
+            console.log(eventsToAdd);
             const result = await toPromise(
                 this.http.post<TIMCalendarEvent[]>("/calendar/events", {
                     events: eventsToAdd,

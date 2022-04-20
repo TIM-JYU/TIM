@@ -5,9 +5,14 @@ from datetime import datetime
 from flask import Response, request
 
 from timApp.auth.accesshelper import verify_logged_in
-from timApp.auth.sessioninfo import get_current_user_id
-from timApp.plugin.calendar.models import Event
+from timApp.auth.sessioninfo import (
+    get_current_user_id,
+    get_current_user_group,
+    get_current_user_object,
+)
+from timApp.plugin.calendar.models import Event, Eventgroup
 from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -80,13 +85,28 @@ def get_todos() -> Response:
 
 @calendar_plugin.get("/events")
 def get_events() -> Response:
-    """Fetches the user's events from the database in JSON or ICS format, specified in the query-parameter
+    """Fetches the user's events and the events that have a relation to user's groups from the database in JSON or
+    ICS format, specified in the query-parameter
 
     :return: User's events in JSON or ICS format or HTTP 400 if failed
     """
     verify_logged_in()
     cur_user = get_current_user_id()
+
     events: list[Event] = Event.query.filter(Event.creator_user_id == cur_user).all()
+
+    user_obj = get_current_user_object()
+
+    for group in user_obj.groups:
+        group_events = Eventgroup.query.filter(
+            Eventgroup.usergroup_id == group.id
+        ).all()
+        for group_event in group_events:
+            event = Event.get_event_by_id(group_event.event_id)
+            if event not in events:
+                events.append(event)
+            elif event is None:
+                print("Event not found by the id of", group_event.event_id)
 
     file_type = request.args.get("file_type")
     match file_type:
@@ -120,6 +140,7 @@ def get_events() -> Response:
                         "title": event.title,
                         "start": event.start_time,
                         "end": event.end_time,
+                        "groups": event.groups_in_event,
                     }
                 )
             return json_response(event_objs)
@@ -131,6 +152,7 @@ class CalendarEvent:
     title: str
     start: datetime
     end: datetime
+    event_groups: list[str] | None
 
 
 @calendar_plugin.post("/events")
@@ -145,11 +167,16 @@ def add_events(events: list[CalendarEvent]) -> Response:
     cur_user = get_current_user_id()
     added_events = []
     for event in events:
+        groups = []
+        for event_group in event.event_groups:
+            groups.append(UserGroup.get_by_name(event_group))
+
         event = Event(
             title=event.title,
             start_time=event.start,
             end_time=event.end,
             creator_user_id=cur_user,
+            groups_in_event=groups,
         )
         db.session.add(event)
         added_events.append(event)
