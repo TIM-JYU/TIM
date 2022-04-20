@@ -841,8 +841,11 @@ export class Drawing {
      * Remove last drawn piece of non-permanent drawings
      */
     undo(): DrawItem | undefined {
+        const dimensions = getDrawingDimensions(this.drawData);
+        this.minY = dimensions.y;
+        this.maxY = dimensions.y + dimensions.h;
+        this.setActiveContexts();
         const ret = this.drawData.pop();
-        this.activeContexts = this.ctxs;
         this.redrawAll();
         return ret;
     }
