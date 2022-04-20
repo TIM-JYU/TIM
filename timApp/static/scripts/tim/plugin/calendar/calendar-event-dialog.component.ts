@@ -103,6 +103,10 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!isEditEnabled()">
                     Delete
                 </button>
+                <button class="timButton" type="button" style="float: left"
+                        (click)="bookTime()" [disabled]="form.invalid" [hidden]="isEditEnabled()">
+                    Book time
+                </button>
                 <button class="timButton" type="submit" (click)="onSubmit(form)" [disabled]="form.invalid"
                         [hidden]="!isEditEnabled()">
                     Save
@@ -240,6 +244,27 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     isEditEnabled() {
         if (this.data.meta) {
             return this.data.meta.editEnabled;
+        }
+    }
+
+    /**
+     * Sends the booking request for the event to the TIM-server
+     */
+    async bookTime() {
+        const eventToBook = this.data;
+
+        const result = await toPromise(
+            this.http.post("/calendar/bookings", {
+                event_id: eventToBook.id,
+            })
+        );
+        if (result.ok) {
+            console.log(result.result);
+            this.data.meta!.enrollments++;
+            this.close(eventToBook);
+        } else {
+            console.error(result.result.error.error);
+            this.setMessage(result.result.error.error);
         }
     }
 }

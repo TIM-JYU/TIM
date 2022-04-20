@@ -10,9 +10,10 @@ from timApp.auth.sessioninfo import (
     get_current_user_group,
     get_current_user_object,
 )
-from timApp.plugin.calendar.models import Event, Eventgroup
+from timApp.plugin.calendar.models import Event, Eventgroup, Enrollment, Enrollmenttype
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -25,6 +26,21 @@ from tim_common.pluginserver_flask import (
 )
 
 calendar_plugin = TypedBlueprint("calendar_plugin", __name__, url_prefix="/calendar")
+
+
+@calendar_plugin.before_app_first_request
+def initialize_db():
+    """Initializes the enrollment types in the database when the TIM-server is launched the first time,
+    before the first request."""
+
+    types = Enrollmenttype.query.filter(
+        Enrollmenttype.enroll_type_id == 0
+    ).all()  # Remember to add filters here if you add new enrollment types
+    if len(types) == 0:
+        db.session.add(
+            Enrollmenttype(enroll_type_id=0, enroll_type="booking")
+        )  # TODO: proper enrollment types
+        db.session.commit()
 
 
 @dataclass
@@ -134,13 +150,14 @@ def get_events() -> Response:
         case "json":
             event_objs = []
             for event in events:
+                enrollments = len(Event.get_event_by_id(event.event_id).enrolled_users)
                 event_objs.append(
                     {
                         "id": event.event_id,
                         "title": event.title,
                         "start": event.start_time,
                         "end": event.end_time,
-                        "groups": event.groups_in_event,
+                        "meta": {"enrollments": enrollments, "maxSize": event.max_size},
                     }
                 )
             return json_response(event_objs)
@@ -153,6 +170,7 @@ class CalendarEvent:
     start: datetime
     end: datetime
     event_groups: list[str] | None
+    max_size: int
 
 
 @calendar_plugin.post("/events")
@@ -177,6 +195,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
             end_time=event.end,
             creator_user_id=cur_user,
             groups_in_event=groups,
+            max_size=event.max_size,
         )
         db.session.add(event)
         added_events.append(event)
@@ -191,6 +210,10 @@ def add_events(events: list[CalendarEvent]) -> Response:
                 "title": event.title,
                 "start": event.start_time,
                 "end": event.end_time,
+                "meta": {
+                    "enrollments": 0,
+                    "maxSize": event.max_size,
+                },
             }
         )
 
@@ -229,6 +252,30 @@ def delete_event(event_id: int) -> Response:
         raise RouteException("Event not found")
     db.session.delete(event)
     db.session.commit()
+    return ok_response()
+
+
+@calendar_plugin.post("/bookings")
+def book_event(event_id: int) -> Response:
+    verify_logged_in()
+    # user_id = get_current_user_id()
+    user_obj = get_current_user_object()
+    # user_group_ids = UserGroupMember.query.filter(
+    #    UserGroupMember.user_id == user_id
+    # ).all()
+
+    group_id = None
+    for group in user_obj.groups:
+        if group.name == user_obj.name:
+            group_id = group.id
+
+    enrollment = Enrollment(
+        event_id=event_id, usergroup_id=group_id, enroll_type_id=0
+    )  # TODO: add enrollment types
+
+    db.session.add(enrollment)
+    db.session.commit()
+
     return ok_response()
 
 

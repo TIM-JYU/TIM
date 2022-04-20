@@ -136,6 +136,8 @@ export type TIMCalendarEvent = CalendarEvent<{
     tmpEvent: boolean;
     deleted?: boolean;
     editEnabled?: boolean;
+    enrollments: number;
+    maxSize: number;
 }>;
 
 @Component({
@@ -486,6 +488,8 @@ export class CalendarComponent
             end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
                 tmpEvent: true,
+                enrollments: 0,
+                maxSize: 1, // TODO: temporary solution
             },
             // actions: this.actions,
         };
@@ -587,6 +591,9 @@ export class CalendarComponent
     private refresh() {
         this.events = [...this.events];
         this.events.forEach((event) => {
+            if (event.meta!.enrollments >= event.meta!.maxSize) {
+                event.color = colors.red;
+            }
             if (Date.now() > event.start.getTime()) {
                 event.color = colors.gray;
             }
@@ -632,7 +639,11 @@ export class CalendarComponent
                     }
                 }
                 // event.actions = this.actions;
-                event.meta = {tmpEvent: false};
+                event.meta = {
+                    tmpEvent: false,
+                    enrollments: event.meta!.enrollments,
+                    maxSize: event.meta!.maxSize,
+                };
                 event.resizable = {
                     beforeStart: this.editEnabled,
                     afterEnd: this.editEnabled,
@@ -670,6 +681,7 @@ export class CalendarComponent
                     start: event.start,
                     end: event.end,
                     event_groups: eventGroups,
+                    max_size: 1, // TODO: temporary solution
                 };
             });
             console.log(eventsToAdd);
@@ -694,6 +706,8 @@ export class CalendarComponent
                             meta: {
                                 tmpEvent: false,
                                 editEnabled: this.editEnabled,
+                                enrollments: event.meta!.enrollments,
+                                maxSize: event.meta!.maxSize,
                             },
                             // actions: this.actions,
                             resizable: {
