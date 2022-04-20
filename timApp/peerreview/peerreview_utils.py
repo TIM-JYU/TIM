@@ -165,6 +165,15 @@ def get_reviews_for_user_query(d: DocInfo, user: User) -> Query:
     return PeerReview.query.filter_by(block_id=d.id, reviewer_id=user.id)
 
 
+def get_reviews_to_user(d: DocInfo, user: User) -> list[PeerReview]:
+    q = get_reviews_to_user_query(d, user).options(joinedload(PeerReview.reviewable))
+    return q.all()
+
+
+def get_reviews_to_user_query(d: DocInfo, user: User) -> Query:
+    return PeerReview.query.filter_by(block_id=d.id, reviewable_id=user.id)
+
+
 def has_review_access(
     doc: DocInfo,
     reviewer_user: User,

@@ -675,8 +675,19 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return q
 
     def add_to_group(
-        self, ug: UserGroup, added_by: Optional["User"], sync_mailing_lists=True
+        self,
+        ug: UserGroup,
+        added_by: Optional["User"],
+        sync_mailing_lists=True,
     ) -> bool:
+        """
+        Adds the user to a group.
+
+        :param ug: The user group to add the user to.
+        :param added_by: Optionally, the user that added this user to the group.
+        :param sync_mailing_lists: If True, automatically notifies message lists about the added user.
+        :return: True, if the added user is a "new" member (i.e. never was a member of the group before).
+        """
         # Avoid cyclical importing.
         from timApp.messaging.messagelist.messagelist_utils import (
             sync_message_list_on_add,
@@ -686,9 +697,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             self.id is not None and self.memberships_dyn.filter_by(group=ug).first()
         )
         if existing:
+            if existing.membership_end is not None:
+                existing.membership_added = get_current_time()
+                existing.adder = added_by
             existing.membership_end = None
-            existing.membership_added = get_current_time()
-            existing.adder = added_by
             new_add = False
         else:
             self.memberships.append(UserGroupMember(group=ug, adder=added_by))
