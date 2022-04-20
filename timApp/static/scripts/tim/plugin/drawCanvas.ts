@@ -910,7 +910,7 @@ const SCROLLBAR_APPROX_WIDTH = 17;
                     </button>
                 </div>
             </div>
-            <div *ngIf="loading" style="position: absolute; z-index: 1;">Loading images ({{loadedImages}}/{{bgSources.length}})
+            <div i18n *ngIf="loading" style="position: absolute; z-index: 1;">Loading images ({{loadedImages}}/{{bgSources.length}})
                 <tim-loading></tim-loading>
             </div>
             <div #wrapper style="overflow: auto; position: relative; resize: both;"
