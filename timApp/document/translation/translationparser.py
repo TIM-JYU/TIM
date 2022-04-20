@@ -656,6 +656,7 @@ def list_collect(
             # The paragraphs in items except the 1st need to be as indented as the item start (ie. "- " or "1. " etc)
             # FIXME It seems hard to control the indentation of paragraphs at this level
             arr += block_collect(block, depth + 1)
+
     return arr
 
 
@@ -740,7 +741,7 @@ def definitionlist_collect(content: dict) -> list[TranslateApproval]:
 def header_collect(content: dict) -> list[TranslateApproval]:
     # Attr check in attr_collect TODO Should we follow this convention? ATM other funcs like link_collect make the check at their level...
     if not isinstance(content[0], int) or not isinstance(content[2], list):
-        assert False, "PanDoc orderedlist content is not [ int, Attr, [Block]  ]"
+        assert False, "PanDoc orderedlist content is not [ int, Attr, [Inline]  ]"
 
     level = content[0]
     arr: list[TranslateApproval] = list()
@@ -757,7 +758,6 @@ def header_collect(content: dict) -> list[TranslateApproval]:
     arr += attrs
     if is_notranslate:
         return [x if isinstance(x, NoTranslate) else NoTranslate(x.text) for x in arr]
-
     return arr
 
 
@@ -782,6 +782,11 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
     arr: list[TranslateApproval] = list()
     type_ = top_block["t"]
     content = top_block.get("c", None)
+
+    # All blocks should be prepended by newline
+    if depth == 0:
+        arr.append(Translate("\n"))
+
     if type_ == "Plain":
         # TODO Need different literals before?
         for inline in content:
@@ -791,7 +796,8 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
             arr += inline_collect(inline)
         # "A paragraph is simply one or more consecutive lines of text, separated by one or more blank lines."
         # https://daringfireball.net/projects/markdown/syntax#p
-        # arr.append(NoTranslate("\n\n"))
+        # TODO Decide whether these newlines should be added or not
+        arr.append(Translate("\n"))
     elif type_ == "LineBlock":
         for inline_list in content:
             for inline in inline_list:
@@ -817,6 +823,7 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
         arr += definitionlist_collect(content)
     elif type_ == "Header":
         arr += header_collect(content)
+        arr.append(NoTranslate("\n"))
     elif type_ == "HorizontalRule":
         arr.append(NoTranslate("***"))
     elif type_ == "Table":
@@ -828,10 +835,10 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
 
     # The last part of block (hopefully) does not require the ending newlines
     # TODO figure out the "correct" way to include newlines
-    #    arr[-1].text = arr[-1].text.rstrip()
-    #    # Remove last element, if it is empty
-    #    if not arr[-1].text:
-    #        return arr[:-1]
+    # arr[-1].text = arr[-1].text.rstrip("\n")
+    ## Remove last element, if it is empty
+    # if not arr[-1].text:
+    #    return arr[:-1]
 
     return arr
 

@@ -100,7 +100,8 @@ def create_translation_route(tr_doc_id, language):
     # Translate each paragraph sequentially if a translator was created
     if translator_func:
         orig_doc = tr.document.get_source_document()
-        # TODO The parsing done before translation might need id etc values found in the markdown, but not found in the paragraphs, that get_paragraphs() returns...
+        # TODO The parsing done before translation might need id etc values found in the
+        #  markdown, but not found in the paragraphs, that get_paragraphs() returns...
         # Ignore the settings paragraphs entirely to protect them from mangling
         orig_paragraphs = orig_doc.get_paragraphs()
         translatable_paragraphs = list(
@@ -113,8 +114,12 @@ def create_translation_route(tr_doc_id, language):
         # TODO Call with the whole document and let preprocessing handle the conversion into list[str]?
         translated_texts = translator_func(translatable_paragraphs)
 
-        tr_paragraphs = tr.document.get_paragraphs()
-        for text, tr_block in zip(translated_texts, tr_paragraphs):
+        # The order of paragraphs in both docs must match, so that correct ones are modified.
+        tr_translatable_paragraphs = list(
+            filter(lambda x: not x.is_setting(), tr.document.get_paragraphs()),
+        )
+
+        for text, tr_block in zip(translated_texts, tr_translatable_paragraphs):
             tr.document.modify_paragraph(tr_block.id, text)
 
     if isinstance(doc, DocEntry):

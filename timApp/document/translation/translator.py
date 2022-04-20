@@ -417,14 +417,13 @@ class DeeplTranslationService(RegisteredTranslationService):
 
         # Insert the text-parts sent to the API into correct places in original elements
         translated_texts = list()
-        for translated_block in resp_json["translations"]:
-            for element in translated_block:
-                clean_block = (
-                    self.postprocess(translated_block["text"])
-                    if tag_handling == "xml"
-                    else translated_block["text"]
-                )
-                translated_texts.append(clean_block)
+        for translation_resp in resp_json["translations"]:
+            clean_block = (
+                self.postprocess(translation_resp["text"])
+                if tag_handling == "xml"
+                else translation_resp["text"]
+            )
+            translated_texts.append(clean_block)
         return translated_texts
 
     def usage(self) -> Usage:
@@ -714,7 +713,12 @@ class TranslateMethodFactory:
             translated_texts = translate_paragraphs(paras)
 
             # TODO Maybe log the length of text or other shorter info?
-            logger.log_info("\n".join(translated_texts))
+            for i, part in enumerate(translated_texts):
+                logger.log_info(
+                    f"==== Part {i}: ================================"
+                    f"{part}"
+                    "================================================"
+                )
 
             usage = translator.usage()
             logger.log_info(
