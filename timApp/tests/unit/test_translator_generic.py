@@ -21,7 +21,7 @@ class ReversingTranslationService(TranslationService):
 
     def translate(
         self,
-        texts: list[TranslateApproval],
+        texts: list[list[TranslateApproval]],
         _src_lang: Language,
         _target_lang: Language,
     ) -> list[TranslateApproval]:
