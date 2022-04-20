@@ -54,11 +54,23 @@ export class PeerReviewTableComponent
     implements OnInit
 {
     data?: IPeerReviewData[] = [];
+    testdata?: never;
     message?: string;
 
     ngOnInit() {
         super.ngOnInit();
         this.getReviews();
+        this.test();
+    }
+
+    async test() {
+        const r = await toPromise(this.http.get<never>("/myplugin/223/test"));
+        if (r.ok) {
+            this.testdata = r.result;
+        } else {
+            // Käsittele virhe
+            console.log(r.result.error.error);
+        }
     }
 
     async getReviews() {
