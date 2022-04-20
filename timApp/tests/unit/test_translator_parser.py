@@ -539,6 +539,7 @@ x=0\;\;\;\\text{"""
         )
 
     def test_ordered_list_codeblock(self):
+        # FIXME NOTE This test might not be accurate or well-defined... Especially regarding indentations.
         md = """1. Kissa
 
        eka
@@ -550,15 +551,18 @@ x=0\;\;\;\\text{"""
             get_translate_approvals(md),
             [
                 [
+                    NoTranslate("1. "),
+                    Translate("Kissa"),
                     NoTranslate(
-                        """1. Kissa
+                        """
 
- ```
- eka
- toka
- ```
-2. Koira"""
-                    )
+\t```
+\teka
+\ttoka
+\t```
+2. """
+                    ),
+                    Translate("Koira"),
                 ]
             ],
         )
@@ -851,6 +855,62 @@ P.getData = function(){
 ```"""
                     ),
                 ]
+            ],
+        )
+
+    # TODO Finish this test when there is a clearer picture of the needs
+    def TODO_test_multiple_paragraphs(self):
+        md = """**fet**
+
+
+*kursiv stil*
+
+
+<u>Understrykning</u>
+
+
+<s>strykning</s>
+
+
+[Färg]{.red}
+
+
+[bakgrundsfärg]{.bgred}
+
+
+`koodi`
+kodblock
+
+
+~delindex~
+
+
+^högsta index^"""
+
+        TR = Translate
+        NT = NoTranslate
+        self.assertEqual(
+            get_translate_approvals(md),
+            [
+                [NT("**"), TR("fet"), NT("**\n\n*")],
+                [
+                    TR("kursiv stil"),
+                    NT("*\n\n<u>"),
+                    TR("Understrykning"),
+                    NT("</u>\n\n<s>"),
+                    TR("strykning"),
+                    NT("</s>\n\n["),
+                    TR("Färg"),
+                    NT("]{.red}\n\n["),
+                    TR("bakgrundsfärg"),
+                    NT("]{.bgred}\n\n`"),
+                    TR("koodi"),
+                    NT("`\nkodblock\n\n~"),
+                    TR("delindex"),
+                    NT("~\n\n^"),
+                    TR("högsta index"),
+                    NT("^"),
+                ],
             ],
         )
 
