@@ -1139,7 +1139,7 @@ ${backTicks}
         this.changePreviewPositions();
     }
 
-    /*
+    /**
     Updates this.hideOriginalPreview and calls for a change of positioning because ng-model updates it too slow.
      */
     updateOriginalPreviewHide() {
@@ -1288,7 +1288,8 @@ ${backTicks}
     }
 
     /**
-     * Compiles the preview of the source block (the original document's block the current block is based on) in translation documents.
+     * Compiles the preview of the source block (the original document's block the current block is based on) in
+     * translation documents.
      */
     async compileOriginalPreview() {
         const previewOriginalDiv = angular.element(".previeworiginalcontent");

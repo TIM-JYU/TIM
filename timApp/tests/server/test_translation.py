@@ -365,9 +365,9 @@ Bar
 Baz
 """
         )
-        # TODO Would rather use RevesingTranslationService.service_name but is not str
-        data = {"autotranslate": "Reversing"}
-        tr_json = self.json_post(f"/translate/{d.id}/{lang.lang_code}", data)
+        # TODO Would rather use ReversingTranslationService.service_name but is not str
+        data = "Reversing"
+        tr_json = self.json_post(f"/translate/{d.id}/{lang.lang_code}/{data}")
         tr_doc = Translation.query.get(tr_json["id"]).document
         tr_doc.clear_mem_cache()
         mds = map(lambda x: x.md, tr_doc.get_paragraphs())
@@ -391,24 +391,26 @@ Baz
         tr = self.create_translation(d)
         tr_doc = tr.document
         id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
-        # TODO Would rather use RevesingTranslationService.service_name but is not str
-        data = {"autotranslate": "Reversing"}
-        r = self.json_post(f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}", data)
+        # TODO Would rather use ReversingTranslationService.service_name but is not str
+        data = "Reversing"
+        r = self.json_post(
+            f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}/{data}"
+        )
         tr_doc.clear_mem_cache()
         self.assertEqual(r, tr.id)
         self.assertEqual(tr_doc.get_paragraph(id1).md, "ooF")
         self.assertEqual(tr_doc.get_paragraph(id2).md, "")
         self.assertEqual(tr_doc.get_paragraph(id3).md, "")
 
-        self.json_post(f"/translate/paragraph/{tr.id}/{id2}/{lang.lang_code}", data)
+        self.json_post(f"/translate/paragraph/{tr.id}/{id2}/{lang.lang_code}/{data}")
         tr_doc.clear_mem_cache()
         self.assertEqual(tr_doc.get_paragraph(id2).md, "raB")
 
-        self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}", data)
+        self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}/{data}")
         tr_doc.clear_mem_cache()
         self.assertEqual(tr_doc.get_paragraph(id3).md, "zaB")
 
-        self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}", data)
+        self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}/{data}")
         tr_doc.clear_mem_cache()
         # Applying translation again uses the SOURCE paragraph, so the result is the same
         self.assertEqual(tr_doc.get_paragraph(id3).md, "zaB")
@@ -430,13 +432,13 @@ Qux
         tr = self.create_translation(d)
         tr_doc = tr.document
         id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
-        data = {"autotranslate": "Reversing"}
+        data = "Reversing"
 
-        self.json_post(f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}", data)
+        self.json_post(f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}/{data}")
         tr_doc.clear_mem_cache()
         self.assertEqual(tr_doc.get_paragraph(id1).md, "ooF")
 
-        self.json_post(f"/translate/paragraph/{tr.id}/{id2}/{lang.lang_code}", data)
+        self.json_post(f"/translate/paragraph/{tr.id}/{id2}/{lang.lang_code}/{data}")
         tr_doc.clear_mem_cache()
         tr_par2 = tr_doc.get_paragraph(id2)
         orig_par2 = d.document.get_paragraph(tr_par2.get_attr("rp"))
@@ -451,7 +453,7 @@ notexistingkey: Bar baz
 ```""",
         )
 
-        self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}", data)
+        self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}/{data}")
         tr_doc.clear_mem_cache()
         self.assertEqual(tr_doc.get_paragraph(id3).md, "xuQ")
 
@@ -469,11 +471,10 @@ Baz qux [qux](www.example.com)
 """
 
         data = {
-            "autotranslate": "Reversing",
             "originaltext": md,
         }
         resp = self.json_post(
-            f"/translate/{tr.id}/{lang.lang_code}/translate_block", data
+            f"/translate/{tr.id}/{lang.lang_code}/translate_block/Reversing", data
         )
         # NOTE Apparently Pandoc likes to add to headers their text-content as identifier,
         # which does not seem to be a TIM-convention (which could be a problem?).
