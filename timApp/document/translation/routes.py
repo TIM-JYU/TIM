@@ -36,7 +36,9 @@ from timApp.document.translation.language import Language
 
 def valid_language_id(lang_id: str) -> bool:
     """
-    Check that the id is recognized by the langcodes library and found in database.
+    Check that the id is recognized by the langcodes library and found in
+    database.
+
     :param lang_id: Language id (or "tag") to check
     :return: True, if id is found in database
     """
@@ -151,9 +153,12 @@ def paragraph_translation_route(
 ) -> Response:
     """
     Replace the content of paragraph with requested translation.
+
     :param tr_doc_id: ID of the document that the paragraph is in.
-    :param tr_par_id: ID of the paragraph in the Translation NOTE: NOT the original paragraph!
+    :param tr_par_id: ID of the paragraph in the Translation NOTE: NOT the
+    original paragraph!
     :param language: Language to translate into.
+    :param transl: Identifying code of the translator to use.
     :return: Response to the request.
     """
     translator_code = transl
@@ -257,9 +262,7 @@ def get_translations(doc_id: int) -> Response:
 
 @tr_bp.post("/translations/source-languages")
 def get_source_languages() -> Response:
-    """
-    Query the database for the possible source languages.
-    """
+    """Query the database for the possible source languages."""
 
     req_data = request.get_json()
     translator = req_data.get("translator", "")
@@ -287,8 +290,7 @@ def get_source_languages() -> Response:
 
 @tr_bp.get("/translations/document-languages")
 def get_document_languages() -> Response:
-    """
-    Query the database for the languages of existing documents.
+    """Query the database for the languages of existing documents.
     TODO Select from documents
     """
 
@@ -299,9 +301,7 @@ def get_document_languages() -> Response:
 
 @tr_bp.post("/translations/target-languages")
 def get_target_languages() -> Response:
-    """
-    Query the database for the possible target languages.
-    """
+    """Query the database for the possible target languages."""
 
     req_data = request.get_json()
     translator = req_data.get("translator", "")
@@ -327,9 +327,7 @@ def get_target_languages() -> Response:
 
 @tr_bp.get("/translations/translators")
 def get_translators() -> Response:
-    """
-    Query the database for the possible machine translators.
-    """
+    """Query the database for the possible machine translators."""
 
     translationservices = TranslationService.query.all()
     translationservice_names = list(map(lambda x: x.service_name, translationservices))
@@ -340,9 +338,7 @@ def get_translators() -> Response:
 
 @tr_bp.post("apikeys/add")
 def add_api_key() -> Response:
-    """
-    The function for adding API keys.
-    """
+    """The function for adding API keys."""
 
     req_data = request.get_json()
     translator = req_data.get("translator", "")
@@ -374,9 +370,7 @@ def add_api_key() -> Response:
 
 @tr_bp.post("apikeys/remove")
 def remove_api_key() -> Response:
-    """
-    The function for removing API keys.
-    """
+    """The function for removing API keys."""
 
     verify_logged_in()
     user = get_current_user_object()
@@ -418,9 +412,9 @@ def get_quota():
 
 @tr_bp.post("/apikeys/validate")
 def get_valid_status() -> Response:
-
     """
     Check the validity of a given api-key with the chosen translator engine.
+
     :return: Response from the server, or an Exception
     """
 
