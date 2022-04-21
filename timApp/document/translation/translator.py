@@ -313,7 +313,6 @@ class DeeplTranslationService(RegisteredTranslationService):
         :param ignore_tags: Tags to ignore when translating.
         :return: The DeepL API response JSON.
         """
-        # TODO Limit the amount of `text` parameters according to DeepL spec (50 per request?)
 
         src_lang = source_lang
 
@@ -402,26 +401,31 @@ class DeeplTranslationService(RegisteredTranslationService):
             map(lambda xs: "".join(map(lambda x: x.text, xs)), texts)
         )
 
-        # Translate texts
-        resp_json = self._translate(
-            protected_texts,
-            # Send uppercase, because it is used in DeepL documentation
-            source_lang_code.upper(),
-            target_lang.lang_code.upper(),
-            split_sentences="1",  # "1" (for example) keeps original document's empty newlines
-            # NOTE Preserve formatting=1 might remove punctuation
-            preserve_formatting="0",  # "1" DeepL does not make guesses of the desired sentence
-            tag_handling=tag_handling,
-            ignore_tags=[self.ignore_tag],
-        )
+        # Translate texts 50 at a time to match DeepL-spec:
+        # "Up to 50 text parameters can be submitted in one request."
+        # https://www.deepl.com/docs-api/translating-text/large-volumes/
+        translation_resps = list()
+        for i in range(0, len(protected_texts), 50):
+            resp_json = self._translate(
+                protected_texts[i : i + 50],
+                # Send uppercase, because it is used in DeepL documentation
+                source_lang_code.upper(),
+                target_lang.lang_code.upper(),
+                split_sentences="1",  # "1" (for example) keeps original document's empty newlines
+                # NOTE Preserve formatting=1 might remove punctuation
+                preserve_formatting="0",  # "1" DeepL does not make guesses of the desired sentence
+                tag_handling=tag_handling,
+                ignore_tags=[self.ignore_tag],
+            )
+            translation_resps += resp_json["translations"]
 
         # Insert the text-parts sent to the API into correct places in original elements
         translated_texts = list()
-        for translation_resp in resp_json["translations"]:
+        for resp in translation_resps:
             clean_block = (
-                self.postprocess(translation_resp["text"])
+                self.postprocess(resp["text"])
                 if tag_handling == "xml"
-                else translation_resp["text"]
+                else resp["text"]
             )
             translated_texts.append(clean_block)
         return translated_texts
@@ -708,14 +712,11 @@ class TranslateMethodFactory:
             :param paras: TIM-paragraphs containing Markdown to translate.
             :return: The translatable text contained in input paragraphs translated according to the outer functions inputs (the languages).
             """
-            # TODO Translator should be able to translate multiple texts at once
-            #  (ie. DeepL request can have 50 text-params)
             translated_texts = translate_paragraphs(paras)
 
-            # TODO Maybe log the length of text or other shorter info?
             for i, part in enumerate(translated_texts):
                 logger.log_info(
-                    f"==== Part {i}: ================================"
+                    f"==== Part {i} ({len(part)} characters): ================================"
                     f"{part}"
                     "================================================"
                 )
