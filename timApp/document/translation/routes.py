@@ -1,9 +1,11 @@
 import re
 import langcodes
+import requests
 
 from flask import request, Blueprint
 from sqlalchemy.exc import IntegrityError
 
+import timApp.util.flask.responsehelper
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
     verify_view_access,
@@ -409,6 +411,41 @@ def get_quota():
     tr.register(get_current_user_object().get_personal_group())
 
     return json_response(tr.usage())
+
+
+@tr_bp.post("/apikeys/validate")
+def get_valid_status() -> Response:
+
+    """
+    Check the validity of a given api-key with the chosen translator engine.
+    :return: Response from the server, or an Exception
+    """
+
+    verify_logged_in()
+
+    req_data = request.get_json()
+    translator = req_data.get("translator", "")
+    key = req_data.get("apikey", "")
+
+    # Get the translation service by the provided service name
+    tr = TranslationService.query.filter(
+        translator == TranslationService.service_name,
+    ).first()
+
+    # Each new translator engine should add their preferred method for validating api keys here
+    # TODO might be prudent to do this in the specific translator class in the future
+    if tr.service_name.startswith("DeepL"):
+        resp = requests.post(
+            tr.service_url + "/usage",
+            headers={"Authorization": f"DeepL-Auth-Key {key}"},
+        )
+
+    if resp.ok:
+        return ok_response()
+    else:
+        raise RouteException(
+            description="Invalid API key for the chosen translator engine."
+        )
 
 
 @tr_bp.get("/apikeys/get")

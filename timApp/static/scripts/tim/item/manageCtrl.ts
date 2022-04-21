@@ -378,6 +378,10 @@ export class PermCtrl implements IController {
         }
     }
 
+    /*
+    TODO: Handling the error code should be done better (it should never appear on the browser's console) but at
+    least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
+     */
     async deleteDocument(id: number) {
         const trDocLang = this.findCurrentTrDocLang(id);
         const deletingCurrentDoc = this.item.id == id;
@@ -611,6 +615,8 @@ export class PermCtrl implements IController {
 
     /**
      * Updates the list of available target languages when translator is changed.
+     * TODO: Handling the error code should be done better (it should never appear on the browser's console) but at
+     * least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
      */
     async updateTranslatorLanguages() {
         let sources = await to(
