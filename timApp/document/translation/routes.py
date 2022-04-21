@@ -55,9 +55,9 @@ tr_bp = Blueprint("translation", __name__, url_prefix="")
 
 
 @tr_bp.post("/translate/<int:tr_doc_id>/<string:language>/<string:transl>")
-def create_translation_route(tr_doc_id: int, language: str, transl: str):
-    # TODO Why is the variable for *original* document's ID named "tr_doc_id"?
+def create_translation_route(tr_doc_id: int, language: str, transl: str) -> Response:
     req_data = request.get_json()
+    # TODO Move doc_title -parameter to the URL as well
     title = req_data.get("doc_title", None)
 
     doc = get_doc_or_abort(tr_doc_id)
@@ -317,6 +317,7 @@ def get_target_languages() -> Response:
 
     if translator.lower() == "deepl free" or translator.lower() == "deepl pro":
         langs = get_lang_lists(translator, False)
+        # TODO Implement to_json for Language and use it here
         sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
         return json_response(sl)
     else:
@@ -329,10 +330,14 @@ def get_target_languages() -> Response:
 def get_translators() -> Response:
     """Query the database for the possible machine translators."""
 
-    translationservices = TranslationService.query.all()
-    translationservice_names = list(map(lambda x: x.service_name, translationservices))
-    # TODO Add Manual to the TranslationService-table?
-    sl = ["Manual"] + translationservice_names
+    translationservice_names = TranslationService.query.with_entities(
+        TranslationService.service_name
+    ).all()
+    # The SQLAlchemy query returns a list of tuples even when values of a
+    # single column were requested, so they must be unpacked.
+    # TODO Add "Manual" to the TranslationService-table instead of hardcoding
+    #  here (and elsewhere)?
+    sl = ["Manual"] + [x[0] for x in translationservice_names]
     return json_response(sl)
 
 
@@ -379,17 +384,14 @@ def remove_api_key() -> Response:
     translator = req_data.get("translator", "")
     key = req_data.get("apikey", "")
 
-    to_be_removed = TranslationServiceKey.query.filter(
+    TranslationServiceKey.query.filter(
         key == TranslationServiceKey.api_key,
         TranslationServiceKey.group_id == user.get_personal_group().id,
         translator == TranslationService.service_name,
-    ).first()
+    ).delete(synchronize_session=False)
 
-    if not to_be_removed:
-        raise RouteException("The key does not exist for the user")
-
-    db.session.delete(to_be_removed)
     db.session.commit()
+
     return ok_response()
 
 
