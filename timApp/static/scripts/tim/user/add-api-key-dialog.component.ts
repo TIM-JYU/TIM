@@ -19,7 +19,6 @@ import {ITranslators, ITranslatorUsage} from "../item/IItem";
 import {listTranslators} from "../document/editing/edittypes";
 import {IUserApiKey} from "./IUser";
 
-
 /**
  * User can add translator API keys to be stored in TIM. (code source: add-contact-dialog.component.ts)
  */
@@ -70,8 +69,10 @@ import {IUserApiKey} from "./IUser";
         </tim-dialog-frame>
     `,
 })
-export class AddAPIKeyDialogComponent extends AngularDialogComponent<{ onAdd: (key: IUserApiKey) => void },
-    void> {
+export class AddAPIKeyDialogComponent extends AngularDialogComponent<
+    {onAdd: (key: IUserApiKey) => void},
+    void
+> {
     translators: Array<ITranslators> = [];
 
     ngOnInit() {
@@ -99,7 +100,6 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<{ onAdd: (k
      * least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
      */
     async addNewAPIKey() {
-
         const validateResponse = await this.validateAPIKey();
 
         if (validateResponse.ok) {
@@ -130,12 +130,14 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<{ onAdd: (k
                 this.addError = result.result.error.error;
             }
         } else {
-            // TODO we should catch HTTP errors correctly here,
-            //  but we do not currently have a compatible method of doing so
             this.addError = validateResponse.result.error.error;
         }
     }
 
+    /**
+     * Sends a request to our server to check the validity of the API key to be added.
+     * @return Response from server, if anything else than 200 OK we know the key was not valid.
+     */
     async validateAPIKey() {
         return await toPromise(
             this.http.post<ITranslatorUsage>("/apikeys/validate", {
@@ -144,12 +146,10 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<{ onAdd: (k
             })
         );
     }
-
 }
 
 @NgModule({
     declarations: [AddAPIKeyDialogComponent],
     imports: [DialogModule, FormsModule, TimUtilityModule, CommonModule],
 })
-export class AddAPIKeyDialogModule {
-}
+export class AddAPIKeyDialogModule {}
