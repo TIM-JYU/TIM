@@ -45,7 +45,9 @@ class TranslationTest(TimRouteTest):
         self.get(t.url)
         self.logout()
         self.json_post(
-            f"/translate/{doc.id}/{lang}", {"doc_title": doc_title}, expect_status=403
+            f"/translate/{doc.id}/{lang}/Manual",
+            {"doc_title": doc_title},
+            expect_status=403,
         )
 
     def test_translation_create_with_settings(self):

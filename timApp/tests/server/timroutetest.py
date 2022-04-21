@@ -947,7 +947,7 @@ class TimRouteTest(TimDbTest):
                 "name": doc.short_name,
             }
         j = self.json_post(
-            f"/translate/{doc.id}/{lang}",
+            f"/translate/{doc.id}/{lang}/Manual",
             {"doc_title": doc_title},
             expect_contains=expect_contains,
             expect_content=expect_content,
