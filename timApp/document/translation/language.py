@@ -30,16 +30,17 @@ class Language(db.Model):
     """Native name for the language."""
 
     @classmethod
-    def create_from_name(cls, s: str) -> "Language":
+    def create_from_name(cls, name: str) -> "Language":
         """
         Create an instance of Language that follows a standard. Note that this
         should always be used when creating a new Language especially when
         adding it to database.
 
-        :param s: Natural name of the language
-        :return: A corresponding Language-object newly created
+        :param name: Natural name of the language
+        :return: A corresponding Language-object newly created.
+        :raises LookupError: if the language is not found.
         """
-        lang = langcodes.find(s)
+        lang = langcodes.find(name)
         return Language(
             lang_code=lang.to_tag(),
             lang_name=lang.language_name(),
