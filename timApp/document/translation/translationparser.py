@@ -34,6 +34,8 @@ class Table(TranslateApproval):
 def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
     """
     By parsing the input text, identify parts that should and should not be passed to a machine translator
+    TODO Does this need to return list of lists, when the function of this is to split markdown into parts that can be translated or not?
+
     :param md: The input text to eventually translate
     :return: Lists containing the translatable parts of each block in a list
     """
@@ -41,7 +43,9 @@ def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
     ast = json.loads(pypandoc.convert_text(md, format="md", to="json"))
     # By walking the ast, glue continuous translatable parts together into Translate-object and non-translatable parts into NoTranslate object
     # Add the objects into a list where they alternate T|NT, NT, T, NT ... T|NT
-    block_approvals = [block_collect(block) for block in ast["blocks"]]
+    block_approvals = [
+        merge_consecutive(block_collect(block)) for block in ast["blocks"]
+    ]
     # Return the list
     return block_approvals
 
@@ -333,6 +337,9 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
             arr += inline_collect(inline)
         arr.append(NoTranslate("</s>"))
     elif type_ == "Superscript":
+        # TODO Not related to this module, but spaces inside break TIM render of Superscript.
+        #  eg. ^yläindeksi^ can translate into English as ^top index^, which renders badly, but
+        #  rendering could be fixed by encoding spaces like ^top\ index^.
         arr.append(NoTranslate("^"))
         for inline in content:
             arr += inline_collect(inline)
@@ -645,7 +652,11 @@ def list_collect(
 
         for block in block_list:
             start_num = start_num + 1
+            # TODO Handle the indentation inside list item's element
+            # The paragraphs in items except the 1st need to be as indented as the item start (ie. "- " or "1. " etc)
+            # FIXME It seems hard to control the indentation of paragraphs at this level
             arr += block_collect(block, depth + 1)
+
     return arr
 
 
@@ -730,7 +741,7 @@ def definitionlist_collect(content: dict) -> list[TranslateApproval]:
 def header_collect(content: dict) -> list[TranslateApproval]:
     # Attr check in attr_collect TODO Should we follow this convention? ATM other funcs like link_collect make the check at their level...
     if not isinstance(content[0], int) or not isinstance(content[2], list):
-        assert False, "PanDoc orderedlist content is not [ int, Attr, [Block]  ]"
+        assert False, "PanDoc orderedlist content is not [ int, Attr, [Inline]  ]"
 
     level = content[0]
     arr: list[TranslateApproval] = list()
@@ -747,7 +758,6 @@ def header_collect(content: dict) -> list[TranslateApproval]:
     arr += attrs
     if is_notranslate:
         return [x if isinstance(x, NoTranslate) else NoTranslate(x.text) for x in arr]
-
     return arr
 
 
@@ -762,9 +772,9 @@ def div_collect(content: dict) -> list[TranslateApproval]:
 def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
     """
     Walks the whole block and appends each translatable and non-translatable string-part into a list in order.
-
     Based on the pandoc AST-spec at:
     https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
+
     :param top_block: The block to collect strings from
     :param depth: The depth of the recursion if it is needed for example with list-indentation
     :return: List of strings inside the correct approval-type.
@@ -772,10 +782,22 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
     arr: list[TranslateApproval] = list()
     type_ = top_block["t"]
     content = top_block.get("c", None)
-    if type_ == "Plain" or type_ == "Para":
+
+    # All blocks should be prepended by newline
+    if depth == 0:
+        arr.append(Translate("\n"))
+
+    if type_ == "Plain":
         # TODO Need different literals before?
         for inline in content:
             arr += inline_collect(inline)
+    elif type_ == "Para":
+        for inline in content:
+            arr += inline_collect(inline)
+        # "A paragraph is simply one or more consecutive lines of text, separated by one or more blank lines."
+        # https://daringfireball.net/projects/markdown/syntax#p
+        # TODO Decide whether these newlines should be added or not
+        arr.append(Translate("\n"))
     elif type_ == "LineBlock":
         for inline_list in content:
             for inline in inline_list:
@@ -801,6 +823,7 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
         arr += definitionlist_collect(content)
     elif type_ == "Header":
         arr += header_collect(content)
+        arr.append(NoTranslate("\n"))
     elif type_ == "HorizontalRule":
         arr.append(NoTranslate("***"))
     elif type_ == "Table":
@@ -810,29 +833,44 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
     elif type_ == "Null":
         pass
 
-    # TODO this function could be good for unit-testing
-    # ie. [T("foo"), T(" "), T("bar"), NT("\n"), NT("["), T("click"), NT("](www.example.com)")]
-    # ==>
-    # [T("foo bar"), NT("\n["), T("click"), NT("](www.example.com)")]
-    if len(arr) > 0:
-        merged_arr: list[TranslateApproval] = list()
-        arr_iter = iter(arr)
-        elem = next(arr_iter, None)
-        if elem:
-            last_elem_s, last_elem_t = elem.text, type(elem)
-            while True:
-                elem = next(arr_iter, None)
-                if isinstance(elem, last_elem_t):
-                    # Combine the texts of element and previously added if they are the same type
-                    last_elem_s += elem.text
-                else:
-                    # If element is different type to last, save last and start collecting the new one
-                    last_obj = last_elem_t(last_elem_s)
-                    merged_arr.append(last_obj)
-                    if elem is None:
-                        break
-                    last_elem_t = type(elem)
-                    last_elem_s = elem.text
-        return merged_arr
+    # The last part of block (hopefully) does not require the ending newlines
+    # TODO figure out the "correct" way to include newlines
+    # arr[-1].text = arr[-1].text.rstrip("\n")
+    ## Remove last element, if it is empty
+    # if not arr[-1].text:
+    #    return arr[:-1]
 
     return arr
+
+
+def merge_consecutive(arr: list[TranslateApproval]) -> list[TranslateApproval]:
+    """
+    Merge consecutive elements of the same type into each other to reduce length of the list.
+    The merging is as follows (T = Translate, NT = NoTranslate):
+    [T("foo"), T(" "), T("bar"), NT("\n"), NT("["), T("click"), NT("](www.example.com)")]
+    ==>
+    [T("foo bar"), NT("\n["), T("click"), NT("](www.example.com)")]
+
+    :param arr: The list of objects to merge.
+    :return: Merged list.
+    """
+    # TODO this function could be good for unit-testing
+    merged_arr: list[TranslateApproval] = list()
+    arr_iter = iter(arr)
+    elem = next(arr_iter, None)
+    if elem:
+        last_elem_s, last_elem_t = elem.text, type(elem)
+        while True:
+            elem = next(arr_iter, None)
+            if isinstance(elem, last_elem_t):
+                # Combine the texts of element and previously added if they are the same type
+                last_elem_s += elem.text
+            else:
+                # If element is different type to last, save last and start collecting the new one
+                last_obj = last_elem_t(last_elem_s)
+                merged_arr.append(last_obj)
+                if elem is None:
+                    break
+                last_elem_t = type(elem)
+                last_elem_s = elem.text
+    return merged_arr

@@ -4,6 +4,7 @@ import pypandoc
 
 from dataclasses import dataclass
 from typing import Dict, Callable
+from itertools import chain
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.document.docparagraph import DocParagraph
@@ -52,24 +53,25 @@ class TranslationService(db.Model):
 
     def translate(
         self,
-        texts: TranslateBlock,
+        texts: list[TranslateBlock],
         source_lang: Language,
         target_lang: Language,
         *,
         tag_handling: str = "",
-    ) -> None:
+    ) -> list[str]:
         """
         Translate texts from source to target language.
-        The implementor of this method should keep the (translated) elements in the same order
+        The implementor of this method should return the (translated) text in the same order
         as found in the input `texts`-parameter originally.
 
-        :param texts: The texts marked for translation or not. This parameter will be handled as a reference and
-        modified in the translation process.
+        :param texts: The texts marked for translation or not. A convention would be to pass
+        as much of the translatable text as possible in this parameter in order to minimize the amount of separate
+        translation-calls.
         :param source_lang: Language to translate from.
         :param target_lang: Language to translate into.
         :param tag_handling: Tag representing a way to separate or otherwise control translated text with the
         translation service. A HACKY way to handle special case with translating (html) tables.
-        :return: None. The translation results are saved on the `texts`-parameter.
+        :return: List of strings found inside the items of `texts`-parameter, in the same order and translated.
         """
 
         raise NotImplementedError
@@ -320,6 +322,8 @@ class DeeplTranslationService(RegisteredTranslationService):
         ):
             src_lang = "en"
 
+        logger.log_info(f"Amount of separate translatable texts: {str(len(text))}/50")
+
         data = {
             "text": text,
             "source_lang": src_lang,
@@ -353,6 +357,7 @@ class DeeplTranslationService(RegisteredTranslationService):
         :param elem: The element to add XML-protection-tags to.
         :return None. The tag is added to the input object.
         """
+        # TODO If the protection tag is found in the content text, somehow encode such tag first
         if type(elem) is NoTranslate:
             elem.text = f"<{self.ignore_tag}>{elem.text}</{self.ignore_tag}>"
 
@@ -369,29 +374,33 @@ class DeeplTranslationService(RegisteredTranslationService):
 
     def translate(
         self,
-        texts: TranslateBlock,
+        texts: list[TranslateBlock],
         source_lang: Language | None,
         target_lang: Language,
         tag_handling: str = "xml",
-    ) -> None:
+    ) -> list[str]:
         """
         Use the DeepL API to translate text between languages.
 
-        :param texts: Text to be translated TODO This should probably be a list of lists (each sublist is a paragraph(?))
+        :param texts: Text to be translated
         :param source_lang: Language of input text. None value makes DeepL guess it from the text.
         :param target_lang: Language for target language.
         :param tag_handling: See comment in superclass.
-        :return: None.
+        :return: List of strings in target language with the non-translatable parts intact.
         """
         source_lang_code = source_lang.lang_code if source_lang else None
 
         # Get the translatable text of objects and add XML-tag -protection to them if so needed
         if tag_handling == "xml":
-            for elem in texts:
-                self.preprocess(elem)
-        protected_texts = list(map(lambda x: x.text, texts))
-
-        logger.log_info(f"Length of translate-list: {str(len(protected_texts))}/50")
+            # TODO This multidimensionalism of lists is hard to read
+            for block in texts:
+                for elem in block:
+                    self.preprocess(elem)
+        # TODO This multidimensionalism of lists is hard to read
+        # Combine the strings of each block for maximum-effectiveness of the translation-call.
+        protected_texts = list(
+            map(lambda xs: "".join(map(lambda x: x.text, xs)), texts)
+        )
 
         # Translate texts
         resp_json = self._translate(
@@ -407,13 +416,15 @@ class DeeplTranslationService(RegisteredTranslationService):
         )
 
         # Insert the text-parts sent to the API into correct places in original elements
-        for translated_text, element in zip(resp_json["translations"], texts):
-            clean_text = (
-                self.postprocess(translated_text["text"])
+        translated_texts = list()
+        for translation_resp in resp_json["translations"]:
+            clean_block = (
+                self.postprocess(translation_resp["text"])
                 if tag_handling == "xml"
-                else translated_text["text"]
+                else translation_resp["text"]
             )
-            element.text = clean_text
+            translated_texts.append(clean_block)
+        return translated_texts
 
     def usage(self) -> Usage:
         resp_json = self._post("usage")
@@ -447,7 +458,7 @@ class DeeplTranslationService(RegisteredTranslationService):
         return_langs = list(filter(None, map(get_langs_from_db, langs)))
         if source_langs:
             self.source_Language_code = "en-US"
-            en = Language(
+            en: Language | None = Language(
                 flag_uri="",
                 lang_code="",
                 lang_name="",
@@ -529,22 +540,6 @@ class DeeplProTranslationService(DeeplTranslationService):
     __mapper_args__ = {"polymorphic_identity": "DeepL Pro"}
 
 
-def init_translate(
-    translator: TranslationService,
-    source_lang: Language,
-    target_lang: Language,
-) -> Callable[[list[str]], list[str]]:
-    # TODO This helper-function would be better if there was some way to hide the
-    #  translate-methods on ITranslators. Maybe save for the eventual(?) TranslatorSelector?
-    """
-    Use the specified TranslationService to initialize machine translation
-    :param translator: The translator to use
-    :param source_lang: The language that text is in
-    :param target_lang: The language that text will be translated into
-    :return: A partially applied function for translating text with the specified languages using the specified TranslationService
-    """
-
-
 # TODO Remove this when crisis is over
 class DeeplPlaceholderTranslationService(DeeplTranslationService):
 
@@ -554,10 +549,9 @@ class DeeplPlaceholderTranslationService(DeeplTranslationService):
 
 @dataclass
 class TranslationTarget:
+    """Type that can be passed around in translations."""
+
     value: str | DocParagraph
-    """
-    Type that can be passed around in translations.
-    """
 
     def get_text(self) -> str:
         if isinstance(self.value, str):
@@ -602,113 +596,110 @@ class TranslateMethodFactory:
                 description=f"The language pair from {source_lang} to {target_lang} is not supported with {translator.service_name}"
             )
 
-        def translate_raw_text(md: str) -> str:
+        def translate_raw_texts(mds: list[str]) -> list[str]:
             """
-            Most primitive translate-func -version to translate text between languages.
+            Most primitive translate-func -version to translate texts between languages.
 
-            :param md: The text to translate.
-            :return: The translated text.
+            :param mds: The texts to translate.
+            :return: The translated texts in same order as input.
             """
             # Turn the text into lists of objects that describe whether they can be translated or not
-            elements: list[TranslateBlock] = get_translate_approvals(md)
-            # Pass object-lists with translatable text to the machine translator object.
-            # If supported, the translator protects and removes the protection from the
-            # text (for example adding XML-ignore-tags in DeepL's case).
-            translated_elements: list[TranslateBlock] = list()
+            # TODO The flattening (calling `chain.from_iterable`) could probably be done in parser
+            blocks: list[list[TranslateApproval]] = list(
+                map(
+                    lambda x: list(chain.from_iterable(get_translate_approvals(x))), mds
+                )
+            )
 
-            for xs in elements:
-                # Pick the table out for special translation and handle the rest normally
-                tr_sublist: TranslateBlock = list()
-                for x in xs:
-                    if isinstance(x, Table):
+            # Map over blocks, picking the tables out for special translation and handle the rest normally
+            for block in blocks:
+                for i in range(len(block)):
+                    elem = block[i]
+                    if isinstance(elem, Table):
                         if translator.supports_tag_handling("html"):
                             # Special (HACKY) case, where md-tables are translated as html (if supported)
                             # TODO Actually implement table_collect at translationparser.py so that
                             #  non-html-handling translators can be used as well
                             # Turn the markdown into html
                             table_html: str = pypandoc.convert_text(
-                                x.text, to="html", format="md"
+                                elem.text, to="html", format="md"
                             )
                             # Translate as HTML
-                            table_html_tr = [Translate(table_html)]
-                            translator.translate(
-                                table_html_tr,
+                            table_html_tr = translator.translate(
+                                [[Translate(table_html)]],
                                 source_lang,
                                 target_lang,
                                 tag_handling="html",
                             )
                             # Turn the html back into md
                             table_md_tr = pypandoc.convert_text(
-                                table_html_tr[0].text, to="md", format="html"
+                                table_html_tr[0], to="md", format="html"
                             )
                             # Now mark the table as NoTranslate, so it doesn't get translated when
                             # the list is passed on to mass-translation
                             # TODO Adding this newline is kinda HACKY and not thought out.
-                            tr_sublist.append(NoTranslate("\n" + table_md_tr))
+                            block[i] = NoTranslate("\n" + table_md_tr)
                         else:
                             # The table cannot be translated and is handled as is
-                            tr_sublist.append(NoTranslate(x.text))
-                    else:
-                        tr_sublist.append(x)
-                translator.translate(tr_sublist, source_lang, target_lang)
-                translated_elements.append(tr_sublist)
-            # The translator object returns the same structure as input but their content
-            # has been translated accordingly.
-            # Transform the objects back to a Markdown string
-            translated_md = ""
-            for paragraph in translated_elements:
-                for elem in paragraph:
-                    translated_md += elem.text
-                # TODO what are the paragraphs separated by? "\n\n"? Seems like this would need more handling in regard
-                #  to TIM's block separation and id's etc
-                # TODO Do some MD-elements (from parser) not include newline postfix and should this newline-addition
-                #  then be placed into parser-module?
-                translated_md += "\n"
-            translated_md = translated_md.rstrip()
+                            block[i] = NoTranslate(elem.text)
 
-            return translated_md
+            # Pass object-lists with translatable text to the machine translator object.
+            # If supported, the translator protects and removes the protection from the
+            # text (for example adding XML-ignore-tags in DeepL's case).
+            translated_mds = translator.translate(blocks, source_lang, target_lang)
+            # TODO what are the paragraphs separated by? "\n\n"? Seems like this would need more handling in regard
+            #  to TIM's block separation and id's etc
+            # TODO Do some MD-elements (from parser) not include newline postfix and should this newline-addition
+            #  then be placed into parser-module?
+            return translated_mds
 
-        def translate_paragraph(target: TranslationTarget) -> str:
+        def translate_paragraphs(targets: list[TranslationTarget]) -> list[str]:
             """
-            Translate a single piece of Markdown roughly the size of a generic paragraph.
+            Translate pieces of Markdown roughly the size of a generic paragraph.
 
-            :param target: The object whose Markdown-text-value to parse.
-            :return: The markdown elements that are contained in the text.
+            :param targets: The list of objects whose Markdown-text-value to parse.
+            :return: List containing the translated pieces of markdown in same order as input.
             """
 
-            md = target.get_text()
+            mds = []
 
-            if isinstance(target.value, DocParagraph) and target.value.is_plugin():
-                # Add the attributes to the content so that parser can identify the code block as a plugin
-                # NOTE that the parser should only use the attributes for identification
-                # and deletes them from the translated result ie. this is a special case!
+            for target in targets:
+                md = target.get_text()
+                if isinstance(target.value, DocParagraph) and target.value.is_plugin():
+                    # Add the attributes to the content so that parser can identify the code block as a plugin
+                    # NOTE that the parser should only use the attributes for identification
+                    # and deletes them from the translated result ie. this is a special case!
 
-                # Form the Pandoc-AST representation of a code-block's Attr and glue the
-                # parts returned as is back together into a string of Markdown
-                # TODO Is par.attrs trusted to not be None?
-                taskid = (
-                    target.value.attrs.get("taskId", "") if target.value.attrs else ""
-                )
-                classes: list[str] = (
-                    x
-                    if target.value.attrs
-                    and isinstance(x := target.value.attrs.get("classes"), list)
-                    else []
-                )
-                kv_pairs = (
-                    [(k, v) for k, v in target.value.attrs.items() if k != "taskId"]
-                    if target.value.attrs
-                    else []
-                )
-                attr_str = "".join(
-                    map(
-                        lambda y: y.text,
-                        attr_collect([taskid, classes, kv_pairs])[0],
+                    # Form the Pandoc-AST representation of a code-block's Attr and glue the
+                    # parts returned as is back together into a string of Markdown
+                    # TODO Is par.attrs trusted to not be None?
+                    taskid = (
+                        target.value.attrs.get("taskId", "")
+                        if target.value.attrs
+                        else ""
                     )
-                )
-                md = md.replace("```\n", f"``` {attr_str}\n", 1)
+                    classes: list[str] = (
+                        x
+                        if target.value.attrs
+                        and isinstance(x := target.value.attrs.get("classes"), list)
+                        else []
+                    )
+                    kv_pairs = (
+                        [(k, v) for k, v in target.value.attrs.items() if k != "taskId"]
+                        if target.value.attrs
+                        else []
+                    )
+                    attr_str = "".join(
+                        map(
+                            lambda y: y.text,
+                            attr_collect([taskid, classes, kv_pairs])[0],
+                        )
+                    )
+                    md = md.replace("```\n", f"``` {attr_str}\n", 1)
 
-            return translate_raw_text(md)
+                mds.append(md)
+
+            return translate_raw_texts(mds)
 
         def generic_translate(paras: list[TranslationTarget]) -> list[str]:
             """
@@ -719,10 +710,15 @@ class TranslateMethodFactory:
             """
             # TODO Translator should be able to translate multiple texts at once
             #  (ie. DeepL request can have 50 text-params)
-            translated_texts = [translate_paragraph(x) for x in paras]
+            translated_texts = translate_paragraphs(paras)
 
             # TODO Maybe log the length of text or other shorter info?
-            logger.log_info("\n".join(translated_texts))
+            for i, part in enumerate(translated_texts):
+                logger.log_info(
+                    f"==== Part {i}: ================================"
+                    f"{part}"
+                    "================================================"
+                )
 
             usage = translator.usage()
             logger.log_info(

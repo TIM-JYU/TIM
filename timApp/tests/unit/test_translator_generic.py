@@ -21,38 +21,49 @@ class ReversingTranslationService(TranslationService):
 
     def translate(
         self,
-        texts: list[TranslateApproval],
-        _src_lang: Language,
-        _target_lang: Language,
-    ) -> list[TranslateApproval]:
+        texts: list[list[TranslateApproval]],
+        src_lang: Language,
+        target_lang: Language,
+    ) -> list[str]:
         """
         Reverse the translatable text given.
-        NOTE The algorithm here for combining translation results back to original structure might be integrated into the actual TranslationService-implementation.
+        NOTE The algorithm here for combining translation results back to original structure might be integrated into
+         the actual TranslationService-implementation.
+
         :param texts: Texts to reverse
-        :param _src_lang: Unused
-        :param _target_lang: Unused
+        :param src_lang: Unused
+        :param target_lang: Unused
         :return: Texts where translatable ones have been reversed.
         """
 
-        # Leave non-translatable values out of the call to machine translation and pick their string-valued texts to a list
-        only_translates = list(
-            map(
-                lambda x: x.text,
-                filter(lambda x: isinstance(x, Translate), texts),
+        # Iterate the blocks of texts
+        translation_subjects: list[list[str]] = list()
+        for xs in texts:
+            # Leave non-translatable values out of the call to machine translation
+            # and pick their string-valued texts to a list
+            just_translates = list(
+                map(
+                    lambda x: x.text,
+                    filter(lambda x: isinstance(x, Translate), xs),
+                )
             )
-        )
-        # Perform the translation
-        translation_results = self._translate(only_translates)
+            translation_subjects.append(just_translates)
+
+        # Perform the translation on all or maximum amount of blocks at a time
+        for i, xs in enumerate(translation_subjects):
+            translation_subjects[i] = self._translate(xs)
+
         # Insert translated parts back into their original objects
         # NOTE This only works, if self._translate returns the values in the same order as it got them!!
-        i = 0
-        for obj in texts:
-            if isinstance(obj, Translate):
-                obj.text = translation_results[i]
-                i += 1
+        for text, translated_text in zip(texts, translation_subjects):
+            i = 0
+            for part in text:
+                if isinstance(part, Translate):
+                    part.text = translated_text[i]
+                    i += 1
 
-        # TODO See comment about the return value on TranslationService.translate
-        return texts
+        # Concatenate the strings inside texts' list of items together
+        return ["".join(map(lambda x: x.text, xs)) for xs in texts]
 
     def usage(self) -> Usage:
         """Infinite quota"""
