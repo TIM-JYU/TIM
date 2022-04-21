@@ -70,10 +70,8 @@ import {IUserApiKey} from "./IUser";
         </tim-dialog-frame>
     `,
 })
-export class AddAPIKeyDialogComponent extends AngularDialogComponent<
-    {onAdd: (key: IUserApiKey) => void},
-    void
-> {
+export class AddAPIKeyDialogComponent extends AngularDialogComponent<{ onAdd: (key: IUserApiKey) => void },
+    void> {
     translators: Array<ITranslators> = [];
 
     ngOnInit() {
@@ -131,8 +129,7 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
                 this.added = false;
                 this.addError = result.result.error.error;
             }
-        }
-        else {
+        } else {
             // TODO we should catch HTTP errors correctly here,
             //  but we do not currently have a compatible method of doing so
             this.addError = validateResponse.result.error.error;
@@ -155,4 +152,5 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
     declarations: [AddAPIKeyDialogComponent],
     imports: [DialogModule, FormsModule, TimUtilityModule, CommonModule],
 })
-export class AddAPIKeyDialogModule {}
+export class AddAPIKeyDialogModule {
+}
