@@ -52,8 +52,8 @@ def valid_language_id(lang_id: str) -> bool:
 tr_bp = Blueprint("translation", __name__, url_prefix="")
 
 
-@tr_bp.post("/translate/<int:tr_doc_id>/<language>")
-def create_translation_route(tr_doc_id, language):
+@tr_bp.post("/translate/<int:tr_doc_id>/<string:language>/<string:transl>")
+def create_translation_route(tr_doc_id: int, language: str, transl: str):
     # TODO Why is the variable for *original* document's ID named "tr_doc_id"?
     req_data = request.get_json()
     title = req_data.get("doc_title", None)
@@ -67,14 +67,15 @@ def create_translation_route(tr_doc_id, language):
         raise ItemAlreadyExistsException("Translation for this language already exists")
     verify_manage_access(doc.src_doc)
 
-    # NOTE Failing to create the translation still increases document id number and sometimes the manage page gets stuck (because of it?)
+    # NOTE Failing to create the translation still increases document id number and sometimes the manage page gets stuck
+    # (because of it?)
     src_doc = doc.src_doc.document
     cite_doc = create_document_and_block(get_current_user_object().get_personal_group())
 
     tr = Translation(doc_id=cite_doc.doc_id, src_docid=src_doc.doc_id, lang_id=language)
     tr.title = title
 
-    translator = req_data.get("autotranslate", None)
+    translator = transl
 
     add_reference_pars(
         cite_doc,
@@ -85,7 +86,7 @@ def create_translation_route(tr_doc_id, language):
 
     # Select the specified translator
     translator_func = None
-    if translator_code := req_data.get("autotranslate", None):
+    if translator_code := translator:
         # Use the translator with a different source language if specified
         # and get the actual Language objects from database TODO Is database-query dumb here?
 
@@ -142,9 +143,11 @@ def create_translation_route(tr_doc_id, language):
     return json_response(tr)
 
 
-@tr_bp.post("/translate/paragraph/<int:tr_doc_id>/<string:tr_par_id>/<string:language>")
+@tr_bp.post(
+    "/translate/paragraph/<int:tr_doc_id>/<string:tr_par_id>/<string:language>/<string:transl>"
+)
 def paragraph_translation_route(
-    tr_doc_id: int, tr_par_id: str, language: str
+    tr_doc_id: int, tr_par_id: str, language: str, transl: str
 ) -> Response:
     """
     Replace the content of paragraph with requested translation.
@@ -153,7 +156,7 @@ def paragraph_translation_route(
     :param language: Language to translate into.
     :return: Response to the request.
     """
-    translator_code = request.get_json().get("autotranslate")
+    translator_code = transl
 
     # TODO Why should get_doc_or_abort be used?
     tr = Translation.query.get(get_doc_or_abort(tr_doc_id).id)
@@ -196,8 +199,8 @@ def paragraph_translation_route(
     return json_response(tr_doc_id)
 
 
-@tr_bp.post("/translate/<int:tr_doc_id>/<language>/translate_block")
-def text_translation_route(tr_doc_id: int, language: str) -> Response:
+@tr_bp.post("/translate/<int:tr_doc_id>/<language>/translate_block/<string:transl>")
+def text_translation_route(tr_doc_id: int, language: str, transl: str) -> Response:
     req_data = request.get_json()
 
     doc = get_doc_or_abort(tr_doc_id)
@@ -208,7 +211,7 @@ def text_translation_route(tr_doc_id: int, language: str) -> Response:
     src_doc = doc.src_doc.document
 
     # Select the specified translator and translate if valid
-    if req_data and (translator_code := req_data.get("autotranslate", None)):
+    if req_data and (translator_code := transl):
         src_text = req_data.get("originaltext", None)
         translator_func = TranslateMethodFactory.create(
             translator_code,

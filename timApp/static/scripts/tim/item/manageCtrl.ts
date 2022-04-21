@@ -660,10 +660,9 @@ export class PermCtrl implements IController {
 
         const r = await to(
             $http.post<IDocument>(
-                `/translate/${this.item.id}/${this.newTranslation.language}`,
+                `/translate/${this.item.id}/${this.newTranslation.language}/${this.newTranslation.translator}`,
                 {
                     doc_title: this.newTranslation.title,
-                    autotranslate: this.newTranslation.translator,
                 }
             )
         );
