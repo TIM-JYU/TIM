@@ -13,7 +13,12 @@ import {
     IGroupData,
     IJsRunnerMarkup,
 } from "../../shared/jsrunnertypes";
-import {AliasDataT, JsrunnerAnswer, UserFieldDataT} from "../servertypes";
+import {
+    AliasDataT,
+    JsrunnerAnswer,
+    UserFieldDataT,
+    VelpDataT,
+} from "../servertypes";
 import {GTools, IToolsResult, Tools, ToolsBase} from "./tools";
 
 console.log("answer");
@@ -43,6 +48,7 @@ interface IRunnerData {
     markup: IJsRunnerMarkup;
     program: string;
     compileProgram: (code: string) => string;
+    testvelps: VelpDataT[];
 }
 
 type RunnerResult =
@@ -85,6 +91,7 @@ function runner(d: IRunnerData): RunnerResult {
     const currDoc = d.currDoc;
     const markup = d.markup;
     const aliases = d.aliases;
+    const testvelps = d.testvelps;
     const saveUsersFields: IToolsResult[] = [];
     // const statCounters: { [fieldname: string]: StatCounter } = {};
     let output = "";
@@ -100,10 +107,20 @@ function runner(d: IRunnerData): RunnerResult {
                 real_name: "",
                 email: "",
             },
+            groupinfo: {
+                membership_add: null,
+                membership_end: null,
+            },
             fields: {},
             styles: {},
         };
-        const dummyTools = new Tools(dummyUser, currDoc, markup, aliases); // in compiled JS, this is tools_1.default(...)
+        const dummyTools = new Tools(
+            dummyUser,
+            currDoc,
+            markup,
+            aliases,
+            testvelps
+        ); // in compiled JS, this is tools_1.default(...)
         const gtools = new GTools(
             currDoc,
             markup,
@@ -138,7 +155,7 @@ function runner(d: IRunnerData): RunnerResult {
         gtools.clearOutput();
 
         for (const user of data) {
-            const tools = new Tools(user, currDoc, markup, aliases); // in compiled JS, this is tools_1.default(...)
+            const tools = new Tools(user, currDoc, markup, aliases, testvelps); // in compiled JS, this is tools_1.default(...)
             tools.usePrintLine = gtools.usePrintLine;
             gtools.setTools(tools);
             errorprg = "gtools.addToDatas(tools)";
@@ -261,6 +278,7 @@ router.put("/", async (req, res, next) => {
         aliases: value.input.aliases,
         program: value.markup.program ?? "",
         compileProgram: compileProgram,
+        testvelps: value.input.testvelps,
     };
     await ctx.global.set("g", JSON.stringify(runnerData));
     let r: AnswerReturn;

@@ -4,7 +4,6 @@ import sys
 import unittest
 from contextlib import contextmanager
 from io import StringIO
-from typing import Union
 
 import sqlalchemy.exc
 from sqlalchemy.orm import close_all_sessions
@@ -181,7 +180,7 @@ TEST_USER_3_USERNAME = "testuser3"
 
 GITLAB_SKIP_TESTS = {
     # STACK image is not yet pulled in CI
-    "tests.browser.test_csplugin.CsPluginTest.test_csplugin_answernr_stack1"
+    "tests.browser.test_csplugin.StackRandomTest.test_csplugin_answernr_stack1",
 }
 
 

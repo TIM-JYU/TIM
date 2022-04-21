@@ -241,3 +241,57 @@ $body$
         """,
         )
         return t
+
+
+class SubtitlesTest(TimRouteTest):
+    def test_print_video_subtitles_document(self):
+        self.login_test1()
+        doc = self.create_doc(
+            initial_par="""
+#-
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:02.610
+Welcome!
+
+2
+00:00:02.750 --> 00:00:03.300
+The end.
+                """,
+            settings={"textplain": True},
+        )
+        # Test case:
+        # A document should be able to represent valid subtitles file in WebVTT format as plaintext.
+        # Entries of subtitle lines are separated with a blank line except the last one.
+        self.get(
+            f"/print/{doc.path}",
+            expect_status=200,
+            expect_content="WEBVTT\n\n1\n00:00:00.000 --> 00:00:02.610\nWelcome!\n\n2\n00:00:02.750 --> 00:00:03.300\nThe end.",
+        )
+
+    def test_print_video_subtitles_chunks(self):
+        self.login_test2()
+        doc = self.create_doc(
+            initial_par="""
+#-
+WEBVTT
+#-
+1
+00:00:00.000 --> 00:00:02.610
+Welcome!
+#-
+2
+00:00:02.750 --> 00:00:03.300
+The end.
+                """,
+            settings={"textplain": True},
+        )
+        # Test case:
+        # A document divided into multiple paragraphs should be converted to valid WebVTT format as plaintext.
+        # In the Markdown format, paragraphs are separated by a blank line when represented as mere plaintext.
+        self.get(
+            f"/print/{doc.path}",
+            expect_status=200,
+            expect_content="WEBVTT\n\n1\n00:00:00.000 --> 00:00:02.610\nWelcome!\n\n2\n00:00:02.750 --> 00:00:03.300\nThe end.",
+        )

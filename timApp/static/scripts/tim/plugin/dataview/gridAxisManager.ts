@@ -26,11 +26,13 @@ export class GridAxisManager {
      */
     indexToOrdinal: Record<number, number> = {};
 
+    private totalSizeIncompleteInternal = false;
+
     constructor(
         private size: number,
         private isDataViewVirtual: boolean,
         private borderSpacing: number,
-        private getSize: (i: number) => number,
+        private getSize: (i: number) => [number, boolean],
         private showItem: (index: number) => boolean,
         private skipItem?: (ordinal: number) => boolean
     ) {
@@ -67,6 +69,13 @@ export class GridAxisManager {
     }
 
     /**
+     * Whether the total size could not be completely determined.
+     */
+    get totalSizeIncomplete() {
+        return this.totalSizeIncompleteInternal && this.isVirtual;
+    }
+
+    /**
      * Updates the visible items and recomputes the positions if needed.
      */
     refresh(): void {
@@ -87,14 +96,21 @@ export class GridAxisManager {
             return;
         }
         this.positionStart = [0];
+        let sizeOk = true;
         for (let i = 0; i <= this.visibleItems.length - 1; i++) {
             const index = this.visibleItems[i];
-            let size = this.getSize(index);
-            if (size) {
+            const sizeRes = this.getSize(index);
+            let size = sizeRes[0];
+            const ok = sizeRes[1];
+            if (!ok) {
+                sizeOk = false;
+            }
+            if (size && ok) {
                 size += this.borderSpacing;
             }
             this.positionStart[i + 1] = this.positionStart[i] + size;
         }
+        this.totalSizeIncompleteInternal = !sizeOk;
     }
 
     /**

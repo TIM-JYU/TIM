@@ -102,15 +102,10 @@ function time02String(time: number) {
 const youtubeDomains = new Set(["www.youtube.com", "youtube.com", "youtu.be"]);
 const moniviestinDomains = new Set(["m3.jyu.fi", "moniviestin.jyu.fi"]);
 
-function isYoutube(file: string) {
-    try {
-        const u = new URL(file, location.origin);
-        return youtubeDomains.has(u.hostname);
-    } catch {
-        return false;
-    }
-}
-
+const SubtitlesMarkup = t.type({
+    name: withDefault(t.string, ""),
+    file: withDefault(t.string, ""),
+});
 const ShowFileMarkup = t.intersection([
     t.partial({
         doclink: nullable(t.string),
@@ -129,6 +124,7 @@ const ShowFileMarkup = t.intersection([
     t.type({
         autoplay: withDefault(t.boolean, true),
         file: withDefault(t.string, ""),
+        subtitles: withDefault(t.array(SubtitlesMarkup), []),
         target: withDefault(t.string, "timdoc"),
         open: withDefault(t.boolean, false),
         videoicon: withDefault(t.boolean, true),
@@ -227,6 +223,7 @@ const ShowFileAll = t.type({
                        [src]="videosettings.src"
                        [autoplay]="markup.autoplay"
                 >
+                        <track *ngFor="let subtitle of markup.subtitles" [src]="subtitle.file" [label]="subtitle.name" />    
                 </video>
             </ng-container>
             <ng-container *ngIf="isNormalSize">
@@ -307,8 +304,18 @@ export class VideoComponent extends AngularPluginBase<
         return this.markup.type === "normal";
     }
 
-    get iframe() {
-        return this.markup.iframe ?? isYoutube(this.markup.file);
+    get iframe(): boolean {
+        try {
+            const url = new URL(this.markup.file, location.origin);
+            const conditions: boolean[] = [
+                this.markup.iframe !== undefined,
+                youtubeDomains.has(url.hostname),
+                moniviestinDomains.has(url.hostname),
+            ];
+            return conditions.includes(true);
+        } catch {
+            return false;
+        }
     }
 
     get videoname() {
@@ -331,7 +338,10 @@ export class VideoComponent extends AngularPluginBase<
     private origSize!: string;
     private origWidth?: number;
     private origHeight?: number;
+
+    // Removing the ElementRef caused the video's advanced controls not to work properly.
     @ViewChild("video") video?: ElementRef<HTMLVideoElement>;
+
     private limits!: string | null;
     duration!: string | null;
     startt!: string | null;

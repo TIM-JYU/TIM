@@ -435,6 +435,7 @@ def add_counters_par(
 def handle_doc_numbering(doc_info: DocInfo, used_names: list[str] | None) -> str:
     """
     Create automatic counters for document and all referenced documents.
+
     :param doc_info: document to handle
     :param used_names: list of already used names to avoid endless recursion
     :return: Possible error string
@@ -501,6 +502,7 @@ def handle_doc_numbering(doc_info: DocInfo, used_names: list[str] | None) -> str
 def get_numbering(doc_path: str, recurse: bool = False) -> Response:
     """
     renumber autocounters
+
     :param doc_path: from what document
     :param recurse: Should the referenced documents be renumbered as well?
     :return: ok-response

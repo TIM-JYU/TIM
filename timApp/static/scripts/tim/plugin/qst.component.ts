@@ -161,6 +161,12 @@ export class QstComponent
         this.button = this.buttonText() ?? "Save";
     }
 
+    ngOnDestroy() {
+        if (!this.pluginMeta.isPreview()) {
+            this.vctrl.removeTimComponent(this);
+        }
+    }
+
     getHeader() {
         return this.attrsall.markup.header;
     }
@@ -222,7 +228,7 @@ export class QstComponent
     }
 
     questionClicked() {
-        this.showQuestionNew(this.getPar().originalPar.id);
+        this.showQuestionNew(this.getPar()!.originalPar.id);
     }
 
     private async showQuestionNew(parId: string) {

@@ -286,6 +286,10 @@ export class ViewCtrl implements IController {
         EventListeners[keyof EventListeners][]
     > = new Map();
 
+    private updatePendingPromise: Promise<void> | undefined;
+    private updatePendingPromiseResolve?: () => void;
+    private updatePendingPromiseReject?: (e: unknown) => void;
+
     constructor(sc: IScope) {
         timLogTime("ViewCtrl start", "view");
         const dg = documentglobals();
@@ -742,7 +746,6 @@ export class ViewCtrl implements IController {
      * @param {string} par The par context where the table is.
      */
     public addTable(controller: TimTableComponent, par: ParContext) {
-        // console.log("table added!");
         this.timTables.set(par.originalPar.id, controller);
     }
 
@@ -859,6 +862,38 @@ export class ViewCtrl implements IController {
                 if (ldr) {
                     ldr.hideBrowser = true;
                 }
+            }
+        }
+    }
+
+    /**
+     * Unregisters an ITimComponent from the view controller by its name attribute if it has one.
+     * @param {ITimComponent} component The component to be unregistered.
+     * @param {string | undefined} tag for accessing  group of ITimComponents
+     */
+    public removeTimComponent(component: ITimComponent, tag?: string | null) {
+        const taskId = component.getTaskId();
+        if (taskId) {
+            const name = taskId.docTaskField();
+            const res = this.timComponents.get(name);
+            if (res == component) {
+                this.timComponents.delete(name);
+            }
+            if (tag) {
+                const prev = this.timComponentTags.get(tag);
+                if (prev != undefined) {
+                    this.timComponentTags.set(
+                        name,
+                        prev.filter((n) => n != name)
+                    );
+                }
+            }
+            const previousComps = this.getTimComponentArray(name);
+            if (previousComps != undefined) {
+                this.timComponentArrays.set(
+                    name,
+                    previousComps.filter((c) => c != component)
+                );
             }
         }
     }
@@ -1227,7 +1262,48 @@ export class ViewCtrl implements IController {
         return jsRunner;
     }
 
-    async beginUpdate() {
+    /**
+     * Updates the current document structure by traversing the DOM and collecting paragraphs.
+     * During the update, documentUpdate Promise is available to wait for completion of the update.
+     *
+     * @param init Optional function that is run before the actual update process.
+     *              Use to run any code that might want to await the documentUpdate Promise.
+     */
+    async updateDocument(init?: () => PromiseLike<void> | void) {
+        if (this.updatePendingPromise) {
+            this.updatePendingPromiseReject?.(
+                new Error("Document is stale, refreshing document state")
+            );
+            this.updatePendingPromise = undefined;
+            this.updatePendingPromiseResolve = undefined;
+            this.updatePendingPromiseReject = undefined;
+        }
+        this.updatePendingPromise = new Promise<void>((resolve, reject) => {
+            this.updatePendingPromiseResolve = resolve;
+            this.updatePendingPromiseReject = reject;
+        });
+        if (init) {
+            await init();
+        }
+        try {
+            await this.updateDocumentImpl();
+            this.updatePendingPromiseResolve?.();
+            this.updatePendingPromise = undefined;
+        } catch (e) {
+            this.updatePendingPromiseReject?.(e);
+            this.updatePendingPromise = undefined;
+            throw e;
+        }
+    }
+
+    public get documentUpdate() {
+        if (this.updatePendingPromise) {
+            return this.updatePendingPromise;
+        }
+        return Promise.resolve();
+    }
+
+    private async updateDocumentImpl() {
         const response = await to(
             $http.get<{changed_pars: Record<string, string>}>(
                 "/getUpdatedPars/" + this.docId
@@ -1236,7 +1312,7 @@ export class ViewCtrl implements IController {
         if (!response.ok) {
             return;
         }
-        this.updatePendingPars(
+        await this.updatePendingPars(
             new Map<string, string>(
                 Object.entries(response.result.data.changed_pars)
             )
@@ -1386,6 +1462,12 @@ export class ViewCtrl implements IController {
         //     this.abs.set(ab.taskId + index, ab);
         // } else { this.abs.set(ab.taskId, ab); }
         this.abs.set(dtf, ab);
+    }
+
+    unregisterAnswerBrowser(ab: AnswerBrowserController) {
+        const dtf = ab.taskId.docTaskField();
+        this.abs.delete(dtf);
+        this.formAbs.delete(dtf);
     }
 
     getAnswerBrowser(taskId: string) {

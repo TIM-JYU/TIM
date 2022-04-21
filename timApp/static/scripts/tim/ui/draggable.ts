@@ -34,7 +34,7 @@ const draggableTemplate = `
        ng-click="d.toggleDetach()"
        title="{{ d.canDrag() ? 'Attach' : 'Detach' }}"
        class="glyphicon glyphicon-arrow-{{ d.canDrag() ? 'left' : 'right' }}"></i>
-    <i ng-show="d.click"
+    <i ng-show="d.click && d.canDrag()"
        title="{{ d.areaMinimized ? 'Maximize' : 'Minimize' }} dialog"
        ng-click="d.toggleMinimize()"
        class="glyphicon glyphicon-{{ d.areaMinimized ? 'unchecked' : 'minus' }}"></i>
@@ -54,6 +54,7 @@ timApp.directive("timDraggableFixed", [
         return {
             bindToController: {
                 absolute: "<?",
+                anchor: "@?",
                 caption: "@?",
                 click: "<?",
                 detachable: "<?",
@@ -61,6 +62,7 @@ timApp.directive("timDraggableFixed", [
                 resize: "<?",
                 draggable: "<?",
                 save: "@?",
+                initialSize: "<?",
             },
             controller: DraggableController,
             controllerAs: "d", // default $ctrl does not work, possibly because of some ng-init
@@ -143,6 +145,8 @@ export class DraggableController implements IController {
     private dragClick?: () => void;
     private autoHeight?: boolean;
     private absolute?: Binding<boolean, "<">;
+    private anchor: Binding<string, "<"> = "absolute";
+    private initialSize?: Binding<t.TypeOf<typeof SizeType>, "<">;
     private parentDraggable?: DraggableController;
     private forceMaximized?: Binding<boolean, "<">;
     private modal?: IModalInstanceService;
@@ -181,6 +185,11 @@ export class DraggableController implements IController {
         });
         // User may have refreshed the document after resizing the window.
         void this.restoreSizeAndPosition(VisibilityFix.Full);
+        if (this.canDrag()) {
+            this.element.addClass("draggable-detached");
+        } else {
+            this.element.addClass("draggable-attached");
+        }
     }
 
     private setVisibility(v: "visible" | "hidden" | "inherit") {
@@ -210,15 +219,22 @@ export class DraggableController implements IController {
 
     private toggleDetach() {
         if (this.canDrag()) {
+            if (this.areaMinimized) {
+                this.toggleMinimize();
+            }
             this.element.css("position", "static");
             this.element.css("visibility", "inherit");
             for (const prop of ["width", "height"]) {
                 this.element.css(prop, "");
             }
+            this.element.removeClass("draggable-detached");
+            this.element.addClass("draggable-attached");
         } else {
-            this.element.css("position", "absolute");
+            this.element.css("position", this.anchor);
             this.element.css("visibility", "visible");
             void this.restoreSizeAndPosition(VisibilityFix.Full);
+            this.element.removeClass("draggable-attached");
+            this.element.addClass("draggable-detached");
         }
         this.detachStorage.set(this.canDrag());
     }
@@ -228,7 +244,7 @@ export class DraggableController implements IController {
         if (!modal) {
             return;
         }
-        modal.css("position", "absolute");
+        modal.css("position", this.anchor);
     }
 
     private async getModal() {
@@ -253,7 +269,9 @@ export class DraggableController implements IController {
         if (!m) {
             return false;
         }
-        return m.css("position") === "absolute" && this.parentDraggable == null;
+        return (
+            m.css("position") === this.anchor && this.parentDraggable == null
+        );
     }
 
     setDragClickFn(fn: () => void) {
@@ -330,7 +348,7 @@ export class DraggableController implements IController {
         if (!this.posKey) {
             return;
         }
-        const oldSize = this.sizeStorage.get();
+        const oldSize = this.sizeStorage.get() ?? this.initialSize;
         if (oldSize && this.canDrag() && !this.isMinimized()) {
             const vps = getViewPortSize();
             if (oldSize.width) {

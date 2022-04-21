@@ -3,14 +3,14 @@ import io
 import json
 import os
 import posixpath
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Optional, Union
 from urllib.parse import unquote, urlparse
 
 from flask import Blueprint, request, send_file, Response, url_for
 from wand.image import Image
-from werkzeug.utils import secure_filename, redirect
+from werkzeug.utils import secure_filename
 
 from timApp.auth.accesshelper import (
     verify_view_access,
@@ -34,7 +34,6 @@ from timApp.item.validation import (
     validate_item_and_create_intermediate_folders,
     validate_uploaded_document_content,
 )
-from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_files_path
@@ -45,6 +44,7 @@ from timApp.upload.uploadedfile import (
     UploadedFile,
     get_mimetype,
 )
+from timApp.user.user import User
 from timApp.util.flask.requesthelper import use_model, RouteException, NotExist
 from timApp.util.flask.responsehelper import (
     json_response,
@@ -137,11 +137,11 @@ def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
         if (
             not verify_seeanswers_access(d, require=False)
             and get_current_user_object() not in answer.users_all
+            and not d.document.get_settings().peer_review()
         ):
             raise AccessDenied(
                 "Sorry, you don't have permission to access this upload."
             )
-
     up = PluginUpload(block)
     p = up.filesystem_path.as_posix()
     mt = get_mimetype(p)
@@ -176,9 +176,9 @@ def pluginupload_file(doc_id: int, task_id: str):
     content = file.read()
     u = get_current_user_object()
     f = UploadedFile.save_new(
-        content,
         file.filename,
         BlockType.Upload,
+        file_data=content,
         upload_info=PluginUploadInfo(task_id_name=task_id, user=u, doc=d),
     )
     f.block.set_owner(u.get_personal_group())
@@ -193,24 +193,69 @@ def pluginupload_file(doc_id: int, task_id: str):
             )
     p = task_access.plugin
     if p.type == "reviewcanvas":
-        compress_image(f)
+        returninfo = convert_pdf_or_compress_image(f, u, d, task_id)
+    else:
+        returninfo = [
+            {
+                "file": (Path("/uploads") / f.relative_filesystem_path).as_posix(),
+                "type": f.content_mimetype,
+                "block": f.id,
+            }
+        ]
     db.session.commit()
-    return json_response(
-        {
-            "file": (Path("/uploads") / f.relative_filesystem_path).as_posix(),
-            "type": f.content_mimetype,
-            "block": f.id,
-        }
-    )
+    return json_response(returninfo)
 
 
-def compress_image(f: UploadedFile):
-    if not f.content_mimetype.startswith("image/"):
-        return
+def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id: str):
     p = f.filesystem_path
-    with Image(filename=p) as img:
-        img.transform(resize="2048x2048>")  # TODO: max dimensions from markup
-        img.save(filename=p)
+    returninfo = []
+    if f.content_mimetype.startswith("image/"):
+        with Image(filename=p) as img:
+            img.transform(resize="2048x2048>")  # TODO: max dimensions from markup
+            img.save(filename=p)
+        returninfo.append(
+            {
+                "file": (Path("/uploads") / f.relative_filesystem_path).as_posix(),
+                "type": f.content_mimetype,
+                "block": f.id,
+            }
+        )
+    elif f.is_content_pdf:
+        tempfolder = p.parent / "temp"
+        tempfolder.mkdir()
+        subprocess.run(
+            [
+                "gs",
+                "-dNOPAUSE",
+                "-dBATCH",
+                "-sDEVICE=png16m",
+                "-r200",  # TODO: Find decent value, default 72 too blurry for small text
+                f"-sOutputFile={p.parent}/temp/{p.stem}_image-%d.png",
+                p,
+            ],
+            capture_output=True,
+        )
+        for imagepath in os.listdir(tempfolder):
+            file = tempfolder / imagepath
+            uf = UploadedFile.save_new(
+                imagepath,
+                BlockType.Upload,
+                original_file=file,
+                upload_info=PluginUploadInfo(task_id_name=task_id, user=u, doc=d),
+            )
+            uf.block.set_owner(u.get_personal_group())
+            grant_access_to_session_users(uf)
+            returninfo.append(
+                {
+                    "file": (Path("/uploads") / uf.relative_filesystem_path).as_posix(),
+                    "type": uf.content_mimetype,
+                    "block": uf.id,
+                }
+            )
+        tempfolder.rmdir()
+    else:
+        raise RouteException("Upload needs to be an image or a pdf file")
+    return returninfo
 
 
 @upload.post("/upload/")
@@ -353,6 +398,7 @@ def upload_and_stamp_attachment(
 ):
     """
     Uploads the file and makes a stamped version of it into the same folder.
+
     :param d: Document info.
     :param file: The file to upload and stamp.
     :param stamp_data: Stamp data object (attachment and list ids) without the path.
@@ -398,7 +444,7 @@ def upload_image_or_file(d: DocInfo, file):
 def save_file_and_grant_access(
     d: DocInfo, content, file, block_type: BlockType
 ) -> UploadedFile:
-    f = UploadedFile.save_new(content, file.filename, block_type)
+    f = UploadedFile.save_new(file.filename, block_type, file_data=content)
     f.block.set_owner(get_current_user_object().get_personal_group())
     d.block.children.append(f.block)
     return f

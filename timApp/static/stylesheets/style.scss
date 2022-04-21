@@ -48,6 +48,26 @@ tim-dialog-frame {
     }
 }
 
+.draggable-plugin {
+    z-index: 1200;
+    background-color: $material-bg;
+
+    [data-plugin] {
+        background-color: $material-bg;
+    }
+
+    &.draggable-detached .csRunDiv {
+        max-width: $paragraph-preferred-width;
+        background-color: $material-bg;
+    }
+
+    &.draggable-detached .draggable-content {
+        height: inherit;
+        overflow-y: auto;
+        max-height: 90vh;
+    }
+}
+
 .modal-dialog {
     max-width: 100vw;
 

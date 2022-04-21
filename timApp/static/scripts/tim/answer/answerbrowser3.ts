@@ -1692,7 +1692,9 @@ export class AnswerBrowserController
         this.showFeedback("");
     }
 
-    $onDestroy() {}
+    $onDestroy() {
+        this.viewctrl.unregisterAnswerBrowser(this);
+    }
 
     private getTaskName() {
         return this.taskId.name;

@@ -4,6 +4,7 @@ Insert only configuration-related things in this file. Do NOT define routes here
 
 """
 import inspect
+import json
 import mimetypes
 import os
 import sys
@@ -209,7 +210,7 @@ app.jinja_env.trim_blocks = True
 app.jinja_env.lstrip_blocks = True
 app.config.from_pyfile("defaultconfig.py", silent=False)
 app.config.from_envvar("TIM_SETTINGS", silent=True)
-app.config.from_json("hosts.json", silent=True)
+app.config.from_file("hosts.json", load=json.load, silent=True)
 Request.user_agent_class = SimpleUserAgent
 setup_logging(app)
 
