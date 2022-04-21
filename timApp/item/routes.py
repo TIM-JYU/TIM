@@ -940,7 +940,13 @@ def render_doc_view(
             mark_all_read(group_id, doc)
         db.session.commit()
 
+    exam_mode = is_exam_mode(doc_settings, rights)
+
     document_themes = doc_settings.themes()
+    if exam_mode:
+        document_themes = list(
+            dict.fromkeys(doc_settings.exam_mode_themes() + document_themes)
+        )
     override_theme = None
     if document_themes:
         document_theme_docs = resolve_themes(document_themes)
@@ -967,7 +973,7 @@ def render_doc_view(
         pars_only=m.pars_only or should_hide_paragraphs(doc_settings, rights),
         hide_sidemenu=should_hide_sidemenu(doc_settings, rights),
         show_unpublished_bg=show_unpublished_bg,
-        exam_mode=is_exam_mode(doc_settings, rights),
+        exam_mode=exam_mode,
         rights=rights,
         route=view_ctx.route.value,
         edit_mode=(m.edit if current_user.has_edit_access(doc_info) else None),

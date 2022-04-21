@@ -67,6 +67,8 @@ class DocSettingTypes:
     slide_size: tuple[int, int]
     allow_url_permission_edits: bool
     additional_angular_modules: list[str]
+    exam_mode: str
+    exam_mode_themes: list[str]
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -126,7 +128,6 @@ class DocSettings:
     allow_self_confirm_from_key = "allow_self_confirm_from"
     auto_confirm_key = "auto_confirm"
     expire_next_doc_message_key = "expire_next_doc_message"
-    exam_mode_key = "exam_mode"
     answer_grace_period_key = "answer_grace_period"
 
     @classmethod
@@ -382,8 +383,11 @@ class DocSettings:
     def pars_only(self, default=None):
         return self.__dict.get(self.pars_only_key, default)
 
-    def exam_mode(self, default=None):
-        return self.__dict.get(self.exam_mode_key, default)
+    def exam_mode(self) -> str | None:
+        return self.get_setting_or_default("exam_mode", None)
+
+    def exam_mode_themes(self) -> list[str]:
+        return self.get_setting_or_default("exam_mode_themes", [])
 
     def point_sum_rule(self, default=None) -> PointSumRule | None:
         psr_dict = self.__dict.get(self.point_sum_rule_key, default)
