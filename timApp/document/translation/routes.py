@@ -444,7 +444,7 @@ def get_valid_status() -> Response:
         return ok_response()
     else:
         raise RouteException(
-            description="Invalid API key for the chosen translator engine."
+            description="Inserted API key is not valid for the chosen translator engine."
         )
 
 

@@ -130,12 +130,14 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<{ onAdd: (k
                 this.addError = result.result.error.error;
             }
         } else {
-            // TODO we should catch HTTP errors correctly here,
-            //  but we do not currently have a compatible method of doing so
             this.addError = validateResponse.result.error.error;
         }
     }
 
+    /**
+     * Sends a request to our server to check the validity of the API key to be added.
+     * @return Response from server, if anything else than 200 OK we know the key was not valid.
+     */
     async validateAPIKey() {
         return await toPromise(
             this.http.post<ITranslatorUsage>("/apikeys/validate", {
