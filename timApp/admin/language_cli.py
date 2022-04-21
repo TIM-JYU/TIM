@@ -1,3 +1,11 @@
+"""
+Enables adding Languages to TIM's database from the command line
+"""
+
+__authors__ = ["Sami Viitanen"]
+__license__ = "MIT"
+__date__ = "8.4.2022"
+
 import langcodes
 import click
 from flask.cli import AppGroup
