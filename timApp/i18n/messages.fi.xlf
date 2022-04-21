@@ -5512,6 +5512,14 @@
           <context context-type="linenumber">186</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2148669647566543747" datatype="html">
+        <source>Loading images (<x id="INTERPOLATION" equiv-text="{{loadedImages}}"/>/<x id="INTERPOLATION_1" equiv-text="{{bgSources.length}}"/>) <x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;tim-loading>"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;/tim-loading>"/></source>
+        <target state="translated">Ladataan kuvia (<x id="INTERPOLATION" equiv-text="{{loadedImages}}"/>/<x id="INTERPOLATION_1" equiv-text="{{bgSources.length}}"/>) <x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;tim-loading>"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;/tim-loading>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="linenumber">913,914</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
