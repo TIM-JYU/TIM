@@ -1415,8 +1415,9 @@ report_unconfirmed_repaired_data_mismatches: false
 # Having many tables and/or keyspaces negatively affects performance of many operations in the
 # cluster. When the number of tables/keyspaces in the cluster exceeds the following thresholds
 # a client warning will be sent back to the user when creating a table or keyspace.
-# table_count_warn_threshold: 150
-# keyspace_count_warn_threshold: 40
+# TODO: TIM: This is a temporary workaround until we have a better solution for cleaning up user-created tables (#2586)
+table_count_warn_threshold: 10000
+keyspace_count_warn_threshold: 1000
 
 #########################
 # EXPERIMENTAL FEATURES #
