@@ -2,6 +2,7 @@
  * Created by noemjoke on 21.3.2022
  * The dialog component for adding translator API keys to user settings
  * @author Noora Jokela
+ * @author Sami Viitanen
  * @licence MIT
  * @copyright 2022 TIMTra project authors
  */
@@ -14,7 +15,7 @@ import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-compone
 import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {toPromise} from "../util/utils";
 import {TimUtilityModule} from "../ui/tim-utility.module";
-import {ITranslators} from "../item/IItem";
+import {ITranslators, ITranslatorUsage} from "../item/IItem";
 import {listTranslators} from "../document/editing/edittypes";
 import {IUserApiKey} from "./IUser";
 
@@ -99,31 +100,51 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
      * least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
      */
     async addNewAPIKey() {
-        this.saving = true;
-        // Call the server.
-        const result = await toPromise(
-            this.http.post("/apikeys/add", {
+        const validateResponse = await this.validateAPIKey();
+
+        if (validateResponse.ok) {
+            this.saving = true;
+            // Call the server.
+            const result = await toPromise(
+                this.http.post("/apikeys/add", {
+                    translator: this.chosenTranslator,
+                    apikey: this.apiKey,
+                })
+            );
+            this.saving = false;
+            this.added = true;
+
+            if (result.ok) {
+                this.saved = true;
+                this.data.onAdd({
+                    translator: this.chosenTranslator,
+                    APIkey: this.apiKey!,
+                    availableQuota: 0,
+                    usedQuota: 0,
+                    quotaChecked: false,
+                });
+                this.dismiss();
+                this.added = false;
+            } else {
+                this.added = false;
+                this.addError = result.result.error.error;
+            }
+        } else {
+            this.addError = validateResponse.result.error.error;
+        }
+    }
+
+    /**
+     * Sends a request to our server to check the validity of the API key to be added.
+     * @return Response from server, if anything else than 200 OK we know the key was not valid.
+     */
+    async validateAPIKey() {
+        return await toPromise(
+            this.http.post<ITranslatorUsage>("/apikeys/validate", {
                 translator: this.chosenTranslator,
                 apikey: this.apiKey,
             })
         );
-        this.saving = false;
-        this.added = true;
-        if (result.ok) {
-            this.saved = true;
-            this.data.onAdd({
-                translator: this.chosenTranslator,
-                APIkey: this.apiKey!,
-                availableQuota: 0,
-                usedQuota: 0,
-                quotaChecked: false,
-            });
-            this.dismiss();
-            this.added = false;
-        } else {
-            this.added = false;
-            this.addError = result.result.error.error;
-        }
     }
 }
 

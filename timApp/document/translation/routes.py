@@ -1,9 +1,11 @@
 import re
 import langcodes
+import requests
 
 from flask import request, Blueprint
 from sqlalchemy.exc import IntegrityError
 
+import timApp.util.flask.responsehelper
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
     verify_view_access,
@@ -98,30 +100,36 @@ def create_translation_route(tr_doc_id: int, language: str, transl: str):
                 get_current_user_object().get_personal_group(),
             )
 
-    # Translate each paragraph sequentially if a translator was created
+    # Translate the paragraphs of the document if a translator was created
     if translator_func:
-        orig_doc = tr.document.get_source_document()
-        # TODO The parsing done before translation might need id etc values found in the
-        #  markdown, but not found in the paragraphs, that get_paragraphs() returns...
-        # Ignore the settings paragraphs entirely to protect them from mangling
-        orig_paragraphs = orig_doc.get_paragraphs()
-        translatable_paragraphs = list(
-            map(
-                TranslationTarget, filter(lambda x: not x.is_setting(), orig_paragraphs)
-            )
+        # Ignore the settings-paragraphs entirely to protect them from mangling
+        source_paragraphs = list(
+            filter(
+                lambda x: not x.is_setting(),
+                tr.document.get_source_document().get_paragraphs(),
+            ),
+        )
+
+        tr_paragraphs = filter(
+            lambda x: not x.is_setting(), tr.document.get_paragraphs()
         )
 
         # Call the partially applied function, that contains languages selected earlier, to translate texts
-        # TODO Call with the whole document and let preprocessing handle the conversion into list[str]?
-        translated_texts = translator_func(translatable_paragraphs)
-
-        # The order of paragraphs in both docs must match, so that correct ones are modified.
-        tr_translatable_paragraphs = list(
-            filter(lambda x: not x.is_setting(), tr.document.get_paragraphs()),
+        translated_texts = translator_func(
+            # Wrap the paragraphs to TranslationTarget objects, that translator accepts.
+            # TODO Remove this TranslationTarget -pattern as useless, because explicit typechecking is performed on
+            #  translate_paragraphs anyway...
+            list(map(TranslationTarget, source_paragraphs))
         )
 
-        for text, tr_block in zip(translated_texts, tr_translatable_paragraphs):
-            tr.document.modify_paragraph(tr_block.id, text)
+        assert len(translated_texts) == len(
+            source_paragraphs
+        ), "Translation produced different amount of paragraphs"
+
+        # The order of paragraphs in both docs must match, so that correct ones are modified.
+        for tr_paragraph, text in zip(tr_paragraphs, translated_texts):
+            # Note that the paragraph's text is stripped, as extra newlines at start or end seemed to break plugins
+            tr.document.modify_paragraph(tr_paragraph.id, text.strip())
 
     if isinstance(doc, DocEntry):
         de = doc
@@ -406,6 +414,41 @@ def get_quota():
     tr.register(get_current_user_object().get_personal_group())
 
     return json_response(tr.usage())
+
+
+@tr_bp.post("/apikeys/validate")
+def get_valid_status() -> Response:
+
+    """
+    Check the validity of a given api-key with the chosen translator engine.
+    :return: Response from the server, or an Exception
+    """
+
+    verify_logged_in()
+
+    req_data = request.get_json()
+    translator = req_data.get("translator", "")
+    key = req_data.get("apikey", "")
+
+    # Get the translation service by the provided service name
+    tr = TranslationService.query.filter(
+        translator == TranslationService.service_name,
+    ).first()
+
+    # Each new translator engine should add their preferred method for validating api keys here
+    # TODO might be prudent to do this in the specific translator class in the future
+    if tr.service_name.startswith("DeepL"):
+        resp = requests.post(
+            tr.service_url + "/usage",
+            headers={"Authorization": f"DeepL-Auth-Key {key}"},
+        )
+
+    if resp.ok:
+        return ok_response()
+    else:
+        raise RouteException(
+            description="Inserted API key is not valid for the chosen translator engine."
+        )
 
 
 @tr_bp.get("/apikeys/get")
