@@ -22,7 +22,9 @@ from timApp.util.flask.requesthelper import NotExist, RouteException
 
 
 TranslateBlock = list[TranslateApproval]
-"""Typedef to represent logically connected parts of non- and translatable text"""
+"""Typedef to represent logically connected parts of non- and translatable
+text
+"""
 
 
 @dataclass
@@ -35,13 +37,17 @@ class Usage:
 
 # TODO make dataclass?
 class LanguagePairing(Dict[str, list[Language]]):
-    """Maps standardized codes of (source) Languages to lists of (target) Language objects."""
+    """Maps standardized codes of (source) Languages to lists of (target)
+    Language objects.
+    """
 
     ...
 
 
 class TranslationService(db.Model):
-    """Represents the information that must be available from all possible machine translators."""
+    """Represents the information that must be available from all possible
+    machine translators.
+    """
 
     __tablename__ = "translationservice"
 
@@ -61,17 +67,20 @@ class TranslationService(db.Model):
     ) -> list[str]:
         """
         Translate texts from source to target language.
-        The implementor of this method should return the (translated) text in the same order
-        as found in the input `texts`-parameter originally.
 
-        :param texts: The texts marked for translation or not. A convention would be to pass
-        as much of the translatable text as possible in this parameter in order to minimize the amount of separate
-        translation-calls.
+        The implementor of this method should return the (translated) text in
+        the same order as found in the input `texts`-parameter originally.
+
+        :param texts: The texts marked for translation or not. A convention
+        would be to pass as much of the translatable text as possible in this
+        parameter in order to minimize the amount of separate translation-calls.
         :param source_lang: Language to translate from.
         :param target_lang: Language to translate into.
-        :param tag_handling: Tag representing a way to separate or otherwise control translated text with the
-        translation service. A HACKY way to handle special case with translating (html) tables.
-        :return: List of strings found inside the items of `texts`-parameter, in the same order and translated.
+        :param tag_handling: Tag representing a way to separate or otherwise
+        control translated text with the translation service. A HACKY way to
+        handle special case with translating (html) tables.
+        :return: List of strings found inside the items of `texts`-parameter,
+        in the same order and translated.
         """
 
         raise NotImplementedError
@@ -80,15 +89,18 @@ class TranslationService(db.Model):
         """
         Get the service's usage status.
 
-        :return: The current usage of this TranslationService (for example status of an API-key).
+        :return: The current usage of this TranslationService (for example
+        status of an API-key).
         """
         raise NotImplementedError
 
     def languages(self) -> LanguagePairing:
         """
-        Get the language-combinations for translations supported with the service.
+        Get the language-combinations for translations supported with the
+        service.
 
-        :return: The supported mapping of languages to translate to and from with this TranslationService.
+        :return: The supported mapping of languages to translate to and from
+        with this TranslationService.
         """
         raise NotImplementedError
 
@@ -98,19 +110,23 @@ class TranslationService(db.Model):
 
         :param source_lang: Language to translate from.
         :param target_lang: Language to translate into.
-        :return: True, if the service can translate from `source_lang` to `target_lang`.
+        :return: True, if the service can translate from `source_lang` to
+        `target_lang`.
         """
         raise NotImplementedError
 
     def supports_tag_handling(self, tag_type: str) -> bool:
         """
-        Check if the service supports tag handling in translations. For example using XML-tags, some services offer
-        controlling parts of the text, that should be kept as-is and not be affected by the machine translation: "My
+        Check if the service supports tag handling in translations. For example
+        using XML-tags, some services offer controlling parts of the text, that
+        should be kept as-is and not be affected by the machine translation: "My
         name is Dr. <protect>Oak</protect>."
 
-        NOTE this is related to the kinda HACKY way of handling Markdown-tables in DeepL-translation.
+        NOTE this is related to the kinda HACKY way of handling Markdown-tables
+        in DeepL-translation.
 
-        :param tag_type: Type of the tag. Some services for example support "xml" or "html".
+        :param tag_type: Type of the tag. Some services for example support
+        "xml" or "html".
         :return: True, if the tag type is supported.
         """
         raise NotImplementedError
@@ -120,8 +136,9 @@ class TranslationService(db.Model):
 
 
 class TranslationServiceKey(db.Model):
-    """Represents an API-key (or any string value) that is needed for using a machine translator and that one or more
-    users are in possession of."""
+    """Represents an API-key (or any string value) that is needed for using a
+    machine translator and that one or more users are in possession of.
+    """
 
     __tablename__ = "translationservicekey"
 
@@ -152,7 +169,8 @@ class TranslationServiceKey(db.Model):
         Query a key based on a group that could have access to it.
 
         :param user_group: The group that wants to use a key.
-        :return: The first matching TranslationServiceKey instance, if one is found.
+        :return: The first matching TranslationServiceKey instance, if one is
+        found.
         """
         return TranslationServiceKey.query.get(
             TranslationServiceKey.group_id == user_group
@@ -182,13 +200,17 @@ class DeeplTranslationService(RegisteredTranslationService):
     """The url base for the API calls (defaults to the free version)."""
 
     ignore_tag = db.Column(db.Text, default="x", nullable=False)
-    """The XML-tag name to use for ignoring pieces of text when XML-handling is used."""
+    """The XML-tag name to use for ignoring pieces of text when XML-handling is
+    used.
+    """
 
     headers: dict[str, str]
     """Request-headers needed for authentication with the API-key."""
 
     source_Language_code: str
-    """The source language's code (helps handling regional variants that DeepL doesn't differentiate)"""
+    """The source language's code (helps handling regional variants that DeepL
+    doesn't differentiate).
+    """
 
     def register(self, user_group: UserGroup) -> None:
         """
@@ -217,7 +239,8 @@ class DeeplTranslationService(RegisteredTranslationService):
         """
         Perform an authorized POST-request to the DeepL-API.
 
-        :param url_slug: The last part of URL-path for the API function without the starting '/' slash.
+        :param url_slug: The last part of URL-path for the API function without
+        the starting '/' slash.
         :param data: Data to be transmitted along the request.
         :return: The JSON-response returned by the API.
         """
@@ -300,7 +323,8 @@ class DeeplTranslationService(RegisteredTranslationService):
     ) -> dict:
         """
         Supports most of the parameters of a DeepL API translate call.
-        See https://www.deepl.com/docs-api/translating-text/request/ for valid parameter values and more information.
+        See https://www.deepl.com/docs-api/translating-text/request/ for valid
+        parameter values and more information.
 
         :param text: Text to translate that can contain XML.
         :param source_lang: Language of the text.
@@ -308,7 +332,8 @@ class DeeplTranslationService(RegisteredTranslationService):
         :param split_sentences: Is text split before translation.
         :param preserve_formatting: Is formatting preserved during translation.
         :param tag_handling: XML and HTML are currently supported.
-        :param non_splitting_tags: Tags that never split sentences (eg. for the tag "<x>" the parameter should be "x").
+        :param non_splitting_tags: Tags that never split sentences (eg. for the
+        tag "<x>" the parameter should be "x").
         :param splitting_tags: Tags that always split sentences.
         :param ignore_tags: Tags to ignore when translating.
         :return: The DeepL API response JSON.
@@ -351,7 +376,8 @@ class DeeplTranslationService(RegisteredTranslationService):
 
     def preprocess(self, elem: TranslateApproval) -> None:
         """
-        Protect the text inside element from mangling in translation by adding XML-tags.
+        Protect the text inside element from mangling in translation by adding
+        XML-tags.
 
         :param elem: The element to add XML-protection-tags to.
         :return None. The tag is added to the input object.
@@ -382,10 +408,12 @@ class DeeplTranslationService(RegisteredTranslationService):
         Use the DeepL API to translate text between languages.
 
         :param texts: Text to be translated
-        :param source_lang: Language of input text. None value makes DeepL guess it from the text.
+        :param source_lang: Language of input text. None value makes DeepL
+        guess it from the text.
         :param target_lang: Language for target language.
         :param tag_handling: See comment in superclass.
-        :return: List of strings in target language with the non-translatable parts intact.
+        :return: List of strings in target language with the non-translatable
+        parts intact.
         """
         source_lang_code = source_lang.lang_code if source_lang else None
 
@@ -478,11 +506,12 @@ class DeeplTranslationService(RegisteredTranslationService):
     # TODO Cache this maybe?
     def languages(self) -> LanguagePairing:
         """
-        Asks the DeepL API for the list of supported languages
-        (Note: the supported language pairings are not explicitly specified)
-        and turns the returned language codes to Languages found in the database.
+        Asks the DeepL API for the list of supported languages (Note: the
+        supported language pairings are not explicitly specified) and turns the
+        returned language codes to Languages found in the database.
 
-        :return: Dictionary of source langs to lists of target langs, that are supported by the API and also found in database.
+        :return: Dictionary of source langs to lists of target langs, that are
+        supported by the API and also found in database.
         """
 
         def get_lang(deepl_lang: dict) -> Language | None:
@@ -509,7 +538,8 @@ class DeeplTranslationService(RegisteredTranslationService):
 
     def supports(self, source_lang: Language, target_lang: Language) -> bool:
         """
-        Check that the source language can be translated into target language by the translation API.
+        Check that the source language can be translated into target language
+        by the translation API.
 
         :param source_lang: Language of original text
         :param target_lang: Language to translate into
@@ -572,14 +602,17 @@ class TranslateMethodFactory:
         translator_code: str, s_lang: str, t_lang: str, user_group: UserGroup | None
     ) -> Callable[[list[TranslationTarget]], list[str]]:
         """
-        Based on a name, get the correct TranslationService from database and perform needed initializations on it.
+        Based on a name, get the correct TranslationService from database and
+        perform needed initializations on it.
 
-        :param translator_code: Name that separates the different TranslationServices.
+        :param translator_code: Name that separates the different
+        TranslationServices.
         :param s_lang: Source language of translatable text.
         :param t_lang: Target language to translate text into.
-        :param user_group: Identification of user, that can be allowed to use some TranslationServices (for example
-        DeepL requires an API-key)
-        :return: Function that when called, uses the selected parameters in translating text.
+        :param user_group: Identification of user, that can be allowed to use
+        some TranslationServices (for example DeepL requires an API-key)
+        :return: Function that when called, uses the selected parameters in
+        translating text.
         """
 
         # TODO Find out if this is used correctly. Would rather use Query.get, but did not work...
@@ -602,7 +635,8 @@ class TranslateMethodFactory:
 
         def translate_raw_texts(mds: list[str]) -> list[str]:
             """
-            Most primitive translate-func -version to translate texts between languages.
+            Most primitive translate-func -version to translate texts between
+            languages.
 
             :param mds: The texts to translate.
             :return: The translated texts in same order as input.
@@ -659,10 +693,13 @@ class TranslateMethodFactory:
 
         def translate_paragraphs(targets: list[TranslationTarget]) -> list[str]:
             """
-            Translate pieces of Markdown roughly the size of a generic paragraph.
+            Translate pieces of Markdown roughly the size of a generic
+            paragraph.
 
-            :param targets: The list of objects whose Markdown-text-value to parse.
-            :return: List containing the translated pieces of markdown in same order as input.
+            :param targets: The list of objects whose Markdown-text-value to
+            parse.
+            :return: List containing the translated pieces of markdown in same
+            order as input.
             """
 
             mds = []
@@ -707,10 +744,13 @@ class TranslateMethodFactory:
 
         def generic_translate(paras: list[TranslationTarget]) -> list[str]:
             """
-            Wraps the TranslationService, source and target languages into a function that can be used to call a translation on different TranslationService-instances.
+            Wraps the TranslationService, source and target languages into a
+            function that can be used to call a translation on different
+            TranslationService-instances.
 
             :param paras: TIM-paragraphs containing Markdown to translate.
-            :return: The translatable text contained in input paragraphs translated according to the outer functions inputs (the languages).
+            :return: The translatable text contained in input paragraphs
+            translated according to the outer functions inputs (the languages).
             """
             translated_texts = translate_paragraphs(paras)
 

@@ -6,9 +6,11 @@ from dataclasses import dataclass
 
 @dataclass
 class Language(db.Model):
-    """Represents a standardized language code used for example with translation documents.
+    """Represents a standardized language code used for example with
+    translation documents.
 
-    NOTE: You should always use the provided class-methods for creating new instances!
+    NOTE: You should always use the provided class-methods for creating new
+    instances!
     """
 
     __tablename__ = "language"
@@ -28,13 +30,17 @@ class Language(db.Model):
     """Native name for the language."""
 
     @classmethod
-    def create_from_name(cls, s: str) -> "Language":
+    def create_from_name(cls, name: str) -> "Language":
         """
-        Create an instance of Language that follows a standard. Note that this should always be used when creating a new Language especially when adding it to database.
-        :param s: Natural name of the language
-        :return: A corresponding Language-object newly created
+        Create an instance of Language that follows a standard. Note that this
+        should always be used when creating a new Language especially when
+        adding it to database.
+
+        :param name: Natural name of the language
+        :return: A corresponding Language-object newly created.
+        :raises LookupError: if the language is not found.
         """
-        lang = langcodes.find(s)
+        lang = langcodes.find(name)
         return Language(
             lang_code=lang.to_tag(),
             lang_name=lang.language_name(),
@@ -45,8 +51,10 @@ class Language(db.Model):
     def query_by_code(cls, code: str) -> Optional["Language"]:
         """
         Query the database to find a single match for language tag
+
         :param code: The IETF tag for the language
-        :return: The corresponding Language-object in database or None if not found
+        :return: The corresponding Language-object in database or None if not
+        found
         """
         # TODO Instead of type str -code, could langcodes.Language type lessen boilerplate at caller?
         return cls.query.get(code)
@@ -55,6 +63,7 @@ class Language(db.Model):
     def query_all(cls) -> list["Language"]:
         """
         Query the database for all the languages
+
         :return: All the languages found from database
         """
         return cls.query.all()

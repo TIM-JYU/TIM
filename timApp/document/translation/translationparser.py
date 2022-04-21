@@ -8,8 +8,9 @@ from dataclasses import dataclass
 # TODO This name is kinda bad. Better would be along the lines of translate-flag or a whole new list-type data structure, that describes alternating between Yes's and No's
 @dataclass
 class TranslateApproval:
-    """Superclass for text that should or should not be
-    passed to a machine translator"""
+    """Superclass for text that should or should not be passed to a machine
+    translator
+    """
 
     text: str = ""
 
@@ -26,14 +27,17 @@ class NoTranslate(TranslateApproval):
 
 @dataclass
 class Table(TranslateApproval):
-    """Hacky way to translate tables by identifying them at translation and setting html-tag handling on"""
+    """Hacky way to translate tables by identifying them at translation and
+    setting html-tag handling on
+    """
 
     ...
 
 
 def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
     """
-    By parsing the input text, identify parts that should and should not be passed to a machine translator
+    By parsing the input text, identify parts that should and should not be
+    passed to a machine translator
     TODO Does this need to return list of lists, when the function of this is to split markdown into parts that can be translated or not?
 
     :param md: The input text to eventually translate
@@ -52,8 +56,9 @@ def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
 
 def tex_collect(content: str) -> list[TranslateApproval]:
     """
-    Collect and separate translatable and untranslatable areas within
-    a LaTeX element.
+    Collect and separate translatable and untranslatable areas within a LaTeX
+    element.
+
     :param content: String which contains LaTeX area
     :return: List containing the parsed collection of LaTeX content
     """
@@ -113,7 +118,7 @@ def attr_collect(content: list) -> Tuple[list[TranslateApproval], bool]:
 
     :param content: Pandoc-ASTs JSON form of Attr (attributes)
     :return: List of non/translatable parts and boolean indicating, whether the .notranslate
-        -style was found in the element.
+    -style was found in the element.
     """
     if (
         not isinstance(content[0], str)
@@ -196,8 +201,9 @@ def code_collect(content: dict) -> list[TranslateApproval]:
 
 def math_collect(content: dict) -> list[TranslateApproval]:
     """
-    Collect and separate translatable and untranslatable areas within
-    a math element.
+    Collect and separate translatable and untranslatable areas within a math
+    element.
+
     :param content: TeX math (literal) from Inline
     :return: List containing the parsed collection of math content
     """
@@ -225,8 +231,9 @@ def math_collect(content: dict) -> list[TranslateApproval]:
 
 def rawinline_collect(content: dict) -> list[TranslateApproval]:
     """
-    Collect and separate translatable and untranslatable areas within
-    a rawinline element.
+    Collect and separate translatable and untranslatable areas within a
+    rawinline element.
+
     :param content: RawInline from Inline
     :return: List containing the parsed collection of rawinline content
     """
@@ -397,7 +404,8 @@ def notranslate_all(type_: str, content: dict) -> list[TranslateApproval]:
     TODO NOTE This function does not seem to produce markdown consistent with TIM's practices, and using this should eventually be replaced with the specific *_collect -functions!
     :param type_: Pandoc AST-type of the content
     :param content: Pandoc AST-content of the type
-    :return: List of single NoTranslate -element containing Markdown representation of content
+    :return: List of single NoTranslate -element containing Markdown
+    representation of content
     """
     # The conversion requires the pandoc-api-version TODO This feels kinda hacky...
     ast_content = {
@@ -417,8 +425,12 @@ def notranslate_all(type_: str, content: dict) -> list[TranslateApproval]:
 # TODO make attrs into a class
 def collect_tim_plugin(attrs: dict, content: str) -> list[TranslateApproval]:
     """
-    Special case to collect translatable and non-translatable parts of a TIM-plugin based on its (YAML) contents
-    :param attrs: Pandoc-AST defined Attr -attributes of the plugin-block for example plugin="csPlugin"
+    Special case to collect translatable and non-translatable parts of a
+    TIM-plugin based on its (YAML) contents
+
+    :param attrs: Pandoc-AST defined Attr -attributes of the plugin-block for
+    example plugin="csPlugin"
+     TODO Add handling for this if necessary
     :param content: The raw markdown content of the plugin-defined paragraph.
     :return: List of the translatable and non-translatable parts
     """
@@ -578,10 +590,12 @@ def bulletlist_collect(content: dict, depth: int) -> list[TranslateApproval]:
 def ordered_list_styling(start_num: int, num_style: str, num_delim: str) -> str:
     """
     Makes the style for the ordered lists.
+
     Different styles for ordered lists:
-    num_styles - Decimal (1,2,3), LowerRoman(i,ii,iii), LowerAlpha(a,b,c), UpperRoman (I,III,III), UpperAlpha(A,B,C),
-                 DefaultStyle (#)
-    num_delims - Period( . ), OneParen( ) ), DefaultDelim ( . ), TwoParens ( (#) )
+    num_styles - Decimal (1,2,3), LowerRoman(i,ii,iii), LowerAlpha(a,b,c),
+                 UpperRoman (I,III,III), UpperAlpha(A,B,C), DefaultStyle (#)
+    num_delims - Period( . ), OneParen( ) ), DefaultDelim ( . ),
+                 TwoParens ( (#) )
 
     :param start_num: The number that starts the list
     :param num_style: The numbering style
@@ -620,7 +634,8 @@ def list_collect(
     General method for handling both bullet- and ordered lists.
 
     :param blocks: The [[Block]] found in Pandoc definition for the lists.
-    :param depth: The depth of recursion with lists (can contain lists of lists of lists ...).
+    :param depth: The depth of recursion with lists (can contain lists of lists
+    of lists ...).
     :param attrs: Information related to the style of the OrderedList items.
     :return: List containing the translatable parts of the list.
     """
@@ -662,8 +677,10 @@ def list_collect(
 
 def to_roman_numeral(num: int) -> str:
     """
-    Converts the start number from Pandoc's Roman number list to the corresponding number.
-    Source: https://stackoverflow.com/questions/28777219/basic-program-to-convert-integer-to-roman-numerals
+    Converts the start number from Pandoc's Roman number list to the
+    corresponding number.
+    Source:
+    https://stackoverflow.com/questions/28777219/basic-program-to-convert-integer-to-roman-numerals
 
     :param num: The list's starting number
     :returns: The Roman number corresponding the starting number
@@ -697,7 +714,8 @@ def to_roman_numeral(num: int) -> str:
 
 def to_alphabet(num: int) -> str:
     """
-    Converts the start number from Pandoc's alphabet list to the corresponding character.
+    Converts the start number from Pandoc's alphabet list to the corresponding
+    character.
 
     :param num: The list's starting number
     :returns: The alphabet corresponding the starting number
@@ -771,12 +789,14 @@ def div_collect(content: dict) -> list[TranslateApproval]:
 
 def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
     """
-    Walks the whole block and appends each translatable and non-translatable string-part into a list in order.
+    Walks the whole block and appends each translatable and non-translatable
+    string-part into a list in order.
     Based on the pandoc AST-spec at:
     https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
 
     :param top_block: The block to collect strings from
-    :param depth: The depth of the recursion if it is needed for example with list-indentation
+    :param depth: The depth of the recursion if it is needed for example with
+    list-indentation
     :return: List of strings inside the correct approval-type.
     """
     arr: list[TranslateApproval] = list()
@@ -845,10 +865,16 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
 
 def merge_consecutive(arr: list[TranslateApproval]) -> list[TranslateApproval]:
     """
-    Merge consecutive elements of the same type into each other to reduce length of the list.
+    Merge consecutive elements of the same type into each other to reduce
+    length of the list.
+
     The merging is as follows (T = Translate, NT = NoTranslate):
-    [T("foo"), T(" "), T("bar"), NT("\n"), NT("["), T("click"), NT("](www.example.com)")]
+
+    [T("foo"), T(" "), T("bar"), NT("\n"), NT("["), T("click"),
+    NT("](www.example.com)")]
+
     ==>
+
     [T("foo bar"), NT("\n["), T("click"), NT("](www.example.com)")]
 
     :param arr: The list of objects to merge.

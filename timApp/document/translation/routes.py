@@ -36,7 +36,9 @@ from timApp.document.translation.language import Language
 
 def valid_language_id(lang_id: str) -> bool:
     """
-    Check that the id is recognized by the langcodes library and found in database.
+    Check that the id is recognized by the langcodes library and found in
+    database.
+
     :param lang_id: Language id (or "tag") to check
     :return: True, if id is found in database
     """
@@ -53,9 +55,9 @@ tr_bp = Blueprint("translation", __name__, url_prefix="")
 
 
 @tr_bp.post("/translate/<int:tr_doc_id>/<string:language>/<string:transl>")
-def create_translation_route(tr_doc_id: int, language: str, transl: str):
-    # TODO Why is the variable for *original* document's ID named "tr_doc_id"?
+def create_translation_route(tr_doc_id: int, language: str, transl: str) -> Response:
     req_data = request.get_json()
+    # TODO Move doc_title -parameter to the URL as well
     title = req_data.get("doc_title", None)
 
     doc = get_doc_or_abort(tr_doc_id)
@@ -151,9 +153,12 @@ def paragraph_translation_route(
 ) -> Response:
     """
     Replace the content of paragraph with requested translation.
+
     :param tr_doc_id: ID of the document that the paragraph is in.
-    :param tr_par_id: ID of the paragraph in the Translation NOTE: NOT the original paragraph!
+    :param tr_par_id: ID of the paragraph in the Translation NOTE: NOT the
+    original paragraph!
     :param language: Language to translate into.
+    :param transl: Identifying code of the translator to use.
     :return: Response to the request.
     """
     translator_code = transl
@@ -257,9 +262,7 @@ def get_translations(doc_id: int) -> Response:
 
 @tr_bp.post("/translations/source-languages")
 def get_source_languages() -> Response:
-    """
-    Query the database for the possible source languages.
-    """
+    """Query the database for the possible source languages."""
 
     req_data = request.get_json()
     translator = req_data.get("translator", "")
@@ -287,8 +290,7 @@ def get_source_languages() -> Response:
 
 @tr_bp.get("/translations/document-languages")
 def get_document_languages() -> Response:
-    """
-    Query the database for the languages of existing documents.
+    """Query the database for the languages of existing documents.
     TODO Select from documents
     """
 
@@ -299,9 +301,7 @@ def get_document_languages() -> Response:
 
 @tr_bp.post("/translations/target-languages")
 def get_target_languages() -> Response:
-    """
-    Query the database for the possible target languages.
-    """
+    """Query the database for the possible target languages."""
 
     req_data = request.get_json()
     translator = req_data.get("translator", "")
@@ -317,6 +317,7 @@ def get_target_languages() -> Response:
 
     if translator.lower() == "deepl free" or translator.lower() == "deepl pro":
         langs = get_lang_lists(translator, False)
+        # TODO Implement to_json for Language and use it here
         sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
         return json_response(sl)
     else:
@@ -327,22 +328,22 @@ def get_target_languages() -> Response:
 
 @tr_bp.get("/translations/translators")
 def get_translators() -> Response:
-    """
-    Query the database for the possible machine translators.
-    """
+    """Query the database for the possible machine translators."""
 
-    translationservices = TranslationService.query.all()
-    translationservice_names = list(map(lambda x: x.service_name, translationservices))
-    # TODO Add Manual to the TranslationService-table?
-    sl = ["Manual"] + translationservice_names
+    translationservice_names = TranslationService.query.with_entities(
+        TranslationService.service_name
+    ).all()
+    # The SQLAlchemy query returns a list of tuples even when values of a
+    # single column were requested, so they must be unpacked.
+    # TODO Add "Manual" to the TranslationService-table instead of hardcoding
+    #  here (and elsewhere)?
+    sl = ["Manual"] + [x[0] for x in translationservice_names]
     return json_response(sl)
 
 
 @tr_bp.post("apikeys/add")
 def add_api_key() -> Response:
-    """
-    The function for adding API keys.
-    """
+    """The function for adding API keys."""
 
     req_data = request.get_json()
     translator = req_data.get("translator", "")
@@ -374,9 +375,7 @@ def add_api_key() -> Response:
 
 @tr_bp.post("apikeys/remove")
 def remove_api_key() -> Response:
-    """
-    The function for removing API keys.
-    """
+    """The function for removing API keys."""
 
     verify_logged_in()
     user = get_current_user_object()
@@ -385,17 +384,14 @@ def remove_api_key() -> Response:
     translator = req_data.get("translator", "")
     key = req_data.get("apikey", "")
 
-    to_be_removed = TranslationServiceKey.query.filter(
+    TranslationServiceKey.query.filter(
         key == TranslationServiceKey.api_key,
         TranslationServiceKey.group_id == user.get_personal_group().id,
         translator == TranslationService.service_name,
-    ).first()
+    ).delete(synchronize_session=False)
 
-    if not to_be_removed:
-        raise RouteException("The key does not exist for the user")
-
-    db.session.delete(to_be_removed)
     db.session.commit()
+
     return ok_response()
 
 
@@ -418,9 +414,9 @@ def get_quota():
 
 @tr_bp.post("/apikeys/validate")
 def get_valid_status() -> Response:
-
     """
     Check the validity of a given api-key with the chosen translator engine.
+
     :return: Response from the server, or an Exception
     """
 
