@@ -1476,7 +1476,7 @@ export class ImageXComponent
                 drawings.push({type: "freehand", drawData: obj});
             }
         }
-        this.drawing = new Drawing(this.drawSettings, this.canvas, true);
+        this.drawing = new Drawing(this.drawSettings, [this.canvas], true);
         this.drawing.drawData = this.attrsall.state?.drawings ?? drawings;
         if (this.isFreeHandInUse) {
             this.drawSettings.enabled = true;
