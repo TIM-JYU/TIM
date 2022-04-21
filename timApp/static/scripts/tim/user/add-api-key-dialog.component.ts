@@ -137,13 +137,12 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<{ onAdd: (k
     }
 
     async validateAPIKey() {
-        const r = await toPromise(
+        return await toPromise(
             this.http.post<ITranslatorUsage>("/apikeys/validate", {
                 translator: this.chosenTranslator,
                 apikey: this.apiKey,
             })
         );
-        return r;
     }
 
 }
