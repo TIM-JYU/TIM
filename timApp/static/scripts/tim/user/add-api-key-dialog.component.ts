@@ -19,7 +19,6 @@ import {ITranslators, ITranslatorUsage} from "../item/IItem";
 import {listTranslators} from "../document/editing/edittypes";
 import {IUserApiKey} from "./IUser";
 
-
 /**
  * User can add translator API keys to be stored in TIM. (code source: add-contact-dialog.component.ts)
  */
@@ -70,8 +69,10 @@ import {IUserApiKey} from "./IUser";
         </tim-dialog-frame>
     `,
 })
-export class AddAPIKeyDialogComponent extends AngularDialogComponent<{ onAdd: (key: IUserApiKey) => void },
-    void> {
+export class AddAPIKeyDialogComponent extends AngularDialogComponent<
+    {onAdd: (key: IUserApiKey) => void},
+    void
+> {
     translators: Array<ITranslators> = [];
 
     ngOnInit() {
@@ -99,7 +100,6 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<{ onAdd: (k
      * least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
      */
     async addNewAPIKey() {
-
         const validateResponse = await this.validateAPIKey();
 
         if (validateResponse.ok) {
@@ -146,12 +146,10 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<{ onAdd: (k
             })
         );
     }
-
 }
 
 @NgModule({
     declarations: [AddAPIKeyDialogComponent],
     imports: [DialogModule, FormsModule, TimUtilityModule, CommonModule],
 })
-export class AddAPIKeyDialogModule {
-}
+export class AddAPIKeyDialogModule {}
