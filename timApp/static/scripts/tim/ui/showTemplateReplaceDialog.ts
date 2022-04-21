@@ -52,9 +52,7 @@ export async function showTemplateReplaceDialog(
     }
     const what = param.what ?? "\\\\\\?";
 
-    // MK 19.4.2022
-    // replace special characters with "legal" characters
-    return data.replace(new RegExp(what, flags), slugify(replace.result));
+    return data.replace(new RegExp(what, flags), replace.result);
 }
 
 export async function replaceTemplateValues(data: string): Promise<string> {
