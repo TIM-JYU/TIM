@@ -1751,9 +1751,8 @@ ${backTicks}
         const lang = this.resolve.params.viewCtrl!.item.lang_id!;
         const r = await to(
             $http.post<IDocument>(
-                `/translate/paragraph/${docId}/${parId}/${lang}`,
+                `/translate/paragraph/${docId}/${parId}/${lang}/${this.docTranslator}`,
                 {
-                    autotranslate: this.docTranslator,
                     originaltext: this.trdiff!.new,
                 }
             )
@@ -1795,9 +1794,8 @@ ${backTicks}
                     $http.post<string>(
                         `/translate/${
                             this.resolve.params.viewCtrl!.item.id
-                        }/${lang}/translate_block`,
+                        }/${lang}/translate_block/${this.docTranslator}`,
                         {
-                            autotranslate: this.docTranslator,
                             originaltext: translatableText,
                         }
                     )
