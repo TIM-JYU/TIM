@@ -1260,26 +1260,26 @@ interface IAnswerResponse {
                         height={{canvasheight}}></canvas>
                 <div class="content"></div>
             </div>
-            <p class="csRunMenu"><span *ngIf="button">&nbsp;<button
+            <p class="csRunMenu"><span *ngIf="button" class="save">&nbsp;<button
                                                class="timButton"
                                                [disabled]="isRunning"
                                                (click)="save()">{{button}}
             </button></span>
-                <span  *ngIf="buttonPlay">
+                <span  *ngIf="buttonPlay" class="videoPlay">
                 &nbsp;&nbsp;
                 <button
                         [disabled]="isRunning"
                         (click)="videoPlay()">{{buttonPlay}}
                 </button>
                 </span>
-                <span *ngIf="buttonRevert">
+                <span *ngIf="buttonRevert" class="videoBeginning">
                 &nbsp;&nbsp;
                 <button
                         [disabled]="isRunning"
                         (click)="videoBeginning()">{{buttonRevert}}
                 </button>
                     </span>
-                <span [hidden]="!(finalanswer && userHasAnswered)">
+                <span [hidden]="!(finalanswer && userHasAnswered)" class="showAnswer">
                 &nbsp;&nbsp;
                 <button class="timButton"
                         [disabled]="isRunning"
@@ -1287,11 +1287,11 @@ interface IAnswerResponse {
                     Show correct answer
                 </button>
                     </span>
-                <span *ngIf="button">
+                <span *ngIf="button" class="resetExercise">
                 &nbsp;&nbsp;<a
                                (click)="resetExercise()">{{resetText}}</a>
                     </span>
-                <span *ngIf="muokattu" >
+                <span *ngIf="muokattu" class="initCode">
                 &nbsp;&nbsp;<a
                         href="" (click)="initCode()">{{resetText}}</a>
                     </span>
