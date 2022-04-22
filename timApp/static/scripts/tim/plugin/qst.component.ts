@@ -74,11 +74,11 @@ const PluginFields = t.intersection([
                     &nbsp;&nbsp;
                     <a class="questionAddedNew" *ngIf="hasTeacherRight() && !isInvalid()" (click)="questionClicked()">
                         <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
-                    </a>  
+                    </a>
+                    &ngsp;
+                    <span class="qstResult" *ngIf="result">{{result}}</span>
                 </div>
             </div>
-            &ngsp;
-            <span *ngIf="result">{{result}}</span>
             <p class="plgfooter" [innerHtml]="getFooter() | purify"></p>
             <div *ngIf="error" class="error" style="font-size: 12px" [innerHtml]="error"></div>
         </div>
