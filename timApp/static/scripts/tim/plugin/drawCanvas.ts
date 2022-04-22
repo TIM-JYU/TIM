@@ -361,18 +361,14 @@ export function drawEllipse(
     ellipse: IRectangleOrEllipse,
     ctx: CanvasRenderingContext2D
 ) {
-    const ratio = ellipse.w / ellipse.h;
+    const h = Math.max(ellipse.h, 0.001);
+    const w = Math.max(ellipse.w, 0.001);
+    const ratio = w / h;
     ctx.save();
     ctx.beginPath();
     ctx.scale(ratio, 1);
-    const r = Math.min(ellipse.w / ratio, ellipse.h) / 2;
-    ctx.arc(
-        (ellipse.x + ellipse.w / 2) / ratio,
-        ellipse.y + ellipse.h / 2,
-        r,
-        0,
-        2 * Math.PI
-    );
+    const r = Math.min(w / ratio, h) / 2;
+    ctx.arc((ellipse.x + w / 2) / ratio, ellipse.y + h / 2, r, 0, 2 * Math.PI);
     ctx.restore();
     if (ellipse.fillColor) {
         ctx.fill();
