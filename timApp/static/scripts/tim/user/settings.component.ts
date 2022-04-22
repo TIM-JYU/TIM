@@ -560,6 +560,9 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     // region Styles tab
 
+    /**
+     * Fetches the user's API keys from the server.
+     */
     async getKeys() {
         const r = await toPromise(this.http.get<IUserApiKey[]>("/apikeys/get"));
         if (r.ok) {
@@ -1001,6 +1004,10 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.cdr.detectChanges();
     }
 
+    /**
+     * Removes the user's key.
+     * @param key the key to be removed
+     */
     async deleteKey(key: IUserApiKey) {
         this.saving = true;
         const r = await toPromise(
@@ -1020,6 +1027,10 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.cdr.detectChanges();
     }
 
+    /**
+     * Checks the quota left for the chosen key and updates it to the progress bar.
+     * @param key the key the quota of which is checked
+     */
     async checkQuota(key: IUserApiKey) {
         const r = await toPromise(
             this.http.post<ITranslatorUsage>("/apikeys/quota", {

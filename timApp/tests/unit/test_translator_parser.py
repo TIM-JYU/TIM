@@ -412,6 +412,9 @@ x=0\;\;\;\\text{"""
     #     )
 
     def test_ordered_list1(self):
+        """
+        Testing orderedlist with all the different ways they can be formatted.
+        """
         md = r"""1. Tässä ollaan
     2. Jotain tehdään
     3. Ainakin nyt
@@ -462,6 +465,9 @@ x=0\;\;\;\\text{"""
         )
 
     def test_ordered_list2(self):
+        """
+        Testing orderedlist with all the different ways they can be formatted and with indentation.
+        """
         md = r"""1. Tässä ollaan
     2. Jotain tehdään
     3. Ainakin nyt

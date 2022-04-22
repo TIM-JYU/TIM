@@ -397,6 +397,11 @@ def remove_api_key() -> Response:
 
 @tr_bp.post("/apikeys/quota")
 def get_quota():
+    """
+    Gets the quota info for the user's API key.
+
+    :return: the used and available quota for the user's API key
+    """
     verify_logged_in()
 
     req_data = request.get_json()
@@ -449,6 +454,11 @@ def get_valid_status() -> Response:
 
 @tr_bp.get("/apikeys/get")
 def get_keys() -> Response:
+    """
+    Gets the user's API keys.
+
+    :return: The user's API keys.
+    """
     verify_logged_in()
 
     user = get_current_user_object()
@@ -470,6 +480,11 @@ def get_keys() -> Response:
 
 @tr_bp.get("/apikeys/translators")
 def get_my_translators() -> Response:
+    """
+    Gets the translators the user has the API keys for.
+
+    :return: The list of the translators the user has the API keys for.
+    """
     verify_logged_in()
 
     user = get_current_user_object()
