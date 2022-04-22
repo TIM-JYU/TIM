@@ -1299,6 +1299,7 @@ interface IAnswerResponse {
                 <draw-toolbar *ngIf="isFreeHandInUse" [drawSettings]="drawSettings" [undo]="passUndo"
                               [drawVisibleOptions]="drawVisibleOptions"></draw-toolbar>
             </p>
+            <div class="plgfooter"></div>
             <div [hidden]="!preview"><span><span [ngStyle]="{'background-color': previewColor}"
                                                  style="display: table-cell; text-align: center; width: 30px;"
                                                  (click)="getPColor()">&lt;-</span>
