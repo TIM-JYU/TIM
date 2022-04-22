@@ -8,6 +8,7 @@ from timApp.document.docsettings import DocSettings
 from timApp.document.document import Document
 from timApp.document.translation.translation import Translation
 from timApp.document.translation.language import Language
+from timApp.document.translation.translator import DeeplTranslationService
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
@@ -355,6 +356,27 @@ c
         self.assertIsNotNone(d)
         self.assertEqual(len(d.translations), 2)
 
+    def test_invalid_language(self):
+        lang = Language(lang_code="baz", lang_name="foo", autonym="foo")
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+Foo
+#-
+Bar
+#-
+Baz
+"""
+        )
+        d.lang_id = "orig"
+        # TODO Would rather use ReversingTranslationService.service_name but is not str
+        data = "Reversing"
+        self.json_post(
+            f"/translate/{d.id}/{lang.lang_code}/{data}",
+            {"doc_title": "title"},
+            expect_status=404,
+        )
+
     def test_document_machine_translation_route(self):
         lang = self.reverselang
         self.login_test1()
@@ -367,9 +389,12 @@ Bar
 Baz
 """
         )
+        d.lang_id = "orig"
         # TODO Would rather use ReversingTranslationService.service_name but is not str
         data = "Reversing"
-        tr_json = self.json_post(f"/translate/{d.id}/{lang.lang_code}/{data}")
+        tr_json = self.json_post(
+            f"/translate/{d.id}/{lang.lang_code}/{data}", {"doc_title": "title"}
+        )
         tr_doc = Translation.query.get(tr_json["id"]).document
         tr_doc.clear_mem_cache()
         mds = map(lambda x: x.md, tr_doc.get_paragraphs())
@@ -378,12 +403,55 @@ Baz
         self.assertEqual(next(mds), "zaB")
         self.assertEqual(next(mds, None), None)
 
-    def test_paragraph_machine_translation_route(self):
+    def test_document_machine_translation_route_no_api_key(self):
         lang = self.reverselang
         self.login_test1()
         d = self.create_doc(
             initial_par="""
 Foo
+#-
+Bar
+#-
+Baz
+"""
+        )
+        d.lang_id = "orig"
+        data = DeeplTranslationService.query.first().service_name
+        self.json_post(
+            f"/translate/{d.id}/{lang.lang_code}/{data}",
+            {"doc_title": "title"},
+            expect_status=404,
+        )
+
+    def test_document_machine_translation_route_forbidden(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+Foo
+#-
+Bar
+#-
+Baz
+"""
+        )
+
+        d.lang_id = "orig"
+        self.logout()
+        self.login_test2()
+        data = DeeplTranslationService.query.first().service_name
+        self.json_post(
+            f"/translate/{d.id}/{lang.lang_code}/{data}",
+            {"doc_title": "title"},
+            expect_status=403,
+        )
+
+    def test_paragraph_machine_translation_route(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+[Foo]{.notranslate}
 #-
 Bar
 #-
@@ -400,7 +468,7 @@ Baz
         )
         tr_doc.clear_mem_cache()
         self.assertEqual(r, tr.id)
-        self.assertEqual(tr_doc.get_paragraph(id1).md, "ooF")
+        self.assertEqual(tr_doc.get_paragraph(id1).md, "[Foo]{.notranslate}")
         self.assertEqual(tr_doc.get_paragraph(id2).md, "")
         self.assertEqual(tr_doc.get_paragraph(id3).md, "")
 
@@ -416,6 +484,50 @@ Baz
         tr_doc.clear_mem_cache()
         # Applying translation again uses the SOURCE paragraph, so the result is the same
         self.assertEqual(tr_doc.get_paragraph(id3).md, "zaB")
+
+    def test_paragraph_machine_translation_route_no_api_key(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+Foo
+#-
+Bar
+#-
+Baz
+"""
+        )
+        tr = self.create_translation(d)
+        tr_doc = tr.document
+        id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
+        data = DeeplTranslationService.query.first().service_name
+        self.json_post(
+            f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}/{data}",
+            expect_status=404,
+        )
+
+    def test_paragraph_machine_translation_route_forbidden(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+Foo
+#-
+Bar
+#-
+Baz
+"""
+        )
+        tr = self.create_translation(d)
+        self.logout()
+        self.login_test2()
+        tr_doc = tr.document
+        id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
+        data = DeeplTranslationService.query.first().service_name
+        self.json_post(
+            f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}/{data}",
+            expect_status=403,
+        )
 
     def test_paragraph_machine_translation_route_plugin(self):
         lang = self.reverselang
@@ -488,6 +600,54 @@ Baz qux [qux](www.example.com)
 [Bar]{.notranslate}\
 
  xuq zaB[xuq](www.example.com)""",
+        )
+
+    def test_text_machine_translation_route_no_api_key(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc()
+        tr = self.create_translation(d)
+
+        md = r"""
+# Foo
+[Bar]{.notranslate}\
+
+Baz qux [qux](www.example.com)
+"""
+
+        transl = DeeplTranslationService.query.first().service_name
+        data = {
+            "originaltext": md,
+        }
+        self.json_post(
+            f"/translate/{tr.id}/{lang.lang_code}/translate_block/{transl}",
+            data,
+            expect_status=404,
+        )
+
+    def test_text_machine_translation_route_forbidden(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc()
+        tr = self.create_translation(d)
+        self.logout()
+        self.login_test2()
+
+        md = r"""
+# Foo
+[Bar]{.notranslate}\
+
+Baz qux [qux](www.example.com)
+"""
+
+        transl = DeeplTranslationService.query.first().service_name
+        data = {
+            "originaltext": md,
+        }
+        self.json_post(
+            f"/translate/{tr.id}/{lang.lang_code}/translate_block/{transl}",
+            data,
+            expect_status=403,
         )
 
 

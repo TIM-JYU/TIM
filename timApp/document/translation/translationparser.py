@@ -5,7 +5,8 @@ from typing import Tuple
 from dataclasses import dataclass
 
 
-# TODO This name is kinda bad. Better would be along the lines of translate-flag or a whole new list-type data structure, that describes alternating between Yes's and No's
+# TODO This name is kinda bad. Better would be along the lines of translate-flag or a whole new list-type data
+#  structure, that describes alternating between Yes's and No's
 @dataclass
 class TranslateApproval:
     """Superclass for text that should or should not be passed to a machine
@@ -38,15 +39,16 @@ def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
     """
     By parsing the input text, identify parts that should and should not be
     passed to a machine translator
-    TODO Does this need to return list of lists, when the function of this is to split markdown into parts that can be translated or not?
+    TODO Does this need to return list of lists, when the function of this is to split markdown into parts that can be
+     translated or not?
 
     :param md: The input text to eventually translate
     :return: Lists containing the translatable parts of each block in a list
     """
     # Parse the string into an ast
     ast = json.loads(pypandoc.convert_text(md, format="md", to="json"))
-    # By walking the ast, glue continuous translatable parts together into
-    # Translate-object and non-translatable parts into NoTranslate object
+    # By walking the ast, glue continuous translatable parts together into Translate-object and non-translatable parts
+    # into NoTranslate object
     # Add the objects into a list where they alternate T|NT, NT, T, NT ... T|NT
     block_approvals = [
         merge_consecutive(block_collect(block)) for block in ast["blocks"]
@@ -126,9 +128,12 @@ def attr_collect(content: list) -> Tuple[list[TranslateApproval], bool]:
         or not (content[1], list[str])
         or not (content[2], list[list[str]])
     ):
-        assert False, "PanDoc link content is not [ str, [str], [(str, str)] ]."
+        raise Exception("PanDoc link content is not [ str, [str], [(str, str)] ].")
 
-    # FIXME(?) WARNING It is crucial, that the attributes do not include the TIM-identifier eg. id="SAs3EK96oQtL" from {plugin="csPlugin" id="SAs3EK96oQtL"}, because Pandoc has earlier deleted extra identifiers contained in attributes like #btn-tex2 and id="SAs3EK96oQtL" with {plugin="csPlugin" #btn-tex2 id="SAs3EK96oQtL"}
+    # FIXME(?) WARNING It is crucial that the attributes do not include the TIM-identifier eg.
+    #  id="SAs3EK96oQtL" from {plugin="csPlugin" id="SAs3EK96oQtL"}, because Pandoc has earlier deleted extra
+    #  identifiers contained in attributes like
+    #  #btn-tex2 and id="SAs3EK96oQtL" with {plugin="csPlugin" #btn-tex2 id="SAs3EK96oQtL"}
     arr: list[TranslateApproval] = list()
     # https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Attr
     identifier = content[0]
@@ -157,7 +162,7 @@ def attr_collect(content: list) -> Tuple[list[TranslateApproval], bool]:
 
 def quoted_collect(content: dict) -> list[TranslateApproval]:
     if not isinstance(content[0]["t"], str) or not isinstance(content[1], list):
-        assert False, "PanDoc format is of wrong type"
+        raise Exception("PanDoc format is of wrong type")
 
     arr: list[TranslateApproval] = list()
     # TODO Are quotes translate?
@@ -177,7 +182,7 @@ def quoted_collect(content: dict) -> list[TranslateApproval]:
 
 def cite_collect(content: dict) -> list[TranslateApproval]:
     if not isinstance(content[0], list) or not isinstance(content[1], list):
-        assert False, "PanDoc cite content is not [ [Citation], [Inline] ]."
+        raise Exception("PanDoc cite content is not [ [Citation], [Inline] ].")
     # At the moment not needed and will break FIXME Implement this
     arr: list[TranslateApproval] = list()
     for inline in content[1]:
@@ -187,7 +192,7 @@ def cite_collect(content: dict) -> list[TranslateApproval]:
 
 def code_collect(content: dict) -> list[TranslateApproval]:
     if not isinstance(content[0], list) or not isinstance(content[1], str):
-        assert False, "PanDoc code content is not [ Attr, Text ]."
+        raise Exception("PanDoc code content is not [ Attr, Text ].")
     # TODO Handle "Attr"
     arr: list[TranslateApproval] = list()
     arr.append(NoTranslate(f"`{content[1]}`"))
@@ -209,7 +214,7 @@ def math_collect(content: dict) -> list[TranslateApproval]:
     :return: List containing the parsed collection of math content
     """
     if not isinstance(content[0]["t"], str) or not isinstance(content[1], str):
-        assert False, "PanDoc math content is not [ MathType, Text ]."
+        raise Exception("PanDoc math content is not [ MathType, Text ].")
     arr: list[TranslateApproval] = list()
     mathtype = content[0]["t"]
     # TODO Go deeper to find translatable text
@@ -239,7 +244,7 @@ def rawinline_collect(content: dict) -> list[TranslateApproval]:
     :return: List containing the parsed collection of rawinline content
     """
     if not isinstance(content[0], str) or not isinstance(content[1], str):
-        assert False, "PanDoc rawinline content is not [ Format, Text ]."
+        raise Exception("PanDoc rawinline content is not [ Format, Text ].")
     # HTML currently as "else" path (<u></u> and <s></s>)
     format_ = content[0]
     if format_ == "tex":
@@ -254,7 +259,7 @@ def link_collect(content: dict) -> list[TranslateApproval]:
         or not isinstance(content[1], list)
         or not isinstance(content[2], list)
     ):
-        assert False, "PanDoc link content is not [ Attr, [Inline], Target ]."
+        raise Exception("PanDoc link content is not [ Attr, [Inline], Target ].")
     return link_or_image_collect(content, True)
 
 
@@ -264,7 +269,7 @@ def image_collect(content: dict) -> list[TranslateApproval]:
         or not isinstance(content[1], list)
         or not isinstance(content[2], list)
     ):
-        assert False, "PanDoc image content is not [ Attr, [Inline], Target ]."
+        raise Exception("PanDoc image content is not [ Attr, [Inline], Target ].")
     return link_or_image_collect(content, False)
 
 
@@ -290,7 +295,7 @@ def link_or_image_collect(content: dict, islink: bool) -> list[TranslateApproval
 def span_collect(content: dict) -> list[TranslateApproval]:
     # Attr check in attr_collect
     if not isinstance(content[1], list):
-        assert False, "PanDoc link content is not [ [Inline] ]."
+        raise Exception("PanDoc link content is not [ [Inline] ].")
 
     # TODO Generalize this func like with links and images
     arr: list[TranslateApproval] = list()
@@ -315,7 +320,7 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
     # Change to str
     if type_ == "Str":
         if not isinstance(content, str):
-            assert False, "PanDoc inline content is not [ str ]."
+            raise Exception("PanDoc inline content is not [ str ].")
         arr.append(Translate(content))
     # What?
     if type_ == "Emph":
@@ -402,7 +407,8 @@ def notranslate_all(type_: str, content: dict) -> list[TranslateApproval]:
     """
     Mark the whole element as non-translatable.
 
-    TODO NOTE This function does not seem to produce markdown consistent with TIM's practices, and using this should eventually be replaced with the specific *_collect -functions!
+    TODO NOTE This function does not seem to produce markdown consistent with TIM's practices, and using this should
+    eventually be replaced with the specific *_collect -functions!
     :param type_: Pandoc AST-type of the content
     :param content: Pandoc AST-content of the type
     :return: List of single NoTranslate -element containing Markdown
@@ -511,7 +517,8 @@ def collect_tim_plugin(attrs: dict, content: str) -> list[TranslateApproval]:
                     # Line is a single line value.
                     arr.append(Translate(text))
                 break
-        # No keys were matched if the inner for-loop does not terminate early -> the line does not contain a known key for translatable text
+        # No keys were matched if the inner for-loop does not terminate early -> the line does not contain a known key
+        # for translatable text
         else:
             arr.append(NoTranslate(line))
         arr.append(NoTranslate("\n"))
@@ -521,7 +528,7 @@ def collect_tim_plugin(attrs: dict, content: str) -> list[TranslateApproval]:
 def codeblock_collect(content: dict) -> list[TranslateApproval]:
     # TODO where to typecheck Attr?
     if not isinstance(content[1], str):
-        assert False, "PanDoc codeblock content is not [ Attr, [Block] ]."
+        raise Exception("PanDoc codeblock content is not [ Attr, [Block] ].")
 
     attr = content[0]
     attr_kv_pairs = dict(attr[2])
@@ -533,9 +540,14 @@ def codeblock_collect(content: dict) -> list[TranslateApproval]:
     arr.append(NoTranslate("```"))
 
     if is_plugin:
-        # NOTE Attr identifier is set to the last occurrence and rest are discarded in Pandoc-parsing eg. from #foo id=bar id=baz only baz is saved and foo and bar are lost! To fix this in regard to TIM's block ids, the id needs to be saved and injected into md after parsing with Pandoc NOTE that such an approach requires that the critical information is saved BEFORE giving the md to Pandoc
-        # TODO Different plugins can be identified by Attr's 3rd index; key-value -pair for example plugin="csplugin", but this information might be unnecessary
-        # NOTE Here, the attributes of codeblock are DISCARDED (as mentioned in comment above) and will not be included in the result when markdown is reconstructed ie. caller should save needed attributes
+        # NOTE Attr identifier is set to the last occurrence and rest are discarded in Pandoc-parsing
+        # eg. from #foo id=bar id=baz only baz is saved and foo and bar are lost! To fix this in regard to TIM's
+        # block ids, the id needs to be saved and injected into md after parsing with Pandoc NOTE that such an approach
+        # requires that the critical information is saved BEFORE giving the md to Pandoc
+        # TODO Different plugins can be identified by Attr's 3rd index; key-value -pair for example plugin="csplugin",
+        # but this information might be unnecessary
+        # NOTE Here, the attributes of codeblock are DISCARDED (as mentioned in comment above) and will not be included
+        # in the result when markdown is reconstructed ie. caller should save needed attributes
         # TODO Does DocParagraph.modify_paragraph include the ``` for (plugin) codeblocks already?
 
         # TODO Maybe parse the YAML to be translated based on keys for more exact translations?
@@ -584,7 +596,9 @@ def orderedlist_collect(content: dict, depth: int) -> list[TranslateApproval]:
         and isinstance(content[0][2]["t"], str)
         or not isinstance(content[1], list)
     ):
-        assert False, "PanDoc orderedlist content is not [ ListAttributes, [[Block]] ]."
+        raise Exception(
+            "PanDoc orderedlist content is not [ ListAttributes, [[Block]] ]."
+        )
     # TODO: fix after tuple check as content[0].
     return list_collect(
         content[1], depth, (int(content[0][0]), str(content[0][1]), str(content[0][2]))
@@ -593,7 +607,7 @@ def orderedlist_collect(content: dict, depth: int) -> list[TranslateApproval]:
 
 def bulletlist_collect(content: dict, depth: int) -> list[TranslateApproval]:
     if not isinstance(content, list):
-        assert False, "PanDoc bulletlist content is not [ [Block] ]."
+        raise Exception("PanDoc bulletlist content is not [ [Block] ].")
     return list_collect(content, depth, None)
 
 
@@ -771,9 +785,10 @@ def definitionlist_collect(content: dict) -> list[TranslateApproval]:
 
 
 def header_collect(content: dict) -> list[TranslateApproval]:
-    # Attr check in attr_collect TODO Should we follow this convention? ATM other funcs like link_collect make the check at their level...
+    # Attr check in attr_collect
+    # TODO Should we follow this convention? ATM other funcs like link_collect make the check at their level...
     if not isinstance(content[0], int) or not isinstance(content[2], list):
-        assert False, "PanDoc orderedlist content is not [ int, Attr, [Inline]  ]"
+        raise Exception("PanDoc orderedlist content is not [ int, Attr, [Inline]  ]")
 
     level = content[0]
     arr: list[TranslateApproval] = list()
@@ -874,7 +889,7 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
     # The last part of block (hopefully) does not require the ending newlines
     # TODO figure out the "correct" way to include newlines
     # arr[-1].text = arr[-1].text.rstrip("\n")
-    ## Remove last element, if it is empty
+    # Remove last element, if it is empty
     # if not arr[-1].text:
     #    return arr[:-1]
 
