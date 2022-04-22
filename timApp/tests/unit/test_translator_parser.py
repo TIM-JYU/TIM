@@ -16,7 +16,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(
             [
                 [
-                    Translate("Tässä on kuva "),
+                    Translate("\nTässä on kuva "),
                     NoTranslate("!["),
                     Translate("kissasta"),
                     NoTranslate("](/kuvat/kissa.png)"),
@@ -24,7 +24,7 @@ class TestParser(unittest.TestCase):
                     NoTranslate("["),
                     Translate("Tosi"),
                     NoTranslate("]{.red}"),
-                    Translate(" hieno, eikös?"),
+                    Translate(" hieno, eikös?\n"),
                 ]
             ],
             get_translate_approvals(text),
@@ -36,9 +36,9 @@ class TestParser(unittest.TestCase):
         self.assertEqual(
             [
                 [
-                    Translate(r"tässä on "),
-                    NoTranslate(r"[teksti]{.notranslate}"),
-                    Translate(r", jota ei käännetä."),
+                    Translate("\ntässä on "),
+                    NoTranslate("[teksti]{.notranslate}"),
+                    Translate(", jota ei käännetä.\n"),
                 ]
             ],
             get_translate_approvals(text),
@@ -51,11 +51,12 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             [
                 [
                     # TODO Should the plugins contain the attributes or no?
+                    Translate("\n"),
                     NoTranslate(
                         """```
 header: Harjoittele matemaattisen vastauksen kirjoittamista.
 ```"""
-                    )
+                    ),
                 ]
             ],
             get_translate_approvals(text),
@@ -65,8 +66,9 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
         self.assertEqual(
             [
                 [
-                    Translate("Jyväskylän yliopisto sijaitsee paikassa nimeltä "),
+                    Translate("\nJyväskylän yliopisto sijaitsee paikassa nimeltä "),
                     NoTranslate("[Keski-Suomi]{.notranslate}"),
+                    Translate("\n"),
                 ]
             ],
             get_translate_approvals(text),
@@ -79,10 +81,11 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
         self.assertEqual(
             [
                 [
-                    Translate("Käännettävää tekstiä"),
+                    Translate("\nKäännettävää tekstiä"),
                     NoTranslate(
                         "[Ei(){}( { käännettävää [x],[y],[x, y] `tekstiä`]{.notranslate}"
                     ),
+                    Translate("\n"),
                 ]
             ],
             get_translate_approvals(text),
@@ -96,6 +99,7 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
         self.assertEqual(
             [
                 [
+                    Translate("\n"),
                     NoTranslate("""***<u><s>"""),
                     Translate("Teksti, jossa on kaikki tyylit paitsi notranslate"),
                     NoTranslate(r"""</s></u>***"""),
@@ -104,6 +108,7 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
                         """\
 ***<u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>***"""
                     ),
+                    Translate("\n"),
                 ]
             ],
             get_translate_approvals(text),
@@ -126,14 +131,15 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             [
                 [
                     Translate(
-                        """r”# otsikko1
+                        """
+r”# otsikko1
 ## otsikko2
 ### otsikko3
 #### otsikko4
 ##### otsikko 5
 ###### otsikko 6
 # otsikko1.2
-# otsikko jossa sana header ja ## merkkejä"""
+# otsikko jossa sana header ja ## merkkejä\n"""
                     )
                 ]
             ],
@@ -263,7 +269,7 @@ x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 && |\text{ ratkaistaan x}\\
             [
                 [
                     # NOTE Pandoc seems to convert a single quote into U+2019
-                    Translate("KING CLAUDIUS\n[Aside] O, ’tis "),
+                    Translate("\nKING CLAUDIUS\n[Aside] O, ’tis "),
                     NoTranslate("$too$"),
                     Translate(" true!\n"),
                     NoTranslate("$How$"),
@@ -294,6 +300,7 @@ x=0\;\;\;\\text{"""
                         r"""}\;x=-7
 \end{align*}"""
                     ),
+                    Translate("\n"),
                 ]
             ],
             get_translate_approvals(latexblock),
@@ -363,11 +370,11 @@ x=0\;\;\;\\text{"""
                     NoTranslate("\n- "),
                     Translate("Yksi kohta"),
                     NoTranslate("\n\t- "),
-                    Translate("Kaksi kohtaa"),
+                    Translate("Kaksi kohtaa\n"),
                     NoTranslate("\n\t- "),
-                    Translate("Kolme kohtaa"),
-                    NoTranslate("\n\t- ```\nKoodia välissä```\n\t- "),
-                    Translate("Jotain"),
+                    Translate("Kolme kohtaa\n"),
+                    NoTranslate("\n\t- ```\nKoodia välissä\n```\n\t- "),
+                    Translate("Jotain\n"),
                 ],
             ],
             get_translate_approvals(md),
@@ -435,6 +442,7 @@ x=0\;\;\;\\text{"""
             [
                 [
                     # TODO/FIXME does a list need to start with newline?
+                    Translate("\n"),
                     NoTranslate("\n1. "),
                     Translate("Tässä ollaan"),
                     NoTranslate("\n\t2. "),
@@ -460,7 +468,7 @@ x=0\;\;\;\\text{"""
                     NoTranslate("\n\tA) "),
                     Translate("Ihan hirveesti"),
                     NoTranslate("\n\tB) "),
-                    Translate("Liikaa"),
+                    Translate("Liikaa\n"),
                 ]
             ],
             get_translate_approvals(md),
@@ -488,6 +496,7 @@ x=0\;\;\;\\text{"""
             [
                 [
                     # TODO/FIXME does a list need to start with newline?
+                    Translate("\n"),
                     NoTranslate("\n1. "),
                     Translate("Tässä ollaan"),
                     NoTranslate("\n\t2. "),
@@ -513,7 +522,7 @@ x=0\;\;\;\\text{"""
                     NoTranslate("\n\tA) "),
                     Translate("Ihan hirveesti"),
                     NoTranslate("\n\tB) "),
-                    Translate("Liikaa"),
+                    Translate("Liikaa\n"),
                 ]
             ],
             get_translate_approvals(md),
@@ -610,6 +619,7 @@ questionTitle: 'Vinkkejä harjoitteluun'
             [
                 [
                     # NOTE At the moment, the attributes are discarded
+                    Translate("\n"),
                     NoTranslate(
                         r"""```
 header: """
@@ -664,6 +674,7 @@ buttons: ""
         self.assertEqual(
             [
                 [
+                    Translate("\n"),
                     NoTranslate(
                         """```
 %%laskin%%
@@ -704,6 +715,7 @@ choices:
         self.assertEqual(
             [
                 [
+                    Translate("\n"),
                     NoTranslate(
                         r"""```
 lazy: false
@@ -749,6 +761,7 @@ file: VIDEOURLHERE
         self.assertEqual(
             [
                 [
+                    Translate("\n"),
                     NoTranslate('```\nfooter: "'),
                     Translate("Video footer here"),
                     NoTranslate(
@@ -817,6 +830,7 @@ P.getData = function(){
         self.assertEqual(
             [
                 [
+                    Translate("\n"),
                     NoTranslate(
                         """```\ntype: geogebra
 #tool: true
