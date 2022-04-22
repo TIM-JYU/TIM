@@ -478,8 +478,11 @@ export class Drawing {
     private endY: number = 0;
 
     // previous move event coordinate
-    private prevStepX: number = 0;
     private prevStepY: number = 0;
+
+    // y-coordinate limits for move event from previous preview shape
+    private prevMinY: number = 0;
+    private prevMaxY: number = 0;
 
     // dimension used when drawing shapes
     private itemX: number = 0;
@@ -545,9 +548,10 @@ export class Drawing {
         this.drawMoved = true;
         const {x, y} = coords;
         const w = this.drawOptions.w;
+        // TODO: Adding more DrawTypes later could be easier with classes
         if (
-            this.drawOptions.drawType == DrawType.Ellipse ||
-            this.drawOptions.drawType == DrawType.Rectangle
+            this.drawOptions.drawType == DrawType.Rectangle ||
+            this.drawOptions.drawType == DrawType.CornerEllipse
         ) {
             this.minY = Math.min(this.startY, y, this.prevStepY) - w;
             this.maxY = Math.max(this.startY, y, this.prevStepY) + w;
@@ -558,11 +562,26 @@ export class Drawing {
             this.itemY = Math.min(y, this.startY);
             this.itemW = Math.abs(x - this.startX);
             this.itemH = Math.abs(y - this.startY);
-            if (this.drawOptions.drawType == DrawType.Ellipse) {
+            if (this.drawOptions.drawType == DrawType.CornerEllipse) {
                 this.drawPreviewEllipse();
             } else {
                 this.drawPreviewRectangle();
             }
+        } else if (this.drawOptions.drawType == DrawType.CenterEllipse) {
+            const oppositeX = 2 * this.startX - x;
+            const oppositeY = 2 * this.startY - y;
+            this.itemX = Math.min(x, oppositeX);
+            this.itemY = Math.min(y, oppositeY);
+            this.itemW = Math.abs(x - oppositeX);
+            this.itemH = Math.abs(y - oppositeY);
+            this.minY = Math.min(oppositeY, this.prevMinY) - w;
+            this.maxY = Math.max(oppositeY, this.prevMaxY) + w;
+            this.prevMinY = this.itemY;
+            this.prevMaxY = this.itemY + this.itemH;
+            this.setActiveContexts();
+            this.redrawAll();
+            this.setContextSettingsFromOptions();
+            this.drawPreviewEllipse();
         } else if (this.drawOptions.drawType == DrawType.Arrow) {
             const points = getArrowPoints({
                 start: {x: this.startX, y: this.startY},
@@ -619,7 +638,10 @@ export class Drawing {
             this.drawStarted = false;
         }
         if (this.drawMoved) {
-            if (this.drawOptions.drawType == DrawType.Ellipse) {
+            if (
+                this.drawOptions.drawType == DrawType.CenterEllipse ||
+                this.drawOptions.drawType == DrawType.CornerEllipse
+            ) {
                 const ellipse: IEllipse = {
                     type: "ellipse",
                     drawData: this.makeFullRectangleOrEllipse(),
