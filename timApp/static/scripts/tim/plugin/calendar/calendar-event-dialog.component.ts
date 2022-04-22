@@ -1,5 +1,5 @@
 import {Component, NgModule} from "@angular/core";
-import {FormsModule, NgForm} from "@angular/forms";
+import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {DialogModule} from "../../ui/angulardialog/dialog.module";
