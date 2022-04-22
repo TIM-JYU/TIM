@@ -107,7 +107,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!isEditEnabled()">
                     Delete
                 </button>
-                <button class="timButton" type="submit" (click)="onSubmit(form)" [disabled]="form.invalid"
+                <button class="timButton" type="submit" (click)="saveChanges()" [disabled]="form.invalid"
                         [hidden]="!isEditEnabled()">
                     Save
                 </button>
@@ -133,11 +133,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 
     constructor(private http: HttpClient) {
         super();
-    }
-
-    async onSubmit(form: NgForm) {
-        console.log(form.errors);
-        await this.saveChanges();
     }
 
     /**
