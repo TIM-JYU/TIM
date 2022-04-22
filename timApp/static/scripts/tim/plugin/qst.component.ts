@@ -61,17 +61,22 @@ const PluginFields = t.intersection([
                     [questiondata]="preview"
                     (onAnswerChange)="updateAnswer($event)">
             </tim-answer-sheet>
-            <button class="timButton" [innerHtml]="button" *ngIf="button"
-                    [disabled]="isRunning || isInvalid() || (disableUnchanged && !isUnSaved())"
-                    (click)="saveText()"></button>
-            <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event)">
-                &nbsp;{{undoButton}}
-            </a>
-
-            &nbsp;&nbsp;
-            <a class="questionAddedNew" *ngIf="hasTeacherRight() && !isInvalid()" (click)="questionClicked()">
-                <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
-            </a>
+            <div class="csRunMenuArea">
+                <div class="csRunMenu">
+                    <button class="timButton"
+                            [innerHtml]="button"
+                            *ngIf="button"
+                            [disabled]="isRunning || isInvalid() || (disableUnchanged && !isUnSaved())"
+                            (click)="saveText()"></button>
+                    <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event)">
+                    &nbsp;{{undoButton}}
+                    </a>
+                    &nbsp;&nbsp;
+                    <a class="questionAddedNew" *ngIf="hasTeacherRight() && !isInvalid()" (click)="questionClicked()">
+                        <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
+                    </a>  
+                </div>
+            </div>
             &ngsp;
             <span *ngIf="result">{{result}}</span>
             <p class="plgfooter" [innerHtml]="getFooter() | purify"></p>
