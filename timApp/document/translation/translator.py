@@ -655,7 +655,11 @@ class TranslateMethodFactory:
                             table_html: str = pypandoc.convert_text(
                                 elem.text, to="html", format="md"
                             )
-                            # Translate as HTML
+                            # Translate as HTML NOTE Requires translator to
+                            # support tag handling in HTML
+                            # TODO All document's tables could potentially be
+                            #  send to translator at once instead of one by
+                            #  one as done here.
                             table_html_tr = translator.translate(
                                 [[Translate(table_html)]],
                                 source_lang,
