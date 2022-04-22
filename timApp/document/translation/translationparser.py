@@ -318,88 +318,90 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
     # TODO Dynamic typing would be easy here but Mypy doesn't like this
     content = top_inline.get("c", list())
     arr: list[TranslateApproval] = list()
-    # Change to str
-    if type_ == "Str":
-        if not isinstance(content, str):
-            raise Exception("PanDoc inline content is not [ str ].")
-        arr.append(Translate(content))
-    # What?
-    if type_ == "Emph":
-        # NOTE Recursion
-        arr.append(NoTranslate("*"))
-        for inline in content:
-            arr += inline_collect(inline)
-        arr.append(NoTranslate("*"))
-    elif type_ == "Underline":
-        # NOTE Recursion
-        # TODO Is this just <u>text</u> == RawInline?
-        # TODO Feed example to pypandoc to learn more
-        arr.append(NoTranslate("<u>"))
-        for inline in content:
-            arr += inline_collect(inline)
-        arr.append(NoTranslate("</u>"))
-    elif type_ == "Strong":
-        arr.append(NoTranslate("**"))
-        for inline in content:
-            arr += inline_collect(inline)
-        arr.append(NoTranslate("**"))
-    elif type_ == "Strikeout":
-        # NOTE Recursion
-        # TODO Maybe same as UnderLine?
-        arr.append(NoTranslate("<s>"))
-        for inline in content:
-            arr += inline_collect(inline)
-        arr.append(NoTranslate("</s>"))
-    elif type_ == "Superscript":
-        # TODO Not related to this module, but spaces inside break TIM render of Superscript.
-        #  eg. ^yläindeksi^ can translate into English as ^top index^, which renders badly, but
-        #  rendering could be fixed by encoding spaces like ^top\ index^.
-        arr.append(NoTranslate("^"))
-        for inline in content:
-            arr += inline_collect(inline)
-        arr.append(NoTranslate("^"))
-    elif type_ == "Subscript":
-        arr.append(NoTranslate("~"))
-        for inline in content:
-            arr += inline_collect(inline)
-        arr.append(NoTranslate("~"))
-    elif type_ == "SmallCaps":
-        # TODO What even is this?
-        for inline in content:
-            # TODO if figured out remove this notranslate
-            arr += list(map(lambda x: NoTranslate(x.text), inline_collect(inline)))
-    elif type_ == "Note":
-        # NOTE Scary?
-        for block in content:
-            arr += block_collect(block)
-    elif type_ == "Quoted":
-        arr += quoted_collect(content)
-    elif type_ == "Cite":
-        arr += cite_collect(content)
-    elif type_ == "Space":
-        arr.append(Translate(" "))
-    elif type_ == "SoftBreak":
-        # TODO Are newlines translated or not?
-        arr.append(Translate("\n"))
-    elif type_ == "LineBreak":
-        arr.append(NoTranslate("\\"))
-        # TODO Are newlines translated or not?
-        arr.append(Translate("\n"))
-    elif type_ == "Code":
-        arr += code_collect(content)
-    elif type_ == "Math":
-        arr += math_collect(content)
-    elif type_ == "RawInline":
-        arr += rawinline_collect(content)
+    match type_:
+        case "Str":
+            if not isinstance(content, str):
+                raise Exception("PanDoc inline content is not [ str ].")
+            arr.append(Translate(content))
+        case "Emph":
+            # NOTE Recursion
+            arr.append(NoTranslate("*"))
+            for inline in content:
+                arr += inline_collect(inline)
+            arr.append(NoTranslate("*"))
+        case "Underline":
+            # NOTE Recursion
+            # TODO Is this just <u>text</u> == RawInline?
+            # TODO Feed example to pypandoc to learn more
+            arr.append(NoTranslate("<u>"))
+            for inline in content:
+                arr += inline_collect(inline)
+            arr.append(NoTranslate("</u>"))
+        case "Strong":
+            arr.append(NoTranslate("**"))
+            for inline in content:
+                arr += inline_collect(inline)
+            arr.append(NoTranslate("**"))
+        case "Strikeout":
+            # NOTE Recursion
+            # TODO Maybe same as UnderLine?
+            arr.append(NoTranslate("<s>"))
+            for inline in content:
+                arr += inline_collect(inline)
+            arr.append(NoTranslate("</s>"))
+        case "Superscript":
+            # TODO Not related to this module, but spaces inside break TIM render of Superscript.
+            #  eg. ^yläindeksi^ can translate into English as ^top index^, which renders badly, but
+            #  rendering could be fixed by encoding spaces like ^top\ index^.
+            arr.append(NoTranslate("^"))
+            for inline in content:
+                arr += inline_collect(inline)
+            arr.append(NoTranslate("^"))
+        case "Subscript":
+            arr.append(NoTranslate("~"))
+            for inline in content:
+                arr += inline_collect(inline)
+            arr.append(NoTranslate("~"))
+        case "SmallCaps":
+            # TODO What even is this?
+            for inline in content:
+                # TODO if figured out remove this notranslate
+                arr += list(map(lambda x: NoTranslate(x.text), inline_collect(inline)))
+        case "Note":
+            # NOTE Scary?
+            for block in content:
+                arr += block_collect(block)
+        case "Quoted":
+            arr += quoted_collect(content)
+        case "Cite":
+            arr += cite_collect(content)
+        case "Space":
+            arr.append(Translate(" "))
+        case "SoftBreak":
+            # TODO Are newlines translated or not?
+            arr.append(Translate("\n"))
+        case "LineBreak":
+            arr.append(NoTranslate("\\"))
+            # TODO Are newlines translated or not?
+            arr.append(Translate("\n"))
+        case "Code":
+            arr += code_collect(content)
+        case "Math":
+            arr += math_collect(content)
+        case "RawInline":
+            arr += rawinline_collect(content)
 
-    # Dict[any, any, any]
-    elif type_ == "Link":
-        arr += link_collect(content)
-    elif type_ == "Image":
-        arr += image_collect(content)
+        # Dict[any, any, any]
+        case "Link":
+            arr += link_collect(content)
+        case "Image":
+            arr += image_collect(content)
 
-    elif type_ == "Span":
-        arr += span_collect(content)
+        case "Span":
+            arr += span_collect(content)
+
+        case x:
+            raise Exception(f"Parser encountered unexpected type: '{x}'")
 
     return arr
 
@@ -839,53 +841,56 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
     if depth == 0:
         arr.append(Translate("\n"))
 
-    if type_ == "Plain":
-        # TODO Need different literals before?
-        for inline in content:
-            arr += inline_collect(inline)
-    elif type_ == "Para":
-        for inline in content:
-            arr += inline_collect(inline)
-        # "A paragraph is simply one or more consecutive lines of text, separated by one or more blank lines."
-        # https://daringfireball.net/projects/markdown/syntax#p
-        # TODO Decide whether these newlines should be added or not
-        arr.append(Translate("\n"))
-    elif type_ == "LineBlock":
-        for inline_list in content:
-            for inline in inline_list:
+    match type_:
+        case "Plain":
+            # TODO Need different literals before?
+            for inline in content:
                 arr += inline_collect(inline)
-    elif type_ == "CodeBlock":
-        # Code blocks are not translated
-        arr += codeblock_collect(content)
-    elif type_ == "RawBlock":
-        arr += rawblock_collect(content)
-    elif type_ == "BlockQuote":
-        # NOTE Recursion
-        # TODO See that this implementation actually works
-        arr.append(NoTranslate("> "))
-        for block in content:
-            arr += block_collect(block)
-    elif type_ == "OrderedList":
-        # NOTE Recursion
-        arr += orderedlist_collect(content, depth)
-    elif type_ == "BulletList":
-        # NOTE Recursion
-        arr += bulletlist_collect(content, depth)
-    elif type_ == "DefinitionList":
-        arr += definitionlist_collect(content)
-    elif type_ == "Header":
-        arr += header_collect(content)
-        # Add newline after Header so an empty line is produced if a block
-        # follows
-        arr.append(Translate("\n"))
-    elif type_ == "HorizontalRule":
-        arr.append(NoTranslate("***"))
-    elif type_ == "Table":
-        arr += table_collect(content)
-    elif type_ == "Div":
-        arr += div_collect(content)
-    elif type_ == "Null":
-        pass
+        case "Para":
+            for inline in content:
+                arr += inline_collect(inline)
+            # "A paragraph is simply one or more consecutive lines of text, separated by one or more blank lines."
+            # https://daringfireball.net/projects/markdown/syntax#p
+            # TODO Decide whether these newlines should be added or not
+            arr.append(Translate("\n"))
+        case "LineBlock":
+            for inline_list in content:
+                for inline in inline_list:
+                    arr += inline_collect(inline)
+        case "CodeBlock":
+            # Code blocks are not translated
+            arr += codeblock_collect(content)
+        case "RawBlock":
+            arr += rawblock_collect(content)
+        case "BlockQuote":
+            # NOTE Recursion
+            # TODO See that this implementation actually works
+            arr.append(NoTranslate("> "))
+            for block in content:
+                arr += block_collect(block)
+        case "OrderedList":
+            # NOTE Recursion
+            arr += orderedlist_collect(content, depth)
+        case "BulletList":
+            # NOTE Recursion
+            arr += bulletlist_collect(content, depth)
+        case "DefinitionList":
+            arr += definitionlist_collect(content)
+        case "Header":
+            arr += header_collect(content)
+            # Add newline after Header so an empty line is produced if a block
+            # follows
+            arr.append(Translate("\n"))
+        case "HorizontalRule":
+            arr.append(NoTranslate("***"))
+        case "Table":
+            arr += table_collect(content)
+        case "Div":
+            arr += div_collect(content)
+        case "Null":
+            pass
+        case x:
+            raise Exception(f"Parser encountered unexpected type: '{x}'")
 
     # The last part of block (hopefully) does not require the ending newlines
     # TODO figure out the "correct" way to include newlines
