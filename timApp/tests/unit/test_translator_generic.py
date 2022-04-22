@@ -100,7 +100,8 @@ class TestGenericTranslator(TimDbTest):
         translator = ReversingTranslationService()
         # TODO A more extensive test input might need to be used here
         parts = get_translate_approvals(
-            "Here I am [**rocking**]{.red} [like](www.example.com) a ![hurricane](/imgs/hurricane.png)!"
+            "Here I am [**rocking**]{.red} [like](www.example.com) "
+            "a ![hurricane](/imgs/hurricane.png)!"
         )
 
         # Sanity checks
@@ -110,21 +111,10 @@ class TestGenericTranslator(TimDbTest):
 
         self.assertEqual(
             [
-                TR(" ma I ereH"),
-                NT("[**"),
-                TR("gnikcor"),
-                NT("**]{.red}"),
-                TR(" "),
-                NT("["),
-                TR("ekil"),
-                NT("](www.example.com)"),
-                TR(" a "),
-                NT("!["),
-                TR("enacirruh"),
-                NT("](/imgs/hurricane.png)"),
-                TR("!"),
+                " ma I ereH\n[**gnikcor**]{.red} [ekil](www.example.com) "
+                "a ![enacirruh](/imgs/hurricane.png)\n!"
             ],
-            translator.translate(parts[0], none_lang, none_lang),
+            translator.translate(parts, none_lang, none_lang),
         )
 
     def test_all_translate(self):
@@ -140,8 +130,8 @@ class TestGenericTranslator(TimDbTest):
             self.assertIsInstance(x.text, str)
 
         self.assertEqual(
-            [TR("ma I ereH")],
-            translator.translate(parts[0], none_lang, none_lang),
+            ["\nma I ereH\n"],
+            translator.translate(parts, none_lang, none_lang),
         )
 
     def test_all_notranslate(self):
@@ -152,14 +142,15 @@ class TestGenericTranslator(TimDbTest):
 
         # Sanity checks
         self.assertEqual(len(parts), 1)
-        for x in parts[0]:
+        # The first and last item are Translate("\n")
+        for x in parts[1:-1]:
             self.assertIsInstance(x, NoTranslate)
             self.assertIsInstance(x.text, str)
 
         self.assertEqual(
             # NOTE that {} as optional(?) get omitted by parsing
-            [NT("[]()[]![]()")],
-            translator.translate(parts[0], none_lang, none_lang),
+            ["\n[]()[]![]()\n"],
+            translator.translate(parts, none_lang, none_lang),
         )
 
     def test_empty(self):
