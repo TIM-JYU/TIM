@@ -14,7 +14,6 @@ class TestParser(unittest.TestCase):
         # TODO Add cases for identifiers, key-value -pairs and multiple classes as well
         text = "Tässä on kuva ![kissasta](/kuvat/kissa.png). [Tosi]{.red} hieno, eikös?"
         self.assertEqual(
-            get_translate_approvals(text),
             [
                 [
                     Translate("Tässä on kuva "),
@@ -28,13 +27,13 @@ class TestParser(unittest.TestCase):
                     Translate(" hieno, eikös?"),
                 ]
             ],
+            get_translate_approvals(text),
         )
 
     # For .notranslate style, might move elsewhere. For future use.
     def test_notranslate_style1(self):
         text = r"tässä on [teksti]{.notranslate}, jota ei käännetä."
         self.assertEqual(
-            get_translate_approvals(text),
             [
                 [
                     Translate(r"tässä on "),
@@ -42,13 +41,13 @@ class TestParser(unittest.TestCase):
                     Translate(r", jota ei käännetä."),
                 ]
             ],
+            get_translate_approvals(text),
         )
 
         text = """``` {plugin="csPlugin" #btn-tex2 .notranslate .miniSnippets}
 header: Harjoittele matemaattisen vastauksen kirjoittamista.
 ```"""
         self.assertEqual(
-            get_translate_approvals(text),
             [
                 [
                     # TODO Should the plugins contain the attributes or no?
@@ -59,17 +58,18 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
                     )
                 ]
             ],
+            get_translate_approvals(text),
         )
 
         text = "Jyväskylän yliopisto sijaitsee paikassa nimeltä [Keski-Suomi]{.notranslate}"
         self.assertEqual(
-            get_translate_approvals(text),
             [
                 [
                     Translate("Jyväskylän yliopisto sijaitsee paikassa nimeltä "),
                     NoTranslate("[Keski-Suomi]{.notranslate}"),
                 ]
             ],
+            get_translate_approvals(text),
         )
 
     def test_notranslate_style2(self):
@@ -77,7 +77,6 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
         Will fail if it contains unclosed [ or ]"""
         text = "Käännettävää tekstiä[Ei(){}( { käännettävää [x],[y],[x, y] `tekstiä`]{.notranslate}"
         self.assertEqual(
-            get_translate_approvals(text),
             [
                 [
                     Translate("Käännettävää tekstiä"),
@@ -86,6 +85,7 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
                     ),
                 ]
             ],
+            get_translate_approvals(text),
         )
 
     def test_notranslate_style3(self):
@@ -94,7 +94,6 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
         ***<u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>***"""
 
         self.assertEqual(
-            get_translate_approvals(text),
             [
                 [
                     NoTranslate("""***<u><s>"""),
@@ -107,6 +106,7 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
                     ),
                 ]
             ],
+            get_translate_approvals(text),
         )
 
     def test_header(self):
@@ -123,7 +123,6 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             ""
         )
         self.assertEqual(
-            get_translate_approvals(text),
             [
                 [
                     Translate(
@@ -138,6 +137,7 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
                     )
                 ]
             ],
+            get_translate_approvals(text),
         )
 
     def test_tex_collect(self):
@@ -148,7 +148,6 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             r"\&\;\;\;\;\;\,\;\;x^2=49 \&\;\;\;\;\;\,\;\;\;\;x=7\;\mathsf{tai}\;x=-7"
         )
         self.assertEqual(
-            tex_collect(text),
             [
                 NoTranslate(r"x^3-49x&=0 &&|\text{"),
                 Translate(r" erotetaan yhteinen tekijä x"),
@@ -164,29 +163,29 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
                 Translate(r"tai"),
                 NoTranslate(r"}\;x=-7"),
             ],
+            tex_collect(text),
         )
 
     def test_tex_collect_simple_text(self):
         """Testing simple text inside latex"""
         text = r"\text{testi}\x"
         self.assertEqual(
-            tex_collect(text),
             [NoTranslate(r"\text{"), Translate(r"testi"), NoTranslate(r"}\x")],
+            tex_collect(text),
         ),
 
     def test_tex_collect_style_text(self):
         """Testing text with style inside latex"""
         text = r"\textrm{another test}\x"
         self.assertEqual(
-            tex_collect(text),
             [NoTranslate(r"\textrm{"), Translate(r"another test"), NoTranslate(r"}\x")],
+            tex_collect(text),
         ),
 
     def test_tex_collect_math_function1(self):
         """Testing a math function inside latex using dollar signs"""
         text = r"\text{Testataan kaaviota: }\x$1\;\text{prosentti}=1\;\% =\frac{1}{100}=0,01$"
         self.assertEqual(
-            tex_collect(text),
             [
                 NoTranslate(r"\text{"),
                 Translate(r"Testataan kaaviota: "),
@@ -194,18 +193,19 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
                 Translate(r"prosentti"),
                 NoTranslate(r"}=1\;\% =\frac{1}{100}=0,01$"),
             ],
+            tex_collect(text),
         ),
 
     def test_tex_collect_math_function2(self):
         """Testing a math function mathrm inside latex using double dollar signs"""
         text = r"$$\mathrm{Muuttuja e} = \sum_{n=0}^{\infty} \dfrac{1}{n!}$$"
         self.assertEqual(
-            tex_collect(text),
             [
                 NoTranslate(r"$$\mathrm{"),
                 Translate(r"Muuttuja e"),
                 NoTranslate(r"} = \sum_{n=0}^{\infty} \dfrac{1}{n!}$$"),
             ],
+            tex_collect(text),
         ),
 
     def test_tex_collect_math_function3(self):
@@ -218,7 +218,6 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
         \end{bmatrix}
         $$"""
         self.assertEqual(
-            tex_collect(text),
             [
                 NoTranslate(
                     r""""$$M = 
@@ -230,13 +229,13 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
         $$"""
                 )
             ],
+            tex_collect(text),
         )
 
     def test_tex_collect_formatted(self):
         """Testing bold and italics formatting"""
         text = r"\textbf{oranges}\x\times 100 \textit{something}\x"
         self.assertEqual(
-            tex_collect(text),
             [
                 NoTranslate(r"\textbf{"),
                 Translate(r"oranges"),
@@ -244,6 +243,7 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
                 Translate(r"something"),
                 NoTranslate(r"}\x"),
             ],
+            tex_collect(text),
         ),
 
     def test_get_translate_approvals_latex(self):
@@ -260,7 +260,6 @@ x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 && |\text{ ratkaistaan x}\\
 &\;\;\;\;\;\,\;\;\;\;x=7\;\text{tai}\;x=-7
 \end{align*} """
         self.assertEqual(
-            get_translate_approvals(latexblock),
             [
                 [
                     # NOTE Pandoc seems to convert a single quote into U+2019
@@ -297,6 +296,7 @@ x=0\;\;\;\\text{"""
                     ),
                 ]
             ],
+            get_translate_approvals(latexblock),
         )
 
     def test_bulletlist1(self):
@@ -314,10 +314,10 @@ x=0\;\;\;\\text{"""
                 Kolmannen
 """
         self.assertEqual(
-            get_translate_approvals(md),
             [
                 [
                     # TODO/FIXME does a list need to start with newline?
+                    Translate("\n"),
                     NoTranslate("\n- "),
                     Translate("Mieleni minun "),
                     NoTranslate("["),
@@ -339,9 +339,10 @@ x=0\;\;\;\\text{"""
                     NoTranslate("\\"),
                     Translate("\nAivoni ajattelevi"),
                     NoTranslate("\\"),
-                    Translate("\nKerran\nToisen\nKolmannen"),
+                    Translate("\nKerran\nToisen\nKolmannen\n"),
                 ]
             ],
+            get_translate_approvals(md),
         )
 
     def test_bulletlist2(self):
@@ -356,9 +357,9 @@ x=0\;\;\;\\text{"""
     ```
     - Jotain"""
         self.assertEqual(
-            get_translate_approvals(md),
             [
                 [
+                    Translate("\n"),
                     NoTranslate("\n- "),
                     Translate("Yksi kohta"),
                     NoTranslate("\n\t- "),
@@ -369,6 +370,7 @@ x=0\;\;\;\\text{"""
                     Translate("Jotain"),
                 ],
             ],
+            get_translate_approvals(md),
         )
 
     def test_bulletlist3(self):
@@ -383,7 +385,6 @@ x=0\;\;\;\\text{"""
     - ""\"Lopuksi'
     - Add"end\'um   """
         self.assertEqual(
-            get_translate_approvals(md),
             [
                 [
                     NoTranslate("\n- "),
@@ -406,6 +407,7 @@ x=0\;\;\;\\text{"""
                     Translate("Add\"end'um"),
                 ]
             ],
+            get_translate_approvals(md),
         )
 
     def test_ordered_list1(self):
@@ -424,7 +426,6 @@ x=0\;\;\;\\text{"""
     B) Liikaa
 """
         self.assertEqual(
-            get_translate_approvals(md),
             [
                 [
                     # TODO/FIXME does a list need to start with newline?
@@ -456,6 +457,7 @@ x=0\;\;\;\\text{"""
                     Translate("Liikaa"),
                 ]
             ],
+            get_translate_approvals(md),
         )
 
     def test_ordered_list2(self):
@@ -474,7 +476,6 @@ x=0\;\;\;\\text{"""
     B) Liikaa
 """
         self.assertEqual(
-            get_translate_approvals(md),
             [
                 [
                     # TODO/FIXME does a list need to start with newline?
@@ -506,6 +507,7 @@ x=0\;\;\;\\text{"""
                     Translate("Liikaa"),
                 ]
             ],
+            get_translate_approvals(md),
         )
 
     def test_ordered_list3(self):
@@ -519,7 +521,6 @@ x=0\;\;\;\\text{"""
 
     """
         self.assertEqual(
-            get_translate_approvals(md),
             [
                 [
                     NoTranslate("\n1. "),
@@ -536,6 +537,7 @@ x=0\;\;\;\\text{"""
                     Translate('Ihan "liikaa roomalaisia numeroita'),
                 ]
             ],
+            get_translate_approvals(md),
         )
 
     def test_ordered_list_codeblock(self):
@@ -548,7 +550,6 @@ x=0\;\;\;\\text{"""
 2. Koira"""
 
         self.assertEqual(
-            get_translate_approvals(md),
             [
                 [
                     NoTranslate("1. "),
@@ -565,6 +566,7 @@ x=0\;\;\;\\text{"""
                     Translate("Koira"),
                 ]
             ],
+            get_translate_approvals(md),
         )
 
     def test_tim_plugin1(self):
@@ -590,7 +592,6 @@ eri ratkaisua.  Vain jos diskriminantti $D = \sqrt{b^2 - 4ac}$ on nolla, on ratk
 questionTitle: 'Vinkkejä harjoitteluun'
 ```"""
         self.assertEqual(
-            get_translate_approvals(md),
             [
                 [
                     # NOTE At the moment, the attributes are discarded
@@ -633,6 +634,7 @@ questionTitle: '"""
                     NoTranslate("'\n```"),
                 ]
             ],
+            get_translate_approvals(md),
         )
 
         md = r"""``` {#lasku plugin="csPlugin"}
@@ -645,7 +647,6 @@ sin(π / 2)
 buttons: ""
 ```"""
         self.assertEqual(
-            get_translate_approvals(md),
             [
                 [
                     NoTranslate(
@@ -665,6 +666,7 @@ buttons: ""
                     ),
                 ]
             ],
+            get_translate_approvals(md),
         )
 
     def test_tim_plugin2(self):
@@ -685,7 +687,6 @@ choices:
     
 ```"""
         self.assertEqual(
-            get_translate_approvals(md),
             [
                 [
                     NoTranslate(
@@ -717,6 +718,7 @@ stem: """
                     ),
                 ]
             ],
+            get_translate_approvals(md),
         )
 
     def test_tim_plugin3(self):
@@ -730,7 +732,6 @@ file: VIDEOURLHERE
 ```
 """
         self.assertEqual(
-            get_translate_approvals(md),
             [
                 [
                     NoTranslate('```\nfooter: "'),
@@ -745,6 +746,7 @@ file: VIDEOURLHERE
                     ),
                 ]
             ],
+            get_translate_approvals(md),
         )
 
     def test_tim_plugin4(self):
@@ -798,7 +800,6 @@ P.getData = function(){
 ```
 """
         self.assertEqual(
-            get_translate_approvals(md),
             [
                 [
                     NoTranslate(
@@ -856,6 +857,7 @@ P.getData = function(){
                     ),
                 ]
             ],
+            get_translate_approvals(md),
         )
 
     # TODO Finish this test when there is a clearer picture of the needs
@@ -890,7 +892,6 @@ kodblock
         TR = Translate
         NT = NoTranslate
         self.assertEqual(
-            get_translate_approvals(md),
             [
                 [NT("**"), TR("fet"), NT("**\n\n*")],
                 [
@@ -912,6 +913,7 @@ kodblock
                     NT("^"),
                 ],
             ],
+            get_translate_approvals(md),
         )
 
 

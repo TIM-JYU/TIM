@@ -45,7 +45,8 @@ def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
     """
     # Parse the string into an ast
     ast = json.loads(pypandoc.convert_text(md, format="md", to="json"))
-    # By walking the ast, glue continuous translatable parts together into Translate-object and non-translatable parts into NoTranslate object
+    # By walking the ast, glue continuous translatable parts together into
+    # Translate-object and non-translatable parts into NoTranslate object
     # Add the objects into a list where they alternate T|NT, NT, T, NT ... T|NT
     block_approvals = [
         merge_consecutive(block_collect(block)) for block in ast["blocks"]
@@ -135,7 +136,7 @@ def attr_collect(content: list) -> Tuple[list[TranslateApproval], bool]:
     kv_pairs = content[2]
 
     # Handle the special style in TIM, that allows user to opt out from translating some text
-    is_notranslate = "notranslate" in classes
+    is_notranslate = "notranslate" in classes or "nt" in classes
 
     # Return nothing if there's no attrs
     if not (identifier or classes or kv_pairs):
@@ -541,10 +542,19 @@ def codeblock_collect(content: dict) -> list[TranslateApproval]:
         arr.append(NoTranslate("\n"))
         arr += collect_tim_plugin(attr, content[1])
     else:
-        # TODO Should the plugins contain the attributes or not?
+        # NOTE Pandoc does not tell us what syntax (N amount of `-marks or
+        # indentation) the original markdown used with the codeblock
+        # TODO To handle the case, where content of a code block contains Markdown
+        #  code block syntax, parse until no codeblocks are found. Ie.
+        # ````                  ==> ```` # Level 0 code block
+        # ```                   ==> ``` # Level 1 code block
+        # My codeblock example  ==> My codeblock example
+        # ```                   ==> ```
+        # ````                  ==> ````
         arr += attrs
         arr.append(NoTranslate("\n"))
         arr.append(NoTranslate(content[1]))
+        arr.append(NoTranslate("\n"))
 
     arr.append(NoTranslate("```"))
 
@@ -672,6 +682,10 @@ def list_collect(
             # FIXME It seems hard to control the indentation of paragraphs at this level
             arr += block_collect(block, depth + 1)
 
+    # Handle edge case of separation between Markdown lists and paragraphs.
+    if depth == 0:
+        arr.append(Translate("\n"))
+
     return arr
 
 
@@ -764,6 +778,8 @@ def header_collect(content: dict) -> list[TranslateApproval]:
     level = content[0]
     arr: list[TranslateApproval] = list()
 
+    # Prepend Headers with an empty line (see block_collect, where the first
+    # newline is added)
     arr.append(NoTranslate(f"\n{'#' * level} "))
     for inline in content[2]:
         arr += inline_collect(inline)
@@ -843,7 +859,9 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
         arr += definitionlist_collect(content)
     elif type_ == "Header":
         arr += header_collect(content)
-        arr.append(NoTranslate("\n"))
+        # Add newline after Header so an empty line is produced if a block
+        # follows
+        arr.append(Translate("\n"))
     elif type_ == "HorizontalRule":
         arr.append(NoTranslate("***"))
     elif type_ == "Table":
