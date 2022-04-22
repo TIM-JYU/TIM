@@ -11,6 +11,11 @@
   pointer-events: none;
 }
 
+/* Dictates event size so that multiple events can be added in same timeslot by clicking */
+.cal-events-container {
+  width: calc(89% - 2px);
+}
+
 .edit-btn {
   margin-bottom: 20px;
 }
