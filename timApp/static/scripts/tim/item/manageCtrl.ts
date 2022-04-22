@@ -14,6 +14,7 @@ import {
     listTranslators,
     listLanguages,
     availableTranslators,
+    isOptionAvailable,
 } from "../document/editing/edittypes";
 import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
@@ -142,7 +143,7 @@ export class PermCtrl implements IController {
             }
         }
         for (const tr of this.translators) {
-            this.isOptionAvailable(tr);
+            isOptionAvailable(tr, this.availableTranslators);
         }
     }
 
@@ -255,7 +256,7 @@ export class PermCtrl implements IController {
 
     async changeTitle() {
         if (!this.newTitle) {
-            showMessageDialog("Title not provided.");
+            await showMessageDialog("Title not provided.");
             return;
         }
         const r = await to(
@@ -358,14 +359,6 @@ export class PermCtrl implements IController {
         }
     }
 
-    isOptionAvailable(tr: ITranslators) {
-        for (const translator of this.availableTranslators) {
-            if (tr.name == translator) {
-                tr.available = true;
-            }
-        }
-    }
-
     /**
      * Sets the right text for the document deletion button.
      */
@@ -427,9 +420,9 @@ export class PermCtrl implements IController {
         }
     }
 
-    convertDocument(doc: string) {
+    async convertDocument(doc: string) {
         if (!this.wikiRoot) {
-            showMessageDialog("Wiki root missing.");
+            await showMessageDialog("Wiki root missing.");
             return;
         }
         let text = this.tracWikiText;
@@ -573,7 +566,7 @@ export class PermCtrl implements IController {
                             "\n\nDo you still wish to save the document?"
                     )
                 ) {
-                    this.saveDocumentWithWarnings();
+                    await this.saveDocumentWithWarnings();
                 }
             } else {
                 await showMessageDialog(data.error);
@@ -682,7 +675,7 @@ export class PermCtrl implements IController {
 
     /**
      * Finds the language of the translation document the given ID refers to.
-     * @param the id of the translation document
+     * @param id the id of the translation document
      * @returns The current translation document's language or nothing if not found or is source document.
      */
     findCurrentTrDocLang(id: number) {
@@ -711,7 +704,8 @@ export class PermCtrl implements IController {
     }
 
     /**
-     * Checks whether the translator chosen for the document is Manual (in which case a translator language is not shown) or not
+     * Checks whether the translator chosen for the document is Manual (in which case a translator language is not
+     * shown) or not
      */
     notManualCheck() {
         if (this.newTranslation.translator == "Manual") {

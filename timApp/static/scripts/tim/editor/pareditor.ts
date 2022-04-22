@@ -21,6 +21,7 @@ import {
     listTranslators,
     listLanguages,
     availableTranslators,
+    isOptionAvailable,
 } from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
@@ -1283,7 +1284,7 @@ ${backTicks}
             }
         }
         for (const tr of this.translators) {
-            this.isOptionAvailable(tr);
+            isOptionAvailable(tr, this.availableTranslators);
         }
     }
 
@@ -1293,6 +1294,8 @@ ${backTicks}
      */
     async compileOriginalPreview() {
         const previewOriginalDiv = angular.element(".previeworiginalcontent");
+        // This is called for the first time before this component is created, so this check is needed to avoid
+        // needless running of this function.
         if (previewOriginalDiv.length == 0) {
             await this.editorChanged();
             return;
@@ -1465,14 +1468,6 @@ ${backTicks}
 
     getInitialText() {
         return this.resolve.params.initialText;
-    }
-
-    isOptionAvailable(tr: ITranslators) {
-        for (const translator of this.availableTranslators) {
-            if (tr.name == translator) {
-                tr.available = true;
-            }
-        }
     }
 
     async setInitialText() {
@@ -1952,7 +1947,7 @@ ${backTicks}
         }
         const text = this.editor!.getEditorText();
         if (text.trim() === "") {
-            this.deleteClicked();
+            await this.deleteClicked();
             this.saving = false;
             return;
         }
@@ -2065,7 +2060,7 @@ ${backTicks}
 
     async onFileSelect(file: File) {
         const editor = this.editor!;
-        this.focusEditor();
+        await this.focusEditor();
         this.file = file;
         const editorText = editor.getEditorText();
         let autostamp = false;
@@ -2193,7 +2188,7 @@ ${backTicks}
                         }
                     }
                     ed.insertTemplate(`${start}${this.uploadedFile}${end}`);
-                    // Separate from isPlugin so this is ran only when there are attachments with stamps.
+                    // Separate from isPlugin so this is run only when there are attachments with stamps.
                     if (macroRange && kokousDate) {
                         stamped.uploadUrl = this.uploadedFile;
                         this.activeAttachments = this.updateAttachments(
@@ -2213,7 +2208,7 @@ ${backTicks}
     }
 
     async putTemplate(data: string) {
-        this.focusEditor();
+        await this.focusEditor();
         data = await replaceTemplateValues(data);
         if (!data) {
             return;
@@ -2235,7 +2230,7 @@ ${backTicks}
             return;
         }
         this.editor!.insertTemplate(data);
-        this.focusEditor();
+        await this.focusEditor();
     }
 
     tabClicked() {
