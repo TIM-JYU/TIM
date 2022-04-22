@@ -574,13 +574,6 @@ class DeeplProTranslationService(DeeplTranslationService):
     __mapper_args__ = {"polymorphic_identity": "DeepL Pro"}
 
 
-# TODO Remove this when crisis is over
-class DeeplPlaceholderTranslationService(DeeplTranslationService):
-
-    # TODO Make the value an enum like with Verification?
-    __mapper_args__ = {"polymorphic_identity": "DeepL"}
-
-
 @dataclass
 class TranslationTarget:
     """Type that can be passed around in translations."""
