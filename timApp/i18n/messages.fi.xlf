@@ -5520,6 +5520,14 @@
           <context context-type="linenumber">913,914</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6376339761620712201" datatype="html">
+        <source>File <x id="PH" equiv-text="file.name"/> is empty, but it will still be uploaded</source>
+        <target state="translated">Tiedosto <x id="PH" equiv-text="file.name"/> on tyhjä, mutta se ladataan silti</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">210</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
