@@ -174,3 +174,16 @@ export async function availableTranslators(translators: string[]) {
     }
     return error;
 }
+
+/**
+ * Checks if the translator is available for the user.
+ * @param tr the translator getting checked
+ * @param translators the list of translators to check through
+ */
+export function isOptionAvailable(tr: ITranslators, translators: string[]) {
+    for (const translator of translators) {
+        if (tr.name == translator) {
+            tr.available = true;
+        }
+    }
+}

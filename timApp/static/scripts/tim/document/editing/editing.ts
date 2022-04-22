@@ -986,6 +986,12 @@ auto_number_headings: 0${CURSOR}
         };
     }
 
+    /**
+     * Marks the paragraph checked.
+     * @param e the mouse event leading to this
+     * @param par info on the paragraph to be marked
+     * @param sel the selection for the paragraph
+     */
     async markParagraphChecked(
         e: MouseEvent,
         par: ParContext,

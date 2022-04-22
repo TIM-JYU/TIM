@@ -224,7 +224,17 @@ def text_translation_route(tr_doc_id: int, language: str, transl: str) -> Respon
             language,
             get_current_user_object().get_personal_group(),
         )
+        # Save the leading and trailing space as some machine translators
+        # (especially DeepL) like to erase them (when they are used with
+        # certain parameters)
+        leading_space = src_text[: len(src_text) - len(src_text.lstrip())]
+        trailing_space = src_text[::-1][: len(src_text) - len(src_text[::-1].lstrip())]
+        src_text = src_text.strip()
         block_text = translator_func([TranslationTarget(src_text)])[0]
+        # Remove extra newlines from start and end, as the parser likes to add these.
+        block_text = block_text.strip("\n")
+        # Insert spaces back
+        block_text = leading_space + block_text + trailing_space
     else:
         raise RouteException(
             description=f"Please select a translator from the 'Translator data' tab."
@@ -397,6 +407,11 @@ def remove_api_key() -> Response:
 
 @tr_bp.post("/apikeys/quota")
 def get_quota():
+    """
+    Gets the quota info for the user's API key.
+
+    :return: the used and available quota for the user's API key
+    """
     verify_logged_in()
 
     req_data = request.get_json()
@@ -449,6 +464,11 @@ def get_valid_status() -> Response:
 
 @tr_bp.get("/apikeys/get")
 def get_keys() -> Response:
+    """
+    Gets the user's API keys.
+
+    :return: The user's API keys.
+    """
     verify_logged_in()
 
     user = get_current_user_object()
@@ -470,6 +490,11 @@ def get_keys() -> Response:
 
 @tr_bp.get("/apikeys/translators")
 def get_my_translators() -> Response:
+    """
+    Gets the translators the user has the API keys for.
+
+    :return: The list of the translators the user has the API keys for.
+    """
     verify_logged_in()
 
     user = get_current_user_object()
