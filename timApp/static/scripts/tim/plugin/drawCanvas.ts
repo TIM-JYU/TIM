@@ -345,10 +345,12 @@ export function drawRectangle(
 ) {
     // TODO: Draw border with own settings but custom fill color
     ctx.lineJoin = "miter";
+    const h = Math.max(rectangle.h, 1);
+    const w = Math.max(rectangle.w, 1);
     if (rectangle.fillColor) {
-        ctx.fillRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
+        ctx.fillRect(rectangle.x, rectangle.y, w, h);
     } else {
-        ctx.strokeRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
+        ctx.strokeRect(rectangle.x, rectangle.y, w, h);
     }
 }
 
