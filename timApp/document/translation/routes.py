@@ -240,6 +240,7 @@ def text_translation_route(tr_doc_id: int, language: str, transl: str) -> Respon
             description=f"Please select a translator from the 'Translator data' tab."
         )
 
+    # TODO change to string_response?
     return json_response(block_text)
 
 
@@ -273,11 +274,13 @@ def get_translations(doc_id: int) -> Response:
 @tr_bp.post("/translations/source-languages")
 def get_source_languages() -> Response:
     """Query the database for the possible source languages."""
+    # TODO Is this route the same as get_target_languages, but with a boolean-input difference?
 
     req_data = request.get_json()
     translator = req_data.get("translator", "")
 
     if translator.lower() == "manual" or translator.lower() == "":
+        # TODO Change to string_response?
         return json_response("")
     else:
         # Get the translation service by the provided service name TODO Maybe change to use id instead?
@@ -290,12 +293,10 @@ def get_source_languages() -> Response:
 
     if translator.lower() == "deepl free" or translator.lower() == "deepl pro":
         langs = get_lang_lists(translator, True)
-        sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
-        return json_response(sl)
+        return json_response(langs)
     else:
         langs = Language.query.all()
-        sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
-        return json_response(sl)
+        return json_response(langs)
 
 
 @tr_bp.get("/translations/document-languages")
@@ -305,8 +306,7 @@ def get_document_languages() -> Response:
     """
 
     langs = Language.query.all()
-    sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
-    return json_response(sl)
+    return json_response(langs)
 
 
 @tr_bp.post("/translations/target-languages")
@@ -317,6 +317,7 @@ def get_target_languages() -> Response:
     translator = req_data.get("translator", "")
 
     if translator.lower() == "manual" or translator.lower() == "":
+        # TODO Change this to string_response?
         return json_response("")
     else:
         # Get the translation service by the provided service name TODO Maybe change to use id instead?
@@ -327,13 +328,10 @@ def get_target_languages() -> Response:
 
     if translator.lower() == "deepl free" or translator.lower() == "deepl pro":
         langs = get_lang_lists(translator, False)
-        # TODO Implement to_json for Language and use it here
-        sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
-        return json_response(sl)
+        return json_response(langs)
     else:
         langs = Language.query.all()
-        sl = list(map(lambda x: {"name": x.autonym, "code": x.lang_code}, langs))
-        return json_response(sl)
+        return json_response(langs)
 
 
 @tr_bp.get("/translations/translators")
@@ -418,7 +416,8 @@ def get_quota():
     translator = req_data.get("translator", "")
     key = req_data.get("apikey", "")
 
-    # Get the translation service by the provided service name TODO Maybe change to use id instead?
+    # Get the translation service by the provided service name
+    # TODO Maybe change to use id instead?
     tr = TranslationService.query.filter(
         translator == TranslationService.service_name,
     ).first()
@@ -446,8 +445,10 @@ def get_valid_status() -> Response:
         translator == TranslationService.service_name,
     ).first()
 
-    # Each new translator engine should add their preferred method for validating api keys here
-    # TODO might be prudent to do this in the specific translator class in the future
+    # Each new translator engine should add their preferred method for
+    # validating api keys here
+    # TODO might be prudent to do this in the specific translator class in the
+    #  future
     if tr.service_name.startswith("DeepL"):
         resp = requests.post(
             tr.service_url + "/usage",
@@ -476,16 +477,7 @@ def get_keys() -> Response:
         TranslationServiceKey.group_id == user.get_personal_group().id
     ).all()
 
-    result = []
-    for x in keys:
-        result.append(
-            {
-                "translator": x.service.service_name,
-                "APIkey": x.api_key,
-            }
-        )
-
-    return json_response(result)
+    return json_response(keys)
 
 
 @tr_bp.get("/apikeys/translators")
@@ -504,6 +496,7 @@ def get_my_translators() -> Response:
 
     result = []
     for x in keys:
+        # TODO Could implement to_json for TranslationServices also
         result.append(x.service.service_name)
 
     return json_response(result)

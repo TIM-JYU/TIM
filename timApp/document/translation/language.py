@@ -71,3 +71,16 @@ class Language(db.Model):
     def __str__(self) -> str:
         """:return: Nice format for users to read"""
         return f"'{self.lang_name}' ({self.lang_code})"
+
+    def to_json(self) -> dict:
+        """
+        Create a JSON representation of the Language instance.
+
+        :return: The Language instance's fields in a dict.
+        """
+        return {
+            "code": self.lang_code,
+            "standardName": self.lang_name,
+            "flagUri": self.flag_uri,
+            "name": self.autonym,
+        }

@@ -176,6 +176,18 @@ class TranslationServiceKey(db.Model):
             TranslationServiceKey.group_id == user_group
         )
 
+    def to_json(self) -> dict:
+        """
+        Create a JSON representation of data related to the
+        TranslationServiceKey instance.
+
+        :return: The TranslationServiceKey instance's needed fields in a dict.
+        """
+        return {
+            "translator": self.service.service_name,
+            "APIkey": self.api_key,
+        }
+
 
 # TODO PyCharm wants this class to implement the superclass methods...
 class RegisteredTranslationService(TranslationService):
