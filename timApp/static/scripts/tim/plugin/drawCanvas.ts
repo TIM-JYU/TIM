@@ -361,8 +361,8 @@ export function drawEllipse(
     ellipse: IRectangleOrEllipse,
     ctx: CanvasRenderingContext2D
 ) {
-    const h = Math.max(ellipse.h, 0.001);
-    const w = Math.max(ellipse.w, 0.001);
+    const h = Math.max(ellipse.h, 1);
+    const w = Math.max(ellipse.w, 1);
     const ratio = w / h;
     ctx.save();
     ctx.beginPath();
