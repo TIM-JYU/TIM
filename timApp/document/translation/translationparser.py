@@ -4,6 +4,27 @@ import json
 from typing import Tuple
 from dataclasses import dataclass
 
+# Regex table for all searched sections for translation. Expand if necessary.
+regex_to_translate = [
+    r"(\\text{)(.*?)(})",  # text
+    r"(\\textrm{)(.*?)(})",  # textrm
+    r"(\\textsf{)(.*?)(})",  # textsf
+    r"(\\textbf{)(.*?)(})",  # textbf
+    r"(\\textit{)(.*?)(})",  # textit
+    r"(\\textup{)(.*?)(})",  # textup
+    r"(\\textnormal{)(.*?)(})",  # textnormal
+    r"(\\mathrm{)(.*?)(})",  # mathrm
+    r"(\\mathsf{)(.*?)(})",  # mathsf
+    r"(\\mathcal{)(.*?)(})",  # mathcal
+    r"(\\mathit{)(.*?)(})",  # mathit
+    r"(\\mathbf{)(.*?)(})",  # mathbf
+    r"(<span>)(.*?)(<\/span>)",  # span
+    r"(\\mbox{)(.*?)(})",  # mbox
+]
+# Full collection of all found sections for translation as or statement.
+regex_collection = "|".join(regex_to_translate)
+# Compile collection for efficiency.
+regex_pattern = re.compile(regex_collection)
 
 # TODO This name is kinda bad. Better would be along the lines of translate-flag or a whole new list-type data
 #  structure, that describes alternating between Yes's and No's
@@ -69,26 +90,6 @@ def tex_collect(content: str) -> list[TranslateApproval]:
     edit_tex = content
     # Variable containing NoTranslate and Translate objects.
     parsed_tex: list[TranslateApproval] = list()
-    # Regex table for all searched sections for translation. Expand if necessary.
-    regex_to_translate = [
-        r"(\\text{)(.*?)(})",  # text
-        r"(\\textrm{)(.*?)(})",  # textrm
-        r"(\\textsf{)(.*?)(})",  # textsf
-        r"(\\textbf{)(.*?)(})",  # textbf
-        r"(\\textit{)(.*?)(})",  # textit
-        r"(\\textup{)(.*?)(})",  # textup
-        r"(\\textnormal{)(.*?)(})",  # textnormal
-        r"(\\mathrm{)(.*?)(})",  # mathrm
-        r"(\\mathsf{)(.*?)(})",  # mathsf
-        r"(\\mathcal{)(.*?)(})",  # mathcal
-        r"(\\mathit{)(.*?)(})",  # mathit
-        r"(\\mathbf{)(.*?)(})",  # mathbf
-        r"(<span>)(.*?)(<\/span>)",  # span
-    ]
-    # Full collection of all found sections for translation as or statement.
-    regex_collection = "|".join(regex_to_translate)
-    # Compile collection for efficiency.
-    regex_pattern = re.compile(regex_collection)
     # re.findall includes empty matches, which seems the only way of resolving the issue.
     # Contains format for each list-element in the format of [NoTranslate] and [Translate] combinations.
     no_translate_textblocks = list(re.findall(regex_pattern, content))
