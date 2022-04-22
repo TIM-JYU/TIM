@@ -224,7 +224,17 @@ def text_translation_route(tr_doc_id: int, language: str, transl: str) -> Respon
             language,
             get_current_user_object().get_personal_group(),
         )
+        # Save the leading and trailing space as some machine translators
+        # (especially DeepL) like to erase them (when they are used with
+        # certain parameters)
+        leading_space = src_text[: len(src_text) - len(src_text.lstrip())]
+        trailing_space = src_text[::-1][: len(src_text) - len(src_text[::-1].lstrip())]
+        src_text = src_text.strip()
         block_text = translator_func([TranslationTarget(src_text)])[0]
+        # Remove extra newlines from start and end, as the parser likes to add these.
+        block_text = block_text.strip("\n")
+        # Insert spaces back
+        block_text = leading_space + block_text + trailing_space
     else:
         raise RouteException(
             description=f"Please select a translator from the 'Translator data' tab."
