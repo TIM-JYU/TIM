@@ -215,6 +215,12 @@ def is_peerreview_enabled(doc: DocInfo) -> bool:
     stop = tz.localize((settings.peer_review_stop()), is_dst=None)
     current_time = datetime.now(pytz.timezone("UTC"))
 
+    print("first date is smaller than second_date: ", start <= current_time)
+    print("current time is smaller than second_date: ", current_time < stop)
+    print("Current time ", current_time)
+    print("Start ", start)
+    print("Stop ", stop)
+
     if not start or not stop:
         return doc.document.get_settings().peer_review()
     if start <= current_time < stop:
