@@ -106,7 +106,7 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
             this.saving = true;
             // Call the server.
             const result = await toPromise(
-                this.http.post("/apikeys/add", {
+                this.http.put("/translations/apikeys", {
                     translator: this.chosenTranslator,
                     apikey: this.apiKey,
                 })
@@ -140,7 +140,7 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
      */
     async validateAPIKey() {
         return await toPromise(
-            this.http.post<ITranslatorUsage>("/apikeys/validate", {
+            this.http.post<ITranslatorUsage>("/translations/apikeys/validate", {
                 translator: this.chosenTranslator,
                 apikey: this.apiKey,
             })

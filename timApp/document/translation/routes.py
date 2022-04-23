@@ -274,6 +274,7 @@ def get_translations(doc_id: int) -> Response:
     return json_response(d.translations)
 
 
+# TODO change into GET?
 @tr_bp.post("/translations/source-languages")
 def get_source_languages() -> Response:
     """Query the database for the possible source languages."""
@@ -312,6 +313,7 @@ def get_document_languages() -> Response:
     return json_response(langs)
 
 
+# TODO Change into GET?
 @tr_bp.post("/translations/target-languages")
 def get_target_languages() -> Response:
     """Query the database for the possible target languages."""
@@ -352,7 +354,7 @@ def get_translators() -> Response:
     return json_response(sl)
 
 
-@tr_bp.post("apikeys/add")
+@tr_bp.put("/translations/apikeys")
 def add_api_key() -> Response:
     """The function for adding API keys."""
 
@@ -384,7 +386,8 @@ def add_api_key() -> Response:
     return ok_response()
 
 
-@tr_bp.post("apikeys/remove")
+# TODO Change into DELETE (there's some differences in passing the parameters)
+@tr_bp.post("/translations/apikeys/remove")
 def remove_api_key() -> Response:
     """The function for removing API keys."""
 
@@ -406,7 +409,9 @@ def remove_api_key() -> Response:
     return ok_response()
 
 
-@tr_bp.post("/apikeys/quota")
+# TODO Could this be GET? And would it create any security problems with for
+#  example the API-key being shown in logs?
+@tr_bp.post("/translations/apikeys/quota")
 def get_quota():
     """
     Gets the quota info for the user's API key.
@@ -429,7 +434,7 @@ def get_quota():
     return json_response(tr.usage())
 
 
-@tr_bp.post("/apikeys/validate")
+@tr_bp.post("/translations/apikeys/validate")
 def get_valid_status() -> Response:
     """
     Check the validity of a given api-key with the chosen translator engine.
@@ -466,7 +471,7 @@ def get_valid_status() -> Response:
         )
 
 
-@tr_bp.get("/apikeys/get")
+@tr_bp.get("/translations/apikeys")
 def get_keys() -> Response:
     """
     Gets the user's API keys.
@@ -483,7 +488,7 @@ def get_keys() -> Response:
     return json_response(keys)
 
 
-@tr_bp.get("/apikeys/translators")
+@tr_bp.get("/translations/my-translators")
 def get_my_translators() -> Response:
     """
     Gets the translators the user has the API keys for.
