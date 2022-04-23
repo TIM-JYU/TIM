@@ -16,7 +16,7 @@ from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
-from timApp.document.translation.translator import (
+from timApp.document.translation.deepl import (
     DeeplTranslationService,
     DeeplProTranslationService,
 )

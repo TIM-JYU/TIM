@@ -8,7 +8,7 @@ from timApp.document.docsettings import DocSettings
 from timApp.document.document import Document
 from timApp.document.translation.translation import Translation
 from timApp.document.translation.language import Language
-from timApp.document.translation.translator import DeeplTranslationService
+from timApp.document.translation.deepl import DeeplTranslationService
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db

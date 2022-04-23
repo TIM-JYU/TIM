@@ -34,6 +34,8 @@ from timApp.document.translation.language import Language
 from timApp.document.translation.translator import (
     TranslationService,
     TranslationServiceKey,
+)
+from timApp.document.translation.deepl import (
     DeeplTranslationService,
 )
 from timApp.folder.folder import Folder
