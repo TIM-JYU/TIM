@@ -1654,7 +1654,7 @@ export class ViewCtrl implements IController {
                 !this.docSettings.peer_review_start ||
                 !this.docSettings.peer_review_stop
             ) {
-                return false;
+                return this.docSettings.peer_review;
             }
 
             const startTime = new Date(
