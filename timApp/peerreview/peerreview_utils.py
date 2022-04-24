@@ -38,8 +38,8 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
     review_count = settings.peer_review_count()
 
     # TODO: [Kuvio] get timestamps from doc settings
-    start_time_reviews = settings.peer_review_start()
-    end_time_reviews = settings.peer_review_stop()
+    start_time_reviews = settings.peer_review_start() or datetime.now()
+    end_time_reviews = settings.peer_review_stop() or datetime.now()
 
     # Dictionary containing review pairs,
     # has reviewer user ID as key and value is list containing reviewable user IDs
@@ -173,6 +173,9 @@ def is_peerreview_enabled(doc: DocInfo) -> bool:
 
     # TODO: create better solution
     tz = pytz.timezone("Europe/Helsinki")
+
+    if not settings.peer_review_start() or not settings.peer_review_stop():
+        return doc.document.get_settings().peer_review()
 
     start = tz.localize((settings.peer_review_start()), is_dst=None)
     stop = tz.localize((settings.peer_review_stop()), is_dst=None)
