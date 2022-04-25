@@ -6,7 +6,7 @@ import {getISOWeek} from "date-fns";
     selector: "tim-show-week",
     template: `
         <ng-container>
-        <h4> {{getWeekNumberFromDate(viewDate)}} </h4>
+        <p> Week: {{getWeekNumberFromDate(viewDate)}} </p>
         </ng-container>`,
     styleUrls: ["calendar.component.scss"],
 })
@@ -15,7 +15,7 @@ export class ShowWeekComponent {
 
     @Input() viewDate: Date = new Date();
 
-    @Input() locale: string = "fi-FI";
+    // @Input() locale: string = "fi-FI";
 
     @Output() viewChange = new EventEmitter<CalendarView>();
 
@@ -24,17 +24,11 @@ export class ShowWeekComponent {
     CalendarView = CalendarView;
 
     /**
-     * Calculates the current week number according to given Date-object. Takes into account the possibility
-     * of need for presentation of different locales.
+     * Calculates the current week number according to given Date-object.
      *
      * @param viewDate Current Date's object
      */
     getWeekNumberFromDate(viewDate: Date) {
-        switch (this.locale) {
-            case "en-US":
-                return "Week: " + getISOWeek(viewDate);
-            default:
-                return "Viikko: " + getISOWeek(viewDate);
-        }
+        return getISOWeek(viewDate);
     }
 }
