@@ -1,3 +1,17 @@
+"""
+TODO: Short description of Python module
+"""
+
+__authors__ = [
+    "Noora Jokela",
+    "Riku Lehkonen",
+    "Vili Moisala",
+    "Juho Tarkkanen",
+    "Sami Viitanen",
+]
+__license__ = "MIT"
+__date__ = "25.4.2022"
+
 import unittest
 
 from timApp.document.translation.translationparser import (
@@ -88,16 +102,16 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
 
         self.assertEqual(
             [
-                Translate("\n"),
-                NoTranslate("""***<u><s>"""),
+                Translate("\n***"),
+                NoTranslate("""<u><s>"""),
                 Translate("Teksti, jossa on kaikki tyylit paitsi notranslate"),
-                NoTranslate(r"""</s></u>***"""),
-                Translate("\n"),
+                NoTranslate(r"""</s></u>"""),
+                Translate("***\n***"),
                 NoTranslate(
                     """\
-***<u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>***"""
+<u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>"""
                 ),
-                Translate("\n"),
+                Translate("***\n"),
             ],
             get_translate_approvals(text),
         )
