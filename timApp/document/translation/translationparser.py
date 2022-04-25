@@ -315,7 +315,6 @@ def span_collect(content: dict) -> list[TranslateApproval]:
 
 def inline_collect(top_inline: dict) -> list[TranslateApproval]:
     type_ = top_inline["t"]
-    # TODO Dynamic typing would be easy here but Mypy doesn't like this
     content = top_inline.get("c", list())
     arr: list[TranslateApproval] = list()
     match type_:
@@ -325,10 +324,13 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
             arr.append(Translate(content))
         case "Emph":
             # NOTE Recursion
-            arr.append(NoTranslate("*"))
+            # TODO Marking these as Translate is DeepL-specific. Refactor into
+            #  translator's preprocessing or inject the translator into parsing
+            #  with a filtering-list for example.
+            arr.append(Translate("*"))
             for inline in content:
                 arr += inline_collect(inline)
-            arr.append(NoTranslate("*"))
+            arr.append(Translate("*"))
         case "Underline":
             # NOTE Recursion
             # TODO Is this just <u>text</u> == RawInline?
@@ -338,10 +340,13 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
                 arr += inline_collect(inline)
             arr.append(NoTranslate("</u>"))
         case "Strong":
-            arr.append(NoTranslate("**"))
+            # TODO Marking these as Translate is DeepL-specific. Refactor into
+            #  translator's preprocessing or inject the translator into parsing
+            #  with a filtering-list for example.
+            arr.append(Translate("**"))
             for inline in content:
                 arr += inline_collect(inline)
-            arr.append(NoTranslate("**"))
+            arr.append(Translate("**"))
         case "Strikeout":
             # NOTE Recursion
             # TODO Maybe same as UnderLine?
@@ -353,15 +358,22 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
             # TODO Not related to this module, but spaces inside break TIM render of Superscript.
             #  eg. ^yläindeksi^ can translate into English as ^top index^, which renders badly, but
             #  rendering could be fixed by encoding spaces like ^top\ index^.
-            arr.append(NoTranslate("^"))
+
+            # TODO Marking these as Translate is DeepL-specific. Refactor into
+            #  translator's preprocessing or inject the translator into parsing
+            #  with a filtering-list for example.
+            arr.append(Translate("^"))
             for inline in content:
                 arr += inline_collect(inline)
-            arr.append(NoTranslate("^"))
+            arr.append(Translate("^"))
         case "Subscript":
-            arr.append(NoTranslate("~"))
+            # TODO Marking these as Translate is DeepL-specific. Refactor into
+            #  translator's preprocessing or inject the translator into parsing
+            #  with a filtering-list for example.
+            arr.append(Translate("~"))
             for inline in content:
                 arr += inline_collect(inline)
-            arr.append(NoTranslate("~"))
+            arr.append(Translate("~"))
         case "SmallCaps":
             # TODO What even is this?
             for inline in content:
@@ -400,8 +412,8 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
         case "Span":
             arr += span_collect(content)
 
-        case x:
-            raise Exception(f"Parser encountered unexpected type: '{x}'")
+        case other:
+            raise Exception(f"Parser encountered unexpected type: '{other}'")
 
     return arr
 
