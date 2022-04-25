@@ -1,5 +1,12 @@
 """
-TODO: Short description of Python module
+This module contains most notably the TranslationService-interface that
+different machine translators must implement in order to be integrated into
+TIM's machine translation feature.
+
+Other notable things include a database model for the API-keys of machine
+translator services and a factory to create a partially applied function by
+which the different translators can be used to translate text from one
+language to another.
 """
 
 __authors__ = [
@@ -16,7 +23,6 @@ import pypandoc
 
 from dataclasses import dataclass
 from typing import Dict, Callable
-from itertools import chain
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.document.docparagraph import DocParagraph
@@ -32,10 +38,8 @@ from timApp.document.translation.translationparser import (
 from timApp.util import logger
 from timApp.util.flask.requesthelper import RouteException
 
-
 TranslateBlock = list[TranslateApproval]
-"""Typedef to represent logically connected parts of non- and translatable
-text
+"""Typedef to represent logically connected parts of non- and translatable text
 """
 
 
@@ -94,7 +98,8 @@ class TranslationService(db.Model):
 
         :param texts: The texts marked for translation or not. A convention
         would be to pass as much of the translatable text as possible in this
-        parameter in order to minimize the amount of separate translation-calls.
+        parameter in order to minimize the amount of separate
+        translation-calls.
         :param source_lang: Language to translate from.
         :param target_lang: Language to translate into.
         :param tag_handling: Tag representing a way to separate or otherwise
@@ -140,8 +145,8 @@ class TranslationService(db.Model):
         """
         Check if the service supports tag handling in translations. For example
         using XML-tags, some services offer controlling parts of the text, that
-        should be kept as-is and not be affected by the machine translation: "My
-        name is Dr. <protect>Oak</protect>."
+        should be kept as-is and not be affected by the machine translation:
+        "My name is Dr. <protect>Oak</protect>."
 
         NOTE this is related to the kinda HACKY way of handling Markdown-tables
         in DeepL-translation.
@@ -152,7 +157,8 @@ class TranslationService(db.Model):
         """
         raise NotImplementedError
 
-    # Polymorphism allows querying multiple objects by their class e.g. TranslationService.query
+    # Polymorphism allows querying multiple objects by their class e.g.
+    # TranslationService.query
     __mapper_args__ = {"polymorphic_on": service_name}
 
 
@@ -258,7 +264,8 @@ class TranslateMethodFactory:
         translating text.
         """
 
-        # TODO Find out if this is used correctly. Would rather use Query.get, but did not work...
+        # TODO Find out if this is used correctly. Would rather use Query.get,
+        #  but did not work...
         translator = TranslationService.query.with_polymorphic("*").filter(
             TranslationService.service_name == translator_code
         )[0]
@@ -284,21 +291,26 @@ class TranslateMethodFactory:
             :param mds: The texts to translate.
             :return: The translated texts in same order as input.
             """
-            # Turn the text into lists of objects that describe whether they can be translated or not
-            # TODO The flattening (calling `chain.from_iterable`) could probably be done in parser
+            # Turn the text into lists of objects that describe whether they
+            # can be translated or not
+            # TODO The flattening (calling `chain.from_iterable`) could
+            #  probably be done in parser
             blocks: list[list[TranslateApproval]] = list(
                 map(lambda x: get_translate_approvals(x), mds)
             )
 
-            # Map over blocks, picking the tables out for special translation and handle the rest normally
+            # Map over blocks, picking the tables out for special translation
+            # and handle the rest normally
             for block in blocks:
                 for i in range(len(block)):
                     elem = block[i]
                     if isinstance(elem, Table):
                         if translator.supports_tag_handling("html"):
-                            # Special (HACKY) case, where md-tables are translated as html (if supported)
-                            # TODO Actually implement table_collect at translationparser.py so that
-                            #  non-html-handling translators can be used as well
+                            # Special (HACKY) case, where md-tables are
+                            # translated as html (if supported)
+                            # TODO Actually implement table_collect at
+                            #  translationparser.py so that non-html-handling
+                            #  translators can be used as well
                             # Turn the markdown into html
                             table_html: str = pypandoc.convert_text(
                                 elem.text, to="html", format="md"
@@ -318,22 +330,29 @@ class TranslateMethodFactory:
                             table_md_tr = pypandoc.convert_text(
                                 table_html_tr[0], to="md", format="html"
                             )
-                            # Now mark the table as NoTranslate, so it doesn't get translated when
-                            # the list is passed on to mass-translation
-                            # TODO Adding this newline is kinda HACKY and not thought out.
+                            # Now mark the table as NoTranslate, so it doesn't
+                            # get translated when the list is passed on to
+                            # mass-translation
+                            # TODO Adding this newline is kinda HACKY and not
+                            #  thought out.
                             block[i] = NoTranslate("\n" + table_md_tr)
                         else:
-                            # The table cannot be translated and is handled as is
+                            # The table cannot be translated and is handled as
+                            # is
                             block[i] = NoTranslate(elem.text)
 
-            # Pass object-lists with translatable text to the machine translator object.
-            # If supported, the translator protects and removes the protection from the
-            # text (for example adding XML-ignore-tags in DeepL's case).
+            # Pass object-lists with translatable text to the machine
+            # translator object.
+            # If supported, the translator protects and removes the protection
+            # from the text (for example adding XML-ignore-tags in DeepL's
+            # case).
             translated_mds = translator.translate(blocks, source_lang, target_lang)
-            # TODO what are the paragraphs separated by? "\n\n"? Seems like this would need more handling in regard
-            #  to TIM's block separation and id's etc
-            # TODO Do some MD-elements (from parser) not include newline postfix and should this newline-addition
-            #  then be placed into parser-module?
+            # TODO what are the paragraphs separated by? "\n\n"? Seems like
+            #  this would need more handling in regard to TIM's block
+            #  separation and id's etc
+            # TODO Do some MD-elements (from parser) not include newline
+            #  postfix and should this newline-addition then be placed into
+            #  parser-module?
             return translated_mds
 
         def translate_paragraphs(targets: list[TranslationTarget]) -> list[str]:
@@ -352,12 +371,15 @@ class TranslateMethodFactory:
             for target in targets:
                 md = target.get_text()
                 if isinstance(target.value, DocParagraph) and target.value.is_plugin():
-                    # Add the attributes to the content so that parser can identify the code block as a plugin
-                    # NOTE that the parser should only use the attributes for identification
-                    # and deletes them from the translated result ie. this is a special case!
+                    # Add the attributes to the content so that parser can
+                    # identify the code block as a plugin.
+                    # NOTE that the parser should only use the attributes for
+                    # identification and deletes them from the translated
+                    # result ie. this is a special case!
 
-                    # Form the Pandoc-AST representation of a code-block's Attr and glue the
-                    # parts returned as is back together into a string of Markdown
+                    # Form the Pandoc-AST representation of a code-block's
+                    # Attr and glue the parts returned as is back together
+                    # into a string of Markdown
                     # TODO Is par.attrs trusted to not be None?
                     taskid = (
                         target.value.attrs.get("taskId", "")

@@ -1,5 +1,10 @@
 """
-TODO: Short description of Python module
+This module contains the main functions needed for marking parts of the
+Markdown used in TIM into translatable text (human-spoken language) and
+non-translatable text (syntax of Markdown and TIM-plugins for example).
+
+Basically only the get_translate_approvals -function should be called directly
+by users.
 """
 
 __authors__ = [
@@ -41,8 +46,10 @@ regex_collection = "|".join(regex_to_translate)
 # Compile collection for efficiency.
 regex_pattern = re.compile(regex_collection)
 
-# TODO This name is kinda bad. Better would be along the lines of translate-flag or a whole new list-type data
-#  structure, that describes alternating between Yes's and No's
+
+# TODO This name is kinda bad. Better would be along the lines of
+#  translate-flag or a whole new list-type data structure, that describes
+#  alternating between Yes's and No's
 @dataclass
 class TranslateApproval:
     """Superclass for text that should or should not be passed to a machine
@@ -75,17 +82,18 @@ def get_translate_approvals(md: str) -> list[TranslateApproval]:
     """
     By parsing the input text, identify parts that should and should not be
     passed to a machine translator
-    TODO Does this need to return list of lists, when the function of this is to split markdown into parts that can be
-     translated or not?
+    TODO Does this need to return list of lists, when the function of this is
+     to split markdown into parts that can be translated or not?
 
     :param md: The input text to eventually translate
     :return: Lists containing the translatable parts of each block in a list
     """
     # Parse the string into an ast
     ast = json.loads(pypandoc.convert_text(md, format="md", to="json"))
-    # By walking the ast, glue continuous translatable parts together into Translate-object and non-translatable parts
-    # into NoTranslate object
-    # Add the objects into a list where they alternate T|NT, NT, T, NT ... T|NT
+    # By walking the ast, glue continuous translatable parts together into
+    # Translate-object and non-translatable parts into NoTranslate object.
+    # Add the objects into a list where they alternate eg.:
+    # T, NT, T, NT ... T|NT
     block_approvals = list(
         chain.from_iterable(
             merge_consecutive(block_collect(block)) for block in ast["blocks"]
@@ -107,8 +115,10 @@ def tex_collect(content: str) -> list[TranslateApproval]:
     edit_tex = content
     # Variable containing NoTranslate and Translate objects.
     parsed_tex: list[TranslateApproval] = list()
-    # re.findall includes empty matches, which seems the only way of resolving the issue.
-    # Contains format for each list-element in the format of [NoTranslate] and [Translate] combinations.
+    # re.findall includes empty matches, which seems the only way of resolving
+    # the issue.
+    # Contains format for each list-element in the format of [NoTranslate] and
+    # [Translate] combinations.
     no_translate_textblocks = list(re.findall(regex_pattern, content))
     # Check if given LaTeX contains any areas for translation translatable.
     if len(no_translate_textblocks) != 0:
@@ -116,7 +126,8 @@ def tex_collect(content: str) -> list[TranslateApproval]:
             # Filter out empty groups due to re.findall().
             block = list(filter(None, block))
             # Collect the separated regex for identification in string.
-            # This area is originally split as command, text, closing statement.
+            # This area is originally split as command, text, closing
+            # statement.
             full_tex_text = block[0] + block[1] + block[2]
             # Find the first case of the collected translatable LaTeX.
             temp_tex_list = edit_tex.split(full_tex_text, 1)
@@ -138,8 +149,8 @@ def attr_collect(content: list) -> Tuple[list[TranslateApproval], bool]:
     Collect the parts of Attr into Markdown.
 
     :param content: Pandoc-ASTs JSON form of Attr (attributes)
-    :return: List of non/translatable parts and boolean indicating, whether the .notranslate
-    -style was found in the element.
+    :return: List of non/translatable parts and boolean indicating, whether
+     the .notranslate -style was found in the element.
     """
     if (
         not isinstance(content[0], str)
@@ -148,17 +159,20 @@ def attr_collect(content: list) -> Tuple[list[TranslateApproval], bool]:
     ):
         raise Exception("PanDoc link content is not [ str, [str], [(str, str)] ].")
 
-    # FIXME(?) WARNING It is crucial that the attributes do not include the TIM-identifier eg.
-    #  id="SAs3EK96oQtL" from {plugin="csPlugin" id="SAs3EK96oQtL"}, because Pandoc has earlier deleted extra
-    #  identifiers contained in attributes like
-    #  #btn-tex2 and id="SAs3EK96oQtL" with {plugin="csPlugin" #btn-tex2 id="SAs3EK96oQtL"}
+    # NOTE Attr identifier is set to the last occurrence and rest are
+    # discarded in Pandoc-parsing e.g. from "#foo id=bar id=baz" only "baz"
+    # is saved and "foo" and "bar" are lost! To fix this in regard to
+    # TIM's block ids, the id needs to be saved before and added back into
+    # md after parsing with Pandoc.
+
     arr: list[TranslateApproval] = list()
     # https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Attr
     identifier = content[0]
     classes = content[1]
     kv_pairs = content[2]
 
-    # Handle the special style in TIM, that allows user to opt out from translating some text
+    # Handle the special styles in TIM, that allows user to opt out from
+    # translating some text.
     is_notranslate = "notranslate" in classes or "nt" in classes
 
     # Return nothing if there's no attrs
@@ -170,7 +184,8 @@ def attr_collect(content: list) -> Tuple[list[TranslateApproval], bool]:
     if identifier:
         arr.append(NoTranslate(f"#{identifier} "))
     arr += [NoTranslate(f".{x} ") for x in classes]
-    # NOTE Is seems to be convention with TIM to surround the value with double quotes
+    # NOTE Is seems to be convention with TIM to surround the value-part with
+    # double quotes.
     arr += [NoTranslate(f'{k}="{v}" ') for k, v in kv_pairs]
     # Remove extra space from last element
     arr[-1].text = arr[-1].text.strip()
@@ -372,9 +387,10 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
                 arr += inline_collect(inline)
             arr.append(NoTranslate("</s>"))
         case "Superscript":
-            # TODO Not related to this module, but spaces inside break TIM render of Superscript.
-            #  eg. ^yläindeksi^ can translate into English as ^top index^, which renders badly, but
-            #  rendering could be fixed by encoding spaces like ^top\ index^.
+            # TODO Not related to this module, but spaces inside break TIM
+            #  render of Superscript. eg. ^yläindeksi^ can translate into
+            #  English as ^top index^, which renders badly, but rendering
+            #  could be fixed by encoding spaces like ^top\ index^.
 
             # TODO Marking these as Translate is DeepL-specific. Refactor into
             #  translator's preprocessing or inject the translator into parsing
@@ -439,14 +455,18 @@ def notranslate_all(type_: str, content: dict) -> list[TranslateApproval]:
     """
     Mark the whole element as non-translatable.
 
-    TODO NOTE This function does not seem to produce markdown consistent with TIM's practices, and using this should
-    eventually be replaced with the specific *_collect -functions!
+    TODO NOTE This function does not seem to produce Markdown consistent with
+     TIM's practices, and using this should eventually be replaced with the
+     specific *_collect -functions!
     :param type_: Pandoc AST-type of the content
     :param content: Pandoc AST-content of the type
     :return: List of single NoTranslate -element containing Markdown
     representation of content
     """
-    # The conversion requires the pandoc-api-version TODO This feels kinda hacky...
+    # The conversion requires the pandoc-api-version which is extracted here a
+    # bit hacky...
+    # TODO The information could be added into a Parser-class containing the
+    #  module's functions.
     ast_content = {
         "pandoc-api-version": json.loads(
             pypandoc.convert_text("", to="json", format="md")
@@ -454,9 +474,7 @@ def notranslate_all(type_: str, content: dict) -> list[TranslateApproval]:
         "meta": {},
         "blocks": [{"t": type_, "c": content}],
     }
-    # TODO Test this. Could have problems with newlines or other coding of characters?
     json_str = json.dumps(ast_content)
-    # FIXME This conversion needs to know the pandoc api version -> add into a parser-class?
     md = pypandoc.convert_text(json_str, to="md", format="json")
     return [Table(md) if type_ == "Table" else NoTranslate(md)]
 
@@ -524,7 +542,8 @@ def collect_tim_plugin(attrs: dict, content: str) -> list[TranslateApproval]:
                     # Skip the start_char
                     text = text[1:]
                     # Get text until next occurrence of the quote.
-                    # NOTE An area prone to bugs seems to be when multiline-values are after each other
+                    # NOTE An area prone to bugs seems to be when
+                    # multiline-values are after each other
                     # NOTE Translation could worsen because of YAML indentation
                     while (
                         start_char not in text
@@ -549,8 +568,8 @@ def collect_tim_plugin(attrs: dict, content: str) -> list[TranslateApproval]:
                     # Line is a single line value.
                     arr.append(Translate(text))
                 break
-        # No keys were matched if the inner for-loop does not terminate early -> the line does not contain a known key
-        # for translatable text
+        # No keys were matched if the inner for-loop does not terminate early
+        # -> the line does not contain a known key for translatable text
         else:
             arr.append(NoTranslate(line))
         arr.append(NoTranslate("\n"))
@@ -558,6 +577,21 @@ def collect_tim_plugin(attrs: dict, content: str) -> list[TranslateApproval]:
 
 
 def codeblock_collect(content: dict) -> list[TranslateApproval]:
+    """
+    Pick translatable and non-translatable parts off of a codeblock.
+
+    NOTE/WARNING In regard to plugins:
+    It is critical that the attributes do not include the TIM-identifier eg.
+    id="SAs3EK96oQtL" from {plugin="csPlugin" id="SAs3EK96oQtL"}, because
+    Pandoc deletes extra identifiers contained in attributes like #btn-tex2
+    and id="SAs3EK96oQtL" in {plugin="csPlugin" #btn-tex2 id="SAs3EK96oQtL"}.
+    Here, the attributes of a plugin-codeblock are DISCARDED and will not be
+    included in the result when markdown is reconstructed i.e. caller should
+    save the attributes if needed.
+    :param content: List with the attributes and text-content of the codeblock.
+    :return: List marking the Markdown representation of the element into
+    translatable and non-translatable parts.
+    """
     # TODO where to typecheck Attr?
     if not isinstance(content[1], str):
         raise Exception("PanDoc codeblock content is not [ Attr, [Block] ].")
@@ -569,33 +603,30 @@ def codeblock_collect(content: dict) -> list[TranslateApproval]:
 
     arr: list[TranslateApproval] = list()
 
+    # NOTE Pandoc does not tell us what syntax (N amount of `-marks or
+    # indentation) the original markdown used with the codeblock.
     arr.append(NoTranslate("```"))
 
     if is_plugin:
-        # NOTE Attr identifier is set to the last occurrence and rest are discarded in Pandoc-parsing
-        # eg. from #foo id=bar id=baz only baz is saved and foo and bar are lost! To fix this in regard to TIM's
-        # block ids, the id needs to be saved and injected into md after parsing with Pandoc NOTE that such an approach
-        # requires that the critical information is saved BEFORE giving the md to Pandoc
-        # TODO Different plugins can be identified by Attr's 3rd index; key-value -pair for example plugin="csplugin",
-        # but this information might be unnecessary
-        # NOTE Here, the attributes of codeblock are DISCARDED (as mentioned in comment above) and will not be included
-        # in the result when markdown is reconstructed ie. caller should save needed attributes
-        # TODO Does DocParagraph.modify_paragraph include the ``` for (plugin) codeblocks already?
-
-        # TODO Maybe parse the YAML to be translated based on keys for more exact translations?
+        # TODO Maybe parse the YAML to be translated based on the attrs for
+        #  more exact translations?
         arr.append(NoTranslate("\n"))
         arr += collect_tim_plugin(attr, content[1])
     else:
-        # NOTE Pandoc does not tell us what syntax (N amount of `-marks or
-        # indentation) the original markdown used with the codeblock
-        # TODO To handle the case, where content of a code block contains Markdown
-        #  code block syntax, parse until no codeblocks are found. Ie.
+        # FIXME The syntax-style (e.g. "```cs ..." for C#) is moved into
+        #  Attr-classes in result instead of appended to the starting "```".
+        #  This is apparently called a "fenced code block"
+        #  (https://www.markdownguide.org/extended-syntax/#syntax-highlighting).
+        #  Maybe if there is just 1 class (for example "cs" in "```cs\nvar
+        #  x;\n```") then do NOT put it inside braces (like "{.cs}")
+        arr += attrs
+        # TODO To handle the case, where content of a code block contains
+        #  codeblock syntax, parse until no codeblocks are found. Ie.
         # ````                  ==> ```` # Level 0 code block
-        # ```                   ==> ``` # Level 1 code block
+        # ```                   ==> ``` # The bottom-level code block (3 * "`")
         # My codeblock example  ==> My codeblock example
         # ```                   ==> ```
         # ````                  ==> ````
-        arr += attrs
         arr.append(NoTranslate("\n"))
         arr.append(NoTranslate(content[1]))
         arr.append(NoTranslate("\n"))
@@ -604,11 +635,6 @@ def codeblock_collect(content: dict) -> list[TranslateApproval]:
 
     if is_notranslate:
         return [x if isinstance(x, NoTranslate) else NoTranslate(x.text) for x in arr]
-
-    # TODO Handle "fenced code block"
-    #  (https://www.markdownguide.org/extended-syntax/#syntax-highlighting). Maybe if there is
-    #  just 1 class (for example "cs" in "```cs\nvar x;\n```") then do NOT put it inside braces
-    #  (like "{.cs}")
 
     return arr
 
@@ -723,9 +749,11 @@ def list_collect(
 
         for block in block_list:
             start_num = start_num + 1
-            # TODO Handle the indentation inside list item's element
-            # The paragraphs in items except the 1st need to be as indented as the item start (ie. "- " or "1. " etc)
-            # FIXME It seems hard to control the indentation of paragraphs at this level
+            # The paragraphs in items except the 1st need to be as indented as
+            # the item start (ie. "- " or "1. " etc).
+            # TODO Handle the indentation inside list item's element.
+            #  It seems hard to control the indentation of paragraphs at
+            #  this level and in some cases the list-items break.
             arr += block_collect(block, depth + 1)
 
     # Handle edge case of separation between Markdown lists and paragraphs.
@@ -818,9 +846,10 @@ def definitionlist_collect(content: dict) -> list[TranslateApproval]:
 
 def header_collect(content: dict) -> list[TranslateApproval]:
     # Attr check in attr_collect
-    # TODO Should we follow this convention? ATM other funcs like link_collect make the check at their level...
+    # TODO Should we follow this convention? ATM other funcs like link_collect
+    #  make the check at their level...
     if not isinstance(content[0], int) or not isinstance(content[2], list):
-        raise Exception("PanDoc orderedlist content is not [ int, Attr, [Inline]  ]")
+        raise Exception("PanDoc OrderedList content is not [ int, Attr, [Inline]  ]")
 
     level = content[0]
     arr: list[TranslateApproval] = list()
@@ -831,9 +860,10 @@ def header_collect(content: dict) -> list[TranslateApproval]:
     for inline in content[2]:
         arr += inline_collect(inline)
 
-    # NOTE Apparently Pandoc likes to add to headers their text-content as identifier,
-    # which does not seem to be a TIM-convention (which could be a problem?).
-    # TODO Remove the extra identifier that Pandoc automatically adds (Needs handling [Inline])
+    # NOTE Apparently Pandoc likes to add to headers their text-content as
+    # identifier, which does not seem to be a TIM-convention.
+    # TODO If it turns out to be problematic, remove the extra identifier that
+    #  Pandoc automatically adds (Needs handling [Inline])
 
     attrs, is_notranslate = attr_collect(content[1])
     arr += attrs
@@ -878,7 +908,8 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
         case "Para":
             for inline in content:
                 arr += inline_collect(inline)
-            # "A paragraph is simply one or more consecutive lines of text, separated by one or more blank lines."
+            # "A paragraph is simply one or more consecutive lines of text,
+            # separated by one or more blank lines."
             # https://daringfireball.net/projects/markdown/syntax#p
             # TODO Decide whether these newlines should be added or not
             arr.append(Translate("\n"))
@@ -957,10 +988,12 @@ def merge_consecutive(arr: list[TranslateApproval]) -> list[TranslateApproval]:
         while True:
             elem = next(arr_iter, None)
             if isinstance(elem, last_elem_t):
-                # Combine the texts of element and previously added if they are the same type
+                # Combine the texts of element and previously added if they
+                # are the same type.
                 last_elem_s += elem.text
             else:
-                # If element is different type to last, save last and start collecting the new one
+                # If element is different type to last, save last and start
+                # collecting the new one.
                 last_obj = last_elem_t(last_elem_s)
                 merged_arr.append(last_obj)
                 if elem is None:
