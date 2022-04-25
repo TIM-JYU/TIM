@@ -25,7 +25,7 @@ def apply_citation(new_doc: DocInfo, src_doc: Document):
 
     doc = new_doc.document
 
-    add_reference_pars(doc, src_doc, "c")
+    add_reference_pars(doc, src_doc, "c", None)
 
     settings = {"source_document": src_doc.doc_id}
     orig_pars = src_doc.get_paragraphs()
