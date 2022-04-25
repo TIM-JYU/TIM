@@ -163,7 +163,9 @@ export async function listTranslators(
  */
 export async function availableTranslators(translators: string[]) {
     let error = "";
-    const sources = await to($http.get<string[]>("/translations/my-translators"));
+    const sources = await to(
+        $http.get<string[]>("/translations/my-translators")
+    );
     translators.push("Manual");
     if (sources.ok) {
         for (const translator of sources.result.data) {

@@ -564,7 +564,9 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
      * Fetches the user's API keys from the server.
      */
     async getKeys() {
-        const r = await toPromise(this.http.get<IUserApiKey[]>("/translations/apikeys"));
+        const r = await toPromise(
+            this.http.get<IUserApiKey[]>("/translations/apikeys")
+        );
         if (r.ok) {
             this.userAPIKeys = r.result;
         }
