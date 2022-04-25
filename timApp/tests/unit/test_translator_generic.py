@@ -105,8 +105,8 @@ class TestGenericTranslator(TimDbTest):
         )
 
         # Sanity checks
-        self.assertEqual(len(parts), 1)
-        for x in parts[0]:
+        self.assertEqual(13, len(parts))
+        for x in parts:
             self.assertIsInstance(x.text, str)
 
         self.assertEqual(
@@ -114,7 +114,7 @@ class TestGenericTranslator(TimDbTest):
                 " ma I ereH\n[**gnikcor**]{.red} [ekil](www.example.com) "
                 "a ![enacirruh](/imgs/hurricane.png)\n!"
             ],
-            translator.translate(parts, none_lang, none_lang),
+            translator.translate([parts], none_lang, none_lang),
         )
 
     def test_all_translate(self):
@@ -124,14 +124,14 @@ class TestGenericTranslator(TimDbTest):
         parts = get_translate_approvals("Here I am")
 
         # Sanity checks
-        self.assertEqual(len(parts), 1)
-        for x in parts[0]:
+        self.assertEqual(1, len(parts))
+        for x in parts:
             self.assertIsInstance(x, Translate)
             self.assertIsInstance(x.text, str)
 
         self.assertEqual(
             ["\nma I ereH\n"],
-            translator.translate(parts, none_lang, none_lang),
+            translator.translate([parts], none_lang, none_lang),
         )
 
     def test_all_notranslate(self):
@@ -141,7 +141,7 @@ class TestGenericTranslator(TimDbTest):
         parts = get_translate_approvals("[]()[]{}![]()")
 
         # Sanity checks
-        self.assertEqual(len(parts), 1)
+        self.assertEqual(3, len(parts))
         # The first and last item are Translate("\n")
         for x in parts[1:-1]:
             self.assertIsInstance(x, NoTranslate)
@@ -150,7 +150,7 @@ class TestGenericTranslator(TimDbTest):
         self.assertEqual(
             # NOTE that {} as optional(?) get omitted by parsing
             ["\n[]()[]![]()\n"],
-            translator.translate(parts, none_lang, none_lang),
+            translator.translate([parts], none_lang, none_lang),
         )
 
     def test_empty(self):

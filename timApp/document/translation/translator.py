@@ -273,9 +273,7 @@ class TranslateMethodFactory:
             # Turn the text into lists of objects that describe whether they can be translated or not
             # TODO The flattening (calling `chain.from_iterable`) could probably be done in parser
             blocks: list[list[TranslateApproval]] = list(
-                map(
-                    lambda x: list(chain.from_iterable(get_translate_approvals(x))), mds
-                )
+                map(lambda x: get_translate_approvals(x), mds)
             )
 
             # Map over blocks, picking the tables out for special translation and handle the rest normally
