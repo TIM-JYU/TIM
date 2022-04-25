@@ -112,7 +112,6 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     Book event
                 </button>
                 <button class="timButton" type="submit" (click)="saveChanges()" [disabled]="form.invalid"
-
                         [hidden]="!isEditEnabled()">
                     Save
                 </button>
