@@ -189,3 +189,46 @@ export function isOptionAvailable(tr: ITranslators, translators: string[]) {
         }
     }
 }
+
+/**
+ * Handles updating data regarding translations.
+ * @param sourceLanguages the list of source languages
+ * @param documentLanguages the list of document languages
+ * @param targetLanguages the list of target languages
+ * @param docTranslator the document's translator
+ * @param translators the full list of translators
+ * @param availableTrs the list of translators the user can use
+ * @param errorMessage the error message user is shown if something goes wrong
+ * @param translatorAvailable whether or not the chosen translator is available
+ * @param includeManual whether or not Manual should be listed among translators
+ */
+export async function updateTranslationData(
+    sourceLanguages: Array<ILanguages>,
+    documentLanguages: Array<ILanguages>,
+    targetLanguages: Array<ILanguages>,
+    docTranslator: string,
+    translators: Array<ITranslators>,
+    availableTrs: string[],
+    errorMessage: string,
+    translatorAvailable: boolean,
+    includeManual: boolean
+) {
+    const error = ["", "", ""];
+    error[0] = await listTranslators(translators, includeManual);
+    error[1] = await updateLanguages(
+        sourceLanguages,
+        documentLanguages,
+        targetLanguages,
+        docTranslator
+    );
+    error[2] = await availableTranslators(availableTrs);
+    for (const errors of error) {
+        if (errors != "") {
+            errorMessage = errors;
+            translatorAvailable = false;
+        }
+    }
+    for (const tr of translators) {
+        isOptionAvailable(tr, availableTrs);
+    }
+}

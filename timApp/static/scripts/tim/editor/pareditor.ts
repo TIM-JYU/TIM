@@ -17,11 +17,8 @@ import {IDocument, ILanguages, ITranslators} from "tim/item/IItem";
 import {
     IExtraData,
     ITags,
-    updateLanguages,
-    listTranslators,
     listLanguages,
-    availableTranslators,
-    isOptionAvailable,
+    updateTranslationData,
 } from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
@@ -1141,7 +1138,7 @@ ${backTicks}
     }
 
     /**
-    Updates this.hideOriginalPreview and calls for a change of positioning because ng-model updates it too slow.
+     * Updates this.hideOriginalPreview and calls for a change of positioning because ng-model updates it too slow.
      */
     updateOriginalPreviewHide() {
         this.hideOriginalPreview = !this.hideOriginalPreview;
@@ -1259,32 +1256,17 @@ ${backTicks}
         this.changePreviewPositions();
 
         if (!this.checkIfOriginal()) {
-            this.updateTranslationData();
-        }
-    }
-
-    /**
-     * Handles updating data regarding translations (cannot be done in initialization because it cannot be turned into
-     * an async function right now).
-     */
-    async updateTranslationData() {
-        const error = ["", "", ""];
-        error[0] = await listTranslators(this.translators, false);
-        error[1] = await updateLanguages(
-            this.sourceLanguages,
-            this.documentLanguages,
-            this.targetLanguages,
-            this.docTranslator
-        );
-        error[2] = await availableTranslators(this.availableTranslators);
-        for (const errors of error) {
-            if (errors != "") {
-                this.errorMessage = errors;
-                this.translatorAvailable = false;
-            }
-        }
-        for (const tr of this.translators) {
-            isOptionAvailable(tr, this.availableTranslators);
+            updateTranslationData(
+                this.sourceLanguages,
+                this.documentLanguages,
+                this.targetLanguages,
+                this.docTranslator,
+                this.translators,
+                this.availableTranslators,
+                this.errorMessage,
+                this.translatorAvailable,
+                false
+            );
         }
     }
 
@@ -1654,6 +1636,7 @@ ${backTicks}
      * Updates the list of target languages based on the selected translator.
      * TODO: Handling the error code should be done better (it should never appear on the browser's console) but at
      * least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
+     * TODO: This could probably be refactored into edittypes.ts at least after updating this to new Angular?
      */
     async updateTranslatorLanguages() {
         let sources = await to(
