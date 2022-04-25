@@ -337,7 +337,7 @@ export class ReviewController {
         for (const a of annotations) {
             const ann = this.vctrl.getAnnotation(`t${a.id}`);
             if (ann?.annotation.answer) {
-                this.removeAnnotation(a.id);
+                this.removeAnnotationElement(a.id);
             }
         }
     }
@@ -463,7 +463,7 @@ export class ReviewController {
             );
         }
         if (canvas) {
-            canvas.setPersistentDrawData(drawings);
+            canvas.setAndAdjustPersistentDrawData(drawings);
         }
         $rootScope.$applyAsync(); // TODO: run only if we are in Angular zone
     }
@@ -643,54 +643,58 @@ export class ReviewController {
      * @param id - Annotation ID
      */
     async deleteAnnotation(id: number) {
+        const annotation = this.annotations.find((a) => a.id == id);
         this.annotations = this.annotations.filter((a) => a.id !== id);
-        this.removeAnnotation(id);
+        if (annotation?.draw_data && annotation?.answer?.id) {
+            const canvas = this.vctrl.getVelpCanvas(annotation.answer.id);
+            if (canvas) {
+                const ab = this.vctrl.getAnswerBrowser(
+                    annotation.answer.task_id
+                );
+                const selected_velper = ab?.getReviewerUser();
+                this.drawAnnotationsOnCanvas(
+                    canvas,
+                    annotation.answer.id,
+                    selected_velper
+                );
+            }
+        }
+        this.removeAnnotationElement(id);
         await to($http.post("/invalidate_annotation", {id: id}));
     }
 
     /**
-     * Visually removes an annotation
+     * Removes an annotation element
      * Removes the annotation from the margin
-     * Removes the annotation in text if present
-     * Redraws any canvas annotations if deleted annotation was a drawn annotation
+     * Removes the annotation element in text or in drawing if present
      * @param id - Annotation to remove
      */
-    removeAnnotation(id: number) {
+    removeAnnotationElement(id: number) {
         const annotationParents = document.querySelectorAll(`[aid="${id}"]`);
         if (annotationParents.length == 0) {
             return;
         }
         const annotationHighlights =
             annotationParents[0].getElementsByClassName("highlighted");
-        const annotation = this.annotations.find((a) => a.id == id);
-        if (
-            annotation?.draw_data &&
-            annotation?.answer?.id &&
-            annotationParents.length > 1
-        ) {
-            const canvas = this.vctrl.getVelpCanvas(annotation.answer.id);
-            if (canvas) {
-                this.drawAnnotationsOnCanvas(canvas, annotation.answer.id);
-            }
-            $(annotationParents).remove();
-        } else {
-            for (const annParent of annotationParents) {
-                const parent = annParent.parentElement;
-                if (parent?.classList.contains("notes")) {
-                    $(annParent).remove();
-                } else {
-                    let savedHTML = "";
-                    for (const a of annotationHighlights) {
-                        let addHTML = a.innerHTML.replace(
-                            '<span class="ng-scope">',
-                            ""
-                        );
-                        addHTML = addHTML.replace("</span>", "");
-                        savedHTML += addHTML;
-                    }
-                    annParent.outerHTML = savedHTML;
-                    parent?.normalize();
+        for (const annParent of annotationParents) {
+            const parent = annParent.parentElement;
+            if (
+                parent?.classList.contains("notes") ||
+                parent?.classList.contains("canvasObjectContainer")
+            ) {
+                $(annParent).remove();
+            } else {
+                let savedHTML = "";
+                for (const a of annotationHighlights) {
+                    let addHTML = a.innerHTML.replace(
+                        '<span class="ng-scope">',
+                        ""
+                    );
+                    addHTML = addHTML.replace("</span>", "");
+                    savedHTML += addHTML;
                 }
+                annParent.outerHTML = savedHTML;
+                parent?.normalize();
             }
         }
     }
@@ -992,9 +996,9 @@ export class ReviewController {
             if (saved.ok) {
                 const annCopy = saved.result;
                 this.updateAnnotation(annCopy);
-
                 this.selectedCanvas.storeDrawing();
             }
+            console.log(this.selectedCanvas.getDrawing());
             // TODO clear indicators and margins if !saved.ok
             this.selectedElement = undefined;
             // end if (this.selectionIsDrawing)
@@ -1503,16 +1507,27 @@ export class ReviewController {
      * Draws annotation drawings on canvas
      * @param canvas - DrawCanvasComponent to use
      * @param answerId - Answer for which to find annotations
+     * @param user - Optional user to filter loaded annotations with
      */
-    drawAnnotationsOnCanvas(canvas: DrawCanvasComponent, answerId: number) {
-        const annotationDrawings = this.getAnnotationsByAnswerId(
-            answerId
-        ).reduce((arr: DrawItem[], ann: Annotation) => {
-            if (ann.draw_data) {
-                arr = arr.concat(ann.draw_data);
-            }
-            return arr;
-        }, []);
+    drawAnnotationsOnCanvas(
+        canvas: DrawCanvasComponent,
+        answerId: number,
+        user?: IUser
+    ) {
+        console.log("after del", canvas.getDrawing());
+        let annotations = this.getAnnotationsByAnswerId(answerId);
+        if (user) {
+            annotations = annotations.filter((a) => a.annotator.id == user.id);
+        }
+        const annotationDrawings = annotations.reduce(
+            (arr: DrawItem[], ann: Annotation) => {
+                if (ann.draw_data) {
+                    arr = arr.concat(ann.draw_data);
+                }
+                return arr;
+            },
+            []
+        );
         canvas.setAndAdjustPersistentDrawData(annotationDrawings);
     }
 

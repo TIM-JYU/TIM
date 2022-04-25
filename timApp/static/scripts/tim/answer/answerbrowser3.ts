@@ -1578,6 +1578,10 @@ export class AnswerBrowserController
             );
     }
 
+    getReviewerUser() {
+        return this.reviewerUser;
+    }
+
     changeReviewerUser() {
         if (this.selectedAnswer && this.reviewHtml) {
             const par = this.getPar();
