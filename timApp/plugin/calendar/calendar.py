@@ -13,7 +13,8 @@ from flask import Response, request
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_id, get_current_user_object
-from timApp.plugin.calendar.models import Event
+from timApp.plugin.calendar.models import Event, ExportedCalendar
+from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import RouteException
 
@@ -91,16 +92,54 @@ def get_todos() -> Response:
 @calendar_plugin.get("/export")
 def get_url() -> Response:
     verify_logged_in()
+    domain = app.config["TIM_HOST"]
+    url = domain + "/calendar/ical?user="
     cur_user = get_current_user_id()
+    user_data: ExportedCalendar = ExportedCalendar.query.filter(
+        ExportedCalendar.user_id == cur_user
+    ).one_or_none()
+    if user_data is not None:
+        url = url + user_data.calendar_hash
+        return text_response(url)
     hash_code = secrets.token_urlsafe(16)
-    # TODO add user_id and hash_code to database
-    current_path = request.full_path
-    o = urlparse(current_path)
-    domain = o.hostname
-    if domain == None:
-        domain = ""
-    url = domain + "/calendar/events?user=" + hash_code
+    user_data = ExportedCalendar(
+        user_id=cur_user,
+        calendar_hash=hash_code,
+    )
+    db.session.add(user_data)
+    db.session.commit()
+    url = url + hash_code
     return text_response(url)
+
+
+@calendar_plugin.get("/ical")
+def get_ical(user: str) -> Response:
+    user_data: ExportedCalendar = ExportedCalendar.query.filter(
+        ExportedCalendar.calendar_hash == user
+    ).one_or_none()
+    user_id = user_data.user_id
+    events: list[Event] = Event.query.filter(Event.creator_user_id == user_id).all()
+    buf = StringIO()
+    buf.write("BEGIN:VCALENDAR\r\n")
+    buf.write("PRODID:-//TIM Katti-kalenteri//iCal4j 1.0//EN\r\n")
+    buf.write("VERSION:2.0\r\n")
+    buf.write("CALSCALE:GREGORIAN\r\n")
+    for event in events:
+        dts = event.start_time.strftime("%Y%m%dT%H%M%S")
+        dtend = event.end_time.strftime("%Y%m%dT%H%M%S")
+
+        buf.write("BEGIN:VEVENT\r\n")
+        buf.write("DTSTART:" + dts + "Z\r\n")
+        buf.write("DTEND:" + dtend + "Z\r\n")
+        buf.write("DTSTAMP:" + dts + "Z\r\n")
+        buf.write("UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\r\n")
+        buf.write("CREATED:" + dts + "Z\r\n")
+        buf.write("SUMMARY:" + event.title + "\r\n")
+        buf.write("END:VEVENT\r\n")
+
+    buf.write("END:VCALENDAR\r\n")
+    result = buf.getvalue()
+    return Response(result, mimetype="text/calendar")
 
 
 @calendar_plugin.get("/events")
