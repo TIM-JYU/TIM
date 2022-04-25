@@ -160,11 +160,16 @@ def get_events() -> Response:
                             "title": event_obj.title,
                             "start": event_obj.start_time,
                             "end": event_obj.end_time,
-                            "meta": {"enrollments": enrollments, "maxSize": event_obj.max_size},
+                            "meta": {
+                                "enrollments": enrollments,
+                                "maxSize": event_obj.max_size,
+                            },
                         }
                     )
                 else:
-                    print("Error fetching the event by the id of", event.event_id)  # should be never possible
+                    print(
+                        "Error fetching the event by the id of", event.event_id
+                    )  # should be never possible
             return json_response(event_objs)
     raise RouteException("Unsupported file type")
 
