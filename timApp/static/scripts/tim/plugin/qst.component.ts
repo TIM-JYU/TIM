@@ -61,19 +61,24 @@ const PluginFields = t.intersection([
                     [questiondata]="preview"
                     (onAnswerChange)="updateAnswer($event)">
             </tim-answer-sheet>
-            <button class="timButton" [innerHtml]="button" *ngIf="button"
-                    [disabled]="isRunning || isInvalid() || (disableUnchanged && !isUnSaved())"
-                    (click)="saveText()"></button>
-            <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event)">
-                &nbsp;{{undoButton}}
-            </a>
-
-            &nbsp;&nbsp;
-            <a class="questionAddedNew" *ngIf="hasTeacherRight() && !isInvalid()" (click)="questionClicked()">
-                <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
-            </a>
-            &ngsp;
-            <span *ngIf="result">{{result}}</span>
+            <div class="csRunMenuArea">
+                <div class="csRunMenu">
+                    <button class="timButton"
+                            [innerHtml]="button"
+                            *ngIf="button"
+                            [disabled]="isRunning || isInvalid() || (disableUnchanged && !isUnSaved())"
+                            (click)="saveText()"></button>
+                    <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event)">
+                    &nbsp;{{undoButton}}
+                    </a>
+                    &nbsp;&nbsp;
+                    <a class="questionAddedNew" *ngIf="hasTeacherRight() && !isInvalid()" (click)="questionClicked()">
+                        <span class="glyphicon glyphicon-question-sign" title="Ask question"></span>
+                    </a>
+                    &ngsp;
+                    <span class="qstResult" *ngIf="result">{{result}}</span>
+                </div>
+            </div>
             <p class="plgfooter" [innerHtml]="getFooter() | purify"></p>
             <div *ngIf="error" class="error" style="font-size: 12px" [innerHtml]="error"></div>
         </div>
@@ -228,7 +233,7 @@ export class QstComponent
     }
 
     questionClicked() {
-        this.showQuestionNew(this.getPar().originalPar.id);
+        this.showQuestionNew(this.getPar()!.originalPar.id);
     }
 
     private async showQuestionNew(parId: string) {

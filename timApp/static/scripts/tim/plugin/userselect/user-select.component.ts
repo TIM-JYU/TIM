@@ -448,7 +448,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 "/userSelect/undo",
                 {
                     username: this.lastAddedUser.user.name,
-                    par: this.getPar().par.getJsonForServer(),
+                    par: this.getPar()!.par.getJsonForServer(),
                 },
                 {params}
             )
@@ -550,7 +550,7 @@ export class UserSelectComponent extends AngularPluginBase<
             this.http.post<{distributionErrors: string[]}>(
                 "/userSelect/apply",
                 {
-                    par: this.getPar().par.getJsonForServer(),
+                    par: this.getPar()!.par.getJsonForServer(),
                     username: this.selectedUser.user.name,
                 },
                 {params}
@@ -831,7 +831,7 @@ export class UserSelectComponent extends AngularPluginBase<
         if (task?.docId && task.blockHint) {
             par = {doc_id: task.docId, par_id: task.blockHint};
         } else {
-            par = this.getPar().par.getJsonForServer();
+            par = this.getPar()!.par.getJsonForServer();
         }
 
         const queryHandler = this.markup.preFetch

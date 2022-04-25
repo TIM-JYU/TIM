@@ -21,6 +21,8 @@ x-caddy:
   CADDY_DOMAINS: ${CADDY_DOMAINS:?}
   CADDY_EXTRA_CONFIG: ${CADDY_EXTRA_CONFIG:?}
   CADDY_EXTRA_TIM_CONFIG: ${CADDY_EXTRA_TIM_CONFIG:-}
+  COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
+  STATUS_PAGE_URL: ${STATUS_PAGE_URL:-}
  restart: unless-stopped
 
 services:
@@ -178,6 +180,8 @@ services:
   environment:
    # We're not going to enable replication, so it's fine to listen to localhost
    CASSANDRA_LISTEN_ADDRESS: localhost
+   HEAP_NEWSIZE: ${CSPLUGIN_CASSANDRA_HEAP_NEWSIZE:-128M}
+   MAX_HEAP_SIZE: ${CSPLUGIN_CASSANDRA_MAX_HEAP_SIZE:-1024M}
   volumes:
    - csplugin_db_data:/var/lib/cassandra
    - ./timApp/modules/cs/cassandra/cassandra.yaml:/etc/cassandra/cassandra.yaml

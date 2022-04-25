@@ -119,6 +119,7 @@ from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
+from timApp.velp.velpgroups import set_default_velp_group_selected_and_visible
 from tim_common.html_sanitize import sanitize_html
 
 DEFAULT_RELEVANCE = 10
@@ -640,6 +641,7 @@ def render_doc_view(
     # Used later to get partitioning with preambles included correct.
     # Includes either only special class preambles, or all of them if b=0.
     preamble_count = 0
+    preamble_pars = None
     if (
         load_preamble
         or view_range.starts_from_beginning
@@ -808,7 +810,46 @@ def render_doc_view(
         if is_peerreview_enabled(doc_info):
             if not check_review_grouping(doc_info):
                 try:
-                    generate_review_groups(doc_info, post_process_result.plugins)
+                    if not r_view_range.is_full:
+                        # peer_review pairing generation may be called when only a part of the document is requested,
+                        # however we need to know answerers from every task in the document, so we generate full
+                        # document here
+                        # TODO: alternative approach (separate route, timer etc) for launching peer_review generation
+                        full_document_for_review, _ = get_document(
+                            doc_info, RequestedViewRange(b=None, e=None, size=None)
+                        )
+                        if preamble_pars:
+                            full_document_for_review = (
+                                preamble_pars + full_document_for_review
+                            )
+                        DocParagraph.preload_htmls(
+                            full_document_for_review,
+                            doc_settings,
+                            view_ctx,
+                            clear_cache,
+                        )
+                        full_document_for_review = dereference_pars(
+                            full_document_for_review, context_doc=doc, view_ctx=view_ctx
+                        )
+                        full_document_for_review = post_process_pars(
+                            doc,
+                            full_document_for_review,
+                            user_ctx,
+                            view_ctx,
+                            sanitize=False,
+                            do_lazy=do_lazy,
+                            load_plugin_states=not hide_answers,
+                        )
+                        generate_review_groups(
+                            doc_info,
+                            full_document_for_review.plugins,
+                            doc_settings.group(),
+                        )
+                    else:
+                        generate_review_groups(
+                            doc_info, post_process_result.plugins, doc_settings.group()
+                        )
+                    set_default_velp_group_selected_and_visible(doc_info)
                 except PeerReviewException as e:
                     flash(str(e))
             reviews = get_reviews_for_user(doc_info, current_user)
@@ -899,7 +940,13 @@ def render_doc_view(
             mark_all_read(group_id, doc)
         db.session.commit()
 
+    exam_mode = is_exam_mode(doc_settings, rights)
+
     document_themes = doc_settings.themes()
+    if exam_mode:
+        document_themes = list(
+            dict.fromkeys(doc_settings.exam_mode_themes() + document_themes)
+        )
     override_theme = None
     if document_themes:
         document_theme_docs = resolve_themes(document_themes)
@@ -926,7 +973,7 @@ def render_doc_view(
         pars_only=m.pars_only or should_hide_paragraphs(doc_settings, rights),
         hide_sidemenu=should_hide_sidemenu(doc_settings, rights),
         show_unpublished_bg=show_unpublished_bg,
-        exam_mode=is_exam_mode(doc_settings, rights),
+        exam_mode=exam_mode,
         rights=rights,
         route=view_ctx.route.value,
         edit_mode=(m.edit if current_user.has_edit_access(doc_info) else None),

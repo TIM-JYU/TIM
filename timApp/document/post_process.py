@@ -433,10 +433,10 @@ def process_areas(
 def should_auto_read(
     doc: Document, usergroup_ids: list[int], user: User, for_cache: bool = False
 ) -> bool:
-    return not has_anything_read(usergroup_ids, doc) and (
+    return user.get_prefs().auto_mark_all_read or (
         has_no_higher_right(
             doc.get_settings().exam_mode(),
             get_user_rights_for_item(doc.docinfo, user, allow_duration=for_cache),
         )
-        or user.get_prefs().auto_mark_all_read
+        and not has_anything_read(usergroup_ids, doc)
     )

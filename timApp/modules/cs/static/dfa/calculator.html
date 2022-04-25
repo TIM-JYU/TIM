@@ -69,6 +69,8 @@ infix ===              # takaisin "normaaliin" laskentaan
 5-3 === 2              # toimiiko?
 5 3 === undefined      # kertomerkki puuttuu
 3^--2+4^-+-2 === 25    # ylimääräisiä etumerkkejä
+ln(e) === 1            # ln neper e
+log10(10) === 1        # 10-kantainen logaritmi
 `;
     let res = setData({code: code.substring(1), params: {xusemem: false, xallowed: ["signm","mem","num", "*", ], xillegals: ["mem", "sin"]}});
     console.log(res);
