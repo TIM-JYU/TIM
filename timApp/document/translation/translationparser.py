@@ -1,8 +1,23 @@
+"""
+TODO: Short description of Python module
+"""
+
+__authors__ = [
+    "Noora Jokela",
+    "Riku Lehkonen",
+    "Vili Moisala",
+    "Juho Tarkkanen",
+    "Sami Viitanen",
+]
+__license__ = "MIT"
+__date__ = "25.4.2022"
+
 import re
 import pypandoc
 import json
 from typing import Tuple
 from dataclasses import dataclass
+from itertools import chain
 
 # Regex table for all searched sections for translation. Expand if necessary.
 regex_to_translate = [
@@ -56,7 +71,7 @@ class Table(TranslateApproval):
     ...
 
 
-def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
+def get_translate_approvals(md: str) -> list[TranslateApproval]:
     """
     By parsing the input text, identify parts that should and should not be
     passed to a machine translator
@@ -71,9 +86,11 @@ def get_translate_approvals(md: str) -> list[list[TranslateApproval]]:
     # By walking the ast, glue continuous translatable parts together into Translate-object and non-translatable parts
     # into NoTranslate object
     # Add the objects into a list where they alternate T|NT, NT, T, NT ... T|NT
-    block_approvals = [
-        merge_consecutive(block_collect(block)) for block in ast["blocks"]
-    ]
+    block_approvals = list(
+        chain.from_iterable(
+            merge_consecutive(block_collect(block)) for block in ast["blocks"]
+        )
+    )
     # Return the list
     return block_approvals
 
