@@ -7,13 +7,11 @@ from flask import Response, request
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import (
     get_current_user_id,
-    get_current_user_group,
     get_current_user_object,
 )
 from timApp.plugin.calendar.models import Event, Eventgroup, Enrollment, Enrollmenttype
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
-from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -152,16 +150,21 @@ def get_events() -> Response:
         case "json":
             event_objs = []
             for event in events:
-                enrollments = len(Event.get_event_by_id(event.event_id).enrolled_users)
-                event_objs.append(
-                    {
-                        "id": event.event_id,
-                        "title": event.title,
-                        "start": event.start_time,
-                        "end": event.end_time,
-                        "meta": {"enrollments": enrollments, "maxSize": event.max_size},
-                    }
-                )
+                event_optional = Event.get_event_by_id(event.event_id)
+                if event_optional is not None:
+                    event_obj: Event = event_optional
+                    enrollments = len(event_obj.enrolled_users)
+                    event_objs.append(
+                        {
+                            "id": event_obj.event_id,
+                            "title": event_obj.title,
+                            "start": event_obj.start_time,
+                            "end": event_obj.end_time,
+                            "meta": {"enrollments": enrollments, "maxSize": event_obj.max_size},
+                        }
+                    )
+                else:
+                    print("Error fetching the event by the id of", event.event_id)  # should be never possible
             return json_response(event_objs)
     raise RouteException("Unsupported file type")
 
