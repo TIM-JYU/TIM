@@ -174,8 +174,8 @@ class CalendarEvent:
     title: str
     start: datetime
     end: datetime
-    event_groups: list[str] | None
-    max_size: int
+    max_size: int = 1
+    event_groups: list[str] | None = None
 
 
 @calendar_plugin.post("/events")
