@@ -1253,7 +1253,7 @@ interface IAnswerResponse {
             <div class="pluginError" *ngIf="imageLoadError" [textContent]="imageLoadError"></div>
             <h4 *ngIf="header" [innerHtml]="header"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
-            <div>
+            <div class="imagex-content">
                 <canvas class="canvas no-popup-menu"
                         tabindex="1"
                         width={{canvaswidth}}
