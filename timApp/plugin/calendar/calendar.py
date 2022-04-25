@@ -152,7 +152,7 @@ def get_events() -> Response:
             for event in events:
                 event_optional = Event.get_event_by_id(event.event_id)
                 if event_optional is not None:
-                    event_obj: Event = event_optional
+                    event_obj = event_optional
                     enrollments = len(event_obj.enrolled_users)
                     event_objs.append(
                         {
