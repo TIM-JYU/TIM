@@ -405,7 +405,7 @@ interface IImageSizes {
     width: number;
 }
 
-interface offsetContext {
+interface IOffsetContext {
     ctx: CanvasRenderingContext2D;
     width: number;
     height: number;
@@ -420,7 +420,7 @@ export class Drawing {
     // original canvas elements
     canvases: HTMLCanvasElement[];
     // CanvasRenderingContexts on canvases and their respective offsets
-    ctxs: offsetContext[] = [];
+    ctxs: IOffsetContext[] = [];
     externalClear = false;
 
     /**
@@ -489,7 +489,7 @@ export class Drawing {
     private itemH: number = 0;
 
     // which contexts need to be re-drawn on draw events
-    private activeContexts: offsetContext[] = [];
+    private activeContexts: IOffsetContext[] = [];
 
     // y-coordinate limits for current move event
     private minY: number = 0;
@@ -805,7 +805,7 @@ export class Drawing {
      * (e.g canvases between this.minY and this.maxY)
      */
     setActiveContexts() {
-        const ret: offsetContext[] = [];
+        const ret: IOffsetContext[] = [];
         for (const ctx of this.ctxs) {
             const top = -ctx.yOffset;
             const bottom = top + ctx.height;
