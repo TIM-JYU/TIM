@@ -273,8 +273,12 @@ def book_event(event_id: int) -> Response:
     """
     verify_logged_in()
     event = Event.get_event_by_id(event_id)
-    if len(event.enrolled_users) >= event.max_size:
-        raise RouteException("Event is already full")
+    if event is not None:
+        event_obj: Event = event
+        if len(event_obj.enrolled_users) >= event_obj.max_size:
+            raise RouteException("Event is already full")
+    else:
+        raise RouteException(f"Event not found by the id of {0}".format(event_id))
     user_obj = get_current_user_object()
 
     group_id = None
