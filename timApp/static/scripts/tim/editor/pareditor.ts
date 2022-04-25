@@ -22,6 +22,7 @@ import {
     listLanguages,
     availableTranslators,
     isOptionAvailable,
+    updateTranslationData,
 } from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
@@ -1259,32 +1260,17 @@ ${backTicks}
         this.changePreviewPositions();
 
         if (!this.checkIfOriginal()) {
-            this.updateTranslationData();
-        }
-    }
-
-    /**
-     * Handles updating data regarding translations (cannot be done in initialization because it cannot be turned into
-     * an async function right now).
-     */
-    async updateTranslationData() {
-        const error = ["", "", ""];
-        error[0] = await listTranslators(this.translators, false);
-        error[1] = await updateLanguages(
-            this.sourceLanguages,
-            this.documentLanguages,
-            this.targetLanguages,
-            this.docTranslator
-        );
-        error[2] = await availableTranslators(this.availableTranslators);
-        for (const errors of error) {
-            if (errors != "") {
-                this.errorMessage = errors;
-                this.translatorAvailable = false;
-            }
-        }
-        for (const tr of this.translators) {
-            isOptionAvailable(tr, this.availableTranslators);
+            updateTranslationData(
+                this.sourceLanguages,
+                this.documentLanguages,
+                this.targetLanguages,
+                this.docTranslator,
+                this.translators,
+                this.availableTranslators,
+                this.errorMessage,
+                this.translatorAvailable,
+                false
+            );
         }
     }
 

@@ -15,6 +15,7 @@ import {
     listLanguages,
     availableTranslators,
     isOptionAvailable,
+    updateTranslationData,
 } from "../document/editing/edittypes";
 import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
@@ -127,24 +128,17 @@ export class PermCtrl implements IController {
         }
         this.setDeleteText();
 
-        const error = ["", "", ""];
-        error[0] = await listTranslators(this.translators, true);
-        error[1] = await updateLanguages(
+        await updateTranslationData(
             this.sourceLanguages,
             this.documentLanguages,
             this.targetLanguages,
-            this.newTranslation.translator
+            this.newTranslation.translator,
+            this.translators,
+            this.availableTranslators,
+            this.errorMessage,
+            this.translatorAvailable,
+            true
         );
-        error[2] = await availableTranslators(this.availableTranslators);
-        for (const errors of error) {
-            if (errors != "") {
-                this.errorMessage = errors;
-                this.translatorAvailable = false;
-            }
-        }
-        for (const tr of this.translators) {
-            isOptionAvailable(tr, this.availableTranslators);
-        }
     }
 
     async showMoreChangelog() {
