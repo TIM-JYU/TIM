@@ -8,8 +8,47 @@ export class CustomDateFormatter extends CalendarDateFormatter {
         return formatDate(date, "EEE", locale!);
     }
 
+    /**
+     *  Custom formatted that takes into special account finnish language. Returns a formatted
+     *  title with the name of the month and the year.
+     *  There is a default 'ta' -ending in the default formatDate -function. This function removes the last 2 letters of all those
+     *  huhtikuuta, tammikuuta etc. month names and brings them closer to natural finnish language.
+     *
+     * @param date date to be formatted
+     * @param locale the locale of user
+     */
     public monthViewTitle({date, locale}: DateFormatterParams): string {
+        if (locale!.toLowerCase() == "fi" || locale!.toLowerCase() == "fi-fi") {
+            const formattedYear = formatDate(date, "y", locale!);
+            let formattedMonthName = formatDate(date, "MMMM", locale!);
+            formattedMonthName = formattedMonthName.substring(
+                0,
+                formattedMonthName.length - 2
+            );
+            return formattedMonthName + " " + formattedYear;
+        }
+
         return formatDate(date, "MMMM y", locale!);
+    }
+
+    /**
+     * Custom formatted that takes into special account finnish language. Returns a formatted
+     *  title with the name of the month.
+     *  There is a default 'ta' -ending in the default formatDate -function. This function removes the last 2 letters of all those
+     *  huhtikuuta, tammikuuta etc. month names and brings them closer to natural finnish language.
+     * @param date date to be formatted
+     * @param locale the locale of user
+     */
+    public viewMonth({date, locale}: DateFormatterParams): string {
+        if (locale!.toLowerCase() == "fi" || locale!.toLowerCase() == "fi-fi") {
+            let formattedMonthName = formatDate(date, "MMMM", locale!);
+            formattedMonthName = formattedMonthName.substring(
+                0,
+                formattedMonthName.length - 2
+            );
+            return formattedMonthName;
+        }
+        return formatDate(date, "MMMM", locale!);
     }
 
     public weekViewColumnHeader({date, locale}: DateFormatterParams): string {

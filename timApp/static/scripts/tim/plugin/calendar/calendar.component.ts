@@ -26,6 +26,7 @@ import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {CommonModule, registerLocaleData} from "@angular/common";
 import localeFr from "@angular/common/locales/fi";
+import localeFi from "@angular/common/locales/fi";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
@@ -108,6 +109,7 @@ const segmentHeight = 30;
 // const minutesInSegment = 20;
 
 registerLocaleData(localeFr);
+registerLocaleData(localeFi);
 
 /**
  * For customizing the event tooltip
@@ -151,7 +153,7 @@ export type TIMCalendarEvent = CalendarEvent<{
         // },
     ],
     template: `
-        <mwl-utils-calendar-header [(view)]="view" [(viewDate)]="viewDate">
+        <mwl-utils-calendar-header [locale]="locale" [(view)]="view" [(viewDate)]="viewDate">
         </mwl-utils-calendar-header>
         <div class="row text-center">
             <div class="col-md-4">
@@ -168,7 +170,7 @@ export type TIMCalendarEvent = CalendarEvent<{
                             id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button.valueOf()}}</button>
                 </div>
             </div>
-            <div class="col-md-4">Näytä:
+            <div class="col-md-4">Show:
                     <div *ngFor="let box of checkboxEvents"> 
                         <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
                                [(ngModel)]="box.checked" [checked]="">{{box.name}}
@@ -270,7 +272,8 @@ export type TIMCalendarEvent = CalendarEvent<{
                 </div>
             </div>
             <div class="modal-footer">
-                <!-- <button [style.visibility] = "editEnabled ? 'visible' : 'hidden'" type="button" class="btn btn-outline-secondary timButton"
+                <!-- <button [style.visibility] = "editEnabled ? 'visible' : 'hidden'" type="button" class="btn btn-out
+                line-secondary timButton"
                         (click)=" close(); deleteEvent(modalData?.event)">
                     Delete
                 </button> -->
