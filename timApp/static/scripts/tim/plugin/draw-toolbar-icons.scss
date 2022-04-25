@@ -99,16 +99,47 @@
   border-top: 2px solid
 }
 
-.gg-shape-circle {
-  box-sizing: border-box;
-  position: relative;
-  top: 2px;
-  display: block;
-  width: 20px;
-  height: 16px;
-  border: 3px solid;
-  border-radius: 100px / 85px;
+.gg-shape-circle-center,
+.gg-shape-circle-center::after,
+.gg-shape-circle-corner,
+.gg-shape-circle-corner::after
+{
+    display: block;
+    box-sizing: border-box;
+    border-radius: 100px
 }
+
+.gg-shape-circle-center, .gg-shape-circle-corner {
+    box-sizing: border-box;
+    position: relative;
+    top: 2px;
+    display: block;
+    width: 20px;
+    height: 16px;
+    border: 3px solid;
+    border-radius: 100px / 85px;
+}
+
+.gg-shape-circle-center::after {
+    content: "";
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: currentColor;
+    top: 4px;
+    left: 6px;
+}
+
+.gg-shape-circle-corner::after {
+    content: "";
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: currentColor;
+    top: -4px;
+    left: -4px;
+}
+
 
 .gg-edit-fade {
   box-sizing: border-box;
