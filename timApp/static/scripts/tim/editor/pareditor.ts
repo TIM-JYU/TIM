@@ -17,11 +17,7 @@ import {IDocument, ILanguages, ITranslators} from "tim/item/IItem";
 import {
     IExtraData,
     ITags,
-    updateLanguages,
-    listTranslators,
     listLanguages,
-    availableTranslators,
-    isOptionAvailable,
     updateTranslationData,
 } from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
@@ -1142,7 +1138,7 @@ ${backTicks}
     }
 
     /**
-    Updates this.hideOriginalPreview and calls for a change of positioning because ng-model updates it too slow.
+     * Updates this.hideOriginalPreview and calls for a change of positioning because ng-model updates it too slow.
      */
     updateOriginalPreviewHide() {
         this.hideOriginalPreview = !this.hideOriginalPreview;
@@ -1640,6 +1636,7 @@ ${backTicks}
      * Updates the list of target languages based on the selected translator.
      * TODO: Handling the error code should be done better (it should never appear on the browser's console) but at
      * least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
+     * TODO: This could probably be refactored into edittypes.ts at least after updating this to new Angular?
      */
     async updateTranslatorLanguages() {
         let sources = await to(

@@ -10,11 +10,7 @@ import * as tem from "tim/ui/formErrorMessage";
 import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
 import {
     IManageResponse,
-    updateLanguages,
-    listTranslators,
     listLanguages,
-    availableTranslators,
-    isOptionAvailable,
     updateTranslationData,
 } from "../document/editing/edittypes";
 import {IGroup} from "../user/IUser";
@@ -365,9 +361,11 @@ export class PermCtrl implements IController {
         }
     }
 
-    /*
-    TODO: Handling the error code should be done better (it should never appear on the browser's console) but at
-    least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
+    /**
+     * Removes the chosen document.
+     * TODO: Handling the error code should be done better (it should never appear on the browser's console) but at
+     * least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
+     * @param id the id of the document to be deleted
      */
     async deleteDocument(id: number) {
         const trDocLang = this.findCurrentTrDocLang(id);
@@ -604,6 +602,7 @@ export class PermCtrl implements IController {
      * Updates the list of available target languages when translator is changed.
      * TODO: Handling the error code should be done better (it should never appear on the browser's console) but at
      * least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
+     * TODO: This could probably be refactored into edittypes.ts at least after updating this to new Angular?
      */
     async updateTranslatorLanguages() {
         let sources = await to(
@@ -699,7 +698,7 @@ export class PermCtrl implements IController {
 
     /**
      * Checks whether the translator chosen for the document is Manual (in which case a translator language is not
-     * shown) or not
+     * shown) or not.
      */
     notManualCheck() {
         if (this.newTranslation.translator == "Manual") {
