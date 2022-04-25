@@ -29,7 +29,7 @@ calendar_plugin = TypedBlueprint("calendar_plugin", __name__, url_prefix="/calen
 
 
 @calendar_plugin.before_app_first_request
-def initialize_db():
+def initialize_db() -> None:
     """Initializes the enrollment types in the database when the TIM-server is launched the first time,
     before the first request."""
 
@@ -119,9 +119,11 @@ def get_events() -> Response:
         ).all()
         for group_event in group_events:
             event = Event.get_event_by_id(group_event.event_id)
-            if event not in events:
-                events.append(event)
-            elif event is None:
+            if event is not None:
+                event_obj: Event = event
+                if event_obj not in events:
+                    events.append(event_obj)
+            else:
                 print("Event not found by the id of", group_event.event_id)
 
     file_type = request.args.get("file_type")
