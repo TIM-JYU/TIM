@@ -1,3 +1,17 @@
+"""
+TODO: Short description of Python module
+"""
+
+__authors__ = [
+    "Noora Jokela",
+    "Riku Lehkonen",
+    "Vili Moisala",
+    "Juho Tarkkanen",
+    "Sami Viitanen",
+]
+__license__ = "MIT"
+__date__ = "25.4.2022"
+
 import re
 import langcodes
 import requests
