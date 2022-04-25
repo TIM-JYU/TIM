@@ -69,7 +69,7 @@ tim-qst .answer-sheet-table {
   margin-left: 2em;
 }
 
-tim-qst button.timButton {
+tim-qst button.timButton:not(:first-child) {
   margin-left: 2em;
 }
 

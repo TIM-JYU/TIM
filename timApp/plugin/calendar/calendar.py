@@ -187,7 +187,9 @@ def add_events(events: list[CalendarEvent]) -> Response:
     for event in events:
         groups = []
         for event_group in event.event_groups:
-            groups.append(UserGroup.get_by_name(event_group))
+            group = UserGroup.get_by_name(event_group)
+            if group is not None:
+                groups.append(group)
 
         event = Event(
             title=event.title,

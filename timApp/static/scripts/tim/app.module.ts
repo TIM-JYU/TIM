@@ -39,6 +39,7 @@ import {TimManageModule} from "tim/item/manage/manage.module";
 import {ParRefComponent} from "tim/document/par-ref.component";
 import {GamificationMapComponent} from "tim/gamification/gamification-map.component";
 import {SelfExpireComponent} from "tim/item/self-expire.component";
+import {SearchButtonComponent} from "tim/search/search-button.component";
 
 @NgModule({
     declarations: [
@@ -59,6 +60,7 @@ import {SelfExpireComponent} from "tim/item/self-expire.component";
         BookmarkFolderBoxComponent,
         SiteHeaderComponent,
         SearchBoxComponent,
+        SearchButtonComponent,
         AccessCountdownComponent,
         DirectoryListComponent,
         TemplateListComponent,

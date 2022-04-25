@@ -27,6 +27,10 @@ export CADDY_EXTRA_CONFIG='
 
 '
 
+# If main TIM container is down (e.g. during the update),
+# this URL is shown to the users as the "status page" URL
+export STATUS_PAGE_URL=''
+
 # TIM image tag to use. Do not modify; it is computed automatically.
 export TIM_IMAGE_TAG=$(${DIR}/get_latest_date.sh)
 
@@ -86,6 +90,12 @@ export CONFIG_FILE='prodconfig.py'
 
 # Location of log directory; will be mapped for TIM container at /service/tim_logs.
 export LOG_DIR=${DIR}/tim_logs
+
+# Initial heap size for Cassandra used for csplugin tasks
+export CSPLUGIN_CASSANDRA_HEAP_NEWSIZE=128M
+
+# Max heap size for Cassandra used for csplugin tasks
+export CSPLUGIN_CASSANDRA_MAX_HEAP_SIZE=1024M
 
 # To print the concrete values of these variables, you can use:
 # env - bash -c ". ./variables.sh && env | grep -Ev '^(_|PWD|SHLVL)='"

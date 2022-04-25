@@ -31,6 +31,7 @@
             </div>
         </div>
         <div ng-show="!$ctrl.hasUserChanged() || $ctrl.loading">
+                        <span class="flex align-center">
             <div ng-show="$ctrl.answers.length > 0">
                 <div ng-if="$ctrl.showBrowseAnswers" class="flex align-center">
                     <div>
@@ -64,14 +65,15 @@
                              ng-href="{{ $ctrl.getAnswerLink() }}">Link</a>
                         (<a title="Link to currently selected answer without other document content"
                             target="_blank"
-                            ng-href="{{ $ctrl.getAnswerLink(true) }}">only</a>)
-                         <a ng-if="$ctrl.peerReviewEnabled && !$ctrl.isPeerReview"
-                            title="Link to peer review"
-                            ng-href="{{ $ctrl.getReviewLink() }}">Review</a>
+                            ng-href="{{ $ctrl.getAnswerLink(true) }}">only</a>)&nbsp;
                         </span>
                     </div>
                 </div>
                 </div>
+                <a ng-if="$ctrl.peerReviewEnabled && !$ctrl.isPeerReview"
+                    title="Link to peer review"
+                ng-href="{{ $ctrl.getReviewLink() }}">Review</a>
+                </span>
              <div ng-show="$ctrl.answers.length == 0 && $ctrl.viewctrl.teacherMode">
                 <span ng-if="!$ctrl.hasUserChanged()">(no answers from the selected user)</span>
                  <span ng-if="$ctrl.hasUserChanged()"> <tim-loading></tim-loading> </span>

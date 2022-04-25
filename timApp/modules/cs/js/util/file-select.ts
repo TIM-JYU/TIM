@@ -1,22 +1,22 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["files_", "multipleElements_"] }] */
 import {
+    ChangeDetectorRef,
     Component,
-    ViewChild,
-    ViewChildren,
     ElementRef,
+    EventEmitter,
     Input,
     Output,
-    EventEmitter,
     QueryList,
-    ChangeDetectorRef,
+    ViewChild,
+    ViewChildren,
 } from "@angular/core";
 import {
     HttpClient,
-    HttpEventType,
     HttpErrorResponse,
+    HttpEventType,
 } from "@angular/common/http";
 import {NotificationComponent} from "./notification";
-import {timeString, sizeString} from "./util";
+import {sizeString, timeString} from "./util";
 import {Set} from "./set";
 
 export interface IFile {
@@ -107,6 +107,7 @@ let nextId = 0;
                         </ng-container>
                         <notification #loadInfo></notification>
                         <notification class="error" #error></notification>
+                        <notification class="warning" #warning></notification>
                     </div>
                 </div>
             </label>
@@ -134,6 +135,7 @@ export class FileSelectComponent {
 
     @ViewChild("input") inputElement?: ElementRef;
     @ViewChild("error") error?: NotificationComponent;
+    @ViewChild("warning") warning?: NotificationComponent;
     @ViewChild("loadInfo") loadInfo?: NotificationComponent;
 
     progress?: string;
@@ -145,6 +147,7 @@ export class FileSelectComponent {
     clearStatus() {
         this.error?.clear();
         this.loadInfo?.clear();
+        this.warning?.clear();
 
         this.numFiles = 0;
         this.numUploaded = 0;
@@ -179,6 +182,10 @@ export class FileSelectComponent {
         this.error?.push(error, timeout);
     }
 
+    addWarning(warning: string, timeout?: number) {
+        this.warning?.push(warning, timeout);
+    }
+
     uploadFiles(files: File[], mappings: IMapping[]) {
         if (!this.uploadUrl) {
             return;
@@ -198,6 +205,12 @@ export class FileSelectComponent {
                 }
                 const formdata = new FormData();
                 formdata.append("file", file, mapping.path);
+                if (file.size == 0) {
+                    this.addWarning(
+                        $localize`File ${file.name} is empty, but it will still be uploaded`,
+                        10000
+                    );
+                }
                 const _ = this.http
                     .post(this.uploadUrl!, formdata, {
                         reportProgress: true,

@@ -237,7 +237,8 @@ class JmpCommand extends CommandWithLabel {
                 return undefined;
             }
         }
-        rpn.addError("Label " + this.label + " not found!")
+		rpn.addError(rpn.params.labelNotFoundError.replace("%s", this.label));
+
         super.run(rpn)
         return undefined;
     }
@@ -293,7 +294,20 @@ const knownCommands = [
     JGtr,
 ];
 
+
+
 class RPN {
+
+    toNumber(s, def) {
+        try {
+            if (s === undefined) return def;
+            let n = parseInt(""+s);
+            if (isNaN(n)) return def;
+            return n;
+        } catch (e) {
+            return def;
+        }
+    }
 
     addError(err) {
         this.errors += err + "\n";
@@ -314,7 +328,16 @@ class RPN {
         let initial = params["initial"] || "";
         this.allowed = params["allowed"] || [];
         this.illegals = params["illegals"] || [];
-        this.params.maxStep = this.params.maxStep || 10000;
+        this.params.maxStep = this.toNumber(this.params.maxStep, 10000);
+        this.params.maxStepError = this.params.maxStepError || "Loop forever";
+        this.params.stackEmptyError = this.params.stackEmptyError || "Stack empty!";
+        this.params.maxStack = this.toNumber(this.params.maxStack, 25);
+        this.params.maxStackErrorLimit = this.toNumber(this.params.maxStackErrorLimit || this.params.maxStack);
+        this.params.maxStackError = this.params.maxStackError || "Too much stack usage!";
+        this.params.labelNotFoundError = this.params.labelNotFoundError || "Label %s not found!";
+        this.params.wrongNumberError = this.params.wrongNumberError || "Not a number to stack: %s!";
+        this.params.noItemsInStack = this.params.noItemsInStack || "Stack has not this many items: %s!";
+        this.params.unknownCommandError = this.params.unknownCommandError || 'unknown or illegal command!';
         this.errorlevel = 3;
         this.stack = [];
         this.commands = [];
@@ -397,7 +420,7 @@ class RPN {
                     if (cmds) break;
                 }
                 if (!cmds) {  // this should not happend if there is UnknownCommand last
-                    this.addError(`${this.linenumber}: ${line} - unknown or illegal`);
+                    this.addError(`${this.linenumber}: ${line} - ` + this.params.unknownCommandError);
                     continue; // did not match any know types
                 }
 
@@ -425,14 +448,14 @@ class RPN {
         for (const s of this.values) {
             let value = s.trim();
             if (value === "") continue;
-            if (!/^-?([0-9]+)/.test(value)) this.addError("Wrong number: " + value);
+            if (!/^-?([0-9]+)/.test(value)) this.addError(this.params.wrongNumberError.replace("%s", value));
             this.stack.push(parseInt(value));
         }
     }
 
     isEmpty() {
         if (this.stack.length < 1) {
-            this.addError("Stack empty!");
+            this.addError(this.params.stackEmptyError);
             return true;
         }
         return false;
@@ -445,7 +468,7 @@ class RPN {
 
     peek(n) {
         if (this.stack.length < n) {
-            this.addError("No item " + n + " in stack!");
+            this.addError(this.params.noItemsInStack.replace("%s", ""+n));
             return true;
         }
         return this.stack[this.stack.length-n];
@@ -483,6 +506,8 @@ class RPN {
             if (this.errors.length > 0 && this.params.stopOnError) break;
             nr++;
         }
+        if (nr >= this.params.maxStep) this.addError(this.params.maxStepError);
+        if (this.maxStack > this.params.maxStackErrorLimit) this.addError(this.params.maxStackError);
         return nr;
     }
 

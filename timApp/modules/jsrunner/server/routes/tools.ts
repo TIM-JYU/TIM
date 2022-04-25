@@ -6,7 +6,12 @@ import {
     IJsRunnerMarkup,
     INumbersObject,
 } from "../../shared/jsrunnertypes";
-import {AliasDataT, UserFieldDataT} from "../servertypes";
+import {
+    AliasDataT,
+    PeerReviewDataT,
+    UserFieldDataT,
+    VelpDataT,
+} from "../servertypes";
 
 /**
  * From name=alias list returns two lists
@@ -946,11 +951,14 @@ export interface IToolsResult {
 
 export class Tools extends ToolsBase {
     private result: Record<string, unknown> = {};
+
     constructor(
         protected data: UserFieldDataT,
         currDoc: string,
         markup: IJsRunnerMarkup,
-        aliases: AliasDataT
+        aliases: AliasDataT,
+        protected testvelps: VelpDataT[],
+        protected peerreviews: PeerReviewDataT[]
     ) {
         super(currDoc, markup, aliases);
     }
@@ -994,9 +1002,11 @@ export class Tools extends ToolsBase {
     }
 
     getLeaveDate() {
-        return this.data.groupinfo
-            ? this.data.groupinfo.membership_end
-            : undefined;
+        return this.data.groupinfo?.membership_end;
+    }
+
+    getAddDate() {
+        return this.data.groupinfo?.membership_add;
     }
 
     getDouble(fieldName: unknown, defa: unknown = 0): number {
@@ -1316,5 +1326,118 @@ export class Tools extends ToolsBase {
 
     getResult(): IToolsResult {
         return {user: this.data.user.id, fields: this.result};
+    }
+
+    isVelpTask(v: VelpDataT, task: string): boolean {
+        const id: string = v.answer.task_id;
+        return id.substr(id.indexOf(".") + 1) === task;
+    }
+
+    isVelpForUser(v: VelpDataT): boolean {
+        return v.answer.users[0].id === this.data.user.id;
+    }
+
+    getTaskPoints(task: string): number {
+        const sum = this.testvelps
+            .filter((v) => this.isVelpForUser(v) && this.isVelpTask(v, task))
+            .map((v) => v.points)
+            .reduce((acc, p) => acc + (p !== null ? p : 0), 0);
+        const count = this.getVelpedCount(task);
+        // this.println(sum, count);
+        return count ? sum / count : NaN;
+        // return sum / velps.length ? sum / velps.length : 0;
+    }
+
+    getVelpedCount(task: string): number {
+        const seen = new Set();
+        this.testvelps
+            .filter(
+                (v) =>
+                    this.isVelpForUser(v) &&
+                    this.isVelpTask(v, task) &&
+                    v.points !== null
+            )
+            .map((v) => seen.add(v.annotator.id));
+        return seen.size;
+    }
+
+    getReviewCount(task: string): number {
+        const seen = new Set();
+        this.testvelps
+            .filter(
+                (v) =>
+                    v.annotator.id === this.data.user.id &&
+                    this.isVelpTask(v, task)
+            )
+            .map((v) => seen.add(v.answer.id));
+        return seen.size;
+    }
+
+    getReviews(task: string): object[] {
+        const velps = this.testvelps
+            .filter((v) => this.isVelpForUser(v) && this.isVelpTask(v, task))
+            .map((v) => ({
+                id: v.annotator.id,
+                name: v.annotator.name,
+                points: v.points !== null ? v.points : NaN,
+            }));
+        // this.output += velps;
+
+        const result = Array.from(new Set(velps.map((s) => s.id))).map((id) => {
+            const reviewer = velps.find((s) => s.id === id);
+            const points = velps
+                .filter((s) => s.id === id)
+                .map((velp) => (velp.points !== null ? velp.points : NaN))
+                .filter((n) => !isNaN(n));
+            return {
+                id: id,
+                name: reviewer ? reviewer.name : "",
+                points: points,
+            };
+        });
+        return result;
+    }
+
+    getPoints(task: string) {
+        const velps = this.testvelps
+            .filter((v) => this.isVelpForUser(v) && this.isVelpTask(v, task))
+            .map((v) => ({
+                id: v.annotator.id,
+                name: v.annotator.name,
+                points: v.points ? v.points : NaN,
+                task: v.answer.task_id,
+            }));
+
+        const points = velps.map((v) => v.points).filter((n) => !isNaN(n));
+        // this.output += points
+        const sum = points.reduce((a, b) => a + b, 0);
+        return sum;
+    }
+
+    /**
+     * Print every row in peer_review table where document_id matches jsrunner origin doc id
+     */
+    getAllPeerReviews(): PeerReviewDataT[] {
+        return this.peerreviews;
+    }
+
+    /**
+     * Print every row from peer_review table where document_id matches
+     * jsrunner origin doc id and reviewer is current user
+     */
+    getPeerReviewsByUser(): PeerReviewDataT[] {
+        return this.getAllPeerReviews().filter(
+            (rev) => rev.reviewer_id == this.data.user.id
+        );
+    }
+
+    /**
+     * Print every row from peer_review table where document_id matches
+     * jsrunner origin doc id and target is current user
+     */
+    getPeerReviewsForUser(): PeerReviewDataT[] {
+        return this.getAllPeerReviews().filter(
+            (rev) => rev.reviewable_id == this.data.user.id
+        );
     }
 }

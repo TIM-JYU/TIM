@@ -435,6 +435,16 @@ class Sqrt extends FuncRROperation {
     doCalc(a) { return Math.sqrt(a); }
 },
 
+class Ln extends FuncRROperation {
+    reg() { return /ln/; }
+    doCalc(a) { return Math.log(a); }
+},
+
+class Log10 extends FuncRROperation {
+    reg() { return /log10/; }
+    doCalc(a) { return Math.log10(a); }
+},
+
 class Rad extends Command {
     reg() { return /rad/; }
     calc() { this.calculator.deg = false; }
@@ -474,6 +484,16 @@ class PiOperation extends  ValueOperation {
     lexfunc(lexme, lexer) {
         const oper = new PiOperation(this.calculator);
         oper.value = Math.PI;
+        return oper;
+    }
+},
+
+class EOperation extends  ValueOperation {
+    reg() { return /e/ }
+    lexname() { return "e"; }
+    lexfunc(lexme, lexer) {
+        const oper = new EOperation(this.calculator);
+        oper.value = Math.E;
         return oper;
     }
 },

@@ -1,5 +1,5 @@
 import {Component, NgModule} from "@angular/core";
-import {FormsModule, NgForm} from "@angular/forms";
+import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {DialogModule} from "../../ui/angulardialog/dialog.module";
@@ -111,7 +111,8 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         (click)="bookEvent()" [disabled]="eventIsFull()" [hidden]="isEditEnabled()">
                     Book event
                 </button>
-                <button class="timButton" type="submit" (click)="onSubmit(form)" [disabled]="form.invalid"
+                <button class="timButton" type="submit" (click)="saveChanges()" [disabled]="form.invalid"
+
                         [hidden]="!isEditEnabled()">
                     Save
                 </button>
@@ -137,11 +138,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 
     constructor(private http: HttpClient) {
         super();
-    }
-
-    async onSubmit(form: NgForm) {
-        console.log(form.errors);
-        await this.saveChanges();
     }
 
     /**

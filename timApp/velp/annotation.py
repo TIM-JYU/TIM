@@ -6,10 +6,8 @@ as well as adding comments to the annotations. The module also retrieves the ann
 :version: 1.0.0
 
 """
-import json
 import re
-from dataclasses import dataclass, field
-from typing import Optional
+from dataclasses import field
 
 from flask import Response
 
@@ -22,11 +20,16 @@ from timApp.auth.accesshelper import (
     verify_view_access,
     AccessDenied,
     verify_teacher_access,
+    has_seeanswers_access,
 )
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.document.viewcontext import default_view_ctx
-from timApp.peerreview.peerreview_utils import has_review_access
+from timApp.peerreview.peerreview_utils import (
+    has_review_access,
+    get_reviews_to_user,
+    is_peerreview_enabled,
+)
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException
@@ -86,7 +89,7 @@ def add_annotation(
                 raise RouteException(
                     "Reviewing answers with multiple collaborators not supported yet"
                 )
-            if not has_review_access(d, annotator, a.parsed_task_id, a.users_all[0]):
+            if not has_review_access(d, annotator, None, a.users_all[0]):
                 raise AccessDenied()
         else:
             if doc_id != ans_doc_id:
@@ -252,4 +255,18 @@ def get_annotations(doc_id: int, only_own: bool = False) -> Response:
     results = get_annotations_with_comments_in_document(
         get_current_user_object(), d, only_own
     )
+    if is_peerreview_enabled(d) and not has_seeanswers_access(d):
+        # TODO: these checks should be changed to something else
+        #  - peerreview might be disabled later, but the annotation should remain anonymous to target
+        #  - in future peerreview pairing may be changeable, but anonymization info should persist
+        #  - instead of querying peer_reviews every time annotation could directly contain info about anonymization
+        revs = get_reviews_to_user(d, get_current_user_object())
+        revset = {r.reviewer_id for r in revs}
+        for ann in results:
+            if (
+                ann.annotator.id != get_current_user_object().id
+                and ann.annotator_id in revset
+            ):
+                ann.annotator.hide_name = True
+
     return no_cache_json_response(results, date_conversion=True)

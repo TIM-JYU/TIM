@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from email.mime.text import MIMEText
 from io import TextIOWrapper
 from pprint import pprint
-from typing import Optional
 
 import click
 from flask import current_app
@@ -241,6 +240,7 @@ def do_merge_users(u_prim: User, u_sec: User, force=False) -> MergeResult:
             ugm = UserGroupMember(
                 usergroup_id=m.usergroup_id,
                 added_by=m.added_by,
+                membership_added=m.membership_added,
                 membership_end=m.membership_end,
             )
             u_prim.memberships.append(ugm)

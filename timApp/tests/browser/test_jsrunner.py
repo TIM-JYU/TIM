@@ -89,9 +89,7 @@ Test
             self.wait_until_hidden("js-runner tim-loading")
 
         def click_jsrunner():
-            self.drv.find_element(
-                By.CSS_SELECTOR, "div:nth-child(1) > .timButton:nth-child(1)"
-            ).click()
+            self.drv.find_element(By.CSS_SELECTOR, "js-runner > div > button").click()
             wait_jsrunner_done()
 
         def wait_jsrunner_output(text: str):
@@ -117,7 +115,7 @@ Test
             By.CSS_SELECTOR, ".qst-tr:nth-child(1) .qst-normal"
         )
         qst_save_button = self.drv.find_element(
-            By.CSS_SELECTOR, ".csRunDiv > .timButton"
+            By.CSS_SELECTOR, "tim-qst > div > div > div > button"
         )
         body_element = self.drv.find_element(By.CSS_SELECTOR, "body")
         actions = ActionChains(self.drv, duration=1000)
@@ -139,7 +137,7 @@ Test
             By.CSS_SELECTOR, ".qst-tr:nth-child(2) .qst-normal"
         )
         qst_save_button = self.drv.find_element(
-            By.CSS_SELECTOR, ".csRunDiv > .timButton"
+            By.CSS_SELECTOR, "tim-qst > div > div > div > button"
         )
         actions = ActionChains(self.drv, duration=1000)
         actions.move_to_element(qst_option_2)

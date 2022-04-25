@@ -1,5 +1,4 @@
 import json
-from typing import Optional
 
 from sqlalchemy import func
 
@@ -72,10 +71,10 @@ class Answer(db.Model):
     )
 
     @property
-    def content_as_json(self):
+    def content_as_json(self) -> dict:
         return json.loads(self.content)
 
-    def get_answer_number(self):
+    def get_answer_number(self) -> int:
         u = self.users.first()
         if not u:
             return 1
@@ -85,7 +84,7 @@ class Answer(db.Model):
     def task_name(self) -> str:
         return self.parsed_task_id.task_name
 
-    def to_json(self):
+    def to_json(self) -> dict:
         return {
             "id": self.id,
             "task_id": self.task_id,
