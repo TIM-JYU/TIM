@@ -159,14 +159,20 @@ export async function listTranslators(
 /**
  * Fetches the translators the user can use
  * @param translators the list the translators will be added to
+ * @param includeManual Whether or not the option for manual translation should be included in the list
  * @returns The error message if the request was unsuccessful.
  */
-export async function availableTranslators(translators: string[]) {
+export async function availableTranslators(
+    translators: string[],
+    includeManual: boolean
+) {
     let error = "";
     const sources = await to(
         $http.get<string[]>("/translations/my-translators")
     );
-    translators.push("Manual");
+    if (includeManual) {
+        translators.push("Manual");
+    }
     if (sources.ok) {
         for (const translator of sources.result.data) {
             translators.push(translator);
@@ -199,7 +205,6 @@ export function isOptionAvailable(tr: ITranslators, translators: string[]) {
  * @param translators the full list of translators
  * @param availableTrs the list of translators the user can use
  * @param errorMessage the error message user is shown if something goes wrong
- * @param translatorAvailable whether or not the chosen translator is available
  * @param includeManual whether or not Manual should be listed among translators
  */
 export async function updateTranslationData(
@@ -210,9 +215,9 @@ export async function updateTranslationData(
     translators: ITranslators[],
     availableTrs: string[],
     errorMessage: string,
-    translatorAvailable: boolean,
     includeManual: boolean
 ) {
+    let finalError = errorMessage;
     const error = ["", "", ""];
     error[0] = await listTranslators(translators, includeManual);
     error[1] = await updateLanguages(
@@ -221,14 +226,14 @@ export async function updateTranslationData(
         targetLanguages,
         docTranslator
     );
-    error[2] = await availableTranslators(availableTrs);
+    error[2] = await availableTranslators(availableTrs, includeManual);
     for (const errors of error) {
         if (errors != "") {
-            errorMessage = errors;
-            translatorAvailable = false;
+            finalError = errors;
         }
     }
     for (const tr of translators) {
         isOptionAvailable(tr, availableTrs);
     }
+    return finalError;
 }

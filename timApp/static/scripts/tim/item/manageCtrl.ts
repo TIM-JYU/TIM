@@ -124,7 +124,7 @@ export class PermCtrl implements IController {
         }
         this.setDeleteText();
 
-        await updateTranslationData(
+        this.errorMessage = await updateTranslationData(
             this.sourceLanguages,
             this.documentLanguages,
             this.targetLanguages,
@@ -132,9 +132,11 @@ export class PermCtrl implements IController {
             this.translators,
             this.availableTranslators,
             this.errorMessage,
-            this.translatorAvailable,
             true
         );
+        if (this.errorMessage != "") {
+            this.translatorAvailable = false;
+        }
     }
 
     async showMoreChangelog() {
