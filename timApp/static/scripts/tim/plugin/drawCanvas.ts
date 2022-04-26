@@ -907,6 +907,8 @@ export class Drawing {
 
 // Approximate scrollbar size
 const SCROLLBAR_APPROX_WIDTH = 17;
+const MIN_IMAGE_HEIGHT = 300;
+const MIN_IMAGE_WIDTH = 700;
 
 @Component({
     selector: "draw-canvas",
@@ -1159,23 +1161,33 @@ export class DrawCanvasComponent
         this.bgOffsets = [offset];
         this.imgHeight = this.bgElement.nativeElement.clientHeight;
         this.imgWidth = this.bgElement.nativeElement.clientWidth;
+        // width will be same for all images/canvases
+        const newWidth = Math.max(this.imgWidth, MIN_IMAGE_WIDTH);
         for (let i = 0; i < this.bgSourceSizes.length; i++) {
             const canvas = this.canvases.get(i)?.nativeElement;
             if (!canvas) {
                 throw Error(`Missing canvas ${i}`);
             }
-            canvas.height = this.bgSourceSizes[i].height;
-            canvas.width = this.imgWidth;
+            let newHeight: number;
+            if (i < this.bgSourceSizes.length - 1) {
+                newHeight = this.bgSourceSizes[i].height;
+                this.bgOffsets.push(newHeight + offset);
+            } else {
+                // if total image size is less than minimum, stretch last canvas
+                newHeight = Math.max(
+                    this.bgSourceSizes[i].height,
+                    MIN_IMAGE_HEIGHT - offset
+                );
+            }
+            canvas.height = newHeight;
+            canvas.width = newWidth;
             canvas.style.top = offset + "px";
             this.drawHandler!.setOffSet(
                 i,
-                {w: canvas.width, h: canvas.height},
+                {w: canvas.width, h: newHeight},
                 -offset
             );
-            if (i < this.bgSourceSizes.length - 1) {
-                this.bgOffsets.push(this.bgSourceSizes[i].height + offset);
-                offset += this.bgSourceSizes[i].height;
-            }
+            offset += newHeight;
         }
         if (this.imgWidth > this.wrapper.nativeElement.clientWidth) {
             this.defaultZoomLevel =
