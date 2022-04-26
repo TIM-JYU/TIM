@@ -62,6 +62,10 @@ export class CustomDateFormatter extends CalendarDateFormatter {
         return formatDate(date, "d.M", locale!);
     }
 
+    public viewDay({date, locale}: DateFormatterParams): string {
+        return formatDate(date, "EEEE, d.M.y", locale!);
+    }
+
     public dayViewHour({date, locale}: DateFormatterParams): string {
         return formatDate(date, "HH:mm", locale!);
     }

@@ -54,7 +54,8 @@ import {CustomDateFormatter} from "./custom-date-formatter.service";
         </div>
       </div>
       <div class="col-md-4">
-          <h3>{{ viewDate | calendarDate:(view + 'ViewTitle'):locale:weekStartsOn }}</h3>
+          <h2 [hidden]="view != 'day'">{{ viewDate | calendarDate:('viewDay'):locale}}</h2>
+          <h2 [hidden]="view == 'day'">{{ viewDate | calendarDate:(view + 'ViewTitle'):locale:weekStartsOn }}</h2>
       </div>
       <div class="col-md-4">
         <div class="btn-group">
