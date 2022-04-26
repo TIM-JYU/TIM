@@ -37,7 +37,6 @@ export const dateCheckedValidator: ValidatorFn = (
 ): ValidationErrors | null => {
     // TODO: Check that startTime + -date is before endTime + -date.
 
-    console.log(control.value);
     const values: {
         title: string;
         startDate: string;

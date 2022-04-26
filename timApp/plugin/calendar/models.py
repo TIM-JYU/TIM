@@ -57,10 +57,8 @@ class Event(db.Model):
     )
 
     def get_event_by_id(event_id: int) -> Optional["Event"]:
-        cur_user = get_current_user_id()
-        return Event.query.filter(
-            (Event.creator_user_id == cur_user) & (Event.event_id == event_id)
-        ).one_or_none()
+        # cur_user = get_current_user_id()
+        return Event.query.filter(Event.event_id == event_id).one_or_none()
 
 
 class Enrollmenttype(db.Model):

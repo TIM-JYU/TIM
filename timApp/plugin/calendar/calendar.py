@@ -7,9 +7,13 @@ from flask import Response
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.plugin.calendar.models import Event, ExportedCalendar
 from timApp.tim_app import app
-from timApp.auth.sessioninfo import get_current_user_id
-from timApp.plugin.calendar.models import Event
+from timApp.auth.sessioninfo import (
+    get_current_user_id,
+    get_current_user_object,
+)
+from timApp.plugin.calendar.models import Event, Eventgroup, Enrollment, Enrollmenttype
 from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -24,10 +28,25 @@ from tim_common.pluginserver_flask import (
 calendar_plugin = TypedBlueprint("calendar_plugin", __name__, url_prefix="/calendar")
 
 
+@calendar_plugin.before_app_first_request
+def initialize_db() -> None:
+    """Initializes the enrollment types in the database when the TIM-server is launched the first time,
+    before the first request."""
+
+    types = Enrollmenttype.query.filter(
+        Enrollmenttype.enroll_type_id == 0
+    ).all()  # Remember to add filters here if you add new enrollment types
+    if len(types) == 0:
+        db.session.add(
+            Enrollmenttype(enroll_type_id=0, enroll_type="booking")
+        )  # TODO: proper enrollment types
+        db.session.commit()
+
+
 @dataclass
 class CalendarItem:
-    done: bool
-    text: str
+    opiskelijat: str
+    ohjaajat: str
 
     def to_json(self) -> dict:
         return asdict(self)
@@ -35,7 +54,7 @@ class CalendarItem:
 
 @dataclass
 class CalendarMarkup(GenericMarkupModel):
-    todos: list[CalendarItem] | None = None
+    ryhmat: list[CalendarItem] | None = None
 
 
 @dataclass
@@ -135,23 +154,52 @@ def get_ical(user: str) -> Response:
 
 @calendar_plugin.get("/events")
 def get_events() -> Response:
-    """Fetches the user's events from the database in JSON or ICS format, specified in the query-parameter
+    """Fetches the user's events and the events that have a relation to user's groups from the database in JSON or
+    ICS format, specified in the query-parameter
 
     :return: User's events in JSON or ICS format or HTTP 400 if failed
     """
     verify_logged_in()
     cur_user = get_current_user_id()
+
     events: list[Event] = Event.query.filter(Event.creator_user_id == cur_user).all()
+
+    user_obj = get_current_user_object()
+
+    for group in user_obj.groups:
+        group_events = Eventgroup.query.filter(
+            Eventgroup.usergroup_id == group.id
+        ).all()
+        for group_event in group_events:
+            event = Event.get_event_by_id(group_event.event_id)
+            if event is not None:
+                event_obj: Event = event
+                if event_obj not in events:
+                    events.append(event_obj)
+            else:
+                print("Event not found by the id of", group_event.event_id)
     event_objs = []
     for event in events:
-        event_objs.append(
-            {
-                "id": event.event_id,
-                "title": event.title,
-                "start": event.start_time,
-                "end": event.end_time,
-            }
-        )
+        event_optional = Event.get_event_by_id(event.event_id)
+        if event_optional is not None:
+            event_obj = event_optional
+            enrollments = len(event_obj.enrolled_users)
+            event_objs.append(
+                {
+                    "id": event_obj.event_id,
+                    "title": event_obj.title,
+                    "start": event_obj.start_time,
+                    "end": event_obj.end_time,
+                    "meta": {
+                        "enrollments": enrollments,
+                        "maxSize": event_obj.max_size,
+                    },
+                }
+            )
+        else:
+            print(
+                "Error fetching the event by the id of", event.event_id
+            )  # should be never possible
     return json_response(event_objs)
 
 
@@ -160,6 +208,8 @@ class CalendarEvent:
     title: str
     start: datetime
     end: datetime
+    max_size: int = 1
+    event_groups: list[str] | None = None
 
 
 @calendar_plugin.post("/events")
@@ -174,11 +224,22 @@ def add_events(events: list[CalendarEvent]) -> Response:
     cur_user = get_current_user_id()
     added_events = []
     for event in events:
+        groups = []
+        group_names = event.event_groups
+        if group_names is not None:
+            group_name_strs: list[str] = group_names
+            for event_group in group_name_strs:
+                group = UserGroup.get_by_name(event_group)
+                if group is not None:
+                    groups.append(group)
+
         event = Event(
             title=event.title,
             start_time=event.start,
             end_time=event.end,
             creator_user_id=cur_user,
+            groups_in_event=groups,
+            max_size=event.max_size,
         )
         db.session.add(event)
         added_events.append(event)
@@ -193,6 +254,10 @@ def add_events(events: list[CalendarEvent]) -> Response:
                 "title": event.title,
                 "start": event.start_time,
                 "end": event.end_time,
+                "meta": {
+                    "enrollments": 0,
+                    "maxSize": event.max_size,
+                },
             }
         )
 
@@ -231,6 +296,40 @@ def delete_event(event_id: int) -> Response:
         raise RouteException("Event not found")
     db.session.delete(event)
     db.session.commit()
+    return ok_response()
+
+
+@calendar_plugin.post("/bookings")
+def book_event(event_id: int) -> Response:
+    """
+    Books the event for current user's personal user group.
+    TODO: implement booking for user's other groups
+
+    :param event_id: Event id
+    :return: HTTP 200 if succeeded, 400 if the event is already full
+    """
+    verify_logged_in()
+    event = Event.get_event_by_id(event_id)
+    if event is not None:
+        event_obj: Event = event
+        if len(event_obj.enrolled_users) >= event_obj.max_size:
+            raise RouteException("Event is already full")
+    else:
+        raise RouteException(f"Event not found by the id of {0}".format(event_id))
+    user_obj = get_current_user_object()
+
+    group_id = None
+    for group in user_obj.groups:
+        if group.name == user_obj.name:
+            group_id = group.id
+
+    enrollment = Enrollment(
+        event_id=event_id, usergroup_id=group_id, enroll_type_id=0
+    )  # TODO: add enrollment types
+
+    db.session.add(enrollment)
+    db.session.commit()
+
     return ok_response()
 
 
