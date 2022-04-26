@@ -6,6 +6,8 @@ from timApp.user.usergroup import UserGroup
 
 
 class Eventgroup(db.Model):
+    """Table for combining events to specific usergroups"""
+
     __tablename__ = "eventgroup"
     event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
     usergroup_id = db.Column(
@@ -14,6 +16,8 @@ class Eventgroup(db.Model):
 
 
 class Enrollment(db.Model):
+    """Table for enrollments; combines event, user group and enrollment type."""
+
     __tablename__ = "enrollment"
     event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
     usergroup_id = db.Column(
@@ -25,6 +29,8 @@ class Enrollment(db.Model):
 
 
 class Event(db.Model):
+    """Table for event. Contains all information of event"""
+
     __tablename__ = "event"
     event_id = db.Column(db.Integer, primary_key=True)
     location = db.Column(db.Text)
@@ -62,12 +68,16 @@ class Event(db.Model):
 
 
 class Enrollmenttype(db.Model):
+    """Table for enrollment type, combines enrollment type ID to specific enrollment type"""
+
     __tablename__ = "enrollmenttype"
     enroll_type_id = db.Column(db.Integer, primary_key=True)
     enroll_type = db.Column(db.Text, nullable=False)
 
 
 class ExportedCalendar(db.Model):
+    """Table for hash codes used in calendar exporting. Combines user to its hash code"""
+
     __tablename__ = "exportedcalendar"
     user_id = db.Column(
         db.Integer, db.ForeignKey("useraccount.id"), primary_key=True, nullable=False

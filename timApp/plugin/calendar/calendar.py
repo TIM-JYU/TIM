@@ -101,6 +101,11 @@ def get_todos() -> Response:
 
 @calendar_plugin.get("/export")
 def get_url() -> Response:
+    """Creates a unique URl for user to be used when calendar is exported. User ID is
+    bind to specific hash code
+
+    :return: URL with hash code
+    """
     verify_logged_in()
     domain = app.config["TIM_HOST"]
     url = domain + "/calendar/ical?user="
@@ -124,6 +129,10 @@ def get_url() -> Response:
 
 @calendar_plugin.get("/ical")
 def get_ical(user: str) -> Response:
+    """Fetches users events in a ICS format. User ID is sorted out from hash code from query parameter
+
+    :return: ICS file that can be exported
+    """
     user_data: ExportedCalendar = ExportedCalendar.query.filter(
         ExportedCalendar.calendar_hash == user
     ).one_or_none()
@@ -154,10 +163,10 @@ def get_ical(user: str) -> Response:
 
 @calendar_plugin.get("/events")
 def get_events() -> Response:
-    """Fetches the user's events and the events that have a relation to user's groups from the database in JSON or
-    ICS format, specified in the query-parameter
+    """Fetches the user's events and the events that have a relation to user's groups from the database in JSON
+    format
 
-    :return: User's events in JSON or ICS format or HTTP 400 if failed
+    :return: User's events in JSON format or HTTP 400 if failed
     """
     verify_logged_in()
     cur_user = get_current_user_id()
