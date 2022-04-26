@@ -27,13 +27,13 @@ import {IUserApiKey} from "./IUser";
     template: `
         <tim-dialog-frame [minimizable]="false">
             <ng-container header i18n>
-                Add new translator API key
+                Add new machine translator API key
             </ng-container>
             <ng-container body>
                 <form>
                     <fieldset [disabled]="saving || saved">
                         <div class="form-group">
-                            <label class="control-label" for="name-select" i18n>Translator</label>
+                            <label class="control-label" for="name-select" i18n>Machine translator</label>
                             <select class="form-control" name="channel-select" [(ngModel)]="chosenTranslator">
                                 <option *ngFor="let translator of this.translators"
                                         value="{{translator.name}}"
@@ -73,7 +73,7 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
     {onAdd: (key: IUserApiKey) => void},
     void
 > {
-    translators: Array<ITranslators> = [];
+    translators: ITranslators[] = [];
 
     ngOnInit() {
         listTranslators(this.translators, false);

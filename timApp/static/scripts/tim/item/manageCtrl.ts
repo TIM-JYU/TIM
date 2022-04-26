@@ -45,11 +45,11 @@ export class PermCtrl implements IController {
     private newTitle: string;
     private newFolderName: string;
     private hasMoreChangelog?: boolean;
-    private translations: Array<IEditableTranslation> = [];
-    private sourceLanguages: Array<ILanguages> = [];
-    private targetLanguages: Array<ILanguages> = [];
-    private documentLanguages: Array<ILanguages> = [];
-    private translators: Array<ITranslators> = [];
+    private translations: IEditableTranslation[] = [];
+    private sourceLanguages: ILanguages[] = [];
+    private targetLanguages: ILanguages[] = [];
+    private documentLanguages: ILanguages[] = [];
+    private translators: ITranslators[] = [];
     private newTranslation: {
         language: string;
         title: string;
@@ -124,7 +124,7 @@ export class PermCtrl implements IController {
         }
         this.setDeleteText();
 
-        await updateTranslationData(
+        this.errorMessage = await updateTranslationData(
             this.sourceLanguages,
             this.documentLanguages,
             this.targetLanguages,
@@ -132,9 +132,11 @@ export class PermCtrl implements IController {
             this.translators,
             this.availableTranslators,
             this.errorMessage,
-            this.translatorAvailable,
             true
         );
+        if (this.errorMessage != "") {
+            this.translatorAvailable = false;
+        }
     }
 
     async showMoreChangelog() {
@@ -184,7 +186,7 @@ export class PermCtrl implements IController {
         }
 
         const r = await to(
-            $http.get<Array<IEditableTranslation>>(
+            $http.get<IEditableTranslation[]>(
                 "/translations/" + this.item.id,
                 {}
             )
@@ -376,7 +378,7 @@ export class PermCtrl implements IController {
                     !this.item.isFolder && trDocLang == ""
                         ? "document"
                         : "translation: " + trDocLang
-                }?`
+                }? Deletion cannot be undone!`
             )
         ) {
             const r = await to($http.delete("/documents/" + id));

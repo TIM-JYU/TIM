@@ -236,10 +236,10 @@ export class PareditorController extends DialogController<
     private perusliiteMacroStringBegin = "%%perusliite("; // Attachment macro without stamping.
     private perusliiteMacroStringEnd = ")%%";
     private lastKnownDialogHeight?: number;
-    private sourceLanguages: Array<ILanguages> = [];
-    private targetLanguages: Array<ILanguages> = [];
-    private documentLanguages: Array<ILanguages> = [];
-    private translators: Array<ITranslators> = [];
+    private sourceLanguages: ILanguages[] = [];
+    private targetLanguages: ILanguages[] = [];
+    private documentLanguages: ILanguages[] = [];
+    private translators: ITranslators[] = [];
     private docTranslator: string = "";
     private translatorAvailable = true;
     private sideBySide: boolean = false;
@@ -1256,18 +1256,36 @@ ${backTicks}
         this.changePreviewPositions();
 
         if (!this.checkIfOriginal()) {
-            updateTranslationData(
-                this.sourceLanguages,
-                this.documentLanguages,
-                this.targetLanguages,
-                this.docTranslator,
-                this.translators,
-                this.availableTranslators,
-                this.errorMessage,
-                this.translatorAvailable,
-                false
-            );
+            this.getTheErrorMessage().then((result) => {
+                this.errorMessage = result;
+                if (result != "") {
+                    this.translatorAvailable = false;
+                } else if (this.availableTranslators.length == 0) {
+                    this.errorMessage =
+                        "You do not have any machine translator API keys added to you account.";
+                    this.translatorAvailable = false;
+                }
+            });
         }
+    }
+
+    /**
+     * Gets the error message from initialization because $onInit cannot be made async/await right now and .then takes
+     * the result from the first request in updateTranslationData().
+     */
+    async getTheErrorMessage() {
+        let result: string = "";
+        result = await updateTranslationData(
+            this.sourceLanguages,
+            this.documentLanguages,
+            this.targetLanguages,
+            this.docTranslator,
+            this.translators,
+            this.availableTranslators,
+            this.errorMessage,
+            false
+        );
+        return result;
     }
 
     /**

@@ -215,7 +215,7 @@
                                 <option ng-repeat="option in $ctrl.documentLanguages" value="{{option.code}}">{{option.name}} ({{option.code}})</option>
                         </select></div>
                         <div>
-                        <label for="translator">Translator:</label>
+                        <label for="translator">Machine translator:</label>
                         <select id="translator" name="translator-select" class="form-control"
                                ng-model="$ctrl.newTranslation.translator" ng-change="$ctrl.updateTranslatorLanguages()">
                                 <option ng-repeat="option in $ctrl.translators" ng-disabled="!option.available" value="{{option.name}}">{{option.name}}</option>
@@ -225,7 +225,7 @@
                         <p>This document will be automatically translated on creation. Note: A human should check the translation for any errors and fix them!</p>
                     </div>
                     <div ng-show="!$ctrl.mayTranslate || !$ctrl.newTranslation.title">
-                        <b ng-show="$ctrl.notManual && !$ctrl.mayTranslate && $ctrl.translatorAvailable">The chosen translator does not support the chosen language. </b>
+                        <b ng-show="$ctrl.notManual && !$ctrl.mayTranslate && $ctrl.translatorAvailable">The chosen machine translator does not support the chosen language. </b>
                         <b ng-show="!$ctrl.translatorAvailable">{{$ctrl.errorMessage}} </b>
                         <p>This document will not be automatically translated on creation.</p>
                     </div>
