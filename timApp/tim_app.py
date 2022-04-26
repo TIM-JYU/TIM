@@ -33,10 +33,12 @@ from timApp.document.translation.translation import Translation
 from timApp.document.translation.language import Language
 from timApp.document.translation.translator import (
     TranslationService,
+    RegisteredTranslationService,
     TranslationServiceKey,
 )
 from timApp.document.translation.deepl import (
     DeeplTranslationService,
+    DeeplProTranslationService,
 )
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
@@ -144,6 +146,7 @@ all_models = (
     ContactAddVerification,
     SetPrimaryContactVerification,
     DeeplTranslationService,
+    DeeplProTranslationService,
     DocEntry,
     DocumentNotification,
     Folder,
@@ -174,6 +177,7 @@ all_models = (
     Question,
     QuestionActivity,
     ReadParagraph,
+    RegisteredTranslationService,
     RowOwnerInfo,
     Runningquestion,
     ScimUserGroup,
