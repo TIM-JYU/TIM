@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from timApp.answer.answers import save_answer
 from timApp.plugin.taskid import TaskId
 from timApp.tests.browser.browsertest import BrowserTest
+from timApp.timdb.sqa import db
 
 
 class ImagexTest(BrowserTest):
@@ -68,6 +69,7 @@ fixedobjects:
             },
             points=0,
         )
+        db.session.commit()
         self.goto_document(d)
         canvas = self.find_element_avoid_staleness("imagex-runner canvas")
         # legacy format loads correctly
