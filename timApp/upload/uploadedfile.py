@@ -141,9 +141,9 @@ class UploadedFile(ItemBase):
         cls,
         file_filename: str,
         block_type: BlockType,
-        file_data: bytes = None,
-        original_file: Path = None,
-        upload_info: PluginUploadInfo = None,
+        file_data: bytes | None = None,
+        original_file: Path | None = None,
+        upload_info: PluginUploadInfo | None = None,
     ) -> "UploadedFile":
         if file_data is None and original_file is None:
             raise TimDbException(
@@ -176,7 +176,7 @@ class UploadedFile(ItemBase):
         f = CLASS_MAPPING[block_type](file_block)
         p = f.filesystem_path
         p.parent.mkdir(parents=True)
-        if file_data:
+        if file_data is not None:
             with p.open(mode="wb") as fi:
                 fi.write(file_data)
         else:

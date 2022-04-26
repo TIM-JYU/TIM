@@ -5512,6 +5512,30 @@
           <context context-type="linenumber">186</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2148669647566543747" datatype="html">
+        <source>Loading images (<x id="INTERPOLATION" equiv-text="{{loadedImages}}"/>/<x id="INTERPOLATION_1" equiv-text="{{bgSources.length}}"/>) <x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;tim-loading>"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;/tim-loading>"/></source>
+        <target state="translated">Ladataan kuvia (<x id="INTERPOLATION" equiv-text="{{loadedImages}}"/>/<x id="INTERPOLATION_1" equiv-text="{{bgSources.length}}"/>) <x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;tim-loading>"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;/tim-loading>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="linenumber">913,914</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6376339761620712201" datatype="html">
+        <source>File <x id="PH" equiv-text="file.name"/> is empty, but it will still be uploaded</source>
+        <target state="translated">Tiedosto <x id="PH" equiv-text="file.name"/> on tyhjä, mutta se ladataan silti</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
+          <context context-type="linenumber">210</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8535707178887476322" datatype="html">
+        <source>Centered ellipse</source>
+        <target state="translated">Keskitetty ellipsi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="linenumber">109</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="4302420491905014187" datatype="html">
         <source>This will mark the translations in all paragraphs in this document as checked. Continue?</source>
         <target state="new">Tämä merkitsee käännökset kaikissa tämän dokumentin kappaleissa tarkistetuiksi. Jatketaanko?</target>

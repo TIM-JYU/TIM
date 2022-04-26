@@ -25,7 +25,7 @@ function getPixels(s: string) {
 
 const draggableTemplate = `
 <div class="draghandle drag"
-     ng-class="{'attached': !d.canDrag()}"
+     ng-class="{'attached': !d.canDrag(), 'minimized': d.areaMinimized}"
      ng-mousedown="d.dragClick(); $event.preventDefault()"
      ng-show="d.dragEnabled"
      >

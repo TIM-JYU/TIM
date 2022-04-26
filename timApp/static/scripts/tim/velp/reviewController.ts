@@ -1450,7 +1450,7 @@ export class ReviewController {
             }
             return arr;
         }, []);
-        canvas.setPersistentDrawData(annotationDrawings);
+        canvas.setAndAdjustPersistentDrawData(annotationDrawings);
     }
 
     /**
@@ -1466,67 +1466,69 @@ export class ReviewController {
         canvas: DrawCanvasComponent,
         updateArgs: IDrawUpdate
     ) => {
-        if (updateArgs.drawingUpdated) {
-            if (canvas.getDrawing().length > 0) {
-                this.selectedArea = undefined;
-                this.selectionIsDrawing = true;
-                const par = $(canvas.canvas.nativeElement).parents(
-                    ".par"
-                )[0] as Element;
-                this.selectedElement = createParContext(par);
-                this.selectedCanvas = canvas;
-            } else if (this.selectedCanvas == canvas) {
-                this.selectionIsDrawing = false;
-                this.selectedElement = undefined;
-            }
-        } else if (updateArgs.scaleChange != undefined) {
-            const anns = this.getAnnotationsByAnswerId(canvas.id);
-            for (const a of anns) {
-                if (!a.draw_data) {
-                    continue;
-                }
-                this.vctrl
-                    .getAnnotation(`t${a.id}`)
-                    ?.resizeElementBorder(updateArgs.scaleChange);
-            }
-        } else if (updateArgs.deleted) {
+        if (updateArgs.deleted) {
             this.vctrl.removeVelpCanvas(canvas.id);
             if (this.selectedCanvas == canvas) {
                 this.selectionIsDrawing = false;
                 this.selectedElement = undefined;
             }
-        } else if (updateArgs.x != undefined && updateArgs.y != undefined) {
-            const anns = this.getAnnotationsByAnswerId(canvas.id);
-            const annCompsInCoord: AnnotationComponent[] = [];
-            for (const a of anns) {
-                if (!a.draw_data) {
-                    continue;
+        } else {
+            if (updateArgs.drawingUpdated) {
+                if (canvas.getDrawing().length > 0) {
+                    this.selectedArea = undefined;
+                    this.selectionIsDrawing = true;
+                    const par = $(canvas.canvasWrapper.nativeElement).parents(
+                        ".par"
+                    )[0] as Element;
+                    this.selectedElement = createParContext(par);
+                    this.selectedCanvas = canvas;
+                } else if (this.selectedCanvas == canvas) {
+                    this.selectionIsDrawing = false;
+                    this.selectedElement = undefined;
                 }
-                if (
-                    isCoordWithinDrawing(
-                        a.draw_data,
-                        updateArgs.x,
-                        updateArgs.y,
-                        this.drawMinDimensions
-                    )
-                ) {
-                    const tanncomp = this.vctrl.getAnnotation(`t${a.id}`);
-                    if (!tanncomp) {
-                    } else {
-                        annCompsInCoord.push(tanncomp);
+            } else if (updateArgs.scaleChange != undefined) {
+                const anns = this.getAnnotationsByAnswerId(canvas.id);
+                for (const a of anns) {
+                    if (!a.draw_data) {
+                        continue;
+                    }
+                    this.vctrl
+                        .getAnnotation(`t${a.id}`)
+                        ?.resizeElementBorder(updateArgs.scaleChange);
+                }
+            } else if (updateArgs.x != undefined && updateArgs.y != undefined) {
+                const anns = this.getAnnotationsByAnswerId(canvas.id);
+                const annCompsInCoord: AnnotationComponent[] = [];
+                for (const a of anns) {
+                    if (!a.draw_data) {
+                        continue;
+                    }
+                    if (
+                        isCoordWithinDrawing(
+                            a.draw_data,
+                            updateArgs.x,
+                            updateArgs.y,
+                            this.drawMinDimensions
+                        )
+                    ) {
+                        const tanncomp = this.vctrl.getAnnotation(`t${a.id}`);
+                        if (!tanncomp) {
+                        } else {
+                            annCompsInCoord.push(tanncomp);
+                        }
                     }
                 }
+                if (annCompsInCoord.length == 0) {
+                    return;
+                }
+                if (annCompsInCoord.length == 1) {
+                    annCompsInCoord[0].toggleAnnotationShow();
+                } else {
+                    this.toggleAnnotationsInList(annCompsInCoord);
+                }
             }
-            if (annCompsInCoord.length == 0) {
-                return;
-            }
-            if (annCompsInCoord.length == 1) {
-                annCompsInCoord[0].toggleAnnotationShow();
-            } else {
-                this.toggleAnnotationsInList(annCompsInCoord);
-            }
+            this.scope.$digest();
         }
-        this.scope.$digest();
     };
 
     /**

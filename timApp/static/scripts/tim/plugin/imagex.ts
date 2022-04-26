@@ -1253,33 +1253,33 @@ interface IAnswerResponse {
             <div class="pluginError" *ngIf="imageLoadError" [textContent]="imageLoadError"></div>
             <h4 *ngIf="header" [innerHtml]="header"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
-            <div>
+            <div class="imagex-content">
                 <canvas class="canvas no-popup-menu"
                         tabindex="1"
                         width={{canvaswidth}}
                         height={{canvasheight}}></canvas>
                 <div class="content"></div>
             </div>
-            <p class="csRunMenu"><span *ngIf="button">&nbsp;<button
+            <p class="csRunMenu"><span *ngIf="button" class="save">&nbsp;<button
                                                class="timButton"
                                                [disabled]="isRunning"
                                                (click)="save()">{{button}}
             </button></span>
-                <span  *ngIf="buttonPlay">
+                <span  *ngIf="buttonPlay" class="videoPlay">
                 &nbsp;&nbsp;
                 <button
                         [disabled]="isRunning"
                         (click)="videoPlay()">{{buttonPlay}}
                 </button>
                 </span>
-                <span *ngIf="buttonRevert">
+                <span *ngIf="buttonRevert" class="videoBeginning">
                 &nbsp;&nbsp;
                 <button
                         [disabled]="isRunning"
                         (click)="videoBeginning()">{{buttonRevert}}
                 </button>
                     </span>
-                <span [hidden]="!(finalanswer && userHasAnswered)">
+                <span [hidden]="!(finalanswer && userHasAnswered)" class="showAnswer">
                 &nbsp;&nbsp;
                 <button class="timButton"
                         [disabled]="isRunning"
@@ -1287,11 +1287,11 @@ interface IAnswerResponse {
                     Show correct answer
                 </button>
                     </span>
-                <span *ngIf="button">
+                <span *ngIf="button" class="resetExercise">
                 &nbsp;&nbsp;<a
                                (click)="resetExercise()">{{resetText}}</a>
                     </span>
-                <span *ngIf="muokattu" >
+                <span *ngIf="muokattu" class="initCode">
                 &nbsp;&nbsp;<a
                         href="" (click)="initCode()">{{resetText}}</a>
                     </span>
@@ -1299,6 +1299,7 @@ interface IAnswerResponse {
                 <draw-toolbar *ngIf="isFreeHandInUse" [drawSettings]="drawSettings" [undo]="passUndo"
                               [drawVisibleOptions]="drawVisibleOptions"></draw-toolbar>
             </p>
+            <div class="plgfooter"></div>
             <div [hidden]="!preview"><span><span [ngStyle]="{'background-color': previewColor}"
                                                  style="display: table-cell; text-align: center; width: 30px;"
                                                  (click)="getPColor()">&lt;-</span>
@@ -1388,7 +1389,8 @@ export class ImageXComponent
         freeHand: true,
         lineMode: true,
         rectangleMode: true,
-        ellipseMode: true,
+        centerEllipseMode: true,
+        cornerEllipseMode: true,
         arrowMode: true,
         w: true,
         color: true,
@@ -1476,7 +1478,7 @@ export class ImageXComponent
                 drawings.push({type: "freehand", drawData: obj});
             }
         }
-        this.drawing = new Drawing(this.drawSettings, this.canvas, true);
+        this.drawing = new Drawing(this.drawSettings, [this.canvas], true);
         this.drawing.drawData = this.attrsall.state?.drawings ?? drawings;
         if (this.isFreeHandInUse) {
             this.drawSettings.enabled = true;

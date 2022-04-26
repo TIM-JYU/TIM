@@ -2602,6 +2602,7 @@ ${backTicks}
         // Normal line breaks cause exception with JSON.parse, and replacing them with ones parse understands
         // causes exceptions when line breaks are outside parameters, so just remove them before parsing.
         macroText = macroText.replace(/(\r\n|\n|\r)/gm, "");
+        macroText = macroText.replace(/(\t)/gm, " ");
         return JSON.parse(`[${macroText}]`) as unknown[];
     }
 
