@@ -38,6 +38,7 @@ import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
 import {toPromise, to2} from "../../util/utils";
 import {Users} from "../../user/userService";
+import {itemglobals} from "../../util/globals";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
@@ -70,13 +71,13 @@ function ceilToNearest(
 }
 
 const CalendarItem = t.type({
-    done: t.boolean,
-    text: t.string,
+    opiskelijat: t.string,
+    ohjaajat: t.string,
 });
 
 const CalendarMarkup = t.intersection([
     t.partial({
-        todos: nullable(t.array(CalendarItem)),
+        ryhmat: nullable(t.array(CalendarItem)),
     }),
     GenericPluginMarkup,
 ]);
@@ -137,6 +138,8 @@ export type TIMCalendarEvent = CalendarEvent<{
     tmpEvent: boolean;
     deleted?: boolean;
     editEnabled?: boolean;
+    enrollments: number;
+    maxSize: number;
 }>;
 
 @Component({
@@ -157,7 +160,7 @@ export type TIMCalendarEvent = CalendarEvent<{
         </mwl-utils-calendar-header>
         <div class="row text-center">
             <div class="col-md-4">
-                <div class="btn-group edit-btn">
+                <div class="btn-group edit-btn" [hidden]="!userIsManager()">
                     <button (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
                     <button (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
                 </div>
@@ -408,7 +411,6 @@ export class CalendarComponent
                 this.locale = "en-us";
                 break;
         }
-        console.log(navigator.language);
     }
 
     /**
@@ -489,6 +491,8 @@ export class CalendarComponent
             end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
                 tmpEvent: true,
+                enrollments: 0,
+                maxSize: 1, // TODO: temporary solution
             },
             // actions: this.actions,
         };
@@ -590,6 +594,9 @@ export class CalendarComponent
     private refresh() {
         this.events = [...this.events];
         this.events.forEach((event) => {
+            if (event.meta!.enrollments >= event.meta!.maxSize) {
+                event.color = colors.red;
+            }
             if (Date.now() > event.start.getTime()) {
                 event.color = colors.gray;
             }
@@ -626,6 +633,7 @@ export class CalendarComponent
         );
         if (result.ok) {
             result.result.forEach((event) => {
+                console.log();
                 event.start = new Date(event.start);
                 if (event.end) {
                     event.end = new Date(event.end);
@@ -634,7 +642,11 @@ export class CalendarComponent
                     }
                 }
                 // event.actions = this.actions;
-                event.meta = {tmpEvent: false};
+                event.meta = {
+                    tmpEvent: false,
+                    enrollments: event.meta!.enrollments,
+                    maxSize: event.meta!.maxSize,
+                };
                 event.resizable = {
                     beforeStart: this.editEnabled,
                     afterEnd: this.editEnabled,
@@ -656,14 +668,26 @@ export class CalendarComponent
         let eventsToAdd = this.events.filter((event: TIMCalendarEvent) =>
             this.isTempEvent(event)
         );
+
+        console.log(this.markup.ryhmat);
+        const eventGroups: string[] = [];
+        if (this.markup.ryhmat) {
+            console.log(this.markup.ryhmat[0].opiskelijat);
+            eventGroups.push(this.markup.ryhmat[0].opiskelijat);
+            eventGroups.push(this.markup.ryhmat[0].ohjaajat);
+        }
+
         if (eventsToAdd.length > 0) {
-            eventsToAdd = eventsToAdd.map<CalendarEvent>((event) => {
+            eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
                 return {
                     title: event.title,
                     start: event.start,
                     end: event.end,
+                    event_groups: eventGroups,
+                    max_size: 1, // TODO: temporary solution
                 };
             });
+            console.log(eventsToAdd);
             const result = await toPromise(
                 this.http.post<TIMCalendarEvent[]>("/calendar/events", {
                     events: eventsToAdd,
@@ -685,6 +709,8 @@ export class CalendarComponent
                             meta: {
                                 tmpEvent: false,
                                 editEnabled: this.editEnabled,
+                                enrollments: event.meta!.enrollments,
+                                maxSize: event.meta!.maxSize,
                             },
                             // actions: this.actions,
                             resizable: {
@@ -769,6 +795,13 @@ export class CalendarComponent
                 this.updateEventTitle(modifiedEvent);
             }
         }
+    }
+
+    userIsManager(): boolean {
+        return (
+            itemglobals().curr_item.rights.manage ||
+            itemglobals().curr_item.rights.owner
+        );
     }
 }
 
