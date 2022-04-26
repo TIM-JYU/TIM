@@ -45,7 +45,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        id="startDate" name="startDate"
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
-                                >
+                                       >
 
                                 <input i18n-placeholder type="time"
                                        [(ngModel)]="startTime"
@@ -53,7 +53,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        id="startTime" name="startTime"
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
-                                >
+                                        >
                             </div>
                         </div>
                     </div>
@@ -68,7 +68,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        id="endDate" name="endDate"
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
-                                >
+                                        >
                                 <input i18n-placeholder type="time"
                                        [(ngModel)]="endTime"
                                        (ngModelChange)="setMessage()"
