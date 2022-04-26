@@ -1,13 +1,26 @@
 import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
-import {CalendarModule, CalendarView} from "angular-calendar";
+import {
+    CalendarDateFormatter,
+    CalendarModule,
+    CalendarView,
+} from "angular-calendar";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {ShowWeekComponent} from "./show-week.component";
+import {CustomDateFormatter} from "./custom-date-formatter.service";
 
 @Component({
     selector: "mwl-utils-calendar-header",
     template: `
     <div class="row text-center">
+        <button class="btn timButton currentDay"
+                mwlCalendarToday
+                [(viewDate)]="viewDate"
+                (viewDateChange)="viewDateChange.next(viewDate)"
+                >Back to current date
+        </button>
+        </div>
+     <div class="row text-center">   
       <div class="col-md-4">
         <div class="btn-group time-period-btn">
           <button
@@ -25,7 +38,9 @@ import {ShowWeekComponent} from "./show-week.component";
             [(viewDate)]="viewDate"
             (viewDateChange)="viewDateChange.next(viewDate)"
           >
-            Tänään
+              <ng-container >  <span [hidden]="!(view== CalendarView.Day)" >{{viewDate | calendarDate:'weekViewColumnSubHeader':locale}}</span> </ng-container>
+            <app-show-week [hidden]="!(view == CalendarView.Week)" [(view)]="view" [(viewDate)]="viewDate"></app-show-week>
+              <ng-container >  <span  [hidden]="!(view== CalendarView.Month)">{{viewDate | calendarDate :'viewMonth':locale}}</span> </ng-container>
           </button>
           <button
             class="btn btn-primary"
@@ -39,8 +54,8 @@ import {ShowWeekComponent} from "./show-week.component";
         </div>
       </div>
       <div class="col-md-4">
-          <h3>{{ viewDate | calendarDate:(view + 'ViewTitle'):locale:weekStartsOn }}</h3>
-              <app-show-week [hidden] = "view == CalendarView.Month" [(view)]="view" [(viewDate)]="viewDate"></app-show-week>
+          <h2 [hidden]="view != 'day'">{{ viewDate | calendarDate:('viewDay'):locale}}</h2>
+          <h2 [hidden]="view == 'day'">{{ viewDate | calendarDate:(view + 'ViewTitle'):locale:weekStartsOn }}</h2>
       </div>
       <div class="col-md-4">
         <div class="btn-group">
@@ -49,21 +64,21 @@ import {ShowWeekComponent} from "./show-week.component";
             (click)="viewChange.emit(CalendarView.Month)"
             [class.active]="view === CalendarView.Month"
           >
-            Kuukausi
+            Month
           </button>
           <button
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Week)"
             [class.active]="view === CalendarView.Week"
           >
-            Viikko
+            Week
           </button>
           <button
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Day)"
             [class.active]="view === CalendarView.Day"
           >
-            Päivä
+            Day
           </button>
         </div>
       </div>
@@ -92,5 +107,11 @@ export class CalendarHeaderComponent {
     imports: [CommonModule, FormsModule, CalendarModule],
     declarations: [CalendarHeaderComponent, ShowWeekComponent],
     exports: [CalendarHeaderComponent],
+    providers: [
+        {
+            provide: CalendarDateFormatter,
+            useClass: CustomDateFormatter,
+        },
+    ],
 })
 export class CalendarHeaderModule {}
