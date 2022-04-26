@@ -62,6 +62,13 @@ export class CustomDateFormatter extends CalendarDateFormatter {
         return formatDate(date, "d.M", locale!);
     }
 
+    /**
+     *  Custom formatter to be used in the day-view of the calendar. Takes into special account
+     *  finnish language and formats accordingly in d.M.y-format.
+     *  All other locales are formatted in the M/d/y -format.
+     * @param date current date
+     * @param locale current locale of the user
+     */
     public viewDay({date, locale}: DateFormatterParams): string {
         if (
             locale!.toLocaleLowerCase() == "fi-fi" ||
