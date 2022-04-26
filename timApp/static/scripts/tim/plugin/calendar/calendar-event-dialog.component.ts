@@ -6,6 +6,8 @@ import {DialogModule} from "../../ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {AngularDialogComponent} from "../../ui/angulardialog/angular-dialog-component.directive";
 import {toPromise} from "../../util/utils";
+import {Users} from "../../user/userService";
+import {itemglobals} from "../../util/globals";
 import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
 
 @Component({
@@ -31,6 +33,18 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    class="form-control"
                                    placeholder="Set title"
                                    [disabled]="!isEditEnabled()"/>
+                        </div>
+                    </div>
+                    <div class="form-group" [hidden]="!userIsManager()">
+                        <label for="booker" class="col-sm-2 control-label">Booker</label>
+                        <div class="col-sm-10">
+                            <input type="text"
+                                   [(ngModel)]="booker" #ngModelTitle="ngModel"
+                                   (ngModelChange)="setMessage()"
+                                   id="booker" name="booker"
+                                   class="form-control"
+                                   placeholder="Not booked"
+                                   disabled="true"/>
                         </div>
                     </div>
 
@@ -134,6 +148,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     startTime = "";
     endDate = "";
     endTime = "";
+    booker = "";
 
     constructor(private http: HttpClient) {
         super();
@@ -219,6 +234,14 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         const startDate = new Date(
             this.data.start.getTime() - startOffset * 60 * 1000
         );
+        const bookers = this.data.meta!.bookers;
+        if (bookers) {
+            bookers.forEach((booker) => {
+                // TODO: Make a list of all bookers when the event capacity is higher than 1
+                this.booker = booker.name;
+            });
+        }
+
         const startDateTime = startDate.toISOString().split("T");
 
         this.startDate = startDateTime[0];
@@ -260,6 +283,14 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (result.ok) {
             console.log(result.result);
             this.data.meta!.enrollments++;
+
+            const booker = Users.getCurrent().groups.find((group) => {
+                return group.name === Users.getCurrent().name;
+            });
+            if (booker) {
+                this.data.meta!.bookers.push(booker);
+            }
+
             this.close(eventToBook);
         } else {
             console.error(result.result.error.error);
@@ -269,6 +300,13 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 
     eventIsFull() {
         return this.data.meta!.enrollments >= this.data.meta!.maxSize;
+    }
+
+    userIsManager() {
+        return (
+            itemglobals().curr_item.rights.manage ||
+            itemglobals().curr_item.rights.owner
+        );
     }
 }
 

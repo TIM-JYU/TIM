@@ -154,6 +154,7 @@ def get_events() -> Response:
                 if event_optional is not None:
                     event_obj = event_optional
                     enrollments = len(event_obj.enrolled_users)
+                    bookers = event_obj.enrolled_users
                     event_objs.append(
                         {
                             "id": event_obj.event_id,
@@ -163,6 +164,7 @@ def get_events() -> Response:
                             "meta": {
                                 "enrollments": enrollments,
                                 "maxSize": event_obj.max_size,
+                                "bookers": bookers,
                             },
                         }
                     )

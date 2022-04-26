@@ -39,6 +39,7 @@ import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
 import {toPromise, to2} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
+import {IGroup} from "../../user/IUser";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
@@ -104,6 +105,10 @@ const colors = {
         primary: "#d5d5d5",
         secondary: "#d5d5d5",
     },
+    green: {
+        primary: "#4ce629",
+        secondary: "#d9ffc2",
+    },
 };
 
 const segmentHeight = 30;
@@ -140,6 +145,7 @@ export type TIMCalendarEvent = CalendarEvent<{
     editEnabled?: boolean;
     enrollments: number;
     maxSize: number;
+    bookers: IGroup[];
 }>;
 
 @Component({
@@ -493,6 +499,7 @@ export class CalendarComponent
                 tmpEvent: true,
                 enrollments: 0,
                 maxSize: 1, // TODO: temporary solution
+                bookers: [],
             },
             // actions: this.actions,
         };
@@ -597,6 +604,13 @@ export class CalendarComponent
             if (event.meta!.enrollments >= event.meta!.maxSize) {
                 event.color = colors.red;
             }
+            if (event.meta!.bookers) {
+                event.meta!.bookers.forEach((booker) => {
+                    if (booker.name === Users.getCurrent().name) {
+                        event.color = colors.green;
+                    }
+                });
+            }
             if (Date.now() > event.start.getTime()) {
                 event.color = colors.gray;
             }
@@ -633,19 +647,19 @@ export class CalendarComponent
         );
         if (result.ok) {
             result.result.forEach((event) => {
-                console.log();
                 event.start = new Date(event.start);
                 if (event.end) {
                     event.end = new Date(event.end);
-                    if (Date.now() > event.start.getTime()) {
+                    /** if (Date.now() > event.start.getTime()) {
                         event.color = colors.gray;
-                    }
+                    }*/
                 }
                 // event.actions = this.actions;
                 event.meta = {
                     tmpEvent: false,
                     enrollments: event.meta!.enrollments,
                     maxSize: event.meta!.maxSize,
+                    bookers: event.meta!.bookers,
                 };
                 event.resizable = {
                     beforeStart: this.editEnabled,
@@ -711,6 +725,7 @@ export class CalendarComponent
                                 editEnabled: this.editEnabled,
                                 enrollments: event.meta!.enrollments,
                                 maxSize: event.meta!.maxSize,
+                                bookers: [],
                             },
                             // actions: this.actions,
                             resizable: {
@@ -786,13 +801,16 @@ export class CalendarComponent
         const result = await to2(showCalendarEventDialog(event));
         this.dialogOpen = false;
         if (result.ok) {
+            this.refresh();
             const modifiedEvent = result.result;
             if (modifiedEvent.meta) {
                 if (modifiedEvent.meta.deleted) {
                     console.log("deleted");
                     this.events.splice(this.events.indexOf(modifiedEvent), 1);
+                    this.refresh();
+                } else {
+                    this.updateEventTitle(modifiedEvent);
                 }
-                this.updateEventTitle(modifiedEvent);
             }
         }
     }
