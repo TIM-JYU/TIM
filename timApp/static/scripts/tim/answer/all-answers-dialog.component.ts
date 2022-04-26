@@ -10,6 +10,7 @@ import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.compo
 import * as t from "io-ts";
 import {CommonDialogOptions} from "tim/answer/commondialogoptions";
 import {ReadonlyMoment} from "tim/util/readonlymoment";
+import {maybeUndefined} from "tim/plugin/attributes";
 import {$httpParamSerializer} from "../util/ngimport";
 import {TimStorage, toPromise} from "../util/utils";
 
@@ -26,6 +27,7 @@ const AnswersDialogOptions = t.intersection([
         age: t.string,
         consent: t.string,
         format: t.keyof({text: null, json: null}),
+        salt: maybeUndefined(t.string),
     }),
     CommonDialogOptions,
 ]);
@@ -50,76 +52,77 @@ export interface IAllAnswersParams {
                 <form class="form-horizontal">
                     <div class="form-group">
                         <div class="col-sm-3">
-                            <label class="radio-inline">Answer age</label>
+                            <label class="radio-inline" i18n>Answer age</label>
                         </div>
                         <div class="col-sm-9">
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.age" name="age" value="max">
-                                    Newest of each user
+                                    <ng-container i18n>Newest of each user</ng-container>
                                 </label>
                             </div>
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.age" name="age" value="min">
-                                    Oldest of each user
+                                    <ng-container i18n>Oldest of each user</ng-container>
                                 </label>
                             </div>
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.age" name="age" value="all">
-                                    All
+                                    <ng-container i18n>All</ng-container>
                                 </label>
                             </div>
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="col-sm-3">
-                            <label class="radio-inline">Period</label>
+                            <label class="radio-inline" i18n>Period</label>
                         </div>
                         <div class="col-sm-9">
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.period" name="period" value="whenever">
-                                    Whenever
+                                    <ng-container i18n>Whenever</ng-container>
                                 </label>
                             </div>
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.period" name="period" value="sincelast">
-                                    Since last answer fetch
+                                    <ng-container i18n>Since last answer fetch</ng-container>
                                     (
                                     <ng-container *ngIf="lastFetch">{{ lastFetch | timdate }}</ng-container>
-                                    <ng-container *ngIf="!lastFetch">no fetches yet</ng-container>
+                                    <ng-container *ngIf="!lastFetch" i18n>no fetches yet</ng-container>
                                     )
                                 </label>
                             </div>
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.period" name="period" value="day">
-                                    Past day
+                                    <ng-container i18n>Past day</ng-container>
                                 </label>
                             </div>
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.period" name="period" value="week">
-                                    Past week
+                                    <ng-container i18n>Past week</ng-container>
                                 </label>
                             </div>
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.period" name="period" value="month">
-                                    Past month
+                                    <ng-container i18n>Past month</ng-container>
                                 </label>
                             </div>
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.period" name="period" value="other">
-                                    Other...
+                                    <ng-container i18n>Other...</ng-container>
                                 </label>
                                 <div *ngIf="options.period === 'other'">
+                                    <ng-container i18n>from</ng-container>
                                     <tim-datetime-picker [(time)]="options.periodFrom"></tim-datetime-picker>
-                                    to
+                                    <ng-container i18n>to</ng-container>
                                     <tim-datetime-picker [(time)]="options.periodTo"></tim-datetime-picker>
                                 </div>
                             </div>
@@ -127,125 +130,144 @@ export interface IAllAnswersParams {
                     </div>
                     <div class="form-group">
                         <div class="col-sm-3">
-                            <label class="radio-inline">Validity</label>
+                            <label class="radio-inline" i18n>Validity</label>
                         </div>
                         <div class="col-sm-9">
                             <label class="radio-inline">
-                                <input type="radio" [(ngModel)]="options.valid" name="valid" value="1"> Valid
+                                <input type="radio" [(ngModel)]="options.valid" name="valid" value="1">
+                                <ng-container i18n>Valid</ng-container>
                             </label>
                             <label class="radio-inline">
-                                <input type="radio" [(ngModel)]="options.valid" name="valid" value="0"> Invalid
+                                <input type="radio" [(ngModel)]="options.valid" name="valid" value="0">
+                                <ng-container i18n>Invalid</ng-container>
                             </label>
                             <label class="radio-inline">
-                                <input type="radio" [(ngModel)]="options.valid" name="valid" value="all"> All
+                                <input type="radio" [(ngModel)]="options.valid" name="valid" value="all">
+                                <ng-container i18n>All</ng-container>
                             </label>
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="col-sm-3">
-                            <label class="radio-inline">Names</label>
+                            <label class="radio-inline" i18n>Names</label>
                         </div>
                         <div class="col-sm-9">
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.name" name="name" value="both">
-                                    Username and full name
+                                    <ng-container i18n>Username and full name</ng-container>
                                 </label>
                             </div>
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.name" name="name" value="username">
-                                    Username only
+                                    <ng-container i18n>Username only</ng-container>
                                 </label>
                             </div>
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.name" name="name" value="anonymous">
-                                    Anonymous username
+                                    <ng-container i18n>Anonymous username</ng-container>
                                 </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" [(ngModel)]="options.name" name="name" value="pseudonym">
+                                    <ng-container i18n>Pseudonymous username</ng-container>
+                                </label>
+                                <ng-container *ngIf="options.name === 'pseudonym'">
+                                    <div class="input-group pseudonym-input">
+                                        <input #salt="ngModel" minlength="10" [(ngModel)]="options.salt" name="salt" type="text" class="form-control" placeholder="Key for generating pseudonyms" i18n-placeholder>
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-default" type="button" title="Generate a random key" i18n-title (click)="setRandomSalt()"><i class="glyphicon glyphicon-refresh"></i></button>
+                                        </span>
+                                    </div>
+                                    <div *ngIf="salt.value === undefined || salt.value === null || salt.value.length == 0" class="pseudo-info" i18n>Specify a key to generate pseudonyms. A user will always get the same pseudonym for a key.</div>
+                                    <div *ngIf="salt.invalid" class="validation-error" i18n>The key should be at least 10 characters long</div>
+                                </ng-container>
                             </div>
                         </div>
                     </div>
                     <div class="form-group" *ngIf="showSort">
                         <div class="col-sm-3">
-                            <label class="radio-inline">Sort by</label>
+                            <label class="radio-inline" i18n>Sort by</label>
                         </div>
                         <div class="col-sm-9">
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.sort" name="sort" value="task">
-                                    Task, then username
+                                    <ng-container i18n>Task, then username</ng-container>
                                 </label>
                             </div>
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.sort" name="sort" value="username">
-                                    Username, then task
+                                    <ng-container i18n>Username, then task</ng-container>
                                 </label>
                             </div>
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="col-sm-3">
-                            <label class="radio-inline">Print</label>
+                            <label class="radio-inline" i18n>Print</label>
                         </div>
                         <div class="col-sm-9">
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.print" name="print" value="all">
-                                    Headers and answers
+                                    <ng-container i18n>Headers and answers</ng-container>
                                 </label>
                             </div>
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.print" name="print" value="header">
-                                    Headers only
+                                    <ng-container i18n>Headers only</ng-container>
                                 </label>
                             </div>
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.print" name="print" value="answers">
-                                    Answers only
+                                    <ng-container i18n>Answers only</ng-container>
                                 </label>
                             </div>
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.print" name="print" value="answersnoline">
-                                    Answers only without separator line
+                                    <ng-container i18n>Answers only without separator line</ng-container>
                                 </label>
                             </div>
                             <div class="radio">
                                 <label>
                                     <input type="radio" [(ngModel)]="options.print" name="print" value="korppi">
-                                    Korppi export
+                                    <ng-container i18n>Korppi export</ng-container>
                                 </label>
                             </div>
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="col-sm-3">
-                            <label class="radio-inline" title="Format for output">Output fmt</label>
+                            <label class="radio-inline" title="Format for output" i18n>Output fmt</label>
                         </div>
                         <div class="col-sm-9">
                             <label class="radio-inline">
                                 <input type="radio" [(ngModel)]="options.format" name="format" value="text">
-                                Text
+                                <ng-container i18n>Text</ng-container>
                             </label>
                             <label class="radio-inline">
                                 <input type="radio" [(ngModel)]="options.format" name="format" value="json">
-                                JSON
+                                <ng-container i18n>JSON</ng-container>
                             </label>
                         </div>
                     </div>
                 </form>
             </ng-container>
             <ng-container footer>
-                <button class="timButton" type="button" (click)="ok()">Get answers
-                </button>
-                <button class="btn btn-default" type="button" (click)="cancel()">Cancel</button>
+                <button class="timButton" type="button" (click)="ok()" i18n>Get answers</button>
+                <button class="btn btn-default" type="button" (click)="cancel()" i18n>Cancel</button>
             </ng-container>
         </tim-dialog-frame>
     `,
+    styleUrls: ["all-answers-dialog.component.scss"],
 })
 export class AllAnswersDialogComponent extends AngularDialogComponent<
     IAllAnswersParams,
@@ -262,7 +284,16 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
     }
 
     getTitle() {
-        return "Get answers";
+        return $localize`Get answers`;
+    }
+
+    setRandomSalt() {
+        const salt = new Uint8Array(16);
+        window.crypto.getRandomValues(salt);
+        // Convert to base64
+        this.options.salt = String.fromCharCode(
+            ...salt.map((b) => (b % 62) + (b < 62 ? 48 : 55))
+        );
     }
 
     ngOnInit() {
@@ -280,6 +311,7 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
             period: "whenever",
             print: "all",
             format: "text",
+            salt: undefined,
         } as const;
 
         this.options = this.storage.get() ?? defs;
@@ -308,6 +340,10 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
             periodTo: this.options.periodTo,
         };
         this.storage.set(this.options);
+        // Don't include the salt in the serialized data if it's not used
+        if (toSerialize.name !== "pseudonym") {
+            toSerialize.salt = undefined;
+        }
         window.open(
             this.data.url + "?" + $httpParamSerializer(toSerialize),
             "_blank"

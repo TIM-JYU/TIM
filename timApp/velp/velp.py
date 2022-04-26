@@ -9,7 +9,6 @@ the document.
 :version: 1.0.0
 
 """
-from typing import Optional
 
 from flask import Blueprint
 from flask import request
@@ -66,6 +65,8 @@ from timApp.velp.velpgroups import (
     add_groups_to_selection_table,
     get_default_selections_for_velp_groups,
     get_personal_selections_for_velp_groups,
+    get_document_default_velp_group,
+    set_default_velp_group_rights,
 )
 from timApp.velp.velps import (
     create_velp_version,
@@ -756,37 +757,20 @@ def create_default_velp_group_route(doc_id: int):
     """
 
     doc = get_doc_or_abort(doc_id)
-    full_path = doc.path
-    doc_path, doc_name = split_location(full_path)
-
     verify_logged_in()
     user_group = doc.block.owners[0]
-
     verify_edit_access(doc)
-
-    velps_folder_path = check_velp_group_folder_path(doc_path, user_group, doc_name)
-    velp_group_name = doc_name + "_default"
-
-    new_group_path = velps_folder_path + "/" + velp_group_name
-    group_exists = DocEntry.find_by_path(
-        new_group_path
-    )  # Check name so no duplicates are made
-    if group_exists is None:
+    default, default_group_path, default_group_name = get_document_default_velp_group(
+        doc
+    )
+    if default is None:
         velp_group = create_default_velp_group(
-            velp_group_name, user_group, new_group_path
+            default_group_name, user_group, default_group_path
         )
         created_new_group = True
-        rights = get_rights_holders(doc_id)
-        # Copy all rights but view
-        for right in rights:
-            # TODO once someone implements a grant_access that takes access ids instead of strings, change to that
-            # function.
-            if not right.atype.name == "view":
-                grant_access(right.usergroup, velp_group, right.atype.to_enum())
-
+        set_default_velp_group_rights(doc_id, velp_group)
     else:
-        default = DocEntry.find_by_path(new_group_path)
-        vg = make_document_a_velp_group(velp_group_name, default.id, None, True)
+        vg = make_document_a_velp_group(default_group_name, default.id, None, True)
         velp_group = default
         vg.default_group = True
         vg.valid_until = None
@@ -796,8 +780,8 @@ def create_default_velp_group_route(doc_id: int):
     created_velp_group["id"] = velp_group.id
     created_velp_group["target_type"] = 0
     created_velp_group["target_id"] = "0"
-    created_velp_group["name"] = velp_group_name
-    created_velp_group["location"] = new_group_path
+    created_velp_group["name"] = default_group_name
+    created_velp_group["location"] = default_group_path
     created_velp_group["selected"] = True
     created_velp_group["show"] = True
     created_velp_group["default"] = False

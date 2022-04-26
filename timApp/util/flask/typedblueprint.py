@@ -2,7 +2,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, fields
 from functools import wraps
 from inspect import signature, Signature
-from typing import Any, Callable, TypeVar, Optional
+from typing import Any, Callable, TypeVar
 
 from flask import Blueprint
 
@@ -106,7 +106,18 @@ def use_typed_params(
     def decorator(func: Callable) -> Callable:
         custom_model: type[ModelType] | None = model
         pass_by_kwargs = model is None
-        if custom_model is None:
+        if custom_model is not None:
+            # get the name of the argument that uses the model
+            sig = signature(func)
+            for name, param in sig.parameters.items():
+                if param.annotation is custom_model:
+                    custom_model_name = name
+                    break
+            else:
+                raise ValueError(
+                    f"Model {custom_model} is not used as an argument in {func}"
+                )
+        else:
             sig = signature(func)
             params = OrderedDict(sig.parameters)
             for i in range(0, num_path_params):
@@ -147,7 +158,7 @@ def use_typed_params(
         @wraps(func)
         def extract_and_call_with_model(*args: Any, **kwargs: Any) -> Any:
             extracted = extract_params()  # type: ignore[call-arg]
-            return func(*args, extracted, **kwargs)
+            return func(*args, **kwargs, **{custom_model_name: extracted})
 
         if pass_by_kwargs:
             return extract_and_call_by_kwargs

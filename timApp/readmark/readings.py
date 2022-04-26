@@ -28,14 +28,13 @@ def has_anything_read(usergroup_ids: list[int], doc: Document) -> bool:
     # Custom query for speed
     ids = doc.get_referenced_document_ids()
     ids.add(doc.doc_id)
-    query = ReadParagraph.query.filter(
+    query = db.session.query(ReadParagraph.id).filter(
         ReadParagraph.doc_id.in_(ids)
-        & (
-            ReadParagraph.usergroup_id.in_(usergroup_ids)
-            & (ReadParagraph.type == ReadParagraphType.click_red)
-        )
+        & (ReadParagraph.usergroup_id.in_(usergroup_ids))
+        & (ReadParagraph.type == ReadParagraphType.click_red)
     )
-    return db.session.query(query.exists()).scalar()
+    # Normal query is generally faster than an "exists" subquery even if it causes extra data to be loaded
+    return query.first() is not None
 
 
 def get_readings_filtered_query(

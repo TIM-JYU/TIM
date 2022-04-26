@@ -57,12 +57,12 @@ postprogram: |!!
         self.login_browser_quick_test1()
         self.goto_document(d)
         self.drv.find_element(By.XPATH, "//td/label/input").click()
-        self.drv.find_element(By.XPATH, "//tim-qst/div/button").click()
+        self.drv.find_element(By.XPATH, "//tim-qst/div/div/div/button").click()
         self.drv.find_element(
             By.CSS_SELECTOR, ".qst-tr:nth-child(2) .ng-untouched"
         ).click()
         self.drv.find_element(
-            By.XPATH, "//div[3]/div/tim-plugin-loader/div/tim-qst/div/button"
+            By.XPATH, "//div[3]/div/tim-plugin-loader/div/tim-qst/div/div/div/button"
         ).click()
 
         self.wait_until_present("pre")

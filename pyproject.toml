@@ -87,7 +87,6 @@ module = [
     # Right now flask.cli.command is not annotated properly, wait until it is
     "timApp.admin.*",
     "timApp.admin.migrate_to_postgre",
-    "timApp.answer.answer",
     "timApp.answer.answer_models",
     "timApp.answer.feedbackanswer",
     "timApp.answer.routes",
