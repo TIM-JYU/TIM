@@ -143,47 +143,21 @@ def get_ical(user: str) -> Response:
 
 
 @calendar_plugin.get("/events")
-def get_events(file_type: str = "json") -> Response:
+def get_events() -> Response:
     verify_logged_in()
     cur_user = get_current_user_id()
     events: list[Event] = Event.query.filter(Event.creator_user_id == cur_user).all()
-
-    match file_type:
-        case "ics":
-            buf = StringIO()
-            buf.write("BEGIN:VCALENDAR\n")
-            buf.write("PRODID:-//TIM Katti-kalenteri//iCal4j 1.0//EN\n")
-            buf.write("VERSION:2.0\n")
-            buf.write("CALSCALE:GREGORIAN\n")
-            for event in events:
-                dts = event.start_time.strftime("%Y%m%dT%H%M%S")
-                dtend = event.end_time.strftime("%Y%m%dT%H%M%S")
-
-                buf.write("BEGIN:VEVENT\n")
-                buf.write("DTSTART:" + dts + "Z\n")
-                buf.write("DTEND:" + dtend + "Z\n")
-                buf.write("DTSTAMP:" + dts + "Z\n")
-                buf.write("UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\n")
-                buf.write("CREATED:" + dts + "Z\n")
-                buf.write("SUMMARY:" + event.title + "\n")
-                buf.write("END:VEVENT\n")
-
-            buf.write("END:VCALENDAR\n")
-            result = buf.getvalue()
-            return text_response(result)
-        case "json":
-            event_objs = []
-            for event in events:
-                event_objs.append(
-                    {
-                        "id": event.event_id,
-                        "title": event.title,
-                        "start": event.start_time,
-                        "end": event.end_time,
-                    }
-                )
-            return json_response(event_objs)
-    raise RouteException("Unsupported file type")
+    event_objs = []
+    for event in events:
+        event_objs.append(
+            {
+                "id": event.event_id,
+                "title": event.title,
+                "start": event.start_time,
+                "end": event.end_time,
+            }
+        )
+    return json_response(event_objs)
 
 
 @dataclass
