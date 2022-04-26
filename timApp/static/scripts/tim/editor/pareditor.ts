@@ -236,10 +236,10 @@ export class PareditorController extends DialogController<
     private perusliiteMacroStringBegin = "%%perusliite("; // Attachment macro without stamping.
     private perusliiteMacroStringEnd = ")%%";
     private lastKnownDialogHeight?: number;
-    private sourceLanguages: Array<ILanguages> = [];
-    private targetLanguages: Array<ILanguages> = [];
-    private documentLanguages: Array<ILanguages> = [];
-    private translators: Array<ITranslators> = [];
+    private sourceLanguages: ILanguages[] = [];
+    private targetLanguages: ILanguages[] = [];
+    private documentLanguages: ILanguages[] = [];
+    private translators: ITranslators[] = [];
     private docTranslator: string = "";
     private translatorAvailable = true;
     private sideBySide: boolean = false;

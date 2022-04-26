@@ -203,11 +203,11 @@ export function isOptionAvailable(tr: ITranslators, translators: string[]) {
  * @param includeManual whether or not Manual should be listed among translators
  */
 export async function updateTranslationData(
-    sourceLanguages: Array<ILanguages>,
-    documentLanguages: Array<ILanguages>,
-    targetLanguages: Array<ILanguages>,
+    sourceLanguages: ILanguages[],
+    documentLanguages: ILanguages[],
+    targetLanguages: ILanguages[],
     docTranslator: string,
-    translators: Array<ITranslators>,
+    translators: ITranslators[],
     availableTrs: string[],
     errorMessage: string,
     translatorAvailable: boolean,
