@@ -102,16 +102,16 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
 
         self.assertEqual(
             [
-                Translate("\n***"),
+                Translate("\n<b><i>"),
                 NoTranslate("""<u><s>"""),
                 Translate("Teksti, jossa on kaikki tyylit paitsi notranslate"),
                 NoTranslate(r"""</s></u>"""),
-                Translate("***\n***"),
+                Translate("</i></b>\n<b><i>"),
                 NoTranslate(
                     """\
 <u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>"""
                 ),
-                Translate("***\n"),
+                Translate("</i></b>\n"),
             ],
             get_translate_approvals(text),
         )
@@ -891,8 +891,7 @@ P.getData = function(){
             get_translate_approvals(md),
         )
 
-    # TODO Finish this test when there is a clearer picture of the needs
-    def TODO_test_multiple_paragraphs(self):
+    def test_multiple_paragraphs(self):
         md = """**fet**
 
 
@@ -924,25 +923,25 @@ kodblock
         NT = NoTranslate
         self.assertEqual(
             [
-                NT("**"),
-                TR("fet"),
-                NT("**\n\n*"),
-                TR("kursiv stil"),
-                NT("*\n\n<u>"),
+                TR("\n<b>fet</b>\n\n<i>kursiv stil</i>\n\n"),
+                NT("<u>"),
                 TR("Understrykning"),
-                NT("</u>\n\n<s>"),
+                NT("</u>"),
+                TR("\n\n"),
+                NT("<s>"),
                 TR("strykning"),
-                NT("</s>\n\n["),
+                NT("</s>"),
+                TR("\n\n"),
+                NT("["),
                 TR("Färg"),
-                NT("]{.red}\n\n["),
+                NT("]{.red}"),
+                TR("\n\n"),
+                NT("["),
                 TR("bakgrundsfärg"),
-                NT("]{.bgred}\n\n`"),
-                TR("koodi"),
-                NT("`\nkodblock\n\n~"),
-                TR("delindex"),
-                NT("~\n\n^"),
-                TR("högsta index"),
-                NT("^"),
+                NT("]{.bgred}"),
+                TR("\n\n"),
+                NT("`koodi`"),
+                TR("\nkodblock\n\n~delindex~\n\n^högsta index^\n"),
             ],
             get_translate_approvals(md),
         )

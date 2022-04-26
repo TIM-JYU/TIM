@@ -124,8 +124,10 @@ class TestGenericTranslator(TimDbTest):
             self.assertIsInstance(x.text, str)
 
         self.assertEqual(
+            # TODO Implement tag-protection on the ReversingTranslator in
+            #  order to better simulate an XML-handling translation service.
             [
-                " ma I ereH\n[**gnikcor**]{.red} [ekil](www.example.com) "
+                " ma I ereH\n[>b/<gnikcor>b<]{.red} [ekil](www.example.com) "
                 "a ![enacirruh](/imgs/hurricane.png)\n!"
             ],
             translator.translate([parts], none_lang, none_lang),

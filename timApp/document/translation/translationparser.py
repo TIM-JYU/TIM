@@ -95,10 +95,14 @@ def get_translate_approvals(md: str) -> list[TranslateApproval]:
     # Add the objects into a list where they alternate eg.:
     # T, NT, T, NT ... T|NT
     block_approvals = list(
-        chain.from_iterable(
-            merge_consecutive(block_collect(block)) for block in ast["blocks"]
+        merge_consecutive(
+            chain.from_iterable(block_collect(block) for block in ast["blocks"])
         )
     )
+    # NOTE Asserting that the NoTranslate and Translate alternate in the list
+    # could maybe be suited here, but cannot really be done, when there are
+    # objects like Table for hacky reasons...
+
     # Return the list
     return block_approvals
 
@@ -359,10 +363,10 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
             # TODO Marking these as Translate is DeepL-specific. Refactor into
             #  translator's preprocessing or inject the translator into parsing
             #  with a filtering-list for example.
-            arr.append(Translate("*"))
+            arr.append(Translate("<i>"))
             for inline in content:
                 arr += inline_collect(inline)
-            arr.append(Translate("*"))
+            arr.append(Translate("</i>"))
         case "Underline":
             # NOTE Recursion
             # TODO Is this just <u>text</u> == RawInline?
@@ -375,10 +379,10 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
             # TODO Marking these as Translate is DeepL-specific. Refactor into
             #  translator's preprocessing or inject the translator into parsing
             #  with a filtering-list for example.
-            arr.append(Translate("**"))
+            arr.append(Translate("<b>"))
             for inline in content:
                 arr += inline_collect(inline)
-            arr.append(Translate("**"))
+            arr.append(Translate("</b>"))
         case "Strikeout":
             # NOTE Recursion
             # TODO Maybe same as UnderLine?
@@ -927,6 +931,8 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
     content = top_block.get("c", None)
 
     # All blocks should be prepended by newline
+    # TODO Why is this check made? Is it some hack? Unchecking could fix
+    #  newlines on list-items...
     if depth == 0:
         arr.append(Translate("\n"))
 
@@ -941,7 +947,6 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
             # "A paragraph is simply one or more consecutive lines of text,
             # separated by one or more blank lines."
             # https://daringfireball.net/projects/markdown/syntax#p
-            # TODO Decide whether these newlines should be added or not
             arr.append(Translate("\n"))
         case "LineBlock":
             for inline_list in content:

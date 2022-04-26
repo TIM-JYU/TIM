@@ -23,6 +23,7 @@ from timApp.document.translation.translator import (
     TranslateBlock,
     Usage,
     LanguagePairing,
+    replace_md_aliases,
 )
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
@@ -227,13 +228,17 @@ class DeeplTranslationService(RegisteredTranslationService):
 
     def postprocess(self, text: str) -> str:
         """
-        Remove unnecessary protection tags from the text.
+        Remove unnecessary protection tags from the text and change bolds and
+        italics into Markdown syntax.
 
-        :param text: The text to remove XML-protection-tags from.
-        :return: Text without the previously added protecting XML-tags.
+        :param text: The text returned from DeepL API.
+        :return: Text with the needed operations performed, to more closely
+        match the text before passing it to DeepL API.
         """
-        return text.replace(f"<{self.ignore_tag}>", "").replace(
-            f"</{self.ignore_tag}>", ""
+        return (
+            replace_md_aliases(text)
+            .replace(f"<{self.ignore_tag}>", "")
+            .replace(f"</{self.ignore_tag}>", "")
         )
 
     def translate(

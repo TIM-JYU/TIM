@@ -452,3 +452,24 @@ def get_lang_lists(translator: str, source_langs: bool) -> list[Language]:
         tr = DeeplProTranslationService.query.first()
 
     return tr.get_languages(source_langs)
+
+
+def replace_md_aliases(text: str) -> str:
+    """
+    Replace the aliases that are used in place of Markdown-syntax-characters.
+
+    On some machine translators (tested with DeepL) the Markdown syntax
+    characters break easier compared to their HTML-style counterparts. This is
+    baked into the translation-parser, but must be converted back to
+    Markdown-style in order to follow TIM's preferences.
+    :param text: Text to replace the HTML-tags of.
+    :return: Text with the HTML-tags replaced.
+    """
+    # TODO Map these replacements somehow from translationparser.py instead of
+    #  hard-coding here (and there).
+    return (
+        text.replace("<i>", "*")
+        .replace("</i>", "*")
+        .replace("<b>", "**")
+        .replace("</b>", "**")
+    )
