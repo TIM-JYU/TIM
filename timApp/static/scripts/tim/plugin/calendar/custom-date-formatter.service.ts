@@ -63,7 +63,13 @@ export class CustomDateFormatter extends CalendarDateFormatter {
     }
 
     public viewDay({date, locale}: DateFormatterParams): string {
-        return formatDate(date, "EEEE, d.M.y", locale!);
+        if (
+            locale!.toLocaleLowerCase() == "fi-fi" ||
+            locale!.toLocaleLowerCase() == "fi"
+        ) {
+            return formatDate(date, "EEEE, d.M.y", locale!);
+        }
+        return formatDate(date, "EEEE, M/d/y", locale!);
     }
 
     public dayViewHour({date, locale}: DateFormatterParams): string {
