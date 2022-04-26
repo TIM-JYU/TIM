@@ -552,21 +552,24 @@ def collect_tim_plugin(attrs: dict, content: str) -> list[TranslateApproval]:
                         text += "\n" + line
                     # Add the lines content, that included the start_char
                     text = text[: text.index(start_char)]
-                    arr.append(Translate(text))
+                    add_value_with_prefix(text, arr)
                     arr.append(NoTranslate(start_char))
                 elif start_char == "|":
                     # Line is a multiline (ie. "|xx .* xx") value.
                     start_symbol = text_start[1:]
                     arr.append(NoTranslate(start_char + start_symbol))
+                    # Remove until the starting symbol
+                    text = text[text.index(start_symbol) + len(start_symbol) :]
                     while (line := next(lines, None)) is not None:
                         if start_symbol in line:
-                            # Add the end of multiline
-                            arr.append(NoTranslate("\n" + line))
                             break
-                        arr.append(Translate("\n" + line))
+                        text += "\n" + line
+                    add_value_with_prefix(text, arr)
+                    # Add the end of multiline
+                    arr.append(NoTranslate("\n" + line))
                 else:
                     # Line is a single line value.
-                    arr.append(Translate(text))
+                    add_value_with_prefix(text, arr)
                 break
         # No keys were matched if the inner for-loop does not terminate early
         # -> the line does not contain a known key for translatable text
@@ -574,6 +577,33 @@ def collect_tim_plugin(attrs: dict, content: str) -> list[TranslateApproval]:
             arr.append(NoTranslate(line))
         arr.append(NoTranslate("\n"))
     return arr
+
+
+def add_value_with_prefix(text: str, arr: list[TranslateApproval]) -> None:
+    """
+    Separates the contents of a YAML string-prefix and value found in plugins
+    and adds to the list.
+
+    The text can possibly start with the "md:" prefix (NoTranslate) for
+    content that is Markdown, and the rest after that is the value (Translate
+    TODO Parse as fully-fledged Markdown).
+
+    :param text: The text that can be contained with (plugin).
+    :param arr: The list that the results will be added to.
+    :return: None, the result is inserted into the arr-parameter.
+    """
+    # TODO Does or can this prefix contain spaces?
+    md_prefix = "md:"
+    if text.lstrip().startswith(md_prefix):
+        # Save the original leading whitespace.
+        leading_wspace = text[: len(text) - len(text.lstrip())]
+        text = text.removeprefix(leading_wspace + md_prefix)
+        arr.append(NoTranslate(leading_wspace + md_prefix))
+        # Parse Markdown here.
+        arr += get_translate_approvals(text)
+    else:
+        # Translate normal text.
+        arr.append(Translate(text))
 
 
 def codeblock_collect(content: dict) -> list[TranslateApproval]:
@@ -924,7 +954,9 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
             arr += rawblock_collect(content)
         case "BlockQuote":
             # NOTE Recursion
-            # TODO See that this implementation actually works
+            # FIXME The block_collect adds an unneeded newline (but it does not
+            #  seem to matter for TIM-rendering). A HACK would be to pass
+            #  depth=1 to it...
             arr.append(NoTranslate("> "))
             for block in content:
                 arr += block_collect(block)

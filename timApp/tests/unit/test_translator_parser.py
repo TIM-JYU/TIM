@@ -622,22 +622,43 @@ header: """
                     '"'
                     + r"""
               
-stem: |!!"""
+stem: |!!
+md:"""
                 ),
                 Translate(
                     r"""
-md:
 Kirjoita teksti:
 
->Toisen asteen ratkaisukaava on:
-
-$$
-x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
-$$
-
->josta on huomattava että useimmilla $a$, $b$ ja $c$ arvoilla voi tulla kaksi
-eri ratkaisua.  Vain jos diskriminantti $D = \sqrt{b^2 - 4ac}$ on nolla, on ratkaisuja yksi kappale."""
+"""
                 ),
+                NoTranslate("> "),
+                # TODO This preceding newline is tested for because the
+                #  implementation works that way (for now), i.e. it is
+                #  BAD practice but seems to not "break" the functionality.
+                Translate("\nToisen asteen ratkaisukaava on:\n\n"),
+                NoTranslate(
+                    r"""$$
+x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$"""
+                ),
+                Translate("\n\n"),
+                NoTranslate("> "),
+                # TODO This preceding newline is tested for because the
+                #  implementation works that way (for now), i.e. it is
+                #  BAD practice but seems to not "break" the functionality.
+                Translate("\njosta on huomattava että useimmilla "),
+                NoTranslate("$a$"),
+                Translate(", "),
+                NoTranslate("$b$"),
+                Translate(" ja "),
+                NoTranslate("$c$"),
+                Translate(
+                    """ arvoilla voi tulla kaksi
+eri ratkaisua. Vain jos diskriminantti """
+                ),
+                NoTranslate(r"$D = \sqrt{b^2 - 4ac}$"),
+                # Paragraph ends with a newline. TODO Is that right in this case?
+                Translate(" on nolla, on ratkaisuja yksi kappale.\n"),
                 NoTranslate(
                     """
 !!
@@ -665,9 +686,10 @@ buttons: ""
                 NoTranslate(
                     """```
 %%laskin%%
-stem: '"""
+stem: 'md:"""
                 ),
-                Translate(r"md:foo"),
+                # Paragraph ends with a newline. TODO Is that right in this case?
+                Translate("\nfoo\n"),
                 NoTranslate(
                     """'
 fullprogram: |!!
