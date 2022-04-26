@@ -122,8 +122,6 @@ class TimRouteTest(TimDbTest):
         cls.client = testclient
         # Default language on create_translation NOTE not same as british or american english
         cls.add_language("english")
-        # For test_copy_cite.test_copy_translations
-        cls.add_language("german")
         db.session.commit()
 
     @classmethod
