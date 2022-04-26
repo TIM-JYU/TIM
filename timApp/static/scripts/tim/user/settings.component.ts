@@ -431,7 +431,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                         </div>
                     </ng-container>
                     <ng-container>
-                        <span class="form-label" i18n>Translator API Keys</span>
+                        <span class="form-label" i18n>Machine translator API Keys</span>
                         <div class="contact-collection">
                             <div class="contact-info" *ngFor="let APIkey of userAPIKeys">
                                 <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>

@@ -5528,14 +5528,6 @@
           <context context-type="linenumber">447</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6138642781979779012" datatype="html">
-        <source>Translator API Keys</source>
-        <target state="new">Kääntäjien API-avaimet</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">432</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="4082647858622460612" datatype="html">
         <source>Mark translations as checked</source>
         <target state="new">Merkitse käännökset tarkistetuiksi</target>
@@ -5550,22 +5542,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">110,111</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8856893104265509267" datatype="html">
-        <source> Add new translator API key </source>
-        <target state="new"> Lisää uusi kääntäjä-API-avain </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
-          <context context-type="linenumber">22,24</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="3735755360481797574" datatype="html">
-        <source>Translator</source>
-        <target state="new">Kääntäjä</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
-          <context context-type="linenumber">29</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4671562292257026998" datatype="html">
@@ -5598,6 +5574,30 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">442,444</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="888422761114341906" datatype="html">
+        <source>Machine translator API Keys</source>
+        <target state="new">Konekääntäjän API-avaimet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">434</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5084737096054125136" datatype="html">
+        <source> Add new machine translator API key </source>
+        <target state="new"> Lisää uusi konekääntäjän API-avain </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">29,31</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8751302521403822705" datatype="html">
+        <source>Machine translator</source>
+        <target state="new">Konekääntäjä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">36</context>
         </context-group>
       </trans-unit>
     </body>
