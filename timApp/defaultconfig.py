@@ -350,10 +350,37 @@ VERIFICATION_UNREACTED_CLEANUP_INTERVAL = 10 * 60
 # Default: 30 days
 VERIFICATION_REACTED_CLEANUP_INTERVAL = 30 * 24 * 60 * 60
 
+# Supported languages for document translation.
+# Database entries for languages are created when TIM is started/re-started.
+# Pre-existing entries are skipped.
+# Default list includes languages supported by the translation service
+# DeepL: https://https://www.deepl.com/docs-api/translating-text/
 LANGUAGES = [
-    "finnish",
-    "british english",
-    "american english",
-    "swedish",
+    "Bulgarian",
+    "Czech",
+    "Danish",
+    "German",
+    "Greek",
+    "American English",
+    "British English",
+    "Spanish",
+    "Estonian",
+    "Finnish",
+    "French",
+    "Hungarian",
+    "Italian",
+    "Japanese",
+    "Lithuanian",
+    "Latvian",
+    "Dutch",
+    "Polish",
+    "Portuguese",
+    "Brazilian Portuguese",
+    "Romanian",
+    "Russian",
+    "Slovak",
+    "Slovenian",
+    "Swedish",
+    "Chinese",
     {"lang_code": "FI-SiMpLe", "lang_name": "Simple Finnish", "autonym": "selkosuomi"},
 ]
