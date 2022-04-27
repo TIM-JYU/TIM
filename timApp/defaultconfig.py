@@ -440,7 +440,7 @@ If enabled, user session info is expired automatically when logging out.
 Otherwise, the session must be explicitly cleared.
 """
 
-SESSIONS_MAX_CONCURRENT_SESSIONS_PER_DOCUMENT = None
+SESSIONS_MAX_CONCURRENT_SESSIONS_PER_DOCUMENT = 1
 """
 How many concurrent sessions are allowed for a single user for a protected document.
 If this limit is reached, the user is not given an active session which prevents accessing documents.
