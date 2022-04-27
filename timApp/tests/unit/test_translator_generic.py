@@ -19,7 +19,6 @@ from timApp.document.translation.translationparser import (
     TranslateApproval,
     Translate,
     NoTranslate,
-    get_translate_approvals,
 )
 from timApp.tests.db.timdbtest import TimDbTest
 

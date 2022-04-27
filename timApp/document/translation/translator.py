@@ -30,8 +30,7 @@ from timApp.document.translation.language import Language
 from timApp.document.translation.translationparser import (
     NoTranslate,
     TranslateApproval,
-    get_translate_approvals,
-    attr_collect,
+    TranslationParser,
     Table,
     Translate,
 )
@@ -283,6 +282,8 @@ class TranslateMethodFactory:
                 description=f"The language pair from {source_lang} to {target_lang} is not supported with {translator.service_name}"
             )
 
+        parser = TranslationParser()
+
         def translate_raw_texts(mds: list[str]) -> list[str]:
             """
             Most primitive translate-func -version to translate texts between
@@ -296,7 +297,7 @@ class TranslateMethodFactory:
             # TODO The flattening (calling `chain.from_iterable`) could
             #  probably be done in parser
             blocks: list[list[TranslateApproval]] = list(
-                map(lambda x: get_translate_approvals(x), mds)
+                map(lambda x: parser.get_translate_approvals(x), mds)
             )
 
             # Map over blocks, picking the tables out for special translation
@@ -400,7 +401,7 @@ class TranslateMethodFactory:
                     attr_str = "".join(
                         map(
                             lambda y: y.text,
-                            attr_collect([taskid, classes, kv_pairs])[0],
+                            parser.attr_collect([taskid, classes, kv_pairs])[0],
                         )
                     )
                     md = md.replace("```\n", f"``` {attr_str}\n", 1)

@@ -17,13 +17,15 @@ import unittest
 from timApp.document.translation.translationparser import (
     Translate,
     NoTranslate,
-    get_translate_approvals,
-    tex_collect,
-    span_collect,
+    TranslationParser,
 )
 
 
 class TestParser(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.parser = TranslationParser()
+
     def test_get_translate_approvals_attr(self):
         # TODO Add cases for identifiers, key-value -pairs and multiple classes as well
         text = "Tässä on kuva ![kissasta](/kuvat/kissa.png). [Tosi]{.red} hieno, eikös?"
@@ -39,7 +41,7 @@ class TestParser(unittest.TestCase):
                 NoTranslate("]{.red}"),
                 Translate(" hieno, eikös?\n"),
             ],
-            get_translate_approvals(text),
+            self.parser.get_translate_approvals(text),
         )
 
     # For .notranslate style, might move elsewhere. For future use.
@@ -51,7 +53,7 @@ class TestParser(unittest.TestCase):
                 NoTranslate("[teksti]{.notranslate}"),
                 Translate(", jota ei käännetä.\n"),
             ],
-            get_translate_approvals(text),
+            self.parser.get_translate_approvals(text),
         )
 
         text = """``` {plugin="csPlugin" #btn-tex2 .notranslate .miniSnippets}
@@ -67,7 +69,7 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
 ```"""
                 ),
             ],
-            get_translate_approvals(text),
+            self.parser.get_translate_approvals(text),
         )
 
         text = "Jyväskylän yliopisto sijaitsee paikassa nimeltä [Keski-Suomi]{.notranslate}"
@@ -77,7 +79,7 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
                 NoTranslate("[Keski-Suomi]{.notranslate}"),
                 Translate("\n"),
             ],
-            get_translate_approvals(text),
+            self.parser.get_translate_approvals(text),
         )
 
     def test_notranslate_style2(self):
@@ -92,7 +94,7 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
                 ),
                 Translate("\n"),
             ],
-            get_translate_approvals(text),
+            self.parser.get_translate_approvals(text),
         )
 
     def test_notranslate_style3(self):
@@ -113,7 +115,7 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
                 ),
                 Translate("</i></b>\n"),
             ],
-            get_translate_approvals(text),
+            self.parser.get_translate_approvals(text),
         )
 
     def test_header(self):
@@ -143,7 +145,7 @@ r”# otsikko1
 # otsikko jossa sana header ja ## merkkejä\n"""
                 )
             ],
-            get_translate_approvals(text),
+            self.parser.get_translate_approvals(text),
         )
 
     def test_tex_collect(self):
@@ -169,15 +171,16 @@ r”# otsikko1
                 Translate(r"tai"),
                 NoTranslate(r"}\;x=-7"),
             ],
-            tex_collect(text),
+            self.parser.tex_collect(text),
         )
 
     def test_tex_collect_simple_text(self):
         """Testing simple text inside latex"""
+        self.assertEqual([NoTranslate(text)], self.parser.tex_collect(text))
         text = r"\text{testi}\x"
         self.assertEqual(
             [NoTranslate(r"\text{"), Translate(r"testi"), NoTranslate(r"}\x")],
-            tex_collect(text),
+            self.parser.tex_collect(text),
         ),
 
     def test_tex_collect_style_text(self):
@@ -185,7 +188,7 @@ r”# otsikko1
         text = r"\textrm{another test}\x"
         self.assertEqual(
             [NoTranslate(r"\textrm{"), Translate(r"another test"), NoTranslate(r"}\x")],
-            tex_collect(text),
+            self.parser.tex_collect(text),
         ),
 
     def test_tex_collect_math_function1(self):
@@ -199,7 +202,7 @@ r”# otsikko1
                 Translate(r"prosentti"),
                 NoTranslate(r"}=1\;\% =\frac{1}{100}=0,01$"),
             ],
-            tex_collect(text),
+            self.parser.tex_collect(text),
         ),
 
     def test_tex_collect_math_function2(self):
@@ -211,7 +214,7 @@ r”# otsikko1
                 Translate(r"Muuttuja e"),
                 NoTranslate(r"} = \sum_{n=0}^{\infty} \dfrac{1}{n!}$$"),
             ],
-            tex_collect(text),
+            self.parser.tex_collect(text),
         ),
 
     def test_tex_collect_math_function3(self):
@@ -235,7 +238,7 @@ r”# otsikko1
         $$"""
                 )
             ],
-            tex_collect(text),
+            self.parser.tex_collect(text),
         )
 
     def test_tex_collect_formatted(self):
@@ -249,7 +252,7 @@ r”# otsikko1
                 Translate(r"something"),
                 NoTranslate(r"}\x"),
             ],
-            tex_collect(text),
+            self.parser.tex_collect(text),
         ),
 
     def test_get_translate_approvals_latex(self):
@@ -301,7 +304,7 @@ x=0\;\;\;\\text{"""
                 ),
                 Translate("\n"),
             ],
-            get_translate_approvals(latexblock),
+            self.parser.get_translate_approvals(latexblock),
         )
 
     def test_bulletlist1(self):
@@ -345,7 +348,7 @@ x=0\;\;\;\\text{"""
                 NoTranslate("\\"),
                 Translate("\nKerran\nToisen\nKolmannen\n"),
             ],
-            get_translate_approvals(md),
+            self.parser.get_translate_approvals(md),
         )
 
     def test_bulletlist2(self):
@@ -371,7 +374,7 @@ x=0\;\;\;\\text{"""
                 NoTranslate("\n\t- ```\nKoodia välissä\n```\n\t- "),
                 Translate("Jotain\n"),
             ],
-            get_translate_approvals(md),
+            self.parser.get_translate_approvals(md),
         )
 
     # TODO There is currently no reliable solution for the corner cases in this test case.
@@ -463,7 +466,7 @@ x=0\;\;\;\\text{"""
                 NoTranslate("\n\tB) "),
                 Translate("Liikaa\n"),
             ],
-            get_translate_approvals(md),
+            self.parser.get_translate_approvals(md),
         )
 
     def test_ordered_list2(self):
@@ -515,7 +518,7 @@ x=0\;\;\;\\text{"""
                 NoTranslate("\n\tB) "),
                 Translate("Liikaa\n"),
             ],
-            get_translate_approvals(md),
+            self.parser.get_translate_approvals(md),
         )
 
     # TODO There is currently no reliable solution for the corner cases in this test case.
@@ -668,7 +671,7 @@ questionTitle: '"""
                 Translate("Vinkkejä harjoitteluun"),
                 NoTranslate("'\n```"),
             ],
-            get_translate_approvals(md),
+            self.parser.get_translate_approvals(md),
         )
 
         md = r"""``` {#lasku plugin="csPlugin"}
@@ -700,7 +703,7 @@ buttons: ""
 ```"""
                 ),
             ],
-            get_translate_approvals(md),
+            self.parser.get_translate_approvals(md),
         )
 
     def test_tim_plugin2(self):
@@ -751,7 +754,7 @@ stem: """
                     ""
                 ),
             ],
-            get_translate_approvals(md),
+            self.parser.get_translate_approvals(md),
         )
 
     def test_tim_plugin3(self):
@@ -778,7 +781,7 @@ file: VIDEOURLHERE
 ```"""
                 ),
             ],
-            get_translate_approvals(md),
+            self.parser.get_translate_approvals(md),
         )
 
     def test_tim_plugin4(self):
@@ -888,7 +891,7 @@ P.getData = function(){
 ```"""
                 ),
             ],
-            get_translate_approvals(md),
+            self.parser.get_translate_approvals(md),
         )
 
     def test_multiple_paragraphs(self):
@@ -943,7 +946,15 @@ kodblock
                 NT("`koodi`"),
                 TR("\nkodblock\n\n~delindex~\n\n^högsta index^\n"),
             ],
-            get_translate_approvals(md),
+            self.parser.get_translate_approvals(md),
+        )
+
+    def TODO_test_latex_inside_span(self):
+        # TODO This following value sometimes comes out weird from the whole parsing...
+        text = "```{plugin=\"mmcq\"\nchoices:\n  -\n    text:'[$$\\sum_{i=1}^n a_i = a_1+a_2+\\ldots+a_n  = \\frac{a_1+a_n}{2}\\cdot n$$]{.red}'\n```"
+        self.assertEqual(
+            [Translate("\n"), NoTranslate(text), Translate("\n")],
+            self.parser.get_translate_approvals(text),
         )
 
 
