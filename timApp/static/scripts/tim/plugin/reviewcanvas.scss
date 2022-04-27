@@ -25,3 +25,9 @@ label {
   gap: 1em;
   -ms-transform: translateY(-50%);
 }
+
+.uploadContainer {
+  min-height: 17em;
+  display: flex;
+  align-items: center;
+}
