@@ -173,10 +173,12 @@ export type TIMCalendarEvent = CalendarEvent<{
                             id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button.valueOf()}}</button>
                 </div>
             </div>
-            <div class="col-md-4">Show:
+            <div class="col-md-4">
+                <div class="checkbox-group"> Show:
                     <div *ngFor="let box of checkboxEvents"> 
                         <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
                                [(ngModel)]="box.checked" [checked]="">{{box.name}}
+                    </div>
                 </div>
             </div>
         </div>
