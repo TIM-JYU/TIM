@@ -34,7 +34,7 @@ const draggableTemplate = `
        ng-click="d.toggleDetach()"
        title="{{ d.canDrag() ? 'Attach' : 'Detach' }}"
        class="glyphicon glyphicon-arrow-{{ d.canDrag() ? 'left' : 'right' }}"></i>
-    <i ng-show="d.click && d.canDrag()"
+    <i ng-show="(d.click && d.canDrag()) || d.canMinimize"
        title="{{ d.areaMinimized ? 'Maximize' : 'Minimize' }} dialog"
        ng-click="d.toggleMinimize()"
        class="glyphicon glyphicon-{{ d.areaMinimized ? 'unchecked' : 'minus' }}"></i>
@@ -53,6 +53,7 @@ timApp.directive("timDraggableFixed", [
     () => {
         return {
             bindToController: {
+                canMinimize: "<?",
                 absolute: "<?",
                 anchor: "@?",
                 caption: "@?",
@@ -159,6 +160,7 @@ export class DraggableController implements IController {
     private sizeStorage!: TimStorage<t.TypeOf<typeof SizeType>>;
     private minStorage!: TimStorage<boolean>;
     private detachStorage!: TimStorage<boolean>;
+    private canMinimize?: Binding<boolean, "<">;
 
     constructor(private scope: IScope, private element: JQLite) {}
 
@@ -471,6 +473,46 @@ export class DraggableController implements IController {
             }
             this.element.width(this.areaWidth);
             this.minStorage.set(false);
+        }
+
+        // Handle moving previews around when at least one is minimized in editor
+        const prevs = document.getElementById("previews");
+        if (prevs) {
+            // The last child should have the class ".draggable-content".
+            // If it's not, change pareditor's previews' structuring.
+            const currpreview = document.getElementById("currpreview")
+                ?.lastElementChild as HTMLElement;
+            const origpreview = document.getElementById("origpreview")
+                ?.lastElementChild as HTMLElement;
+            const diff = document.getElementById("diff");
+            if (
+                this.caption != diff?.getAttribute("caption") &&
+                currpreview &&
+                origpreview
+            ) {
+                if (
+                    currpreview.style.visibility ||
+                    origpreview.style.visibility
+                ) {
+                    prevs.classList.remove("sidebyside");
+                    prevs.classList.add("stacked");
+                    document
+                        .getElementById("currpreview")!
+                        .classList.add("ForceFullSize");
+                    document
+                        .getElementById("origpreview")!
+                        .classList.add("ForceFullSize");
+                } else {
+                    prevs.classList.remove("stacked");
+                    prevs.classList.add("sidebyside");
+                    document
+                        .getElementById("currpreview")!
+                        .classList.remove("ForceFullSize");
+                    document
+                        .getElementById("origpreview")!
+                        .classList.remove("ForceFullSize");
+                }
+            }
         }
     }
 

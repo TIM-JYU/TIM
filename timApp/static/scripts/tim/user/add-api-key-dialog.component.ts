@@ -23,7 +23,7 @@ import {IUserApiKey} from "./IUser";
  * User can add translator API keys to be stored in TIM. (code source: add-contact-dialog.component.ts)
  */
 @Component({
-    selector: "add-api-key-dialog",
+    selector: "tim-add-api-key-dialog",
     template: `
         <tim-dialog-frame [minimizable]="false">
             <ng-container header i18n>
