@@ -198,12 +198,12 @@ def get_events() -> Response:
                 {
                     "id": event_obj.event_id,
                     "title": event_obj.title,
-                    "location": event_obj.location,
                     "start": event_obj.start_time,
                     "end": event_obj.end_time,
                     "meta": {
                         "enrollments": enrollments,
                         "maxSize": event_obj.max_size,
+                        "location": event_obj.location,
                     },
                 }
             )
@@ -265,12 +265,12 @@ def add_events(events: list[CalendarEvent]) -> Response:
             {
                 "id": event.event_id,
                 "title": event.title,
-                "location": event.location,
                 "start": event.start_time,
                 "end": event.end_time,
                 "meta": {
                     "enrollments": 0,
                     "maxSize": event.max_size,
+                    "location": event.location,
                 },
             }
         )

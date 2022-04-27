@@ -37,6 +37,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             <input type="text"
                             maxlength="120"
                                    [(ngModel)]="location" #ngModelLocation="ngModel"
+                                   (ngModelChange)="setMessage()"
                                    id="location"
                                    placeholder="Set location"
                                    name="location"
@@ -140,7 +141,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     protected dialogName = "CalendarEventEdit";
 
     title = "";
-    location: string = "";
+    location = "";
     message?: string;
     startDate = "";
     startTime = "";
@@ -160,6 +161,8 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (!id) {
             return;
         }
+        console.log(this.location);
+        console.log(this.title);
 
         const eventToEdit = {
             title: this.title,
@@ -176,7 +179,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (result.ok) {
             console.log(result.result);
             this.data.title = eventToEdit.title;
-            //  this.data.location = eventToEdit.location;
+            this.data.meta!.location = eventToEdit.location;
             this.data.start = eventToEdit.start;
             this.data.end = eventToEdit.end;
             this.close(this.data);
@@ -229,7 +232,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      */
     ngOnInit() {
         this.title = this.data.title;
-        //   this.location = this.data.location;
+        this.location = this.data.meta!.location;
         const startOffset = this.data.start.getTimezoneOffset();
         const startDate = new Date(
             this.data.start.getTime() - startOffset * 60 * 1000
