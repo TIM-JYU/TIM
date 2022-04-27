@@ -1,17 +1,19 @@
 import secrets
-from io import StringIO
 import uuid
 from dataclasses import dataclass, asdict
 from datetime import datetime
+from io import StringIO
+
 from flask import Response
+
 from timApp.auth.accesshelper import verify_logged_in
-from timApp.plugin.calendar.models import Event, ExportedCalendar
-from timApp.tim_app import app
 from timApp.auth.sessioninfo import (
     get_current_user_id,
     get_current_user_object,
 )
 from timApp.plugin.calendar.models import Event, Eventgroup, Enrollment, Enrollmenttype
+from timApp.plugin.calendar.models import ExportedCalendar
+from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
@@ -187,12 +189,25 @@ def get_events() -> Response:
                     events.append(event_obj)
             else:
                 print("Event not found by the id of", group_event.event_id)
+
     event_objs = []
     for event in events:
         event_optional = Event.get_event_by_id(event.event_id)
         if event_optional is not None:
             event_obj = event_optional
             enrollments = len(event_obj.enrolled_users)
+            booker_groups = event_obj.enrolled_users
+            groups = []
+            for group in booker_groups:
+                users = []
+                for user in group.users:
+                    users.append(
+                        {
+                            "name": user.name,
+                            "email": user.email,
+                        }
+                    )
+                groups.append({"name": group.name, "users": users})
             event_objs.append(
                 {
                     "id": event_obj.event_id,
@@ -202,6 +217,7 @@ def get_events() -> Response:
                     "meta": {
                         "enrollments": enrollments,
                         "maxSize": event_obj.max_size,
+                        "booker_groups": groups,
                     },
                 }
             )
@@ -209,6 +225,7 @@ def get_events() -> Response:
             print(
                 "Error fetching the event by the id of", event.event_id
             )  # should be never possible
+
     return json_response(event_objs)
 
 

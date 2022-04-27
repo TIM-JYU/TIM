@@ -6,6 +6,8 @@ import {DialogModule} from "../../ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {AngularDialogComponent} from "../../ui/angulardialog/angular-dialog-component.directive";
 import {toPromise} from "../../util/utils";
+import {Users} from "../../user/userService";
+import {itemglobals} from "../../util/globals";
 import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
 
 @Component({
@@ -31,6 +33,30 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    class="form-control"
                                    placeholder="Set title"
                                    [disabled]="!isEditEnabled()"/>
+                        </div>
+                    </div>
+                    <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
+                        <label for="booker" class="col-sm-2 control-label">Booker</label>
+                        <div class="col-sm-10">
+                            <input type="text"
+                                   [(ngModel)]="booker"
+                                   (ngModelChange)="setMessage()"
+                                   id="booker" name="booker"
+                                   class="form-control"
+                                   placeholder="Not booked"
+                                   disabled="true"/>
+                        </div>
+                    </div>
+                    <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
+                        <label for="bookerEmail" class="col-sm-2 control-label">Booker email</label>
+                        <div class="col-sm-10">
+                            <input type="text"
+                                   [(ngModel)]="bookerEmail"
+                                   (ngModelChange)="setMessage()"
+                                   id="bookerEmail" name="bookerEmail"
+                                   class="form-control"
+                                   placeholder=""
+                                   disabled="true"/>
                         </div>
                     </div>
 
@@ -134,6 +160,8 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     startTime = "";
     endDate = "";
     endTime = "";
+    booker = "";
+    bookerEmail: string | null = "";
 
     constructor(private http: HttpClient) {
         super();
@@ -219,6 +247,17 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         const startDate = new Date(
             this.data.start.getTime() - startOffset * 60 * 1000
         );
+        const bookerGroups = this.data.meta!.booker_groups;
+        if (bookerGroups) {
+            bookerGroups.forEach((group) => {
+                // TODO: Make a list of all bookers when the event capacity is higher than 1
+                this.booker = group.name;
+                group.users.forEach((user) => {
+                    this.bookerEmail = user.email;
+                });
+            });
+        }
+
         const startDateTime = startDate.toISOString().split("T");
 
         this.startDate = startDateTime[0];
@@ -260,6 +299,22 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (result.ok) {
             console.log(result.result);
             this.data.meta!.enrollments++;
+
+            const booker = Users.getCurrent().groups.find((group) => {
+                return group.name === Users.getCurrent().name;
+            });
+            if (booker) {
+                this.data.meta!.booker_groups.push({
+                    name: booker.name,
+                    users: [
+                        {
+                            name: Users.getCurrent().name,
+                            email: Users.getCurrent().email,
+                        },
+                    ],
+                });
+            }
+
             this.close(eventToBook);
         } else {
             console.error(result.result.error.error);
@@ -269,6 +324,17 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 
     eventIsFull() {
         return this.data.meta!.enrollments >= this.data.meta!.maxSize;
+    }
+
+    userIsManager() {
+        return (
+            itemglobals().curr_item.rights.manage ||
+            itemglobals().curr_item.rights.owner
+        );
+    }
+
+    eventHasBookings() {
+        return this.data.meta!.enrollments > 0;
     }
 }
 
