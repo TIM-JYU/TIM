@@ -32,6 +32,17 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    placeholder="Set title"
                                    [disabled]="!isEditEnabled()"/>
                         </div>
+                        <label for="location" class="col-sm-2 control-label">Location</label>
+                        <div class="col-sm-10">
+                            <input type="text"
+                            maxlength="120"
+                                   [(ngModel)]="location" #ngModelLocation="ngModel"
+                                   id="location"
+                                   placeholder="Set location"
+                                   name="location"
+                                   class="form-control"
+                                   [disabled]="!isEditEnabled()"/>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -129,6 +140,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     protected dialogName = "CalendarEventEdit";
 
     title = "";
+    location: string = "";
     message?: string;
     startDate = "";
     startTime = "";
@@ -151,6 +163,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 
         const eventToEdit = {
             title: this.title,
+            location: this.location,
             start: new Date(`${this.startDate}T${this.startTime}`),
             end: new Date(`${this.endDate}T${this.endTime}`),
         };
@@ -163,6 +176,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (result.ok) {
             console.log(result.result);
             this.data.title = eventToEdit.title;
+            //  this.data.location = eventToEdit.location;
             this.data.start = eventToEdit.start;
             this.data.end = eventToEdit.end;
             this.close(this.data);
@@ -215,6 +229,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      */
     ngOnInit() {
         this.title = this.data.title;
+        //   this.location = this.data.location;
         const startOffset = this.data.start.getTimezoneOffset();
         const startDate = new Date(
             this.data.start.getTime() - startOffset * 60 * 1000

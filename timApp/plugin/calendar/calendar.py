@@ -154,6 +154,7 @@ def get_ical(user: str) -> Response:
         buf.write("UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\r\n")
         buf.write("CREATED:" + dts + "Z\r\n")
         buf.write("SUMMARY:" + event.title + "\r\n")
+        buf.write("SUMMARY:" + event.location + "\r\n")
         buf.write("END:VEVENT\r\n")
 
     buf.write("END:VCALENDAR\r\n")
@@ -197,6 +198,7 @@ def get_events() -> Response:
                 {
                     "id": event_obj.event_id,
                     "title": event_obj.title,
+                    "location": event_obj.location,
                     "start": event_obj.start_time,
                     "end": event_obj.end_time,
                     "meta": {
@@ -215,6 +217,7 @@ def get_events() -> Response:
 @dataclass
 class CalendarEvent:
     title: str
+    location: str
     start: datetime
     end: datetime
     max_size: int = 1
@@ -244,6 +247,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
 
         event = Event(
             title=event.title,
+            location=event.location,
             start_time=event.start,
             end_time=event.end,
             creator_user_id=cur_user,
@@ -261,6 +265,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
             {
                 "id": event.event_id,
                 "title": event.title,
+                "location": event.location,
                 "start": event.start_time,
                 "end": event.end_time,
                 "meta": {
@@ -286,6 +291,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     if not old_event:
         raise RouteException("Event not found")
     old_event.title = event.title
+    old_event.location = event.location
     old_event.start_time = event.start
     old_event.end_time = event.end
     db.session.commit()

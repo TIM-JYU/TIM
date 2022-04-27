@@ -138,6 +138,7 @@ export type TIMCalendarEvent = CalendarEvent<{
     tmpEvent: boolean;
     deleted?: boolean;
     editEnabled?: boolean;
+    location: string;
     enrollments: number;
     maxSize: number;
 }>;
@@ -496,6 +497,7 @@ export class CalendarComponent
             meta: {
                 tmpEvent: true,
                 enrollments: 0,
+                location: "",
                 maxSize: 1, // TODO: temporary solution
             },
             // actions: this.actions,
@@ -651,6 +653,7 @@ export class CalendarComponent
                     tmpEvent: false,
                     enrollments: event.meta!.enrollments,
                     maxSize: event.meta!.maxSize,
+                    location: event.meta!.location,
                 };
                 event.resizable = {
                     beforeStart: this.editEnabled,
@@ -684,8 +687,10 @@ export class CalendarComponent
 
         if (eventsToAdd.length > 0) {
             eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
+                console.log(event);
                 return {
                     title: event.title,
+                    location: event.meta!.location,
                     start: event.start,
                     end: event.end,
                     event_groups: eventGroups,
@@ -716,6 +721,7 @@ export class CalendarComponent
                                 editEnabled: this.editEnabled,
                                 enrollments: event.meta!.enrollments,
                                 maxSize: event.meta!.maxSize,
+                                location: event.meta!.location,
                             },
                             // actions: this.actions,
                             resizable: {
