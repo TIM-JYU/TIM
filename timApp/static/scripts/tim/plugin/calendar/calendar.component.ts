@@ -321,7 +321,7 @@ export class CalendarComponent
     selectedEvent: string = this.eventType + 0;
 
     checkboxEvents = [
-        {name: "Ohjaus", value: "1", checked: true},
+        {name: "OhjausTEST", value: "1", checked: true},
         {name: "Luento", value: "2", checked: true},
         {name: "Opetusryhmä", value: "3", checked: true},
     ];
