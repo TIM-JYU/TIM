@@ -428,11 +428,11 @@ def inline_collect(top_inline: dict) -> list[TranslateApproval]:
             arr.append(Translate(" "))
         case "SoftBreak":
             # TODO Are newlines translated or not?
-            arr.append(Translate("\n"))
+            arr.append(NoTranslate("\n"))
         case "LineBreak":
             arr.append(NoTranslate("\\"))
             # TODO Are newlines translated or not?
-            arr.append(Translate("\n"))
+            arr.append(NoTranslate("\n"))
         case "Code":
             arr += code_collect(content)
         case "Math":
