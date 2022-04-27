@@ -2043,14 +2043,26 @@ def get_all_answers_as_list(
     for tid in task_ids:
         doc_ids.add(tid.doc_id)
         d = get_doc_or_abort(tid.doc_id)
-        # Require full teacher rights for getting all answers
-        verify_teacher_access(d)
+        # Require at least seeanswers access to view all answers
+        verify_seeanswers_access(d)
 
     # TODO: Integrate directly into AllAnswerOptions
     options.consent = get_consent_opt()
     options.period_from, options.period_to = get_answer_period(
         task_ids, doc_ids, options
     )
+
+    # Check only for the first document since we require seeanswers for all
+    if (
+        d
+        and (not has_teacher_access(d) or hide_names_in_teacher(d))
+        and options.name
+        not in (
+            NameOptions.ANON,
+            NameOptions.PSEUDO,
+        )
+    ):
+        options.name = NameOptions.ANON
 
     if options.name == NameOptions.PSEUDO:
         if not options.salt:
@@ -2060,9 +2072,6 @@ def get_all_answers_as_list(
                 "For optimal results, use at least 10 characters for the hash"
             )
 
-    if d and hide_names_in_teacher(d):
-        # Above, we're requiring teacher access to all documents, so it does not matter which DocInfo we pass here.
-        options.name = NameOptions.ANON
     return get_all_answers(task_ids, options)
 
 

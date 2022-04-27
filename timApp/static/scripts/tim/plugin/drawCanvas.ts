@@ -345,10 +345,12 @@ export function drawRectangle(
 ) {
     // TODO: Draw border with own settings but custom fill color
     ctx.lineJoin = "miter";
+    const h = Math.max(rectangle.h, 1);
+    const w = Math.max(rectangle.w, 1);
     if (rectangle.fillColor) {
-        ctx.fillRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
+        ctx.fillRect(rectangle.x, rectangle.y, w, h);
     } else {
-        ctx.strokeRect(rectangle.x, rectangle.y, rectangle.w, rectangle.h);
+        ctx.strokeRect(rectangle.x, rectangle.y, w, h);
     }
 }
 
@@ -361,18 +363,14 @@ export function drawEllipse(
     ellipse: IRectangleOrEllipse,
     ctx: CanvasRenderingContext2D
 ) {
-    const ratio = ellipse.w / ellipse.h;
+    const h = Math.max(ellipse.h, 1);
+    const w = Math.max(ellipse.w, 1);
+    const ratio = w / h;
     ctx.save();
     ctx.beginPath();
     ctx.scale(ratio, 1);
-    const r = Math.min(ellipse.w / ratio, ellipse.h) / 2;
-    ctx.arc(
-        (ellipse.x + ellipse.w / 2) / ratio,
-        ellipse.y + ellipse.h / 2,
-        r,
-        0,
-        2 * Math.PI
-    );
+    const r = Math.min(w / ratio, h) / 2;
+    ctx.arc((ellipse.x + w / 2) / ratio, ellipse.y + h / 2, r, 0, 2 * Math.PI);
     ctx.restore();
     if (ellipse.fillColor) {
         ctx.fill();
@@ -407,7 +405,7 @@ interface IImageSizes {
     width: number;
 }
 
-interface offsetContext {
+interface IOffsetContext {
     ctx: CanvasRenderingContext2D;
     width: number;
     height: number;
@@ -422,7 +420,7 @@ export class Drawing {
     // original canvas elements
     canvases: HTMLCanvasElement[];
     // CanvasRenderingContexts on canvases and their respective offsets
-    ctxs: offsetContext[] = [];
+    ctxs: IOffsetContext[] = [];
     externalClear = false;
 
     /**
@@ -478,8 +476,11 @@ export class Drawing {
     private endY: number = 0;
 
     // previous move event coordinate
-    private prevStepX: number = 0;
     private prevStepY: number = 0;
+
+    // y-coordinate limits for move event from previous preview shape
+    private prevMinY: number = 0;
+    private prevMaxY: number = 0;
 
     // dimension used when drawing shapes
     private itemX: number = 0;
@@ -488,7 +489,7 @@ export class Drawing {
     private itemH: number = 0;
 
     // which contexts need to be re-drawn on draw events
-    private activeContexts: offsetContext[] = [];
+    private activeContexts: IOffsetContext[] = [];
 
     // y-coordinate limits for current move event
     private minY: number = 0;
@@ -545,9 +546,10 @@ export class Drawing {
         this.drawMoved = true;
         const {x, y} = coords;
         const w = this.drawOptions.w;
+        // TODO: Adding more DrawTypes later could be easier with classes
         if (
-            this.drawOptions.drawType == DrawType.Ellipse ||
-            this.drawOptions.drawType == DrawType.Rectangle
+            this.drawOptions.drawType == DrawType.Rectangle ||
+            this.drawOptions.drawType == DrawType.CornerEllipse
         ) {
             this.minY = Math.min(this.startY, y, this.prevStepY) - w;
             this.maxY = Math.max(this.startY, y, this.prevStepY) + w;
@@ -558,11 +560,26 @@ export class Drawing {
             this.itemY = Math.min(y, this.startY);
             this.itemW = Math.abs(x - this.startX);
             this.itemH = Math.abs(y - this.startY);
-            if (this.drawOptions.drawType == DrawType.Ellipse) {
+            if (this.drawOptions.drawType == DrawType.CornerEllipse) {
                 this.drawPreviewEllipse();
             } else {
                 this.drawPreviewRectangle();
             }
+        } else if (this.drawOptions.drawType == DrawType.CenterEllipse) {
+            const oppositeX = 2 * this.startX - x;
+            const oppositeY = 2 * this.startY - y;
+            this.itemX = Math.min(x, oppositeX);
+            this.itemY = Math.min(y, oppositeY);
+            this.itemW = Math.abs(x - oppositeX);
+            this.itemH = Math.abs(y - oppositeY);
+            this.minY = Math.min(oppositeY, this.prevMinY) - w;
+            this.maxY = Math.max(oppositeY, this.prevMaxY) + w;
+            this.prevMinY = this.itemY;
+            this.prevMaxY = this.itemY + this.itemH;
+            this.setActiveContexts();
+            this.redrawAll();
+            this.setContextSettingsFromOptions();
+            this.drawPreviewEllipse();
         } else if (this.drawOptions.drawType == DrawType.Arrow) {
             const points = getArrowPoints({
                 start: {x: this.startX, y: this.startY},
@@ -619,7 +636,10 @@ export class Drawing {
             this.drawStarted = false;
         }
         if (this.drawMoved) {
-            if (this.drawOptions.drawType == DrawType.Ellipse) {
+            if (
+                this.drawOptions.drawType == DrawType.CenterEllipse ||
+                this.drawOptions.drawType == DrawType.CornerEllipse
+            ) {
                 const ellipse: IEllipse = {
                     type: "ellipse",
                     drawData: this.makeFullRectangleOrEllipse(),
@@ -785,7 +805,7 @@ export class Drawing {
      * (e.g canvases between this.minY and this.maxY)
      */
     setActiveContexts() {
-        const ret: offsetContext[] = [];
+        const ret: IOffsetContext[] = [];
         for (const ctx of this.ctxs) {
             const top = -ctx.yOffset;
             const bottom = top + ctx.height;
@@ -887,6 +907,8 @@ export class Drawing {
 
 // Approximate scrollbar size
 const SCROLLBAR_APPROX_WIDTH = 17;
+const MIN_IMAGE_HEIGHT = 300;
+const MIN_IMAGE_WIDTH = 700;
 
 @Component({
     selector: "draw-canvas",
@@ -1139,23 +1161,33 @@ export class DrawCanvasComponent
         this.bgOffsets = [offset];
         this.imgHeight = this.bgElement.nativeElement.clientHeight;
         this.imgWidth = this.bgElement.nativeElement.clientWidth;
+        // width will be same for all images/canvases
+        const newWidth = Math.max(this.imgWidth, MIN_IMAGE_WIDTH);
         for (let i = 0; i < this.bgSourceSizes.length; i++) {
             const canvas = this.canvases.get(i)?.nativeElement;
             if (!canvas) {
                 throw Error(`Missing canvas ${i}`);
             }
-            canvas.height = this.bgSourceSizes[i].height;
-            canvas.width = this.imgWidth;
+            let newHeight: number;
+            if (i < this.bgSourceSizes.length - 1) {
+                newHeight = this.bgSourceSizes[i].height;
+                this.bgOffsets.push(newHeight + offset);
+            } else {
+                // if total image size is less than minimum, stretch last canvas
+                newHeight = Math.max(
+                    this.bgSourceSizes[i].height,
+                    MIN_IMAGE_HEIGHT - offset
+                );
+            }
+            canvas.height = newHeight;
+            canvas.width = newWidth;
             canvas.style.top = offset + "px";
             this.drawHandler!.setOffSet(
                 i,
-                {w: canvas.width, h: canvas.height},
+                {w: canvas.width, h: newHeight},
                 -offset
             );
-            if (i < this.bgSourceSizes.length - 1) {
-                this.bgOffsets.push(this.bgSourceSizes[i].height + offset);
-                offset += this.bgSourceSizes[i].height;
-            }
+            offset += newHeight;
         }
         if (this.imgWidth > this.wrapper.nativeElement.clientWidth) {
             this.defaultZoomLevel =

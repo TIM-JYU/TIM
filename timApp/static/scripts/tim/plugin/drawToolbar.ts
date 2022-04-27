@@ -27,7 +27,8 @@ export interface IDrawVisibleOptions {
     freeHand?: boolean;
     lineMode?: boolean;
     rectangleMode?: boolean;
-    ellipseMode?: boolean;
+    centerEllipseMode?: boolean;
+    cornerEllipseMode?: boolean;
     arrowMode?: boolean;
     w?: boolean;
     color?: boolean;
@@ -39,7 +40,8 @@ export enum DrawType {
     Freehand,
     Line,
     Rectangle,
-    Ellipse,
+    CenterEllipse,
+    CornerEllipse,
     Arrow,
 }
 
@@ -51,7 +53,8 @@ const DrawTypeCodec = t.keyof({
     [DrawType.Freehand]: null,
     [DrawType.Line]: null,
     [DrawType.Rectangle]: null,
-    [DrawType.Ellipse]: null,
+    [DrawType.CenterEllipse]: null,
+    [DrawType.CornerEllipse]: null,
     [DrawType.Arrow]: null,
 });
 
@@ -102,10 +105,16 @@ export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
                     <i class="gg-shape-square"></i>
                 </label>
                 <label class="btn btn-default mb-0"
-                       btnRadio="Ellipse"
+                       btnRadio="CenterEllipse"
+                       title="Centered ellipse"
+                       i18n-title>
+                    <i class="gg-shape-circle-center"></i>
+                </label>
+                <label class="btn btn-default mb-0"
+                       btnRadio="CornerEllipse"
                        title="Ellipse"
                        i18n-title>
-                    <i class="gg-shape-circle"></i>
+                    <i class="gg-shape-circle-corner"></i>
                 </label>
                 <label class="btn btn-default mb-0"
                        btnRadio="Arrow"
@@ -206,7 +215,8 @@ export class DrawToolbarComponent implements AfterViewInit {
         freeHand: true,
         lineMode: true,
         rectangleMode: true,
-        ellipseMode: true,
+        centerEllipseMode: true,
+        cornerEllipseMode: true,
         arrowMode: true,
         w: true,
         color: true,
