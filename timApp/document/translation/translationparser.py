@@ -20,7 +20,7 @@ __date__ = "25.4.2022"
 import re
 import pypandoc
 import json
-from typing import Tuple
+from typing import Tuple, Iterable
 from dataclasses import dataclass
 from itertools import chain
 
@@ -570,7 +570,9 @@ def collect_tim_plugin(attrs: dict, content: str) -> list[TranslateApproval]:
                         text += "\n" + line
                     add_value_with_prefix(text, arr)
                     # Add the end of multiline
-                    arr.append(NoTranslate("\n" + line))
+                    # TODO If line is None here, should raise an exception
+                    #  because of malformed TIM-YAML?
+                    arr.append(NoTranslate("\n" + (line or "")))
                 else:
                     # Line is a single line value.
                     add_value_with_prefix(text, arr)
@@ -999,7 +1001,7 @@ def block_collect(top_block: dict, depth: int = 0) -> list[TranslateApproval]:
     return arr
 
 
-def merge_consecutive(arr: list[TranslateApproval]) -> list[TranslateApproval]:
+def merge_consecutive(arr: Iterable[TranslateApproval]) -> list[TranslateApproval]:
     """
     Merge consecutive elements of the same type into each other to reduce
     length of the list.
