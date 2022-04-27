@@ -546,11 +546,11 @@ export class CalendarComponent
                 );
                 if (newEnd > segment.date && newEnd < endOfView) {
                     dragToSelectEvent.end = newEnd;
-                    dragToSelectEvent.title = `${segment.date
-                        .toTimeString()
-                        .substr(0, 5)}–${newEnd
-                        .toTimeString()
-                        .substr(0, 5)} Varattava aika`;
+                    // dragToSelectEvent.title = `${segment.date
+                    //     .toTimeString()
+                    //     .substr(0, 5)}–${newEnd
+                    //     .toTimeString()
+                    //     .substr(0, 5)} Varattava aika`;
                     if (dragToSelectEvent.end) {
                         dragToSelectEvent.end = new Date(dragToSelectEvent.end);
                     }
