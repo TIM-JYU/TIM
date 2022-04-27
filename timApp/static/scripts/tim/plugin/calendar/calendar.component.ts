@@ -255,8 +255,8 @@ export type TIMCalendarEvent = CalendarEvent<{
                 (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
                                 (evening)="setEvening($event)"></app-timeview-selectors>
         <div>
-            <button class="btn timButton" id="icsBtn" (click)="export()">Vie kalenterin tiedot</button>
-            <input type="textbox" id="icsURL">
+            <button class="btn timButton" (click)="export()">Vie kalenterin tiedot</button>
+            <input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL">
         </div>
         <ng-template #modalContent let-close="close">
             <div class="modal-header">
@@ -301,6 +301,7 @@ export class CalendarComponent
     implements OnInit
 {
     @ViewChild("modalContent", {static: true})
+    icsURL: string = "";
     modalContent?: TemplateRef<never>;
     view: CalendarView = CalendarView.Week;
 
@@ -617,6 +618,7 @@ export class CalendarComponent
      * Called when the plugin is loaded. Loads the user's events
      */
     ngOnInit() {
+        this.icsURL = "";
         super.ngOnInit();
         this.setLanguage();
         if (Users.isLoggedIn()) {
@@ -765,11 +767,9 @@ export class CalendarComponent
             })
         );
         if (result.ok) {
+            const url = result.result;
+            this.icsURL = url;
             this.refresh();
-            const urlTextBox = document.getElementById("icsURL");
-            if (urlTextBox != null) {
-                urlTextBox.setAttribute("value", result.result);
-            }
         } else {
             // TODO: Handle error responses properly
             console.error(result.result.error.error);
