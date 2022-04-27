@@ -250,6 +250,7 @@ def get_all_answers(
         AnswerPrintOptions.ANSWERS,
         AnswerPrintOptions.ANSWERS_NO_LINE,
     )
+    anon_name = options.name in (NameOptions.ANON, NameOptions.PSEUDO)
 
     if options.period_from is None or options.period_to is None:
         raise ValueError("Answer period must be specified.")
@@ -324,7 +325,7 @@ def get_all_answers(
             points = ""
         name = u.name
         ns = str(int(n))  # n may be a boolean, so convert to int (0/1) first
-        if options.name == NameOptions.ANON or options.name == NameOptions.PSEUDO:
+        if anon_name:
             name = hidden_user_names.get(u.name, None)
             if not name:
                 name = f"user_{hasher(u.id)}"
@@ -385,8 +386,9 @@ def get_all_answers(
 
                 result.append(res)
             case FormatOptions.JSON:
+                user_data = u if not anon_name else name
                 result_json.append(
-                    dict(user=u, answer=a, count=int(n), resolved_content=answ)
+                    dict(user=user_data, answer=a, count=int(n), resolved_content=answ)
                 )
     if options.format == FormatOptions.TEXT:
         return result

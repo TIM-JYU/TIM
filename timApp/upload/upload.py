@@ -463,12 +463,13 @@ def get_file(file_id, file_filename):
         raise NotExist("File not found")
     verify_view_access(f, check_parents=True)
     file_path = f.filesystem_path.as_posix()
-    mime_type = get_mimetype(file_path)
     send_plain = get_option(request, "plain", False)
-    conditional = True
-    if send_plain and mime_type.startswith("text/"):
+    if send_plain:
         mime_type = "text/plain"
         conditional = False
+    else:
+        mime_type = get_mimetype(file_path)
+        conditional = True
     return send_file(file_path, mimetype=mime_type, conditional=conditional)
 
 

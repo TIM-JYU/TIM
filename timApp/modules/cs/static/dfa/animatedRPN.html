@@ -242,7 +242,9 @@
               root.style.setProperty('--font', font);
           }
 
-          root.style.setProperty('--how-many-elements', Math.max(this.maxStack,elemns));
+          elemns = 1;
+          let maxElemns = Math.max(Math.min(this.maxStack,this.params['maxStack']),elemns)
+          root.style.setProperty('--how-many-elements', maxElemns);
           if (color2) root.style.setProperty('--color2', color2);
 
           let operations = document.createElement("div");
@@ -456,11 +458,10 @@
     const code = `
 label a
 push 3
-jump a
      `;
     setData({code: code, args: "",
              params: {
-                 maxStep: 10,
+                 maxStep: 100,
                  initial: "3,2",
                  arrow: "POP\n=====>",
                  xstack2Color: "lightblue",
