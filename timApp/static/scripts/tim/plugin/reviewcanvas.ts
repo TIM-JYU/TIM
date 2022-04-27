@@ -125,7 +125,7 @@ const PluginFields = t.intersection([
             <ng-container body>
                 <div class="form-inline small">
                     <div style="position: relative;" *ngFor="let item of uploadedFiles; let i = index">
-                       <div #wraps>
+                       <div class="uploadContainer" #wraps>
                             <img alt="Uploaded image" #img [src]="item.path" (load)="onImgLoad($event, i)">
                         </div>
                         <div class="tools">
@@ -371,20 +371,16 @@ export class ReviewCanvasComponent
         ];
         imgElement.style.transform = rotations[uploadedFile.rotation];
         if (uploadedFile.rotation % 2 == 0) {
-            imgElement.style.removeProperty("top");
             imgElement.style.removeProperty("height");
             wrapper.style.removeProperty("height");
         } else {
-            imgElement.style.position = "relative";
             if (oldHeight < oldWidth) {
-                imgElement.style.top = (oldWidth - oldHeight) / 2 + "px";
                 wrapper.style.height = oldWidth + "px";
             } else {
                 const newHeight = Math.min(oldHeight, wrapperWidth);
                 imgElement.style.height = newHeight + "px";
                 const newWidth = imgElement.width;
                 wrapper.style.height = newWidth + "px";
-                imgElement.style.top = -(newHeight - newWidth) / 2 + "px";
             }
         }
     }
