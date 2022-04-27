@@ -154,7 +154,7 @@ def get_ical(user: str) -> Response:
         buf.write("UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\r\n")
         buf.write("CREATED:" + dts + "Z\r\n")
         buf.write("SUMMARY:" + event.title + "\r\n")
-        buf.write("SUMMARY:" + event.location + "\r\n")
+        buf.write("LOCATION:" + event.location + "\r\n")
         buf.write("END:VEVENT\r\n")
 
     buf.write("END:VCALENDAR\r\n")
