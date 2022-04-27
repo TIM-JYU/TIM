@@ -1,5 +1,6 @@
 """
-TODO: Short description of Python module
+Contains prototypal testing for a generic model of translating from language
+to another.
 """
 
 __authors__ = [
@@ -12,7 +13,6 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "25.4.2022"
 
-import unittest
 
 from timApp.document.translation.language import Language
 from timApp.document.translation.translationparser import (
@@ -21,6 +21,7 @@ from timApp.document.translation.translationparser import (
     NoTranslate,
 )
 from timApp.tests.db.timdbtest import TimDbTest
+from timApp.tests.unit.test_translator_parser import TimTranslationParserTest
 
 from timApp.document.translation.translator import (
     TranslationService,
@@ -107,12 +108,12 @@ NT = NoTranslate
 
 
 # NOTE Needs to inherit from TimDbTest in order to create Language-objects
-class TestGenericTranslator(TimDbTest):
+class TestGenericTranslator(TimDbTest, TimTranslationParserTest):
     def test_mixed(self):
         none_lang = Language(lang_code="", lang_name="", autonym="")
         translator = ReversingTranslationService()
         # TODO A more extensive test input might need to be used here
-        parts = get_translate_approvals(
+        parts = self.parser.get_translate_approvals(
             "Here I am [**rocking**]{.red} [like](www.example.com) "
             "a ![hurricane](/imgs/hurricane.png)!"
         )
@@ -136,7 +137,7 @@ class TestGenericTranslator(TimDbTest):
         none_lang = Language(lang_code="", lang_name="", autonym="")
         translator = ReversingTranslationService()
         # TODO A more extensive test input might need to be used here
-        parts = get_translate_approvals("Here I am")
+        parts = self.parser.get_translate_approvals("Here I am")
 
         # Sanity checks
         self.assertEqual(1, len(parts))
@@ -153,7 +154,7 @@ class TestGenericTranslator(TimDbTest):
         none_lang = Language(lang_code="", lang_name="", autonym="")
         translator = ReversingTranslationService()
         # TODO A more extensive test input might need to be used here
-        parts = get_translate_approvals("[]()[]{}![]()")
+        parts = self.parser.get_translate_approvals("[]()[]{}![]()")
 
         # Sanity checks
         self.assertEqual(3, len(parts))

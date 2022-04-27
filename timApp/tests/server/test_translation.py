@@ -599,8 +599,8 @@ Baz qux [qux](www.example.com)
             r"""
 # ooF{#foo}
 
-[Bar]{.notranslate}\ xuq zaB
-
+[Bar]{.notranslate}\
+ xuq zaB
 
 [xuq](www.example.com)
   """,

@@ -21,11 +21,13 @@ from timApp.document.translation.translationparser import (
 )
 
 
-class TestParser(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        cls.parser = TranslationParser()
+class TimTranslationParserTest:
+    """A Base class to run translation tests needing a parser instance."""
 
+    parser: TranslationParser = TranslationParser()
+
+
+class TestParser(unittest.TestCase, TimTranslationParserTest):
     def test_get_translate_approvals_attr(self):
         # TODO Add cases for identifiers, key-value -pairs and multiple classes as well
         text = "Tässä on kuva ![kissasta](/kuvat/kissa.png). [Tosi]{.red} hieno, eikös?"
@@ -108,7 +110,9 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
                 NoTranslate("""<u><s>"""),
                 Translate("Teksti, jossa on kaikki tyylit paitsi notranslate"),
                 NoTranslate(r"""</s></u>"""),
-                Translate("</i></b>\n<b><i>"),
+                Translate("</i></b>"),
+                NoTranslate("\n"),
+                Translate("<b><i>"),
                 NoTranslate(
                     """\
 <u><s>[Ja sama myös notranslatella]{.notranslate}</s></u>"""
@@ -135,15 +139,22 @@ header: Harjoittele matemaattisen vastauksen kirjoittamista.
             [
                 Translate(
                     """
-r”# otsikko1
-## otsikko2
-### otsikko3
-#### otsikko4
-##### otsikko 5
-###### otsikko 6
-# otsikko1.2
-# otsikko jossa sana header ja ## merkkejä\n"""
-                )
+r”# otsikko1"""
+                ),
+                NoTranslate("\n"),
+                Translate("## otsikko2"),
+                NoTranslate("\n"),
+                Translate("### otsikko3"),
+                NoTranslate("\n"),
+                Translate("#### otsikko4"),
+                NoTranslate("\n"),
+                Translate("##### otsikko 5"),
+                NoTranslate("\n"),
+                Translate("###### otsikko 6"),
+                NoTranslate("\n"),
+                Translate("# otsikko1.2"),
+                NoTranslate("\n"),
+                Translate("# otsikko jossa sana header ja ## merkkejä\n" ""),
             ],
             self.parser.get_translate_approvals(text),
         )
@@ -176,7 +187,6 @@ r”# otsikko1
 
     def test_tex_collect_simple_text(self):
         """Testing simple text inside latex"""
-        self.assertEqual([NoTranslate(text)], self.parser.tex_collect(text))
         text = r"\text{testi}\x"
         self.assertEqual(
             [NoTranslate(r"\text{"), Translate(r"testi"), NoTranslate(r"}\x")],
@@ -271,15 +281,19 @@ x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 && |\text{ ratkaistaan x}\\
         self.assertEqual(
             [
                 # NOTE Pandoc seems to convert a single quote into U+2019
-                Translate("\nKING CLAUDIUS\n[Aside] O, ’tis "),
+                Translate("\nKING CLAUDIUS"),
+                NoTranslate("\n"),
+                Translate("[Aside] O, ’tis "),
                 NoTranslate("$too$"),
-                Translate(" true!\n"),
-                NoTranslate("$How$"),
+                Translate(" true!"),
+                NoTranslate("\n$How$"),
                 Translate(" $ smart$ a "),
                 NoTranslate("$$lash $$"),
                 Translate(" that [speech] "),
                 NoTranslate("$$doth$$"),
-                Translate(" [give] my conscience!\na) "),
+                Translate(" [give] my conscience!"),
+                NoTranslate("\n"),
+                Translate("a) "),
                 # TODO content in \text{<content>} should be marked as translate
                 NoTranslate(r"\begin{align*} asd\x^3-49x&=0 &&|\text{"),
                 Translate(" erotetaan yhteinen tekijä x"),
@@ -341,12 +355,16 @@ x=0\;\;\;\\text{"""
                 Translate("Kolmannen"),
                 NoTranslate("\n\t- "),
                 Translate("Koko kappale:"),
-                NoTranslate("\\"),
-                Translate("\nMieleni minun tekevi"),
-                NoTranslate("\\"),
-                Translate("\nAivoni ajattelevi"),
-                NoTranslate("\\"),
-                Translate("\nKerran\nToisen\nKolmannen\n"),
+                NoTranslate("\\\n"),
+                Translate("Mieleni minun tekevi"),
+                NoTranslate("\\\n"),
+                Translate("Aivoni ajattelevi"),
+                NoTranslate("\\\n"),
+                Translate("Kerran"),
+                NoTranslate("\n"),
+                Translate("Toisen"),
+                NoTranslate("\n"),
+                Translate("Kolmannen\n"),
             ],
             self.parser.get_translate_approvals(md),
         )
@@ -612,32 +630,16 @@ questionTitle: 'Vinkkejä harjoitteluun'
             [
                 # NOTE At the moment, the attributes are discarded
                 Translate("\n"),
-                NoTranslate(
-                    r"""```
-header: """
-                ),
+                NoTranslate("```\nheader: "),
                 Translate("Harjoittele matemaattisen vastauksen kirjoittamista."),
                 NoTranslate('\nquestionText: "'),
                 Translate(
                     "Voit harjoitella\n              sitä vaikkapa kirjoittamalla"
                 ),
-                NoTranslate(
-                    '"'
-                    + r"""
-              
-stem: |!!
-md:"""
-                ),
-                Translate(
-                    r"""
-Kirjoita teksti:
-
-"""
-                ),
+                NoTranslate('"\n              \nstem: |!!\nmd:'),
+                Translate("Kirjoita teksti:\n\n"),
                 NoTranslate("> "),
-                # TODO This preceding newline is tested for because the
-                #  implementation works that way (for now), i.e. it is
-                #  BAD practice but seems to not "break" the functionality.
+                # BlockQuote starts a Block, which starts with newline
                 Translate("\nToisen asteen ratkaisukaava on:\n\n"),
                 NoTranslate(
                     r"""$$
@@ -646,28 +648,18 @@ $$"""
                 ),
                 Translate("\n\n"),
                 NoTranslate("> "),
-                # TODO This preceding newline is tested for because the
-                #  implementation works that way (for now), i.e. it is
-                #  BAD practice but seems to not "break" the functionality.
                 Translate("\njosta on huomattava että useimmilla "),
                 NoTranslate("$a$"),
                 Translate(", "),
                 NoTranslate("$b$"),
                 Translate(" ja "),
                 NoTranslate("$c$"),
-                Translate(
-                    """ arvoilla voi tulla kaksi
-eri ratkaisua. Vain jos diskriminantti """
-                ),
+                Translate(" arvoilla voi tulla kaksi"),
+                NoTranslate("\n"),
+                Translate("eri ratkaisua. Vain jos diskriminantti "),
                 NoTranslate(r"$D = \sqrt{b^2 - 4ac}$"),
-                # Paragraph ends with a newline. TODO Is that right in this case?
-                Translate(" on nolla, on ratkaisuja yksi kappale.\n"),
-                NoTranslate(
-                    """
-!!
-%%matikka%%
-questionTitle: '"""
-                ),
+                Translate(" on nolla, on ratkaisuja yksi kappale."),
+                NoTranslate("\n!!\n%%matikka%%\nquestionTitle: '"),
                 Translate("Vinkkejä harjoitteluun"),
                 NoTranslate("'\n```"),
             ],
@@ -692,7 +684,7 @@ buttons: ""
 stem: 'md:"""
                 ),
                 # Paragraph ends with a newline. TODO Is that right in this case?
-                Translate("\nfoo\n"),
+                Translate("foo"),
                 NoTranslate(
                     """'
 fullprogram: |!!
@@ -943,8 +935,8 @@ kodblock
                 TR("bakgrundsfärg"),
                 NT("]{.bgred}"),
                 TR("\n\n"),
-                NT("`koodi`"),
-                TR("\nkodblock\n\n~delindex~\n\n^högsta index^\n"),
+                NT("`koodi`\n"),
+                TR("kodblock\n\n~delindex~\n\n^högsta index^\n"),
             ],
             self.parser.get_translate_approvals(md),
         )
