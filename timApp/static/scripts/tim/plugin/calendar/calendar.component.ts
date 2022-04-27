@@ -257,7 +257,8 @@ export type TIMCalendarEvent = CalendarEvent<{
                 (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
                                 (evening)="setEvening($event)"></app-timeview-selectors>
         <div>
-            <button class="timButton" id="icsBtn" (click)="exportICS()">Vie kalenterin tiedot</button>
+            <button class="btn timButton" (click)="export()">Vie kalenterin tiedot</button>
+            <input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL">
         </div>
         <ng-template #modalContent let-close="close">
             <div class="modal-header">
@@ -303,6 +304,7 @@ export class CalendarComponent
 {
     @ViewChild("modalContent", {static: true})
     modalContent?: TemplateRef<never>;
+    icsURL: string = "";
     view: CalendarView = CalendarView.Week;
 
     viewDate: Date = new Date();
@@ -618,6 +620,7 @@ export class CalendarComponent
      * Called when the plugin is loaded. Loads the user's events
      */
     ngOnInit() {
+        this.icsURL = "";
         super.ngOnInit();
         this.setLanguage();
         if (Users.isLoggedIn()) {
@@ -631,7 +634,7 @@ export class CalendarComponent
      */
     private async loadEvents() {
         const result = await toPromise(
-            this.http.get<TIMCalendarEvent[]>("/calendar/events?file_type=json")
+            this.http.get<TIMCalendarEvent[]>("/calendar/events")
         );
         if (result.ok) {
             result.result.forEach((event) => {
@@ -759,16 +762,16 @@ export class CalendarComponent
         }
     }
 
-    async exportICS() {
+    async export() {
         const result = await toPromise(
-            this.http.get("/calendar/events?file_type=ics", {
+            this.http.get("/calendar/export", {
                 responseType: "text",
             })
         );
         if (result.ok) {
+            const url = result.result;
+            this.icsURL = url;
             this.refresh();
-            console.log(result.result);
-            console.log("Tiedot viety");
         } else {
             // TODO: Handle error responses properly
             console.error(result.result.error.error);

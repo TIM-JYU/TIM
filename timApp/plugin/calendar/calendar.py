@@ -1,10 +1,12 @@
+import secrets
+from io import StringIO
 import uuid
 from dataclasses import dataclass, asdict
 from datetime import datetime
-
-from flask import Response, request
-
+from flask import Response
 from timApp.auth.accesshelper import verify_logged_in
+from timApp.plugin.calendar.models import Event, ExportedCalendar
+from timApp.tim_app import app
 from timApp.auth.sessioninfo import (
     get_current_user_id,
     get_current_user_object,
@@ -97,12 +99,74 @@ def get_todos() -> Response:
     )
 
 
+@calendar_plugin.get("/export")
+def get_url() -> Response:
+    """Creates a unique URl for user to be used when calendar is exported. User ID is
+    bind to specific hash code
+
+    :return: URL with hash code
+    """
+    verify_logged_in()
+    domain = app.config["TIM_HOST"]
+    url = domain + "/calendar/ical?user="
+    cur_user = get_current_user_id()
+    user_data: ExportedCalendar = ExportedCalendar.query.filter(
+        ExportedCalendar.user_id == cur_user
+    ).one_or_none()
+    if user_data is not None:
+        url = url + user_data.calendar_hash
+        return text_response(url)
+    hash_code = secrets.token_urlsafe(16)
+    user_data = ExportedCalendar(
+        user_id=cur_user,
+        calendar_hash=hash_code,
+    )
+    db.session.add(user_data)
+    db.session.commit()
+    url = url + hash_code
+    return text_response(url)
+
+
+@calendar_plugin.get("/ical")
+def get_ical(user: str) -> Response:
+    """Fetches users events in a ICS format. User ID is sorted out from hash code from query parameter
+
+    :return: ICS file that can be exported
+    """
+    user_data: ExportedCalendar = ExportedCalendar.query.filter(
+        ExportedCalendar.calendar_hash == user
+    ).one_or_none()
+    user_id = user_data.user_id
+    events: list[Event] = Event.query.filter(Event.creator_user_id == user_id).all()
+    buf = StringIO()
+    buf.write("BEGIN:VCALENDAR\r\n")
+    buf.write("PRODID:-//TIM Katti-kalenteri//iCal4j 1.0//EN\r\n")
+    buf.write("VERSION:2.0\r\n")
+    buf.write("CALSCALE:GREGORIAN\r\n")
+    for event in events:
+        dts = event.start_time.strftime("%Y%m%dT%H%M%S")
+        dtend = event.end_time.strftime("%Y%m%dT%H%M%S")
+
+        buf.write("BEGIN:VEVENT\r\n")
+        buf.write("DTSTART:" + dts + "Z\r\n")
+        buf.write("DTEND:" + dtend + "Z\r\n")
+        buf.write("DTSTAMP:" + dts + "Z\r\n")
+        buf.write("UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\r\n")
+        buf.write("CREATED:" + dts + "Z\r\n")
+        buf.write("SUMMARY:" + event.title + "\r\n")
+        buf.write("END:VEVENT\r\n")
+
+    buf.write("END:VCALENDAR\r\n")
+    result = buf.getvalue()
+    return Response(result, mimetype="text/calendar")
+
+
 @calendar_plugin.get("/events")
 def get_events() -> Response:
-    """Fetches the user's events and the events that have a relation to user's groups from the database in JSON or
-    ICS format, specified in the query-parameter
+    """Fetches the user's events and the events that have a relation to user's groups from the database in JSON
+    format
 
-    :return: User's events in JSON or ICS format or HTTP 400 if failed
+    :return: User's events in JSON format or HTTP 400 if failed
     """
     verify_logged_in()
     cur_user = get_current_user_id()
@@ -123,55 +187,29 @@ def get_events() -> Response:
                     events.append(event_obj)
             else:
                 print("Event not found by the id of", group_event.event_id)
-
-    file_type = request.args.get("file_type")
-    match file_type:
-        case "ics":
-            ics_file = ""
-            ics_file = ics_file + "BEGIN:VCALENDAR\n"
-            ics_file = ics_file + "PRODID:-//TIM Katti-kalenteri//iCal4j 1.0//EN\n"
-            ics_file = ics_file + "VERSION:2.0\n"
-            ics_file = ics_file + "CALSCALE:GREGORIAN\n"
-            for event in events:
-                dts = event.start_time.strftime("%Y%m%dT%H%M%S")
-                dtend = event.end_time.strftime("%Y%m%dT%H%M%S")
-
-                ics_file = ics_file + "BEGIN:VEVENT\n"
-                ics_file = ics_file + "DTSTART:" + dts + "Z\n"
-                ics_file = ics_file + "DTEND:" + dtend + "Z\n"
-                ics_file = ics_file + "DTSTAMP:" + dts + "Z\n"
-                ics_file = ics_file + "UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\n"
-                ics_file = ics_file + "CREATED:" + dts + "Z\n"
-                ics_file = ics_file + "SUMMARY:" + event.title + "\n"
-                ics_file = ics_file + "END:VEVENT\n"
-
-            ics_file = ics_file + "END:VCALENDAR\n"
-            return text_response(ics_file)
-        case "json":
-            event_objs = []
-            for event in events:
-                event_optional = Event.get_event_by_id(event.event_id)
-                if event_optional is not None:
-                    event_obj = event_optional
-                    enrollments = len(event_obj.enrolled_users)
-                    event_objs.append(
-                        {
-                            "id": event_obj.event_id,
-                            "title": event_obj.title,
-                            "start": event_obj.start_time,
-                            "end": event_obj.end_time,
-                            "meta": {
-                                "enrollments": enrollments,
-                                "maxSize": event_obj.max_size,
-                            },
-                        }
-                    )
-                else:
-                    print(
-                        "Error fetching the event by the id of", event.event_id
-                    )  # should be never possible
-            return json_response(event_objs)
-    raise RouteException("Unsupported file type")
+    event_objs = []
+    for event in events:
+        event_optional = Event.get_event_by_id(event.event_id)
+        if event_optional is not None:
+            event_obj = event_optional
+            enrollments = len(event_obj.enrolled_users)
+            event_objs.append(
+                {
+                    "id": event_obj.event_id,
+                    "title": event_obj.title,
+                    "start": event_obj.start_time,
+                    "end": event_obj.end_time,
+                    "meta": {
+                        "enrollments": enrollments,
+                        "maxSize": event_obj.max_size,
+                    },
+                }
+            )
+        else:
+            print(
+                "Error fetching the event by the id of", event.event_id
+            )  # should be never possible
+    return json_response(event_objs)
 
 
 @dataclass
