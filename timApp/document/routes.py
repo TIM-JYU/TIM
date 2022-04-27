@@ -16,7 +16,7 @@ from timApp.document.document import Document
 from timApp.document.documentversion import DocumentVersion
 from timApp.timdb.exceptions import TimDbException
 from timApp.util.flask.requesthelper import NotExist
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 doc_bp = TypedBlueprint("document", __name__, url_prefix="")
@@ -46,7 +46,7 @@ def set_settings(doc_id: int):
     value = req_data.get("value", "")
 
     d.document.add_setting(setting, value)
-    return json_response("OK")
+    return ok_response()
 
 
 @doc_bp.get("/download/<int:doc_id>/<int:major>/<int:minor>")
