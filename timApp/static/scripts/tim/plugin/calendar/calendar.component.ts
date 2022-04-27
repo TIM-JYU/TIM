@@ -144,7 +144,6 @@ export type TIMCalendarEvent = CalendarEvent<{
     editEnabled?: boolean;
     enrollments: number;
     maxSize: number;
-    // bookers: IGroup[];
     booker_groups: {
         name: string;
         users: {name: string; email: string | null}[];
@@ -666,9 +665,6 @@ export class CalendarComponent
                 event.start = new Date(event.start);
                 if (event.end) {
                     event.end = new Date(event.end);
-                    /** if (Date.now() > event.start.getTime()) {
-                        event.color = colors.gray;
-                    }*/
                 }
                 // event.actions = this.actions;
                 event.meta = {
@@ -816,18 +812,14 @@ export class CalendarComponent
         const result = await to2(showCalendarEventDialog(event));
         this.dialogOpen = false;
         if (result.ok) {
-            this.refresh();
             const modifiedEvent = result.result;
             if (modifiedEvent.meta) {
                 if (modifiedEvent.meta.deleted) {
                     console.log("deleted");
                     this.events.splice(this.events.indexOf(modifiedEvent), 1);
-                    this.refresh();
-                } else {
-                    // this.updateEventTitle(modifiedEvent);
-                    this.refresh();
                 }
             }
+            this.refresh();
         }
     }
 

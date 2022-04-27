@@ -290,7 +290,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      */
     async bookEvent() {
         const eventToBook = this.data;
-        console.log(eventToBook);
 
         const result = await toPromise(
             this.http.post("/calendar/bookings", {
