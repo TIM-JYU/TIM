@@ -538,7 +538,7 @@ div.error {
 }
 
 .previewDiv {
-    min-width: 20em;
+    min-width: 50%;
     max-width: 100%;
     clear: both;
     border-radius: 5px;
@@ -1277,6 +1277,10 @@ p.docsettings {
 
 .forceHalfSize{
     max-width: 50% !important;
+}
+
+.ForceFullSize {
+    min-width: 100%;
 }
 
 .diff {

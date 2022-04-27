@@ -98,49 +98,48 @@
           class="halfsize"
          tim-draggable-fixed
          detachable="true"
+         can-minimize="true"
          caption="Difference in original document"
          save="{{$ctrl.getOptions().localSaveTag}}Trdiff"
     id="diff">
+        <div class="draggable-content">
         <div class="border background">
             <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.sideBySide" ng-click="$ctrl.changePositioning()"/> View beside the editor </label>
-            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.hideDiff"/> Hide this area </label>
         </div>
         <div class="diff border" ng-hide="$ctrl.hideDiff">
             <pre diff left-obj="$ctrl.trdiff.old" right-obj="$ctrl.trdiff.new"></pre>
             <a href="{{ $ctrl.getSourceDocumentLink() }}"><i class="glyphicon glyphicon-link"></i></a>
-        </div>
+        </div></div>
     </div>
   </div>
   <div id="previews">
     <div tim-draggable-fixed
          detachable="true"
+         can-minimize="true"
          caption="Current Block {{ $ctrl.getPreviewCaption() }}"
          save="{{$ctrl.getOptions().localSaveTag}}Preview"
-         class="previewDiv halfsize"
+         class="previewDiv"
          ng-show="$ctrl.proeditor"
     id="currpreview">
-        <div class="border background">
-            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.hidePreview" ng-click="$ctrl.updatePreviewHide()"/> Hide this area </label>
-        </div>
-        <div class="previewcontent paragraphs fullsize" ng-hide="$ctrl.hidePreview"></div>
+        <div class="draggable-content">
+        <div class="previewcontent paragraphs fullsize" ng-hide="$ctrl.hidePreview"></div></div>
     </div>
     <div tim-draggable-fixed
          detachable="true"
+         can-minimize="true"
          caption="Source Block {{ $ctrl.getPreviewCaption() }}"
          save="{{$ctrl.getOptions().localSaveTag}}Preview (original block)"
-         class="previewDiv halfsize"
+         class="previewDiv"
          ng-if="$ctrl.trdiff.new"
          ng-show="$ctrl.proeditor"
     id="origpreview">
-        <div class="border background">
-            <label class="font-weight-normal margin-5-right"><input type="checkbox" id="origprev" ng-model="$ctrl.hideOriginalPreview" ng-click="$ctrl.updateOriginalPreviewHide()"/> Hide this area </label>
-        </div>
+        <div class="draggable-content">
         <div class="previeworiginalcontent paragraphs fullsize" ng-hide="$ctrl.hideOriginalPreview">
             <div class="par">
             <div class="parContent">
             <p>{{$ctrl.trdiff.new}}</p>
             </div>
             </div>
-        </div>
+        </div></div>
     </div>
     </div>
