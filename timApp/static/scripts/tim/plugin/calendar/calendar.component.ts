@@ -301,8 +301,8 @@ export class CalendarComponent
     implements OnInit
 {
     @ViewChild("modalContent", {static: true})
-    icsURL: string = "";
     modalContent?: TemplateRef<never>;
+    icsURL: string = "";
     view: CalendarView = CalendarView.Week;
 
     viewDate: Date = new Date();
