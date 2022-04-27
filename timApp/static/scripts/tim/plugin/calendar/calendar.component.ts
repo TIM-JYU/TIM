@@ -490,12 +490,13 @@ export class CalendarComponent
     ) {
         const dragToSelectEvent: TIMCalendarEvent = {
             id: this.events.length,
-            title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
-                segment.date,
-                this.segmentMinutes
-            )
-                .toTimeString()
-                .substr(0, 5)} Varattava aika`,
+            // title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
+            //     segment.date,
+            //     this.segmentMinutes
+            // )
+            //     .toTimeString()
+            //     .substr(0, 5)} Varattava aika`,
+            title: "Ohjausaika",
             start: segment.date,
             end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
@@ -570,12 +571,16 @@ export class CalendarComponent
         if (newEnd) {
             event.start = newStart;
             event.end = newEnd;
-            this.updateEventTitle(event);
+            // this.updateEventTitle(event);
+            this.refresh();
             await this.editEvent(event);
         }
     }
 
     /**
+     * @deprecated
+     * DEPRECATED: Not used anymore, time expressions removed from event titles
+     *
      * Updates the event's title if the begin matches the regular expression, e.g. "10:00-11.00"
      *
      * TODO: handle localized time expressions (e.g. AM and PM)
@@ -652,11 +657,7 @@ export class CalendarComponent
             this.http.get<TIMCalendarEvent[]>("/calendar/events?file_type=json")
         );
         if (result.ok) {
-            console.log(result.result);
             result.result.forEach((event) => {
-                event.meta!.booker_groups.forEach((group) => {
-                    // console.log(group.users);
-                });
                 event.start = new Date(event.start);
                 if (event.end) {
                     event.end = new Date(event.end);
@@ -819,7 +820,8 @@ export class CalendarComponent
                     this.events.splice(this.events.indexOf(modifiedEvent), 1);
                     this.refresh();
                 } else {
-                    this.updateEventTitle(modifiedEvent);
+                    // this.updateEventTitle(modifiedEvent);
+                    this.refresh();
                 }
             }
         }
