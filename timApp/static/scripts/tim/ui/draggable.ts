@@ -475,7 +475,7 @@ export class DraggableController implements IController {
             this.minStorage.set(false);
         }
 
-        // Handle moving previews around when one is minimized in editor
+        // Handle moving previews around when at least one is minimized in editor
         const prevs = document.getElementById("previews");
         if (prevs) {
             // The last child should have the class ".draggable-content".

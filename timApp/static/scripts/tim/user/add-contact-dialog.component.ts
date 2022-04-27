@@ -13,7 +13,7 @@ import {ContactOrigin, IUserContact} from "./IUser";
  * User can add additional contact information to be stored in TIM.
  */
 @Component({
-    selector: "add-contact-dialog",
+    selector: "tim-add-contact-dialog",
     template: `
         <tim-dialog-frame [minimizable]="false">
             <ng-container header i18n>
