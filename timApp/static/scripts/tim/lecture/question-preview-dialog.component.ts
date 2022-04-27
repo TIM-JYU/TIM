@@ -17,6 +17,7 @@ import {
 import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {to2} from "tim/util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {
     AnswerSheetModule,
     IPreviewParams,
@@ -159,6 +160,6 @@ export class QuestionPreviewDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [QuestionPreviewDialogComponent],
-    imports: [BrowserModule, DialogModule, AnswerSheetModule],
+    imports: [BrowserModule, DialogModule, AnswerSheetModule, TimUtilityModule],
 })
 export class QuestionPreviewDialogModule {}

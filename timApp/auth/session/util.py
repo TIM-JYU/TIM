@@ -46,6 +46,10 @@ def add_user_session(user: User, session_id: str, origin: str) -> None:
     log_info(f"SESSION: {user.name} ({len(user.active_sessions)} active sessions)")
 
 
+class SessionExpired(Exception):
+    pass
+
+
 def has_valid_session(user: User) -> bool:
     from timApp.auth.sessioninfo import get_current_user_id
 

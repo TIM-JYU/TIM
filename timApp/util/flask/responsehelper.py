@@ -123,11 +123,16 @@ def csv_response(data, dialect="excel", delimiter=","):
     )
 
 
-def error_generic(error: str, code: int, template="error.jinja2"):
+def error_generic(
+    error: str, code: int, template="error.jinja2", status: str | None = None
+):
     if "text/html" in request.headers.get("Accept", ""):
         return (
             render_template(
-                template, message=error, code=code, status=http.client.responses[code]
+                template,
+                message=error,
+                code=code,
+                status=http.client.responses.get(code, None) or status,
             ),
             code,
         )

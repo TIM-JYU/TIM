@@ -3,6 +3,7 @@ import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
+import {SessionVerify} from "tim/util/session-verify.interceptor";
 import {hasLectureEnded, ILecture} from "./lecturetypes";
 
 export interface ILectureEndingDialogResult {
@@ -69,6 +70,7 @@ export class LectureEndingDialogComponent extends AngularDialogComponent<
 }
 
 @NgModule({
+    providers: [SessionVerify],
     declarations: [LectureEndingDialogComponent],
     imports: [BrowserModule, DialogModule, FormsModule],
 })

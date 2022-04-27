@@ -4,13 +4,19 @@ import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
+import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {TimArchiveHeaderComponent} from "./tim-archive-header.component";
 import {TimArchiveFooterComponent} from "./tim-archive-footer.component";
 import {ArchivedMessageStateService} from "./archived-message-state.service";
 
 @NgModule({
     declarations: [TimArchiveHeaderComponent, TimArchiveFooterComponent],
-    imports: [BrowserModule, HttpClientModule, TooltipModule.forRoot()],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        TooltipModule.forRoot(),
+        TimUtilityModule,
+    ],
     providers: [ArchivedMessageStateService],
 })
 export class TimArchiveModule implements DoBootstrap {

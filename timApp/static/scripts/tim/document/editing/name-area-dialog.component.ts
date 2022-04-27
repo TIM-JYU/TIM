@@ -4,6 +4,7 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 export type INameAreaOptions = {
     alttext?: string;
@@ -153,6 +154,12 @@ export class NameAreaDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [NameAreaDialogComponent],
-    imports: [BrowserModule, DialogModule, FormsModule, DatetimePickerModule],
+    imports: [
+        BrowserModule,
+        DialogModule,
+        FormsModule,
+        DatetimePickerModule,
+        TimUtilityModule,
+    ],
 })
 export class NameAreaDialogModule {}

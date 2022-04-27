@@ -9,6 +9,7 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
+import {TimUtilityModule} from "../ui/tim-utility.module";
 import {IItem} from "./IItem";
 
 @Component({
@@ -45,6 +46,7 @@ export class RelevanceEditDialogComponent extends AngularDialogComponent<
         DialogModule,
         FormsModule,
         TypeaheadModule.forRoot(),
+        TimUtilityModule,
     ],
 })
 export class ViewRangeEditDialogModule {}

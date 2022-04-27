@@ -9,6 +9,7 @@ from sqlalchemy import inspect
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
+from timApp.auth.session.util import has_valid_session, SessionExpired
 from timApp.auth.sessioninfo import (
     logged_in,
     get_other_users_as_list,
@@ -129,6 +130,7 @@ def verify_access(
                 break
     return abort_if_not_access_and_required(
         has_access,
+        u,
         b,
         access_type,
         require,
@@ -245,6 +247,7 @@ class ItemLockedException(Exception):
 
 def abort_if_not_access_and_required(
     access_obj: BlockAccess,
+    user: User,
     block: ItemOrBlock,
     access_type: AccessType,
     require=True,
@@ -253,6 +256,10 @@ def abort_if_not_access_and_required(
 ):
     if access_obj:
         return access_obj
+
+    if not has_valid_session(user):
+        raise SessionExpired()
+
     if check_duration:
         ba = BlockAccess.query.filter_by(
             block_id=block.id,

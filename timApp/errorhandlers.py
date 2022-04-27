@@ -4,7 +4,7 @@ import sys
 import traceback
 from dataclasses import dataclass
 from functools import wraps
-from typing import Type, Callable, Any, Optional
+from typing import Callable, Any
 
 from flask import request, render_template, session, flash, Flask, redirect
 from markupsafe import Markup
@@ -14,6 +14,7 @@ from sass import CompileError
 from timApp.answer.answers import TooLargeAnswerException
 from timApp.auth.accesshelper import AccessDenied, ItemLockedException
 from timApp.auth.login import logout
+from timApp.auth.session.util import SessionExpired
 from timApp.auth.sessioninfo import get_current_user_object, clear_session
 from timApp.document.docentry import DocEntry
 from timApp.document.docsettings import get_minimal_visibility_settings
@@ -102,6 +103,14 @@ def register_errorhandlers(app: Flask):
             else "Sorry, you don't have permission to access this resource."
         )
         return error_generic(msg, 403)
+
+    @app.errorhandler(SessionExpired)
+    def handle_session_expired(error: SessionExpired):
+        return error_generic(
+            "Your session has expired. Please log in again.",
+            490,
+            status="Session expired",
+        )
 
     @app.errorhandler(NotExist)
     def handle_access_denied(error):
