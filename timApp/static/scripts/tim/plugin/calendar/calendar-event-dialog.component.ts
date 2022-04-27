@@ -35,15 +35,27 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    [disabled]="!isEditEnabled()"/>
                         </div>
                     </div>
-                    <div class="form-group" [hidden]="!userIsManager()">
+                    <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
                         <label for="booker" class="col-sm-2 control-label">Booker</label>
                         <div class="col-sm-10">
                             <input type="text"
-                                   [(ngModel)]="booker" #ngModelTitle="ngModel"
+                                   [(ngModel)]="booker"
                                    (ngModelChange)="setMessage()"
                                    id="booker" name="booker"
                                    class="form-control"
                                    placeholder="Not booked"
+                                   disabled="true"/>
+                        </div>
+                    </div>
+                    <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
+                        <label for="bookerEmail" class="col-sm-2 control-label">Booker email</label>
+                        <div class="col-sm-10">
+                            <input type="text"
+                                   [(ngModel)]="bookerEmail"
+                                   (ngModelChange)="setMessage()"
+                                   id="bookerEmail" name="bookerEmail"
+                                   class="form-control"
+                                   placeholder=""
                                    disabled="true"/>
                         </div>
                     </div>
@@ -149,6 +161,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     endDate = "";
     endTime = "";
     booker = "";
+    bookerEmail: string | null = "";
 
     constructor(private http: HttpClient) {
         super();
@@ -234,11 +247,14 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         const startDate = new Date(
             this.data.start.getTime() - startOffset * 60 * 1000
         );
-        const bookers = this.data.meta!.bookers;
-        if (bookers) {
-            bookers.forEach((booker) => {
+        const bookerGroups = this.data.meta!.booker_groups;
+        if (bookerGroups) {
+            bookerGroups.forEach((group) => {
                 // TODO: Make a list of all bookers when the event capacity is higher than 1
-                this.booker = booker.name;
+                this.booker = group.name;
+                group.users.forEach((user) => {
+                    this.bookerEmail = user.email;
+                });
             });
         }
 
@@ -274,6 +290,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      */
     async bookEvent() {
         const eventToBook = this.data;
+        console.log(eventToBook);
 
         const result = await toPromise(
             this.http.post("/calendar/bookings", {
@@ -288,7 +305,15 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 return group.name === Users.getCurrent().name;
             });
             if (booker) {
-                this.data.meta!.bookers.push(booker);
+                this.data.meta!.booker_groups.push({
+                    name: booker.name,
+                    users: [
+                        {
+                            name: Users.getCurrent().name,
+                            email: Users.getCurrent().email,
+                        },
+                    ],
+                });
             }
 
             this.close(eventToBook);
@@ -307,6 +332,10 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             itemglobals().curr_item.rights.manage ||
             itemglobals().curr_item.rights.owner
         );
+    }
+
+    eventHasBookings() {
+        return this.data.meta!.enrollments > 0;
     }
 }
 

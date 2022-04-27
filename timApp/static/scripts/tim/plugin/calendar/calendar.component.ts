@@ -39,7 +39,6 @@ import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
 import {toPromise, to2} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
-import {IGroup} from "../../user/IUser";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
@@ -145,7 +144,11 @@ export type TIMCalendarEvent = CalendarEvent<{
     editEnabled?: boolean;
     enrollments: number;
     maxSize: number;
-    bookers: IGroup[];
+    // bookers: IGroup[];
+    booker_groups: {
+        name: string;
+        users: {name: string; email: string | null}[];
+    }[];
 }>;
 
 @Component({
@@ -499,7 +502,7 @@ export class CalendarComponent
                 tmpEvent: true,
                 enrollments: 0,
                 maxSize: 1, // TODO: temporary solution
-                bookers: [],
+                booker_groups: [],
             },
             // actions: this.actions,
         };
@@ -604,13 +607,16 @@ export class CalendarComponent
             if (event.meta!.enrollments >= event.meta!.maxSize) {
                 event.color = colors.red;
             }
-            if (event.meta!.bookers) {
-                event.meta!.bookers.forEach((booker) => {
-                    if (booker.name === Users.getCurrent().name) {
-                        event.color = colors.green;
-                    }
+            if (event.meta!.booker_groups) {
+                event.meta!.booker_groups.forEach((group) => {
+                    group.users.forEach((user) => {
+                        if (user.name === Users.getCurrent().name) {
+                            event.color = colors.green;
+                        }
+                    });
                 });
             }
+
             if (Date.now() > event.start.getTime()) {
                 event.color = colors.gray;
             }
@@ -646,7 +652,11 @@ export class CalendarComponent
             this.http.get<TIMCalendarEvent[]>("/calendar/events?file_type=json")
         );
         if (result.ok) {
+            console.log(result.result);
             result.result.forEach((event) => {
+                event.meta!.booker_groups.forEach((group) => {
+                    // console.log(group.users);
+                });
                 event.start = new Date(event.start);
                 if (event.end) {
                     event.end = new Date(event.end);
@@ -659,7 +669,7 @@ export class CalendarComponent
                     tmpEvent: false,
                     enrollments: event.meta!.enrollments,
                     maxSize: event.meta!.maxSize,
-                    bookers: event.meta!.bookers,
+                    booker_groups: event.meta!.booker_groups,
                 };
                 event.resizable = {
                     beforeStart: this.editEnabled,
@@ -725,7 +735,7 @@ export class CalendarComponent
                                 editEnabled: this.editEnabled,
                                 enrollments: event.meta!.enrollments,
                                 maxSize: event.meta!.maxSize,
-                                bookers: [],
+                                booker_groups: [],
                             },
                             // actions: this.actions,
                             resizable: {

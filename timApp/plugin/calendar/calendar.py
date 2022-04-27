@@ -154,7 +154,18 @@ def get_events() -> Response:
                 if event_optional is not None:
                     event_obj = event_optional
                     enrollments = len(event_obj.enrolled_users)
-                    bookers = event_obj.enrolled_users
+                    booker_groups = event_obj.enrolled_users
+                    groups = []
+                    for group in booker_groups:
+                        users = []
+                        for user in group.users:
+                            users.append(
+                                {
+                                    "name": user.name,
+                                    "email": user.email,
+                                }
+                            )
+                        groups.append({"name": group.name, "users": users})
                     event_objs.append(
                         {
                             "id": event_obj.event_id,
@@ -164,7 +175,7 @@ def get_events() -> Response:
                             "meta": {
                                 "enrollments": enrollments,
                                 "maxSize": event_obj.max_size,
-                                "bookers": bookers,
+                                "booker_groups": groups,
                             },
                         }
                     )
