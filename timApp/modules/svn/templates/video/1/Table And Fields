@@ -63,8 +63,10 @@ fields:
  - XX_Pisteet=Pisteet
  - XX_Vp=Vp
  - XX_VpOpe=VpOpe
- - XX_Arvioija_(1,%%arvosteltavia%%)=Arvioija_%%i%%
- - XX_P_(1,%%arvosteltavia%%)=P_%%i%%
+{% for i in range(1,arvosteltavia+1) %}
+ - XX_Arvioija_%%i%%
+ - XX_P_%%i%%=P%%i%%
+{% endfor %}
  - XX_Riitauta=Riitauta
 updateFields:
  - XX_Ope
@@ -76,6 +78,14 @@ updateFields:
  - XX_P_%%i%%
 {% endfor %}
  - XX_Riitauta
+preprogram: |!!
+//
+    const parsed = JSON.parse(this.g);
+    gtools.users = {};
+    for (a of parsed.data) {
+       gtools.users[a.user.id] = a.user.name;
+    }
+!!
 program: |!!
 
     let hyvitys = 1; // Arvioinnista saatu hyvityspiste
@@ -103,7 +113,7 @@ program: |!!
     }
 
     pointsArray = [];
-    arvioinnit = tools.getReviews("XX");
+    arvioinnit = tools.getReviews("XX", gtools.users);
     for (let i =1; i <= arvioinnit.length; i++) {
         tools.setString("XX_Arvioija_${i}"+i, arvioinnit[i-1].name);
         points = arvioinnit[i-1].points;
@@ -126,3 +136,30 @@ program: |!!
 !!
 ```
 \
+``` {#changeReviewersRunner plugin="jsrunner"}
+button: Aseta uudet arvioijat
+groups:
+ - %%group%%
+fields:
+{% for i in range(1,arvosteltavia+1) %}
+ - XX_Arvioija_%%i%%
+{% endfor %}
+updateFields:
+{% for i in range(1,arvosteltavia+1) %}
+ - XX_Arvioija_%%i%%
+{% endfor %}
+paramFields:
+{% for i in range(1,arvosteltavia+1) %}
+ - XX_Arvioija_%%i%%
+{% endfor %}
+preprogram: |!!
+    const parsed = JSON.parse(this.g);
+    gtools.users = {};
+    for (a of parsed.data) {
+       gtools.users[a.user.id] = a.user.name
+    }
+!!
+program: |!!
+    tools.changePeerReviewer(gtools.users)
+!!
+```

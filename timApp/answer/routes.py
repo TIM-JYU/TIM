@@ -89,6 +89,7 @@ from timApp.peerreview.peerreview_utils import (
     get_reviews_for_user,
     is_peerreview_enabled,
     get_reviews_for_document,
+    change_peerreviewers_for_user,
 )
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.importdata.importData import MissingUser
@@ -468,6 +469,7 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     failGrade: str | Missing = missing
     fieldhelper: bool | Missing = missing
     gradeField: str | Missing = missing
+    peerReviewField: str | Missing = missing
     gradingScale: dict[Any, Any] | Missing = missing
     group: str | Missing = missing
     groups: list[str] | Missing = missing
@@ -485,6 +487,7 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     confirmText: str | Missing = missing
     timeout: int | Missing = missing
     updateFields: list[str] | Missing = missing
+    resultFields: list[str] | Missing = missing
     nextRunner: str | Missing = missing
     timeZoneDiff: int | Missing = missing
     peerReview: bool | Missing = missing
@@ -828,7 +831,7 @@ def post_answer_impl(
     if preprocessor:
         preprocessor(answerdata, curr_user, d, plugin)
 
-    # print(json.dumps(answerdata))  # uncomment this to follow what answers are used in browser tests
+    # print(json.dumps(answerdata)) # uncomment this to follow what answers are used in browser tests
 
     answer_call_data = {
         "markup": plugin.values,
@@ -907,12 +910,14 @@ def post_answer_impl(
         add_group = None
         if plugin.type == "importData":
             add_group = plugin.values.get("addUsersToGroup")
+        pr_data = plugin.values.get("peerReviewField", None)
         saveresult = save_fields(
             jsonresp,
             curr_user,
             d,
             allow_non_teacher=siw,
             add_users_to_group=add_group,
+            pr_data=pr_data,
             overwrite_previous_points=overwrite_points,
         )
 
@@ -1297,11 +1302,9 @@ def preprocess_jsrunner_answer(
             raise AccessDenied("Teacher access required to browse all peer reviews")
         answerdata["peerreviews"] = get_reviews_for_document(d)
     else:
-        answerdata["peerreviews"] = []
+        answerdata["peerreviews"] = get_reviews_for_document(d)
 
-    answerdata["testvelps"] = get_annotations_with_comments_in_document(
-        curr_user, d, False
-    )
+    answerdata["velps"] = get_annotations_with_comments_in_document(curr_user, d, False)
     answerdata.pop(
         "paramComps", None
     )  # This isn't needed by jsrunner server, so don't send it.
@@ -1312,6 +1315,7 @@ def preprocess_jsrunner_answer(
         localoffset = localtz.utcoffset(datetime.now())
         tzd = localoffset.total_seconds() / 3600
         plugin.values["timeZoneDiff"] = tzd
+    # print(answerdata)
     if runnermarkup.program is missing:
         raise PluginException("Attribute 'program' is required.")
 
@@ -1534,6 +1538,7 @@ def save_fields(
     allow_non_teacher: bool = False,
     add_users_to_group: str | None = None,
     overwrite_previous_points: bool = False,
+    pr_data: str | None = None,
 ) -> FieldSaveResult:
     save_obj = jsonresp.get("savedata")
     ignore_missing = jsonresp.get("ignoreMissing", False)
@@ -1587,6 +1592,17 @@ def save_fields(
                 raise RouteException(f"Doc id missing: {tid}")
             if id_num.doc_id not in doc_map:
                 doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
+            if pr_data is not None:
+                peer_review_data = json.loads(task_u.get(tid))
+                userId = item.get("user")
+                old = peer_review_data.get("from")
+                new = peer_review_data.get("to")
+                task = peer_review_data.get("task")
+                if not old:
+                    # TODO: Add new reviewer or if reviewable have none
+                    pass
+                else:
+                    change_peerreviewers_for_user(current_doc, task, userId, old, new)
     task_content_name_map = {}
     for task in tasks:
         t_id = TaskId.parse(
