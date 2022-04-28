@@ -2,7 +2,13 @@
 Enables adding Languages to TIM's database from the command line
 """
 
-__authors__ = ["Sami Viitanen"]
+__authors__ = [
+    "Noora Jokela",
+    "Riku Lehkonen",
+    "Vili Moisala",
+    "Juho Tarkkanen",
+    "Sami Viitanen",
+]
 __license__ = "MIT"
 __date__ = "8.4.2022"
 
