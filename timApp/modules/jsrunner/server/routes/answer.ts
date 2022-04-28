@@ -49,7 +49,7 @@ interface IRunnerData {
     markup: IJsRunnerMarkup;
     program: string;
     compileProgram: (code: string) => string;
-    testvelps: VelpDataT[];
+    velps: VelpDataT[];
     peerreviews: PeerReviewDataT[];
 }
 
@@ -93,7 +93,7 @@ function runner(d: IRunnerData): RunnerResult {
     const currDoc = d.currDoc;
     const markup = d.markup;
     const aliases = d.aliases;
-    const testvelps = d.testvelps;
+    const velps = d.velps;
     const peerreviews = d.peerreviews;
     const saveUsersFields: IToolsResult[] = [];
     // const statCounters: { [fieldname: string]: StatCounter } = {};
@@ -122,7 +122,7 @@ function runner(d: IRunnerData): RunnerResult {
             currDoc,
             markup,
             aliases,
-            testvelps,
+            velps,
             peerreviews
         ); // in compiled JS, this is tools_1.default(...)
         const gtools = new GTools(
@@ -164,7 +164,7 @@ function runner(d: IRunnerData): RunnerResult {
                 currDoc,
                 markup,
                 aliases,
-                testvelps,
+                velps,
                 peerreviews
             ); // in compiled JS, this is tools_1.default(...)
             tools.usePrintLine = gtools.usePrintLine;
@@ -289,7 +289,7 @@ router.put("/", async (req, res, next) => {
         aliases: value.input.aliases,
         program: value.markup.program ?? "",
         compileProgram: compileProgram,
-        testvelps: value.input.testvelps,
+        velps: value.input.velps,
         peerreviews: value.input.peerreviews,
     };
     await ctx.global.set("g", JSON.stringify(runnerData));
