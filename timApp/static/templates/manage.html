@@ -205,7 +205,7 @@
                 <uib-tab heading="Create a translation">
                     <div class="form-group"><label for="translationTitle">Title:</label>
                         <input id="translationTitle" class="form-control" type="text"
-                               ng-model="$ctrl.newTranslation.title" />
+                               ng-model="$ctrl.newTranslation.title" ng-change="$ctrl.checkCannotTranslate()" />
                     </div>
                     <div class="languageLists">
                         <div>
@@ -225,9 +225,9 @@
                         <p>This document will be automatically translated on creation. Note: A human should check the translation for any errors and fix them!</p>
                     </div>
                     <div ng-show="!$ctrl.mayTranslate || !$ctrl.newTranslation.title">
-                        <b ng-show="$ctrl.notManual && !$ctrl.mayTranslate && $ctrl.translatorAvailable">The chosen machine translator does not support the chosen language. </b>
+                        <b ng-show="$ctrl.whyCannotTranslate">{{$ctrl.whyCannotTranslate}}</b>
                         <b ng-show="!$ctrl.translatorAvailable">{{$ctrl.errorMessage}} </b>
-                        <p>This document will not be automatically translated on creation.</p>
+                        <p>This document will not be automatically translated on creation{{$ctrl.notManual ? "" : " because you have not chosen a machine translator"}}.</p>
                     </div>
                     <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title ||
                     $ctrl.translationInProgress || (!$ctrl.mayTranslate && $ctrl.notManual) || !$ctrl.translatorAvailable"

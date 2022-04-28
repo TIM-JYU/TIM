@@ -61,6 +61,7 @@ export class PermCtrl implements IController {
     private translationInProgress: boolean = false;
     private deleteButtonText = "";
     private errorMessage = "";
+    private whyCannotTranslate = "";
     private availableTranslators: string[] = [];
     private accessTypes: Array<unknown>; // TODO proper type
     private orgs: IGroup[];
@@ -136,6 +137,41 @@ export class PermCtrl implements IController {
         );
         if (this.errorMessage != "") {
             this.translatorAvailable = false;
+        }
+        this.checkCannotTranslate();
+    }
+
+    /**
+     * Checks for reasons why the document cannot be translated.
+     */
+    checkCannotTranslate() {
+        const base = "The following information is missing: ";
+        let reasons = base;
+        if (this.findSourceDocLang() == "") {
+            reasons = reasons + "Source language";
+        }
+        if (this.newTranslation.title == "") {
+            if (!(reasons === base)) {
+                reasons = reasons + ", ";
+            }
+            reasons = reasons + "Title";
+        }
+        if (this.newTranslation.language == "") {
+            if (!(reasons === base)) {
+                reasons = reasons + ", ";
+            }
+            reasons = reasons + "Target language";
+        }
+        if (this.notManual && !this.mayTranslate && this.translatorAvailable) {
+            if (reasons === base) {
+                reasons =
+                    "The chosen machine translator does not support the chosen language combination.";
+            }
+        }
+        if (!(reasons === base)) {
+            this.whyCannotTranslate = reasons;
+        } else {
+            this.whyCannotTranslate = "";
         }
     }
 
@@ -232,6 +268,8 @@ export class PermCtrl implements IController {
         } else {
             await showMessageDialog(r.result.data.error);
         }
+        this.checkTranslatability();
+        this.checkCannotTranslate();
     }
 
     syncTitle(title: string) {
@@ -733,12 +771,14 @@ export class PermCtrl implements IController {
                 for (const source of this.sourceLanguages) {
                     if (source.code == src_lang) {
                         this.mayTranslate = true;
+                        this.checkCannotTranslate();
                         return;
                     }
                 }
             }
         }
         this.mayTranslate = false;
+        this.checkCannotTranslate();
     }
 
     loggedIn() {
