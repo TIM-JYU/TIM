@@ -149,8 +149,6 @@ interface PeerReviewerUser {
     name: string;
     points: number[];
 }
-
-interface Point {
     x: number;
     y: number;
 }
@@ -1473,6 +1471,7 @@ export class Tools extends ToolsBase {
         );
         return reviewers;
     }
+    /*
      * Print reviewers and received points of current user
      */
     getReviews(task: string, usersObject?: Users): PeerReviewerUser[] {
@@ -1538,12 +1537,14 @@ export class Tools extends ToolsBase {
         const fields = this.markup.paramFields ? this.markup.paramFields : [""];
         const datafield = this.markup.peerReviewField;
         this.setString(datafield, "");
-        const task = fields[0].substring(0, fields[0].indexOf("_"));
-        const reviewers = this.getPeerReviewsForUser();
-        const initialReviewers = reviewers.map((reviewer) =>
-            reviewer.reviewer_id.toString()
-        );
-        const updatedReviewers = fields.map((f) =>
+    /*
+     * Print every every name, id and given velppoints of users
+     * who have reviewed current user
+     */
+    changePeerReviewer(usersObject: Users): object {
+        const reviewableID = this.data.user.id;
+        const fields = this.markup.paramFields ? this.markup.paramFields : [""];
+
             Object.keys(users).find((key) => {
                 return users[key] == this.getString(f);
             })

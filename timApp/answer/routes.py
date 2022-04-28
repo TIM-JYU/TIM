@@ -1300,11 +1300,11 @@ def preprocess_jsrunner_answer(
     if runnermarkup.peerReview:
         if not curr_user.has_teacher_access(d):
             raise AccessDenied("Teacher access required to browse all peer reviews")
-        answerdata["peerreviews"] = get_reviews_for_document(d)
-    if d.document.get_settings().peer_review():
         answerdata["velps"] = get_annotations_with_comments_in_document(
             curr_user, d, False
         )
+        answerdata["peerreviews"] = get_reviews_for_document(d)
+
     answerdata.pop(
         "paramComps", None
     )  # This isn't needed by jsrunner server, so don't send it.
