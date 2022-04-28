@@ -1,5 +1,8 @@
 """
-TODO: Short description of Python module
+Contains tests for the parsing that is performed on TIM's Markdown before
+machine translation. Most tests check that correct parts are being marked as
+Translate or NoTranslate and that the Markdown is constructed with good enough
+accuracy to original.
 """
 
 __authors__ = [
@@ -29,23 +32,30 @@ class TimTranslationParserTest:
 
 class TestParser(unittest.TestCase, TimTranslationParserTest):
     def test_get_translate_approvals_attr(self):
-        # TODO Add cases for identifiers, key-value -pairs and multiple classes as well
-        text = "Tässä on kuva ![kissasta](/kuvat/kissa.png). [Tosi]{.red} hieno, eikös?"
+        text = (
+            'Tässä on kuva ![kissasta](/kuvat/kissa.png){id="link" foo="bar"'
+            "}. [Tosi]{.red .bggreen} hieno, [eikös]{#last}?"
+        )
         self.assertEqual(
             [
                 Translate("\nTässä on kuva "),
                 NoTranslate("!["),
                 Translate("kissasta"),
-                NoTranslate("](/kuvat/kissa.png)"),
+                NoTranslate('](/kuvat/kissa.png){#link foo="bar"}'),
                 Translate(". "),
                 NoTranslate("["),
                 Translate("Tosi"),
-                NoTranslate("]{.red}"),
-                Translate(" hieno, eikös?\n"),
+                NoTranslate("]{.red .bggreen}"),
+                Translate(" hieno, "),
+                NoTranslate("["),
+                Translate("eikös"),
+                NoTranslate("]{#last}"),
+                Translate("?\n"),
             ],
             self.parser.get_translate_approvals(text),
         )
 
+    # TODO What's the current status on this comment?:
     # For .notranslate style, might move elsewhere. For future use.
     def test_notranslate_style1(self):
         text = r"tässä on [teksti]{.notranslate}, jota ei käännetä."
@@ -61,9 +71,9 @@ class TestParser(unittest.TestCase, TimTranslationParserTest):
         text = """``` {plugin="csPlugin" #btn-tex2 .notranslate .miniSnippets}
 header: Harjoittele matemaattisen vastauksen kirjoittamista.
 ```"""
+        # Note that plugins' attributes are gone after parsing.
         self.assertEqual(
             [
-                # TODO Should the plugins contain the attributes or no?
                 Translate("\n"),
                 NoTranslate(
                     """```
@@ -160,6 +170,7 @@ r”# otsikko1"""
         )
 
     def test_tex_collect(self):
+        # TODO What's the current status on this comment?
         # TODO Add cases for identifiers, key-value -pairs and multiple classes as well
         text = (
             r"x^3-49x&=0 &&|\text{ erotetaan yhteinen tekijä x}\x(x^2-49)&=0 &&|\text{ "
@@ -216,7 +227,9 @@ r”# otsikko1"""
         ),
 
     def test_tex_collect_math_function2(self):
-        """Testing a math function mathrm inside latex using double dollar signs"""
+        """Testing a math function mathrm inside latex using double dollar
+        signs
+        """
         text = r"$$\mathrm{Muuttuja e} = \sum_{n=0}^{\infty} \dfrac{1}{n!}$$"
         self.assertEqual(
             [
@@ -268,7 +281,7 @@ r”# otsikko1"""
     def test_get_translate_approvals_latex(self):
         """Test for multiple translate approvals"""
         # NOTE Pandoc does not seem to account for trailing whitespace,
-        # so the single space ' ' at the end of this test-text will disappear
+        # so the single space ' ' at the end of this test-text will disappear.
         latexblock = r"""KING CLAUDIUS
 [Aside] O, 'tis $too$ true!
 $How$ $ smart$ a $$lash $$ that [speech] $$doth$$ [give] my conscience!
@@ -294,7 +307,6 @@ x=0\;\;\;\\text{tai}\;\;\;&x^2-49=0 && |\text{ ratkaistaan x}\\
                 Translate(" [give] my conscience!"),
                 NoTranslate("\n"),
                 Translate("a) "),
-                # TODO content in \text{<content>} should be marked as translate
                 NoTranslate(r"\begin{align*} asd\x^3-49x&=0 &&|\text{"),
                 Translate(" erotetaan yhteinen tekijä x"),
                 NoTranslate("}\nx(x^2-49)&=0 &&|\\text{"),
@@ -337,7 +349,8 @@ x=0\;\;\;\\text{"""
 """
         self.assertEqual(
             [
-                # TODO/FIXME does a list need to start with newline?
+                # TODO/FIXME does a list need to start with newline when the
+                #  Para already does?
                 Translate("\n"),
                 NoTranslate("\n- "),
                 Translate("Mieleni minun "),
@@ -370,7 +383,9 @@ x=0\;\;\;\\text{"""
         )
 
     def test_bulletlist2(self):
-        """Testing bulletlist with different intendation and with a code block in between the list"""
+        """Testing bulletlist with different indentation and with a code block
+        in between the list.
+        """
         md = """- Yksi kohta
     - Kaksi kohtaa
     -   Kolme kohtaa
@@ -395,8 +410,9 @@ x=0\;\;\;\\text{"""
             self.parser.get_translate_approvals(md),
         )
 
-    # TODO There is currently no reliable solution for the corner cases in this test case.
-    #      Proper handling will require major refactoring of the parser engine.
+    # TODO There is currently no reliable solution for the corner cases in
+    #  this test case. Proper handling will require major refactoring of the
+    #  parser engine.
     #
     # def test_bulletlist3(self):
     #     """Testing quotation marks inside bulletlist currently ' will change into ’ and " will change into ”"""
@@ -455,7 +471,8 @@ x=0\;\;\;\\text{"""
 """
         self.assertEqual(
             [
-                # TODO/FIXME does a list need to start with newline?
+                # TODO/FIXME does a list need to start with newline when the
+                #  Para already does?
                 Translate("\n"),
                 NoTranslate("\n1. "),
                 Translate("Tässä ollaan"),
@@ -489,7 +506,8 @@ x=0\;\;\;\\text{"""
 
     def test_ordered_list2(self):
         """
-        Testing orderedlist with all the different ways they can be formatted and with indentation.
+        Testing orderedlist with all the different ways they can be formatted
+        and with indentation.
         """
         md = r"""1. Tässä ollaan
     2. Jotain tehdään
@@ -507,7 +525,8 @@ x=0\;\;\;\\text{"""
 """
         self.assertEqual(
             [
-                # TODO/FIXME does a list need to start with newline?
+                # TODO/FIXME does a list need to start with newline when the
+                #  Para already does?
                 Translate("\n"),
                 NoTranslate("\n1. "),
                 Translate("Tässä ollaan"),
@@ -539,8 +558,9 @@ x=0\;\;\;\\text{"""
             self.parser.get_translate_approvals(md),
         )
 
-    # TODO There is currently no reliable solution for the corner cases in this test case.
-    #      Proper handling will require major refactoring of the parser engine.
+    # TODO There is currently no reliable solution for the corner cases in
+    #  this test case. Proper handling will require major refactoring of the
+    #  parser engine.
     #
     # def test_ordered_list3(self):
     #     """Testing quotation marks with ordered list, ' will change into ’ and " will change into ”"""
@@ -572,8 +592,9 @@ x=0\;\;\;\\text{"""
     #         ],
     #     )
 
-    # TODO There is currently no reliable solution for the corner cases in this test case.
-    #      Proper handling will require major refactoring of the parser engine.
+    # TODO There is currently no reliable solution for the corner cases in
+    #  this test case. Proper handling will require major refactoring of the
+    #  parser engine.
     #
     #     def test_ordered_list_codeblock(self):
     #         # FIXME NOTE This test might not be accurate or well-defined... Especially regarding indentations.
@@ -605,6 +626,10 @@ x=0\;\;\;\\text{"""
     #         )
 
     def test_tim_plugin1(self):
+        """Test that YAML-attributes defined as translatable are in fact
+        marked as translate and that Markdown parts inside plugins are parsed
+        as well.
+        """
         md = r"""``` {plugin="csPlugin" #btn-tex2 .miniSnippets}
 header: Harjoittele matemaattisen vastauksen kirjoittamista.
 questionText: "Voit harjoitella
@@ -683,7 +708,8 @@ buttons: ""
 %%laskin%%
 stem: 'md:"""
                 ),
-                # Paragraph ends with a newline. TODO Is that right in this case?
+                # Note that top and bottom paragraph inside plugins are not
+                # surrounded with newline.
                 Translate("foo"),
                 NoTranslate(
                     """'
@@ -750,7 +776,7 @@ stem: """
         )
 
     def test_tim_plugin3(self):
-        """Test for a big sized video plugin"""
+        """Test for a big sized video plugin."""
         md = r"""``` {plugin="showVideo"}
 footer: "Video footer here"
 #iframe: true
@@ -777,7 +803,9 @@ file: VIDEOURLHERE
         )
 
     def test_tim_plugin4(self):
-        """Test for geogebra plugin. Currently translates only header and stem, nothing else"""
+        """Test for geogebra plugin. Currently, translates only header and
+        stem, nothing else.
+        """
         md = r"""``` {plugin="csPlugin" #Plugin1}
 type: geogebra
 #tool: true
@@ -887,6 +915,7 @@ P.getData = function(){
         )
 
     def test_multiple_paragraphs(self):
+        """Test string that contains multiple Para-elements."""
         md = """**fet**
 
 
@@ -942,13 +971,14 @@ kodblock
         )
 
     def TODO_test_latex_inside_span(self):
-        # TODO This following value sometimes comes out weird from the whole parsing...
-        text = "```{plugin=\"mmcq\"\nchoices:\n  -\n    text:'[$$\\sum_{i=1}^n a_i = a_1+a_2+\\ldots+a_n  = \\frac{a_1+a_n}{2}\\cdot n$$]{.red}'\n```"
+        # TODO This following value sometimes comes out weird from the whole
+        #  parsing...
+        text = (
+            '```{plugin="mmcq"\nchoices:\n  -\n    '
+            "text:'[$$\\sum_{i=1}^n a_i = a_1+a_2+\\ldots+a_n  "
+            "= \\frac{a_1+a_n}{2}\\cdot n$$]{.red}'\n```"
+        )
         self.assertEqual(
             [Translate("\n"), NoTranslate(text), Translate("\n")],
             self.parser.get_translate_approvals(text),
         )
-
-
-if __name__ == "__main__":
-    unittest.main()

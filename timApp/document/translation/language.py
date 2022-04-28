@@ -1,5 +1,6 @@
 """
-TODO: Short description of Python module
+Contains implementation of the Language-database model, which is used to unify
+TIM's translation-documents' languages.
 """
 
 __authors__ = [
@@ -12,10 +13,13 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "25.4.2022"
 
-import langcodes
-from timApp.timdb.sqa import db
-from typing import Optional
+
 from dataclasses import dataclass
+from typing import Optional
+
+import langcodes
+
+from timApp.timdb.sqa import db
 
 
 @dataclass
@@ -33,7 +37,6 @@ class Language(db.Model):
     """Standardized code of the language."""
 
     # TODO should this be unique?
-    # TODO in what language? Couldn't this be solved by using the langcodes library and asking for antonym every time a new translation is made? Is the idea to limit the use of langcodes library?
     lang_name = db.Column(db.Text, nullable=False)
     """IANA's name for the language."""
 
@@ -52,7 +55,8 @@ class Language(db.Model):
 
         :param name: Natural name of the language
         :return: A corresponding Language-object newly created.
-        :raises LookupError: if the language is not found.
+        :raises LookupError: if the language is not found from langcodes'
+        database.
         """
         lang = langcodes.find(name)
         return Language(
@@ -66,11 +70,12 @@ class Language(db.Model):
         """
         Query the database to find a single match for language tag
 
-        :param code: The IETF tag for the language
+        :param code: The IETF tag for the language.
         :return: The corresponding Language-object in database or None if not
-        found
+        found.
         """
-        # TODO Instead of type str -code, could langcodes.Language type lessen boilerplate at caller?
+        # TODO Instead of the code -parameter being str-type, could
+        #  langcodes.Language type be more convenient to caller?
         return cls.query.get(code)
 
     @classmethod
@@ -78,12 +83,16 @@ class Language(db.Model):
         """
         Query the database for all the languages
 
-        :return: All the languages found from database
+        :return: All the languages found from database.
         """
         return cls.query.all()
 
     def __str__(self) -> str:
-        """:return: Nice format for users to read"""
+        """
+        Create a string representation of the Language instance.
+
+        :return: Nice format for users to read
+        """
         return f"'{self.lang_name}' ({self.lang_code})"
 
     def to_json(self) -> dict:

@@ -40,6 +40,7 @@ from timApp.document.translation.deepl import (
     DeeplTranslationService,
     DeeplProTranslationService,
 )
+from timApp.document.translation.reversingtranslator import ReversingTranslationService
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.blockassociation import BlockAssociation
@@ -178,6 +179,7 @@ all_models = (
     QuestionActivity,
     ReadParagraph,
     RegisteredTranslationService,
+    ReversingTranslationService,
     RowOwnerInfo,
     Runningquestion,
     ScimUserGroup,

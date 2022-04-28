@@ -1,5 +1,9 @@
 """
-TODO: Short description of Python module
+Contains routes for making operations on translation documents. Mainly
+translations on whole documents, paragraphs and raw text.
+
+Also contains routes for getting available languages, names of machine
+translators and queries related to API-keys of these machine translators.
 """
 
 __authors__ = [
@@ -12,14 +16,11 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "25.4.2022"
 
-import re
 import langcodes
 import requests
-
 from flask import request, Blueprint
 from sqlalchemy.exc import IntegrityError
 
-import timApp.util.flask.responsehelper
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
     verify_view_access,
@@ -32,7 +33,6 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import create_document_and_block, DocEntry
 from timApp.document.documents import add_reference_pars
 from timApp.document.translation.translation import Translation
-
 from timApp.item.block import copy_default_rights, BlockType
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
@@ -50,13 +50,14 @@ from timApp.document.translation.language import Language
 
 def valid_language_id(lang_id: str) -> bool:
     """
-    Check that the id is recognized by the langcodes library and found in
+    Check that the ID is recognized by the langcodes library and found in
     database.
 
-    :param lang_id: Language id (or "tag") to check
-    :return: True, if id is found in database
+    :param lang_id: Language id (or "tag") to check for validity.
+    :return: True, if the ID is found in database.
     """
-    # TODO This could return the queried language if found (to reduce db-queries)
+    # TODO This could return the queried language if found (to reduce
+    #  db-queries)
     try:
         tag = langcodes.standardize_tag(lang_id)
         lang = Language.query_by_code(tag)
@@ -70,6 +71,17 @@ tr_bp = Blueprint("translation", __name__, url_prefix="")
 
 @tr_bp.post("/translate/<int:tr_doc_id>/<string:language>/<string:transl>")
 def create_translation_route(tr_doc_id: int, language: str, transl: str) -> Response:
+    """
+    Create and add a translation version of a whole document. Make machine
+    translation on it if so requested and authorized to.
+
+    :param tr_doc_id: ID of the document that the translation will be.
+    :param language: Language that will be set to the translation document and
+    used in potential machine translation.
+    :param transl: Identifying name of the translator to use (machine or
+    manual).
+    :return: The created translation document's information as JSON.
+    """
     req_data = request.get_json()
     # TODO Move doc_title -parameter to the URL as well
     title = req_data.get("doc_title", None)
@@ -83,8 +95,8 @@ def create_translation_route(tr_doc_id: int, language: str, transl: str) -> Resp
         raise ItemAlreadyExistsException("Translation for this language already exists")
     verify_manage_access(doc.src_doc)
 
-    # NOTE Failing to create the translation still increases document id number and sometimes the manage page gets stuck
-    # (because of it?)
+    # NOTE Failing to create the translation still increases document id
+    # number and sometimes the manage page gets stuck (because of it?).
     src_doc = doc.src_doc.document
     cite_doc = create_document_and_block(get_current_user_object().get_personal_group())
 
@@ -103,11 +115,9 @@ def create_translation_route(tr_doc_id: int, language: str, transl: str) -> Resp
     # Select the specified translator
     translator_func = None
     if translator_code := translator:
-        # Use the translator with a different source language if specified
-        # and get the actual Language objects from database TODO Is database-query dumb here?
-
-        # Manual translation can still be done without source language
-        # TODO This could probably be handled nicer...
+        # Manual translation can still be done without a source language.
+        # TODO This could probably be handled nicer with database queries and
+        #  "Manual" as a translator in there.
         if translator_code != "Manual":
             translator_func = TranslateMethodFactory.create(
                 translator_code,
@@ -116,9 +126,10 @@ def create_translation_route(tr_doc_id: int, language: str, transl: str) -> Resp
                 get_current_user_object().get_personal_group(),
             )
 
-    # Translate the paragraphs of the document if a translator was created
+    # Translate the paragraphs of the document if a translator was created.
     if translator_func:
-        # Ignore the settings-paragraphs entirely to protect them from mangling
+        # Ignore the settings-paragraphs entirely to protect them from
+        # mangling.
         source_paragraphs = list(
             filter(
                 lambda x: not x.is_setting(),
@@ -130,11 +141,14 @@ def create_translation_route(tr_doc_id: int, language: str, transl: str) -> Resp
             lambda x: not x.is_setting(), tr.document.get_paragraphs()
         )
 
-        # Call the partially applied function, that contains languages selected earlier, to translate texts
+        # Call the partially applied function that contains languages
+        # selected earlier, to translate texts
         translated_texts = translator_func(
-            # Wrap the paragraphs to TranslationTarget objects, that translator accepts.
-            # TODO Remove this TranslationTarget -pattern as useless, because explicit typechecking is performed on
-            #  translate_paragraphs anyway...
+            # Wrap the paragraphs to TranslationTarget objects that
+            # translator accepts.
+            # TODO Remove this TranslationTarget -pattern as useless, because
+            #  explicit typechecking is performed on translate_paragraphs
+            #  anyway...
             list(map(TranslationTarget, source_paragraphs))
         )
 
@@ -142,9 +156,11 @@ def create_translation_route(tr_doc_id: int, language: str, transl: str) -> Resp
             source_paragraphs
         ), "Translation produced different amount of paragraphs"
 
-        # The order of paragraphs in both docs must match, so that correct ones are modified.
+        # The order of paragraphs in both docs must match, so that correct
+        # ones are modified.
         for tr_paragraph, text in zip(tr_paragraphs, translated_texts):
-            # Note that the paragraph's text is stripped, as extra newlines at start or end seemed to break plugins
+            # Note that the paragraph's text is stripped, as extra newlines at
+            # start or end seem to break plugins.
             tr.document.modify_paragraph(tr_paragraph.id, text.strip())
 
     if isinstance(doc, DocEntry):
@@ -173,7 +189,7 @@ def paragraph_translation_route(
     original paragraph!
     :param language: Language to translate into.
     :param transl: Identifying code of the translator to use.
-    :return: Response to the request.
+    :return: Response to the request. TODO Change when return value is changed
     """
     translator_code = transl
 
@@ -191,7 +207,8 @@ def paragraph_translation_route(
         raise NotExist("Invalid language identifier")
 
     if translator_code:
-        # Paragraph in Translation is always assumed to be a reference and raise an exception otherwise
+        # Paragraph in Translation is always assumed to be a reference and
+        # raise an exception otherwise.
         tr_par = tr.document.get_paragraph(tr_par_id)
         if not tr_par.is_reference():
             raise RouteException(
@@ -220,6 +237,15 @@ def paragraph_translation_route(
 
 @tr_bp.post("/translate/<int:tr_doc_id>/<language>/translate_block/<string:transl>")
 def text_translation_route(tr_doc_id: int, language: str, transl: str) -> Response:
+    """
+    Translate raw text between the source document's language and the one
+    requested.
+
+    :param tr_doc_id: ID of the document that the text is from.
+    :param language: Language to translate the text into.
+    :param transl: Identifying code of the translator to use.
+    :return: The translated text.
+    """
     req_data = request.get_json()
 
     doc = get_doc_or_abort(tr_doc_id)
@@ -229,7 +255,7 @@ def text_translation_route(tr_doc_id: int, language: str, transl: str) -> Respon
 
     src_doc = doc.src_doc.document
 
-    # Select the specified translator and translate if valid
+    # Select the specified translator and translate if valid.
     if req_data and (translator_code := transl):
         src_text = req_data.get("originaltext", None)
         translator_func = TranslateMethodFactory.create(
@@ -242,15 +268,17 @@ def text_translation_route(tr_doc_id: int, language: str, transl: str) -> Respon
         # (especially DeepL) like to erase them (when they are used with
         # certain parameters).
         leading_wspace = src_text[: len(src_text) - len(src_text.lstrip())]
-        # The trailing whitespace needs to be reversed here, as it is collected reversed.
+        # The trailing whitespace is reversed twice here, as it is also
+        # collected reversed.
         trailing_wspace = src_text[::-1][
             : len(src_text) - len(src_text[::-1].lstrip())
         ][::-1]
         src_text = src_text.strip()
         block_text = translator_func([TranslationTarget(src_text)])[0]
-        # Remove extra newlines from start and end, as the parser likes to add these.
+        # Remove extra newlines from start and end, as the parser likes to add
+        # these.
         block_text = block_text.strip("\n")
-        # Insert spaces back
+        # Insert the whitespaces back.
         block_text = leading_wspace + block_text + trailing_wspace
     else:
         raise RouteException(
@@ -291,8 +319,13 @@ def get_translations(doc_id: int) -> Response:
 # TODO change into GET?
 @tr_bp.post("/translations/sourceLanguages")
 def get_source_languages() -> Response:
-    """Query the database for the possible source languages."""
-    # TODO Is this route the same as get_target_languages, but with a boolean-input difference?
+    """
+    Query the database for the possible source languages.
+
+    :return: JSON response containing the languages.
+    """
+    # TODO Is this route the same as get_target_languages, but with a
+    #  boolean-input difference?
 
     req_data = request.get_json()
     translator = req_data.get("translator", "")
@@ -301,12 +334,14 @@ def get_source_languages() -> Response:
         # TODO Change to string_response?
         return json_response("")
     else:
-        # Get the translation service by the provided service name TODO Maybe change to use id instead?
+        # Get the translation service by the provided service name
+        # TODO Maybe change to use an id instead?
         tr = TranslationService.query.filter(
             translator == TranslationService.service_name,
         ).first()
-        # TODO This crashes(?) if the translation service does not implement register-method (ie. does not inherit
-        #  from RegisteredTranslationService)
+        # TODO This crashes(?) if the translation service does not implement
+        #  register-method (ie. does not inherit from
+        #  RegisteredTranslationService)
         tr.register(get_current_user_object().get_personal_group())
 
     if translator.lower() == "deepl free" or translator.lower() == "deepl pro":
@@ -319,8 +354,11 @@ def get_source_languages() -> Response:
 
 @tr_bp.get("/translations/documentLanguages")
 def get_document_languages() -> Response:
-    """Query the database for the languages of existing documents.
+    """
+    Query the database for the languages of all existing documents.
     TODO Select from documents
+
+    :return: JSON response containing the languages.
     """
 
     langs = Language.query.all()
@@ -330,7 +368,11 @@ def get_document_languages() -> Response:
 # TODO Change into GET?
 @tr_bp.post("/translations/targetLanguages")
 def get_target_languages() -> Response:
-    """Query the database for the possible target languages."""
+    """
+    Query the database for the possible target languages.
+
+    :return: JSON response containing the languages.
+    """
 
     req_data = request.get_json()
     translator = req_data.get("translator", "")
@@ -339,7 +381,8 @@ def get_target_languages() -> Response:
         # TODO Change this to string_response?
         return json_response("")
     else:
-        # Get the translation service by the provided service name TODO Maybe change to use id instead?
+        # Get the translation service by the provided service name.
+        # TODO Maybe change to use id instead?
         tr = TranslationService.query.filter(
             translator == TranslationService.service_name,
         ).first()
@@ -355,7 +398,11 @@ def get_target_languages() -> Response:
 
 @tr_bp.get("/translations/translators")
 def get_translators() -> Response:
-    """Query the database for the possible machine translators."""
+    """
+    Query the database for the possible machine translators.
+
+    :return: JSON response containing the translators.
+    """
 
     translationservice_names = TranslationService.query.with_entities(
         TranslationService.service_name
@@ -370,7 +417,11 @@ def get_translators() -> Response:
 
 @tr_bp.put("/translations/apiKeys")
 def add_api_key() -> Response:
-    """The function for adding API keys."""
+    """
+    Add API key to the database for current user.
+
+    :return: OK-response if adding the key was successful.
+    """
 
     req_data = request.get_json()
     translator = req_data.get("translator", "")
@@ -389,7 +440,7 @@ def add_api_key() -> Response:
     if duplicate:
         raise RouteException("There is already a key for this translator for this user")
 
-    # Add the new API key
+    # Add the new API key.
     new_key = TranslationServiceKey(
         api_key=key,
         group_id=user.get_personal_group().id,
@@ -403,7 +454,11 @@ def add_api_key() -> Response:
 # TODO Change into DELETE (there's some differences in passing the parameters)
 @tr_bp.post("/translations/apiKeys/remove")
 def remove_api_key() -> Response:
-    """The function for removing API keys."""
+    """
+    Remove the current user's API key from the database.
+
+    :return: OK-response if removing the key was successful.
+    """
 
     verify_logged_in()
     user = get_current_user_object()
@@ -430,7 +485,7 @@ def get_quota():
     """
     Gets the quota info for the user's API key.
 
-    :return: the used and available quota for the user's API key
+    :return: The used and available quota for the user's API key as JSON.
     """
     verify_logged_in()
 
@@ -438,7 +493,7 @@ def get_quota():
     translator = req_data.get("translator", "")
     key = req_data.get("apikey", "")
 
-    # Get the translation service by the provided service name
+    # Get the translation service by the provided service name.
     # TODO Maybe change to use id instead?
     tr = TranslationService.query.filter(
         translator == TranslationService.service_name,
@@ -453,7 +508,7 @@ def get_valid_status() -> Response:
     """
     Check the validity of a given api-key with the chosen translator engine.
 
-    :return: Response from the server, or an Exception
+    :return: OK-response if the key is valid, or an Exception.
     """
 
     verify_logged_in()
@@ -462,15 +517,15 @@ def get_valid_status() -> Response:
     translator = req_data.get("translator", "")
     key = req_data.get("apikey", "")
 
-    # Get the translation service by the provided service name
+    # Get the translation service by the provided service name.
     tr = TranslationService.query.filter(
         translator == TranslationService.service_name,
     ).first()
 
     # Each new translator engine should add their preferred method for
-    # validating api keys here
+    # validating api keys here.
     # TODO might be prudent to do this in the specific translator class in the
-    #  future
+    #  future.
     if tr.service_name.startswith("DeepL"):
         resp = requests.post(
             tr.service_url + "/usage",
@@ -490,7 +545,7 @@ def get_keys() -> Response:
     """
     Gets the user's API keys.
 
-    :return: The user's API keys.
+    :return: The user's API keys as JSON.
     """
     verify_logged_in()
 
@@ -505,9 +560,10 @@ def get_keys() -> Response:
 @tr_bp.get("/translations/myTranslators")
 def get_my_translators() -> Response:
     """
-    Gets the translators the user has the API keys for.
+    Gets the names of the translators the user has the API keys for.
 
-    :return: The list of the translators the user has the API keys for.
+    :return: The JSON-list of the names of the translators the user has the
+    API keys for.
     """
     verify_logged_in()
 
@@ -518,7 +574,7 @@ def get_my_translators() -> Response:
 
     result = []
     for x in keys:
-        # TODO Could implement to_json for TranslationServices also
+        # TODO Could implement to_json for TranslationServices also.
         result.append(x.service.service_name)
 
     return json_response(result)
