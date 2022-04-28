@@ -116,6 +116,30 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             </div>
                         </div>
                     </div>
+                    
+                    <div [hidden]="!isEditEnabled()" class="form-group">
+                        <label for="from" class="col-sm-2 control-label">Book before</label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+
+                                <input type="date"
+                                       [(ngModel)]="bookingStopDate"
+                                       (ngModelChange)="setMessage()"
+                                       id="bookingStopDate" name="bookingStopDate"
+                                       class="form-control"
+                                       [disabled]="!isEditEnabled()"
+                                       >
+
+                                <input type="time"
+                                       [(ngModel)]="bookingStopTime"
+                                       (ngModelChange)="setMessage()"
+                                       id="bookingStopTime" name="bookingStopTime"
+                                       class="form-control"
+                                       [disabled]="!isEditEnabled()"
+                                        >
+                            </div>
+                        </div>
+                    </div>
                 </form>
                 
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['dateInvalid']">
@@ -169,6 +193,8 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     title = "";
     location = "";
     message?: string;
+    bookingStopTime = "";
+    bookingStopDate = "";
     startDate = "";
     startTime = "";
     endDate = "";
@@ -191,12 +217,17 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         }
         console.log(this.location);
         console.log(this.title);
+        console.log(this.bookingStopDate);
+        console.log(this.bookingStopTime);
 
         const eventToEdit = {
             title: this.title,
             location: this.location,
             start: new Date(`${this.startDate}T${this.startTime}`),
             end: new Date(`${this.endDate}T${this.endTime}`),
+            signup_before: new Date(
+                `${this.bookingStopDate}T${this.bookingStopTime}`
+            ),
         };
 
         const result = await toPromise(
@@ -210,6 +241,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.data.meta!.location = eventToEdit.location;
             this.data.start = eventToEdit.start;
             this.data.end = eventToEdit.end;
+            this.data.meta!.signup_before = eventToEdit.signup_before;
             this.close(this.data);
         } else {
             // TODO: Handle error responses properly
@@ -281,6 +313,16 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         this.startDate = startDateTime[0];
 
         this.startTime = startDateTime[1].split(".")[0];
+
+        const bookOffset = this.data.meta!.signup_before.getTimezoneOffset();
+        const bookStopDate = new Date(
+            this.data.meta!.signup_before.getTime() - bookOffset * 60 * 1000
+        );
+
+        const bookDateTime = bookStopDate.toISOString().split("T");
+
+        this.bookingStopDate = bookDateTime[0];
+        this.bookingStopTime = bookDateTime[1].split(".")[0];
 
         if (this.data.end) {
             const endOffset = this.data.start.getTimezoneOffset();

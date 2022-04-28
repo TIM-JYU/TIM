@@ -142,6 +142,7 @@ export type TIMCalendarEvent = CalendarEvent<{
     tmpEvent: boolean;
     deleted?: boolean;
     editEnabled?: boolean;
+    signup_before: Date;
     location: string;
     enrollments: number;
     maxSize: number;
@@ -505,6 +506,7 @@ export class CalendarComponent
             end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
                 tmpEvent: true,
+                signup_before: segment.date,
                 enrollments: 0,
                 location: "",
                 maxSize: 1, // TODO: temporary solution
@@ -577,6 +579,7 @@ export class CalendarComponent
             event.start = newStart;
             event.end = newEnd;
             // this.updateEventTitle(event);
+
             this.refresh();
             await this.editEvent(event);
         }
@@ -663,6 +666,7 @@ export class CalendarComponent
             this.http.get<TIMCalendarEvent[]>("/calendar/events")
         );
         if (result.ok) {
+            console.log(result.result);
             result.result.forEach((event) => {
                 event.start = new Date(event.start);
                 if (event.end) {
@@ -675,6 +679,7 @@ export class CalendarComponent
                     maxSize: event.meta!.maxSize,
                     location: event.meta!.location,
                     booker_groups: event.meta!.booker_groups,
+                    signup_before: new Date(event.meta!.signup_before),
                 };
                 event.resizable = {
                     beforeStart: this.editEnabled,
@@ -714,6 +719,7 @@ export class CalendarComponent
                     location: event.meta!.location,
                     start: event.start,
                     end: event.end,
+                    signup_before: new Date(event.meta!.signup_before),
                     event_groups: eventGroups,
                     max_size: 1, // TODO: temporary solution
                 };
@@ -730,6 +736,7 @@ export class CalendarComponent
                     this.events.splice(this.events.indexOf(event), 1);
                 });
                 // Push new events with updated id to the event list
+                console.log(result.result);
                 result.result.forEach((event) => {
                     if (event.end) {
                         this.events.push({
@@ -744,6 +751,9 @@ export class CalendarComponent
                                 maxSize: event.meta!.maxSize,
                                 location: event.meta!.location,
                                 booker_groups: [],
+                                signup_before: new Date(
+                                    event.meta!.signup_before
+                                ),
                             },
                             // actions: this.actions,
                             resizable: {

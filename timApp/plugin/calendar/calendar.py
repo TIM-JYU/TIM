@@ -220,6 +220,7 @@ def get_events() -> Response:
                         "maxSize": event_obj.max_size,
                         "location": event_obj.location,
                         "booker_groups": groups,
+                        "signup_before": event_obj.signup_before,
                     },
                 }
             )
@@ -237,6 +238,7 @@ class CalendarEvent:
     location: str
     start: datetime
     end: datetime
+    signup_before: datetime
     max_size: int = 1
     event_groups: list[str] | None = None
 
@@ -270,6 +272,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
             creator_user_id=cur_user,
             groups_in_event=groups,
             max_size=event.max_size,
+            signup_before=event.signup_before,
         )
         db.session.add(event)
         added_events.append(event)
@@ -285,6 +288,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
                 "start": event.start_time,
                 "end": event.end_time,
                 "meta": {
+                    "signup_before": event.signup_before,
                     "enrollments": 0,
                     "maxSize": event.max_size,
                     "location": event.location,
