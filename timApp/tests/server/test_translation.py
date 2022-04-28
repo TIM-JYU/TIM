@@ -9,17 +9,18 @@ from timApp.document.document import Document
 from timApp.document.translation.translation import Translation
 from timApp.document.translation.language import Language
 from timApp.document.translation.deepl import DeeplTranslationService
+from timApp.document.translation.reversingtranslator import ReversingTranslationService
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.util.utils import static_tim_doc
 
-from timApp.tests.unit.test_translator_generic import (
-    ReversingTranslationService,
-)
 
+class TimTranslationTest(TimRouteTest):
+    """Test class containing the reversing translation service and its
+    preferred target language.
+    """
 
-class TranslationTest(TimRouteTest):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -30,6 +31,8 @@ class TranslationTest(TimRouteTest):
         db.session.add(cls.reverselang)
         db.session.commit()
 
+
+class TranslationTest(TimTranslationTest):
     def test_translation_create(self):
         self.login_test1()
         doc = self.create_doc()
@@ -369,7 +372,8 @@ Baz
 """
         )
         d.lang_id = "orig"
-        # TODO Would rather use ReversingTranslationService.service_name but is not str
+        # TODO Would rather use ReversingTranslationService.service_name but
+        #  is not str
         data = "Reversing"
         self.json_post(
             f"/translate/{d.id}/{lang.lang_code}/{data}",
@@ -390,7 +394,8 @@ Baz
 """
         )
         d.lang_id = "orig"
-        # TODO Would rather use ReversingTranslationService.service_name but is not str
+        # TODO Would rather use ReversingTranslationService.service_name but
+        #  is not str
         data = "Reversing"
         tr_json = self.json_post(
             f"/translate/{d.id}/{lang.lang_code}/{data}", {"doc_title": "title"}
@@ -461,7 +466,8 @@ Baz
         tr = self.create_translation(d)
         tr_doc = tr.document
         id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
-        # TODO Would rather use ReversingTranslationService.service_name but is not str
+        # TODO Would rather use ReversingTranslationService.service_name but
+        #  is not str
         data = "Reversing"
         r = self.json_post(
             f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}/{data}"
@@ -484,7 +490,8 @@ Baz
 
         self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}/{data}")
         tr_doc.clear_mem_cache()
-        # Applying translation again uses the SOURCE paragraph, so the result is the same
+        # Applying translation again uses the SOURCE paragraph, so the result
+        # is the same.
         self.assertEqual("\nzaB\n", tr_doc.get_paragraph(id3).md)
 
     def test_paragraph_machine_translation_route_no_api_key(self):
@@ -656,4 +663,5 @@ Baz qux [qux](www.example.com)
         )
 
 
-# TODO Add cases for all 3 translation routes for the special cases (basically just for plugins and tables)
+# TODO Add cases for all 3 translation routes for the special cases (basically
+#  just for plugins and tables)
