@@ -120,16 +120,18 @@ class TimRouteTest(TimDbTest):
     def setUpClass(cls):
         super().setUpClass()
         cls.client = testclient
-        # Default language on create_translation NOTE not same as british or american english
+        # Default language on create_translation NOTE not same as british or
+        # american english.
         cls.add_language("english")
         db.session.commit()
 
     @classmethod
     def add_language(cls, lang_name: str) -> Language:
         """
-        Add a Language to the database
-        :param lang_name: Name that langcodes could recognize
-        :return: the new Language
+        Add a Language to the database.
+
+        :param lang_name: Name of the language that langcodes could recognize.
+        :return: The newly added Language.
         """
         lang = Language.create_from_name(lang_name)
         db.session.add(lang)

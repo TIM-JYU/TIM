@@ -355,6 +355,12 @@ VERIFICATION_REACTED_CLEANUP_INTERVAL = 30 * 24 * 60 * 60
 # Pre-existing entries are skipped.
 # Default list includes languages supported by the translation service
 # DeepL: https://https://www.deepl.com/docs-api/translating-text/
+# Custom language syntax is the following: TODO What is the accurate lang_code?
+# {
+#   "lang_code": "<standardized tag>",
+#   "lang_name": "<name in English>",
+#   "autonym": "<name in its language>",
+# }
 LANGUAGES = [
     "Bulgarian",
     "Czech",
@@ -382,5 +388,6 @@ LANGUAGES = [
     "Slovenian",
     "Swedish",
     "Chinese",
-    {"lang_code": "FI-SiMpLe", "lang_name": "Simple Finnish", "autonym": "selkosuomi"},
+    # TODO Change lang_code to the accurate tag-format of Simple Finnish.
+    {"lang_code": "fi-simple", "lang_name": "Simple Finnish", "autonym": "selkosuomi"},
 ]

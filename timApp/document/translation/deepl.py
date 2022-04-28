@@ -1,5 +1,8 @@
 """
-TODO: Short description of Python module
+Contains implementation of the TranslationService-interface for the DeepL
+machine translator: https://www.deepl.com/translator.
+
+Both DeepL API Free and DeepL API Pro -versions.
 """
 
 __authors__ = [
@@ -32,16 +35,16 @@ from timApp.util.flask.requesthelper import NotExist, RouteException
 
 
 class DeeplTranslationService(RegisteredTranslationService):
-    """Translation service using the DeepL (https://www.deepl.com/) API."""
+    """Translation service using the DeepL API Free."""
 
     service_url = db.Column(
         db.Text, default="https://api-free.deepl.com/v2", nullable=False
     )
-    """The url base for the API calls (defaults to the free version)."""
+    """The url base for the API calls (defaults to current free version)."""
 
     ignore_tag = db.Column(db.Text, default="x", nullable=False)
     """The XML-tag name to use for ignoring pieces of text when XML-handling is
-    used.
+    used. Should be chosen to be some uncommon string not found in many texts.
     """
 
     headers: dict[str, str]
@@ -54,11 +57,12 @@ class DeeplTranslationService(RegisteredTranslationService):
 
     def register(self, user_group: UserGroup) -> None:
         """
-        Set headers to use the user group's API-key ready for translation calls.
+        Set headers to use the user group's API-key ready for translation
+        calls.
 
         :param user_group: The user group whose API key will be used.
         """
-        # One key should match one service per one user group TODO is that correct?
+        # One user group should match one service per one key.
         api_key = TranslationServiceKey.query.filter(
             TranslationServiceKey.service_id == self.id,
             TranslationServiceKey.group_id == user_group.id,
@@ -68,7 +72,7 @@ class DeeplTranslationService(RegisteredTranslationService):
                 "Please add a DeepL API key that corresponds the chosen plan into your account"
             )
         if len(api_key) > 1:
-            # TODO Does telling this information compromise security in any way?
+            # TODO Does revealing this info compromise security in any way?
             raise RouteException(
                 "A user should not have more than one (1) API-key per service."
             )
@@ -97,7 +101,7 @@ class DeeplTranslationService(RegisteredTranslationService):
             status_code = resp.status_code
 
             # Handle the status codes given by DeepL API
-            # Using Python 3.10's match-statement would be cool here but Black did not support it
+            # Using Python 3.10's match-statement would be cool here...
 
             if status_code == 400:
                 debug_exception = Exception(
@@ -166,14 +170,17 @@ class DeeplTranslationService(RegisteredTranslationService):
         See https://www.deepl.com/docs-api/translating-text/request/ for valid
         parameter values and more information.
 
+        With tag handling for example to handle the tag "<x>" the parameter
+        value should be "x".
+
         :param text: Text to translate that can contain XML.
         :param source_lang: Language of the text.
         :param target_lang: Language to translate the text into.
         :param split_sentences: Is text split before translation.
         :param preserve_formatting: Is formatting preserved during translation.
-        :param tag_handling: XML and HTML are currently supported.
-        :param non_splitting_tags: Tags that never split sentences (eg. for the
-        tag "<x>" the parameter should be "x").
+        :param tag_handling: Are tags intelligently handled. XML and HTML are
+        currently supported.
+        :param non_splitting_tags: Tags that never split sentences.
         :param splitting_tags: Tags that always split sentences.
         :param ignore_tags: Tags to ignore when translating.
         :return: The DeepL API response JSON.
@@ -208,7 +215,8 @@ class DeeplTranslationService(RegisteredTranslationService):
         Get languages supported by the API.
 
         :param is_source: Flag to query for supported source-languages.
-        :return: Languages supported in translations by type (source or target).
+        :return: Languages supported in translations by type (source or
+        target).
         """
         return self._post(
             "languages", data={"type": "source" if is_source else "target"}
@@ -222,17 +230,18 @@ class DeeplTranslationService(RegisteredTranslationService):
         :param elem: The element to add XML-protection-tags to.
         :return None. The tag is added to the input object.
         """
-        # TODO If the protection tag is found in the content text, somehow encode such tag first
+        # TODO If the protection tag is found in the content text, somehow
+        #  encode such tag first.
         if type(elem) is NoTranslate:
             elem.text = f"<{self.ignore_tag}>{elem.text}</{self.ignore_tag}>"
 
     def postprocess(self, text: str) -> str:
         """
-        Remove unnecessary protection tags from the text and change bolds and
-        italics into Markdown syntax.
+        Remove unnecessary protection tags from the text and change defined
+        aliases back to Markdown syntax.
 
-        :param text: The text returned from DeepL API.
-        :return: Text with the needed operations performed, to more closely
+        :param text: The text returned from DeepL API after translation.
+        :return: Text with the needed operations performed to more closely
         match the text before passing it to DeepL API.
         """
         return (
@@ -251,7 +260,7 @@ class DeeplTranslationService(RegisteredTranslationService):
         """
         Use the DeepL API to translate text between languages.
 
-        :param texts: Text to be translated
+        :param texts: Some set of texts to be translated.
         :param source_lang: Language of input text. None value makes DeepL
         guess it from the text.
         :param target_lang: Language for target language.
@@ -261,14 +270,16 @@ class DeeplTranslationService(RegisteredTranslationService):
         """
         source_lang_code = source_lang.lang_code if source_lang else None
 
-        # Get the translatable text of objects and add XML-tag -protection to them if so needed
+        # Get the translatable text of objects and add XML-tag -protection to
+        # them if so needed.
         if tag_handling == "xml":
             # TODO This multidimensionalism of lists is hard to read
             for block in texts:
                 for elem in block:
                     self.preprocess(elem)
         # TODO This multidimensionalism of lists is hard to read
-        # Combine the strings of each block for maximum-effectiveness of the translation-call.
+        # Combine the strings of each block for maximum-effectiveness of the
+        # translation-call.
         protected_texts = list(
             map(lambda xs: "".join(map(lambda x: x.text, xs)), texts)
         )
@@ -280,18 +291,21 @@ class DeeplTranslationService(RegisteredTranslationService):
         for i in range(0, len(protected_texts), 50):
             resp_json = self._translate(
                 protected_texts[i : i + 50],
-                # Send uppercase, because it is used in DeepL documentation
+                # Send uppercase, because it is used in DeepL documentation.
                 source_lang_code.upper(),
                 target_lang.lang_code.upper(),
-                split_sentences="1",  # "1" (for example) keeps original document's empty newlines
-                # NOTE Preserve formatting=1 might remove punctuation
-                preserve_formatting="0",  # "1" DeepL does not make guesses of the desired sentence
+                # "1" (for example) keeps original document's empty newlines.
+                split_sentences="1",
+                # NOTE preserve_formatting=1 might remove punctuation even
+                # though DeepL should not make guesses of the content.
+                preserve_formatting="0",
                 tag_handling=tag_handling,
                 ignore_tags=[self.ignore_tag],
             )
             translation_resps += resp_json["translations"]
 
-        # Insert the text-parts sent to the API into correct places in original elements
+        # Insert the text-parts sent to the API into correct places in
+        # original elements.
         translated_texts = list()
         for resp in translation_resps:
             clean_block = (
@@ -303,6 +317,11 @@ class DeeplTranslationService(RegisteredTranslationService):
         return translated_texts
 
     def usage(self) -> Usage:
+        """
+        Fetch current API usage of the registered key from DeepL.
+
+        :return: Usage returned from DeepL.
+        """
         resp_json = self._post("usage")
         return Usage(
             character_count=int(resp_json["character_count"]),
@@ -322,7 +341,8 @@ class DeeplTranslationService(RegisteredTranslationService):
                 language = deepl_lang["language"]
                 code = langcodes.get(language).to_tag()
 
-                # This is needed because DeepL's source languages only include English (EN) and not regional variants
+                # This is needed because DeepL's source languages only include
+                # English (EN) and not regional variants.
                 if code.lower() == "en":
                     code = self.source_Language_code
                 return Language.query_by_code(code)
@@ -350,8 +370,7 @@ class DeeplTranslationService(RegisteredTranslationService):
     # TODO Cache this maybe?
     def languages(self) -> LanguagePairing:
         """
-        Asks the DeepL API for the list of supported languages (Note: the
-        supported language pairings are not explicitly specified) and turns the
+        Asks the DeepL API for the list of supported languages and turns the
         returned language codes to Languages found in the database.
 
         :return: Dictionary of source langs to lists of target langs, that are
@@ -363,14 +382,16 @@ class DeeplTranslationService(RegisteredTranslationService):
                 language = deepl_lang["language"]
                 code = langcodes.get(language).to_tag()
 
-                # This is needed because DeepL's source languages only include English (EN) and not regional variants
+                # This is needed because DeepL's source languages only include
+                # English (EN) and not regional variants.
                 if code.lower() == "en":
                     code = self.source_Language_code
                 return Language.query_by_code(code)
             except LookupError:
                 return None
 
-        # Query API for supported source and target languages and transform them into suitable format
+        # Query API for supported source and target languages and transform
+        # them into the return type.
         resp_json_src = self._languages(is_source=True)
         resp_json_target = self._languages(is_source=False)
         db_langs_src: list[Language] = list(filter(None, map(get_lang, resp_json_src)))
@@ -385,9 +406,9 @@ class DeeplTranslationService(RegisteredTranslationService):
         Check that the source language can be translated into target language
         by the translation API.
 
-        :param source_lang: Language of original text
-        :param target_lang: Language to translate into
-        :return: True, if the pairing is supported
+        :param source_lang: Language to check the translation capability from.
+        :param target_lang: Language to check the translation capability into.
+        :return: True, if the pairing is supported.
         """
 
         self.source_Language_code = source_lang.lang_code
@@ -401,12 +422,18 @@ class DeeplTranslationService(RegisteredTranslationService):
                 f"The language code {e} was not found in supported source languages."
             )
 
-        # The target language is found by the primary key
+        # The target language is found by the primary key.
         # TODO is this too much? Can't strings be just as good?
         #  Maybe better would be to handle Languages by their database id's?
         return any(x.lang_code == target_lang.lang_code for x in supported_languages)
 
     def supports_tag_handling(self, tag_type: str) -> bool:
+        """
+        Check if DeeplTranslationService supports a tag-handling.
+
+        :param tag_type: The tag-type to check handling for.
+        :return: True if the tag-type is supported.
+        """
         return tag_type in ["xml", "html"]
 
     # TODO Make the value an enum like with Verification?
@@ -414,5 +441,7 @@ class DeeplTranslationService(RegisteredTranslationService):
 
 
 class DeeplProTranslationService(DeeplTranslationService):
+    """Translation service using the DeepL API Pro."""
+
     # TODO Make the value an enum like with Verification?
     __mapper_args__ = {"polymorphic_identity": "DeepL Pro"}

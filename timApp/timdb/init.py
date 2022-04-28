@@ -188,7 +188,8 @@ def initialize_database(create_docs: bool = True) -> None:
 
             create_style_docs()
 
-        # Add the DeepL machine-translator to database with its default values
+        # Add the DeepL Free machine-translator to database with its default
+        # values.
         sess.add(DeeplTranslationService())
         log_info(f"Adding new translator '{DeeplTranslationService}'")
         sess.add(DeeplProTranslationService(service_url="https://api.deepl.com/v2"))
@@ -196,11 +197,11 @@ def initialize_database(create_docs: bool = True) -> None:
         sess.commit()
         log_info("Database initialization done.")
 
-    # Add to the database the languages found in config and skip existing ones
+    # Add to the database the languages found in config and skip existing ones.
     langset = {x[0] for x in Language.query.with_entities(Language.lang_code).all()}
     for l in app.config["LANGUAGES"]:
         if type(l) is dict:
-            # Standardize the primary key with langcodes before inserting into db
+            # Standardize primary key with langcodes before inserting into db.
             standard_code = langcodes.standardize_tag(l["lang_code"])
             lang = Language(
                 lang_code=standard_code,
@@ -211,7 +212,7 @@ def initialize_database(create_docs: bool = True) -> None:
             try:
                 lang = Language.create_from_name(l)
             except Exception as e:
-                # TODO Tell user if language cannot be created from given code
+                # TODO Tell user if language cannot be created from given code.
                 log_error(f"Failed to create language; try some other value: {str(e)}")
         if lang.lang_code not in langset:
             log_info(f"Adding new language '{lang.lang_name} ({lang.lang_code})'")
