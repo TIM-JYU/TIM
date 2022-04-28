@@ -777,13 +777,18 @@ export class CalendarComponent
         if (!event.id) {
             return;
         }
+        const values: {
+            location: string;
+            signup_before: Date;
+        } = event.meta;
+
         const id = event.id;
         const eventToEdit = {
             title: event.title,
             start: event.start,
-            location: event.meta.location, // TODO: Fix unsafe member access
+            location: values.location,
             end: event.end,
-            signup_before: new Date(event.start),
+            signup_before: values.signup_before,
         };
         const result = await toPromise(
             this.http.put(`/calendar/events/${id}`, {
