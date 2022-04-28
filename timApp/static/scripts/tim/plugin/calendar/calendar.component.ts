@@ -576,6 +576,11 @@ export class CalendarComponent
         newEnd,
     }: CalendarEventTimesChangedEvent) {
         if (newEnd) {
+            const values: {
+                signup_before: Date;
+            } = event.meta;
+            values.signup_before = newStart;
+            event.meta = values;
             event.start = newStart;
             event.end = newEnd;
             // this.updateEventTitle(event);
