@@ -95,10 +95,6 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
         for reviewer, reviewables in pairing.items():
             for a in filtered_answers:
                 if a.users_all[0].id in reviewables:
-
-                    # save_review(
-                    #    doc, reviewer, start_time_reviews, end_time_reviews, a, t, False
-                    # )
                     save_review(
                         a, t, doc, reviewer, start_time_reviews, end_time_reviews, False
                     )

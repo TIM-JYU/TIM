@@ -1510,6 +1510,7 @@ export class Tools extends ToolsBase {
             reviewer.reviewer_id.toString()
         );
         const updatedReviewers = fields.map((f) =>
+<<<<<<< HEAD
             Object.keys(usersObject).find((key) => {
                 return usersObject[key] == this.getString(f);
             })
