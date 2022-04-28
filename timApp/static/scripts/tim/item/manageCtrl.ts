@@ -646,7 +646,7 @@ export class PermCtrl implements IController {
      */
     async updateTranslatorLanguages() {
         let sources = await to(
-            $http.post<ILanguages[]>("/translations/target-languages", {
+            $http.post<ILanguages[]>("/translations/targetLanguages", {
                 translator: this.newTranslation.translator,
             })
         );
@@ -661,7 +661,7 @@ export class PermCtrl implements IController {
             return;
         }
         sources = await to(
-            $http.post<ILanguages[]>("/translations/source-languages", {
+            $http.post<ILanguages[]>("/translations/sourceLanguages", {
                 translator: this.newTranslation.translator,
             })
         );

@@ -289,7 +289,7 @@ def get_translations(doc_id: int) -> Response:
 
 
 # TODO change into GET?
-@tr_bp.post("/translations/source-languages")
+@tr_bp.post("/translations/sourceLanguages")
 def get_source_languages() -> Response:
     """Query the database for the possible source languages."""
     # TODO Is this route the same as get_target_languages, but with a boolean-input difference?
@@ -317,7 +317,7 @@ def get_source_languages() -> Response:
         return json_response(langs)
 
 
-@tr_bp.get("/translations/document-languages")
+@tr_bp.get("/translations/documentLanguages")
 def get_document_languages() -> Response:
     """Query the database for the languages of existing documents.
     TODO Select from documents
@@ -328,7 +328,7 @@ def get_document_languages() -> Response:
 
 
 # TODO Change into GET?
-@tr_bp.post("/translations/target-languages")
+@tr_bp.post("/translations/targetLanguages")
 def get_target_languages() -> Response:
     """Query the database for the possible target languages."""
 
@@ -368,7 +368,7 @@ def get_translators() -> Response:
     return json_response(sl)
 
 
-@tr_bp.put("/translations/apikeys")
+@tr_bp.put("/translations/apiKeys")
 def add_api_key() -> Response:
     """The function for adding API keys."""
 
@@ -401,7 +401,7 @@ def add_api_key() -> Response:
 
 
 # TODO Change into DELETE (there's some differences in passing the parameters)
-@tr_bp.post("/translations/apikeys/remove")
+@tr_bp.post("/translations/apiKeys/remove")
 def remove_api_key() -> Response:
     """The function for removing API keys."""
 
@@ -425,7 +425,7 @@ def remove_api_key() -> Response:
 
 # TODO Could this be GET? And would it create any security problems with for
 #  example the API-key being shown in logs?
-@tr_bp.post("/translations/apikeys/quota")
+@tr_bp.post("/translations/apiKeys/quota")
 def get_quota():
     """
     Gets the quota info for the user's API key.
@@ -448,7 +448,7 @@ def get_quota():
     return json_response(tr.usage())
 
 
-@tr_bp.post("/translations/apikeys/validate")
+@tr_bp.post("/translations/apiKeys/validate")
 def get_valid_status() -> Response:
     """
     Check the validity of a given api-key with the chosen translator engine.
@@ -485,7 +485,7 @@ def get_valid_status() -> Response:
         )
 
 
-@tr_bp.get("/translations/apikeys")
+@tr_bp.get("/translations/apiKeys")
 def get_keys() -> Response:
     """
     Gets the user's API keys.
@@ -502,7 +502,7 @@ def get_keys() -> Response:
     return json_response(keys)
 
 
-@tr_bp.get("/translations/my-translators")
+@tr_bp.get("/translations/myTranslators")
 def get_my_translators() -> Response:
     """
     Gets the translators the user has the API keys for.

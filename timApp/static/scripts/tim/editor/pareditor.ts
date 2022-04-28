@@ -1627,7 +1627,7 @@ ${backTicks}
      */
     async updateTranslatorLanguages() {
         let sources = await to(
-            $http.post<ILanguages[]>("/translations/target-languages", {
+            $http.post<ILanguages[]>("/translations/targetLanguages", {
                 translator: this.docTranslator,
             })
         );
@@ -1642,7 +1642,7 @@ ${backTicks}
             return;
         }
         sources = await to(
-            $http.post<ILanguages[]>("/translations/source-languages", {
+            $http.post<ILanguages[]>("/translations/sourceLanguages", {
                 translator: this.docTranslator,
             })
         );
