@@ -506,7 +506,7 @@ export class CalendarComponent
             end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
                 tmpEvent: true,
-                signup_before: segment.date,
+                signup_before: new Date(segment.date),
                 enrollments: 0,
                 location: "",
                 maxSize: 1, // TODO: temporary solution
@@ -579,7 +579,6 @@ export class CalendarComponent
             event.start = newStart;
             event.end = newEnd;
             // this.updateEventTitle(event);
-
             this.refresh();
             await this.editEvent(event);
         }
@@ -666,7 +665,6 @@ export class CalendarComponent
             this.http.get<TIMCalendarEvent[]>("/calendar/events")
         );
         if (result.ok) {
-            console.log(result.result);
             result.result.forEach((event) => {
                 event.start = new Date(event.start);
                 if (event.end) {
@@ -713,7 +711,6 @@ export class CalendarComponent
 
         if (eventsToAdd.length > 0) {
             eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
-                console.log(event);
                 return {
                     title: event.title,
                     location: event.meta!.location,
@@ -736,7 +733,6 @@ export class CalendarComponent
                     this.events.splice(this.events.indexOf(event), 1);
                 });
                 // Push new events with updated id to the event list
-                console.log(result.result);
                 result.result.forEach((event) => {
                     if (event.end) {
                         this.events.push({
@@ -785,7 +781,9 @@ export class CalendarComponent
         const eventToEdit = {
             title: event.title,
             start: event.start,
+            location: event.meta.location, // TODO: Fix unsafe member access
             end: event.end,
+            signup_before: new Date(event.start),
         };
         const result = await toPromise(
             this.http.put(`/calendar/events/${id}`, {

@@ -141,6 +141,9 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     </div>
                 </form>
+                <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['bookingEndInvalid']">
+                <ng-container *ngIf="form.errors?.['bookingEndInvalid']">Booking must be done before the event</ng-container>
+                </tim-alert>
                 
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['dateInvalid']">
                 <ng-container *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.</ng-container>
