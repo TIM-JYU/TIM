@@ -1,0 +1,119 @@
+Change peer-reviewers
+Change peer-reviewers
+
+#- {area="prarea" visible="%% False | isview%%" nocache="true"}
+Vaihda arvioijia
+#- {area="prfields" collapse="true"}
+
+#- {defaultplugin="textfield" readonly="view" .fieldCell}
+{%for i in range(0, arvosteltavia)%}
+{#Arvioija_%%i+1%% stem: Arvioija %%i+1%%, cols: 10 #}
+{% endfor -%}
+
+#- {area_end="prfields"}
+#- {area_end="prarea"}
+
+``` {#prtable plugin="tableForm" visible="%% False | isview%%" nocache="true"}
+groups:
+ - %%group%%
+fields:
+{% for i in range(1,arvosteltavia+1) %}
+ - Arvioija_%%i%%
+{% endfor %}
+header: Demotaulukko
+minWidth: 3em
+singleLine: true
+autosave: true
+open: true
+cbColumn: true
+nrColumn: true
+filterRow: true
+emailUsersButtonText: Lähetä ruksituille sähköpostia
+emailUsersButtonText: "Lähetä sähköpostia"
+```
+
+``` {#setreviewersrunner plugin="jsrunner"}
+button: Päivitä taulukko
+groups:
+ - %%group%%
+fields:
+{% for i in range(1,arvosteltavia+1) %}
+ - Arvioija_%%i%%
+{% endfor %}
+ - vaihto
+updateFields:
+{% for i in range(1,arvosteltavia+1) %}
+ - Arvioija_%%i%%
+{% endfor %}
+preprogram: |!!
+//
+    const parsed = JSON.parse(this.g);
+    gtools.users = {};
+    for (a of parsed.data) {
+       gtools.users[a.user.id] = a.user.name
+    }
+!!
+program: |!!
+    const peerreviewers = tools.getPeerReviewersForUser(gtools.users)
+    peerreviewers.forEach((peerreviewer,index) => {
+        tools.setString("Arvioija_" + ++index, peerreviewer)
+    })
+!!
+```
+
+
+``` {#changeReviewersRunner plugin="jsrunner"}
+button: Aseta uudet arvioijat
+groups:
+ - %%group%%
+fields:
+{% for i in range(1,arvosteltavia+1) %}
+ - Arvioija_%%i%%
+{% endfor %}
+ - vaihto
+updateFields:
+{% for i in range(1,arvosteltavia+1) %}
+ - Arvioija_%%i%%
+{% endfor %}
+ - vaihto
+paramFields:
+{% for i in range(1,arvosteltavia+1) %}
+ - Arvioija_%%i%%
+{% endfor %}
+preprogram: |!!
+    const parsed = JSON.parse(this.g);
+    gtools.users = {};
+    for (a of parsed.data) {
+       gtools.users[a.user.id] = a.user.name
+    }
+!!
+program: |!!
+    const user = tools.changePeerReviewer(gtools.users)
+    let task = user.task
+    let changed = false;
+    let from;
+    let to;
+
+    user.initialReviewers.forEach((reviewer, index) => {
+        if (!user.updatedReviewers.includes(reviewer)) {
+            changed = true;
+            from = reviewer;
+        }
+    });
+
+    user.updatedReviewers.forEach((reviewer, index) => {
+    if (!user.initialReviewers.includes(reviewer)  && reviewer) {
+        changed = true;
+        to = reviewer;
+    }
+    });
+
+    const data = {
+        task,
+        changed,
+        from,
+        to
+    }
+    tools.setString("vaihto", JSON.stringify(data))
+!!
+```

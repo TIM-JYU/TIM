@@ -87,7 +87,7 @@ from timApp.peerreview.peerreview_utils import (
     has_review_access,
     get_reviews_for_user,
     is_peerreview_enabled,
-    get_reviews_for_document,
+    get_reviews_for_document, change_peerreviewers_for_user,
 )
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.importdata.importData import MissingUser
@@ -826,7 +826,7 @@ def post_answer_impl(
     if preprocessor:
         preprocessor(answerdata, curr_user, d, plugin)
 
-    # print(json.dumps(answerdata))  # uncomment this to follow what answers are used in browser tests
+    #print(json.dumps(answerdata)) # uncomment this to follow what answers are used in browser tests
 
     answer_call_data = {
         "markup": plugin.values,
@@ -1283,9 +1283,9 @@ def preprocess_jsrunner_answer(
             raise AccessDenied("Teacher access required to browse all peer reviews")
         answerdata["peerreviews"] = get_reviews_for_document(d)
     else:
-        answerdata["peerreviews"] = []
+        answerdata["peerreviews"] = get_reviews_for_document(d)
 
-    answerdata["testvelps"] = get_annotations_with_comments_in_document(
+    answerdata["velps"] = get_annotations_with_comments_in_document(
         curr_user, d, False
     )
     answerdata.pop(
@@ -1298,6 +1298,7 @@ def preprocess_jsrunner_answer(
         localoffset = localtz.utcoffset(datetime.now())
         tzd = localoffset.total_seconds() / 3600
         plugin.values["timeZoneDiff"] = tzd
+    #print(answerdata)
     if runnermarkup.program is missing:
         raise PluginException("Attribute 'program' is required.")
 
@@ -1572,6 +1573,19 @@ def save_fields(
                 raise RouteException(f"Doc id missing: {tid}")
             if id_num.doc_id not in doc_map:
                 doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
+            if "vaihto" in tid:
+                peer_review_data = json.loads(task_u.get(tid))
+                userId = item.get("user")
+                changed = peer_review_data.get("changed")
+                old = peer_review_data.get("from")
+                new = peer_review_data.get("to")
+                task = peer_review_data.get("task")
+                if changed:
+                    if not old:
+                        # TODO: Add new reviewer or if reviewable have none
+                        pass
+                    else:
+                        change_peerreviewers_for_user(current_doc, task, userId, old, new)
     task_content_name_map = {}
     for task in tasks:
         t_id = TaskId.parse(

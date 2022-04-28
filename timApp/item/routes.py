@@ -842,12 +842,11 @@ def render_doc_view(
                         )
                         generate_review_groups(
                             doc_info,
-                            full_document_for_review.plugins,
-                            doc_settings.group(),
+                            full_document_for_review.plugins
                         )
                     else:
                         generate_review_groups(
-                            doc_info, post_process_result.plugins, doc_settings.group()
+                            doc_info, post_process_result.plugins
                         )
                     set_default_velp_group_selected_and_visible(doc_info)
                 except PeerReviewException as e:
