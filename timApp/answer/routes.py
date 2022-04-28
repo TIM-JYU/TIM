@@ -487,6 +487,7 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     confirmText: str | Missing = missing
     timeout: int | Missing = missing
     updateFields: list[str] | Missing = missing
+    resultFields: list[str] | Missing = missing
     nextRunner: str | Missing = missing
     timeZoneDiff: int | Missing = missing
     peerReview: bool | Missing = missing

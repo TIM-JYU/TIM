@@ -1464,6 +1464,15 @@ export class Tools extends ToolsBase {
         );
     }
     /**
+     * Print every every name of users from peer_review table where document_id
+     * matches jsrunner origin doc id and target is current user
+     */
+    getPeerReviewersForUser(usersObject: Users): string[] {
+        const reviewers = this.getPeerReviewsForUser().map(
+            (reviewer) => usersObject[reviewer.reviewer_id]
+        );
+        return reviewers;
+    }
      * Print reviewers and received points of current user
      */
     getReviews(task: string, usersObject?: Users): PeerReviewerUser[] {
