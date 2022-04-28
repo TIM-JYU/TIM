@@ -36,7 +36,7 @@ import {NgbModalModule} from "@ng-bootstrap/ng-bootstrap";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
-import {toPromise, to2} from "../../util/utils";
+import {to2, toPromise} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {CalendarHeaderModule} from "./calendar-header.component";
@@ -104,6 +104,10 @@ const colors = {
         primary: "#d5d5d5",
         secondary: "#d5d5d5",
     },
+    green: {
+        primary: "#4ce629",
+        secondary: "#d9ffc2",
+    },
 };
 
 const segmentHeight = 30;
@@ -141,6 +145,10 @@ export type TIMCalendarEvent = CalendarEvent<{
     location: string;
     enrollments: number;
     maxSize: number;
+    booker_groups: {
+        name: string;
+        users: {name: string; email: string | null}[];
+    }[];
 }>;
 
 @Component({
@@ -486,12 +494,13 @@ export class CalendarComponent
     ) {
         const dragToSelectEvent: TIMCalendarEvent = {
             id: this.events.length,
-            title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
-                segment.date,
-                this.segmentMinutes
-            )
-                .toTimeString()
-                .substr(0, 5)} Varattava aika`,
+            // title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
+            //     segment.date,
+            //     this.segmentMinutes
+            // )
+            //     .toTimeString()
+            //     .substr(0, 5)} Varattava aika`,
+            title: "Ohjausaika",
             start: segment.date,
             end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
@@ -499,6 +508,7 @@ export class CalendarComponent
                 enrollments: 0,
                 location: "",
                 maxSize: 1, // TODO: temporary solution
+                booker_groups: [],
             },
             // actions: this.actions,
         };
@@ -538,11 +548,11 @@ export class CalendarComponent
                 );
                 if (newEnd > segment.date && newEnd < endOfView) {
                     dragToSelectEvent.end = newEnd;
-                    dragToSelectEvent.title = `${segment.date
-                        .toTimeString()
-                        .substr(0, 5)}–${newEnd
-                        .toTimeString()
-                        .substr(0, 5)} Varattava aika`;
+                    // dragToSelectEvent.title = `${segment.date
+                    //     .toTimeString()
+                    //     .substr(0, 5)}–${newEnd
+                    //     .toTimeString()
+                    //     .substr(0, 5)} Varattava aika`;
                     if (dragToSelectEvent.end) {
                         dragToSelectEvent.end = new Date(dragToSelectEvent.end);
                     }
@@ -566,12 +576,16 @@ export class CalendarComponent
         if (newEnd) {
             event.start = newStart;
             event.end = newEnd;
-            this.updateEventTitle(event);
+            // this.updateEventTitle(event);
+            this.refresh();
             await this.editEvent(event);
         }
     }
 
     /**
+     * @deprecated
+     * DEPRECATED: Not used anymore, time expressions removed from event titles
+     *
      * Updates the event's title if the begin matches the regular expression, e.g. "10:00-11.00"
      *
      * TODO: handle localized time expressions (e.g. AM and PM)
@@ -603,6 +617,16 @@ export class CalendarComponent
             if (event.meta!.enrollments >= event.meta!.maxSize) {
                 event.color = colors.red;
             }
+            if (event.meta!.booker_groups) {
+                event.meta!.booker_groups.forEach((group) => {
+                    group.users.forEach((user) => {
+                        if (user.name === Users.getCurrent().name) {
+                            event.color = colors.green;
+                        }
+                    });
+                });
+            }
+
             if (Date.now() > event.start.getTime()) {
                 event.color = colors.gray;
             }
@@ -640,13 +664,9 @@ export class CalendarComponent
         );
         if (result.ok) {
             result.result.forEach((event) => {
-                console.log();
                 event.start = new Date(event.start);
                 if (event.end) {
                     event.end = new Date(event.end);
-                    if (Date.now() > event.start.getTime()) {
-                        event.color = colors.gray;
-                    }
                 }
                 // event.actions = this.actions;
                 event.meta = {
@@ -654,6 +674,7 @@ export class CalendarComponent
                     enrollments: event.meta!.enrollments,
                     maxSize: event.meta!.maxSize,
                     location: event.meta!.location,
+                    booker_groups: event.meta!.booker_groups,
                 };
                 event.resizable = {
                     beforeStart: this.editEnabled,
@@ -722,6 +743,7 @@ export class CalendarComponent
                                 enrollments: event.meta!.enrollments,
                                 maxSize: event.meta!.maxSize,
                                 location: event.meta!.location,
+                                booker_groups: [],
                             },
                             // actions: this.actions,
                             resizable: {
@@ -775,8 +797,7 @@ export class CalendarComponent
             })
         );
         if (result.ok) {
-            const url = result.result;
-            this.icsURL = url;
+            this.icsURL = result.result;
             this.refresh();
         } else {
             // TODO: Handle error responses properly
@@ -803,8 +824,8 @@ export class CalendarComponent
                     console.log("deleted");
                     this.events.splice(this.events.indexOf(modifiedEvent), 1);
                 }
-                this.updateEventTitle(modifiedEvent);
             }
+            this.refresh();
         }
     }
 
