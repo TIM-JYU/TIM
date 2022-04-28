@@ -96,7 +96,7 @@ export async function updateLanguages(
 ) {
     let error = "";
     let sources = await to(
-        $http.post<ILanguages[]>("/translations/source-languages", {
+        $http.post<ILanguages[]>("/translations/sourceLanguages", {
             translator: translator,
         })
     );
@@ -107,7 +107,7 @@ export async function updateLanguages(
     }
 
     sources = await to(
-        $http.get<ILanguages[]>("/translations/document-languages")
+        $http.get<ILanguages[]>("/translations/documentLanguages")
     );
     if (sources.ok) {
         listLanguages(sources.result.data, docL);
@@ -116,7 +116,7 @@ export async function updateLanguages(
     }
 
     sources = await to(
-        $http.post<ILanguages[]>("/translations/target-languages", {
+        $http.post<ILanguages[]>("/translations/targetLanguages", {
             translator: translator,
         })
     );
@@ -168,7 +168,7 @@ export async function availableTranslators(
 ) {
     let error = "";
     const sources = await to(
-        $http.get<string[]>("/translations/my-translators")
+        $http.get<string[]>("/translations/myTranslators")
     );
     if (includeManual) {
         translators.push("Manual");

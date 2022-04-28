@@ -565,7 +565,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
      */
     async getKeys() {
         const r = await toPromise(
-            this.http.get<IUserApiKey[]>("/translations/apikeys")
+            this.http.get<IUserApiKey[]>("/translations/apiKeys")
         );
         if (r.ok) {
             this.userAPIKeys = r.result;
@@ -1013,7 +1013,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     async deleteKey(key: IUserApiKey) {
         this.saving = true;
         const r = await toPromise(
-            this.http.post("/translations/apikeys/remove", {
+            this.http.post("/translations/apiKeys/remove", {
                 translator: key.translator,
                 apikey: key.APIkey,
             })
@@ -1034,7 +1034,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
      */
     async checkQuota(key: IUserApiKey) {
         const r = await toPromise(
-            this.http.post<ITranslatorUsage>("/translations/apikeys/quota", {
+            this.http.post<ITranslatorUsage>("/translations/apiKeys/quota", {
                 translator: key.translator,
                 apikey: key.APIkey,
             })

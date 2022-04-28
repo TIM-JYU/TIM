@@ -359,6 +359,7 @@ export class DraggableController implements IController {
             await this.restoreSizeAndPosition(vf);
             if (this.minStorage.get() && !this.forceMaximized) {
                 this.toggleMinimize();
+                this.areaHeight = 0;
             }
             if (this.detachStorage.get()) {
                 this.toggleDetach();
@@ -469,48 +470,57 @@ export class DraggableController implements IController {
             if (this.autoHeight) {
                 this.element.height("auto");
             } else {
-                this.element.height(this.areaHeight);
+                this.element.height(
+                    this.areaHeight != 0 ? this.areaHeight : "auto"
+                );
             }
             this.element.width(this.areaWidth);
             this.minStorage.set(false);
         }
 
         // Handle moving previews around when at least one is minimized in editor
-        const prevs = document.getElementById("previews");
-        if (prevs) {
+        const previews = document.getElementById("previews");
+        if (previews) {
             // The last child should have the class ".draggable-content".
             // If it's not, change pareditor's previews' structuring.
-            const currpreview = document.getElementById("currpreview")
+            const currPreview = document.getElementById("currpreview")
                 ?.lastElementChild as HTMLElement;
-            const origpreview = document.getElementById("origpreview")
+            const origPreview = document.getElementById("origpreview")
                 ?.lastElementChild as HTMLElement;
             const diff = document.getElementById("diff");
             if (
                 this.caption != diff?.getAttribute("caption") &&
-                currpreview &&
-                origpreview
+                (currPreview || origPreview)
             ) {
                 if (
-                    currpreview.style.visibility ||
-                    origpreview.style.visibility
+                    currPreview?.style.visibility ||
+                    origPreview?.style.visibility
                 ) {
-                    prevs.classList.remove("sidebyside");
-                    prevs.classList.add("stacked");
-                    document
-                        .getElementById("currpreview")!
-                        .classList.add("ForceFullSize");
-                    document
-                        .getElementById("origpreview")!
-                        .classList.add("ForceFullSize");
+                    previews.classList.remove("sidebyside");
+                    previews.classList.add("stacked");
+                    if (currPreview) {
+                        document
+                            .getElementById("currpreview")!
+                            .classList.add("ForceFullSize");
+                    }
+                    if (origPreview) {
+                        document
+                            .getElementById("origpreview")!
+                            .classList.add("ForceFullSize");
+                    }
                 } else {
-                    prevs.classList.remove("stacked");
-                    prevs.classList.add("sidebyside");
-                    document
-                        .getElementById("currpreview")!
-                        .classList.remove("ForceFullSize");
-                    document
-                        .getElementById("origpreview")!
-                        .classList.remove("ForceFullSize");
+                    previews.classList.remove("stacked");
+                    previews.classList.add("sidebyside");
+                    if (currPreview) {
+                        document
+                            .getElementById("currpreview")!
+                            .classList.remove("ForceFullSize");
+                    }
+                    if (origPreview) {
+                        document
+                            .getElementById("origpreview")!
+                            .classList.remove("ForceFullSize");
+                    }
                 }
             }
         }
