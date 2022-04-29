@@ -368,10 +368,20 @@ def delete_booking(event_id: int) -> Response:
     :return: HTTP 200 if succeeded, otherwise 400
     """
     verify_logged_in()
-    event = Event.get_event_by_id(event_id)
     user_obj = get_current_user_object()
-    # TODO: Delete the enrollment where id of the event is the provided one and user group is same as users.
 
+    group_id = None
+    for group in user_obj.groups:
+        if group.name == user_obj.name:
+            group_id = group.id
+
+    # TODO: Delete the enrollment where id of the event is the provided one and user group is same as users.
+    enrollment = Enrollment.get_enrollment_by_ids(event_id, group_id)
+    if not enrollment:
+        raise RouteException("Enrollment not found")
+    db.session.delete(enrollment)
+    db.session.commit()
+    # return ok_response()
     return ok_response()
 
 

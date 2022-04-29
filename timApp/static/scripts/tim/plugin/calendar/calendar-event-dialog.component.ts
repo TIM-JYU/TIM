@@ -137,7 +137,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         (click)="bookEvent()" [disabled]="eventIsFull()" [hidden]="isEditEnabled()">
                     Book event
                 </button>
-                <button class="btn timButton" type="button" (click)="cancelBooking()" style="background-color: red;">
+                <button class="btn timButton" type="button" [hidden]="!eventHasBookings()" (click)="cancelBooking()" style="background-color: red;">
                     Cancel Booking
                 </button>
                 <button class="timButton" type="submit" (click)="saveChanges()" [disabled]="form.invalid"
@@ -326,17 +326,22 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     }
 
     async cancelBooking() {
-        const EnrollmentToCancelId = this.data.id; // data of event
-        // we need an enrollment, with this event ID and users usergroup_id
+        const openEvent = this.data;
+        const EnrollmentToCancelId = this.data.id;
         if (!EnrollmentToCancelId) {
             return;
         } //
         const result = await toPromise(
             this.http.delete(`/calendar/bookings/${EnrollmentToCancelId}`)
         );
+        console.log(result);
         if (result.ok) {
             console.log(result.result);
-            // this.data.meta!.enrollments--;
+            this.data.meta!.enrollments--;
+            this.close(openEvent);
+        } else {
+            console.error(result.result.error.error);
+            this.setMessage(result.result.error.error);
         }
     }
 
