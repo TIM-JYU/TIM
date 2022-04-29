@@ -55,8 +55,6 @@ class TestParser(unittest.TestCase, TimTranslationParserTest):
             self.parser.get_translate_approvals(text),
         )
 
-    # TODO What's the current status on this comment?:
-    # For .notranslate style, might move elsewhere. For future use.
     def test_notranslate_style1(self):
         text = r"tässä on [teksti]{.notranslate}, jota ei käännetä."
         self.assertEqual(
@@ -170,8 +168,6 @@ r”# otsikko1"""
         )
 
     def test_tex_collect(self):
-        # TODO What's the current status on this comment?
-        # TODO Add cases for identifiers, key-value -pairs and multiple classes as well
         text = (
             r"x^3-49x&=0 &&|\text{ erotetaan yhteinen tekijä x}\x(x^2-49)&=0 &&|\text{ "
             r"käytetään tulon nollasääntöä}\x=0\;\;\;\textrm{tai}\;\;\;&x^2-49=0 &&|\textsf{ ratkaistaan x}"
@@ -968,17 +964,4 @@ kodblock
                 TR("kodblock\n\n~delindex~\n\n^högsta index^\n"),
             ],
             self.parser.get_translate_approvals(md),
-        )
-
-    def TODO_test_latex_inside_span(self):
-        # TODO This following value sometimes comes out weird from the whole
-        #  parsing...
-        text = (
-            '```{plugin="mmcq"\nchoices:\n  -\n    '
-            "text:'[$$\\sum_{i=1}^n a_i = a_1+a_2+\\ldots+a_n  "
-            "= \\frac{a_1+a_n}{2}\\cdot n$$]{.red}'\n```"
-        )
-        self.assertEqual(
-            [Translate("\n"), NoTranslate(text), Translate("\n")],
-            self.parser.get_translate_approvals(text),
         )
