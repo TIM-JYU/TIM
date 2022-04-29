@@ -15,8 +15,11 @@ __date__ = "8.4.2022"
 import langcodes
 import click
 from flask.cli import AppGroup
+
+from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.document.translation.language import Language
+from timApp.util.logger import log_error, log_info, log_debug
 
 language_cli = AppGroup("language")
 
@@ -68,6 +71,46 @@ def add(lang_name: str) -> None:
         click.echo(f"Adding new language '{lang.lang_name} ({lang.lang_code})'")
         db.session.add(lang)
         db.session.commit()
+
+
+@language_cli.command()
+def add_all_languages() -> None:
+    """
+    Add all supported languages to the database. Supported languages are
+    defined in the configuration variable LANGUAGES in timApp\defaultconfig.py.
+
+    :return: None
+    """
+
+    # Add to the database the languages found in config and skip existing ones.
+    langset = {x[0] for x in Language.query.with_entities(Language.lang_code).all()}
+    for l in app.config["LANGUAGES"]:
+        if type(l) is dict:
+            # Standardize primary key with langcodes before inserting into db.
+            standard_code = langcodes.standardize_tag(l["lang_code"])
+            lang = Language(
+                lang_code=standard_code,
+                lang_name=l["lang_name"],
+                autonym=l["autonym"],
+            )
+        else:
+            try:
+                lang = Language.create_from_name(l)
+            except Exception as e:
+                log_error(f"Failed to create language: {str(e)}")
+                click.echo(f"Failed to create language: {str(e)}")
+        if lang.lang_code not in langset:
+            log_info(f"Adding new language '{lang.lang_name} ({lang.lang_code})'")
+            click.echo(f"Adding new language '{lang.lang_name} ({lang.lang_code})'")
+            db.session.add(lang)
+        else:
+            log_info(
+                f"Skipping language '{lang.lang_name} ({lang.lang_code})': Already in database"
+            )
+            click.echo(
+                f"Language code '{lang.lang_code}' already exists in the database."
+            )
+    db.session.commit()
 
 
 @language_cli.command()
