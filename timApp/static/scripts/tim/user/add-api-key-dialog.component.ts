@@ -1,8 +1,8 @@
 /**
- * Created by noemjoke on 21.3.2022
  * The dialog component for adding translator API keys to user settings
  * @author Noora Jokela
  * @author Sami Viitanen
+ * @date 21.3.2022
  * @licence MIT
  * @copyright 2022 TIMTra project authors
  */
@@ -15,8 +15,8 @@ import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-compone
 import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {toPromise} from "../util/utils";
 import {TimUtilityModule} from "../ui/tim-utility.module";
-import {ITranslators, ITranslatorUsage} from "../item/IItem";
-import {listTranslators} from "../document/editing/edittypes";
+import {ITranslator, ITranslatorUsage} from "../item/IItem";
+import {listTranslators} from "../document/languages";
 import {IUserApiKey} from "./IUser";
 
 /**
@@ -73,10 +73,13 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
     {onAdd: (key: IUserApiKey) => void},
     void
 > {
-    translators: ITranslators[] = [];
+    translators: ITranslator[] = [];
 
-    ngOnInit() {
-        listTranslators(this.translators, false);
+    async ngOnInit() {
+        const r = await listTranslators(false);
+        if (r.ok) {
+            this.translators = r.result;
+        }
     }
 
     dialogName: string = "AddAPIKey";

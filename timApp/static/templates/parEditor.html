@@ -106,7 +106,7 @@
         <div class="border background">
             <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.sideBySide" ng-click="$ctrl.changePositioning()"/> View beside the editor </label>
         </div>
-        <div class="diff border" ng-hide="$ctrl.hideDiff">
+        <div class="diff border">
             <pre diff left-obj="$ctrl.trdiff.old" right-obj="$ctrl.trdiff.new"></pre>
             <a href="{{ $ctrl.getSourceDocumentLink() }}"><i class="glyphicon glyphicon-link"></i></a>
         </div></div>
@@ -122,7 +122,7 @@
          ng-show="$ctrl.proeditor"
     id="currpreview">
         <div class="draggable-content">
-        <div class="previewcontent paragraphs fullsize" ng-hide="$ctrl.hidePreview"></div></div>
+        <div class="previewcontent paragraphs fullsize"></div></div>
     </div>
     <div tim-draggable-fixed
          detachable="true"
@@ -134,7 +134,7 @@
          ng-show="$ctrl.proeditor"
     id="origpreview">
         <div class="draggable-content">
-        <div class="previeworiginalcontent paragraphs fullsize" ng-hide="$ctrl.hideOriginalPreview">
+        <div class="previeworiginalcontent paragraphs fullsize">
             <div class="par">
             <div class="parContent">
             <p>{{$ctrl.trdiff.new}}</p>

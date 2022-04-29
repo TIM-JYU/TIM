@@ -8,11 +8,8 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as snv from "tim/ui/shortNameValidator";
 import * as tem from "tim/ui/formErrorMessage";
 import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
-import {
-    IManageResponse,
-    listLanguages,
-    updateTranslationData,
-} from "../document/editing/edittypes";
+import {updateTranslationData} from "tim/document/languages";
+import {IManageResponse} from "../document/editing/edittypes";
 import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
 import {manageglobals} from "../util/globals";
@@ -24,10 +21,10 @@ import {
     IFullDocument,
     IItem,
     IEditableTranslation,
-    ILanguages,
+    ILanguage,
     redirectToItem,
     getItemTypeName,
-    ITranslators,
+    ITranslator,
 } from "./IItem";
 
 markAsUsed(snv, tem);
@@ -46,10 +43,10 @@ export class PermCtrl implements IController {
     private newFolderName: string;
     private hasMoreChangelog?: boolean;
     private translations: IEditableTranslation[] = [];
-    private sourceLanguages: ILanguages[] = [];
-    private targetLanguages: ILanguages[] = [];
-    private documentLanguages: ILanguages[] = [];
-    private translators: ITranslators[] = [];
+    private sourceLanguages: ILanguage[] = [];
+    private targetLanguages: ILanguage[] = [];
+    private documentLanguages: ILanguage[] = [];
+    private translators: ITranslator[] = [];
     private newTranslation: {
         language: string;
         title: string;
@@ -125,16 +122,18 @@ export class PermCtrl implements IController {
         }
         this.setDeleteText();
 
-        this.errorMessage = await updateTranslationData(
-            this.sourceLanguages,
-            this.documentLanguages,
-            this.targetLanguages,
+        const result = await updateTranslationData(
             this.newTranslation.translator,
-            this.translators,
-            this.availableTranslators,
             this.errorMessage,
             true
         );
+        this.sourceLanguages = result.source;
+        this.documentLanguages = result.document;
+        this.targetLanguages = result.target;
+        this.translators = result.translators;
+        this.availableTranslators = result.availableTransls;
+        this.errorMessage = result.error;
+
         if (this.errorMessage != "") {
             this.translatorAvailable = false;
         }
@@ -646,13 +645,13 @@ export class PermCtrl implements IController {
      */
     async updateTranslatorLanguages() {
         let sources = await to(
-            $http.post<ILanguages[]>("/translations/targetLanguages", {
+            $http.post<ILanguage[]>("/translations/targetLanguages", {
                 translator: this.newTranslation.translator,
             })
         );
         if (sources.ok) {
             this.targetLanguages = [];
-            listLanguages(sources.result.data, this.targetLanguages);
+            this.targetLanguages.push(...sources.result.data);
             this.translatorAvailable = true;
             this.errorMessage = "";
         } else {
@@ -661,13 +660,13 @@ export class PermCtrl implements IController {
             return;
         }
         sources = await to(
-            $http.post<ILanguages[]>("/translations/sourceLanguages", {
+            $http.post<ILanguage[]>("/translations/sourceLanguages", {
                 translator: this.newTranslation.translator,
             })
         );
         if (sources.ok) {
             this.sourceLanguages = [];
-            listLanguages(sources.result.data, this.sourceLanguages);
+            this.sourceLanguages.push(...sources.result.data);
             this.translatorAvailable = true;
             this.errorMessage = "";
         } else {

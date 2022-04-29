@@ -13,13 +13,9 @@ import {
     toggleFullScreen,
 } from "tim/util/fullscreen";
 import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
-import {IDocument, ILanguages, ITranslators} from "tim/item/IItem";
-import {
-    IExtraData,
-    ITags,
-    listLanguages,
-    updateTranslationData,
-} from "../document/editing/edittypes";
+import {IDocument, ILanguage, ITranslator} from "tim/item/IItem";
+import {updateTranslationData} from "tim/document/languages";
+import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -215,9 +211,6 @@ export class PareditorController extends DialogController<
         wrap: TimStorage<string>;
         oldMode: TimStorage<string>;
         diffSideBySide: TimStorage<boolean>;
-        hideDiff: TimStorage<boolean>;
-        hidePreview: TimStorage<boolean>;
-        hideOriginalPreview: TimStorage<boolean>;
         translator: TimStorage<string>;
     };
     private touchDevice: boolean;
@@ -236,10 +229,10 @@ export class PareditorController extends DialogController<
     private perusliiteMacroStringBegin = "%%perusliite("; // Attachment macro without stamping.
     private perusliiteMacroStringEnd = ")%%";
     private lastKnownDialogHeight?: number;
-    private sourceLanguages: ILanguages[] = [];
-    private targetLanguages: ILanguages[] = [];
-    private documentLanguages: ILanguages[] = [];
-    private translators: ITranslators[] = [];
+    private sourceLanguages: ILanguage[] = [];
+    private targetLanguages: ILanguage[] = [];
+    private documentLanguages: ILanguage[] = [];
+    private translators: ITranslator[] = [];
     private docTranslator: string = "";
     private translatorAvailable = true;
     private sideBySide: boolean = false;
@@ -1148,12 +1141,6 @@ ${backTicks}
                 "diffSideBySide" + saveTag,
                 t.boolean
             ),
-            hideDiff: new TimStorage("hideDiff" + saveTag, t.boolean),
-            hidePreview: new TimStorage("hidePreview" + saveTag, t.boolean),
-            hideOriginalPreview: new TimStorage(
-                "hideOriginalPreview" + saveTag,
-                t.boolean
-            ),
             translator: new TimStorage<string>(
                 "translator" + saveTag,
                 t.string
@@ -1174,10 +1161,6 @@ ${backTicks}
         }
         this.sideBySide = this.storage.diffSideBySide.get() ?? true;
         this.changePositioning();
-        this.hideDiff = this.storage.hideDiff.get() ?? true;
-        this.hidePreview = this.storage.hidePreview.get() ?? false;
-        this.hideOriginalPreview =
-            this.storage.hideOriginalPreview.get() ?? false;
         this.lastTab = this.activeTab;
         this.citeText = this.getCiteText();
         const sn = this.storage.wrap.get();
@@ -1225,36 +1208,33 @@ ${backTicks}
         );
 
         if (!this.checkIfOriginal()) {
-            this.getTheErrorMessage().then((result) => {
-                this.errorMessage = result;
-                if (result != "") {
-                    this.translatorAvailable = false;
-                } else if (this.availableTranslators.length == 0) {
-                    this.errorMessage =
-                        "You do not have any machine translator API keys added to you account.";
-                    this.translatorAvailable = false;
-                }
-            });
+            void this.initTranslatorData();
         }
     }
 
     /**
-     * Gets the error message from initialization because $onInit cannot be made async/await right now and .then takes
-     * the result from the first request in updateTranslationData().
+     * Fetches the translator data on initialization and adds it to the lists.
      */
-    async getTheErrorMessage() {
-        let result: string = "";
-        result = await updateTranslationData(
-            this.sourceLanguages,
-            this.documentLanguages,
-            this.targetLanguages,
+    async initTranslatorData() {
+        const result = await updateTranslationData(
             this.docTranslator,
-            this.translators,
-            this.availableTranslators,
             this.errorMessage,
             false
         );
-        return result;
+        this.sourceLanguages = result.source;
+        this.documentLanguages = result.document;
+        this.targetLanguages = result.target;
+        this.translators = result.translators;
+        this.availableTranslators = result.availableTransls;
+        this.errorMessage = result.error;
+
+        if (this.errorMessage != "") {
+            this.translatorAvailable = false;
+        } else if (this.availableTranslators.length == 0) {
+            this.errorMessage =
+                "You do not have any machine translator API keys added to you account.";
+            this.translatorAvailable = false;
+        }
     }
 
     /**
@@ -1627,13 +1607,13 @@ ${backTicks}
      */
     async updateTranslatorLanguages() {
         let sources = await to(
-            $http.post<ILanguages[]>("/translations/targetLanguages", {
+            $http.post<ILanguage[]>("/translations/targetLanguages", {
                 translator: this.docTranslator,
             })
         );
         if (sources.ok) {
             this.targetLanguages = [];
-            listLanguages(sources.result.data, this.targetLanguages);
+            this.targetLanguages.push(...sources.result.data);
             this.translatorAvailable = true;
             this.errorMessage = "";
         } else {
@@ -1642,13 +1622,13 @@ ${backTicks}
             return;
         }
         sources = await to(
-            $http.post<ILanguages[]>("/translations/sourceLanguages", {
+            $http.post<ILanguage[]>("/translations/sourceLanguages", {
                 translator: this.docTranslator,
             })
         );
         if (sources.ok) {
             this.sourceLanguages = [];
-            listLanguages(sources.result.data, this.sourceLanguages);
+            this.sourceLanguages.push(...sources.result.data);
             this.translatorAvailable = true;
             this.errorMessage = "";
         } else {
@@ -2452,9 +2432,6 @@ ${backTicks}
         this.storage.oldMode.set(ace ? "ace" : "text");
         this.storage.wrap.set("" + this.wrapValue());
         this.storage.diffSideBySide.set(!this.sideBySide);
-        this.storage.hideDiff.set(this.hideDiff);
-        this.storage.hidePreview.set(this.hidePreview);
-        this.storage.hideOriginalPreview.set(this.hideOriginalPreview);
         this.storage.translator.set(this.docTranslator);
         const acc = this.getExtraData().access;
         if (acc != null) {

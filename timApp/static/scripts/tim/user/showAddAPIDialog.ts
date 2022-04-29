@@ -1,7 +1,7 @@
 /**
- * Created by noemjoke on 21.3.2022
  * Brings up the dialog component for adding translator API keys to user settings
  * @author Noora Jokela
+ * @date 21.3.2022
  * @licence MIT
  * @copyright 2022 TIMTra project authors
  */

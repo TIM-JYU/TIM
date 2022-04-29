@@ -161,12 +161,12 @@ export function getItemTypeName(i: DocumentOrFolder) {
     return i.isFolder ? "folder" : "document";
 }
 
-export interface ILanguages {
+export interface ILanguage {
     name: string;
     code: string;
 }
 
-export interface ITranslators {
+export interface ITranslator {
     name: string;
     available: boolean;
 }

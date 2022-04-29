@@ -7,6 +7,8 @@ translators and queries related to API-keys of these machine translators.
 """
 
 __authors__ = [
+    "Mika Lehtinen",
+    "Denis Zhidkikh",
     "Noora Jokela",
     "Riku Lehkonen",
     "Vili Moisala",
