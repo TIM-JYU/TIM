@@ -359,4 +359,20 @@ def book_event(event_id: int) -> Response:
     return ok_response()
 
 
+@calendar_plugin.delete("/bookings/<int:event_id>")
+def delete_booking(event_id: int) -> Response:
+    """
+    Deletes the booking or enrollment to an event for current user's personal user group.
+
+    :param event_id: Event id that matches with the enrollment
+    :return: HTTP 200 if succeeded, otherwise 400
+    """
+    verify_logged_in()
+    event = Event.get_event_by_id(event_id)
+    user_obj = get_current_user_object()
+    # TODO: Delete the enrollment where id of the event is the provided one and user group is same as users.
+
+    return ok_response()
+
+
 register_html_routes(calendar_plugin, class_schema(CalendarHtmlModel), reqs_handle)
