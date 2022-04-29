@@ -37,12 +37,19 @@ from timApp.util.flask.requesthelper import NotExist, RouteException
 class DeeplTranslationService(RegisteredTranslationService):
     """Translation service using the DeepL API Free."""
 
-    service_url = db.Column(
-        db.Text, default="https://api-free.deepl.com/v2", nullable=False
-    )
-    """The url base for the API calls (defaults to current free version)."""
+    def __init__(self, values: dict):
+        """
+        Constructor for setting all the needed DeepL-specific fields.
 
-    ignore_tag = db.Column(db.Text, default="x", nullable=False)
+        :param values: Contains values for the fields.
+        """
+        self.ignore_tag = values["ignore_tag"]
+        self.service_url = values["service_url"]
+
+    service_url = db.Column(db.Text, nullable=False)
+    """The url base for the API calls."""
+
+    ignore_tag = db.Column(db.Text, nullable=False)
     """The XML-tag name to use for ignoring pieces of text when XML-handling is
     used. Should be chosen to be some uncommon string not found in many texts.
     """
@@ -139,11 +146,12 @@ class DeeplTranslationService(RegisteredTranslationService):
                 debug_exception = Exception(
                     f"Too many requests were sent. Please wait and resend the request later."
                 )
-            elif status_code >= 500 & status_code < 600:
+            elif 500 <= status_code < 600:
                 debug_exception = Exception(
                     f"An internal error occurred on the DeepL server. Please try again."
                 )
             else:
+                # TODO Do not show this to user. Confirm, that wuff is sent.
                 debug_exception = Exception(
                     f"DeepL API / {url_slug} responded with {resp.status_code}"
                 )

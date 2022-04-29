@@ -8,6 +8,10 @@ from pathlib import Path
 from celery.schedules import crontab
 
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
+from timApp.document.translation.deepl import (
+    DeeplTranslationService,
+    DeeplProTranslationService,
+)
 
 # NOTE: If you are a different organization (other than JYU), please don't modify this file directly.
 # This avoids merge conflicts. Override the values with prodconfig.py instead.
@@ -390,4 +394,21 @@ LANGUAGES = [
     "Chinese",
     # TODO Change lang_code to the accurate tag-format of Simple Finnish.
     {"lang_code": "fi-simple", "lang_name": "Simple Finnish", "autonym": "selkosuomi"},
+]
+
+MACHINE_TRANSLATORS = [
+    (
+        DeeplTranslationService,
+        {
+            "service_url": "https://api-free.deepl.com/v2",
+            "ignore_tag": "x",
+        },
+    ),
+    (
+        DeeplProTranslationService,
+        {
+            "service_url": "https://api.deepl.com/v2",
+            "ignore_tag": "x",
+        },
+    ),
 ]
