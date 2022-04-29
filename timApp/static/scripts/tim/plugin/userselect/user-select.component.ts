@@ -43,6 +43,7 @@ import {
     ServerQueryHandler,
     UserResult,
 } from "./searchQueryHandlers";
+import {T9KeyboardComponent} from "./t9-keyboard.component";
 
 const PluginMarkup = t.intersection([
     GenericPluginMarkup,
@@ -288,48 +289,7 @@ class ToggleOption {
                 </ng-container>
             </div>
         </tim-alert>
-        <table class="t9kbd" *ngIf="t9Mode.value">
-            <tr>
-                <td>
-                    <button (click)="applyT9('1')">1<br>&nbsp;</button>
-                </td>
-                <td>
-                    <button (click)="applyT9('2')">2<br>ABC</button>
-                <td>
-                    <button (click)="applyT9('3')">3<br>DEF</button>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <button (click)="applyT9('4')">4<br>GHI</button>
-                </td>
-                <td>
-                    <button (click)="applyT9('5')">5<br>JKL</button>
-                <td>
-                    <button (click)="applyT9('6')">6<br>MNO</button>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <button (click)="applyT9('7')">7<br>PQRS</button>
-                </td>
-                <td>
-                    <button (click)="applyT9('8')">8<br>TUV</button>
-                <td>
-                    <button (click)="applyT9('9')">9<br>WXYZ</button>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <button (click)="applyT9('clr')">clr<br>&nbsp;</button>
-                </td>
-                <td>
-                    <button (click)="applyT9('0')">0<br>space</button>
-                <td>
-                    <button (click)="applyT9('<=')"><=<br>&nbsp;</button>
-                </td>
-            </tr>
-        </table>
+        <tim-t9-keyboard (applyT9)="applyT9($event)" *ngIf="t9Mode.enabled"></tim-t9-keyboard>
     `,
     styleUrls: ["user-select.component.scss"],
 })
@@ -348,6 +308,7 @@ export class UserSelectComponent extends AngularPluginBase<
     detailedError?: string;
 
     searchString: string = "";
+    searchParameter?: string;
     inputMinLength!: number;
     searching: boolean = false;
     applying: boolean = false;
@@ -449,6 +410,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 {
                     username: this.lastAddedUser.user.name,
                     par: this.getPar()!.par.getJsonForServer(),
+                    param: this.searchParameter,
                 },
                 {params}
             )
@@ -490,6 +452,12 @@ export class UserSelectComponent extends AngularPluginBase<
             this.scanCode = false;
         }
         this.searchString = result.getText();
+        const hashIndex = this.searchString.indexOf("#");
+        if (hashIndex >= 0) {
+            this.searchParameter = this.searchString.substr(hashIndex + 1);
+        } else {
+            this.searchParameter = undefined;
+        }
 
         await this.search(
             this.markup.scanner.applyOnMatch,
@@ -552,6 +520,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 {
                     par: this.getPar()!.par.getJsonForServer(),
                     username: this.selectedUser.user.name,
+                    param: this.searchParameter,
                 },
                 {params}
             )
@@ -574,6 +543,7 @@ export class UserSelectComponent extends AngularPluginBase<
         this.selectedUser = undefined;
         this.lastSearchResult = undefined;
         this.searchString = "";
+        this.searchParameter = undefined;
         this.verifyUndo = false;
         if (!isMobileDevice()) {
             this.searchInput.nativeElement.focus();
@@ -850,7 +820,11 @@ export class UserSelectComponent extends AngularPluginBase<
 }
 
 @NgModule({
-    declarations: [UserSelectComponent, CodeScannerComponent],
+    declarations: [
+        UserSelectComponent,
+        CodeScannerComponent,
+        T9KeyboardComponent,
+    ],
     imports: [
         BrowserModule,
         HttpClientModule,

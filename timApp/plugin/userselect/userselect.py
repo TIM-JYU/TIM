@@ -527,7 +527,10 @@ def undo_group_actions(
 
 @user_select_plugin.post("/undo")
 def undo(
-    username: str, task_id: str | None = None, par: GlobalParId | None = None
+    username: str,
+    task_id: str | None = None,
+    par: GlobalParId | None = None,
+    param: str | None = None,  # TODO: Use
 ) -> Response:
     model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
     # No permissions to undo
@@ -690,7 +693,10 @@ def apply_group_actions(
 
 @user_select_plugin.post("/apply")
 def apply(
-    username: str, task_id: str | None = None, par: GlobalParId | None = None
+    username: str,
+    task_id: str | None = None,
+    par: GlobalParId | None = None,
+    param: str | None = None,  # TODO: Use
 ) -> Response:
     model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
     # No permissions to apply, simply return
