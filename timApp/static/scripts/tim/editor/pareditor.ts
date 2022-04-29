@@ -13,13 +13,9 @@ import {
     toggleFullScreen,
 } from "tim/util/fullscreen";
 import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
-import {IDocument, ILanguages, ITranslators} from "tim/item/IItem";
-import {
-    IExtraData,
-    ITags,
-    listLanguages,
-    updateTranslationData,
-} from "../document/editing/edittypes";
+import {IDocument, ILanguage, ITranslator} from "tim/item/IItem";
+import {listLanguages, updateTranslationData} from "tim/document/languages";
+import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -233,10 +229,10 @@ export class PareditorController extends DialogController<
     private perusliiteMacroStringBegin = "%%perusliite("; // Attachment macro without stamping.
     private perusliiteMacroStringEnd = ")%%";
     private lastKnownDialogHeight?: number;
-    private sourceLanguages: ILanguages[] = [];
-    private targetLanguages: ILanguages[] = [];
-    private documentLanguages: ILanguages[] = [];
-    private translators: ITranslators[] = [];
+    private sourceLanguages: ILanguage[] = [];
+    private targetLanguages: ILanguage[] = [];
+    private documentLanguages: ILanguage[] = [];
+    private translators: ITranslator[] = [];
     private docTranslator: string = "";
     private translatorAvailable = true;
     private sideBySide: boolean = false;
@@ -1614,7 +1610,7 @@ ${backTicks}
      */
     async updateTranslatorLanguages() {
         let sources = await to(
-            $http.post<ILanguages[]>("/translations/targetLanguages", {
+            $http.post<ILanguage[]>("/translations/targetLanguages", {
                 translator: this.docTranslator,
             })
         );
@@ -1629,7 +1625,7 @@ ${backTicks}
             return;
         }
         sources = await to(
-            $http.post<ILanguages[]>("/translations/sourceLanguages", {
+            $http.post<ILanguage[]>("/translations/sourceLanguages", {
                 translator: this.docTranslator,
             })
         );
