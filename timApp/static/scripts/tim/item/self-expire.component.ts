@@ -11,8 +11,8 @@ import {documentglobals} from "tim/util/globals";
     `,
 })
 export class SelfExpireComponent {
-    private confirm?: string;
-    buttonText?: string;
+    @Input() confirm?: string;
+    @Input() buttonText?: string;
     @Input() itemId?: number;
 
     constructor(private http: HttpClient) {}
