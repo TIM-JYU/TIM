@@ -8,8 +8,7 @@ import {
     HttpRequest,
 } from "@angular/common/http";
 import {Observable, retry} from "rxjs";
-import {to2} from "tim/util/utils";
-import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {openSessionCheckDialog} from "tim/ui/session-check/openSessionCheckDialog";
 
 export const SESSION_VERIFICATION_NEEDED_CODE = 490;
 
@@ -17,7 +16,7 @@ let globalHandleExpirationPromise: Promise<void> | undefined;
 export async function handleExpiredSession() {
     if (!globalHandleExpirationPromise) {
         globalHandleExpirationPromise = (async () => {
-            await to2(showMessageDialog("Session expired!"));
+            await openSessionCheckDialog();
             globalHandleExpirationPromise = undefined;
         })();
     }

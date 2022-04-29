@@ -2,6 +2,7 @@ from flask import has_request_context, session, current_app
 from sqlalchemy import func
 
 from timApp.auth.session.model import UserSession
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.userutils import get_anon_user_id
@@ -18,6 +19,10 @@ def _expire_on_logout() -> bool:
 
 def _max_concurrent_sessions() -> int | None:
     return current_app.config["SESSIONS_MAX_CONCURRENT_SESSIONS_PER_DOCUMENT"]
+
+
+def current_session_id() -> str | None:
+    return session.get("session_id")
 
 
 def expire_user_session(user: User, session_id: str | None) -> None:
@@ -50,18 +55,21 @@ class SessionExpired(Exception):
     pass
 
 
-def has_valid_session(user: User) -> bool:
+def has_valid_session(user: User | None = None) -> bool:
     from timApp.auth.sessioninfo import get_current_user_id
 
-    if not _save_sessions():
-        return True
-    if not has_request_context():
-        return True
-    # Only check session for current user since the session ID is only valid for them
-    if get_current_user_id() == get_anon_user_id() or get_current_user_id() != user.id:
+    user = user if user else get_current_user_object()
+
+    if (
+        not has_request_context()
+        or not _save_sessions()
+        # Only check session for current user since the session ID is only valid for them
+        or get_current_user_id() == get_anon_user_id()
+        or get_current_user_id() != user.id
+    ):
         return True
 
-    session_id = session.get("session_id")
+    session_id = current_session_id()
     if not session_id:
         return False
 

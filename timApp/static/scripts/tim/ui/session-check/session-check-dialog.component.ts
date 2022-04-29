@@ -1,0 +1,120 @@
+import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
+import {BrowserModule} from "@angular/platform-browser";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {BrowserQRCodeSvgWriter} from "@zxing/browser";
+import {
+    EncodeHintType,
+    QRCodeDecoderErrorCorrectionLevel,
+} from "@zxing/library";
+import {TimUtilityModule} from "../tim-utility.module";
+import {AngularDialogComponent} from "../angulardialog/angular-dialog-component.directive";
+import {DialogModule} from "../angulardialog/dialog.module";
+import {toPromise} from "../../util/utils";
+import {Users} from "../../user/userService";
+import {IFullUser} from "../../user/IUser";
+
+interface ISessionStatus {
+    sessionId: string;
+    valid: boolean;
+}
+
+const QR_CODE_SIZE = 320;
+
+@Component({
+    selector: "tim-session-check-dialog",
+    template: `
+        <div class="modal-bg"></div>
+        <tim-dialog-frame [minimizable]="false" size="lg">
+            <ng-container header>
+                Session check
+            </ng-container>
+            <ng-container body>
+                <tim-alert *ngIf="currentSession && !currentSession.valid && recheck && !isCheckingStatus">
+                    The session is not verified. Ask to scan the QR code again.
+                </tim-alert>
+                <h2>Verify multiple logins</h2>
+                <p>The current session was expired because you logged in too many times.</p>
+                <p><strong>Please ask the supervisor to scan the code below for the session you want to continue.</strong></p>
+                <div class="qr-container">
+                    <div class="qr-code" #qrCode></div>
+                    <div class="qr-info">{{currentUser?.name}} ({{currentUser?.real_name}})</div>
+                </div>
+                <p>Once the code has been scanned, press "Check status" to re-check your verification.</p>
+            </ng-container>
+            <ng-container footer>
+                <div class="footer">
+                    <tim-loading *ngIf="isCheckingStatus"></tim-loading>
+                    <button class="timButton" [disabled]="isCheckingStatus" (click)="checkStatus(true)">Check status</button>
+                </div>
+            </ng-container>
+        </tim-dialog-frame>
+  `,
+    styleUrls: ["./session-check-dialog.component.scss"],
+})
+export class SessionCheckDialogComponent extends AngularDialogComponent<
+    unknown,
+    unknown
+> {
+    protected dialogName = "SessionCheckDialog";
+    isCheckingStatus = false;
+    currentSession?: ISessionStatus;
+    qrWriter: BrowserQRCodeSvgWriter = new BrowserQRCodeSvgWriter();
+    recheck = false;
+    currentUser?: IFullUser;
+
+    @ViewChild("qrCode", {static: true})
+    qrCode!: ElementRef<HTMLDivElement>;
+
+    constructor(private http: HttpClient) {
+        super();
+    }
+
+    async ngOnInit() {
+        await this.checkStatus();
+        if (!this.currentSession) {
+            return;
+        }
+        this.currentUser = Users.getCurrent();
+        this.qrWriter.writeToDom(
+            this.qrCode.nativeElement,
+            `${this.currentUser.name}#${this.currentSession.sessionId}`,
+            QR_CODE_SIZE,
+            QR_CODE_SIZE,
+            new Map<EncodeHintType, unknown>([
+                [
+                    EncodeHintType.ERROR_CORRECTION,
+                    QRCodeDecoderErrorCorrectionLevel.L,
+                ],
+                [EncodeHintType.MARGIN, 0],
+            ])
+        );
+    }
+
+    async checkStatus(recheck = false) {
+        this.recheck = recheck;
+        this.isCheckingStatus = true;
+        const r = await toPromise(
+            this.http.get<ISessionStatus>("/user/sessions/current")
+        );
+        if (r.ok) {
+            this.currentSession = r.result;
+            if (this.currentSession.valid) {
+                this.close(true);
+            }
+        } else {
+            return;
+        }
+        this.isCheckingStatus = false;
+    }
+
+    ngAfterViewInit(): void {
+        super.ngAfterViewInit();
+        this.frame.closeFn = undefined;
+    }
+}
+
+@NgModule({
+    declarations: [SessionCheckDialogComponent],
+    imports: [BrowserModule, TimUtilityModule, DialogModule, HttpClientModule],
+})
+export class SessionCheckDialogModule {}

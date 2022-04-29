@@ -8,8 +8,9 @@ import {
     Output,
     ViewChild,
 } from "@angular/core";
-import {BrowserMultiFormatReader, Exception, Result} from "@zxing/library";
+import {BrowserMultiFormatReader} from "@zxing/browser";
 import * as t from "io-ts";
+import {Exception, Result} from "@zxing/library";
 import {TimStorage} from "../../util/utils";
 import {
     cameraConstraintSupported,
@@ -69,10 +70,9 @@ export class CodeScannerComponent implements OnInit, OnDestroy {
     selectedCamera = this.selectedCameraStorage.get();
 
     constructor() {
-        this.codeReader = new BrowserMultiFormatReader(
-            undefined,
-            this.scanInterval
-        );
+        this.codeReader = new BrowserMultiFormatReader(undefined, {
+            delayBetweenScanAttempts: this.scanInterval,
+        });
     }
 
     supportsConstraint(name: string) {
@@ -117,7 +117,7 @@ export class CodeScannerComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const devices = await this.codeReader.listVideoInputDevices();
+        const devices = await BrowserMultiFormatReader.listVideoInputDevices();
         this.availableCameras = devices.map((d) => ({
             id: d.deviceId,
             name: d.label,
@@ -172,7 +172,7 @@ export class CodeScannerComponent implements OnInit, OnDestroy {
         }
 
         await setStreamConstraints(this.codeReaderStream, {torch: false});
-        this.codeReader.reset();
+        BrowserMultiFormatReader.releaseAllStreams();
         this.codeReaderStream
             ?.getVideoTracks()
             .forEach((track) => track.stop());
