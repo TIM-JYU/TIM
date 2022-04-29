@@ -40,6 +40,8 @@ PREV_ANSWER = "answerbrowser .prevAnswer"
 
 
 options = webdriver.ChromeOptions()
+# Uncomment to print console.log calls in print_console
+# options.capabilities["goog:loggingPrefs"] = {"browser": "ALL"}
 options.headless = True
 options.add_argument("--window-size=1024x768")
 # We run unit tests in CI environment, so we can generally skip sandboxing to achieve better stability
