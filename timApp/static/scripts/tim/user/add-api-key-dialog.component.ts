@@ -75,8 +75,11 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
 > {
     translators: ITranslator[] = [];
 
-    ngOnInit() {
-        listTranslators(this.translators, false);
+    async ngOnInit() {
+        const r = await listTranslators(false);
+        if (r.ok) {
+            this.translators = r.result;
+        }
     }
 
     dialogName: string = "AddAPIKey";

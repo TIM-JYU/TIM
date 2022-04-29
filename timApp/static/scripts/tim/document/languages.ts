@@ -10,82 +10,94 @@
  */
 
 import {ILanguage, ITranslator} from "../item/IItem";
-import {to} from "../util/utils";
+import {Result, to} from "../util/utils";
 import {$http} from "../util/ngimport";
 
-/**
- * Goes through the given language list and inserts each of its members into it.
- * @param languages The list of languages to be added
- * @param languageArray The list the languages need to be added to
- */
-export function listLanguages(
-    languages: ILanguage[],
-    languageArray: ILanguage[]
-) {
-    for (const lang of languages) {
-        languageArray.push(lang);
-    }
-}
+type SupportedLanguagesAndTranslators = {
+    source: ILanguage[];
+    document: ILanguage[];
+    target: ILanguage[];
+    translators: ITranslator[];
+    availableTransls: string[];
+    error: string;
+};
 
 /**
- * Fetches the lists of the languages supported by the chosen translator and lists them to front-end's language lists.
- * @param sourceL The list of supported source languages
- * @param docL The list of document languages available
- * @param targetL The list of supported target languages
+ * Fetches the lists of the languages supported by the chosen translator.
+ * @param lists The lists of languages
  * @param translator The chosen translator
- * @returns The last error message that came up.
+ * @returns The fetched lists or last error message that came up
  */
-export async function updateLanguages(
-    sourceL: ILanguage[],
-    docL: ILanguage[],
-    targetL: ILanguage[],
+async function updateLanguages(
+    lists: SupportedLanguagesAndTranslators,
     translator: string
-) {
+): Promise<Result<SupportedLanguagesAndTranslators, string>> {
+    const fetchData = async (
+        url: string,
+        list: ILanguage[],
+        data: Record<string, string>,
+        post: boolean
+    ) => {
+        let sources;
+        if (post) {
+            sources = await to($http.post<ILanguage[]>(url, data));
+        } else {
+            sources = await to($http.get<ILanguage[]>(url));
+        }
+        if (sources.ok) {
+            list.push(...sources.result.data);
+            return "";
+        } else {
+            return sources.result.data.error;
+        }
+    };
+
     let error = "";
-    let sources = await to(
-        $http.post<ILanguage[]>("/translations/sourceLanguages", {
-            translator: translator,
-        })
-    );
-    if (sources.ok) {
-        listLanguages(sources.result.data, sourceL);
-    } else {
-        error = sources.result.data.error;
-    }
 
-    sources = await to(
-        $http.get<ILanguage[]>("/translations/documentLanguages")
-    );
-    if (sources.ok) {
-        listLanguages(sources.result.data, docL);
-    } else {
-        error = sources.result.data.error;
-    }
-
-    sources = await to(
-        $http.post<ILanguage[]>("/translations/targetLanguages", {
+    error = await fetchData(
+        "/translations/sourceLanguages",
+        lists.source,
+        {
             translator: translator,
-        })
+        },
+        true
     );
-    if (sources.ok) {
-        listLanguages(sources.result.data, targetL);
-    } else {
-        error = sources.result.data.error;
+    error = await fetchData(
+        "/translations/documentLanguages",
+        lists.document,
+        {},
+        false
+    );
+    error = await fetchData(
+        "/translations/targetLanguages",
+        lists.target,
+        {
+            translator: translator,
+        },
+        true
+    );
+
+    if (error == "") {
+        return {
+            ok: true,
+            result: lists,
+        };
     }
-    return error;
+    return {
+        ok: false,
+        result: error,
+    };
 }
 
 /**
- * Fetches the list of the available translators and adds them to front-end's list of them.
- * @param translators The list the translators will be added to
+ * Fetches the list of the available translators.
  * @param includeManual Whether or not the option for manual translation should be included in the list
- * @returns The error message if the request was unsuccessful.
+ * @returns The list of translators or error message if the request was unsuccessful
  */
 export async function listTranslators(
-    translators: ITranslator[],
     includeManual: boolean
-) {
-    let error = "";
+): Promise<Result<ITranslator[], string>> {
+    const translators = [];
     const sources = await to($http.get<string[]>("/translations/translators"));
     if (sources.ok) {
         for (const translator of sources.result.data) {
@@ -94,26 +106,30 @@ export async function listTranslators(
             }
             translators.push({name: translator, available: false});
         }
+        return {
+            ok: true,
+            result: translators,
+        };
     } else {
         if (includeManual) {
             translators.push({name: "Manual", available: false});
         }
-        error = sources.result.data.error;
+        return {
+            ok: false,
+            result: sources.result.data.error,
+        };
     }
-    return error;
 }
 
 /**
- * Fetches the translators the user can use
- * @param translators the list the translators will be added to
+ * Fetches the translators the user can use.
  * @param includeManual Whether or not the option for manual translation should be included in the list
- * @returns The error message if the request was unsuccessful.
+ * @returns The list of available translators or the error message if the request was unsuccessful
  */
 export async function availableTranslators(
-    translators: string[],
     includeManual: boolean
-) {
-    let error = "";
+): Promise<Result<string[], string>> {
+    const translators: string[] = [];
     const sources = await to(
         $http.get<string[]>("/translations/myTranslators")
     );
@@ -124,63 +140,70 @@ export async function availableTranslators(
         for (const translator of sources.result.data) {
             translators.push(translator);
         }
+        return {
+            ok: true,
+            result: translators,
+        };
     } else {
-        error = sources.result.data.error;
-    }
-    return error;
-}
-
-/**
- * Checks if the translator is available for the user.
- * @param tr the translator getting checked
- * @param translators the list of translators to check through
- */
-export function isOptionAvailable(tr: ITranslator, translators: string[]) {
-    for (const translator of translators) {
-        if (tr.name == translator) {
-            tr.available = true;
-        }
+        return {
+            ok: false,
+            result: sources.result.data.error,
+        };
     }
 }
 
 /**
- * Handles updating data regarding translations.
- * @param sourceLanguages the list of source languages
- * @param documentLanguages the list of document languages
- * @param targetLanguages the list of target languages
+ * Fetches the data regarding translations and returns it for handling.
  * @param docTranslator the document's translator
- * @param translators the full list of translators
- * @param availableTrs the list of translators the user can use
  * @param errorMessage the error message user is shown if something goes wrong
  * @param includeManual whether or not Manual should be listed among translators
+ * @returns The lists of translations, translators, their availability and the last error
  */
 export async function updateTranslationData(
-    sourceLanguages: ILanguage[],
-    documentLanguages: ILanguage[],
-    targetLanguages: ILanguage[],
     docTranslator: string,
-    translators: ITranslator[],
-    availableTrs: string[],
     errorMessage: string,
     includeManual: boolean
 ) {
-    let finalError = errorMessage;
+    let results: SupportedLanguagesAndTranslators = {
+        source: [],
+        document: [],
+        target: [],
+        translators: [],
+        availableTransls: [],
+        error: "",
+    };
+
+    results.error = errorMessage;
     const error = ["", "", ""];
-    error[0] = await listTranslators(translators, includeManual);
-    error[1] = await updateLanguages(
-        sourceLanguages,
-        documentLanguages,
-        targetLanguages,
-        docTranslator
-    );
-    error[2] = await availableTranslators(availableTrs, includeManual);
+
+    const response1 = await listTranslators(includeManual);
+    if (response1.ok) {
+        results.translators = response1.result;
+    } else {
+        error[0] = response1.result;
+    }
+
+    const response2 = await updateLanguages(results, docTranslator);
+    if (response2.ok) {
+        results = response2.result;
+    } else {
+        error[1] = response2.result;
+    }
+
+    const response3 = await availableTranslators(includeManual);
+    if (response3.ok) {
+        results.availableTransls = response3.result;
+    } else {
+        error[2] = response3.result;
+    }
     for (const errors of error) {
         if (errors != "") {
-            finalError = errors;
+            results.error = errors;
         }
     }
-    for (const tr of translators) {
-        isOptionAvailable(tr, availableTrs);
+    for (const tr of results.translators) {
+        tr.available = results.availableTransls.includes(tr.name);
     }
-    return finalError;
+
+    return results;
 }

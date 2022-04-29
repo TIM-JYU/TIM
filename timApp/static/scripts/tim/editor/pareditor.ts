@@ -14,7 +14,7 @@ import {
 } from "tim/util/fullscreen";
 import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
 import {IDocument, ILanguage, ITranslator} from "tim/item/IItem";
-import {listLanguages, updateTranslationData} from "tim/document/languages";
+import {updateTranslationData} from "tim/document/languages";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
@@ -1208,36 +1208,33 @@ ${backTicks}
         );
 
         if (!this.checkIfOriginal()) {
-            this.getTheErrorMessage().then((result) => {
-                this.errorMessage = result;
-                if (result != "") {
-                    this.translatorAvailable = false;
-                } else if (this.availableTranslators.length == 0) {
-                    this.errorMessage =
-                        "You do not have any machine translator API keys added to you account.";
-                    this.translatorAvailable = false;
-                }
-            });
+            void this.initTranslatorData();
         }
     }
 
     /**
-     * Gets the error message from initialization because $onInit cannot be made async/await right now and .then takes
-     * the result from the first request in updateTranslationData().
+     * Fetches the translator data on initialization and adds it to the lists.
      */
-    async getTheErrorMessage() {
-        let result: string = "";
-        result = await updateTranslationData(
-            this.sourceLanguages,
-            this.documentLanguages,
-            this.targetLanguages,
+    async initTranslatorData() {
+        const result = await updateTranslationData(
             this.docTranslator,
-            this.translators,
-            this.availableTranslators,
             this.errorMessage,
             false
         );
-        return result;
+        this.sourceLanguages = result.source;
+        this.documentLanguages = result.document;
+        this.targetLanguages = result.target;
+        this.translators = result.translators;
+        this.availableTranslators = result.availableTransls;
+        this.errorMessage = result.error;
+
+        if (this.errorMessage != "") {
+            this.translatorAvailable = false;
+        } else if (this.availableTranslators.length == 0) {
+            this.errorMessage =
+                "You do not have any machine translator API keys added to you account.";
+            this.translatorAvailable = false;
+        }
     }
 
     /**
@@ -1616,7 +1613,7 @@ ${backTicks}
         );
         if (sources.ok) {
             this.targetLanguages = [];
-            listLanguages(sources.result.data, this.targetLanguages);
+            this.targetLanguages.push(...sources.result.data);
             this.translatorAvailable = true;
             this.errorMessage = "";
         } else {
@@ -1631,7 +1628,7 @@ ${backTicks}
         );
         if (sources.ok) {
             this.sourceLanguages = [];
-            listLanguages(sources.result.data, this.sourceLanguages);
+            this.sourceLanguages.push(...sources.result.data);
             this.translatorAvailable = true;
             this.errorMessage = "";
         } else {
