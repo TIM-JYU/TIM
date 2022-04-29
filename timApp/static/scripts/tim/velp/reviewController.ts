@@ -12,8 +12,8 @@ import {deserialize} from "typescript-json-serializer";
 import {TaskId} from "tim/plugin/taskid";
 import {
     DrawCanvasComponent,
-    DrawItem,
     getDrawingDimensions,
+    IDrawingWithID,
     IDrawUpdate,
     isCoordWithinDrawing,
 } from "tim/plugin/drawCanvas";
@@ -29,9 +29,9 @@ import {documentglobals} from "../util/globals";
 import {$compile, $http, $rootScope} from "../util/ngimport";
 import {
     angularWait,
-    isText,
     checkIfElement,
     getElementParent,
+    isText,
     log,
     to,
     truncate,
@@ -368,12 +368,12 @@ export class ReviewController {
         if (user) {
             annotations = annotations.filter((a) => a.annotator.id == user.id);
         }
-        const drawings: DrawItem[] = [];
+        const drawings: IDrawingWithID[] = [];
         for (const a of annotations) {
             const placeInfo = a.coord;
             let added = false;
             if (a.draw_data) {
-                drawings.push(...a.draw_data);
+                drawings.push({id: a.id, drawData: a.draw_data});
                 const targ = par.par.htmlElement.querySelector(
                     ".canvasObjectContainer"
                 );
@@ -463,7 +463,7 @@ export class ReviewController {
             );
         }
         if (canvas) {
-            canvas.setAndAdjustPersistentDrawData(drawings);
+            canvas.setPersistentDrawData(drawings);
         }
         $rootScope.$applyAsync(); // TODO: run only if we are in Angular zone
     }
@@ -648,15 +648,7 @@ export class ReviewController {
         if (annotation?.draw_data && annotation?.answer?.id) {
             const canvas = this.vctrl.getVelpCanvas(annotation.answer.id);
             if (canvas) {
-                const ab = this.vctrl.getAnswerBrowser(
-                    annotation.answer.task_id
-                );
-                const selected_velper = ab?.getReviewerUser();
-                this.drawAnnotationsOnCanvas(
-                    canvas,
-                    annotation.answer.id,
-                    selected_velper
-                );
+                canvas.deleteDrawItem(annotation.id);
             }
         }
         this.removeAnnotationElement(id);
@@ -996,9 +988,8 @@ export class ReviewController {
             if (saved.ok) {
                 const annCopy = saved.result;
                 this.updateAnnotation(annCopy);
-                this.selectedCanvas.storeDrawing();
+                this.selectedCanvas.saveAndStoreDrawing(ann.id);
             }
-            console.log(this.selectedCanvas.getDrawing());
             // TODO clear indicators and margins if !saved.ok
             this.selectedElement = undefined;
             // end if (this.selectionIsDrawing)
@@ -1501,34 +1492,6 @@ export class ReviewController {
         canvas.clearObjectContainer();
         canvas.id = answerId;
         this.vctrl.addVelpCanvas(answerId, canvas);
-    }
-
-    /**
-     * Draws annotation drawings on canvas
-     * @param canvas - DrawCanvasComponent to use
-     * @param answerId - Answer for which to find annotations
-     * @param user - Optional user to filter loaded annotations with
-     */
-    drawAnnotationsOnCanvas(
-        canvas: DrawCanvasComponent,
-        answerId: number,
-        user?: IUser
-    ) {
-        console.log("after del", canvas.getDrawing());
-        let annotations = this.getAnnotationsByAnswerId(answerId);
-        if (user) {
-            annotations = annotations.filter((a) => a.annotator.id == user.id);
-        }
-        const annotationDrawings = annotations.reduce(
-            (arr: DrawItem[], ann: Annotation) => {
-                if (ann.draw_data) {
-                    arr = arr.concat(ann.draw_data);
-                }
-                return arr;
-            },
-            []
-        );
-        canvas.setAndAdjustPersistentDrawData(annotationDrawings);
     }
 
     /**
