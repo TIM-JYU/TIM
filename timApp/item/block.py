@@ -227,6 +227,7 @@ def copy_default_rights(
     while folder is not None:
         default_rights += get_default_rights_holders(folder, item_type)
         folder = folder.parent
+    refreshed_groups = set()
     for d in default_rights:
         if (
             owners_to_skip
@@ -234,6 +235,11 @@ def copy_default_rights(
             and d.access_type == AccessType.owner
         ):
             continue
+        # Because copy_default_rights is usually applied to a new item with new permissions, the usergroup.accesses_alt
+        # might not be updated yet. Because of this, we need to force the update of the accesses_alt at least once.
+        if d.usergroup.id not in refreshed_groups:
+            db.session.expire(d.usergroup, ["accesses_alt"])
+            refreshed_groups.add(d.usergroup.id)
         grant_access(
             d.usergroup,
             item,
