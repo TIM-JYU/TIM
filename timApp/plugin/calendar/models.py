@@ -27,7 +27,9 @@ class Enrollment(db.Model):
         db.Integer, db.ForeignKey("enrollmenttype.enroll_type_id"), nullable=False
     )
 
-    def get_enrollment_by_ids(event_id: int, user_group: usergroup_id):
+    def get_enrollment_by_ids(
+        event_id: int, user_group: usergroup_id
+    ) -> Optional["Enrollment"]:
         return Enrollment.query.filter(
             Enrollment.event_id == event_id, Enrollment.usergroup_id == user_group
         ).one_or_none()
