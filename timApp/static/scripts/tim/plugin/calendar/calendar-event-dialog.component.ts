@@ -137,7 +137,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         (click)="bookEvent()" [disabled]="eventIsFull()" [hidden]="isEditEnabled()">
                     Book event
                 </button>
-                <button class="btn timButton" type="button" [hidden]="!eventHasBookings()" (click)="cancelBooking()" style="background-color: red;">
+                <button class="btn timButton" type="button" [hidden]="!eventHasBookings() || userIsManager()" (click)="cancelBooking()" style="background-color: red;">
                     Cancel Booking
                 </button>
                 <button class="timButton" type="submit" (click)="saveChanges()" [disabled]="form.invalid"
@@ -328,7 +328,10 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     async cancelBooking() {
         const openEvent = this.data;
         const EnrollmentToCancelId = this.data.id;
-        if (!EnrollmentToCancelId) {
+        if (
+            !EnrollmentToCancelId ||
+            !confirm("Are you sure you want to cancel booking?")
+        ) {
             return;
         } //
         const result = await toPromise(
