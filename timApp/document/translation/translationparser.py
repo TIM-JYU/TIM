@@ -20,6 +20,7 @@ __date__ = "25.4.2022"
 import re
 import pypandoc
 import json
+import string
 from typing import Tuple, Iterable
 from dataclasses import dataclass
 from itertools import chain
@@ -46,6 +47,34 @@ regex_collection = "|".join(regex_to_translate)
 # Compile collection for efficiency.
 regex_pattern = re.compile(regex_collection)
 
+
+TRANSLATE_PLUGIN_ATTRIBUTES = [
+    "stem",
+    "buttonText",
+    "button",
+    "text",
+    "reason",
+    "placeholder",
+    "header",
+    "headerText",
+    "questionText",
+    "questionTitle",
+    # Starts a list of translatable texts
+    # "rows", # TODO Handle separately?
+    "button",
+    "inputstem",
+    "inputplaceholder",
+    "argsstem",
+    "argsplaceholder",
+    "showCodeOn",
+    "showCodeOff",
+    "footer",
+    # "id", # TODO Allowing translation unsure
+    "hidetext",
+    "videoname",
+    "correctText",
+    "wrongText",
+]
 
 # TODO This name is kinda bad. Better would be along the lines of
 #  translate-flag or a whole new list-type data structure, that describes
@@ -195,8 +224,8 @@ class TranslationParser:
         if identifier:
             arr.append(NoTranslate(f"#{identifier} "))
         arr += [NoTranslate(f".{x} ") for x in classes]
-        # NOTE Is seems to be convention with TIM to surround the value-part with
-        # double quotes.
+        # Use the specific quotes that was initialized with (related to md: in
+        # plugin values).
         arr += [NoTranslate(f"{k}={self.quote}{v}{self.quote} ") for k, v in kv_pairs]
         # Remove extra space from last element
         arr[-1].text = arr[-1].text.strip()
@@ -500,38 +529,11 @@ class TranslationParser:
         :param content: The raw markdown content of the plugin-defined paragraph.
         :return: List of the translatable and non-translatable parts
         """
-        keys = [
-            "stem",
-            "buttonText",
-            "button",
-            "text",
-            "reason",
-            "placeholder",
-            "header",
-            "headerText",
-            "questionText",
-            "questionTitle",
-            # Starts a list of translatable texts
-            # "rows", # TODO Handle separately?
-            "button",
-            "inputstem",
-            "inputplaceholder",
-            "argsstem",
-            "argsplaceholder",
-            "showCodeOn",
-            "showCodeOff",
-            "footer",
-            # "id", # TODO Allowing translation unsure
-            "hidetext",
-            "videoname",
-            "correctText",
-            "wrongText",
-        ]
 
         arr: list[TranslateApproval] = list()
         lines = iter(content.splitlines())
         while (line := next(lines, None)) is not None:
-            for key_s in map(lambda x: f"{x}:", keys):
+            for key_s in map(lambda x: f"{x}:", TRANSLATE_PLUGIN_ATTRIBUTES):
                 if line.lstrip().startswith(key_s):
                     nt, text = line.split(key_s, 1)
                     arr.append(NoTranslate(nt))
@@ -1029,36 +1031,8 @@ def to_alphabet(num: int) -> str:
     Converts the start number from Pandoc's alphabet list to the corresponding
     character.
 
-    :param num: The list's starting number
-    :returns: The alphabet corresponding the starting number
+    :param num: The list's starting number.
+    :returns: The alphabet corresponding the starting number.
     """
-    alphabets = [
-        "",
-        "a",
-        "b",
-        "c",
-        "d",
-        "e",
-        "f",
-        "g",
-        "h",
-        "i",
-        "j",
-        "k",
-        "l",
-        "m",
-        "n",
-        "o",
-        "p",
-        "q",
-        "r",
-        "s",
-        "t",
-        "u",
-        "v",
-        "w",
-        "x",
-        "y",
-        "z",
-    ]
-    return alphabets[num]
+    # TODO This fails when num > len(string.ascii_lowercase)
+    return string.ascii_lowercase[num - 1]

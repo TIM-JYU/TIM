@@ -554,6 +554,61 @@ x=0\;\;\;\\text{"""
             self.parser.get_translate_approvals(md),
         )
 
+    # TODO Allow this test when needed parts are implemented.
+    def TODO_test_ordered_list3(self):
+        """
+        Testing orderedlist with all the different ways they can be formatted
+        with indentation and different number-digits.
+        """
+        md = r"""42. Tässä ollaan
+    42. Jotain tehdään
+    42. Ainakin nyt
+    #) Kivaa on
+        xxxx. Roomalaisia numeroita
+        xxxx) Ihan liikaa roomalaisia numeroita
+        xxxx) Ei olla edes Roomassa
+    (ix) tai koomassa
+    (z) Aakkosia
+    (z) Niitäkin on liikaa
+    (z) Liikaa, liikaa
+    A) Ihan hirveesti
+    B) Liikaa
+"""
+        self.assertEqual(
+            [
+                # TODO/FIXME does a list need to start with newline when the
+                #  Para already does?
+                Translate("\n"),
+                NoTranslate("\n42. "),
+                Translate("Tässä ollaan"),
+                NoTranslate("\n\t43. "),
+                Translate("Jotain tehdään"),
+                NoTranslate("\n\t44. "),
+                Translate("Ainakin nyt"),
+                NoTranslate("\n\t#) "),
+                Translate("Kivaa on"),
+                NoTranslate("\n\t\txl. "),
+                Translate("Roomalaisia numeroita"),
+                NoTranslate("\n\t\txli) "),
+                Translate("Ihan liikaa roomalaisia numeroita"),
+                NoTranslate("\n\t\txlii) "),
+                Translate("Ei olla edes Roomassa"),
+                NoTranslate("\n\t(ix) "),
+                Translate("tai koomassa"),
+                NoTranslate("\n\t(z) "),
+                Translate("Aakkosia"),
+                NoTranslate("\n\t(aa) "),
+                Translate("Niitäkin on liikaa"),
+                NoTranslate("\n\t(ab) "),
+                Translate("Liikaa, liikaa"),
+                NoTranslate("\n\tA) "),
+                Translate("Ihan hirveesti"),
+                NoTranslate("\n\tB) "),
+                Translate("Liikaa\n"),
+            ],
+            self.parser.get_translate_approvals(md),
+        )
+
     # TODO There is currently no reliable solution for the corner cases in
     #  this test case. Proper handling will require major refactoring of the
     #  parser engine.

@@ -50,16 +50,14 @@ from timApp.document.translation.translator import (
 from timApp.document.translation.language import Language
 
 
-def valid_language_id(lang_id: str) -> bool:
+def is_valid_language_id(lang_id: str) -> bool:
     """
     Check that the ID is recognized by the langcodes library and found in
     database.
 
     :param lang_id: Language id (or "tag") to check for validity.
-    :return: True, if the ID is found in database.
+    :return: True, if the standardized ID is found in database.
     """
-    # TODO This could return the queried language if found (to reduce
-    #  db-queries)
     try:
         tag = langcodes.standardize_tag(lang_id)
         lang = Language.query_by_code(tag)
@@ -91,7 +89,7 @@ def create_translation_route(tr_doc_id: int, language: str, transl: str) -> Resp
     doc = get_doc_or_abort(tr_doc_id)
 
     verify_view_access(doc)
-    if not valid_language_id(language):
+    if not is_valid_language_id(language):
         raise NotExist("Invalid language identifier")
     if doc.has_translation(language):
         raise ItemAlreadyExistsException("Translation for this language already exists")
@@ -205,7 +203,7 @@ def paragraph_translation_route(
     verify_view_access(tr)
     verify_manage_access(src_doc)
 
-    if not valid_language_id(language):
+    if not is_valid_language_id(language):
         raise NotExist("Invalid language identifier")
 
     if translator_code:
@@ -294,7 +292,7 @@ def text_translation_route(tr_doc_id: int, language: str, transl: str) -> Respon
 @tr_bp.post("/translation/<int:doc_id>")
 def update_translation(doc_id):
     (lang_id, doc_title) = verify_json_params("new_langid", "new_title", require=True)
-    if not valid_language_id(lang_id):
+    if not is_valid_language_id(lang_id):
         raise AccessDenied("Invalid language identifier")
     doc = get_doc_or_abort(doc_id)
     if not has_manage_access(doc) and not has_manage_access(doc):
