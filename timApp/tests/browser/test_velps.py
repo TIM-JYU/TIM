@@ -126,7 +126,6 @@ saveButton: Tallenna
             points=0,
         )
         db.session.commit()
-        self.goto_document(d)
         def_group_res = self.post(f"{d.id}/create_default_velp_group")
         default_group_id = def_group_res["id"]
         vg = VelpGroup.query.get(default_group_id)
@@ -137,6 +136,8 @@ saveButton: Tallenna
         )
         vg.velps[new_velp.id] = new_velp
         db.session.commit()
+        self.goto_document(d)
+        self.wait_until_present("jsframe-runner iframe")
         par = self.find_element_avoid_staleness(".par.csPlugin")
         parid = par.get_attribute("id")
         t = par.get_attribute("t")
@@ -209,17 +210,21 @@ saveButton: Tallenna
         iframe = self.find_element_avoid_staleness("jsframe-runner iframe")
         iframe.click()
         self.find_element_avoid_staleness("answerbrowser")
-        velpbox = self.drv.find_element(By.XPATH, "//*[text()[contains(.,'Velps')]]")
+        velpbox = self.find_element_avoid_staleness(
+            xpath="//*[text()[contains(.,'Velps')]]"
+        )
         velpbox.click()
         self.wait_until_present(".canvasObjectContainer annotation")
-        velper_selector_element = self.find_element(
+        self.find_element_avoid_staleness("draw-toolbar button").click()
+        velper_selector_element = self.find_element_avoid_staleness(
             "select[ng-model='$ctrl.reviewerUser']"
         )
-        self.find_element("draw-toolbar button").click()
         velper_selector_dropdown = Select(velper_selector_element)
-        canvas = self.find_element(".drawbase")
+        canvas = self.find_element_avoid_staleness(".drawbase")
         velper_selector_dropdown.select_by_index(1)
-        velp_to_use = self.find_element("velp-window:nth-child(2) .velp")
+        velp_to_use = self.find_element_avoid_staleness(
+            "velp-window:nth-child(2) .velp"
+        )
         # ann 3
         ActionChains(self.drv).move_to_element(canvas).move_by_offset(
             0, -150
@@ -231,10 +236,14 @@ saveButton: Tallenna
         ).click_and_hold().move_by_offset(20, 20).release().perform()
         velp_to_use.click()
         self.wait_until_hidden("span[ng-if='$ctrl.rctrl.selectedElement']")
-        self.find_element("annotation[aid='3'] span.glyphicon-trash").click()
+        self.find_element_avoid_staleness(
+            "annotation[aid='3'] span.glyphicon-trash"
+        ).click()
         self.drv.switch_to.alert.accept()
-        canvas.click()
-        self.wait_until_hidden("span[ng-if='$ctrl.rctrl.selectedElement']")
+        self.find_element_avoid_staleness(
+            "annotation[aid='4'] tim-close-button"
+        ).click()
+        self.wait_until_hidden("annotation[aid='4'] .fulldiv")
         # tu1 added velp 1, tu2 added velp2
         # tu1 filters velps by choosing tu2 from the ui
         # tu1 added velps 3 and 4, deleted 3, did not touch filter selector
