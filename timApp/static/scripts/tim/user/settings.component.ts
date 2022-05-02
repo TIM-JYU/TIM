@@ -437,8 +437,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                 <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>
                                 <input type="text" class="form-control buttonBorder" [value]="APIkey.translator" disabled>
                                 <div *ngIf="APIkey.quotaChecked" class="stacked quotaProgressBar">
-                                    <progressbar [value]="APIkey.usedQuota" [max]="APIkey.availableQuota"></progressbar>
-                                        <p>{{APIkey.usedQuota}} / {{APIkey.availableQuota}}</p>
+                                    <progressbar tooltip="{{APIkey.usedQuota}} / {{APIkey.availableQuota}}" [value]="APIkey.usedQuota" [max]="APIkey.availableQuota"></progressbar>
                                 </div>
                                 <button *ngIf="!APIkey.quotaChecked" class="btn" type="button" (click)="checkQuota(APIkey)" i18n>
                                     Check key's quota 
