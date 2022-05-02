@@ -1246,7 +1246,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         DndModule,
         TooltipModule.forRoot(),
         TabsModule.forRoot(),
-        ProgressbarModule,
+        ProgressbarModule.forRoot(),
     ],
 })
 export class SettingsModule implements DoBootstrap {

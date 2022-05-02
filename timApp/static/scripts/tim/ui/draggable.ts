@@ -238,7 +238,7 @@ export class DraggableController implements IController {
             this.element.removeClass("draggable-attached");
             this.element.addClass("draggable-detached");
         }
-        this.element.css("z-index", this.layerProperly());
+        this.element.css("z-index", this.getVisibleLayer());
 
         this.detachStorage.set(this.canDrag());
     }
@@ -248,7 +248,7 @@ export class DraggableController implements IController {
      * detached windows) so this makes use of z-indexes to work around it.
      * @returns the layer/z-index for this window.
      */
-    layerProperly() {
+    getVisibleLayer() {
         const diff = document.getElementById("diff");
         const preview = document.getElementById("currpreview");
         const orig = document.getElementById("origprev");

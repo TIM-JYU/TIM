@@ -579,10 +579,10 @@ ${backTicks}
                         name: "H5",
                     },
                     {
-                        title: "Notranslate",
+                        title: "No translation",
                         func: () =>
                             this.editor!.styleClicked("Teksti", "notranslate"),
-                        name: "Notranslate",
+                        name: "No translation",
                     },
                 ],
                 name: "Style",
@@ -1126,7 +1126,6 @@ ${backTicks}
         super.$onInit();
         this.docSettings = documentglobals().docSettings;
         const saveTag = this.getSaveTag();
-        this.translationInProgress = false;
         this.storage = {
             acebehaviours: new TimStorage("acebehaviours" + saveTag, t.boolean),
             acewrap: new TimStorage("acewrap" + saveTag, t.boolean),
@@ -1156,7 +1155,7 @@ ${backTicks}
             this.storage.proeditor.get() ??
             (saveTag === "par" || saveTag === TIM_TABLE_CELL);
         this.activeTab = this.storage.editortab.get() ?? "navigation";
-        if (this.checkIfOriginal() && this.activeTab == "translator") {
+        if (this.isOriginalDocument() && this.activeTab == "translator") {
             this.activeTab = "navigation";
         }
         this.sideBySide = this.storage.diffSideBySide.get() ?? true;
@@ -1207,7 +1206,7 @@ ${backTicks}
             undefined
         );
 
-        if (!this.checkIfOriginal()) {
+        if (!this.isOriginalDocument()) {
             void this.initTranslatorData();
         }
     }
@@ -1291,7 +1290,9 @@ ${backTicks}
                 minLines: Math.min(lines, 5),
             });
         } else if (this.editor?.type == EditorType.Textarea) {
-            this.editor.editor.height(Math.abs(remainingSpace));
+            // Changing from ace editor to text editor can make text editor's height be 0, but putting remainingSpace to
+            // Math.abs makes text editor become taller while making it shorter after some point.
+            this.editor.editor.height(remainingSpace);
         }
     }
 
@@ -1640,19 +1641,18 @@ ${backTicks}
      * Checks if the document is a translation document and if its languages are supported by the selected translator.
      * @returns Whether or not the document can be translated automatically
      */
-    showTranslated() {
-        let isTranslated = false;
-        if (this.checkIfOriginal()) {
-            return isTranslated;
+    isTranslationSupported() {
+        if (this.isOriginalDocument()) {
+            return false;
         }
         const trs = documentglobals().translations;
         const orig = trs.find((tab) => tab.id === tab.src_docid);
         if (orig && this.resolve.params.viewCtrl?.item.lang_id) {
             const orig_lang = orig.lang_id;
             const tr_lang = this.resolve.params.viewCtrl.item.lang_id;
-            isTranslated = this.checkIfSupported(orig_lang, tr_lang);
+            return this.isTranslationPairSupported(orig_lang, tr_lang);
         }
-        return isTranslated;
+        return false;
     }
 
     /**
@@ -1661,7 +1661,7 @@ ${backTicks}
      * @param tr The curent document's language code
      * @returns Whether or not the language combination is supported
      */
-    checkIfSupported(orig: string, tr: string) {
+    isTranslationPairSupported(orig: string, tr: string) {
         for (const target of this.targetLanguages) {
             if (target.code.toUpperCase() == tr.toUpperCase()) {
                 for (const source of this.sourceLanguages) {
@@ -1677,7 +1677,7 @@ ${backTicks}
     /**
      * Checks whether or not the document is the original document.
      */
-    checkIfOriginal() {
+    isOriginalDocument() {
         const tags = this.getExtraData().tags;
         return tags.marktranslated == undefined;
     }
@@ -1717,11 +1717,11 @@ ${backTicks}
      * Handles sending either the selected editor text or the entire block to the translator.
      */
     async translateClicked() {
-        const translatableText = this.translationSelector();
+        const translatableText = this.getTranslatableText();
         const helper = this.getEditor()!.getEditorText();
         const editText = helper.substring(helper.indexOf("\n") + 1);
 
-        const mayContinue: boolean = await this.checkMayTranslate(editText);
+        const mayContinue = await this.checkMayTranslate(editText);
 
         if (!mayContinue) {
         } else {
@@ -1792,7 +1792,7 @@ ${backTicks}
      * Gets the text to be sent to the translator.
      * @returns The selected text, the source block's text or nothing if there is neither
      */
-    translationSelector() {
+    getTranslatableText() {
         const selection = this.getEditor()!.checkTranslationSelection();
         if (selection == "") {
             this.nothingSelected = true;

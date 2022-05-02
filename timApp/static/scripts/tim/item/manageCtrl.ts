@@ -107,7 +107,6 @@ export class PermCtrl implements IController {
     }
 
     async $onInit() {
-        this.translationInProgress = false;
         if (this.item.isFolder) {
             this.newName = this.item.name;
             this.newFolderName = this.item.location;
@@ -707,15 +706,10 @@ export class PermCtrl implements IController {
      * @returns The current translation document's language or nothing if not found or is source document.
      */
     findCurrentTrDocLang(id: number) {
-        for (const translation of this.translations) {
-            if (
-                translation.id == id &&
-                translation.id != translation.src_docid
-            ) {
-                return translation.lang_id;
-            }
-        }
-        return "";
+        return (
+            this.translations.find((tr) => tr.id == id && tr.id != tr.src_docid)
+                ?.lang_id ?? ""
+        );
     }
 
     /**
@@ -723,12 +717,9 @@ export class PermCtrl implements IController {
      * @returns the source document's language or an empty string if for some reason was not found
      */
     findSourceDocLang() {
-        for (const translation of this.translations) {
-            if (translation.id == translation.src_docid) {
-                return translation.lang_id;
-            }
-        }
-        return "";
+        return (
+            this.translations.find((tr) => tr.id == tr.src_docid)?.lang_id ?? ""
+        );
     }
 
     /**
