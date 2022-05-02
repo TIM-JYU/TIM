@@ -1104,6 +1104,9 @@ ${backTicks}
      * Tracks the editing and Difference in original document views' positioning (see pareditor.html).
      */
     changePositioning() {
+        if (this.isOriginalDocument()) {
+            return;
+        }
         const doc = document.getElementById("editorflex");
         const editdoc = document.getElementById("editorbox");
         if (doc != null && this.sideBySide) {
@@ -2407,7 +2410,9 @@ ${backTicks}
         const ace = this.isAce();
         this.storage.oldMode.set(ace ? "ace" : "text");
         this.storage.wrap.set("" + this.wrapValue());
-        this.storage.diffSideBySide.set(!this.sideBySide);
+        if (!this.isOriginalDocument()) {
+            this.storage.diffSideBySide.set(!this.sideBySide);
+        }
         this.storage.translator.set(this.docTranslator);
         const acc = this.getExtraData().access;
         if (acc != null) {
