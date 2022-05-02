@@ -1013,9 +1013,11 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     async deleteKey(key: IUserApiKey) {
         this.saving = true;
         const r = await toPromise(
-            this.http.post("/translations/apiKeys/remove", {
-                translator: key.translator,
-                apikey: key.APIkey,
+            this.http.delete("/translations/apiKeys", {
+                body: {
+                    translator: key.translator,
+                    apikey: key.APIkey,
+                },
             })
         );
         this.saving = false;
