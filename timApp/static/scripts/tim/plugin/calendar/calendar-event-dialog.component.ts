@@ -304,15 +304,16 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 return group.name === Users.getCurrent().name;
             });
             if (booker) {
-                let lastName = " " + Users.getCurrent().last_name;
-                if (!lastName) {
-                    lastName = "";
+                let fullName = Users.getCurrent().real_name;
+                if (!fullName) {
+                    fullName = Users.getCurrent().name;
                 }
                 this.data.meta!.booker_groups.push({
                     name: booker.name,
                     users: [
                         {
-                            name: `${Users.getCurrent().name}${lastName}`,
+                            id: Users.getCurrent().id,
+                            name: `${fullName}`,
                             email: Users.getCurrent().email,
                         },
                     ],

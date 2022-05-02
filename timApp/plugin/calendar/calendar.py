@@ -203,7 +203,8 @@ def get_events() -> Response:
                 for user in group.users:
                     users.append(
                         {
-                            "name": user.pretty_full_name,
+                            "id": user.id,
+                            "name": user.real_name,
                             "email": user.email,
                         }
                     )

@@ -146,7 +146,7 @@ export type TIMCalendarEvent = CalendarEvent<{
     maxSize: number;
     booker_groups: {
         name: string;
-        users: {name: string; email: string | null}[];
+        users: {id: number; name: string; email: string | null}[];
     }[];
 }>;
 
@@ -491,6 +491,10 @@ export class CalendarComponent
         mouseDownEvent: MouseEvent,
         segmentElement: HTMLElement
     ) {
+        let fullName = Users.getCurrent().real_name;
+        if (!fullName) {
+            fullName = Users.getCurrent().name;
+        }
         const dragToSelectEvent: TIMCalendarEvent = {
             id: this.events.length,
             // title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
@@ -499,7 +503,7 @@ export class CalendarComponent
             // )
             //     .toTimeString()
             //     .substr(0, 5)} Varattava aika`,
-            title: Users.getCurrent().name + " " + Users.getCurrent().last_name,
+            title: fullName,
             start: segment.date,
             end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
@@ -618,14 +622,7 @@ export class CalendarComponent
             if (event.meta!.booker_groups) {
                 event.meta!.booker_groups.forEach((group) => {
                     group.users.forEach((user) => {
-                        let lastName = " " + Users.getCurrent().last_name;
-                        if (!lastName) {
-                            lastName = "";
-                        }
-                        if (
-                            user.name ===
-                            `${Users.getCurrent().name}${lastName}`
-                        ) {
+                        if (user.id === Users.getCurrent().id) {
                             event.color = colors.green;
                         }
                     });
