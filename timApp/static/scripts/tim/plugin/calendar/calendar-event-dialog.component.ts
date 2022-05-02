@@ -325,6 +325,12 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         }
     }
 
+    /**
+     * Cancel booking of a selected event from the current user. Sends the id of the event to the API, which handles
+     * recognition of the current user group.
+     * TODO: Event should be colored blue right after cancelling, now the page needs to be refreshed for some reason.
+     *
+     */
     async cancelBooking() {
         const openEvent = this.data;
         const EnrollmentToCancelId = this.data.id;
