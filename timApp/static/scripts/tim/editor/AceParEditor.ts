@@ -52,6 +52,9 @@ export class AceParEditor extends BaseParEditor {
             minLines: 5,
             autoScrollEditorIntoView: true,
             hScrollBarAlwaysVisible: true,
+            // This needs to be true so that horizontal scrolling is possible when Difference in original document is
+            // next to the editor. The horizontal scrolling doesn't work properly when editor is resized to be narrower
+            // than the text in it (doesn't scroll all the way to the right)); seems to be an issue with the Ace editor.
             vScrollBarAlwaysVisible: false,
             enableBasicAutocompletion: true,
             enableLiveAutocompletion: true,
@@ -451,12 +454,14 @@ export class AceParEditor extends BaseParEditor {
             this.editor.getSelectionRange()
         );
     }
+
     replaceTranslation(descDefault: string) {
         // $ is a special symbol in TextMate/Sublime Text snippets and should be escaped
         // https://forum.sublimetext.com/t/escaping-dollar-sign-in-snippets/31078
         descDefault = descDefault.replace(/\$/g, "\\$");
         this.snippetManager.insertSnippet(this.editor, descDefault);
     }
+
     /**
      * @param descDefault Placeholder for description
      * @param linkDefault Placeholder for link address

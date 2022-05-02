@@ -8,7 +8,10 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as snv from "tim/ui/shortNameValidator";
 import * as tem from "tim/ui/formErrorMessage";
 import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
-import {updateTranslationData} from "tim/document/languages";
+import {
+    updateTranslationData,
+    updateTranslatorLanguages,
+} from "tim/document/languages";
 import {IManageResponse} from "../document/editing/edittypes";
 import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
@@ -107,7 +110,6 @@ export class PermCtrl implements IController {
     }
 
     async $onInit() {
-        this.translationInProgress = false;
         if (this.item.isFolder) {
             this.newName = this.item.name;
             this.newFolderName = this.item.location;
@@ -402,8 +404,6 @@ export class PermCtrl implements IController {
 
     /**
      * Removes the chosen document.
-     * TODO: Handling the error code should be done better (it should never appear on the browser's console) but at
-     * least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
      * @param id the id of the document to be deleted
      */
     async deleteDocument(id: number) {
@@ -638,42 +638,24 @@ export class PermCtrl implements IController {
     }
 
     /**
-     * Updates the list of available target languages when translator is changed.
-     * TODO: Handling the error code should be done better (it should never appear on the browser's console) but at
-     * least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
-     * TODO: This could probably be refactored into edittypes.ts at least after updating this to new Angular?
+     * Updates the list of available languages when translator is changed.
      */
-    async updateTranslatorLanguages() {
-        let sources = await to(
-            $http.post<ILanguage[]>("/translations/targetLanguages", {
-                translator: this.newTranslation.translator,
-            })
+    async updateManageTranslatorLanguages() {
+        const result = await updateTranslatorLanguages(
+            this.newTranslation.translator
         );
-        if (sources.ok) {
+        if (result.ok) {
             this.targetLanguages = [];
-            this.targetLanguages.push(...sources.result.data);
-            this.translatorAvailable = true;
-            this.errorMessage = "";
-        } else {
-            this.translatorAvailable = false;
-            this.errorMessage = sources.result.data.error;
-            return;
-        }
-        sources = await to(
-            $http.post<ILanguage[]>("/translations/sourceLanguages", {
-                translator: this.newTranslation.translator,
-            })
-        );
-        if (sources.ok) {
             this.sourceLanguages = [];
-            this.sourceLanguages.push(...sources.result.data);
+            this.targetLanguages.push(...result.result.target);
+            this.sourceLanguages.push(...result.result.source);
             this.translatorAvailable = true;
             this.errorMessage = "";
         } else {
             this.translatorAvailable = false;
-            this.errorMessage = sources.result.data.error;
-            return;
+            this.errorMessage = result.result;
         }
+
         this.notManualCheck();
         this.checkTranslatability();
     }
@@ -711,15 +693,10 @@ export class PermCtrl implements IController {
      * @returns The current translation document's language or nothing if not found or is source document.
      */
     findCurrentTrDocLang(id: number) {
-        for (const translation of this.translations) {
-            if (
-                translation.id == id &&
-                translation.id != translation.src_docid
-            ) {
-                return translation.lang_id;
-            }
-        }
-        return "";
+        return (
+            this.translations.find((tr) => tr.id == id && tr.id != tr.src_docid)
+                ?.lang_id ?? ""
+        );
     }
 
     /**
@@ -727,12 +704,9 @@ export class PermCtrl implements IController {
      * @returns the source document's language or an empty string if for some reason was not found
      */
     findSourceDocLang() {
-        for (const translation of this.translations) {
-            if (translation.id == translation.src_docid) {
-                return translation.lang_id;
-            }
-        }
-        return "";
+        return (
+            this.translations.find((tr) => tr.id == tr.src_docid)?.lang_id ?? ""
+        );
     }
 
     /**
