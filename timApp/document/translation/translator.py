@@ -215,7 +215,8 @@ class TranslationServiceKey(db.Model):
         }
 
 
-# TODO PyCharm wants this class to implement the superclass methods...
+# PyCharm would otherwise want this class to implement the superclass methods.
+# noinspection PyAbstractClass
 class RegisteredTranslationService(TranslationService):
     """A translation service whose use is constrained by user group."""
 
@@ -241,7 +242,7 @@ class TranslationTarget:
         elif isinstance(self.value, DocParagraph):
             return self.value.md
         else:
-            assert False, "Translatable paragraph had unexpected type"
+            raise Exception("Translation target had unexpected type")
 
 
 class TranslateMethodFactory:
@@ -444,17 +445,22 @@ class TranslateMethodFactory:
         return generic_translate
 
 
-def get_lang_lists(translator: str, source_langs: bool) -> list[Language]:
-    # TODO use SQLAlchemy polymorphism here instead of if-elif
-    from timApp.document.translation.deepl import DeeplTranslationService
-    from timApp.document.translation.deepl import DeeplProTranslationService
+def get_lang_lists(translator_code: str, source_langs: bool) -> list[Language]:
+    """
+    Get list of supported languages by machine translator.
 
-    if translator.lower() == "deepl free":
-        tr = DeeplTranslationService.query.first()
-    elif translator.lower() == "deepl pro":
-        tr = DeeplProTranslationService.query.first()
+    :param translator_code: Identifier of the machine translator.
+    :param source_langs: Flag for getting source-language (True) list instead
+    of target-language (False).
+    :return: List of the supported languages by type (source or target).
+    """
+    translator = (
+        TranslationService.query.with_polymorphic("*")
+        .filter(TranslationService.service_name == translator_code)
+        .one()
+    )
 
-    return tr.get_languages(source_langs)
+    return translator.get_languages(source_langs)
 
 
 def replace_md_aliases(text: str) -> str:

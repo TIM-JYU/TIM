@@ -194,7 +194,7 @@ def create_translation_route(
     elif isinstance(doc, Translation):
         de = doc.docentry
     else:
-        assert False, "doc has unexpected type"
+        raise Exception("doc has unexpected type")
     de.trs.append(tr)
     copy_default_rights(tr, BlockType.Document)
     db.session.commit()
@@ -216,16 +216,15 @@ def paragraph_translation_route(
     original paragraph!
     :param language: Language to translate into.
     :param transl: Identifying code of the translator to use.
-    :return: Response to the request. TODO Change when return value is changed
+    :return: OK-response if translation and modification was successful.
     """
     translator_code = transl
 
-    # TODO Why should get_doc_or_abort be used?
-    tr = Translation.query.get(get_doc_or_abort(tr_doc_id).id)
+    tr = get_doc_or_abort(tr_doc_id)
     src_doc = tr.src_doc
 
     if not isinstance(tr, Translation):
-        assert False, "doc has unexpected type"
+        raise Exception("Document is not Translation-type")
     # TODO Do these checks follow TIM conventions?
     verify_view_access(tr)
     verify_manage_access(src_doc)
@@ -252,14 +251,8 @@ def paragraph_translation_route(
 
         translated_text = translator_func([TranslationTarget(src_par)])[0]
         tr.document.modify_paragraph(tr_par_id, translated_text)
-        # TODO Maybe this is needed for modifying paragraphs???
-        db.session.commit()
 
-    # TODO (maybe duplicate) Could this cause unhandled exception if translator_code is not recognised and tries to
-    #  return json_response(block_text) when block_text is not defined
-    # TODO What should this even return? Maybe an ok_response?
-    #  Or string_response?
-    return json_response(tr_doc_id)
+    return ok_response()
 
 
 @tr_bp.post("/translate/<int:tr_doc_id>/<language>/translate_block/<transl>")
@@ -277,6 +270,8 @@ def text_translation_route(tr_doc_id: int, language: str, transl: str) -> Respon
 
     doc = get_doc_or_abort(tr_doc_id)
 
+    if not isinstance(doc, Translation):
+        raise Exception("Document is not Translation-type")
     verify_view_access(doc)
     verify_manage_access(doc.src_doc)
 
@@ -371,7 +366,7 @@ def get_source_languages() -> Response:
         #  RegisteredTranslationService)
         tr.register(get_current_user_object().get_personal_group())
 
-    if translator.lower() == "deepl free" or translator.lower() == "deepl pro":
+    if translator.lower() != "manual":
         langs = get_lang_lists(translator, True)
         return json_response(langs)
     else:
