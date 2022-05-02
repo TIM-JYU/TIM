@@ -8,7 +8,10 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as snv from "tim/ui/shortNameValidator";
 import * as tem from "tim/ui/formErrorMessage";
 import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
-import {updateTranslationData} from "tim/document/languages";
+import {
+    updateTranslationData,
+    updateTranslatorLanguages,
+} from "tim/document/languages";
 import {IManageResponse} from "../document/editing/edittypes";
 import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
@@ -635,40 +638,24 @@ export class PermCtrl implements IController {
     }
 
     /**
-     * Updates the list of available target languages when translator is changed.
-     * TODO: This could probably be refactored into edittypes.ts at least after updating this to new Angular?
+     * Updates the list of available languages when translator is changed.
      */
-    async updateTranslatorLanguages() {
-        let sources = await to(
-            $http.post<ILanguage[]>("/translations/targetLanguages", {
-                translator: this.newTranslation.translator,
-            })
+    async updateManageTranslatorLanguages() {
+        const result = await updateTranslatorLanguages(
+            this.newTranslation.translator
         );
-        if (sources.ok) {
+        if (result.ok) {
             this.targetLanguages = [];
-            this.targetLanguages.push(...sources.result.data);
-            this.translatorAvailable = true;
-            this.errorMessage = "";
-        } else {
-            this.translatorAvailable = false;
-            this.errorMessage = sources.result.data.error;
-            return;
-        }
-        sources = await to(
-            $http.post<ILanguage[]>("/translations/sourceLanguages", {
-                translator: this.newTranslation.translator,
-            })
-        );
-        if (sources.ok) {
             this.sourceLanguages = [];
-            this.sourceLanguages.push(...sources.result.data);
+            this.targetLanguages.push(...result.result.target);
+            this.sourceLanguages.push(...result.result.source);
             this.translatorAvailable = true;
             this.errorMessage = "";
         } else {
             this.translatorAvailable = false;
-            this.errorMessage = sources.result.data.error;
-            return;
+            this.errorMessage = result.result;
         }
+
         this.notManualCheck();
         this.checkTranslatability();
     }

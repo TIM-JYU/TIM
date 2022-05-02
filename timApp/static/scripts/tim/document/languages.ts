@@ -22,6 +22,39 @@ type SupportedLanguagesAndTranslators = {
     error: string;
 };
 
+type SupportedLanguages = {
+    source: ILanguage[];
+    target: ILanguage[];
+};
+
+/**
+ * Fetches ILanguage data from the given url with either post or get and updates the given list.
+ * @param url the url to fetch from
+ * @param list the ILanguage list that needs to be updated
+ * @param data the data needed for the post request
+ * @param post whether or not a post request needs to be made
+ * @returns The error message if the fetching failed or an empty string
+ */
+async function fetchData(
+    url: string,
+    list: ILanguage[],
+    data: Record<string, string>,
+    post: boolean
+) {
+    let sources;
+    if (post) {
+        sources = await to($http.post<ILanguage[]>(url, data));
+    } else {
+        sources = await to($http.get<ILanguage[]>(url));
+    }
+    if (sources.ok) {
+        list.push(...sources.result.data);
+        return "";
+    } else {
+        return sources.result.data.error;
+    }
+}
+
 /**
  * Fetches the lists of the languages supported by the chosen translator.
  * @param lists The lists of languages
@@ -32,26 +65,6 @@ async function updateLanguages(
     lists: SupportedLanguagesAndTranslators,
     translator: string
 ): Promise<Result<SupportedLanguagesAndTranslators, string>> {
-    const fetchData = async (
-        url: string,
-        list: ILanguage[],
-        data: Record<string, string>,
-        post: boolean
-    ) => {
-        let sources;
-        if (post) {
-            sources = await to($http.post<ILanguage[]>(url, data));
-        } else {
-            sources = await to($http.get<ILanguage[]>(url));
-        }
-        if (sources.ok) {
-            list.push(...sources.result.data);
-            return "";
-        } else {
-            return sources.result.data.error;
-        }
-    };
-
     let error = "";
 
     error = await fetchData(
@@ -206,4 +219,51 @@ export async function updateTranslationData(
     }
 
     return results;
+}
+
+/**
+ * Fetches the lists of languages supported by the given translator.
+ * @param translator The translator the languages are fetched for
+ * @return The lists of supported languages or an error message if something went wrong
+ */
+export async function updateTranslatorLanguages(
+    translator: string
+): Promise<Result<SupportedLanguages, string>> {
+    const results: SupportedLanguages = {
+        source: [],
+        target: [],
+    };
+
+    let error = await fetchData(
+        "/translations/targetLanguages",
+        results.target,
+        {
+            translator: translator,
+        },
+        true
+    );
+    if (error != "") {
+        return {
+            ok: false,
+            result: error,
+        };
+    }
+    error = await fetchData(
+        "/translations/sourceLanguages",
+        results.source,
+        {
+            translator: translator,
+        },
+        true
+    );
+    if (error != "") {
+        return {
+            ok: false,
+            result: error,
+        };
+    }
+    return {
+        ok: true,
+        result: results,
+    };
 }

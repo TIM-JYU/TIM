@@ -14,7 +14,10 @@ import {
 } from "tim/util/fullscreen";
 import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
 import {IDocument, ILanguage, ITranslator} from "tim/item/IItem";
-import {updateTranslationData} from "tim/document/languages";
+import {
+    updateTranslationData,
+    updateTranslatorLanguages,
+} from "tim/document/languages";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
@@ -1602,38 +1605,19 @@ ${backTicks}
 
     /**
      * Updates the list of target languages based on the selected translator.
-     * TODO: This could probably be refactored into edittypes.ts at least after updating this to new Angular?
      */
-    async updateTranslatorLanguages() {
-        let sources = await to(
-            $http.post<ILanguage[]>("/translations/targetLanguages", {
-                translator: this.docTranslator,
-            })
-        );
-        if (sources.ok) {
-            this.targetLanguages = [];
-            this.targetLanguages.push(...sources.result.data);
-            this.translatorAvailable = true;
-            this.errorMessage = "";
-        } else {
-            this.translatorAvailable = false;
-            this.errorMessage = sources.result.data.error;
-            return;
-        }
-        sources = await to(
-            $http.post<ILanguage[]>("/translations/sourceLanguages", {
-                translator: this.docTranslator,
-            })
-        );
-        if (sources.ok) {
+    async updatePareditorTranslatorLanguages() {
+        const result = await updateTranslatorLanguages(this.docTranslator);
+        if (result.ok) {
             this.sourceLanguages = [];
-            this.sourceLanguages.push(...sources.result.data);
+            this.targetLanguages = [];
+            this.sourceLanguages.push(...result.result.source);
+            this.targetLanguages.push(...result.result.target);
             this.translatorAvailable = true;
             this.errorMessage = "";
         } else {
             this.translatorAvailable = false;
-            this.errorMessage = sources.result.data.error;
-            return;
+            this.errorMessage = result.result;
         }
     }
 
