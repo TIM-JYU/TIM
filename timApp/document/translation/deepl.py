@@ -32,6 +32,7 @@ from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.util import logger
 from timApp.util.flask.requesthelper import NotExist, RouteException
+from timApp.util.flask.cache import cache
 
 
 class DeeplTranslationService(RegisteredTranslationService):
@@ -217,7 +218,7 @@ class DeeplTranslationService(RegisteredTranslationService):
 
         return self._post("translate", data)
 
-    # TODO Cache this
+    @cache.memoize(timeout=36000 * 24)
     def _languages(self, *, is_source: bool) -> dict:
         """
         Get languages supported by the API.
@@ -375,7 +376,7 @@ class DeeplTranslationService(RegisteredTranslationService):
                 return_langs = return_langs + [en]
         return return_langs
 
-    # TODO Cache this maybe?
+    @cache.memoize(timeout=36000 * 24)
     def languages(self) -> LanguagePairing:
         """
         Asks the DeepL API for the list of supported languages and turns the
