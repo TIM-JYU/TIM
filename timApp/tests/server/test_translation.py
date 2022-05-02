@@ -473,7 +473,7 @@ Baz
             f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}/{data}"
         )
         tr_doc.clear_mem_cache()
-        self.assertEqual(r, tr.id)
+        self.assertEqual(r["status"], "ok")
         # TIM doesn't (seem) to strip the paragraph contents on its own, so
         # because of it the newlines are kept at this point.
         self.assertEqual("\n[Foo]{.notranslate}\n", tr_doc.get_paragraph(id1).md)

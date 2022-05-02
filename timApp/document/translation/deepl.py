@@ -47,10 +47,14 @@ class DeeplTranslationService(RegisteredTranslationService):
         self.ignore_tag = values["ignore_tag"]
         self.service_url = values["service_url"]
 
-    service_url = db.Column(db.Text, nullable=False)
+    # TODO Would be better as nullable=False, but that prevents creating
+    #  non-DeeplTranslationService -subclasses of TranslationService.
+    service_url = db.Column(db.Text)
     """The url base for the API calls."""
 
-    ignore_tag = db.Column(db.Text, nullable=False)
+    # TODO Would be better as nullable=False, but that prevents creating
+    #  non-DeeplTranslationService -subclasses of TranslationService.
+    ignore_tag = db.Column(db.Text)
     """The XML-tag name to use for ignoring pieces of text when XML-handling is
     used. Should be chosen to be some uncommon string not found in many texts.
     """
