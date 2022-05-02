@@ -20,6 +20,7 @@ __date__ = "25.4.2022"
 import re
 import pypandoc
 import json
+import string
 from typing import Tuple, Iterable
 from dataclasses import dataclass
 from itertools import chain
@@ -1030,36 +1031,8 @@ def to_alphabet(num: int) -> str:
     Converts the start number from Pandoc's alphabet list to the corresponding
     character.
 
-    :param num: The list's starting number
-    :returns: The alphabet corresponding the starting number
+    :param num: The list's starting number.
+    :returns: The alphabet corresponding the starting number.
     """
-    alphabets = [
-        "",
-        "a",
-        "b",
-        "c",
-        "d",
-        "e",
-        "f",
-        "g",
-        "h",
-        "i",
-        "j",
-        "k",
-        "l",
-        "m",
-        "n",
-        "o",
-        "p",
-        "q",
-        "r",
-        "s",
-        "t",
-        "u",
-        "v",
-        "w",
-        "x",
-        "y",
-        "z",
-    ]
-    return alphabets[num]
+    # TODO This fails when num > len(string.ascii_lowercase)
+    return string.ascii_lowercase[num - 1]
