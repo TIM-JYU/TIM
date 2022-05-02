@@ -69,7 +69,7 @@ def is_valid_language_id(lang_id: str) -> bool:
 tr_bp = Blueprint("translation", __name__, url_prefix="")
 
 
-@tr_bp.post("/translate/<int:tr_doc_id>/<string:language>/<string:transl>")
+@tr_bp.post("/translate/<int:tr_doc_id>/<language>/<transl>")
 def create_translation_route(tr_doc_id: int, language: str, transl: str) -> Response:
     """
     Create and add a translation version of a whole document. Make machine
@@ -175,9 +175,7 @@ def create_translation_route(tr_doc_id: int, language: str, transl: str) -> Resp
     return json_response(tr)
 
 
-@tr_bp.post(
-    "/translate/paragraph/<int:tr_doc_id>/<string:tr_par_id>/<string:language>/<string:transl>"
-)
+@tr_bp.post("/translate/paragraph/<int:tr_doc_id>/<tr_par_id>/<language>/<transl>")
 def paragraph_translation_route(
     tr_doc_id: int, tr_par_id: str, language: str, transl: str
 ) -> Response:
@@ -235,7 +233,7 @@ def paragraph_translation_route(
     return json_response(tr_doc_id)
 
 
-@tr_bp.post("/translate/<int:tr_doc_id>/<language>/translate_block/<string:transl>")
+@tr_bp.post("/translate/<int:tr_doc_id>/<language>/translate_block/<transl>")
 def text_translation_route(tr_doc_id: int, language: str, transl: str) -> Response:
     """
     Translate raw text between the source document's language and the one

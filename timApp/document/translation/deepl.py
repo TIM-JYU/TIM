@@ -202,7 +202,7 @@ class DeeplTranslationService(RegisteredTranslationService):
         ):
             src_lang = "en"
 
-        logger.log_info(f"Amount of separate translatable texts: {str(len(text))}/50")
+        logger.log_debug(f"Amount of separate translatable texts: {str(len(text))}/50")
 
         data = {
             "text": text,
