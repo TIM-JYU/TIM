@@ -348,6 +348,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             console.log(result.result);
             this.data.meta!.enrollments--;
             this.close(openEvent);
+            // TODO: This sets the color manually to the desired one, find a smarter way!
+            this.data.color!.primary = "#1e90ff";
+            this.data.color!.secondary = "#D1E8FF";
         } else {
             console.error(result.result.error.error);
             this.setMessage(result.result.error.error);
