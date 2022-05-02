@@ -1601,8 +1601,6 @@ ${backTicks}
 
     /**
      * Updates the list of target languages based on the selected translator.
-     * TODO: Handling the error code should be done better (it should never appear on the browser's console) but at
-     * least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
      * TODO: This could probably be refactored into edittypes.ts at least after updating this to new Angular?
      */
     async updateTranslatorLanguages() {
@@ -1686,8 +1684,6 @@ ${backTicks}
 
     /**
      * Translates the whole block.
-     * TODO: Handling the error code should be done better (it should never appear on the browser's console) but at
-     * least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
      */
     async translateParagraph() {
         const parId = this.getExtraData().par!.originalPar.id;
@@ -1719,8 +1715,6 @@ ${backTicks}
 
     /**
      * Handles sending either the selected editor text or the entire block to the translator.
-     * TODO: Handling the error code should be done better (it should never appear on the browser's console) but at
-     * least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
      */
     async translateClicked() {
         const translatableText = this.translationSelector();

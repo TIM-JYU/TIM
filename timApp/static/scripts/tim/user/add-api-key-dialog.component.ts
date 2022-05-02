@@ -99,8 +99,6 @@ export class AddAPIKeyDialogComponent extends AngularDialogComponent<
 
     /**
      * Sends a new API key for a user to server.
-     * TODO: Handling the error code should be done better (it should never appear on the browser's console) but at
-     * least with Angular's catchError it cannot be done with ISaferHttpResponse because it doesn't support pipes.
      */
     async addNewAPIKey() {
         const validateResponse = await this.validateAPIKey();

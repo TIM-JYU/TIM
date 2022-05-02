@@ -164,7 +164,7 @@ class DocParagraph:
         :param doc: The Document object in which the reference paragraph will reside.
         :param r: The kind of the reference.
         :param add_rd: If True, sets the rd attribute for the reference paragraph.
-        :param translator: The translator set to mt on machine translation.
+        :param translator: The name of the machine translator set to mt on machine translation.
         :return: The created DocParagraph.
 
         """
@@ -1197,6 +1197,11 @@ class DocParagraph:
         )
 
     def is_translation_unchecked(self):
+        """
+        Checks whether or not the paragraph's translation has been checked by a human.
+
+        :return: False if the paragraph is not a translation or it has been checked, true if it is not checked
+        """
         if not self.ref_chain:
             return False
         last_ref = self.ref_chain.prev_deref
@@ -1233,7 +1238,7 @@ def create_reference(
     :param doc: The Document object in which the reference paragraph will reside.
     :param r: The kind of the reference.
     :param add_rd: If True, sets the rd attribute for the reference paragraph.
-    :param translator: The translator set to mt on machine translation.
+    :param translator: The name of the machine translator set to mt on machine translation.
     :return: The created DocParagraph.
 
     """
