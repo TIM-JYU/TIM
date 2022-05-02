@@ -225,7 +225,9 @@ a .glyphicon {
         display: inline-block;
     }
 
-    .troutofdate::before {
+    .troutofdate:not(.areaContent)::before, // Normal paragraph except the first after area
+    .areaContent.troutofdate > div.par:first-child::before // First paragraph after areaContent is the area paragraph
+    {
         content: "Translation is out of date";
         color: red;
         position: absolute;
