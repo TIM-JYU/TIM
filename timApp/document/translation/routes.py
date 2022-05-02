@@ -32,6 +32,7 @@ from timApp.auth.accesshelper import (
     verify_logged_in,
 )
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.document import Document
 from timApp.document.docentry import create_document_and_block, DocEntry
 from timApp.document.documents import add_reference_pars
 from timApp.document.translation.translation import Translation
@@ -66,65 +67,33 @@ def is_valid_language_id(lang_id: str) -> bool:
         return False
 
 
-tr_bp = Blueprint("translation", __name__, url_prefix="")
-
-
-@tr_bp.post("/translate/<int:tr_doc_id>/<language>/<transl>")
-def create_translation_route(tr_doc_id: int, language: str, transl: str) -> Response:
+def translate_full_document(
+    tr: Translation, src_doc: Document, target_language: Language, translator_code: str
+) -> None:
     """
-    Create and add a translation version of a whole document. Make machine
-    translation on it if so requested and authorized to.
+    Translate matching paragraphs of document based on an original source
+    document.
 
-    :param tr_doc_id: ID of the document that the translation will be.
-    :param language: Language that will be set to the translation document and
-    used in potential machine translation.
-    :param transl: Identifying name of the translator to use (machine or
-    manual).
-    :return: The created translation document's information as JSON.
+    :param tr: The metadata of the translation target.
+    :param src_doc: The original source document with translatable text.
+    :param target_language: The language to translate the document into.
+    :param translator_code: Identifier of the translator to use (machine or "Manual"
+    if empty).
+    :return: None. The translation is applied to document based on the
+    tr-parameter.
     """
-    req_data = request.get_json()
-    # TODO Move doc_title -parameter to the URL as well
-    title = req_data.get("doc_title", None)
-
-    doc = get_doc_or_abort(tr_doc_id)
-
-    verify_view_access(doc)
-    if not is_valid_language_id(language):
-        raise NotExist("Invalid language identifier")
-    if doc.has_translation(language):
-        raise ItemAlreadyExistsException("Translation for this language already exists")
-    verify_manage_access(doc.src_doc)
-
-    # NOTE Failing to create the translation still increases document id
-    # number and sometimes the manage page gets stuck (because of it?).
-    src_doc = doc.src_doc.document
-    cite_doc = create_document_and_block(get_current_user_object().get_personal_group())
-
-    tr = Translation(doc_id=cite_doc.doc_id, src_docid=src_doc.doc_id, lang_id=language)
-    tr.title = title
-
-    translator = transl
-
-    add_reference_pars(
-        cite_doc,
-        src_doc,
-        "tr",
-        translator=translator if translator != "Manual" else None,
-    )
-
     # Select the specified translator
     translator_func = None
-    if translator_code := translator:
-        # Manual translation can still be done without a source language.
-        # TODO This could probably be handled nicer with database queries and
-        #  "Manual" as a translator in there.
-        if translator_code != "Manual":
-            translator_func = TranslateMethodFactory.create(
-                translator_code,
-                src_doc.docinfo.lang_id,
-                language,
-                get_current_user_object().get_personal_group(),
-            )
+    # Manual translation can still be done without a source language.
+    # TODO This could probably be handled nicer with database queries and
+    #  "Manual" as a translator in there.
+    if translator_code != "Manual":
+        translator_func = TranslateMethodFactory.create(
+            translator_code,
+            src_doc.docinfo.lang_id,
+            target_language,
+            get_current_user_object().get_personal_group(),
+        )
 
     # Translate the paragraphs of the document if a translator was created.
     if translator_func:
@@ -152,16 +121,73 @@ def create_translation_route(tr_doc_id: int, language: str, transl: str) -> Resp
             list(map(TranslationTarget, source_paragraphs))
         )
 
-        assert len(translated_texts) == len(
-            source_paragraphs
-        ), "Translation produced different amount of paragraphs"
-
         # The order of paragraphs in both docs must match, so that correct
         # ones are modified.
         for tr_paragraph, text in zip(tr_paragraphs, translated_texts):
             # Note that the paragraph's text is stripped, as extra newlines at
             # start or end seem to break plugins.
             tr.document.modify_paragraph(tr_paragraph.id, text.strip())
+
+        # Raise exception here rather than before the modification as not to
+        # waste the (potentially usable) translation.
+        # TODO Make TranslationService.translate to handle or accumulate(?) the
+        #  exceptions so that for example the quota running out
+        #  mid-translation, the partial results can be recovered.
+        if len(translated_texts) != len(source_paragraphs):
+            raise RouteException(
+                description="Machine translation produced different amount of paragraphs"
+            )
+
+
+tr_bp = Blueprint("translation", __name__, url_prefix="")
+
+
+@tr_bp.post("/translate/<int:tr_doc_id>/<language>/<translator>")
+def create_translation_route(
+    tr_doc_id: int, language: str, translator: str
+) -> Response:
+    """
+    Create and add a translation version of a whole document. Make machine
+    translation on it if so requested and authorized to.
+
+    :param tr_doc_id: ID of the document that the translation will be.
+    :param language: Language that will be set to the translation document and
+    used in potential machine translation.
+    :param translator: Identifying name of the translator to use (machine or
+    manual).
+    :return: The created translation document's information as JSON.
+    """
+    req_data = request.get_json()
+    # TODO Move doc_title -parameter to the URL as well
+    title = req_data.get("doc_title", None)
+
+    doc = get_doc_or_abort(tr_doc_id)
+
+    verify_view_access(doc)
+    if not is_valid_language_id(language):
+        raise NotExist("Invalid language identifier")
+    if doc.has_translation(language):
+        raise ItemAlreadyExistsException("Translation for this language already exists")
+    verify_manage_access(doc.src_doc)
+
+    # NOTE Failing to create the translation still increases document id
+    # number and sometimes the manage page gets stuck (because of it?).
+    src_doc = doc.src_doc.document
+    cite_doc = create_document_and_block(get_current_user_object().get_personal_group())
+
+    tr = Translation(
+        doc_id=cite_doc.doc_id,
+        src_docid=src_doc.doc_id,
+        lang_id=language,
+    )
+    tr.title = title
+
+    add_reference_pars(
+        cite_doc,
+        src_doc,
+        "tr",
+        translator=translator if translator != "Manual" else None,
+    )
 
     if isinstance(doc, DocEntry):
         de = doc
@@ -172,6 +198,9 @@ def create_translation_route(tr_doc_id: int, language: str, transl: str) -> Resp
     de.trs.append(tr)
     copy_default_rights(tr, BlockType.Document)
     db.session.commit()
+
+    translate_full_document(tr, src_doc, language, translator)
+
     return json_response(tr)
 
 
