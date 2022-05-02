@@ -4,7 +4,6 @@ import logging
 import sys
 
 import flask_migrate
-import langcodes
 import sqlalchemy
 import sqlalchemy.exc
 from alembic.runtime.environment import EnvironmentContext
@@ -17,7 +16,6 @@ from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
-from timApp.document.translation.language import Language
 from timApp.document.documents import import_document_from_file
 from timApp.document.specialnames import (
     TEMPLATE_FOLDER_NAME,

@@ -19,10 +19,11 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "25.4.2022"
 
+from dataclasses import dataclass
+from typing import Callable
+
 import pypandoc
 
-from dataclasses import dataclass
-from typing import Dict, Callable
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.document.docparagraph import DocParagraph

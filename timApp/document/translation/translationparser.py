@@ -17,13 +17,14 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "25.4.2022"
 
-import re
-import pypandoc
 import json
+import re
 import string
-from typing import Tuple, Iterable
 from dataclasses import dataclass
 from itertools import chain
+from typing import Tuple, Iterable
+
+import pypandoc
 
 # Regex table for all searched sections for translation. Expand if necessary.
 regex_to_translate = [
