@@ -478,49 +478,57 @@ export class DraggableController implements IController {
             this.minStorage.set(false);
         }
 
-        // Handle moving previews around when at least one is minimized in editor
+        // This should probably be moved elsewhere
         const previews = document.getElementById("previews");
         if (previews) {
-            // The last child should have the class ".draggable-content".
-            // If it's not, change pareditor's previews' structuring.
-            const currPreview = document.getElementById("currpreview")
-                ?.lastElementChild as HTMLElement;
-            const origPreview = document.getElementById("origpreview")
-                ?.lastElementChild as HTMLElement;
-            const diff = document.getElementById("diff");
+            this.movePreviewsProperly(previews);
+        }
+    }
+
+    /**
+     * Handles moving previews around when at least one is minimized in editor.
+     * @param previews The HTML element that holds the previews
+     */
+    movePreviewsProperly(previews: HTMLElement) {
+        // The last child should have the class ".draggable-content".
+        // If it's not, change pareditor's previews' structuring.
+        const currPreview = document.getElementById("currpreview")
+            ?.lastElementChild as HTMLElement;
+        const origPreview = document.getElementById("origpreview")
+            ?.lastElementChild as HTMLElement;
+        const diff = document.getElementById("diff");
+        if (
+            this.caption != diff?.getAttribute("caption") &&
+            (currPreview || origPreview)
+        ) {
             if (
-                this.caption != diff?.getAttribute("caption") &&
-                (currPreview || origPreview)
+                currPreview?.style.visibility ||
+                origPreview?.style.visibility
             ) {
-                if (
-                    currPreview?.style.visibility ||
-                    origPreview?.style.visibility
-                ) {
-                    previews.classList.remove("sidebyside");
-                    previews.classList.add("stacked");
-                    if (currPreview) {
-                        document
-                            .getElementById("currpreview")!
-                            .classList.add("ForceFullSize");
-                    }
-                    if (origPreview) {
-                        document
-                            .getElementById("origpreview")!
-                            .classList.add("ForceFullSize");
-                    }
-                } else {
-                    previews.classList.remove("stacked");
-                    previews.classList.add("sidebyside");
-                    if (currPreview) {
-                        document
-                            .getElementById("currpreview")!
-                            .classList.remove("ForceFullSize");
-                    }
-                    if (origPreview) {
-                        document
-                            .getElementById("origpreview")!
-                            .classList.remove("ForceFullSize");
-                    }
+                previews.classList.remove("sidebyside");
+                previews.classList.add("stacked");
+                if (currPreview) {
+                    document
+                        .getElementById("currpreview")!
+                        .classList.add("ForceFullSize");
+                }
+                if (origPreview) {
+                    document
+                        .getElementById("origpreview")!
+                        .classList.add("ForceFullSize");
+                }
+            } else {
+                previews.classList.remove("stacked");
+                previews.classList.add("sidebyside");
+                if (currPreview) {
+                    document
+                        .getElementById("currpreview")!
+                        .classList.remove("ForceFullSize");
+                }
+                if (origPreview) {
+                    document
+                        .getElementById("origpreview")!
+                        .classList.remove("ForceFullSize");
                 }
             }
         }
