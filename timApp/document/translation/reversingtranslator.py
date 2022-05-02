@@ -101,6 +101,10 @@ class ReversingTranslationService(TranslationService):
         # TODO
         raise NotImplementedError
 
+    def supports_tag_handling(self, tag_type: str) -> bool:
+        # TODO
+        raise NotImplementedError
+
     def supports(self, source_lang: Language, target_lang: Language) -> bool:
         """
         Check if language pairing is supported.

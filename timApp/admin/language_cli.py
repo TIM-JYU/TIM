@@ -77,16 +77,23 @@ def add(lang_name: str) -> None:
 def add_all_languages() -> None:
     """
     TODO Cannot call this name from cli `./r flask language add_all_languages`
-    Add all supported languages to the database. Supported languages are
-    defined in the configuration variable LANGUAGES in timApp\defaultconfig.py.
+    Add languages defined in configuration into database from command line.
 
-    :return: None
+    :return: None.
     """
-    # This allows calling at the db-initialization.
     add_all_the_languages()
 
 
-def add_all_the_languages():
+def add_all_the_languages() -> None:
+    """
+    Add all supported languages to the database. Supported languages are
+    defined in the configuration variable LANGUAGES in timApp\defaultconfig.py.
+
+    This separate function allows adding all the languages at the
+    db-initialization.
+
+    :return: None.
+    """
     # Add to the database the languages found in config and skip existing ones.
     langset = {x[0] for x in Language.query.with_entities(Language.lang_code).all()}
     for l in app.config["LANGUAGES"]:
