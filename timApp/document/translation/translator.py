@@ -56,7 +56,7 @@ class LanguagePairing:
     Language objects.
     """
 
-    value: Dict[str, list[Language]]
+    value: dict[str, list[Language]]
 
     def __getitem__(self, item: str) -> list[Language]:
         """
@@ -265,9 +265,11 @@ class TranslateMethodFactory:
 
         # TODO Find out if this is used correctly. Would rather use Query.get,
         #  but did not work...
-        translator = TranslationService.query.with_polymorphic("*").filter(
-            TranslationService.service_name == translator_code
-        )[0]
+        translator = (
+            TranslationService.query.with_polymorphic("*")
+            .filter(TranslationService.service_name == translator_code)
+            .one()
+        )
 
         if user_group is not None and isinstance(
             translator, RegisteredTranslationService
@@ -423,15 +425,15 @@ class TranslateMethodFactory:
             translated_texts = translate_paragraphs(paras)
 
             for i, part in enumerate(translated_texts):
-                logger.log_info(
+                logger.log_debug(
                     f"==== Part {i} ({len(part)} characters): ================================"
                     f"{part}"
                     "================================================"
                 )
 
             usage = translator.usage()
-            logger.log_info(
-                "Current DeepL API usage: "
+            logger.log_debug(
+                "Current usage: "
                 + str(usage.character_count)
                 + "/"
                 + str(usage.character_limit)
