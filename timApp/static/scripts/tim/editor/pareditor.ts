@@ -1707,8 +1707,7 @@ ${backTicks}
 
         const mayContinue = await this.checkMayTranslate(editText);
 
-        if (!mayContinue) {
-        } else {
+        if (mayContinue) {
             this.translationInProgress = true;
             if (this.nothingSelected) {
                 await this.translateParagraph();
@@ -1747,12 +1746,11 @@ ${backTicks}
      * @returns True if translation may be done, false if not
      */
     async checkMayTranslate(editText: string) {
-        let mayTranslate = true;
         if (this.nothingSelected && this.trdiff == undefined) {
             await showMessageDialog(
                 "There is no original text to be translated. Please check the Difference in original document view."
             );
-            mayTranslate = false;
+            return false;
         } else if (!this.resolve.params.viewCtrl?.item.lang_id) {
             await showMessageDialog(
                 "This document does not have a language set. Please set a language and try again."
@@ -1764,12 +1762,12 @@ ${backTicks}
             this.trdiff.old != editText &&
             this.nothingSelected
         ) {
-            mayTranslate = window.confirm(
+            return window.confirm(
                 "This will overwrite all previous changes to this block and cannot be undone!" +
                     " Do you want to continue?"
             );
         }
-        return mayTranslate;
+        return true;
     }
 
     /**
