@@ -1,4 +1,8 @@
-import {CalendarDateFormatter, DateFormatterParams} from "angular-calendar";
+import {
+    CalendarDateFormatter,
+    DateFormatterParams,
+    getWeekViewPeriod,
+} from "angular-calendar";
 import {formatDate} from "@angular/common";
 import {Injectable} from "@angular/core";
 
@@ -60,6 +64,52 @@ export class CustomDateFormatter extends CalendarDateFormatter {
         locale,
     }: DateFormatterParams): string {
         return formatDate(date, "d.M", locale!);
+    }
+
+    /**
+     * Formats the date in week view to preferred form d.M. - d.M.yyyy or
+     * M/d/- M/d/yyyy if any other than finnish locale
+     *
+     * @param date date
+     * @param locale locale
+     * @param weekStartsOn start day of week
+     * @param excludeDays days to be excluded from view
+     * @param daysInWeek number of days in a week
+     */
+    public weekViewTitle({
+        date,
+        locale,
+        weekStartsOn,
+        excludeDays,
+        daysInWeek,
+    }: DateFormatterParams): string {
+        const {viewStart, viewEnd} = getWeekViewPeriod(
+            this.dateAdapter,
+            date,
+            weekStartsOn!,
+            excludeDays,
+            daysInWeek
+        );
+        let formatType = "";
+        if (
+            locale!.toLocaleLowerCase() == "fi-fi" ||
+            locale!.toLocaleLowerCase() == "fi"
+        ) {
+            formatType = "d.M.";
+        } else {
+            formatType = "M/d/";
+        }
+
+        const format = (dateToFormat: Date, showYear: boolean) =>
+            formatDate(
+                dateToFormat,
+                formatType + (showYear ? "yyyy" : ""),
+                locale!
+            );
+        return `${format(
+            viewStart,
+            viewStart.getUTCFullYear() !== viewEnd.getUTCFullYear()
+        )} - ${format(viewEnd, true)}`;
     }
 
     /**
