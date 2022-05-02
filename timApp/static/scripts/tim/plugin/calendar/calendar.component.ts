@@ -499,7 +499,7 @@ export class CalendarComponent
             // )
             //     .toTimeString()
             //     .substr(0, 5)} Varattava aika`,
-            title: "Ohjausaika",
+            title: Users.getCurrent().name + " " + Users.getCurrent().last_name,
             start: segment.date,
             end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
@@ -618,7 +618,14 @@ export class CalendarComponent
             if (event.meta!.booker_groups) {
                 event.meta!.booker_groups.forEach((group) => {
                     group.users.forEach((user) => {
-                        if (user.name === Users.getCurrent().name) {
+                        let lastName = " " + Users.getCurrent().last_name;
+                        if (!lastName) {
+                            lastName = "";
+                        }
+                        if (
+                            user.name ===
+                            `${Users.getCurrent().name}${lastName}`
+                        ) {
                             event.color = colors.green;
                         }
                     });

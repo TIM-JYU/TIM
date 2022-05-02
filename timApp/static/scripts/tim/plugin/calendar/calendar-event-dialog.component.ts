@@ -251,9 +251,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (bookerGroups) {
             bookerGroups.forEach((group) => {
                 // TODO: Make a list of all bookers when the event capacity is higher than 1
-                this.booker = group.name;
                 group.users.forEach((user) => {
                     this.bookerEmail = user.email;
+                    this.booker = user.name;
                 });
             });
         }
@@ -304,11 +304,15 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 return group.name === Users.getCurrent().name;
             });
             if (booker) {
+                let lastName = " " + Users.getCurrent().last_name;
+                if (!lastName) {
+                    lastName = "";
+                }
                 this.data.meta!.booker_groups.push({
                     name: booker.name,
                     users: [
                         {
-                            name: Users.getCurrent().name,
+                            name: `${Users.getCurrent().name}${lastName}`,
                             email: Users.getCurrent().email,
                         },
                     ],
