@@ -12,7 +12,7 @@ from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from sqlalchemy_utils import database_exists, create_database
 
-from timApp.admin.language_cli import add_all_languages
+from timApp.admin.language_cli import add_all_the_languages
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel
 from timApp.document.docentry import DocEntry
@@ -193,7 +193,7 @@ def initialize_database(create_docs: bool = True) -> None:
         log_info("Database initialization done.")
 
         # Create and add all supported languages to the database
-        add_all_languages()
+        add_all_the_languages()
 
     if not app.config["TESTING"]:
         exit_if_not_db_up_to_date()
