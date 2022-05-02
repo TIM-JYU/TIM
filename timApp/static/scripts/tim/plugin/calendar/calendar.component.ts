@@ -624,7 +624,9 @@ export class CalendarComponent
                     });
                 });
             }
-
+            if (event.meta!.enrollments == 0) {
+                event.color = colors.blue;
+            }
             if (Date.now() > event.start.getTime()) {
                 event.color = colors.gray;
             }
