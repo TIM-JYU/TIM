@@ -62,7 +62,7 @@ from timApp.util.flask.requesthelper import (
     RouteException,
     NotExist,
 )
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import json_response, ok_response, Response
 from timApp.util.utils import get_error_html
 
 edit_page = Blueprint("edit_page", __name__, url_prefix="")  # TODO: Better URL prefix.
@@ -330,7 +330,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
             p.set_attr("rt", None)
 
         if p.is_translation():
-            deref = mark_translation_as_checked(p)
+            mark_translation_as_checked(p)
 
         if p.is_different_from(original_par):
             verify_par_edit_access(original_par)
@@ -377,14 +377,14 @@ def mark_as_translated(p: DocParagraph):
     return deref
 
 
-def mark_translation_as_checked(p: DocParagraph):
-    try:
-        deref = p.get_referenced_pars()
-    except TimDbException:
-        deref = None
-    if deref:
-        p.set_attr("mt", None)
-    return deref
+def mark_translation_as_checked(p: DocParagraph) -> None:
+    """
+    Mark a paragraph as checked by removing its mt-attribute.
+
+    :param p: The paragraph to mark as checked.
+    :return: None.
+    """
+    p.set_attr("mt", None)
 
 
 def abort_if_duplicate_ids(doc: Document, pars_to_add: list[DocParagraph]):
@@ -1005,7 +1005,14 @@ def mark_translated_route(doc_id):
 
 
 @edit_page.post("/markChecked/<int:doc_id>")
-def mark_all_checked_route(doc_id):
+def mark_all_checked_route(doc_id: int) -> Response:
+    """
+    TODO What does this function do?
+
+    :param doc_id:
+    :return:
+    """
+
     d = get_doc_or_abort(doc_id)
     verify_edit_access(d)
     for p in d.document_as_current_user.get_paragraphs():
@@ -1017,12 +1024,18 @@ def mark_all_checked_route(doc_id):
     return ok_response()
 
 
-@edit_page.post("/markChecked/<int:doc_id>/<string:par_id>")
-def mark_checked_route(doc_id, par_id):
+@edit_page.post("/markChecked/<int:doc_id>/<par_id>")
+def mark_checked_route(doc_id: int, par_id: str) -> Response:
+    """
+    TODO What does this function do?
+
+    :param doc_id:
+    :param par_id:
+    :return:
+    """
     d = get_doc_or_abort(doc_id)
     verify_edit_access(d)
     doc = d.document_as_current_user
-    pars = doc.get_paragraphs()
 
     par = doc.get_paragraph(par_id=par_id)
     old_rc = par.get_attr("mt")
