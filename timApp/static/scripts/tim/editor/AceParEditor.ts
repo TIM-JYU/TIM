@@ -440,25 +440,41 @@ export class AceParEditor extends BaseParEditor {
                 this.editor.getSelectionRange()
             );
         }
-        // $ is a special symbol in TextMate/Sublime Text snippets and should be escaped
-        // https://forum.sublimetext.com/t/escaping-dollar-sign-in-snippets/31078
-        descDefault = descDefault.replace(/\$/g, "\\$");
+        descDefault = this.escapeDollarSign(descDefault);
         this.snippetManager.insertSnippet(
             this.editor,
             "[" + descDefault + "]{.${0:" + styleDefault + "}}"
         );
     }
 
+    /**
+     * Escapes $ characters in given string.
+     * @param descDefault the string that needs its $ characters escaped
+     * @return the given string with its $ characters escaped
+     */
+    escapeDollarSign(descDefault: string) {
+        // $ is a special symbol in TextMate/Sublime Text snippets and should be escaped
+        // https://forum.sublimetext.com/t/escaping-dollar-sign-in-snippets/31078
+        descDefault = descDefault.replace(/\$/g, "\\$");
+        return descDefault;
+    }
+
+    /**
+     * Checks for a selection that can be sent to be translated.
+     * @return the selected text range
+     */
     checkTranslationSelection() {
         return this.editor.session.getTextRange(
             this.editor.getSelectionRange()
         );
     }
 
+    /**
+     * Replaces the selected text with the translation in editor.
+     * @param descDefault the translation that will replace original selected text
+     */
     replaceTranslation(descDefault: string) {
-        // $ is a special symbol in TextMate/Sublime Text snippets and should be escaped
-        // https://forum.sublimetext.com/t/escaping-dollar-sign-in-snippets/31078
-        descDefault = descDefault.replace(/\$/g, "\\$");
+        descDefault = this.escapeDollarSign(descDefault);
         this.snippetManager.insertSnippet(this.editor, descDefault);
     }
 

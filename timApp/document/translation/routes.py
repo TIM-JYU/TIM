@@ -449,8 +449,7 @@ def add_api_key() -> Response:
     return ok_response()
 
 
-# TODO Change into DELETE (there's some differences in passing the parameters)
-@tr_bp.post("/translations/apiKeys/remove")
+@tr_bp.delete("/translations/apiKeys")
 def remove_api_key() -> Response:
     """
     Remove the current user's API key from the database.
