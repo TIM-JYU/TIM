@@ -43,6 +43,7 @@ from timApp.util.flask.requesthelper import verify_json_params, NotExist, RouteE
 from timApp.util.flask.responsehelper import json_response, ok_response, Response
 from timApp.document.translation.translator import (
     TranslationService,
+    RegisteredTranslationService,
     TranslationServiceKey,
     TranslationTarget,
     TranslateMethodFactory,
@@ -137,6 +138,34 @@ def translate_full_document(
             raise RouteException(
                 description="Machine translation produced different amount of paragraphs"
             )
+
+
+def get_languages(source_languages: bool) -> Response:
+    req_data = request.get_json()
+    translator = req_data.get("translator", "")
+    if translator.lower() == "manual" or translator.lower() == "":
+        # TODO Change to return empty list?
+        return json_response("")
+    else:
+        # Get the translation service by the provided service name
+        # TODO Maybe change to use an id instead?
+        tr = TranslationService.query.filter(
+            translator == TranslationService.service_name,
+        ).first()
+        if isinstance(tr, RegisteredTranslationService):
+            tr.register(get_current_user_object().get_personal_group())
+
+    # TODO This used to check for translator meaning a machine translator...
+    if translator.lower() != "manual":
+        # FIXME Why does this work, when the translator is not registered ever?
+        #  The tr-variable above is not used here and thus the call to
+        #  translator._languages should fail without API-key...
+        langs = get_lang_lists(translator, source_languages)
+        return json_response(langs)
+    else:
+        # TODO ...but when would this clause be needed then?
+        langs = Language.query.all()
+        return json_response(langs)
 
 
 tr_bp = Blueprint("translation", __name__, url_prefix="")
@@ -346,32 +375,7 @@ def get_source_languages() -> Response:
 
     :return: JSON response containing the languages.
     """
-    # TODO Is this route the same as get_target_languages, but with a
-    #  boolean-input difference?
-
-    req_data = request.get_json()
-    translator = req_data.get("translator", "")
-
-    if translator.lower() == "manual" or translator.lower() == "":
-        # TODO Change to string_response?
-        return json_response("")
-    else:
-        # Get the translation service by the provided service name
-        # TODO Maybe change to use an id instead?
-        tr = TranslationService.query.filter(
-            translator == TranslationService.service_name,
-        ).first()
-        # TODO This crashes(?) if the translation service does not implement
-        #  register-method (ie. does not inherit from
-        #  RegisteredTranslationService)
-        tr.register(get_current_user_object().get_personal_group())
-
-    if translator.lower() != "manual":
-        langs = get_lang_lists(translator, True)
-        return json_response(langs)
-    else:
-        langs = Language.query.all()
-        return json_response(langs)
+    return get_languages(source_languages=True)
 
 
 @tr_bp.get("/translations/documentLanguages")
@@ -395,27 +399,7 @@ def get_target_languages() -> Response:
 
     :return: JSON response containing the languages.
     """
-
-    req_data = request.get_json()
-    translator = req_data.get("translator", "")
-
-    if translator.lower() == "manual" or translator.lower() == "":
-        # TODO Change this to string_response?
-        return json_response("")
-    else:
-        # Get the translation service by the provided service name.
-        # TODO Maybe change to use id instead?
-        tr = TranslationService.query.filter(
-            translator == TranslationService.service_name,
-        ).first()
-        tr.register(get_current_user_object().get_personal_group())
-
-    if translator.lower() == "deepl free" or translator.lower() == "deepl pro":
-        langs = get_lang_lists(translator, False)
-        return json_response(langs)
-    else:
-        langs = Language.query.all()
-        return json_response(langs)
+    return get_languages(source_languages=False)
 
 
 @tr_bp.get("/translations/translators")
