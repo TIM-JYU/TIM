@@ -78,6 +78,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             <div class="input-group">
 
                                 <input i18n-placeholder type="date"
+                                       required
                                        [(ngModel)]="startDate"
                                        (ngModelChange)="setMessage()"
                                        id="startDate" name="startDate"
@@ -86,6 +87,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        >
 
                                 <input i18n-placeholder type="time"
+                                       required
                                        [(ngModel)]="startTime"
                                        (ngModelChange)="setMessage()"
                                        id="startTime" name="startTime"
@@ -101,6 +103,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         <div class="col-sm-10">
                             <div class="input-group">
                                 <input i18n-placeholder type="date"
+                                       required
                                        [(ngModel)]="endDate"
                                        (ngModelChange)="setMessage()"
                                        id="endDate" name="endDate"
@@ -108,6 +111,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        [disabled]="!isEditEnabled()"
                                         >
                                 <input i18n-placeholder type="time"
+                                       required
                                        [(ngModel)]="endTime"
                                        (ngModelChange)="setMessage()"
                                        id="endTime" name="endTime"
@@ -123,6 +127,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             <div class="input-group">
 
                                 <input type="date"
+                                       required
                                        [(ngModel)]="bookingStopDate"
                                        (ngModelChange)="setMessage()"
                                        id="bookingStopDate" name="bookingStopDate"
@@ -131,6 +136,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        >
 
                                 <input type="time"
+                                       required
                                        [(ngModel)]="bookingStopTime"
                                        (ngModelChange)="setMessage()"
                                        id="bookingStopTime" name="bookingStopTime"
@@ -173,7 +179,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     Delete
                 </button>
                 <button class="timButton" type="button" style="float: left"
-                        (click)="bookEvent()" [disabled]="eventIsFull()" [hidden]="isEditEnabled()">
+                        (click)="bookEvent()" [disabled]="eventIsFull() || !eventCanBeBooked()" [hidden]="isEditEnabled()">
                     Book event
                 </button>
                 <button class="timButton" type="submit" (click)="saveChanges()" [disabled]="form.invalid"
@@ -398,6 +404,15 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 
     eventHasBookings() {
         return this.data.meta!.enrollments > 0;
+    }
+
+    eventCanBeBooked() {
+        const nowDate = new Date();
+        console.log(this.data.meta!.signup_before);
+        const bookBefore = new Date(this.data.meta!.signup_before);
+        console.log(nowDate);
+        console.log(bookBefore);
+        return bookBefore.getTime() > nowDate.getTime();
     }
 }
 
