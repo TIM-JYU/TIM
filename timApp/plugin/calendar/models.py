@@ -30,6 +30,7 @@ class Enrollment(db.Model):
     def get_enrollment_by_ids(
         event_id: int, user_group_id: int
     ) -> Optional["Enrollment"]:
+        """Returns a specific enrollment (or none) that match the user group id and event id"""
         return Enrollment.query.filter(
             Enrollment.event_id == event_id, Enrollment.usergroup_id == user_group_id
         ).one_or_none()
