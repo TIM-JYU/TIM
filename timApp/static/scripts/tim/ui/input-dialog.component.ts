@@ -12,7 +12,7 @@ export type InputDialogParams<T> = {
     text: string;
     okText?: string;
     cancelText?: string;
-    autoHeight?: boolean;
+    asyncContent?: boolean;
 } & (
     | {isInput: InputDialogKind.NoValidator; okValue: T}
     | {
@@ -31,7 +31,7 @@ export type InputDialogParams<T> = {
     template: `
         <div class="modal-bg">
         </div>
-        <tim-dialog-frame [minimizable]="false" [autoHeight]=autoHeight>
+        <tim-dialog-frame [minimizable]="false" [mightBeAsync]=asyncContent>
                 <ng-container header>
                     {{getTitle()}}
                 </ng-container>
@@ -66,7 +66,7 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
     value = "";
     error?: string;
     isInput = false;
-    autoHeight = true;
+    asyncContent = true;
 
     getTitle() {
         return this.data.title;
@@ -79,8 +79,8 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
         } else {
             this.value = this.data.defaultValue;
         }
-        if (this.data.autoHeight == false) {
-            this.autoHeight = false;
+        if (this.data.asyncContent == false) {
+            this.asyncContent = false;
         }
     }
 

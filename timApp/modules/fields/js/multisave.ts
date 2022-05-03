@@ -415,7 +415,7 @@ export class MultisaveComponent
                     okValue: true,
                     text: this.undoConfirmation,
                     title: this.undoTitle ?? this.undoConfirmation,
-                    autoHeight: false,
+                    asyncContent: false,
                 })
             );
             if (!ans.ok || !ans.result) {
