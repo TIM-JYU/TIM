@@ -78,6 +78,16 @@ TRANSLATE_PLUGIN_ATTRIBUTES = [
     "wrongText",
 ]
 
+PLUGIN_MD_PREFIX = "md:"
+"""Prefix in plugin's values that can be parsed into Markdown. The prefix does
+not contain delimiters and is not preceded by spaces."""
+
+NOTRANSLATE_STYLE_LONG = "notranslate"
+"""Longer string used for marking non-translatable text in TIM's Markdown"""
+
+NOTRANSLATE_STYLE_SHORT = "nt"
+"""Shorter string used for marking non-translatable text in TIM's Markdown"""
+
 # TODO This name is kinda bad. Better would be along the lines of
 #  translate-flag or a whole new list-type data structure, that describes
 #  alternating between Yes's and No's
@@ -218,7 +228,9 @@ class TranslationParser:
 
         # Handle the special styles in TIM, that allows user to opt out from
         # translating some text.
-        is_notranslate = "notranslate" in classes or "nt" in classes
+        is_notranslate = (
+            NOTRANSLATE_STYLE_LONG in classes or NOTRANSLATE_STYLE_SHORT in classes
+        )
 
         # Return nothing if there's no attrs
         if not (identifier or classes or kv_pairs):
@@ -522,12 +534,11 @@ class TranslationParser:
                     arr += self.inline_collect(inline)
                 arr.append(Translate("~"))
             case "SmallCaps":
-                # TODO What even is this?
-                for inline in content:
-                    # TODO if figured out remove this notranslate
-                    arr += list(
-                        map(lambda x: NoTranslate(x.text), self.inline_collect(inline))
-                    )
+                # For more info see: https://pandoc.org/MANUAL.html#small-caps
+                # In Markdown this is equivalent to [Small caps]{.smallcaps}
+                # and in TeX it produces \textsc{Small caps}.
+                # TODO Add actual handling for this type of element.
+                arr += self.notranslate_all(type_, content)
             case "Note":
                 # NOTE Scary?
                 for block in content:
@@ -686,13 +697,11 @@ class TranslationParser:
         :param plugin_quote: The quote to use inside the potential Markdown.
         :return: None, the result is inserted into the arr-parameter.
         """
-        # TODO Does or can this prefix contain spaces?
-        md_prefix = "md:"
-        if text.lstrip().startswith(md_prefix):
+        if text.lstrip().startswith(PLUGIN_MD_PREFIX):
             # Save the original leading whitespace.
             leading_wspace = text[: len(text) - len(text.lstrip())]
-            text = text.removeprefix(leading_wspace + md_prefix)
-            arr.append(NoTranslate(leading_wspace + md_prefix))
+            text = text.removeprefix(leading_wspace + PLUGIN_MD_PREFIX)
+            arr.append(NoTranslate(leading_wspace + PLUGIN_MD_PREFIX))
             # Remove leading whitespace from each line of the text, because
             # otherwise it might get interpreted as a CodeBlock, which will
             # not be translated at all.

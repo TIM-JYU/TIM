@@ -76,7 +76,7 @@ async function updateLanguages(
         true
     );
     error = await fetchData(
-        "/translations/documentLanguages",
+        "/translations/allLanguages",
         lists.document,
         {},
         false

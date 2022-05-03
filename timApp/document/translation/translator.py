@@ -246,27 +246,26 @@ class TranslationTarget:
             raise Exception("Translation target had unexpected type")
 
 
-class TranslateMethodFactory:
-    @staticmethod
-    def create(
-        translator_code: str, s_lang: str, t_lang: str, user_group: UserGroup | None
-    ) -> Callable[[list[TranslationTarget]], list[str]]:
+class TranslateProcessor:
+    def __init__(
+        self,
+        translator_code: str,
+        s_lang: str,
+        t_lang: str,
+        user_group: UserGroup | None,
+    ):
         """
         Based on a name, get the correct TranslationService from database and
         perform needed initializations on it.
 
-        :param translator_code: Name that separates the different
-        TranslationServices.
+        :param translator_code: Name that identifies the
+        TranslationService being used.
         :param s_lang: Source language of translatable text.
         :param t_lang: Target language to translate text into.
         :param user_group: Identification of user, that can be allowed to use
-        some TranslationServices (for example DeepL requires an API-key)
-        :return: Function that when called, uses the selected parameters in
-        translating text.
+        some TranslationServices (for example DeepL requires an API-key).
         """
 
-        # TODO Find out if this is used correctly. Would rather use Query.get,
-        #  but did not work...
         translator = (
             TranslationService.query.with_polymorphic("*")
             .filter(TranslationService.service_name == translator_code)
@@ -278,172 +277,172 @@ class TranslateMethodFactory:
         ):
             translator.register(user_group)
 
-        source_lang = Language.query_by_code(s_lang)
-        target_lang = Language.query_by_code(t_lang)
+        source_lang_ = Language.query_by_code(s_lang)
+        target_lang_ = Language.query_by_code(t_lang)
 
-        if not translator.supports(source_lang, target_lang):
+        if not translator.supports(source_lang_, target_lang_):
             raise RouteException(
-                description=f"The language pair from {source_lang} to {target_lang} is not supported with {translator.service_name}"
+                description=f"The language pair from {source_lang_} to {target_lang_} is not supported with {translator.service_name}"
             )
 
-        parser = TranslationParser()
+        self.translator = translator
+        self.parser = TranslationParser()
+        self.source_lang = source_lang_
+        self.target_lang = target_lang_
 
-        def translate_raw_texts(mds: list[str]) -> list[str]:
-            """
-            Most primitive translate-func -version to translate texts between
-            languages.
+    def _translate_raw_texts(self, mds: list[str]) -> list[str]:
+        """
+        Most primitive of the translate-methods to translate texts between
+        languages.
 
-            :param mds: The texts to translate.
-            :return: The translated texts in same order as input.
-            """
-            # Turn the text into lists of objects that describe whether they
-            # can be translated or not
-            # TODO The flattening (calling `chain.from_iterable`) could
-            #  probably be done in parser
-            blocks: list[list[TranslateApproval]] = list(
-                map(lambda x: parser.get_translate_approvals(x), mds)
-            )
+        :param mds: The texts to translate.
+        :return: The translated texts in same order as input.
+        """
+        # Turn the text into lists of objects that describe whether they
+        # can be translated or not
+        # TODO The flattening (calling `chain.from_iterable`) could
+        #  probably be done in parser
+        blocks: list[list[TranslateApproval]] = list(
+            map(lambda x: self.parser.get_translate_approvals(x), mds)
+        )
 
-            # Map over blocks, picking the tables out for special translation
-            # and handle the rest normally
-            for block in blocks:
-                for i in range(len(block)):
-                    elem = block[i]
-                    if isinstance(elem, Table):
-                        if translator.supports_tag_handling("html"):
-                            # Special (HACKY) case, where md-tables are
-                            # translated as html (if supported)
-                            # TODO Actually implement table_collect at
-                            #  translationparser.py so that non-html-handling
-                            #  translators can be used as well
-                            # Turn the markdown into html
-                            table_html: str = pypandoc.convert_text(
-                                elem.text, to="html", format="md"
-                            )
-                            # Translate as HTML NOTE Requires translator to
-                            # support tag handling in HTML
-                            # TODO All document's tables could potentially be
-                            #  send to translator at once instead of one by
-                            #  one as done here.
-                            table_html_tr = translator.translate(
-                                [[Translate(table_html)]],
-                                source_lang,
-                                target_lang,
-                                tag_handling="html",
-                            )
-                            # Turn the html back into md
-                            table_md_tr = pypandoc.convert_text(
-                                table_html_tr[0], to="md", format="html"
-                            )
-                            # Now mark the table as NoTranslate, so it doesn't
-                            # get translated when the list is passed on to
-                            # mass-translation
-                            # TODO Adding this newline is kinda HACKY and not
-                            #  thought out.
-                            block[i] = NoTranslate("\n" + table_md_tr)
-                        else:
-                            # The table cannot be translated and is handled as
-                            # is
-                            block[i] = NoTranslate(elem.text)
-
-            # Pass object-lists with translatable text to the machine
-            # translator object.
-            # If supported, the translator protects and removes the protection
-            # from the text (for example adding XML-ignore-tags in DeepL's
-            # case).
-            translated_mds = translator.translate(blocks, source_lang, target_lang)
-            # TODO what are the paragraphs separated by? "\n\n"? Seems like
-            #  this would need more handling in regard to TIM's block
-            #  separation and id's etc
-            # TODO Do some MD-elements (from parser) not include newline
-            #  postfix and should this newline-addition then be placed into
-            #  parser-module?
-            return translated_mds
-
-        def translate_paragraphs(targets: list[TranslationTarget]) -> list[str]:
-            """
-            Translate pieces of Markdown roughly the size of a generic
-            paragraph.
-
-            :param targets: The list of objects whose Markdown-text-value to
-            parse.
-            :return: List containing the translated pieces of markdown in same
-            order as input.
-            """
-
-            mds = []
-
-            for target in targets:
-                md = target.get_text()
-                if isinstance(target.value, DocParagraph) and target.value.is_plugin():
-                    # Add the attributes to the content so that parser can
-                    # identify the code block as a plugin.
-                    # NOTE that the parser should only use the attributes for
-                    # identification and deletes them from the translated
-                    # result ie. this is a special case!
-
-                    # Form the Pandoc-AST representation of a code-block's
-                    # Attr and glue the parts returned as is back together
-                    # into a string of Markdown
-                    # TODO Is par.attrs trusted to not be None?
-                    taskid = (
-                        target.value.attrs.get("taskId", "")
-                        if target.value.attrs
-                        else ""
-                    )
-                    classes: list[str] = (
-                        x
-                        if target.value.attrs
-                        and isinstance(x := target.value.attrs.get("classes"), list)
-                        else []
-                    )
-                    kv_pairs = (
-                        [(k, v) for k, v in target.value.attrs.items() if k != "taskId"]
-                        if target.value.attrs
-                        else []
-                    )
-                    attr_str = "".join(
-                        map(
-                            lambda y: y.text,
-                            parser.attr_collect([taskid, classes, kv_pairs])[0],
+        # Map over blocks, picking the tables out for special translation
+        # and handle the rest normally
+        for block in blocks:
+            for i in range(len(block)):
+                elem = block[i]
+                if isinstance(elem, Table):
+                    if self.translator.supports_tag_handling("html"):
+                        # Special (HACKY) case, where md-tables are
+                        # translated as html (if supported)
+                        # TODO Actually implement table_collect at
+                        #  translationparser.py so that non-html-handling
+                        #  translators can be used as well
+                        # Turn the markdown into html
+                        table_html: str = pypandoc.convert_text(
+                            elem.text, to="html", format="md"
                         )
-                    )
-                    md = md.replace("```\n", f"``` {attr_str}\n", 1)
+                        # Translate as HTML NOTE Requires translator to
+                        # support tag handling in HTML
+                        # TODO All document's tables could potentially be
+                        #  send to translator at once instead of one by
+                        #  one as done here.
+                        table_html_tr = self.translator.translate(
+                            [[Translate(table_html)]],
+                            self.source_lang,
+                            self.target_lang,
+                            tag_handling="html",
+                        )
+                        # Turn the html back into md
+                        table_md_tr = pypandoc.convert_text(
+                            table_html_tr[0], to="md", format="html"
+                        )
+                        # Now mark the table as NoTranslate, so it doesn't
+                        # get translated when the list is passed on to
+                        # mass-translation
+                        # TODO Adding this newline is kinda HACKY and not
+                        #  thought out.
+                        block[i] = NoTranslate("\n" + table_md_tr)
+                    else:
+                        # The table cannot be translated and is handled as
+                        # is
+                        block[i] = NoTranslate(elem.text)
 
-                mds.append(md)
+        # Pass object-lists with translatable text to the machine
+        # translator object.
+        # If supported, the translator protects and removes the protection
+        # from the text (for example adding XML-ignore-tags in DeepL's
+        # case).
+        translated_mds = self.translator.translate(
+            blocks, self.source_lang, self.target_lang
+        )
+        # TODO what are the paragraphs separated by? "\n\n"? Seems like
+        #  this would need more handling in regard to TIM's block
+        #  separation and id's etc
+        # TODO Do some MD-elements (from parser) not include newline
+        #  postfix and should this newline-addition then be placed into
+        #  parser-module?
+        return translated_mds
 
-            return translate_raw_texts(mds)
+    def _translate_paragraphs(self, targets: list[TranslationTarget]) -> list[str]:
+        """
+        Translate pieces of Markdown roughly the size of a generic
+        paragraph.
 
-        def generic_translate(paras: list[TranslationTarget]) -> list[str]:
-            """
-            Wraps the TranslationService, source and target languages into a
-            function that can be used to call a translation on different
-            TranslationService-instances.
+        :param targets: The list of objects whose Markdown-text-value to
+        parse.
+        :return: List containing the translated pieces of markdown in same
+        order as input.
+        """
 
-            :param paras: TIM-paragraphs containing Markdown to translate.
-            :return: The translatable text contained in input paragraphs
-            translated according to the outer functions inputs (the languages).
-            """
-            translated_texts = translate_paragraphs(paras)
+        mds = []
 
-            for i, part in enumerate(translated_texts):
-                logger.log_debug(
-                    f"==== Part {i} ({len(part)} characters): ================================"
-                    f"{part}"
-                    "================================================"
+        for target in targets:
+            md = target.get_text()
+            if isinstance(target.value, DocParagraph) and target.value.is_plugin():
+                # Add the attributes to the content so that parser can
+                # identify the code block as a plugin.
+                # NOTE that the parser should only use the attributes for
+                # identification and deletes them from the translated
+                # result ie. this is a special case!
+
+                # Form the Pandoc-AST representation of a code-block's
+                # Attr and glue the parts returned as is back together
+                # into a string of Markdown
+                # TODO Is par.attrs trusted to not be None?
+                taskid = (
+                    target.value.attrs.get("taskId", "") if target.value.attrs else ""
                 )
+                classes: list[str] = (
+                    x
+                    if target.value.attrs
+                    and isinstance(x := target.value.attrs.get("classes"), list)
+                    else []
+                )
+                kv_pairs = (
+                    [(k, v) for k, v in target.value.attrs.items() if k != "taskId"]
+                    if target.value.attrs
+                    else []
+                )
+                attr_str = "".join(
+                    map(
+                        lambda y: y.text,
+                        self.parser.attr_collect([taskid, classes, kv_pairs])[0],
+                    )
+                )
+                md = md.replace("```\n", f"``` {attr_str}\n", 1)
 
-            usage = translator.usage()
+            mds.append(md)
+
+        return self._translate_raw_texts(mds)
+
+    def translate(self, paras: list[TranslationTarget]) -> list[str]:
+        """
+        Translate a list of text-containing items using the
+        TranslationService-instance and languages set at initialization.
+
+        :param paras: TIM-paragraphs containing Markdown to translate.
+        :return: The translatable text contained in input paragraphs
+        translated according to the outer functions inputs (the languages).
+        """
+        translated_texts = self._translate_paragraphs(paras)
+
+        for i, part in enumerate(translated_texts):
             logger.log_debug(
-                "Current usage: "
-                + str(usage.character_count)
-                + "/"
-                + str(usage.character_limit)
+                f"==== Part {i} ({len(part)} characters): ================================"
+                f"{part}"
+                "================================================"
             )
 
-            return translated_texts
+        usage = self.translator.usage()
+        logger.log_debug(
+            "Current usage: "
+            + str(usage.character_count)
+            + "/"
+            + str(usage.character_limit)
+        )
 
-        return generic_translate
+        return translated_texts
 
 
 def get_lang_lists(translator_code: str, source_langs: bool) -> list[Language]:

@@ -46,7 +46,7 @@ from timApp.document.translation.translator import (
     RegisteredTranslationService,
     TranslationServiceKey,
     TranslationTarget,
-    TranslateMethodFactory,
+    TranslateProcessor,
     get_lang_lists,
 )
 from timApp.document.translation.language import Language
@@ -83,61 +83,55 @@ def translate_full_document(
     :return: None. The translation is applied to document based on the
     tr-parameter.
     """
-    # Select the specified translator
-    translator_func = None
-    # Manual translation can still be done without a source language.
-    # TODO This could probably be handled nicer with database queries and
-    #  "Manual" as a translator in there.
-    if translator_code != "Manual":
-        translator_func = TranslateMethodFactory.create(
-            translator_code,
-            src_doc.docinfo.lang_id,
-            target_language,
-            get_current_user_object().get_personal_group(),
+
+    processor = TranslateProcessor(
+        translator_code,
+        src_doc.docinfo.lang_id,
+        target_language,
+        get_current_user_object().get_personal_group(),
+    )
+
+    # Translate the paragraphs of the document if a translator was successfully
+    # created.
+
+    # Ignore the settings-paragraphs entirely to protect them from
+    # mangling.
+    source_paragraphs = list(
+        filter(
+            lambda x: not x.is_setting(),
+            tr.document.get_source_document().get_paragraphs(),
+        ),
+    )
+
+    tr_paragraphs = filter(lambda x: not x.is_setting(), tr.document.get_paragraphs())
+
+    # Call the partially applied function that contains languages
+    # selected earlier, to translate texts
+    translated_texts = processor.translate(
+        # Wrap the paragraphs to TranslationTarget objects that
+        # translator accepts.
+        # TODO Remove this TranslationTarget -pattern as useless, because
+        #  explicit typechecking is performed on translate_paragraphs
+        #  anyway...
+        list(map(TranslationTarget, source_paragraphs))
+    )
+
+    # The order of paragraphs in both docs must match, so that correct
+    # ones are modified.
+    for tr_paragraph, text in zip(tr_paragraphs, translated_texts):
+        # Note that the paragraph's text is stripped, as extra newlines at
+        # start or end seem to break plugins.
+        tr.document.modify_paragraph(tr_paragraph.id, text.strip())
+
+    # Raise exception here rather than before the modification as not to
+    # waste the (potentially usable) translation.
+    # TODO Make TranslationService.translate to handle or accumulate(?) the
+    #  exceptions so that for example the quota running out
+    #  mid-translation, the partial results can be recovered.
+    if len(translated_texts) != len(source_paragraphs):
+        raise RouteException(
+            description="Machine translation produced different amount of paragraphs"
         )
-
-    # Translate the paragraphs of the document if a translator was created.
-    if translator_func:
-        # Ignore the settings-paragraphs entirely to protect them from
-        # mangling.
-        source_paragraphs = list(
-            filter(
-                lambda x: not x.is_setting(),
-                tr.document.get_source_document().get_paragraphs(),
-            ),
-        )
-
-        tr_paragraphs = filter(
-            lambda x: not x.is_setting(), tr.document.get_paragraphs()
-        )
-
-        # Call the partially applied function that contains languages
-        # selected earlier, to translate texts
-        translated_texts = translator_func(
-            # Wrap the paragraphs to TranslationTarget objects that
-            # translator accepts.
-            # TODO Remove this TranslationTarget -pattern as useless, because
-            #  explicit typechecking is performed on translate_paragraphs
-            #  anyway...
-            list(map(TranslationTarget, source_paragraphs))
-        )
-
-        # The order of paragraphs in both docs must match, so that correct
-        # ones are modified.
-        for tr_paragraph, text in zip(tr_paragraphs, translated_texts):
-            # Note that the paragraph's text is stripped, as extra newlines at
-            # start or end seem to break plugins.
-            tr.document.modify_paragraph(tr_paragraph.id, text.strip())
-
-        # Raise exception here rather than before the modification as not to
-        # waste the (potentially usable) translation.
-        # TODO Make TranslationService.translate to handle or accumulate(?) the
-        #  exceptions so that for example the quota running out
-        #  mid-translation, the partial results can be recovered.
-        if len(translated_texts) != len(source_paragraphs):
-            raise RouteException(
-                description="Machine translation produced different amount of paragraphs"
-            )
 
 
 def get_languages(source_languages: bool) -> Response:
@@ -228,7 +222,9 @@ def create_translation_route(
     copy_default_rights(tr, BlockType.Document)
     db.session.commit()
 
-    translate_full_document(tr, src_doc, language, translator)
+    # Run automatic translation if requested
+    if translator != "Manual":
+        translate_full_document(tr, src_doc, language, translator)
 
     return json_response(tr)
 
@@ -271,14 +267,14 @@ def paragraph_translation_route(
             )
 
         src_par = src_doc.document.get_paragraph(tr_par.get_attr("rp"))
-        translator_func = TranslateMethodFactory.create(
+        processor = TranslateProcessor(
             translator_code,
             src_doc.lang_id,
             language,
             get_current_user_object().get_personal_group(),
         )
 
-        translated_text = translator_func([TranslationTarget(src_par)])[0]
+        translated_text = processor.translate([TranslationTarget(src_par)])[0]
         tr.document.modify_paragraph(tr_par_id, translated_text)
 
     return ok_response()
@@ -309,7 +305,7 @@ def text_translation_route(tr_doc_id: int, language: str, transl: str) -> Respon
     # Select the specified translator and translate if valid.
     if req_data and (translator_code := transl):
         src_text = req_data.get("originaltext", None)
-        translator_func = TranslateMethodFactory.create(
+        processor = TranslateProcessor(
             translator_code,
             src_doc.docinfo.lang_id,
             language,
@@ -325,7 +321,7 @@ def text_translation_route(tr_doc_id: int, language: str, transl: str) -> Respon
             : len(src_text) - len(src_text[::-1].lstrip())
         ][::-1]
         src_text = src_text.strip()
-        block_text = translator_func([TranslationTarget(src_text)])[0]
+        block_text = processor.translate([TranslationTarget(src_text)])[0]
         # Remove extra newlines from start and end, as the parser likes to add
         # these.
         block_text = block_text.strip("\n")
@@ -378,13 +374,12 @@ def get_source_languages() -> Response:
     return get_languages(source_languages=True)
 
 
-@tr_bp.get("/translations/documentLanguages")
-def get_document_languages() -> Response:
+@tr_bp.get("/translations/allLanguages")
+def get_all_languages() -> Response:
     """
-    Query the database for the languages of all existing documents.
-    TODO Select from documents
+    Query the database for all the available languages to be used for documents.
 
-    :return: JSON response containing the languages.
+    :return: JSON response containing all the available languages.
     """
 
     langs = Language.query.all()
@@ -426,7 +421,7 @@ def add_api_key() -> Response:
     """
     Add API key to the database for current user.
 
-    :return: OK-response if adding the key was successful.
+    :return: OK response if adding the key was successful.
     """
 
     req_data = request.get_json()
