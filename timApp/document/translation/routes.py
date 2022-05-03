@@ -374,13 +374,12 @@ def get_source_languages() -> Response:
     return get_languages(source_languages=True)
 
 
-@tr_bp.get("/translations/documentLanguages")
-def get_document_languages() -> Response:
+@tr_bp.get("/translations/allLanguages")
+def get_all_languages() -> Response:
     """
-    Query the database for the languages of all existing documents.
-    TODO Select from documents
+    Query the database for all the available languages to be used for documents.
 
-    :return: JSON response containing the languages.
+    :return: JSON response containing all the available languages.
     """
 
     langs = Language.query.all()
@@ -422,7 +421,7 @@ def add_api_key() -> Response:
     """
     Add API key to the database for current user.
 
-    :return: OK-response if adding the key was successful.
+    :return: OK response if adding the key was successful.
     """
 
     req_data = request.get_json()
