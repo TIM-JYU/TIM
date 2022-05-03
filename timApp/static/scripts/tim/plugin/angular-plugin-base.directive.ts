@@ -5,7 +5,7 @@ import {
 } from "tim/plugin/attributes";
 import {Type} from "io-ts";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
-import {toPromise} from "tim/util/utils";
+import {to2, toPromise} from "tim/util/utils";
 import {
     baseOnInit,
     getDefaults,
@@ -15,6 +15,8 @@ import {
 } from "tim/plugin/util";
 import {DomSanitizer} from "@angular/platform-browser";
 import {JsonValue} from "tim/util/jsonvalue";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {showInputDialog} from "tim/ui/showInputDialog";
 import {
     handleAnswerResponse,
     prepareAnswerRequest,
@@ -107,6 +109,28 @@ export abstract class AngularPluginBase<
                 this.taskid
             );
         }
+    }
+
+    async tryResetChanges(e?: Event) {
+        if (e) {
+            e.preventDefault();
+        }
+        if (this.undoConfirmation) {
+            const ans = await to2(
+                showInputDialog({
+                    isInput: InputDialogKind.NoValidator,
+                    okValue: true,
+                    text: this.undoConfirmation,
+                    title: this.undoTitle ?? this.undoConfirmation,
+                    autoHeight: false,
+                })
+            );
+            if (!ans.ok || !ans.result) {
+                return;
+            }
+        }
+
+        this.resetChanges();
     }
 
     protected httpGet<U>(

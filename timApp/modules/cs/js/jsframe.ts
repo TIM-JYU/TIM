@@ -14,7 +14,6 @@ import {
     defaultTimeout,
     parseIframeopts,
     to,
-    to2,
 } from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
@@ -50,8 +49,6 @@ import {
     toggleFullScreen,
 } from "../../../static/scripts/tim/util/fullscreen";
 import {communicationJS} from "./iframeutils";
-import {showInputDialog} from "../../../static/scripts/tim/ui/showInputDialog";
-import {InputDialogKind} from "../../../static/scripts/tim/ui/input-dialog.kind";
 
 const JsframeMarkup = t.intersection([
     t.partial({
@@ -631,27 +628,6 @@ export class JsframeComponent
         this.console = "";
         this.updateListeners();
         this.c();
-    }
-
-    async tryResetChanges(e?: Event) {
-        if (e) {
-            e.preventDefault();
-        }
-        if (this.undoConfirmation) {
-            const ans = await to2(
-                showInputDialog({
-                    isInput: InputDialogKind.NoValidator,
-                    okValue: true,
-                    text: this.undoConfirmation,
-                    title: this.undoTitle ?? this.undoConfirmation,
-                    autoHeight: false,
-                })
-            );
-            if (!ans.ok || !ans.result) {
-                return;
-            }
-        }
-        this.resetChanges();
     }
 
     resetChanges() {

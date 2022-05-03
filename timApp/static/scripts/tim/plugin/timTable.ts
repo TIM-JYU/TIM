@@ -78,6 +78,8 @@ import {
 } from "tim/plugin/toolbarUtils";
 import {computeHiddenRowsFromFilters} from "tim/plugin/filtering";
 import {createParContext} from "tim/document/structure/create";
+import {showInputDialog} from "tim/ui/showInputDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {onClick, OnClickArg} from "../document/eventhandlers";
 import {
     ChangeType,
@@ -115,8 +117,6 @@ import {
 } from "../util/utils";
 import {TaskId} from "./taskid";
 import {PluginMeta} from "./util";
-import {showInputDialog} from "tim/ui/showInputDialog";
-import {InputDialogKind} from "tim/ui/input-dialog.kind";
 
 const timDateRegex = /^\d{4}-\d{2}-\d{2}[ T]?\d{2}:\d{2}(:\d{2})?$/;
 

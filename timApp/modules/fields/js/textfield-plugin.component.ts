@@ -24,7 +24,7 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {getFormBehavior} from "tim/plugin/util";
-import {defaultErrorMessage, timeout, to2, valueOr} from "tim/util/utils";
+import {defaultErrorMessage, timeout, valueOr} from "tim/util/utils";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -38,8 +38,6 @@ import {
     createDowngradedModule,
     doDowngrade,
 } from "../../../static/scripts/tim/downgrade";
-import {showInputDialog} from "../../../static/scripts/tim/ui/showInputDialog";
-import {InputDialogKind} from "../../../static/scripts/tim/ui/input-dialog.kind";
 
 const TextfieldMarkup = t.intersection([
     t.partial({
@@ -306,28 +304,6 @@ export class TextfieldPluginComponent
             this.errormessage = undefined;
             return undefined;
         });
-    }
-
-    async tryResetChanges(e?: Event) {
-        if (e) {
-            e.preventDefault();
-        }
-        if (this.undoConfirmation) {
-            const ans = await to2(
-                showInputDialog({
-                    isInput: InputDialogKind.NoValidator,
-                    okValue: true,
-                    text: this.undoConfirmation,
-                    title: this.undoTitle ?? this.undoConfirmation,
-                    autoHeight: false,
-                })
-            );
-            if (!ans.ok || !ans.result) {
-                return;
-            }
-        }
-
-        this.resetChanges();
     }
 
     resetChanges(): void {

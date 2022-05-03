@@ -33,7 +33,6 @@ import {
     defaultTimeout,
     timeout,
     to,
-    to2,
     toPromise,
     valueDefu,
     valueOr,
@@ -58,8 +57,6 @@ import {
     IFileSpecification,
 } from "./util/file-select";
 import {OrderedSet, Set} from "./util/set";
-import {showInputDialog} from "../../../static/scripts/tim/ui/showInputDialog";
-import {InputDialogKind} from "../../../static/scripts/tim/ui/input-dialog.kind";
 
 // TODO better name?
 interface Vid {
@@ -1472,24 +1469,6 @@ export class CsController extends CsBase implements ITimComponent {
             state,
             this.markup.tag ? this.markup.tag : undefined
         );
-    }
-
-    async tryResetChanges() {
-        if (this.undoConfirmation) {
-            const ans = await to2(
-                showInputDialog({
-                    isInput: InputDialogKind.NoValidator,
-                    okValue: true,
-                    text: this.undoConfirmation,
-                    title: this.undoTitle ?? this.undoConfirmation,
-                    autoHeight: false,
-                })
-            );
-            if (!ans.ok || !ans.result) {
-                return;
-            }
-        }
-        this.resetChanges();
     }
 
     resetChanges(): void {

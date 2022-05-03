@@ -33,12 +33,12 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {showInputDialog} from "../../../static/scripts/tim/ui/showInputDialog";
+import {InputDialogKind} from "../../../static/scripts/tim/ui/input-dialog.kind";
 import {
     GroupType,
     SisuAssessmentExportModule,
 } from "./sisu-assessment-export.component";
-import {showInputDialog} from "../../../static/scripts/tim/ui/showInputDialog";
-import {InputDialogKind} from "../../../static/scripts/tim/ui/input-dialog.kind";
 
 const multisaveMarkup = t.intersection([
     t.partial({
