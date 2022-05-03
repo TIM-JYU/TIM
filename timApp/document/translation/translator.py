@@ -445,24 +445,6 @@ class TranslateProcessor:
         return translated_texts
 
 
-def get_lang_lists(translator_code: str, source_langs: bool) -> list[Language]:
-    """
-    Get list of supported languages by machine translator.
-
-    :param translator_code: Identifier of the machine translator.
-    :param source_langs: Flag for getting source-language (True) list instead
-    of target-language (False).
-    :return: List of the supported languages by type (source or target).
-    """
-    translator = (
-        TranslationService.query.with_polymorphic("*")
-        .filter(TranslationService.service_name == translator_code)
-        .one()
-    )
-
-    return translator.get_languages(source_langs)
-
-
 def replace_md_aliases(text: str) -> str:
     """
     Replace the aliases that are used in place of Markdown-syntax-characters.

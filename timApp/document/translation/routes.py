@@ -47,7 +47,6 @@ from timApp.document.translation.translator import (
     TranslationServiceKey,
     TranslationTarget,
     TranslateProcessor,
-    get_lang_lists,
 )
 from timApp.document.translation.language import Language
 
@@ -135,31 +134,34 @@ def translate_full_document(
 
 
 def get_languages(source_languages: bool) -> Response:
+    """
+    Get list of supported languages by machine translator.
+
+    :param source_languages: Flag for getting source-language (True) list instead
+    of target-language (False).
+    :return: List of the supported languages by type (source or target).
+    """
     req_data = request.get_json()
     translator = req_data.get("translator", "")
+
+    # Do not make unneeded database queries if manual translation.
     if translator.lower() == "manual" or translator.lower() == "":
-        # TODO Change to return empty list?
-        return json_response("")
+        langs = []
     else:
         # Get the translation service by the provided service name
         # TODO Maybe change to use an id instead?
-        tr = TranslationService.query.filter(
-            translator == TranslationService.service_name,
-        ).first()
+        tr = (
+            TranslationService.query.with_polymorphic("*")
+            .filter(TranslationService.service_name == translator)
+            .one()
+        )
+
         if isinstance(tr, RegisteredTranslationService):
             tr.register(get_current_user_object().get_personal_group())
 
-    # TODO This used to check for translator meaning a machine translator...
-    if translator.lower() != "manual":
-        # FIXME Why does this work, when the translator is not registered ever?
-        #  The tr-variable above is not used here and thus the call to
-        #  translator._languages should fail without API-key...
-        langs = get_lang_lists(translator, source_languages)
-        return json_response(langs)
-    else:
-        # TODO ...but when would this clause be needed then?
-        langs = Language.query.all()
-        return json_response(langs)
+        langs = tr.get_languages(source_languages)
+
+    return json_response(langs)
 
 
 tr_bp = Blueprint("translation", __name__, url_prefix="")
