@@ -137,7 +137,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         (click)="bookEvent()" [disabled]="eventIsFull()" [hidden]="isEditEnabled()">
                     Book event
                 </button>
-                <button class="btn timButton" type="button" [hidden]="!eventHasBookings() || userIsManager()" (click)="cancelBooking()" style="background-color: red;">
+                <button class="btn timButton" type="button" [hidden]="!userHasBooked()" (click)="cancelBooking()" style="background-color: red;">
                     Cancel Booking
                 </button>
                 <button class="timButton" type="submit" (click)="saveChanges()" [disabled]="form.invalid"
@@ -165,6 +165,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     endTime = "";
     booker = "";
     bookerEmail: string | null = "";
+    userBooked = false;
 
     constructor(private http: HttpClient) {
         super();
@@ -343,6 +344,16 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (result.ok) {
             console.log(result.result);
             this.data.meta!.enrollments--;
+
+            this.data.meta!.booker_groups.forEach((group) => {
+                if (group.name == Users.getCurrent().name) {
+                    group.name = "";
+                    group.users.forEach((user) => {
+                        user.email = "";
+                        user.name = "";
+                    });
+                }
+            });
             this.close(openEvent);
         } else {
             console.error(result.result.error.error);
@@ -363,6 +374,19 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 
     eventHasBookings() {
         return this.data.meta!.enrollments > 0;
+    }
+
+    userHasBooked() {
+        this.userBooked = false;
+        const bookers = this.data.meta!.booker_groups;
+        bookers.forEach((booker) => {
+            Users.getCurrent().groups.forEach((userGroup) => {
+                if (booker.name == userGroup.name) {
+                    this.userBooked = true;
+                }
+            });
+        });
+        return this.userBooked;
     }
 }
 
