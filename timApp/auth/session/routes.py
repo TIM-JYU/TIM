@@ -4,18 +4,24 @@ Routes for managing user sessions
 from _csv import QUOTE_ALL
 from dataclasses import field
 from enum import Enum
+from typing import Any
 
 from flask import Response
 
 from timApp.auth.accesshelper import verify_logged_in, verify_admin
 from timApp.auth.session.model import UserSession
-from timApp.auth.session.util import current_session_id, has_valid_session
+from timApp.auth.session.util import (
+    current_session_id,
+    has_valid_session,
+    verify_session_for,
+)
+from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, csv_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.utils import get_current_time
+from timApp.util.secret import check_secret
 
 user_sessions = TypedBlueprint("user_sessions", __name__, url_prefix="/user/sessions")
 
@@ -72,7 +78,9 @@ def get_all_sessions(
         case ExportFormatOptions.JSON:
             return json_response(q.all())
         case ExportFormatOptions.CSV:
-            data = [["user", "session_id", "origin", "logged_in", "logged_out"]]
+            data: list[list[Any]] = [
+                ["user", "session_id", "origin", "logged_in", "logged_out"]
+            ]
             for s in q.all():  # type: UserSession
                 data.append(
                     [
@@ -94,27 +102,20 @@ def get_all_sessions(
 @user_sessions.get("/<user>/verify")
 def validate_session(user: str, session_id: str | None = None) -> Response:
     verify_admin()
-    user_subquery = db.session.query(User.id).filter(User.name == user).subquery()
-    q_base = UserSession.query.filter(UserSession.user_id.in_(user_subquery))
-    if session_id:
-        q_expire = q_base.filter(UserSession.session_id != session_id)
-        q_verify = q_base.filter(UserSession.session_id == session_id)
+    verify_session_for(user, session_id)
+    db.session.commit()
+    return ok_response()
+
+
+@user_sessions.post("/verify")
+@csrf.exempt
+def validate_remote_session(
+    username: str, session_id: str | None, secret: str | None
+) -> Response:
+    if not secret:
+        verify_admin()
     else:
-        # Get the latest active session
-        subquery = (
-            db.session.query(UserSession.session_id)
-            .filter(UserSession.expired == False)
-            .order_by(UserSession.logged_in_at.desc())
-            .limit(1)
-            .subquery()
-        )
-        q_expire = q_base.filter(UserSession.session_id.notin_(subquery))
-        q_verify = q_base.filter(UserSession.session_id.in_(subquery))
-
-    # Only expire active sessions
-    q_expire = q_expire.filter(UserSession.expired == False)
-
-    q_expire.update({"logged_out_at": get_current_time()}, synchronize_session=False)
-    q_verify.update({"logged_out_at": None}, synchronize_session=False)
+        check_secret(secret, "DIST_RIGHTS_RECEIVE_SECRET")
+    verify_session_for(username, session_id)
     db.session.commit()
     return ok_response()

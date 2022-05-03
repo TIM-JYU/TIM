@@ -64,6 +64,7 @@ const PluginMarkup = t.intersection([
             waitBetweenScans: t.number,
             beepOnSuccess: t.boolean,
             beepOnFailure: t.boolean,
+            parameterSeparator: nullable(t.string),
         }),
         text: t.type({
             apply: nullable(t.string),
@@ -452,9 +453,17 @@ export class UserSelectComponent extends AngularPluginBase<
             this.scanCode = false;
         }
         this.searchString = result.getText();
-        const hashIndex = this.searchString.indexOf("#");
-        if (hashIndex >= 0) {
-            this.searchParameter = this.searchString.substr(hashIndex + 1);
+
+        if (this.markup.scanner.parameterSeparator) {
+            const hashIndex = this.searchString.indexOf(
+                this.markup.scanner.parameterSeparator
+            );
+            if (hashIndex >= 0) {
+                this.searchParameter = this.searchString.substr(hashIndex + 1);
+                this.searchString = this.searchString.substr(0, hashIndex);
+            } else {
+                this.searchParameter = undefined;
+            }
         } else {
             this.searchParameter = undefined;
         }
@@ -588,6 +597,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 waitBetweenScans: 0,
                 beepOnSuccess: false,
                 beepOnFailure: false,
+                parameterSeparator: "#",
             },
             text: {
                 apply: null,
