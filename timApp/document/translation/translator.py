@@ -389,7 +389,6 @@ class TranslateProcessor:
                 # Form the Pandoc-AST representation of a code-block's
                 # Attr and glue the parts returned as is back together
                 # into a string of Markdown
-                # TODO Is par.attrs trusted to not be None?
                 taskid = (
                     target.value.attrs.get("taskId", "") if target.value.attrs else ""
                 )
