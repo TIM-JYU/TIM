@@ -23,7 +23,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                          [ngClass]="{'has-error': ngModelTitle.invalid && ngModelTitle.dirty}">
 
                         <label for="title" class="col-sm-2 control-label">Title</label>
-                        <div class="col-sm-10">
+                        <div class="col-sm-9">
                             <input type="text" required
                                    maxlength="280"
                                    [(ngModel)]="title" #ngModelTitle="ngModel"
@@ -35,7 +35,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    [disabled]="!isEditEnabled()"/>
                         </div>
                         <label for="location" class="col-sm-2 control-label">Location</label>
-                        <div class="col-sm-10">
+                        <div class="col-sm-9">
                             <input type="text"
                             maxlength="120"
                                    [(ngModel)]="location" #ngModelLocation="ngModel"
@@ -49,7 +49,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     </div>
                     <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
                         <label for="booker" class="col-sm-2 control-label">Booker</label>
-                        <div class="col-sm-10">
+                        <div class="col-sm-9">
                             <input type="text"
                                    [(ngModel)]="booker"
                                    (ngModelChange)="setMessage()"
@@ -61,7 +61,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     </div>
                     <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
                         <label for="bookerEmail" class="col-sm-2 control-label">Booker email</label>
-                        <div class="col-sm-10">
+                        <div class="col-sm-9">
                             <input type="text"
                                    [(ngModel)]="bookerEmail"
                                    (ngModelChange)="setMessage()"
@@ -71,12 +71,10 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    disabled="true"/>
                         </div>
                     </div>
-
-                    <div class="form-group">
-                        <label for="from" class="col-sm-2 control-label">From</label>
-                        <div class="col-sm-10">
+                    <div class="form-group ">
+                        <div class="col-sm-4">
+                            <label for="from" class="col-sm-8 control-label">From</label>
                             <div class="input-group">
-
                                 <input i18n-placeholder type="date"
                                        required
                                        [(ngModel)]="startDate"
@@ -96,11 +94,8 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                         >
                             </div>
                         </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="to" class="col-sm-2 control-label">To</label>
-                        <div class="col-sm-10">
+                    <div class="col-sm-4">
+                        <label for="to" class="col-sm-6 control-label">To</label>
                             <div class="input-group">
                                 <input i18n-placeholder type="date"
                                        required
@@ -119,11 +114,8 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        [disabled]="!isEditEnabled()">
                             </div>
                         </div>
-                    </div>
-                    
-                    <div [hidden]="!isEditEnabled()" class="form-group">
-                        <label for="from" class="col-sm-2 control-label">Book before</label>
-                        <div class="col-sm-10">
+                        <div class="col-sm-4" [hidden]="!isEditEnabled()">
+                        <label for="from" class="col-sm-12 control-label">Book before</label>
                             <div class="input-group">
 
                                 <input type="date"
@@ -408,10 +400,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 
     eventCanBeBooked() {
         const nowDate = new Date();
-        console.log(this.data.meta!.signup_before);
         const bookBefore = new Date(this.data.meta!.signup_before);
-        console.log(nowDate);
-        console.log(bookBefore);
         return bookBefore.getTime() > nowDate.getTime();
     }
 }
