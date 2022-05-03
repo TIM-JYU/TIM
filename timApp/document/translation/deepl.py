@@ -16,7 +16,8 @@ __license__ = "MIT"
 __date__ = "25.4.2022"
 
 import langcodes
-import requests
+from requests import post, Response
+from requests.exceptions import JSONDecodeError
 
 from timApp.document.translation.language import Language
 from timApp.document.translation.translationparser import TranslateApproval, NoTranslate
@@ -33,6 +34,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util import logger
 from timApp.util.flask.requesthelper import NotExist, RouteException
 from timApp.util.flask.cache import cache
+from tim_common.vendor.requests_futures import FuturesSession, Future
 
 
 LANGUAGES_CACHE_TIMEOUT = 3600 * 24  # seconds
@@ -76,6 +78,8 @@ class DeeplTranslationService(RegisteredTranslationService):
         calls.
 
         :param user_group: The user group whose API key will be used.
+        :raises NotExist: If no API key is found.
+        :raises RouteException: If more than one key is found from user.
         """
         # One user group should match one service per one key.
         api_key = TranslationServiceKey.query.filter(
@@ -103,14 +107,24 @@ class DeeplTranslationService(RegisteredTranslationService):
         :param data: Data to be transmitted along the request.
         :return: The JSON-response returned by the API.
         """
-        resp = requests.post(
-            self.service_url + "/" + url_slug, data=data, headers=self.headers
-        )
+        resp = post(self.service_url + "/" + url_slug, data=data, headers=self.headers)
 
+        return self._handle_post_response(resp)
+
+    def _handle_post_response(self, resp: Response) -> dict:
+        """
+        Handle converting successful response into JSON or raise an exception
+        with a fitting message.
+
+        :param resp: The DeepL API -response to handle.
+        :return: The JSON-response returned by the API.
+        :raises RouteException: If DeepL API returned an error.
+        :raises Exception: If DeepL API returned an unknown or unexpected error.
+        """
         if resp.ok:
             try:
                 return resp.json()
-            except requests.exceptions.JSONDecodeError as e:
+            except JSONDecodeError as e:
                 raise Exception(f"DeepL API returned malformed JSON: {e}")
         else:
             status_code = resp.status_code
@@ -161,7 +175,7 @@ class DeeplTranslationService(RegisteredTranslationService):
             else:
                 # TODO Do not show this to user. Confirm, that wuff is sent.
                 debug_exception = Exception(
-                    f"DeepL API / {url_slug} responded with {resp.status_code}"
+                    f"'{resp.url}' responded with: {status_code}"
                 )
 
             raise RouteException(
@@ -170,6 +184,7 @@ class DeeplTranslationService(RegisteredTranslationService):
 
     def _translate(
         self,
+        session: FuturesSession,
         text: list[str],
         source_lang: str | None,
         target_lang: str,
@@ -180,7 +195,7 @@ class DeeplTranslationService(RegisteredTranslationService):
         non_splitting_tags: list[str] = [],
         splitting_tags: list[str] = [],
         ignore_tags: list[str] = [],
-    ) -> dict:
+    ) -> Future:
         """
         Supports most of the parameters of a DeepL API translate call.
         See https://www.deepl.com/docs-api/translating-text/request/ for valid
@@ -189,6 +204,8 @@ class DeeplTranslationService(RegisteredTranslationService):
         With tag handling for example to handle the tag "<x>" the parameter
         value should be "x".
 
+        :param session: Object to use in constructing the single DeepL API
+        translate-call.
         :param text: Text to translate that can contain XML.
         :param source_lang: Language of the text.
         :param target_lang: Language to translate the text into.
@@ -199,7 +216,7 @@ class DeeplTranslationService(RegisteredTranslationService):
         :param non_splitting_tags: Tags that never split sentences.
         :param splitting_tags: Tags that always split sentences.
         :param ignore_tags: Tags to ignore when translating.
-        :return: The DeepL API response JSON.
+        :return: A Future-object of the DeepL API translate-call.
         """
 
         src_lang = source_lang
@@ -223,7 +240,9 @@ class DeeplTranslationService(RegisteredTranslationService):
             "ignore_tags": ",".join(ignore_tags),
         }
 
-        return self._post("translate", data)
+        return session.post(
+            self.service_url + "/translate", data=data, headers=self.headers
+        )
 
     @cache.memoize(timeout=LANGUAGES_CACHE_TIMEOUT, args_to_ignore=["self"])
     def _languages(self, *, is_source: bool) -> dict:
@@ -303,9 +322,12 @@ class DeeplTranslationService(RegisteredTranslationService):
         # Translate texts 50 at a time to match DeepL-spec:
         # "Up to 50 text parameters can be submitted in one request."
         # https://www.deepl.com/docs-api/translating-text/large-volumes/
-        translation_resps = list()
+        translate_calls = list()
+        # Initialize the session for parallel translate-calls.
+        session = FuturesSession()
         for i in range(0, len(protected_texts), 50):
-            resp_json = self._translate(
+            call = self._translate(
+                session,
                 protected_texts[i : i + 50],
                 # Send uppercase, because it is used in DeepL documentation.
                 source_lang_code.upper(),
@@ -318,6 +340,15 @@ class DeeplTranslationService(RegisteredTranslationService):
                 tag_handling=tag_handling,
                 ignore_tags=[self.ignore_tag],
             )
+            translate_calls.append(call)
+
+        # Wait for the parallel calls to finish and get their results in
+        # order.
+        translation_resps = list()
+        for call in translate_calls:
+            resp = call.result()
+            # TODO Handle exceptions raised in the error handling.
+            resp_json = self._handle_post_response(resp)
             translation_resps += resp_json["translations"]
 
         # Insert the text-parts sent to the API into correct places in
