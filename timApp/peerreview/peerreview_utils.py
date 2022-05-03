@@ -143,6 +143,8 @@ def get_reviews_for_user(d: DocInfo, user: User) -> list[PeerReview]:
 def get_reviews_for_user_query(d: DocInfo, user: User) -> Query:
     return PeerReview.query.filter_by(block_id=d.id, reviewer_id=user.id)
 
+def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
+    return PeerReview.query.filter_by(block_id=doc.id, task_name="rc1").all()
 
 def has_review_access(
     doc: DocInfo,
