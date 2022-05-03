@@ -111,9 +111,12 @@ import {
     StringOrNumber,
     timeout,
     to,
+    to2,
 } from "../util/utils";
 import {TaskId} from "./taskid";
 import {PluginMeta} from "./util";
+import {showInputDialog} from "tim/ui/showInputDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
 
 const timDateRegex = /^\d{4}-\d{2}-\d{2}[ T]?\d{2}:\d{2}(:\d{2})?$/;
 
@@ -4498,12 +4501,23 @@ export class TimTableComponent
         return undefined;
     }
 
-    tryResetChanges(e?: Event): void {
+    async tryResetChanges(e?: Event) {
         if (e) {
             e.preventDefault();
         }
-        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
-            return;
+        if (this.undoConfirmation) {
+            const ans = await to2(
+                showInputDialog({
+                    isInput: InputDialogKind.NoValidator,
+                    okValue: true,
+                    text: this.undoConfirmation,
+                    title: this.undoTitle ?? this.undoConfirmation,
+                    autoHeight: false,
+                })
+            );
+            if (!ans.ok || !ans.result) {
+                return;
+            }
         }
         this.resetChanges();
     }

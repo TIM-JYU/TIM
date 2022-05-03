@@ -31,6 +31,8 @@ import {PurifyModule} from "../util/purify.module";
 import {showQuestionAskDialog} from "../lecture/showLectureDialogs";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "./attributes";
 import {AngularPluginBase} from "./angular-plugin-base.directive";
+import {showInputDialog} from "../ui/showInputDialog";
+import {InputDialogKind} from "../ui/input-dialog.kind";
 
 const PluginMarkupFields = t.intersection([
     GenericPluginMarkup,
@@ -327,12 +329,23 @@ export class QstComponent
         return {saved: true, message: undefined};
     }
 
-    tryResetChanges(e?: Event): void {
+    async tryResetChanges(e?: Event) {
         if (e) {
             e.preventDefault();
         }
-        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
-            return;
+        if (this.undoConfirmation) {
+            const ans = await to2(
+                showInputDialog({
+                    isInput: InputDialogKind.NoValidator,
+                    okValue: true,
+                    text: this.undoConfirmation,
+                    title: this.undoTitle ?? this.undoConfirmation,
+                    autoHeight: false,
+                })
+            );
+            if (!ans.ok || !ans.result) {
+                return;
+            }
         }
         this.resetChanges();
     }

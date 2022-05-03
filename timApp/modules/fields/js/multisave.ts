@@ -23,7 +23,7 @@ import {
     Info,
     withDefault,
 } from "tim/plugin/attributes";
-import {escapeRegExp, scrollToElement} from "tim/util/utils";
+import {escapeRegExp, scrollToElement, to2} from "tim/util/utils";
 import {TaskId} from "tim/plugin/taskid";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -37,6 +37,8 @@ import {
     GroupType,
     SisuAssessmentExportModule,
 } from "./sisu-assessment-export.component";
+import {showInputDialog} from "../../../static/scripts/tim/ui/showInputDialog";
+import {InputDialogKind} from "../../../static/scripts/tim/ui/input-dialog.kind";
 
 const multisaveMarkup = t.intersection([
     t.partial({
@@ -405,9 +407,20 @@ export class MultisaveComponent
         return multisaveAll;
     }
 
-    tryResetChanges(): void {
-        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
-            return;
+    async tryResetChanges() {
+        if (this.undoConfirmation) {
+            const ans = await to2(
+                showInputDialog({
+                    isInput: InputDialogKind.NoValidator,
+                    okValue: true,
+                    text: this.undoConfirmation,
+                    title: this.undoTitle ?? this.undoConfirmation,
+                    autoHeight: false,
+                })
+            );
+            if (!ans.ok || !ans.result) {
+                return;
+            }
         }
         const targets = this.findTargetTasks();
         for (const target of targets) {

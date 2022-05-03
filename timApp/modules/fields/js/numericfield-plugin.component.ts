@@ -24,7 +24,7 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {getFormBehavior} from "tim/plugin/util";
-import {defaultErrorMessage, valueOr} from "tim/util/utils";
+import {defaultErrorMessage, to2, valueOr} from "tim/util/utils";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -39,6 +39,8 @@ import {
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
 import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
 import {FieldDataWithStyles, TFieldContent} from "./textfield-plugin.component";
+import {showInputDialog} from "../../../static/scripts/tim/ui/showInputDialog";
+import {InputDialogKind} from "../../../static/scripts/tim/ui/input-dialog.kind";
 
 const REDOUBLE = /[^0-9,.e\-+]+/g;
 
@@ -304,12 +306,23 @@ export class NumericfieldPluginComponent
         });
     }
 
-    tryResetChanges(e?: Event): void {
+    async tryResetChanges(e?: Event) {
         if (e) {
             e.preventDefault();
         }
-        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
-            return;
+        if (this.undoConfirmation) {
+            const ans = await to2(
+                showInputDialog({
+                    isInput: InputDialogKind.NoValidator,
+                    okValue: true,
+                    text: this.undoConfirmation,
+                    title: this.undoTitle ?? this.undoConfirmation,
+                    autoHeight: false,
+                })
+            );
+            if (!ans.ok || !ans.result) {
+                return;
+            }
         }
         this.resetChanges();
     }

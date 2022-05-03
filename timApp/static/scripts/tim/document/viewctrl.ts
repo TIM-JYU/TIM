@@ -736,6 +736,14 @@ export class ViewCtrl implements IController {
                 }
             });
         }
+        const oldConfirm = window.confirm;
+        window.confirm = (msg) => {
+            console.log("confirm?", oldConfirm);
+            const time = new Date().getTime();
+            const conf = oldConfirm(msg);
+
+            return new Date().getTime() - time > 200 ? conf : true;
+        };
     }
 
     /**
