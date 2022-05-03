@@ -643,7 +643,7 @@ def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
     if not need_new_task_id:
         return task_id
 
-    # Otherwise determine a new one
+    # Otherwise, determine a new one
     else:
         # Split the name into text and trailing number
         task_id_body = ""
@@ -683,7 +683,7 @@ def check_and_rename_pluginnamehere(blocks: list[DocParagraph], doc: Document):
     i = 1
     j = 0
     # For all blocks check if taskId is pluginnamehere, if it is find next available name.
-    for p in blocks:  # go thru all new pars if they need to be renamed
+    for p in blocks:  # go through all new pars if they need to be renamed
         if p.is_task():
             task_id = p.get_attr("taskId")
             if task_id == "PLUGINNAMEHERE":
@@ -1007,10 +1007,10 @@ def mark_translated_route(doc_id):
 @edit_page.post("/markChecked/<int:doc_id>")
 def mark_all_checked_route(doc_id: int) -> Response:
     """
-    TODO What does this function do?
+    Marks all the paragraphs in a translation document checked.
 
-    :param doc_id:
-    :return:
+    :param doc_id: The id of the translation document to be handled.
+    :return: OK response if successful
     """
 
     d = get_doc_or_abort(doc_id)
@@ -1027,11 +1027,11 @@ def mark_all_checked_route(doc_id: int) -> Response:
 @edit_page.post("/markChecked/<int:doc_id>/<par_id>")
 def mark_checked_route(doc_id: int, par_id: str) -> Response:
     """
-    TODO What does this function do?
+    Marks a paragraph checked.
 
-    :param doc_id:
-    :param par_id:
-    :return:
+    :param doc_id: The id of the document the paragraph belongs to.
+    :param par_id: The id of the paragraph to be marked checked.
+    :return: The modified paragraph.
     """
     d = get_doc_or_abort(doc_id)
     verify_edit_access(d)

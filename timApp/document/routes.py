@@ -36,24 +36,6 @@ def return_doc_content(d: Document, format: str = "md", with_tl: bool = False):
         return Response(d.export_markdown(with_tl=with_tl), mimetype="text/plain")
 
 
-# TODO Is this used anywhere anymore?
-@doc_bp.post("settings/<int:doc_id>")
-def set_settings(doc_id: int, setting: str, value: str) -> Response:
-    """
-    Add setting to a document.
-
-    :param doc_id: The document's id.
-    :param setting: The setting to add.
-    :param value: The value of the setting.
-    :return: OK-response if successful.
-    """
-    d = get_doc_or_abort(doc_id)
-    verify_edit_access(d)
-
-    d.document.add_setting(setting, value)
-    return ok_response()
-
-
 @doc_bp.get("/download/<int:doc_id>/<int:major>/<int:minor>")
 def download_document_version(doc_id: int, major: int, minor: int, format: str = "md"):
     d = get_doc_or_abort(doc_id)
