@@ -73,7 +73,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     </div>
                     <div class="form-group ">
                         <div class="col-sm-4">
-                            <label for="from" class="col-sm-8 control-label">From</label>
+                            <label for="startDate" class="col-sm-8 control-label">From</label>
                             <div class="input-group">
                                 <input i18n-placeholder type="date"
                                        required
@@ -95,7 +95,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             </div>
                         </div>
                     <div class="col-sm-4">
-                        <label for="to" class="col-sm-6 control-label">To</label>
+                        <label for="endDate" class="col-sm-6 control-label">To</label>
                             <div class="input-group">
                                 <input i18n-placeholder type="date"
                                        required
@@ -115,7 +115,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             </div>
                         </div>
                         <div class="col-sm-4" [hidden]="!isEditEnabled()">
-                        <label for="from" class="col-sm-12 control-label">Book before</label>
+                        <label for="bookingStopDate" class="col-sm-12 control-label">Book before</label>
                             <div class="input-group">
 
                                 <input type="date"
@@ -136,6 +136,16 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        [disabled]="!isEditEnabled()"
                                         >
                             </div>
+                        </div>
+                        <div class="col-md-12">
+                            <label for="description">Event description</label>
+                            <textarea maxlength="1020"
+                             [(ngModel)]="description"
+                             (ngModelChange)="setMessage()"
+                             name="description"
+                             class="form-control"
+                             [disabled]="!isEditEnabled()">
+                            </textarea>
                         </div>
                     </div>
                 </form>
@@ -202,6 +212,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     endTime = "";
     booker = "";
     bookerEmail: string | null = "";
+    description = "";
 
     constructor(private http: HttpClient) {
         super();
@@ -216,12 +227,14 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (!id) {
             return;
         }
+        console.log(this.description);
         console.log(this.location);
         console.log(this.title);
         console.log(this.bookingStopDate);
         console.log(this.bookingStopTime);
 
         const eventToEdit = {
+            description: this.description,
             title: this.title,
             location: this.location,
             start: new Date(`${this.startDate}T${this.startTime}`),
@@ -239,6 +252,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (result.ok) {
             console.log(result.result);
             this.data.title = eventToEdit.title;
+            this.data.meta!.description = eventToEdit.description;
             this.data.meta!.location = eventToEdit.location;
             this.data.start = eventToEdit.start;
             this.data.end = eventToEdit.end;
@@ -294,6 +308,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     ngOnInit() {
         this.title = this.data.title;
         this.location = this.data.meta!.location;
+        this.description = this.data.meta!.description;
         const startOffset = this.data.start.getTimezoneOffset();
         const startDate = new Date(
             this.data.start.getTime() - startOffset * 60 * 1000

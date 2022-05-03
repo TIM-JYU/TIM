@@ -144,6 +144,7 @@ export type TIMCalendarEvent = CalendarEvent<{
     editEnabled?: boolean;
     signup_before: Date;
     location: string;
+    description: string;
     enrollments: number;
     maxSize: number;
     booker_groups: {
@@ -507,6 +508,7 @@ export class CalendarComponent
             meta: {
                 tmpEvent: true,
                 signup_before: new Date(segment.date),
+                description: "",
                 enrollments: 0,
                 location: "",
                 maxSize: 1, // TODO: temporary solution
@@ -677,6 +679,7 @@ export class CalendarComponent
                 }
                 // event.actions = this.actions;
                 event.meta = {
+                    description: event.meta!.description,
                     tmpEvent: false,
                     enrollments: event.meta!.enrollments,
                     maxSize: event.meta!.maxSize,
@@ -719,6 +722,7 @@ export class CalendarComponent
                 return {
                     title: event.title,
                     location: event.meta!.location,
+                    description: event.meta!.description,
                     start: event.start,
                     end: event.end,
                     signup_before: new Date(event.meta!.signup_before),
@@ -749,6 +753,7 @@ export class CalendarComponent
                                 tmpEvent: false,
                                 editEnabled: this.editEnabled,
                                 enrollments: event.meta!.enrollments,
+                                description: event.meta!.description,
                                 maxSize: event.meta!.maxSize,
                                 location: event.meta!.location,
                                 booker_groups: [],
@@ -785,12 +790,14 @@ export class CalendarComponent
         const values: {
             location: string;
             signup_before: Date;
+            description: string;
         } = event.meta;
 
         const id = event.id;
         const eventToEdit = {
             title: event.title,
             start: event.start,
+            description: values.description,
             location: values.location,
             end: event.end,
             signup_before: values.signup_before,
