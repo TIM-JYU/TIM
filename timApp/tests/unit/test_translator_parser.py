@@ -555,7 +555,7 @@ x=0\;\;\;\\text{"""
         )
 
     # TODO Allow this test when needed parts are implemented.
-    def TODO_test_ordered_list3(self):
+    def test_ordered_list3(self):
         """
         Testing orderedlist with all the different ways they can be formatted
         with indentation and different number-digits.
@@ -589,9 +589,9 @@ x=0\;\;\;\\text{"""
                 Translate("Kivaa on"),
                 NoTranslate("\n\t\txl. "),
                 Translate("Roomalaisia numeroita"),
-                NoTranslate("\n\t\txli) "),
+                NoTranslate("\n\t\txl) "),
                 Translate("Ihan liikaa roomalaisia numeroita"),
-                NoTranslate("\n\t\txlii) "),
+                NoTranslate("\n\t\txli) "),
                 Translate("Ei olla edes Roomassa"),
                 NoTranslate("\n\t(ix) "),
                 Translate("tai koomassa"),

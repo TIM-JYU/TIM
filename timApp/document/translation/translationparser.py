@@ -809,13 +809,14 @@ class TranslationParser:
             )
 
             for block in block_list:
-                start_num = start_num + 1
                 # The paragraphs in items except the 1st need to be as indented as
                 # the item start (ie. "- " or "1. " etc).
                 # TODO Handle the indentation inside list item's element.
                 #  It seems hard to control the indentation of paragraphs at
                 #  this level and in some cases the list-items break.
                 arr += self.block_collect(block, depth + 1)
+
+            start_num = start_num + 1
 
         # Handle edge case of separation between Markdown lists and paragraphs.
         if depth == 0:
@@ -1036,4 +1037,6 @@ def to_alphabet(num: int) -> str:
     :returns: The alphabet corresponding the starting number.
     """
     # TODO This fails when num > len(string.ascii_lowercase)
-    return string.ascii_lowercase[num - 1]
+    alphabet = string.ascii_lowercase
+
+    return alphabet[(num - 1) % len(alphabet)]
