@@ -1,6 +1,7 @@
 import csv
 import http.client
 import json
+from _csv import QUOTE_MINIMAL
 from io import StringIO
 from typing import Any
 from urllib.parse import urlparse, urljoin
@@ -92,10 +93,38 @@ def empty_response():
     return json_response({"empty": True})
 
 
-def csv_string(data, dialect: str, delimiter: str = ","):
+def pad_csv_data(data: list[list[Any]]) -> list[list[str]]:
+    """
+    Pad each column with spaces to the maximum length of the column.
+    :param data:
+    :return:
+    """
+    max_lengths = []
+
+    for column in zip(*data):
+        max_lengths.append(max(len(str(cell)) for cell in column))
+    new_data = []
+    for row in data:
+        new_row = []
+        for i, cell in enumerate(row):
+            cell = str(cell)
+            new_row.append(cell.ljust(max_lengths[i]))
+        new_data.append(new_row)
+    return new_data
+
+
+def csv_string(
+    data: list[list[Any]],
+    dialect: str,
+    delimiter: str = ",",
+    quoting: int = QUOTE_MINIMAL,
+    pad_spaces: bool = False,
+) -> str:
     line = StringIO()
+    if pad_spaces:
+        data = pad_csv_data(data)
     try:
-        writer = csv.writer(line, dialect=dialect, delimiter=delimiter)
+        writer = csv.writer(line, dialect=dialect, delimiter=delimiter, quoting=quoting)
     except csv.Error:
         writer = csv.writer(line)
     for csv_line in data:
@@ -103,10 +132,18 @@ def csv_string(data, dialect: str, delimiter: str = ","):
     return line.getvalue()  # .strip('\r\n')  # let the last lf be there
 
 
-def iter_csv(data, dialect: str, delimiter: str = ","):
+def iter_csv(
+    data: list[list[Any]],
+    dialect: str,
+    delimiter: str = ",",
+    quoting: int = QUOTE_MINIMAL,
+    pad_spaces: bool = False,
+):
     line = StringIO()
+    if pad_spaces:
+        data = pad_csv_data(data)
     try:
-        writer = csv.writer(line, dialect=dialect, delimiter=delimiter)
+        writer = csv.writer(line, dialect=dialect, delimiter=delimiter, quoting=quoting)
     except csv.Error:
         writer = csv.writer(line)
     for csv_line in data:
@@ -117,9 +154,16 @@ def iter_csv(data, dialect: str, delimiter: str = ","):
         line.seek(0)
 
 
-def csv_response(data, dialect="excel", delimiter=","):
+def csv_response(
+    data,
+    dialect="excel",
+    delimiter=",",
+    quoting: int = QUOTE_MINIMAL,
+    pad_spaces: bool = False,
+):
     return Response(
-        stream_with_context(iter_csv(data, dialect, delimiter)), mimetype="text/plain"
+        stream_with_context(iter_csv(data, dialect, delimiter, quoting, pad_spaces)),
+        mimetype="text/plain",
     )
 
 
