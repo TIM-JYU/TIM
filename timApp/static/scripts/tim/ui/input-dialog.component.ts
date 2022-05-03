@@ -12,6 +12,7 @@ export type InputDialogParams<T> = {
     text: string;
     okText?: string;
     cancelText?: string;
+    autoHeight?: boolean;
 } & (
     | {isInput: InputDialogKind.NoValidator; okValue: T}
     | {
@@ -28,31 +29,34 @@ export type InputDialogParams<T> = {
 @Component({
     selector: "tim-input-dialog",
     template: `
-        <tim-dialog-frame>
-            <ng-container header>
-                {{getTitle()}}
-            </ng-container>
-            <ng-container body>
-                <p [innerHtml]="text()"></p>
-                <input (keydown.enter)="ok()"
-                       class="form-control"
-                       focusMe
-                       type="text"
-                       *ngIf="isInput"
-                       [(ngModel)]="value"
-                       (ngModelChange)="clearError()">
-                <tim-alert *ngIf="error" severity="danger">
-                    {{ error }}
-                </tim-alert>
-            </ng-container>
-            <ng-container footer>
-                <button [disabled]="!value"
-                        class="timButton" type="button" (click)="ok()">{{ okText() }}
-                </button>
-                <button class="btn btn-default" type="button" (click)="dismiss()">{{ cancelText() }}</button>
-            </ng-container>
+        <div class="modal-bg">
+        </div>
+        <tim-dialog-frame [minimizable]="false">
+                <ng-container header>
+                    {{getTitle()}}
+                </ng-container>
+                <ng-container body>
+                    <p [innerHtml]="text()"></p>
+                    <input (keydown.enter)="ok()"
+                           class="form-control"
+                           focusMe
+                           type="text"
+                           *ngIf="isInput"
+                           [(ngModel)]="value"
+                           (ngModelChange)="clearError()">
+                    <tim-alert *ngIf="error" severity="danger">
+                        {{ error }}
+                    </tim-alert>
+                </ng-container>
+                <ng-container footer>
+                    <button [disabled]="!value"
+                            class="timButton" type="button" (click)="ok()">{{ okText() }}
+                    </button>
+                    <button class="btn btn-default" type="button" (click)="dismiss()">{{ cancelText() }}</button>
+                </ng-container>
         </tim-dialog-frame>
     `,
+    styleUrls: ["./input-dialog.component.scss"],
 })
 export class InputDialogComponent<T> extends AngularDialogComponent<
     InputDialogParams<T>,
