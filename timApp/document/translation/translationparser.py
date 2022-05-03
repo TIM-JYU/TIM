@@ -48,7 +48,8 @@ regex_collection = "|".join(regex_to_translate)
 # Compile collection for efficiency.
 regex_pattern = re.compile(regex_collection)
 
-
+# Below are the plugin attributes which have their values translated. Currently the values which have "md:" in the
+# beginning go through the parser. Parser does not handle attributes values, if they are formatted with YAML-syntax.
 TRANSLATE_PLUGIN_ATTRIBUTES = [
     "stem",
     "buttonText",
@@ -92,28 +93,29 @@ NOTRANSLATE_STYLE_SHORT = "nt"
 #  alternating between Yes's and No's
 @dataclass
 class TranslateApproval:
-    """Superclass for text that should or should not be passed to a machine
-    translator
-    """
+    """Superclass for text that should or should not be passed to a machine translator"""
 
     text: str = ""
 
 
 @dataclass
 class Translate(TranslateApproval):
+    """Subclass of TranslateApproval, which indicates that the string value of the class will be translated."""
+
     ...
 
 
 @dataclass
 class NoTranslate(TranslateApproval):
+    """Subclass of TranslateApproval, which indicates that the string value of the class will not be translated."""
+
     ...
 
 
 @dataclass
 class Table(TranslateApproval):
-    """Hacky way to translate tables by identifying them at translation and
-    setting html-tag handling on
     """
+    Hacky way to translate tables by identifying them at translation and setting html-tag handling on."""
 
     ...
 
@@ -199,7 +201,9 @@ class TranslationParser:
         """
         Collect the parts of Attr into Markdown.
 
-        :param content: Pandoc-ASTs JSON form of Attr (attributes)
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
+
+        :param content: Pandoc-ASTs JSON form of Attr (attributes): [ str, [str], [(str, str)] ]
         :return: List of non/translatable parts and boolean indicating, whether
          the .notranslate -style was found in the element.
         """
@@ -208,7 +212,7 @@ class TranslationParser:
             or not (content[1], list[str])
             or not (content[2], list[list[str]])
         ):
-            raise Exception("PanDoc link content is not [ str, [str], [(str, str)] ].")
+            raise Exception("PanDoc Attr content is not [ str, [str], [(str, str)] ].")
 
         # NOTE Attr identifier is set to the last occurrence and rest are
         # discarded in Pandoc-parsing e.g. from "#foo id=bar id=baz" only "baz"
@@ -265,6 +269,15 @@ class TranslationParser:
         return arr
 
     def cite_collect(self, content: dict) -> list[TranslateApproval]:
+        """
+        Collect and separate translatable and untranslatable areas within a citation
+        element. Citation element is delimited by citation marks.
+
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
+
+        :param content: Citation (list of inlines) from Inline element: [ [Citation], [Inline] ]
+        :return: List containing the parsed collection of Citation content
+        """
         if not isinstance(content[0], list) or not isinstance(content[1], list):
             raise Exception("PanDoc cite content is not [ [Citation], [Inline] ].")
         # At the moment not needed and will break FIXME Implement this
@@ -274,6 +287,16 @@ class TranslationParser:
         return arr
 
     def code_collect(self, content: dict) -> list[TranslateApproval]:
+        """
+        Collect everything within an Inline code element as untranslatable areas due to no clear context if the text
+        should remain in the origin language or not element. Inline Code element is defined through spacing before the
+        string.
+
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
+
+        :param content: Inline code (literal) from Inline element: [ Attr, Text ]
+        :return: List containing the collection of Inline code content
+        """
         if not isinstance(content[0], list) or not isinstance(content[1], str):
             raise Exception("PanDoc code content is not [ Attr, Text ].")
         # TODO Handle "Attr"
@@ -294,7 +317,9 @@ class TranslationParser:
         Collect and separate translatable and untranslatable areas within a math
         element.
 
-        :param content: TeX math (literal) from Inline
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
+
+        :param content: TeX math (literal) from Inline: [ MathType, Text ]
         :return: List containing the parsed collection of math content
         """
         if not isinstance(content[0]["t"], str) or not isinstance(content[1], str):
@@ -323,7 +348,9 @@ class TranslationParser:
         Collect and separate translatable and untranslatable areas within a
         rawinline element.
 
-        :param content: RawInline from Inline
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
+
+        :param content: RawInline from Inline: [ Format, Text ]
         :return: List containing the parsed collection of rawinline content
         """
         if not isinstance(content[0], str) or not isinstance(content[1], str):
@@ -336,6 +363,14 @@ class TranslationParser:
             return [NoTranslate(content[1])]
 
     def link_collect(self, content: dict) -> list[TranslateApproval]:
+        """
+        Collect and separate translatable and untranslatable areas within a link element.
+
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
+
+        :param content: Attr, alt text (list of inlines), target: [ Attr, [Inline], Target ]
+        :return: List containing the parsed collection of link content
+        """
         if (
             not isinstance(content[0], list)
             or not isinstance(content[1], list)
@@ -345,6 +380,14 @@ class TranslationParser:
         return self.link_or_image_collect(content, True)
 
     def image_collect(self, content: dict) -> list[TranslateApproval]:
+        """
+        Collect and separate translatable and untranslatable areas within an image element.
+
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
+
+        :param content: Attr, alt text (list of inlines), target: [ Attr, [Inline], Target ]
+        :return: List containing the parsed collection of image content
+        """
         if (
             not isinstance(content[0], list)
             or not isinstance(content[1], list)
@@ -356,6 +399,15 @@ class TranslationParser:
     def link_or_image_collect(
         self, content: dict, islink: bool
     ) -> list[TranslateApproval]:
+        """
+        Collect and separate translatable and untranslatable areas within a link or image element.
+        Universal collector for both link and image collect due to them having the same outline in markdown, except
+        for "[" or "![" prepend.
+
+        :param content: Attr, alt text (list of inlines), target: [ Attr, [Inline], Target ]
+        :param islink: True-state if content is link-element (true=link, false=image)
+        :return: List containing the parsed collection of link or image content
+        """
         arr: list[TranslateApproval] = list()
         arr.append(NoTranslate("[" if islink else "!["))
         for inline in content[1]:
@@ -373,18 +425,32 @@ class TranslationParser:
             ]
 
         # TODO Handle title in "Target"
+        # Title is the text pop-up/tooltip which occurs when you hover over a link
+        # For an example: [link](www.example.com "This is an example link"), where the quoted area is the title.
+
         return arr
 
     def span_collect(self, content: dict) -> list[TranslateApproval]:
+        """
+        Collect and separate translatable and untranslatable areas within a generic inline container with attributes.
+
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
+
+        :param content: Generic inline container with attributes: [Attr, [Inline] ]
+        :return: List containing the parsed collection of span area
+        """
         # Attr check in self.attr_collect
         if not isinstance(content[1], list):
-            raise Exception("PanDoc link content is not [ [Inline] ].")
+            raise Exception("PanDoc span content is not [ [Inline] ].")
 
         # TODO Generalize this func like with links and images
         arr: list[TranslateApproval] = list()
+        # Prepend of span area
         arr.append(NoTranslate("["))
+        # Translated text within the span area
         for inline in content[1]:
             arr += self.inline_collect(inline)
+        # Append of span area
         arr.append(NoTranslate("]"))
 
         attrs, is_notranslate = self.attr_collect(content[0])
@@ -397,6 +463,15 @@ class TranslationParser:
         return arr
 
     def inline_collect(self, top_inline: dict) -> list[TranslateApproval]:
+        """
+        Collect and separate translatable and untranslatable areas within an Inline element.
+
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
+        Types are listed as emphasized text in the list and the values after it is the content.
+
+        :param top_inline: Made out of type and content. Type defines the case and content is the value of that type.
+        :return: List of translatable and untranslatable areas within an Inline element.
+        """
         type_ = top_inline["t"]
         content = top_inline.get("c", list())
         arr: list[TranslateApproval] = list()
@@ -710,10 +785,30 @@ class TranslationParser:
         return arr
 
     def rawblock_collect(self, content: dict) -> list[TranslateApproval]:
+        """
+        Pick translatable and non-translatable parts from a rawblock.
+
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
+
+        :param content: Raw block [ Format, Text ]
+        :return: List of single NoTranslate -element containing Markdown representation of rawblock element
+        """
         return self.notranslate_all("RawBlock", content)
 
     def orderedlist_collect(self, content: dict, depth: int) -> list[TranslateApproval]:
+        """
+        Collect and separate translatable and untranslatable areas within an ordered list element through recursion.
+        Calls to list_collect to handle recursion through block_collect.
+
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
+
+        :param content: Ordered list (attributes and a list of items, each a list of blocks):
+                        [ ListAttributes, [[Block]] ]
+        :param depth: The current depth of the list, used for indentation
+        :return: List of translatable and untranslatable areas within an ordered list element.
+        """
         # TODO: how to check the tuple.
+        # For an example: isinstance(v, tuple) and list(map(type, v)) == [str, int]
         if (
             not isinstance(content[0], list)
             or not isinstance(content[0][0], int)
@@ -734,6 +829,17 @@ class TranslationParser:
         )
 
     def bulletlist_collect(self, content: dict, depth: int) -> list[TranslateApproval]:
+        """
+        Collect and separate translatable and untranslatable areas within a bullet list element through recursion.
+        Calls to list_collect to handle recursion through block_collect.
+
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
+
+        :param content: Bullet list (attributes and a list of items, each a list of blocks):
+                        [ ListAttributes, [[Block]] ]
+        :param depth: The current depth of the list, used for indentation
+        :return: List of translatable and untranslatable areas within a bullet list element.
+        """
         if not isinstance(content, list):
             raise Exception("PanDoc bulletlist content is not [ [Block] ].")
         return self.list_collect(content, depth, None)
@@ -834,9 +940,29 @@ class TranslationParser:
         return arr
 
     def definitionlist_collect(self, content: dict) -> list[TranslateApproval]:
-        return self.notranslate_all("DefinitionList", content)  # TODO
+        """
+        Collect definition list areas as untranslatable.
+        Each list item is a pair consisting of a term (a list of inlines) and one or more definitions
+        (each a list of blocks).
+
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
+
+        :param content: Definition list. : [([Inline], [[Block]])].
+        :return: List of single NoTranslate -element containing Markdown representation of definition list.
+        """
+        return self.notranslate_all(
+            "DefinitionList", content
+        )  # TODO: Uncertain what definition lists are in Markdown.
 
     def header_collect(self, content: dict) -> list[TranslateApproval]:
+        """
+        Collect and separate translatable and untranslatable areas within a header from a block.
+
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
+
+        :param content: Header's level (integer) and text (inlines): [ int, Attr, [Inline]  ].
+        :return: List of translatable and untranslatable areas within a header element.
+        """
         # Attr check in self.attr_collect
         # TODO Should we follow this convention? ATM other funcs like link_collect
         #  make the check at their level...
@@ -868,10 +994,30 @@ class TranslationParser:
         return arr
 
     def table_collect(self, content: dict) -> list[TranslateApproval]:
-        return self.notranslate_all("Table", content)  # TODO
+        """
+        Collect table areas as untranslatable.
+
+        Refer to Pandoc definition for tables:
+        https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
+
+        :param content: Table content as dict
+        :return: List of single NoTranslate -element containing Markdown representation of table.
+        """
+        # TODO This is handled and translated separately for DeepL but when you include other machine translators
+        #  this will need to be handled for them.
+        return self.notranslate_all("Table", content)
 
     def div_collect(self, content: dict) -> list[TranslateApproval]:
-        return self.notranslate_all("Div", content)  # TODO
+        """
+        Collects generic block container with attributes as untranslatable.
+
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
+
+        :param content: Generic block container with attributes: [ Attr [Block] ]
+        :return: List of single NoTranslate -element containing Markdown representation of div element.
+        """
+        # This is not handled as there are no div cases to replicate in TIM.
+        return self.notranslate_all("Div", content)
 
     def block_collect(self, top_block: dict, depth: int = 0) -> list[TranslateApproval]:
         """
