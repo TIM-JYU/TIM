@@ -31,7 +31,7 @@ export type InputDialogParams<T> = {
     template: `
         <div class="modal-bg">
         </div>
-        <tim-dialog-frame [minimizable]="false">
+        <tim-dialog-frame [minimizable]="false" [autoHeight]=autoHeight>
                 <ng-container header>
                     {{getTitle()}}
                 </ng-container>
@@ -66,6 +66,7 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
     value = "";
     error?: string;
     isInput = false;
+    autoHeight = true;
 
     getTitle() {
         return this.data.title;
@@ -77,6 +78,9 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
             this.value = "-";
         } else {
             this.value = this.data.defaultValue;
+        }
+        if (this.data.autoHeight == false) {
+            this.autoHeight = false;
         }
     }
 
