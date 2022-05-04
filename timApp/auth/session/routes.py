@@ -108,6 +108,14 @@ def validate_session(user: str, session_id: str | None = None) -> Response:
     return ok_response()
 
 
+@user_sessions.get("/<user>/invalidate")
+def invalidate_session(user: str, session_id: str | None = None) -> Response:
+    verify_admin()
+    invalidate_sessions_for(user, session_id)
+    db.session.commit()
+    return ok_response()
+
+
 @user_sessions.post("/verify")
 @csrf.exempt
 def validate_remote_session(
