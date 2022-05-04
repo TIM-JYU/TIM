@@ -354,6 +354,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 if (group.name == Users.getCurrent().name) {
                     group.name = "";
                     group.users.forEach((user) => {
+                        user.id = -1;
                         user.email = "";
                         user.name = "";
                     });
