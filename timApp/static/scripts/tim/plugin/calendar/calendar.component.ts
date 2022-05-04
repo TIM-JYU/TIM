@@ -223,6 +223,7 @@ export type TIMCalendarEvent = CalendarEvent<{
                     [weekStartsOn]="1"
                     (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
                     (dayClicked)="changeToDay($event.day.date)"
+                    (eventClicked)="handleEventClick($event.event)"
             >
             </mwl-calendar-month-view>
             <mwl-calendar-week-view
