@@ -147,6 +147,7 @@ class ActionCollection:
     addToGroups: list[str] = field(default_factory=list)
     removeFromGroups: list[str] = field(default_factory=list)
     verifyRemoteSessions: list[str] = field(default_factory=list)
+    invalidateRemoteSessions: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -277,6 +278,9 @@ actions:                 # Actions to apply for the selected user
     #  - somegroups
 
     #verifyRemoteSessions:    # Verify sessions for remote targets. Use DIST_RIGHTS_HOSTS to specify the actual hosts.
+    #  - target1
+    
+    #invalidateRemoteSessions: # Invalidate sessions for remote targets. Use DIST_RIGHTS_HOSTS to specify the actual hosts.
     #  - target1
 #text:              # UI texts
 #  apply: Apply permissions
@@ -447,6 +451,9 @@ def get_plugin_info(
 
     if model.actions.verifyRemoteSessions and not can_distribute_rights:
         raise RouteException("verifyRemoteSessions is not allowed in this document")
+
+    if model.actions.invalidateRemoteSessions and not can_distribute_rights:
+        raise RouteException("invalidateRemoteSessions is not allowed in this document")
 
     return model, cur_user, user_group, user_acc
 
@@ -690,9 +697,9 @@ def apply_dist_right_actions(
 
 
 def apply_verify_session(
-    user_acc: User, session_id: str | None, targets: list[str]
+    action: str, user_acc: User, session_id: str | None, targets: list[str]
 ) -> list[str]:
-    return distribute_session_verification(user_acc.name, session_id, targets)
+    return distribute_session_verification(action, user_acc.name, session_id, targets)
 
 
 def apply_group_actions(
@@ -733,7 +740,11 @@ def apply(
     )
 
     session_verification_errors = apply_verify_session(
-        user_acc, param, model.actions.verifyRemoteSessions
+        "verify", user_acc, param, model.actions.verifyRemoteSessions
+    )
+
+    session_invalidation_errors = apply_verify_session(
+        "invalidate", user_acc, param, model.actions.invalidateRemoteSessions
     )
 
     update_messages = apply_permission_actions(
@@ -759,7 +770,14 @@ def apply(
             f"SESSION_VERIFICATION: problem verifying session for user {user_acc.email}: {error}"
         )
 
-    all_errors = right_dist_errors + session_verification_errors
+    for error in session_invalidation_errors:
+        log_warning(
+            f"SESSION_VERIFICATION: problem invalidating session for user {user_acc.email}: {error}"
+        )
+
+    all_errors = (
+        right_dist_errors + session_verification_errors + session_invalidation_errors
+    )
     # Better throw an error here. This should prompt the user to at least try again
     # Unlike with undoing, it's better to get the user to reapply the rights or properly fix them
     # Moreover, this should encourage the user to report the problem with distribution ASAP

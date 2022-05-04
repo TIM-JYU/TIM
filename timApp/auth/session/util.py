@@ -155,8 +155,26 @@ def verify_session_for(username: str, session_id: str | None = None) -> None:
     q_verify.update({"logged_out_at": None}, synchronize_session=False)
 
 
+def invalidate_sessions_for(username: str, session_id: str | None = None) -> None:
+    """
+    Invalidate the session for the user.
+
+    :param username: Username of the user to invalidate the session for.
+    :param session_id: If specified, invalidate the specific session ID. If None, invalidate all sessions.
+    """
+    user_subquery = db.session.query(User.id).filter(User.name == username).subquery()
+    q_invalidate = UserSession.query.filter(UserSession.user_id.in_(user_subquery))
+
+    if session_id:
+        q_invalidate = q_invalidate.filter(UserSession.session_id == session_id)
+
+    q_invalidate.update(
+        {"logged_out_at": get_current_time()}, synchronize_session=False
+    )
+
+
 def distribute_session_verification(
-    username: str, session_id: str | None, targets: list[str]
+    action: str, username: str, session_id: str | None, targets: list[str]
 ) -> list[str]:
     hosts = set()
     dist_rights_send_secret = get_secret_or_abort("DIST_RIGHTS_SEND_SECRET")
@@ -164,11 +182,14 @@ def distribute_session_verification(
         h = app.config["DIST_RIGHTS_HOSTS"].get(target, {}).get("hosts", [])
         hosts.update(h)
 
+    if not hosts:
+        return []
+
     r_session = FuturesSession()
     futures = []
     for host in hosts:
         r = r_session.post(
-            f"{host}/user/sessions/verify",
+            f"{host}/user/sessions/{action}",
             json={
                 "username": username,
                 "session_id": session_id,

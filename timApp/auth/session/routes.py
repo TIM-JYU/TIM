@@ -14,6 +14,7 @@ from timApp.auth.session.util import (
     current_session_id,
     has_valid_session,
     verify_session_for,
+    invalidate_sessions_for,
 )
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
@@ -110,12 +111,26 @@ def validate_session(user: str, session_id: str | None = None) -> Response:
 @user_sessions.post("/verify")
 @csrf.exempt
 def validate_remote_session(
-    username: str, session_id: str | None, secret: str | None
+    username: str, session_id: str | None = None, secret: str | None = None
 ) -> Response:
     if not secret:
         verify_admin()
     else:
         check_secret(secret, "DIST_RIGHTS_RECEIVE_SECRET")
     verify_session_for(username, session_id)
+    db.session.commit()
+    return ok_response()
+
+
+@user_sessions.post("/invalidate")
+@csrf.exempt
+def invalidate_session(
+    username: str, session_id: str | None = None, secret: str | None = None
+) -> Response:
+    if not secret:
+        verify_admin()
+    else:
+        check_secret(secret, "DIST_RIGHTS_RECEIVE_SECRET")
+    invalidate_sessions_for(username, session_id)
     db.session.commit()
     return ok_response()
