@@ -114,7 +114,7 @@ const multisaveAll = t.intersection([
     <button class="btn btn-default"
             *ngIf="(undoButton && (!listener || !allSaved()))"
             [title]="undoTitle"
-            (click)="tryResetChanges()">
+            (click)="tryResetChanges($event)">
         {{undoButton}}
     </button>
     <p class="savedtext" *ngIf="isSaved && allSaved()">{{savedText}}</p>
@@ -407,16 +407,19 @@ export class MultisaveComponent
         return multisaveAll;
     }
 
-    async tryResetChanges() {
+    async tryResetChanges(e?: Event) {
         if (this.undoConfirmation) {
             const ans = await to2(
-                showInputDialog({
-                    isInput: InputDialogKind.NoValidator,
-                    okValue: true,
-                    text: this.undoConfirmation,
-                    title: this.undoTitle ?? this.undoConfirmation,
-                    asyncContent: false,
-                })
+                showInputDialog(
+                    {
+                        isInput: InputDialogKind.NoValidator,
+                        okValue: true,
+                        text: this.undoConfirmation,
+                        title: this.undoTitle ?? this.undoConfirmation,
+                        asyncContent: false,
+                    },
+                    {resetPos: true}
+                )
             );
             if (!ans.ok || !ans.result) {
                 return;

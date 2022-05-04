@@ -4507,13 +4507,16 @@ export class TimTableComponent
         }
         if (this.undoConfirmation) {
             const ans = await to2(
-                showInputDialog({
-                    isInput: InputDialogKind.NoValidator,
-                    okValue: true,
-                    text: this.undoConfirmation,
-                    title: this.undoTitle ?? this.undoConfirmation,
-                    asyncContent: false,
-                })
+                showInputDialog(
+                    {
+                        isInput: InputDialogKind.NoValidator,
+                        okValue: true,
+                        text: this.undoConfirmation,
+                        title: this.undoTitle ?? this.undoConfirmation,
+                        asyncContent: false,
+                    },
+                    {resetPos: true}
+                )
             );
             if (!ans.ok || !ans.result) {
                 return;

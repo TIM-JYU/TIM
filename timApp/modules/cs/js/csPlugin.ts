@@ -3783,7 +3783,7 @@ ${fhtml}
                             (click)="fetchExternalFiles()"
                             [innerHTML]="externalFetchText()"></button>
                     <a href="#" *ngIf="undoButton && isUnSaved()" [title]="undoTitle"
-                       (click)="tryResetChanges(); $event.preventDefault()"> &nbsp;{{undoButton}}</a>
+                       (click)="tryResetChanges($event)"> &nbsp;{{undoButton}}</a>
                     &nbsp;&nbsp;
                     <span *ngIf="savedText"
                           class="savedText"
