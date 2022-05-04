@@ -45,7 +45,12 @@ from timApp.upload.uploadedfile import (
     get_mimetype,
 )
 from timApp.user.user import User
-from timApp.util.flask.requesthelper import use_model, RouteException, NotExist
+from timApp.util.flask.requesthelper import (
+    use_model,
+    RouteException,
+    NotExist,
+    get_option,
+)
 from timApp.util.flask.responsehelper import (
     json_response,
     ok_response,
@@ -457,7 +462,13 @@ def get_file(file_id, file_filename):
         raise NotExist("File not found")
     verify_view_access(f, check_parents=True)
     file_path = f.filesystem_path.as_posix()
-    return send_file(file_path, mimetype=get_mimetype(file_path))
+    mime_type = get_mimetype(file_path)
+    send_plain = get_option(request, "plain", False)
+    conditional = True
+    if send_plain and mime_type.startswith("text/"):
+        mime_type = "text/plain"
+        conditional = False
+    return send_file(file_path, mimetype=mime_type, conditional=conditional)
 
 
 @upload.get("/images/<int:image_id>/<image_filename>")

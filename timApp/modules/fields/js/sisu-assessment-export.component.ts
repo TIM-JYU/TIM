@@ -308,6 +308,10 @@ class AssessmentTableModel implements DataModelProvider {
         this.colFilters[columnIndex] = value;
     }
 
+    getRowFilter(columnIndex: number): string {
+        return this.colFilters[columnIndex] ?? "";
+    }
+
     setSelectAll(state: boolean): void {
         for (let i = 0; i < this.assessments.length; ++i) {
             if (this.isRowSelectable(i) && this.showRow(i)) {
@@ -422,15 +426,20 @@ class AssessmentTableModel implements DataModelProvider {
                 </button>
             </div>
             <tim-loading *ngIf="loading"></tim-loading>
-            <p *ngIf="okAssessments != null && !loading">
-                {{ okAssessments }} arviointia lähetettiin Sisuun.
-                <span *ngIf="errAssessments != null && errAssessments > 0">{{ errAssessments }} virheellistä arviointia torjuttiin.</span>
-                Voit vahvistaa arvioinnit menemällä kurssin
-                <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/ng-evaluation/confirmation">
-                    Tarkista ja vahvista -näkymään</a>.
-                <strong>Huom:</strong> Ennen 24.1.2022 luotujen kurssien arviointien vahvistaminen vaatii vastaavan arvioijan korjaamista Sisussa.
-                <a href="/view/tim/ohjeita/lomakkeiden-luominen#sisuAssesmentFix">Katso ohjeet täältä.</a>
-            </p>
+            <ng-container *ngIf="okAssessments != null && !loading">
+                <p>
+                    {{ okAssessments }} arviointia lähetettiin Sisuun.
+                    <span *ngIf="errAssessments != null && errAssessments > 0">{{ errAssessments }} virheellistä arviointia torjuttiin.</span>
+                </p>
+                <p class="red">
+                    Toistaiseksi vastaava arvioija tulee kirjata käsin Sisussa.<br>
+                    Mene kurssin <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/ng-evaluation/mass-edit">
+                    Tietojen massamuokkaus -välilehteen</a> ja aseta kaikille arvioitaville vastaava arvioija.
+                    <br>
+                    <a href="/view/tim/ohjeita/sisun-vastaavan-arvioijan-korjaus" target="_blank">Katso tarvittaessa lisäohjeet täältä</a>
+                </p>
+                <p class="red"><strong>Digipalvelut tutkii ongelman parhaillaan.</strong></p>
+            </ng-container>
         </div>
     `,
 })

@@ -5192,6 +5192,326 @@
           <context context-type="linenumber">888</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6107681138263811641" datatype="html">
+        <source>Answer age</source>
+        <target state="translated">Vastauksen ikä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">53</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6031758365372244639" datatype="html">
+        <source>Newest of each user</source>
+        <target state="translated">Uusimmat vastaukset</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">59</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1527041134654048591" datatype="html">
+        <source>Oldest of each user</source>
+        <target state="translated">Vanhimmat vastaukset</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">65</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1616102757855967475" datatype="html">
+        <source>All</source>
+        <target state="translated">Kaikki</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">71</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">144</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1507949699959470925" datatype="html">
+        <source>Period</source>
+        <target state="translated">Ajanjakso</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">78</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4922032719160773238" datatype="html">
+        <source>Whenever</source>
+        <target state="translated">Milloin tahansa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">84</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="972989875887826595" datatype="html">
+        <source>Since last answer fetch</source>
+        <target state="translated">Viimeisestä noutokerrasta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">90</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5380796636693554872" datatype="html">
+        <source>no fetches yet</source>
+        <target state="translated">ei viimeistä noutokertaa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">93</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4579056986330680943" datatype="html">
+        <source>Past day</source>
+        <target state="translated">Mennyt päivä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">100</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4390956568040848098" datatype="html">
+        <source>Past week</source>
+        <target state="translated">Mennyt viikko</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">106</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4737644674648109155" datatype="html">
+        <source>Past month</source>
+        <target state="translated">Mennyt kuukausi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">112</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8258001121894230907" datatype="html">
+        <source>Other...</source>
+        <target state="translated">Muu...</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">118</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="23518581647153834" datatype="html">
+        <source>from</source>
+        <target state="translated">alkaen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">121</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3207050836358092212" datatype="html">
+        <source>to</source>
+        <target state="translated">päättyen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">123</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6912849366309653724" datatype="html">
+        <source>Validity</source>
+        <target state="translated">Validisuus</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">131</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2831497907036176442" datatype="html">
+        <source>Valid</source>
+        <target state="translated">Validit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">136</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4136129438009397007" datatype="html">
+        <source>Invalid</source>
+        <target state="translated">Epävalidit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">140</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2128800934734769071" datatype="html">
+        <source>Names</source>
+        <target state="translated">Nimet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">150</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3865090777684537412" datatype="html">
+        <source>Username and full name</source>
+        <target state="translated">Käyttäjätunnus ja koko nimi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">156</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8675399030920847432" datatype="html">
+        <source>Username only</source>
+        <target state="translated">Vain käyttäjätunnus</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">162</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2319084728084419863" datatype="html">
+        <source>Anonymous username</source>
+        <target state="translated">Anonyymi tunnus</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">168</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7699622144571229146" datatype="html">
+        <source>Sort by</source>
+        <target state="translated">Lajitteluperuste</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">175</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3309915655225296659" datatype="html">
+        <source>Task, then username</source>
+        <target state="translated">Ensin tehtävä, sitten nimi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">181</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2384777388145535848" datatype="html">
+        <source>Username, then task</source>
+        <target state="translated">Ensin nimi, sitten tehtävä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">187</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7049887240439736400" datatype="html">
+        <source>Print</source>
+        <target state="translated">Tulosta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">194</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3518489489615053715" datatype="html">
+        <source>Headers and answers</source>
+        <target state="translated">Otsikot ja vastaukset</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">200</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5469941366887154358" datatype="html">
+        <source>Headers only</source>
+        <target state="translated">Vain otsikot</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">206</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5985682006104504196" datatype="html">
+        <source>Answers only</source>
+        <target state="translated">Vain vastaukset</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">212</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5010997835951877509" datatype="html">
+        <source>Answers only without separator line</source>
+        <target state="translated">Vastaukset ilman rivierotinta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">218</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="941878039785213087" datatype="html">
+        <source>Korppi export</source>
+        <target state="translated">Korppi-vienti</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">224</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5195257953852616978" datatype="html">
+        <source>Output fmt</source>
+        <target state="translated">Vientimuoto</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">231</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6162693758764653365" datatype="html">
+        <source>Text</source>
+        <target state="translated">Teksti</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">236</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2742664813202759813" datatype="html">
+        <source>JSON</source>
+        <target state="translated">JSON</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">240</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4465627218183026778" datatype="html">
+        <source>Get answers</source>
+        <target state="translated">Nouda vastaukset</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">247</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">268</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1897302956265961273" datatype="html">
+        <source>Pseudonymous username</source>
+        <target state="translated">Pseudonyymi tunnus</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">176</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7582520939264360836" datatype="html">
+        <source>Key for generating pseudonyms</source>
+        <target state="translated">Avain pseudonyymien luomiseksi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">180</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="140762725397805137" datatype="html">
+        <source>Generate a random key</source>
+        <target state="translated">Luo satunnainen avain</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">182</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3095169801210180631" datatype="html">
+        <source>Specify a key to generate pseudonyms. A user will always get the same pseudonym for a key.</source>
+        <target state="translated">Määritä avain pseudonyymien luomiseksi. Käyttäjä saa aina saman pseudonyymin samalla avaimella.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">185</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3361601582508115598" datatype="html">
+        <source>The key should be at least 10 characters long</source>
+        <target state="translated">Avaimen pituuden on oltava vähintään 10 merkkiä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">186</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

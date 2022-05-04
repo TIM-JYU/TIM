@@ -293,7 +293,7 @@ export interface TimTable {
 export const DataViewVirtualScrollingSettingsType = t.type({
     enabled: withDefault(t.boolean, true),
     verticalOverflow: withDefault(t.number, 1),
-    horizontalOverflow: withDefault(t.number, 1),
+    horizontalOverflow: withDefault(t.number, 999), // TODO: Reduce when horizontal scrolling works better
 });
 
 export const DataViewSettingsType = t.type({
@@ -4656,6 +4656,10 @@ export class TimTableComponent
 
     setRowFilter(columnIndex: number, value: string): void {
         this.filters[columnIndex] = value;
+    }
+
+    getRowFilter(columnIndex: number): string {
+        return this.filters[columnIndex] ?? "";
     }
 
     clearChecked() {
