@@ -53,10 +53,6 @@ export class UserListController implements IController {
     constructor(private scope: IScope, private element: JQLite) {}
 
     $onInit() {
-        // hopefully removes the funtionalilty of the grid menu
-        this.scope.$destroy();
-        return;
-
         this.scope.$watch(
             () => this.element[0].offsetHeight + this.element[0].offsetWidth,
             (sum) => {
