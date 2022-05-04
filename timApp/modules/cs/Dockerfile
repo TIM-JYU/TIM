@@ -36,6 +36,7 @@ RUN python3.10 -m pip install Flask bleach lxml && bash -c "${APT_CLEANUP}"
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && bash -c "${APT_CLEANUP}"
 RUN echo "deb https://download.mono-project.com/repo/ubuntu stable-focal main" > /etc/apt/sources.list.d/mono-official-stable.list
 RUN bash -c "${APT_INSTALL} \
+ca-certificates \
 doxygen \
 fsharp \
 graphviz \
@@ -59,6 +60,16 @@ x11-utils \
 libglfw3 \
 libglfw3-dev \
 && ${APT_CLEANUP}"
+
+# Copy any certificates that are needed
+# Right some servers doe not share the certificate correctly,
+# so we need to manually add it until references are migrated.
+# See https://gitlab.com/tim-jyu/tim/-/issues/2590
+COPY cert_chains/*.crt /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+RUN ln -s /etc/ssl/certs/ca-certificates.crt /usr/lib/ssl/cert.pem && \
+    chmod 775 /usr/lib/ssl/cert.pem && \
+    chmod 775 /etc/ssl/certs/ca-certificates.crt
 
 # We use Mesa drivers by default for GUI rendering
 # For this, we specifically force software rendering mode and use the fast "llvmpipe" driver
@@ -266,7 +277,7 @@ RUN swift --version
 RUN echo 'options(repos=structure(c(CRAN="https://cloud.r-project.org/")))' > ~/.Rprofile
 
 RUN bash -c "${APT_INSTALL} cmake" && \
-    git clone git://github.com/stevengj/nlopt && \
+    git clone https://github.com/stevengj/nlopt.git && \
     cd nlopt && cmake -DCMAKE_CXX_FLAGS=-std=c++11 . && make && make install && cd .. && rm -r nlopt && apt-get remove -y cmake && ${APT_CLEANUP}
 
 RUN ldconfig
