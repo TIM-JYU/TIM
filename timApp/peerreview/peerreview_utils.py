@@ -14,11 +14,9 @@ from timApp.plugin.plugin import Plugin
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-<<<<<<< HEAD
 import pytz
-=======
 from timApp.user.usergroup import UserGroup
->>>>>>> 5bafdd469f0d561854c88498a41fdac93c96f830
+
 
 
 class PeerReviewException(Exception):
@@ -205,7 +203,7 @@ def check_review_grouping(doc: DocInfo) -> bool:
 
 
 def is_peerreview_enabled(doc: DocInfo) -> bool:
-<<<<<<< HEAD
+
     settings = doc.document.get_settings()
 
     # TODO: create better solution
@@ -224,7 +222,6 @@ def is_peerreview_enabled(doc: DocInfo) -> bool:
         return True
     else:
         return False
-=======
     return doc.document.get_settings().peer_review()
 
 
@@ -232,4 +229,4 @@ def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
     return PeerReview.query.filter_by(
         block_id=doc.id,
     ).all()
->>>>>>> 5bafdd469f0d561854c88498a41fdac93c96f830
+
