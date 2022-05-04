@@ -1191,7 +1191,17 @@ def to_alphabet(num: int) -> str:
     :param num: The list's starting number.
     :returns: The alphabet corresponding the starting number.
     """
-    # TODO This fails when num > len(string.ascii_lowercase)
     alphabet = string.ascii_lowercase
+    n = len(alphabet)
 
-    return alphabet[(num - 1) % len(alphabet)]
+    # Adapted from:
+    # https://codereview.stackexchange.com/questions/182733/base-26-letters-and-base-10-using-recursion
+    result = ""
+
+    while num > 0:
+        # Minus one in order to prevent (N * 26) % 26.
+        num, remainder = (num - 1) // n, (num - 1) % n
+        # The first letter A matches 1 which here is indexed as 0.
+        result += alphabet[remainder]
+
+    return "".join(result)[::-1]

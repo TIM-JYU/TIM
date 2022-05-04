@@ -21,6 +21,7 @@ from timApp.document.translation.translationparser import (
     Translate,
     NoTranslate,
     TranslationParser,
+    to_alphabet,
 )
 
 
@@ -554,7 +555,6 @@ x=0\;\;\;\\text{"""
             self.parser.get_translate_approvals(md),
         )
 
-    # TODO Allow this test when needed parts are implemented.
     def test_ordered_list3(self):
         """
         Testing orderedlist with all the different ways they can be formatted
@@ -581,9 +581,9 @@ x=0\;\;\;\\text{"""
                 Translate("\n"),
                 NoTranslate("\n42. "),
                 Translate("Tässä ollaan"),
-                NoTranslate("\n\t43. "),
+                NoTranslate("\n\t42. "),
                 Translate("Jotain tehdään"),
-                NoTranslate("\n\t44. "),
+                NoTranslate("\n\t43. "),
                 Translate("Ainakin nyt"),
                 NoTranslate("\n\t#) "),
                 Translate("Kivaa on"),
@@ -608,6 +608,16 @@ x=0\;\;\;\\text{"""
             ],
             self.parser.get_translate_approvals(md),
         )
+
+    def test_base10_to_alphabet(self):
+        """Test some edge-cases on the alphabet conversion."""
+        self.assertEqual("", to_alphabet(0))
+        self.assertEqual("acw", to_alphabet(777))
+        self.assertEqual("zyz", to_alphabet(18252))
+        self.assertEqual("z", to_alphabet(26))
+        self.assertEqual("aa", to_alphabet(27))
+        self.assertEqual("zz", to_alphabet(702))
+        self.assertEqual("aaa", to_alphabet(703))
 
     # TODO There is currently no reliable solution for the corner cases in
     #  this test case. Proper handling will require major refactoring of the
