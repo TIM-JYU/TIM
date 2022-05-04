@@ -1,3 +1,4 @@
+
 import {IAngularEvent, IController, IScope} from "angular";
 import {timApp} from "tim/app";
 import uiGrid from "ui-grid";
@@ -20,10 +21,13 @@ import {
 } from "../util/utils";
 
 export interface IExportOptions {
+
     totalPointField: string;
     velpPointField: string;
     taskPointField: string;
     copy: boolean;
+
+
 }
 
 function numericSort(a: number | null, b: number | null) {
@@ -40,11 +44,14 @@ function numericSort(a: number | null, b: number | null) {
 }
 
 export class UserListController implements IController {
+
     static $inject = ["$scope", "$element"];
     private gridOptions?: uiGrid.IGridOptionsOf<IUserListEntry> & {
         gridMenuCustomItems: unknown;
     };
     private gridApi?: uiGrid.IGridApiOf<IUserListEntry>;
+
+
     private instantUpdate: boolean = false;
     private onUserChange!: Binding<
         (params: {$USER: IUser; $UPDATEALL: boolean}) => void,
@@ -56,6 +63,14 @@ export class UserListController implements IController {
     constructor(private scope: IScope, private element: JQLite) {}
 
     $onInit() {
+
+        // hopefully removes the funtionalilty of the grid menu
+        this.scope.$destroy();
+        return;
+
+
+
+
         this.scope.$watch(
             () => this.element[0].offsetHeight + this.element[0].offsetWidth,
             (sum) => {
@@ -408,16 +423,21 @@ export class UserListController implements IController {
         document.body.appendChild(elem);
         elem.click();
         document.body.removeChild(elem);
+
         /*
         const opened = window.open("text/plain", "replace");
         if ( !opened ) { return; }
         opened.document.write(dataKorppi);
         opened.close();
         */
+
+
     }
+
 }
 
 timApp.component("timUserList", {
+
     bindings: {
         onUserChange: "&",
         users: "<", // unused?
@@ -426,8 +446,11 @@ timApp.component("timUserList", {
     require: {
         viewctrl: "^timView",
     },
-    template: `<div
-     class="userlist"
+
+template: `
+        
+<div
+     class="userlist" hide="true"
      ng-if="$ctrl.users"
      ui-grid="$ctrl.gridOptions"
      ui-grid-selection
@@ -437,5 +460,5 @@ timApp.component("timUserList", {
 </div>
 <div ng-if="!$ctrl.users">
     No answerers.
-</div>`,
-});
+</div>
+`,});
