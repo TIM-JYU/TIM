@@ -294,7 +294,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      */
     async bookEvent() {
         const eventToBook = this.data;
-
+        if (!confirm(`Book the event "${this.data.title}"?`)) {
+            return;
+        }
         const result = await toPromise(
             this.http.post("/calendar/bookings", {
                 event_id: eventToBook.id,
