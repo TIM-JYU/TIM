@@ -413,7 +413,10 @@ class TranslateProcessor:
 
             mds.append(md)
 
-        return self._translate_raw_texts(mds)
+        try:
+            return self._translate_raw_texts(mds)
+        except Exception as e:
+            raise RouteException("Automatic translation failed: " + str(e))
 
     def translate(self, paras: list[TranslationTarget]) -> list[str]:
         """

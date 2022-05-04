@@ -10,10 +10,18 @@ from timApp.document.translation.translation import Translation
 from timApp.document.translation.language import Language
 from timApp.document.translation.deepl import DeeplTranslationService
 from timApp.document.translation.reversingtranslator import ReversingTranslationService
+from timApp.document.translation.translator import Usage, TranslateBlock
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.util.utils import static_tim_doc
+from timApp.util.flask.requesthelper import RouteException
+
+
+MAX_TEST_CHAR_QUOTA = 50
+"""Amount of characters to initialize the quota-limited test translator
+with.
+"""
 
 
 class TimTranslationTest(TimRouteTest):
@@ -25,11 +33,53 @@ class TimTranslationTest(TimRouteTest):
     def setUpClass(cls):
         super().setUpClass()
         db.session.add(ReversingTranslationService())
+        db.session.add(QuotaLimitedTestTranslator(character_limit=MAX_TEST_CHAR_QUOTA))
         cls.reverselang = Language(
             lang_code="rev-Erse", lang_name="Reverse", autonym="esreveR"
         )
         db.session.add(cls.reverselang)
         db.session.commit()
+
+
+class QuotaLimitedTestTranslator(ReversingTranslationService):
+    """A test translator that can run out of quota mid-translation. Used for
+    simulating a translation service, that returns an error when
+    translation-quota is exceeded by the caller (such as the case with DeepL
+    Free).
+    """
+
+    character_limit = db.Column(db.Integer, default=MAX_TEST_CHAR_QUOTA)
+    """Amount of characters allowed to translate."""
+
+    _character_count = 0
+    """Holds the state of characters translated with the translator."""
+
+    def translate(
+        self,
+        texts: list[TranslateBlock],
+        source_lang: Language,
+        target_lang: Language,
+        *,
+        tag_handling: str = "",
+    ) -> list[str]:
+        # Translate everything at first, because it's easier to implement here.
+        result = super().translate(
+            texts, source_lang, target_lang, tag_handling=tag_handling
+        )
+        # Apply changes to the quota.
+        for text in result:
+            self._character_count += len(text)
+            if self._character_count > self.character_limit:
+                raise Exception(f"Translation quota ({self.character_limit}) exceeded")
+
+        return result
+
+    def usage(self) -> Usage:
+        return Usage(
+            character_limit=self.character_limit, character_count=self._character_count
+        )
+
+    __mapper_args__ = {"polymorphic_identity": "QuotaLimited"}
 
 
 class TranslationTest(TimTranslationTest):
@@ -661,6 +711,67 @@ Baz qux [qux](www.example.com)
             data,
             expect_status=403,
         )
+
+    def test_quota_exceeded_error(self):
+        """Test the case where quota runs out during translation."""
+        lang = self.reverselang
+        translator = QuotaLimitedTestTranslator.__mapper_args__["polymorphic_identity"]
+        self.login_test1()
+
+        # Create some paragraphs with length equal to the translator's max quota.
+        # TODO/NOTE This data is made for the reason, that partially applying
+        #  the translation before failure might be implemented in the _future_.
+        text = "ab" * (MAX_TEST_CHAR_QUOTA // 2) + "a" * (MAX_TEST_CHAR_QUOTA % 2)
+        pars_count = 3
+        par_len = len(text) // pars_count
+        # Split text between paragraphs into equal parts.
+        pars_content = [
+            text[i : i + par_len] for i in range(par_len, MAX_TEST_CHAR_QUOTA, par_len)
+        ]
+        pars_content[-1] += text[:par_len]
+
+        # Sanity check that the data is of required length.
+        chars_in_content = sum(len(par) for par in pars_content)
+        self.assertEqual(pars_count, len(pars_content))
+        self.assertEqual(MAX_TEST_CHAR_QUOTA, chars_in_content)
+
+        d = self.create_doc(initial_par="\n#-\n".join(pars_content))
+        d.lang_id = "orig"
+
+        # Failing to finish automatic translation (exceeding quota)
+        # TODO/NOTE Calling the route does not raise exception, as exceptions
+        #  happen inside Python, not the HTTP-request(?).
+        # with self.assertRaises(RouteException) as e:
+        err_resp = self.json_post(
+            f"/translate/{d.id}/{lang.lang_code}/{translator}",
+            {"doc_title": "title"},
+            expect_status=400,  # The code of RouteException.
+        )
+        # See that the translator's error message was returned.
+        self.assertTrue(
+            f"Translation quota ({len(text)}) exceeded" in err_resp["error"]
+        )
+
+        # Refresh the document.
+        d = DocEntry.find_by_id(d.id)
+
+        # See that the failed translation created the document with correct
+        # references and contents.
+
+        self.assertTrue(d.has_translation(lang.lang_code))
+        self.assertEqual(2, len(d.translations))
+
+        # Get the newly created translation doc.
+        tr_doc = d.translations[1].document
+        # tr_doc.clear_mem_cache()
+
+        src_paras = d.document.get_paragraphs()
+        tr_paras = tr_doc.get_paragraphs()
+        self.assertEqual(len(src_paras), len(tr_paras))
+
+        for src_par, tr_par in zip(src_paras, tr_paras):
+            self.assertEqual("", tr_par.md)
+            self.assertEqual(src_par.id, tr_par.get_attr("rp"))
 
 
 # TODO Add cases for all 3 translation routes for the special cases (basically

@@ -182,9 +182,8 @@ def create_translation_route(
     manual).
     :return: The created translation document's information as JSON.
     """
-    req_data = request.get_json()
     # TODO Move doc_title -parameter to the URL as well
-    title = req_data.get("doc_title", None)
+    title = request.get_json().get("doc_title", None)
 
     doc = get_doc_or_abort(tr_doc_id)
 
@@ -195,22 +194,18 @@ def create_translation_route(
         raise ItemAlreadyExistsException("Translation for this language already exists")
     verify_manage_access(doc.src_doc)
 
-    # NOTE Failing to create the translation still increases document id
-    # number and sometimes the manage page gets stuck (because of it?).
     src_doc = doc.src_doc.document
     cite_doc = create_document_and_block(get_current_user_object().get_personal_group())
 
-    tr = Translation(
-        doc_id=cite_doc.doc_id,
-        src_docid=src_doc.doc_id,
-        lang_id=language,
-    )
+    tr = Translation(doc_id=cite_doc.doc_id, src_docid=src_doc.doc_id, lang_id=language)
     tr.title = title
 
     add_reference_pars(
         cite_doc,
         src_doc,
         "tr",
+        # TODO If auto-translation fails, maybe prevent this information from
+        #  being included.
         translator=translator if translator != "Manual" else None,
     )
 

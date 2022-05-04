@@ -98,12 +98,20 @@ class ReversingTranslationService(TranslationService):
         return Usage(character_count=0, character_limit=sys.maxsize)
 
     def languages(self) -> LanguagePairing:
-        # TODO
-        raise NotImplementedError
+        """
+        :return: Mapping from all languages in database into the reversed language.
+        """
+        reverse_lang = Language.query_by_code("rev-erse")
+        if reverse_lang is not None:
+            return LanguagePairing(
+                value={source: reverse_lang for source in Language.query_all()}
+            )
+        raise Exception(
+            "Test-language is not found in database with the code 'rev-erse'."
+        )
 
     def supports_tag_handling(self, tag_type: str) -> bool:
-        # TODO
-        raise NotImplementedError
+        return False
 
     def supports(self, source_lang: Language, target_lang: Language) -> bool:
         """
