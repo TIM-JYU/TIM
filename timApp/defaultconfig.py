@@ -87,6 +87,19 @@ WUFF_EMAIL = "wuff@tim.jyu.fi"
 NOREPLY_EMAIL = "no-reply@tim.jyu.fi"
 GLOBAL_NOTIFICATION_FILE = "/tmp/global_notification.html"
 
+# Ensure the main dir is marked as safe
+# See https://github.blog/2022-04-12-git-security-vulnerability-announced/
+subprocess.run(
+    [
+        "git",
+        "config",
+        "--global",
+        "--add",
+        "safe.directory",
+        os.path.dirname(os.getcwd()),
+    ]
+)
+
 GIT_LATEST_COMMIT_TIMESTAMP = (
     subprocess.run(
         ["git", "log", "-1", "--date=format:%d.%m.%Y %H:%M:%S", "--format=%cd"],
