@@ -223,6 +223,7 @@ export type TIMCalendarEvent = CalendarEvent<{
                     [weekStartsOn]="1"
                     (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
                     (dayClicked)="changeToDay($event.day.date)"
+                    (eventClicked)="handleEventClick($event.event)"
             >
             </mwl-calendar-month-view>
             <mwl-calendar-week-view
@@ -237,7 +238,7 @@ export type TIMCalendarEvent = CalendarEvent<{
                     [locale]="locale"
                     [minimumEventHeight]="minimumEventHeight"
                     [weekStartsOn]="1"
-                    (dayHeaderClicked)="clickedDate = $event.day.date"
+                    (dayHeaderClicked)="viewDay($event.day.date)"
                     (hourSegmentClicked)="clickedDate = $event.date"
                     [hourSegmentTemplate]="weekViewHourSegmentTemplate"
                     (eventClicked)="handleEventClick($event.event)"
@@ -449,6 +450,16 @@ export class CalendarComponent
         this.clickedDate = date;
         this.viewDate = date;
         this.view = CalendarView.Week;
+    }
+
+    /**
+     * Enables the user to click on a date in the week view to see the day view of that day
+     * @param date the date of clicked day
+     */
+    viewDay(date: Date) {
+        this.clickedDate = date;
+        this.viewDate = date;
+        this.view = CalendarView.Day;
     }
 
     /**
