@@ -254,6 +254,7 @@ export class PermCtrl implements IController {
     }
 
     async updateTranslation(tr: IEditableTranslation) {
+        const old_lang = tr.old_langid;
         const r = await to(
             $http.post("/translation/" + tr.id, {
                 new_langid: tr.lang_id,
@@ -267,6 +268,7 @@ export class PermCtrl implements IController {
                 this.syncTitle(tr.title);
             }
         } else {
+            tr.lang_id = old_lang;
             await showMessageDialog(r.result.data.error);
         }
         this.checkTranslatability();

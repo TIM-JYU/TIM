@@ -359,12 +359,14 @@ VERIFICATION_REACTED_CLEANUP_INTERVAL = 30 * 24 * 60 * 60
 # Pre-existing entries are skipped.
 # Default list includes languages supported by the translation service
 # DeepL: https://https://www.deepl.com/docs-api/translating-text/
-# Custom language syntax is the following: TODO What is the accurate lang_code?
+# Custom language syntax is the following:
 # {
 #   "lang_code": "<standardized tag>",
 #   "lang_name": "<name in English>",
 #   "autonym": "<name in its language>",
 # }
+# The standardized tag lang_code should adhere to IETF BCP47,
+# detailed in RFC5646 (https://www.rfc-editor.org/info/rfc5646).
 LANGUAGES = [
     "Bulgarian",
     "Czech",
