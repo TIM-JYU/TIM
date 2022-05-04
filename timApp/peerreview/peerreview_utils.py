@@ -226,7 +226,8 @@ def is_peerreview_enabled(doc: DocInfo) -> bool:
         return doc.document.get_settings().peer_review()
     if start <= current_time < stop:
         return True
-    return doc.document.get_settings().peer_review()
+    else:
+        return False
 
 
 def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
