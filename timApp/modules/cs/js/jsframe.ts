@@ -630,16 +630,6 @@ export class JsframeComponent
         this.c();
     }
 
-    tryResetChanges(e?: Event): void {
-        if (e) {
-            e.preventDefault();
-        }
-        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
-            return;
-        }
-        this.resetChanges();
-    }
-
     resetChanges() {
         if (!this.prevdata) {
             return;
