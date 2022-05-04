@@ -132,7 +132,7 @@ def validate_remote_session(
 
 @user_sessions.post("/invalidate")
 @csrf.exempt
-def invalidate_session(
+def invalidate_remote_session(
     username: str, session_id: str | None = None, secret: str | None = None
 ) -> Response:
     if not secret:
