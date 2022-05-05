@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from timApp.document.par_basic_data import ParBasicData
 
@@ -46,7 +46,7 @@ class PreparedPar:
         return self.data.hash
 
     @property
-    def attrs(self) -> dict[str, str]:
+    def attrs(self) -> dict[str, Any]:
         return self.data.attrs
 
     @property
@@ -69,4 +69,8 @@ class PreparedPar:
     @property
     def class_str(self) -> str:
         # TODO: Do this in a more type-safe way (attrs is a string dict)
-        return " ".join(self.attrs.get("classes", []))
+        classes: list[str] = self.attrs.get("classes", [])
+        # Merge translation block classes with the original classes
+        if self.attrs.get("r") == "tr":
+            classes = list({*classes, *self.target_data.attrs.get("classes", [])})
+        return " ".join(classes)
