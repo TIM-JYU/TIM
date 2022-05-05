@@ -1296,9 +1296,7 @@ ${backTicks}
                 minLines: Math.min(lines, 5),
             });
         } else if (this.editor?.type == EditorType.Textarea) {
-            // Changing from ace editor to text editor can make text editor's height be 0, but putting remainingSpace to
-            // Math.abs makes text editor become taller while making it shorter after some point.
-            this.editor.editor.height(remainingSpace);
+            this.editor.editor.height(Math.max(remainingSpace, 100));
         }
     }
 
