@@ -205,7 +205,8 @@ def get_events() -> Response:
                 for user in group.users:
                     users.append(
                         {
-                            "name": user.name,
+                            "id": user.id,
+                            "name": user.real_name,
                             "email": user.email,
                         }
                     )
@@ -372,6 +373,30 @@ def book_event(event_id: int) -> Response:
     db.session.add(enrollment)
     db.session.commit()
 
+    return ok_response()
+
+
+@calendar_plugin.delete("/bookings/<int:event_id>")
+def delete_booking(event_id: int) -> Response:
+    """
+    Deletes the booking or enrollment to an event for current user's personal user group.
+
+    :param event_id: Event id that matches with the enrollment
+    :return: HTTP 200 if succeeded, otherwise 400
+    """
+    verify_logged_in()
+    user_obj = get_current_user_object()
+    group_id = -1
+    for group in user_obj.groups:
+        if group.name == user_obj.name:
+            group_id = group.id
+
+    enrollment = Enrollment.get_enrollment_by_ids(event_id, group_id)
+    if not enrollment:
+        raise RouteException("Enrollment not found")
+
+    db.session.delete(enrollment)
+    db.session.commit()
     return ok_response()
 
 

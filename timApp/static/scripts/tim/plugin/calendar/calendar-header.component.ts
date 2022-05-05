@@ -13,31 +13,23 @@ import {CustomDateFormatter} from "./custom-date-formatter.service";
     selector: "mwl-utils-calendar-header",
     template: `
     <div class="row text-center">
-        <button class="btn timButton currentDay"
-                mwlCalendarToday
-                [(viewDate)]="viewDate"
-                (viewDateChange)="viewDateChange.next(viewDate)"
-                >Back to current date
-        </button>
-        </div>
+    </div>
      <div class="row text-center">   
       <div class="col-md-4">
-        <div class="btn-group time-period-btn">
+        <div class="btn-group time-period-btn col-md-10">
           <button
             class="btn btn-primary"
             mwlCalendarPreviousView
             [view]="view"
             [(viewDate)]="viewDate"
-            (viewDateChange)="viewDateChange.next(viewDate)"
-          >
+            (viewDateChange)="viewDateChange.next(viewDate)">
               <span class="glyphicon glyphicon-arrow-left"></span>
           </button>
           <button
             class="btn btn-outline-secondary"
             mwlCalendarToday
             [(viewDate)]="viewDate"
-            (viewDateChange)="viewDateChange.next(viewDate)"
-          >
+            (viewDateChange)="viewDateChange.next(viewDate)">
               <ng-container >  <span [hidden]="!(view== CalendarView.Day)" >{{viewDate | calendarDate:'weekViewColumnSubHeader':locale}}</span> </ng-container>
             <app-show-week [hidden]="!(view == CalendarView.Week)" [(view)]="view" [(viewDate)]="viewDate"></app-show-week>
               <ng-container >  <span  [hidden]="!(view== CalendarView.Month)">{{viewDate | calendarDate :'viewMonth':locale}}</span> </ng-container>
@@ -47,11 +39,16 @@ import {CustomDateFormatter} from "./custom-date-formatter.service";
             mwlCalendarNextView
             [view]="view"
             [(viewDate)]="viewDate"
-            (viewDateChange)="viewDateChange.next(viewDate)"
-          >
+            (viewDateChange)="viewDateChange.next(viewDate)">
               <span class="glyphicon glyphicon-arrow-right"></span>
           </button>
         </div>
+          <button class="btn timButton currentDay col-md-10"
+                mwlCalendarToday
+                [(viewDate)]="viewDate"
+                (viewDateChange)="viewDateChange.next(viewDate)"
+                >Back to current date
+        </button>
       </div>
       <div class="col-md-4">
           <h2 [hidden]="view != 'day'">{{ viewDate | calendarDate:('viewDay'):locale}}</h2>
@@ -62,22 +59,19 @@ import {CustomDateFormatter} from "./custom-date-formatter.service";
           <button
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Month)"
-            [class.active]="view === CalendarView.Month"
-          >
+            [class.active]="view === CalendarView.Month">
             Month
           </button>
           <button
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Week)"
-            [class.active]="view === CalendarView.Week"
-          >
+            [class.active]="view === CalendarView.Week">
             Week
           </button>
           <button
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Day)"
-            [class.active]="view === CalendarView.Day"
-          >
+            [class.active]="view === CalendarView.Day">
             Day
           </button>
         </div>

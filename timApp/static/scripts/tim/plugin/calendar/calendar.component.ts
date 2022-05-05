@@ -149,7 +149,7 @@ export type TIMCalendarEvent = CalendarEvent<{
     maxSize: number;
     booker_groups: {
         name: string;
-        users: {name: string; email: string | null}[];
+        users: {id: number; name: string; email: string | null}[];
     }[];
 }>;
 
@@ -226,6 +226,7 @@ export type TIMCalendarEvent = CalendarEvent<{
                     [weekStartsOn]="1"
                     (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
                     (dayClicked)="changeToDay($event.day.date)"
+                    (eventClicked)="handleEventClick($event.event)"
             >
             </mwl-calendar-month-view>
             <mwl-calendar-week-view
@@ -240,7 +241,7 @@ export type TIMCalendarEvent = CalendarEvent<{
                     [locale]="locale"
                     [minimumEventHeight]="minimumEventHeight"
                     [weekStartsOn]="1"
-                    (dayHeaderClicked)="clickedDate = $event.day.date"
+                    (dayHeaderClicked)="viewDay($event.day.date)"
                     (hourSegmentClicked)="clickedDate = $event.date"
                     [hourSegmentTemplate]="weekViewHourSegmentTemplate"
                     (eventClicked)="handleEventClick($event.event)"
@@ -455,6 +456,16 @@ export class CalendarComponent
     }
 
     /**
+     * Enables the user to click on a date in the week view to see the day view of that day
+     * @param date the date of clicked day
+     */
+    viewDay(date: Date) {
+        this.clickedDate = date;
+        this.viewDate = date;
+        this.view = CalendarView.Day;
+    }
+
+    /**
      * Sets the view/edit mode in the UI
      * @param enabled whether the edit mode is enabled
      */
@@ -494,6 +505,10 @@ export class CalendarComponent
         mouseDownEvent: MouseEvent,
         segmentElement: HTMLElement
     ) {
+        let fullName = Users.getCurrent().real_name;
+        if (!fullName) {
+            fullName = Users.getCurrent().name;
+        }
         const dragToSelectEvent: TIMCalendarEvent = {
             id: this.events.length,
             // title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
@@ -502,7 +517,7 @@ export class CalendarComponent
             // )
             //     .toTimeString()
             //     .substr(0, 5)} Varattava aika`,
-            title: "Ohjausaika",
+            title: fullName,
             start: segment.date,
             end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
@@ -625,17 +640,18 @@ export class CalendarComponent
         this.events.forEach((event) => {
             if (event.meta!.enrollments >= event.meta!.maxSize) {
                 event.color = colors.red;
+            } else {
+                event.color = colors.blue;
             }
             if (event.meta!.booker_groups) {
                 event.meta!.booker_groups.forEach((group) => {
                     group.users.forEach((user) => {
-                        if (user.name === Users.getCurrent().name) {
+                        if (user.id === Users.getCurrent().id) {
                             event.color = colors.green;
                         }
                     });
                 });
             }
-
             if (Date.now() > event.start.getTime()) {
                 event.color = colors.gray;
             }
