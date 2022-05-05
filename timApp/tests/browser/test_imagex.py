@@ -1,3 +1,5 @@
+from time import sleep
+
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 
@@ -71,6 +73,7 @@ fixedobjects:
         )
         db.session.commit()
         self.goto_document(d)
+        sleep(5)
         canvas = self.find_element_avoid_staleness("imagex-runner canvas")
         # legacy format loads correctly
         self.assert_same_screenshot(canvas, ["imagex/canvas_legacy_init"])
