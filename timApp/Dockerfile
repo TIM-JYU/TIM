@@ -197,6 +197,7 @@ RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.14.2/
 
 # Set name and email for git.
 RUN git config --global user.email "agent@docker.com" && git config --global user.name "agent"
+RUN git config --global --add safe.directory /service
 
 RUN mkdir /service
 
