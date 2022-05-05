@@ -3680,10 +3680,13 @@ ${fhtml}
         <div [ngClass]="{'csRunDiv': borders}" class="type-{{rtype}} cs-flex" [ngStyle]="csRunDivStyle">
             <tim-markup-error class="csMarkupError" *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <h4 class="csHeader" *ngIf="header" [innerHTML]="header | purify"></h4>
-            <div class="csAllSelector" *ngIf="isAll" style="float: right;">{{languageText}}
-                <select [(ngModel)]="selectedLanguage" required (ngModelChange)="languageChange()">
-                    <option *ngFor="let o of progLanguages" [value]="o">{{o}}</option>
-                </select>
+            <div class="csAllSelector" *ngIf="isAll">
+                <div>
+                    {{languageText}}
+                    <select [(ngModel)]="selectedLanguage" required (ngModelChange)="languageChange()">
+                        <option *ngFor="let o of progLanguages" [value]="o">{{o}}</option>
+                    </select>
+                </div>
             </div>
             <p *ngIf="stem" class="stem" [innerHTML]="stem | purify"></p>
             <div class="csTaunoContent" *ngIf="isTauno">
