@@ -1471,13 +1471,6 @@ export class CsController extends CsBase implements ITimComponent {
         );
     }
 
-    tryResetChanges(): void {
-        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
-            return;
-        }
-        this.resetChanges();
-    }
-
     resetChanges(): void {
         this.usercode = this.savedvals?.usercode ?? "";
         this.userargs = this.savedvals?.args ?? "";
@@ -3790,7 +3783,7 @@ ${fhtml}
                             (click)="fetchExternalFiles()"
                             [innerHTML]="externalFetchText()"></button>
                     <a href="#" *ngIf="undoButton && isUnSaved()" [title]="undoTitle"
-                       (click)="tryResetChanges(); $event.preventDefault()"> &nbsp;{{undoButton}}</a>
+                       (click)="tryResetChanges($event)"> &nbsp;{{undoButton}}</a>
                     &nbsp;&nbsp;
                     <span *ngIf="savedText"
                           class="savedText"

@@ -23,7 +23,7 @@ import {
     Info,
     withDefault,
 } from "tim/plugin/attributes";
-import {escapeRegExp, scrollToElement} from "tim/util/utils";
+import {escapeRegExp, scrollToElement, to2} from "tim/util/utils";
 import {TaskId} from "tim/plugin/taskid";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -33,6 +33,8 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {showInputDialog} from "../../../static/scripts/tim/ui/showInputDialog";
+import {InputDialogKind} from "../../../static/scripts/tim/ui/input-dialog.kind";
 import {
     GroupType,
     SisuAssessmentExportModule,
@@ -112,7 +114,7 @@ const multisaveAll = t.intersection([
     <button class="btn btn-default"
             *ngIf="(undoButton && (!listener || !allSaved()))"
             [title]="undoTitle"
-            (click)="tryResetChanges()">
+            (click)="tryResetChanges($event)">
         {{undoButton}}
     </button>
     <p class="savedtext" *ngIf="isSaved && allSaved()">{{savedText}}</p>
@@ -405,9 +407,23 @@ export class MultisaveComponent
         return multisaveAll;
     }
 
-    tryResetChanges(): void {
-        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
-            return;
+    async tryResetChanges(e?: Event) {
+        if (this.undoConfirmation) {
+            const ans = await to2(
+                showInputDialog(
+                    {
+                        isInput: InputDialogKind.NoValidator,
+                        okValue: true,
+                        text: this.undoConfirmation,
+                        title: this.undoTitle ?? this.undoConfirmation,
+                        asyncContent: false,
+                    },
+                    {resetPos: true}
+                )
+            );
+            if (!ans.ok || !ans.result) {
+                return;
+            }
         }
         const targets = this.findTargetTasks();
         for (const target of targets) {

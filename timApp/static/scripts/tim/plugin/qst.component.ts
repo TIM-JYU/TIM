@@ -327,16 +327,6 @@ export class QstComponent
         return {saved: true, message: undefined};
     }
 
-    tryResetChanges(e?: Event): void {
-        if (e) {
-            e.preventDefault();
-        }
-        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
-            return;
-        }
-        this.resetChanges();
-    }
-
     resetChanges(): void {
         this.newAnswer = this.savedAnswer;
         this.preview = makePreview(this.attrsall.markup, {

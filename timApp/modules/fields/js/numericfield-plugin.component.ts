@@ -304,16 +304,6 @@ export class NumericfieldPluginComponent
         });
     }
 
-    tryResetChanges(e?: Event): void {
-        if (e) {
-            e.preventDefault();
-        }
-        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
-            return;
-        }
-        this.resetChanges();
-    }
-
     resetChanges(): void {
         this.zone.run(() => {
             this.numericvalue = this.initialValue;
