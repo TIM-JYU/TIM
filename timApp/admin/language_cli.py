@@ -80,10 +80,10 @@ def add_all_languages() -> None:
 
     :return: None.
     """
-    add_all_the_languages()
+    add_all_supported_languages()
 
 
-def add_all_the_languages() -> None:
+def add_all_supported_languages() -> None:
     """
     Add all supported languages to the database. Supported languages are
     defined in the configuration variable LANGUAGES in timApp\defaultconfig.py.
