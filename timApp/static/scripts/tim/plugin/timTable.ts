@@ -78,8 +78,7 @@ import {
 } from "tim/plugin/toolbarUtils";
 import {computeHiddenRowsFromFilters} from "tim/plugin/filtering";
 import {createParContext} from "tim/document/structure/create";
-import {showInputDialog} from "tim/ui/showInputDialog";
-import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import {onClick, OnClickArg} from "../document/eventhandlers";
 import {
     ChangeType,
@@ -113,7 +112,6 @@ import {
     StringOrNumber,
     timeout,
     to,
-    to2,
 } from "../util/utils";
 import {TaskId} from "./taskid";
 import {PluginMeta} from "./util";
@@ -4506,19 +4504,12 @@ export class TimTableComponent
             e.preventDefault();
         }
         if (this.undoConfirmation) {
-            const ans = await to2(
-                showInputDialog(
-                    {
-                        isInput: InputDialogKind.NoValidator,
-                        okValue: true,
-                        text: this.undoConfirmation,
-                        title: this.undoTitle ?? this.undoConfirmation,
-                        asyncContent: false,
-                    },
-                    {resetPos: true}
-                )
-            );
-            if (!ans.ok || !ans.result) {
+            if (
+                !(await showConfirm(
+                    this.undoTitle ?? this.undoConfirmation,
+                    this.undoConfirmation
+                ))
+            ) {
                 return;
             }
         }
