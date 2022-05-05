@@ -104,6 +104,17 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             </div>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label for="bookerMessage" class="col-sm-2 control-label">Message (optional)</label>
+                    <div class="col-sm-10">
+                            <textarea [hidden]="!userIsManager() || isEditEnabled()"
+                                    [(ngModel)]="bookerMessage"
+                            (ngModelChange)="setMessage()"
+                            name="bookerMessage"
+                            class="form-control">
+                            </textarea>
+                            </div>
+                    </div>
                 </form>
                 
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['dateInvalid']">
@@ -162,6 +173,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     endTime = "";
     booker = "";
     bookerEmail: string | null = "";
+    bookerMessage = "";
 
     constructor(private http: HttpClient) {
         super();
