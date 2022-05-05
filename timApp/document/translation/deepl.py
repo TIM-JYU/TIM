@@ -402,7 +402,6 @@ class DeeplTranslationService(RegisteredTranslationService):
         if source_langs:
             self.source_Language_code = "en-US"
             en: Language | None = Language(
-                flag_uri="",
                 lang_code="",
                 lang_name="",
                 autonym="",

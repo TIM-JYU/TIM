@@ -157,6 +157,15 @@ class TranslationService(db.Model):
         """
         raise NotImplementedError
 
+    def get_languages(self, source_langs: bool) -> list[Language]:
+        """
+        Return languages supported by the TranslationService.
+
+        :param source_langs: Whether source languages must be returned.
+        :return: The list of supported source or target languages.
+        """
+        raise NotImplementedError
+
     # Polymorphism allows querying multiple objects by their class e.g.
     # TranslationService.query
     __mapper_args__ = {"polymorphic_on": service_name}

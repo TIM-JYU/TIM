@@ -9,7 +9,10 @@ from timApp.document.document import Document
 from timApp.document.translation.translation import Translation
 from timApp.document.translation.language import Language
 from timApp.document.translation.deepl import DeeplTranslationService
-from timApp.document.translation.reversingtranslator import ReversingTranslationService
+from timApp.document.translation.reversingtranslator import (
+    ReversingTranslationService,
+    REVERSE_LANG,
+)
 from timApp.document.translation.translator import Usage, TranslateBlock
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -33,9 +36,7 @@ class TimTranslationTest(TimRouteTest):
         super().setUpClass()
         db.session.add(ReversingTranslationService())
         db.session.add(QuotaLimitedTestTranslator(character_limit=MAX_TEST_CHAR_QUOTA))
-        cls.reverselang = Language(
-            lang_code="rev-Erse", lang_name="Reverse", autonym="esreveR"
-        )
+        cls.reverselang = Language(**REVERSE_LANG)
         db.session.add(cls.reverselang)
         db.session.commit()
 

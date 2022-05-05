@@ -1,6 +1,6 @@
 """
-Contains the implementation of ReversingTranslationService, which is used
-in (NOTE:) unit-tests for translation routes.
+Contains the implementation of ReversingTranslationService and its target
+language, which are used in (NOTE:) unit-tests for translation routes.
 """
 
 __authors__ = [
@@ -13,6 +13,7 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "25.4.2022"
 
+import langcodes
 
 from timApp.document.translation.language import Language
 from timApp.document.translation.translationparser import (
@@ -24,6 +25,16 @@ from timApp.document.translation.translator import (
     LanguagePairing,
     Usage,
 )
+
+
+REVERSE_LANG = {
+    "lang_code": langcodes.standardize_tag("rev-erse"),
+    "lang_name": "Reverse",
+    "autonym": "esreveR",
+}
+"""Language that the ReversingTranslationService translates text into. To use
+in tests.
+"""
 
 
 class ReversingTranslationService(TranslationService):
@@ -50,15 +61,15 @@ class ReversingTranslationService(TranslationService):
         :return:
         :param texts: Texts to reverse
         :param src_lang: Any.
-        :param target_lang: Only rev-Erse is supported.
+        :param target_lang: Only REVERSE_LANG["lang_code"] is supported.
         :param tag_handling: tags to intelligently handle during translation
          TODO XML-handling.
         :return: Texts where translatable ones have been reversed.
         """
 
-        if target_lang.lang_code.lower() != "rev-erse":
+        if target_lang.lang_code.lower() != REVERSE_LANG["lang_code"].lower():
             raise Exception(
-                f"Bad target language. Expected rev-Erse, got {target_lang}."
+                f"Bad target language. Expected '{REVERSE_LANG['lang_code']}', got '{target_lang}'."
             )
 
         # Iterate the blocks of texts
@@ -101,13 +112,13 @@ class ReversingTranslationService(TranslationService):
         """
         :return: Mapping from all languages in database into the reversed language.
         """
-        reverse_lang = Language.query_by_code("rev-erse")
-        if reverse_lang is not None:
+        lang = Language.query_by_code(REVERSE_LANG["lang_code"])
+        if lang is not None:
             return LanguagePairing(
-                value={source: reverse_lang for source in Language.query_all()}
+                value={source: lang for source in Language.query_all()}
             )
         raise Exception(
-            "Test-language is not found in database with the code 'rev-erse'."
+            f"Test-language is not found in database with the code '{REVERSE_LANG['lang_code']}'."
         )
 
     def supports_tag_handling(self, tag_type: str) -> bool:
@@ -118,12 +129,12 @@ class ReversingTranslationService(TranslationService):
         Check if language pairing is supported.
 
         :param source_lang: Language to translate from.
-        :param target_lang: Only the rev-Erse -language code is supported.
+        :param target_lang: Only the REVERSE_LANG -language-code is supported.
         :return: True, if target_lang is rev-Erse.
         """
-        return target_lang.lang_code.lower() == "rev-erse"
+        return target_lang.lang_code.lower() == REVERSE_LANG["lang_code"].lower()
 
-    def _translate(_self, texts: list[str]) -> list[str]:
+    def _translate(self, texts: list[str]) -> list[str]:
         """
         Reverses texts.
         Simulates the call to a machine translator.
@@ -132,5 +143,22 @@ class ReversingTranslationService(TranslationService):
         :return: List of translated text
         """
         return [x[::-1] for x in texts]
+
+    def get_languages(self, source_langs: bool) -> list[Language]:
+        """
+        Reverse-language is supported as the only target language.
+
+        :param source_langs: See documentation on TranslationService.
+        :return: See documentation on TranslationService.
+        """
+        if source_langs:
+            return Language.query_all()
+        else:
+            reverse_lang = Language.query_by_code(REVERSE_LANG["lang_code"])
+            if reverse_lang is not None:
+                return [reverse_lang]
+            raise Exception(
+                f"Test-language is not found in database with the code '{REVERSE_LANG['lang_code']}'."
+            )
 
     __mapper_args__ = {"polymorphic_identity": "Reversing"}
