@@ -15,7 +15,6 @@ from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.util.utils import static_tim_doc
-from timApp.util.flask.requesthelper import RouteException
 
 
 MAX_TEST_CHAR_QUOTA = 50
@@ -66,7 +65,8 @@ class QuotaLimitedTestTranslator(ReversingTranslationService):
         result = super().translate(
             texts, source_lang, target_lang, tag_handling=tag_handling
         )
-        # Apply changes to the quota.
+        # Apply changes to the quota (based on the translated text, as it does
+        # not matter with ReversingTranslationService).
         for text in result:
             self._character_count += len(text)
             if self._character_count > self.character_limit:
@@ -721,6 +721,7 @@ Baz qux [qux](www.example.com)
         # Create some paragraphs with length equal to the translator's max quota.
         # TODO/NOTE This data is made for the reason, that partially applying
         #  the translation before failure might be implemented in the _future_.
+        #  Without that, this is kind of overkill...
         text = "ab" * (MAX_TEST_CHAR_QUOTA // 2) + "a" * (MAX_TEST_CHAR_QUOTA % 2)
         pars_count = 3
         par_len = len(text) // pars_count
@@ -739,9 +740,6 @@ Baz qux [qux](www.example.com)
         d.lang_id = "orig"
 
         # Failing to finish automatic translation (exceeding quota)
-        # TODO/NOTE Calling the route does not raise exception, as exceptions
-        #  happen inside Python, not the HTTP-request(?).
-        # with self.assertRaises(RouteException) as e:
         err_resp = self.json_post(
             f"/translate/{d.id}/{lang.lang_code}/{translator}",
             {"doc_title": "title"},
@@ -763,7 +761,6 @@ Baz qux [qux](www.example.com)
 
         # Get the newly created translation doc.
         tr_doc = d.translations[1].document
-        # tr_doc.clear_mem_cache()
 
         src_paras = d.document.get_paragraphs()
         tr_paras = tr_doc.get_paragraphs()
