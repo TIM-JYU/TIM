@@ -5,7 +5,7 @@ from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 
 
-class Eventgroup(db.Model):
+class EventGroup(db.Model):
     """Table for combining events to specific usergroups"""
 
     __tablename__ = "eventgroup"
@@ -23,6 +23,7 @@ class Enrollment(db.Model):
     usergroup_id = db.Column(
         db.Integer, db.ForeignKey("usergroup.id"), primary_key=True
     )
+    booker_message = db.Column(db.Text)
     enroll_type_id = db.Column(
         db.Integer, db.ForeignKey("enrollmenttype.enroll_type_id"), nullable=False
     )
@@ -57,8 +58,8 @@ class Event(db.Model):
 
     groups_in_event: list[UserGroup] = db.relationship(
         UserGroup,
-        Eventgroup.__table__,
-        primaryjoin=event_id == Eventgroup.event_id,
+        EventGroup.__table__,
+        primaryjoin=event_id == EventGroup.event_id,
         lazy="select",
     )
 
@@ -67,7 +68,7 @@ class Event(db.Model):
         return Event.query.filter(Event.event_id == event_id).one_or_none()
 
 
-class Enrollmenttype(db.Model):
+class EnrollmentType(db.Model):
     """Table for enrollment type, combines enrollment type ID to specific enrollment type"""
 
     __tablename__ = "enrollmenttype"

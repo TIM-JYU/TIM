@@ -11,7 +11,7 @@ from timApp.auth.sessioninfo import (
     get_current_user_id,
     get_current_user_object,
 )
-from timApp.plugin.calendar.models import Event, Eventgroup, Enrollment, Enrollmenttype
+from timApp.plugin.calendar.models import Event, EventGroup, Enrollment, EnrollmentType
 from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
@@ -35,12 +35,12 @@ def initialize_db() -> None:
     """Initializes the enrollment types in the database when the TIM-server is launched the first time,
     before the first request."""
 
-    types = Enrollmenttype.query.filter(
-        Enrollmenttype.enroll_type_id == 0
+    types = EnrollmentType.query.filter(
+        EnrollmentType.enroll_type_id == 0
     ).all()  # Remember to add filters here if you add new enrollment types
     if len(types) == 0:
         db.session.add(
-            Enrollmenttype(enroll_type_id=0, enroll_type="booking")
+            EnrollmentType(enroll_type_id=0, enroll_type="booking")
         )  # TODO: proper enrollment types
         db.session.commit()
 
@@ -178,8 +178,8 @@ def get_events() -> Response:
     user_obj = get_current_user_object()
 
     for group in user_obj.groups:
-        group_events = Eventgroup.query.filter(
-            Eventgroup.usergroup_id == group.id
+        group_events = EventGroup.query.filter(
+            EventGroup.usergroup_id == group.id
         ).all()
         for group_event in group_events:
             event = Event.get_event_by_id(group_event.event_id)
@@ -351,7 +351,7 @@ def book_event(event_id: int) -> Response:
             group_id = group.id
 
     enrollment = Enrollment(
-        event_id=event_id, usergroup_id=group_id, enroll_type_id=0
+        event_id=event_id, booker_message="", usergroup_id=group_id, enroll_type_id=0
     )  # TODO: add enrollment types
 
     db.session.add(enrollment)
