@@ -629,6 +629,8 @@ export class CalendarComponent
         this.events.forEach((event) => {
             if (event.meta!.enrollments >= event.meta!.maxSize) {
                 event.color = colors.red;
+            } else {
+                event.color = colors.blue;
             }
             if (event.meta!.booker_groups) {
                 event.meta!.booker_groups.forEach((group) => {
@@ -639,7 +641,6 @@ export class CalendarComponent
                     });
                 });
             }
-
             if (Date.now() > event.start.getTime()) {
                 event.color = colors.gray;
             }

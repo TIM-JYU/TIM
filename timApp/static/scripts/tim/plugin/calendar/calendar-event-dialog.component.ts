@@ -137,6 +137,9 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         (click)="bookEvent()" [disabled]="eventIsFull()" [hidden]="isEditEnabled()">
                     Book event
                 </button>
+                <button class="btn timButton" type="button" [hidden]="!userHasBooked()" (click)="cancelBooking()" style="background-color: red;">
+                    Cancel Booking
+                </button>
                 <button class="timButton" type="submit" (click)="saveChanges()" [disabled]="form.invalid"
                         [hidden]="!isEditEnabled()">
                     Save
@@ -162,6 +165,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     endTime = "";
     booker = "";
     bookerEmail: string | null = "";
+    userBooked = false;
 
     constructor(private http: HttpClient) {
         super();
@@ -290,7 +294,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      */
     async bookEvent() {
         const eventToBook = this.data;
-
+        if (!confirm(`Book the event "${this.data.title}"?`)) {
+            return;
+        }
         const result = await toPromise(
             this.http.post("/calendar/bookings", {
                 event_id: eventToBook.id,
@@ -327,6 +333,42 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         }
     }
 
+    /**
+     * Cancel booking of a selected event from the current user. Sends the id of the event to the API, which handles
+     * recognition of the current user group.
+     *
+     */
+    async cancelBooking() {
+        const openEvent = this.data;
+        const eventId = this.data.id;
+        if (!eventId || !confirm("Are you sure you want to cancel booking?")) {
+            return;
+        } //
+        const result = await toPromise(
+            this.http.delete(`/calendar/bookings/${eventId}`)
+        );
+        console.log(result);
+        if (result.ok) {
+            console.log(result.result);
+            this.data.meta!.enrollments--;
+
+            this.data.meta!.booker_groups.forEach((group) => {
+                if (group.name == Users.getCurrent().name) {
+                    group.name = "";
+                    group.users.forEach((user) => {
+                        user.id = -1;
+                        user.email = "";
+                        user.name = "";
+                    });
+                }
+            });
+            this.close(openEvent);
+        } else {
+            console.error(result.result.error.error);
+            this.setMessage(result.result.error.error);
+        }
+    }
+
     eventIsFull() {
         return this.data.meta!.enrollments >= this.data.meta!.maxSize;
     }
@@ -340,6 +382,19 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 
     eventHasBookings() {
         return this.data.meta!.enrollments > 0;
+    }
+
+    userHasBooked() {
+        this.userBooked = false;
+        const bookers = this.data.meta!.booker_groups;
+        bookers.forEach((booker) => {
+            Users.getCurrent().groups.forEach((userGroup) => {
+                if (booker.name == userGroup.name) {
+                    this.userBooked = true;
+                }
+            });
+        });
+        return this.userBooked;
     }
 }
 

@@ -27,6 +27,14 @@ class Enrollment(db.Model):
         db.Integer, db.ForeignKey("enrollmenttype.enroll_type_id"), nullable=False
     )
 
+    def get_enrollment_by_ids(
+        event_id: int, user_group_id: int
+    ) -> Optional["Enrollment"]:
+        """Returns a specific enrollment (or none) that match the user group id and event id"""
+        return Enrollment.query.filter(
+            Enrollment.event_id == event_id, Enrollment.usergroup_id == user_group_id
+        ).one_or_none()
+
 
 class Event(db.Model):
     """Table for event. Contains all information of event"""
