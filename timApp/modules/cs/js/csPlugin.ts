@@ -2014,7 +2014,7 @@ ${fhtml}
             if (langs) {
                 return langs.split(/[\n;, \/]/);
             } else {
-                return languageTypes.runTypes.sort();
+                return [...languageTypes.runTypes].sort();
             }
         }
     }
