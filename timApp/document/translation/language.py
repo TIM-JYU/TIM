@@ -46,6 +46,19 @@ class Language(db.Model):
     autonym = db.Column(db.Text, nullable=False)
     """Native name for the language."""
 
+    def __init__(self, lang_code: str, lang_name: str, autonym: str):
+        """
+        Initialize a custom language by standardizing the tag.
+        """
+        # Standardize primary key with langcodes before creating db-object.
+        # TODO/NOTE The boolean check is here because of implementation on
+        #  DeeplTranslationService.get_languages. Maybe see about not using
+        #  it that way?
+        standard_code = langcodes.standardize_tag(lang_code) if lang_code else lang_code
+        self.lang_code = standard_code
+        self.lang_name = lang_name
+        self.autonym = autonym
+
     @classmethod
     def create_from_name(cls, name: str) -> "Language":
         """

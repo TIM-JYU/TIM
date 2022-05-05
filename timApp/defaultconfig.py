@@ -8,6 +8,10 @@ from pathlib import Path
 from celery.schedules import crontab
 
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
+from timApp.document.translation.reversingtranslator import (
+    ReversingTranslationService,
+    REVERSE_LANG,
+)
 from timApp.document.translation.deepl import (
     DeeplTranslationService,
     DeeplProTranslationService,
@@ -396,21 +400,35 @@ LANGUAGES = [
     "Chinese",
     # TODO Change lang_code to the accurate tag-format of Simple Finnish.
     {"lang_code": "fi-simple", "lang_name": "Simple Finnish", "autonym": "selkosuomi"},
+    # TODO Remove this from list in production and during automatic tests.
+    # REVERSE_LANG,
 ]
+
+# Translation services with their initialization values are listed below.
+# Syntax for inserting a new translation service is the following:
+# (
+#   <Class of the TranslationService>,
+#   <Some type (Any), that is used in initializing the TranslationService>
+# )
 
 MACHINE_TRANSLATORS = [
     (
         DeeplTranslationService,
         {
             "service_url": "https://api-free.deepl.com/v2",
-            "ignore_tag": "x",
+            "ignore_tag": "😂",
         },
     ),
     (
         DeeplProTranslationService,
         {
             "service_url": "https://api.deepl.com/v2",
-            "ignore_tag": "x",
+            "ignore_tag": "😂",
         },
     ),
+    # TODO Remove this from list in production and during automatic tests.
+    # (
+    #    ReversingTranslationService,
+    #    None,
+    # ),
 ]

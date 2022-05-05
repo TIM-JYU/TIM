@@ -12,6 +12,7 @@ from alembic.script import ScriptDirectory
 from sqlalchemy_utils import database_exists, create_database
 
 from timApp.admin.language_cli import add_all_the_languages
+from timApp.admin.translationservice_cli import add_all_tr_services_to_session
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel
 from timApp.document.docentry import DocEntry
@@ -184,14 +185,13 @@ def initialize_database(create_docs: bool = True) -> None:
             create_style_docs()
 
         # Add the machine-translators to database with their default values.
-        for translator, values in app.config["MACHINE_TRANSLATORS"]:
-            sess.add(translator(values))
-
-        sess.commit()
-        log_info("Database initialization done.")
+        add_all_tr_services_to_session()
 
         # Create and add all supported languages to the database
         add_all_the_languages()
+
+        sess.commit()
+        log_info("Database initialization done.")
 
     if not app.config["TESTING"]:
         exit_if_not_db_up_to_date()

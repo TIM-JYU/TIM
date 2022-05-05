@@ -76,7 +76,6 @@ def add(lang_name: str) -> None:
 @language_cli.command()
 def add_all_languages() -> None:
     """
-    TODO Cannot call this name from cli `./r flask language add_all_languages`
     Add languages defined in configuration into database from command line.
 
     :return: None.
@@ -98,10 +97,8 @@ def add_all_the_languages() -> None:
     langset = {x[0] for x in Language.query.with_entities(Language.lang_code).all()}
     for l in app.config["LANGUAGES"]:
         if type(l) is dict:
-            # Standardize primary key with langcodes before inserting into db.
-            standard_code = langcodes.standardize_tag(l["lang_code"])
             lang = Language(
-                lang_code=standard_code,
+                lang_code=l["lang_code"],
                 lang_name=l["lang_name"],
                 autonym=l["autonym"],
             )
@@ -112,6 +109,7 @@ def add_all_the_languages() -> None:
                 log_error(f"Failed to create language: {str(e)}")
                 click.echo(f"Failed to create language: {str(e)}")
         if lang.lang_code not in langset:
+            # TODO Are these logs unnecessary?
             log_info(f"Adding new language '{lang.lang_name} ({lang.lang_code})'")
             click.echo(f"Adding new language '{lang.lang_name} ({lang.lang_code})'")
             db.session.add(lang)
