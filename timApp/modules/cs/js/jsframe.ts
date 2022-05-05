@@ -400,7 +400,10 @@ export class JsframeComponent
             })();
         }
         if (this.isDrawio()) {
-            this.viewctrl.addParMenuEntry(this, this.getPar());
+            (async () => {
+                await this.viewctrl.documentUpdate;
+                this.viewctrl.addParMenuEntry(this, this.getPar()!);
+            })();
             if (this.isTask() && !this.getTaskId()) {
                 this.error = "Task-mode on but TaskId is missing!";
             }
@@ -553,7 +556,7 @@ export class JsframeComponent
             url = "/jsframe/drawIOData";
             params = {
                 data: unwrapAllC(data).c,
-                par_id: this.getPar().originalPar.id,
+                par_id: this.getPar()!.originalPar.id,
                 doc_id: this.viewctrl.docId,
             };
         }
@@ -625,16 +628,6 @@ export class JsframeComponent
         this.console = "";
         this.updateListeners();
         this.c();
-    }
-
-    tryResetChanges(e?: Event): void {
-        if (e) {
-            e.preventDefault();
-        }
-        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
-            return;
-        }
-        this.resetChanges();
     }
 
     resetChanges() {

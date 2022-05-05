@@ -1,0 +1,53 @@
+$cs-classes: (
+ "csMarkupError",
+ "csAllSelector",
+ "stem",
+ "csTaunoContent",
+ "csSimcirContent",
+ "csUploadContent",
+ "csViewCodeOver",
+ "csRunCode",
+ "computeSage",
+ "csInputDiv",
+ "csArgsDiv",
+ "csRunCode",
+ "csRunSnippets",
+ "csrunEditorDiv",
+ "csRunMenuArea",
+ "outputSage",
+ "csViewCodeUnder",
+ "unitTestGreen",
+ "unitTestRed",
+ "csRunError",
+ "csFetchError",
+ "console",
+ "htmlresult",
+ "csrunPreview",
+ "csVariables",
+ "grconsole",
+ "csVideo",
+ "csAudio",
+ "docurl",
+ "footer"
+);
+
+@each $cs-class in $cs-classes {
+  .#{$cs-class} {
+    order: var(--csplugin-#{$cs-class}, 9999);
+  }
+}
+
+.csHeader { order: var(--csplugin-csHeader, -1000); }
+
+.cs-flex {
+  display: flex;
+  flex-direction: column;
+
+  .csHeader {
+    order: -1000;
+  }
+}
+
+.csAllSelector > div {
+  float: right;
+}

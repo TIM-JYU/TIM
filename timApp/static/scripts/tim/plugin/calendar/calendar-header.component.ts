@@ -1,69 +1,78 @@
 import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
-import {CalendarModule, CalendarView} from "angular-calendar";
+import {
+    CalendarDateFormatter,
+    CalendarModule,
+    CalendarView,
+} from "angular-calendar";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {ShowWeekComponent} from "./show-week.component";
+import {CustomDateFormatter} from "./custom-date-formatter.service";
 
 @Component({
     selector: "tim-calendar-header",
     template: `
     <div class="row text-center">
+    </div>
+     <div class="row text-center">   
       <div class="col-md-4">
-        <div class="btn-group time-period-btn">
+        <div class="btn-group time-period-btn col-md-10">
           <button
             class="btn btn-primary"
             mwlCalendarPreviousView
             [view]="view"
             [(viewDate)]="viewDate"
-            (viewDateChange)="viewDateChange.next(viewDate)"
-          >
+            (viewDateChange)="viewDateChange.next(viewDate)">
               <span class="glyphicon glyphicon-arrow-left"></span>
           </button>
           <button
             class="btn btn-outline-secondary"
             mwlCalendarToday
             [(viewDate)]="viewDate"
-            (viewDateChange)="viewDateChange.next(viewDate)"
-          >
-            Tänään
+            (viewDateChange)="viewDateChange.next(viewDate)">
+              <ng-container >  <span [hidden]="!(view== CalendarView.Day)" >{{viewDate | calendarDate:'weekViewColumnSubHeader':locale}}</span> </ng-container>
+            <tim-show-week [hidden]="!(view == CalendarView.Week)" [(view)]="view" [(viewDate)]="viewDate"></tim-show-week>
+              <ng-container >  <span  [hidden]="!(view== CalendarView.Month)">{{viewDate | calendarDate :'viewMonth':locale}}</span> </ng-container>
           </button>
           <button
             class="btn btn-primary"
             mwlCalendarNextView
             [view]="view"
             [(viewDate)]="viewDate"
-            (viewDateChange)="viewDateChange.next(viewDate)"
-          >
+            (viewDateChange)="viewDateChange.next(viewDate)">
               <span class="glyphicon glyphicon-arrow-right"></span>
           </button>
         </div>
+          <button class="btn timButton currentDay col-md-10"
+                mwlCalendarToday
+                [(viewDate)]="viewDate"
+                (viewDateChange)="viewDateChange.next(viewDate)"
+                >Back to current date
+        </button>
       </div>
       <div class="col-md-4">
-          <h3>{{ viewDate | calendarDate:(view + 'ViewTitle'):locale:weekStartsOn }}</h3>
-              <tim-show-week [hidden] = "view == CalendarView.Month" [(view)]="view" [(viewDate)]="viewDate"></tim-show-week>
+          <h2 [hidden]="view != 'day'">{{ viewDate | calendarDate:('viewDay'):locale}}</h2>
+          <h2 [hidden]="view == 'day'">{{ viewDate | calendarDate:(view + 'ViewTitle'):locale:weekStartsOn }}</h2>
       </div>
       <div class="col-md-4">
         <div class="btn-group">
           <button
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Month)"
-            [class.active]="view === CalendarView.Month"
-          >
-            Kuukausi
+            [class.active]="view === CalendarView.Month">
+            Month
           </button>
           <button
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Week)"
-            [class.active]="view === CalendarView.Week"
-          >
-            Viikko
+            [class.active]="view === CalendarView.Week">
+            Week
           </button>
           <button
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Day)"
-            [class.active]="view === CalendarView.Day"
-          >
-            Päivä
+            [class.active]="view === CalendarView.Day">
+            Day
           </button>
         </div>
       </div>
@@ -92,5 +101,11 @@ export class CalendarHeaderComponent {
     imports: [CommonModule, FormsModule, CalendarModule],
     declarations: [CalendarHeaderComponent, ShowWeekComponent],
     exports: [CalendarHeaderComponent],
+    providers: [
+        {
+            provide: CalendarDateFormatter,
+            useClass: CustomDateFormatter,
+        },
+    ],
 })
 export class CalendarHeaderModule {}

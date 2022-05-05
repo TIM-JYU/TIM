@@ -6,6 +6,8 @@ import {DialogModule} from "../../ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {AngularDialogComponent} from "../../ui/angulardialog/angular-dialog-component.directive";
 import {toPromise} from "../../util/utils";
+import {Users} from "../../user/userService";
+import {itemglobals} from "../../util/globals";
 import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
 
 @Component({
@@ -31,6 +33,30 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    class="form-control"
                                    placeholder="Set title"
                                    [disabled]="!isEditEnabled()"/>
+                        </div>
+                    </div>
+                    <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
+                        <label for="booker" class="col-sm-2 control-label">Booker</label>
+                        <div class="col-sm-10">
+                            <input type="text"
+                                   [(ngModel)]="booker"
+                                   (ngModelChange)="setMessage()"
+                                   id="booker" name="booker"
+                                   class="form-control"
+                                   placeholder="Not booked"
+                                   disabled="true"/>
+                        </div>
+                    </div>
+                    <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
+                        <label for="bookerEmail" class="col-sm-2 control-label">Booker email</label>
+                        <div class="col-sm-10">
+                            <input type="text"
+                                   [(ngModel)]="bookerEmail"
+                                   (ngModelChange)="setMessage()"
+                                   id="bookerEmail" name="bookerEmail"
+                                   class="form-control"
+                                   placeholder=""
+                                   disabled="true"/>
                         </div>
                     </div>
 
@@ -107,6 +133,13 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!isEditEnabled()">
                     Delete
                 </button>
+                <button class="timButton" type="button" style="float: left"
+                        (click)="bookEvent()" [disabled]="eventIsFull()" [hidden]="isEditEnabled()">
+                    Book event
+                </button>
+                <button class="btn timButton" type="button" [hidden]="!userHasBooked()" (click)="cancelBooking()" style="background-color: red;">
+                    Cancel Booking
+                </button>
                 <button class="timButton" type="submit" (click)="saveChanges()" [disabled]="form.invalid"
                         [hidden]="!isEditEnabled()">
                     Save
@@ -130,6 +163,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     startTime = "";
     endDate = "";
     endTime = "";
+    booker = "";
+    bookerEmail: string | null = "";
+    userBooked = false;
 
     constructor(private http: HttpClient) {
         super();
@@ -215,6 +251,17 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         const startDate = new Date(
             this.data.start.getTime() - startOffset * 60 * 1000
         );
+        const bookerGroups = this.data.meta!.booker_groups;
+        if (bookerGroups) {
+            bookerGroups.forEach((group) => {
+                // TODO: Make a list of all bookers when the event capacity is higher than 1
+                group.users.forEach((user) => {
+                    this.bookerEmail = user.email;
+                    this.booker = user.name;
+                });
+            });
+        }
+
         const startDateTime = startDate.toISOString().split("T");
 
         this.startDate = startDateTime[0];
@@ -240,6 +287,114 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (this.data.meta) {
             return this.data.meta.editEnabled;
         }
+    }
+
+    /**
+     * Sends the booking request for the event to the TIM-server
+     */
+    async bookEvent() {
+        const eventToBook = this.data;
+        if (!confirm(`Book the event "${this.data.title}"?`)) {
+            return;
+        }
+        const result = await toPromise(
+            this.http.post("/calendar/bookings", {
+                event_id: eventToBook.id,
+            })
+        );
+        if (result.ok) {
+            console.log(result.result);
+            this.data.meta!.enrollments++;
+
+            const booker = Users.getCurrent().groups.find((group) => {
+                return group.name === Users.getCurrent().name;
+            });
+            if (booker) {
+                let fullName = Users.getCurrent().real_name;
+                if (!fullName) {
+                    fullName = Users.getCurrent().name;
+                }
+                this.data.meta!.booker_groups.push({
+                    name: booker.name,
+                    users: [
+                        {
+                            id: Users.getCurrent().id,
+                            name: `${fullName}`,
+                            email: Users.getCurrent().email,
+                        },
+                    ],
+                });
+            }
+
+            this.close(eventToBook);
+        } else {
+            console.error(result.result.error.error);
+            this.setMessage(result.result.error.error);
+        }
+    }
+
+    /**
+     * Cancel booking of a selected event from the current user. Sends the id of the event to the API, which handles
+     * recognition of the current user group.
+     *
+     */
+    async cancelBooking() {
+        const openEvent = this.data;
+        const eventId = this.data.id;
+        if (!eventId || !confirm("Are you sure you want to cancel booking?")) {
+            return;
+        } //
+        const result = await toPromise(
+            this.http.delete(`/calendar/bookings/${eventId}`)
+        );
+        console.log(result);
+        if (result.ok) {
+            console.log(result.result);
+            this.data.meta!.enrollments--;
+
+            this.data.meta!.booker_groups.forEach((group) => {
+                if (group.name == Users.getCurrent().name) {
+                    group.name = "";
+                    group.users.forEach((user) => {
+                        user.id = -1;
+                        user.email = "";
+                        user.name = "";
+                    });
+                }
+            });
+            this.close(openEvent);
+        } else {
+            console.error(result.result.error.error);
+            this.setMessage(result.result.error.error);
+        }
+    }
+
+    eventIsFull() {
+        return this.data.meta!.enrollments >= this.data.meta!.maxSize;
+    }
+
+    userIsManager() {
+        return (
+            itemglobals().curr_item.rights.manage ||
+            itemglobals().curr_item.rights.owner
+        );
+    }
+
+    eventHasBookings() {
+        return this.data.meta!.enrollments > 0;
+    }
+
+    userHasBooked() {
+        this.userBooked = false;
+        const bookers = this.data.meta!.booker_groups;
+        bookers.forEach((booker) => {
+            Users.getCurrent().groups.forEach((userGroup) => {
+                if (booker.name == userGroup.name) {
+                    this.userBooked = true;
+                }
+            });
+        });
+        return this.userBooked;
     }
 }
 

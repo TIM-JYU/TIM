@@ -225,7 +225,9 @@ a .glyphicon {
         display: inline-block;
     }
 
-    .troutofdate::before {
+    .troutofdate:not(.areaContent)::before, // Normal paragraph except the first after area
+    .areaContent.troutofdate > div.par:first-child::before // First paragraph after areaContent is the area paragraph
+    {
         content: "Translation is out of date";
         color: red;
         position: absolute;
@@ -1210,20 +1212,6 @@ p.docsettings {
         padding-left: $container-xs-padding;
         padding-right: $container-xs-padding;
     }
-}
-
-.search-panel {
-    position: absolute;
-    z-index: 5;
-    right: 0;
-    top: 0;
-    left: auto;
-    max-width: 480px;
-}
-
-.search-result-dialog {
-    z-index:6;
-    width:auto;
 }
 
 .no-page-break-before {

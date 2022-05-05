@@ -16,6 +16,13 @@
   width: calc(89% - 2px);
 }
 
+@media (min-width: 992px){
+  .currentDay {
+margin-top: 5px;
+}
+}
+
+
 .edit-btn {
   margin-bottom: 20px;
 }
@@ -26,6 +33,11 @@
 
 .event-btn button {
   padding: 6px 5px;
+}
+
+.icsURL{
+  margin-left: 5px;
+  width: fit-content;
 }
 
 .modal{
@@ -54,3 +66,13 @@
 #selectorsBtn{
   margin-top: 5px;
 }
+
+.checkbox-group{
+  text-align: left;
+  float: right;
+}
+
+input[type="checkbox"]{
+  margin-right: 4px;
+}
+

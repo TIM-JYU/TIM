@@ -22,7 +22,7 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {Subject, Subscription} from "rxjs";
 import {debounceTime, distinctUntilChanged} from "rxjs/operators";
 import {PurifyModule} from "tim/util/purify.module";
-import {defaultErrorMessage, defaultTimeout, timeout} from "../util/utils";
+import {defaultErrorMessage, defaultTimeout} from "../util/utils";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {CsUtilityModule} from "../../../../modules/cs/js/util/module";
@@ -121,42 +121,44 @@ const PluginFields = t.intersection([
             <span [innerHTML]="header | purify"></span>
         </tim-plugin-header>
         <p stem *ngIf="stem" [innerHTML]="stem | purify"></p>
-        <ng-container body>
-            <div class="form-inline small">
-                <div style="position: relative;" *ngFor="let item of uploadedFiles; let i = index">
-                   <div #wraps>
-                        <img alt="Uploaded image" #img [src]="item.path" (load)="onImgLoad($event, i)">
-                    </div>
-                    <div class="tools">
-                        <button class="timButton" title="Move up" i18n-title (click)="moveImageUp(i)">&uarr;</button>
-                        <button class="timButton" title="Move down" i18n-title (click)="moveImageDown(i)">&darr;
-                        </button>
-                        <button class="timButton" title="Rotate clockwise" i18n-title (click)="increaseRotation(i)">&#8635;
-                        </button>
-                        <button class="timButton" title="Delete picture" i18n-title (click)="deleteImage(i)">
-                            <i class="glyphicon glyphicon-trash"></i>
-                        </button>
+        <div *ngIf="!inReviewView()">
+            <ng-container body>
+                <div class="form-inline small">
+                    <div style="position: relative;" *ngFor="let item of uploadedFiles; let i = index">
+                       <div class="uploadContainer" #wraps>
+                            <img alt="Uploaded image" #img [src]="item.path" (load)="onImgLoad($event, i)">
+                        </div>
+                        <div class="tools">
+                            <button class="timButton" title="Move up" i18n-title (click)="moveImageUp(i)">&uarr;</button>
+                            <button class="timButton" title="Move down" i18n-title (click)="moveImageDown(i)">&darr;
+                            </button>
+                            <button class="timButton" title="Rotate clockwise" i18n-title (click)="increaseRotation(i)">&#8635;
+                            </button>
+                            <button class="timButton" title="Delete picture" i18n-title (click)="deleteImage(i)">
+                                <i class="glyphicon glyphicon-trash"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
+                <file-select-manager class="small"
+                                     [dragAndDrop]="dragAndDrop"
+                                     [uploadUrl]="uploadUrl"
+                                     [stem]="uploadstem"
+                                     (file)="onFileLoad($event)"
+                                     (upload)="onUploadResponse($event)"
+                                     (uploadDone)="onUploadDone($event)"
+                                     [accept]="'image/*,.pdf'">
+                </file-select-manager>
+                <tim-loading *ngIf="isRunning"></tim-loading>
+                <div *ngIf="error" [innerHTML]="error"></div>
+                <pre *ngIf="result">{{result}}</pre>
+            </ng-container>
+            <div *ngIf="connectionErrorMessage || userErrorMessage">
+                <span *ngIf="connectionErrorMessage" class="error" [innerHTML]="connectionErrorMessage"></span>
+                <span *ngIf="userErrorMessage" class="error" [innerHTML]="userErrorMessage"></span>
             </div>
-            <file-select-manager class="small"
-                                 [dragAndDrop]="dragAndDrop"
-                                 [uploadUrl]="uploadUrl"
-                                 [stem]="uploadstem"
-                                 (file)="onFileLoad($event)"
-                                 (upload)="onUploadResponse($event)"
-                                 (uploadDone)="onUploadDone($event)"
-                                 [accept]="'image/*,.pdf'">
-            </file-select-manager>
-            <tim-loading *ngIf="isRunning"></tim-loading>
-            <div *ngIf="error" [innerHTML]="error"></div>
-            <pre *ngIf="result">{{result}}</pre>
-        </ng-container>
-        <div *ngIf="connectionErrorMessage || userErrorMessage">
-            <span *ngIf="connectionErrorMessage" class="error" [innerHTML]="connectionErrorMessage"></span>
-            <span *ngIf="userErrorMessage" class="error" [innerHTML]="userErrorMessage"></span>
+            <button class="timButton" (click)="save()" i18n>Save answer</button>
         </div>
-        <button class="timButton" (click)="save()" i18n>Save answer</button>
         <p footer *ngIf="footer" [textContent]="footer"></p>
     `,
     styleUrls: ["./reviewcanvas.scss"],
@@ -179,7 +181,6 @@ export class ReviewCanvasComponent
     modelChanged: Subject<object> = new Subject<object>();
     private modelChangeSub!: Subscription;
     changes = false;
-    private init = false;
     private loadedImages = 0;
     private vctrl!: ViewCtrl;
 
@@ -208,6 +209,10 @@ export class ReviewCanvasComponent
         return super.buttonText() ?? "Save";
     }
 
+    inReviewView(): boolean {
+        return window.location.pathname.startsWith("/review/");
+    }
+
     ngOnInit() {
         super.ngOnInit();
         this.vctrl = vctrlInstance!;
@@ -229,12 +234,10 @@ export class ReviewCanvasComponent
             this.attrsall.state?.uploadedFiles &&
             this.attrsall.state?.uploadedFiles.length > 0
         ) {
-            this.init = false;
             this.attrsall.state.uploadedFiles.forEach((uf) =>
                 this.uploadedFiles.push(uf)
             );
         } else {
-            this.init = true;
         }
     }
 
@@ -368,32 +371,22 @@ export class ReviewCanvasComponent
         ];
         imgElement.style.transform = rotations[uploadedFile.rotation];
         if (uploadedFile.rotation % 2 == 0) {
-            imgElement.style.removeProperty("top");
             imgElement.style.removeProperty("height");
             wrapper.style.removeProperty("height");
         } else {
-            imgElement.style.position = "relative";
             if (oldHeight < oldWidth) {
-                imgElement.style.top = (oldWidth - oldHeight) / 2 + "px";
                 wrapper.style.height = oldWidth + "px";
             } else {
                 const newHeight = Math.min(oldHeight, wrapperWidth);
                 imgElement.style.height = newHeight + "px";
                 const newWidth = imgElement.width;
                 wrapper.style.height = newWidth + "px";
-                imgElement.style.top = -(newHeight - newWidth) / 2 + "px";
             }
         }
     }
 
     onImgLoad(e: Event, index: number): void {
         this.loadedImages += 1;
-        if (
-            this.attrsall.state?.uploadedFiles &&
-            this.attrsall.state?.uploadedFiles.length <= this.loadedImages
-        ) {
-            this.init = true;
-        }
         this.rotateImage(index);
     }
 
@@ -478,42 +471,52 @@ export class ReviewCanvasComponent
      * The returned images are fully rotated to their current rotation value (90deg per one rotation)
      */
     async getVelpImages(): Promise<string[] | undefined> {
-        while (!this.init) {
-            await timeout();
-        }
-        const imgs = this.uploadedFiles.map((file) => {
+        const rotatedimgsrcs = this.uploadedFiles.filter(
+            (file) => file.rotation != undefined && file.rotation !== 0
+        );
+        const rotatedimgs = rotatedimgsrcs.map((file) => {
             const newImg = new Image();
             newImg.src = file.path;
             return newImg;
         });
-        await Promise.all(imgs.map((img) => img.decode()));
-        return imgs.map((img, index) => {
-            const uploadedFile = this.uploadedFiles[index];
-            if (uploadedFile.rotation == undefined) {
-                return img.currentSrc;
+        await Promise.all(rotatedimgs.map((img) => img.decode()));
+        const ret: string[] = [];
+        for (const file of this.uploadedFiles) {
+            const uploadedFile = file;
+            if (
+                uploadedFile.rotation == undefined ||
+                uploadedFile.rotation == 0
+            ) {
+                ret.push(uploadedFile.path);
+            } else {
+                const img = rotatedimgs.shift();
+                if (img == undefined) {
+                    throw Error("Failed to load velp images");
+                }
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d")!;
+                let dx = 0;
+                let dy = 0;
+                if (uploadedFile.rotation == 1) {
+                    dy = -img.height;
+                }
+                if (uploadedFile.rotation == 2) {
+                    dx = -img.width;
+                    dy = -img.height;
+                }
+                if (uploadedFile.rotation == 3) {
+                    dx = -img.width;
+                }
+                canvas.height =
+                    uploadedFile.rotation % 2 == 0 ? img.height : img.width;
+                canvas.width =
+                    uploadedFile.rotation % 2 == 0 ? img.width : img.height;
+                ctx.rotate((Math.PI / 2) * uploadedFile.rotation);
+                ctx.drawImage(img, dx, dy);
+                ret.push(canvas.toDataURL());
             }
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d")!;
-            let dx = 0;
-            let dy = 0;
-            if (uploadedFile.rotation == 1) {
-                dy = -img.height;
-            }
-            if (uploadedFile.rotation == 2) {
-                dx = -img.width;
-                dy = -img.height;
-            }
-            if (uploadedFile.rotation == 3) {
-                dx = -img.width;
-            }
-            canvas.height =
-                uploadedFile.rotation % 2 == 0 ? img.height : img.width;
-            canvas.width =
-                uploadedFile.rotation % 2 == 0 ? img.width : img.height;
-            ctx.rotate((Math.PI / 2) * uploadedFile.rotation);
-            ctx.drawImage(img, dx, dy);
-            return canvas.toDataURL();
-        });
+        }
+        return ret;
     }
 }
 

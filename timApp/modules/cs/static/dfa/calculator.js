@@ -150,6 +150,16 @@ class Sqrt extends FuncRROperation {
     doCalc(a) { return Math.sqrt(a); }
 }
 
+class Ln extends FuncRROperation {
+    op() { return "ln"; }
+    doCalc(a) { return Math.log(a); }
+}
+
+class Log10 extends FuncRROperation {
+    op() { return "log10"; }
+    doCalc(a) { return Math.log10(a); }
+}
+
 const operations = [
   Plus,
   Minus,
@@ -160,6 +170,8 @@ const operations = [
   Sqrt,
   Deg,
   Rad,
+  Ln,
+  Log10,
 ];
 
 

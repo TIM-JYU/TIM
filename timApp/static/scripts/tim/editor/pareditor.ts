@@ -12,6 +12,7 @@ import {
     getFullscreenElement,
     toggleFullScreen,
 } from "tim/util/fullscreen";
+import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
@@ -1810,8 +1811,12 @@ ${backTicks}
         }
     }
 
-    putTemplate(data: string) {
+    async putTemplate(data: string) {
         this.focusEditor();
+        data = await replaceTemplateValues(data);
+        if (!data) {
+            return;
+        }
         this.editor!.insertTemplate(data);
     }
 
@@ -1824,6 +1829,10 @@ ${backTicks}
         }
         let data = response.result.data;
         data = data.replace(/\\/g, "\\\\");
+        data = await replaceTemplateValues(data);
+        if (!data) {
+            return;
+        }
         this.editor!.insertTemplate(data);
         this.focusEditor();
     }
@@ -2191,6 +2200,7 @@ ${backTicks}
         // Normal line breaks cause exception with JSON.parse, and replacing them with ones parse understands
         // causes exceptions when line breaks are outside parameters, so just remove them before parsing.
         macroText = macroText.replace(/(\r\n|\n|\r)/gm, "");
+        macroText = macroText.replace(/(\t)/gm, " ");
         return JSON.parse(`[${macroText}]`) as unknown[];
     }
 

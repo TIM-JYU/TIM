@@ -797,7 +797,7 @@ class CSComtest(
         cmdline = (
             f"java -jar /cs_data/java/cs/ComTest.jar nunit {self.sourcefilename} && "
             f"{self.compiler} -nologo -out:{self.testdll} -target:library {CSComtest.get_build_refs()} "
-            f"{Jypeli.get_build_refs()} {self.sourcefilename} {testcs} /cs/dotnet/shims/TIMconsole.cs"
+            f"{Jypeli.get_build_refs()} {self.get_sourcefiles()} {testcs} /cs/dotnet/shims/TIMconsole.cs"
         )
         return cmdline
 

@@ -87,7 +87,7 @@ class MinutesHandling(BrowserTest):
         self.get(
             f"/minutes/createMinuteExtracts/{d_kokous.path_without_lang}",
             expect_status=302,
-            expect_content=f"view/{d_kokous.location}/otteet/kokous{knro}/kokous{knro}",
+            expect_content=f"/view/{d_kokous.location}/otteet/kokous{knro}/kokous{knro}",
         )
         ote_index = DocEntry.find_by_path(
             f"{d_kokous.location}/otteet/kokous{knro}/kokous{knro}"

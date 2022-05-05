@@ -33,6 +33,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {showConfirm} from "../../../static/scripts/tim/ui/showConfirmDialog";
 import {
     GroupType,
     SisuAssessmentExportModule,
@@ -112,7 +113,7 @@ const multisaveAll = t.intersection([
     <button class="btn btn-default"
             *ngIf="(undoButton && (!listener || !allSaved()))"
             [title]="undoTitle"
-            (click)="tryResetChanges()">
+            (click)="tryResetChanges($event)">
         {{undoButton}}
     </button>
     <p class="savedtext" *ngIf="isSaved && allSaved()">{{savedText}}</p>
@@ -405,9 +406,16 @@ export class MultisaveComponent
         return multisaveAll;
     }
 
-    tryResetChanges(): void {
-        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
-            return;
+    async tryResetChanges(e?: Event) {
+        if (this.undoConfirmation) {
+            if (
+                !(await showConfirm(
+                    this.undoTitle ?? this.undoConfirmation,
+                    this.undoConfirmation
+                ))
+            ) {
+                return;
+            }
         }
         const targets = this.findTargetTasks();
         for (const target of targets) {

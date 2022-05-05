@@ -1,6 +1,7 @@
 from unittest.mock import patch, Mock
 
 from timApp.auth.accesstype import AccessType
+from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
@@ -325,3 +326,14 @@ c
         self.create_translation(d)
         self.json_put(f"/alias/{d.id}/users%2Ftest-user-1%2Falias")
         self.json_delete(f"/alias/users%2Ftest-user-1%2Falias")
+
+    def test_translation_delete(self):
+        self.login_test1()
+        d = self.create_doc()
+        tr = self.create_translation(d)
+        self.assertIsNotNone(tr)
+        self.delete(f"/documents/{tr.id}")
+
+        d = DocEntry.find_by_path(f"roskis/tl_{tr.id}_{d.id}_{tr.lang_id}_deleted")
+        self.assertIsNotNone(d)
+        self.assertEqual(len(d.translations), 2)

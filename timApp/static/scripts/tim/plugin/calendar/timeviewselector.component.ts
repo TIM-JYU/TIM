@@ -8,19 +8,18 @@ const eveningHours: number[] = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
     selector: "tim-time-view-selector",
     template: `
     <ng-container>
-        <span>Näytä tarkkuudella </span>
-        <select [(ngModel)]="selectedAccuracy" >
+        <span>Set view with timeslots of </span>
+        <select [(ngModel)]="selectedAccuracy" (change)="submit(selectedAccuracy, selectedStart, selectedEnd)">
             <option *ngFor="let item of accuracies" [value]="item">{{ item | number:'2.0' }}</option>
         </select>
-        <span> Väliltä </span>
-        <select [(ngModel)]="selectedStart" >
+        <span> minutes from </span>
+        <select [(ngModel)]="selectedStart" (change)="submit(selectedAccuracy, selectedStart, selectedEnd)">
             <option *ngFor="let hour of morningHours" [value]="hour">{{ hour | number:'2.0' }}</option>
         </select>
-        <span> - </span>
-        <select [(ngModel)]="selectedEnd">
+        <span> to </span>
+        <select [(ngModel)]="selectedEnd" (change)="submit(selectedAccuracy, selectedStart, selectedEnd)">
             <option *ngFor="let hour of eveningHours" [value]="hour">{{ hour | number:'2.0' }}</option>
         </select>
-        <div><button id="selectorsBtn" (click)="submit(selectedAccuracy, selectedStart, selectedEnd)" class="btn btn-primary">Käytä</button></div>
     </ng-container>`,
     styleUrls: ["calendar.component.scss"],
 })

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import timezone, timedelta, datetime
 from pathlib import Path
 
@@ -35,6 +36,95 @@ def register_right_or_raise(op: RightOp, target_name: str) -> RightLog:
     return res
 
 
+@dataclass
+class DistRightsProcessor:
+    dt: datetime
+    target_name: str
+
+    def confirm(self, i: int, incr: timedelta):
+        self.dt = self.dt + incr
+        return register_right_or_raise(
+            ConfirmOp(type="confirm", email=f"test{i}@example.com", timestamp=self.dt),
+            self.target_name,
+        )
+
+    def confirmgroup(self, group: str, incr: timedelta):
+        self.dt = self.dt + incr
+        return register_right_or_raise(
+            ConfirmGroupOp(type="confirmgroup", group=group, timestamp=self.dt),
+            self.target_name,
+        )
+
+    def changetime(self, i: int, incr: timedelta, secs: int):
+        self.dt = self.dt + incr
+        return register_right_or_raise(
+            ChangeTimeOp(
+                type="changetime",
+                email=f"test{i}@example.com",
+                timestamp=self.dt,
+                secs=secs,
+            ),
+            self.target_name,
+        )
+
+    def changetimegroup(self, group: str, incr: timedelta, secs: int):
+        self.dt = self.dt + incr
+        return register_right_or_raise(
+            ChangeTimeGroupOp(
+                type="changetimegroup", group=group, timestamp=self.dt, secs=secs
+            ),
+            self.target_name,
+        )
+
+    def changestarttimegroup(self, group: str, incr: timedelta, newtime: datetime):
+        self.dt = self.dt + incr
+        return register_right_or_raise(
+            ChangeStartTimeGroupOp(
+                type="changestarttimegroup",
+                group=group,
+                timestamp=self.dt,
+                starttime=newtime,
+            ),
+            self.target_name,
+        )
+
+    def unlock(self, i: int, incr: timedelta):
+        self.dt = self.dt + incr
+        return register_right_or_raise(
+            UnlockOp(type="unlock", email=f"test{i}@example.com", timestamp=self.dt),
+            self.target_name,
+        )
+
+    def quit(self, i: int, incr: timedelta):
+        self.dt = self.dt + incr
+        return register_right_or_raise(
+            QuitOp(type="quit", email=f"test{i}@example.com", timestamp=self.dt),
+            self.target_name,
+        )
+
+    def undoquit(self, i: int, incr: timedelta):
+        self.dt = self.dt + incr
+        return register_right_or_raise(
+            UndoQuitOp(
+                type="undoquit", email=f"test{i}@example.com", timestamp=self.dt
+            ),
+            self.target_name,
+        )
+
+    def undoconfirm(self, i: int, incr: timedelta):
+        self.dt = self.dt + incr
+        return register_right_or_raise(
+            UndoConfirmOp(
+                type="undoconfirm", email=f"test{i}@example.com", timestamp=self.dt
+            ),
+            self.target_name,
+        )
+
+
+h = 3600
+m = 60
+
+
 class DistRightsTest(TimRouteTest):
     def check(self, base_date, rights, i, rq, d_f, d_t, d_secs, acc_f, acc_t):
         self.assertEqual(
@@ -57,180 +147,161 @@ class DistRightsTest(TimRouteTest):
             rights.get_right(f"test{i}@example.com"),
         )
 
-    def test_distribute_rights(self):
+    def init_processor(self, target_name: str):
         tz = timezone(timedelta(0), "+0000")
-        dt = datetime(
-            year=2021, month=5, day=25, hour=10, minute=0, second=0, tzinfo=tz
+        processor = DistRightsProcessor(
+            dt=datetime(
+                year=2021,
+                month=5,
+                day=25,
+                hour=10,
+                minute=0,
+                second=0,
+                tzinfo=tz,
+            ),
+            target_name=target_name,
         )
-        target_name = "test"
-
-        def confirm(i: int, incr: timedelta):
-            nonlocal dt
-            dt = dt + incr
-            return register_right_or_raise(
-                ConfirmOp(type="confirm", email=f"test{i}@example.com", timestamp=dt),
-                target_name,
-            )
-
-        def confirmgroup(group: str, incr: timedelta):
-            nonlocal dt
-            dt = dt + incr
-            return register_right_or_raise(
-                ConfirmGroupOp(type="confirmgroup", group=group, timestamp=dt),
-                target_name,
-            )
-
-        def changetime(i: int, incr: timedelta, secs: int):
-            nonlocal dt
-            dt = dt + incr
-            return register_right_or_raise(
-                ChangeTimeOp(
-                    type="changetime",
-                    email=f"test{i}@example.com",
-                    timestamp=dt,
-                    secs=secs,
-                ),
-                target_name,
-            )
-
-        def changetimegroup(group: str, incr: timedelta, secs: int):
-            nonlocal dt
-            dt = dt + incr
-            return register_right_or_raise(
-                ChangeTimeGroupOp(
-                    type="changetimegroup", group=group, timestamp=dt, secs=secs
-                ),
-                target_name,
-            )
-
-        def changestarttimegroup(group: str, incr: timedelta, newtime: datetime):
-            nonlocal dt
-            dt = dt + incr
-            return register_right_or_raise(
-                ChangeStartTimeGroupOp(
-                    type="changestarttimegroup",
-                    group=group,
-                    timestamp=dt,
-                    starttime=newtime,
-                ),
-                target_name,
-            )
-
-        def unlock(i: int, incr: timedelta):
-            nonlocal dt
-            dt = dt + incr
-            return register_right_or_raise(
-                UnlockOp(type="unlock", email=f"test{i}@example.com", timestamp=dt),
-                target_name,
-            )
-
-        def quit(i: int, incr: timedelta):
-            nonlocal dt
-            dt = dt + incr
-            return register_right_or_raise(
-                QuitOp(type="quit", email=f"test{i}@example.com", timestamp=dt),
-                target_name,
-            )
-
-        def undoquit(i: int, incr: timedelta):
-            nonlocal dt
-            dt = dt + incr
-            return register_right_or_raise(
-                UndoQuitOp(type="undoquit", email=f"test{i}@example.com", timestamp=dt),
-                target_name,
-            )
-
-        def undoconfirm(i: int, incr: timedelta):
-            nonlocal dt
-            dt = dt + incr
-            return register_right_or_raise(
-                UndoConfirmOp(
-                    type="undoconfirm", email=f"test{i}@example.com", timestamp=dt
-                ),
-                target_name,
-            )
-
-        base_date = datetime(2021, 5, 25, 10, 0, tzinfo=tz)
+        base_date = datetime(2021, 5, 25, 10, 0, 0, tzinfo=tz)
 
         def check(*args):
             return self.check(base_date, *args)
 
+        return processor, base_date, check
+
+    def write_initial(
+        self, processor: DistRightsProcessor, initial_right: Right, ops: list[RightOp]
+    ):
+        fp = Path(app.config["FILES_PATH"]) / f"{processor.target_name}.rights.initial"
+        with fp.open("w") as f:
+            f.write(to_json_str(initial_right) + "\n")
+            for op in ops:
+                f.write(to_json_str(op) + "\n")
+
+    def test_group_manipulation(self):
+        processor, base_date, check = self.init_processor("test_group_manipulation")
+        self.login_test1()
+        UserGroup.create("tg_manip1")
+        db.session.commit()
+        self.write_initial(
+            processor,
+            Right(
+                require_confirm=True,
+                duration_from=None,
+                duration_to=None,
+                duration=None,
+                accessible_from=processor.dt,
+                accessible_to=processor.dt + timedelta(hours=1),
+            ),
+            [
+                ChangeStartTimeGroupOp(
+                    type="changestarttimegroup",
+                    group="tg_manip1",
+                    starttime=processor.dt + timedelta(hours=1),
+                    timestamp=processor.dt,
+                ),
+            ],
+        )
+
+        twosecs = timedelta(seconds=2)
+        # Basic case: the user is not in a group, he should get default rights on confirm
+        r, _ = get_current_rights(processor.target_name)
+        check(r, 1, True, None, None, None, 0, 1 * h)
+        r = processor.confirm(1, twosecs)
+        check(r, 1, False, None, None, None, 0, 1 * h)
+
+        # Basic remove case: undo confirm
+        r = processor.undoconfirm(1, twosecs)
+        check(r, 1, True, None, None, None, 0, 1 * h)
+
+        # Group add case: The user is added to the group and then confirmed
+        # Intentionally don't flush after adding user to group, simulate UserSelect behaviour
+
+        ug = UserGroup.get_by_name("tg_manip1")
+        self.test_user_1.add_to_group(ug, None)
+
+        r = processor.confirm(1, twosecs)
+        check(r, 1, False, None, None, None, 1 * h, 2 * h)
+        db.session.commit()
+
+        # Group remove case: The user is removed from the group and then unconfirmed
+        ug = UserGroup.get_by_name("tg_manip1")
+        membership = ug.current_memberships.get(self.test_user_1.id, None)
+        if membership:
+            membership.set_expired()
+        db.session.commit()
+        r = processor.undoconfirm(1, twosecs)
+        check(r, 1, True, None, None, None, 0, 1 * h)
+
+    def test_distribute_rights(self):
+        processor, base_date, check = self.init_processor("test")
         self.login_test1()
         ug = UserGroup.create("tg1")
         self.test_user_1.add_to_group(ug, None)
         self.test_user_2.add_to_group(ug, None)
         empty = UserGroup.create("some_empty_group1")
         db.session.commit()
-        fp = Path(app.config["FILES_PATH"]) / f"{target_name}.rights.initial"
-        with fp.open("w") as f:
-            f.write(
-                to_json_str(
-                    Right(
-                        require_confirm=True,
-                        duration_from=dt,
-                        duration_to=dt + timedelta(minutes=10),
-                        duration=Duration(hours=4),
-                        accessible_from=None,
-                        accessible_to=None,
-                    )
+        self.write_initial(
+            processor,
+            Right(
+                require_confirm=True,
+                duration_from=processor.dt,
+                duration_to=processor.dt + timedelta(minutes=10),
+                duration=Duration(hours=4),
+                accessible_from=None,
+                accessible_to=None,
+            ),
+            [
+                ChangeTimeOp(
+                    type="changetime",
+                    email="test1@example.com",
+                    secs=5 * 60,
+                    timestamp=processor.dt + timedelta(seconds=10),
                 )
-                + "\n"
-            )
-            f.write(
-                to_json_str(
-                    ChangeTimeOp(
-                        type="changetime",
-                        email="test1@example.com",
-                        secs=5 * 60,
-                        timestamp=dt + timedelta(seconds=10),
-                    )
-                )
-            )
+            ],
+        )
 
         twosecs = timedelta(seconds=2)
-        r, _ = get_current_rights(target_name)
-        h = 3600
-        m = 60
+        r, _ = get_current_rights(processor.target_name)
         check(r, 1, True, 0, 10 * m, 4 * h + 5 * m, None, None)
         check(r, 2, True, 0, 10 * m, 4 * h, None, None)
-        r = confirmgroup("tg1", twosecs)
+        r = processor.confirmgroup("tg1", twosecs)
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, None, None)
         check(r, 2, False, 0, 10 * m, 4 * h, None, None)
         check(r, 3, True, 0, 10 * m, 4 * h, None, None)
-        r = undoconfirm(1, twosecs)
-        r = undoconfirm(2, twosecs)
+        r = processor.undoconfirm(1, twosecs)
+        r = processor.undoconfirm(2, twosecs)
         check(r, 1, True, 0, 10 * m, 4 * h + 5 * m, None, None)
         check(r, 2, True, 0, 10 * m, 4 * h, None, None)
-        r = confirm(1, twosecs)
+        r = processor.confirm(1, twosecs)
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, None, None)
         check(r, 2, True, 0, 10 * m, 4 * h, None, None)
-        r = undoconfirm(1, twosecs)
+        r = processor.undoconfirm(1, twosecs)
         check(r, 1, True, 0, 10 * m, 4 * h + 5 * m, None, None)
         check(r, 2, True, 0, 10 * m, 4 * h, None, None)
-        r = confirm(1, twosecs)
+        r = processor.confirm(1, twosecs)
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, None, None)
         check(r, 2, True, 0, 10 * m, 4 * h, None, None)
-        r = changetime(2, twosecs, 20)
+        r = processor.changetime(2, twosecs, 20)
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, None, None)
         check(r, 2, True, 0, 10 * m, 4 * h + 20, None, None)
         check(r, 3, True, 0, 10 * m, 4 * h, None, None)
-        r = confirm(3, twosecs)
+        r = processor.confirm(3, twosecs)
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, None, None)
         check(r, 2, True, 0, 10 * m, 4 * h + 20, None, None)
         check(r, 3, False, 0, 10 * m, 4 * h, None, None)
         halfhour = timedelta(minutes=30)
-        r = changestarttimegroup("tg1", twosecs, base_date + halfhour)
+        r = processor.changestarttimegroup("tg1", twosecs, base_date + halfhour)
         halfhoursecs = halfhour.total_seconds()
         check(
             r, 1, False, halfhoursecs, halfhoursecs + 10 * m, 4 * h + 5 * m, None, None
         )
         check(r, 2, True, halfhoursecs, halfhoursecs + 10 * m, 4 * h + 20, None, None)
         check(r, 3, False, 0, 10 * m, 4 * h, None, None)
-        r = changestarttimegroup("tg1", twosecs, base_date)
+        r = processor.changestarttimegroup("tg1", twosecs, base_date)
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, None, None)
         check(r, 2, True, 0, 10 * m, 4 * h + 20, None, None)
         check(r, 3, False, 0, 10 * m, 4 * h, None, None)
-        r = unlock(1, twosecs)
+        r = processor.unlock(1, twosecs)
         unlock_time = 2 * 11
         check(
             r,
@@ -242,7 +313,7 @@ class DistRightsTest(TimRouteTest):
             unlock_time,
             4 * h + 5 * m + unlock_time,
         )
-        r = changetime(1, twosecs, 20)
+        r = processor.changetime(1, twosecs, 20)
         check(
             r,
             1,
@@ -253,7 +324,7 @@ class DistRightsTest(TimRouteTest):
             unlock_time,
             4 * h + 5 * m + unlock_time + 20,
         )
-        r = changetimegroup("tg1", twosecs, 15)
+        r = processor.changetimegroup("tg1", twosecs, 15)
         check(
             r,
             1,
@@ -265,7 +336,7 @@ class DistRightsTest(TimRouteTest):
             4 * h + 5 * m + unlock_time + 20 + 15,
         )
         check(r, 2, True, 0, 10 * m, 4 * h + 20 + 15, None, None)
-        r = changetimegroup("tg1", twosecs, 5)
+        r = processor.changetimegroup("tg1", twosecs, 5)
         check(
             r,
             1,
@@ -279,16 +350,16 @@ class DistRightsTest(TimRouteTest):
         check(r, 2, True, 0, 10 * m, 4 * h + 20 + 15 + 5, None, None)
         check(r, 3, False, 0, 10 * m, 4 * h, None, None)
         with self.assertRaises(RouteException):
-            r = undoquit(1, twosecs)
-        r = quit(1, twosecs)
+            r = processor.undoquit(1, twosecs)
+        r = processor.quit(1, twosecs)
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, unlock_time, 2 * 16)
         with self.assertRaises(RouteException):
-            quit(1, twosecs)
+            processor.quit(1, twosecs)
         with self.assertRaises(RouteException):
-            changetime(1, twosecs, 20)
+            processor.changetime(1, twosecs, 20)
         with self.assertRaises(RouteException):
-            unlock(1, twosecs)
-        r = undoquit(1, twosecs)
+            processor.unlock(1, twosecs)
+        r = processor.undoquit(1, twosecs)
         check(
             r,
             1,
@@ -299,7 +370,7 @@ class DistRightsTest(TimRouteTest):
             unlock_time,
             4 * h + 5 * m + unlock_time + 20 + 15 + 5,
         )
-        r = changetime(1, twosecs, 5)
+        r = processor.changetime(1, twosecs, 5)
         check(
             r,
             1,
@@ -359,7 +430,7 @@ class DistRightsTest(TimRouteTest):
                     },
                     expect_content={"host_errors": []},
                 )
-        r, _ = get_current_rights(target_name)
+        r, _ = get_current_rights(processor.target_name)
         check(
             r,
             1,
@@ -370,7 +441,7 @@ class DistRightsTest(TimRouteTest):
             unlock_time,
             4 * h + 5 * m + unlock_time + 20 + 15 + 5 + 5 + 4,
         )
-        r = changestarttimegroup("testuser1", twosecs, base_date + halfhour)
+        r = processor.changestarttimegroup("testuser1", twosecs, base_date + halfhour)
         check(
             r,
             1,
@@ -383,17 +454,17 @@ class DistRightsTest(TimRouteTest):
         )
 
         # An operation on an empty group should not raise an exception.
-        confirmgroup("some_empty_group1", twosecs)
+        processor.confirmgroup("some_empty_group1", twosecs)
 
         # An operation on a non-existent group should raise an exception.
         with self.assertRaises(Exception):
-            confirmgroup("this_does_not_exist", twosecs)
+            processor.confirmgroup("this_does_not_exist", twosecs)
 
         self.make_admin(self.test_user_3)
         self.login_test3()
         resp = self.get(
             "/distRights/current",
-            query_string={"target": target_name, "groups": "tg1,testuser3"},
+            query_string={"target": processor.target_name, "groups": "tg1,testuser3"},
         )
         self.assertEqual(
             [

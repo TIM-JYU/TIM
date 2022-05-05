@@ -68,7 +68,13 @@ from timApp.notification.pending_notification import (
     AnswerNotification,
 )
 from timApp.peerreview.peerreview import PeerReview
-from timApp.plugin.calendar.models import Event, EventGroup, Enrollment, EnrollmentType
+from timApp.plugin.calendar.models import (
+    Event,
+    EventGroup,
+    Enrollment,
+    EnrollmentType,
+    ExportedCalendar,
+)
 from timApp.plugin.plugintype import PluginType
 from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
 from timApp.printing.printeddoc import PrintedDoc
@@ -142,6 +148,7 @@ all_models = (
     EnrollmentType,
     Event,
     EventGroup,
+    ExportedCalendar,
     Folder,
     HakaOrganization,
     InternalMessage,

@@ -26,6 +26,7 @@ import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {CommonModule, registerLocaleData} from "@angular/common";
 import localeFr from "@angular/common/locales/fi";
+import localeFi from "@angular/common/locales/fi";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
@@ -35,8 +36,9 @@ import {NgbModalModule} from "@ng-bootstrap/ng-bootstrap";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
-import {toPromise, to2} from "../../util/utils";
+import {to2, toPromise} from "../../util/utils";
 import {Users} from "../../user/userService";
+import {itemglobals} from "../../util/globals";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
@@ -69,13 +71,13 @@ function ceilToNearest(
 }
 
 const CalendarItem = t.type({
-    done: t.boolean,
-    text: t.string,
+    opiskelijat: t.string,
+    ohjaajat: t.string,
 });
 
 const CalendarMarkup = t.intersection([
     t.partial({
-        todos: nullable(t.array(CalendarItem)),
+        ryhmat: nullable(t.array(CalendarItem)),
     }),
     GenericPluginMarkup,
 ]);
@@ -102,12 +104,17 @@ const colors = {
         primary: "#d5d5d5",
         secondary: "#d5d5d5",
     },
+    green: {
+        primary: "#4ce629",
+        secondary: "#d9ffc2",
+    },
 };
 
 const segmentHeight = 30;
 // const minutesInSegment = 20;
 
 registerLocaleData(localeFr);
+registerLocaleData(localeFi);
 
 /**
  * For customizing the event tooltip
@@ -135,6 +142,12 @@ export type TIMCalendarEvent = CalendarEvent<{
     tmpEvent: boolean;
     deleted?: boolean;
     editEnabled?: boolean;
+    enrollments: number;
+    maxSize: number;
+    booker_groups: {
+        name: string;
+        users: {id: number; name: string; email: string | null}[];
+    }[];
 }>;
 
 @Component({
@@ -151,11 +164,11 @@ export type TIMCalendarEvent = CalendarEvent<{
         // },
     ],
     template: `
-        <tim-calendar-header [(view)]="view" [(viewDate)]="viewDate">
+        <tim-calendar-header [locale]="locale" [(view)]="view" [(viewDate)]="viewDate">
         </tim-calendar-header>
         <div class="row text-center">
             <div class="col-md-4">
-                <div class="btn-group edit-btn">
+                <div class="btn-group edit-btn" [hidden]="!userIsManager()">
                     <button (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
                     <button (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
                 </div>
@@ -168,10 +181,12 @@ export type TIMCalendarEvent = CalendarEvent<{
                             id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button.valueOf()}}</button>
                 </div>
             </div>
-            <div class="col-md-4">Näytä:
+            <div class="col-md-4">
+                <div class="checkbox-group"> Show:
                     <div *ngFor="let box of checkboxEvents"> 
                         <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
                                [(ngModel)]="box.checked" [checked]="">{{box.name}}
+                    </div>
                 </div>
             </div>
         </div>
@@ -208,6 +223,7 @@ export type TIMCalendarEvent = CalendarEvent<{
                     [weekStartsOn]="1"
                     (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
                     (dayClicked)="changeToDay($event.day.date)"
+                    (eventClicked)="handleEventClick($event.event)"
             >
             </mwl-calendar-month-view>
             <mwl-calendar-week-view
@@ -222,7 +238,7 @@ export type TIMCalendarEvent = CalendarEvent<{
                     [locale]="locale"
                     [minimumEventHeight]="minimumEventHeight"
                     [weekStartsOn]="1"
-                    (dayHeaderClicked)="clickedDate = $event.day.date"
+                    (dayHeaderClicked)="viewDay($event.day.date)"
                     (hourSegmentClicked)="clickedDate = $event.date"
                     [hourSegmentTemplate]="weekViewHourSegmentTemplate"
                     (eventClicked)="handleEventClick($event.event)"
@@ -250,7 +266,8 @@ export type TIMCalendarEvent = CalendarEvent<{
                 (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
                                 (evening)="setEvening($event)"></tim-time-view-selector>
         <div>
-            <button class="timButton" id="icsBtn" (click)="exportICS()">Vie kalenterin tiedot</button>
+            <button class="btn timButton" (click)="export()">Vie kalenterin tiedot</button>
+            <input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL">
         </div>
         <ng-template #modalContent let-close="close">
             <div class="modal-header">
@@ -270,7 +287,8 @@ export type TIMCalendarEvent = CalendarEvent<{
                 </div>
             </div>
             <div class="modal-footer">
-                <!-- <button [style.visibility] = "editEnabled ? 'visible' : 'hidden'" type="button" class="btn btn-outline-secondary timButton"
+                <!-- <button [style.visibility] = "editEnabled ? 'visible' : 'hidden'" type="button" class="btn btn-out
+                line-secondary timButton"
                         (click)=" close(); deleteEvent(modalData?.event)">
                     Delete
                 </button> -->
@@ -295,6 +313,7 @@ export class CalendarComponent
 {
     @ViewChild("modalContent", {static: true})
     modalContent?: TemplateRef<never>;
+    icsURL: string = "";
     view: CalendarView = CalendarView.Week;
 
     viewDate: Date = new Date();
@@ -405,7 +424,6 @@ export class CalendarComponent
                 this.locale = "en-us";
                 break;
         }
-        console.log(navigator.language);
     }
 
     /**
@@ -432,6 +450,16 @@ export class CalendarComponent
         this.clickedDate = date;
         this.viewDate = date;
         this.view = CalendarView.Week;
+    }
+
+    /**
+     * Enables the user to click on a date in the week view to see the day view of that day
+     * @param date the date of clicked day
+     */
+    viewDay(date: Date) {
+        this.clickedDate = date;
+        this.viewDate = date;
+        this.view = CalendarView.Day;
     }
 
     /**
@@ -474,18 +502,26 @@ export class CalendarComponent
         mouseDownEvent: MouseEvent,
         segmentElement: HTMLElement
     ) {
+        let fullName = Users.getCurrent().real_name;
+        if (!fullName) {
+            fullName = Users.getCurrent().name;
+        }
         const dragToSelectEvent: TIMCalendarEvent = {
             id: this.events.length,
-            title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
-                segment.date,
-                this.segmentMinutes
-            )
-                .toTimeString()
-                .substr(0, 5)} Varattava aika`,
+            // title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
+            //     segment.date,
+            //     this.segmentMinutes
+            // )
+            //     .toTimeString()
+            //     .substr(0, 5)} Varattava aika`,
+            title: fullName,
             start: segment.date,
             end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
                 tmpEvent: true,
+                enrollments: 0,
+                maxSize: 1, // TODO: temporary solution
+                booker_groups: [],
             },
             // actions: this.actions,
         };
@@ -525,11 +561,11 @@ export class CalendarComponent
                 );
                 if (newEnd > segment.date && newEnd < endOfView) {
                     dragToSelectEvent.end = newEnd;
-                    dragToSelectEvent.title = `${segment.date
-                        .toTimeString()
-                        .substr(0, 5)}–${newEnd
-                        .toTimeString()
-                        .substr(0, 5)} Varattava aika`;
+                    // dragToSelectEvent.title = `${segment.date
+                    //     .toTimeString()
+                    //     .substr(0, 5)}–${newEnd
+                    //     .toTimeString()
+                    //     .substr(0, 5)} Varattava aika`;
                     if (dragToSelectEvent.end) {
                         dragToSelectEvent.end = new Date(dragToSelectEvent.end);
                     }
@@ -553,12 +589,16 @@ export class CalendarComponent
         if (newEnd) {
             event.start = newStart;
             event.end = newEnd;
-            this.updateEventTitle(event);
+            // this.updateEventTitle(event);
+            this.refresh();
             await this.editEvent(event);
         }
     }
 
     /**
+     * @deprecated
+     * DEPRECATED: Not used anymore, time expressions removed from event titles
+     *
      * Updates the event's title if the begin matches the regular expression, e.g. "10:00-11.00"
      *
      * TODO: handle localized time expressions (e.g. AM and PM)
@@ -587,6 +627,20 @@ export class CalendarComponent
     private refresh() {
         this.events = [...this.events];
         this.events.forEach((event) => {
+            if (event.meta!.enrollments >= event.meta!.maxSize) {
+                event.color = colors.red;
+            } else {
+                event.color = colors.blue;
+            }
+            if (event.meta!.booker_groups) {
+                event.meta!.booker_groups.forEach((group) => {
+                    group.users.forEach((user) => {
+                        if (user.id === Users.getCurrent().id) {
+                            event.color = colors.green;
+                        }
+                    });
+                });
+            }
             if (Date.now() > event.start.getTime()) {
                 event.color = colors.gray;
             }
@@ -606,6 +660,7 @@ export class CalendarComponent
      * Called when the plugin is loaded. Loads the user's events
      */
     ngOnInit() {
+        this.icsURL = "";
         super.ngOnInit();
         this.setLanguage();
         if (Users.isLoggedIn()) {
@@ -619,19 +674,21 @@ export class CalendarComponent
      */
     private async loadEvents() {
         const result = await toPromise(
-            this.http.get<TIMCalendarEvent[]>("/calendar/events?file_type=json")
+            this.http.get<TIMCalendarEvent[]>("/calendar/events")
         );
         if (result.ok) {
             result.result.forEach((event) => {
                 event.start = new Date(event.start);
                 if (event.end) {
                     event.end = new Date(event.end);
-                    if (Date.now() > event.start.getTime()) {
-                        event.color = colors.gray;
-                    }
                 }
                 // event.actions = this.actions;
-                event.meta = {tmpEvent: false};
+                event.meta = {
+                    tmpEvent: false,
+                    enrollments: event.meta!.enrollments,
+                    maxSize: event.meta!.maxSize,
+                    booker_groups: event.meta!.booker_groups,
+                };
                 event.resizable = {
                     beforeStart: this.editEnabled,
                     afterEnd: this.editEnabled,
@@ -653,14 +710,26 @@ export class CalendarComponent
         let eventsToAdd = this.events.filter((event: TIMCalendarEvent) =>
             this.isTempEvent(event)
         );
+
+        console.log(this.markup.ryhmat);
+        const eventGroups: string[] = [];
+        if (this.markup.ryhmat) {
+            console.log(this.markup.ryhmat[0].opiskelijat);
+            eventGroups.push(this.markup.ryhmat[0].opiskelijat);
+            eventGroups.push(this.markup.ryhmat[0].ohjaajat);
+        }
+
         if (eventsToAdd.length > 0) {
-            eventsToAdd = eventsToAdd.map<CalendarEvent>((event) => {
+            eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
                 return {
                     title: event.title,
                     start: event.start,
                     end: event.end,
+                    event_groups: eventGroups,
+                    max_size: 1, // TODO: temporary solution
                 };
             });
+            console.log(eventsToAdd);
             const result = await toPromise(
                 this.http.post<TIMCalendarEvent[]>("/calendar/events", {
                     events: eventsToAdd,
@@ -682,6 +751,9 @@ export class CalendarComponent
                             meta: {
                                 tmpEvent: false,
                                 editEnabled: this.editEnabled,
+                                enrollments: event.meta!.enrollments,
+                                maxSize: event.meta!.maxSize,
+                                booker_groups: [],
                             },
                             // actions: this.actions,
                             resizable: {
@@ -728,16 +800,15 @@ export class CalendarComponent
         }
     }
 
-    async exportICS() {
+    async export() {
         const result = await toPromise(
-            this.http.get("/calendar/events?file_type=ics", {
+            this.http.get("/calendar/export", {
                 responseType: "text",
             })
         );
         if (result.ok) {
+            this.icsURL = result.result;
             this.refresh();
-            console.log(result.result);
-            console.log("Tiedot viety");
         } else {
             // TODO: Handle error responses properly
             console.error(result.result.error.error);
@@ -763,9 +834,16 @@ export class CalendarComponent
                     console.log("deleted");
                     this.events.splice(this.events.indexOf(modifiedEvent), 1);
                 }
-                this.updateEventTitle(modifiedEvent);
             }
+            this.refresh();
         }
+    }
+
+    userIsManager(): boolean {
+        return (
+            itemglobals().curr_item.rights.manage ||
+            itemglobals().curr_item.rights.owner
+        );
     }
 }
 
