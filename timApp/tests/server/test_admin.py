@@ -286,7 +286,7 @@ class UserDeleteTest(TimRouteTest):
         d = self.create_doc()
         find_and_soft_delete("m@example.com")
         db.session.commit()
-        self.get(d.url, expect_status=302, expect_content="")
+        self.get(d.url, expect_status=302, expect_content="/")
         self.get(d.url, expect_status=403)
         self.login(username=f"m@example.com_deleted_{u.id}")
         self.post_answer(

@@ -15,7 +15,7 @@ if [ "$1" = "1" ] ; then
     export TEST_PARAMS="tests.$2"
 fi
 
-./docker-compose.sh up --profile test --exit-code-from tests --abort-on-container-exit tests
+./docker-compose.sh --profile test up --exit-code-from tests --abort-on-container-exit tests
 exitcode=$?
 ./docker-compose.sh down -t 0 > /dev/null 2>&1
 exit ${exitcode}

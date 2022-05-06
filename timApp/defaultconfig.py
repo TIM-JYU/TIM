@@ -1,13 +1,13 @@
 import logging
 import multiprocessing
 import os
-import subprocess
 from datetime import timedelta
 from pathlib import Path
 
 from celery.schedules import crontab
 
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
+from timApp.util.git_utils import get_latest_commit_timestamp, get_current_branch
 from timApp.document.translation.reversingtranslator import (
     ReversingTranslationService,
     REVERSE_LANG,
@@ -95,19 +95,8 @@ WUFF_EMAIL = "wuff@tim.jyu.fi"
 NOREPLY_EMAIL = "no-reply@tim.jyu.fi"
 GLOBAL_NOTIFICATION_FILE = "/tmp/global_notification.html"
 
-GIT_LATEST_COMMIT_TIMESTAMP = (
-    subprocess.run(
-        ["git", "log", "-1", "--date=format:%d.%m.%Y %H:%M:%S", "--format=%cd"],
-        stdout=subprocess.PIPE,
-    )
-    .stdout.decode()
-    .strip()
-)
-GIT_BRANCH = (
-    subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], stdout=subprocess.PIPE)
-    .stdout.decode()
-    .strip()
-)
+GIT_LATEST_COMMIT_TIMESTAMP = get_latest_commit_timestamp()
+GIT_BRANCH = get_current_branch()
 
 CELERY_BROKER_URL = "redis://redis:6379"
 CELERY_RESULT_BACKEND = "redis://redis:6379"
