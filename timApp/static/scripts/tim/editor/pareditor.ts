@@ -246,6 +246,7 @@ export class PareditorController extends DialogController<
     private nothingSelected: boolean = false;
     private errorMessage = "";
     private availableTranslators: string[] = [];
+    private originalDocument: boolean = true;
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -1104,7 +1105,7 @@ ${backTicks}
      * Tracks the editing and Difference in original document views' positioning (see pareditor.html).
      */
     changePositioning() {
-        if (this.isOriginalDocument()) {
+        if (this.originalDocument) {
             return;
         }
         const doc = document.getElementById("editorflex");
@@ -1153,6 +1154,8 @@ ${backTicks}
         };
         setCurrentEditor(this);
 
+        this.originalDocument = this.isOriginalDocument();
+
         this.docTranslator = this.storage.translator.get() ?? "";
 
         this.spellcheck = this.storage.spellcheck.get() ?? false;
@@ -1161,7 +1164,7 @@ ${backTicks}
             this.storage.proeditor.get() ??
             (saveTag === "par" || saveTag === TIM_TABLE_CELL);
         this.activeTab = this.storage.editortab.get() ?? "navigation";
-        if (this.isOriginalDocument() && this.activeTab == "translator") {
+        if (this.originalDocument && this.activeTab == "translator") {
             this.activeTab = "navigation";
         }
         this.sideBySide = this.storage.diffSideBySide.get() ?? true;
@@ -1212,7 +1215,7 @@ ${backTicks}
             undefined
         );
 
-        if (!this.isOriginalDocument()) {
+        if (!this.originalDocument) {
             void this.initTranslatorData();
         }
     }
@@ -1627,7 +1630,7 @@ ${backTicks}
      * @returns Whether or not the document can be translated automatically
      */
     isTranslationSupported() {
-        if (this.isOriginalDocument()) {
+        if (this.originalDocument) {
             return false;
         }
         const trs = documentglobals().translations;
@@ -2408,7 +2411,7 @@ ${backTicks}
         const ace = this.isAce();
         this.storage.oldMode.set(ace ? "ace" : "text");
         this.storage.wrap.set("" + this.wrapValue());
-        if (!this.isOriginalDocument()) {
+        if (!this.originalDocument) {
             this.storage.diffSideBySide.set(!this.sideBySide);
         }
         this.storage.translator.set(this.docTranslator);

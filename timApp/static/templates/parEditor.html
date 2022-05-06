@@ -34,7 +34,7 @@
             <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#viitteen-katsominen" target="_blank"
                title="Help for references"><i class="helpButton glyphicon glyphicon-question-sign"></i></a>
     </uib-tab>
-    <uib-tab ng-show="!$ctrl.checkIfOriginal()" heading="Translation" index="'translator'">
+    <uib-tab ng-show="!$ctrl.originalDocument" heading="Translation" index="'translator'">
         <div id="translationTab">
             <label for="translator">Translator:</label>
             <select id="translator" name="translator-select" class="form-control"
