@@ -499,6 +499,9 @@ class TranslationParser:
                 # TODO Marking these as Translate is DeepL-specific. Refactor into
                 #  translator's preprocessing or inject the translator into parsing
                 #  with a filtering-list for example.
+                # These can be changed to NoTranslate but the quality of the text will suffer. The only benefits are
+                # that the extreme edge cases of multiple styles nested inside each other will hold the specific
+                # styles, but it will require manual translation regardless because the quality is awful.
                 arr.append(Translate("<i>"))
                 for inline in content:
                     arr += self.inline_collect(inline)
@@ -515,6 +518,9 @@ class TranslationParser:
                 # TODO Marking these as Translate is DeepL-specific. Refactor into
                 #  translator's preprocessing or inject the translator into parsing
                 #  with a filtering-list for example.
+                # These could be changed to NoTranslate but the quality of the text will suffer. Benefits are
+                # that the extreme edge cases of multiple styles nested inside each other will hold the specific
+                # styles, but it will require manual translation regardless because the quality is awful.
                 arr.append(Translate("<b>"))
                 for inline in content:
                     arr += self.inline_collect(inline)
@@ -636,10 +642,13 @@ class TranslationParser:
         lines = iter(content.splitlines())
         while (line := next(lines, None)) is not None:
             for key_s in map(lambda x: f"{x}:", TRANSLATE_PLUGIN_ATTRIBUTES):
+                # Current line contains an attribute for translation
                 if line.lstrip().startswith(key_s):
+                    # Extract text from the line for translation
                     nt, text = line.split(key_s, 1)
                     arr.append(NoTranslate(nt))
                     arr.append(NoTranslate(key_s))
+                    # Save leading whitespace from value to avoid wasted translation
                     if text_start := text.lstrip():
                         text_start_i = text.index(text_start)
                         nt, text = text[:text_start_i], text[text_start_i:]
@@ -1057,8 +1066,10 @@ class TranslationParser:
         content = top_block.get("c", None)
 
         # All blocks should be prepended by newline
-        # TODO Why is this check made? Is it some hack? Unchecking could fix
-        #  newlines on list-items...
+        # TODO figure out the "correct" way to include newlines. The Combination of Pandoc markdown and DeepL
+        #  creates and inconsistent structure on when and how to add newlines. Currently they are included into
+        #  the Markdown handling in parser.
+        # TODO: Unordered list might have issues with this.
         if depth == 0:
             arr.append(Translate("\n"))
 
@@ -1114,13 +1125,6 @@ class TranslationParser:
                 pass
             case x:
                 raise Exception(f"Parser encountered unexpected type: '{x}'")
-
-        # The last part of block (hopefully) does not require the ending newlines
-        # TODO figure out the "correct" way to include newlines
-        # arr[-1].text = arr[-1].text.rstrip("\n")
-        # Remove last element, if it is empty
-        # if not arr[-1].text:
-        #    return arr[:-1]
 
         return arr
 
