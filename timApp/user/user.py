@@ -1057,9 +1057,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 usergroup_id=self.get_personal_group().id,
             )
 
-        from timApp.auth.session.util import has_valid_session
+        from timApp.auth.session.util import session_has_access
 
-        if not has_valid_session(self):
+        if not session_has_access(i, self):
             return None
 
         if isinstance(i, ItemBase):

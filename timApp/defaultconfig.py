@@ -447,3 +447,9 @@ If this limit is reached, the user is not given an active session which prevents
 
 If None, there is no limit.
 """
+
+SESSION_BLOCK_IGNORE_DOCUMENTS = {}
+"""
+Paths of documents that should be ignored when blocking sessions.
+All users will be able to access the document regardless of the session blocking.
+"""

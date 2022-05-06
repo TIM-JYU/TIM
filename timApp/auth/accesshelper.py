@@ -9,7 +9,11 @@ from sqlalchemy import inspect
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
-from timApp.auth.session.util import has_valid_session, SessionExpired
+from timApp.auth.session.util import (
+    has_valid_session,
+    SessionExpired,
+    session_has_access,
+)
 from timApp.auth.sessioninfo import (
     logged_in,
     get_other_users_as_list,
@@ -257,7 +261,7 @@ def abort_if_not_access_and_required(
     if access_obj:
         return access_obj
 
-    if not has_valid_session(user):
+    if not session_has_access(block, user):
         raise SessionExpired()
 
     if check_duration:

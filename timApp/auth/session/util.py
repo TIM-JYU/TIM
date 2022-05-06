@@ -3,9 +3,10 @@ from sqlalchemy import func
 
 from timApp.auth.session.model import UserSession
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.item.item import Item
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
-from timApp.user.user import User
+from timApp.user.user import User, ItemOrBlock
 from timApp.user.userutils import get_anon_user_id
 from timApp.util.logger import log_info, log_warning
 from timApp.util.secret import get_secret_or_abort
@@ -27,6 +28,11 @@ def _max_concurrent_sessions() -> int | None:
 
 def current_session_id() -> str | None:
     return session.get("session_id")
+
+
+def is_allowed_document(path: str) -> bool:
+    paths = current_app.config.get("SESSION_BLOCK_IGNORE_DOCUMENTS", [])
+    return path in paths
 
 
 def expire_user_session(user: User, session_id: str | None) -> None:
@@ -211,3 +217,9 @@ def distribute_session_verification(
                 errors.append(f"{host} ({res.status_code}): {res.text}")
 
     return errors
+
+
+def session_has_access(i: ItemOrBlock, user: User | None = None) -> bool:
+    return has_valid_session(user) or (
+        isinstance(i, Item) and is_allowed_document(i.path)
+    )
