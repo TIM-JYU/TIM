@@ -369,6 +369,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         }
     }
 
+    /**
+     * Returns true if the event is full otherwise false
+     */
     eventIsFull() {
         return this.data.meta!.enrollments >= this.data.meta!.maxSize;
     }
@@ -380,10 +383,16 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         );
     }
 
+    /**
+     * Returns true if there are any bookings on the handled event otherwise false
+     */
     eventHasBookings() {
         return this.data.meta!.enrollments > 0;
     }
 
+    /**
+     * Returns true if a user has booked the handled event otherwise false
+     */
     userHasBooked() {
         this.userBooked = false;
         const bookers = this.data.meta!.booker_groups;
