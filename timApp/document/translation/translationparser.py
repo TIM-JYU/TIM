@@ -486,6 +486,9 @@ class TranslationParser:
                 # TODO Marking these as Translate is DeepL-specific. Refactor into
                 #  translator's preprocessing or inject the translator into parsing
                 #  with a filtering-list for example.
+                # These can be changed to NoTranslate but the quality of the text will suffer. The only benefits are
+                # that the extreme edge cases of multiple styles nested inside each other will hold the specific
+                # styles, but it will require manual translation regardless because the quality is awful.
                 arr.append(Translate("<i>"))
                 for inline in content:
                     arr += self.inline_collect(inline)
@@ -502,6 +505,9 @@ class TranslationParser:
                 # TODO Marking these as Translate is DeepL-specific. Refactor into
                 #  translator's preprocessing or inject the translator into parsing
                 #  with a filtering-list for example.
+                # These could be changed to NoTranslate but the quality of the text will suffer. Benefits are
+                # that the extreme edge cases of multiple styles nested inside each other will hold the specific
+                # styles, but it will require manual translation regardless because the quality is awful.
                 arr.append(Translate("<b>"))
                 for inline in content:
                     arr += self.inline_collect(inline)
