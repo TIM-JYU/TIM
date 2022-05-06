@@ -69,7 +69,7 @@ class Language(db.Model):
         :param name: Natural name of the language
         :return: A corresponding Language-object newly created.
         :raises LookupError: if the language is not found from langcodes'
-        database.
+         database.
         """
         lang = langcodes.find(name)
         return Language(
@@ -85,7 +85,7 @@ class Language(db.Model):
 
         :param code: The IETF tag for the language.
         :return: The corresponding Language-object in database or None if not
-        found.
+         found.
         """
         # TODO Instead of the code -parameter being str-type, could
         #  langcodes.Language type be more convenient to caller?

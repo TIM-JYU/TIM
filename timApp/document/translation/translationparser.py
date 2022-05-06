@@ -608,7 +608,7 @@ class TranslationParser:
         :param type_: Pandoc AST-type of the content.
         :param content: Pandoc AST-content of the type.
         :return: List of single NoTranslate -element containing Markdown
-        representation of content.
+         representation of content.
         """
         # The conversion requires the pandoc-api-version which is extracted here a
         # bit hacky...
