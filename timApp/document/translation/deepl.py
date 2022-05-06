@@ -103,7 +103,7 @@ class DeeplTranslationService(RegisteredTranslationService):
         Perform an authorized POST-request to the DeepL-API.
 
         :param url_slug: The last part of URL-path for the API function without
-        the starting '/' slash.
+         the starting '/' slash.
         :param data: Data to be transmitted along the request.
         :return: The JSON-response returned by the API.
         """
@@ -205,14 +205,14 @@ class DeeplTranslationService(RegisteredTranslationService):
         value should be "x".
 
         :param session: Object to use in constructing the single DeepL API
-        translate-call.
+         translate-call.
         :param text: Text to translate that can contain XML.
         :param source_lang: Language of the text.
         :param target_lang: Language to translate the text into.
         :param split_sentences: Is text split before translation.
         :param preserve_formatting: Is formatting preserved during translation.
         :param tag_handling: Are tags intelligently handled. XML and HTML are
-        currently supported.
+         currently supported.
         :param non_splitting_tags: Tags that never split sentences.
         :param splitting_tags: Tags that always split sentences.
         :param ignore_tags: Tags to ignore when translating.
@@ -251,7 +251,7 @@ class DeeplTranslationService(RegisteredTranslationService):
 
         :param is_source: Flag to query for supported source-languages.
         :return: Languages supported in translations by type (source or
-        target).
+         target).
         """
         return self._post(
             "languages", data={"type": "source" if is_source else "target"}
@@ -277,7 +277,7 @@ class DeeplTranslationService(RegisteredTranslationService):
 
         :param text: The text returned from DeepL API after translation.
         :return: Text with the needed operations performed to more closely
-        match the text before passing it to DeepL API.
+         match the text before passing it to DeepL API.
         """
         return (
             replace_md_aliases(text)
@@ -297,11 +297,11 @@ class DeeplTranslationService(RegisteredTranslationService):
 
         :param texts: Some set of texts to be translated.
         :param source_lang: Language of input text. None value makes DeepL
-        guess it from the text.
+         guess it from the text.
         :param target_lang: Language for target language.
         :param tag_handling: See comment in superclass.
         :return: List of strings in target language with the non-translatable
-        parts intact.
+         parts intact.
         """
         source_lang_code = source_lang.lang_code if source_lang else None
 
@@ -420,7 +420,7 @@ class DeeplTranslationService(RegisteredTranslationService):
         returned language codes to Languages found in the database.
 
         :return: Dictionary of source langs to lists of target langs, that are
-        supported by the API and also found in database.
+         supported by the API and also found in database.
         """
 
         def get_lang(deepl_lang: dict) -> Language | None:

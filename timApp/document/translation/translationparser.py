@@ -135,7 +135,7 @@ class TranslationParser:
         :param md: The input text to eventually translate.
         :return: Lists containing the translatable parts of each block in a list.
         """
-        # Parse the string into an ast
+        # Parse the string into the abstract syntax tree (AST).
         ast = json.loads(pypandoc.convert_text(md, format="md", to="json"))
         # By walking the ast, glue continuous translatable parts together into
         # Translate-object and non-translatable parts into NoTranslate object.
@@ -227,7 +227,7 @@ class TranslationParser:
         classes = content[1]
         kv_pairs = content[2]
 
-        # Handle the special styles in TIM, that allows user to opt out from
+        # Handle the special styles in TIM, that allow user to opt out from
         # translating some text.
         is_notranslate = (
             NOTRANSLATE_STYLE_LONG in classes or NOTRANSLATE_STYLE_SHORT in classes
@@ -237,6 +237,8 @@ class TranslationParser:
         if not (identifier or classes or kv_pairs):
             return [], is_notranslate
 
+        # Collect the needed pieces of Markdown syntax marked to not be
+        # translated.
         arr.append(NoTranslate("{"))
         # TODO Are spaces needed between the attributes?
         if identifier:
@@ -251,6 +253,17 @@ class TranslationParser:
         return arr, is_notranslate
 
     def quoted_collect(self, content: dict) -> list[TranslateApproval]:
+        """
+        Collect and separate translatable and untranslatable areas within
+        quatation marks.
+        Quatation element is delimited by quatation marks.
+
+        Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
+
+        :param content: The types of quatation marks used and the text (list
+         of inlines) from Inline element: [ QuoteType, [Inline] ].
+        :return: List containing the parsed collection of Quoted content.
+        """
         if not isinstance(content[0]["t"], str) or not isinstance(content[1], list):
             raise Exception("PanDoc format is of wrong type")
 
@@ -768,6 +781,7 @@ class TranslationParser:
             #  Maybe if there is just 1 class (for example "cs" in "```cs\nvar
             #  x;\n```") then do NOT put it inside braces (like "{.cs}")
             arr += attrs
+
             # TODO To handle the case, where content of a code block contains
             #  codeblock syntax, parse until no codeblocks are found. Ie.
             # ````                  ==> ```` # Level 0 code block

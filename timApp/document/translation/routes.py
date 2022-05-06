@@ -78,9 +78,9 @@ def translate_full_document(
     :param src_doc: The original source document with translatable text.
     :param target_language: The language to translate the document into.
     :param translator_code: Identifier of the translator to use (machine or "Manual"
-    if empty).
+     if empty).
     :return: None. The translation is applied to document based on the
-    tr-parameter.
+     tr-parameter.
     """
 
     processor = TranslateProcessor(
@@ -109,7 +109,7 @@ def translate_full_document(
     translated_texts = processor.translate(
         # Wrap the paragraphs to TranslationTarget objects that
         # translator accepts.
-        # TODO Remove this TranslationTarget -pattern as useless, because
+        # TODO This TranslationTarget -pattern is kinda useless, because
         #  explicit typechecking is performed on translate_paragraphs
         #  anyway...
         list(map(TranslationTarget, source_paragraphs))
@@ -138,7 +138,7 @@ def get_languages(source_languages: bool) -> Response:
     Get list of supported languages by machine translator.
 
     :param source_languages: Flag for getting source-language (True) list instead
-    of target-language (False).
+     of target-language (False).
     :return: List of the supported languages by type (source or target).
     """
     req_data = request.get_json()
@@ -177,9 +177,9 @@ def create_translation_route(
 
     :param tr_doc_id: ID of the document that the translation will be.
     :param language: Language that will be set to the translation document and
-    used in potential machine translation.
+     used in potential machine translation.
     :param translator: Identifying name of the translator to use (machine or
-    manual).
+     manual).
     :return: The created translation document's information as JSON.
     """
     # TODO Move doc_title -parameter to the URL as well
@@ -235,7 +235,7 @@ def paragraph_translation_route(
 
     :param tr_doc_id: ID of the document that the paragraph is in.
     :param tr_par_id: ID of the paragraph in the Translation NOTE: NOT the
-    original paragraph!
+     original paragraph!
     :param language: Language to translate into.
     :param transl: Identifying code of the translator to use.
     :return: OK-response if translation and modification was successful.
@@ -560,7 +560,7 @@ def get_my_translators() -> Response:
     Gets the names of the translators the user has the API keys for.
 
     :return: The JSON-list of the names of the translators the user has the
-    API keys for.
+     API keys for.
     """
     verify_logged_in()
 

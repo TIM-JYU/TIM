@@ -4,9 +4,8 @@ different machine translators must implement in order to be integrated into
 TIM's machine translation feature.
 
 Other notable things include a database model for the API-keys of machine
-translator services and a factory to create a partially applied function by
-which the different translators can be used to translate text from one
-language to another.
+translator services and a processor/wrapper by which the different
+translators can be used to translate text from one language to another.
 """
 
 __authors__ = [
@@ -20,7 +19,6 @@ __license__ = "MIT"
 __date__ = "25.4.2022"
 
 from dataclasses import dataclass
-from typing import Callable
 
 import pypandoc
 
@@ -38,14 +36,15 @@ from timApp.document.translation.translationparser import (
 from timApp.util import logger
 from timApp.util.flask.requesthelper import RouteException
 
+
 TranslateBlock = list[TranslateApproval]
-"""Typedef to represent logically connected parts of non- and translatable text
+"""Typedef to represent logically connected parts of non- and translatable text.
 """
 
 
 @dataclass
 class Usage:
-    """Contains information about the usage of a translator service"""
+    """Contains information about the usage of a translator service."""
 
     character_count: int
     character_limit: int
@@ -70,8 +69,8 @@ class LanguagePairing:
 
 
 class TranslationService(db.Model):
-    """Represents the information that must be available from all possible
-    machine translators.
+    """Represents the information and methods that must be available from all
+    possible machine translators.
     """
 
     __tablename__ = "translationservice"
@@ -80,7 +79,8 @@ class TranslationService(db.Model):
     """Translation service identifier."""
 
     service_name = db.Column(db.Text, unique=True, nullable=False)
-    """Human-readable name of the machine translator."""
+    """Human-readable name of the machine translator. Also used as an
+    identifier."""
 
     def translate(
         self,
@@ -97,16 +97,16 @@ class TranslationService(db.Model):
         the same order as found in the input `texts`-parameter originally.
 
         :param texts: The texts marked for translation or not. A convention
-        would be to pass as much of the translatable text as possible in this
-        parameter in order to minimize the amount of separate
-        translation-calls.
+         would be to pass as much of the translatable text as possible in this
+         parameter in order to minimize the amount of separate
+         translation-calls.
         :param source_lang: Language to translate from.
         :param target_lang: Language to translate into.
         :param tag_handling: Tag representing a way to separate or otherwise
-        control translated text with the translation service. A HACKY way to
-        handle special case with translating (html) tables.
+         control translated text with the translation service. A HACKY way to
+         handle special case with translating (html) tables.
         :return: List of strings found inside the items of `texts`-parameter,
-        in the same order and translated.
+         in the same order and translated.
         """
 
         raise NotImplementedError
@@ -116,7 +116,7 @@ class TranslationService(db.Model):
         Get the service's usage status.
 
         :return: The current usage of this TranslationService (for example
-        status of an API-key).
+         status of an API-key).
         """
         raise NotImplementedError
 
@@ -126,7 +126,7 @@ class TranslationService(db.Model):
         service.
 
         :return: The supported mapping of languages to translate to and from
-        with this TranslationService.
+         with this TranslationService.
         """
         raise NotImplementedError
 
@@ -137,7 +137,7 @@ class TranslationService(db.Model):
         :param source_lang: Language to translate from.
         :param target_lang: Language to translate into.
         :return: True, if the service can translate from `source_lang` to
-        `target_lang`.
+         `target_lang`.
         """
         raise NotImplementedError
 
@@ -152,7 +152,7 @@ class TranslationService(db.Model):
         in DeepL-translation.
 
         :param tag_type: Type of the tag. Some services for example support
-        "xml" or "html".
+         "xml" or "html".
         :return: True, if the tag type is supported.
         """
         raise NotImplementedError
@@ -167,7 +167,7 @@ class TranslationService(db.Model):
         raise NotImplementedError
 
     # Polymorphism allows querying multiple objects by their class e.g.
-    # TranslationService.query
+    # `TranslationService.query`.
     __mapper_args__ = {"polymorphic_on": service_name}
 
 
@@ -206,7 +206,7 @@ class TranslationServiceKey(db.Model):
 
         :param user_group: The group that wants to use a key.
         :return: The first matching TranslationServiceKey instance, if one is
-        found.
+         found.
         """
         return TranslationServiceKey.query.get(
             TranslationServiceKey.group_id == user_group
@@ -268,11 +268,12 @@ class TranslateProcessor:
         perform needed initializations on it.
 
         :param translator_code: Name that identifies the
-        TranslationService being used.
+         TranslationService being used.
         :param s_lang: Source language of translatable text.
         :param t_lang: Target language to translate text into.
         :param user_group: Identification of user, that can be allowed to use
-        some TranslationServices (for example DeepL requires an API-key).
+         some TranslationServices (for example DeepL requires an API-key that
+         the user sets to their account).
         """
 
         translator = (
@@ -308,7 +309,7 @@ class TranslateProcessor:
         :return: The translated texts in same order as input.
         """
         # Turn the text into lists of objects that describe whether they
-        # can be translated or not
+        # can be translated or not.
         # TODO The flattening (calling `chain.from_iterable`) could
         #  probably be done in parser
         blocks: list[list[TranslateApproval]] = list(
@@ -316,23 +317,23 @@ class TranslateProcessor:
         )
 
         # Map over blocks, picking the tables out for special translation
-        # and handle the rest normally
+        # and handle the rest normally.
         for block in blocks:
             for i in range(len(block)):
                 elem = block[i]
                 if isinstance(elem, Table):
                     if self.translator.supports_tag_handling("html"):
                         # Special (HACKY) case, where md-tables are
-                        # translated as html (if supported)
+                        # translated as html (if supported).
                         # TODO Actually implement table_collect at
                         #  translationparser.py so that non-html-handling
                         #  translators can be used as well
-                        # Turn the markdown into html
+                        # Turn the markdown into html.
                         table_html: str = pypandoc.convert_text(
                             elem.text, to="html", format="md"
                         )
-                        # Translate as HTML NOTE Requires translator to
-                        # support tag handling in HTML
+                        # Translate as HTML. NOTE Requires translator to
+                        # support tag handling in HTML.
                         # TODO All document's tables could potentially be
                         #  send to translator at once instead of one by
                         #  one as done here.
@@ -342,19 +343,19 @@ class TranslateProcessor:
                             self.target_lang,
                             tag_handling="html",
                         )
-                        # Turn the html back into md
+                        # Turn the html back into md.
                         table_md_tr = pypandoc.convert_text(
                             table_html_tr[0], to="md", format="html"
                         )
                         # Now mark the table as NoTranslate, so it doesn't
                         # get translated when the list is passed on to
-                        # mass-translation
+                        # mass-translation.
                         # TODO Adding this newline is kinda HACKY and not
                         #  thought out.
                         block[i] = NoTranslate("\n" + table_md_tr)
                     else:
                         # The table cannot be translated and is handled as
-                        # is
+                        # is.
                         block[i] = NoTranslate(elem.text)
 
         # Pass object-lists with translatable text to the machine
@@ -367,7 +368,7 @@ class TranslateProcessor:
         )
         # TODO what are the paragraphs separated by? "\n\n"? Seems like
         #  this would need more handling in regard to TIM's block
-        #  separation and id's etc
+        #  separation and id's etc.
         # TODO Do some MD-elements (from parser) not include newline
         #  postfix and should this newline-addition then be placed into
         #  parser-module?
@@ -379,9 +380,9 @@ class TranslateProcessor:
         paragraph.
 
         :param targets: The list of objects whose Markdown-text-value to
-        parse.
+         parse.
         :return: List containing the translated pieces of markdown in same
-        order as input.
+         order as input.
         """
 
         mds = []
@@ -395,9 +396,9 @@ class TranslateProcessor:
                 # identification and deletes them from the translated
                 # result ie. this is a special case!
 
-                # Form the Pandoc-AST representation of a code-block's
-                # Attr and glue the parts returned as is back together
-                # into a string of Markdown
+                # Form the Pandoc abstract syntax tree -representation of a
+                # code-block's Attr and glue the parts returned as is back
+                # together into a string of Markdown.
                 taskid = (
                     target.value.attrs.get("taskId", "") if target.value.attrs else ""
                 )
@@ -427,16 +428,17 @@ class TranslateProcessor:
         except Exception as e:
             raise RouteException("Automatic translation failed: " + str(e))
 
-    def translate(self, paras: list[TranslationTarget]) -> list[str]:
+    def translate(self, pars: list[TranslationTarget]) -> list[str]:
         """
         Translate a list of text-containing items using the
         TranslationService-instance and languages set at initialization.
 
-        :param paras: TIM-paragraphs containing Markdown to translate.
+        :param pars: TIM-paragraphs containing Markdown to translate.
         :return: The translatable text contained in input paragraphs
-        translated according to the outer functions inputs (the languages).
+         translated according to the processor-state (languages and the
+         translator).
         """
-        translated_texts = self._translate_paragraphs(paras)
+        translated_texts = self._translate_paragraphs(pars)
 
         for i, part in enumerate(translated_texts):
             logger.log_debug(
