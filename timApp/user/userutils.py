@@ -172,6 +172,13 @@ def get_or_create_default_right_document(
     return d
 
 
+def is_some_default_right_document(doc: DocInfo) -> bool:
+    for r in default_right_paths.values():
+        if doc.path.endswith(r):
+            return True
+    return False
+
+
 def get_default_right_document(
     folder: Folder,
     object_type: BlockType,

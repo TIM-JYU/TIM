@@ -78,6 +78,7 @@ import {
 } from "tim/plugin/toolbarUtils";
 import {computeHiddenRowsFromFilters} from "tim/plugin/filtering";
 import {createParContext} from "tim/document/structure/create";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import {onClick, OnClickArg} from "../document/eventhandlers";
 import {
     ChangeType,
@@ -4498,12 +4499,19 @@ export class TimTableComponent
         return undefined;
     }
 
-    tryResetChanges(e?: Event): void {
+    async tryResetChanges(e?: Event) {
         if (e) {
             e.preventDefault();
         }
-        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
-            return;
+        if (this.undoConfirmation) {
+            if (
+                !(await showConfirm(
+                    this.undoTitle ?? this.undoConfirmation,
+                    this.undoConfirmation
+                ))
+            ) {
+                return;
+            }
         }
         this.resetChanges();
     }

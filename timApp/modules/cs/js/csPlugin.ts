@@ -726,6 +726,7 @@ const CsMarkupOptional = t.partial({
     cssFiles: t.array(t.string),
     deleteFiles: t.array(t.string),
     jsBrowserConsole: t.boolean,
+    editorOrder: t.array(t.string),
 });
 
 const CsMarkupDefaults = t.type({
@@ -1471,13 +1472,6 @@ export class CsController extends CsBase implements ITimComponent {
         );
     }
 
-    tryResetChanges(): void {
-        if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
-            return;
-        }
-        this.resetChanges();
-    }
-
     resetChanges(): void {
         this.usercode = this.savedvals?.usercode ?? "";
         this.userargs = this.savedvals?.args ?? "";
@@ -2020,7 +2014,7 @@ ${fhtml}
             if (langs) {
                 return langs.split(/[\n;, \/]/);
             } else {
-                return languageTypes.runTypes.sort();
+                return [...languageTypes.runTypes].sort();
             }
         }
     }
@@ -2221,6 +2215,14 @@ ${fhtml}
     }
 
     async ngAfterViewInit() {
+        if (this.markup.editorOrder) {
+            const style = this.element[0].style;
+            for (let i = 0; i < this.markup.editorOrder.length; i++) {
+                const key = this.markup.editorOrder[i];
+                style.setProperty(`--csplugin-${key}`, i.toString());
+            }
+        }
+
         this.preview = this.element.find(".csrunPreview");
         const styleArgs = this.markup["style-args"];
         if (styleArgs) {
@@ -3675,11 +3677,19 @@ ${fhtml}
     selector: "cs-runner",
     template: `
         <!--suppress TypeScriptUnresolvedVariable -->
-        <div [ngClass]="{'csRunDiv': borders}" class="type-{{rtype}}" [ngStyle]="csRunDivStyle">
-            <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-            <h4 *ngIf="header" [innerHTML]="header | purify"></h4>
+        <div [ngClass]="{'csRunDiv': borders}" class="type-{{rtype}} cs-flex" [ngStyle]="csRunDivStyle">
+            <tim-markup-error class="csMarkupError" *ngIf="markupError" [data]="markupError"></tim-markup-error>
+            <h4 class="csHeader" *ngIf="header" [innerHTML]="header | purify"></h4>
+            <div class="csAllSelector" *ngIf="isAll">
+                <div>
+                    {{languageText}}
+                    <select [(ngModel)]="selectedLanguage" required (ngModelChange)="languageChange()">
+                        <option *ngFor="let o of progLanguages" [value]="o">{{o}}</option>
+                    </select>
+                </div>
+            </div>
             <p *ngIf="stem" class="stem" [innerHTML]="stem | purify"></p>
-            <div *ngIf="isTauno">
+            <div class="csTaunoContent" *ngIf="isTauno">
                 <p *ngIf="taunoOn" class="pluginHide"><a (click)="hideTauno()">{{hideText}} Tauno</a></p>
                 <iframe *ngIf="iframesettings"
                         [id]="iframesettings.id"
@@ -3696,7 +3706,7 @@ ${fhtml}
                 <p *ngIf="taunoOn" class="taunoOhje">
                     {{taunoOhjeText}}</p>
             </div>
-            <div *ngIf="isSimcir">
+            <div class="csSimcirContent" *ngIf="isSimcir">
                 <p *ngIf="simcirOn" class="pluginHide"><a (click)="hideSimcir()">{{hideText}} SimCir</a></p>
                 <div class="simcirContainer"><p></p></div>
                 <p *ngIf="!simcirOn" class="pluginShow"><a (click)="showSimcir()">{{showText}} SimCir</a></p>
@@ -3705,7 +3715,7 @@ ${fhtml}
                     | <a (click)="copyToSimcir()">copy to SimCir</a> | <a (click)="hideSimcir()">hide SimCir</a>
                 </p>
             </div>
-            <ng-container *ngIf="upload">
+            <div class="csUploadContent" *ngIf="upload">
                 <file-select-manager class="small"
                                      [dragAndDrop]="dragAndDrop"
                                      [uploadUrl]="uploadUrl"
@@ -3715,17 +3725,12 @@ ${fhtml}
                                      (uploadDone)="onUploadDone($event)">
                 </file-select-manager>
                 <div class="form-inline small">
-            <span *ngFor="let item of uploadedFiles">
-                <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
-            </span>
+                    <span *ngFor="let item of uploadedFiles">
+                        <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
+                    </span>
                 </div>
-            </ng-container>
-            <div *ngIf="isAll" style="float: right;">{{languageText}}
-                <select [(ngModel)]="selectedLanguage" required (ngModelChange)="languageChange()">
-                    <option *ngFor="let o of progLanguages" [value]="o">{{o}}</option>
-                </select>
             </div>
-            <pre *ngIf="viewCode && codeover">{{code}}</pre>
+            <pre class="csViewCodeOver" *ngIf="viewCode && codeover">{{code}}</pre>
             <div class="csRunCode">
                 <pre class="csRunPre" *ngIf="viewCode && !codeunder && !codeover">{{precode}}</pre>
                 <div class="csEditorAreaDiv">
@@ -3766,7 +3771,7 @@ ${fhtml}
                              [(ngModel)]="userargs"
                              [placeholder]="argsplaceholder"></span>
             </div>
-            <cs-count-board *ngIf="count" [options]="count"></cs-count-board>
+            <cs-count-board class="csRunCode" *ngIf="count" [options]="count"></cs-count-board>
             <div #runSnippets class="csRunSnippets" *ngIf="templateButtonsCount && !noeditor">
                 <button [class.math]="item.hasMath" class="btn btn-default" *ngFor="let item of templateButtons;"
                         (click)="addText(item)" title="{{item.expl}}" [innerHTML]="item.text | purify" ></button>
@@ -3790,7 +3795,7 @@ ${fhtml}
                             (click)="fetchExternalFiles()"
                             [innerHTML]="externalFetchText()"></button>
                     <a href="#" *ngIf="undoButton && isUnSaved()" [title]="undoTitle"
-                       (click)="tryResetChanges(); $event.preventDefault()"> &nbsp;{{undoButton}}</a>
+                       (click)="tryResetChanges($event)"> &nbsp;{{undoButton}}</a>
                     &nbsp;&nbsp;
                     <span *ngIf="savedText"
                           class="savedText"
@@ -3856,10 +3861,10 @@ ${fhtml}
 
             </div>
             <div *ngIf="isSage" class="outputSage no-popup-menu"></div>
-            <pre *ngIf="viewCode && codeunder">{{code}}</pre>
+            <pre class="csViewCodeUnder" *ngIf="viewCode && codeunder">{{code}}</pre>
             <p class="unitTestGreen" *ngIf="runTestGreen">&nbsp;ok</p>
             <pre class="unitTestRed" *ngIf="runTestRed">{{comtestError}}</pre>
-            <div class="csRunErrorClass" *ngIf="runError">
+            <div class="csRunErrorClass csRunError" *ngIf="runError">
                 <p class="pull-right" *ngIf="!markup['noclose']">
                     <label class="normalLabel" title="Keep erros until next run">Keep <input type="checkbox"
                                                                                              [(ngModel)]="keepErros"/></label>
@@ -3870,7 +3875,7 @@ ${fhtml}
                     <tim-close-button (click)="closeError()"></tim-close-button>
                 </p>
             </div>
-            <div class="csRunErrorClass" *ngIf="fetchError">
+            <div class="csRunErrorClass csFetchError" *ngIf="fetchError">
                 <p class="pull-right" *ngIf="!markup['noclose']">
                     <tim-close-button (click)="fetchError=undefined"></tim-close-button>
                 </p>
@@ -3906,14 +3911,14 @@ ${fhtml}
                 <div *ngIf="mdHtml" [innerHTML]="mdHtml | purify">
                 </div>
             </div>
-            <tim-graph-viz *ngIf="isViz" [vizcmd]="fullCode" [jsparams]="jsparams"></tim-graph-viz>
-            <tim-variables *ngIf="isVars" [code]="fullCode"
+            <tim-graph-viz class="csGraphViz" *ngIf="isViz" [vizcmd]="fullCode" [jsparams]="jsparams"></tim-graph-viz>
+            <tim-variables class="csVariables" *ngIf="isVars" [code]="fullCode"
                            [jsparams]="jsparams"
                            [height]="height"
             ></tim-variables> <!-- TODO: why direct markup.jsparam does not work -->
             <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt=""/>
-            <video *ngIf="videoURL" [src]="videoURL" type="video/mp4" style="width: 100%;" controls="" autoplay></video>
-            <video *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true" width="300"
+            <video class="csVideo" *ngIf="videoURL" [src]="videoURL" type="video/mp4" style="width: 100%;" controls="" autoplay></video>
+            <video class="csAudio" *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true" width="300"
                    height="40"></video>
             <div *ngIf="docURL" class="docurl">
                 <p class="pull-right">
@@ -3923,6 +3928,7 @@ ${fhtml}
             </div>
             <p class="footer" [innerHTML]="footer | purify"></p>
         </div>`,
+    styleUrls: ["./csPlugin.scss"],
 })
 export class CsRunnerComponent extends CsController {
     constructor(

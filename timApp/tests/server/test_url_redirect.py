@@ -20,36 +20,36 @@ class RedirectTest(TimRouteTest):
             self.get(
                 f"{route}/{personal_folder}/testing space",
                 expect_status=302,
-                expect_content=f"{route}/{testing_space}",
+                expect_content=f"/{route}/{testing_space}",
             )
             self.get(
                 f"{route}/{personal_folder}/testing spAce",
                 expect_status=302,
-                expect_content=f"{route}/{testing_space_cap}",
+                expect_content=f"/{route}/{testing_space_cap}",
             )
             self.get(
                 f"{route}/{personal_folder}/testing späce",
                 expect_status=302,
-                expect_content=f"{route}/{testing_space}?{params}",
+                expect_content=f"/{route}/{testing_space}?{params}",
                 query_string={"a": "b"},
             )
             self.get(
                 f"{route}/{personal_folder}/testing spöce",
                 expect_status=302,
-                expect_content=f"{route}/{testing_spoce}?{params}",
+                expect_content=f"/{route}/{testing_spoce}?{params}",
                 query_string={"a": "b"},
             )
             self.get(
                 f"{route}/{personal_folder}/testing spåce",
                 expect_status=302,
-                expect_content=f"{route}/{testing_space}?{params}",
+                expect_content=f"/{route}/{testing_space}?{params}",
                 query_string={"a": "b"},
             )
             for c in "<>|½!\"#¤%&()=?`´¨~^',;:@£$€{[]}\\":
                 self.get(
                     quote_plus(f"{route}/{personal_folder}/testing{c}remove"),
                     expect_status=302,
-                    expect_content=f"{route}/{testing_remove}?{params}",
+                    expect_content=f"/{route}/{testing_remove}?{params}",
                     query_string={"a": "b"},
                 )
 
@@ -60,14 +60,14 @@ class RedirectTest(TimRouteTest):
     def test_slash_redirect(self):
         self.get("/", expect_status=200)
         self.get("/test", expect_status=404)
-        self.get("/test/", expect_status=302, expect_content="test")
-        self.get("/test//", expect_status=302, expect_content="test")
-        self.get("/test///", expect_status=302, expect_content="test")
-        self.get("/test/////////", expect_status=302, expect_content="test")
-        self.get("/test/?a=b", expect_status=302, expect_content="test?a=b")
-        self.get("/test/x/", expect_status=302, expect_content="test/x")
-        self.get("/test/x/?a=b", expect_status=302, expect_content="test/x?a=b")
-        self.get("/test//x/", expect_status=302, expect_content="test/x")
-        self.get("/test//x///?a=b", expect_status=302, expect_content="test/x?a=b")
+        self.get("/test/", expect_status=302, expect_content="/test")
+        self.get("/test//", expect_status=302, expect_content="/test")
+        self.get("/test///", expect_status=302, expect_content="/test")
+        self.get("/test/////////", expect_status=302, expect_content="/test")
+        self.get("/test/?a=b", expect_status=302, expect_content="/test?a=b")
+        self.get("/test/x/", expect_status=302, expect_content="/test/x")
+        self.get("/test/x/?a=b", expect_status=302, expect_content="/test/x?a=b")
+        self.get("/test//x/", expect_status=302, expect_content="/test/x")
+        self.get("/test//x///?a=b", expect_status=302, expect_content="/test/x?a=b")
         self.get("/view", expect_status=200)
-        self.get("/manage", expect_status=302, expect_content="view")
+        self.get("/manage", expect_status=302, expect_content="/view")

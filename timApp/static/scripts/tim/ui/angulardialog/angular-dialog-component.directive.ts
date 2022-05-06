@@ -16,6 +16,7 @@ import {Pos} from "tim/ui/pos";
 
 export interface IDialogOptions {
     resetSize?: boolean;
+    resetPos?: boolean;
     pos?: Pos;
 }
 
@@ -126,11 +127,6 @@ export abstract class AngularDialogComponent<Params, Result>
                 this.frame.resizable.getSize().set(sizehint);
             }
         }
-        const savedPos = this.getPosStorage().get();
-        if (savedPos) {
-            this.frame.setPos({x: savedPos[0], y: savedPos[1]});
-        }
-
         this.fixPosSizeInbounds(sizehint);
         this.frame.resizable.doResize();
         if (this.dialogOptions?.pos) {
@@ -139,6 +135,11 @@ export abstract class AngularDialogComponent<Params, Result>
                     x: this.dialogOptions.pos.x - this.xOrigin!,
                     y: this.dialogOptions.pos.y,
                 });
+            }
+        } else if (!this.dialogOptions?.resetPos) {
+            const savedPos = this.getPosStorage().get();
+            if (savedPos) {
+                this.frame.setPos({x: savedPos[0], y: savedPos[1]});
             }
         }
         (async () => {
