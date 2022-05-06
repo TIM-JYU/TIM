@@ -93,7 +93,7 @@ NOTRANSLATE_STYLE_SHORT = "nt"
 #  alternating between Yes's and No's
 @dataclass
 class TranslateApproval:
-    """Superclass for text that should or should not be passed to a machine translator"""
+    """Superclass for text that should or should not be passed to a machine translator."""
 
     text: str = ""
 
@@ -127,12 +127,13 @@ class TranslationParser:
     def get_translate_approvals(self, md: str) -> list[TranslateApproval]:
         """
         By parsing the input text, identify parts that should and should not be
-        passed to a machine translator
+        passed to a machine translator.
+
         TODO Does this need to return list of lists, when the function of this is
          to split markdown into parts that can be translated or not?
 
-        :param md: The input text to eventually translate
-        :return: Lists containing the translatable parts of each block in a list
+        :param md: The input text to eventually translate.
+        :return: Lists containing the translatable parts of each block in a list.
         """
         # Parse the string into an ast
         ast = json.loads(pypandoc.convert_text(md, format="md", to="json"))
@@ -159,8 +160,8 @@ class TranslationParser:
         Collect and separate translatable and untranslatable areas within a LaTeX
         element.
 
-        :param content: String which contains LaTeX area
-        :return: List containing the parsed collection of LaTeX content
+        :param content: String which contains LaTeX area.
+        :return: List containing the parsed collection of LaTeX content.
         """
         # Temp content to traverse through and remove parsed sections for loop.
         edit_tex = content
@@ -203,8 +204,8 @@ class TranslationParser:
 
         Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
 
-        :param content: Pandoc-ASTs JSON form of Attr (attributes): [ str, [str], [(str, str)] ]
-        :return: List of non/translatable parts and boolean indicating, whether
+        :param content: Pandoc-ASTs JSON form of Attr (attributes): [ str, [str], [(str, str)] ].
+        :return: List of non/translatable parts and boolean indicating, whether.
          the .notranslate -style was found in the element.
         """
         if (
@@ -275,8 +276,8 @@ class TranslationParser:
 
         Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
 
-        :param content: Citation (list of inlines) from Inline element: [ [Citation], [Inline] ]
-        :return: List containing the parsed collection of Citation content
+        :param content: Citation (list of inlines) from Inline element: [ [Citation], [Inline] ].
+        :return: List containing the parsed collection of Citation content.
         """
         if not isinstance(content[0], list) or not isinstance(content[1], list):
             raise Exception("PanDoc cite content is not [ [Citation], [Inline] ].")
@@ -294,8 +295,8 @@ class TranslationParser:
 
         Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
 
-        :param content: Inline code (literal) from Inline element: [ Attr, Text ]
-        :return: List containing the collection of Inline code content
+        :param content: Inline code (literal) from Inline element: [ Attr, Text ].
+        :return: List containing the collection of Inline code content.
         """
         if not isinstance(content[0], list) or not isinstance(content[1], str):
             raise Exception("PanDoc code content is not [ Attr, Text ].")
@@ -319,8 +320,8 @@ class TranslationParser:
 
         Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
 
-        :param content: TeX math (literal) from Inline: [ MathType, Text ]
-        :return: List containing the parsed collection of math content
+        :param content: TeX math (literal) from Inline: [ MathType, Text ].
+        :return: List containing the parsed collection of math content.
         """
         if not isinstance(content[0]["t"], str) or not isinstance(content[1], str):
             raise Exception("PanDoc math content is not [ MathType, Text ].")
@@ -350,8 +351,8 @@ class TranslationParser:
 
         Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
 
-        :param content: RawInline from Inline: [ Format, Text ]
-        :return: List containing the parsed collection of rawinline content
+        :param content: RawInline from Inline: [ Format, Text ].
+        :return: List containing the parsed collection of rawinline content.
         """
         if not isinstance(content[0], str) or not isinstance(content[1], str):
             raise Exception("PanDoc rawinline content is not [ Format, Text ].")
@@ -368,8 +369,8 @@ class TranslationParser:
 
         Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
 
-        :param content: Attr, alt text (list of inlines), target: [ Attr, [Inline], Target ]
-        :return: List containing the parsed collection of link content
+        :param content: Attr, alt text (list of inlines), target: [ Attr, [Inline], Target ].
+        :return: List containing the parsed collection of link content.
         """
         if (
             not isinstance(content[0], list)
@@ -385,8 +386,8 @@ class TranslationParser:
 
         Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
 
-        :param content: Attr, alt text (list of inlines), target: [ Attr, [Inline], Target ]
-        :return: List containing the parsed collection of image content
+        :param content: Attr, alt text (list of inlines), target: [ Attr, [Inline], Target ].
+        :return: List containing the parsed collection of image content.
         """
         if (
             not isinstance(content[0], list)
@@ -404,9 +405,9 @@ class TranslationParser:
         Universal collector for both link and image collect due to them having the same outline in markdown, except
         for "[" or "![" prepend.
 
-        :param content: Attr, alt text (list of inlines), target: [ Attr, [Inline], Target ]
-        :param islink: True-state if content is link-element (true=link, false=image)
-        :return: List containing the parsed collection of link or image content
+        :param content: Attr, alt text (list of inlines), target: [ Attr, [Inline], Target ].
+        :param islink: True-state if content is link-element (true=link, false=image).
+        :return: List containing the parsed collection of link or image content.
         """
         arr: list[TranslateApproval] = list()
         arr.append(NoTranslate("[" if islink else "!["))
@@ -436,8 +437,8 @@ class TranslationParser:
 
         Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Inline
 
-        :param content: Generic inline container with attributes: [Attr, [Inline] ]
-        :return: List containing the parsed collection of span area
+        :param content: Generic inline container with attributes: [Attr, [Inline] ].
+        :return: List containing the parsed collection of span area.
         """
         # Attr check in self.attr_collect
         if not isinstance(content[1], list):
@@ -584,10 +585,11 @@ class TranslationParser:
         TODO NOTE This function does not seem to produce Markdown consistent with
          TIM's practices, and using this should eventually be replaced with the
          specific *_collect -functions!
-        :param type_: Pandoc AST-type of the content
-        :param content: Pandoc AST-content of the type
+
+        :param type_: Pandoc AST-type of the content.
+        :param content: Pandoc AST-content of the type.
         :return: List of single NoTranslate -element containing Markdown
-        representation of content
+        representation of content.
         """
         # The conversion requires the pandoc-api-version which is extracted here a
         # bit hacky...
@@ -608,13 +610,13 @@ class TranslationParser:
     def collect_tim_plugin(self, attrs: dict, content: str) -> list[TranslateApproval]:
         """
         Special case to collect translatable and non-translatable parts of a
-        TIM-plugin based on its (YAML) contents
+        TIM-plugin based on its (YAML) contents.
 
         :param attrs: Pandoc-AST defined Attr -attributes of the plugin-block for
-        example plugin="csPlugin"
-         TODO Add handling for this if necessary
+            example plugin="csPlugin".
+            TODO Add handling for this if necessary.
         :param content: The raw markdown content of the plugin-defined paragraph.
-        :return: List of the translatable and non-translatable parts
+        :return: List of the translatable and non-translatable parts.
         """
 
         arr: list[TranslateApproval] = list()
@@ -725,6 +727,7 @@ class TranslationParser:
         Pick translatable and non-translatable parts off of a codeblock.
 
         NOTE/WARNING In regard to plugins:
+
         It is critical that the attributes do not include the TIM-identifier eg.
         id="SAs3EK96oQtL" from {plugin="csPlugin" id="SAs3EK96oQtL"}, because
         Pandoc deletes extra identifiers contained in attributes like #btn-tex2
@@ -732,9 +735,10 @@ class TranslationParser:
         Here, the attributes of a plugin-codeblock are DISCARDED and will not be
         included in the result when markdown is reconstructed i.e. caller should
         save the attributes if needed.
+
         :param content: List with the attributes and text-content of the codeblock.
         :return: List marking the Markdown representation of the element into
-        translatable and non-translatable parts.
+                translatable and non-translatable parts.
         """
         # TODO where to typecheck Attr?
         if not isinstance(content[1], str):
@@ -790,8 +794,8 @@ class TranslationParser:
 
         Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
 
-        :param content: Raw block [ Format, Text ]
-        :return: List of single NoTranslate -element containing Markdown representation of rawblock element
+        :param content: The Raw block [ Format, Text ].
+        :return: List of single NoTranslate -element containing Markdown representation of rawblock element.
         """
         return self.notranslate_all("RawBlock", content)
 
@@ -803,8 +807,8 @@ class TranslationParser:
         Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
 
         :param content: Ordered list (attributes and a list of items, each a list of blocks):
-                        [ ListAttributes, [[Block]] ]
-        :param depth: The current depth of the list, used for indentation
+                        [ ListAttributes, [[Block]] ].
+        :param depth: The current depth of the list, used for indentation.
         :return: List of translatable and untranslatable areas within an ordered list element.
         """
         # TODO: how to check the tuple.
@@ -836,8 +840,8 @@ class TranslationParser:
         Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
 
         :param content: Bullet list (attributes and a list of items, each a list of blocks):
-                        [ ListAttributes, [[Block]] ]
-        :param depth: The current depth of the list, used for indentation
+                        [ ListAttributes, [[Block]] ].
+        :param depth: The current depth of the list, used for indentation.
         :return: List of translatable and untranslatable areas within a bullet list element.
         """
         if not isinstance(content, list):
@@ -856,10 +860,10 @@ class TranslationParser:
         num_delims - Period( . ), OneParen( ) ), DefaultDelim ( . ),
                      TwoParens ( (#) )
 
-        :param start_num: The number that starts the list
-        :param num_style: The numbering style
-        :param num_delim: The punctuation for list
-        :returns: The list style that needs to be used
+        :param start_num: The number that starts the list.
+        :param num_style: The numbering style.
+        :param num_delim: The punctuation for list.
+        :returns: The list style that needs to be used.
         """
 
         list_style = ""
@@ -892,9 +896,9 @@ class TranslationParser:
         General method for handling both bullet- and ordered lists.
 
         :param blocks: The [[Block]] found in Pandoc definition for the lists.
-        :param depth: The depth of recursion with lists (can contain lists of lists
-        of lists ...).
-        :param attrs: Information related to the style of the OrderedList items.
+        :param depth: The depth of recursion with lists (can contain lists of lists.
+                of lists ...).
+        :param attrs: The information related to the style of the OrderedList items.
         :return: List containing the translatable parts of the list.
         """
 
@@ -1000,7 +1004,7 @@ class TranslationParser:
         Refer to Pandoc definition for tables:
         https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
 
-        :param content: Table content as dict
+        :param content: Table content as dict.
         :return: List of single NoTranslate -element containing Markdown representation of table.
         """
         # TODO This is handled and translated separately for DeepL but when you include other machine translators
@@ -1013,7 +1017,7 @@ class TranslationParser:
 
         Pandoc: https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
 
-        :param content: Generic block container with attributes: [ Attr [Block] ]
+        :param content: Generic block container with attributes: [ Attr [Block] ].
         :return: List of single NoTranslate -element containing Markdown representation of div element.
         """
         # This is not handled as there are no div cases to replicate in TIM.
@@ -1023,12 +1027,15 @@ class TranslationParser:
         """
         Walks the whole block and appends each translatable and non-translatable
         string-part into a list in order.
+        Adds newlines to the start of each block and end of some specific blocks, for Markdown syntax.
+        These newlines are required due to Pandoc removing the newlines in formatting.
+
         Based on the pandoc AST-spec at:
         https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html#t:Block
 
-        :param top_block: The block to collect strings from
+        :param top_block: The block to collect strings from.
         :param depth: The depth of the recursion if it is needed for example with
-        list-indentation
+                    list-indentation.
         :return: List of strings inside the correct approval-type.
         """
         arr: list[TranslateApproval] = list()
@@ -1153,8 +1160,8 @@ def to_roman_numeral(num: int) -> str:
     Source:
     https://stackoverflow.com/questions/28777219/basic-program-to-convert-integer-to-roman-numerals
 
-    :param num: The list's starting number
-    :returns: The Roman number corresponding the starting number
+    :param num: The list's starting number.
+    :returns: The Roman number corresponding the starting number.
     """
     romans = [
         (1000, "M"),
