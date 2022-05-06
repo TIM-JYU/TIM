@@ -431,14 +431,9 @@ class AssessmentTableModel implements DataModelProvider {
                     {{ okAssessments }} arviointia lähetettiin Sisuun.
                     <span *ngIf="errAssessments != null && errAssessments > 0">{{ errAssessments }} virheellistä arviointia torjuttiin.</span>
                 </p>
-                <p class="red">
-                    Toistaiseksi vastaava arvioija tulee kirjata käsin Sisussa.<br>
-                    Mene kurssin <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/ng-evaluation/mass-edit">
-                    Tietojen massamuokkaus -välilehteen</a> ja aseta kaikille arvioitaville vastaava arvioija.
-                    <br>
-                    <a href="/view/tim/ohjeita/sisun-vastaavan-arvioijan-korjaus" target="_blank">Katso tarvittaessa lisäohjeet täältä</a>
+                <p>
+                    Käy tarkistamassa ja vahvistamassa arvioinnit kurssin <a href="https://sisu.jyu.fi/teacher/role/teacher/teaching/course-unit-realisations/view/{{destCourse}}/ng-evaluation/confirmation">Tarkista ja vahvista</a> -näkymästä.
                 </p>
-                <p class="red"><strong>Digipalvelut tutkii ongelman parhaillaan.</strong></p>
             </ng-container>
         </div>
     `,
