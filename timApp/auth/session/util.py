@@ -1,3 +1,7 @@
+"""
+Helper functions for managing user sessions.
+"""
+
 from flask import has_request_context, session, current_app
 from sqlalchemy import func
 
@@ -22,15 +26,6 @@ def _max_concurrent_sessions() -> int | None:
     return current_app.config["SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER"]
 
 
-def current_session_id() -> str | None:
-    return session.get("session_id")
-
-
-def is_allowed_document(path: str) -> bool:
-    paths = current_app.config.get("SESSION_BLOCK_IGNORE_DOCUMENTS", [])
-    return path in paths
-
-
 def _get_active_session_count(user: User) -> int:
     return (
         db.session.query(func.count(UserSession.session_id))
@@ -39,7 +34,39 @@ def _get_active_session_count(user: User) -> int:
     )
 
 
+def current_session_id() -> str | None:
+    """
+    Get the current session ID of the current user.
+
+    .. note:: The function must be called from within a request context.
+
+    :return: Session ID or None if not logged in or the user is missing session info.
+    """
+    return session.get("session_id")
+
+
+def is_allowed_document(path: str) -> bool:
+    """
+    Check if the given path is allowed to be accessed despite the session block.
+
+    :param path: Path to check.
+    :return: True if the path is allowed, False otherwise.
+    """
+
+    paths = current_app.config.get("SESSION_BLOCK_IGNORE_DOCUMENTS", [])
+    return path in paths
+
+
 def expire_user_session(user: User, session_id: str | None) -> None:
+    """
+    Expire the given session for the given user.
+
+    Users with expired sessions cannot access documents without re-verifying their session.
+
+    :param user: User to expire the session for.
+    :param session_id: Session ID to expire.
+    """
+
     if not _save_sessions() or not session_id:
         return
     sess = UserSession.query.filter_by(user=user, session_id=session_id).first()
@@ -55,6 +82,14 @@ def expire_user_session(user: User, session_id: str | None) -> None:
 
 
 def add_user_session(user: User, session_id: str, origin: str) -> None:
+    """
+    Add a new session for the given user.
+
+    :param user: User to add the session for.
+    :param session_id: Session ID to add.
+    :param origin: Origin of the session.
+                   Origin may contain any information to identify the origin of the session (user agent, endpoint, etc).
+    """
     if not _save_sessions():
         return
 
@@ -83,7 +118,7 @@ class SessionExpired(Exception):
     Raised when current user's session is expired.
     """
 
-    pass
+    ...
 
 
 def has_valid_session(user: User | None = None) -> bool:
@@ -183,6 +218,20 @@ def invalidate_sessions_for(username: str, session_id: str | None = None) -> Non
 def distribute_session_verification(
     action: str, username: str, session_id: str | None, targets: list[str]
 ) -> list[str]:
+    """
+    Distribute a session verification operation to the specified targets.
+
+    .. note:: The function requires right distribution to be enabled.
+              Session verfication is distributed and verified with :ref:`timApp.defaultconfig.DIST_RIGHTS_SEND_SECRET`
+              and :ref:`timApp.defaultconfig.DIST_RIGHTS_RECEIVE_SECRET` configuration options.
+
+    :param action: Action to perform. Usually either "verify" or "invalidate".
+    :param username: Username of the user to verify the session for.
+    :param session_id: If specified, verify the specific session ID.
+    :param targets: List of targets from :ref:`timApp.defaultconfig.DIST_RIGHTS_HOSTS`
+                    to distribute the session verification to.
+    :return: List of errors that occurred during distribution.
+    """
     hosts = set()
     dist_rights_send_secret = get_secret_or_abort("DIST_RIGHTS_SEND_SECRET")
     for target in targets:
@@ -221,6 +270,13 @@ def distribute_session_verification(
 
 
 def session_has_access(i: ItemOrBlock, user: User | None = None) -> bool:
+    """
+    Checks if the user's current session has access to the given item.
+
+    :param i: Item or block to check access for.
+    :param user: User to check access for.
+    :return: True if the user has access and valid session, False otherwise.
+    """
     return has_valid_session(user) or (
         isinstance(i, Item) and is_allowed_document(i.path)
     )

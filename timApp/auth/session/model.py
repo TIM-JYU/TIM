@@ -15,7 +15,8 @@ class UserSession(db.Model):
 
     The session is used to track the user's login status and login history:
 
-    .. note:: At the moment, the model is only used for logging when :attr:`timApp.defaultconfig.LOG_SESSIONS` is set.
+    .. note:: At the moment, the model is only used for logging when
+              :attr:`timApp.defaultconfig.SESSIONS_ENABLE` is set.
     """
 
     __tablename__ = "usersession"

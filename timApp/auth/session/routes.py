@@ -1,6 +1,7 @@
 """
-Routes for managing user sessions
+Routes for managing user sessions.
 """
+
 from _csv import QUOTE_ALL
 from dataclasses import field
 from enum import Enum
@@ -29,6 +30,11 @@ user_sessions = TypedBlueprint("user_sessions", __name__, url_prefix="/user/sess
 
 @user_sessions.get("/current")
 def get_current_session() -> Response:
+    """
+    Get the information about the current session.
+
+    :return: A JSON response with the session ID and validity.
+    """
     verify_logged_in()
     return json_response(
         {"sessionId": current_session_id(), "valid": has_valid_session()}
@@ -36,14 +42,30 @@ def get_current_session() -> Response:
 
 
 class SessionStateFilterOptions(Enum):
+    """
+    Options for filtering the sessions by state.
+    """
+
     ALL = "all"
+    """Allow any session state."""
+
     EXPIRED = "expired"
+    """Only allow expired sessions."""
+
     ACTIVE = "active"
+    """Only allow active sessions."""
 
 
 class ExportFormatOptions(Enum):
+    """
+    Options for session export format.
+    """
+
     CSV = "csv"
+    """Export sessions as CSV."""
+
     JSON = "json"
+    """Export sessions as JSON."""
 
 
 @user_sessions.get("/all")
@@ -61,6 +83,16 @@ def get_all_sessions(
         },
     ),
 ) -> Response:
+    """
+    Get all sessions information.
+
+    .. note:: This endpoint is only accessible to administrators.
+
+    :param state: Session state to filter by.
+    :param user: Username to filter by.
+    :param export_format: Export format to use.
+    :return: User sessions information in the specified format.
+    """
     verify_admin()
     q = UserSession.query
 
@@ -102,6 +134,17 @@ def get_all_sessions(
 
 @user_sessions.get("/<user>/verify")
 def validate_session(user: str, session_id: str | None = None) -> Response:
+    """
+    Validate a session.
+
+    A validated session will be unexpired while all other sessions will be expired.
+
+    .. note:: This endpoint is only accessible to administrators.
+
+    :param user: Username to validate.
+    :param session_id: Session ID to validate. If not specified, the latest session will be validated.
+    :return: OK response.
+    """
     verify_admin()
     verify_session_for(user, session_id)
     db.session.commit()
@@ -110,6 +153,15 @@ def validate_session(user: str, session_id: str | None = None) -> Response:
 
 @user_sessions.get("/<user>/invalidate")
 def invalidate_session(user: str, session_id: str | None = None) -> Response:
+    """
+    Invalidate a session.
+
+    .. note:: This endpoint is only accessible to administrators.
+
+    :param user: Username to invalidate.
+    :param session_id: Session ID to invalidate. If not specified, all sessions will be invalidated.
+    :return: OK response.
+    """
     verify_admin()
     invalidate_sessions_for(user, session_id)
     db.session.commit()
@@ -121,6 +173,18 @@ def invalidate_session(user: str, session_id: str | None = None) -> Response:
 def validate_remote_session(
     username: str, session_id: str | None = None, secret: str | None = None
 ) -> Response:
+    """
+    Validate a session.
+
+    A validated session will be unexpired while all other sessions will be expired.
+
+    :param username: Username to validate.
+    :param session_id: Session ID to validate. If not specified, the latest session will be validated.
+    :param secret: Right distribution secret (:ref:`timApp.defaulconfig.DIST_RIGHTS_RECEIVE_SECRET`).
+                   If not specified, the caller must be an administrator.
+    :return: OK response if session was validated.
+    """
+
     if not secret:
         verify_admin()
     else:
@@ -135,6 +199,18 @@ def validate_remote_session(
 def invalidate_remote_session(
     username: str, session_id: str | None = None, secret: str | None = None
 ) -> Response:
+    """
+    Invalidate a session.
+
+    A validated session will be unexpired while all other sessions will be expired.
+
+    :param username: Username to invalidate.
+    :param session_id: Session ID to invalidate. If not specified, all sessions will be invalidated.
+    :param secret: Right distribution secret (:ref:`timApp.defaulconfig.DIST_RIGHTS_RECEIVE_SECRET`).
+                   If not specified, the caller must be an administrator.
+    :return: OK response if session was invalidated.
+    """
+
     if not secret:
         verify_admin()
     else:
