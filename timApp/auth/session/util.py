@@ -45,7 +45,7 @@ def expire_user_session(user: User, session_id: str | None) -> None:
     sess = UserSession.query.filter_by(user=user, session_id=session_id).first()
     if sess:
         log_info(
-            f"SESSION: {user.name} logged out (has {_get_active_session_count(user) - 1} active sessions left)"
+            f"SESSION: {user.name} logged out (expired={sess.expired}, active={_get_active_session_count(user) - 1})"
         )
         sess.expire()
     else:
@@ -65,16 +65,17 @@ def add_user_session(user: User, session_id: str, origin: str) -> None:
     ):
         expired_at_time = get_current_time()
 
-    db.session.add(
-        UserSession(
-            user=user,
-            session_id=session_id,
-            origin=origin,
-            expired_at=expired_at_time,
-        )
+    us = UserSession(
+        user=user,
+        session_id=session_id,
+        origin=origin,
+        expired_at=expired_at_time,
     )
+    db.session.add(us)
 
-    log_info(f"SESSION: {user.name} ({len(user.active_sessions)} active sessions)")
+    log_info(
+        f"SESSION: {user.name} logged in (expired={us.expired}, active={len(user.active_sessions)})"
+    )
 
 
 class SessionExpired(Exception):
