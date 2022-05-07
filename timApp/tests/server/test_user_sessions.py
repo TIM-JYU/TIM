@@ -7,10 +7,12 @@ from timApp.timdb.sqa import db
 
 class UserSessionsTest(TimRouteTest):
     def forget_session(self):
+        """Forget the current session. Simulates user e.g. closing an incognito window."""
         with self.client.session_transaction() as s:
             s.clear()
 
     def latest_session(self) -> UserSession:
+        """Get latest session of Test User 1."""
         return (
             UserSession.query.filter_by(user_id=self.test_user_1.id)
             .order_by(UserSession.logged_in_at.desc())
@@ -20,6 +22,7 @@ class UserSessionsTest(TimRouteTest):
     def assert_sesion_expired_state(
         self, session_ids: list[str], state: list[bool], msg: str
     ) -> None:
+        """Assert the state of Test User 1's sessions."""
         self.assertEqual(
             [
                 UserSession.query.filter_by(
@@ -35,12 +38,12 @@ class UserSessionsTest(TimRouteTest):
         )
 
     def test_session_basic(self):
+        """Test that sessions are tracked when SESSIONS_ENABLE is True."""
         self.logout()
         with self.temp_config(
             {
                 "SESSIONS_ENABLE": True,
                 "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER": None,
-                "SESSIONS_EXPIRE_ON_LOGOUT": True,
             }
         ):
             UserSession.query.delete()
@@ -66,6 +69,7 @@ class UserSessionsTest(TimRouteTest):
             self.assertEqual(sessions[0].expired, True)
 
     def test_session_access_block(self):
+        """Test that expired sessions cannot access documents."""
         self.login_test2()
         d = self.create_doc()
         self.test_user_1.grant_access(d, AccessType.view)
@@ -76,7 +80,6 @@ class UserSessionsTest(TimRouteTest):
             {
                 "SESSIONS_ENABLE": True,
                 "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER": 1,
-                "SESSIONS_EXPIRE_ON_LOGOUT": True,
             }
         ):
             UserSession.query.delete()
@@ -95,7 +98,6 @@ class UserSessionsTest(TimRouteTest):
             {
                 "SESSIONS_ENABLE": True,
                 "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER": 1,
-                "SESSIONS_EXPIRE_ON_LOGOUT": True,
             }
         ):
             UserSession.query.delete()
@@ -117,7 +119,7 @@ class UserSessionsTest(TimRouteTest):
             self.assertEqual(
                 lsess.expired,
                 True,
-                "Session should be expired after logging out with SESSIONS_EXPIRE_ON_LOGOUT",
+                "Session should be expired after logging out",
             )
             self.get("/user/sessions/current", expect_status=403)
 
@@ -141,8 +143,11 @@ class UserSessionsTest(TimRouteTest):
             )
 
             lsess = self.latest_session()
-            self.assertEqual(lsess.expired, False)
-            # Session is invalid because there are too many concurrent sessions
+            self.assertEqual(
+                lsess.expired,
+                True,
+                "The new session should be automatically expired (max concurrent sessions reached)",
+            )
             self.get(
                 "/user/sessions/current",
                 expect_content={
@@ -177,7 +182,6 @@ class UserSessionsTest(TimRouteTest):
             {
                 "SESSIONS_ENABLE": True,
                 "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER": 1,
-                "SESSIONS_EXPIRE_ON_LOGOUT": True,
                 "DIST_RIGHTS_SEND_SECRET": "yyy",
                 "DIST_RIGHTS_RECEIVE_SECRET": "yyy",
             }
@@ -267,7 +271,6 @@ class UserSessionsTest(TimRouteTest):
             {
                 "SESSIONS_ENABLE": True,
                 "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER": 1,
-                "SESSIONS_EXPIRE_ON_LOGOUT": True,
                 "DIST_RIGHTS_SEND_SECRET": "yyy",
                 "DIST_RIGHTS_RECEIVE_SECRET": "yyy",
             }
@@ -289,8 +292,8 @@ class UserSessionsTest(TimRouteTest):
 
             self.assert_sesion_expired_state(
                 session_ids,
-                [False, False, False],
-                "All sessions should be non-expired",
+                [False, True, True],
+                "Oldest session should be valid, others expired",
             )
 
             self.post(
@@ -324,8 +327,8 @@ class UserSessionsTest(TimRouteTest):
 
             self.assert_sesion_expired_state(
                 session_ids,
-                [False, False, False],
-                "All sessions should be non-expired after failed invalidation",
+                [False, True, True],
+                "Expiration state should not have changed after wrong invalidation attempts",
             )
 
             self.post(
@@ -339,8 +342,20 @@ class UserSessionsTest(TimRouteTest):
 
             self.assert_sesion_expired_state(
                 session_ids,
-                [True, False, False],
-                "First session should be expired after invalidation",
+                [True, True, True],
+                "Oldest session should be invalidated",
+            )
+
+            for session_id in session_ids:
+                sess = UserSession.query.filter_by(session_id=session_id).first()
+                sess.expired_at = None
+
+            db.session.commit()
+
+            self.assert_sesion_expired_state(
+                session_ids,
+                [False, False, False],
+                "All sessions should be valid after manual validation",
             )
 
             self.post(
