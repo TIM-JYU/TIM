@@ -35,7 +35,7 @@ def get_current_session() -> Response:
     )
 
 
-class ExpiredFilterOptions(Enum):
+class SessionStateFilterOptions(Enum):
     ALL = "all"
     EXPIRED = "expired"
     ACTIVE = "active"
@@ -48,13 +48,13 @@ class ExportFormatOptions(Enum):
 
 @user_sessions.get("/all")
 def get_all_sessions(
-    expired: ExpiredFilterOptions = field(
-        default=ExpiredFilterOptions.ALL,
+    state: SessionStateFilterOptions = field(
+        default=SessionStateFilterOptions.ALL,
         metadata={"by_value": True},
     ),
     user: str | None = None,
     export_format: ExportFormatOptions = field(
-        default=ExportFormatOptions.JSON,
+        default=ExportFormatOptions.CSV,
         metadata={
             "by_value": True,
             "data_key": "format",
@@ -64,10 +64,10 @@ def get_all_sessions(
     verify_admin()
     q = UserSession.query
 
-    match expired:
-        case ExpiredFilterOptions.ACTIVE:
+    match state:
+        case SessionStateFilterOptions.ACTIVE:
             q = q.filter(UserSession.expired == False)
-        case ExpiredFilterOptions.EXPIRED:
+        case SessionStateFilterOptions.EXPIRED:
             q = q.filter(UserSession.expired == True)
         case _:
             pass
