@@ -1,0 +1,31 @@
+name: Generate code statistics
+
+on: push
+
+jobs:
+  ts_bundle_stats:
+    name: Bundle stats for TypeScript
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            timApp/node_modules
+            timApp/modules/jsrunner/server/node_modules
+          key: ${{ runner.os }}-ts-stats-npm-${{ hashFiles('**/package-lock.json') }}
+      - name: Install packages
+        run: |
+          npm i --global npm@6
+          cd timApp
+          npm install --unsafe-perm
+          npm install -g webpack-bundle-analyzer
+      - name: Generate bundle statistics
+        run: cd timApp && npm run statshtml
+      - name: Upload stats
+        uses: actions/upload-artifact@v3.0.0
+        with:
+          name: Bundle Report
+          path: timApp/report.html

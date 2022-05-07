@@ -1,0 +1,34 @@
+name: Check formatting
+
+on: push
+
+jobs:
+  ts_format:
+    name: Check TypeScript formatting
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install packages
+        run: |
+          cd timApp
+          rm package-lock.json
+          npm install --unsafe-perm --legacy-peer-deps
+          npm install --no-package-lock --legacy-peer-deps --no-save prettier@2.4.1
+      - name: Check formatting
+        run: cd timApp && npm run checkformat
+
+  py_format:
+    name: Check Python formatting
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install Black
+        run: pip install black==22.3.0
+      - name: Run format
+        run: black --check .

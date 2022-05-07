@@ -1,0 +1,21 @@
+# Dependencies needed for type checking
+# MyPy
+mypy
+mypy-extensions
+
+# Typings for MyPy
+types-bleach
+types-filelock
+types-python-dateutil
+types-pytz
+types-PyYAML
+types-redis
+types-requests
+types-attrs
+
+# Libraries with typings for MyPy
+marshmallow
+bcrypt
+flask
+authlib==1.0.0rc1
+langcodes

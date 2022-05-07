@@ -67,7 +67,7 @@
     "ifvisible.js": "^1.0.6",
     "io-ts": "^2.2.16",
     "katex": "^0.15.1",
-    "mathjax-full": "^3.2.0",
+    "mathjax-full": "3.2.0",
     "mathjs": "^10.0.0",
     "mobile-drag-drop": "^2.3.0-rc.2",
     "moment": "^2.29.1",

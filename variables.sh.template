@@ -32,7 +32,8 @@ export CADDY_EXTRA_CONFIG='
 export STATUS_PAGE_URL=''
 
 # TIM image tag to use. Do not modify; it is computed automatically.
-export TIM_IMAGE_TAG=$(${DIR}/get_latest_date.sh)
+TIM_IMAGE_TAG=$("${DIR}"/hash_container.sh timApp/Dockerfile timApp/requirements*.txt)
+export TIM_IMAGE_TAG
 
 # Maximum number of allowed connections to PostgreSQL.
 export PG_MAX_CONNECTIONS=200
