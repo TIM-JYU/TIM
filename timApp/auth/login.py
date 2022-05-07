@@ -172,7 +172,9 @@ def set_single_user_to_session(user: User) -> None:
     session_hash = h.hexdigest(8)
     session["session_id"] = session_hash
 
-    add_user_session(user, session_hash, request.user_agent.string)
+    add_user_session(
+        user, session_hash, f"[{request.remote_addr}] {request.user_agent.string}"
+    )
 
     session.pop("other_users", None)
 
