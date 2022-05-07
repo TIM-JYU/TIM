@@ -94,10 +94,8 @@ def add_user_session(user: User, session_id: str, origin: str) -> None:
         return
 
     expired_at_time = None
-    if (
-        _max_concurrent_sessions()
-        and _get_active_session_count(user) >= _max_concurrent_sessions()
-    ):
+    max_sessions = _max_concurrent_sessions()
+    if max_sessions and _get_active_session_count(user) >= max_sessions:
         expired_at_time = get_current_time()
 
     us = UserSession(
