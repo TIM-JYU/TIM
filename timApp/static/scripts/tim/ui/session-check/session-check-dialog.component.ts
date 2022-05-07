@@ -18,7 +18,7 @@ interface ISessionStatus {
     valid: boolean;
 }
 
-const QR_CODE_SIZE = 320;
+const QR_CODE_SIZE = 350;
 
 @Component({
     selector: "tim-session-check-dialog",
@@ -83,7 +83,7 @@ export class SessionCheckDialogComponent extends AngularDialogComponent<
             new Map<EncodeHintType, unknown>([
                 [
                     EncodeHintType.ERROR_CORRECTION,
-                    QRCodeDecoderErrorCorrectionLevel.L,
+                    QRCodeDecoderErrorCorrectionLevel.H,
                 ],
                 [EncodeHintType.MARGIN, 0],
             ])
