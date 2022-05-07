@@ -93,13 +93,15 @@ def has_valid_session(user: User | None = None) -> bool:
     A user is considered to have a valid session if:
 
     0. Session tracking is enabled (:ref:`timApp.defaultconfig.SESSIONS_ENABLE`).
-    1. The user has a session that is not expired (doesn't have the logout date set).
+    1. User is an admin.
+    2. The user has a session that is not expired (doesn't have the logout date set).
 
     :param user: User to check for session validity. If None, the current user is used.
     :return: True if the user has a valid session, False otherwise.
     """
 
     from timApp.auth.sessioninfo import get_current_user_id
+    from timApp.auth.accesshelper import verify_admin
 
     user = user if user else get_current_user_object()
 
@@ -109,6 +111,7 @@ def has_valid_session(user: User | None = None) -> bool:
         # Only check session for current user since the session ID is only valid for them
         or get_current_user_id() == get_anon_user_id()
         or get_current_user_id() != user.id
+        or verify_admin(require=False, user=user)
     ):
         return True
 
