@@ -80,7 +80,7 @@ def get_all_sessions(
             return json_response(q.all())
         case ExportFormatOptions.CSV:
             data: list[list[Any]] = [
-                ["user", "session_id", "origin", "logged_in", "logged_out"]
+                ["user", "session_id", "origin", "logged_in_at", "expired_at"]
             ]
             for s in q.all():  # type: UserSession
                 data.append(
@@ -89,7 +89,7 @@ def get_all_sessions(
                         s.session_id,
                         s.origin,
                         s.logged_in_at,
-                        s.logged_out_at,
+                        s.expired_at,
                     ]
                 )
             return csv_response(

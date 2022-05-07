@@ -52,10 +52,11 @@ def expire_user_session(user: User, session_id: str | None) -> None:
 def add_user_session(user: User, session_id: str, origin: str) -> None:
     if not _save_sessions():
         return
+
     user.active_sessions[session_id] = UserSession(
         session_id=session_id,
         origin=origin,
-        logged_out_at=None,
+        expired_at=None,
     )
 
     log_info(f"SESSION: {user.name} ({len(user.active_sessions)} active sessions)")
@@ -157,8 +158,8 @@ def verify_session_for(username: str, session_id: str | None = None) -> None:
     # Only expire active sessions
     q_expire = q_expire.filter(UserSession.expired == False)
 
-    q_expire.update({"logged_out_at": get_current_time()}, synchronize_session=False)
-    q_verify.update({"logged_out_at": None}, synchronize_session=False)
+    q_expire.update({"expired_at": get_current_time()}, synchronize_session=False)
+    q_verify.update({"expired_at": None}, synchronize_session=False)
 
 
 def invalidate_sessions_for(username: str, session_id: str | None = None) -> None:
@@ -174,9 +175,7 @@ def invalidate_sessions_for(username: str, session_id: str | None = None) -> Non
     if session_id:
         q_invalidate = q_invalidate.filter(UserSession.session_id == session_id)
 
-    q_invalidate.update(
-        {"logged_out_at": get_current_time()}, synchronize_session=False
-    )
+    q_invalidate.update({"expired_at": get_current_time()}, synchronize_session=False)
 
 
 def distribute_session_verification(

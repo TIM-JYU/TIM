@@ -35,9 +35,9 @@ class UserSession(db.Model):
     The time when the user logged in and the session was created.
     """
 
-    logged_out_at: datetime | None = db.Column(db.DateTime, nullable=True)
+    expired_at: datetime | None = db.Column(db.DateTime, nullable=True)
     """
-    The time when the user logged out or their session was invalidated.
+    The time when the session was expired.
     """
 
     origin = db.Column(db.Text, nullable=False)
@@ -57,7 +57,7 @@ class UserSession(db.Model):
         """
         # == is needed because this is a hybrid property
         # noinspection PyComparisonWithNone
-        return self.logged_out_at != None  # noqa: E712
+        return self.expired_at != None  # noqa: E712
 
     expired = hybrid_property(_get_expired)
     """Whether the user session is expired."""
@@ -66,4 +66,4 @@ class UserSession(db.Model):
         """
         Expires the current user session.
         """
-        self.logged_out_at = get_current_time()
+        self.expired_at = get_current_time()

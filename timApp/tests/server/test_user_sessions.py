@@ -243,7 +243,7 @@ class UserSessionsTest(TimRouteTest):
 
             # Mark all sessions as not expired to test verification of the latest session
             UserSession.query.filter_by(user_id=self.test_user_1.id).update(
-                {"logged_out_at": None}
+                {"expired_at": None}
             )
             db.session.commit()
 

@@ -21,7 +21,7 @@ def upgrade():
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column("session_id", sa.Text(), nullable=False),
         sa.Column("logged_in_at", sa.DateTime(), nullable=False),
-        sa.Column("logged_out_at", sa.DateTime(), nullable=True),
+        sa.Column("expired_at", sa.DateTime(), nullable=True),
         sa.Column("origin", sa.Text(), nullable=False),
         sa.ForeignKeyConstraint(
             ["user_id"],
