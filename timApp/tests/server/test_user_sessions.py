@@ -39,7 +39,7 @@ class UserSessionsTest(TimRouteTest):
         with self.temp_config(
             {
                 "SESSIONS_ENABLE": True,
-                "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_DOCUMENT": None,
+                "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER": None,
                 "SESSIONS_EXPIRE_ON_LOGOUT": True,
             }
         ):
@@ -75,7 +75,7 @@ class UserSessionsTest(TimRouteTest):
         with self.temp_config(
             {
                 "SESSIONS_ENABLE": True,
-                "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_DOCUMENT": 1,
+                "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER": 1,
                 "SESSIONS_EXPIRE_ON_LOGOUT": True,
             }
         ):
@@ -94,7 +94,7 @@ class UserSessionsTest(TimRouteTest):
         with self.temp_config(
             {
                 "SESSIONS_ENABLE": True,
-                "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_DOCUMENT": 1,
+                "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER": 1,
                 "SESSIONS_EXPIRE_ON_LOGOUT": True,
             }
         ):
@@ -176,7 +176,7 @@ class UserSessionsTest(TimRouteTest):
         with self.temp_config(
             {
                 "SESSIONS_ENABLE": True,
-                "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_DOCUMENT": 1,
+                "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER": 1,
                 "SESSIONS_EXPIRE_ON_LOGOUT": True,
                 "DIST_RIGHTS_SEND_SECRET": "yyy",
                 "DIST_RIGHTS_RECEIVE_SECRET": "yyy",
@@ -266,7 +266,7 @@ class UserSessionsTest(TimRouteTest):
         with self.temp_config(
             {
                 "SESSIONS_ENABLE": True,
-                "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_DOCUMENT": 1,
+                "SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER": 1,
                 "SESSIONS_EXPIRE_ON_LOGOUT": True,
                 "DIST_RIGHTS_SEND_SECRET": "yyy",
                 "DIST_RIGHTS_RECEIVE_SECRET": "yyy",

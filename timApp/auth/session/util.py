@@ -18,12 +18,8 @@ def _save_sessions() -> bool:
     return current_app.config["SESSIONS_ENABLE"]
 
 
-def _expire_on_logout() -> bool:
-    return current_app.config["SESSIONS_EXPIRE_ON_LOGOUT"]
-
-
 def _max_concurrent_sessions() -> int | None:
-    return current_app.config["SESSIONS_MAX_CONCURRENT_SESSIONS_PER_DOCUMENT"]
+    return current_app.config["SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER"]
 
 
 def current_session_id() -> str | None:
@@ -35,12 +31,21 @@ def is_allowed_document(path: str) -> bool:
     return path in paths
 
 
+def _get_active_session_count(user: User) -> int:
+    return (
+        db.session.query(func.count(UserSession.session_id))
+        .filter((UserSession.user == user) & ~UserSession.expired)
+        .scalar()
+    )
+
+
 def expire_user_session(user: User, session_id: str | None) -> None:
-    if not _save_sessions() or not _expire_on_logout() or not session_id:
+    if not _save_sessions() or not session_id:
         return
-    if sess := user.active_sessions.get(session_id):
+    sess = UserSession.query.filter_by(user=user, session_id=session_id).first()
+    if sess:
         log_info(
-            f"SESSION: {user.name} logged out (has {len(user.active_sessions) - 1} active sessions left)"
+            f"SESSION: {user.name} logged out (has {_get_active_session_count(user) - 1} active sessions left)"
         )
         sess.expire()
     else:
@@ -53,10 +58,20 @@ def add_user_session(user: User, session_id: str, origin: str) -> None:
     if not _save_sessions():
         return
 
-    user.active_sessions[session_id] = UserSession(
-        session_id=session_id,
-        origin=origin,
-        expired_at=None,
+    expired_at_time = None
+    if (
+        _max_concurrent_sessions()
+        and _get_active_session_count(user) >= _max_concurrent_sessions()
+    ):
+        expired_at_time = get_current_time()
+
+    db.session.add(
+        UserSession(
+            user=user,
+            session_id=session_id,
+            origin=origin,
+            expired_at=expired_at_time,
+        )
     )
 
     log_info(f"SESSION: {user.name} ({len(user.active_sessions)} active sessions)")
@@ -77,9 +92,7 @@ def has_valid_session(user: User | None = None) -> bool:
     A user is considered to have a valid session if:
 
     0. Session tracking is enabled (:ref:`timApp.defaultconfig.SESSIONS_ENABLE`).
-    1. The user has a session that is not expired (doesn't have the logout date set)
-    2. The number of session that are not expired is less than the maximum number
-       of concurrent sessions (:ref:`timApp.defaultconfig.SESSIONS_MAX_CONCURRENT_SESSIONS_PER_DOCUMENT`).
+    1. The user has a session that is not expired (doesn't have the logout date set).
 
     :param user: User to check for session validity. If None, the current user is used.
     :return: True if the user has a valid session, False otherwise.
@@ -112,22 +125,7 @@ def has_valid_session(user: User | None = None) -> bool:
         .first()
     )
 
-    if not current_session:
-        return False
-
-    active_session_count = (
-        db.session.query(func.count(UserSession.session_id))
-        .filter((UserSession.user == user) & ~UserSession.expired)
-        .scalar()
-    )
-
-    if (
-        _max_concurrent_sessions() is not None
-        and active_session_count > _max_concurrent_sessions()
-    ):
-        return False
-
-    return True
+    return current_session is not None
 
 
 def verify_session_for(username: str, session_id: str | None = None) -> None:

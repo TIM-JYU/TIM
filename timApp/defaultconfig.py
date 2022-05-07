@@ -434,13 +434,7 @@ MACHINE_TRANSLATORS = [
 SESSIONS_ENABLE = False
 """If enabled, session management information will be stored and logged."""
 
-SESSIONS_EXPIRE_ON_LOGOUT = True
-"""
-If enabled, user session info is expired automatically when logging out.
-Otherwise, the session must be explicitly cleared.
-"""
-
-SESSIONS_MAX_CONCURRENT_SESSIONS_PER_DOCUMENT = 1
+SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER = 1
 """
 How many concurrent sessions are allowed for a single user for a protected document.
 If this limit is reached, the user is not given an active session which prevents accessing documents.
