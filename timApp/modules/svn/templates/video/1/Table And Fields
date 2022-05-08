@@ -22,7 +22,7 @@ Tehtävän arvioineet:\
 {% endfor -%}
 \
 #- {defaultplugin="textfield" readonly="view" .fieldCell}
-%% 'XX_Riita=Riita' | gfields('cols: 5') -%%
+%% 'XX_Riita=Riita;XX_vaihto=Vaihto' | gfields('cols: 5') -%%
 \
 #- {area_end="XX_fields"}
 #- {area_end="XX_demo"}
@@ -152,6 +152,7 @@ paramFields:
 {% for i in range(1,arvosteltavia+1) %}
  - XX_Arvioija_%%i%%
 {% endfor %}
+peerReviewField: XX_vaihto
 preprogram: |!!
     const parsed = JSON.parse(this.g);
     gtools.users = {};
