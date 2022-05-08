@@ -338,9 +338,10 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 
         this.startTime = startDateTime[1].split(".")[0];
 
-        const bookOffset = this.data.meta!.signup_before.getTimezoneOffset();
+        const finalBookDate: Date = this.data.meta!.signup_before;
+        const bookOffset = finalBookDate.getTimezoneOffset();
         const bookStopDate = new Date(
-            this.data.meta!.signup_before.getTime() - bookOffset * 60 * 1000
+            finalBookDate.getTime() - bookOffset * 60 * 1000
         );
 
         const bookDateTime = bookStopDate.toISOString().split("T");
@@ -463,6 +464,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         }
     }
 
+    /**
+     * Returns true if the event is full otherwise false
+     */
     eventIsFull() {
         return this.data.meta!.enrollments >= this.data.meta!.maxSize;
     }
@@ -474,6 +478,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         );
     }
 
+    /**
+     * Returns true if there are any bookings on the handled event otherwise false
+     */
     eventHasBookings() {
         return this.data.meta!.enrollments > 0;
     }
@@ -484,6 +491,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         return bookBefore.getTime() > nowDate.getTime();
     }
 
+    /**
+     * Returns true if a user has booked the handled event otherwise false
+     */
     userHasBooked() {
         this.userBooked = false;
         const bookers = this.data.meta!.booker_groups;

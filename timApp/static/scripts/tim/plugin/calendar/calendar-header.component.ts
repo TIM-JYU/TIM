@@ -10,7 +10,7 @@ import {ShowWeekComponent} from "./show-week.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 
 @Component({
-    selector: "mwl-utils-calendar-header",
+    selector: "tim-calendar-header",
     template: `
     <div class="row text-center">
     </div>
@@ -31,7 +31,7 @@ import {CustomDateFormatter} from "./custom-date-formatter.service";
             [(viewDate)]="viewDate"
             (viewDateChange)="viewDateChange.next(viewDate)">
               <ng-container >  <span [hidden]="!(view== CalendarView.Day)" >{{viewDate | calendarDate:'weekViewColumnSubHeader':locale}}</span> </ng-container>
-            <app-show-week [hidden]="!(view == CalendarView.Week)" [(view)]="view" [(viewDate)]="viewDate"></app-show-week>
+            <tim-show-week [hidden]="!(view == CalendarView.Week)" [(view)]="view" [(viewDate)]="viewDate"></tim-show-week>
               <ng-container >  <span  [hidden]="!(view== CalendarView.Month)">{{viewDate | calendarDate :'viewMonth':locale}}</span> </ng-container>
           </button>
           <button

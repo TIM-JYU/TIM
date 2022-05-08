@@ -154,7 +154,7 @@ export type TIMCalendarEvent = CalendarEvent<{
 }>;
 
 @Component({
-    selector: "mwl-calendar-component",
+    selector: "tim-calendar",
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [
         {
@@ -167,8 +167,8 @@ export type TIMCalendarEvent = CalendarEvent<{
         // },
     ],
     template: `
-        <mwl-utils-calendar-header [locale]="locale" [(view)]="view" [(viewDate)]="viewDate">
-        </mwl-utils-calendar-header>
+        <tim-calendar-header [locale]="locale" [(view)]="view" [(viewDate)]="viewDate">
+        </tim-calendar-header>
         <div class="row text-center">
             <div class="col-md-4">
                 <div class="btn-group edit-btn" [hidden]="!userIsManager()">
@@ -265,9 +265,9 @@ export type TIMCalendarEvent = CalendarEvent<{
             >
             </mwl-calendar-day-view>
         </div>
-        <app-timeview-selectors [style.visibility]="view == 'month' ? 'hidden' : 'visible'"
+        <tim-time-view-selector [style.visibility]="view == 'month' ? 'hidden' : 'visible'"
                 (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
-                                (evening)="setEvening($event)"></app-timeview-selectors>
+                                (evening)="setEvening($event)"></tim-time-view-selector>
         <div>
             <button class="btn timButton" (click)="export()">Vie kalenterin tiedot</button>
             <input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL">
@@ -300,7 +300,7 @@ export type TIMCalendarEvent = CalendarEvent<{
                 </button>
             </div>
         </ng-template>
-
+        
     `,
     encapsulation: ViewEncapsulation.None,
     styleUrls: ["calendar.component.scss"],

@@ -3,7 +3,7 @@ import {CalendarView} from "angular-calendar";
 import {getISOWeek} from "date-fns";
 
 @Component({
-    selector: "app-show-week",
+    selector: "tim-show-week",
     template: `
         <ng-container>
         <span> Week: {{getWeekNumberFromDate(viewDate)}} </span>
