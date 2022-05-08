@@ -8,6 +8,7 @@ import {AngularDialogComponent} from "../../ui/angulardialog/angular-dialog-comp
 import {toPromise} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
+import {showConfirm} from "../../ui/showConfirmDialog";
 import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
 
 @Component({
@@ -280,7 +281,10 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         }
         if (
             !eventToDelete.meta.tmpEvent &&
-            confirm("Are you sure you want to delete the event?") // TODO: make more sophisticated confirmation dialog
+            (await showConfirm(
+                "Delete an Event",
+                `Are you sure you want to delete the event "${this.data.title}"?`
+            ))
         ) {
             const result = await toPromise(
                 this.http.delete(`/calendar/events/${eventToDelete.id}`)
@@ -370,7 +374,12 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      */
     async bookEvent() {
         const eventToBook = this.data;
-        if (!confirm(`Book the event "${this.data.title}"?`)) {
+        if (
+            !(await showConfirm(
+                "Book an Event",
+                `Book the event "${this.data.title}"?`
+            ))
+        ) {
             return;
         }
         if (!this.eventCanBeBooked()) {
@@ -420,7 +429,13 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     async cancelBooking() {
         const openEvent = this.data;
         const eventId = this.data.id;
-        if (!eventId || !confirm("Are you sure you want to cancel booking?")) {
+        if (
+            !eventId ||
+            !(await showConfirm(
+                "Cancel booking",
+                `Are you sure you want to cancel booking "${this.data.title}"?`
+            ))
+        ) {
             return;
         } //
         const result = await toPromise(
