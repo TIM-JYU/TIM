@@ -59,8 +59,6 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    placeholder="Not booked"
                                    disabled="true"/>
                         </div>
-                    </div>
-                    <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
                         <label for="bookerEmail" class="col-sm-2 control-label">Booker email</label>
                         <div class="col-sm-9">
                             <input type="text"
