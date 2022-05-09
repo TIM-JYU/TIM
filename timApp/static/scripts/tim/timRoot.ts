@@ -136,6 +136,10 @@ export function getVisibilityVars() {
         hide.messageListCreate = true;
     }
 
+    if (!g.config.passwordResetEnabled) {
+        hide.passwordRecovery = true;
+    }
+
     if (params.get("hide_top_buttons")) {
         hideTopButtonsStuff(hide);
     }
