@@ -197,10 +197,11 @@ def get_events() -> Response:
         event_optional = Event.get_event_by_id(event.event_id)
         if event_optional is not None:
             event_obj = event_optional
-            enrollments = len(event_obj.enrolled_users)
+            enrollment_amount = len(event_obj.enrolled_users)
             booker_groups = event_obj.enrolled_users
             groups = []
             for group in booker_groups:
+                enrollment = Enrollment.get_enrollment_by_ids(event.event_id, group.id)
                 users = []
                 for user in group.users:
                     users.append(
@@ -210,7 +211,13 @@ def get_events() -> Response:
                             "email": user.email,
                         }
                     )
-                groups.append({"name": group.name, "users": users})
+                groups.append(
+                    {
+                        "name": group.name,
+                        "message": enrollment.booker_message,
+                        "users": users,
+                    }
+                )
             event_objs.append(
                 {
                     "id": event_obj.event_id,
@@ -219,7 +226,7 @@ def get_events() -> Response:
                     "end": event_obj.end_time,
                     "meta": {
                         "description": event_obj.message,
-                        "enrollments": enrollments,
+                        "enrollments": enrollment_amount,
                         "maxSize": event_obj.max_size,
                         "location": event_obj.location,
                         "booker_groups": groups,

@@ -135,8 +135,11 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        [disabled]="!isEditEnabled()"
                                         >
                             </div>
+                            </div>
                         </div>
-                        <div class="col-sm-12">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="col-sm-12">
                             <label class="col-sm-12 control-label" for="description">Event description</label>
                             <textarea maxlength="1020"
                              [(ngModel)]="description"
@@ -146,17 +149,16 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                              [disabled]="!isEditEnabled()">
                             </textarea>
                         </div>
-                    </div>
-                    <div class="form-group" [hidden]="isEditEnabled()">
-                        <label for="bookerMessage" class="col-sm-2 control-label">Message (optional)</label>
-                    <div class="col-sm-10">
-                            <textarea 
+                    <div class="col-sm-12">
+                        <label for="bookerMessage" class="col-sm-12 control-label">Message (optional)</label>
+                            <textarea [disabled] = "eventIsFull()"
                                     [(ngModel)]="bookerMessage"
                             (ngModelChange)="setMessage()"
                             name="bookerMessage"
                             class="form-control">
                             </textarea>
                             </div>
+                        </div>
                     </div>
                 </form>
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['bookingEndInvalid']">
@@ -335,6 +337,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (bookerGroups) {
             bookerGroups.forEach((group) => {
                 // TODO: Make a list of all bookers when the event capacity is higher than 1
+                this.bookerMessage = group.message;
                 group.users.forEach((user) => {
                     this.bookerEmail = user.email;
                     this.booker = user.name;
@@ -386,7 +389,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     async bookEvent() {
         const eventToBook = this.data;
         console.log(eventToBook);
-        const message = "koira";
         if (
             !(await showConfirm(
                 "Book an Event",
@@ -398,10 +400,11 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (!this.eventCanBeBooked()) {
             return;
         }
+
         const result = await toPromise(
             this.http.post("/calendar/bookings", {
                 event_id: eventToBook.id,
-                booker_msg: message,
+                booker_msg: this.bookerMessage,
             })
         );
         console.log(result);
@@ -419,7 +422,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 }
                 this.data.meta!.booker_groups.push({
                     name: booker.name,
-                    message: message,
+                    message: this.bookerMessage,
                     users: [
                         {
                             id: Users.getCurrent().id,
@@ -465,6 +468,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.data.meta!.booker_groups.forEach((group) => {
                 if (group.name == Users.getCurrent().name) {
                     group.name = "";
+                    group.message = "";
                     group.users.forEach((user) => {
                         user.id = -1;
                         user.email = "";
