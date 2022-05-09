@@ -13,9 +13,11 @@ from timApp.peerreview.peerreview import PeerReview
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
+from timApp.user import usergroup
 from timApp.user.user import User
-import pytz
 from timApp.user.usergroup import UserGroup
+
+import pytz
 
 
 class PeerReviewException(Exception):
@@ -33,9 +35,20 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
     points = get_points_by_rule(None, task_ids, None)
 
     users = []
-    for user in points:
-        users.append(user["user"])
 
+    if usergroup is not None:
+        ug = UserGroup.get_by_name(usergroup)
+        if not ug:
+            raise PeerReviewException(f"User group {usergroup} not found")
+        userfilter = set(user.id for user in ug.users)
+        for user in points:
+            if user["user"].id in userfilter:
+                users.append(user["user"])
+    else:
+        for user in points:
+            users.append(user["user"])
+
+    shuffle(users)
     settings = doc.document.get_settings()
     review_count = settings.peer_review_count()
 
@@ -103,12 +116,13 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
 
 
 def save_review(
-    answer: Answer,
-    task_id: TaskId,
     doc: DocInfo,
     reviewer_id: int,
+    reviewable_id: int,
     start_time: datetime,
     end_time: datetime,
+    answer: Answer | None = None,
+    task_id: TaskId | None = None,
     reviewed: bool = False,
 ) -> PeerReview:
     """Saves a review to the database.
@@ -123,7 +137,6 @@ def save_review(
     :param answer: Answer object for answer id.
     :param task_id: TaskId object to provide task name.
     :param reviewed: Boolean indicating if review has been done.
-
     """
     review = PeerReview(
         answer_id=answer.id if answer else None,
@@ -147,6 +160,10 @@ def get_reviews_for_user(d: DocInfo, user: User) -> list[PeerReview]:
 
 def get_reviews_for_user_query(d: DocInfo, user: User) -> Query:
     return PeerReview.query.filter_by(block_id=d.id, reviewer_id=user.id)
+
+
+def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
+    return PeerReview.query.filter_by(block_id=doc.id, task_name="rc1").all()
 
 
 def get_reviews_to_user(d: DocInfo, user: User) -> list[PeerReview]:

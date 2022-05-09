@@ -1,0 +1,11 @@
+.button-container {
+    text-align: center;
+}
+
+.name {
+    min-width: 15rem;
+}
+
+.reviewers {
+    min-width: 45rem;
+}

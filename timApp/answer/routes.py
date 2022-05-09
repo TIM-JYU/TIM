@@ -87,7 +87,8 @@ from timApp.peerreview.peerreview_utils import (
     has_review_access,
     get_reviews_for_user,
     is_peerreview_enabled,
-    get_reviews_for_document, change_peerreviewers_for_user,
+    get_reviews_for_document,
+    change_peerreviewers_for_user,
 )
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.importdata.importData import MissingUser
@@ -828,7 +829,7 @@ def post_answer_impl(
     if preprocessor:
         preprocessor(answerdata, curr_user, d, plugin)
 
-    #print(json.dumps(answerdata)) # uncomment this to follow what answers are used in browser tests
+    # print(json.dumps(answerdata)) # uncomment this to follow what answers are used in browser tests
 
     answer_call_data = {
         "markup": plugin.values,
@@ -904,9 +905,14 @@ def post_answer_impl(
         add_group = None
         if plugin.type == "importData":
             add_group = plugin.values.get("addUsersToGroup")
-        pr_data = plugin.values.get('peerReviewField', None)
+        pr_data = plugin.values.get("peerReviewField", None)
         saveresult = save_fields(
-            jsonresp, curr_user, d, allow_non_teacher=siw, add_users_to_group=add_group, pr_data=pr_data
+            jsonresp,
+            curr_user,
+            d,
+            allow_non_teacher=siw,
+            add_users_to_group=add_group,
+            pr_data=pr_data,
         )
 
         # TODO: Could report the result to other plugins too.
@@ -1288,9 +1294,8 @@ def preprocess_jsrunner_answer(
     else:
         answerdata["peerreviews"] = get_reviews_for_document(d)
 
-    answerdata["velps"] = get_annotations_with_comments_in_document(
-        curr_user, d, False
-    )
+    answerdata["velps"] = get_annotations_with_comments_in_document(curr_user, d, False)
+
     answerdata.pop(
         "paramComps", None
     )  # This isn't needed by jsrunner server, so don't send it.
@@ -1301,7 +1306,6 @@ def preprocess_jsrunner_answer(
         localoffset = localtz.utcoffset(datetime.now())
         tzd = localoffset.total_seconds() / 3600
         plugin.values["timeZoneDiff"] = tzd
-    #print(answerdata)
     if runnermarkup.program is missing:
         raise PluginException("Attribute 'program' is required.")
 
@@ -1523,7 +1527,7 @@ def save_fields(
     current_doc: DocInfo | None = None,
     allow_non_teacher: bool = False,
     add_users_to_group: str | None = None,
-    pr_data: str | None = None
+    pr_data: str | None = None,
 ) -> FieldSaveResult:
     save_obj = jsonresp.get("savedata")
     ignore_missing = jsonresp.get("ignoreMissing", False)

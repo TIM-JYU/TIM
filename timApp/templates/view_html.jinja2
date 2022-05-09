@@ -1,5 +1,7 @@
 {% extends "item.jinja2" %}
 {% set teacher_mode = route in ("teacher", "answers", "review") %}
+{% set student_mode = route in ("view", "answers", "review") %}
+
 {% block title %}{{ item.title }}{% endblock %}
 
 {% block head %}
@@ -30,11 +32,11 @@
         <tim-time-left end-time="{{ access.accessible_to }}"></tim-time-left>
     {% endif %}
 
-    {% if teacher_mode %}
+    {%  if teacher_mode and not(student_mode) %}
         <div save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed click="true" caption="{{ '{{ $ctrl.users.length }}' }} users with answers">
             <tim-user-list class="draggable-content" on-user-change="$ctrl.changeUser($USER, $UPDATEALL)" users="$ctrl.users"></tim-user-list>
         </div>
-    {% endif %}
+    {%  endif %}
 {% endblock %}
 
 {# NOTE: Keep the below HTML static (i.e. don't put more variables there, other than the "doc_content"). #}
