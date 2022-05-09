@@ -1,8 +1,10 @@
 """"""
+import hashlib
 import json
 from collections import defaultdict, OrderedDict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 from typing import (
     Iterable,
     Any,
@@ -30,8 +32,10 @@ from timApp.timdb.sqa import db
 from timApp.upload.upload import get_pluginupload
 from timApp.user.user import Consent, User
 from timApp.user.usergroup import UserGroup
-from timApp.util.answerutil import task_ids_to_strlist
-from timApp.util.flask.requesthelper import RouteException
+from timApp.util.answerutil import (
+    task_ids_to_strlist,
+    AnswerPeriodOptions,
+)
 from timApp.util.logger import log_warning
 from timApp.velp.annotation_model import Annotation
 
@@ -172,90 +176,158 @@ def save_answer(
     return a
 
 
+class AgeOptions(Enum):
+    MIN = "min"
+    MAX = "max"
+    ALL = "all"
+
+
+class ValidityOptions(Enum):
+    ALL = "all"
+    VALID = "1"
+    INVALID = "0"
+
+
+class NameOptions(Enum):
+    USERNAME = "username"
+    BOTH = "both"
+    ANON = "anonymous"
+    PSEUDO = "pseudonym"
+
+
+class SortOptions(Enum):
+    USERNAME = "username"
+    TASK = "task"
+
+
+class FormatOptions(Enum):
+    JSON = "json"
+    TEXT = "text"
+
+
+class AnswerPrintOptions(Enum):
+    ALL = "all"
+    ANSWERS = "answers"
+    ANSWERS_NO_LINE = "answersnoline"
+    HEADER = "header"
+    KORPPI = "korppi"
+
+
+@dataclass
+class AllAnswersOptions(AnswerPeriodOptions):
+    group: str | None = None
+    age: AgeOptions = field(default=AgeOptions.MAX, metadata={"by_value": True})
+    valid: ValidityOptions = field(
+        default=ValidityOptions.VALID, metadata={"by_value": True}
+    )
+    name: NameOptions = field(default=NameOptions.BOTH, metadata={"by_value": True})
+    sort: SortOptions = field(default=SortOptions.TASK, metadata={"by_value": True})
+    format: FormatOptions = field(
+        default=FormatOptions.TEXT, metadata={"by_value": True}
+    )
+    consent: Consent | None = field(
+        default=None, metadata={"by_value": True, "data_key": "consentOpt"}
+    )
+    print: AnswerPrintOptions = field(
+        default=AnswerPrintOptions.ALL, metadata={"by_value": True}
+    )
+    salt: str | None = None
+    salt_len: int = field(default=32, metadata={"data_key": "saltLen"})
+
+
 def get_all_answers(
     task_ids: list[TaskId],
-    usergroup: int | None,
-    hide_names: bool,
-    age: str,
-    valid: str,
-    printname: bool,
-    sort: str,
-    print_opt: str,
-    period_from: datetime,
-    period_to: datetime,
-    data_format: str,
-    consent: Consent | None,
+    options: AllAnswersOptions,
 ) -> list[str] | list[dict]:
     """Gets all answers to the specified tasks.
 
-    :param data_format: The data format to use, currently supports "text" and "json".
-    :param period_from: The minimum answering time for answers.
-    :param period_to: The maximum answering time for answers.
-    :param sort: Sorting order for answers.
-    :param task_ids: The ids of the tasks.
-    :param usergroup: Group of users to search
-    :param hide_names: Hide names
-    :param age: min, max or all
-    :param valid: 0, 1 or all
-    :param printname: True = put user full name as first in every task
-    :param print_opt: all = header and answers, header=only header, answers=only answers, korppi=korppi form
-
+    :param task_ids: The ids of the tasks to get answers for.
+    :param options: The options for getting and printing the answers.
     """
-    print_header = print_opt == "all" or print_opt == "header"
-    print_answers = (
-        print_opt == "all" or print_opt == "answers" or print_opt == "answersnoline"
+    print_header = options.print in (AnswerPrintOptions.ALL, AnswerPrintOptions.HEADER)
+    print_answers = options.print in (
+        AnswerPrintOptions.ALL,
+        AnswerPrintOptions.ANSWERS,
+        AnswerPrintOptions.ANSWERS_NO_LINE,
     )
 
-    q = get_all_answer_initial_query(period_from, period_to, task_ids, valid)
+    if options.period_from is None or options.period_to is None:
+        raise ValueError("Answer period must be specified.")
+
+    q = get_all_answer_initial_query(
+        options.period_from, options.period_to, task_ids, options.valid
+    )
 
     q = q.options(defaultload(Answer.users).lazyload(User.groups))
 
-    if consent is not None:
-        q = q.filter_by(consent=consent)
+    if options.consent is not None:
+        q = q.filter_by(consent=options.consent)
 
-    if age == "min":
-        minmax = func.min(Answer.id).label("minmax")
-        counts = func.count(Answer.answered_on).label("count")
-    elif age == "all":
-        minmax = Answer.id.label("minmax")
-        counts = Answer.valid.label("count")
-    else:
-        minmax = func.max(Answer.id).label("minmax")
-        counts = func.count(Answer.answered_on).label("count")
+    match options.age:
+        case AgeOptions.MIN:
+            minmax = func.min(Answer.id).label("minmax")
+            counts = func.count(Answer.answered_on).label("count")
+        case AgeOptions.MAX:
+            minmax = func.max(Answer.id).label("minmax")
+            counts = func.count(Answer.answered_on).label("count")
+        case AgeOptions.ALL:
+            minmax = Answer.id.label("minmax")
+            counts = Answer.valid.label("count")
 
     q = q.add_columns(minmax, counts)
-    if age != "all":
+    if options.age != AgeOptions.ALL:
         q = q.group_by(Answer.task_id, User.id)
     q = q.with_entities(minmax, counts)
     sub = q.subquery()
     q = Answer.query.join(sub, Answer.id == sub.c.minmax).join(User, Answer.users)
     q = q.outerjoin(PluginType).options(contains_eager(Answer.plugin_type))
-    if sort == "username":
-        q = q.order_by(User.name, Answer.task_id, Answer.answered_on)
-    else:
-        q = q.order_by(Answer.task_id, User.name, Answer.answered_on)
+    match options.sort:
+        case SortOptions.USERNAME:
+            q = q.order_by(User.name, Answer.task_id, Answer.answered_on)
+        case SortOptions.TASK:
+            q = q.order_by(Answer.task_id, User.name, Answer.answered_on)
     q = q.with_entities(Answer, User, sub.c.count)
     result = []
     result_json = []
 
     lf = "\n"
-    if print_opt == "answersnoline":
+    if options.print == AnswerPrintOptions.ANSWERS_NO_LINE:
         lf = ""
 
     qq: Iterable[tuple[Answer, User, int]] = q
     cnt = 0
     hidden_user_names: dict[str, str] = {}
+
+    hashes = set()
+
+    def hasher(x: int) -> str:
+        nonlocal cnt
+        cnt += 1
+        return str(cnt)
+
+    if options.name == NameOptions.PSEUDO and options.salt is not None:
+
+        def hasher(x: int) -> str:
+            assert options.salt is not None
+            shake = hashlib.shake_256()
+            shake.update(options.salt.encode("utf-8"))
+            shake.update(str(x).encode("utf-8"))
+            hash_result = shake.hexdigest(options.salt_len)
+            if hash_result in hashes:
+                return f"{hash_result}-DUPLICATE"
+            hashes.add(hash_result)
+            return hash_result
+
     for a, u, n in qq:
         points = str(a.points)
         if points == "None":
             points = ""
         name = u.name
         ns = str(int(n))  # n may be a boolean, so convert to int (0/1) first
-        if hide_names:
+        if options.name == NameOptions.ANON or options.name == NameOptions.PSEUDO:
             name = hidden_user_names.get(u.name, None)
             if not name:
-                cnt += 1
-                name = f"user{cnt}"
+                name = f"user_{hasher(u.id)}"
                 hidden_user_names[u.name] = name
         line = json.loads(a.content)
         header = "; ".join(
@@ -294,30 +366,29 @@ def get_all_answers(
                 if "points" in line:  # empty csPlugin answer
                     answ = ""
 
-        if data_format == "text":
-            res = ""
-            if printname and not hide_names:
-                header = str(u.real_name) + "; " + header
-            if print_header:
-                res = header
-            if print_answers:
-                res += lf + answ
-            if print_opt == "korppi":
-                res = name + ";"
-                taskid = a.task_id
-                i = taskid.find(".")
-                if i >= 0:
-                    taskid = taskid[i + 1 :]
-                res += taskid + ";" + answ.replace("\n", "\\n")
+        match options.format:
+            case FormatOptions.TEXT:
+                res = ""
+                if options.name == NameOptions.BOTH:
+                    header = str(u.real_name) + "; " + header
+                if print_header:
+                    res = header
+                if print_answers:
+                    res += lf + answ
+                if options.print == AnswerPrintOptions.KORPPI:
+                    res = name + ";"
+                    taskid = a.task_id
+                    i = taskid.find(".")
+                    if i >= 0:
+                        taskid = taskid[i + 1 :]
+                    res += taskid + ";" + answ.replace("\n", "\\n")
 
-            result.append(res)
-        elif data_format == "json":
-            result_json.append(
-                dict(user=u, answer=a, count=int(n), resolved_content=answ)
-            )
-        else:
-            raise RouteException(f"Unknown data format option: {data_format}")
-    if data_format == "text":
+                result.append(res)
+            case FormatOptions.JSON:
+                result_json.append(
+                    dict(user=u, answer=a, count=int(n), resolved_content=answ)
+                )
+    if options.format == FormatOptions.TEXT:
         return result
     else:
         return result_json
@@ -327,17 +398,18 @@ def get_all_answer_initial_query(
     period_from: datetime,
     period_to: datetime,
     task_ids: list[TaskId],
-    valid: str,
+    valid: ValidityOptions,
 ) -> Query:
     q = Answer.query.filter(
         (period_from <= Answer.answered_on) & (Answer.answered_on < period_to)
     ).filter(Answer.task_id.in_(task_ids_to_strlist(task_ids)))
-    if valid == "all":
-        pass
-    elif valid == "0":
-        q = q.filter_by(valid=False)
-    else:
-        q = q.filter_by(valid=True)
+    match valid:
+        case ValidityOptions.ALL:
+            pass
+        case ValidityOptions.INVALID:
+            q = q.filter_by(valid=False)
+        case ValidityOptions.VALID:
+            q = q.filter_by(valid=True)
     q = q.join(User, Answer.users)
     return q
 

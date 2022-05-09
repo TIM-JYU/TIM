@@ -36,9 +36,10 @@ from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document, find_free_name, DocInfo
 from timApp.document.exceptions import ValidationException
+from timApp.document.translation.translation import Translation
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder, path_includes
-from timApp.item.block import BlockType, Block
+from timApp.item.block import BlockType, Block, copy_default_rights
 from timApp.item.copy_rights import copy_rights
 from timApp.item.item import Item
 from timApp.item.validation import (
@@ -692,7 +693,16 @@ def del_document(doc_id: int) -> Response:
     d = get_doc_or_abort(doc_id)
     verify_ownership(d)
     f = get_trash_folder()
-    move_document(d, f)
+    if d.path.startswith(f.path):
+        return ok_response()
+    if isinstance(d, Translation):
+        deleted_doc = DocEntry.create(
+            f"{f.path}/tl_{d.id}_{d.src_docid}_{d.lang_id}_deleted",
+            title=f"Deleted translation (src_docid: {d.src_docid}, lang_id: {d.lang_id})",
+        )
+        d.docentry = deleted_doc
+    else:
+        move_document(d, f)
     db.session.commit()
     return ok_response()
 
@@ -824,7 +834,7 @@ def copy_folder(
 ) -> list[ValidationException]:
     errors = []
     process_queue: list[tuple[Folder, Folder]] = [(from_folder, to_folder)]
-
+    user_who_copies_group = user_who_copies.get_personal_group()
     while process_queue:
         f_from, f_to = process_queue.pop()
         db.session.flush()
@@ -853,7 +863,10 @@ def copy_folder(
                 copy_active=options.copy_active_rights,
                 copy_expired=options.copy_expired_rights,
             )
-            nd.document.modifier_group_id = user_who_copies.get_personal_group().id
+            copy_default_rights(
+                nd, BlockType.Document, owners_to_skip=[user_who_copies_group]
+            )
+            nd.document.modifier_group_id = user_who_copies_group.id
             try:
                 for tr, new_tr in copy_document_and_enum_translations(
                     d, nd, copy_uploads=True
@@ -864,6 +877,11 @@ def copy_folder(
                         new_owner=user_who_copies,
                         copy_active=options.copy_active_rights,
                         copy_expired=options.copy_expired_rights,
+                    )
+                    copy_default_rights(
+                        new_tr,
+                        BlockType.Document,
+                        owners_to_skip=[user_who_copies_group],
                     )
             except ValidationException as e:
                 errors.append(e)
@@ -889,6 +907,11 @@ def copy_folder(
                     new_owner=user_who_copies,
                     copy_active=options.copy_active_rights,
                     copy_expired=options.copy_expired_rights,
+                )
+                copy_default_rights(
+                    nf,
+                    BlockType.Folder,
+                    owners_to_skip=[user_who_copies_group],
                 )
             process_queue.append((f, nf))
 

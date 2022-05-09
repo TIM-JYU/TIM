@@ -6,6 +6,7 @@ import subprocess
 import time
 from dataclasses import dataclass
 from datetime import datetime
+from io import StringIO
 from pathlib import Path
 from typing import Match
 
@@ -24,6 +25,7 @@ from timApp.item.block import Block
 from timApp.item.routes import get_document_relevance
 from timApp.item.tag import Tag
 from timApp.timdb.dbaccess import get_files_path
+from timApp.timdb.exceptions import InvalidReferenceException
 from timApp.util.flask.requesthelper import (
     get_option,
     use_model,
@@ -31,7 +33,7 @@ from timApp.util.flask.requesthelper import (
     NotExist,
 )
 from timApp.util.flask.responsehelper import json_response
-from timApp.util.logger import log_error
+from timApp.util.logger import log_error, log_warning
 from timApp.util.utils import get_error_message, cache_folder_path
 
 search_routes = Blueprint("search", __name__, url_prefix="/search")
@@ -481,8 +483,22 @@ def add_doc_info_content_line(
             # If par can't be found (deleted), don't add it.
             if not doc_info.document.has_paragraph(par_id):
                 continue
+        # Resolve the markdown in full (including references) for better search
+        doc_par = doc_info.document.get_paragraph(par_id)
+        par_md_buf = StringIO()
+        if doc_par.is_par_reference() or doc_par.is_area_reference():
+            try:
+                ref_pars = doc_par.get_referenced_pars()
+            except InvalidReferenceException:
+                par_md_buf.write(doc_par.md)
+            else:
+                for p in ref_pars:
+                    par_md_buf.write(f"{p.md}\n")
+        else:
+            par_md_buf.write(doc_par.md)
+
+        par_md = par_md_buf.getvalue().replace("\r", " ").replace("\n", " ")
         # Cherry pick attributes, because others are unnecessary for the search.
-        par_md = par_dict["md"].replace("\r", " ").replace("\n", " ")
         par_attrs = par_dict["attrs"]
         par_json_list.append({"id": par_id, "attrs": par_attrs, "md": par_md})
     if add_title:
@@ -542,6 +558,7 @@ def create_search_files(remove_deleted_pars=True):
     temp_title_file_name = (
         SEARCH_CACHE_FOLDER / f"temp_{PROCESSED_TITLE_FILE_PATH.name}"
     )
+    index_log_file_name = SEARCH_CACHE_FOLDER / "index_log.log"
     f: Path = RAW_CONTENT_FILE_PATH.parent
     f.mkdir(exist_ok=True)
 
@@ -565,7 +582,9 @@ def create_search_files(remove_deleted_pars=True):
             "w+", encoding="utf-8"
         ) as temp_content_file, temp_title_file_name.open(
             "w+", encoding="utf-8"
-        ) as temp_title_file:
+        ) as temp_title_file, index_log_file_name.open(
+            "w+", encoding="utf-8"
+        ) as index_log_file:
 
             current_doc, current_pars = -1, []
 
@@ -593,9 +612,9 @@ def create_search_files(remove_deleted_pars=True):
                         current_pars.clear()
                         current_pars.append(par)
                 except Exception as e:
-                    print(
-                        f"'{get_error_message(e)}' while writing search file line '{line}''"
-                    )
+                    err = f"SEARCH_INDEX: '{get_error_message(e)}' while writing search file line '{line}'"
+                    index_log_file.write(f"{err}\n")
+                    print(err)
 
             # Write the last line separately, because loop leaves it unsaved.
             if current_doc and current_pars:
@@ -621,10 +640,10 @@ def create_search_files(remove_deleted_pars=True):
             f"Combined and processed paragraph files created to "
             f"{PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH}",
         )
-    except:
+    except Exception as e:
         return (
             400,
-            f"Creating files to {PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH} failed!",
+            f"Creating files to {PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH} failed: {get_error_message(e)}!",
         )
 
 
@@ -974,7 +993,7 @@ def search():
 
     :return: Document paragraph search results with total result count.
     """
-    # If the file containing all TIM content doesn't exists, give warning immediately.
+    # If the file containing all TIM content doesn't exist, give warning immediately.
     content_search_file_path = PROCESSED_CONTENT_FILE_PATH
     title_search_file_path = PROCESSED_TITLE_FILE_PATH
     (

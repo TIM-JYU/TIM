@@ -1,6 +1,7 @@
 """"""
 from collections import defaultdict
 from datetime import datetime
+from random import shuffle
 from typing import Optional, DefaultDict
 
 from sqlalchemy.orm import joinedload, Query
@@ -14,6 +15,7 @@ from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 import pytz
+from timApp.user.usergroup import UserGroup
 
 
 class PeerReviewException(Exception):
@@ -101,13 +103,13 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
 
 
 def save_review(
-    answer: Answer,
-    task_id: TaskId,
-    doc: DocInfo,
-    reviewer_id: int,
-    start_time: datetime,
-    end_time: datetime,
-    reviewed: bool = False,
+            answer: Answer,
+            task_id: TaskId,
+            doc: DocInfo,
+            reviewer_id: int,
+            start_time: datetime,
+            end_time: datetime,
+            reviewed: bool = False,
 ) -> PeerReview:
     """Saves a review to the database.
 
@@ -115,14 +117,17 @@ def save_review(
     :param task_id: TaskId object to provide task name.
     :param doc: Document containing reviewable answers.
     :param reviewer_id: User ID for the reviewer user.
+    :param reviewable_id: User ID for the review target user.
     :param start_time: Timestamp for starting the review period.
     :param end_time: Timestamp for ending the review period.
+    :param answer: Answer object for answer id.
+    :param task_id: TaskId object to provide task name.
     :param reviewed: Boolean indicating if review has been done.
 
     """
     review = PeerReview(
-        answer_id=answer.id,
-        task_name=task_id.task_name,
+        answer_id=answer.id if answer else None,
+        task_name=task_id.task_name if task_id else None,
         block_id=doc.id,
         reviewer_id=reviewer_id,
         reviewable_id=answer.users_all[0].id,
@@ -144,11 +149,20 @@ def get_reviews_for_user_query(d: DocInfo, user: User) -> Query:
     return PeerReview.query.filter_by(block_id=d.id, reviewer_id=user.id)
 
 
+def get_reviews_to_user(d: DocInfo, user: User) -> list[PeerReview]:
+    q = get_reviews_to_user_query(d, user).options(joinedload(PeerReview.reviewable))
+    return q.all()
+
+
+def get_reviews_to_user_query(d: DocInfo, user: User) -> Query:
+    return PeerReview.query.filter_by(block_id=d.id, reviewable_id=user.id)
+
+
 def has_review_access(
-    doc: DocInfo,
-    reviewer_user: User,
-    task_id: TaskId | None,
-    reviewable_user: User | None,
+        doc: DocInfo,
+        reviewer_user: User,
+        task_id: TaskId | None,
+        reviewable_user: User | None,
 ) -> bool:
     if not is_peerreview_enabled(doc):
         return False
@@ -187,3 +201,37 @@ def is_peerreview_enabled(doc: DocInfo) -> bool:
         return True
     else:
         return False
+
+
+def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
+    return PeerReview.query.filter_by(
+        block_id=doc.id,
+    ).all()
+
+
+def change_peerreviewers_for_user(
+        doc: DocInfo,
+        task: str,
+        reviewable: int,
+        old_reviewers: list[int],
+        new_reviewers: list[int],
+) -> list[PeerReview]:
+
+    for i in range(0, len(old_reviewers)):
+        if reviewable != new_reviewers[i]:
+            updated_user = PeerReview.query.filter_by(
+                block_id=doc.id,
+                reviewer_id=old_reviewers[i],
+                reviewable_id=reviewable,
+                task_name=task
+            ).first()
+            print(updated_user)
+            try:
+                updated_user.reviewer_id = new_reviewers[i]
+                db.session.commit()
+                print("gg")
+            except:
+                print('Error in reviewer update')
+            return updated_user
+        else:
+            print('Same reviewer and reviewable')

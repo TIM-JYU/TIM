@@ -110,6 +110,7 @@ TIM_SAFE_TAGS = [
     "tim-style-preview",
     "tim-message-send",
     "tim-notification-options",
+    "tim-search-button",
 ]
 
 TIM_SAFE_ATTRS_MAP = {
@@ -252,6 +253,9 @@ TIM_SAFE_ATTRS = frozenset(
         "ng-non-bindable",
         # tim-message-send
         "send-global",
+        # tim-search-button
+        "folder",
+        "button-text",
     ]
 )
 

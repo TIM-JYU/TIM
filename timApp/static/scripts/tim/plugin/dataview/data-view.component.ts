@@ -108,6 +108,8 @@ export interface DataModelProvider {
 
     setRowFilter(columnIndex: number, value: string): void;
 
+    getRowFilter(columnIndex: number): string;
+
     handleChangeFilter(): void;
 
     setRowChecked(rowIndex: number, checked: boolean): void;
@@ -1748,7 +1750,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
                 const filterCell = filters.getCell(0, column);
                 const input = filterCell.getElementsByTagName("input")[0];
+                input.value = this.modelProvider.getRowFilter(columnIndex);
                 input.oninput = this.onFilterInput(input, columnIndex);
+                input.onfocus = this.onFilterFocus(input, columnIndex);
+                input.onblur = this.onFilterBlur(input);
+                if (this.lastFocusedIndex === columnIndex) {
+                    input.focus();
+                }
             }
             return colIndices;
         };
@@ -1868,6 +1876,26 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             }
             this.modelProvider.setRowFilter(columnIndex, input.value);
             this.modelProvider.handleChangeFilter();
+        };
+    }
+
+    private lastFocusedIndex?: number;
+
+    private onFilterFocus(input: HTMLInputElement, columnIndex: number) {
+        return () => {
+            if (this.modelProvider.isPreview()) {
+                return;
+            }
+            this.lastFocusedIndex = columnIndex;
+        };
+    }
+
+    private onFilterBlur(input: HTMLInputElement) {
+        return () => {
+            if (this.modelProvider.isPreview()) {
+                return;
+            }
+            this.lastFocusedIndex = undefined;
         };
     }
 

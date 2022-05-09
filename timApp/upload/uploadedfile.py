@@ -241,6 +241,10 @@ WHITELIST_MIMETYPES = {
     "application/vnd.ms-access",
 }
 
+REMAP_MIMETYPES = {
+    "application/csv": "text/csv",
+}
+
 
 def get_mimetype(p):
     mime = magic.Magic(mime=True)
@@ -249,6 +253,8 @@ def get_mimetype(p):
         mt += "+xml"
     if isinstance(mt, bytes):
         mt = mt.decode("utf-8")
+    if remapped := REMAP_MIMETYPES.get(mt):
+        mt = remapped
     if mt not in WHITELIST_MIMETYPES:
         if mt.startswith("text/"):
             mt = "text/plain"
