@@ -51,6 +51,7 @@
             margin-left: 0 !important;
         }
         .container-fluid > section { padding-top: 50px; padding-bottom: 50px; }
+        .message { max-width: 850px; }
         .message-info { margin-bottom: 20px; }
         hr { border: 1px solid #ccc; }
         .message hr { max-width: 100px; margin-left: 0; }
@@ -65,7 +66,9 @@
                            "footer" auto / auto;
         }
          nav { position: initial; }
-         aside { position: initial; }
+         aside { position: initial; max-height: initial; }
+         .divider { page-break-before: auto; }
+         .message { page-break-before: avoid; }
     </style>
 </head>
 <body>
