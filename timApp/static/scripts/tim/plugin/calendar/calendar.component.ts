@@ -137,18 +137,22 @@ registerLocaleData(localeFi);
 //         return "";
 //     }
 // }
-
-export type TIMCalendarEvent = CalendarEvent<{
+export type TIMEventMeta = {
     tmpEvent: boolean;
     deleted?: boolean;
     editEnabled?: boolean;
+    signup_before: Date;
+    location: string;
+    description: string;
     enrollments: number;
     maxSize: number;
     booker_groups: {
         name: string;
         users: {id: number; name: string; email: string | null}[];
     }[];
-}>;
+};
+
+export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
 
 @Component({
     selector: "tim-calendar",
@@ -519,7 +523,10 @@ export class CalendarComponent
             end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
                 tmpEvent: true,
+                signup_before: new Date(segment.date),
+                description: "",
                 enrollments: 0,
+                location: "",
                 maxSize: 1, // TODO: temporary solution
                 booker_groups: [],
             },
@@ -585,13 +592,17 @@ export class CalendarComponent
         event,
         newStart,
         newEnd,
-    }: CalendarEventTimesChangedEvent) {
-        if (newEnd) {
+    }: CalendarEventTimesChangedEvent<TIMEventMeta>) {
+        if (newEnd && event.meta) {
+            event.meta.signup_before = newStart;
             event.start = newStart;
             event.end = newEnd;
-            // this.updateEventTitle(event);
             this.refresh();
             await this.editEvent(event);
+        } else {
+            // TODO: handle undefined event.meta. Shouldn't be possible for the event.meta to be undefined.
+            this.refresh();
+            return;
         }
     }
 
@@ -684,10 +695,13 @@ export class CalendarComponent
                 }
                 // event.actions = this.actions;
                 event.meta = {
+                    description: event.meta!.description,
                     tmpEvent: false,
                     enrollments: event.meta!.enrollments,
                     maxSize: event.meta!.maxSize,
+                    location: event.meta!.location,
                     booker_groups: event.meta!.booker_groups,
+                    signup_before: new Date(event.meta!.signup_before),
                 };
                 event.resizable = {
                     beforeStart: this.editEnabled,
@@ -723,8 +737,11 @@ export class CalendarComponent
             eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
                 return {
                     title: event.title,
+                    location: event.meta!.location,
+                    description: event.meta!.description,
                     start: event.start,
                     end: event.end,
+                    signup_before: new Date(event.meta!.signup_before),
                     event_groups: eventGroups,
                     max_size: 1, // TODO: temporary solution
                 };
@@ -752,8 +769,13 @@ export class CalendarComponent
                                 tmpEvent: false,
                                 editEnabled: this.editEnabled,
                                 enrollments: event.meta!.enrollments,
+                                description: event.meta!.description,
                                 maxSize: event.meta!.maxSize,
+                                location: event.meta!.location,
                                 booker_groups: [],
+                                signup_before: new Date(
+                                    event.meta!.signup_before
+                                ),
                             },
                             // actions: this.actions,
                             resizable: {
@@ -781,11 +803,20 @@ export class CalendarComponent
         if (!event.id) {
             return;
         }
+        const values: {
+            location: string;
+            signup_before: Date;
+            description: string;
+        } = event.meta;
+
         const id = event.id;
         const eventToEdit = {
             title: event.title,
             start: event.start,
+            description: values.description,
+            location: values.location,
             end: event.end,
+            signup_before: values.signup_before,
         };
         const result = await toPromise(
             this.http.put(`/calendar/events/${id}`, {

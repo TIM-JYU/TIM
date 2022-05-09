@@ -27,6 +27,7 @@ class Enrollment(db.Model):
         db.Integer, db.ForeignKey("enrollmenttype.enroll_type_id"), nullable=False
     )
 
+    @staticmethod
     def get_enrollment_by_ids(
         event_id: int, user_group_id: int
     ) -> Optional["Enrollment"]:
@@ -70,6 +71,7 @@ class Event(db.Model):
         lazy="select",
     )
 
+    @staticmethod
     def get_event_by_id(event_id: int) -> Optional["Event"]:
         # cur_user = get_current_user_id()
         return Event.query.filter(Event.event_id == event_id).one_or_none()
