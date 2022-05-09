@@ -25,11 +25,12 @@ from sqlalchemy.exc import IntegrityError
 
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
-    verify_view_access,
     verify_manage_access,
     has_manage_access,
     AccessDenied,
     verify_logged_in,
+    verify_copy_access,
+    verify_edit_access,
 )
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.document import Document
@@ -175,7 +176,8 @@ def create_translation_route(
     Create and add a translation version of a whole document. Make machine
     translation on it if so requested and authorized to.
 
-    :param tr_doc_id: ID of the document that the translation will be.
+    :param tr_doc_id: ID of a document that the translation can be made based
+     on. ID of document, that is or is linked to the original source document.
     :param language: Language that will be set to the translation document and
      used in potential machine translation.
     :param translator: Identifying name of the translator to use (machine or
@@ -187,11 +189,17 @@ def create_translation_route(
 
     doc = get_doc_or_abort(tr_doc_id)
 
-    verify_view_access(doc)
+    # The user making the translation should be able to fully read the
+    # contents of the document the translation is started from, which
+    # copy-access allows.
+    verify_copy_access(doc)
     if not is_valid_language_id(language):
         raise NotExist("Invalid language identifier")
     if doc.has_translation(language):
         raise ItemAlreadyExistsException("Translation for this language already exists")
+    # Manage access to the _actual_ source document is needed because creating
+    # a new translation adds information to the source document (i.e. inserts
+    # the new translation into the list of translations).
     verify_manage_access(doc.src_doc)
 
     src_doc = doc.src_doc.document
@@ -247,9 +255,11 @@ def paragraph_translation_route(
 
     if not isinstance(tr, Translation):
         raise Exception("Document is not Translation-type")
-    # TODO Do these checks follow TIM conventions?
-    verify_view_access(tr)
-    verify_manage_access(src_doc)
+    # Need to be able to edit (this paragraph of) the translation-document.
+    verify_edit_access(tr)
+    # Need to be able to fully read the contents of (the matching paragraph
+    # of) the document being translated from.
+    verify_copy_access(src_doc)
 
     if not is_valid_language_id(language):
         raise NotExist("Invalid language identifier")
@@ -292,10 +302,14 @@ def text_translation_route(tr_doc_id: int, language: str, transl: str) -> Respon
 
     doc = get_doc_or_abort(tr_doc_id)
 
+    # Some of these checks might be overkill in some cases. They are to
+    # prevent use of text-translation without a fitting Translation-document,
+    # because the use-case is translating text highlighted using the
+    # paragraph-editor on a translation-doc.
     if not isinstance(doc, Translation):
         raise Exception("Document is not Translation-type")
-    verify_view_access(doc)
-    verify_manage_access(doc.src_doc)
+    verify_edit_access(doc)
+    verify_copy_access(doc.src_doc)
 
     src_doc = doc.src_doc.document
 
