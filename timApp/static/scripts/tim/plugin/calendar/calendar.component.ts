@@ -736,6 +736,8 @@ export class CalendarComponent
         //     eventGroups.push(this.markup.ryhmat[0].opiskelijat);
         //     eventGroups.push(this.markup.ryhmat[0].ohjaajat);
         // }
+        console.log(this.markup.eventTemplates);
+        console.log(this.markup.filter);
 
         if (eventsToAdd.length > 0) {
             eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {

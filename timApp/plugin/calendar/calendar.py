@@ -109,19 +109,19 @@ def reqs_handle() -> PluginReqs:
     return {"js": ["calendar"], "multihtml": True}
 
 
-@calendar_plugin.get("/")
-def get_todos() -> Response:
-    # user = get_current_user_object()
-    # user.
-    return json_response(
-        {
-            "todos": [
-                "asd",
-                "wer",
-                "rtq",
-            ]
-        }
-    )
+# @calendar_plugin.get("/")
+# def get_todos() -> Response:
+#     # user = get_current_user_object()
+#     # user.
+#     return json_response(
+#         {
+#             "todos": [
+#                 "asd",
+#                 "wer",
+#                 "rtq",
+#             ]
+#         }
+#     )
 
 
 @calendar_plugin.get("/export")
@@ -269,6 +269,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
     :param events: List of events to be persisted
     :return: Persisted events in JSON with updated ids
     """
+
     verify_logged_in()
     # TODO: use get_current_user_object() to access more user information, e.g. user's groups
     cur_user = get_current_user_id()
