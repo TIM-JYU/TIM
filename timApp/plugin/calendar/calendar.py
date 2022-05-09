@@ -327,12 +327,13 @@ def delete_event(event_id: int) -> Response:
 
 
 @calendar_plugin.post("/bookings")
-def book_event(event_id: int) -> Response:
+def book_event(event_id: int, booker_msg: str) -> Response:
     """
     Books the event for current user's personal user group.
     TODO: implement booking for user's other groups
 
     :param event_id: Event id
+    :param booker_msg: Message left by booker of the event
     :return: HTTP 200 if succeeded, 400 if the event is already full
     """
     verify_logged_in()
@@ -351,7 +352,10 @@ def book_event(event_id: int) -> Response:
             group_id = group.id
 
     enrollment = Enrollment(
-        event_id=event_id, booker_message="", usergroup_id=group_id, enroll_type_id=0
+        event_id=event_id,
+        usergroup_id=group_id,
+        enroll_type_id=0,
+        booker_message=booker_msg,
     )  # TODO: add enrollment types
 
     db.session.add(enrollment)

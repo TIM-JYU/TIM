@@ -146,6 +146,7 @@ export type TIMCalendarEvent = CalendarEvent<{
     maxSize: number;
     booker_groups: {
         name: string;
+        message: string;
         users: {id: number; name: string; email: string | null}[];
     }[];
 }>;

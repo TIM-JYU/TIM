@@ -104,10 +104,10 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             </div>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" [hidden]="isEditEnabled()">
                         <label for="bookerMessage" class="col-sm-2 control-label">Message (optional)</label>
                     <div class="col-sm-10">
-                            <textarea [hidden]="!userIsManager() || isEditEnabled()"
+                            <textarea 
                                     [(ngModel)]="bookerMessage"
                             (ngModelChange)="setMessage()"
                             name="bookerMessage"
@@ -302,12 +302,16 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      */
     async bookEvent() {
         const eventToBook = this.data;
+        console.log(eventToBook);
+        const message = "koira";
 
         const result = await toPromise(
             this.http.post("/calendar/bookings", {
                 event_id: eventToBook.id,
+                booker_msg: message,
             })
         );
+        console.log(result);
         if (result.ok) {
             console.log(result.result);
             this.data.meta!.enrollments++;
@@ -322,6 +326,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 }
                 this.data.meta!.booker_groups.push({
                     name: booker.name,
+                    message: message,
                     users: [
                         {
                             id: Users.getCurrent().id,
