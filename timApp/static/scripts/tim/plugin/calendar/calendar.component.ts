@@ -137,8 +137,7 @@ registerLocaleData(localeFi);
 //         return "";
 //     }
 // }
-
-export type TIMCalendarEvent = CalendarEvent<{
+export type TIMEventMeta = {
     tmpEvent: boolean;
     deleted?: boolean;
     editEnabled?: boolean;
@@ -151,7 +150,9 @@ export type TIMCalendarEvent = CalendarEvent<{
         name: string;
         users: {id: number; name: string; email: string | null}[];
     }[];
-}>;
+};
+
+export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
 
 @Component({
     selector: "tim-calendar",
@@ -591,16 +592,11 @@ export class CalendarComponent
         event,
         newStart,
         newEnd,
-    }: CalendarEventTimesChangedEvent) {
+    }: CalendarEventTimesChangedEvent<TIMEventMeta>) {
         if (newEnd) {
-            const values: {
-                signup_before: Date;
-            } = event.meta;
-            values.signup_before = newStart;
-            event.meta = values;
+            event.meta!.signup_before = newStart;
             event.start = newStart;
             event.end = newEnd;
-            // this.updateEventTitle(event);
             this.refresh();
             await this.editEvent(event);
         }
