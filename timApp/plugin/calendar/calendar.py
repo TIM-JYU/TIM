@@ -1,6 +1,6 @@
 import secrets
 import uuid
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from io import StringIO
 
@@ -45,18 +45,41 @@ def initialize_db() -> None:
         db.session.commit()
 
 
-@dataclass
-class CalendarItem:
-    opiskelijat: str
-    ohjaajat: str
+# @dataclass
+# class CalendarItem:
+#     opiskelijat: str
+#     ohjaajat: str
+#
+#     def to_json(self) -> dict:
+#         return asdict(self)
+#
+#
+# @dataclass
+# class CalendarMarkup(GenericMarkupModel):
+#     ryhmat: list[CalendarItem] | None = None
 
-    def to_json(self) -> dict:
-        return asdict(self)
+
+@dataclass
+class FilterOptions:
+    groups: list[str] | None = None
+    tags: list[str] | None = None
+    fromDate: datetime | None = None
+    toDate: datetime | None = None
+
+
+@dataclass
+class EventTemplate:
+    title: str | None = None
+    bookers: list[str] = field(default_factory=list)
+    setters: list[str] = field(default_factory=list)
+    capacity: int = 0
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass
 class CalendarMarkup(GenericMarkupModel):
-    ryhmat: list[CalendarItem] | None = None
+    filter: FilterOptions | None = field(default_factory=FilterOptions)
+    eventTemplates: dict[str, EventTemplate] = field(default_factory=dict)
 
 
 @dataclass

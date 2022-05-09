@@ -70,14 +70,31 @@ function ceilToNearest(
     return Math.ceil(amount / segmentHeight) * minutesInSegment;
 }
 
-const CalendarItem = t.type({
-    opiskelijat: t.string,
-    ohjaajat: t.string,
+// const CalendarItem = t.type({
+//     opiskelijat: t.string,
+//     ohjaajat: t.string,
+// });
+
+const EventTemplate = t.type({
+    title: nullable(t.string),
+    bookers: t.array(t.string),
+    setters: t.array(t.string),
+    tags: t.array(t.string),
+    capacity: t.number,
+});
+
+const FilterOptions = t.type({
+    groups: t.array(t.string),
+    tags: t.array(t.string),
+    fromDate: t.string,
+    toDate: t.string,
 });
 
 const CalendarMarkup = t.intersection([
     t.partial({
-        ryhmat: nullable(t.array(CalendarItem)),
+        // ryhmat: nullable(t.array(CalendarItem)),
+        filter: nullable(FilterOptions),
+        eventTemplates: nullable(t.record(t.string, EventTemplate)),
     }),
     GenericPluginMarkup,
 ]);
@@ -711,13 +728,14 @@ export class CalendarComponent
             this.isTempEvent(event)
         );
 
-        console.log(this.markup.ryhmat);
-        const eventGroups: string[] = [];
-        if (this.markup.ryhmat) {
-            console.log(this.markup.ryhmat[0].opiskelijat);
-            eventGroups.push(this.markup.ryhmat[0].opiskelijat);
-            eventGroups.push(this.markup.ryhmat[0].ohjaajat);
-        }
+        // TODO: korjaa
+        // console.log(this.markup.ryhmat);
+        // const eventGroups: string[] = [];
+        // if (this.markup.ryhmat) {
+        //     console.log(this.markup.ryhmat[0].opiskelijat);
+        //     eventGroups.push(this.markup.ryhmat[0].opiskelijat);
+        //     eventGroups.push(this.markup.ryhmat[0].ohjaajat);
+        // }
 
         if (eventsToAdd.length > 0) {
             eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
@@ -725,7 +743,7 @@ export class CalendarComponent
                     title: event.title,
                     start: event.start,
                     end: event.end,
-                    event_groups: eventGroups,
+                    // event_groups: eventGroups,
                     max_size: 1, // TODO: temporary solution
                 };
             });
