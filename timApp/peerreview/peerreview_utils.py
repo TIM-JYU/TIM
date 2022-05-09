@@ -103,13 +103,13 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
 
 
 def save_review(
-            answer: Answer,
-            task_id: TaskId,
-            doc: DocInfo,
-            reviewer_id: int,
-            start_time: datetime,
-            end_time: datetime,
-            reviewed: bool = False,
+    answer: Answer,
+    task_id: TaskId,
+    doc: DocInfo,
+    reviewer_id: int,
+    start_time: datetime,
+    end_time: datetime,
+    reviewed: bool = False,
 ) -> PeerReview:
     """Saves a review to the database.
 
@@ -159,10 +159,10 @@ def get_reviews_to_user_query(d: DocInfo, user: User) -> Query:
 
 
 def has_review_access(
-        doc: DocInfo,
-        reviewer_user: User,
-        task_id: TaskId | None,
-        reviewable_user: User | None,
+    doc: DocInfo,
+    reviewer_user: User,
+    task_id: TaskId | None,
+    reviewable_user: User | None,
 ) -> bool:
     if not is_peerreview_enabled(doc):
         return False
@@ -210,11 +210,11 @@ def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
 
 
 def change_peerreviewers_for_user(
-        doc: DocInfo,
-        task: str,
-        reviewable: int,
-        old_reviewers: list[int],
-        new_reviewers: list[int],
+    doc: DocInfo,
+    task: str,
+    reviewable: int,
+    old_reviewers: list[int],
+    new_reviewers: list[int],
 ) -> list[PeerReview]:
 
     for i in range(0, len(old_reviewers)):
@@ -223,7 +223,7 @@ def change_peerreviewers_for_user(
                 block_id=doc.id,
                 reviewer_id=old_reviewers[i],
                 reviewable_id=reviewable,
-                task_name=task
+                task_name=task,
             ).first()
             print(updated_user)
             try:
@@ -231,7 +231,7 @@ def change_peerreviewers_for_user(
                 db.session.commit()
                 print("gg")
             except:
-                print('Error in reviewer update')
+                print("Error in reviewer update")
             return updated_user
         else:
-            print('Same reviewer and reviewable')
+            print("Same reviewer and reviewable")
