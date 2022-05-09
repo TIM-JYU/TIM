@@ -5536,6 +5536,22 @@
           <context context-type="linenumber">109</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5441160507208654087" datatype="html">
+        <source>Export archives</source>
+        <target state="translated">Vie arkistot</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
+          <context context-type="linenumber">31</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2357645764289315007" datatype="html">
+        <source>Please wait...</source>
+        <target state="translated">Ole hyvä ja odota...</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
