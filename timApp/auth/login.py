@@ -249,11 +249,15 @@ def do_email_signup_or_password_reset(
         random.choice(string.ascii_uppercase + string.digits) for _ in range(6)
     )
 
-    nu = NewUser.query.get(email)
     password_hash = create_password_hash(password)
-    if nu:
-        nu.pass_ = password_hash
-    else:
+    new_password = True
+    if not is_simple_email_login_enabled():
+        nu = NewUser.query.filter_by(email=email).first()
+        if nu:
+            nu.pass_ = password_hash
+            new_password = False
+
+    if new_password:
         nu = NewUser(email=email, pass_=password_hash)
         db.session.add(nu)
 
@@ -287,16 +291,21 @@ def do_email_signup_or_password_reset(
 
 
 def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
-    nu = NewUser.query.get(email_or_username)
-    if not nu:
-        u = User.get_by_name(email_or_username)
-        if u:
-            nu = NewUser.query.get(u.email)
-    if not (nu and nu.check_password(oldpass)):
+    u = User.get_by_name(email_or_username)
+    if u:
+        name_filter = [u.name, u.email]
+    else:
+        name_filter = [email_or_username]
+    nus = NewUser.query.filter(NewUser.email.in_(name_filter))
+    valid_nu = None
+    for nu in nus:
+        if nu.check_password(oldpass):
+            valid_nu = nu
+    if not valid_nu:
         masked = oldpass[0] + "*****" if oldpass else ""
         log_warning(f'Wrong temp password for "{email_or_username}": "{masked}"')
         raise RouteException("WrongTempPassword")
-    return nu
+    return valid_nu
 
 
 @login_page.post("/emailSignupFinish")
@@ -371,7 +380,9 @@ def email_signup_finish(
         )
         db.session.flush()
 
-    db.session.delete(nu)
+    NewUser.query.filter(NewUser.email.in_((user.name, user.email))).delete(
+        synchronize_session=False
+    )
     db.session.commit()
 
     set_user_to_session(user)
@@ -522,6 +533,10 @@ def simple_login_password(email: str, password: str) -> Response:
 def verify_simple_email_login_enabled() -> None:
     if not current_app.config["SIMPLE_EMAIL_LOGIN"]:
         raise RouteException("Simple email login is not enabled.")
+
+
+def is_simple_email_login_enabled() -> bool:
+    return current_app.config["SIMPLE_EMAIL_LOGIN"]
 
 
 def convert_email_to_lower(email_or_username: str) -> str:

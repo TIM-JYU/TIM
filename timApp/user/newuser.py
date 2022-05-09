@@ -11,7 +11,7 @@ class NewUser(db.Model):
     email = db.Column(db.Text, primary_key=True)
     """Email address."""
 
-    pass_ = db.Column("pass", db.Text, nullable=False)
+    pass_ = db.Column("pass", db.Text, nullable=False, primary_key=True)
     """Password hash for the temporary password."""
 
     created = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())

@@ -59,6 +59,7 @@ interface IConfig {
     gitBranch: string;
     hakaEnabled: boolean;
     emailRegistrationEnabled: boolean;
+    passwordResetEnabled: boolean;
     simpleEmailLogin: boolean;
     hosts?: IHostConfig;
     messageListsEnabled: boolean;
