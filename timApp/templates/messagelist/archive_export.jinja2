@@ -33,6 +33,7 @@
             background-color: var(--background-color);
         }
         body > footer { grid-area: footer; padding: 10px; }
+        footer > em { float: right;}
         aside {
             grid-area: headers;
             overflow: auto;
@@ -42,15 +43,14 @@
             padding: 10px;
         }
         aside ul li {  margin-bottom: 5px; }
-        body > main { padding-top: 0; }
-        body section.container {
+        body > main { padding-top: 0; grid-area: content; overflow-x: auto; }
+        body section.container-fluid {
             --typography-spacing-vertical: 0.8rem;
             padding: var(--block-spacing-vertical) !important;
-            grid-area: content;
             overflow-y: auto;
             margin-left: 0 !important;
         }
-        .container > section { padding-top: 50px; padding-bottom: 50px; }
+        .container-fluid > section { padding-top: 50px; padding-bottom: 50px; }
         .message-info { margin-bottom: 20px; }
         hr { border: 1px solid #ccc; }
         .message hr { max-width: 100px; margin-left: 0; }
@@ -80,14 +80,14 @@
         </ul>
     </aside>
     <main>
-        <section class="container">
+        <section class="container-fluid">
             {% for message in messages %}
                 <section class="message" id="{{ message.anchor }}">
                     <div class="message-info">
                         <div>Subject: <strong class="message-subject">{{ message.title }}</strong></div>
                         <div>Date: <code class="message-sender">{{ message.date }}</code></div>
                         <div>From: <code class="message-sender">{{ message.sender }}</code></div>
-                        <div>To: <code class="message-recipients">{% for r in message.recipients %}{{ r }}{% if not loop.last %}, {% endif %}{% endfor %}</code></div>
+                        <div>To: <code class="message-recipients">{% for r in message.recipients %}{{ r }}{% if not loop.last %}; {% endif %}{% endfor %}</code></div>
                     </div>
                     <hr>
                     <div class="message-body">

@@ -509,6 +509,8 @@ def export_archive(list_name: str) -> Response | str:
     docs = sorted(docs, key=lambda d: d.id, reverse=True)
     messages: list[ArchivedMessage] = []
 
+    anchor_counters = {}
+
     for doc in docs:
         settings = doc.document.get_settings()
         if not settings:
@@ -538,9 +540,16 @@ def export_archive(list_name: str) -> Response | str:
                 return f"<{email}>"
             return f"{name} <{email}>"
 
+        anchor = title_to_id(doc.title)
+        if anchor in anchor_counters:
+            anchor_counters[anchor] += 1
+            anchor += f"-{anchor_counters[anchor]}"
+        else:
+            anchor_counters[anchor] = 0
+
         messages.append(
             ArchivedMessage(
-                anchor=title_to_id(doc.title),
+                anchor=anchor,
                 title=doc.title,
                 date=datetime.strptime(message_date, "%Y-%m-%d %H:%M:%S").strftime(
                     "%Y-%m-%d %H:%M:%S UTC+0"
