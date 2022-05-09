@@ -1,0 +1,2 @@
+This file is used to force the runnig of CI piepeline in gitlab, so that the result shows up in a merge request
+involving the fork/branch.
