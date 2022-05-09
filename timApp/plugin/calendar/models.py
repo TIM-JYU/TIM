@@ -28,6 +28,15 @@ class Enrollment(db.Model):
         db.Integer, db.ForeignKey("enrollmenttype.enroll_type_id"), nullable=False
     )
 
+    @staticmethod
+    def get_enrollment_by_ids(
+        event_id: int, user_group_id: int
+    ) -> Optional["Enrollment"]:
+        """Returns a specific enrollment (or none) that match the user group id and event id"""
+        return Enrollment.query.filter(
+            Enrollment.event_id == event_id, Enrollment.usergroup_id == user_group_id
+        ).one_or_none()
+
 
 class Event(db.Model):
     """Table for event. Contains all information of event"""
@@ -63,6 +72,7 @@ class Event(db.Model):
         lazy="select",
     )
 
+    @staticmethod
     def get_event_by_id(event_id: int) -> Optional["Event"]:
         # cur_user = get_current_user_id()
         return Event.query.filter(Event.event_id == event_id).one_or_none()

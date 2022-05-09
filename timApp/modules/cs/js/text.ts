@@ -26,7 +26,7 @@ import {CsController} from "./csPlugin";
                     (click)="runCode();"
                     [innerHTML]="buttonText() | purify"></button>
             <a href="#" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}"
-                    (click)="tryResetChanges(); $event.preventDefault()">
+                    (click)="tryResetChanges($event)">
                     &nbsp;{{undoButton}}
                     </a>
             <span *ngIf="savedText"

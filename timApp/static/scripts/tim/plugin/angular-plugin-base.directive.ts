@@ -15,6 +15,7 @@ import {
 } from "tim/plugin/util";
 import {DomSanitizer} from "@angular/platform-browser";
 import {JsonValue} from "tim/util/jsonvalue";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import {
     handleAnswerResponse,
     prepareAnswerRequest,
@@ -107,6 +108,24 @@ export abstract class AngularPluginBase<
                 this.taskid
             );
         }
+    }
+
+    async tryResetChanges(e?: Event) {
+        if (e) {
+            e.preventDefault();
+        }
+        if (this.undoConfirmation) {
+            if (
+                !(await showConfirm(
+                    this.undoTitle ?? this.undoConfirmation,
+                    this.undoConfirmation
+                ))
+            ) {
+                return;
+            }
+        }
+
+        this.resetChanges();
     }
 
     protected httpGet<U>(

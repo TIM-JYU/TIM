@@ -35,6 +35,13 @@ margin-top: 5px;
   padding: 6px 5px;
 }
 
+@media (min-width: 768px){
+  .form-horizontal .control-label {
+    text-align: left;
+  }
+}
+
+
 .icsURL{
   margin-left: 5px;
   width: fit-content;

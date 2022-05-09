@@ -455,6 +455,7 @@ services:
    - /tmp
    - /tim_files
    - /cache
+   - /root
   working_dir: /service/timApp
   read_only: true
 volumes:

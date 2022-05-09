@@ -56,7 +56,11 @@ from timApp.user.users import (
     get_rights_holders,
     remove_access,
 )
-from timApp.user.userutils import grant_access, grant_default_access
+from timApp.user.userutils import (
+    grant_access,
+    grant_default_access,
+    is_some_default_right_document,
+)
 from timApp.util.flask.requesthelper import (
     get_option,
     RouteException,
@@ -835,6 +839,55 @@ def copy_folder(
     errors = []
     process_queue: list[tuple[Folder, Folder]] = [(from_folder, to_folder)]
     user_who_copies_group = user_who_copies.get_personal_group()
+    default_right_documents = []
+    folder_opts = FolderCreationOptions(get_templates_rights_from_parent=False)
+
+    def do_copy_doc(doc: DocInfo, folder_to: Folder) -> bool | None:
+        if exclude_re.search(doc.path):
+            return False
+        if not user_who_copies.has_copy_access(doc):
+            raise AccessDenied(f"Missing copy access to document {doc.path}")
+        nd_path = join_location(folder_to.path, doc.short_name)
+        if DocEntry.find_by_path(nd_path):
+            raise AccessDenied(f"Document already exists at path {nd_path}")
+        nd = DocEntry.create(
+            nd_path,
+            title=doc.title,
+            folder_opts=folder_opts,
+        )
+        copy_rights(
+            doc,
+            nd,
+            new_owner=user_who_copies,
+            copy_active=options.copy_active_rights,
+            copy_expired=options.copy_expired_rights,
+        )
+        copy_default_rights(
+            nd, BlockType.Document, owners_to_skip=[user_who_copies_group]
+        )
+        nd.document.modifier_group_id = user_who_copies_group.id
+        try:
+            for tr, new_tr in copy_document_and_enum_translations(
+                doc, nd, copy_uploads=True
+            ):
+                copy_rights(
+                    tr,
+                    new_tr,
+                    new_owner=user_who_copies,
+                    copy_active=options.copy_active_rights,
+                    copy_expired=options.copy_expired_rights,
+                )
+                copy_default_rights(
+                    new_tr,
+                    BlockType.Document,
+                    owners_to_skip=[user_who_copies_group],
+                )
+        except ValidationException as e:
+            errors.append(e)
+            if options.stop_on_errors:
+                return None
+        return True
+
     while process_queue:
         f_from, f_to = process_queue.pop()
         db.session.flush()
@@ -842,50 +895,16 @@ def copy_folder(
             raise AccessDenied(f"Missing edit access to folder {f_to.path}")
         if not user_who_copies.has_copy_access(f_from):
             raise AccessDenied(f"Missing copy access to folder {f_from.path}")
-        folder_opts = FolderCreationOptions(get_templates_rights_from_parent=False)
+
         for d in f_from.get_all_documents(include_subdirs=False):
-            if exclude_re.search(d.path):
+            if is_some_default_right_document(d):
+                default_right_documents.append((d, f_to))
                 continue
-            if not user_who_copies.has_copy_access(d):
-                raise AccessDenied(f"Missing copy access to document {d.path}")
-            nd_path = join_location(f_to.path, d.short_name)
-            if DocEntry.find_by_path(nd_path):
-                raise AccessDenied(f"Document already exists at path {nd_path}")
-            nd = DocEntry.create(
-                nd_path,
-                title=d.title,
-                folder_opts=folder_opts,
-            )
-            copy_rights(
-                d,
-                nd,
-                new_owner=user_who_copies,
-                copy_active=options.copy_active_rights,
-                copy_expired=options.copy_expired_rights,
-            )
-            copy_default_rights(
-                nd, BlockType.Document, owners_to_skip=[user_who_copies_group]
-            )
-            nd.document.modifier_group_id = user_who_copies_group.id
-            try:
-                for tr, new_tr in copy_document_and_enum_translations(
-                    d, nd, copy_uploads=True
-                ):
-                    copy_rights(
-                        tr,
-                        new_tr,
-                        new_owner=user_who_copies,
-                        copy_active=options.copy_active_rights,
-                        copy_expired=options.copy_expired_rights,
-                    )
-                    copy_default_rights(
-                        new_tr,
-                        BlockType.Document,
-                        owners_to_skip=[user_who_copies_group],
-                    )
-            except ValidationException as e:
-                errors.append(e)
-                if options.stop_on_errors:
+
+            match do_copy_doc(d, f_to):
+                case False:
+                    continue
+                case None:
                     return errors
 
         for f in f_from.get_all_folders():
@@ -914,5 +933,15 @@ def copy_folder(
                     owners_to_skip=[user_who_copies_group],
                 )
             process_queue.append((f, nf))
+
+    # Copy default permissions last to ensure they are not re-applied during copying, which
+    # can cause DB persistence errors
+    for d, f_to in default_right_documents:
+        db.session.flush()
+        match do_copy_doc(d, f_to):
+            case False:
+                continue
+            case None:
+                return errors
 
     return errors

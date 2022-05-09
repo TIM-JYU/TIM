@@ -1,3 +1,5 @@
+from time import sleep
+
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 
@@ -72,9 +74,11 @@ fixedobjects:
         db.session.commit()
         self.goto_document(d)
         canvas = self.find_element_avoid_staleness("imagex-runner canvas")
+        sleep(2)
         # legacy format loads correctly
         self.assert_same_screenshot(canvas, ["imagex/canvas_legacy_init"])
         ActionChains(self.drv).drag_and_drop_by_offset(canvas, 50, 100).perform()
+        sleep(2)
         # drawing does not mess with dragTask objects
         self.assert_same_screenshot(canvas, ["imagex/canvas_draw"])
         save = self.drv.find_elements(By.CSS_SELECTOR, "imagex-runner button")[0]
@@ -82,6 +86,7 @@ fixedobjects:
         self.wait_until_present_and_vis("imagex-runner pre")
         self.refresh()
         canvas = self.find_element_avoid_staleness("imagex-runner canvas")
+        sleep(2)
         # new format loads correctly
         self.assert_same_screenshot(canvas, ["imagex/canvas_modern_init"])
         ans = self.get_task_answers(f"{d.id}.Plugin1", self.test_user_1)
