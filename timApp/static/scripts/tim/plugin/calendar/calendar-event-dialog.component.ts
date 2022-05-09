@@ -139,7 +139,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             </div>
                         </div>
                         <div class="col-sm-12">
-                            <label for="description">Event description</label>
+                            <label class="col-sm-12 control-label" for="description">Event description</label>
                             <textarea maxlength="1020"
                              [(ngModel)]="description"
                              (ngModelChange)="setMessage()"
