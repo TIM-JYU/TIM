@@ -509,7 +509,7 @@ def export_archive(list_name: str) -> Response | str:
     docs = sorted(docs, key=lambda d: d.id, reverse=True)
     messages: list[ArchivedMessage] = []
 
-    anchor_counters = {}
+    anchor_counters: dict[str, int] = {}
 
     for doc in docs:
         settings = doc.document.get_settings()
