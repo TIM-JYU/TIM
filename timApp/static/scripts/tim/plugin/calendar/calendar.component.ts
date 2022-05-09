@@ -593,12 +593,16 @@ export class CalendarComponent
         newStart,
         newEnd,
     }: CalendarEventTimesChangedEvent<TIMEventMeta>) {
-        if (newEnd) {
-            event.meta!.signup_before = newStart;
+        if (newEnd && event.meta) {
+            event.meta.signup_before = newStart;
             event.start = newStart;
             event.end = newEnd;
             this.refresh();
             await this.editEvent(event);
+        } else {
+            // TODO: handle undefined event.meta. Shouldn't be possible for the event.meta to be undefined.
+            this.refresh();
+            return;
         }
     }
 
