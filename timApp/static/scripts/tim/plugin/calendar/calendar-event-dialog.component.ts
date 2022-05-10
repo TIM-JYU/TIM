@@ -149,7 +149,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                              [disabled]="!isEditEnabled()">
                             </textarea>
                         </div>
-                    <div class="col-sm-12">
+                    <div class="col-sm-12" [hidden] ="hideBookerMessage()">
                         <label for="bookerMessage" class="col-sm-12 control-label">Message (optional)</label>
                             <textarea [disabled] = "eventIsFull()"
                                     [(ngModel)]="bookerMessage"
@@ -508,6 +508,17 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         const nowDate = new Date();
         const bookBefore = new Date(this.data.meta!.signup_before);
         return bookBefore.getTime() > nowDate.getTime();
+    }
+
+    hideBookerMessage() {
+        if (this.userIsManager()) {
+            return false;
+        } else if (this.userHasBooked()) {
+            return false;
+        } else if (this.eventIsFull()) {
+            return true;
+        }
+        return true;
     }
 
     /**
