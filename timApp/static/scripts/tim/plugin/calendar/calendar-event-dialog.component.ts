@@ -504,13 +504,25 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         return this.data.meta!.enrollments > 0;
     }
 
+    /**
+     *
+     * Compares the current time to the time set by the maker of an event as the end time/date for booking.
+     * Returns true if the current time allows the booking of the event.
+     */
     eventCanBeBooked() {
         const nowDate = new Date();
         const bookBefore = new Date(this.data.meta!.signup_before);
         return bookBefore.getTime() > nowDate.getTime();
     }
 
+    /**
+     * Returns true if the booker message -field should not be shown to the user
+     */
     hideBookerMessage() {
+        if (this.data.meta!.maxSize != 1) {
+            return true;
+            // TODO: Only supports use of booker message in events for one attendee
+        }
         if (this.userIsManager()) {
             return false;
         } else if (this.userHasBooked()) {
