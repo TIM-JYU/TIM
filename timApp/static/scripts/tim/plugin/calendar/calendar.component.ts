@@ -271,8 +271,9 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                 (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
                                 (evening)="setEvening($event)"></tim-time-view-selector>
         <div>
-            <button class="btn timButton" (click)="export()">Vie kalenterin tiedot</button>
-            <input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL">
+            <button class="btn timButton" (click)="export()">Export calendar</button>
+            <!--input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL"-->
+            <span class="exportDone">{{exportDone}}</span>
         </div>
         <ng-template #modalContent let-close="close">
             <div class="modal-header">
@@ -318,6 +319,7 @@ export class CalendarComponent
 {
     @ViewChild("modalContent", {static: true})
     modalContent?: TemplateRef<never>;
+    exportDone: string = "";
     icsURL: string = "";
     view: CalendarView = CalendarView.Week;
 
@@ -847,15 +849,21 @@ export class CalendarComponent
             })
         );
         if (result.ok) {
+            let copyOk = true;
             this.icsURL = result.result;
             navigator.clipboard.writeText(this.icsURL).then(
                 function () {
                     /* clipboard successfully set */
+                    copyOk = true;
                 },
                 function () {
                     /* clipboard write failed */
+                    copyOk = false;
                 }
             );
+            if (copyOk) {
+                this.exportDone = "ICS-url copied to clipboard.";
+            }
             this.refresh();
         } else {
             // TODO: Handle error responses properly
