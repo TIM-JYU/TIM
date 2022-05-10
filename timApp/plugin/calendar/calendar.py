@@ -185,11 +185,14 @@ def string_to_lines(str_to_split: str) -> str:
         return str_to_split
     lines = [str_to_split[i : i + n] for i in range(0, len(str_to_split), n)]
     new_str = ""
+    index = 0
     for line in lines:
-        if line == lines[-1]:
+        index += 1
+        if index == len(lines):
             new_str = new_str + line
-            return new_str
+            break
         new_str = new_str + line + "\r\n "
+    return new_str
 
 
 @calendar_plugin.get("/events")
