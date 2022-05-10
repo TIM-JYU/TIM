@@ -46,7 +46,9 @@ class Language(db.Model):
     autonym = db.Column(db.Text, nullable=False)
     """Native name for the language."""
 
-    def __init__(self, lang_code: str, lang_name: str, autonym: str):
+    def __init__(
+        self, lang_code: str, lang_name: str, autonym: str, flag_uri: str | None = None
+    ):
         """
         Initialize a custom language by standardizing the tag.
         """
@@ -58,6 +60,7 @@ class Language(db.Model):
         self.lang_code = standard_code
         self.lang_name = lang_name
         self.autonym = autonym
+        self.flag_uri = flag_uri
 
     @classmethod
     def create_from_name(cls, name: str) -> "Language":
