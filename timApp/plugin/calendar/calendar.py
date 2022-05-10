@@ -202,6 +202,10 @@ def get_events() -> Response:
             groups = []
             for group in booker_groups:
                 enrollment = Enrollment.get_enrollment_by_ids(event.event_id, group.id)
+                if enrollment is not None:
+                    book_msg = enrollment.booker_message
+                else:
+                    book_msg = ""
                 users = []
                 for user in group.users:
                     users.append(
@@ -214,7 +218,7 @@ def get_events() -> Response:
                 groups.append(
                     {
                         "name": group.name,
-                        "message": enrollment.booker_message,
+                        "message": book_msg,
                         "users": users,
                     }
                 )
