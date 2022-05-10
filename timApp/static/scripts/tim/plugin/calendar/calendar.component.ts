@@ -743,14 +743,46 @@ export class CalendarComponent
         console.log(this.markup.filter);
         console.log(this.selectedEvent);
 
+        let eventTitle: string | null = "";
+        const eventGroups: string[] = [];
+        let capacity: number = 0;
+        if (this.markup.eventTemplates) {
+            eventTitle = this.markup.eventTemplates[this.selectedEvent].title;
+
+            this.markup.eventTemplates[this.selectedEvent].bookers.forEach(
+                (group) => {
+                    eventGroups.push(group);
+                }
+            );
+            this.markup.eventTemplates[this.selectedEvent].setters.forEach(
+                (group) => {
+                    eventGroups.push(group);
+                }
+            );
+            capacity = this.markup.eventTemplates[this.selectedEvent].capacity;
+        }
+
+        let titleToAdd = "";
+        if (!eventTitle) {
+            titleToAdd = this.selectedEvent;
+        } else {
+            titleToAdd = eventTitle;
+        }
+
+        // for (const type of this.eventTypes) {
+        //     if (this.selectedEvent === type) {
+        //         console.log(this.markup.eventTemplates![type]);
+        //     }
+        // }
+
         if (eventsToAdd.length > 0) {
             eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
                 return {
-                    title: event.title,
+                    title: titleToAdd,
                     start: event.start,
                     end: event.end,
-                    // event_groups: eventGroups,
-                    max_size: 1, // TODO: temporary solution
+                    event_groups: eventGroups,
+                    max_size: capacity,
                 };
             });
             console.log(eventsToAdd);
