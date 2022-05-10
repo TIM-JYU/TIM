@@ -174,16 +174,16 @@ def get_ical(key: str) -> Response:
     return Response(result, mimetype="text/calendar")
 
 
-def string_to_lines(str2split):
+def string_to_lines(str_to_split: str) -> str:
     """
     Splits long strings to n char lines
 
     :return: str where lines are separated with \r\n + whitespace
     """
     n = 60
-    if len(str2split) <= n:
-        return str2split
-    lines = [str2split[i : i + n] for i in range(0, len(str2split), n)]
+    if len(str_to_split) <= n:
+        return str_to_split
+    lines = [str_to_split[i : i + n] for i in range(0, len(str_to_split), n)]
     new_str = ""
     for line in lines:
         if line == lines[-1]:
