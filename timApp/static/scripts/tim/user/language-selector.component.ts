@@ -39,7 +39,6 @@ export class LanguageSelectorComponent {
         if (this.saveOnChange) {
             await toPromise(
                 this.http.put("/settings/save/lang", {
-                    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
                     lang: this.language || null,
                 })
             );
