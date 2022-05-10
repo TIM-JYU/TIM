@@ -18,7 +18,7 @@ import {to, to2} from "../util/utils";
                 <h1 class="text-center">TIM - The Interactive Material</h1>
             </div>
             <div class="col-lg-3" *ngIf="isLoggedIn()">
-                <tim-language-selector [saveOnChange]="true"></tim-language-selector>
+                <tim-language-selector [saveOnChange]="true" [(language)]="settings.language"></tim-language-selector>
             </div>
         </div>
         <div class="row">
@@ -109,6 +109,7 @@ export class FrontPageComponent implements IController {
     creatingNew: boolean;
     private docListOpen: boolean;
     bookmarks?: IBookmarkGroup[]; // For My courses.
+    settings = genericglobals().userPrefs;
 
     constructor() {
         this.creatingNew = false;
