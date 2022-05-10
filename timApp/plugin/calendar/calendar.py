@@ -5,6 +5,7 @@ from datetime import datetime
 from io import StringIO
 
 from flask import Response
+from werkzeug.exceptions import NotFound
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import (
@@ -110,7 +111,7 @@ def get_url() -> Response:
     """
     verify_logged_in()
     domain = app.config["TIM_HOST"]
-    url = domain + "/calendar/ical?user="
+    url = domain + "/calendar/ical?key="
     cur_user = get_current_user_id()
     user_data: ExportedCalendar = ExportedCalendar.query.filter(
         ExportedCalendar.user_id == cur_user
@@ -130,14 +131,16 @@ def get_url() -> Response:
 
 
 @calendar_plugin.get("/ical")
-def get_ical(user: str) -> Response:
+def get_ical(key: str) -> Response:
     """Fetches users events in a ICS format. User ID is sorted out from hash code from query parameter
 
     :return: ICS file that can be exported
     """
     user_data: ExportedCalendar = ExportedCalendar.query.filter(
-        ExportedCalendar.calendar_hash == user
+        ExportedCalendar.calendar_hash == key
     ).one_or_none()
+    if user_data is None:
+        raise NotFound()
     user_id = user_data.user_id
     events: list[Event] = Event.query.filter(Event.creator_user_id == user_id).all()
     buf = StringIO()
@@ -155,14 +158,38 @@ def get_ical(user: str) -> Response:
         buf.write("DTSTAMP:" + dts + "Z\r\n")
         buf.write("UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\r\n")
         buf.write("CREATED:" + dts + "Z\r\n")
-        buf.write("SUMMARY:" + event.title + "\r\n")
-        buf.write("LOCATION:" + event.location + "\r\n")
-        buf.write("DESCRIPTION:" + event.message + "\r\n")
+        if event.title is None:
+            event.title = ""
+        buf.write("SUMMARY:" + string_to_lines(event.title) + "\r\n")
+        if event.location is None:
+            event.location = ""
+        buf.write("LOCATION:" + string_to_lines(event.location) + "\r\n")
+        if event.message is None:
+            event.message = ""
+        buf.write("DESCRIPTION:" + string_to_lines(event.message) + "\r\n")
         buf.write("END:VEVENT\r\n")
 
     buf.write("END:VCALENDAR\r\n")
     result = buf.getvalue()
     return Response(result, mimetype="text/calendar")
+
+
+def string_to_lines(str2split):
+    """
+    Splits long strings to n char lines
+
+    :return: str where lines are separated with \r\n + whitespace
+    """
+    n = 60
+    if len(str2split) <= n:
+        return str2split
+    lines = [str2split[i : i + n] for i in range(0, len(str2split), n)]
+    new_str = ""
+    for line in lines:
+        if line == lines[-1]:
+            new_str = new_str + line
+            return new_str
+        new_str = new_str + line + "\r\n "
 
 
 @calendar_plugin.get("/events")
@@ -331,12 +358,12 @@ def delete_event(event_id: int) -> Response:
     """Deletes the event by the given id
 
     :param event_id: Event id
-    :return: HTTP 200 if succeeded, otherwise 400
+    :return: HTTP 200 if succeeded, otherwise 404
     """
     verify_logged_in()
     event = Event.get_event_by_id(event_id)
     if not event:
-        raise RouteException("Event not found")
+        raise NotFound()
     db.session.delete(event)
     db.session.commit()
     return ok_response()
