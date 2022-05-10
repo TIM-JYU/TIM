@@ -904,8 +904,29 @@ export class CalendarComponent
 
     private initEventTypes(): void {
         for (const eventTemplate in this.markup.eventTemplates) {
-            if (eventTemplate !== "") {
-                this.eventTypes.push(eventTemplate);
+            if (this.markup.eventTemplates.hasOwnProperty(eventTemplate)) {
+                // If current user is owner, add option to add all types of events
+                if (itemglobals().curr_item.rights.owner) {
+                    this.eventTypes.push(eventTemplate);
+                }
+                // Otherwise, only add options for types that has a setter group in which the current user belongs to
+                else {
+                    Users.getCurrent().groups.forEach((group) => {
+                        if (!this.markup.eventTemplates) {
+                            return;
+                        }
+
+                        if (
+                            this.markup.eventTemplates[
+                                eventTemplate
+                            ].setters.includes(group.name)
+                        ) {
+                            if (!this.eventTypes.includes(eventTemplate)) {
+                                this.eventTypes.push(eventTemplate);
+                            }
+                        }
+                    });
+                }
             }
         }
         if (this.eventTypes.length === 0) {
