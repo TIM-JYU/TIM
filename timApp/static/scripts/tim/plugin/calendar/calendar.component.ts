@@ -39,6 +39,7 @@ import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
 import {to2, toPromise} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
+import {showConfirm} from "../../ui/showConfirmDialog";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
@@ -832,6 +833,14 @@ export class CalendarComponent
     }
 
     async export() {
+        if (
+            !(await showConfirm(
+                "ICS",
+                `Export calendar information in ics-format?`
+            ))
+        ) {
+            return;
+        }
         const result = await toPromise(
             this.http.get("/calendar/export", {
                 responseType: "text",
@@ -839,6 +848,14 @@ export class CalendarComponent
         );
         if (result.ok) {
             this.icsURL = result.result;
+            navigator.clipboard.writeText(this.icsURL).then(
+                function () {
+                    /* clipboard successfully set */
+                },
+                function () {
+                    /* clipboard write failed */
+                }
+            );
             this.refresh();
         } else {
             // TODO: Handle error responses properly
