@@ -66,6 +66,8 @@ class FilterOptions:
     fromDate: datetime | None = None
     toDate: datetime | None = None
 
+    def to_json(self) -> dict:
+        return asdict(self)
 
 @dataclass
 class EventTemplate:
@@ -75,10 +77,12 @@ class EventTemplate:
     capacity: int = 0
     tags: list[str] = field(default_factory=list)
 
+    def to_json(self) -> dict:
+        return asdict(self)
 
 @dataclass
 class CalendarMarkup(GenericMarkupModel):
-    filter: FilterOptions | None = field(default_factory=FilterOptions)
+    filter: FilterOptions = field(default_factory=FilterOptions)
     eventTemplates: dict[str, EventTemplate] = field(default_factory=dict)
 
 

@@ -84,17 +84,17 @@ const EventTemplate = t.type({
 });
 
 const FilterOptions = t.type({
-    groups: t.array(t.string),
-    tags: t.array(t.string),
-    fromDate: t.string,
-    toDate: t.string,
+    groups: nullable(t.array(t.string)),
+    tags: nullable(t.array(t.string)),
+    fromDate: nullable(t.string), // TODO: figure out correct type for dates
+    toDate: nullable(t.string),
 });
 
 const CalendarMarkup = t.intersection([
     t.partial({
         // ryhmat: nullable(t.array(CalendarItem)),
-        filter: nullable(FilterOptions),
-        eventTemplates: nullable(t.record(t.string, EventTemplate)),
+        filter: FilterOptions,
+        eventTemplates: t.record(t.string, EventTemplate),
     }),
     GenericPluginMarkup,
 ]);
@@ -192,10 +192,10 @@ export type TIMCalendarEvent = CalendarEvent<{
             </div>
             <div class="col-md-4">
                 <div [style.visibility]="editEnabled ? 'visible' : 'hidden'" class="btn-group event-btn">
-                    <button (click)="setEventType($event)" *ngFor="let button of eventTypes"
-                            [class.active]="selectedEvent == (button.valueOf() +eventTypes.indexOf((button)))"
+                    <button (click)="setEventType($event, button)" *ngFor="let button of eventTypes"
+                            [class.active]="selectedEvent === button"
                             class="btn timButton"
-                            id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button.valueOf()}}</button>
+                            id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button}}</button>
                 </div>
             </div>
             <div class="col-md-4">
@@ -346,9 +346,10 @@ export class CalendarComponent
     editEnabled: boolean = false;
     dialogOpen: boolean = false;
 
-    eventTypes: string[] = ["Ohjaus", "Luento", "Opetusryhmä"];
-    eventType: string = this.eventTypes[0];
-    selectedEvent: string = this.eventType + 0;
+    // eventTypes: string[] = ["Ohjaus", "Luento", "Opetusryhmä"];
+    eventTypes: string[] = [];
+    // eventType: string = this.eventTypes[0];
+    selectedEvent: string = "";
 
     checkboxEvents = [
         {name: "Ohjaus", value: "1", checked: true},
@@ -402,9 +403,10 @@ export class CalendarComponent
     /**
      * Set type of event user wants to add while in edit-mode
      * @param event
+     * @param button
      */
-    setEventType(event: Event) {
-        this.selectedEvent = (event.target as Element).id;
+    setEventType(event: Event, button: string) {
+        this.selectedEvent = button;
     }
     isTempEvent(event: TIMCalendarEvent) {
         if (event.meta) {
@@ -679,6 +681,7 @@ export class CalendarComponent
     ngOnInit() {
         this.icsURL = "";
         super.ngOnInit();
+        this.initEventTypes();
         this.setLanguage();
         if (Users.isLoggedIn()) {
             void this.loadEvents();
@@ -738,6 +741,7 @@ export class CalendarComponent
         // }
         console.log(this.markup.eventTemplates);
         console.log(this.markup.filter);
+        console.log(this.selectedEvent);
 
         if (eventsToAdd.length > 0) {
             eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
@@ -864,6 +868,19 @@ export class CalendarComponent
             itemglobals().curr_item.rights.manage ||
             itemglobals().curr_item.rights.owner
         );
+    }
+
+    private initEventTypes(): void {
+        for (const eventTemplate in this.markup.eventTemplates) {
+            if (eventTemplate !== "") {
+                this.eventTypes.push(eventTemplate);
+            }
+        }
+        if (this.eventTypes.length === 0) {
+            // TODO: handle when no templates given in markup
+        } else {
+            this.selectedEvent = this.eventTypes[0];
+        }
     }
 }
 
