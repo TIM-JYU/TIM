@@ -273,7 +273,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
         <div>
             <button class="btn timButton" (click)="export()">Export calendar</button>
             <!--input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL"-->
-            <span class="exportDone">{{exportDone}}</span>
+            <span class="exportDone"><b>{{exportDone}}</b></span>
         </div>
         <ng-template #modalContent let-close="close">
             <div class="modal-header">
