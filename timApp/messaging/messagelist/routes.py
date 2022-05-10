@@ -1,6 +1,8 @@
-from typing import Optional, Any
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
 
-from flask import Response
+from flask import Response, render_template
 from sqlalchemy.orm import load_only
 
 from timApp.auth.accesshelper import (
@@ -13,6 +15,7 @@ from timApp.auth.accesshelper import (
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document, DocInfo
+from timApp.document.viewcontext import default_view_ctx
 from timApp.folder.folder import Folder
 from timApp.item.manage import get_trash_folder
 from timApp.messaging.messagelist.emaillist import (
@@ -23,7 +26,12 @@ from timApp.messaging.messagelist.emaillist import (
     verify_mailman_connection,
 )
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
-from timApp.messaging.messagelist.listinfo import ListInfo, MemberInfo, GroupAndMembers
+from timApp.messaging.messagelist.listinfo import (
+    ListInfo,
+    MemberInfo,
+    GroupAndMembers,
+    ArchiveType,
+)
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.messaging.messagelist.messagelist_utils import (
     verify_messagelist_name_requirements,
@@ -46,6 +54,7 @@ from timApp.messaging.messagelist.messagelist_utils import (
     set_message_list_info,
     check_name_rules,
     verify_can_create_lists,
+    MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX,
 )
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
@@ -53,7 +62,7 @@ from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_error
-from timApp.util.utils import is_valid_email, get_current_time
+from timApp.util.utils import is_valid_email, get_current_time, title_to_id
 
 messagelist = TypedBlueprint("messagelist", __name__, url_prefix="/messagelist")
 
@@ -466,3 +475,97 @@ def get_sibling_archive_messages(message_doc_id: int) -> Response:
         )
 
     return json_response({"next": to_json(next_doc), "prev": to_json(prev_doc)})
+
+
+@dataclass(slots=True)
+class ArchivedMessage:
+    anchor: str
+    title: str
+    date: str
+    recipients: list[str]
+    sender: str
+    body: str
+
+
+@messagelist.get("/archive/export/<list_name>")
+def export_archive(list_name: str) -> Response | str:
+    """Export the archive as a simple HTML file."""
+    message_list = MessageListModel.from_name(list_name)
+    if not has_manage_access(message_list.block):
+        raise RouteException(
+            "You need at least a manage access to the list to do this action."
+        )
+
+    if message_list.archive == ArchiveType.NONE:
+        raise RouteException("This list does not have an archive.")
+
+    # Get the archive messages.
+    archive_folder = f"{MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX}/{list_name}"
+    folder = Folder.find_by_path(archive_folder)
+    if not folder:
+        raise NotExist("No archive folder found, the archive is likely empty")
+
+    docs = folder.get_all_documents(filter_user=get_current_user_object())
+    docs = sorted(docs, key=lambda d: d.id, reverse=True)
+    messages: list[ArchivedMessage] = []
+
+    anchor_counters: dict[str, int] = {}
+
+    for doc in docs:
+        settings = doc.document.get_settings()
+        if not settings:
+            continue
+        macros = settings.get_macroinfo(default_view_ctx).get_macros()
+        if not (message_macro := macros.get("message", {})) or not isinstance(
+            message_macro, dict
+        ):
+            continue
+
+        message_body = next(
+            (p for p in doc.document if p.get_auto_id() == "message-body"), None
+        )
+        if not message_body:
+            continue
+
+        res = message_body.get_html(default_view_ctx)
+
+        message_date = message_macro.get("date")
+        recipients = message_macro.get("recipients", [])
+        sender = message_macro.get("sender", {})
+
+        def format_recipient(recipient: dict) -> str:
+            name = recipient.get("name")
+            email = recipient.get("email")
+            if not name:
+                return f"<{email}>"
+            return f"{name} <{email}>"
+
+        anchor = title_to_id(doc.title)
+        if anchor in anchor_counters:
+            anchor_counters[anchor] += 1
+            anchor += f"-{anchor_counters[anchor]}"
+        else:
+            anchor_counters[anchor] = 0
+
+        messages.append(
+            ArchivedMessage(
+                anchor=anchor,
+                title=doc.title,
+                date=datetime.strptime(message_date, "%Y-%m-%d %H:%M:%S").strftime(
+                    "%Y-%m-%d %H:%M:%S UTC+0"
+                )
+                if message_date
+                else "No date",
+                recipients=[format_recipient(r) for r in recipients],
+                sender=format_recipient(sender),
+                body=res,
+            )
+        )
+
+    now = get_current_time()
+    return render_template(
+        "messagelist/archive_export.jinja2",
+        messages=messages,
+        now=now,
+        message_list=message_list,
+    )

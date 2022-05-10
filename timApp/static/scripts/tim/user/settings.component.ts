@@ -51,11 +51,15 @@ import {ContactOrigin, IFullUser, IUserApiKey, IUserContact} from "./IUser";
 export class SettingsButtonPanelComponent {
     saving = false;
     @Input() saved?: () => Promise<unknown>;
+    @Input() reloadAfterSave = false;
 
     async save() {
         this.saving = true;
         await this.saved?.();
         this.saving = false;
+        if (this.reloadAfterSave) {
+            location.reload();
+        }
     }
 }
 
@@ -116,8 +120,8 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
         <div class="form">
             <bootstrap-form-panel [disabled]="saving" title="Preferred language" i18n-title>
                 <div class="flex cl">
-                    <tim-language-selector></tim-language-selector>
-                    <settings-button-panel [saved]="submit"></settings-button-panel>
+                    <tim-language-selector [(language)]="settings.language"></tim-language-selector>
+                    <settings-button-panel [saved]="submit" [reloadAfterSave]="true"></settings-button-panel>
                 </div>
             </bootstrap-form-panel>
             <bootstrap-form-panel [disabled]="saving" title="Styles" i18n-title>

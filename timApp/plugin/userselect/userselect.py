@@ -549,7 +549,7 @@ def undo(
         db.session.rollback()
         return json_response({"distributionErrors": errors})
 
-    undo_field_actions(user_group, user_acc, model.actions.setValue)
+    undo_field_actions(user_acc, cur_user, model.actions.setValue)
 
     db.session.commit()
 

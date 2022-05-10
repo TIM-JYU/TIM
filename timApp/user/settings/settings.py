@@ -91,7 +91,10 @@ def save_settings() -> Response:
     except TypeError as e:
         raise RouteException(f"Invalid settings: {e}")
     db.session.commit()
-    return json_response(user.get_prefs().to_json(with_style=True))
+    r = json_response(user.get_prefs().to_json(with_style=True))
+    if new_prefs.language:
+        r.set_cookie("lang", new_prefs.language)
+    return r
 
 
 @settings_page.put("/save/lang")

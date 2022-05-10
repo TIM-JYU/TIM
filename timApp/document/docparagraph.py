@@ -425,7 +425,7 @@ class DocParagraph:
         self.nomacros = self.no_macros()
         return self.nomacros
 
-    def get_auto_id(self):
+    def get_auto_id(self) -> str:
         task_id = self.attrs.get("taskId", None)
         if task_id:
             return task_id
