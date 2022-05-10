@@ -5,6 +5,7 @@ from datetime import datetime
 from io import StringIO
 
 from flask import Response
+from werkzeug.exceptions import NotFound
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import (
@@ -350,6 +351,30 @@ def delete_event(event_id: int) -> Response:
         raise RouteException("Event not found")
     db.session.delete(event)
     db.session.commit()
+    return ok_response()
+
+
+@calendar_plugin.put("/bookings")
+def update_book_message(event_id: int, booker_msg: str) -> Response:
+    verify_logged_in()
+    event = Event.get_event_by_id(event_id)
+    if event is None:
+        raise NotFound()
+
+    user_obj = get_current_user_object()
+    group_id = None
+    for group in user_obj.groups:
+        if group.name == user_obj.name:
+            group_id = group.id
+
+    enrollment = Enrollment.get_enrollment_by_ids(event_id, group_id)
+
+    if enrollment is not None:
+        enrollment.booker_message = booker_msg
+        db.session.commit()
+    else:
+        raise NotFound()
+
     return ok_response()
 
 

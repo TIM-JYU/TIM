@@ -1,7 +1,7 @@
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {CommonModule} from "@angular/common";
+import {CommonModule, formatDate} from "@angular/common";
 import {DialogModule} from "../../ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {AngularDialogComponent} from "../../ui/angulardialog/angular-dialog-component.directive";
@@ -151,12 +151,16 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     <div class="col-sm-12" [hidden] ="hideBookerMessage()">
                         <label for="bookerMessage" class="col-sm-12 control-label">Message (optional)</label>
-                            <textarea [disabled] = "eventIsFull()"
-                                    [(ngModel)]="bookerMessage"
+                            <input type="text" [disabled] = "hideBookerMessage()"
+                                    [(ngModel)]="messageText"
                             (ngModelChange)="setMessage()"
                             name="bookerMessage"
                             class="form-control">
-                            </textarea>
+                        <button class="timButton" type="button" style="float: left"
+                        (click)="updateBookMessage()">
+                    Send message
+                </button>
+                        <div class="col-sm-12"><span style="white-space: pre-line">{{bookerMessage}}</span></div>
                             </div>
                         </div>
                     </div>
@@ -221,6 +225,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     message?: string;
     bookingStopTime = "";
     bookingStopDate = "";
+    messageText = "";
     startDate = "";
     startTime = "";
     endDate = "";
@@ -383,6 +388,33 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         }
     }
 
+    async updateBookMessage() {
+        const dateNow = new Date();
+        const bookMessage =
+            this.bookerMessage +
+            "\n\r" +
+            Users.getCurrent().name +
+            " " +
+            formatDate(dateNow, "d.M.yy HH:mm", "fi-FI") +
+            ": " +
+            this.messageText;
+        const eventToBook = this.data;
+        if (!(await showConfirm("Post message", "Post message to booking?"))) {
+            return;
+        }
+        const result = await toPromise(
+            this.http.put("/calendar/bookings", {
+                event_id: eventToBook.id,
+                booker_msg: bookMessage,
+            })
+        );
+        console.log(result);
+        if (result.ok) {
+            console.log(result.result);
+        }
+        this.close(eventToBook);
+    }
+
     /**
      * Sends the booking request for the event to the TIM-server
      */
@@ -404,7 +436,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         const result = await toPromise(
             this.http.post("/calendar/bookings", {
                 event_id: eventToBook.id,
-                booker_msg: this.bookerMessage,
+                booker_msg: this.messageText,
             })
         );
         console.log(result);
