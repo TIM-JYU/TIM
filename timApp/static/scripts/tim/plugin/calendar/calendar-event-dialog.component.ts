@@ -152,15 +152,15 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     <div class="col-sm-12" [hidden] ="hideBookerMessage()">
                         <label for="bookerMessage" class="col-sm-12 control-label">Message (optional)</label>
                             <input type="text" [disabled] = "hideBookerMessage()"
-                                    [(ngModel)]="messageText"
+                                   [(ngModel)]="messageText"
                             (ngModelChange)="setMessage()"
-                            name="bookerMessage"
+                            name="messageText"
                             class="form-control">
                         <button class="timButton" type="button" style="float: left"
                         (click)="updateBookMessage()">
                     Send message
                 </button>
-                        <div class="col-sm-12"><span style="white-space: pre-line">{{bookerMessage}}</span></div>
+                        <div [(ngModel)]="bookerMessage" name="bookerMessage" class="col-sm-12"><span style="white-space: pre-line">{{bookerMessage}}</span></div>
                             </div>
                         </div>
                     </div>
@@ -388,7 +388,12 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         }
     }
 
+    /**
+     *  Used when a booker of an event sends message to the enrollment of an event.
+     *  Updates the message linked to the enrollment with a chat-like timestamp + identifier of the booker.
+     */
     async updateBookMessage() {
+        const eventToBook = this.data;
         const dateNow = new Date();
         const bookMessage =
             this.bookerMessage +
@@ -398,11 +403,11 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             formatDate(dateNow, "d.M.yy HH:mm", "fi-FI") +
             ": " +
             this.messageText;
-        console.log(bookMessage);
-        const eventToBook = this.data;
+
         if (!(await showConfirm("Post message", "Post message to booking?"))) {
             return;
         }
+        console.log(bookMessage);
         const result = await toPromise(
             this.http.put("/calendar/bookings", {
                 event_id: eventToBook.id,
@@ -413,8 +418,8 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (result.ok) {
             console.log(result.result);
             this.bookerMessage = bookMessage;
+            this.messageText = "";
         }
-        this.close(eventToBook);
     }
 
     /**
