@@ -161,7 +161,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </button>
                     </div>
                         </div>
-                        <div [(ngModel)]="bookerMessage" name="bookerMessage" ngDefaultControl class="col-sm-12" style="white-space: pre-line">{{bookerMessage}}
+                        <div [(ngModel)]="bookerMessage" [hidden]="hideBookerMessage()" name="bookerMessage" ngDefaultControl class="col-sm-12" style="white-space: pre-line">{{bookerMessage}}
                         </div>
                     </div>
                 </form>
