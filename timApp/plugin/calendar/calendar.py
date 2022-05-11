@@ -171,8 +171,8 @@ def get_ical(user: str) -> Response:
 
 @calendar_plugin.get("/events")
 def get_events() -> Response:
-    """Fetches the user's events and the events that have a relation to user's groups from the database in JSON
-    format
+    """Fetches the events created by the user and the events that have a relation to user's groups from the database
+    in JSON format
 
     :return: User's events in JSON format or HTTP 400 if failed
     """

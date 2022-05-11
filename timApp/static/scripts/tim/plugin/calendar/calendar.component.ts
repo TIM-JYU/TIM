@@ -179,7 +179,7 @@ export type TIMCalendarEvent = CalendarEvent<{
         </tim-calendar-header>
         <div class="row text-center">
             <div class="col-md-4">
-                <div class="btn-group edit-btn" [hidden]="!userIsManager()">
+                <div class="btn-group edit-btn" [hidden]="!userIsManager() || this.eventTypes.length == 0">
                     <button (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
                     <button (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
                 </div>
