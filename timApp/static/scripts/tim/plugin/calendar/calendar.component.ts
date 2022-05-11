@@ -924,12 +924,12 @@ export class CalendarComponent
     ],
     exports: [CalendarComponent, DateTimeValidatorDirective],
 })
-export class CalendarModule implements DoBootstrap {
+export class TimCalendarModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
 const angularJsModule = createDowngradedModule((extraProviders) =>
-    platformBrowserDynamic(extraProviders).bootstrapModule(CalendarModule)
+    platformBrowserDynamic(extraProviders).bootstrapModule(TimCalendarModule)
 );
 
 doDowngrade(angularJsModule, "timCalendar", CalendarComponent);

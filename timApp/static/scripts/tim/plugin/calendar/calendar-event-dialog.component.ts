@@ -9,7 +9,7 @@ import {toPromise} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
-import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
+import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
 
 @Component({
     selector: "tim-calendar-event-dialog",
@@ -514,7 +514,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         TimUtilityModule,
         CommonModule,
         HttpClientModule,
-        KATTIModule,
+        TimCalendarModule,
     ],
     exports: [CalendarEventDialogComponent],
 })
