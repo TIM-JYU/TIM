@@ -149,7 +149,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                              [disabled]="!isEditEnabled()">
                             </textarea>
                         </div>
-                    <div class="col-sm-12" [hidden] ="hideBookerMessage()">
+                    <div class="col-sm-12" [hidden] ="hideBookerMessage() || userIsManager()">
                         <label for="bookerMessage" class="col-sm-12 control-label">Message (optional)</label>
                             <input type="text" [disabled] = "hideBookerMessage()"
                                    [(ngModel)]="messageText"
