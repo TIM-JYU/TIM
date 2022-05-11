@@ -346,7 +346,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     verify_logged_in()
     old_event = Event.get_event_by_id(event_id)
     if not old_event:
-        raise RouteException("Event not found")
+        raise NotFound()
     old_event.title = event.title
     old_event.location = event.location
     old_event.message = event.description
@@ -423,7 +423,7 @@ def delete_booking(event_id: int) -> Response:
 
     enrollment = Enrollment.get_enrollment_by_ids(event_id, group_id)
     if not enrollment:
-        raise RouteException("Enrollment not found")
+        raise NotFound()
 
     db.session.delete(enrollment)
     db.session.commit()

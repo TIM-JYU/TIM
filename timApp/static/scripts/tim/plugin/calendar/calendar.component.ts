@@ -225,7 +225,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                     [viewDate]="viewDate"
                     [events]="events"
                     [locale]="locale"
-                    [weekStartsOn]="1"
+                    [weekStartsOn]="weekStartsOn"
                     (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
                     (dayClicked)="changeToDay($event.day.date)"
                     (eventClicked)="handleEventClick($event.event)"
@@ -242,7 +242,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                     [dayEndHour]="dayEndHour"
                     [locale]="locale"
                     [minimumEventHeight]="minimumEventHeight"
-                    [weekStartsOn]="1"
+                    [weekStartsOn]="weekStartsOn"
                     (dayHeaderClicked)="viewDay($event.day.date)"
                     (hourSegmentClicked)="clickedDate = $event.date"
                     [hourSegmentTemplate]="weekViewHourSegmentTemplate"
@@ -924,12 +924,12 @@ export class CalendarComponent
     ],
     exports: [CalendarComponent, DateTimeValidatorDirective],
 })
-export class KATTIModule implements DoBootstrap {
+export class CalendarModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
 const angularJsModule = createDowngradedModule((extraProviders) =>
-    platformBrowserDynamic(extraProviders).bootstrapModule(KATTIModule)
+    platformBrowserDynamic(extraProviders).bootstrapModule(CalendarModule)
 );
 
 doDowngrade(angularJsModule, "timCalendar", CalendarComponent);
