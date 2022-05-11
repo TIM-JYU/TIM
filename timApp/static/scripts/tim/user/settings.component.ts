@@ -26,7 +26,6 @@ import {TabsetComponent, TabsModule} from "ngx-bootstrap/tabs";
 import {DndDropEvent, DndModule} from "ngx-drag-drop";
 import {polyfill} from "mobile-drag-drop";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
-import {SessionVerify} from "tim/util/session-verify.interceptor";
 import {ProgressbarModule} from "ngx-bootstrap/progressbar";
 import {ConsentType} from "../ui/consent";
 import {
