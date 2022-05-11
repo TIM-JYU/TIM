@@ -398,6 +398,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             formatDate(dateNow, "d.M.yy HH:mm", "fi-FI") +
             ": " +
             this.messageText;
+        console.log(bookMessage);
         const eventToBook = this.data;
         if (!(await showConfirm("Post message", "Post message to booking?"))) {
             return;
@@ -411,6 +412,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         console.log(result);
         if (result.ok) {
             console.log(result.result);
+            this.bookerMessage = bookMessage;
         }
         this.close(eventToBook);
     }
