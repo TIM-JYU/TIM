@@ -69,6 +69,7 @@ class FilterOptions:
     def to_json(self) -> dict:
         return asdict(self)
 
+
 @dataclass
 class EventTemplate:
     title: str | None = None
@@ -79,6 +80,7 @@ class EventTemplate:
 
     def to_json(self) -> dict:
         return asdict(self)
+
 
 @dataclass
 class CalendarMarkup(GenericMarkupModel):
@@ -377,6 +379,10 @@ def book_event(event_id: int) -> Response:
     for group in user_obj.groups:
         if group.name == user_obj.name:
             group_id = group.id
+
+    enrollment = Enrollment.get_enrollment_by_ids(event_id, group_id)
+    if enrollment is not None:
+        raise RouteException("Event is already booked by the same user group")
 
     enrollment = Enrollment(
         event_id=event_id, usergroup_id=group_id, enroll_type_id=0
