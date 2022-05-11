@@ -70,11 +70,6 @@ function ceilToNearest(
     return Math.ceil(amount / segmentHeight) * minutesInSegment;
 }
 
-// const CalendarItem = t.type({
-//     opiskelijat: t.string,
-//     ohjaajat: t.string,
-// });
-
 const EventTemplate = t.type({
     title: nullable(t.string),
     bookers: t.array(t.string),
@@ -92,7 +87,6 @@ const FilterOptions = t.type({
 
 const CalendarMarkup = t.intersection([
     t.partial({
-        // ryhmat: nullable(t.array(CalendarItem)),
         filter: FilterOptions,
         eventTemplates: t.record(t.string, EventTemplate),
     }),
@@ -192,7 +186,7 @@ export type TIMCalendarEvent = CalendarEvent<{
             </div>
             <div class="col-md-4">
                 <div [style.visibility]="editEnabled ? 'visible' : 'hidden'" class="btn-group event-btn">
-                    <button (click)="setEventType($event, button)" *ngFor="let button of eventTypes"
+                    <button (click)="setEventType(button)" *ngFor="let button of eventTypes"
                             [class.active]="selectedEvent === button"
                             class="btn timButton"
                             id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button}}</button>
@@ -346,9 +340,7 @@ export class CalendarComponent
     editEnabled: boolean = false;
     dialogOpen: boolean = false;
 
-    // eventTypes: string[] = ["Ohjaus", "Luento", "Opetusryhmä"];
     eventTypes: string[] = [];
-    // eventType: string = this.eventTypes[0];
     selectedEvent: string = "";
 
     checkboxEvents = [
@@ -402,10 +394,9 @@ export class CalendarComponent
 
     /**
      * Set type of event user wants to add while in edit-mode
-     * @param event
      * @param button
      */
-    setEventType(event: Event, button: string) {
+    setEventType(button: string) {
         this.selectedEvent = button;
     }
     isTempEvent(event: TIMCalendarEvent) {
@@ -521,10 +512,6 @@ export class CalendarComponent
         mouseDownEvent: MouseEvent,
         segmentElement: HTMLElement
     ) {
-        // let fullName = Users.getCurrent().real_name;
-        // if (!fullName) {
-        //     fullName = Users.getCurrent().name;
-        // }
         let title: string | null = "";
         if (this.markup.eventTemplates) {
             title = this.markup.eventTemplates[this.selectedEvent].title;
@@ -535,12 +522,6 @@ export class CalendarComponent
 
         const dragToSelectEvent: TIMCalendarEvent = {
             id: this.events.length,
-            // title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
-            //     segment.date,
-            //     this.segmentMinutes
-            // )
-            //     .toTimeString()
-            //     .substr(0, 5)} Varattava aika`,
             title: title,
             start: segment.date,
             end: addMinutes(segment.date, this.segmentMinutes),
@@ -550,7 +531,6 @@ export class CalendarComponent
                 maxSize: 1, // TODO: temporary solution
                 booker_groups: [],
             },
-            // actions: this.actions,
         };
         if (Date.now() > dragToSelectEvent.start.getTime()) {
             dragToSelectEvent.color = colors.gray;
@@ -739,24 +719,9 @@ export class CalendarComponent
             this.isTempEvent(event)
         );
 
-        // TODO: korjaa
-        // console.log(this.markup.ryhmat);
-        // const eventGroups: string[] = [];
-        // if (this.markup.ryhmat) {
-        //     console.log(this.markup.ryhmat[0].opiskelijat);
-        //     eventGroups.push(this.markup.ryhmat[0].opiskelijat);
-        //     eventGroups.push(this.markup.ryhmat[0].ohjaajat);
-        // }
-        console.log(this.markup.eventTemplates);
-        console.log(this.markup.filter);
-        console.log(this.selectedEvent);
-
-        // let eventTitle: string | null = "";
         const eventGroups: string[] = [];
         let capacity: number = 0;
         if (this.markup.eventTemplates) {
-            // eventTitle = this.markup.eventTemplates[this.selectedEvent].title;
-
             this.markup.eventTemplates[this.selectedEvent].bookers.forEach(
                 (group) => {
                     eventGroups.push(group);
@@ -769,19 +734,6 @@ export class CalendarComponent
             );
             capacity = this.markup.eventTemplates[this.selectedEvent].capacity;
         }
-
-        // let titleToAdd = "";
-        // if (!eventTitle) {
-        //     titleToAdd = this.selectedEvent;
-        // } else {
-        //     titleToAdd = eventTitle;
-        // }
-
-        // for (const type of this.eventTypes) {
-        //     if (this.selectedEvent === type) {
-        //         console.log(this.markup.eventTemplates![type]);
-        //     }
-        // }
 
         if (eventsToAdd.length > 0) {
             eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
@@ -910,6 +862,10 @@ export class CalendarComponent
         );
     }
 
+    /**
+     * Initializes which different types of events the user can add to the calendar based on the markup
+     * @private
+     */
     private initEventTypes(): void {
         for (const eventTemplate in this.markup.eventTemplates) {
             if (this.markup.eventTemplates.hasOwnProperty(eventTemplate)) {

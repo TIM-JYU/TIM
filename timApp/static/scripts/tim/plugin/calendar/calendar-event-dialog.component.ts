@@ -443,13 +443,20 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         return this.userBooked;
     }
 
+    /**
+     * True if the event can have multiple bookers, false if not
+     */
     multipleBookers() {
         if (this.data.meta) {
             return this.data.meta.maxSize > 1;
         }
-        return false;
+        return false; // Events should always have their meta field
     }
 
+    /**
+     * True if event has no bookings.
+     * If event has bookings: true if user is not manager or the event can only have one booking. Otherwise, false.
+     */
     hideBookerListLink() {
         if (!this.eventHasBookings()) {
             return true;
@@ -457,6 +464,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         return !this.userIsManager() || !this.multipleBookers();
     }
 
+    /**
+     * Amount of enrollments for the event
+     */
     getEventEnrollments() {
         if (this.data.meta) {
             return this.data.meta.enrollments;
@@ -464,6 +474,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         return -1; // Events should always have their meta field
     }
 
+    /**
+     * The maximum capacity for the event
+     */
     getEventCapacity() {
         if (this.data.meta) {
             return this.data.meta.maxSize;

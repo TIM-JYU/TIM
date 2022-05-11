@@ -45,22 +45,10 @@ def initialize_db() -> None:
         db.session.commit()
 
 
-# @dataclass
-# class CalendarItem:
-#     opiskelijat: str
-#     ohjaajat: str
-#
-#     def to_json(self) -> dict:
-#         return asdict(self)
-#
-#
-# @dataclass
-# class CalendarMarkup(GenericMarkupModel):
-#     ryhmat: list[CalendarItem] | None = None
-
-
 @dataclass
 class FilterOptions:
+    """Calendar markup fields for filtering options"""
+
     groups: list[str] | None = None
     tags: list[str] | None = None
     fromDate: datetime | None = None
@@ -72,6 +60,8 @@ class FilterOptions:
 
 @dataclass
 class EventTemplate:
+    """Calendar markup fields for event template"""
+
     title: str | None = None
     bookers: list[str] = field(default_factory=list)
     setters: list[str] = field(default_factory=list)
@@ -84,6 +74,8 @@ class EventTemplate:
 
 @dataclass
 class CalendarMarkup(GenericMarkupModel):
+    """Highest level attributes in the calendar markup"""
+
     filter: FilterOptions = field(default_factory=FilterOptions)
     eventTemplates: dict[str, EventTemplate] = field(default_factory=dict)
 
@@ -113,21 +105,6 @@ class CalendarHtmlModel(
 
 def reqs_handle() -> PluginReqs:
     return {"js": ["calendar"], "multihtml": True}
-
-
-# @calendar_plugin.get("/")
-# def get_todos() -> Response:
-#     # user = get_current_user_object()
-#     # user.
-#     return json_response(
-#         {
-#             "todos": [
-#                 "asd",
-#                 "wer",
-#                 "rtq",
-#             ]
-#         }
-#     )
 
 
 @calendar_plugin.get("/export")
@@ -261,6 +238,12 @@ def get_events() -> Response:
 
 @calendar_plugin.get("/events/<int:event_id>/bookers")
 def get_event_bookers(event_id: int) -> Response:
+    """Fetches all enrollments from the database for the given event and returns the full name and email of every
+    booker in a html table
+
+    :param event_id: event id
+    :return: Full name and email of every booker of the given event in a html table"""
+
     event = Event.get_event_by_id(event_id)
     if event is None:
         raise NotExist(f"Event not found by the id of {0}".format(event_id))
