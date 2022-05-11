@@ -395,14 +395,12 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     async updateBookMessage() {
         const eventToBook = this.data;
         const dateNow = new Date();
-        const bookMessage =
-            this.bookerMessage +
-            "\n\r" +
-            Users.getCurrent().name +
-            " " +
-            formatDate(dateNow, "d.M.yy HH:mm", "fi-FI") +
-            ": " +
-            this.messageText;
+        const bookMessage = `${this.bookerMessage}
+        ${Users.getCurrent().name} ${formatDate(
+            dateNow,
+            "d.M.yy HH:mm",
+            "fi-FI"
+        )}: ${this.messageText}`;
 
         if (!(await showConfirm("Post message", "Post message to booking?"))) {
             return;
