@@ -659,15 +659,18 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def set_prefs(self, prefs: Preferences):
         self.prefs = json.dumps(prefs, cls=TimJsonEncoder)
 
-    def get_groups(self, include_special=True) -> Query:
+    def get_groups(
+        self, include_special: bool = True, include_expired: bool = True
+    ) -> Query:
         special_groups = [ANONYMOUS_GROUPNAME]
         if self.logged_in:
             special_groups.append(LOGGED_IN_GROUPNAME)
+        filter_expr = UserGroupMember.user_id == self.id
+        if not include_expired:
+            filter_expr = filter_expr & membership_current
         q = UserGroup.query.filter(
             UserGroup.id.in_(
-                db.session.query(UserGroupMember.usergroup_id).filter_by(
-                    user_id=self.id
-                )
+                db.session.query(UserGroupMember.usergroup_id).filter(filter_expr)
             )
         )
         if include_special:

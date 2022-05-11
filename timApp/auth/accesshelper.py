@@ -265,7 +265,7 @@ def abort_if_not_access_and_required(
                 .filter(
                     BlockAccess.usergroup_id.in_(
                         get_current_user_object()
-                        .get_groups()
+                        .get_groups(include_expired=False)
                         .with_entities(UserGroup.id)
                     )
                 )
