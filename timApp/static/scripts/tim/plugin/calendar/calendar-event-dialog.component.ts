@@ -36,7 +36,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    [disabled]="!isEditEnabled()"/>
                         </div>
                     </div>
-                    <div hidden="true">
+                    <div [hidden]="multipleBookers()">
                         <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
                             <label for="booker" class="col-sm-2 control-label">Booker</label>
                             <div class="col-sm-10">
@@ -62,8 +62,8 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <a href="https://www.example.com" target="_blank" class="col-sm-10">Show list of all bookers</a>
+                    <div [hidden]="!multipleBookers() || !userIsManager()" class="form-group">
+                        <a href="/calendar/events/{{this.data.id}}/bookers" target="_blank" class="col-sm-10">Show list of all bookers</a>
                     </div>
 
                     <div class="form-group">
@@ -425,6 +425,13 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             });
         });
         return this.userBooked;
+    }
+
+    multipleBookers() {
+        if (this.data.meta) {
+            return this.data.meta.maxSize > 1;
+        }
+        return false;
     }
 }
 

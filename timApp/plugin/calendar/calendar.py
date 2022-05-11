@@ -259,6 +259,39 @@ def get_events() -> Response:
     return json_response(event_objs)
 
 
+@calendar_plugin.get("/events/<int:event_id>/bookers")
+def get_event_bookers(event_id: int) -> Response:
+    event = Event.get_event_by_id(event_id)
+    if event is None:
+        raise NotExist(f"Event not found by the id of {0}".format(event_id))
+
+    buf = StringIO()
+    buf.write(
+        """<style>
+              table, th, td {
+                border: 1px solid black;
+              }
+              </style>"""
+    )
+    buf.write("<body>")
+    buf.write("<table>")
+    buf.write("<tr>")
+    buf.write("<th>Full name</th>")
+    buf.write("<th>Email</th>")
+    buf.write("</tr>")
+    booker_groups = event.enrolled_users
+    for booker_group in booker_groups:
+        bookers = booker_group.users
+        for booker in bookers:
+            buf.write("<tr>")
+            buf.write(f"<td>{booker.real_name}</td>")
+            buf.write(f"<td>{booker.email}</td>")
+            buf.write("</tr>")
+    buf.write("</table>")
+    buf.write("</body>")
+    return Response(buf.getvalue(), mimetype="text/html")
+
+
 @dataclass
 class CalendarEvent:
     title: str
