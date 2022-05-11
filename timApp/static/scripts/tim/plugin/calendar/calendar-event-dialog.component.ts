@@ -36,6 +36,12 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    [disabled]="!isEditEnabled()"/>
                         </div>
                     </div>
+                    <div class="form-group">
+                            <label for="capacity" class="col-sm-2 control-label">Capacity</label>
+                            <div class="col-sm-10">
+                                <b><abbr title="Amount of enrolled users">{{getEventEnrollments()}}</abbr> / <abbr title="Maximum capacity of the event">{{getEventCapacity()}}</abbr></b>
+                            </div>
+                        </div>
                     <div [hidden]="multipleBookers()">
                         <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
                             <label for="booker" class="col-sm-2 control-label">Booker</label>
@@ -63,6 +69,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     </div>
                     <div [hidden]="hideBookerListLink()" class="form-group">
+                        <label for="bookers" class="col-sm-2 control-label">Bookers</label>
                         <a href="/calendar/events/{{this.data.id}}/bookers" target="_blank" class="col-sm-10">Show list
                             of all bookers</a>
                     </div>
@@ -145,6 +152,9 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         (click)="bookEvent()" [disabled]="eventIsFull()" [hidden]="isEditEnabled() || userHasBooked()">
                     Book event
                 </button>
+                <span [hidden]="!eventIsFull() || userHasBooked()" style="float: left; margin-left: 10px">
+                    <b>The event is full.</b>
+                </span>
                 <span [hidden]="!userHasBooked()" style="float: left">
                     <b>You have booked this event.</b>
                 </span>
@@ -445,6 +455,20 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             return true;
         }
         return !this.userIsManager() || !this.multipleBookers();
+    }
+
+    getEventEnrollments() {
+        if (this.data.meta) {
+            return this.data.meta.enrollments;
+        }
+        return -1; // Events should always have their meta field
+    }
+
+    getEventCapacity() {
+        if (this.data.meta) {
+            return this.data.meta.maxSize;
+        }
+        return -1; // Events should always have their meta field
     }
 }
 
