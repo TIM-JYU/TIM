@@ -362,7 +362,7 @@ def update_book_message(event_id: int, booker_msg: str) -> Response:
         raise NotFound()
 
     user_obj = get_current_user_object()
-    group_id = None
+    group_id = -1
     for group in user_obj.groups:
         if group.name == user_obj.name:
             group_id = group.id
