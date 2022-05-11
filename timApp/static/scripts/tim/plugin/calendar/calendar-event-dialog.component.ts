@@ -36,29 +36,34 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    [disabled]="!isEditEnabled()"/>
                         </div>
                     </div>
-                    <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
-                        <label for="booker" class="col-sm-2 control-label">Booker</label>
-                        <div class="col-sm-10">
-                            <input type="text"
-                                   [(ngModel)]="booker"
-                                   (ngModelChange)="setMessage()"
-                                   id="booker" name="booker"
-                                   class="form-control"
-                                   placeholder="Not booked"
-                                   disabled="true"/>
+                    <div hidden="true">
+                        <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
+                            <label for="booker" class="col-sm-2 control-label">Booker</label>
+                            <div class="col-sm-10">
+                                <input type="text"
+                                       [(ngModel)]="booker"
+                                       (ngModelChange)="setMessage()"
+                                       id="booker" name="booker"
+                                       class="form-control"
+                                       placeholder="Not booked"
+                                       disabled="true"/>
+                            </div>
+                        </div>
+                        <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
+                            <label for="bookerEmail" class="col-sm-2 control-label">Booker email</label>
+                            <div class="col-sm-10">
+                                <input type="text"
+                                       [(ngModel)]="bookerEmail"
+                                       (ngModelChange)="setMessage()"
+                                       id="bookerEmail" name="bookerEmail"
+                                       class="form-control"
+                                       placeholder=""
+                                       disabled="true"/>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
-                        <label for="bookerEmail" class="col-sm-2 control-label">Booker email</label>
-                        <div class="col-sm-10">
-                            <input type="text"
-                                   [(ngModel)]="bookerEmail"
-                                   (ngModelChange)="setMessage()"
-                                   id="bookerEmail" name="bookerEmail"
-                                   class="form-control"
-                                   placeholder=""
-                                   disabled="true"/>
-                        </div>
+                    <div class="form-group">
+                        <a href="https://www.example.com" target="_blank" class="col-sm-10">Show list of all bookers</a>
                     </div>
 
                     <div class="form-group">
@@ -148,6 +153,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                 <button i18n class="btn btn-default" type="button" (click)="dismiss()">
                     Cancel
                 </button>
+                
             </ng-container>
         </tim-dialog-frame>
     `,
