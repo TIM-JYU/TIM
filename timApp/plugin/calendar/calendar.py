@@ -12,10 +12,12 @@ from timApp.auth.sessioninfo import (
     get_current_user_id,
     get_current_user_object,
 )
+from timApp.notification.send_email import send_email
 from timApp.plugin.calendar.models import Event, EventGroup, Enrollment, EnrollmentType
 from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
+from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
@@ -427,6 +429,32 @@ def delete_booking(event_id: int) -> Response:
 
     db.session.delete(enrollment)
     db.session.commit()
+    return ok_response()
+
+
+def send_email_to_creator(event_id):
+    """
+    Sends an email of cancelled time to creator of the event
+
+    :param: event_id of the event
+    :return: HTTP 200 if succeeded, otherwise 400
+    """
+    event = Event.get_event_by_id(event_id)
+    if not event:
+        raise RouteException("Event not found")
+    start_time = event.start_time
+    end_time = event.end_time
+    event_time = start_time + " - " + end_time
+    subject = "Reservation " + event_time + " has been cancelled."
+    creator_user_id = event.creator_user_id
+    creator_user_account = User.query.filter(
+        User.useraccount_id == creator_user_id
+    ).one_or_none()
+    if not creator_user_account:
+        raise RouteException("Creator not found")
+    rcpt = creator_user_account.email
+    msg = subject
+    send_email(rcpt, subject, msg)
     return ok_response()
 
 
