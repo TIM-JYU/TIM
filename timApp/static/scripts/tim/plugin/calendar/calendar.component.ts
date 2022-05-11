@@ -895,9 +895,7 @@ export class CalendarComponent
                 }
             }
         }
-        if (this.eventTypes.length === 0) {
-            // TODO: handle when no templates given in markup
-        } else {
+        if (this.eventTypes.length > 0) {
             this.selectedEvent = this.eventTypes[0];
         }
     }
