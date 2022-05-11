@@ -39,6 +39,7 @@ import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
 import {to2, toPromise} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
+import {showConfirm} from "../../ui/showConfirmDialog";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
@@ -270,8 +271,9 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                 (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
                                 (evening)="setEvening($event)"></tim-time-view-selector>
         <div>
-            <button class="btn timButton" (click)="export()">Vie kalenterin tiedot</button>
-            <input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL">
+            <button class="btn timButton" (click)="export()">Export calendar</button>
+            <!--input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL"-->
+            <span class="exportDone"><b>{{exportDone}}</b></span>
         </div>
         <ng-template #modalContent let-close="close">
             <div class="modal-header">
@@ -317,6 +319,7 @@ export class CalendarComponent
 {
     @ViewChild("modalContent", {static: true})
     modalContent?: TemplateRef<never>;
+    exportDone: string = "";
     icsURL: string = "";
     view: CalendarView = CalendarView.Week;
 
@@ -832,13 +835,35 @@ export class CalendarComponent
     }
 
     async export() {
+        if (
+            !(await showConfirm(
+                "ICS",
+                `Export calendar information in ics-format?`
+            ))
+        ) {
+            return;
+        }
         const result = await toPromise(
             this.http.get("/calendar/export", {
                 responseType: "text",
             })
         );
         if (result.ok) {
+            let copyOk = true;
             this.icsURL = result.result;
+            navigator.clipboard.writeText(this.icsURL).then(
+                function () {
+                    /* clipboard successfully set */
+                    copyOk = true;
+                },
+                function () {
+                    /* clipboard write failed */
+                    copyOk = false;
+                }
+            );
+            if (copyOk) {
+                this.exportDone = "ICS-url copied to clipboard.";
+            }
             this.refresh();
         } else {
             // TODO: Handle error responses properly
