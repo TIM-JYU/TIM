@@ -16,7 +16,7 @@ from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import RouteException
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from tim_common.markupmodels import GenericMarkupModel
@@ -375,10 +375,13 @@ def book_event(event_id: int) -> Response:
         raise RouteException(f"Event not found by the id of {0}".format(event_id))
     user_obj = get_current_user_object()
 
-    group_id = None
+    group_id = -1
     for group in user_obj.groups:
         if group.name == user_obj.name:
             group_id = group.id
+
+    if group_id < 0:
+        raise NotExist("User's personal group was not found")  # Should be impossible
 
     enrollment = Enrollment.get_enrollment_by_ids(event_id, group_id)
     if enrollment is not None:
