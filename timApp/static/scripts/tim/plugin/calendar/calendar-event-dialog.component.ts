@@ -149,10 +149,10 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     Delete
                 </button>
                 <button class="timButton" type="button" style="float: left"
-                        (click)="bookEvent()" [disabled]="eventIsFull()" [hidden]="isEditEnabled() || userHasBooked()">
+                        (click)="bookEvent()" [disabled]="eventIsFull()" [hidden]="hideBookingButton()">
                     Book event
                 </button>
-                <span [hidden]="!eventIsFull() || userHasBooked()" style="float: left; margin-left: 10px">
+                <span [hidden]="hideEventFulLSpan()" style="float: left; margin-left: 10px">
                     <b>The event is full.</b>
                 </span>
                 <span [hidden]="!userHasBooked()" style="float: left">
@@ -313,6 +313,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (this.data.meta) {
             return this.data.meta.editEnabled;
         }
+        return false; // Events should always have their meta field
     }
 
     /**
@@ -407,10 +408,16 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     }
 
     /**
-     * Returns true if the event is full otherwise false
+     * Returns true if the event is full otherwise false. Events with the capacity of 0 are considered not full.
      */
     eventIsFull() {
-        return this.data.meta!.enrollments >= this.data.meta!.maxSize;
+        if (this.data.meta) {
+            if (this.data.meta.maxSize == 0) {
+                return false;
+            }
+            return this.data.meta.enrollments >= this.data.meta.maxSize;
+        }
+        return false; // Events should always have their meta field
     }
 
     userIsManager() {
@@ -482,6 +489,29 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             return this.data.meta.maxSize;
         }
         return -1; // Events should always have their meta field
+    }
+
+    /**
+     * True if max size of the event is 0.
+     * If not: true if editing is enabled or user has booked the event. Otherwise, false.
+     */
+    hideBookingButton() {
+        if (this.data.meta) {
+            if (this.data.meta.maxSize == 0) {
+                return true;
+            }
+        }
+        return this.isEditEnabled() || this.userHasBooked();
+    }
+
+    /**
+     * True if editing is enabled. If not: true if event is not full or user has booked the event. Otherwise, false.
+     */
+    hideEventFulLSpan() {
+        if (this.isEditEnabled()) {
+            return true;
+        }
+        return !this.eventIsFull() || this.userHasBooked();
     }
 }
 

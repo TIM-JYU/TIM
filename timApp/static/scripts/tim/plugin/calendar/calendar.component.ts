@@ -152,7 +152,7 @@ registerLocaleData(localeFi);
 export type TIMCalendarEvent = CalendarEvent<{
     tmpEvent: boolean;
     deleted?: boolean;
-    editEnabled?: boolean;
+    editEnabled: boolean;
     enrollments: number;
     maxSize: number;
     booker_groups: {
@@ -530,6 +530,7 @@ export class CalendarComponent
                 enrollments: 0,
                 maxSize: 1, // TODO: temporary solution
                 booker_groups: [],
+                editEnabled: this.editEnabled,
             },
         };
         if (Date.now() > dragToSelectEvent.start.getTime()) {
@@ -696,6 +697,7 @@ export class CalendarComponent
                     enrollments: event.meta!.enrollments,
                     maxSize: event.meta!.maxSize,
                     booker_groups: event.meta!.booker_groups,
+                    editEnabled: this.editEnabled,
                 };
                 event.resizable = {
                     beforeStart: this.editEnabled,
