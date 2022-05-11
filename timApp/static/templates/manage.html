@@ -179,13 +179,26 @@
                     <th>Actions</th>
                 </tr>
                 <tr ng-repeat="tr in $ctrl.translations">
-                    <td><input type="text" class="form-control" ng-model="tr.lang_id" placeholder="Language"/></td>
-                    <td><input type="text" class="form-control" ng-model="tr.title" placeholder="Title"/></td>
+                    <td>
+                        <select id="old-document-language" name="old-document-language-select" class="form-control"
+                               ng-model="tr.lang_id" ng-change="$ctrl.updateTranslation(tr)" >
+                            <option ng-repeat="option in $ctrl.documentLanguages" value="{{option.code}}">{{option.name}} ({{option.code}})</option>
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" class="form-control" ng-model="tr.title" placeholder="Title"/>
+                    </td>
                     <td>{{tr.owner.name}}</td>
                     <td>{{tr.id}}</td>
                     <td>
                         <button class="timButton" ng-click="$ctrl.updateTranslation(tr)"
                                 ng-disabled="!$ctrl.trChanged(tr)">Update
+                        </button>
+                    </td>
+                    <td ng-show="$ctrl.item.rights.owner">
+                        <button ng-show="$ctrl.item.rights.owner" class="btn btn-danger"
+                        ng-click="$ctrl.deleteDocument(tr.id)">
+                            <i class="glyphicon glyphicon-trash"></i>
                         </button>
                     </td>
                 </tr>
@@ -197,16 +210,36 @@
                 <uib-tab heading="Create a translation">
                     <div class="form-group"><label for="translationTitle">Title:</label>
                         <input id="translationTitle" class="form-control" type="text"
-                               ng-model="$ctrl.newTranslation.title"/>
+                               ng-model="$ctrl.newTranslation.title" ng-change="$ctrl.checkCannotTranslate()" />
                     </div>
-                    <div class="form-group"><label for="translationName">Language:</label>
-                        <input id="translationName" class="form-control" type="text"
-                               ng-model="$ctrl.newTranslation.language"
-                               placeholder="Short language identifier, e.g. fi or en"/></div>
-                    <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title"
+                    <div class="languageLists">
+                        <div>
+                        <label for="documentLanguage">Target language:</label>
+                        <select id="document-language" name="document-language-select" class="form-control"
+                               ng-model="$ctrl.newTranslation.language" ng-change="$ctrl.checkTranslatability()">
+                                <option ng-repeat="option in $ctrl.documentLanguages" value="{{option.code}}">{{option.name}} ({{option.code}})</option>
+                        </select></div>
+                        <div>
+                        <label for="translator">Translator:</label>
+                        <select id="translator" name="translator-select" class="form-control"
+                               ng-model="$ctrl.newTranslation.translator" ng-change="$ctrl.updateManageTranslatorLanguages()">
+                                <option ng-repeat="option in $ctrl.translators" ng-disabled="!option.available" value="{{option.name}}">{{option.name}}</option>
+                        </select></div>
+                    </div>
+                    <div ng-show="$ctrl.mayTranslate && $ctrl.newTranslation.title">
+                        <p>This document will be automatically translated on creation. Note: A human should check the translation for any errors and fix them!</p>
+                    </div>
+                    <div ng-show="!$ctrl.mayTranslate || !$ctrl.newTranslation.title">
+                        <b ng-show="$ctrl.whyCannotTranslate">{{$ctrl.whyCannotTranslate}}</b>
+                        <b ng-show="!$ctrl.translatorAvailable">{{$ctrl.errorMessage}} </b>
+                        <p>This document will not be automatically translated on creation{{$ctrl.notManual ? "" : " because you have not chosen a machine translator"}}.</p>
+                    </div>
+                    <button ng-disabled="!$ctrl.newTranslation.language || !$ctrl.newTranslation.title ||
+                    $ctrl.translationInProgress || (!$ctrl.mayTranslate && $ctrl.notManual) || !$ctrl.translatorAvailable"
                             class="timButton"
-                            ng-click="$ctrl.createTranslation()">Create
+                            ng-click="$ctrl.createTranslation()" id="createbutton">Create
                     </button>
+                    <p ng-show="$ctrl.translationInProgress"><tim-loading></tim-loading> Translating... This may take a while.</p>
                 </uib-tab>
 <!--                <uib-tab heading="Create a cited copy">-->
 <!--                    <create-item item-type="document" item-location="{{ $ctrl.item.location }}"-->
@@ -268,8 +301,8 @@
                title="Export document and all untranslated text as markdown">Export document with original text</a>
             <button class="timButton" ng-click="$ctrl.markAllAsRead()">Mark document as read</button>
             <button ng-show="$ctrl.item.rights.owner" class="btn btn-danger"
-                    ng-click="$ctrl.deleteDocument()">
-                {{ !$ctrl.item.isFolder && !$ctrl.item.src_docid ? 'Delete document' : 'Delete translation' }}
+                    ng-click="$ctrl.deleteDocument($ctrl.item.id)">
+                {{$ctrl.deleteButtonText}}
             </button>
             <span ng-show="$ctrl.readUpdating">Marking document as read...</span>
         </div>

@@ -14,6 +14,7 @@ import {
 } from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAddContactDialog} from "tim/user/showAddContactDialog";
+import {showAddAPIKeyDialog} from "tim/user/showAddAPIDialog";
 import {Channel} from "tim/messaging/listOptionTypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
@@ -25,6 +26,7 @@ import {TabsetComponent, TabsModule} from "ngx-bootstrap/tabs";
 import {DndDropEvent, DndModule} from "ngx-drag-drop";
 import {polyfill} from "mobile-drag-drop";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
+import {ProgressbarModule} from "ngx-bootstrap/progressbar";
 import {ConsentType} from "../ui/consent";
 import {
     INotification,
@@ -34,8 +36,8 @@ import {
 } from "../util/globals";
 import {IOkResponse, isIOS, timeout, to2, toPromise} from "../util/utils";
 import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
-import {DocumentOrFolder} from "../item/IItem";
-import {ContactOrigin, IFullUser, IUserContact} from "./IUser";
+import {DocumentOrFolder, ITranslatorUsage} from "../item/IItem";
+import {ContactOrigin, IFullUser, IUserApiKey, IUserContact} from "./IUser";
 
 @Component({
     selector: "settings-button-panel",
@@ -432,9 +434,32 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                             </div>
                         </div>
                     </ng-container>
+                    <ng-container>
+                        <span class="form-label" i18n>Machine translator API Keys</span>
+                        <div class="contact-collection">
+                            <div class="contact-info" *ngFor="let APIkey of userAPIKeys">
+                                <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>
+                                <input type="text" class="form-control buttonBorder" [value]="APIkey.translator" disabled>
+                                <div *ngIf="APIkey.quotaChecked" class="stacked quotaProgressBar">
+                                    <progressbar tooltip="{{APIkey.usedQuota}} / {{APIkey.availableQuota}}" [value]="APIkey.usedQuota" [max]="APIkey.availableQuota"></progressbar>
+                                </div>
+                                <button *ngIf="!APIkey.quotaChecked" class="btn" type="button" (click)="checkQuota(APIkey)" i18n>
+                                    Check key's quota 
+                                </button>
+                                    <button *ngIf="APIkey.quotaChecked" class="btn" type="button" (click)="checkQuota(APIkey)">
+                                        <i class="glyphicon glyphicon-refresh"></i>
+                                    </button>
+                                <button class="btn btn-danger" type="button"
+                                        (click)="deleteKey(APIkey)">
+                                    <i class="glyphicon glyphicon-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </ng-container>
                 </div>
                 <settings-button-panel [saved]="saveUserAccountInfo">
                     <button class="timButton" (click)="openContactInfoDialog()" i18n>Add new contact</button>
+                    <button class="timButton" (click)="openAPIKeyDialog()" i18n>Add new API key</button>
                 </settings-button-panel>
             </bootstrap-form-panel>
             <bootstrap-form-panel [disabled]="saving" title="Delete your account" i18n-title>
@@ -474,6 +499,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     deleteConfirmName = "";
     contacts: IUserContact[];
     userContacts = new Map<Channel, IUserContact[]>();
+    userAPIKeys: IUserApiKey[] = [];
     userEmailContacts: IUserContact[] = [];
     canRemoveCustomContacts = true;
     primaryEmail!: IUserContact;
@@ -508,6 +534,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     styleError?: {title: string; message: string};
 
     constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
+        this.getKeys();
         this.user = settingsglobals().current_user;
         this.consent = this.user.consent;
         this.settings = settingsglobals().userPrefs;
@@ -535,6 +562,18 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     }
 
     // region Styles tab
+
+    /**
+     * Fetches the user's API keys from the server.
+     */
+    async getKeys() {
+        const r = await toPromise(
+            this.http.get<IUserApiKey[]>("/translations/apiKeys")
+        );
+        if (r.ok) {
+            this.userAPIKeys = r.result;
+        }
+    }
 
     async deleteSelectedStyle(style: StyleDocumentInfo) {
         if (!this.currentStyles) {
@@ -880,6 +919,18 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         );
     }
 
+    /**
+     * Opens a dialog for user to add API keys for translators.
+     */
+    openAPIKeyDialog() {
+        void to2(
+            showAddAPIKeyDialog((key) => {
+                this.userAPIKeys.push(key);
+                this.cdr.detectChanges();
+            })
+        );
+    }
+
     private getContactsFor(channel: Channel): IUserContact[] {
         if (!EDITABLE_CONTACT_CHANNELS[channel]) {
             return [];
@@ -956,6 +1007,53 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         }
         // TODO: Figure out why this is needed for change detection
         this.cdr.detectChanges();
+    }
+
+    /**
+     * Removes the user's key.
+     * @param key the key to be removed
+     */
+    async deleteKey(key: IUserApiKey) {
+        this.saving = true;
+        const r = await toPromise(
+            this.http.delete("/translations/apiKeys", {
+                body: {
+                    translator: key.translator,
+                    apikey: key.APIkey,
+                },
+            })
+        );
+        this.saving = false;
+        if (r.ok) {
+            this.userAPIKeys.splice(this.userAPIKeys.indexOf(key), 1);
+        } else {
+            await showMessageDialog(r.result.error.error);
+        }
+        // TODO: Figure out why this is needed for change detection
+        this.cdr.detectChanges();
+    }
+
+    /**
+     * Checks the quota left for the chosen key and updates it to the progress bar.
+     * @param key the key the quota of which is checked
+     */
+    async checkQuota(key: IUserApiKey) {
+        const r = await toPromise(
+            this.http.post<ITranslatorUsage>("/translations/apiKeys/quota", {
+                translator: key.translator,
+                apikey: key.APIkey,
+            })
+        );
+        if (r.ok) {
+            key.quotaChecked = true;
+            key.availableQuota = r.result.character_limit;
+            key.usedQuota = r.result.character_count;
+
+            // TODO: Figure out why this is needed for change detection
+            this.cdr.detectChanges();
+        } else {
+            await showMessageDialog(r.result.error.error);
+        }
     }
 
     saveUserAccountInfo = async () => {
@@ -1153,6 +1251,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         DndModule,
         TooltipModule.forRoot(),
         TabsModule.forRoot(),
+        ProgressbarModule.forRoot(),
     ],
 })
 export class SettingsModule implements DoBootstrap {

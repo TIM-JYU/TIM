@@ -62,6 +62,7 @@ const illegalClasses = [
     "highlighted",
     "editorArea",
     "previewcontent",
+    "previeworiginalcontent",
 ];
 
 function tryCreateRange(

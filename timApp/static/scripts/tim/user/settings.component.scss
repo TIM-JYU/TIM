@@ -249,3 +249,13 @@ textarea#custom_css {
   resize: vertical;
   min-height: 300px;
 }
+
+.buttonBorder{
+    border-right: 1px solid #ccc !important;
+}
+
+.quotaProgressBar{
+    align-items: center;
+    margin: 0 5px;
+    min-width: 20%
+}

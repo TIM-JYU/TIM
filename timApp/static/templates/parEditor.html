@@ -34,7 +34,21 @@
             <a href="https://tim.jyu.fi/view/tim/TIM-ohjeet#viitteen-katsominen" target="_blank"
                title="Help for references"><i class="helpButton glyphicon glyphicon-question-sign"></i></a>
     </uib-tab>
+    <uib-tab ng-show="!$ctrl.originalDocument" heading="Translation" index="'translator'">
+        <div id="translationTab">
+            <label for="translator">Translator:</label>
+            <select id="translator" name="translator-select" class="form-control"
+                    ng-model="$ctrl.docTranslator" ng-change="$ctrl.updatePareditorTranslatorLanguages()">
+                <option ng-repeat="option in $ctrl.translators" ng-disabled="!option.available" value="{{option.name}}">{{option.name}}</option>
+            </select>
+                <p ng-show="$ctrl.translationInProgress"><tim-loading></tim-loading> Translating... This may take a while.</p>
+                <button class="timButton" id="translateButton" ng-disabled="$ctrl.saving || $ctrl.translationInProgress
+                || $ctrl.docTranslator == '' || !$ctrl.translatorAvailable" ng-show="$ctrl.isTranslationSupported()" ng-click="$ctrl.translateClicked()" style="right: 2px;">Translate</button>
+            <b ng-show="!$ctrl.translatorAvailable">{{$ctrl.errorMessage}}</b>
+        </div>
+    </uib-tab>
   </uib-tabset>
+  <div id="editorflex" class="stacked"><div id="editorbox">
     <div class="editorContainer">
     </div>
     <div class="editButtonArea">
@@ -43,7 +57,9 @@
         <span ng-show="$ctrl.proeditor">
         <button class="btn btn-danger" ng-disabled="$ctrl.saving" ng-show="$ctrl.getOptions().showDelete" ng-click="$ctrl.deleteClicked()">Delete</button>
         </span>
-        <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showUnread()" ng-click="$ctrl.unreadClicked()" style="right: 2px; position: absolute;">Mark as unread</button>
+        <div class="hidingButtonArea">
+            <button class="timButton" ng-disabled="$ctrl.saving" ng-show="$ctrl.showUnread()" ng-click="$ctrl.unreadClicked()" style="right: 2px;">Mark as unread</button>
+        </div>
     </div>
     <div class="choices" ng-show="$ctrl.getOptions().choices">
         <div ng-repeat="choice in $ctrl.getOptions().choices" title="{{ choice.title }}">
@@ -69,30 +85,61 @@
             <button class="timButton btn-xs" title="Click to reformat text for given line length" ng-click="$ctrl.editor.forceWrap(true)">Wrap
             </button>
             <input type="checkbox" title="Check for automatic wrapping" ng-model="$ctrl.wrap.auto"/>
-            <input type="text" title="Choose linelength for text.  0=no wrap" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
+            <input type="text" title="Choose line length for text.  0=no wrap" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
         </span>
-    </div>
+    </div></div>
     <!--
     <label class="pull-right font-weight-normal" title="Put 0 to no wrap" ng-click="$ctrl.editor.forceWrap(true)">Wrap:
         <input type="text" ng-pattern="/[-0-9]*/" ng-model="$ctrl.wrap.n" size="2"/>
     </label>
     -->
     <div ng-if="$ctrl.trdiff"
+         ng-show="$ctrl.proeditor"
+          class="halfsize"
          tim-draggable-fixed
          detachable="true"
+         can-minimize="true"
          caption="Difference in original document"
          save="{{$ctrl.getOptions().localSaveTag}}Trdiff"
-    >
+    id="diff">
+        <div class="draggable-content">
+        <div class="border background">
+            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.sideBySide" ng-click="$ctrl.changePositioning()"/> View beside the editor </label>
+        </div>
         <div class="diff border">
             <pre diff left-obj="$ctrl.trdiff.old" right-obj="$ctrl.trdiff.new"></pre>
             <a href="{{ $ctrl.getSourceDocumentLink() }}"><i class="glyphicon glyphicon-link"></i></a>
-        </div>
+        </div></div>
+    </div>
+  </div>
+  <div id="previews" class="sidebyside">
+    <div tim-draggable-fixed
+         detachable="true"
+         can-minimize="true"
+         caption="Current Block {{ $ctrl.getPreviewCaption() }}"
+         save="{{$ctrl.getOptions().localSaveTag}}Preview"
+         class="previewDiv"
+         ng-show="$ctrl.proeditor"
+    id="currpreview">
+        <div class="draggable-content">
+        <div class="previewcontent paragraphs fullsize"></div></div>
     </div>
     <div tim-draggable-fixed
          detachable="true"
-         caption="{{ $ctrl.getPreviewCaption() }}"
-         save="{{$ctrl.getOptions().localSaveTag}}Preview"
+         can-minimize="true"
+         caption="Source Block {{ $ctrl.getPreviewCaption() }}"
+         save="{{$ctrl.getOptions().localSaveTag}}Preview (original block)"
          class="previewDiv"
-         ng-show="$ctrl.proeditor">
-        <div class="previewcontent paragraphs"></div>
+         ng-if="$ctrl.trdiff.new"
+         ng-show="$ctrl.proeditor"
+    id="origpreview">
+        <div class="draggable-content">
+        <div class="previeworiginalcontent paragraphs fullsize">
+            <div class="par">
+            <div class="parContent">
+            <p>{{$ctrl.trdiff.new}}</p>
+            </div>
+            </div>
+        </div></div>
+    </div>
     </div>

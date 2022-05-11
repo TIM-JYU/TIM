@@ -35,7 +35,7 @@ class UserContactTest(BrowserTest):
         self.drv.find_element(
             By.CSS_SELECTOR, ".modal-footer > .timButton:nth-child(1)"
         ).click()
-        self.drv.find_element(By.CSS_SELECTOR, ".timButton:nth-child(3)").click()
+        self.drv.find_element(By.CSS_SELECTOR, ".timButton:nth-child(2)").click()
 
         screenshot("usercontact/add_new_unverified")
 

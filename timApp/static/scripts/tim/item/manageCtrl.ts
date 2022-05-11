@@ -8,6 +8,10 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as snv from "tim/ui/shortNameValidator";
 import * as tem from "tim/ui/formErrorMessage";
 import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
+import {
+    updateTranslationData,
+    updateTranslatorLanguages,
+} from "tim/document/languages";
 import {IManageResponse} from "../document/editing/edittypes";
 import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
@@ -15,13 +19,15 @@ import {manageglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
 import {capitalizeFirstLetter, clone, markAsUsed, to, to2} from "../util/utils";
 import {
-    getItemTypeName,
     IDocument,
-    IEditableTranslation,
     IFolder,
     IFullDocument,
     IItem,
+    IEditableTranslation,
+    ILanguage,
     redirectToItem,
+    getItemTypeName,
+    ITranslator,
 } from "./IItem";
 
 markAsUsed(snv, tem);
@@ -39,8 +45,24 @@ export class PermCtrl implements IController {
     private newTitle: string;
     private newFolderName: string;
     private hasMoreChangelog?: boolean;
-    private translations: Array<IEditableTranslation> = [];
-    private newTranslation: {language: string; title: string};
+    private translations: IEditableTranslation[] = [];
+    private sourceLanguages: ILanguage[] = [];
+    private targetLanguages: ILanguage[] = [];
+    private documentLanguages: ILanguage[] = [];
+    private translators: ITranslator[] = [];
+    private newTranslation: {
+        language: string;
+        title: string;
+        translator: string;
+    };
+    private mayTranslate = false;
+    private notManual = false;
+    private translatorAvailable = true;
+    private translationInProgress: boolean = false;
+    private deleteButtonText = "";
+    private errorMessage = "";
+    private whyCannotTranslate = "";
+    private availableTranslators: string[] = [];
     private accessTypes: Array<unknown>; // TODO proper type
     private orgs: IGroup[];
     private item: IFullDocument | IFolder;
@@ -65,7 +87,11 @@ export class PermCtrl implements IController {
     private result?: boolean;
 
     constructor() {
-        this.newTranslation = {language: "", title: ""};
+        this.newTranslation = {
+            language: "",
+            title: "",
+            translator: "Manual", // Default
+        };
         this.accessTypes = manageglobals().accessTypes;
         this.orgs = manageglobals().orgs;
         this.item = manageglobals().curr_item;
@@ -95,6 +121,58 @@ export class PermCtrl implements IController {
                 await this.getAliases();
                 await this.getTranslations();
             }
+        }
+        this.setDeleteText();
+
+        const result = await updateTranslationData(
+            this.newTranslation.translator,
+            this.errorMessage,
+            true
+        );
+        this.sourceLanguages = result.source;
+        this.documentLanguages = result.document;
+        this.targetLanguages = result.target;
+        this.translators = result.translators;
+        this.availableTranslators = result.availableTransls;
+        this.errorMessage = result.error;
+
+        if (this.errorMessage != "") {
+            this.translatorAvailable = false;
+        }
+        this.checkCannotTranslate();
+    }
+
+    /**
+     * Checks for reasons why the document cannot be translated.
+     */
+    checkCannotTranslate() {
+        const base = "The following information is missing: ";
+        let reasons = base;
+        if (this.findSourceDocLang() == "") {
+            reasons = reasons + "Source language";
+        }
+        if (this.newTranslation.title == "") {
+            if (!(reasons === base)) {
+                reasons = reasons + ", ";
+            }
+            reasons = reasons + "Title";
+        }
+        if (this.newTranslation.language == "") {
+            if (!(reasons === base)) {
+                reasons = reasons + ", ";
+            }
+            reasons = reasons + "Target language";
+        }
+        if (this.notManual && !this.mayTranslate && this.translatorAvailable) {
+            if (reasons === base) {
+                reasons =
+                    "The chosen machine translator does not support the chosen language combination.";
+            }
+        }
+        if (!(reasons === base)) {
+            this.whyCannotTranslate = reasons;
+        } else {
+            this.whyCannotTranslate = "";
         }
     }
 
@@ -145,7 +223,7 @@ export class PermCtrl implements IController {
         }
 
         const r = await to(
-            $http.get<Array<IEditableTranslation>>(
+            $http.get<IEditableTranslation[]>(
                 "/translations/" + this.item.id,
                 {}
             )
@@ -176,6 +254,7 @@ export class PermCtrl implements IController {
     }
 
     async updateTranslation(tr: IEditableTranslation) {
+        const old_lang = tr.old_langid;
         const r = await to(
             $http.post("/translation/" + tr.id, {
                 new_langid: tr.lang_id,
@@ -189,8 +268,11 @@ export class PermCtrl implements IController {
                 this.syncTitle(tr.title);
             }
         } else {
+            tr.lang_id = old_lang;
             await showMessageDialog(r.result.data.error);
         }
+        this.checkTranslatability();
+        this.checkCannotTranslate();
     }
 
     syncTitle(title: string) {
@@ -207,7 +289,7 @@ export class PermCtrl implements IController {
 
     async changeTitle() {
         if (!this.newTitle) {
-            showMessageDialog("Title not provided.");
+            await showMessageDialog("Title not provided.");
             return;
         }
         const r = await to(
@@ -310,26 +392,45 @@ export class PermCtrl implements IController {
         }
     }
 
-    async deleteDocument() {
+    /**
+     * Sets the right text for the document deletion button.
+     */
+    setDeleteText() {
+        const lang_name = this.findCurrentTrDocLang(this.item.id);
+        if (lang_name == "") {
+            this.deleteButtonText = "Delete document";
+        } else {
+            this.deleteButtonText = "Delete translation: " + lang_name;
+        }
+    }
+
+    /**
+     * Removes the chosen document.
+     * @param id the id of the document to be deleted
+     */
+    async deleteDocument(id: number) {
+        const trDocLang = this.findCurrentTrDocLang(id);
+        const deletingCurrentDoc = this.item.id == id;
         if (
             window.confirm(
                 `Are you sure you want to delete this ${
-                    !this.item.isFolder && !this.item.src_docid
+                    !this.item.isFolder && trDocLang == ""
                         ? "document"
-                        : "translation"
-                }?`
+                        : "translation: " + trDocLang
+                }? Deletion cannot be undone!`
             )
         ) {
-            const r = await to($http.delete("/documents/" + this.item.id));
+            const r = await to($http.delete("/documents/" + id));
             if (r.ok) {
-                if (!this.item.isFolder && this.item.src_docid) {
+                if (!this.item.isFolder && deletingCurrentDoc) {
                     const originalDoc = this.item.path.substring(
                         0,
                         this.item.path.lastIndexOf("/")
                     );
                     location.replace(`/manage/${originalDoc}`);
                 } else {
-                    location.replace(`/view/${this.item.location}`);
+                    // TODO: Turn this from what's basically a page refresh to just updating the list of translations
+                    location.replace(`/manage/${this.item.path}`);
                 }
             } else {
                 await showMessageDialog(r.result.data.error);
@@ -352,9 +453,9 @@ export class PermCtrl implements IController {
         }
     }
 
-    convertDocument(doc: string) {
+    async convertDocument(doc: string) {
         if (!this.wikiRoot) {
-            showMessageDialog("Wiki root missing.");
+            await showMessageDialog("Wiki root missing.");
             return;
         }
         let text = this.tracWikiText;
@@ -498,7 +599,7 @@ export class PermCtrl implements IController {
                             "\n\nDo you still wish to save the document?"
                     )
                 ) {
-                    this.saveDocumentWithWarnings();
+                    await this.saveDocumentWithWarnings();
                 }
             } else {
                 await showMessageDialog(data.error);
@@ -538,10 +639,37 @@ export class PermCtrl implements IController {
         }
     }
 
+    /**
+     * Updates the list of available languages when translator is changed.
+     */
+    async updateManageTranslatorLanguages() {
+        const result = await updateTranslatorLanguages(
+            this.newTranslation.translator
+        );
+        if (result.ok) {
+            this.targetLanguages = [];
+            this.sourceLanguages = [];
+            this.targetLanguages.push(...result.result.target);
+            this.sourceLanguages.push(...result.result.source);
+            this.translatorAvailable = true;
+            this.errorMessage = "";
+        } else {
+            this.translatorAvailable = false;
+            this.errorMessage = result.result;
+        }
+
+        this.notManualCheck();
+        this.checkTranslatability();
+    }
+
     async createTranslation() {
+        if (this.newTranslation.translator != "Manual") {
+            this.translationInProgress = true;
+        }
+
         const r = await to(
             $http.post<IDocument>(
-                `/translate/${this.item.id}/${this.newTranslation.language}`,
+                `/translate/${this.item.id}/${this.newTranslation.language}/${this.newTranslation.translator}`,
                 {
                     doc_title: this.newTranslation.title,
                 }
@@ -549,10 +677,83 @@ export class PermCtrl implements IController {
         );
         if (r.ok) {
             const data = r.result.data;
+            if (this.newTranslation.translator != "Manual") {
+                await $http.post(`/markTranslated/${data.id}`, {
+                    doc_id: data.id,
+                });
+            }
             redirectToItem(data);
         } else {
+            this.translationInProgress = false;
             await showMessageDialog(r.result.data.error);
         }
+    }
+
+    /**
+     * Finds the language of the translation document the given ID refers to.
+     * @param id the id of the translation document
+     * @returns The current translation document's language or nothing if not found or is source document.
+     */
+    findCurrentTrDocLang(id: number) {
+        return (
+            this.translations.find((tr) => tr.id == id && tr.id != tr.src_docid)
+                ?.lang_id ?? ""
+        );
+    }
+
+    /**
+     * Finds the language of the source document in the translations list.
+     * @returns the source document's language or an empty string if for some reason was not found
+     */
+    findSourceDocLang() {
+        return (
+            this.translations.find((tr) => tr.id == tr.src_docid)?.lang_id ?? ""
+        );
+    }
+
+    /**
+     * Checks whether the translator chosen for the document is Manual (in which case a translator language is not
+     * shown) or not.
+     */
+    notManualCheck() {
+        if (this.newTranslation.translator == "Manual") {
+            this.notManual = false;
+            this.translatorAvailable = true;
+            return;
+        }
+        this.notManual = true;
+    }
+
+    /**
+     * Checks if the document can be translated automatically.
+     * TODO: Change the value of target language dropdown to ILanguage object rather than just the code and
+     * handle finding languages with .find or .includes or something?
+     * @returns Whether or not the document can be translated automatically with the selected translator
+     */
+    checkTranslatability() {
+        let targetFound = false;
+        if (this.newTranslation.translator == "Manual") {
+            this.mayTranslate = false;
+        } else {
+            const src_lang = this.findSourceDocLang();
+            for (const target of this.targetLanguages) {
+                if (target.code == this.newTranslation.language) {
+                    targetFound = true;
+                    break;
+                }
+            }
+            if (targetFound) {
+                for (const source of this.sourceLanguages) {
+                    if (source.code == src_lang) {
+                        this.mayTranslate = true;
+                        this.checkCannotTranslate();
+                        return;
+                    }
+                }
+            }
+        }
+        this.mayTranslate = false;
+        this.checkCannotTranslate();
     }
 
     loggedIn() {

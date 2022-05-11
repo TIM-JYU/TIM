@@ -35,6 +35,14 @@ export interface IUserContact {
     primary: boolean;
 }
 
+export interface IUserApiKey {
+    translator: string;
+    APIkey: string;
+    usedQuota: number;
+    availableQuota: number;
+    quotaChecked: boolean;
+}
+
 export interface IFullUser extends IUser {
     groups: IGroup[];
     consent: ConsentType | undefined;
