@@ -145,6 +145,9 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         (click)="bookEvent()" [disabled]="eventIsFull()" [hidden]="isEditEnabled() || userHasBooked()">
                     Book event
                 </button>
+                <span [hidden]="!userHasBooked()" style="float: left">
+                    <b>You have booked this event.</b>
+                </span>
                 <button class="btn timButton" type="button" [hidden]="!userHasBooked()" (click)="cancelBooking()"
                         style="background-color: red;">
                     Cancel Booking
