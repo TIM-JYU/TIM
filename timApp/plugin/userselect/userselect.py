@@ -8,6 +8,7 @@ from timApp.answer.routes import save_fields, FieldSaveRequest, FieldSaveUserEnt
 from timApp.auth.accesshelper import verify_logged_in, verify_view_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
+from timApp.auth.session.util import distribute_session_verification
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -145,6 +146,8 @@ class ActionCollection:
     setValue: list[SetTaskValueAction] = field(default_factory=list)
     addToGroups: list[str] = field(default_factory=list)
     removeFromGroups: list[str] = field(default_factory=list)
+    verifyRemoteSessions: list[str] = field(default_factory=list)
+    invalidateRemoteSessions: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -156,6 +159,7 @@ class ScannerOptions:
     waitBetweenScans: float = 0.0
     beepOnSuccess: bool = False
     beepOnFailure: bool = False
+    parameterSeparator: str | None = "#"
 
 
 @dataclass
@@ -228,13 +232,14 @@ selectOnce: false        # If true, hide other users when selecting one.
 allowUndo: false         # Can the action be undone. Undoing is not supported by all actions.
 preFetch: false          # If true, all users are prefetched. This makes initial load longer but searches are faster.
 scanner:                 # Camera scanner options
-  enabled: false         # Show the scanner button
-  applyOnMatch: false    # If true and only one user is found from scanning, apply actions on them without verifying 
-  continuousMatch: false # If true, scanner is not disabled after a successful scan
-  waitBetweenScans: 0    # If continuousMatch is true, how many seconds to wait before restarting the scanner
-  beepOnSuccess: false   # Play a "beep" sound on successful scan.
-  beepOnFailure: true    # Play a "beep" sound if scan was successful but no matching users were found. 
-  scanInterval: 1.5      # Time interval between scan attempts in seconds. Lower value means faster scans but higher energy usage.
+  enabled: false           # Show the scanner button
+  parameterSeparator: "#"  # String to separate the user query from the search parameter when scanning. If null, no separation is done.
+  applyOnMatch: false      # If true and only one user is found from scanning, apply actions on them without verifying 
+  continuousMatch: false   # If true, scanner is not disabled after a successful scan
+  waitBetweenScans: 0      # If continuousMatch is true, how many seconds to wait before restarting the scanner
+  beepOnSuccess: false     # Play a "beep" sound on successful scan.
+  beepOnFailure: true      # Play a "beep" sound if scan was successful but no matching users were found. 
+  scanInterval: 1.5        # Time interval between scan attempts in seconds. Lower value means faster scans but higher energy usage.
 actions:                 # Actions to apply for the selected user
 
     #addPermission:               # Add permissions to documents
@@ -271,6 +276,12 @@ actions:                 # Actions to apply for the selected user
 
     #removeFromGroups:          # Remove the user from the groups. This will do a soft delete (i.e. add removal date)
     #  - somegroups
+
+    #verifyRemoteSessions:    # Verify sessions for remote targets. Use DIST_RIGHTS_HOSTS to specify the actual hosts.
+    #  - target1
+    
+    #invalidateRemoteSessions: # Invalidate sessions for remote targets. Use DIST_RIGHTS_HOSTS to specify the actual hosts.
+    #  - target1
 #text:              # UI texts
 #  apply: Apply permissions
 #  cancel: Cancel
@@ -433,8 +444,16 @@ def get_plugin_info(
     if not model.actions:
         return model, cur_user, user_group, user_acc
 
-    if model.actions.distributeRight and not has_distribution_moderation_access(doc):
+    can_distribute_rights = has_distribution_moderation_access(doc)
+
+    if model.actions.distributeRight and not can_distribute_rights:
         raise RouteException("distributeRight is not allowed in this document")
+
+    if model.actions.verifyRemoteSessions and not can_distribute_rights:
+        raise RouteException("verifyRemoteSessions is not allowed in this document")
+
+    if model.actions.invalidateRemoteSessions and not can_distribute_rights:
+        raise RouteException("invalidateRemoteSessions is not allowed in this document")
 
     return model, cur_user, user_group, user_acc
 
@@ -527,7 +546,10 @@ def undo_group_actions(
 
 @user_select_plugin.post("/undo")
 def undo(
-    username: str, task_id: str | None = None, par: GlobalParId | None = None
+    username: str,
+    task_id: str | None = None,
+    par: GlobalParId | None = None,
+    param: str | None = None,  # TODO: Use
 ) -> Response:
     model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
     # No permissions to undo
@@ -674,6 +696,12 @@ def apply_dist_right_actions(
     return errors
 
 
+def apply_verify_session(
+    action: str, user_acc: User, session_id: str | None, targets: list[str]
+) -> list[str]:
+    return distribute_session_verification(action, user_acc.name, session_id, targets)
+
+
 def apply_group_actions(
     user_acc: User, cur_user: User, add: list[str], remove: list[str]
 ) -> None:
@@ -690,7 +718,10 @@ def apply_group_actions(
 
 @user_select_plugin.post("/apply")
 def apply(
-    username: str, task_id: str | None = None, par: GlobalParId | None = None
+    username: str,
+    task_id: str | None = None,
+    par: GlobalParId | None = None,
+    param: str | None = None,  # TODO: Use
 ) -> Response:
     model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
     # No permissions to apply, simply return
@@ -703,8 +734,17 @@ def apply(
     db.session.flush()
 
     apply_field_actions(user_acc, cur_user, model.actions.setValue)
+
     right_dist_errors = apply_dist_right_actions(
         user_acc, model.actions.distributeRight
+    )
+
+    session_verification_errors = apply_verify_session(
+        "verify", user_acc, param, model.actions.verifyRemoteSessions
+    )
+
+    session_invalidation_errors = apply_verify_session(
+        "invalidate", user_acc, param, model.actions.invalidateRemoteSessions
     )
 
     update_messages = apply_permission_actions(
@@ -725,11 +765,24 @@ def apply(
             f"RIGHT_DIST: problem distributing rights for user {user_acc.email}: {error}"
         )
 
+    for error in session_verification_errors:
+        log_warning(
+            f"SESSION_VERIFICATION: problem verifying session for user {user_acc.email}: {error}"
+        )
+
+    for error in session_invalidation_errors:
+        log_warning(
+            f"SESSION_VERIFICATION: problem invalidating session for user {user_acc.email}: {error}"
+        )
+
+    all_errors = (
+        right_dist_errors + session_verification_errors + session_invalidation_errors
+    )
     # Better throw an error here. This should prompt the user to at least try again
     # Unlike with undoing, it's better to get the user to reapply the rights or properly fix them
     # Moreover, this should encourage the user to report the problem with distribution ASAP
-    if right_dist_errors:
-        raise RouteException("\n".join([f"* {error}" for error in right_dist_errors]))
+    if all_errors:
+        raise RouteException("\n".join([f"* {error}" for error in all_errors]))
 
     return ok_response()
 

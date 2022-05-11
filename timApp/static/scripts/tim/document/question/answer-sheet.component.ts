@@ -13,13 +13,13 @@ import {ParCompiler} from "tim/editor/parCompiler";
 import {
     AnswerFieldType,
     AnswerTable,
-    RowCodec,
     IAskedJsonJson,
     IExplCollection,
     IHeader,
     IProcessedHeaders,
     IRow,
     IUnprocessedHeaders,
+    RowCodec,
 } from "tim/lecture/lecturetypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClientModule} from "@angular/common/http";

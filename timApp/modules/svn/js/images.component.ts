@@ -5,8 +5,8 @@ import {
     DoBootstrap,
     ElementRef,
     NgModule,
-    ViewEncapsulation,
     ViewChild,
+    ViewEncapsulation,
 } from "@angular/core";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {

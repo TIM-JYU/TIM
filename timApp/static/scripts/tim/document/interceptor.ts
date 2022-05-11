@@ -6,8 +6,12 @@ import angular, {
 import {timApp} from "tim/app";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
+import {
+    handleExpiredSession,
+    SESSION_VERIFICATION_NEEDED_CODE,
+} from "tim/util/session-verify.interceptor";
 import {AnswerBrowserData, IAnswerSaveEvent} from "../answer/answerbrowser3";
-import {$httpProvider, $q} from "../util/ngimport";
+import {$http, $httpProvider, $q} from "../util/ngimport";
 
 export function handleAnswerResponse(
     taskIdFull: string,
@@ -143,5 +147,22 @@ timApp.config([
         $httpProvider.interceptors.push(
             interceptor as IHttpInterceptorFactory[]
         );
+        $httpProvider.interceptors.push([
+            () => {
+                return {
+                    async responseError(
+                        response: angular.IHttpResponse<unknown>
+                    ) {
+                        if (
+                            response.status === SESSION_VERIFICATION_NEEDED_CODE
+                        ) {
+                            await handleExpiredSession();
+                            return $http(response.config);
+                        }
+                        return $q.reject(response);
+                    },
+                };
+            },
+        ]);
     },
 ]);

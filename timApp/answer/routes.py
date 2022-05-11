@@ -57,6 +57,7 @@ from timApp.auth.sessioninfo import (
     logged_in,
     user_context_with_logged_in,
     get_other_session_users_objs,
+    clear_session,
 )
 from timApp.auth.sessioninfo import get_current_user_object, get_current_user_group
 from timApp.document.caching import clear_doc_cache
@@ -687,7 +688,7 @@ def post_answer_impl(
     # It is rare but possible that the current user has been deleted (for example as the result of merging 2 accounts).
     # We assume it's the case here, so we clear the session and ask to log in again.
     if curr_user.is_deleted:
-        session.clear()
+        clear_session()
         raise AccessDenied("Please refresh the page and log in again.")
 
     rights = get_user_rights_for_item(d, curr_user)
