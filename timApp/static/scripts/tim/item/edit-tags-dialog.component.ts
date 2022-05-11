@@ -8,6 +8,7 @@ import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {SessionVerify} from "tim/util/session-verify.interceptor";
 import {TEACHERS_GROUPNAME} from "../user/IUser";
 import {userBelongsToGroupOrIsAdmin} from "../user/userService";
 import {toPromise} from "../util/utils";
@@ -328,6 +329,7 @@ export class EditTagsDialogComponent extends AngularDialogComponent<
 }
 
 @NgModule({
+    providers: [SessionVerify],
     declarations: [EditTagsDialogComponent],
     imports: [
         BrowserModule,

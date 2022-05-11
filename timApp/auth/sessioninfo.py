@@ -5,10 +5,16 @@ from sqlalchemy.orm import joinedload
 
 from timApp.document.usercontext import UserContext
 from timApp.user.user import User, user_query_with_joined_groups
+from timApp.user.usergroup import UserGroup
 
 
-def get_current_user():
+def get_current_user() -> dict:
     return get_current_user_object().to_json()
+
+
+def clear_session() -> None:
+    session.clear()
+    g.pop("user", None)
 
 
 def get_current_user_object() -> User:
@@ -53,7 +59,7 @@ def get_other_users_as_list() -> list[dict[str, str]]:
     return list(session.get("other_users", {}).values())
 
 
-def get_session_users():
+def get_session_users() -> list[dict]:
     return [get_current_user()] + get_other_users_as_list()
 
 
@@ -73,7 +79,7 @@ def get_session_users_ids() -> list[int]:
     return [u["id"] for u in get_session_users()]
 
 
-def get_session_usergroup_ids():
+def get_session_usergroup_ids() -> list[int]:
     return [
         User.get_by_id(u["id"]).get_personal_group().id for u in get_session_users()
     ]
@@ -103,7 +109,7 @@ def get_current_user_group() -> int:
     return get_current_user_group_object().id
 
 
-def get_current_user_group_object():
+def get_current_user_group_object() -> UserGroup:
     return get_current_user_object().get_personal_group()
 
 
@@ -111,5 +117,5 @@ def logged_in() -> bool:
     return get_current_user_id() != 0
 
 
-def save_last_page():
+def save_last_page() -> None:
     session["last_doc"] = request.full_path

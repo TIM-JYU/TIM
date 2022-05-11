@@ -1,0 +1,41 @@
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+
+  & > *:not(:last-child) {
+    margin-right: 10px;
+  }
+}
+
+h2 {
+  margin-top: 0;
+}
+
+.qr-container {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  margin: 20px;
+
+  .qr-code {
+    margin: 20px;
+  }
+
+  .qr-info {
+    font-weight: bold;
+    font-size: 1.2em;
+  }
+}
+
+.modal-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 100;
+    background: black;
+    opacity: 0.5;
+    pointer-events: all;
+}

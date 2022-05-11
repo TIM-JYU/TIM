@@ -89,6 +89,11 @@ export interface IGenericGlobals {
     lectureInfo: {in_lecture: boolean; is_lecturer: boolean};
 }
 
+export interface IErrorGlobals extends IGenericGlobals {
+    errorCode: number;
+    errorStatus: string;
+}
+
 export interface IItemGlobals extends IGenericGlobals {
     breadcrumbs: IFolder[];
     curr_item: DocumentOrFolder;
@@ -277,6 +282,10 @@ export function verificationglobals(): IVerificationGlobals {
 
 export function isDocumentGlobals(g: SomeGlobals): g is IDocumentGlobals {
     return "docSettings" in g;
+}
+
+export function isErrorGlobals(g: SomeGlobals): g is IErrorGlobals {
+    return "errorCode" in g;
 }
 
 function someGlobals<T extends IGenericGlobals>(): T {

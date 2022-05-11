@@ -14,13 +14,12 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {copyToClipboard} from "tim/util/utils";
-
 import {
+    copyToClipboard,
+    isSafari,
     parseIframeopts,
     seconds2Time,
     valueDefu,
-    isSafari,
 } from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {BrowserModule} from "@angular/platform-browser";

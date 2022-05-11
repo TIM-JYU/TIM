@@ -10,7 +10,7 @@ from timApp.admin.user_cli import do_soft_delete
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.routes import hide_points
 from timApp.auth.accesshelper import verify_logged_in, verify_admin, verify_view_access
-from timApp.auth.sessioninfo import get_current_user_object
+from timApp.auth.sessioninfo import get_current_user_object, clear_session
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.item.block import Block, BlockType
@@ -200,6 +200,6 @@ def delete_account() -> Response:
         )
     do_soft_delete(u)
     db.session.commit()
-    session.clear()
+    clear_session()
     flash("Your account has been deleted.")
     return ok_response()

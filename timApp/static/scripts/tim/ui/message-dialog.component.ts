@@ -2,6 +2,7 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {BrowserModule} from "@angular/platform-browser";
+import {TimUtilityModule} from "./tim-utility.module";
 
 @Component({
     selector: "tim-message-dialog",
@@ -28,6 +29,6 @@ export class MessageDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [MessageDialogComponent],
-    imports: [BrowserModule, DialogModule],
+    imports: [BrowserModule, DialogModule, TimUtilityModule],
 })
 export class MessageDialogModule {}

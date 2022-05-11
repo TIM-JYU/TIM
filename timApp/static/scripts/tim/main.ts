@@ -64,8 +64,12 @@ import {CopyFolderComponent} from "tim/folder/copy-folder.component";
 import {NotificationOptionsComponent} from "tim/item/manage/notification-options.component";
 import {ParRefComponent} from "tim/document/par-ref.component";
 import {SearchButtonComponent} from "tim/search/search-button.component";
+import {
+    handleExpiredSession,
+    SESSION_VERIFICATION_NEEDED_CODE,
+} from "tim/util/session-verify.interceptor";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
-import {genericglobals} from "./util/globals";
+import {genericglobals, isErrorGlobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
 
 BackspaceDisabler.disable();
@@ -146,7 +150,8 @@ if (document.location) {
 $(async () => {
     timLogTime("DOM ready", "main.ts");
     insertLogDivIfEnabled();
-    const jsmodules = genericglobals().JSMODULES;
+    const globals = genericglobals();
+    const jsmodules = globals.JSMODULES;
     const moduleLoads = [];
     for (const mname of jsmodules) {
         const m = staticDynamicImport(mname);
@@ -174,6 +179,14 @@ $(async () => {
     );
     timLogTime("Angular bootstrap done", "main.ts");
     ParCompiler.processAllMathDelayed($("body"), 1500);
+
+    if (
+        isErrorGlobals(globals) &&
+        globals.errorCode == SESSION_VERIFICATION_NEEDED_CODE
+    ) {
+        await handleExpiredSession();
+        window.location.reload();
+    }
 
     // For some reason, anchor link in URL doesn't work when loading a page for the first time.
     // This is a workaround for it.

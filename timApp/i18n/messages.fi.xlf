@@ -4994,7 +4994,7 @@
       </trans-unit>
       <trans-unit id="6692672754656409173" datatype="html">
         <source>Upload starting... </source>
-        <target state="translated">Lataus alkaa...</target>
+        <target state="translated">Lataus alkaa… </target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">204</context>
@@ -5534,6 +5534,62 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
           <context context-type="linenumber">109</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7711803407150719014" datatype="html">
+        <source> Session check </source>
+        <target state="translated"> Istunnon tarkistus </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
+          <context context-type="linenumber">28,30</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3505358436479235655" datatype="html">
+        <source> The session is expired. Ask the supervisor to scan the QR code below. </source>
+        <target state="translated"> Istunto on vanhentunut. Pyydä valvojaa skannaamaan alla oleva QR-koodi. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
+          <context context-type="linenumber">32,34</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8303849156036972853" datatype="html">
+        <source>Verify a new login</source>
+        <target state="translated">Vahvista uusi sisäänkirjautuminen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
+          <context context-type="linenumber">35</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="212118607883345467" datatype="html">
+        <source>This session was expired because you logged in too many times.</source>
+        <target state="translated">Tämä istunto vanhentui, koska kirjauduit sisään liian monta kertaa.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
+          <context context-type="linenumber">36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8437774784999642776" datatype="html">
+        <source>Once the code has been scanned, press "Check status" to re-check your verification.</source>
+        <target state="translated">Kun koodi on skannattu, tarkista vahvistuksen tila painamalla "Tarkista tila".</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
+          <context context-type="linenumber">46</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6118193036130472402" datatype="html">
+        <source> Check status </source>
+        <target state="translated"> Tarkista tila </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
+          <context context-type="linenumber">51,53</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5098547321898510813" datatype="html">
+        <source> Please ask the supervisor to scan the code below to continue. </source>
+        <target state="translated"> Ole hyvä ja pyydä valvojaa skannaamaan alla oleva koodi jatkaaksesi. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
+          <context context-type="linenumber">38,40</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4302420491905014187" datatype="html">

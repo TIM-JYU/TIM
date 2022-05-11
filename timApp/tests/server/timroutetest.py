@@ -769,6 +769,7 @@ class TimRouteTest(TimDbTest):
         username: str | None = None,
         force: bool = False,
         clear_last_doc: bool = True,
+        manual: bool = False,
         add: bool = False,
         **kwargs,
     ):
@@ -779,10 +780,11 @@ class TimRouteTest(TimDbTest):
         :param passw: The password of the user.
         :param force: Whether to force the login route to be called even if the user is already logged in.
         :param add: Whether to add this user to the session group.
+        :param manual: If true, always executes the login manually (without quick user context creation).
         :return: Response as a JSON dict.
 
         """
-        if self.client.application.got_first_request:
+        if self.client.application.got_first_request and not manual:
             if not force and not add:
                 u = User.get_by_name(username)
                 # if not flask.has_request_context():
