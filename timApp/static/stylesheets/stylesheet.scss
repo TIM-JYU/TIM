@@ -235,6 +235,14 @@ a .glyphicon {
         right: 0;
     }
 
+    .checktr::before {
+        content: "Check translation";
+        color: red;
+        position: absolute;
+        top: -0.8em;
+        right: 0;
+    }
+
      .header th {
             border: 1px solid #bbb;
      }
@@ -522,8 +530,8 @@ div.error {
 }
 
 .previewDiv {
-    min-width: 20em;
-    max-width: 52em;
+    min-width: 50%;
+    max-width: 100%;
     clear: both;
     border-radius: 5px;
     background: inherit;
@@ -552,12 +560,17 @@ div.error {
     border-radius: 0;
 }
 
-.previewcontent {
+.background {
+    background-color: $material-bg;
+}
+
+.previewcontent, .previeworiginalcontent {
     @extend .border;
     clear: both;
     overflow-y: auto;
     background-color: $material-bg;
-    min-height: 1px;
+    min-height: 1em;
+    max-height: 30em;
     padding-left: 2em;
     padding-right: 2em;
     min-width: inherit;
@@ -578,6 +591,20 @@ a.timButton {
 
 .editMenuButton {
     width: 100%;
+}
+
+.languageLists{
+    display:flex;
+}
+
+.languageLists div {
+    margin-right: 3em;
+}
+
+/* TODO: Make this a bit nicer for wider screens without losing its scalability for narrower screen (such as mobile screens) */
+.languageLists select {
+    min-width: 8em;
+    overflow: auto;
 }
 
 .uiContainer table, .uiContainer td, .uiContainer tr, .uiContainer th {
@@ -826,6 +853,7 @@ br {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
+    overflow-x: auto;
 }
 
 pareditor {
@@ -858,6 +886,11 @@ pareditor {
 
 .editorButton {
     margin: 2px;
+}
+
+.hidingButtonArea {
+    margin-bottom: 0.6em;
+    float: right;
 }
 
 li.tab.active, li.tab.pinned {
@@ -1226,10 +1259,26 @@ p.docsettings {
     display: inline-flex;
 }
 
+.halfsize {
+    min-width: 50%;
+}
+
+.fullsize {
+    max-width: 100%;
+}
+
+.forceHalfSize{
+    max-width: 50% !important;
+}
+
+.ForceFullSize {
+    min-width: 100%;
+}
+
 .diff {
     position: relative;
     background-color: #f8f8f8;
-    height: 100%;
+    max-height: 24em;
 
     a {
         position: absolute;
@@ -1239,7 +1288,7 @@ p.docsettings {
     }
 
     pre {
-        height: 100%;
+        max-height: 23em; //This has to be kept around 1em (or 50px) lower than diff's max-height or else it overflows over the preview in editor!
         border: 0;
 
         ins {
@@ -1252,6 +1301,16 @@ p.docsettings {
             background: #ffbbbb;
         }
     }
+}
+
+.sidebyside {
+    display: flex;
+    flex-direction: row;
+}
+
+.stacked {
+    display: flex;
+    flex-direction: column;
 }
 
 answerbrowser {
@@ -1424,4 +1483,18 @@ tim-rights-editor {
 // Global access from switch-button.component.ts
 .toggle-margin-left {
     margin-left: 0;
+}
+
+// Style for translation-tab in parEditor
+#translationTab{
+
+    display: flex;
+    align-items: baseline;
+
+    span{
+        display: inline-block;
+    }
+    & > * {
+        margin: 2px;
+    }
 }

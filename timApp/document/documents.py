@@ -25,7 +25,7 @@ def apply_citation(new_doc: DocInfo, src_doc: Document):
 
     doc = new_doc.document
 
-    add_reference_pars(doc, src_doc, "c")
+    add_reference_pars(doc, src_doc, r="c")
 
     settings = {"source_document": src_doc.doc_id}
     orig_pars = src_doc.get_paragraphs()
@@ -38,9 +38,11 @@ def apply_citation(new_doc: DocInfo, src_doc: Document):
         doc.set_settings(settings)
 
 
-def add_reference_pars(doc: Document, original_doc: Document, r: str):
+def add_reference_pars(
+    doc: Document, original_doc: Document, r: str, translator: str | None = None
+):
     for par in original_doc:
-        ref_par = par.create_reference(doc, r, add_rd=False)
+        ref_par = par.create_reference(doc, translator, r, add_rd=False)
         if par.is_setting():
             ref_par.set_attr("settings", "")
         doc.add_paragraph_obj(ref_par)

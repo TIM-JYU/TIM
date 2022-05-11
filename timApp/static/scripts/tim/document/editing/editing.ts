@@ -222,7 +222,7 @@ export class EditingHandler {
             tagKeys.push("marktranslated");
             tagsDescs.push({
                 name: "marktranslated",
-                desc: "Mark as translated",
+                desc: "Mark as translated/checked",
             });
         }
         for (const k of tagKeys) {
@@ -894,6 +894,20 @@ auto_number_headings: 0${CURSOR}
                     }
                 );
             }
+            if (isTranslation) {
+                fns.push({
+                    func: (e) =>
+                        this.markParagraphChecked(
+                            e,
+                            par,
+                            isTranslation
+                                ? getExplicitSelection(par)
+                                : getMinimalUnbrokenSelection(par, par)
+                        ),
+                    desc: "Mark as checked",
+                    show: this.viewctrl.item.rights.editable,
+                });
+            }
             if (
                 refAreaInclusion === ParAreaInclusionKind.Outside ||
                 refAreaInclusion === ParAreaInclusionKind.IsStart
@@ -970,6 +984,30 @@ auto_number_headings: 0${CURSOR}
             show: /* this.viewctrl.lectureMode && */ this.viewctrl.item.rights
                 .editable,
         };
+    }
+
+    /**
+     * Marks the paragraph checked.
+     * @param e the mouse event leading to this
+     * @param par info on the paragraph to be marked
+     * @param sel the selection for the paragraph
+     */
+    async markParagraphChecked(
+        e: MouseEvent,
+        par: ParContext,
+        sel: UnbrokenSelection
+    ) {
+        const parId = par.originalPar.id;
+        const docId = this.viewctrl.item.id;
+        const r = await to(
+            $http.post<IParResponse>(`/markChecked/${docId}/${parId}`, {})
+        );
+        if (r.ok) {
+            this.addSavedParToDom(r.result.data, {
+                type: EditType.Edit,
+                pars: sel,
+            });
+        }
     }
 
     removeDefaultPars() {

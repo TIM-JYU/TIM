@@ -8,6 +8,14 @@ from celery.schedules import crontab
 
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.util.git_utils import get_latest_commit_timestamp, get_current_branch
+from timApp.document.translation.reversingtranslator import (
+    ReversingTranslationService,
+    REVERSE_LANG,
+)
+from timApp.document.translation.deepl import (
+    DeeplTranslationService,
+    DeeplProTranslationService,
+)
 
 # NOTE: If you are a different organization (other than JYU), please don't modify this file directly.
 # This avoids merge conflicts. Override the values with prodconfig.py instead.
@@ -338,3 +346,78 @@ VERIFICATION_UNREACTED_CLEANUP_INTERVAL = 10 * 60
 # How long reacted verifications should be persisted for in seconds
 # Default: 30 days
 VERIFICATION_REACTED_CLEANUP_INTERVAL = 30 * 24 * 60 * 60
+
+# Supported languages for document translation.
+# Database entries for languages are created when TIM is started/re-started.
+# Pre-existing entries are skipped.
+# Default list includes languages supported by the translation service
+# DeepL: https://https://www.deepl.com/docs-api/translating-text/
+# Custom language syntax is the following:
+# {
+#   "lang_code": "<standardized tag>",
+#   "lang_name": "<name in English>",
+#   "autonym": "<name in its language>",
+# }
+# The standardized tag lang_code should adhere to IETF BCP47,
+# detailed in RFC5646 (https://www.rfc-editor.org/info/rfc5646).
+LANGUAGES = [
+    "Bulgarian",
+    "Czech",
+    "Danish",
+    "German",
+    "Greek",
+    "American English",
+    "British English",
+    "Spanish",
+    "Estonian",
+    "Finnish",
+    "French",
+    "Hungarian",
+    "Italian",
+    "Japanese",
+    "Lithuanian",
+    "Latvian",
+    "Dutch",
+    "Polish",
+    "Portuguese",
+    "Brazilian Portuguese",
+    "Romanian",
+    "Russian",
+    "Slovak",
+    "Slovenian",
+    "Swedish",
+    "Chinese",
+    # TODO Change lang_code to the accurate tag-format of Simple Finnish.
+    {"lang_code": "fi-simple", "lang_name": "Simple Finnish", "autonym": "selkosuomi"},
+    # TODO Remove this from list in production and during automatic tests.
+    # REVERSE_LANG,
+]
+
+# Translation services with their initialization values are listed below.
+# Syntax for inserting a new translation service is the following:
+# (
+#   <Class of the TranslationService>,
+#   <Some type (Any), that is used in initializing the TranslationService>
+# )
+
+MACHINE_TRANSLATORS = [
+    (
+        DeeplTranslationService,
+        {
+            "service_url": "https://api-free.deepl.com/v2",
+            "ignore_tag": "😂",
+        },
+    ),
+    (
+        DeeplProTranslationService,
+        {
+            "service_url": "https://api.deepl.com/v2",
+            "ignore_tag": "😂",
+        },
+    ),
+    # TODO Remove this from list in production and during automatic tests.
+    # (
+    #    ReversingTranslationService,
+    #    None,
+    # ),
+]

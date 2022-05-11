@@ -62,7 +62,7 @@ from timApp.util.flask.requesthelper import (
     RouteException,
     NotExist,
 )
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import json_response, ok_response, Response
 from timApp.util.utils import get_error_html
 
 edit_page = Blueprint("edit_page", __name__, url_prefix="")  # TODO: Better URL prefix.
@@ -329,6 +329,9 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         else:
             p.set_attr("rt", None)
 
+        if p.is_translation():
+            mark_translation_as_checked(p)
+
         if p.is_different_from(original_par):
             verify_par_edit_access(original_par)
             par = doc.modify_paragraph_obj(par_id=par_id, p=p)
@@ -372,6 +375,16 @@ def mark_as_translated(p: DocParagraph):
     if deref:
         p.set_attr("rt", deref[0].get_hash())
     return deref
+
+
+def mark_translation_as_checked(p: DocParagraph) -> None:
+    """
+    Mark a paragraph as checked by removing its mt-attribute.
+
+    :param p: The paragraph to mark as checked.
+    :return: None.
+    """
+    p.set_attr("mt", None)
 
 
 def abort_if_duplicate_ids(doc: Document, pars_to_add: list[DocParagraph]):
@@ -630,7 +643,7 @@ def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
     if not need_new_task_id:
         return task_id
 
-    # Otherwise determine a new one
+    # Otherwise, determine a new one
     else:
         # Split the name into text and trailing number
         task_id_body = ""
@@ -670,7 +683,7 @@ def check_and_rename_pluginnamehere(blocks: list[DocParagraph], doc: Document):
     i = 1
     j = 0
     # For all blocks check if taskId is pluginnamehere, if it is find next available name.
-    for p in blocks:  # go thru all new pars if they need to be renamed
+    for p in blocks:  # go through all new pars if they need to be renamed
         if p.is_task():
             task_id = p.get_attr("taskId")
             if task_id == "PLUGINNAMEHERE":
@@ -989,6 +1002,51 @@ def mark_translated_route(doc_id):
             if old_rt != p.get_attr("rt"):
                 p.save()
     return ok_response()
+
+
+@edit_page.post("/markChecked/<int:doc_id>")
+def mark_all_checked_route(doc_id: int) -> Response:
+    """
+    Marks all the paragraphs in a translation document checked.
+
+    :param doc_id: The id of the translation document to be handled.
+    :return: OK response if successful
+    """
+
+    d = get_doc_or_abort(doc_id)
+    verify_edit_access(d)
+    for p in d.document_as_current_user.get_paragraphs():
+        if p.is_translation() and not p.is_setting():
+            old_rc = p.get_attr("mt")
+            mark_translation_as_checked(p)
+            if old_rc is not None:
+                p.save()
+    return ok_response()
+
+
+@edit_page.post("/markChecked/<int:doc_id>/<par_id>")
+def mark_checked_route(doc_id: int, par_id: str) -> Response:
+    """
+    Marks a paragraph checked.
+
+    :param doc_id: The id of the document the paragraph belongs to.
+    :param par_id: The id of the paragraph to be marked checked.
+    :return: The modified paragraph.
+    """
+    d = get_doc_or_abort(doc_id)
+    verify_edit_access(d)
+    doc = d.document_as_current_user
+
+    par = doc.get_paragraph(par_id=par_id)
+    old_rc = par.get_attr("mt")
+    mark_translation_as_checked(par)
+    if old_rc is not None:
+        par.save()
+    return par_response(
+        [par],
+        d,
+        update_cache=current_app.config["IMMEDIATE_PRELOAD"],
+    )
 
 
 @dataclass

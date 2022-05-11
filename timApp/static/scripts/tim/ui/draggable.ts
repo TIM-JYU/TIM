@@ -34,7 +34,7 @@ const draggableTemplate = `
        ng-click="d.toggleDetach()"
        title="{{ d.canDrag() ? 'Attach' : 'Detach' }}"
        class="glyphicon glyphicon-arrow-{{ d.canDrag() ? 'left' : 'right' }}"></i>
-    <i ng-show="d.click && d.canDrag()"
+    <i ng-show="(d.click && d.canDrag()) || d.canMinimize"
        title="{{ d.areaMinimized ? 'Maximize' : 'Minimize' }} dialog"
        ng-click="d.toggleMinimize()"
        class="glyphicon glyphicon-{{ d.areaMinimized ? 'unchecked' : 'minus' }}"></i>
@@ -53,6 +53,7 @@ timApp.directive("timDraggableFixed", [
     () => {
         return {
             bindToController: {
+                canMinimize: "<?",
                 absolute: "<?",
                 anchor: "@?",
                 caption: "@?",
@@ -159,6 +160,7 @@ export class DraggableController implements IController {
     private sizeStorage!: TimStorage<t.TypeOf<typeof SizeType>>;
     private minStorage!: TimStorage<boolean>;
     private detachStorage!: TimStorage<boolean>;
+    private canMinimize?: Binding<boolean, "<">;
 
     constructor(private scope: IScope, private element: JQLite) {}
 
@@ -236,7 +238,34 @@ export class DraggableController implements IController {
             this.element.removeClass("draggable-attached");
             this.element.addClass("draggable-detached");
         }
+        this.element.css("z-index", this.getVisibleLayer());
+
         this.detachStorage.set(this.canDrag());
+    }
+
+    /**
+     * The layering of pareditor's detachable windows acts weird (Source Block Preview's arrow and contents show above
+     * detached windows) so this makes use of z-indexes to work around it.
+     * @returns the layer/z-index for this window.
+     */
+    getVisibleLayer() {
+        const diff = document.getElementById("diff");
+        const preview = document.getElementById("currpreview");
+        const orig = document.getElementById("origprev");
+        let index = 1;
+        if (!this.canDrag()) {
+            return 0;
+        }
+        if (diff?.style.zIndex && diff?.style.zIndex > "0") {
+            index++;
+        }
+        if (preview?.style.zIndex && preview?.style.zIndex > "0") {
+            index++;
+        }
+        if (orig?.style.zIndex && orig?.style.zIndex > "0") {
+            index++;
+        }
+        return index;
     }
 
     private async makeModalPositionAbsolute() {
@@ -330,6 +359,7 @@ export class DraggableController implements IController {
             await this.restoreSizeAndPosition(vf);
             if (this.minStorage.get() && !this.forceMaximized) {
                 this.toggleMinimize();
+                this.areaHeight = 0;
             }
             if (this.detachStorage.get()) {
                 this.toggleDetach();
@@ -440,10 +470,67 @@ export class DraggableController implements IController {
             if (this.autoHeight) {
                 this.element.height("auto");
             } else {
-                this.element.height(this.areaHeight);
+                this.element.height(
+                    this.areaHeight != 0 ? this.areaHeight : "auto"
+                );
             }
             this.element.width(this.areaWidth);
             this.minStorage.set(false);
+        }
+
+        // This should probably be moved elsewhere
+        const previews = document.getElementById("previews");
+        if (previews) {
+            this.movePreviewsProperly(previews);
+        }
+    }
+
+    /**
+     * Handles moving previews around when at least one is minimized in editor.
+     * @param previews The HTML element that holds the previews
+     */
+    movePreviewsProperly(previews: HTMLElement) {
+        // The last child should have the class ".draggable-content".
+        // If it's not, change pareditor's previews' structuring.
+        const currPreview = document.getElementById("currpreview")
+            ?.lastElementChild as HTMLElement;
+        const origPreview = document.getElementById("origpreview")
+            ?.lastElementChild as HTMLElement;
+        const diff = document.getElementById("diff");
+        if (
+            this.caption != diff?.getAttribute("caption") &&
+            (currPreview || origPreview)
+        ) {
+            if (
+                currPreview?.style.visibility ||
+                origPreview?.style.visibility
+            ) {
+                previews.classList.remove("sidebyside");
+                previews.classList.add("stacked");
+                if (currPreview) {
+                    document
+                        .getElementById("currpreview")!
+                        .classList.add("ForceFullSize");
+                }
+                if (origPreview) {
+                    document
+                        .getElementById("origpreview")!
+                        .classList.add("ForceFullSize");
+                }
+            } else {
+                previews.classList.remove("stacked");
+                previews.classList.add("sidebyside");
+                if (currPreview) {
+                    document
+                        .getElementById("currpreview")!
+                        .classList.remove("ForceFullSize");
+                }
+                if (origPreview) {
+                    document
+                        .getElementById("origpreview")!
+                        .classList.remove("ForceFullSize");
+                }
+            }
         }
     }
 
