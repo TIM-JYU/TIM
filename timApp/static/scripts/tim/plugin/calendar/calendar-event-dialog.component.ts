@@ -153,15 +153,15 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         <label for="bookerMessage" class="col-sm-12 control-label">Message (optional)</label>
                             <input type="text" [disabled] = "hideBookerMessage()"
                                    [(ngModel)]="messageText"
-                            (ngModelChange)="setMessage()"
-                            name="messageText"
-                            class="form-control">
+                                   (ngModelChange)="setMessage()"
+                                    name="messageText"
+                                    class="form-control">
                         <button class="timButton" type="button" style="float: left"
-                        (click)="updateBookMessage()">
-                    Send message
-                </button>
-                        <div [(ngModel)]="bookerMessage" name="bookerMessage" class="col-sm-12"><span style="white-space: pre-line">{{bookerMessage}}</span></div>
-                            </div>
+                        (click)="updateBookMessage()">Send message
+                        </button>
+                    </div>
+                        </div>
+                        <div [(ngModel)]="bookerMessage" name="bookerMessage" ngDefaultControl class="col-sm-12" style="white-space: pre-line">{{bookerMessage}}
                         </div>
                     </div>
                 </form>
@@ -562,9 +562,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             return true;
             // TODO: Only supports use of booker message in events for one attendee
         }
-        if (this.userIsManager()) {
-            return false;
-        } else if (this.userHasBooked()) {
+        if (this.isEditEnabled() || !this.eventHasBookings()) {
+            return true;
+        } else if (this.userIsManager() || this.userHasBooked()) {
             return false;
         } else if (this.eventIsFull()) {
             return true;
