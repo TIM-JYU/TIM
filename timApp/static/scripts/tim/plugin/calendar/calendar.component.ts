@@ -521,10 +521,18 @@ export class CalendarComponent
         mouseDownEvent: MouseEvent,
         segmentElement: HTMLElement
     ) {
-        let fullName = Users.getCurrent().real_name;
-        if (!fullName) {
-            fullName = Users.getCurrent().name;
+        // let fullName = Users.getCurrent().real_name;
+        // if (!fullName) {
+        //     fullName = Users.getCurrent().name;
+        // }
+        let title: string | null = "";
+        if (this.markup.eventTemplates) {
+            title = this.markup.eventTemplates[this.selectedEvent].title;
         }
+        if (!title) {
+            title = this.selectedEvent;
+        }
+
         const dragToSelectEvent: TIMCalendarEvent = {
             id: this.events.length,
             // title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
@@ -533,7 +541,7 @@ export class CalendarComponent
             // )
             //     .toTimeString()
             //     .substr(0, 5)} Varattava aika`,
-            title: fullName,
+            title: title,
             start: segment.date,
             end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
@@ -743,11 +751,11 @@ export class CalendarComponent
         console.log(this.markup.filter);
         console.log(this.selectedEvent);
 
-        let eventTitle: string | null = "";
+        // let eventTitle: string | null = "";
         const eventGroups: string[] = [];
         let capacity: number = 0;
         if (this.markup.eventTemplates) {
-            eventTitle = this.markup.eventTemplates[this.selectedEvent].title;
+            // eventTitle = this.markup.eventTemplates[this.selectedEvent].title;
 
             this.markup.eventTemplates[this.selectedEvent].bookers.forEach(
                 (group) => {
@@ -762,12 +770,12 @@ export class CalendarComponent
             capacity = this.markup.eventTemplates[this.selectedEvent].capacity;
         }
 
-        let titleToAdd = "";
-        if (!eventTitle) {
-            titleToAdd = this.selectedEvent;
-        } else {
-            titleToAdd = eventTitle;
-        }
+        // let titleToAdd = "";
+        // if (!eventTitle) {
+        //     titleToAdd = this.selectedEvent;
+        // } else {
+        //     titleToAdd = eventTitle;
+        // }
 
         // for (const type of this.eventTypes) {
         //     if (this.selectedEvent === type) {
@@ -778,7 +786,7 @@ export class CalendarComponent
         if (eventsToAdd.length > 0) {
             eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
                 return {
-                    title: titleToAdd,
+                    title: event.title,
                     start: event.start,
                     end: event.end,
                     event_groups: eventGroups,
