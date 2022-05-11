@@ -480,6 +480,7 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     program: str | Missing = missing
     overrideGrade: bool = False
     showInView: bool = False
+    canOverwritePoints: bool = False
     confirmText: str | Missing = missing
     timeout: int | Missing = missing
     updateFields: list[str] | Missing = missing
@@ -899,11 +900,19 @@ def post_answer_impl(
 
     if "savedata" in jsonresp:
         siw = answer_call_data.get("markup", {}).get("showInView", False)
+        overwrite_points = answer_call_data.get("markup", {}).get(
+            "canOverwritePoints", False
+        )
         add_group = None
         if plugin.type == "importData":
             add_group = plugin.values.get("addUsersToGroup")
         saveresult = save_fields(
-            jsonresp, curr_user, d, allow_non_teacher=siw, add_users_to_group=add_group
+            jsonresp,
+            curr_user,
+            d,
+            allow_non_teacher=siw,
+            add_users_to_group=add_group,
+            overwrite_previous_points=overwrite_points,
         )
 
         # TODO: Could report the result to other plugins too.
@@ -1519,6 +1528,7 @@ def save_fields(
     current_doc: DocInfo | None = None,
     allow_non_teacher: bool = False,
     add_users_to_group: str | None = None,
+    overwrite_previous_points: bool = False,
 ) -> FieldSaveResult:
     save_obj = jsonresp.get("savedata")
     ignore_missing = jsonresp.get("ignoreMissing", False)
@@ -1689,6 +1699,7 @@ def save_fields(
             points = None
             content = {}
             new_answer = False
+            points_changed = False
             if an:
                 points = an.points
                 content = json.loads(an.content)
@@ -1706,7 +1717,7 @@ def save_fields(
                                 f"Value {value} is not valid point value for task {task_id.task_name}"
                             )
                     if points != value:
-                        new_answer = True
+                        points_changed = True
                     points = value
                 elif field == "styles":
                     if isinstance(value, str):
@@ -1741,6 +1752,13 @@ def save_fields(
                     if not an or content.get(field, "") != value:
                         new_answer = True
                     content[field] = value
+
+            if points_changed:
+                if an and not new_answer and overwrite_previous_points:
+                    an.points = points
+                else:
+                    new_answer = True
+
             if not new_answer:
                 saveresult.fields_unchanged += 1
                 continue
