@@ -35,7 +35,14 @@ margin-top: 5px;
   padding: 6px 5px;
 }
 
-.icsURL{
+@media (min-width: 768px){
+  .form-horizontal .control-label {
+    text-align: left;
+  }
+}
+
+
+.exportDone{
   margin-left: 5px;
   width: fit-content;
 }

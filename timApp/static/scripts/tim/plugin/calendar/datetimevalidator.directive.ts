@@ -43,7 +43,18 @@ export const dateCheckedValidator: ValidatorFn = (
         startTime: string;
         endDate: string;
         endTime: string;
+        bookingStopTime: string;
+        bookingStopDate: string;
     } = control.value;
+
+    if (
+        new Date(
+            `${values.bookingStopDate}T${values.bookingStopTime}`
+        ).getTime() >
+        new Date(`${values.startDate}T${values.startTime}`).getTime()
+    ) {
+        return {bookingEndInvalid: true};
+    }
 
     if (
         new Date(`${values.startDate}T${values.startTime}`).getTime() >

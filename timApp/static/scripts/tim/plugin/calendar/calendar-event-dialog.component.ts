@@ -24,7 +24,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                          [ngClass]="{'has-error': ngModelTitle.invalid && ngModelTitle.dirty}">
 
                         <label for="title" class="col-sm-2 control-label">Title</label>
-                        <div class="col-sm-10">
+                        <div class="col-sm-9">
                             <input type="text" required
                                    maxlength="280"
                                    [(ngModel)]="title" #ngModelTitle="ngModel"
@@ -35,8 +35,20 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    placeholder="Set title"
                                    [disabled]="!isEditEnabled()"/>
                         </div>
+                        <label for="location" class="col-sm-2 control-label">Location</label>
+                        <div class="col-sm-9">
+                            <input type="text"
+                            maxlength="120"
+                                   [(ngModel)]="location" #ngModelLocation="ngModel"
+                                   (ngModelChange)="setMessage()"
+                                   id="location"
+                                   placeholder="Set location"
+                                   name="location"
+                                   class="form-control"
+                                   [disabled]="!isEditEnabled()"/>
+                        </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" [hidden]="isPersonalEvent()">
                             <label for="capacity" class="col-sm-2 control-label">Capacity</label>
                             <div class="col-sm-10">
                                 <b><abbr title="Amount of enrolled users">{{getEventEnrollments()}}</abbr> / <abbr title="Maximum capacity of the event">{{getEventCapacity()}}</abbr></b>
@@ -45,7 +57,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     <div [hidden]="multipleBookers()">
                         <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
                             <label for="booker" class="col-sm-2 control-label">Booker</label>
-                            <div class="col-sm-10">
+                            <div class="col-sm-9">
                                 <input type="text"
                                        [(ngModel)]="booker"
                                        (ngModelChange)="setMessage()"
@@ -57,7 +69,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                         <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
                             <label for="bookerEmail" class="col-sm-2 control-label">Booker email</label>
-                            <div class="col-sm-10">
+                            <div class="col-sm-9">
                                 <input type="text"
                                        [(ngModel)]="bookerEmail"
                                        (ngModelChange)="setMessage()"
@@ -75,11 +87,12 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     </div>
 
                     <div class="form-group">
-                        <label for="from" class="col-sm-2 control-label">From</label>
-                        <div class="col-sm-10">
+                        <div class="col-sm-4">
+                        <label for="startDate" class="col-sm-8 control-label">From</label>
+                        
                             <div class="input-group">
-
                                 <input i18n-placeholder type="date"
+                                       required
                                        [(ngModel)]="startDate"
                                        (ngModelChange)="setMessage()"
                                        id="startDate" name="startDate"
@@ -88,6 +101,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                 >
 
                                 <input i18n-placeholder type="time"
+                                       required
                                        [(ngModel)]="startTime"
                                        (ngModelChange)="setMessage()"
                                        id="startTime" name="startTime"
@@ -96,13 +110,11 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                 >
                             </div>
                         </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="to" class="col-sm-2 control-label">To</label>
-                        <div class="col-sm-10">
+                    <div class="col-sm-4">
+                        <label for="endDate" class="col-sm-6 control-label">To</label>
                             <div class="input-group">
                                 <input i18n-placeholder type="date"
+                                       required
                                        [(ngModel)]="endDate"
                                        (ngModelChange)="setMessage()"
                                        id="endDate" name="endDate"
@@ -110,6 +122,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        [disabled]="!isEditEnabled()"
                                 >
                                 <input i18n-placeholder type="time"
+                                       required
                                        [(ngModel)]="endTime"
                                        (ngModelChange)="setMessage()"
                                        id="endTime" name="endTime"
@@ -117,12 +130,49 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        [disabled]="!isEditEnabled()">
                             </div>
                         </div>
+                        <div class="col-sm-4" [hidden]="!isEditEnabled() || isPersonalEvent()">
+                        <label for="bookingStopDate" class="col-sm-12 control-label">Book before</label>
+                            <div class="input-group">
+
+                                <input type="date"
+                                       required
+                                       [(ngModel)]="bookingStopDate"
+                                       (ngModelChange)="setMessage()"
+                                       id="bookingStopDate" name="bookingStopDate"
+                                       class="form-control"
+                                       [disabled]="!isEditEnabled()"
+                                       >
+
+                                <input type="time"
+                                       required
+                                       [(ngModel)]="bookingStopTime"
+                                       (ngModelChange)="setMessage()"
+                                       id="bookingStopTime" name="bookingStopTime"
+                                       class="form-control"
+                                       [disabled]="!isEditEnabled()"
+                                        >
+                            </div>
+                        </div>
+                        <div class="col-sm-12">
+                            <label class="col-sm-12 control-label" for="description">Event description</label>
+                            <textarea maxlength="1020"
+                             [(ngModel)]="description"
+                             (ngModelChange)="setMessage()"
+                             name="description"
+                             class="form-control"
+                             [disabled]="!isEditEnabled()">
+                            </textarea>
+                        </div>
                     </div>
                 </form>
 
-                <tim-alert *ngIf="form.invalid" severity="danger" [hidden]="!form.errors?.['dateInvalid']">
-                    <ng-container *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.
-                    </ng-container>
+                <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['bookingEndInvalid']">
+                <ng-container *ngIf="form.errors?.['bookingEndInvalid']">Booking must be done before the event</ng-container>
+                </tim-alert>
+                
+                <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['dateInvalid']">
+                <ng-container *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.</ng-container>
+
                 </tim-alert>
                 <tim-alert *ngIf="ngModelTitle.invalid && ngModelTitle.dirty" severity="danger">
                     <ng-container *ngIf="ngModelTitle.errors?.['required']">
@@ -149,7 +199,9 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     Delete
                 </button>
                 <button class="timButton" type="button" style="float: left"
-                        (click)="bookEvent()" [disabled]="eventIsFull()" [hidden]="hideBookingButton()">
+
+                        (click)="bookEvent()" [disabled]="eventIsFull() || !eventCanBeBooked()" [hidden]="hideBookingButton()">
+
                     Book event
                 </button>
                 <span [hidden]="hideEventFulLSpan()" style="float: left; margin-left: 10px">
@@ -181,13 +233,17 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     protected dialogName = "CalendarEventEdit";
 
     title = "";
+    location = "";
     message?: string;
+    bookingStopTime = "";
+    bookingStopDate = "";
     startDate = "";
     startTime = "";
     endDate = "";
     endTime = "";
     booker = "";
     bookerEmail: string | null = "";
+    description = "";
     userBooked = false;
 
     constructor(private http: HttpClient) {
@@ -203,11 +259,21 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (!id) {
             return;
         }
+        console.log(this.description);
+        console.log(this.location);
+        console.log(this.title);
+        console.log(this.bookingStopDate);
+        console.log(this.bookingStopTime);
 
         const eventToEdit = {
+            description: this.description,
             title: this.title,
+            location: this.location,
             start: new Date(`${this.startDate}T${this.startTime}`),
             end: new Date(`${this.endDate}T${this.endTime}`),
+            signup_before: new Date(
+                `${this.bookingStopDate}T${this.bookingStopTime}`
+            ),
         };
 
         const result = await toPromise(
@@ -218,8 +284,11 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (result.ok) {
             console.log(result.result);
             this.data.title = eventToEdit.title;
+            this.data.meta!.description = eventToEdit.description;
+            this.data.meta!.location = eventToEdit.location;
             this.data.start = eventToEdit.start;
             this.data.end = eventToEdit.end;
+            this.data.meta!.signup_before = eventToEdit.signup_before;
             this.close(this.data);
         } else {
             // TODO: Handle error responses properly
@@ -273,6 +342,8 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      */
     ngOnInit() {
         this.title = this.data.title;
+        this.location = this.data.meta!.location;
+        this.description = this.data.meta!.description;
         const startOffset = this.data.start.getTimezoneOffset();
         const startDate = new Date(
             this.data.start.getTime() - startOffset * 60 * 1000
@@ -293,6 +364,17 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         this.startDate = startDateTime[0];
 
         this.startTime = startDateTime[1].split(".")[0];
+
+        const finalBookDate: Date = this.data.meta!.signup_before;
+        const bookOffset = finalBookDate.getTimezoneOffset();
+        const bookStopDate = new Date(
+            finalBookDate.getTime() - bookOffset * 60 * 1000
+        );
+
+        const bookDateTime = bookStopDate.toISOString().split("T");
+
+        this.bookingStopDate = bookDateTime[0];
+        this.bookingStopTime = bookDateTime[1].split(".")[0];
 
         if (this.data.end) {
             const endOffset = this.data.start.getTimezoneOffset();
@@ -327,6 +409,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 `Book the event "${this.data.title}"?`
             ))
         ) {
+            return;
+        }
+        if (!this.eventCanBeBooked()) {
             return;
         }
         const result = await toPromise(
@@ -434,6 +519,12 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         return this.data.meta!.enrollments > 0;
     }
 
+    eventCanBeBooked() {
+        const nowDate = new Date();
+        const bookBefore = new Date(this.data.meta!.signup_before);
+        return bookBefore.getTime() > nowDate.getTime();
+    }
+
     /**
      * Returns true if a user has booked the handled event otherwise false
      */
@@ -512,6 +603,16 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             return true;
         }
         return !this.eventIsFull() || this.userHasBooked();
+    }
+
+    /**
+     * True if max size of the event is 0, otherwise false
+     */
+    isPersonalEvent() {
+        if (this.data.meta) {
+            return this.data.meta.maxSize === 0;
+        }
+        return false; // Events should always have their meta field
     }
 }
 

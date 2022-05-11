@@ -5,6 +5,7 @@ from datetime import datetime
 from io import StringIO
 
 from flask import Response
+from werkzeug.exceptions import NotFound
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import (
@@ -116,7 +117,7 @@ def get_url() -> Response:
     """
     verify_logged_in()
     domain = app.config["TIM_HOST"]
-    url = domain + "/calendar/ical?user="
+    url = domain + "/calendar/ical?key="
     cur_user = get_current_user_id()
     user_data: ExportedCalendar = ExportedCalendar.query.filter(
         ExportedCalendar.user_id == cur_user
@@ -136,14 +137,16 @@ def get_url() -> Response:
 
 
 @calendar_plugin.get("/ical")
-def get_ical(user: str) -> Response:
+def get_ical(key: str) -> Response:
     """Fetches users events in a ICS format. User ID is sorted out from hash code from query parameter
 
     :return: ICS file that can be exported
     """
     user_data: ExportedCalendar = ExportedCalendar.query.filter(
-        ExportedCalendar.calendar_hash == user
+        ExportedCalendar.calendar_hash == key
     ).one_or_none()
+    if user_data is None:
+        raise NotFound()
     user_id = user_data.user_id
     events: list[Event] = Event.query.filter(Event.creator_user_id == user_id).all()
     buf = StringIO()
@@ -161,12 +164,41 @@ def get_ical(user: str) -> Response:
         buf.write("DTSTAMP:" + dts + "Z\r\n")
         buf.write("UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\r\n")
         buf.write("CREATED:" + dts + "Z\r\n")
-        buf.write("SUMMARY:" + event.title + "\r\n")
+        if event.title is None:
+            event.title = ""
+        buf.write("SUMMARY:" + string_to_lines(event.title) + "\r\n")
+        if event.location is None:
+            event.location = ""
+        buf.write("LOCATION:" + string_to_lines(event.location) + "\r\n")
+        if event.message is None:
+            event.message = ""
+        buf.write("DESCRIPTION:" + string_to_lines(event.message) + "\r\n")
         buf.write("END:VEVENT\r\n")
 
     buf.write("END:VCALENDAR\r\n")
     result = buf.getvalue()
     return Response(result, mimetype="text/calendar")
+
+
+def string_to_lines(str_to_split: str) -> str:
+    """
+    Splits long strings to n char lines
+
+    :return: str where lines are separated with \r\n + whitespace
+    """
+    n = 60
+    if len(str_to_split) <= n:
+        return str_to_split
+    lines = [str_to_split[i : i + n] for i in range(0, len(str_to_split), n)]
+    new_str = ""
+    index = 0
+    for line in lines:
+        index += 1
+        if index == len(lines):
+            new_str = new_str + line
+            break
+        new_str = new_str + line + "\r\n "
+    return new_str
 
 
 @calendar_plugin.get("/events")
@@ -222,9 +254,12 @@ def get_events() -> Response:
                     "start": event_obj.start_time,
                     "end": event_obj.end_time,
                     "meta": {
+                        "description": event_obj.message,
                         "enrollments": enrollments,
                         "maxSize": event_obj.max_size,
+                        "location": event_obj.location,
                         "booker_groups": groups,
+                        "signup_before": event_obj.signup_before,
                     },
                 }
             )
@@ -278,8 +313,11 @@ def get_event_bookers(event_id: int) -> Response:
 @dataclass
 class CalendarEvent:
     title: str
+    description: str
+    location: str
     start: datetime
     end: datetime
+    signup_before: datetime
     max_size: int = 1
     event_groups: list[str] | None = None
 
@@ -308,11 +346,14 @@ def add_events(events: list[CalendarEvent]) -> Response:
 
         event = Event(
             title=event.title,
+            message=event.description,
+            location=event.location,
             start_time=event.start,
             end_time=event.end,
             creator_user_id=cur_user,
             groups_in_event=groups,
             max_size=event.max_size,
+            signup_before=event.signup_before,
         )
         db.session.add(event)
         added_events.append(event)
@@ -328,8 +369,11 @@ def add_events(events: list[CalendarEvent]) -> Response:
                 "start": event.start_time,
                 "end": event.end_time,
                 "meta": {
+                    "signup_before": event.signup_before,
                     "enrollments": 0,
                     "maxSize": event.max_size,
+                    "location": event.location,
+                    "message": event.message,
                 },
             }
         )
@@ -350,6 +394,8 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     if not old_event:
         raise RouteException("Event not found")
     old_event.title = event.title
+    old_event.location = event.location
+    old_event.message = event.description
     old_event.start_time = event.start
     old_event.end_time = event.end
     db.session.commit()
@@ -361,12 +407,12 @@ def delete_event(event_id: int) -> Response:
     """Deletes the event by the given id
 
     :param event_id: Event id
-    :return: HTTP 200 if succeeded, otherwise 400
+    :return: HTTP 200 if succeeded, otherwise 404
     """
     verify_logged_in()
     event = Event.get_event_by_id(event_id)
     if not event:
-        raise RouteException("Event not found")
+        raise NotFound()
     db.session.delete(event)
     db.session.commit()
     return ok_response()
