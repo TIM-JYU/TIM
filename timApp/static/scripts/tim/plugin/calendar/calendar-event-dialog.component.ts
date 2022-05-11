@@ -62,8 +62,9 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             </div>
                         </div>
                     </div>
-                    <div [hidden]="!multipleBookers() || !userIsManager()" class="form-group">
-                        <a href="/calendar/events/{{this.data.id}}/bookers" target="_blank" class="col-sm-10">Show list of all bookers</a>
+                    <div [hidden]="hideBookerListLink()" class="form-group">
+                        <a href="/calendar/events/{{this.data.id}}/bookers" target="_blank" class="col-sm-10">Show list
+                            of all bookers</a>
                     </div>
 
                     <div class="form-group">
@@ -77,7 +78,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        id="startDate" name="startDate"
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
-                                       >
+                                >
 
                                 <input i18n-placeholder type="time"
                                        [(ngModel)]="startTime"
@@ -85,7 +86,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        id="startTime" name="startTime"
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
-                                        >
+                                >
                             </div>
                         </div>
                     </div>
@@ -100,7 +101,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        id="endDate" name="endDate"
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
-                                        >
+                                >
                                 <input i18n-placeholder type="time"
                                        [(ngModel)]="endTime"
                                        (ngModelChange)="setMessage()"
@@ -111,15 +112,16 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     </div>
                 </form>
-                
-                <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['dateInvalid']">
-                <ng-container *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.</ng-container>
+
+                <tim-alert *ngIf="form.invalid" severity="danger" [hidden]="!form.errors?.['dateInvalid']">
+                    <ng-container *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.
+                    </ng-container>
                 </tim-alert>
                 <tim-alert *ngIf="ngModelTitle.invalid && ngModelTitle.dirty" severity="danger">
                     <ng-container *ngIf="ngModelTitle.errors?.['required']">
                         Title is required.
                     </ng-container>
-                    
+
                     <ng-container *ngIf="ngModelTitle.errors?.['pattern']">
                         Title should not contain the slash character. <!--TODO: Think about the pattern-->
                     </ng-container>
@@ -143,7 +145,8 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         (click)="bookEvent()" [disabled]="eventIsFull()" [hidden]="isEditEnabled() || userHasBooked()">
                     Book event
                 </button>
-                <button class="btn timButton" type="button" [hidden]="!userHasBooked()" (click)="cancelBooking()" style="background-color: red;">
+                <button class="btn timButton" type="button" [hidden]="!userHasBooked()" (click)="cancelBooking()"
+                        style="background-color: red;">
                     Cancel Booking
                 </button>
                 <button class="timButton" type="submit" (click)="saveChanges()" [disabled]="form.invalid"
@@ -153,7 +156,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                 <button i18n class="btn btn-default" type="button" (click)="dismiss()">
                     Cancel
                 </button>
-                
+
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -432,6 +435,13 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             return this.data.meta.maxSize > 1;
         }
         return false;
+    }
+
+    hideBookerListLink() {
+        if (!this.eventHasBookings()) {
+            return true;
+        }
+        return !this.userIsManager() || !this.multipleBookers();
     }
 }
 
