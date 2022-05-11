@@ -179,10 +179,10 @@ def verify_session_for(username: str, session_id: str | None = None) -> None:
         q_expire = q_base.filter(UserSession.session_id != session_id)
         q_verify = q_base.filter(UserSession.session_id == session_id)
     else:
-        # Get the latest active session
+        # Get the latest session
         subquery = (
             db.session.query(UserSession.session_id)
-            .filter(UserSession.expired == False)
+            .filter(UserSession.user_id.in_(user_subquery))
             .order_by(UserSession.logged_in_at.desc())
             .limit(1)
             .subquery()

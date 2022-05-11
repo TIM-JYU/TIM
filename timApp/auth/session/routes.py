@@ -24,6 +24,7 @@ from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, csv_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.secret import check_secret
+from timApp.util.utils import get_current_time
 
 user_sessions = TypedBlueprint("user_sessions", __name__, url_prefix="/user/sessions")
 
@@ -190,6 +191,40 @@ def validate_remote_session(
     else:
         check_secret(secret, "DIST_RIGHTS_RECEIVE_SECRET")
     verify_session_for(username, session_id)
+    db.session.commit()
+    return ok_response()
+
+
+@user_sessions.get("/verifyAll")
+def validate_all() -> Response:
+    """
+    Validate all latest sessions.
+    """
+    verify_admin()
+
+    all_usersnames: list[tuple[str]] = (
+        db.session.query(User.name)
+        .join(UserSession)
+        .distinct(UserSession.user_id)
+        .all()
+    )
+    for (user,) in all_usersnames:
+        verify_session_for(user)
+
+    db.session.commit()
+    return ok_response()
+
+
+@user_sessions.get("/invalidateAll")
+def invalidate_all() -> Response:
+    """
+    Invalidate all sessions.
+    """
+    verify_admin()
+
+    UserSession.query.filter(~UserSession.expired).update(
+        {"expired_at": get_current_time()}
+    )
     db.session.commit()
     return ok_response()
 
