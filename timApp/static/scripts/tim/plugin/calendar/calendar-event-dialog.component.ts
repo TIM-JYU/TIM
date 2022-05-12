@@ -203,7 +203,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                 </span>
             </div>
                 <div class="col-sm-12 row">
-                    <button class="btn timButton col-sm-4" type="button" [hidden]="!userHasBooked()" (click)="cancelBooking()"
+                    <button class="btn timButton col-sm-4" type="button" [hidden]="!userHasBooked() || isEditEnabled()" (click)="cancelBooking()"
                         style="background-color: red; float: left">
                     Cancel Booking
                     </button>
