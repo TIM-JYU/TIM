@@ -290,7 +290,7 @@ class ToggleOption {
                 </ng-container>
             </div>
         </tim-alert>
-        <tim-t9-keyboard (applyT9)="applyT9($event)" *ngIf="t9Mode.enabled"></tim-t9-keyboard>
+        <tim-t9-keyboard (applyT9)="applyT9($event)" *ngIf="t9Mode.value"></tim-t9-keyboard>
     `,
     styleUrls: ["user-select.component.scss"],
 })
@@ -758,6 +758,7 @@ export class UserSelectComponent extends AngularPluginBase<
 
         if (this.markup.selectOnce) {
             addOption(this.keyboardMode);
+            console.log(this.t9Mode.enabled);
             addOption(this.t9Mode);
         }
         if (this.markup.scanner.applyOnMatch) {
