@@ -149,7 +149,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                              [disabled]="!isEditEnabled()">
                             </textarea>
                         </div>
-                    <div class="col-sm-12" [hidden] ="hideBookerMessage() || userIsManager()">
+                    <div class="col-sm-12" [hidden] ="hideBookerMessage()">
                         <label for="bookerMessage" class="col-sm-12 control-label">Message (optional)</label>
                             <input type="text" [disabled] = "hideBookerMessage()"
                                    [(ngModel)]="messageText"
@@ -341,7 +341,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         const bookerGroups = this.data.meta!.booker_groups;
         if (bookerGroups) {
             bookerGroups.forEach((group) => {
-                // TODO: Make a list of all bookers when the event capacity is higher than 1
+                // TODO: These attributes are only used with events with maximum capacity of 1
                 this.bookerMessage = group.message;
                 group.users.forEach((user) => {
                     this.bookerEmail = user.email;
@@ -391,10 +391,15 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     /**
      *  Used when a booker of an event sends message to the enrollment of an event.
      *  Updates the message linked to the enrollment with a chat-like timestamp + identifier of the booker.
+     *  TODO: Currently works only with events that has maximum capacity of 1
      */
     async updateBookMessage() {
         const eventToBook = this.data;
         const dateNow = new Date();
+        let bookerGroup = "";
+        if (this.data.meta!.booker_groups.length > 0) {
+            bookerGroup = this.data.meta!.booker_groups[0].name;
+        }
         const bookMessage = `${this.bookerMessage}
         ${Users.getCurrent().name} ${formatDate(
             dateNow,
@@ -410,6 +415,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.http.put("/calendar/bookings", {
                 event_id: eventToBook.id,
                 booker_msg: bookMessage,
+                booker_group: bookerGroup,
             })
         );
         console.log(result);
@@ -417,6 +423,11 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             console.log(result.result);
             this.bookerMessage = bookMessage;
             this.messageText = "";
+            if (this.data.meta) {
+                if (this.data.meta.booker_groups.length > 0) {
+                    this.data.meta.booker_groups[0].message = bookMessage;
+                }
+            }
         }
     }
 

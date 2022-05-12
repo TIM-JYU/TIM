@@ -17,7 +17,7 @@ from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import RouteException
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from tim_common.markupmodels import GenericMarkupModel
@@ -355,19 +355,19 @@ def delete_event(event_id: int) -> Response:
 
 
 @calendar_plugin.put("/bookings")
-def update_book_message(event_id: int, booker_msg: str) -> Response:
+def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Response:
     verify_logged_in()
     event = Event.get_event_by_id(event_id)
     if event is None:
         raise NotFound()
 
-    user_obj = get_current_user_object()
-    group_id = -1
-    for group in user_obj.groups:
-        if group.name == user_obj.name:
-            group_id = group.id
-
-    enrollment = Enrollment.get_enrollment_by_ids(event_id, group_id)
+    # user_obj = get_current_user_object()
+    # group_id = -1
+    # for group in user_obj.groups:
+    #     if group.name == user_obj.name:
+    #         group_id = group.id
+    user_group = UserGroup.get_by_name(booker_group)
+    enrollment = Enrollment.get_enrollment_by_ids(event_id, user_group.id)
 
     if enrollment is not None:
         enrollment.booker_message = booker_msg
