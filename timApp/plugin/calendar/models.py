@@ -2,6 +2,7 @@ from typing import Optional
 
 from timApp.auth.sessioninfo import get_current_user_id
 from timApp.timdb.sqa import db
+from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 
 
@@ -70,6 +71,8 @@ class Event(db.Model):
         primaryjoin=event_id == EventGroup.event_id,
         lazy="select",
     )
+
+    creator: User = db.relationship(User)
 
     @staticmethod
     def get_event_by_id(event_id: int) -> Optional["Event"]:
