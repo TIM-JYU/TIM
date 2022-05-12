@@ -530,6 +530,10 @@ def get_groups(
     return add_groups, remove_groups
 
 
+# It can be useful to offset the time a little to ensure any checks for expired memberships can pass
+group_expired_offset = timedelta(seconds=1)
+
+
 def undo_group_actions(
     user_acc: User, cur_user: User, add: list[str], remove: list[str]
 ) -> None:
@@ -541,7 +545,7 @@ def undo_group_actions(
     for ug in add_groups:
         membership = ug.current_memberships.get(user_acc.id, None)
         if membership:
-            membership.set_expired()
+            membership.set_expired(time_offset=group_expired_offset)
 
 
 @user_select_plugin.post("/undo")
@@ -713,7 +717,7 @@ def apply_group_actions(
     for ug in remove_groups:
         membership = ug.current_memberships.get(user_acc.id, None)
         if membership:
-            membership.set_expired()
+            membership.set_expired(time_offset=group_expired_offset)
 
 
 @user_select_plugin.post("/apply")
