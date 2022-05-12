@@ -230,6 +230,9 @@ def distribute_session_verification(
                     to distribute the session verification to.
     :return: List of errors that occurred during distribution.
     """
+    if not targets:
+        return []
+
     hosts = set()
     dist_rights_send_secret = get_secret_or_abort("DIST_RIGHTS_SEND_SECRET")
     for target in targets:
