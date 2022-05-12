@@ -558,11 +558,11 @@ class DocSettings:
     def peer_review_count(self) -> int:
         return self.get_setting_or_default("peer_review_count", 1)
 
-    def peer_review_start(self, default=None) -> datetime:
-        return self.__dict.get(self.peer_review_start_key, default)
+    def peer_review_start(self) -> datetime:
+        return self.__dict.get(self.peer_review_start_key, None)
 
-    def peer_review_stop(self, default=None) -> datetime:
-        return self.__dict.get(self.peer_review_stop_key, default)
+    def peer_review_stop(self) -> datetime:
+        return self.__dict.get(self.peer_review_stop_key, None)
 
     def access_denied_message(self) -> str | None:
         return self.get_setting_or_default("access_denied_message", None)
