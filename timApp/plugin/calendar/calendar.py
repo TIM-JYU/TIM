@@ -433,12 +433,12 @@ def delete_booking(event_id: int) -> Response:
     return ok_response()
 
 
-def send_email_to_creator(event_id, msg_type):
+def send_email_to_creator(event_id: int, msg_type: bool) -> Response:
     """
-    Sends an email of cancelled time to creator of the event
+    Sends an email of cancelled/booked time to creator of the event
 
     :param: event_id of the event
-    :param: msg_type of the message, reservation or cancellation
+    :param: msg_type of the message, reservation (True) or cancellation (False)
     :return: HTTP 200 if succeeded, otherwise 400
     """
     event = Event.get_event_by_id(event_id)
