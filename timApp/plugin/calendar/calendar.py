@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from io import StringIO
 
-from flask import Response
+from flask import Response, render_template_string
 from werkzeug.exceptions import NotFound
 
 from timApp.auth.accesshelper import verify_logged_in
@@ -272,7 +272,7 @@ def get_events() -> Response:
 
 
 @calendar_plugin.get("/events/<int:event_id>/bookers")
-def get_event_bookers(event_id: int) -> Response:
+def get_event_bookers(event_id: int) -> str:
     """Fetches all enrollments from the database for the given event and returns the full name and email of every
     booker in a html table
 
@@ -283,31 +283,37 @@ def get_event_bookers(event_id: int) -> Response:
     if event is None:
         raise NotExist(f"Event not found by the id of {0}".format(event_id))
 
-    buf = StringIO()
-    buf.write(
-        """<style>
-              table, th, td {
-                border: 1px solid black;
-              }
-              </style>"""
-    )
-    buf.write("<body>")
-    buf.write("<table>")
-    buf.write("<tr>")
-    buf.write("<th>Full name</th>")
-    buf.write("<th>Email</th>")
-    buf.write("</tr>")
+    bookers_info = []
     booker_groups = event.enrolled_users
     for booker_group in booker_groups:
         bookers = booker_group.users
         for booker in bookers:
-            buf.write("<tr>")
-            buf.write(f"<td>{booker.real_name}</td>")
-            buf.write(f"<td>{booker.email}</td>")
-            buf.write("</tr>")
-    buf.write("</table>")
-    buf.write("</body>")
-    return Response(buf.getvalue(), mimetype="text/html")
+            bookers_info.append({"full_name": booker.real_name, "email": booker.email})
+
+    return render_template_string(
+        """
+    <style>
+               table, th, td {
+                 border: 1px solid black;
+               }
+    </style>
+    <body>
+        <table>
+            <tr>
+                <th>Full name</th>
+                <th>Email</th>
+            </tr>
+            {% for booker in bookers_info %}
+                <tr>
+                    <td>{{ booker.full_name }}</td>
+                    <td>{{ booker.email }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </body>
+    """,
+        bookers_info=bookers_info,
+    )
 
 
 @dataclass
