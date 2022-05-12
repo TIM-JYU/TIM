@@ -193,35 +193,36 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                 </tim-alert>
 
             </ng-container>
-            <ng-container footer>
-                <button class="timButton" type="button" style="background-color: red; float: left"
-                        (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!isEditEnabled()">
-                    Delete
-                </button>
-                <button class="timButton" type="button" style="float: left"
-
-                        (click)="bookEvent()" [disabled]="eventIsFull() || !eventCanBeBooked()" [hidden]="hideBookingButton()">
-
-                    Book event
-                </button>
+            <ng-container class="col-sm-12" footer>
+                <div class="col-sm-12 row">
                 <span [hidden]="hideEventFulLSpan()" style="float: left; margin-left: 10px">
                     <b>The event is full.</b>
                 </span>
                 <span [hidden]="!userHasBooked()" style="float: left">
                     <b>You have booked this event.</b>
                 </span>
-                <button class="btn timButton" type="button" [hidden]="!userHasBooked()" (click)="cancelBooking()"
-                        style="background-color: red;">
+            </div>
+                <div class="col-sm-12 row">
+                    <button class="btn timButton col-sm-4" type="button" [hidden]="!userHasBooked()" (click)="cancelBooking()"
+                        style="background-color: red; float: left">
                     Cancel Booking
-                </button>
-                <button class="timButton" type="submit" (click)="saveChanges()" [disabled]="form.invalid"
+                    </button>
+                    <button class="timButton col-sm-2" type="button" style="background-color: red; float: left"
+                        (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!isEditEnabled()">
+                    Delete
+                    </button>
+                    <button class="timButton col-sm-4" type="button" style="float: left"
+                        (click)="bookEvent()" [disabled]="eventIsFull() || !eventCanBeBooked()" [hidden]="hideBookingButton()">
+                    Book event
+                    </button>
+                    <button i18n class="btn btn-default col-sm-2" type="button" style="float:right" (click)="dismiss()">
+                    Cancel
+                    </button>
+                    <button class="timButton col-sm-2" type="submit" style="float:right" (click)="saveChanges()" [disabled]="form.invalid"
                         [hidden]="!isEditEnabled()">
                     Save
-                </button>
-                <button i18n class="btn btn-default" type="button" (click)="dismiss()">
-                    Cancel
-                </button>
-
+                    </button>
+                </div>
             </ng-container>
         </tim-dialog-frame>
     `,
