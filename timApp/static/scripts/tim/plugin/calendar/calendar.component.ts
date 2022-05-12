@@ -17,6 +17,7 @@ import {
     CalendarDateFormatter,
     CalendarEvent,
     CalendarEventTimesChangedEvent,
+    CalendarEventTitleFormatter,
     CalendarModule,
     CalendarView,
     DateAdapter,
@@ -42,6 +43,7 @@ import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
+import {CustomEventTitleFormatter} from "./custom-event-title-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
 import {showCalendarEventDialog} from "./showCalendarEventDialog";
 import {DateTimeValidatorDirective} from "./datetimevalidator.directive";
@@ -173,6 +175,10 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
         {
             provide: CalendarDateFormatter,
             useClass: CustomDateFormatter,
+        },
+        {
+            provide: CalendarEventTitleFormatter,
+            useClass: CustomEventTitleFormatter,
         },
         // {
         //     provide: CalendarEventTitleFormatter,
