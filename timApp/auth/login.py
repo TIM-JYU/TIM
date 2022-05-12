@@ -586,6 +586,7 @@ def quick_login(username: str) -> Response:
         verify_admin()
 
     set_single_user_to_session(user)
+    db.session.commit()
     flash(f"Logged in as: {username}")
     return safe_redirect(url_for("view_page.index_page"))
 
