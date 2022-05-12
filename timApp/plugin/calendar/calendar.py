@@ -12,10 +12,12 @@ from timApp.auth.sessioninfo import (
     get_current_user_id,
     get_current_user_object,
 )
+from timApp.notification.send_email import send_email
 from timApp.plugin.calendar.models import Event, EventGroup, Enrollment, EnrollmentType
 from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
+from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
@@ -461,7 +463,7 @@ def book_event(event_id: int) -> Response:
 
     db.session.add(enrollment)
     db.session.commit()
-
+    send_email_to_creator(event_id, True)
     return ok_response()
 
 
@@ -486,6 +488,33 @@ def delete_booking(event_id: int) -> Response:
 
     db.session.delete(enrollment)
     db.session.commit()
+    send_email_to_creator(event_id, False)
+    return ok_response()
+
+
+def send_email_to_creator(event_id: int, msg_type: bool) -> Response:
+    """
+    Sends an email of cancelled/booked time to creator of the event
+
+    :param: event_id of the event
+    :param: msg_type of the message, reservation (True) or cancellation (False)
+    :return: HTTP 200 if succeeded, otherwise 400
+    """
+    event = Event.get_event_by_id(event_id)
+    if not event:
+        raise NotExist()
+    creator = event.creator
+    start_time = event.start_time.strftime("%d.%m.%Y %H:%M")
+    end_time = event.end_time.strftime("%H:%M")
+    event_time = f"{start_time}-{end_time}"
+    match msg_type:
+        case True:
+            subject = f"Reservation {event_time} has been booked."
+        case False:
+            subject = f"Reservation {event_time} has been cancelled."
+    rcpt = creator.email
+    msg = subject
+    send_email(rcpt, subject, msg)
     return ok_response()
 
 
