@@ -463,7 +463,7 @@ def book_event(event_id: int) -> Response:
 
     db.session.add(enrollment)
     db.session.commit()
-    send_email_to_creator(event_id, True)
+    send_email_to_creator(event_id, True, user_obj)
     return ok_response()
 
 
@@ -488,11 +488,11 @@ def delete_booking(event_id: int) -> Response:
 
     db.session.delete(enrollment)
     db.session.commit()
-    send_email_to_creator(event_id, False)
+    send_email_to_creator(event_id, False, user_obj)
     return ok_response()
 
 
-def send_email_to_creator(event_id: int, msg_type: bool) -> Response:
+def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> Response:
     """
     Sends an email of cancelled/booked time to creator of the event
 
@@ -507,11 +507,12 @@ def send_email_to_creator(event_id: int, msg_type: bool) -> Response:
     start_time = event.start_time.strftime("%d.%m.%Y %H:%M")
     end_time = event.end_time.strftime("%H:%M")
     event_time = f"{start_time}-{end_time}"
+    name = user_obj.name
     match msg_type:
         case True:
-            subject = f"Reservation {event_time} has been booked."
+            subject = f"TIM-Calendar reservation {event.title} {event_time} has been booked by {name}."
         case False:
-            subject = f"Reservation {event_time} has been cancelled."
+            subject = f"TIM-Calendar reservation {event.title} {event_time} has been cancelled by {name}."
     rcpt = creator.email
     msg = subject
     send_email(rcpt, subject, msg)
