@@ -758,7 +758,6 @@ export class UserSelectComponent extends AngularPluginBase<
 
         if (this.markup.selectOnce) {
             addOption(this.keyboardMode);
-            console.log(this.t9Mode.enabled);
             addOption(this.t9Mode);
         }
         if (this.markup.scanner.applyOnMatch) {
