@@ -48,31 +48,48 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    [disabled]="!isEditEnabled()"/>
                         </div>
                     </div>
-                    <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
-                        <label for="booker" class="col-sm-2 control-label">Booker</label>
-                        <div class="col-sm-9">
-                            <input type="text"
-                                   [(ngModel)]="booker"
-                                   (ngModelChange)="setMessage()"
-                                   id="booker" name="booker"
-                                   class="form-control"
-                                   placeholder="Not booked"
-                                   disabled="true"/>
+                    <div class="form-group" [hidden]="isPersonalEvent()">
+                            <label for="capacity" class="col-sm-2 control-label">Capacity</label>
+                            <div class="col-sm-10">
+                                <b><abbr title="Amount of enrolled users">{{getEventEnrollments()}}</abbr> / <abbr title="Maximum capacity of the event">{{getEventCapacity()}}</abbr></b>
+                            </div>
                         </div>
-                        <label for="bookerEmail" class="col-sm-2 control-label">Booker email</label>
-                        <div class="col-sm-9">
-                            <input type="text"
-                                   [(ngModel)]="bookerEmail"
-                                   (ngModelChange)="setMessage()"
-                                   id="bookerEmail" name="bookerEmail"
-                                   class="form-control"
-                                   placeholder=""
-                                   disabled="true"/>
+                    <div [hidden]="multipleBookers()">
+                        <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
+                            <label for="booker" class="col-sm-2 control-label">Booker</label>
+                            <div class="col-sm-9">
+                                <input type="text"
+                                       [(ngModel)]="booker"
+                                       (ngModelChange)="setMessage()"
+                                       id="booker" name="booker"
+                                       class="form-control"
+                                       placeholder="Not booked"
+                                       disabled="true"/>
+                            </div>
+                        </div>
+                        <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
+                            <label for="bookerEmail" class="col-sm-2 control-label">Booker email</label>
+                            <div class="col-sm-9">
+                                <input type="text"
+                                       [(ngModel)]="bookerEmail"
+                                       (ngModelChange)="setMessage()"
+                                       id="bookerEmail" name="bookerEmail"
+                                       class="form-control"
+                                       placeholder=""
+                                       disabled="true"/>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group ">
+                    <div [hidden]="hideBookerListLink()" class="form-group">
+                        <label for="bookers" class="col-sm-2 control-label">Bookers</label>
+                        <a href="/calendar/events/{{this.data.id}}/bookers" target="_blank" class="col-sm-10">Show list
+                            of all bookers</a>
+                    </div>
+
+                    <div class="form-group">
                         <div class="col-sm-4">
-                            <label for="startDate" class="col-sm-8 control-label">From</label>
+                        <label for="startDate" class="col-sm-8 control-label">From</label>
+                        
                             <div class="input-group">
                                 <input i18n-placeholder type="date"
                                        required
@@ -81,7 +98,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        id="startDate" name="startDate"
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
-                                       >
+                                >
 
                                 <input i18n-placeholder type="time"
                                        required
@@ -90,7 +107,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        id="startTime" name="startTime"
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
-                                        >
+                                >
                             </div>
                         </div>
                     <div class="col-sm-4">
@@ -103,7 +120,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        id="endDate" name="endDate"
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
-                                        >
+                                >
                                 <input i18n-placeholder type="time"
                                        required
                                        [(ngModel)]="endTime"
@@ -113,7 +130,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        [disabled]="!isEditEnabled()">
                             </div>
                         </div>
-                        <div class="col-sm-4" [hidden]="!isEditEnabled()">
+                        <div class="col-sm-4" [hidden]="!isEditEnabled() || isPersonalEvent()">
                         <label for="bookingStopDate" class="col-sm-12 control-label">Book before</label>
                             <div class="input-group">
 
@@ -165,18 +182,20 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     </div>
                 </form>
+
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['bookingEndInvalid']">
                 <ng-container *ngIf="form.errors?.['bookingEndInvalid']">Booking must be done before the event</ng-container>
                 </tim-alert>
                 
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['dateInvalid']">
                 <ng-container *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.</ng-container>
+
                 </tim-alert>
                 <tim-alert *ngIf="ngModelTitle.invalid && ngModelTitle.dirty" severity="danger">
                     <ng-container *ngIf="ngModelTitle.errors?.['required']">
                         Title is required.
                     </ng-container>
-                    
+
                     <ng-container *ngIf="ngModelTitle.errors?.['pattern']">
                         Title should not contain the slash character. <!--TODO: Think about the pattern-->
                     </ng-container>
@@ -197,10 +216,19 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     Delete
                 </button>
                 <button class="timButton" type="button" style="float: left"
-                        (click)="bookEvent()" [disabled]="eventIsFull() || !eventCanBeBooked()" [hidden]="isEditEnabled()">
+
+                        (click)="bookEvent()" [disabled]="eventIsFull() || !eventCanBeBooked()" [hidden]="hideBookingButton()">
+
                     Book event
                 </button>
-                <button class="btn timButton" type="button" [hidden]="!userHasBooked()" (click)="cancelBooking()" style="background-color: red;">
+                <span [hidden]="hideEventFulLSpan()" style="float: left; margin-left: 10px">
+                    <b>The event is full.</b>
+                </span>
+                <span [hidden]="!userHasBooked()" style="float: left">
+                    <b>You have booked this event.</b>
+                </span>
+                <button class="btn timButton" type="button" [hidden]="!userHasBooked()" (click)="cancelBooking()"
+                        style="background-color: red;">
                     Cancel Booking
                 </button>
                 <button class="timButton" type="submit" (click)="saveChanges()" [disabled]="form.invalid"
@@ -210,6 +238,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                 <button i18n class="btn btn-default" type="button" (click)="dismiss()">
                     Cancel
                 </button>
+
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -386,6 +415,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (this.data.meta) {
             return this.data.meta.editEnabled;
         }
+        return false; // Events should always have their meta field
     }
 
     /**
@@ -532,10 +562,16 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     }
 
     /**
-     * Returns true if the event is full otherwise false
+     * Returns true if the event is full otherwise false. Events with the capacity of 0 are considered not full.
      */
     eventIsFull() {
-        return this.data.meta!.enrollments >= this.data.meta!.maxSize;
+        if (this.data.meta) {
+            if (this.data.meta.maxSize == 0) {
+                return false;
+            }
+            return this.data.meta.enrollments >= this.data.meta.maxSize;
+        }
+        return false; // Events should always have their meta field
     }
 
     userIsManager() {
@@ -595,6 +631,80 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             });
         });
         return this.userBooked;
+    }
+
+    /**
+     * True if the event can have multiple bookers, false if not
+     */
+    multipleBookers() {
+        if (this.data.meta) {
+            return this.data.meta.maxSize > 1;
+        }
+        return false; // Events should always have their meta field
+    }
+
+    /**
+     * True if event has no bookings.
+     * If event has bookings: true if user is not manager or the event can only have one booking. Otherwise, false.
+     */
+    hideBookerListLink() {
+        if (!this.eventHasBookings()) {
+            return true;
+        }
+        return !this.userIsManager() || !this.multipleBookers();
+    }
+
+    /**
+     * Amount of enrollments for the event
+     */
+    getEventEnrollments() {
+        if (this.data.meta) {
+            return this.data.meta.enrollments;
+        }
+        return -1; // Events should always have their meta field
+    }
+
+    /**
+     * The maximum capacity for the event
+     */
+    getEventCapacity() {
+        if (this.data.meta) {
+            return this.data.meta.maxSize;
+        }
+        return -1; // Events should always have their meta field
+    }
+
+    /**
+     * True if max size of the event is 0.
+     * If not: true if editing is enabled or user has booked the event. Otherwise, false.
+     */
+    hideBookingButton() {
+        if (this.data.meta) {
+            if (this.data.meta.maxSize == 0) {
+                return true;
+            }
+        }
+        return this.isEditEnabled() || this.userHasBooked();
+    }
+
+    /**
+     * True if editing is enabled. If not: true if event is not full or user has booked the event. Otherwise, false.
+     */
+    hideEventFulLSpan() {
+        if (this.isEditEnabled()) {
+            return true;
+        }
+        return !this.eventIsFull() || this.userHasBooked();
+    }
+
+    /**
+     * True if max size of the event is 0, otherwise false
+     */
+    isPersonalEvent() {
+        if (this.data.meta) {
+            return this.data.meta.maxSize === 0;
+        }
+        return false; // Events should always have their meta field
     }
 }
 

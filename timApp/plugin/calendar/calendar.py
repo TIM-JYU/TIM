@@ -1,10 +1,10 @@
 import secrets
 import uuid
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from io import StringIO
 
-from flask import Response
+from flask import Response, render_template_string
 from werkzeug.exceptions import NotFound
 
 from timApp.auth.accesshelper import verify_logged_in
@@ -47,9 +47,27 @@ def initialize_db() -> None:
 
 
 @dataclass
-class CalendarItem:
-    opiskelijat: str
-    ohjaajat: str
+class FilterOptions:
+    """Calendar markup fields for filtering options"""
+
+    groups: list[str] | None = None
+    tags: list[str] | None = None
+    fromDate: datetime | None = None
+    toDate: datetime | None = None
+
+    def to_json(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
+class EventTemplate:
+    """Calendar markup fields for event template"""
+
+    title: str | None = None
+    bookers: list[str] = field(default_factory=list)
+    setters: list[str] = field(default_factory=list)
+    capacity: int = 0
+    tags: list[str] = field(default_factory=list)
 
     def to_json(self) -> dict:
         return asdict(self)
@@ -57,7 +75,10 @@ class CalendarItem:
 
 @dataclass
 class CalendarMarkup(GenericMarkupModel):
-    ryhmat: list[CalendarItem] | None = None
+    """Highest level attributes in the calendar markup"""
+
+    filter: FilterOptions = field(default_factory=FilterOptions)
+    eventTemplates: dict[str, EventTemplate] = field(default_factory=dict)
 
 
 @dataclass
@@ -87,21 +108,6 @@ def reqs_handle() -> PluginReqs:
     return {"js": ["calendar"], "multihtml": True}
 
 
-@calendar_plugin.get("/")
-def get_todos() -> Response:
-    # user = get_current_user_object()
-    # user.
-    return json_response(
-        {
-            "todos": [
-                "asd",
-                "wer",
-                "rtq",
-            ]
-        }
-    )
-
-
 @calendar_plugin.get("/export")
 def get_url() -> Response:
     """Creates a unique URl for user to be used when calendar is exported. User ID is
@@ -111,7 +117,7 @@ def get_url() -> Response:
     """
     verify_logged_in()
     domain = app.config["TIM_HOST"]
-    url = domain + "/calendar/ical?user="
+    url = domain + "/calendar/ical?key="
     cur_user = get_current_user_id()
     user_data: ExportedCalendar = ExportedCalendar.query.filter(
         ExportedCalendar.user_id == cur_user
@@ -131,14 +137,16 @@ def get_url() -> Response:
 
 
 @calendar_plugin.get("/ical")
-def get_ical(user: str) -> Response:
+def get_ical(key: str) -> Response:
     """Fetches users events in a ICS format. User ID is sorted out from hash code from query parameter
 
     :return: ICS file that can be exported
     """
     user_data: ExportedCalendar = ExportedCalendar.query.filter(
-        ExportedCalendar.calendar_hash == user
+        ExportedCalendar.calendar_hash == key
     ).one_or_none()
+    if user_data is None:
+        raise NotFound()
     user_id = user_data.user_id
     events: list[Event] = Event.query.filter(Event.creator_user_id == user_id).all()
     buf = StringIO()
@@ -156,9 +164,15 @@ def get_ical(user: str) -> Response:
         buf.write("DTSTAMP:" + dts + "Z\r\n")
         buf.write("UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\r\n")
         buf.write("CREATED:" + dts + "Z\r\n")
-        buf.write("SUMMARY:" + event.title + "\r\n")
-        buf.write("LOCATION:" + event.location + "\r\n")
-        buf.write("DESCRIPTION:" + event.message + "\r\n")
+        if event.title is None:
+            event.title = ""
+        buf.write("SUMMARY:" + string_to_lines(event.title) + "\r\n")
+        if event.location is None:
+            event.location = ""
+        buf.write("LOCATION:" + string_to_lines(event.location) + "\r\n")
+        if event.message is None:
+            event.message = ""
+        buf.write("DESCRIPTION:" + string_to_lines(event.message) + "\r\n")
         buf.write("END:VEVENT\r\n")
 
     buf.write("END:VCALENDAR\r\n")
@@ -166,10 +180,31 @@ def get_ical(user: str) -> Response:
     return Response(result, mimetype="text/calendar")
 
 
+def string_to_lines(str_to_split: str) -> str:
+    """
+    Splits long strings to n char lines
+
+    :return: str where lines are separated with \r\n + whitespace
+    """
+    n = 60
+    if len(str_to_split) <= n:
+        return str_to_split
+    lines = [str_to_split[i : i + n] for i in range(0, len(str_to_split), n)]
+    new_str = ""
+    index = 0
+    for line in lines:
+        index += 1
+        if index == len(lines):
+            new_str = new_str + line
+            break
+        new_str = new_str + line + "\r\n "
+    return new_str
+
+
 @calendar_plugin.get("/events")
 def get_events() -> Response:
-    """Fetches the user's events and the events that have a relation to user's groups from the database in JSON
-    format
+    """Fetches the events created by the user and the events that have a relation to user's groups from the database
+    in JSON format
 
     :return: User's events in JSON format or HTTP 400 if failed
     """
@@ -247,6 +282,51 @@ def get_events() -> Response:
     return json_response(event_objs)
 
 
+@calendar_plugin.get("/events/<int:event_id>/bookers")
+def get_event_bookers(event_id: int) -> str:
+    """Fetches all enrollments from the database for the given event and returns the full name and email of every
+    booker in a html table
+
+    :param event_id: event id
+    :return: Full name and email of every booker of the given event in a html table"""
+
+    event = Event.get_event_by_id(event_id)
+    if event is None:
+        raise NotExist(f"Event not found by the id of {0}".format(event_id))
+
+    bookers_info = []
+    booker_groups = event.enrolled_users
+    for booker_group in booker_groups:
+        bookers = booker_group.users
+        for booker in bookers:
+            bookers_info.append({"full_name": booker.real_name, "email": booker.email})
+
+    return render_template_string(
+        """
+    <style>
+               table, th, td {
+                 border: 1px solid black;
+               }
+    </style>
+    <body>
+        <table>
+            <tr>
+                <th>Full name</th>
+                <th>Email</th>
+            </tr>
+            {% for booker in bookers_info %}
+                <tr>
+                    <td>{{ booker.full_name }}</td>
+                    <td>{{ booker.email }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </body>
+    """,
+        bookers_info=bookers_info,
+    )
+
+
 @dataclass
 class CalendarEvent:
     title: str
@@ -266,6 +346,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
     :param events: List of events to be persisted
     :return: Persisted events in JSON with updated ids
     """
+
     verify_logged_in()
     # TODO: use get_current_user_object() to access more user information, e.g. user's groups
     cur_user = get_current_user_id()
@@ -343,12 +424,12 @@ def delete_event(event_id: int) -> Response:
     """Deletes the event by the given id
 
     :param event_id: Event id
-    :return: HTTP 200 if succeeded, otherwise 400
+    :return: HTTP 200 if succeeded, otherwise 404
     """
     verify_logged_in()
     event = Event.get_event_by_id(event_id)
     if not event:
-        raise RouteException("Event not found")
+        raise NotFound()
     db.session.delete(event)
     db.session.commit()
     return ok_response()
@@ -398,10 +479,17 @@ def book_event(event_id: int, booker_msg: str) -> Response:
         raise RouteException(f"Event not found by the id of {0}".format(event_id))
     user_obj = get_current_user_object()
 
-    group_id = None
+    group_id = -1
     for group in user_obj.groups:
         if group.name == user_obj.name:
             group_id = group.id
+
+    if group_id < 0:
+        raise NotExist("User's personal group was not found")  # Should be impossible
+
+    enrollment = Enrollment.get_enrollment_by_ids(event_id, group_id)
+    if enrollment is not None:
+        raise RouteException("Event is already booked by the same user group")
 
     enrollment = Enrollment(
         event_id=event_id,
