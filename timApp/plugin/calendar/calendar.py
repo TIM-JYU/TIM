@@ -373,14 +373,16 @@ def add_events(events: list[CalendarEvent]) -> Response:
                     verify_group_access(booker_group, manage_access_set)
                 bookers.append({"booker": booker_group_str, "event_id": event.id})
         if setter_groups is not None:
+
             for setter_group_str in setter_groups:
                 setter_group = UserGroup.get_by_name(setter_group_str)
-                if setter_group not in usr.groups:
-                    return make_response(
-                        {"error": f"No access for group {setter_group_str}"},
-                        403,
-                    )
-                setters.append({"setter": setter_group_str, "event_id": event.id})
+                if setter_group in usr.groups:
+                    setters.append({"setter": setter_group_str, "event_id": event.id})
+            if len(setters) == 0:
+                return make_response(
+                    {"error": f"No access for any of the setter groups."},
+                    403,
+                )
 
     cur_user = get_current_user_id()
     added_events = []
