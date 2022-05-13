@@ -155,8 +155,8 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                         <div class="col-sm-12">
                             <label class="col-sm-12 control-label" for="description">Event description</label>
-                            <textarea maxlength="1020"
-                             [(ngModel)]="description"
+                            <textarea maxlength="1020" id="description" 
+                             [(ngModel)]="description" #ngModelDescription="ngModel"
                              (ngModelChange)="setMessage()"
                              name="description"
                              class="form-control"
@@ -256,9 +256,14 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      */
     async saveChanges(): Promise<void> {
         const id = this.data.id;
-
         if (!id) {
             return;
+        }
+        if (!this.description) {
+            this.description = "";
+        }
+        if (!this.location) {
+            this.location = "";
         }
         console.log(this.description);
         console.log(this.location);
