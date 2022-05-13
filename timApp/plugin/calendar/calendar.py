@@ -475,10 +475,14 @@ def user_is_event_manager(event_id: int) -> bool:
     """Checks if current user is a manager of the event
 
     :param event_id: event id
-    :return: True if current user belongs to given event's manager event group or user is admin user, otherwise false.
+    :return: True if current user belongs to given event's manager event group,
+    or is admin user, or created the event, otherwise false.
     """
     usr = get_current_user_object()
     if usr.is_admin:
+        return True
+    event = Event.get_event_by_id(event_id)
+    if event.creator_user_id == get_current_user_id():
         return True
     event_groups: list[EventGroup] = EventGroup.query.filter(
         EventGroup.event_id == event_id
