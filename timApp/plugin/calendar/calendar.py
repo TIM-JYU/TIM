@@ -18,7 +18,7 @@ from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_access
-from timApp.user.user import User, manage_access_set
+from timApp.user.user import User, manage_access_set, view_access_set
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
@@ -239,17 +239,32 @@ def get_events() -> Response:
             enrollments = len(event_obj.enrolled_users)
             booker_groups = event_obj.enrolled_users
             groups = []
-            for group in booker_groups:
-                users = []
-                for user in group.users:
-                    users.append(
-                        {
-                            "id": user.id,
-                            "name": user.real_name,
-                            "email": user.email,
-                        }
-                    )
-                groups.append({"name": group.name, "users": users})
+            # event_groups = event_obj.groups_in_event
+            event_groups: list[EventGroup] = EventGroup.query.filter(
+                event_obj.event_id == EventGroup.event_id
+            ).all()
+            for event_group in event_groups:
+                user_group: UserGroup = UserGroup.query.filter(
+                    UserGroup.id == event_group.usergroup_id
+                ).one_or_none()
+                if user_group is None:
+                    continue  # should be impossible
+                if (
+                    user_group in user_obj.groups and event_group.manager
+                ):  # Only fetch event bookers when current user belongs to manager event group
+
+                    for group in booker_groups:
+                        users = []
+                        for user in group.users:
+                            users.append(
+                                {
+                                    "id": user.id,
+                                    "name": user.real_name,
+                                    "email": user.email,
+                                }
+                            )
+                        groups.append({"name": group.name, "users": users})
+                    break  # Add booker info only once if user belongs to multiple manager groups
             event_objs.append(
                 {
                     "id": event_obj.event_id,
@@ -331,6 +346,7 @@ class CalendarEvent:
     booker_groups: list[str] | None = None
     setter_groups: list[str] | None = None
     event_groups: list[str] | None = None
+    id: int = -1
 
 
 @calendar_plugin.post("/events")
@@ -344,59 +360,101 @@ def add_events(events: list[CalendarEvent]) -> Response:
 
     verify_logged_in()
 
+    setters = []
+    bookers = []
+    usr = get_current_user_object()
     for event in events:
         booker_groups = event.booker_groups
+        setter_groups = event.setter_groups
         if booker_groups is not None:
             for booker_group_str in booker_groups:
                 booker_group = UserGroup.get_by_name(booker_group_str)
                 if booker_group is not None:
                     verify_group_access(booker_group, manage_access_set)
+                bookers.append({"booker": booker_group_str, "event_id": event.id})
+        if setter_groups is not None:
+            for setter_group_str in setter_groups:
+                setter_group = UserGroup.get_by_name(setter_group_str)
+                if setter_group not in usr.groups:
+                    return make_response(
+                        {"error": f"No access for group {setter_group_str}"},
+                        403,
+                    )
+                setters.append({"setter": setter_group_str, "event_id": event.id})
 
     cur_user = get_current_user_id()
     added_events = []
     for event in events:
-        groups = []
+        # groups = []
         group_names = event.event_groups
         if group_names is not None:
             group_name_strs: list[str] = group_names
             for event_group in group_name_strs:
                 group = UserGroup.get_by_name(event_group)
                 if group is not None:
-                    groups.append(group)
+                    # groups.append(group)
+                    print("f")
 
-        event = Event(
+        event_data = Event(
             title=event.title,
             message=event.description,
             location=event.location,
             start_time=event.start,
             end_time=event.end,
             creator_user_id=cur_user,
-            groups_in_event=groups,
+            # groups_in_event=groups,
             max_size=event.max_size,
             signup_before=event.signup_before,
         )
-        db.session.add(event)
-        added_events.append(event)
+        db.session.add(event_data)
+        added_events.append(
+            {
+                "event": event_data,
+                "local_id": event.id,
+            }
+        )
 
     db.session.commit()
+
     # To fetch the new ids generated by the database
     event_list = []
     for event in added_events:
         event_list.append(
             {
-                "id": event.event_id,
-                "title": event.title,
-                "start": event.start_time,
-                "end": event.end_time,
+                "id": event["event"].event_id,
+                "title": event["event"].title,
+                "start": event["event"].start_time,
+                "end": event["event"].end_time,
                 "meta": {
-                    "signup_before": event.signup_before,
+                    "signup_before": event["event"].signup_before,
                     "enrollments": 0,
-                    "maxSize": event.max_size,
-                    "location": event.location,
-                    "message": event.message,
+                    "maxSize": event["event"].max_size,
+                    "location": event["event"].location,
+                    "message": event["event"].message,
                 },
             }
         )
+        for setter in setters:
+            if setter["event_id"] == event["local_id"]:
+                ug = UserGroup.get_by_name(setter["setter"])
+                db.session.add(
+                    EventGroup(
+                        event_id=event["event"].event_id,
+                        usergroup_id=ug.id,
+                        manager=True,
+                    )
+                )
+        for booker in bookers:
+            if booker["event_id"] == event["local_id"]:
+                ug = UserGroup.get_by_name(booker["booker"])
+                db.session.add(
+                    EventGroup(
+                        event_id=event["event"].event_id,
+                        usergroup_id=ug.id,
+                        manager=False,
+                    )
+                )
+        db.session.commit()
 
     return json_response(event_list)
 

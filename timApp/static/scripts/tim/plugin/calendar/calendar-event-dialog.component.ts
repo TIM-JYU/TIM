@@ -63,7 +63,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        (ngModelChange)="setMessage()"
                                        id="booker" name="booker"
                                        class="form-control"
-                                       placeholder="Not booked"
+                                       placeholder=""
                                        disabled="true"/>
                             </div>
                         </div>

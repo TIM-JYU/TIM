@@ -773,6 +773,7 @@ export class CalendarComponent
         if (eventsToAdd.length > 0) {
             eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
                 return {
+                    id: event.id,
                     title: event.title,
                     location: event.meta!.location,
                     description: event.meta!.description,
@@ -828,7 +829,11 @@ export class CalendarComponent
                 this.refresh();
             } else {
                 console.error(result.result.error.error);
-
+                console.log(result.result);
+                // let errorMsg = result.result.error
+                // if (result.result.error.error){
+                //     errorMsg = result.result.error.error
+                // }
                 await showMessageDialog(
                     `Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
                 );
