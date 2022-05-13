@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from io import StringIO
 
-from flask import Response, render_template_string
+from flask import Response, render_template_string, make_response
 from werkzeug.exceptions import NotFound
 
 from timApp.auth.accesshelper import verify_logged_in
@@ -17,7 +17,8 @@ from timApp.plugin.calendar.models import Event, EventGroup, Enrollment, Enrollm
 from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
-from timApp.user.user import User
+from timApp.user.groups import verify_group_access
+from timApp.user.user import User, manage_access_set
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
@@ -327,12 +328,15 @@ class CalendarEvent:
     end: datetime
     signup_before: datetime
     max_size: int = 1
+    booker_groups: list[str] | None = None
+    setter_groups: list[str] | None = None
     event_groups: list[str] | None = None
 
 
 @calendar_plugin.post("/events")
 def add_events(events: list[CalendarEvent]) -> Response:
-    """Persists the given list of events to the database
+    """Persists the given list of events to the database.
+    User must have at least manage rights to given booker-groups set in the events.
 
     :param events: List of events to be persisted
     :return: Persisted events in JSON with updated ids
@@ -340,6 +344,21 @@ def add_events(events: list[CalendarEvent]) -> Response:
 
     verify_logged_in()
     # TODO: use get_current_user_object() to access more user information, e.g. user's groups
+    # cur_user_obj = get_current_user_object()
+    # cur_ug = UserGroup.get_by_name(cur_user_obj.name)
+    for event in events:
+        booker_groups = event.booker_groups
+        if booker_groups is not None:
+            for booker_group_str in booker_groups:
+                booker_group = UserGroup.get_by_name(booker_group_str)
+                if booker_group is not None:
+                    # if not verify_group_access(booker_group, manage_access_set):
+                    #     return make_response(
+                    #         f"Sorry, you do not have permission to add events for group {booker_group}",
+                    #         403,
+                    #     )
+                    verify_group_access(booker_group, manage_access_set)
+
     cur_user = get_current_user_id()
     added_events = []
     for event in events:

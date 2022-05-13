@@ -745,15 +745,19 @@ export class CalendarComponent
         );
 
         const eventGroups: string[] = [];
+        const bookerGroups: string[] = [];
+        const setterGroups: string[] = [];
         let capacity: number = 0;
         if (this.markup.eventTemplates) {
             this.markup.eventTemplates[this.selectedEvent].bookers.forEach(
                 (group) => {
+                    bookerGroups.push(group);
                     eventGroups.push(group);
                 }
             );
             this.markup.eventTemplates[this.selectedEvent].setters.forEach(
                 (group) => {
+                    setterGroups.push(group);
                     eventGroups.push(group);
                 }
             );
@@ -769,6 +773,8 @@ export class CalendarComponent
                     start: event.start,
                     end: event.end,
                     signup_before: new Date(event.meta!.signup_before),
+                    booker_groups: bookerGroups,
+                    setter_groups: setterGroups,
                     event_groups: eventGroups,
                     max_size: capacity,
                 };
