@@ -249,13 +249,11 @@ def get_events() -> Response:
                 ).one_or_none()
                 if user_group is None:
                     continue  # should be impossible
-                if (
-                    user_group in user_obj.groups and event_group.manager
-                ):  # Only fetch event bookers when current user belongs to manager event group
 
-                    for group in booker_groups:
-                        users = []
-                        for user in group.users:
+                for group in booker_groups:
+                    users = []
+                    for user in group.users:
+                        if user.id == cur_user:  # Fetch user's own bookings
                             users.append(
                                 {
                                     "id": user.id,
@@ -263,8 +261,18 @@ def get_events() -> Response:
                                     "email": user.email,
                                 }
                             )
-                        groups.append({"name": group.name, "users": users})
-                    break  # Add booker info only once if user belongs to multiple manager groups
+                        elif (
+                            user_group in user_obj.groups and event_group.manager
+                        ):  # Only fetch event bookers when current user belongs to manager event group
+                            users.append(
+                                {
+                                    "id": user.id,
+                                    "name": user.real_name,
+                                    "email": user.email,
+                                }
+                            )
+                    groups.append({"name": group.name, "users": users})
+                break  # Add booker info only once if user belongs to multiple manager groups
             event_objs.append(
                 {
                     "id": event_obj.event_id,
@@ -290,17 +298,38 @@ def get_events() -> Response:
 
 
 @calendar_plugin.get("/events/<int:event_id>/bookers")
-def get_event_bookers(event_id: int) -> str:
+def get_event_bookers(event_id: int) -> str | Response:
     """Fetches all enrollments from the database for the given event and returns the full name and email of every
     booker in a html table
 
     :param event_id: event id
     :return: Full name and email of every booker of the given event in a html table"""
 
+    verify_logged_in()
+    usr = get_current_user_object()
     event = Event.get_event_by_id(event_id)
     if event is None:
         raise NotExist(f"Event not found by the id of {0}".format(event_id))
 
+    event_groups: list[EventGroup] = EventGroup.query.filter(
+        event_id == EventGroup.event_id
+    ).all()
+    usr_manager_groups = 0
+    for event_group in event_groups:
+        user_group: UserGroup = UserGroup.query.filter(
+            UserGroup.id == event_group.usergroup_id
+        ).one_or_none()
+        if user_group is None:
+            continue  # should be impossible
+        if (
+            user_group in usr.groups and event_group.manager
+        ):  # User needs to belong to at least one manager event group
+            usr_manager_groups += 1
+    if usr_manager_groups == 0:
+        return make_response(
+            {"error": f"No permission to see event bookers."},
+            403,
+        )
     bookers_info = []
     booker_groups = event.enrolled_users
     for booker_group in booker_groups:
