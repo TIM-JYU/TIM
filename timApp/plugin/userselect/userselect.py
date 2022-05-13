@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Literal, Callable
 
+import filelock
 from flask import render_template_string, Response, current_app
 
 from timApp.answer.routes import save_fields, FieldSaveRequest, FieldSaveUserEntry
@@ -732,34 +733,49 @@ def apply(
     if not model.actions:
         return ok_response()
 
-    apply_group_actions(
-        user_acc, cur_user, model.actions.addToGroups, model.actions.removeFromGroups
-    )
-    db.session.flush()
+    all_groups = set(model.actions.addToGroups) | set(model.actions.removeFromGroups)
+    locks = []
+    for group in all_groups:
+        locks.append(filelock.FileLock(f"/tmp/userselect_groupaction_{group}.lock"))
 
-    apply_field_actions(user_acc, cur_user, model.actions.setValue)
+    for lock in locks:
+        lock.acquire()
 
-    right_dist_errors = apply_dist_right_actions(
-        user_acc, model.actions.distributeRight
-    )
+    try:
+        apply_group_actions(
+            user_acc,
+            cur_user,
+            model.actions.addToGroups,
+            model.actions.removeFromGroups,
+        )
+        db.session.flush()
 
-    session_verification_errors = apply_verify_session(
-        "verify", user_acc, param, model.actions.verifyRemoteSessions
-    )
+        apply_field_actions(user_acc, cur_user, model.actions.setValue)
 
-    session_invalidation_errors = apply_verify_session(
-        "invalidate", user_acc, param, model.actions.invalidateRemoteSessions
-    )
+        right_dist_errors = apply_dist_right_actions(
+            user_acc, model.actions.distributeRight
+        )
 
-    update_messages = apply_permission_actions(
-        user_group,
-        model.actions.addPermission,
-        model.actions.removePermission,
-        model.actions.confirmPermission,
-        model.actions.changePermissionTime,
-    )
+        session_verification_errors = apply_verify_session(
+            "verify", user_acc, param, model.actions.verifyRemoteSessions
+        )
 
-    db.session.commit()
+        session_invalidation_errors = apply_verify_session(
+            "invalidate", user_acc, param, model.actions.invalidateRemoteSessions
+        )
+
+        update_messages = apply_permission_actions(
+            user_group,
+            model.actions.addPermission,
+            model.actions.removePermission,
+            model.actions.confirmPermission,
+            model.actions.changePermissionTime,
+        )
+
+        db.session.commit()
+    finally:
+        for lock in locks:
+            lock.release()
 
     for msg in update_messages:
         log_right(msg)
@@ -782,6 +798,7 @@ def apply(
     all_errors = (
         right_dist_errors + session_verification_errors + session_invalidation_errors
     )
+
     # Better throw an error here. This should prompt the user to at least try again
     # Unlike with undoing, it's better to get the user to reapply the rights or properly fix them
     # Moreover, this should encourage the user to report the problem with distribution ASAP
