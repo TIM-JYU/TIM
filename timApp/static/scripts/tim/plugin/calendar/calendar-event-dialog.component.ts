@@ -155,7 +155,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                         <div class="col-sm-12">
                             <label class="col-sm-12 control-label" for="description">Event description</label>
-                            <textarea maxlength="1020" id="description" required
+                            <textarea maxlength="1020" id="description" 
                              [(ngModel)]="description" #ngModelDescription="ngModel"
                              (ngModelChange)="setMessage()"
                              name="description"
@@ -165,9 +165,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     </div>
                 </form>
-                <tim-alert *ngIf="ngModelDescription.invalid" severity="danger">
-                    <ng-container *ngIf="ngModelDescription.errors?.['required']">Description is required</ng-container>
-                </tim-alert>
+
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['bookingEndInvalid']">
                 <ng-container *ngIf="form.errors?.['bookingEndInvalid']">Booking must be done before the event</ng-container>
                 </tim-alert>
@@ -260,6 +258,12 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         const id = this.data.id;
         if (!id) {
             return;
+        }
+        if (!this.description) {
+            this.description = "";
+        }
+        if (!this.location) {
+            this.location = "";
         }
         console.log(this.description);
         console.log(this.location);
