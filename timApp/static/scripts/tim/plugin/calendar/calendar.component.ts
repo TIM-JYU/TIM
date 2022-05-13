@@ -159,10 +159,6 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
             provide: CalendarEventTitleFormatter,
             useClass: CustomEventTitleFormatter,
         },
-        // {
-        //     provide: CalendarEventTitleFormatter,
-        //     useClass: CustomEventTitleFormatter,
-        // },
     ],
     template: `
         <tim-calendar-header [locale]="locale" [(view)]="view" [(viewDate)]="viewDate">
