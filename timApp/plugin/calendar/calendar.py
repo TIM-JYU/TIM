@@ -372,8 +372,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
                 if booker_group is not None:
                     verify_group_access(booker_group, manage_access_set)
                 bookers.append({"booker": booker_group_str, "event_id": event.id})
-        if setter_groups is not None:
-
+        if len(setter_groups) > 0:
             for setter_group_str in setter_groups:
                 setter_group = UserGroup.get_by_name(setter_group_str)
                 if setter_group in usr.groups:
