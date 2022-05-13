@@ -51,6 +51,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         <div class="col-sm-2">
                             <input type="number"
                             min="0" max="200" [(ngModel)]="maxSize"
+                                   #ngModelMaxSize="ngModel"
                             (ngModelChange)="setMessage()"
                             id="maxSize" name="maxSize" class="form-control"
                             [disabled] ="!isEditEnabled()">
@@ -173,6 +174,9 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     </div>
                 </form>
+                <tim-alert *ngIf="(maxSize>200 || maxSize<0) && ngModelMaxSize.dirty" >
+                    <ng-container>Event capacity must be 0-200</ng-container>
+                </tim-alert>
 
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['bookingEndInvalid']">
                 <ng-container *ngIf="form.errors?.['bookingEndInvalid']">Booking must be done before the event</ng-container>
