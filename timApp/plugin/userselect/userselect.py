@@ -496,7 +496,7 @@ def undo_dist_right_actions(
 
 
 def undo_field_actions(
-    cur_user: UserGroup, user_acc: User, set_value: list[SetTaskValueAction]
+    cur_user: User, user_acc: User, set_value: list[SetTaskValueAction]
 ) -> None:
     fields_to_save = {set_val.taskId: "" for set_val in set_value}
     if fields_to_save:
@@ -561,24 +561,40 @@ def undo(
     if not model.actions:
         return ok_response()
 
-    # Undo the group actions before dist rights because dist rights can might depend on the group
-    # Moreover, undoing is generally a soft action, so we can always manually restore the group safely
-    undo_group_actions(
-        user_acc, cur_user, model.actions.addToGroups, model.actions.removeFromGroups
-    )
-    # Flush so that right distribution is handled correctly
-    db.session.flush()
+    groups = set(model.actions.addToGroups) | set(model.actions.removeFromGroups)
+    locks = [
+        filelock.FileLock(f"/tmp/userselect_groupaction_{group}.lock")
+        for group in groups
+    ]
 
-    errors = undo_dist_right_actions(user_acc, model.actions.distributeRight)
+    for lock in locks:
+        lock.acquire()
 
-    # If there are errors undoing, don't reset the fields because it may have been caused by a race condition
-    if errors:
-        db.session.rollback()
-        return json_response({"distributionErrors": errors})
+    try:
+        # Undo the group actions before dist rights because dist rights can might depend on the group
+        # Moreover, undoing is generally a soft action, so we can always manually restore the group safely
+        undo_group_actions(
+            user_acc,
+            cur_user,
+            model.actions.addToGroups,
+            model.actions.removeFromGroups,
+        )
+        # Flush so that right distribution is handled correctly
+        db.session.flush()
 
-    undo_field_actions(user_acc, cur_user, model.actions.setValue)
+        errors = undo_dist_right_actions(user_acc, model.actions.distributeRight)
 
-    db.session.commit()
+        # If there are errors undoing, don't reset the fields because it may have been caused by a race condition
+        if errors:
+            db.session.rollback()
+            return json_response({"distributionErrors": errors})
+
+        undo_field_actions(cur_user, user_acc, model.actions.setValue)
+
+        db.session.commit()
+    finally:
+        for lock in locks:
+            lock.release()
 
     return json_response({"distributionErrors": errors})
 
@@ -665,7 +681,7 @@ def apply_permission_actions(
 
 
 def apply_field_actions(
-    user_acc: User, cur_user: User, set_values: list[SetTaskValueAction]
+    cur_user: User, user_acc: User, set_values: list[SetTaskValueAction]
 ) -> None:
     fields_to_save = {set_val.taskId: set_val.value for set_val in set_values}
     if fields_to_save:
@@ -734,9 +750,10 @@ def apply(
         return ok_response()
 
     all_groups = set(model.actions.addToGroups) | set(model.actions.removeFromGroups)
-    locks = []
-    for group in all_groups:
-        locks.append(filelock.FileLock(f"/tmp/userselect_groupaction_{group}.lock"))
+    locks = [
+        filelock.FileLock(f"/tmp/userselect_groupaction_{group}.lock")
+        for group in all_groups
+    ]
 
     for lock in locks:
         lock.acquire()
@@ -750,7 +767,7 @@ def apply(
         )
         db.session.flush()
 
-        apply_field_actions(user_acc, cur_user, model.actions.setValue)
+        apply_field_actions(cur_user, user_acc, model.actions.setValue)
 
         right_dist_errors = apply_dist_right_actions(
             user_acc, model.actions.distributeRight
