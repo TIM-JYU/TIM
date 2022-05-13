@@ -617,11 +617,13 @@ export class CalendarComponent
         newEnd,
     }: CalendarEventTimesChangedEvent<TIMEventMeta>) {
         if (newEnd && event.meta) {
+            const oldStart = event.start;
+            const oldEnd = event.end;
             event.meta.signup_before = newStart;
             event.start = newStart;
             event.end = newEnd;
             this.refresh();
-            await this.editEvent(event);
+            await this.editEvent(event, oldStart, oldEnd);
         } else {
             // TODO: handle undefined event.meta. Shouldn't be possible for the event.meta to be undefined.
             this.refresh();
@@ -851,8 +853,10 @@ export class CalendarComponent
     /**
      * Sends the updated event to the TIM server after resizing by dragging
      * @param event Resized event
+     * @param oldStart event start time before resizing
+     * @param oldEnd event end time before resizing
      */
-    async editEvent(event: CalendarEvent) {
+    async editEvent(event: CalendarEvent, oldStart: Date, oldEnd?: Date) {
         if (!event.id) {
             return;
         }
@@ -879,8 +883,11 @@ export class CalendarComponent
         if (result.ok) {
             console.log(result.result);
         } else {
-            // TODO: Handle error responses properly
             console.error(result.result.error.error);
+            await showMessageDialog(result.result.error.error);
+            event.start = oldStart;
+            event.end = oldEnd;
+            this.refresh();
         }
     }
 

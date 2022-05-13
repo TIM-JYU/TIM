@@ -239,26 +239,13 @@ def get_events() -> Response:
             enrollments = len(event_obj.enrolled_users)
             booker_groups = event_obj.enrolled_users
             groups = []
-            # event_groups = event_obj.groups_in_event
-            event_groups: list[EventGroup] = EventGroup.query.filter(
-                event_obj.event_id == EventGroup.event_id
-            ).all()
+
             for group in booker_groups:
                 users = []
-                # Authorization
-                usr_is_manager = user_obj.is_admin
-                for event_group in event_groups:
-                    ug: UserGroup = UserGroup.query.filter(
-                        UserGroup.id == event_group.usergroup_id
-                    ).one_or_none()
-                    if ug is None:
-                        continue
-                    if ug in user_obj.groups and event_group.manager:
-                        usr_is_manager = True
+                cur_user_booking = False
                 for user in group.users:
                     if user.id == cur_user:
-                        # Users are managers of their own bookings
-                        usr_is_manager = True
+                        cur_user_booking = True
                     users.append(
                         {
                             "id": user.id,
@@ -266,7 +253,7 @@ def get_events() -> Response:
                             "email": user.email,
                         }
                     )
-                if usr_is_manager:
+                if user_is_event_manager(event_obj.event_id) or cur_user_booking:
                     groups.append({"name": group.name, "users": users})
 
             event_objs.append(
@@ -496,6 +483,8 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     :return: HTTP 200 if succeeded, otherwise 400
     """
     verify_logged_in()
+    if not user_is_event_manager(event_id):
+        return make_response({"error": "No permission to edit the event"}, 403)
     old_event = Event.get_event_by_id(event_id)
     if not old_event:
         raise RouteException("Event not found")
@@ -508,6 +497,28 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     return ok_response()
 
 
+def user_is_event_manager(event_id: int) -> bool:
+    """Checks if current user is a manager of the event
+
+    :param event_id: event id
+    :return: True if current user belongs to given event's manager event group or user is admin user, otherwise false.
+    """
+    usr = get_current_user_object()
+    if usr.is_admin:
+        return True
+    event_groups: list[EventGroup] = EventGroup.query.filter(
+        EventGroup.event_id == event_id
+    ).all()
+    for event_group in event_groups:
+        ug: UserGroup = UserGroup.query.filter(
+            event_group.usergroup_id == UserGroup.id
+        ).one_or_none()
+        if ug is not None:
+            if ug in usr.groups and event_group.manager:
+                return True
+    return False
+
+
 @calendar_plugin.delete("/events/<int:event_id>")
 def delete_event(event_id: int) -> Response:
     """Deletes the event by the given id
@@ -516,25 +527,14 @@ def delete_event(event_id: int) -> Response:
     :return: HTTP 200 if succeeded, otherwise 404
     """
     verify_logged_in()
+
+    if not user_is_event_manager(event_id):
+        return make_response({"error": "No permission to delete the event"}, 403)
+
     event = Event.get_event_by_id(event_id)
     if not event:
         raise NotFound()
-    usr = get_current_user_object()
 
-    event_groups: list[EventGroup] = EventGroup.query.filter(
-        EventGroup.event_id == event_id
-    ).all()
-    user_is_manager = usr.is_admin
-    for event_group in event_groups:
-        ug: UserGroup = UserGroup.query.filter(
-            event_group.usergroup_id == UserGroup.id
-        ).one_or_none()
-        if ug is not None:
-            if ug in usr.groups and event_group.manager:
-                user_is_manager = True
-
-    if not user_is_manager:
-        return make_response({"error": "No permission to delete the event"}, 403)
     db.session.delete(event)
     db.session.commit()
     return ok_response()
