@@ -559,7 +559,7 @@ def undo(
     model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
     # No permissions to undo
     if not model.actions:
-        return ok_response()
+        return json_response({"distributionErrors": []})
 
     groups = set(model.actions.addToGroups) | set(model.actions.removeFromGroups)
     locks = [
@@ -590,6 +590,14 @@ def undo(
             return json_response({"distributionErrors": errors})
 
         undo_field_actions(cur_user, user_acc, model.actions.setValue)
+
+        errors += apply_verify_session(
+            "verify", user_acc, param, model.actions.invalidateRemoteSessions
+        )
+
+        errors += apply_verify_session(
+            "invalidate", user_acc, param, model.actions.verifyRemoteSessions
+        )
 
         db.session.commit()
     finally:
