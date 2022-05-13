@@ -1606,10 +1606,7 @@ export class ViewCtrl implements IController {
      */
     peerReviewInProcess(): boolean {
         if (this.docSettings.peer_review) {
-            const currentTime = new Date();
-            const currentTimeFixed = new Date(
-                currentTime.getTime() - currentTime.getTimezoneOffset() * 60000
-            ).toISOString();
+            const currentTime = new Date().toISOString();
 
             if (
                 !this.docSettings.peer_review_start ||
@@ -1625,7 +1622,10 @@ export class ViewCtrl implements IController {
                 this.docSettings.peer_review_stop
             ).toISOString();
 
-            if (startTime <= currentTimeFixed && currentTimeFixed < endTime) {
+            console.log(startTime <= currentTime && currentTime < endTime)
+
+
+            if (startTime <= currentTime && currentTime < endTime) {
                 return true;
             }
 

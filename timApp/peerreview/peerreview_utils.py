@@ -17,6 +17,7 @@ from timApp.user import usergroup
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 
+import dateutil.parser
 import pytz
 
 
@@ -202,14 +203,16 @@ def check_review_grouping(doc: DocInfo) -> bool:
 def is_peerreview_enabled(doc: DocInfo) -> bool:
     settings = doc.document.get_settings()
 
-    # TODO: create better solution
-    tz = pytz.timezone("Europe/Helsinki")
-
     if not settings.peer_review_start() or not settings.peer_review_stop():
         return doc.document.get_settings().peer_review()
 
-    start = tz.localize((settings.peer_review_start()), is_dst=None)
-    stop = tz.localize((settings.peer_review_stop()), is_dst=None)
+    start = dateutil.parser.parse(settings.peer_review_start().isoformat()).astimezone(
+        pytz.UTC
+    )
+    stop = dateutil.parser.parse(settings.peer_review_stop().isoformat()).astimezone(
+        pytz.UTC
+    )
+
     current_time = datetime.now(pytz.timezone("UTC"))
 
     if not start or not stop:
