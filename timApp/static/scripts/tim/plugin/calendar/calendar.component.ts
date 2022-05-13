@@ -712,6 +712,7 @@ export class CalendarComponent
             this.http.get<TIMCalendarEvent[]>("/calendar/events")
         );
         if (result.ok) {
+            console.log(result.result);
             result.result.forEach((event) => {
                 event.start = new Date(event.start);
                 if (event.end) {

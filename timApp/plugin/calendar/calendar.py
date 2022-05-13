@@ -243,40 +243,32 @@ def get_events() -> Response:
             event_groups: list[EventGroup] = EventGroup.query.filter(
                 event_obj.event_id == EventGroup.event_id
             ).all()
-            for event_group in event_groups:
-                user_group: UserGroup = UserGroup.query.filter(
-                    UserGroup.id == event_group.usergroup_id
-                ).one_or_none()
-                if user_group is None:
-                    continue  # should be impossible
-
-                for group in booker_groups:
-                    users = []
-
-                    for user in group.users:
-
-                        if (
-                            user.id == cur_user or user_obj.is_admin
-                        ):  # Fetch user's own bookings, pass authorization if admin
-                            users.append(
-                                {
-                                    "id": user.id,
-                                    "name": user.real_name,
-                                    "email": user.email,
-                                }
-                            )
-                        elif (
-                            user_group in user_obj.groups and event_group.manager
-                        ):  # Only fetch event bookers when current user belongs to manager event group
-                            users.append(
-                                {
-                                    "id": user.id,
-                                    "name": user.real_name,
-                                    "email": user.email,
-                                }
-                            )
+            for group in booker_groups:
+                users = []
+                # Authorization
+                usr_is_manager = user_obj.is_admin
+                for event_group in event_groups:
+                    ug: UserGroup = UserGroup.query.filter(
+                        UserGroup.id == event_group.usergroup_id
+                    ).one_or_none()
+                    if ug is None:
+                        continue
+                    if ug in user_obj.groups and event_group.manager:
+                        usr_is_manager = True
+                for user in group.users:
+                    if user.id == cur_user:
+                        # Users are managers of their own bookings
+                        usr_is_manager = True
+                    users.append(
+                        {
+                            "id": user.id,
+                            "name": user.real_name,
+                            "email": user.email,
+                        }
+                    )
+                if usr_is_manager:
                     groups.append({"name": group.name, "users": users})
-                break  # Add booker info only once if user belongs to multiple manager groups
+
             event_objs.append(
                 {
                     "id": event_obj.event_id,
@@ -318,7 +310,7 @@ def get_event_bookers(event_id: int) -> str | Response:
     event_groups: list[EventGroup] = EventGroup.query.filter(
         event_id == EventGroup.event_id
     ).all()
-    usr_manager_groups = 0
+    usr_is_manager = usr.is_admin
     for event_group in event_groups:
         user_group: UserGroup = UserGroup.query.filter(
             UserGroup.id == event_group.usergroup_id
@@ -328,8 +320,8 @@ def get_event_bookers(event_id: int) -> str | Response:
         if (
             user_group in usr.groups and event_group.manager
         ):  # User needs to belong to at least one manager event group
-            usr_manager_groups += 1
-    if usr_manager_groups == 0 and not usr.is_admin:
+            usr_is_manager = True
+    if not usr_is_manager:
         return make_response(
             {"error": f"No permission to see event bookers."},
             403,
