@@ -406,6 +406,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     old_event.message = event.description
     old_event.start_time = event.start
     old_event.end_time = event.end
+    old_event.signup_before = event.signup_before
     db.session.commit()
     return ok_response()
 
