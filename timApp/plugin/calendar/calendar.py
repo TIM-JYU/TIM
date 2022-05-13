@@ -383,15 +383,6 @@ def add_events(events: list[CalendarEvent]) -> Response:
     cur_user = get_current_user_id()
     added_events = []
     for event in events:
-        # groups = []
-        group_names = event.event_groups
-        if group_names is not None:
-            group_name_strs: list[str] = group_names
-            for event_group in group_name_strs:
-                group = UserGroup.get_by_name(event_group)
-                if group is not None:
-                    # groups.append(group)
-                    print("f")
 
         event_data = Event(
             title=event.title,
@@ -400,7 +391,6 @@ def add_events(events: list[CalendarEvent]) -> Response:
             start_time=event.start,
             end_time=event.end,
             creator_user_id=cur_user,
-            # groups_in_event=groups,
             max_size=event.max_size,
             signup_before=event.signup_before,
         )
@@ -432,6 +422,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
                 },
             }
         )
+
         for setter in setters:
             if setter["event_id"] == event["local_id"]:
                 ug = UserGroup.get_by_name(setter["setter"])
