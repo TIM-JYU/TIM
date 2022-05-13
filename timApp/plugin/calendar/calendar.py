@@ -396,6 +396,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
     setters = []
     bookers = []
     usr = get_current_user_object()
+    user_is_manager = usr.is_admin
     for event in events:
         booker_groups = event.booker_groups
         setter_groups = event.setter_groups
@@ -409,8 +410,9 @@ def add_events(events: list[CalendarEvent]) -> Response:
             for setter_group_str in setter_groups:
                 setter_group = UserGroup.get_by_name(setter_group_str)
                 if setter_group in usr.groups:
-                    setters.append({"setter": setter_group_str, "event_id": event.id})
-            if len(setters) == 0 and not usr.is_admin:
+                    user_is_manager = True
+                setters.append({"setter": setter_group_str, "event_id": event.id})
+            if not user_is_manager:
                 return make_response(
                     {"error": f"No access for any of the setter groups."},
                     403,
@@ -488,7 +490,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
                         manager=False,
                     )
                 )
-        db.session.commit()
+    db.session.commit()
 
     return json_response(event_list)
 
@@ -525,6 +527,22 @@ def delete_event(event_id: int) -> Response:
     event = Event.get_event_by_id(event_id)
     if not event:
         raise NotFound()
+    usr = get_current_user_object()
+
+    event_groups: list[EventGroup] = EventGroup.query.filter(
+        EventGroup.event_id == event_id
+    ).all()
+    user_is_manager = usr.is_admin
+    for event_group in event_groups:
+        ug: UserGroup = UserGroup.query.filter(
+            event_group.usergroup_id == UserGroup.id
+        ).one_or_none()
+        if ug is not None:
+            if ug in usr.groups and event_group.manager:
+                user_is_manager = True
+
+    if not user_is_manager:
+        return make_response({"error": "No permission to delete the event"}, 403)
     db.session.delete(event)
     db.session.commit()
     return ok_response()
