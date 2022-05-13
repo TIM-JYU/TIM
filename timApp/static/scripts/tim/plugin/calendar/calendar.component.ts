@@ -130,27 +130,6 @@ const segmentHeight = 30;
 registerLocaleData(localeFr);
 registerLocaleData(localeFi);
 
-/**
- * For customizing the event tooltip
- */
-// @Injectable()
-// export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
-//     weekTooltip(event: TIMCalendarEvent, title: string) {
-//         if (event.end) {
-//             return `${event.start.toTimeString().substr(0, 5)}-${event.end
-//                 .toTimeString()
-//                 .substr(0, 5)}`;
-//         }
-//         return "";
-//     }
-//
-//     dayTooltip(event: CalendarEvent<{tmpEvent?: boolean}>, title: string) {
-//         if (!event.meta?.tmpEvent) {
-//             return super.dayTooltip(event, title);
-//         }
-//         return "";
-//     }
-// }
 export type TIMEventMeta = {
     tmpEvent: boolean;
     deleted?: boolean;
