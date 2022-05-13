@@ -46,12 +46,14 @@ export class UserListController implements IController {
     };
     private gridApi?: uiGrid.IGridApiOf<IUserListEntry>;
     private instantUpdate: boolean = false;
+    private syncAnswerBrowsers: boolean = false;
     private onUserChange!: Binding<
         (params: {$USER: IUser; $UPDATEALL: boolean}) => void,
         "&"
     >;
     private viewctrl!: Require<ViewCtrl>;
     private preventedChange = false;
+    private currentRowCol?: uiGrid.cellNav.IRowCol<IUserListEntry>;
 
     constructor(private scope: IScope, private element: JQLite) {}
 
@@ -64,7 +66,6 @@ export class UserListController implements IController {
                 grid.css("height", this.element[0].offsetHeight - 30 + "px");
             }
         );
-
         let anyAnnotations = false;
         let smallFieldWidth = 59;
         // check if server gave student ids for users
@@ -163,6 +164,11 @@ export class UserListController implements IController {
             ]);
         const formMode = this.viewctrl.docSettings.form_mode ?? false;
         this.instantUpdate = formMode || getViewName() === "review";
+        this.syncAnswerBrowsers =
+            this.viewctrl.docSettings.sync_answerbrowsers ??
+            this.syncAnswerBrowsers;
+
+        this.viewctrl.userList = this;
 
         this.gridOptions = {
             exporterMenuPdf: false,
@@ -180,6 +186,10 @@ export class UserListController implements IController {
                 this.gridApi = gridApi;
 
                 gridApi.selection.on.rowSelectionChanged(this.scope, (row) => {
+                    if (this.preventedChange) {
+                        this.preventedChange = false;
+                        return;
+                    }
                     this.fireUserChange(row, this.instantUpdate);
                 });
                 if (this.gridOptions?.data) {
@@ -208,6 +218,7 @@ export class UserListController implements IController {
                 gridApi.cellNav.on.navigate(
                     this.scope,
                     (newRowCol, oldRowCol) => {
+                        this.currentRowCol = newRowCol;
                         // TODO: check if simple way to cancel this event here
                         //  or make unsavitimcomponents checks at keyboardpress/click events before on.navigate gets called
                         if (this.preventedChange) {
@@ -286,6 +297,29 @@ export class UserListController implements IController {
                     order: 30,
                 },
                 {
+                    title: "Sync selected users in tasks",
+                    action: ($event: IAngularEvent) => {
+                        this.syncAnswerBrowsers = true;
+                    },
+                    shown: () => {
+                        return !this.syncAnswerBrowsers;
+                    },
+                    leaveOpen: true,
+                    order: 40,
+                },
+                {
+                    // TODO: better desc
+                    title: "De-sync selected users in taks",
+                    action: ($event: IAngularEvent) => {
+                        this.syncAnswerBrowsers = false;
+                    },
+                    shown: () => {
+                        return this.syncAnswerBrowsers;
+                    },
+                    leaveOpen: true,
+                    order: 50,
+                },
+                {
                     title: "Answers as plain text/JSON",
                     action: ($event: IAngularEvent) => {
                         void to2(
@@ -298,7 +332,7 @@ export class UserListController implements IController {
                             })
                         );
                     },
-                    order: 40,
+                    order: 60,
                 },
                 {
                     title: "Create Feedback Report",
@@ -333,7 +367,7 @@ export class UserListController implements IController {
                             })
                         );
                     },
-                    order: 50,
+                    order: 70,
                 },
             ],
             rowTemplate: `
@@ -345,8 +379,32 @@ export class UserListController implements IController {
         };
     }
 
+    getInstantUpdate() {
+        return this.instantUpdate;
+    }
+
+    getSyncAnswerBrowsers() {
+        return this.syncAnswerBrowsers;
+    }
+
     fireUserChange(row: uiGrid.IGridRowOf<IUserListEntry>, updateAll: boolean) {
         this.onUserChange({$USER: row.entity.user, $UPDATEALL: updateAll});
+    }
+
+    /**
+     * Change selected user externally and block subsequent on.navigate call
+     * @param user user to select
+     */
+    changeUserWithoutFiring(user: IUserListEntry) {
+        this.preventedChange = true;
+        this.gridApi?.selection.selectRow(user);
+        if (this.currentRowCol) {
+            this.gridApi?.cellNav.scrollToFocus(
+                user,
+                this.currentRowCol.col.colDef
+            );
+        }
+        this.currentRowCol = this.gridApi?.cellNav.getFocusedCell();
     }
 
     exportKorppi(options: IExportOptions) {

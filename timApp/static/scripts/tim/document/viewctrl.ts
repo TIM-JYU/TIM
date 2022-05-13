@@ -34,6 +34,7 @@ import {ParContext} from "tim/document/structure/parContext";
 import {DerefOption} from "tim/document/structure/derefOption";
 import {enumPars} from "tim/document/structure/iteration";
 import {getParContainerElem} from "tim/document/structure/create";
+import {UserListController} from "tim/answer/userlistController";
 import {
     AnswerBrowserController,
     PluginLoaderCtrl,
@@ -246,6 +247,7 @@ export class ViewCtrl implements IController {
     private pendingUpdates: PendingCollection = new Map<string, string>();
     private document?: TimDocument;
     public selectedUser: IUser;
+    public userList?: UserListController;
     public editing: boolean = false;
     public defaultActionStorage = new TimStorage(
         "defAction",
@@ -1022,7 +1024,38 @@ export class ViewCtrl implements IController {
         window.location.reload();
     }
 
-    async changeUser(user: IUser, updateAll: boolean) {
+    /**
+     * Change selected user via an answerbrowser
+     * @param user selected user
+     * @param abId taskId of ab who called the change
+     */
+    changeUserFromAb(user: IUser, abId: TaskId) {
+        if (
+            !(
+                this.userList?.getSyncAnswerBrowsers() ??
+                this.docSettings.sync_answerbrowsers
+            )
+        ) {
+            return;
+        }
+        let updateAll = false;
+        if (this.userList) {
+            const userListEntry = this.findUserByName(user.name);
+            if (userListEntry) {
+                this.userList.changeUserWithoutFiring(userListEntry);
+            }
+            updateAll = this.userList.getInstantUpdate();
+        }
+        this.changeUser(user, updateAll, abId);
+    }
+
+    /**
+     * Change selected user in all answerbrowsers
+     * @param user selected user
+     * @param updateAll if true, update answerbrowsers instantly
+     * @param triggerer_id optional taskId of answerbrowser who called the change (skipped in update)
+     */
+    async changeUser(user: IUser, updateAll: boolean, triggerer_id?: TaskId) {
         this.selectedUser = user;
         for (const uc of this.userChangeListeners.values()) {
             uc.userChanged(user);
@@ -1061,7 +1094,7 @@ export class ViewCtrl implements IController {
                 AnswerBrowserController
             >();
             for (const fab of this.formAbs.entities.values()) {
-                if (!fab.isUseCurrentUser()) {
+                if (!fab.isUseCurrentUser() && triggerer_id != fab.taskId) {
                     fieldsToChange.set(fab.taskId.docTask(), fab);
                 }
             }
@@ -1072,7 +1105,9 @@ export class ViewCtrl implements IController {
         // - handle /answers as single request for all related plugins instead of separate requests
         // - do the same for /taskinfo and /getState requests
         for (const ab of this.abs.entities.values()) {
-            ab.changeUser(user, updateAll);
+            if (triggerer_id != ab.taskId) {
+                ab.changeUser(user, updateAll);
+            }
         }
     }
 
