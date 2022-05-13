@@ -677,6 +677,7 @@ const CsMarkupOptional = t.partial({
     filename: t.string,
     fullhtml: t.string,
     fullhtmlurl: t.string,
+    fullhtmlparams: t.record(t.string, t.string),
     git: GitMarkup,
     gitDefaults: GitDefaultsMarkup,
     height: t.union([t.number, t.string]),
@@ -1630,6 +1631,16 @@ export class CsController extends CsBase implements ITimComponent {
             /http:\/\/localhost\/csstatic\//g,
             window.origin + "/csstatic/"
         );
+        if (this.markup.fullhtmlparams) {
+            for (const [key, value] of Object.entries(
+                this.markup.fullhtmlparams
+            )) {
+                s = s.replace(
+                    new RegExp(`/\\*\s*htmlparam-${key}\s*\\*/`, "g"),
+                    value
+                );
+            }
+        }
         return s;
     }
 
