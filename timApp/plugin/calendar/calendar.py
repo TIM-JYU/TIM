@@ -289,30 +289,13 @@ def get_event_bookers(event_id: int) -> str | Response:
     :return: Full name and email of every booker of the given event in a html table"""
 
     verify_logged_in()
-    usr = get_current_user_object()
+    if not user_is_event_manager(event_id):
+        return make_response({"error": "No permission to see event bookers"}, 403)
+
     event = Event.get_event_by_id(event_id)
     if event is None:
         raise NotExist(f"Event not found by the id of {0}".format(event_id))
 
-    event_groups: list[EventGroup] = EventGroup.query.filter(
-        event_id == EventGroup.event_id
-    ).all()
-    usr_is_manager = usr.is_admin
-    for event_group in event_groups:
-        user_group: UserGroup = UserGroup.query.filter(
-            UserGroup.id == event_group.usergroup_id
-        ).one_or_none()
-        if user_group is None:
-            continue  # should be impossible
-        if (
-            user_group in usr.groups and event_group.manager
-        ):  # User needs to belong to at least one manager event group
-            usr_is_manager = True
-    if not usr_is_manager:
-        return make_response(
-            {"error": f"No permission to see event bookers."},
-            403,
-        )
     bookers_info = []
     booker_groups = event.enrolled_users
     for booker_group in booker_groups:
