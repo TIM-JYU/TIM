@@ -1,3 +1,4 @@
+import * as Console from "console";
 import {
     Component,
     EventEmitter,
@@ -112,7 +113,7 @@ export class CountdownComponent implements OnInit, OnChanges {
 
     ngOnInit() {
         if (this.parseEndTime) {
-            this.endTime = moment(this.parseEndTime, "YYYY-MM-DD HH:mm:ss");
+            this.endTime = moment.utc(this.parseEndTime);
         }
 
         if (!this.autoStart) {
