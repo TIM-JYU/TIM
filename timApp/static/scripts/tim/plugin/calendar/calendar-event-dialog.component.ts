@@ -53,7 +53,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             min="0" max="200" [(ngModel)]="maxSize"
                             (ngModelChange)="setMessage()"
                             id="maxSize" name="maxSize" class="form-control"
-                            [disabled] ="!isEditEnabled() || eventHasBookings()">
+                            [disabled] ="!isEditEnabled()">
                         </div>
                     </div>
                     <div class="form-group" [hidden]="isPersonalEvent()">
@@ -275,6 +275,11 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.location = "";
         }
         if (!this.maxSize) {
+            this.maxSize = this.getEventCapacity();
+        } else if (
+            this.eventHasBookings() &&
+            this.maxSize < this.getEventCapacity()
+        ) {
             this.maxSize = this.getEventCapacity();
         }
         console.log(this.description);
