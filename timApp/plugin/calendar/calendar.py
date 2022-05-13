@@ -252,8 +252,12 @@ def get_events() -> Response:
 
                 for group in booker_groups:
                     users = []
+
                     for user in group.users:
-                        if user.id == cur_user:  # Fetch user's own bookings
+
+                        if (
+                            user.id == cur_user or user_obj.is_admin
+                        ):  # Fetch user's own bookings, pass authorization if admin
                             users.append(
                                 {
                                     "id": user.id,
@@ -325,7 +329,7 @@ def get_event_bookers(event_id: int) -> str | Response:
             user_group in usr.groups and event_group.manager
         ):  # User needs to belong to at least one manager event group
             usr_manager_groups += 1
-    if usr_manager_groups == 0:
+    if usr_manager_groups == 0 and not usr.is_admin:
         return make_response(
             {"error": f"No permission to see event bookers."},
             403,
@@ -406,7 +410,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
                 setter_group = UserGroup.get_by_name(setter_group_str)
                 if setter_group in usr.groups:
                     setters.append({"setter": setter_group_str, "event_id": event.id})
-            if len(setters) == 0:
+            if len(setters) == 0 and not usr.is_admin:
                 return make_response(
                     {"error": f"No access for any of the setter groups."},
                     403,
