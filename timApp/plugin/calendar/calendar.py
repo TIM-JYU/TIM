@@ -421,8 +421,25 @@ def delete_event(event_id: int) -> Response:
     event = Event.get_event_by_id(event_id)
     if not event:
         raise NotFound()
+    send_email_to_enrolled_users(event)
     db.session.delete(event)
     db.session.commit()
+    return ok_response()
+
+
+def send_email_to_enrolled_users(event: Event) -> Response:
+    enrolled_users = event.enrolled_users
+    if len(enrolled_users) == 0:
+        return ok_response()
+    creator = event.creator
+    start_time = event.start_time.strftime("%d.%m.%Y %H:%M")
+    end_time = event.end_time.strftime("%H:%M")
+    event_time = f"{start_time}-{end_time}"
+    msg = f"TIM-calendar event {event.title} {event_time} has been cancelled by {creator.name}"
+    subject = msg
+    for user in enrolled_users:
+        rcpt = user.email
+        send_email(rcpt, subject, msg)
     return ok_response()
 
 
