@@ -52,7 +52,10 @@ const DEFAULT_PIECE_SIZE = 20;
         <ng-template i18n>Document settings</ng-template>
         <ng-container>
             <h5 i18n>Help</h5>
-            <a i18n-title title="Open TIM-guide" href="/view/tim/TIM-ohjeet" i18n>User guide</a>
+            <div class="flex cl">
+                <a i18n-title title="Open quick start guide" href="/view/tim/ohjeita/pikaohje" i18n>Quick start</a>
+                <a i18n-title title="Open content creator guide" href="/view/tim/ohjeita/ohjeet" i18n>Content creator guide</a>    
+            </div>
         </ng-container>
         <ng-container *ngIf="users.isLoggedIn()">
             <h5 i18n>Customize</h5>
