@@ -86,7 +86,7 @@ import {to, to2} from "../util/utils";
                     <li><a href="{{ getIntroLink() }}" i18n>Introduction</a></li>
                     <li><a href="/view/tim/ohjeita/pikaohje" i18n>Quick start</a><sup *ngIf="notFinnish()"> (F)</sup></li>
                     <li><a href="/view/tim/ohjeita/ohjeet" i18n>Content creator guide</a><sup *ngIf="notFinnish()"> (F)</sup></li>
-                    <li><a href="/view/tim/TIM-ohjeet" i18n>Full guide</a><sup *ngIf="notFinnish()"> (F)</sup></li>
+                    <li><a href="/view/tim/TIM-ohjeet" i18n>All guides</a><sup *ngIf="notFinnish()"> (F)</sup></li>
                 </ul>
             </div>
             <div class="col-md-4">

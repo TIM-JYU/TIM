@@ -5700,14 +5700,6 @@
           <context context-type="linenumber">57</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="939344814519085284" datatype="html">
-        <source>Full guide</source>
-        <target state="translated">Kaikki ohjeet</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
-          <context context-type="linenumber">89</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7890554627596125776" datatype="html">
         <source>Open quick start guide</source>
         <target state="translated">Avaa pikaohjeet</target>
@@ -5722,6 +5714,26 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">57</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2763378188979895679" datatype="html">
+        <source>All guides</source>
+        <target state="translated">Kaikki ohjeet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
+          <context context-type="linenumber">89</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
+          <context context-type="linenumber">58</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5840095143381034047" datatype="html">
+        <source>Open all guides</source>
+        <target state="translated">Avaa kaikki ohjeet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
+          <context context-type="linenumber">58</context>
         </context-group>
       </trans-unit>
     </body>
