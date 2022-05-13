@@ -343,20 +343,13 @@ def add_events(events: list[CalendarEvent]) -> Response:
     """
 
     verify_logged_in()
-    # TODO: use get_current_user_object() to access more user information, e.g. user's groups
-    # cur_user_obj = get_current_user_object()
-    # cur_ug = UserGroup.get_by_name(cur_user_obj.name)
+
     for event in events:
         booker_groups = event.booker_groups
         if booker_groups is not None:
             for booker_group_str in booker_groups:
                 booker_group = UserGroup.get_by_name(booker_group_str)
                 if booker_group is not None:
-                    # if not verify_group_access(booker_group, manage_access_set):
-                    #     return make_response(
-                    #         f"Sorry, you do not have permission to add events for group {booker_group}",
-                    #         403,
-                    #     )
                     verify_group_access(booker_group, manage_access_set)
 
     cur_user = get_current_user_id()

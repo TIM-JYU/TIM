@@ -41,6 +41,7 @@ import {to2, toPromise} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
+import {showMessageDialog} from "../../ui/showMessageDialog";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {CustomEventTitleFormatter} from "./custom-event-title-formatter.service";
@@ -412,6 +413,11 @@ export class CalendarComponent
     setEventType(button: string) {
         this.selectedEvent = button;
     }
+
+    /**
+     * True if event is set to be temporary (events that are yet to be sent to the TIM server)
+     * @param event
+     */
     isTempEvent(event: TIMCalendarEvent) {
         if (event.meta) {
             return event.meta.tmpEvent;
@@ -810,7 +816,6 @@ export class CalendarComponent
                                     event.meta!.signup_before
                                 ),
                             },
-                            // actions: this.actions,
                             resizable: {
                                 beforeStart: true,
                                 afterEnd: true,
@@ -822,8 +827,17 @@ export class CalendarComponent
                 console.log(result.result);
                 this.refresh();
             } else {
-                // TODO: Handle error responses properly
                 console.error(result.result.error.error);
+
+                await showMessageDialog(
+                    `Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
+                );
+                this.events.forEach((event) => {
+                    if (this.isTempEvent(event)) {
+                        this.events.splice(this.events.indexOf(event));
+                    }
+                });
+                this.refresh();
             }
         }
     }
