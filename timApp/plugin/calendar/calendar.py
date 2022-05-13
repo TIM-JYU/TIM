@@ -181,8 +181,7 @@ def get_ical(key: str) -> Response:
 
 
 def string_to_lines(str_to_split: str) -> str:
-    """
-    Splits long strings to n char lines
+    """Splits long strings to n char lines
 
     :return: str where lines are separated with \r\n + whitespace
     """
@@ -437,16 +436,17 @@ def delete_event(event_id: int) -> Response:
 
 @calendar_plugin.put("/bookings")
 def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Response:
+    """Updates the booker message in the specific booking
+
+    :param event_id: the id of the event that has the enrollment
+    :param booker_msg: Updated message chain to the enrollment
+    :param booker_group: the involved booker group of the enrollment
+    """
     verify_logged_in()
     event = Event.get_event_by_id(event_id)
     if event is None:
         raise NotFound()
 
-    # user_obj = get_current_user_object()
-    # group_id = -1
-    # for group in user_obj.groups:
-    #     if group.name == user_obj.name:
-    #         group_id = group.id
     user_group = UserGroup.get_by_name(booker_group)
     enrollment = Enrollment.get_enrollment_by_ids(event_id, user_group.id)
 
@@ -461,8 +461,7 @@ def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Re
 
 @calendar_plugin.post("/bookings")
 def book_event(event_id: int, booker_msg: str) -> Response:
-    """
-    Books the event for current user's personal user group.
+    """Books the event for current user's personal user group.
     TODO: implement booking for user's other groups
 
     :param event_id: Event id
@@ -506,8 +505,7 @@ def book_event(event_id: int, booker_msg: str) -> Response:
 
 @calendar_plugin.delete("/bookings/<int:event_id>")
 def delete_booking(event_id: int) -> Response:
-    """
-    Deletes the booking or enrollment to an event for current user's personal user group.
+    """Deletes the booking or enrollment to an event for current user's personal user group.
 
     :param event_id: Event id that matches with the enrollment
     :return: HTTP 200 if succeeded, otherwise 400
