@@ -8,10 +8,9 @@ __date__ = "29.5.2022"
 
 from collections import defaultdict
 from datetime import datetime
-from random import shuffle
 from typing import DefaultDict
 
-from sqlalchemy.orm import joinedload, Query
+from sqlalchemy.orm import joinedload
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, get_latest_valid_answers_query
@@ -21,9 +20,6 @@ from timApp.plugin.plugin import Plugin
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.user.usergroup import UserGroup
-import dateutil.parser
-import pytz
 
 
 class PeerReviewException(Exception):
@@ -48,8 +44,8 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
     review_count = settings.peer_review_count()
 
     # TODO: [Kuvio] get timestamps from doc settings
-    start_time_reviews = settings.peer_review_start() or datetime.now()
-    end_time_reviews = settings.peer_review_stop() or datetime.now()
+    start_time_reviews = datetime.now()
+    end_time_reviews = datetime.now()
 
     # Dictionary containing review pairs,
     # has reviewer user ID as key and value is list containing reviewable user IDs
@@ -210,26 +206,7 @@ def check_review_grouping(doc: DocInfo) -> bool:
 
 
 def is_peerreview_enabled(doc: DocInfo) -> bool:
-    settings = doc.document.get_settings()
-
-    if not settings.peer_review_start() or not settings.peer_review_stop():
-        return doc.document.get_settings().peer_review()
-
-    start = dateutil.parser.parse(settings.peer_review_start().isoformat()).astimezone(
-        pytz.UTC
-    )
-    stop = dateutil.parser.parse(settings.peer_review_stop().isoformat()).astimezone(
-        pytz.UTC
-    )
-
-    current_time = datetime.now(pytz.timezone("UTC"))
-
-    if not start or not stop:
-        return doc.document.get_settings().peer_review()
-    if start <= current_time < stop:
-        return True
-    else:
-        return False
+    return doc.document.get_settings().peer_review()
 
 
 def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
