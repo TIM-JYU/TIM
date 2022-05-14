@@ -212,7 +212,6 @@ def get_plugins() -> dict[str, PluginReg]:
             name="drag", domain=DRAGPLUGIN_DOMAIN, regexattrs=DRAGATTRS, automd=True
         ),
         PluginReg(
-            name="myPlugin", domain=internal_domain, port=qst_port, path="/myplugin/"
             name="calendar", domain=internal_domain, port=qst_port, path="/calendar/"
         ),
     ]

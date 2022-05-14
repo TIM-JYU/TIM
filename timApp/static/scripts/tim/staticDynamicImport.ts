@@ -88,15 +88,12 @@ export function staticDynamicImport(s: string) {
             return import("tim/ui/style-preview.component");
         case "messageSend":
             return import("tim/messaging/tim-message-send.component");
-<<<<<<< HEAD
         case "peerReviewTable":
             return import(
                 "tim/plugin/peerreviewtable/peer-review-table.component"
             );
-=======
         case "calendar":
             return import("tim/plugin/calendar/calendar.component");
->>>>>>> 3cbeafd0306d43389210d5697bfe1096ca81a3fe
     }
     throw Error(`Module was not statically known: ${s}`);
 }
