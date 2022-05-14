@@ -374,6 +374,9 @@ def add_events(events: list[CalendarEvent]) -> Response:
                     setter_group = UserGroup.get_by_name(setter_group_str)
                     if setter_group in usr.groups:
                         user_is_manager = True
+                        # TODO: need to check that user belongs to all setter groups
+                        # TODO: actually, this way students can make events for others...
+                        # TODO: need to use verify_group_access for every setter group
                     setters.append({"setter": setter_group_str, "event_id": event.id})
                 if not user_is_manager:
                     return make_response(
@@ -382,7 +385,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
                     )
 
     cur_user = get_current_user_id()
-    added_events = []
+    added_events: list[dict[str, Event | int]] = []
     for event in events:
 
         event_data = Event(
@@ -483,6 +486,11 @@ def user_is_event_manager(event_id: int) -> bool:
     if usr.is_admin:
         return True
     event = Event.get_event_by_id(event_id)
+    if event is None:
+        print(
+            f"Event not found by the id of {event_id} when checking user's rights to the event"
+        )
+        return False
     if event.creator_user_id == get_current_user_id():
         return True
     event_groups: list[EventGroup] = EventGroup.query.filter(
