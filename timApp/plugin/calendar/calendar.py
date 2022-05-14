@@ -406,7 +406,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
                     "enrollments": 0,
                     "maxSize": event_objs[local_id].max_size,
                     "location": event_objs[local_id].location,
-                    "message": event_objs[local_id].message,
+                    "description": event_objs[local_id].message,
                 },
             }
         )
@@ -427,7 +427,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
                     EventGroup(
                         event_id=event_objs[local_id].event_id,
                         usergroup_id=ug.id,
-                        manager=False,
+                        manager=True,
                     )
                 )
 

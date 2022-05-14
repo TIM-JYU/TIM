@@ -867,10 +867,6 @@ export class CalendarComponent
             description: string;
         } = event.meta;
 
-        if (!values.description) {
-            values.description = "";
-        }
-
         const id = event.id;
         const eventToEdit = {
             title: event.title,
