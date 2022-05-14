@@ -41,8 +41,8 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
     review_count = settings.peer_review_count()
 
     # TODO: [Kuvio] get timestamps from doc settings
-    start_time_reviews = settings.peer_review_start() or datetime.now()
-    end_time_reviews = settings.peer_review_stop() or datetime.now()
+    start_time_reviews = datetime.now()
+    end_time_reviews = datetime.now()
 
     # Dictionary containing review pairs,
     # has reviewer user ID as key and value is list containing reviewable user IDs
@@ -96,6 +96,10 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
         for reviewer, reviewables in pairing.items():
             for a in filtered_answers:
                 if a.users_all[0].id in reviewables:
+
+                    # save_review(
+                    #    doc, reviewer, start_time_reviews, end_time_reviews, a, t, False
+                    # )
                     save_review(
                         a, t, doc, reviewer, start_time_reviews, end_time_reviews, False
                     )
@@ -161,10 +165,6 @@ def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
     return PeerReview.query.filter_by(block_id=doc.id, task_name="rc1").all()
 
 
-def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
-    return PeerReview.query.filter_by(block_id=doc.id, task_name="rc1").all()
-
-
 def get_reviews_to_user(d: DocInfo, user: User) -> list[PeerReview]:
     q = get_reviews_to_user_query(d, user).options(joinedload(PeerReview.reviewable))
     return q.all()
@@ -199,26 +199,7 @@ def check_review_grouping(doc: DocInfo) -> bool:
 
 
 def is_peerreview_enabled(doc: DocInfo) -> bool:
-    settings = doc.document.get_settings()
-
-    if not settings.peer_review_start() or not settings.peer_review_stop():
-        return doc.document.get_settings().peer_review()
-
-    start = dateutil.parser.parse(settings.peer_review_start().isoformat()).astimezone(
-        pytz.UTC
-    )
-    stop = dateutil.parser.parse(settings.peer_review_stop().isoformat()).astimezone(
-        pytz.UTC
-    )
-
-    current_time = datetime.now(pytz.timezone("UTC"))
-
-    if not start or not stop:
-        return doc.document.get_settings().peer_review()
-    if start <= current_time < stop:
-        return True
-    else:
-        return False
+    return doc.document.get_settings().peer_review()
 
 
 def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
@@ -234,22 +215,22 @@ def change_peerreviewers_for_user(
     old_reviewers: list[int],
     new_reviewers: list[int],
 ) -> list[PeerReview]:
+    print(old_reviewers)
+    print(new_reviewers)
+    print(reviewable)
 
-    for i in range(0, len(old_reviewers)):
-        if reviewable != new_reviewers[i]:
-            updated_user = PeerReview.query.filter_by(
-                block_id=doc.id,
-                reviewer_id=old_reviewers[i],
-                reviewable_id=reviewable,
-                task_name=task,
-            ).first()
-            print(updated_user)
-            try:
-                updated_user.reviewer_id = new_reviewers[i]
-                db.session.commit()
-                print("gg")
-            except:
-                print("Error in reviewer update")
+    for i in range(0, len(new_reviewers)):
+        try:
+            if reviewable != new_reviewers[i]:
+                updated_user = PeerReview.query.filter_by(
+                    block_id=doc.id,
+                    reviewer_id=old_reviewers[i],
+                    reviewable_id=reviewable,
+                    task_name=task,
+                ).first()
+                print(updated_user)
+            updated_user.reviewer_id = new_reviewers[i]
+            db.session.commit()
+        except:
+            raise Exception("Error in reviewer update")
             return updated_user
-        else:
-            print("Same reviewer and reviewable")
