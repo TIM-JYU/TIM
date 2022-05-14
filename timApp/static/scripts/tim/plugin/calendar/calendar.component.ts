@@ -831,14 +831,16 @@ export class CalendarComponent
                 this.refresh();
             } else {
                 console.error(result.result.error.error);
-                console.log(result.result);
-                // let errorMsg = result.result.error
-                // if (result.result.error.error){
-                //     errorMsg = result.result.error.error
-                // }
-                await showMessageDialog(
-                    `Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
-                );
+
+                if (result.result.error.error) {
+                    await showMessageDialog(
+                        `Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
+                    );
+                } else {
+                    await showMessageDialog(
+                        `Something went wrong. TIM admins have been notified about the issue.`
+                    );
+                }
                 this.events.forEach((event) => {
                     if (this.isTempEvent(event)) {
                         this.events.splice(this.events.indexOf(event));
@@ -884,7 +886,13 @@ export class CalendarComponent
             console.log(result.result);
         } else {
             console.error(result.result.error.error);
-            await showMessageDialog(result.result.error.error);
+            if (result.result.error.error) {
+                await showMessageDialog(result.result.error.error);
+            } else {
+                await showMessageDialog(
+                    `Something went wrong. TIM admins have been notified about the issue.`
+                );
+            }
             event.start = oldStart;
             event.end = oldEnd;
             this.refresh();

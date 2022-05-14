@@ -297,9 +297,14 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.data.meta!.signup_before = eventToEdit.signup_before;
             this.close(this.data);
         } else {
-            // TODO: Handle error responses properly
             console.error(result.result.error.error);
-            this.setMessage(result.result.error.error);
+            if (result.result.error.error) {
+                this.setMessage(result.result.error.error);
+            } else {
+                this.setMessage(
+                    "Something went wrong. TIM admins have been notified about the issue."
+                );
+            }
         }
     }
 
@@ -328,7 +333,13 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 this.close(eventToDelete);
             } else {
                 console.error(result.result.error.error);
-                this.setMessage(result.result.error.error);
+                if (result.result.error.error) {
+                    this.setMessage(result.result.error.error);
+                } else {
+                    this.setMessage(
+                        "Something went wrong. TIM admins have been notified about the issue."
+                    );
+                }
             }
         } else {
             // Do nothing
@@ -452,7 +463,13 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.close(eventToBook);
         } else {
             console.error(result.result.error.error);
-            this.setMessage(result.result.error.error);
+            if (result.result.error.error) {
+                this.setMessage(result.result.error.error);
+            } else {
+                this.setMessage(
+                    "Something went wrong. TIM admins have been notified about the issue."
+                );
+            }
         }
     }
 
@@ -494,7 +511,13 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.close(openEvent);
         } else {
             console.error(result.result.error.error);
-            this.setMessage(result.result.error.error);
+            if (result.result.error.error) {
+                this.setMessage(result.result.error.error);
+            } else {
+                this.setMessage(
+                    "Something went wrong. TIM admins have been notified about the issue."
+                );
+            }
         }
     }
 
