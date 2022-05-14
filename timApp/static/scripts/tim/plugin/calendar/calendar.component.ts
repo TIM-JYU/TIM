@@ -714,7 +714,6 @@ export class CalendarComponent
             this.http.get<TIMCalendarEvent[]>("/calendar/events")
         );
         if (result.ok) {
-            console.log(result.result);
             result.result.forEach((event) => {
                 event.start = new Date(event.start);
                 if (event.end) {
@@ -875,6 +874,7 @@ export class CalendarComponent
             end: event.end,
             signup_before: values.signup_before,
         };
+
         const result = await toPromise(
             this.http.put(`/calendar/events/${id}`, {
                 event: eventToEdit,

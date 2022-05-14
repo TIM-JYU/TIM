@@ -18,7 +18,7 @@ from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_access
-from timApp.user.user import User, manage_access_set, view_access_set
+from timApp.user.user import User, manage_access_set, edit_access_set
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
@@ -332,12 +332,12 @@ def get_event_bookers(event_id: int) -> str | Response:
 @dataclass
 class CalendarEvent:
     title: str
-    description: str
     location: str
     start: datetime
     end: datetime
     signup_before: datetime
     max_size: int = 1
+    description: str = ""
     booker_groups: list[str] | None = None
     setter_groups: list[str] | None = None
     event_groups: list[str] | None = None
@@ -357,8 +357,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
 
     setters = []
     bookers = []
-    usr = get_current_user_object()
-    user_is_manager = usr.is_admin
+
     for event in events:
         booker_groups = event.booker_groups
         setter_groups = event.setter_groups
@@ -369,20 +368,11 @@ def add_events(events: list[CalendarEvent]) -> Response:
                     verify_group_access(booker_group, manage_access_set)
                 bookers.append({"booker": booker_group_str, "event_id": event.id})
         if setter_groups is not None:
-            if len(setter_groups) > 0:
-                for setter_group_str in setter_groups:
-                    setter_group = UserGroup.get_by_name(setter_group_str)
-                    if setter_group in usr.groups:
-                        user_is_manager = True
-                        # TODO: need to check that user belongs to all setter groups
-                        # TODO: actually, this way students can make events for others...
-                        # TODO: need to use verify_group_access for every setter group
-                    setters.append({"setter": setter_group_str, "event_id": event.id})
-                if not user_is_manager:
-                    return make_response(
-                        {"error": f"No access for any of the setter groups."},
-                        403,
-                    )
+            for setter_group_str in setter_groups:
+                setter_group = UserGroup.get_by_name(setter_group_str)
+                if setter_group is not None:
+                    verify_group_access(setter_group, edit_access_set)
+                setters.append({"setter": setter_group_str, "event_id": event.id})
 
     cur_user = get_current_user_id()
     added_events: list[dict[str, Event | int]] = []
@@ -430,23 +420,25 @@ def add_events(events: list[CalendarEvent]) -> Response:
         for setter in setters:
             if setter["event_id"] == event_o["local_id"]:
                 ug = UserGroup.get_by_name(setter["setter"])
-                db.session.add(
-                    EventGroup(
-                        event_id=event_o["event"].event_id,
-                        usergroup_id=ug.id,
-                        manager=True,
+                if ug is not None:
+                    db.session.add(
+                        EventGroup(
+                            event_id=event_o["event"].event_id,
+                            usergroup_id=ug.id,
+                            manager=True,
+                        )
                     )
-                )
         for booker in bookers:
             if booker["event_id"] == event_o["local_id"]:
                 ug = UserGroup.get_by_name(booker["booker"])
-                db.session.add(
-                    EventGroup(
-                        event_id=event_o["event"].event_id,
-                        usergroup_id=ug.id,
-                        manager=False,
+                if ug is not None:
+                    db.session.add(
+                        EventGroup(
+                            event_id=event_o["event"].event_id,
+                            usergroup_id=ug.id,
+                            manager=False,
+                        )
                     )
-                )
     db.session.commit()
 
     return json_response(event_list)
