@@ -2,7 +2,7 @@
 from collections import defaultdict
 from datetime import datetime
 from random import shuffle
-from typing import Optional, DefaultDict
+from typing import DefaultDict
 
 from sqlalchemy.orm import joinedload, Query
 
@@ -13,12 +13,8 @@ from timApp.peerreview.peerreview import PeerReview
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
-from timApp.user import usergroup
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-
-import dateutil.parser
-import pytz
 
 
 class PeerReviewException(Exception):
@@ -36,26 +32,15 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
     points = get_points_by_rule(None, task_ids, None)
 
     users = []
+    for user in points:
+        users.append(user["user"])
 
-    if usergroup is not None:
-        ug = UserGroup.get_by_name(usergroup)
-        if not ug:
-            raise PeerReviewException(f"User group {usergroup} not found")
-        userfilter = set(user.id for user in ug.users)
-        for user in points:
-            if user["user"].id in userfilter:
-                users.append(user["user"])
-    else:
-        for user in points:
-            users.append(user["user"])
-
-    shuffle(users)
     settings = doc.document.get_settings()
     review_count = settings.peer_review_count()
 
     # TODO: [Kuvio] get timestamps from doc settings
-    start_time_reviews = settings.peer_review_start() or datetime.now()
-    end_time_reviews = settings.peer_review_stop() or datetime.now()
+    start_time_reviews = datetime.now()
+    end_time_reviews = datetime.now()
 
     # Dictionary containing review pairs,
     # has reviewer user ID as key and value is list containing reviewable user IDs
@@ -109,27 +94,39 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
         for reviewer, reviewables in pairing.items():
             for a in filtered_answers:
                 if a.users_all[0].id in reviewables:
+
+                    #save_review(
+                    #    doc, reviewer, start_time_reviews, end_time_reviews, a, t, False
+                    #)
                     save_review(
                         a, t, doc, reviewer, start_time_reviews, end_time_reviews, False
                     )
 
+
     db.session.commit()
 
 
+#def save_review(
+#        doc: DocInfo,
+#        reviewer_id: int,
+#        reviewable_id: int,
+#        start_time: datetime,
+#        end_time: datetime,
+#        answer: Answer | None = None,
+#        task_id: TaskId | None = None,
+#        reviewed: bool = False,
+#) -> PeerReview:
 def save_review(
-    doc: DocInfo,
-    reviewer_id: int,
-    reviewable_id: int,
-    start_time: datetime,
-    end_time: datetime,
-    answer: Answer | None = None,
-    task_id: TaskId | None = None,
-    reviewed: bool = False,
+            answer: Answer,
+            task_id: TaskId,
+            doc: DocInfo,
+            reviewer_id: int,
+            start_time: datetime,
+            end_time: datetime,
+            reviewed: bool = False,
 ) -> PeerReview:
     """Saves a review to the database.
 
-    :param answer: Answer object for answer id and reviewed user.
-    :param task_id: TaskId object to provide task name.
     :param doc: Document containing reviewable answers.
     :param reviewer_id: User ID for the reviewer user.
     :param reviewable_id: User ID for the review target user.
@@ -163,10 +160,6 @@ def get_reviews_for_user_query(d: DocInfo, user: User) -> Query:
     return PeerReview.query.filter_by(block_id=d.id, reviewer_id=user.id)
 
 
-def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
-    return PeerReview.query.filter_by(block_id=doc.id, task_name="rc1").all()
-
-
 def get_reviews_to_user(d: DocInfo, user: User) -> list[PeerReview]:
     q = get_reviews_to_user_query(d, user).options(joinedload(PeerReview.reviewable))
     return q.all()
@@ -177,10 +170,10 @@ def get_reviews_to_user_query(d: DocInfo, user: User) -> Query:
 
 
 def has_review_access(
-    doc: DocInfo,
-    reviewer_user: User,
-    task_id: TaskId | None,
-    reviewable_user: User | None,
+        doc: DocInfo,
+        reviewer_user: User,
+        task_id: TaskId | None,
+        reviewable_user: User | None,
 ) -> bool:
     if not is_peerreview_enabled(doc):
         return False
@@ -201,26 +194,7 @@ def check_review_grouping(doc: DocInfo) -> bool:
 
 
 def is_peerreview_enabled(doc: DocInfo) -> bool:
-    settings = doc.document.get_settings()
-
-    if not settings.peer_review_start() or not settings.peer_review_stop():
-        return doc.document.get_settings().peer_review()
-
-    start = dateutil.parser.parse(settings.peer_review_start().isoformat()).astimezone(
-        pytz.UTC
-    )
-    stop = dateutil.parser.parse(settings.peer_review_stop().isoformat()).astimezone(
-        pytz.UTC
-    )
-
-    current_time = datetime.now(pytz.timezone("UTC"))
-
-    if not start or not stop:
-        return doc.document.get_settings().peer_review()
-    if start <= current_time < stop:
-        return True
-    else:
-        return False
+    return doc.document.get_settings().peer_review()
 
 
 def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
@@ -230,28 +204,28 @@ def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
 
 
 def change_peerreviewers_for_user(
-    doc: DocInfo,
-    task: str,
-    reviewable: int,
-    old_reviewers: list[int],
-    new_reviewers: list[int],
+        doc: DocInfo,
+        task: str,
+        reviewable: int,
+        old_reviewers: list[int],
+        new_reviewers: list[int],
 ) -> list[PeerReview]:
+    print(old_reviewers)
+    print(new_reviewers)
+    print(reviewable)
 
-    for i in range(0, len(old_reviewers)):
-        if reviewable != new_reviewers[i]:
-            updated_user = PeerReview.query.filter_by(
-                block_id=doc.id,
-                reviewer_id=old_reviewers[i],
-                reviewable_id=reviewable,
-                task_name=task,
-            ).first()
-            print(updated_user)
-            try:
-                updated_user.reviewer_id = new_reviewers[i]
-                db.session.commit()
-                print("gg")
-            except:
-                print("Error in reviewer update")
+    for i in range(0, len(new_reviewers)):
+        try:
+            if reviewable != new_reviewers[i]:
+                updated_user = PeerReview.query.filter_by(
+                    block_id=doc.id,
+                    reviewer_id=old_reviewers[i],
+                    reviewable_id=reviewable,
+                    task_name=task
+                ).first()
+                print(updated_user)
+            updated_user.reviewer_id = new_reviewers[i]
+            db.session.commit()
+        except:
+            raise Exception('Error in reviewer update')
             return updated_user
-        else:
-            print("Same reviewer and reviewable")
