@@ -89,7 +89,7 @@ export class SessionCheckDialogComponent extends AngularDialogComponent<
             new Map<EncodeHintType, unknown>([
                 [
                     EncodeHintType.ERROR_CORRECTION,
-                    QRCodeDecoderErrorCorrectionLevel.H,
+                    QRCodeDecoderErrorCorrectionLevel.L,
                 ],
                 [EncodeHintType.MARGIN, 0],
             ])
