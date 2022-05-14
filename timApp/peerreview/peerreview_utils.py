@@ -214,11 +214,7 @@ def change_peerreviewers_for_user(
     reviewable: int,
     old_reviewers: list[int],
     new_reviewers: list[int],
-) -> list[PeerReview]:
-    print(old_reviewers)
-    print(new_reviewers)
-    print(reviewable)
-
+) -> bool:
     for i in range(0, len(new_reviewers)):
         try:
             if reviewable != new_reviewers[i]:
@@ -228,9 +224,8 @@ def change_peerreviewers_for_user(
                     reviewable_id=reviewable,
                     task_name=task,
                 ).first()
-                print(updated_user)
-            updated_user.reviewer_id = new_reviewers[i]
-            db.session.commit()
-        except:
+                updated_user.reviewer_id = new_reviewers[i]
+                db.session.commit()
+        except Exception:
             raise Exception("Error in reviewer update")
-            return updated_user
+    return True
