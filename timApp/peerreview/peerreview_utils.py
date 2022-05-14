@@ -232,7 +232,6 @@ def change_peerreviewers_for_user(
     :param old_reviewers: List of old reviewers IDs
     :param new_reviewers: List of new reviewers IDs
     """
-
     for i in range(0, len(new_reviewers)):
         try:
             if reviewable == new_reviewers[i]:
