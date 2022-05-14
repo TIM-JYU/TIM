@@ -89,8 +89,9 @@ def get_doc_cache_key(
     return f"timdoc-{doc.id}-{user.id}-{h.hexdigest(10)}"
 
 
-def clear_doc_cache(doc: DocInfoOrDocument, user: Optional["User"]) -> None:
-    prefix = f"timdoc-{doc.id}-"
+def clear_doc_cache(doc: DocInfoOrDocument | int, user: Optional["User"]) -> None:
+    doc_id: int = doc if isinstance(doc, int) else doc.id
+    prefix = f"timdoc-{doc_id}-"
     if user:
         prefix += f"{user.id}-"
     prefix += "*"

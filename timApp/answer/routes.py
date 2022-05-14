@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 from typing import Union, Any, Callable, TypedDict, DefaultDict
 
 from flask import Response
+from flask import current_app
 from flask import request
-from flask import session, current_app
 from marshmallow import validates_schema, ValidationError
 from marshmallow.utils import missing
 from sqlalchemy import func
@@ -1177,6 +1177,10 @@ def post_answer_impl(
     db.session.commit()
 
     for u in users:
+        if (
+            origin and origin.doc_id != d.id
+        ):  # Origin might be different from the actual document
+            clear_doc_cache(origin.doc_id, u)
         clear_doc_cache(d, u)
 
     try:
