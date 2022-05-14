@@ -179,7 +179,7 @@ def post_process_pars(
     # taketime("pars done")
 
     group = curr_user.get_personal_group().id
-    if curr_user.logged_in:
+    if curr_user.logged_in and not settings.hide_readmarks():
         # taketime("readings begin")
 
         # TODO: UserContext should support multiple users like in group login.

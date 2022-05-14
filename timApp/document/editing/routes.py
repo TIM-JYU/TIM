@@ -468,6 +468,7 @@ def par_response(
     user_ctx = user_context_with_logged_in(None)
     doc = docu.document
     new_doc_version = doc.get_version()
+    settings = doc.get_settings()
 
     if edit_result:
         preview = False
@@ -490,14 +491,13 @@ def par_response(
     if update_cache:
         changed_pars = DocParagraph.preload_htmls(
             doc.get_paragraphs(include_preamble=True),
-            doc.get_settings(),
+            settings,
             view_ctx,
             persist=update_cache,
         )
     else:
         changed_pars = []
         ctx = None
-        settings = doc.get_settings()
         if edit_request:
             ctx = edit_request.context_par
 
@@ -577,6 +577,7 @@ def par_response(
                     doc.get_docinfo(), user_ctx.logged_user
                 ),
                 preview=preview,
+                hide_readmarks=settings.hide_readmarks(),
             ),
             "js": post_process_result.js_paths,
             "css": post_process_result.css_paths,
@@ -588,6 +589,7 @@ def par_response(
                     rights=get_user_rights_for_item(
                         doc.get_docinfo(), user_ctx.logged_user
                     ),
+                    hide_readmarks=settings.hide_readmarks(),
                 )
                 for p in changed_post_process_result.texts
                 if not is_area_start_or_end(p)

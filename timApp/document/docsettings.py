@@ -69,6 +69,7 @@ class DocSettingTypes:
     additional_angular_modules: list[str]
     exam_mode: str
     exam_mode_themes: list[str]
+    hide_readmarks: bool
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -544,6 +545,9 @@ class DocSettings:
 
     def is_cached(self):
         return self.get_setting_or_default("cache", False)
+
+    def hide_readmarks(self) -> bool:
+        return self.get_setting_or_default("hide_readmarks", False)
 
     def peer_review(self) -> bool:
         return self.get_setting_or_default("peer_review", False)

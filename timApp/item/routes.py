@@ -541,7 +541,9 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
                 set_doc_cache(cr.key, result)
         else:
             # Document reading was skipped during caching, mark it now
-            if should_auto_read(doc_info.document, [ug.id], current_user):
+            if not cr.doc.hide_readmarks and should_auto_read(
+                doc_info.document, [ug.id], current_user
+            ):
                 mark_all_read(ug.id, doc_info.document)
                 db.session.commit()
             refresh_doc_expire(cr.key)
@@ -962,6 +964,8 @@ def render_doc_view(
         theme_style, theme_hash = generate_style(document_theme_docs)
         override_theme = f"{theme_style}?{theme_hash}"
 
+    hide_readmarks = doc_settings.hide_readmarks()
+
     templates_to_render = (
         ["slide_head.jinja2", "slide_content.jinja2"]
         if is_slide
@@ -1014,6 +1018,7 @@ def render_doc_view(
         current_view_range=view_range,
         nav_ranges=nav_ranges,
         should_mark_all_read=post_process_result.should_mark_all_read,
+        hide_readmarks=hide_readmarks,
         override_theme=override_theme,
         current_list_user=current_list_user,
     )
@@ -1029,6 +1034,7 @@ def render_doc_view(
         allowed_to_cache=doc_settings.is_cached()
         and not post_process_result.has_plugin_errors,
         override_theme=override_theme,
+        hide_readmarks=doc_settings.hide_readmarks(),
     )
 
 
@@ -1146,6 +1152,7 @@ def check_updated_pars(doc_id, major, minor):
                     text=post_process_result.texts,
                     rights=rights,
                     preview=False,
+                    hide_readmarks=settings.hide_readmarks(),
                 ),
                 "js": post_process_result.js_paths,
                 "css": post_process_result.css_paths,

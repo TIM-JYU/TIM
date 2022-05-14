@@ -1,7 +1,5 @@
 from dataclasses import dataclass
 
-from typing import Optional
-
 
 @dataclass
 class DocRenderResult:
@@ -9,3 +7,4 @@ class DocRenderResult:
     content_html: str
     allowed_to_cache: bool
     override_theme: str | None
+    hide_readmarks: bool = False
