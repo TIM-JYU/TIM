@@ -149,8 +149,25 @@ def get_ical(key: str) -> Response:
     ).one_or_none()
     if user_data is None:
         raise NotFound()
+
     user_id = user_data.user_id
     events: list[Event] = Event.query.filter(Event.creator_user_id == user_id).all()
+
+    user_obj = get_current_user_object()
+
+    for group in user_obj.groups:
+        group_events = EventGroup.query.filter(
+            EventGroup.usergroup_id == group.id
+        ).all()
+        for group_event in group_events:
+            event = Event.get_event_by_id(group_event.event_id)
+            if event is not None:
+                event_obj: Event = event
+                if event_obj not in events:
+                    events.append(event_obj)
+            else:
+                print("Event not found by the id of", group_event.event_id)
+
     buf = StringIO()
     buf.write("BEGIN:VCALENDAR\r\n")
     buf.write("PRODID:-//TIM Katti-kalenteri//iCal4j 1.0//EN\r\n")
