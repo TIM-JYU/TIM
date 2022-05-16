@@ -38,6 +38,8 @@ function compileProgram(code: string): string {
     }
 }
 
+type Users = Record<string | number, string>;
+
 // Every time tools.ts (or some of its dependencies) is modified, dist/tools.js must be
 // rebuilt with 'npm run buildtools'.
 const toolsSource = readFileSync("./dist/tools.js").toString();
@@ -119,6 +121,7 @@ function runner(d: IRunnerData): RunnerResult {
         };
         const dummyTools = new Tools(
             dummyUser,
+            {},
             currDoc,
             markup,
             aliases,
@@ -157,10 +160,14 @@ function runner(d: IRunnerData): RunnerResult {
         }
         output += gtools.getOutput();
         gtools.clearOutput();
-
+        const users: Users = {};
+        data.forEach((user) => {
+            users[user.user.id] = user.user.name;
+        });
         for (const user of data) {
             const tools = new Tools(
                 user,
+                users,
                 currDoc,
                 markup,
                 aliases,
