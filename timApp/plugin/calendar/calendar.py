@@ -150,8 +150,11 @@ def get_ical(key: str) -> Response:
     ).one_or_none()
     if user_data is None:
         raise NotFound()
+
     user_id = user_data.user_id
-    events: list[Event] = Event.query.filter(Event.creator_user_id == user_id).all()
+    user_obj = get_current_user_object()
+    events = events_of_user(user_id, user_obj)
+
     buf = StringIO()
     buf.write("BEGIN:VCALENDAR\r\n")
     buf.write("PRODID:-//TIM Katti-kalenteri//iCal4j 1.0//EN\r\n")
@@ -204,19 +207,15 @@ def string_to_lines(str_to_split: str) -> str:
     return new_str
 
 
-@calendar_plugin.get("/events")
-def get_events() -> Response:
-    """Fetches the events created by the user and the events that have a relation to user's groups from the database
-    in JSON format
-
-    :return: User's events in JSON format or HTTP 400 if failed
+def events_of_user(cur_user: int, user_obj: User) -> list[Event]:
     """
-    verify_logged_in()
-    cur_user = get_current_user_id()
+    Fetches users events
 
+    :param: cur_user current user id: int
+    :param: user_obj current user object: User
+    :return: list of events
+    """
     events: list[Event] = Event.query.filter(Event.creator_user_id == cur_user).all()
-
-    user_obj = get_current_user_object()
 
     for group in user_obj.groups:
         group_events = EventGroup.query.filter(
@@ -230,6 +229,21 @@ def get_events() -> Response:
                     events.append(event_obj)
             else:
                 print("Event not found by the id of", group_event.event_id)
+    return events
+
+
+@calendar_plugin.get("/events")
+def get_events() -> Response:
+    """Fetches the events created by the user and the events that have a relation to user's groups from the database
+    in JSON format
+
+    :return: User's events in JSON format or HTTP 400 if failed
+    """
+    verify_logged_in()
+    cur_user = get_current_user_id()
+    user_obj = get_current_user_object()
+
+    events = events_of_user(cur_user, user_obj)
 
     event_objs = []
     for event in events:
@@ -455,6 +469,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     old_event.message = event.description
     old_event.start_time = event.start
     old_event.end_time = event.end
+    old_event.signup_before = event.signup_before
     db.session.commit()
     return ok_response()
 
@@ -503,12 +518,44 @@ def delete_event(event_id: int) -> Response:
         return make_response({"error": "No permission to delete the event"}, 403)
 
     event = Event.get_event_by_id(event_id)
+    user_obj = get_current_user_object()
     if not event:
         raise NotFound()
+
+    enrolled_users = event.enrolled_users
+    if len(enrolled_users) > 0:
+        send_email_to_enrolled_users(event, user_obj)
 
     db.session.delete(event)
     db.session.commit()
     return ok_response()
+
+
+def send_email_to_enrolled_users(event: Event, user_obj: User) -> None:
+    """
+    Sends email to enrolled users when event is deleted
+
+    :param: event that is about be deleted
+    :param: user_obj user who deletes the event
+    :return None, or NotExist()
+    """
+    enrolled_users = event.enrolled_users
+    user_accounts = []
+    for user_group in enrolled_users:
+        user_account = User.query.filter(User.name == user_group.name).one_or_none()
+        if user_account is None:
+            raise NotExist()
+        user_accounts.append(user_account)
+    start_time = event.start_time.strftime("%d.%m.%Y %H:%M")
+    end_time = event.end_time.strftime("%H:%M")
+    event_time = f"{start_time}-{end_time}"
+    name = user_obj.name
+    msg = f"TIM-Calendar event {event.title} {event_time} has been cancelled by {name}."
+    subject = msg
+    for user in user_accounts:
+        rcpt = user.email
+        send_email(rcpt, subject, msg)
+    return
 
 
 @calendar_plugin.post("/bookings")
@@ -577,13 +624,13 @@ def delete_booking(event_id: int) -> Response:
     return ok_response()
 
 
-def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> Response:
+def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> None:
     """
     Sends an email of cancelled/booked time to creator of the event
 
     :param: event_id of the event
     :param: msg_type of the message, reservation (True) or cancellation (False)
-    :return: HTTP 200 if succeeded, otherwise 400
+    :return: None, otherwise NotExist()
     """
     event = Event.get_event_by_id(event_id)
     if not event:
@@ -601,7 +648,7 @@ def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> Resp
     rcpt = creator.email
     msg = subject
     send_email(rcpt, subject, msg)
-    return ok_response()
+    return
 
 
 register_html_routes(calendar_plugin, class_schema(CalendarHtmlModel), reqs_handle)
