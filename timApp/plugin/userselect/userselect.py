@@ -102,7 +102,7 @@ class SetTaskValueAction:
 
 @dataclass
 class DistributeRightAction:
-    operation: Literal["confirm", "quit", "unlock", "changetime"]
+    operation: Literal["confirm", "quit", "unlock", "changetime", "undoquit"]
     target: str | list[str]
     timestamp: datetime | None = None
     minutes: float = 0.0
@@ -120,6 +120,11 @@ RIGHT_TO_OP: dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
     ),
     "quit": lambda r, usr: QuitOp(
         type="quit",
+        email=usr,
+        timestamp=r.timestamp_or_now,
+    ),
+    "undoquit": lambda r, usr: UndoQuitOp(
+        type="undoquit",
         email=usr,
         timestamp=r.timestamp_or_now,
     ),
