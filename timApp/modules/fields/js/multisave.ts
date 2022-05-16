@@ -94,8 +94,8 @@ const multisaveAll = t.intersection([
         <div *ngIf="!allSaved()">
             {{unsavedText}}
             <ul>
-                <li *ngFor="let tag of unsaveds">
-                    <a href="" (click)="scrollTo(tag); $event.preventDefault()">{{getUnsavedAlias(tag)}}</a>
+                <li *ngFor="let tag of unsavedTasksWithAliases">
+                    <a href="" (click)="scrollTo(tag.component); $event.preventDefault()">{{tag.alias}}</a>
                 </li>
             </ul>
         </div>
@@ -162,7 +162,7 @@ export class MultisaveComponent
     get unsavedText() {
         return this.markup.unsavedText?.replace(
             "{count}",
-            this.unsavedTimComps.size.toString()
+            this.unsavedTasksWithAliases.length.toString()
         );
     }
 
@@ -178,12 +178,22 @@ export class MultisaveComponent
         return this.markup.livefeed;
     }
 
-    get unsaveds() {
-        const ret = [];
+    /**
+     * Return parsed list unsaved tasks with aliases
+     * If multiple tasks have same alias, only add first one to the returned list
+     */
+    get unsavedTasksWithAliases(): {
+        component: ITimComponent;
+        alias: string | undefined;
+    }[] {
+        const ret: {component: ITimComponent; alias: string | undefined}[] = [];
         for (const name of this.unsavedTimComps) {
             const c = this.vctrl.getTimComponentByName(name);
             if (c) {
-                ret.push(c);
+                const alias = this.getUnsavedAlias(c);
+                if (!ret.find((r) => r.alias && r.alias == alias)) {
+                    ret.push({component: c, alias});
+                }
             }
         }
         return ret;
