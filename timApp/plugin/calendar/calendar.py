@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from io import StringIO
 
-from flask import Response, render_template_string
+from flask import Response, render_template_string, make_response
 from werkzeug.exceptions import NotFound
 
 from timApp.auth.accesshelper import verify_logged_in
@@ -17,7 +17,8 @@ from timApp.plugin.calendar.models import Event, EventGroup, Enrollment, Enrollm
 from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
-from timApp.user.user import User
+from timApp.user.groups import verify_group_access
+from timApp.user.user import User, manage_access_set, edit_access_set
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
@@ -252,9 +253,13 @@ def get_events() -> Response:
             enrollments = len(event_obj.enrolled_users)
             booker_groups = event_obj.enrolled_users
             groups = []
+
             for group in booker_groups:
                 users = []
+                cur_user_booking = False
                 for user in group.users:
+                    if user.id == cur_user:
+                        cur_user_booking = True
                     users.append(
                         {
                             "id": user.id,
@@ -262,7 +267,9 @@ def get_events() -> Response:
                             "email": user.email,
                         }
                     )
-                groups.append({"name": group.name, "users": users})
+                if user_is_event_manager(event_obj.event_id) or cur_user_booking:
+                    groups.append({"name": group.name, "users": users})
+
             event_objs.append(
                 {
                     "id": event_obj.event_id,
@@ -288,12 +295,16 @@ def get_events() -> Response:
 
 
 @calendar_plugin.get("/events/<int:event_id>/bookers")
-def get_event_bookers(event_id: int) -> str:
+def get_event_bookers(event_id: int) -> str | Response:
     """Fetches all enrollments from the database for the given event and returns the full name and email of every
     booker in a html table
 
     :param event_id: event id
     :return: Full name and email of every booker of the given event in a html table"""
+
+    verify_logged_in()
+    if not user_is_event_manager(event_id):
+        return make_response({"error": "No permission to see event bookers"}, 403)
 
     event = Event.get_event_by_id(event_id)
     if event is None:
@@ -335,70 +346,106 @@ def get_event_bookers(event_id: int) -> str:
 @dataclass
 class CalendarEvent:
     title: str
-    description: str
-    location: str
     start: datetime
     end: datetime
     signup_before: datetime
+    location: str
+    description: str
     max_size: int = 1
+    booker_groups: list[str] | None = None
+    setter_groups: list[str] | None = None
     event_groups: list[str] | None = None
+    id: int = -1
 
 
 @calendar_plugin.post("/events")
 def add_events(events: list[CalendarEvent]) -> Response:
-    """Persists the given list of events to the database
+    """Persists the given list of events to the database.
+    User must have at least manage rights to given booker groups and edit rights to given setter groups.
 
     :param events: List of events to be persisted
     :return: Persisted events in JSON with updated ids
     """
 
     verify_logged_in()
-    # TODO: use get_current_user_object() to access more user information, e.g. user's groups
-    cur_user = get_current_user_id()
-    added_events = []
-    for event in events:
-        groups = []
-        group_names = event.event_groups
-        if group_names is not None:
-            group_name_strs: list[str] = group_names
-            for event_group in group_name_strs:
-                group = UserGroup.get_by_name(event_group)
-                if group is not None:
-                    groups.append(group)
 
-        event = Event(
+    cur_user = get_current_user_id()
+    event_bookers: dict[int, list[str]] = {}
+    event_setters: dict[int, list[str]] = {}
+    event_objs: dict[int, Event] = {}
+    for event in events:
+        event_bookers = {event.id: []}
+        event_setters = {event.id: []}
+        booker_groups = event.booker_groups
+        setter_groups = event.setter_groups
+        if booker_groups is not None:
+            for booker_group_str in booker_groups:
+                booker_group = UserGroup.get_by_name(booker_group_str)
+                if booker_group is not None:
+                    verify_group_access(booker_group, manage_access_set)
+                event_bookers[event.id].append(booker_group_str)
+        if setter_groups is not None:
+            for setter_group_str in setter_groups:
+                setter_group = UserGroup.get_by_name(setter_group_str)
+                if setter_group is not None:
+                    verify_group_access(setter_group, edit_access_set)
+                event_setters[event.id].append(setter_group_str)
+
+        event_data = Event(
             title=event.title,
             message=event.description,
             location=event.location,
             start_time=event.start,
             end_time=event.end,
             creator_user_id=cur_user,
-            groups_in_event=groups,
             max_size=event.max_size,
             signup_before=event.signup_before,
         )
-        db.session.add(event)
-        added_events.append(event)
+        db.session.add(event_data)
+        event_objs[event.id] = event_data
 
     db.session.commit()
-    # To fetch the new ids generated by the database
+
+    # To fetch the new ids generated by the database and create appropriate EventGroups
     event_list = []
-    for event in added_events:
+    for local_id in event_objs:
         event_list.append(
             {
-                "id": event.event_id,
-                "title": event.title,
-                "start": event.start_time,
-                "end": event.end_time,
+                "id": event_objs[local_id].event_id,
+                "title": event_objs[local_id].title,
+                "start": event_objs[local_id].start_time,
+                "end": event_objs[local_id].end_time,
                 "meta": {
-                    "signup_before": event.signup_before,
+                    "signup_before": event_objs[local_id].signup_before,
                     "enrollments": 0,
-                    "maxSize": event.max_size,
-                    "location": event.location,
-                    "message": event.message,
+                    "maxSize": event_objs[local_id].max_size,
+                    "location": event_objs[local_id].location,
+                    "description": event_objs[local_id].message,
                 },
             }
         )
+        for booker in event_bookers[local_id]:
+            ug = UserGroup.get_by_name(booker)
+            if ug is not None:
+                db.session.add(
+                    EventGroup(
+                        event_id=event_objs[local_id].event_id,
+                        usergroup_id=ug.id,
+                        manager=False,
+                    )
+                )
+        for setter in event_setters[local_id]:
+            ug = UserGroup.get_by_name(setter)
+            if ug is not None:
+                db.session.add(
+                    EventGroup(
+                        event_id=event_objs[local_id].event_id,
+                        usergroup_id=ug.id,
+                        manager=True,
+                    )
+                )
+
+    db.session.commit()
 
     return json_response(event_list)
 
@@ -412,9 +459,11 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     :return: HTTP 200 if succeeded, otherwise 400
     """
     verify_logged_in()
+    if not user_is_event_manager(event_id):
+        return make_response({"error": "No permission to edit the event"}, 403)
     old_event = Event.get_event_by_id(event_id)
     if not old_event:
-        raise RouteException("Event not found")
+        raise NotExist("Event not found")
     old_event.title = event.title
     old_event.location = event.location
     old_event.message = event.description
@@ -425,6 +474,37 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     return ok_response()
 
 
+def user_is_event_manager(event_id: int) -> bool:
+    """Checks if current user is a manager of the event
+
+    :param event_id: event id
+    :return: True if current user belongs to given event's manager event group,
+    or is admin user, or created the event, otherwise false.
+    """
+    usr = get_current_user_object()
+    if usr.is_admin:
+        return True
+    event = Event.get_event_by_id(event_id)
+    if event is None:
+        print(
+            f"Event not found by the id of {event_id} when checking user's rights to the event"
+        )
+        return False
+    if event.creator_user_id == get_current_user_id():
+        return True
+    event_groups: list[EventGroup] = EventGroup.query.filter(
+        EventGroup.event_id == event_id
+    ).all()
+    for event_group in event_groups:
+        ug: UserGroup = UserGroup.query.filter(
+            event_group.usergroup_id == UserGroup.id
+        ).one_or_none()
+        if ug is not None:
+            if ug in usr.groups and event_group.manager:
+                return True
+    return False
+
+
 @calendar_plugin.delete("/events/<int:event_id>")
 def delete_event(event_id: int) -> Response:
     """Deletes the event by the given id
@@ -433,13 +513,19 @@ def delete_event(event_id: int) -> Response:
     :return: HTTP 200 if succeeded, otherwise 404
     """
     verify_logged_in()
+
+    if not user_is_event_manager(event_id):
+        return make_response({"error": "No permission to delete the event"}, 403)
+
     event = Event.get_event_by_id(event_id)
     user_obj = get_current_user_object()
     if not event:
         raise NotFound()
+
     enrolled_users = event.enrolled_users
     if len(enrolled_users) > 0:
         send_email_to_enrolled_users(event, user_obj)
+
     db.session.delete(event)
     db.session.commit()
     return ok_response()

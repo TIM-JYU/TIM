@@ -14,6 +14,7 @@ class EventGroup(db.Model):
     usergroup_id = db.Column(
         db.Integer, db.ForeignKey("usergroup.id"), primary_key=True
     )
+    manager = db.Column(db.Boolean)
 
 
 class Enrollment(db.Model):
