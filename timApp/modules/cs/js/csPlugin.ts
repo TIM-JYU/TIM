@@ -3421,6 +3421,9 @@ ${fhtml}
             `/preview/${taskId.docId}`,
             {
                 text: text,
+                settings: {
+                    math_type: "mathjax",
+                },
             }
         );
         if (r.ok) {
