@@ -191,7 +191,7 @@ export class MultisaveComponent
             const c = this.vctrl.getTimComponentByName(name);
             if (c) {
                 const alias = this.getUnsavedAlias(c);
-                if (!ret.find((r) => r.alias && r.alias == alias)) {
+                if (!alias || !ret.find((r) => r.alias === alias)) {
                     ret.push({component: c, alias});
                 }
             }
