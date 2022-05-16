@@ -817,11 +817,9 @@ export class GTools extends ToolsBase {
     public dists: Record<string, Distribution> = {};
     public xys: Record<string, XY> = {};
     public stats: Record<string, Stats> = {};
-
     public tools: Tools;
 
     groups: IGroupData = {};
-
     constructor(
         currDoc: string,
         markup: IJsRunnerMarkup,
@@ -953,9 +951,11 @@ export interface IToolsResult {
 
 export class Tools extends ToolsBase {
     private result: Record<string, unknown> = {};
+    groups: IGroupData = {};
 
     constructor(
         protected data: UserFieldDataT,
+        protected users: Users,
         currDoc: string,
         markup: IJsRunnerMarkup,
         aliases: AliasDataT,
@@ -1441,10 +1441,8 @@ export class Tools extends ToolsBase {
         return reviewers;
     }
     /**
-     * Print every every name, id and given velppoints of users
-     * who have reviewed current user
-     */
-    getReviews(task: string, usersObject: Users): object[] {
+     * Print every reviewers and received points of current user
+     */ getReviews(task: string, usersObject: Users): object[] {
         const peerreviewers = this.getPeerReviewsForUser()
             .filter((pr) => pr.task_name === task)
             .map((pr) => {
@@ -1501,24 +1499,25 @@ export class Tools extends ToolsBase {
      * Change reviewers of current user
      */
     changePeerReviewer(usersObject: Users): void {
+        const users = usersObject ? usersObject : this.users;
         const reviewableID = this.data.user.id;
         const fields = this.markup.paramFields ? this.markup.paramFields : [""];
         const datafield = this.markup.peerReviewField;
+        this.setString(datafield, "");
         const task = fields[0].substring(0, fields[0].indexOf("_"));
         const reviewers = this.getPeerReviewsForUser();
         const initialReviewers = reviewers.map((reviewer) =>
             reviewer.reviewer_id.toString()
         );
         const updatedReviewers = fields.map((f) =>
-            Object.keys(usersObject).find((key) => {
-                return usersObject[key] == this.getString(f);
+            Object.keys(users).find((key) => {
+                return users[key] == this.getString(f);
             })
         );
 
         let changed = false;
         const from: string[] = [];
         const to: string[] = [];
-
         initialReviewers.forEach((reviewer) => {
             if (!updatedReviewers.includes(reviewer)) {
                 changed = true;
@@ -1529,6 +1528,10 @@ export class Tools extends ToolsBase {
         updatedReviewers.forEach((reviewer) => {
             if (typeof reviewer == "string") {
                 if (!initialReviewers.includes(reviewer) && reviewer) {
+                    if (reviewer == reviewableID.toString()) {
+                        this.print("Same reviewer and reviewable");
+                        return;
+                    }
                     changed = true;
                     to.push(reviewer);
                 }
