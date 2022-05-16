@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import filelock
+from sqlalchemy.exc import IntegrityError
 
 import timApp
 from timApp.timdb.sqa import db
@@ -45,14 +46,22 @@ class PluginType(db.Model, PluginTypeBase):
         # Add plugin type to database via separate session to preserve the original one created by Flask-SQLAlchemy
         # Use a lock to prevent concurrent access
         with filelock.FileLock("/tmp/plugin_type_create.lock"):
-            tmp_session = db.create_session({})
-            session = tmp_session()
-            session.add(PluginType(type=p_type))
-            session.commit()
-            session.close()
+            try:
+                tmp_session = db.create_session({})
+                session = tmp_session()
+                session.add(PluginType(type=p_type))
+                session.commit()
+                session.close()
+            except IntegrityError as e:
+                # TODO: Try to debug why this still happens even after locking
+                if (
+                    'duplicate key value violates unique constraint "plugintype_type_key"'
+                    not in str(e)
+                ):
+                    raise
 
         # We have to re-query the database since the other session was closed
-        return PluginType.query.filter_by(type=p_type).first()
+        return PluginType.query.filter_by(type=p_type).one()
 
     def get_type(self) -> str:
         return self.type
