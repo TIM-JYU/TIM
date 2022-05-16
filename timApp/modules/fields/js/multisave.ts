@@ -41,6 +41,7 @@ import {
 
 const multisaveMarkup = t.intersection([
     t.partial({
+        aliases: t.record(t.string, t.string),
         allSavedText: t.string,
         areas: t.array(t.string),
         tags: t.array(t.string),
@@ -94,7 +95,7 @@ const multisaveAll = t.intersection([
             {{unsavedText}}
             <ul>
                 <li *ngFor="let tag of unsaveds">
-                    <a href="" (click)="scrollTo(tag); $event.preventDefault()">{{tag.getName()}}</a>
+                    <a href="" (click)="scrollTo(tag); $event.preventDefault()">{{getUnsavedAlias(tag)}}</a>
                 </li>
             </ul>
         </div>
@@ -186,6 +187,27 @@ export class MultisaveComponent
             }
         }
         return ret;
+    }
+
+    /**
+     * Return alias or name for an unsaved task
+     * Preference:
+     * alias by docid.taskname -> alias by taskname -> getName -> undefined
+     * @param task ITimComponent task to look up
+     */
+    getUnsavedAlias(task: ITimComponent): string | undefined {
+        if (this.markup.aliases) {
+            const tid = task.getTaskId();
+            if (tid) {
+                const alias =
+                    this.markup.aliases[tid.docTask().toString()] ??
+                    this.markup.aliases[tid.name];
+                if (alias) {
+                    return alias;
+                }
+            }
+        }
+        return task.getName();
     }
 
     ngOnInit() {
