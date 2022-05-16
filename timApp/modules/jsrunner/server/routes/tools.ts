@@ -1544,7 +1544,6 @@ export class Tools extends ToolsBase {
     changePeerReviewer(usersObject: Users): object {
         const reviewableID = this.data.user.id;
         const fields = this.markup.paramFields ? this.markup.paramFields : [""];
-
             Object.keys(users).find((key) => {
                 return users[key] == this.getString(f);
             })
