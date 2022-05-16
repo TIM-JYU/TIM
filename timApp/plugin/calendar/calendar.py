@@ -420,11 +420,42 @@ def delete_event(event_id: int) -> Response:
     """
     verify_logged_in()
     event = Event.get_event_by_id(event_id)
+    user_obj = get_current_user_object()
     if not event:
         raise NotFound()
+    enrolled_users = event.enrolled_users
+    if len(enrolled_users) > 0:
+        send_email_to_enrolled_users(event, user_obj)
     db.session.delete(event)
     db.session.commit()
     return ok_response()
+
+
+def send_email_to_enrolled_users(event: Event, user_obj: User) -> None:
+    """
+    Sends email to enrolled users when event is deleted
+
+    :param: event that is about be deleted
+    :param: user_obj user who deletes the event
+    :return None, or NotExist()
+    """
+    enrolled_users = event.enrolled_users
+    user_accounts = []
+    for user_group in enrolled_users:
+        user_account = User.query.filter(User.name == user_group.name).one_or_none()
+        if user_account is None:
+            raise NotExist()
+        user_accounts.append(user_account)
+    start_time = event.start_time.strftime("%d.%m.%Y %H:%M")
+    end_time = event.end_time.strftime("%H:%M")
+    event_time = f"{start_time}-{end_time}"
+    name = user_obj.name
+    msg = f"TIM-Calendar event {event.title} {event_time} has been cancelled by {name}."
+    subject = msg
+    for user in user_accounts:
+        rcpt = user.email
+        send_email(rcpt, subject, msg)
+    return
 
 
 @calendar_plugin.post("/bookings")
@@ -493,13 +524,13 @@ def delete_booking(event_id: int) -> Response:
     return ok_response()
 
 
-def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> Response:
+def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> None:
     """
     Sends an email of cancelled/booked time to creator of the event
 
     :param: event_id of the event
     :param: msg_type of the message, reservation (True) or cancellation (False)
-    :return: HTTP 200 if succeeded, otherwise 400
+    :return: None, otherwise NotExist()
     """
     event = Event.get_event_by_id(event_id)
     if not event:
@@ -517,7 +548,7 @@ def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> Resp
     rcpt = creator.email
     msg = subject
     send_email(rcpt, subject, msg)
-    return ok_response()
+    return
 
 
 register_html_routes(calendar_plugin, class_schema(CalendarHtmlModel), reqs_handle)
