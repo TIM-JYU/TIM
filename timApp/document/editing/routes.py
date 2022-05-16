@@ -29,6 +29,7 @@ from timApp.bookmark.bookmarks import LAST_EDITED_GROUP
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
+from timApp.document.docsettings import DocSettings
 from timApp.document.document import Document, get_duplicate_id_msg
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
@@ -44,6 +45,7 @@ from timApp.document.translation.synchronize_translations import (
 )
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx
+from timApp.document.yamlblock import YamlBlock
 from timApp.item.validation import validate_uploaded_document_content
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.notification.notification import NotificationType
@@ -403,6 +405,10 @@ def preview_paragraphs(doc_id):
     """
     (text,) = verify_json_params("text")
     (proofread,) = verify_json_params("proofread", require=False, default=False)
+    (settings,) = verify_json_params("settings", require=False, default={})
+    extra_doc_settings = (
+        YamlBlock(settings) if settings and isinstance(settings, dict) else None
+    )
     docinfo = get_doc_or_abort(doc_id)
     rjson = request.get_json()
     if not rjson.get("isComment"):
@@ -414,7 +420,13 @@ def preview_paragraphs(doc_id):
             blocks = [DocParagraph.create(doc=doc, md="", html=get_error_html(e))]
             proofread = False
             edit_request = None
-        return par_response(blocks, docinfo, proofread, edit_request=edit_request)
+        return par_response(
+            blocks,
+            docinfo,
+            proofread,
+            edit_request=edit_request,
+            extra_doc_settings=extra_doc_settings,
+        )
     else:
         comment_html = md_to_html(text)
         if proofread:
@@ -449,6 +461,7 @@ def par_response(
     edit_result: DocumentEditResult | None = None,
     filter_return: GlobalParId | None = None,
     partial_doc_pars: bool = False,
+    extra_doc_settings: YamlBlock | None = None,
 ):
     """Return a JSON response containing updated paragraphs and updated HTMLs.
 
@@ -463,12 +476,16 @@ def par_response(
     :param filter_return: Return only paragraphs with this document and paragraph id.
     :param partial_doc_pars: If True, assumes that pars list includes partial document (e.g. areas may be incomplete).
                              The option disables some checks that would be otherwise done for full paragraphs.
+    :param extra_doc_settings: Extra settings to apply to the paragraph.
     :return: JSON object containing HTMLs, JS and CSS dependencies of changed paragraphs.
     """
     user_ctx = user_context_with_logged_in(None)
     doc = docu.document
     new_doc_version = doc.get_version()
     settings = doc.get_settings()
+
+    if extra_doc_settings:
+        settings = DocSettings(doc, settings.get_dict().merge_with(extra_doc_settings))
 
     if edit_result:
         preview = False
