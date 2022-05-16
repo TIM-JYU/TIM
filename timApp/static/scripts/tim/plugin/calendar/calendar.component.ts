@@ -17,6 +17,7 @@ import {
     CalendarDateFormatter,
     CalendarEvent,
     CalendarEventTimesChangedEvent,
+    CalendarEventTitleFormatter,
     CalendarModule,
     CalendarView,
     DateAdapter,
@@ -40,8 +41,10 @@ import {to2, toPromise} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
+import {showMessageDialog} from "../../ui/showMessageDialog";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
+import {CustomEventTitleFormatter} from "./custom-event-title-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
 import {showCalendarEventDialog} from "./showCalendarEventDialog";
 import {DateTimeValidatorDirective} from "./datetimevalidator.directive";
@@ -128,27 +131,6 @@ const segmentHeight = 30;
 registerLocaleData(localeFr);
 registerLocaleData(localeFi);
 
-/**
- * For customizing the event tooltip
- */
-// @Injectable()
-// export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
-//     weekTooltip(event: TIMCalendarEvent, title: string) {
-//         if (event.end) {
-//             return `${event.start.toTimeString().substr(0, 5)}-${event.end
-//                 .toTimeString()
-//                 .substr(0, 5)}`;
-//         }
-//         return "";
-//     }
-//
-//     dayTooltip(event: CalendarEvent<{tmpEvent?: boolean}>, title: string) {
-//         if (!event.meta?.tmpEvent) {
-//             return super.dayTooltip(event, title);
-//         }
-//         return "";
-//     }
-// }
 export type TIMEventMeta = {
     tmpEvent: boolean;
     deleted?: boolean;
@@ -175,10 +157,10 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
             provide: CalendarDateFormatter,
             useClass: CustomDateFormatter,
         },
-        // {
-        //     provide: CalendarEventTitleFormatter,
-        //     useClass: CustomEventTitleFormatter,
-        // },
+        {
+            provide: CalendarEventTitleFormatter,
+            useClass: CustomEventTitleFormatter,
+        },
     ],
     template: `
         <tim-calendar-header [locale]="locale" [(view)]="view" [(viewDate)]="viewDate">
@@ -407,6 +389,11 @@ export class CalendarComponent
     setEventType(button: string) {
         this.selectedEvent = button;
     }
+
+    /**
+     * True if event is set to be temporary (events that are yet to be sent to the TIM server)
+     * @param event
+     */
     isTempEvent(event: TIMCalendarEvent) {
         if (event.meta) {
             return event.meta.tmpEvent;
@@ -606,11 +593,13 @@ export class CalendarComponent
         newEnd,
     }: CalendarEventTimesChangedEvent<TIMEventMeta>) {
         if (newEnd && event.meta) {
+            const oldStart = event.start;
+            const oldEnd = event.end;
             event.meta.signup_before = newStart;
             event.start = newStart;
             event.end = newEnd;
             this.refresh();
-            await this.editEvent(event);
+            await this.editEvent(event, oldStart, oldEnd);
         } else {
             // TODO: handle undefined event.meta. Shouldn't be possible for the event.meta to be undefined.
             this.refresh();
@@ -740,15 +729,19 @@ export class CalendarComponent
         );
 
         const eventGroups: string[] = [];
+        const bookerGroups: string[] = [];
+        const setterGroups: string[] = [];
         let capacity: number = 0;
         if (this.markup.eventTemplates) {
             this.markup.eventTemplates[this.selectedEvent].bookers.forEach(
                 (group) => {
+                    bookerGroups.push(group);
                     eventGroups.push(group);
                 }
             );
             this.markup.eventTemplates[this.selectedEvent].setters.forEach(
                 (group) => {
+                    setterGroups.push(group);
                     eventGroups.push(group);
                 }
             );
@@ -758,12 +751,15 @@ export class CalendarComponent
         if (eventsToAdd.length > 0) {
             eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
                 return {
+                    id: event.id,
                     title: event.title,
                     location: event.meta!.location,
                     description: event.meta!.description,
                     start: event.start,
                     end: event.end,
                     signup_before: new Date(event.meta!.signup_before),
+                    booker_groups: bookerGroups,
+                    setter_groups: setterGroups,
                     event_groups: eventGroups,
                     max_size: capacity,
                 };
@@ -799,7 +795,6 @@ export class CalendarComponent
                                     event.meta!.signup_before
                                 ),
                             },
-                            // actions: this.actions,
                             resizable: {
                                 beforeStart: true,
                                 afterEnd: true,
@@ -811,8 +806,23 @@ export class CalendarComponent
                 console.log(result.result);
                 this.refresh();
             } else {
-                // TODO: Handle error responses properly
                 console.error(result.result.error.error);
+
+                if (result.result.error.error) {
+                    await showMessageDialog(
+                        `Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
+                    );
+                } else {
+                    await showMessageDialog(
+                        `Something went wrong. TIM admins have been notified about the issue.`
+                    );
+                }
+                this.events.forEach((event) => {
+                    if (this.isTempEvent(event)) {
+                        this.events.splice(this.events.indexOf(event));
+                    }
+                });
+                this.refresh();
             }
         }
     }
@@ -820,8 +830,10 @@ export class CalendarComponent
     /**
      * Sends the updated event to the TIM server after resizing by dragging
      * @param event Resized event
+     * @param oldStart event start time before resizing
+     * @param oldEnd event end time before resizing
      */
-    async editEvent(event: CalendarEvent) {
+    async editEvent(event: CalendarEvent, oldStart: Date, oldEnd?: Date) {
         if (!event.id) {
             return;
         }
@@ -840,6 +852,7 @@ export class CalendarComponent
             end: event.end,
             signup_before: values.signup_before,
         };
+
         const result = await toPromise(
             this.http.put(`/calendar/events/${id}`, {
                 event: eventToEdit,
@@ -848,8 +861,17 @@ export class CalendarComponent
         if (result.ok) {
             console.log(result.result);
         } else {
-            // TODO: Handle error responses properly
             console.error(result.result.error.error);
+            if (result.result.error.error) {
+                await showMessageDialog(result.result.error.error);
+            } else {
+                await showMessageDialog(
+                    `Something went wrong. TIM admins have been notified about the issue.`
+                );
+            }
+            event.start = oldStart;
+            event.end = oldEnd;
+            this.refresh();
         }
     }
 
