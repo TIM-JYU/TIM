@@ -47,6 +47,15 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    class="form-control"
                                    [disabled]="!isEditEnabled()"/>
                         </div>
+                        <label for="maxSize" class="col-sm-2 control-label">Capacity</label>
+                        <div class="col-sm-2">
+                            <input type="number"
+                            min="0" max="200" [(ngModel)]="maxSize"
+                                   #ngModelMaxSize="ngModel"
+                            (ngModelChange)="setMessage()"
+                            id="maxSize" name="maxSize" class="form-control"
+                            [disabled] ="!isEditEnabled()">
+                        </div>
                     </div>
                     <div class="form-group" [hidden]="isPersonalEvent()">
                             <label for="capacity" class="col-sm-2 control-label">Capacity</label>
@@ -182,6 +191,9 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     </div>
                 </form>
+                <tim-alert *ngIf="(maxSize>200 || maxSize<0) && ngModelMaxSize.dirty" >
+                    <ng-container>Event capacity must be 0-200</ng-container>
+                </tim-alert>
 
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['bookingEndInvalid']">
                 <ng-container *ngIf="form.errors?.['bookingEndInvalid']">Booking must be done before the event</ng-container>
@@ -252,6 +264,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 
     title = "";
     location = "";
+    maxSize = 0;
     message?: string;
     bookingStopTime = "";
     bookingStopDate = "";
@@ -284,6 +297,14 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (!this.location) {
             this.location = "";
         }
+        if (!this.maxSize) {
+            this.maxSize = this.getEventCapacity();
+        } else if (
+            this.eventHasBookings() &&
+            this.maxSize < this.getEventCapacity()
+        ) {
+            this.maxSize = this.getEventCapacity();
+        }
         console.log(this.description);
         console.log(this.location);
         console.log(this.title);
@@ -291,6 +312,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         console.log(this.bookingStopTime);
 
         const eventToEdit = {
+            max_size: this.maxSize,
             description: this.description,
             title: this.title,
             location: this.location,
@@ -308,6 +330,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         );
         if (result.ok) {
             console.log(result.result);
+            this.data.meta!.maxSize = eventToEdit.max_size;
             this.data.title = eventToEdit.title;
             this.data.meta!.description = eventToEdit.description;
             this.data.meta!.location = eventToEdit.location;
@@ -377,6 +400,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      * Sets the dialog data with event information when loaded
      */
     ngOnInit() {
+        this.maxSize = this.getEventCapacity();
         this.title = this.data.title;
         this.location = this.data.meta!.location;
         this.description = this.data.meta!.description;

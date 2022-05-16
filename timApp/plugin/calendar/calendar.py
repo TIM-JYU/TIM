@@ -362,9 +362,9 @@ class CalendarEvent:
     start: datetime
     end: datetime
     signup_before: datetime
+    max_size: int
     location: str
     description: str
-    max_size: int = 1
     booker_groups: list[str] | None = None
     setter_groups: list[str] | None = None
     event_groups: list[str] | None = None
@@ -482,6 +482,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     old_event.message = event.description
     old_event.start_time = event.start
     old_event.end_time = event.end
+    old_event.max_size = event.max_size
     old_event.signup_before = event.signup_before
     db.session.commit()
     return ok_response()
