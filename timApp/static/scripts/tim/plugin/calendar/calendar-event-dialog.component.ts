@@ -412,7 +412,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (bookerGroups) {
             bookerGroups.forEach((group) => {
                 // TODO: These attributes are only used with events with maximum capacity of 1
-                this.bookerMessage = group.message;
+                if (group.message) {
+                    this.bookerMessage = group.message;
+                }
                 group.users.forEach((user) => {
                     this.bookerEmail = user.email;
                     this.booker = user.name;
@@ -465,6 +467,12 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      *  TODO: Currently works only with events that has maximum capacity of 1
      */
     async updateBookMessage() {
+        if (!this.messageText) {
+            this.messageText = "";
+        }
+        if (!this.bookerMessage) {
+            this.bookerMessage = "";
+        }
         const eventToBook = this.data;
         const dateNow = new Date();
         let bookerGroup = "";
