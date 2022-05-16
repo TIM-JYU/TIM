@@ -1292,8 +1292,8 @@ def preprocess_jsrunner_answer(
         answerdata["peerreviews"] = get_reviews_for_document(d)
     else:
         answerdata["peerreviews"] = get_reviews_for_document(d)
-
-    answerdata["velps"] = get_annotations_with_comments_in_document(curr_user, d, False)
+    if True: ##TODO: KEKSI PAREMPI
+        answerdata["velps"] = get_annotations_with_comments_in_document(curr_user, d, False)
 
     answerdata.pop(
         "paramComps", None
@@ -1581,16 +1581,19 @@ def save_fields(
             if id_num.doc_id not in doc_map:
                 doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
             if pr_data is not None:
-                peer_review_data = json.loads(task_u.get(tid))
-                userId = item.get("user")
-                old = peer_review_data.get("from")
-                new = peer_review_data.get("to")
-                task = peer_review_data.get("task")
-                if not old:
-                    # TODO: Add new reviewer or if reviewable have none
-                    pass
-                else:
-                    change_peerreviewers_for_user(current_doc, task, userId, old, new)
+                user_id = item.get("user")
+                try:
+                    peer_review_data = json.loads(task_u.get(tid))
+                    old = peer_review_data.get("from")
+                    new = peer_review_data.get("to")
+                    task = peer_review_data.get("task")
+                    if not old:
+                        # TODO: Add new reviewer or if reviewable have none
+                        pass
+                    if new:
+                        change_peerreviewers_for_user(current_doc, task, user_id, old, new)
+                except json.decoder.JSONDecodeError:
+                    print("There was a problem accessing the equipment data")
     task_content_name_map = {}
     for task in tasks:
         t_id = TaskId.parse(

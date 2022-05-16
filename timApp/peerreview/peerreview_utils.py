@@ -212,7 +212,9 @@ def change_peerreviewers_for_user(
 ) -> bool:
     for i in range(0, len(new_reviewers)):
         try:
-            if reviewable != new_reviewers[i]:
+            if reviewable == new_reviewers[i]:
+                raise Exception('Same reviewer and reviewable')
+            else:
                 updated_user = PeerReview.query.filter_by(
                     block_id=doc.id,
                     reviewer_id=old_reviewers[i],
