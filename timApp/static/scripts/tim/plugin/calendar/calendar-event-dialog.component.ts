@@ -1,7 +1,7 @@
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {CommonModule} from "@angular/common";
+import {CommonModule, formatDate} from "@angular/common";
 import {DialogModule} from "../../ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {AngularDialogComponent} from "../../ui/angulardialog/angular-dialog-component.directive";
@@ -161,8 +161,11 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        [disabled]="!isEditEnabled()"
                                         >
                             </div>
+                            </div>
                         </div>
-                        <div class="col-sm-12">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="col-sm-12">
                             <label class="col-sm-12 control-label" for="description">Event description</label>
                             <textarea maxlength="1020" id="description" 
                              [(ngModel)]="description" #ngModelDescription="ngModel"
@@ -171,6 +174,20 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                              class="form-control"
                              [disabled]="!isEditEnabled()">
                             </textarea>
+                        </div>
+                    <div class="col-sm-12" [hidden] ="hideBookerMessage()">
+                        <label for="bookerMessage" class="col-sm-12 control-label">Message (optional)</label>
+                            <input type="text" [disabled] = "hideBookerMessage()"
+                                   [(ngModel)]="messageText"
+                                   (ngModelChange)="setMessage()"
+                                    name="messageText"
+                                    class="form-control">
+                        <button class="timButton" type="button" style="float: left"
+                        (click)="updateBookMessage()">Send message
+                        </button>
+                    </div>
+                        </div>
+                        <div [(ngModel)]="bookerMessage" [hidden]="hideBookerMessage()" name="bookerMessage" ngDefaultControl class="col-sm-12" style="white-space: pre-line">{{bookerMessage}}
                         </div>
                     </div>
                 </form>
@@ -251,12 +268,14 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     message?: string;
     bookingStopTime = "";
     bookingStopDate = "";
+    messageText = "";
     startDate = "";
     startTime = "";
     endDate = "";
     endTime = "";
     booker = "";
     bookerEmail: string | null = "";
+    bookerMessage = "";
     description = "";
     userBooked = false;
 
@@ -392,7 +411,8 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         const bookerGroups = this.data.meta!.booker_groups;
         if (bookerGroups) {
             bookerGroups.forEach((group) => {
-                // TODO: Make a list of all bookers when the event capacity is higher than 1
+                // TODO: These attributes are only used with events with maximum capacity of 1
+                this.bookerMessage = group.message;
                 group.users.forEach((user) => {
                     this.bookerEmail = user.email;
                     this.booker = user.name;
@@ -440,10 +460,54 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     }
 
     /**
+     *  Used when a booker of an event sends message to the enrollment of an event.
+     *  Updates the message linked to the enrollment with a chat-like timestamp + identifier of the booker.
+     *  TODO: Currently works only with events that has maximum capacity of 1
+     */
+    async updateBookMessage() {
+        const eventToBook = this.data;
+        const dateNow = new Date();
+        let bookerGroup = "";
+        if (this.data.meta!.booker_groups.length > 0) {
+            bookerGroup = this.data.meta!.booker_groups[0].name;
+        }
+        const bookMessage = `${this.bookerMessage}
+        ${Users.getCurrent().name} ${formatDate(
+            dateNow,
+            "d.M.yy HH:mm",
+            "fi-FI"
+        )}: ${this.messageText}`;
+
+        if (!(await showConfirm("Post message", "Post message to booking?"))) {
+            return;
+        }
+        console.log(bookMessage);
+        const result = await toPromise(
+            this.http.put("/calendar/bookings", {
+                event_id: eventToBook.id,
+                booker_msg: bookMessage,
+                booker_group: bookerGroup,
+            })
+        );
+        console.log(result);
+        if (result.ok) {
+            console.log(result.result);
+            this.bookerMessage = bookMessage;
+            this.messageText = "";
+            if (this.data.meta) {
+                if (this.data.meta.booker_groups.length > 0) {
+                    this.data.meta.booker_groups[0].message = bookMessage;
+                }
+            }
+        }
+    }
+
+    /**
      * Sends the booking request for the event to the TIM-server
      */
     async bookEvent() {
         const eventToBook = this.data;
+        console.log(eventToBook);
         if (
             !(await showConfirm(
                 "Book an Event",
@@ -455,11 +519,14 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (!this.eventCanBeBooked()) {
             return;
         }
+
         const result = await toPromise(
             this.http.post("/calendar/bookings", {
                 event_id: eventToBook.id,
+                booker_msg: this.messageText,
             })
         );
+        console.log(result);
         if (result.ok) {
             console.log(result.result);
             this.data.meta!.enrollments++;
@@ -474,6 +541,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 }
                 this.data.meta!.booker_groups.push({
                     name: booker.name,
+                    message: this.bookerMessage,
                     users: [
                         {
                             id: Users.getCurrent().id,
@@ -525,6 +593,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.data.meta!.booker_groups.forEach((group) => {
                 if (group.name == Users.getCurrent().name) {
                     group.name = "";
+                    group.message = "";
                     group.users.forEach((user) => {
                         user.id = -1;
                         user.email = "";
@@ -572,10 +641,33 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         return this.data.meta!.enrollments > 0;
     }
 
+    /**
+     *
+     * Compares the current time to the time set by the maker of an event as the end time/date for booking.
+     * Returns true if the current time allows the booking of the event.
+     */
     eventCanBeBooked() {
         const nowDate = new Date();
         const bookBefore = new Date(this.data.meta!.signup_before);
         return bookBefore.getTime() > nowDate.getTime();
+    }
+
+    /**
+     * Returns true if the booker message -field should not be shown to the user
+     */
+    hideBookerMessage() {
+        if (this.data.meta!.maxSize != 1) {
+            return true;
+            // TODO: Only supports use of booker message in events for one attendee
+        }
+        if (this.isEditEnabled() || !this.eventHasBookings()) {
+            return true;
+        } else if (this.userIsManager() || this.userHasBooked()) {
+            return false;
+        } else if (this.eventIsFull()) {
+            return true;
+        }
+        return true;
     }
 
     /**

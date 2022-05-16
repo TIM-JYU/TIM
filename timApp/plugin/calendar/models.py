@@ -25,6 +25,7 @@ class Enrollment(db.Model):
     usergroup_id = db.Column(
         db.Integer, db.ForeignKey("usergroup.id"), primary_key=True
     )
+    booker_message = db.Column(db.Text)
     enroll_type_id = db.Column(
         db.Integer, db.ForeignKey("enrollmenttype.enroll_type_id"), nullable=False
     )

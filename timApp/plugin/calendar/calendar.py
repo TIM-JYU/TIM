@@ -187,8 +187,7 @@ def get_ical(key: str) -> Response:
 
 
 def string_to_lines(str_to_split: str) -> str:
-    """
-    Splits long strings to n char lines
+    """Splits long strings to n char lines
 
     :return: str where lines are separated with \r\n + whitespace
     """
@@ -250,11 +249,16 @@ def get_events() -> Response:
         event_optional = Event.get_event_by_id(event.event_id)
         if event_optional is not None:
             event_obj = event_optional
-            enrollments = len(event_obj.enrolled_users)
+            enrollment_amount = len(event_obj.enrolled_users)
             booker_groups = event_obj.enrolled_users
             groups = []
 
             for group in booker_groups:
+                enrollment = Enrollment.get_enrollment_by_ids(event.event_id, group.id)
+                if enrollment is not None:
+                    book_msg = enrollment.booker_message
+                else:
+                    book_msg = ""
                 users = []
                 cur_user_booking = False
                 for user in group.users:
@@ -267,6 +271,15 @@ def get_events() -> Response:
                             "email": user.email,
                         }
                     )
+
+                groups.append(
+                    {
+                        "name": group.name,
+                        "message": book_msg,
+                        "users": users,
+                    }
+                )
+
                 if user_is_event_manager(event_obj.event_id) or cur_user_booking:
                     groups.append({"name": group.name, "users": users})
 
@@ -278,7 +291,7 @@ def get_events() -> Response:
                     "end": event_obj.end_time,
                     "meta": {
                         "description": event_obj.message,
-                        "enrollments": enrollments,
+                        "enrollments": enrollment_amount,
                         "maxSize": event_obj.max_size,
                         "location": event_obj.location,
                         "booker_groups": groups,
@@ -559,13 +572,38 @@ def send_email_to_enrolled_users(event: Event, user_obj: User) -> None:
     return
 
 
-@calendar_plugin.post("/bookings")
-def book_event(event_id: int) -> Response:
+@calendar_plugin.put("/bookings")
+def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Response:
+    """Updates the booker message in the specific booking
+
+    :param event_id: the id of the event that has the enrollment
+    :param booker_msg: Updated message chain to the enrollment
+    :param booker_group: the involved booker group of the enrollment
     """
-    Books the event for current user's personal user group.
+    verify_logged_in()
+    event = Event.get_event_by_id(event_id)
+    if event is None:
+        raise NotFound()
+
+    user_group = UserGroup.get_by_name(booker_group)
+    enrollment = Enrollment.get_enrollment_by_ids(event_id, user_group.id)
+
+    if enrollment is not None:
+        enrollment.booker_message = booker_msg
+        db.session.commit()
+    else:
+        raise NotFound()
+
+    return ok_response()
+
+
+@calendar_plugin.post("/bookings")
+def book_event(event_id: int, booker_msg: str) -> Response:
+    """Books the event for current user's personal user group.
     TODO: implement booking for user's other groups
 
     :param event_id: Event id
+    :param booker_msg: Message left by booker of the event
     :return: HTTP 200 if succeeded, 400 if the event is already full
     """
     verify_logged_in()
@@ -591,7 +629,10 @@ def book_event(event_id: int) -> Response:
         raise RouteException("Event is already booked by the same user group")
 
     enrollment = Enrollment(
-        event_id=event_id, usergroup_id=group_id, enroll_type_id=0
+        event_id=event_id,
+        usergroup_id=group_id,
+        enroll_type_id=0,
+        booker_message=booker_msg,
     )  # TODO: add enrollment types
 
     db.session.add(enrollment)
@@ -602,8 +643,7 @@ def book_event(event_id: int) -> Response:
 
 @calendar_plugin.delete("/bookings/<int:event_id>")
 def delete_booking(event_id: int) -> Response:
-    """
-    Deletes the booking or enrollment to an event for current user's personal user group.
+    """Deletes the booking or enrollment to an event for current user's personal user group.
 
     :param event_id: Event id that matches with the enrollment
     :return: HTTP 200 if succeeded, otherwise 400
