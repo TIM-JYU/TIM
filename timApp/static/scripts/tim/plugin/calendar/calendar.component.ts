@@ -17,6 +17,7 @@ import {
     CalendarDateFormatter,
     CalendarEvent,
     CalendarEventTimesChangedEvent,
+    CalendarEventTitleFormatter,
     CalendarModule,
     CalendarView,
     DateAdapter,
@@ -40,8 +41,10 @@ import {to2, toPromise} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
+import {showMessageDialog} from "../../ui/showMessageDialog";
 import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
+import {CustomEventTitleFormatter} from "./custom-event-title-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
 import {showCalendarEventDialog} from "./showCalendarEventDialog";
 import {DateTimeValidatorDirective} from "./datetimevalidator.directive";
@@ -71,14 +74,25 @@ function ceilToNearest(
     return Math.ceil(amount / segmentHeight) * minutesInSegment;
 }
 
-const CalendarItem = t.type({
-    opiskelijat: t.string,
-    ohjaajat: t.string,
+const EventTemplate = t.type({
+    title: nullable(t.string),
+    bookers: t.array(t.string),
+    setters: t.array(t.string),
+    tags: t.array(t.string),
+    capacity: t.number,
+});
+
+const FilterOptions = t.type({
+    groups: nullable(t.array(t.string)),
+    tags: nullable(t.array(t.string)),
+    fromDate: nullable(t.string), // TODO: figure out correct type for dates
+    toDate: nullable(t.string),
 });
 
 const CalendarMarkup = t.intersection([
     t.partial({
-        ryhmat: nullable(t.array(CalendarItem)),
+        filter: FilterOptions,
+        eventTemplates: t.record(t.string, EventTemplate),
     }),
     GenericPluginMarkup,
 ]);
@@ -117,31 +131,10 @@ const segmentHeight = 30;
 registerLocaleData(localeFr);
 registerLocaleData(localeFi);
 
-/**
- * For customizing the event tooltip
- */
-// @Injectable()
-// export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
-//     weekTooltip(event: TIMCalendarEvent, title: string) {
-//         if (event.end) {
-//             return `${event.start.toTimeString().substr(0, 5)}-${event.end
-//                 .toTimeString()
-//                 .substr(0, 5)}`;
-//         }
-//         return "";
-//     }
-//
-//     dayTooltip(event: CalendarEvent<{tmpEvent?: boolean}>, title: string) {
-//         if (!event.meta?.tmpEvent) {
-//             return super.dayTooltip(event, title);
-//         }
-//         return "";
-//     }
-// }
 export type TIMEventMeta = {
     tmpEvent: boolean;
     deleted?: boolean;
-    editEnabled?: boolean;
+    editEnabled: boolean;
     signup_before: Date;
     location: string;
     description: string;
@@ -149,6 +142,7 @@ export type TIMEventMeta = {
     maxSize: number;
     booker_groups: {
         name: string;
+        message: string;
         users: {id: number; name: string; email: string | null}[];
     }[];
 };
@@ -163,27 +157,27 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
             provide: CalendarDateFormatter,
             useClass: CustomDateFormatter,
         },
-        // {
-        //     provide: CalendarEventTitleFormatter,
-        //     useClass: CustomEventTitleFormatter,
-        // },
+        {
+            provide: CalendarEventTitleFormatter,
+            useClass: CustomEventTitleFormatter,
+        },
     ],
     template: `
         <tim-calendar-header [locale]="locale" [(view)]="view" [(viewDate)]="viewDate">
         </tim-calendar-header>
         <div class="row text-center">
             <div class="col-md-4">
-                <div class="btn-group edit-btn" [hidden]="!userIsManager()">
+                <div class="btn-group edit-btn" [hidden]="!userIsManager() || this.eventTypes.length == 0">
                     <button (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
                     <button (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
                 </div>
             </div>
             <div class="col-md-4">
                 <div [style.visibility]="editEnabled ? 'visible' : 'hidden'" class="btn-group event-btn">
-                    <button (click)="setEventType($event)" *ngFor="let button of eventTypes"
-                            [class.active]="selectedEvent == (button.valueOf() +eventTypes.indexOf((button)))"
+                    <button (click)="setEventType(button)" *ngFor="let button of eventTypes"
+                            [class.active]="selectedEvent === button"
                             class="btn timButton"
-                            id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button.valueOf()}}</button>
+                            id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button}}</button>
                 </div>
             </div>
             <div class="col-md-4">
@@ -336,9 +330,8 @@ export class CalendarComponent
     editEnabled: boolean = false;
     dialogOpen: boolean = false;
 
-    eventTypes: string[] = ["Ohjaus", "Luento", "Opetusryhmä"];
-    eventType: string = this.eventTypes[0];
-    selectedEvent: string = this.eventType + 0;
+    eventTypes: string[] = [];
+    selectedEvent: string = "";
 
     checkboxEvents = [
         {name: "Ohjaus", value: "1", checked: true},
@@ -391,11 +384,16 @@ export class CalendarComponent
 
     /**
      * Set type of event user wants to add while in edit-mode
+     * @param button
+     */
+    setEventType(button: string) {
+        this.selectedEvent = button;
+    }
+
+    /**
+     * True if event is set to be temporary (events that are yet to be sent to the TIM server)
      * @param event
      */
-    setEventType(event: Event) {
-        this.selectedEvent = (event.target as Element).id;
-    }
     isTempEvent(event: TIMCalendarEvent) {
         if (event.meta) {
             return event.meta.tmpEvent;
@@ -509,19 +507,17 @@ export class CalendarComponent
         mouseDownEvent: MouseEvent,
         segmentElement: HTMLElement
     ) {
-        let fullName = Users.getCurrent().real_name;
-        if (!fullName) {
-            fullName = Users.getCurrent().name;
+        let title: string | null = "";
+        if (this.markup.eventTemplates) {
+            title = this.markup.eventTemplates[this.selectedEvent].title;
         }
+        if (!title) {
+            title = this.selectedEvent;
+        }
+
         const dragToSelectEvent: TIMCalendarEvent = {
             id: this.events.length,
-            // title: `${segment.date.toTimeString().substr(0, 5)}–${addMinutes(
-            //     segment.date,
-            //     this.segmentMinutes
-            // )
-            //     .toTimeString()
-            //     .substr(0, 5)} Varattava aika`,
-            title: fullName,
+            title: title,
             start: segment.date,
             end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
@@ -532,8 +528,8 @@ export class CalendarComponent
                 location: "",
                 maxSize: 1, // TODO: temporary solution
                 booker_groups: [],
+                editEnabled: this.editEnabled,
             },
-            // actions: this.actions,
         };
         if (Date.now() > dragToSelectEvent.start.getTime()) {
             dragToSelectEvent.color = colors.gray;
@@ -597,11 +593,13 @@ export class CalendarComponent
         newEnd,
     }: CalendarEventTimesChangedEvent<TIMEventMeta>) {
         if (newEnd && event.meta) {
+            const oldStart = event.start;
+            const oldEnd = event.end;
             event.meta.signup_before = newStart;
             event.start = newStart;
             event.end = newEnd;
             this.refresh();
-            await this.editEvent(event);
+            await this.editEvent(event, oldStart, oldEnd);
         } else {
             // TODO: handle undefined event.meta. Shouldn't be possible for the event.meta to be undefined.
             this.refresh();
@@ -676,6 +674,7 @@ export class CalendarComponent
     ngOnInit() {
         this.icsURL = "";
         super.ngOnInit();
+        this.initEventTypes();
         this.setLanguage();
         if (Users.isLoggedIn()) {
             void this.loadEvents();
@@ -704,6 +703,7 @@ export class CalendarComponent
                     maxSize: event.meta!.maxSize,
                     location: event.meta!.location,
                     booker_groups: event.meta!.booker_groups,
+                    editEnabled: this.editEnabled,
                     signup_before: new Date(event.meta!.signup_before),
                 };
                 event.resizable = {
@@ -728,25 +728,40 @@ export class CalendarComponent
             this.isTempEvent(event)
         );
 
-        console.log(this.markup.ryhmat);
         const eventGroups: string[] = [];
-        if (this.markup.ryhmat) {
-            console.log(this.markup.ryhmat[0].opiskelijat);
-            eventGroups.push(this.markup.ryhmat[0].opiskelijat);
-            eventGroups.push(this.markup.ryhmat[0].ohjaajat);
+        const bookerGroups: string[] = [];
+        const setterGroups: string[] = [];
+        let capacity: number = 0;
+        if (this.markup.eventTemplates) {
+            this.markup.eventTemplates[this.selectedEvent].bookers.forEach(
+                (group) => {
+                    bookerGroups.push(group);
+                    eventGroups.push(group);
+                }
+            );
+            this.markup.eventTemplates[this.selectedEvent].setters.forEach(
+                (group) => {
+                    setterGroups.push(group);
+                    eventGroups.push(group);
+                }
+            );
+            capacity = this.markup.eventTemplates[this.selectedEvent].capacity;
         }
 
         if (eventsToAdd.length > 0) {
             eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
                 return {
+                    id: event.id,
                     title: event.title,
                     location: event.meta!.location,
                     description: event.meta!.description,
                     start: event.start,
                     end: event.end,
                     signup_before: new Date(event.meta!.signup_before),
+                    booker_groups: bookerGroups,
+                    setter_groups: setterGroups,
                     event_groups: eventGroups,
-                    max_size: 1, // TODO: temporary solution
+                    max_size: capacity,
                 };
             });
             console.log(eventsToAdd);
@@ -780,7 +795,6 @@ export class CalendarComponent
                                     event.meta!.signup_before
                                 ),
                             },
-                            // actions: this.actions,
                             resizable: {
                                 beforeStart: true,
                                 afterEnd: true,
@@ -792,8 +806,23 @@ export class CalendarComponent
                 console.log(result.result);
                 this.refresh();
             } else {
-                // TODO: Handle error responses properly
                 console.error(result.result.error.error);
+
+                if (result.result.error.error) {
+                    await showMessageDialog(
+                        `Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
+                    );
+                } else {
+                    await showMessageDialog(
+                        `Something went wrong. TIM admins have been notified about the issue.`
+                    );
+                }
+                this.events.forEach((event) => {
+                    if (this.isTempEvent(event)) {
+                        this.events.splice(this.events.indexOf(event));
+                    }
+                });
+                this.refresh();
             }
         }
     }
@@ -801,8 +830,10 @@ export class CalendarComponent
     /**
      * Sends the updated event to the TIM server after resizing by dragging
      * @param event Resized event
+     * @param oldStart event start time before resizing
+     * @param oldEnd event end time before resizing
      */
-    async editEvent(event: CalendarEvent) {
+    async editEvent(event: CalendarEvent, oldStart: Date, oldEnd?: Date) {
         if (!event.id) {
             return;
         }
@@ -821,6 +852,7 @@ export class CalendarComponent
             end: event.end,
             signup_before: values.signup_before,
         };
+
         const result = await toPromise(
             this.http.put(`/calendar/events/${id}`, {
                 event: eventToEdit,
@@ -829,8 +861,17 @@ export class CalendarComponent
         if (result.ok) {
             console.log(result.result);
         } else {
-            // TODO: Handle error responses properly
             console.error(result.result.error.error);
+            if (result.result.error.error) {
+                await showMessageDialog(result.result.error.error);
+            } else {
+                await showMessageDialog(
+                    `Something went wrong. TIM admins have been notified about the issue.`
+                );
+            }
+            event.start = oldStart;
+            event.end = oldEnd;
+            this.refresh();
         }
     }
 
@@ -900,6 +941,42 @@ export class CalendarComponent
             itemglobals().curr_item.rights.manage ||
             itemglobals().curr_item.rights.owner
         );
+    }
+
+    /**
+     * Initializes which different types of events the user can add to the calendar based on the markup
+     * @private
+     */
+    private initEventTypes(): void {
+        for (const eventTemplate in this.markup.eventTemplates) {
+            if (this.markup.eventTemplates.hasOwnProperty(eventTemplate)) {
+                // If current user is owner, add option to add all types of events
+                if (itemglobals().curr_item.rights.owner) {
+                    this.eventTypes.push(eventTemplate);
+                }
+                // Otherwise, only add options for types that has a setter group in which the current user belongs to
+                else {
+                    Users.getCurrent().groups.forEach((group) => {
+                        if (!this.markup.eventTemplates) {
+                            return;
+                        }
+
+                        if (
+                            this.markup.eventTemplates[
+                                eventTemplate
+                            ].setters.includes(group.name)
+                        ) {
+                            if (!this.eventTypes.includes(eventTemplate)) {
+                                this.eventTypes.push(eventTemplate);
+                            }
+                        }
+                    });
+                }
+            }
+        }
+        if (this.eventTypes.length > 0) {
+            this.selectedEvent = this.eventTypes[0];
+        }
     }
 }
 
