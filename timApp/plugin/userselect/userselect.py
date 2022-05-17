@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from enum import Enum
 from typing import Literal, Callable
 
 import filelock
@@ -143,6 +144,17 @@ RIGHT_TO_OP: dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
 
 
 @dataclass
+class ChangeGroupAction:
+    changeTo: str
+    allGroups: list[str]
+    verify: bool = False
+
+    @property
+    def all_groups(self) -> list[str]:
+        return self.allGroups + [self.changeTo]
+
+
+@dataclass
 class ActionCollection:
     addPermission: list[AddPermission] = field(default_factory=list)
     confirmPermission: list[ConfirmPermission] = field(default_factory=list)
@@ -152,6 +164,7 @@ class ActionCollection:
     setValue: list[SetTaskValueAction] = field(default_factory=list)
     addToGroups: list[str] = field(default_factory=list)
     removeFromGroups: list[str] = field(default_factory=list)
+    changeGroup: ChangeGroupAction | None = None
     verifyRemoteSessions: list[str] = field(default_factory=list)
     invalidateRemoteSessions: list[str] = field(default_factory=list)
 
@@ -176,6 +189,7 @@ class TextOptions:
     undone: str | None = None
     undo: str | None = None
     undoWarning: str | None = None
+    verifyReasons: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -279,6 +293,12 @@ actions:                 # Actions to apply for the selected user
 
     #addToGroups:               # Add the user to the groups
     #  - somegroups
+
+    #changeGroup:                 # Change the user's group
+    #  changeTo: somegroup        # Group to change to. The user will become a member of this group.
+    #  allGroups:                 # All groups to check. User is removed from other all groups that are not the same as changeTo.
+    #    - somegroup
+    #  verify: false              # Show a verification message if user is already a member of a group in allGroups.
 
     #removeFromGroups:          # Remove the user from the groups. This will do a soft delete (i.e. add removal date)
     #  - somegroups
@@ -516,14 +536,17 @@ def undo_field_actions(
 
 
 def get_groups(
-    cur_user: User, add: list[str], remove: list[str]
-) -> tuple[list[UserGroup], list[UserGroup]]:
+    cur_user: User, add: list[str], remove: list[str], change_all_groups: list[str]
+) -> tuple[list[UserGroup], list[UserGroup], list[UserGroup]]:
     add_groups: list[UserGroup] = UserGroup.query.filter(UserGroup.name.in_(add)).all()
     remove_groups: list[UserGroup] = UserGroup.query.filter(
         UserGroup.name.in_(remove)
     ).all()
+    change_all_groups: list[UserGroup] = UserGroup.query.filter(
+        UserGroup.name.in_(change_all_groups)
+    ).all()
     all_groups: dict[str, UserGroup] = {
-        ug.name: ug for ug in (add_groups + remove_groups)
+        ug.name: ug for ug in (add_groups + remove_groups + change_all_groups)
     }
 
     for ug in all_groups.values():
@@ -533,7 +556,7 @@ def get_groups(
             )
         verify_group_edit_access(ug, cur_user)
 
-    return add_groups, remove_groups
+    return add_groups, remove_groups, change_all_groups
 
 
 # It can be useful to offset the time a little to ensure any checks for expired memberships can pass
@@ -541,13 +564,19 @@ group_expired_offset = timedelta(seconds=1)
 
 
 def undo_group_actions(
-    user_acc: User, cur_user: User, add: list[str], remove: list[str]
+    user_acc: User,
+    cur_user: User,
+    add: list[str],
+    remove: list[str],
+    change: ChangeGroupAction | None,
 ) -> None:
-    add_groups, remove_groups = get_groups(cur_user, add, remove)
+    add_groups, remove_groups, change_all_groups = get_groups(
+        cur_user, add, remove, change.all_groups if change else []
+    )
 
     # We cannot safely add user back to a group because we don't know if the user was removed from it
 
-    for ug in add_groups:
+    for ug in add_groups + change_all_groups:
         membership = ug.current_memberships.get(user_acc.id, None)
         if membership:
             membership.set_expired(time_offset=group_expired_offset)
@@ -566,6 +595,8 @@ def undo(
         return json_response({"distributionErrors": []})
 
     groups = set(model.actions.addToGroups) | set(model.actions.removeFromGroups)
+    if model.actions.changeGroup:
+        groups |= set(model.actions.changeGroup.all_groups)
     locks = [
         filelock.FileLock(f"/tmp/userselect_groupaction_{group}.lock")
         for group in groups
@@ -582,6 +613,7 @@ def undo(
             cur_user,
             model.actions.addToGroups,
             model.actions.removeFromGroups,
+            model.actions.changeGroup,
         )
         # Flush so that right distribution is handled correctly
         db.session.flush()
@@ -736,17 +768,62 @@ def apply_verify_session(
 
 
 def apply_group_actions(
-    user_acc: User, cur_user: User, add: list[str], remove: list[str]
+    user_acc: User,
+    cur_user: User,
+    add: list[str],
+    remove: list[str],
+    change_to: ChangeGroupAction | None,
 ) -> None:
-    add_groups, remove_groups = get_groups(cur_user, add, remove)
+    add_groups, remove_groups, change_to_groups = get_groups(
+        cur_user, add, remove, change_to.all_groups if change_to else []
+    )
 
     for ug in add_groups:
         user_acc.add_to_group(ug, cur_user)
 
+    def expire_membership(ugg: UserGroup):
+        m = ugg.current_memberships.get(user_acc.id, None)
+        if m:
+            m.set_expired(time_offset=group_expired_offset)
+
     for ug in remove_groups:
-        membership = ug.current_memberships.get(user_acc.id, None)
-        if membership:
-            membership.set_expired(time_offset=group_expired_offset)
+        expire_membership(ug)
+
+    if change_to:
+        for ug in change_to_groups:
+            if ug.name == change_to.changeTo:
+                user_acc.add_to_group(ug, cur_user)
+            else:
+                expire_membership(ug)
+
+
+class NeedsVerifyReasons(Enum):
+    CHANGE_GROUP_BELONGS = "changeGroupBelongs"
+    CHANGE_GROUP_ALREADY_MEMBER = "changeGroupAlreadyMember"
+
+
+@user_select_plugin.post("/needsVerify")
+def needs_verify(username: str, par: GlobalParId) -> Response:
+    model, cur_user, user_group, user_acc = get_plugin_info(username, None, par)
+
+    if not model.actions:
+        return json_response({"needsVerify": False, "reasons": []})
+
+    verify_reasons = []
+
+    if model.actions.changeGroup and model.actions.changeGroup.verify:
+        membership_groups: set[str] = {g.name for g in user_acc.groups}
+        if model.actions.changeGroup.changeTo in membership_groups:
+            verify_reasons.append(NeedsVerifyReasons.CHANGE_GROUP_ALREADY_MEMBER)
+        # No need to add the other reason because "already member" is more important
+        elif any(
+            True for g in model.actions.changeGroup.allGroups if g in membership_groups
+        ):
+            verify_reasons.append(NeedsVerifyReasons.CHANGE_GROUP_BELONGS)
+
+    return json_response(
+        {"needsVerify": len(verify_reasons) > 0, "reasons": verify_reasons}
+    )
 
 
 @user_select_plugin.post("/apply")
@@ -762,6 +839,8 @@ def apply(
         return ok_response()
 
     all_groups = set(model.actions.addToGroups) | set(model.actions.removeFromGroups)
+    if model.actions.changeGroup:
+        all_groups |= set(model.actions.changeGroup.all_groups)
     locks = [
         filelock.FileLock(f"/tmp/userselect_groupaction_{group}.lock")
         for group in all_groups
@@ -776,6 +855,7 @@ def apply(
             cur_user,
             model.actions.addToGroups,
             model.actions.removeFromGroups,
+            model.actions.changeGroup,
         )
         db.session.flush()
 

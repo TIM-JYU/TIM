@@ -45,6 +45,11 @@ import {
 } from "./searchQueryHandlers";
 import {T9KeyboardComponent} from "./t9-keyboard.component";
 
+const NeedsVerifyReasons = t.type({
+    changeGroupBelongs: t.string,
+    changeGroupAlreadyMember: t.string,
+});
+
 const PluginMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
@@ -73,9 +78,17 @@ const PluginMarkup = t.intersection([
             undone: nullable(t.string),
             undo: nullable(t.string),
             undoWarning: nullable(t.string),
+            verifyReasons: t.partial(NeedsVerifyReasons.props),
         }),
     }),
 ]);
+
+interface INeedsVerifyReasons extends t.TypeOf<typeof NeedsVerifyReasons> {}
+
+const DEFAULT_VERIFY_REASONS: INeedsVerifyReasons = {
+    changeGroupBelongs: $localize`The user already belongs to a group. Are you sure you want to change the group?`,
+    changeGroupAlreadyMember: $localize`The user is already a member of this group. Are you sure you want to assign them to this group again?`,
+};
 
 const PluginFields = t.intersection([
     getTopLevelFields(PluginMarkup),
@@ -150,7 +163,7 @@ class ToggleOption {
                    autocomplete="off"
                    [(ngModel)]="searchString"
                    (ngModelChange)="inputTyped.next($event)"
-                   [disabled]="!queryHandler || undoing"
+                   [disabled]="!queryHandler || undoing || applying"
                    minlength="{{ inputMinLength }}"
                    required
                    #searchInput>
@@ -256,6 +269,17 @@ class ToggleOption {
                 </span>
             </div>
         </tim-alert>
+        <tim-alert severity="warning" *ngIf="verifyMessages && verifyAccept && verifyReject">
+            <div class="undoable-message">
+                <ul class="undoable-text">
+                   <li *ngFor="let message of verifyMessages">{{message}}</li> 
+                </ul>
+                <span class="undo-button">
+                    <button (click)="verifyAccept()" class="btn btn-success">{{applyButtonText}}</button>
+                    <button (click)="verifyReject()" class="btn btn-danger">{{cancelButtonText}}</button>
+                </span>
+            </div>
+        </tim-alert>
         <tim-alert class="small" *ngIf="undoErrors.length > 0" severity="warning">
             <ng-container i18n>
                 <p>
@@ -350,6 +374,11 @@ export class UserSelectComponent extends AngularPluginBase<
         $localize`Auto apply on match`
     );
     verifyUndo: boolean = false;
+
+    verifyReasonTemplates!: INeedsVerifyReasons;
+    verifyMessages?: string[];
+    verifyAccept?: (v?: unknown) => void;
+    verifyReject?: () => void;
 
     get successMessage() {
         if (!this.lastAddedUser) {
@@ -485,6 +514,10 @@ export class UserSelectComponent extends AngularPluginBase<
 
     ngOnInit() {
         super.ngOnInit();
+        this.verifyReasonTemplates = {
+            ...DEFAULT_VERIFY_REASONS,
+            ...this.markup.text.verifyReasons,
+        };
         this.isInPreview = this.isPreview();
         this.supportsMediaDevices = MediaDevicesSupported;
         this.initToggleOptions();
@@ -512,12 +545,67 @@ export class UserSelectComponent extends AngularPluginBase<
         void this.initQueryHandler();
     }
 
+    private async verifyAction() {
+        if (!this.selectedUser) {
+            return false;
+        }
+        const res = await toPromise(
+            this.http.post<{
+                needsVerify: boolean;
+                reasons: (keyof INeedsVerifyReasons)[];
+            }>("/userSelect/needsVerify", {
+                username: this.selectedUser.user.name,
+                par: this.getPar()!.par.getJsonForServer(),
+            })
+        );
+
+        if (!res.ok) {
+            this.setError(
+                $localize`Could not apply the permission.`,
+                res.result.error.error
+            );
+            return false;
+        }
+
+        if (!res.result.needsVerify) {
+            return true;
+        }
+
+        this.verifyMessages = [];
+        for (const reason of res.result.reasons) {
+            this.verifyMessages.push(
+                templateString(
+                    this.verifyReasonTemplates[reason],
+                    this.selectedUser.fields
+                )
+            );
+        }
+
+        const mainPromise = new Promise((accept, reject) => {
+            this.verifyAccept = accept;
+            this.verifyReject = reject;
+        });
+        await mainPromise;
+        // Remove the info already here to hide the message box
+        this.verifyMessages = undefined;
+        this.verifyAccept = undefined;
+        this.verifyReject = undefined;
+        return true;
+    }
+
     async apply() {
         if (!this.selectedUser) {
             return;
         }
         this.applying = true;
         this.resetError();
+
+        const verifyResult = await to2(this.verifyAction());
+        if (!verifyResult.ok || !verifyResult.result) {
+            this.applying = false;
+            this.resetView();
+            return;
+        }
 
         // Pass possible urlmacros
         const params = new HttpParams({
@@ -554,6 +642,9 @@ export class UserSelectComponent extends AngularPluginBase<
         this.searchString = "";
         this.searchParameter = undefined;
         this.verifyUndo = false;
+        this.verifyMessages = undefined;
+        this.verifyAccept = undefined;
+        this.verifyReject = undefined;
         if (!isMobileDevice()) {
             this.searchInput.nativeElement.focus();
         }
@@ -606,6 +697,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 undone: null,
                 undo: null,
                 undoWarning: null,
+                verifyReasons: {},
             },
             inputMinLength: 3,
             autoSearchDelay: 0,
