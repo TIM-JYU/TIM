@@ -43,6 +43,7 @@ const DropdownMarkup = t.intersection([
     t.partial({
         tag: t.string,
         words: t.array(t.string),
+        wordAliases: t.record(t.string, t.string),
     }),
     GenericPluginMarkup,
     t.type({
@@ -80,7 +81,7 @@ const DropdownAll = t.intersection([
                           [(ngModel)]="selectedWord"
                           [disabled]="attrsall['preview']"
                           (ngModelChange)="updateSelection()">
-                {{item}}
+                {{getItemText(item)}}
             </label>        
         </div>
         <select *ngIf="!radio"
@@ -88,7 +89,7 @@ const DropdownAll = t.intersection([
                 (ngModelChange)="updateSelection()"
                 [ngClass]="{warnFrame: isUnSaved()}"
                 [disabled]="attrsall['preview']">
-            <option *ngFor="let item of wordList" [value]="item">{{item}}</option>
+            <option *ngFor="let item of wordList" [value]="item">{{getItemText(item)}}</option>
         </select>
     </div>
     <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
@@ -123,6 +124,10 @@ export class DropdownPluginComponent
         private zone: NgZone
     ) {
         super(el, http, domSanitizer);
+    }
+
+    getItemText(item: string) {
+        return this.markup.wordAliases?.[item] ?? item;
     }
 
     getDefaultMarkup() {
