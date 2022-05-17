@@ -2,7 +2,7 @@
   padding: 5px 0px;
 }
 
-.cal-event-title{
+.cal-event-title {
   font-size: 10px;
 }
 
@@ -16,12 +16,11 @@
   width: calc(89% - 2px);
 }
 
-@media (min-width: 992px){
+@media (min-width: 992px) {
   .currentDay {
-margin-top: 5px;
+    margin-top: 5px;
+  }
 }
-}
-
 
 .edit-btn {
   margin-bottom: 20px;
@@ -35,51 +34,50 @@ margin-top: 5px;
   padding: 6px 5px;
 }
 
-@media (min-width: 768px){
+@media (min-width: 768px) {
   .form-horizontal .control-label {
     text-align: left;
   }
 }
 
-
-.exportDone{
+.exportDone {
   margin-left: 5px;
   width: fit-content;
 }
 
-.modal{
+.modal {
   opacity: 1;
   z-index: 1056;
 }
 
-.modal-dialog{
+.modal-dialog {
   margin-top: 15em;
 }
 
 .modal-backdrop.fade {
-    opacity: 0.5;
+  opacity: 0.5;
 }
 
-.time-period-btn{
+.time-period-btn {
   width: max-content;
   //margin-top: 26px;
 }
 
-#saveBtn{
+#saveBtn {
   margin-top: 20px;
   margin-bottom: 20px;
 }
 
-#selectorsBtn{
+#selectorsBtn {
   margin-top: 5px;
 }
 
-.checkbox-group{
+.checkbox-group {
   text-align: left;
   float: right;
 }
 
-input[type="checkbox"]{
+input[type="checkbox"] {
   margin-right: 4px;
 }
 
