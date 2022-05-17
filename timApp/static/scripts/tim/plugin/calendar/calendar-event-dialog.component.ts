@@ -100,7 +100,7 @@ import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
                         <label for="startDate" class="col-sm-8 control-label">From</label>
                         
                             <div class="input-group">
-                                <input i18n-placeholder type="date"
+                                <input type="date"
                                        required
                                        [(ngModel)]="startDate"
                                        (ngModelChange)="setMessage()"
@@ -109,7 +109,7 @@ import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
                                        [disabled]="!isEditEnabled()"
                                 >
 
-                                <input i18n-placeholder type="time"
+                                <input type="time"
                                        required
                                        [(ngModel)]="startTime"
                                        (ngModelChange)="setMessage()"

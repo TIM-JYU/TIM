@@ -229,7 +229,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                     *ngSwitchCase="'week'"
                     [viewDate]="viewDate"
                     [events]="events"
-                    [hourSegmentHeight]="30"
+                    [hourSegmentHeight]="segmentHeight"
                     [hourDuration]="60"
                     [hourSegments]="segmentsInHour"
                     [dayStartHour]="dayStartHour"
@@ -348,6 +348,7 @@ export class CalendarComponent
     dayEndHour: number = 19;
     segmentMinutes: number = 20;
     segmentsInHour: number = 3;
+    segmentHeight: number = 30;
     minimumEventHeight: number = this.segmentMinutes;
 
     modalData?: {

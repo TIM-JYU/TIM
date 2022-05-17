@@ -86,7 +86,7 @@ export class CalendarHeaderComponent {
 
     @Input() viewDate: Date = new Date();
 
-    @Input() locale: string = "fi-FI";
+    @Input() locale: string = window.navigator.language;
 
     @Input() weekStartsOn: number = 1;
 
