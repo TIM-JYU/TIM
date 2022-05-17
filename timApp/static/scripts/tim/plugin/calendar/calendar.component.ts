@@ -675,9 +675,7 @@ export class CalendarComponent
         super.ngOnInit();
         this.initEventTypes();
         this.setLanguage();
-        if (Users.isLoggedIn()) {
-            void this.loadEvents();
-        }
+        void this.loadEvents();
     }
 
     /**
