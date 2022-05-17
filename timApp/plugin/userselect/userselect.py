@@ -545,8 +545,7 @@ def undo_group_actions(
 ) -> None:
     add_groups, remove_groups = get_groups(cur_user, add, remove)
 
-    for ug in remove_groups:
-        user_acc.add_to_group(ug, cur_user)
+    # We cannot safely add user back to a group because we don't know if the user was removed from it
 
     for ug in add_groups:
         membership = ug.current_memberships.get(user_acc.id, None)
