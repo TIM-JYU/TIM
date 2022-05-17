@@ -40,6 +40,7 @@ from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_edit_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import membership_current, UserGroupMember
 from timApp.util.flask.requesthelper import (
     NotExist,
     RouteException,
@@ -782,7 +783,9 @@ def apply_group_actions(
         user_acc.add_to_group(ug, cur_user)
 
     def expire_membership(ugg: UserGroup) -> None:
-        m = ugg.current_memberships.get(user_acc.id, None)
+        m = user_acc.memberships_dyn.filter(
+            membership_current & (UserGroupMember.group == ugg)
+        ).first()
         if m:
             m.set_expired(time_offset=group_expired_offset)
 
