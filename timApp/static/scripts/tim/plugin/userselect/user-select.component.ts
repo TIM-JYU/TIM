@@ -581,6 +581,10 @@ export class UserSelectComponent extends AngularPluginBase<
             );
         }
 
+        if (this.markup.scanner.beepOnFailure) {
+            this.beepFail = await playBeep("beep_fail", this.beepFail);
+        }
+
         const mainPromise = new Promise((accept, reject) => {
             this.verifyAccept = accept;
             this.verifyReject = reject;
