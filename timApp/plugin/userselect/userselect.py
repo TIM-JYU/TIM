@@ -542,11 +542,11 @@ def get_groups(
     remove_groups: list[UserGroup] = UserGroup.query.filter(
         UserGroup.name.in_(remove)
     ).all()
-    change_all_groups: list[UserGroup] = UserGroup.query.filter(
+    change_all_groups_ugs: list[UserGroup] = UserGroup.query.filter(
         UserGroup.name.in_(change_all_groups)
     ).all()
     all_groups: dict[str, UserGroup] = {
-        ug.name: ug for ug in (add_groups + remove_groups + change_all_groups)
+        ug.name: ug for ug in (add_groups + remove_groups + change_all_groups_ugs)
     }
 
     for ug in all_groups.values():
@@ -556,7 +556,7 @@ def get_groups(
             )
         verify_group_edit_access(ug, cur_user)
 
-    return add_groups, remove_groups, change_all_groups
+    return add_groups, remove_groups, change_all_groups_ugs
 
 
 # It can be useful to offset the time a little to ensure any checks for expired memberships can pass
@@ -781,7 +781,7 @@ def apply_group_actions(
     for ug in add_groups:
         user_acc.add_to_group(ug, cur_user)
 
-    def expire_membership(ugg: UserGroup):
+    def expire_membership(ugg: UserGroup) -> None:
         m = ugg.current_memberships.get(user_acc.id, None)
         if m:
             m.set_expired(time_offset=group_expired_offset)
