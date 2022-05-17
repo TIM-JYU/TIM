@@ -637,7 +637,6 @@ export class CalendarComponent
      * @private
      */
     private refresh() {
-        this.events = [...this.events];
         this.events.forEach((event) => {
             if (event.meta!.enrollments >= event.meta!.maxSize) {
                 event.color = colors.red;
