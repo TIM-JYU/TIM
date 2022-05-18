@@ -11,12 +11,14 @@ class CalendarTest(TimRouteTest):
             expect_content=[],
         )
 
+        event_id = 1
+
         self.json_post(
             f"/calendar/events",
             {
                 "events": [
                     {
-                        "id": 1,
+                        "id": event_id,
                         "title": "Otsake",
                         "location": "sijainti",
                         "description": "kuvaus",
@@ -38,7 +40,7 @@ class CalendarTest(TimRouteTest):
             expect_status=200,
             expect_content=[
                 {
-                    "id": 1,
+                    "id": event_id,
                     "title": "Otsake",
                     "start": "2022-05-18T07:20:00+00:00",
                     "end": "2022-05-18T07:40:00+00:00",
@@ -53,3 +55,10 @@ class CalendarTest(TimRouteTest):
                 }
             ],
         )
+
+        self.delete(
+            f"calendar/events/{event_id}",
+            expect_status=200,
+        )
+
+        self.get(f"/calendar/events", expect_status=200, expect_content=[])
