@@ -517,9 +517,8 @@ def simple_login_password(email: str, password: str) -> Response:
       it is the user's self-made password.
     """
     verify_simple_email_login_enabled()
-    users = User.get_by_email_case_insensitive_or_username(
-        convert_email_to_lower(email)
-    )
+    email_lower = convert_email_to_lower(email)
+    users = User.get_by_email_case_insensitive_or_username(email_lower)
     if len(users) == 1 and users[0].pass_ is not None:
         return json_response({"type": "login", "data": do_email_login(email, password)})
     elif len(users) <= 1:
@@ -528,7 +527,7 @@ def simple_login_password(email: str, password: str) -> Response:
         if users and users[0].real_name:
             name = users[0].real_name
         try:
-            check_temp_pw(email, password)
+            check_temp_pw(email_lower, password)
         except RouteException:
             raise AccessDenied("EmailOrPasswordNotMatch")
         else:
