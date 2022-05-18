@@ -49,7 +49,7 @@ from timApp.util.flask.requesthelper import (
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups
-from timApp.util.logger import log_warning
+from timApp.util.logger import log_warning, log_info
 from timApp.util.utils import get_current_time
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
@@ -340,6 +340,12 @@ actions:                 # Actions to apply for the selected user
     }
 
 
+def log_user_select(msg: str) -> None:
+    if not current_app.config["LOG_USER_SELECT_ACTIONS"]:
+        return
+    log_info(f"USER_SELECT: {msg}")
+
+
 def get_plugin_markup(
     task_id: str | None, par: GlobalParId | None
 ) -> tuple[UserSelectMarkupModel, DocInfo, User, ViewContext]:
@@ -455,7 +461,7 @@ def has_distribution_moderation_access(doc: DocInfo) -> bool:
 
 def get_plugin_info(
     username: str, task_id: str | None = None, par: GlobalParId | None = None
-) -> tuple[UserSelectMarkupModel, User, UserGroup, User]:
+) -> tuple[UserSelectMarkupModel, User, UserGroup, User, DocInfo]:
     model, doc, _, _ = get_plugin_markup(task_id, par)
     # Ensure user actually has access to document with the plugin
     verify_view_access(doc)
@@ -469,7 +475,7 @@ def get_plugin_info(
         raise RouteException(f"Cannot find user {username}")
 
     if not model.actions:
-        return model, cur_user, user_group, user_acc
+        return model, cur_user, user_group, user_acc, doc
 
     can_distribute_rights = has_distribution_moderation_access(doc)
 
@@ -482,7 +488,7 @@ def get_plugin_info(
     if model.actions.invalidateRemoteSessions and not can_distribute_rights:
         raise RouteException("invalidateRemoteSessions is not allowed in this document")
 
-    return model, cur_user, user_group, user_acc
+    return model, cur_user, user_group, user_acc, doc
 
 
 def undo_dist_right_actions(
@@ -590,10 +596,14 @@ def undo(
     par: GlobalParId | None = None,
     param: str | None = None,  # TODO: Use
 ) -> Response:
-    model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
+    model, cur_user, user_group, user_acc, doc = get_plugin_info(username, task_id, par)
     # No permissions to undo
     if not model.actions:
         return json_response({"distributionErrors": []})
+
+    log_user_select(
+        f"[{cur_user.name}] undo on {user_acc.name} in {doc.path} (param = {param})"
+    )
 
     groups = set(model.actions.addToGroups) | set(model.actions.removeFromGroups)
     if model.actions.changeGroup:
@@ -807,7 +817,7 @@ class NeedsVerifyReasons(Enum):
 
 @user_select_plugin.post("/needsVerify")
 def needs_verify(username: str, par: GlobalParId) -> Response:
-    model, cur_user, user_group, user_acc = get_plugin_info(username, None, par)
+    model, cur_user, user_group, user_acc, _ = get_plugin_info(username, None, par)
 
     if not model.actions:
         return json_response({"needsVerify": False, "reasons": []})
@@ -836,10 +846,14 @@ def apply(
     par: GlobalParId | None = None,
     param: str | None = None,  # TODO: Use
 ) -> Response:
-    model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
+    model, cur_user, user_group, user_acc, doc = get_plugin_info(username, task_id, par)
     # No permissions to apply, simply return
     if not model.actions:
         return ok_response()
+
+    log_user_select(
+        f"[{cur_user.name}] apply on {user_acc.name} in {doc.path} (param = {param})"
+    )
 
     all_groups = set(model.actions.addToGroups) | set(model.actions.removeFromGroups)
     if model.actions.changeGroup:

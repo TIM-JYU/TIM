@@ -13,16 +13,12 @@ from pathlib import Path
 
 from celery.schedules import crontab
 
-from timApp.user.special_group_names import TEACHERS_GROUPNAME
-from timApp.util.git_utils import get_latest_commit_timestamp, get_current_branch
-from timApp.document.translation.reversingtranslator import (
-    ReversingTranslationService,
-    REVERSE_LANG,
-)
 from timApp.document.translation.deepl import (
     DeeplTranslationService,
     DeeplProTranslationService,
 )
+from timApp.user.special_group_names import TEACHERS_GROUPNAME
+from timApp.util.git_utils import get_latest_commit_timestamp, get_current_branch
 
 # NOTE: If you are a different organization (other than JYU), please don't modify this file directly.
 # This avoids merge conflicts. Override the values with prodconfig.py instead.
@@ -321,6 +317,9 @@ IP_BLOCK_LOG_ONLY = False
 
 # The set of documents for which the right is inherited from its containing folder.
 INHERIT_FOLDER_RIGHTS_DOCS = {}
+
+LOG_USER_SELECT_ACTIONS = False
+"""Log any actions applied via UserSelect component."""
 
 # A list of OAuth2 applications that can authenticate with TIM
 # Refer to OAuth2Client class in timApp/auth/oauth2/models.py for documentation of each field
