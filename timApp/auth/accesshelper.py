@@ -10,7 +10,6 @@ from sqlalchemy import inspect
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.session.util import (
-    has_valid_session,
     SessionExpired,
     session_has_access,
 )
@@ -160,6 +159,20 @@ def check_inherited_right(
     return has_access
 
 
+def get_inherited_right_blocks(b: ItemOrBlock) -> list[Block]:
+    inherited_right_docs = current_app.config["INHERIT_FOLDER_RIGHTS_DOCS"]
+    if not inherited_right_docs:
+        return []
+    is_docinfo = isinstance(b, DocInfo)
+    if is_docinfo or (isinstance(b, Block) and b.type_id == BlockType.Document.value):
+        doc = b if is_docinfo else DocEntry.find_by_id(b.id)
+        if not doc:
+            return []
+        if doc.path_without_lang in inherited_right_docs:
+            return [b.parent.id]
+    return []
+
+
 def verify_view_access(
     b: ItemOrBlock,
     require=True,
@@ -264,15 +277,21 @@ def abort_if_not_access_and_required(
     if not session_has_access(block, user):
         raise SessionExpired()
 
+    block_ids = [block.id, *get_inherited_right_blocks(block)]
+
     if check_duration:
-        ba = BlockAccess.query.filter_by(
-            block_id=block.id,
-            type=access_type.value,
-            usergroup_id=get_current_user_group(),
-        ).first()
+        ba = (
+            BlockAccess.query.filter(BlockAccess.block_id.in_(block_ids))
+            .filter_by(
+                type=access_type.value,
+                usergroup_id=get_current_user_group(),
+            )
+            .first()
+        )
         if ba is None:
             ba_group: BlockAccess = (
-                BlockAccess.query.filter_by(block_id=block.id, type=access_type.value)
+                BlockAccess.query.filter(BlockAccess.block_id.in_(block_ids))
+                .filter_by(type=access_type.value)
                 .filter(
                     BlockAccess.usergroup_id.in_(
                         get_current_user_object()
