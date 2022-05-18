@@ -1,8 +1,7 @@
 """Routes related to email signup and login."""
 import hashlib
-import random
 import re
-import string
+import secrets
 
 from flask import current_app, Response
 from flask import flash
@@ -47,6 +46,8 @@ login_page = TypedBlueprint(
     __name__,
     url_prefix="",  # TODO: Better URL prefix.
 )
+
+unambiguous_characters = "ABCDEFGJKLMNPQRSTUVWXYZ23456789"
 
 
 def get_real_name(email: str) -> str:
@@ -259,9 +260,7 @@ def do_email_signup_or_password_reset(
     if only_password_reset and not current_app.config["PASSWORD_RESET_ENABLED"]:
         raise AccessDenied("PasswordResetDisabled")
 
-    password = "".join(
-        random.choice(string.ascii_uppercase + string.digits) for _ in range(6)
-    )
+    password = "".join(secrets.choice(unambiguous_characters) for _ in range(8))
 
     password_hash = create_password_hash(password)
     new_password = True
