@@ -9,7 +9,7 @@ import {
 import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import * as t from "io-ts";
-import {HttpClientModule, HttpParams} from "@angular/common/http";
+import {HttpClientModule} from "@angular/common/http";
 import {FormsModule, NgForm} from "@angular/forms";
 import {race, Subject, Subscription} from "rxjs";
 import {Observable} from "rxjs/internal/Observable";
@@ -26,6 +26,7 @@ import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
 import {
+    getUrlHttpParams,
     isMobileDevice,
     templateString,
     timeout,
@@ -430,10 +431,6 @@ export class UserSelectComponent extends AngularPluginBase<
         this.undoing = true;
         this.verifyUndo = false;
 
-        // Pass possible urlmacros
-        const params = new HttpParams({
-            fromString: window.location.search.replace("?", "&"),
-        });
         const result = await toPromise(
             this.http.post<{distributionErrors: string[]}>(
                 "/userSelect/undo",
@@ -442,7 +439,7 @@ export class UserSelectComponent extends AngularPluginBase<
                     par: this.getPar()!.par.getJsonForServer(),
                     param: this.searchParameter,
                 },
-                {params}
+                {params: getUrlHttpParams()}
             )
         );
 
@@ -553,10 +550,14 @@ export class UserSelectComponent extends AngularPluginBase<
             this.http.post<{
                 needsVerify: boolean;
                 reasons: (keyof INeedsVerifyReasons)[];
-            }>("/userSelect/needsVerify", {
-                username: this.selectedUser.user.name,
-                par: this.getPar()!.par.getJsonForServer(),
-            })
+            }>(
+                "/userSelect/needsVerify",
+                {
+                    username: this.selectedUser.user.name,
+                    par: this.getPar()!.par.getJsonForServer(),
+                },
+                {params: getUrlHttpParams()}
+            )
         );
 
         if (!res.ok) {
@@ -611,10 +612,6 @@ export class UserSelectComponent extends AngularPluginBase<
             return;
         }
 
-        // Pass possible urlmacros
-        const params = new HttpParams({
-            fromString: window.location.search.replace("?", "&"),
-        });
         const result = await toPromise(
             this.http.post<{distributionErrors: string[]}>(
                 "/userSelect/apply",
@@ -623,7 +620,7 @@ export class UserSelectComponent extends AngularPluginBase<
                     username: this.selectedUser.user.name,
                     param: this.searchParameter,
                 },
-                {params}
+                {params: getUrlHttpParams()}
             )
         );
 
