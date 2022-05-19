@@ -40,7 +40,8 @@ def write_safe(path: str, content: str, write_type: str = "w") -> bool:
     p = Path(path)
     if not is_safe_path(p):
         return False
-    with p.open(write_type, encoding="utf-8") as f:
+    encoding = "utf-8" if "b" not in write_type else None
+    with p.open(write_type, encoding=encoding) as f:
         f.write(content)
     return True
 
