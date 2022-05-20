@@ -300,7 +300,10 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
         
     `,
     encapsulation: ViewEncapsulation.None,
-    styleUrls: ["calendar.component.scss"],
+    styleUrls: [
+        "calendar.component.scss",
+        "../../../../../node_modules/angular-calendar/css/angular-calendar.css",
+    ],
     // templateUrl: "template.html",
 })
 export class CalendarComponent
