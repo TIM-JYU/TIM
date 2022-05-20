@@ -101,8 +101,8 @@
               "node_modules/angular-ui-grid/ui-grid.min.css",
               "node_modules/katex/dist/katex.min.css",
               "node_modules/mobile-drag-drop/default.css",
-              "node_modules/ngx-bootstrap/datepicker/bs-datepicker.css"
-
+              "node_modules/ngx-bootstrap/datepicker/bs-datepicker.css",
+              "node_modules/angular-calendar/css/angular-calendar.css"
             ],
             "scripts": [
             ],
