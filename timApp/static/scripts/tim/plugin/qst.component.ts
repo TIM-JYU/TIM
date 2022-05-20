@@ -35,7 +35,10 @@ import {AngularPluginBase} from "./angular-plugin-base.directive";
 const PluginMarkupFields = t.intersection([
     GenericPluginMarkup,
     AskedJsonJsonCodec,
-    t.partial({invalid: t.boolean, savedText: t.string}),
+    t.partial({
+        invalid: t.boolean,
+        savedText: t.string,
+    }),
     t.type({
         isTask: t.boolean,
     }),
@@ -59,6 +62,7 @@ const PluginFields = t.intersection([
             <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
             <tim-answer-sheet
                     [questiondata]="preview"
+                    [customHeader]="markup['customHeader']"
                     (onAnswerChange)="updateAnswer($event)">
             </tim-answer-sheet>
             <div class="csRunMenuArea">

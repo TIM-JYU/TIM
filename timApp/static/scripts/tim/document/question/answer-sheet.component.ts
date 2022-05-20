@@ -26,6 +26,7 @@ import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {PurifyModule} from "tim/util/purify.module";
+import {HTMLSanitizeModule} from "tim/util/htmlsanitize.module";
 
 /**
  * Directive for dynamic answer sheet. Sheet to answer lecture questions.
@@ -217,6 +218,11 @@ type MatrixElement = string | number;
             <h5 [innerHtml]="getHeader() | purify"></h5>
             <p *ngIf="userpoints != null && questionHasPoints()">Points received: {{ userpoints }}</p>
             <table class="table" [ngClass]="getTableClass()">
+                <colgroup *ngIf="processed.rows.length > 0">
+                    <col *ngIf="isMatrix()">
+                    <col *ngFor="let _ of processed.rows[0].columns">
+                </colgroup>
+                <thead *ngIf="customHeader" [innerHTML]="customHeader | htmlSanitize"></thead>
                 <tbody>
                 <tr *ngIf="hasHeaders()" class="answer-heading-row">
                     <th *ngIf="isMatrix()"></th>
@@ -270,6 +276,7 @@ type MatrixElement = string | number;
 export class AnswerSheetComponent implements OnChanges {
     private readonly element: JQLite;
     @Input() questiondata?: IPreviewParams;
+    @Input() customHeader?: string;
     json!: IAskedJsonJson; // TODO decide if undefined should be valid
     processed!: IProcessedHeaders; // TODO decide if undefined should be valid
     answerMatrix: MatrixElement[][] = [];
@@ -599,6 +606,7 @@ export class AnswerSheetComponent implements OnChanges {
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
+        HTMLSanitizeModule,
         PurifyModule,
     ],
     exports: [AnswerSheetComponent],
