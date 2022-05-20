@@ -215,6 +215,7 @@ const ShowFileAll = t.type({
                        #video
                        class="showVideo"
                        controls
+                       crossorigin="anonymous"
                        (loadedmetadata)="metadataloaded()"
                        (timeupdate)="timeupdate()"
                        [style.width.px]="width"
