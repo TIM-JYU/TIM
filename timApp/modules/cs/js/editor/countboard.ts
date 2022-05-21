@@ -9,8 +9,8 @@ interface ICountLimit {
     max?: number;
     text?: string;
     preventSave?: boolean;
-    tooManyWord?: string;
-    tooFewWord?: string;
+    tooManyText?: string;
+    tooFewText?: string;
     name?: string;
 }
 
@@ -92,7 +92,7 @@ export class CountBoardComponent {
         }
         const cType = limits.text ?? (limits.name ?? countType).toLowerCase();
         const tooFew =
-            limits.tooFewWord ??
+            limits.tooFewText ??
             (this.options_?.tooFewWord ?? $localize`Too few`) +
                 " " +
                 cType +
@@ -102,7 +102,7 @@ export class CountBoardComponent {
                 limits.min +
                 ".";
         const tooMany =
-            limits.tooManyWord ??
+            limits.tooManyText ??
             (this.options_?.tooManyWord ?? $localize`Too many`) +
                 " " +
                 cType +
