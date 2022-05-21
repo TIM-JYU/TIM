@@ -54,9 +54,11 @@ export class UserService {
         return genericglobals().locale;
     }
 
-    public getCurrentLanguage(): "fi" | "en" {
+    public getCurrentLanguage(): "fi" | "en" | "sv" {
         const loc = this.getCurrentLocale();
         if (loc === "fi") {
+            return loc;
+        } else if (loc === "sv") {
             return loc;
         }
         return "en";

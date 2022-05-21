@@ -222,6 +222,7 @@ def get_angularscripts(index_file: str, locale: str | None = None):
 
 KNOWN_LANGUAGES = [
     "fi",
+    "sv",
     "en-US",
 ]
 
@@ -375,6 +376,7 @@ def update_user_course_bookmarks():
 
 @app.get("/en")
 @app.get("/fi")
+@app.get("/sv")
 @app.get("/")
 def start_page():
     update_user_course_bookmarks()
