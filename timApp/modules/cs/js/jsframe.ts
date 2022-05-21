@@ -743,6 +743,7 @@ export class JsframeComponent
                 } else {
                     this.fullScreen = true;
                     document.body.classList.add("no-overflow"); // hide document scrollbar
+                    document.body.classList.add("fullscreen-frame"); // add info about current state for other styles
                     this.c();
                 }
             }
@@ -755,6 +756,7 @@ export class JsframeComponent
                 } else {
                     this.fullScreen = false;
                     document.body.classList.remove("no-overflow");
+                    document.body.classList.remove("fullscreen-frame");
                     this.c();
                 }
             }
