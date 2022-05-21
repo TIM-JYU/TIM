@@ -5752,6 +5752,78 @@
           <context context-type="linenumber">90</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5724363929304709833" datatype="html">
+        <source>lines</source>
+        <target state="translated">rivejä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">62</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1473635030596766447" datatype="html">
+        <source>words</source>
+        <target state="translated">sanoja</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">70</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="300084308343874513" datatype="html">
+        <source>chars</source>
+        <target state="translated">kirjaimia</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">77</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4669611499325588249" datatype="html">
+        <source>Too few</source>
+        <target state="translated">Liian vähän</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">95</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7792690009197919735" datatype="html">
+        <source>min:</source>
+        <target state="translated">minimi:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">99</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="412967389202098756" datatype="html">
+        <source>Too many</source>
+        <target state="translated">Liian paljon</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">105</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5599545427204775388" datatype="html">
+        <source>max:</source>
+        <target state="translated">maksimi:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">109</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7994802812720200611" datatype="html">
+        <source>Chars</source>
+        <target state="translated">Kirjaimia</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">146</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7570842650861337346" datatype="html">
+        <source>Words</source>
+        <target state="translated">Sanoja</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">147</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="499386805970351976" datatype="html">
         <source>Swedish</source>
         <target state="translated">ruotsi</target>

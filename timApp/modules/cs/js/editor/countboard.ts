@@ -8,6 +8,10 @@ interface ICountLimit {
     min?: number;
     max?: number;
     text?: string;
+    preventSave?: boolean;
+    tooManyWord?: string;
+    tooFewWord?: string;
+    name?: string;
 }
 
 interface ICountOptions {
@@ -23,9 +27,9 @@ interface ICountOptions {
     selector: "cs-count-board", // TODO: styling
     template: `
         <div *ngIf="options_" class="csPluginCountItems">
-            <span *ngIf="lines">Lines: <span>{{lines}}</span></span><br>
-            <span *ngIf="words">Words: <span>{{words}}</span></span><br>
-            <span *ngIf="chars">Chars: <span>{{chars}}</span></span>
+            <span *ngIf="nameLines">{{nameLines}}: <span>{{lines}}</span><br></span>
+            <span *ngIf="nameWords">{{nameWords}}: <span>{{words}}</span><br></span>
+            <span *ngIf="nameChars">{{nameChars}}: <span>{{chars}}</span></span>
         </div>
         <div *ngIf="countError" class="csPluginCountError">
             <p>{{countError}}</p>
@@ -39,6 +43,10 @@ export class CountBoardComponent {
     chars: number = 0;
     countError: string = "";
     preventSave: boolean = false;
+    nameChars: string = "";
+    nameWords: string = "";
+    nameLines: string = "";
+    space: string = "<br>";
 
     count(str: string) {
         if (!this.options_) {
@@ -48,21 +56,28 @@ export class CountBoardComponent {
         this.lines = countLines(str);
         this.words = countWords(str);
         this.countError = "";
-        this.countError += this.checkCountLimits(
-            this.options_.lines,
-            this.lines,
-            "lines"
-        );
-        this.countError += this.checkCountLimits(
-            this.options_.words,
-            this.words,
-            "words"
-        );
-        this.countError += this.checkCountLimits(
-            this.options_.chars,
-            this.chars,
-            "chars"
-        );
+        if (this.nameLines) {
+            this.countError += this.checkCountLimits(
+                this.options_.lines,
+                this.lines,
+                $localize`lines`
+            );
+        }
+
+        if (this.nameWords) {
+            this.countError += this.checkCountLimits(
+                this.options_.words,
+                this.words,
+                $localize`words`
+            );
+        }
+        if (this.nameChars) {
+            this.countError += this.checkCountLimits(
+                this.options_.chars,
+                this.chars,
+                $localize`chars`
+            );
+        }
         this.preventSave =
             !!this.options_?.preventSave && this.countError !== "";
     }
@@ -75,20 +90,62 @@ export class CountBoardComponent {
         if (!limits) {
             return "";
         }
-        const tooFew = this.options_?.tooFewWord ?? "Too few";
-        const tooMany = this.options_?.tooManyWord ?? "Too Many";
-        const cType = limits.text ?? countType;
+        const cType = limits.text ?? (limits.name ?? countType).toLowerCase();
+        const tooFew =
+            limits.tooFewWord ??
+            (this.options_?.tooFewWord ?? $localize`Too few`) +
+                " " +
+                cType +
+                ", " +
+                $localize`min:` +
+                " " +
+                limits.min +
+                ".";
+        const tooMany =
+            limits.tooManyWord ??
+            (this.options_?.tooManyWord ?? $localize`Too many`) +
+                " " +
+                cType +
+                ", " +
+                $localize`max:` +
+                " " +
+                limits.max +
+                ".";
         if (limits.min && count < limits.min) {
-            return " " + tooFew + " " + cType + ", min: " + limits.min + ".";
+            return " " + tooFew;
         }
         if (limits.max && count > limits.max) {
-            return " " + tooMany + " " + cType + ", max: " + limits.max + ".";
+            return " " + tooMany;
         }
         return "";
+    }
+
+    getName(limits: ICountLimit | undefined, name: string): string {
+        if (!limits) {
+            return "";
+        }
+        if (limits.show === false) {
+            return "";
+        }
+        if (limits.name) {
+            return limits.name;
+        }
+        if (limits.text) {
+            let s = limits.text;
+            s = s[0].toUpperCase() + s.slice(1);
+            return s;
+        }
+        return name;
     }
 
     @Input()
     set options(options: ICountOptions | undefined) {
         this.options_ = options;
+        if (!this.options_) {
+            return;
+        }
+        this.nameChars = this.getName(this.options_.chars, $localize`Chars`);
+        this.nameWords = this.getName(this.options_.words, $localize`Words`);
+        this.nameLines = this.getName(this.options_.lines, $localize`Lines`);
     }
 }

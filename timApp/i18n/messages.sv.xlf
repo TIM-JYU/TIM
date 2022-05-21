@@ -5649,6 +5649,85 @@
           <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
           <context context-type="linenumber">18</context>
         </context-group>
+      <trans-unit id="5724363929304709833" datatype="html">
+        <source>lines</source>
+        <target state="new">lines</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">62</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1473635030596766447" datatype="html">
+        <source>words</source>
+        <target state="new">words</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">70</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="300084308343874513" datatype="html">
+        <source>chars</source>
+        <target state="new">chars</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">77</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4669611499325588249" datatype="html">
+        <source>Too few</source>
+        <target state="new">Too few</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">95</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7792690009197919735" datatype="html">
+        <source>min:</source>
+        <target state="new">min:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">99</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="412967389202098756" datatype="html">
+        <source>Too many</source>
+        <target state="new">Too many</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">105</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5599545427204775388" datatype="html">
+        <source>max:</source>
+        <target state="new">max:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">109</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7994802812720200611" datatype="html">
+        <source>Chars</source>
+        <target state="new">Chars</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">146</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7570842650861337346" datatype="html">
+        <source>Words</source>
+        <target state="new">Words</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">147</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3845152859531369645" datatype="html">
+        <source>Lines</source>
+        <target state="new">Lines</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">148</context>
+        </context-group>
       </trans-unit>
     </body>
   </file>
