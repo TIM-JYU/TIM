@@ -370,7 +370,10 @@ export class MultisaveComponent
 
             let link = this.markup.jumplink;
             for (let i = 0; i < values.length; i++) {
-                link = link.replace("{" + i + "}", values[i] ?? "");
+                link = link.replace(
+                    "{" + i + "}",
+                    encodeURIComponent(values[i] ?? "")
+                );
             }
             const target = this.markup.jumptarget ?? "_self";
             window.open(link, target);
