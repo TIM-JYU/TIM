@@ -1,4 +1,5 @@
 """Server tests for TIM-calendar"""
+from timApp.plugin.calendar.calendar import initialize_db
 from timApp.tests.server.timroutetest import TimRouteTest
 
 
@@ -110,3 +111,71 @@ class CalendarTest(TimRouteTest):
             expect_status=200,
         )
         self.logout()
+
+
+class CalendarBookTest(TimRouteTest):
+    def test_booking(self):
+        initialize_db()
+        self.login_test2()
+        event_id = 1
+        self.post_event_to_book(event_id)
+
+        self.get(
+            f"/calendar/events",
+            expect_status=200,
+            expect_content=[
+                {
+                    "id": event_id,
+                    "title": "Bookattava",
+                    "start": "2023-05-18T07:20:00+00:00",
+                    "end": "2023-05-18T07:40:00+00:00",
+                    "meta": {
+                        "booker_groups": [],
+                        "description": "kerhon kokous",
+                        "enrollments": 0,
+                        "location": "kerhohuone",
+                        "maxSize": 2,
+                        "signup_before": "2023-05-18T07:20:00+00:00",
+                    },
+                }
+            ],
+        )
+        self.logout()
+        self.login_test1()
+        self.json_post(
+            f"/calendar/bookings",
+            {"event_id": event_id, "booker_msg": ""},
+            expect_status=200,
+        )
+
+        self.logout()
+        self.login_test2()
+        self.get(f"/calendar/events/{event_id}/bookers", expect_status=200)
+        self.delete(
+            f"calendar/events/{event_id}",
+            expect_status=200,
+        )
+        self.logout()
+
+    def post_event_to_book(self, event_id):
+        self.json_post(
+            f"/calendar/events",
+            {
+                "events": [
+                    {
+                        "id": event_id,
+                        "title": "Bookattava",
+                        "location": "kerhohuone",
+                        "description": "kerhon kokous",
+                        "start": "2023-05-18T07:20:00+00:00",
+                        "end": "2023-05-18T07:40:00+00:00",
+                        "signup_before": "2023-05-18T07:20:00+00:00",
+                        "booker_groups": [""],
+                        "setter_groups": [""],
+                        "event_groups": ["", ""],
+                        "max_size": 2,
+                    }
+                ]
+            },
+            False,
+        )
