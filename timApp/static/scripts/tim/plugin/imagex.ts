@@ -2,6 +2,7 @@ import deepmerge from "deepmerge";
 import * as t from "io-ts";
 import {
     ApplicationRef,
+    ChangeDetectorRef,
     Component,
     DoBootstrap,
     ElementRef,
@@ -1432,7 +1433,12 @@ export class ImageXComponent
         this.dt.drawDragTask();
     }
 
-    constructor(el: ElementRef, http: HttpClient, domSanitizer: DomSanitizer) {
+    constructor(
+        el: ElementRef,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private cdr: ChangeDetectorRef
+    ) {
         super(el, http, domSanitizer);
         this.muokattu = false;
         this.result = "";
@@ -1662,6 +1668,7 @@ export class ImageXComponent
         this.drawing.redrawAll();
         this.prevAnswer = this.getContent();
         this.updateListeners();
+        this.cdr.detectChanges();
     }
 
     updateListeners() {
