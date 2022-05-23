@@ -461,16 +461,10 @@ class DragTask {
         this.lines = [];
         const objects = this.drawObjects;
         for (const d of answers) {
-            for (const o of objects) {
-                if (o.id === d.id) {
-                    const line = new Line(
-                        "green",
-                        2,
-                        o,
-                        tupleToCoords(d.position)
-                    );
-                    this.lines.push(line);
-                }
+            const o = objects.find((obj) => obj.id === d.id);
+            if (o) {
+                const line = new Line("green", 2, o, tupleToCoords(d.position));
+                this.lines.push(line);
             }
         }
         this.drawDragTask();
@@ -1582,11 +1576,10 @@ export class ImageXComponent
             const userDrags = this.attrsall.state.userAnswer.drags;
             if (userDrags && userDrags.length > 0) {
                 for (const o of objects) {
-                    for (const ud of userDrags) {
-                        if (o.did === ud.did) {
-                            o.x = ud.position[0];
-                            o.y = ud.position[1];
-                        }
+                    const ud = userDrags.find((u) => u.did === o.did);
+                    if (ud) {
+                        o.x = ud.position[0];
+                        o.y = ud.position[1];
                     }
                 }
             }
@@ -1657,11 +1650,12 @@ export class ImageXComponent
     resetChanges() {
         this.drawing.setDrawData([...this.previousDrawing]);
         for (const o of this.dt.drawObjects) {
-            for (const ud of this.previousDrags) {
-                if (o.did === ud.did) {
-                    o.x = ud.x;
-                    o.y = ud.y;
-                }
+            const prevPos = this.previousDrags.find(
+                (prev) => prev.did == o.did
+            );
+            if (prevPos) {
+                o.x = prevPos.x;
+                o.y = prevPos.y;
             }
         }
         this.dt.drawDragTask();
