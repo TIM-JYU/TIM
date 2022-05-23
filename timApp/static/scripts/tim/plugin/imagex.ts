@@ -1782,8 +1782,6 @@ export class ImageXComponent
         // Draw the exercise so that reset appears instantly.
         this.dt.drawDragTask();
         this.drawing.redrawAll();
-        this.prevAnswer = this.getContent();
-        this.updateListeners();
     }
 
     svgImageSnippet() {
