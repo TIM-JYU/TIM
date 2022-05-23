@@ -100,6 +100,10 @@ function time02String(time: number) {
 
 const youtubeDomains = new Set(["www.youtube.com", "youtube.com", "youtu.be"]);
 const moniviestinDomains = new Set(["m3.jyu.fi", "moniviestin.jyu.fi"]);
+// If a user provides a direct download link, extract the video ID to generate the correct iframe
+const moniviestinIdConverters = new Map<string, RegExp>([
+    ["m3static.cc.jyu.fi", /m3videos\/3\/jyumv\/([^\/]+)/],
+]);
 
 const SubtitlesMarkup = t.type({
     name: withDefault(t.string, ""),
@@ -115,6 +119,7 @@ const ShowFileMarkup = t.intersection([
         hidetext: nullable(t.string),
         iframe: t.boolean,
         iframeopts: nullable(t.string),
+        crossOrigin: nullable(t.string),
         start: t.union([t.number, t.string]),
         videoname: nullable(t.string),
         width: t.number,
@@ -220,6 +225,7 @@ const ShowFileAll = t.type({
                        [style.width.px]="width"
                        [style.height.px]="height"
                        [src]="videosettings.src"
+                       [crossOrigin]="videosettings.crossOrigin"
                        [autoplay]="markup.autoplay"
                 >
                         <track *ngFor="let subtitle of markup.subtitles" [src]="subtitle.file" [label]="subtitle.name" />    
@@ -310,6 +316,7 @@ export class VideoComponent extends AngularPluginBase<
                 this.markup.iframe !== undefined,
                 youtubeDomains.has(url.hostname),
                 moniviestinDomains.has(url.hostname),
+                moniviestinIdConverters.has(url.hostname),
             ];
             return conditions.includes(true);
         } catch {
@@ -349,7 +356,7 @@ export class VideoComponent extends AngularPluginBase<
     private vctrl?: ViewCtrl;
     iframesettings?: Iframesettings;
     isPdf = false;
-    videosettings?: {src: string};
+    videosettings?: {src: string; crossOrigin: string | null};
     playbackRateString = "";
     advVideo: boolean = false;
 
@@ -563,6 +570,7 @@ export class VideoComponent extends AngularPluginBase<
         this.addEventListeners();
 
         this.span = this.limits;
+        let corsOptions: string | null = null;
         const srcUrl = new URL(this.markup.file, location.origin);
         if (moniviestinDomains.has(srcUrl.hostname)) {
             if (this.start) {
@@ -575,6 +583,9 @@ export class VideoComponent extends AngularPluginBase<
             if (this.end) {
                 srcUrl.searchParams.set("end", this.end.toString());
             }
+        }
+        if (srcUrl.hostname.includes("courses.it.jyu.fi")) {
+            corsOptions = "anonymous";
         }
         if (this.iframe) {
             if (
@@ -592,6 +603,30 @@ export class VideoComponent extends AngularPluginBase<
                 }
                 srcUrl.hostname = "www.youtube.com";
                 srcUrl.pathname = `/embed/${id}`;
+            }
+            const moniviestinConvertPattern = moniviestinIdConverters.get(
+                srcUrl.hostname
+            );
+            if (moniviestinConvertPattern) {
+                const data = moniviestinConvertPattern.exec(srcUrl.pathname);
+                if (data) {
+                    srcUrl.hostname = "m3.jyu.fi";
+                    srcUrl.pathname = "/jyumv/embed";
+                    srcUrl.search = "";
+                    srcUrl.searchParams.append("uid", data[1]);
+
+                    // Special case: some users might not have given width or height
+                    // Before with <video>, that would scale automatically
+                    // With Moniviestin iframe, we just guess based on 16:9 aspect ratio
+                    if (this.width !== undefined && this.height === undefined) {
+                        this.height = (this.width * 9) / 16;
+                    } else if (
+                        this.height !== undefined &&
+                        this.width === undefined
+                    ) {
+                        this.width = (this.height * 16) / 9;
+                    }
+                }
             }
             const src = srcUrl.toString();
             this.isPdf =
@@ -624,6 +659,7 @@ export class VideoComponent extends AngularPluginBase<
             }
             this.videosettings = {
                 src: srcUrl.toString(),
+                crossOrigin: this.markup.crossOrigin ?? corsOptions ?? null,
             };
         }
         this.videoOn = true;
