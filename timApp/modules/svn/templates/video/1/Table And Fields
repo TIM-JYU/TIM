@@ -103,8 +103,8 @@ program: |!!
     let vp = reviewCount * compensation
     tools.setDouble("Vp", vp);
 
-    let velpPoints = tools.getVelpTaskPoints("TASK");
-    let teacherCorrection = tools.getDouble("Ope", -100);
+    let velpPoints = tools.getVelpTaskPoints("TASK"); // The average of student's scores
+    let teacherCorrection = tools.getDouble("Ope", -100); // Correction made by teacher
     if (teacherCorrection != -100) {
         tools.setDouble("Pisteet", ope);
     }
