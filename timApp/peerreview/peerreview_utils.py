@@ -203,6 +203,9 @@ def is_peerreview_enabled(doc: DocInfo) -> bool:
 
 
 def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
+    """Get peer-reviewers of current document from the database.
+    :param doc: Document containing reviewable answers.
+    """
     return PeerReview.query.filter_by(
         block_id=doc.id,
     ).all()
@@ -215,10 +218,20 @@ def change_peerreviewers_for_user(
     old_reviewers: list[int],
     new_reviewers: list[int],
 ) -> bool:
+    """Change user reviewers in one task.
+
+    :param doc: Document containing reviewable answers.
+    :param task: task name.
+    :param reviewable: User ID for the review target user.
+    :param old_reviewers: List of old reviewers IDs
+    :param new_reviewers: List of new reviewers IDs
+    :param reviewed: Boolean indicating if review has been done.
+    """
+
     for i in range(0, len(new_reviewers)):
         try:
             if reviewable == new_reviewers[i]:
-                raise Exception("Same reviewer and reviewable")
+                continue
             else:
                 updated_user = PeerReview.query.filter_by(
                     block_id=doc.id,

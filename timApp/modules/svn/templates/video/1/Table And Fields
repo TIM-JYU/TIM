@@ -41,6 +41,10 @@ fields:
 {% endfor %}
  - TASK_Riita=Riita
  - TASK_Riitauta=Riitauta
+lockedFields:
+{% for i in range(1,arvosteltavia+1) %}
+ - P%%i%%
+{% endfor %}
 header: Demotaulukko
 minWidth: 3em
 singleLine: true
@@ -88,23 +92,23 @@ preprogram: |!!
 !!
 program: |!!
 
-    let hyvitys = 1; // Arvioinnista saatu hyvityspiste
-    let value = 6; // Suurin sallittu ero pisteiden välillä
+    let compensation = 1; // Compensation from peer-review
+    let maxDiff = 6; // The maximum difference allowed between the points
 
-    let arviotLkm = tools.getReviewCount("TASK"); // Opiskelijan tekemien arvioiden lkm
-    let vp = arviotLkm * hyvitys
+    let reviewCount = tools.getVelpReviewCount("TASK");
+    let vp = reviewCount * compensation
     tools.setDouble("Vp", vp);
 
-    let pisteet = tools.getTaskPoints("TASK"); // Keskiarvo vertaisarviointien pistemääristä
-    let ope = tools.getDouble("Ope", -100); //Opettajan tekemä korjaus pisteytykseen
-    if (ope != -100) {
+    let velpPoints = tools.getVelpTaskPoints("TASK"); // The average of student's scores
+    let teacherCorrection = tools.getDouble("Ope", -100); // Correction made by teacher
+    if (teacherCorrection != -100) {
         tools.setDouble("Pisteet", ope);
     }
     else {
-        tools.setString("Pisteet", pisteet);
+        tools.setString("Pisteet", velpPoints);
     }
 
-    let VpOpe = tools.getDouble("VpOpe", -100); //Opettajan tekemä korjaus pisteytykseen
+    let VpOpe = tools.getDouble("VpOpe", -100);
     if (VpOpe != -100) {
         tools.setDouble("Vp", VpOpe);
     }
@@ -112,11 +116,11 @@ program: |!!
         tools.setString("Vp", vp);
     }
 
-    pointsArray = [];
-    arvioinnit = tools.getReviews("TASK", gtools.users);
-    for (let i =1; i <= arvioinnit.length; i++) {
-        tools.setString("TASK_Arvioija_${i}"+i, arvioinnit[i-1].name);
-        points = arvioinnit[i-1].points;
+    let pointsArray = [];
+    let reviews = tools.getReviews("TASK", gtools.users);
+    for (let i =1; i <= reviews.length; i++) {
+        tools.setString("TASK_Arvioija_${i}"+i, reviews[i-1].name);
+        points = reviews[i-1].points;
         totalPoints = 0;
         for (let j=0; j<points.length; j++) {
             totalPoints += points[j];
@@ -128,7 +132,7 @@ program: |!!
         max = Math.max(...pointsArray);
         min = Math.min(...pointsArray);
         delta = max - min;
-        if (delta >= value && pointsArray.length > 1 ) {
+        if (delta >= maxDiff && pointsArray.length > 1 ) {
             tools.setDouble("TASK_Riita", delta);
             tools.setString("TASK_Riita.styles", '{"backgroundColor": "red"}');
         }
