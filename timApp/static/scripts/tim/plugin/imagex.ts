@@ -33,6 +33,7 @@ import {
 } from "../util/utils";
 import {editorChangeValue} from "../editor/editorScope";
 import {
+    ChangeType,
     ITimComponent,
     IVelpableComponent,
     ViewCtrl,
@@ -196,12 +197,10 @@ class DragTask {
                 (event) => {
                     const c = String.fromCharCode(event.keyCode);
                     if (event.keyCode === 26) {
-                        this.drawing.undo();
+                        this.imgx.undo();
                     }
                     if (c === "c") {
-                        this.drawing.resetDrawing();
-                        this.drawDragTask();
-                        this.drawing.redrawAll();
+                        this.imgx.resetExercise();
                     }
                     if (c === "r") {
                         this.setColor("#f00");
@@ -455,6 +454,7 @@ class DragTask {
             this.mouseDown = false;
             this.drawing.upEvent(posToRelative(this.canvas, p));
         }
+        this.imgx.updateListeners();
     }
 
     addRightAnswers(answers: RightAnswerT[]) {
@@ -1291,6 +1291,9 @@ interface IAnswerResponse {
                 &nbsp;&nbsp;<a
                                (click)="resetExercise()">{{resetText}}</a>
                     </span>
+                &nbsp;
+                <a href="" *ngIf="undoButton && isUnSaved() && undoButton" title="{{undoTitle}}"
+                    (click)="tryResetChanges($event);">{{undoButton}}</a> 
                 <span *ngIf="muokattu" class="initCode">
                 &nbsp;&nbsp;<a
                         href="" (click)="initCode()">{{resetText}}</a>
@@ -1407,8 +1410,11 @@ export class ImageXComponent
     };
     // public color = "";
     public drawing!: Drawing;
+    private previousDrawing: DrawItem[] = [];
+
     public coords = "";
     public drags: DragObject[] = [];
+    private previousDrags: (IPoint & {did: string})[] = [];
     public userHasAnswered = false;
 
     public muokattu: boolean;
@@ -1610,6 +1616,12 @@ export class ImageXComponent
         this.drawing.redrawAll();
 
         this.previewColor = globalPreviewColor;
+        this.previousDrags = this.drags.map((drag) => ({
+            did: drag.did,
+            x: drag.x,
+            y: drag.y,
+        }));
+        this.previousDrawing = [...this.drawing.getDrawing()];
         this.prevAnswer = this.getContent();
         this.init = true;
     }
@@ -1639,6 +1651,38 @@ export class ImageXComponent
         this.drawing.undo();
         this.dt.drawDragTask();
         this.drawing.redrawAll();
+        this.updateListeners();
+    }
+
+    resetChanges() {
+        this.drawing.setDrawData([...this.previousDrawing]);
+        for (const o of this.dt.drawObjects) {
+            for (const ud of this.previousDrags) {
+                if (o.did === ud.did) {
+                    o.x = ud.x;
+                    o.y = ud.y;
+                }
+            }
+        }
+        this.dt.drawDragTask();
+        this.drawing.redrawAll();
+        this.prevAnswer = this.getContent();
+        this.updateListeners();
+    }
+
+    updateListeners() {
+        if (!this.vctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        this.vctrl.informChangeListeners(
+            taskId,
+            this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved,
+            this.attrsall.markup.tag ? this.attrsall.markup.tag : undefined
+        );
     }
 
     lineMode(): boolean {
@@ -1739,6 +1783,7 @@ export class ImageXComponent
         this.dt.drawDragTask();
         this.drawing.redrawAll();
         this.prevAnswer = this.getContent();
+        this.updateListeners();
     }
 
     svgImageSnippet() {
@@ -1805,7 +1850,14 @@ export class ImageXComponent
             this.userHasAnswered = true;
             this.replyImage = data.web["-replyImage"];
             this.replyHTML = data.web["-replyHTML"];
+            this.previousDrags = this.drags.map((drag) => ({
+                did: drag.did,
+                x: drag.x,
+                y: drag.y,
+            }));
+            this.previousDrawing = [...this.drawing.getDrawing()];
             this.prevAnswer = this.getContent();
+            this.updateListeners();
             return {saved: true, message: undefined};
         } else {
             this.error = "Ikuinen silmukka tai jokin muu vika?";
@@ -1867,6 +1919,9 @@ export class ImageXComponent
     }
 
     isUnSaved(): boolean {
+        if (!this.init) {
+            return false;
+        }
         return this.getContent() !== this.prevAnswer;
     }
 }
