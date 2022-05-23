@@ -1857,9 +1857,11 @@ export class ImageXComponent
             this.previousDrawing = [...this.drawing.getDrawing()];
             this.prevAnswer = this.getContent();
             this.updateListeners();
+            this.cdr.detectChanges();
             return {saved: true, message: undefined};
         } else {
             this.error = "Ikuinen silmukka tai jokin muu vika?";
+            this.cdr.detectChanges();
             return {saved: false, message: this.error};
         }
     }
