@@ -105,7 +105,7 @@ const multisaveAll = t.intersection([
     </div> <!-- unsaved fields -->
     <div *ngIf="!livefeed || !allSaved()">
     <button class="timButton"
-            [disabled]="(markup.disableUnchanged && listener && allSaved())"
+            [disabled]="(disableUnchanged && listener && allSaved())"
             *ngIf="buttonText() && !markup.destCourse"
             (click)="save()">
         {{buttonText()}}

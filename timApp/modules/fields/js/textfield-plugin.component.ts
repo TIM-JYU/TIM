@@ -222,10 +222,6 @@ export class TextfieldPluginComponent
         return this.markup.downloadButtonFile ?? "file.txt";
     }
 
-    get disableUnchanged() {
-        return this.markup.disableUnchanged;
-    }
-
     get placeholder() {
         return this.markup.inputplaceholder ?? "";
     }
