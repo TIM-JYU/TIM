@@ -43,36 +43,24 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3353122254290728761" datatype="html">
-        <source>Uploading... <x id="PH" equiv-text="sizeString(
-                                            event.loaded
-                                        )"/> / <x id="PH_1" equiv-text="total"/> (<x id="PH_2" equiv-text="percentage"/> %)</source>
-        <target state="new">Uploading... <x id="PH" equiv-text="sizeString(
-                                            event.loaded
-                                        )"/> / <x id="PH_1" equiv-text="total"/> (<x id="PH_2" equiv-text="percentage"/> %)</target>
+        <source>Uploading... <x id="PH" equiv-text="sizeString(                                             event.loaded                                         )"/> / <x id="PH_1" equiv-text="total"/> (<x id="PH_2" equiv-text="percentage"/> %)</source>
+        <target state="new">Uploading... <x id="PH" equiv-text="sizeString(                                             event.loaded                                         )"/> / <x id="PH_1" equiv-text="total"/> (<x id="PH_2" equiv-text="percentage"/> %)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">241,243</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3754878083775157899" datatype="html">
-        <source>Uploaded <x id="PH" equiv-text="file.name"/> at <x id="PH_1" equiv-text="timeString()"/>. <x id="PH_2" equiv-text="this.multiple
-                                                    ? this.stem ?? &quot;&quot;
-                                                    : &quot;&quot;"/></source>
-        <target state="new">Uploaded <x id="PH" equiv-text="file.name"/> at <x id="PH_1" equiv-text="timeString()"/>. <x id="PH_2" equiv-text="this.multiple
-                                                    ? this.stem ?? &quot;&quot;
-                                                    : &quot;&quot;"/></target>
+        <source>Uploaded <x id="PH" equiv-text="file.name"/> at <x id="PH_1" equiv-text="timeString()"/>. <x id="PH_2" equiv-text="this.multiple                                                     ? this.stem ?? &quot;&quot;                                                     : &quot;&quot;"/></source>
+        <target state="new">Uploaded <x id="PH" equiv-text="file.name"/> at <x id="PH_1" equiv-text="timeString()"/>. <x id="PH_2" equiv-text="this.multiple                                                     ? this.stem ?? &quot;&quot;                                                     : &quot;&quot;"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">250,256</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2831208374909602436" datatype="html">
-        <source>Uploaded <x id="PH" equiv-text="file.name"/> as <x id="PH_1" equiv-text="mapping.path"/> at <x id="PH_2" equiv-text="timeString()"/>. <x id="PH_3" equiv-text="this.multiple
-                                                    ? this.stem ?? &quot;&quot;
-                                                    : &quot;&quot;"/></source>
-        <target state="new">Uploaded <x id="PH" equiv-text="file.name"/> as <x id="PH_1" equiv-text="mapping.path"/> at <x id="PH_2" equiv-text="timeString()"/>. <x id="PH_3" equiv-text="this.multiple
-                                                    ? this.stem ?? &quot;&quot;
-                                                    : &quot;&quot;"/></target>
+        <source>Uploaded <x id="PH" equiv-text="file.name"/> as <x id="PH_1" equiv-text="mapping.path"/> at <x id="PH_2" equiv-text="timeString()"/>. <x id="PH_3" equiv-text="this.multiple                                                     ? this.stem ?? &quot;&quot;                                                     : &quot;&quot;"/></source>
+        <target state="new">Uploaded <x id="PH" equiv-text="file.name"/> as <x id="PH_1" equiv-text="mapping.path"/> at <x id="PH_2" equiv-text="timeString()"/>. <x id="PH_3" equiv-text="this.multiple                                                     ? this.stem ?? &quot;&quot;                                                     : &quot;&quot;"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">260,268</context>
@@ -87,12 +75,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5108197608757432527" datatype="html">
-        <source>Maximum file size is <x id="PH" equiv-text="sizeString(
-                                maxSize
-                            )"/></source>
-        <target state="new">Maximum file size is <x id="PH" equiv-text="sizeString(
-                                maxSize
-                            )"/></target>
+        <source>Maximum file size is <x id="PH" equiv-text="sizeString(                                 maxSize                             )"/></source>
+        <target state="new">Maximum file size is <x id="PH" equiv-text="sizeString(                                 maxSize                             )"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">309,311</context>
@@ -155,16 +139,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3472580164795390907" datatype="html">
-        <source><x id="PH" equiv-text="file.name"/> exceeds the maximum <x id="PH_1" equiv-text="sizeString(
-                            maxSize
-                        )"/> size limit set for the following files: <x id="PH_2" equiv-text="this.files[
-                            index
-                        ].paths.join(&quot;, &quot;)"/></source>
-        <target state="new"><x id="PH" equiv-text="file.name"/> exceeds the maximum <x id="PH_1" equiv-text="sizeString(
-                            maxSize
-                        )"/> size limit set for the following files: <x id="PH_2" equiv-text="this.files[
-                            index
-                        ].paths.join(&quot;, &quot;)"/></target>
+        <source><x id="PH" equiv-text="file.name"/> exceeds the maximum <x id="PH_1" equiv-text="sizeString(                             maxSize                         )"/> size limit set for the following files: <x id="PH_2" equiv-text="this.files[                             index                         ].paths.join(&quot;, &quot;)"/></source>
+        <target state="new"><x id="PH" equiv-text="file.name"/> exceeds the maximum <x id="PH_1" equiv-text="sizeString(                             maxSize                         )"/> size limit set for the following files: <x id="PH_2" equiv-text="this.files[                             index                         ].paths.join(&quot;, &quot;)"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/util/file-select.ts</context>
           <context context-type="linenumber">586,590</context>
@@ -723,12 +699,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4577528096804984395" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot;
-                               (change)=&quot;fetchFunctions()&quot;
-                               [(ngModel)]=&quot;showAllUsers&quot;&gt;"/> Show functions from all users </source>
-        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot;
-                               (change)=&quot;fetchFunctions()&quot;
-                               [(ngModel)]=&quot;showAllUsers&quot;&gt;"/> Show functions from all users </target>
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot;                                (change)=&quot;fetchFunctions()&quot;                                [(ngModel)]=&quot;showAllUsers&quot;>"/> Show functions from all users </source>
+        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot;                                (change)=&quot;fetchFunctions()&quot;                                [(ngModel)]=&quot;showAllUsers&quot;>"/> Show functions from all users </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/document/scheduling/schedule-dialog.component.ts</context>
           <context context-type="linenumber">84,87</context>
@@ -1039,16 +1011,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5297511590172009633" datatype="html">
-        <source>Examples <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup *ngIf=&quot;notFinnish()&quot;&gt;"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup&gt;"/></source>
-        <target state="new">Examples <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup *ngIf=&quot;notFinnish()&quot;&gt;"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup&gt;"/></target>
+        <source>Examples <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup *ngIf=&quot;notFinnish()&quot;>"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/></source>
+        <target state="new">Examples <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup *ngIf=&quot;notFinnish()&quot;>"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
           <context context-type="linenumber">93</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2135704915672195111" datatype="html">
-        <source>TIM&apos;s possibilities</source>
-        <target state="new">TIM&apos;s possibilities</target>
+        <source>TIM's possibilities</source>
+        <target state="new">TIM's possibilities</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
           <context context-type="linenumber">95</context>
@@ -1071,8 +1043,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3673091046572661203" datatype="html">
-        <source><x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup&gt;"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup&gt;"/> in Finnish </source>
-        <target state="new"><x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup&gt;"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup&gt;"/> in Finnish </target>
+        <source><x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup>"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/> in Finnish </source>
+        <target state="new"><x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup>"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/> in Finnish </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
           <context context-type="linenumber">105,106</context>
@@ -1183,12 +1155,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4817865548432760172" datatype="html">
-        <source> You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }"/> in <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;
-                              [displayUnits]=&quot;[&apos;y&apos;, &apos;mo&apos;, &apos;w&apos;, &apos;d&apos;, &apos;h&apos;, &apos;m&apos;, &apos;s&apos;]&quot;
-                              (onFinish)=&quot;this.countDown = false&quot;&gt;"/><x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown&gt;"/>. </source>
-        <target state="new"> You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }"/> in <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;
-                              [displayUnits]=&quot;[&apos;y&apos;, &apos;mo&apos;, &apos;w&apos;, &apos;d&apos;, &apos;h&apos;, &apos;m&apos;, &apos;s&apos;]&quot;
-                              (onFinish)=&quot;this.countDown = false&quot;&gt;"/><x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown&gt;"/>. </target>
+        <source> You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }"/> in <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;                               [displayUnits]=&quot;['y', 'mo', 'w', 'd', 'h', 'm', 's']&quot;                               (onFinish)=&quot;this.countDown = false&quot;>"/><x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown>"/>. </source>
+        <target state="new"> You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }"/> in <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;                               [displayUnits]=&quot;['y', 'mo', 'w', 'd', 'h', 'm', 's']&quot;                               (onFinish)=&quot;this.countDown = false&quot;>"/><x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
           <context context-type="linenumber">9,14</context>
@@ -1203,8 +1171,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8367583638953157691" datatype="html">
-        <source> You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true { folder } false { document } }"/> now. <x id="START_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;tim-goto-link href=&quot;&quot; [maxWait]=&quot;waitOffset&quot; [autoOpen]=&quot;true&quot;&gt;"/>Refresh the page<x id="CLOSE_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;/tim-goto-link&gt;"/></source>
-        <target state="new"> You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true { folder } false { document } }"/> now. <x id="START_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;tim-goto-link href=&quot;&quot; [maxWait]=&quot;waitOffset&quot; [autoOpen]=&quot;true&quot;&gt;"/>Refresh the page<x id="CLOSE_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;/tim-goto-link&gt;"/></target>
+        <source> You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true { folder } false { document } }"/> now. <x id="START_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;tim-goto-link href=&quot;&quot; [maxWait]=&quot;waitOffset&quot; [autoOpen]=&quot;true&quot;>"/>Refresh the page<x id="CLOSE_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;/tim-goto-link>"/></source>
+        <target state="new"> You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true { folder } false { document } }"/> now. <x id="START_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;tim-goto-link href=&quot;&quot; [maxWait]=&quot;waitOffset&quot; [autoOpen]=&quot;true&quot;>"/>Refresh the page<x id="CLOSE_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;/tim-goto-link>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
           <context context-type="linenumber">15,17</context>
@@ -1919,8 +1887,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2142462720777190527" datatype="html">
-        <source>Loading list&apos;s members failed: <x id="PH" equiv-text="result2.result.error.error"/></source>
-        <target state="new">Loading list&apos;s members failed: <x id="PH" equiv-text="result2.result.error.error"/></target>
+        <source>Loading list's members failed: <x id="PH" equiv-text="result2.result.error.error"/></source>
+        <target state="new">Loading list's members failed: <x id="PH" equiv-text="result2.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">778</context>
@@ -2107,8 +2075,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2729951384988499686" datatype="html">
-        <source>Recipients will see each others&apos; addresses</source>
-        <target state="new">Recipients will see each others&apos; addresses</target>
+        <source>Recipients will see each others' addresses</source>
+        <target state="new">Recipients will see each others' addresses</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
           <context context-type="linenumber">86</context>
@@ -2187,8 +2155,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2684985170850179444" datatype="html">
-        <source>Message will persist on user&apos;s screen until they mark it as read</source>
-        <target state="new">Message will persist on user&apos;s screen until they mark it as read</target>
+        <source>Message will persist on user's screen until they mark it as read</source>
+        <target state="new">Message will persist on user's screen until they mark it as read</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
           <context context-type="linenumber">135</context>
@@ -2355,8 +2323,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1092513435408623514" datatype="html">
-        <source> Read receipt can be cancelled in <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{message.doc_path}}&quot;&gt;"/>the message document<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></source>
-        <target state="new"> Read receipt can be cancelled in <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{message.doc_path}}&quot;&gt;"/>the message document<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></target>
+        <source> Read receipt can be cancelled in <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{message.doc_path}}&quot;>"/>the message document<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
+        <target state="new"> Read receipt can be cancelled in <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{message.doc_path}}&quot;>"/>the message document<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message.component.ts</context>
           <context context-type="linenumber">66,67</context>
@@ -2387,8 +2355,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6922195937313529911" datatype="html">
-        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Loading times can be improved by setting static column widths.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Copy the below settings under <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/>dataView<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/> configuration:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></source>
-        <target state="new"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Loading times can be improved by setting static column widths.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Copy the below settings under <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/>dataView<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/> configuration:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></target>
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Loading times can be improved by setting static column widths.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Copy the below settings under <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>dataView<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> configuration:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="new"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Loading times can be improved by setting static column widths.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Copy the below settings under <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>dataView<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> configuration:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/dataview/copy-table-width-dialog.component.ts</context>
           <context context-type="linenumber">17,18</context>
@@ -2411,16 +2379,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="7466722129747967831" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Column size computation took <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/> seconds.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> You can speed up loading by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event)&quot;&gt;"/>setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </source>
-        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Column size computation took <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/> seconds.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> You can speed up loading by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event)&quot;&gt;"/>setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Column size computation took <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/> seconds.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> You can speed up loading by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event)&quot;>"/>setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </source>
+        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Column size computation took <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/> seconds.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> You can speed up loading by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event)&quot;>"/>setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/dataview/data-view.component.ts</context>
           <context context-type="linenumber">171,174</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3372236332154985924" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>The column count has changed since the last time.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Remove this warning by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event, true)&quot;&gt;"/> setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </source>
-        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>The column count has changed since the last time.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Remove this warning by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event, true)&quot;&gt;"/> setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>The column count has changed since the last time.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Remove this warning by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event, true)&quot;>"/> setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </source>
+        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>The column count has changed since the last time.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Remove this warning by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event, true)&quot;>"/> setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/dataview/data-view.component.ts</context>
           <context context-type="linenumber">178,180</context>
@@ -2467,8 +2435,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2148669647566543747" datatype="html">
-        <source>Loading images (<x id="INTERPOLATION" equiv-text="{{loadedImages}}"/>/<x id="INTERPOLATION_1" equiv-text="{{bgSources.length}}"/>) <x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;tim-loading&gt;"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;/tim-loading&gt;"/></source>
-        <target state="new">Loading images (<x id="INTERPOLATION" equiv-text="{{loadedImages}}"/>/<x id="INTERPOLATION_1" equiv-text="{{bgSources.length}}"/>) <x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;tim-loading&gt;"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;/tim-loading&gt;"/></target>
+        <source>Loading images (<x id="INTERPOLATION" equiv-text="{{loadedImages}}"/>/<x id="INTERPOLATION_1" equiv-text="{{bgSources.length}}"/>) <x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;tim-loading>"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;/tim-loading>"/></source>
+        <target state="new">Loading images (<x id="INTERPOLATION" equiv-text="{{loadedImages}}"/>/<x id="INTERPOLATION_1" equiv-text="{{bgSources.length}}"/>) <x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;tim-loading>"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;/tim-loading>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
           <context context-type="linenumber">938,939</context>
@@ -2659,8 +2627,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1550164164596518424" datatype="html">
-        <source>User&apos;s name</source>
-        <target state="new">User&apos;s name</target>
+        <source>User's name</source>
+        <target state="new">User's name</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/tableForm.ts</context>
           <context context-type="linenumber">890</context>
@@ -2819,24 +2787,24 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5141645080814386241" datatype="html">
-        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> There were problems while undoing. Someone might have edited the permissions at the same time as you. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>You can reapply permissions or fix them manually.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Detailed error messages:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></source>
-        <target state="new"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/> There were problems while undoing. Someone might have edited the permissions at the same time as you. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>You can reapply permissions or fix them manually.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Detailed error messages:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/></target>
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> There were problems while undoing. Someone might have edited the permissions at the same time as you. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>You can reapply permissions or fix them manually.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Detailed error messages:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="new"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> There were problems while undoing. Someone might have edited the permissions at the same time as you. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>You can reapply permissions or fix them manually.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Detailed error messages:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">286,291</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4128190404321529743" datatype="html">
-        <source><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>Show details</source>
-        <target state="new"><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/>Show details</target>
+        <source><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>Show details</source>
+        <target state="new"><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>Show details</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">294,295</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7272675779595492580" datatype="html">
-        <source><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/><x id="INTERPOLATION" equiv-text="{{errorMessage}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/><x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div class=&quot;alert-details&quot;&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Please try refreshing the page and try again.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;&gt;"/><x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div&gt;"/><x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;&gt;"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> Show details <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div&gt;"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;&gt;"/><x id="INTERPOLATION_1" equiv-text="{{detailedError}}"/><x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre&gt;"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container&gt;"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div&gt;"/></source>
-        <target state="new"><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/><x id="INTERPOLATION" equiv-text="{{errorMessage}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/><x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div class=&quot;alert-details&quot;&gt;"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p&gt;"/>Please try refreshing the page and try again.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p&gt;"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;&gt;"/><x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div&gt;"/><x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;&gt;"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> Show details <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div&gt;"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;&gt;"/><x id="INTERPOLATION_1" equiv-text="{{detailedError}}"/><x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre&gt;"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container&gt;"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div&gt;"/></target>
+        <source><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{errorMessage}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/><x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div class=&quot;alert-details&quot;>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Please try refreshing the page and try again.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;>"/><x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div>"/><x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;>"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> Show details <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;>"/><x id="INTERPOLATION_1" equiv-text="{{detailedError}}"/><x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/></source>
+        <target state="new"><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{errorMessage}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/><x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div class=&quot;alert-details&quot;>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Please try refreshing the page and try again.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;>"/><x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div>"/><x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;>"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> Show details <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;>"/><x id="INTERPOLATION_1" equiv-text="{{detailedError}}"/><x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">304,316</context>
@@ -3051,8 +3019,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3880104539461951428" datatype="html">
-        <source>Index <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;&gt;"/>Go to top<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></source>
-        <target state="new">Index <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;&gt;"/>Go to top<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></target>
+        <source>Index <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;>"/>Go to top<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
+        <target state="new">Index <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;>"/>Go to top<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/index-tab.component.ts</context>
           <context context-type="linenumber">17</context>
@@ -3147,16 +3115,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2764567568324210100" datatype="html">
-        <source>People logged in: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></source>
-        <target state="new">People logged in: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/></target>
+        <source>People logged in: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
+        <target state="new">People logged in: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">8</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3522945725389041013" datatype="html">
-        <source>Lecturers (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/>)</source>
-        <target state="new">Lecturers (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/>)</target>
+        <source>Lecturers (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</source>
+        <target state="new">Lecturers (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">9</context>
@@ -3171,8 +3139,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4851338224428351823" datatype="html">
-        <source>Students (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/><x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/>)</source>
-        <target state="new">Students (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span&gt;"/><x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/>)</target>
+        <source>Students (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</source>
+        <target state="new">Students (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -3311,8 +3279,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5372481859541149959" datatype="html">
-        <source> Edit relevance (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;&gt;"/><x id="INTERPOLATION" equiv-text="{{currentRelevance}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/>) </source>
-        <target state="new"> Edit relevance (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;&gt;"/><x id="INTERPOLATION" equiv-text="{{currentRelevance}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span&gt;"/>) </target>
+        <source> Edit relevance (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;>"/><x id="INTERPOLATION" equiv-text="{{currentRelevance}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>) </source>
+        <target state="new"> Edit relevance (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;>"/><x id="INTERPOLATION" equiv-text="{{currentRelevance}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>) </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">70,72</context>
@@ -3503,26 +3471,24 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1304170677752702304" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;
-                                   (ngModelChange)=&quot;lctrl.refreshWall()&quot;&gt;"/> Show wall</source>
-        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;
-                                   (ngModelChange)=&quot;lctrl.refreshWall()&quot;&gt;"/> Show wall</target>
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;>"/> Show wall</source>
+        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;>"/> Show wall</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">143,144</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2865158227582611884" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;&gt;"/> Show questions </source>
-        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;&gt;"/> Show questions </target>
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;>"/> Show questions </source>
+        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;>"/> Show questions </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">148,149</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4058133633628035062" datatype="html">
-        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;&gt;"/> Show answers</source>
-        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;&gt;"/> Show answers</target>
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;>"/> Show answers</source>
+        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;>"/> Show answers</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">152</context>
@@ -3561,8 +3527,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1115486133630608977" datatype="html">
-        <source>Print via browser&apos;s print dialog</source>
-        <target state="new">Print via browser&apos;s print dialog</target>
+        <source>Print via browser's print dialog</source>
+        <target state="new">Print via browser's print dialog</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">169</context>
@@ -3585,8 +3551,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8500529743832016473" datatype="html">
-        <source>Teachers&apos; help for course code</source>
-        <target state="new">Teachers&apos; help for course code</target>
+        <source>Teachers' help for course code</source>
+        <target state="new">Teachers' help for course code</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">177</context>
@@ -3697,8 +3663,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="7359309035708185948" datatype="html">
-        <source>Linked <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;&gt;"/>course groups<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></source>
-        <target state="new">Linked <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;&gt;"/>course groups<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/></target>
+        <source>Linked <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;>"/>course groups<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
+        <target state="new">Linked <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;>"/>course groups<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">223</context>
@@ -3853,8 +3819,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4588307427431053874" datatype="html">
-        <source>The document has no &apos;knro&apos; macro defined</source>
-        <target state="new">The document has no &apos;knro&apos; macro defined</target>
+        <source>The document has no 'knro' macro defined</source>
+        <target state="new">The document has no 'knro' macro defined</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">561</context>
@@ -3901,8 +3867,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8327531442582201391" datatype="html">
-        <source><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-plus&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> New bookmark... </source>
-        <target state="new"><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-plus&quot;&gt;"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i&gt;"/> New bookmark... </target>
+        <source><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-plus&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> New bookmark... </source>
+        <target state="new"><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-plus&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> New bookmark... </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/bookmarks.component.ts</context>
           <context context-type="linenumber">59,60</context>
@@ -3925,16 +3891,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1282825972440368994" datatype="html">
-        <source> I allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;&gt;"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> to be used for scientific research purposes after anonymization. </source>
-        <target state="new"> I allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;&gt;"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> to be used for scientific research purposes after anonymization. </target>
+        <source> I allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> to be used for scientific research purposes after anonymization. </source>
+        <target state="new"> I allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> to be used for scientific research purposes after anonymization. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/consent-choice.component.ts</context>
           <context context-type="linenumber">11,17</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7549221046249449872" datatype="html">
-        <source> I do not allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;&gt;"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> to be used for scientific research purposes after anonymization. </source>
-        <target state="new"> I do not allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;&gt;"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> to be used for scientific research purposes after anonymization. </target>
+        <source> I do not allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> to be used for scientific research purposes after anonymization. </source>
+        <target state="new"> I do not allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> to be used for scientific research purposes after anonymization. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/consent-choice.component.ts</context>
           <context context-type="linenumber">23,29</context>
@@ -4037,8 +4003,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4604922124233283335" datatype="html">
-        <source>You don&apos;t have permission to view that document.</source>
-        <target state="new">You don&apos;t have permission to view that document.</target>
+        <source>You don't have permission to view that document.</source>
+        <target state="new">You don't have permission to view that document.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">160</context>
@@ -4117,8 +4083,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8437774784999642776" datatype="html">
-        <source>Once the code has been scanned, press &quot;Check status&quot; to re-check your verification.</source>
-        <target state="new">Once the code has been scanned, press &quot;Check status&quot; to re-check your verification.</target>
+        <source>Once the code has been scanned, press "Check status" to re-check your verification.</source>
+        <target state="new">Once the code has been scanned, press "Check status" to re-check your verification.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">46</context>
@@ -4330,7 +4296,7 @@
       </trans-unit>
       <trans-unit id="5946121121970393200" datatype="html">
         <source>Select your home organization...</source>
-        <target state="new">Select your home organization...</target>
+        <target state="translated">Välj din hemorgansation...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
           <context context-type="linenumber">77</context>
@@ -4338,7 +4304,7 @@
       </trans-unit>
       <trans-unit id="2715185765061607307" datatype="html">
         <source> Log in </source>
-        <target state="new"> Log in </target>
+        <target state="translated"> Logga in </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
           <context context-type="linenumber">84,86</context>
@@ -4346,7 +4312,7 @@
       </trans-unit>
       <trans-unit id="2826581353496868063" datatype="html">
         <source>Language</source>
-        <target state="new">Language</target>
+        <target state="translated">Språk</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
           <context context-type="linenumber">10</context>
@@ -4354,7 +4320,7 @@
       </trans-unit>
       <trans-unit id="6589026731731627693" datatype="html">
         <source>Use web browser preference</source>
-        <target state="new">Use web browser preference</target>
+        <target state="translated">Använda webbläsarinställningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
           <context context-type="linenumber">15</context>
@@ -4362,7 +4328,7 @@
       </trans-unit>
       <trans-unit id="5866254605255506989" datatype="html">
         <source>English</source>
-        <target state="new">English</target>
+        <target state="translated">Engelska</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
           <context context-type="linenumber">16</context>
@@ -4370,7 +4336,7 @@
       </trans-unit>
       <trans-unit id="861663369293303028" datatype="html">
         <source>Finnish</source>
-        <target state="new">Finnish</target>
+        <target state="translated">Finska</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
           <context context-type="linenumber">17</context>
@@ -4378,7 +4344,7 @@
       </trans-unit>
       <trans-unit id="4814606488888120626" datatype="html">
         <source> Members from universities and other Haka organizations, please use Haka to log in. </source>
-        <target state="new"> Members from universities and other Haka organizations, please use Haka to log in. </target>
+        <target state="translated"> Medlemmar från universitet och andra Haka-prganisationer, använd Haka för att logga in. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">74,76</context>
@@ -4386,7 +4352,7 @@
       </trans-unit>
       <trans-unit id="2341982959296346504" datatype="html">
         <source> Others, please log in with your TIM account. </source>
-        <target state="new"> Others, please log in with your TIM account. </target>
+        <target state="translated"> Övriga, vänligen logga in med ditt TIM-konto. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">81,83</context>
@@ -4394,7 +4360,7 @@
       </trans-unit>
       <trans-unit id="7169763988476671054" datatype="html">
         <source>Email or username</source>
-        <target state="new">Email or username</target>
+        <target state="translated">E-postadress eller användarnamn</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">88</context>
@@ -4409,8 +4375,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5192694303323354537" datatype="html">
-        <source> If you have not logged in before, and your email corresponds to the one in Studyinfo.fi, TIM sent a password to your email now. Please read the email in a separate browser tab, and please wait for the email at least 5 minutes if you don&apos;t get the email right away. Check your spam folder too. </source>
-        <target state="new"> If you have not logged in before, and your email corresponds to the one in Studyinfo.fi, TIM sent a password to your email now. Please read the email in a separate browser tab, and please wait for the email at least 5 minutes if you don&apos;t get the email right away. Check your spam folder too. </target>
+        <source> If you have not logged in before, and your email corresponds to the one in Studyinfo.fi, TIM sent a password to your email now. Please read the email in a separate browser tab, and please wait for the email at least 5 minutes if you don't get the email right away. Check your spam folder too. </source>
+        <target state="translated"> Om du har inte loggat in till TIM tidigare och din e-postadress motsvarar den i Studieinfo.fi, TIM skickade dig ditt lösenord vid e-posten just ny. Snälla läsa e-posten i en separat webbläsarflik och vänta för e-posten minst 5 minuter om du inte har fått e-posten direkt. Checka din spam-mapp också. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">100,108</context>
@@ -4418,7 +4384,7 @@
       </trans-unit>
       <trans-unit id="3890309214395153699" datatype="html">
         <source> If you have not logged in to TIM before, TIM sent a password to your email now. </source>
-        <target state="new"> If you have not logged in to TIM before, TIM sent a password to your email now. </target>
+        <target state="new"> Om du har inte loggat in till TIM senare, TIM skickade dig ditt lösenord vid e-posten just ny. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">109,111</context>
@@ -4426,7 +4392,7 @@
       </trans-unit>
       <trans-unit id="4335926162389244328" datatype="html">
         <source>If you have logged in before, use your current password.</source>
-        <target state="new">If you have logged in before, use your current password.</target>
+        <target state="new">Om du har loggat in senare, använda ditt nuvarande lösenord.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">113</context>
@@ -4434,7 +4400,7 @@
       </trans-unit>
       <trans-unit id="1431416938026210429" datatype="html">
         <source>Password</source>
-        <target state="new">Password</target>
+        <target state="new">Lösenord</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">117</context>
@@ -4446,7 +4412,7 @@
       </trans-unit>
       <trans-unit id="892063502898494584" datatype="html">
         <source>I forgot my password</source>
-        <target state="new">I forgot my password</target>
+        <target state="new">Jag minns inte mitt lösenord</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">126</context>
@@ -4454,7 +4420,7 @@
       </trans-unit>
       <trans-unit id="6962699013778688473" datatype="html">
         <source>Continue</source>
-        <target state="new">Continue</target>
+        <target state="new">Fortsätta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">132</context>
@@ -4466,7 +4432,7 @@
       </trans-unit>
       <trans-unit id="2336550011721758066" datatype="html">
         <source>Log in</source>
-        <target state="new">Log in</target>
+        <target state="new">Logga in</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">137</context>
@@ -4481,8 +4447,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3023906871690155199" datatype="html">
-        <source> Not a <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> student or staff member and don&apos;t have a TIM account? </source>
-        <target state="new"> Not a <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> student or staff member and don&apos;t have a TIM account? </target>
+        <source> Not a <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> student or staff member and don't have a TIM account? </source>
+        <target state="new"> Not a <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> student or staff member and don't have a TIM account? </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">147,149</context>
@@ -4497,8 +4463,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3129992797183034647" datatype="html">
-        <source>If you don&apos;t have an existing TIM or <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> account, you can create a TIM account here.</source>
-        <target state="new">If you don&apos;t have an existing TIM or <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> account, you can create a TIM account here.</target>
+        <source>If you don't have an existing TIM or <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> account, you can create a TIM account here.</source>
+        <target state="new">If you don't have an existing TIM or <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> account, you can create a TIM account here.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">159</context>
@@ -4633,8 +4599,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1031561808357651002" datatype="html">
-        <source> Now you can <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;&quot; focusMe&gt;"/>refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> the page to log in. </source>
-        <target state="new"> Now you can <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;&quot; focusMe&gt;"/>refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> the page to log in. </target>
+        <source> Now you can <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;&quot; focusMe>"/>refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> the page to log in. </source>
+        <target state="new"> Now you can <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;&quot; focusMe>"/>refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> the page to log in. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">282,286</context>
@@ -4677,16 +4643,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="426514155240557396" datatype="html">
-        <source>You are attempting to authenticate to <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> with TIM.</source>
-        <target state="new">You are attempting to authenticate to <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> with TIM.</target>
+        <source>You are attempting to authenticate to <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> with TIM.</source>
+        <target state="new">You are attempting to authenticate to <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> with TIM.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">43</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3914978142342238712" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> will be able to</source>
-        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> will be able to</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> will be able to</source>
+        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> will be able to</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">44</context>
@@ -4805,8 +4771,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5380572116300325278" datatype="html">
-        <source> You have no styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;&gt;"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> tab. </source>
-        <target state="new"> You have no styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;&gt;"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> tab. </target>
+        <source> You have no styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab. </source>
+        <target state="new"> You have no styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">150,152</context>
@@ -4853,32 +4819,32 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3197188819017309601" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Official styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> are maintained and supported by TIM maintainers. </source>
-        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Official styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> are maintained and supported by TIM maintainers. </target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Official styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> are maintained and supported by TIM maintainers. </source>
+        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Official styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> are maintained and supported by TIM maintainers. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">188,190</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4598159830582790095" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>User-made styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> are made and maintained by TIM&apos;s users. For more information, see <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;&gt;"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>.</source>
-        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>User-made styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> are made and maintained by TIM&apos;s users. For more information, see <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;&gt;"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>User-made styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> are made and maintained by TIM's users. For more information, see <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.</source>
+        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>User-made styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> are made and maintained by TIM's users. For more information, see <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">191</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5633802735834461146" datatype="html">
-        <source>To remove styles or edit their ordering, use the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(0)&quot;&gt;"/>Selected styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> tab.</source>
-        <target state="new">To remove styles or edit their ordering, use the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(0)&quot;&gt;"/>Selected styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/> tab.</target>
+        <source>To remove styles or edit their ordering, use the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(0)&quot;>"/>Selected styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab.</source>
+        <target state="new">To remove styles or edit their ordering, use the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(0)&quot;>"/>Selected styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">193,194</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2068094190303764265" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Note:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Your current styles will be temporarily disabled while previewing.</source>
-        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/>Note:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> Your current styles will be temporarily disabled while previewing.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Note:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Your current styles will be temporarily disabled while previewing.</source>
+        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Note:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Your current styles will be temporarily disabled while previewing.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">195</context>
@@ -4945,8 +4911,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4387425307250994986" datatype="html">
-        <source> For extended styling using SCSS, refer to <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;&gt;"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </source>
-        <target state="new"> For extended styling using SCSS, refer to <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;&gt;"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a&gt;"/>. </target>
+        <source> For extended styling using SCSS, refer to <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </source>
+        <target state="new"> For extended styling using SCSS, refer to <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">232,234</context>
@@ -5017,8 +4983,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5590923235316551885" datatype="html">
-        <source>You haven&apos;t subscribed to any documents or folders.</source>
-        <target state="new">You haven&apos;t subscribed to any documents or folders.</target>
+        <source>You haven't subscribed to any documents or folders.</source>
+        <target state="new">You haven't subscribed to any documents or folders.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">268</context>
@@ -5081,8 +5047,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3568299798809723019" datatype="html">
-        <source>Type one regular expression per line that should match any part of the path of the folder or document, e.g. <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/> would match any path with <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/> in it.</source>
-        <target state="new">Type one regular expression per line that should match any part of the path of the folder or document, e.g. <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/> would match any path with <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/> in it.</target>
+        <source>Type one regular expression per line that should match any part of the path of the folder or document, e.g. <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> would match any path with <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> in it.</source>
+        <target state="new">Type one regular expression per line that should match any part of the path of the folder or document, e.g. <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> would match any path with <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> in it.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">299,301</context>
@@ -5241,10 +5207,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="582891413766289599" datatype="html">
-        <source> This email is managed by <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong
-                                    [style.color]=&quot;originInfo.bgColor&quot;&gt;"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>. The address will be automatically updated by the system. </source>
-        <target state="new"> This email is managed by <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong
-                                    [style.color]=&quot;originInfo.bgColor&quot;&gt;"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/>. The address will be automatically updated by the system. </target>
+        <source> This email is managed by <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong                                     [style.color]=&quot;originInfo.bgColor&quot;>"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>. The address will be automatically updated by the system. </source>
+        <target state="new"> This email is managed by <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong                                     [style.color]=&quot;originInfo.bgColor&quot;>"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>. The address will be automatically updated by the system. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">394,398</context>
@@ -5315,8 +5279,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="266304783365394512" datatype="html">
-        <source> Check key&apos;s quota </source>
-        <target state="new"> Check key&apos;s quota </target>
+        <source> Check key's quota </source>
+        <target state="new"> Check key's quota </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">446,448</context>
@@ -5355,8 +5319,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5705192456342684849" datatype="html">
-        <source> To delete your account, please type your username (<x id="INTERPOLATION" equiv-text="{{ user.name }}"/>) in the field below and then click &quot;Delete account now&quot;. </source>
-        <target state="new"> To delete your account, please type your username (<x id="INTERPOLATION" equiv-text="{{ user.name }}"/>) in the field below and then click &quot;Delete account now&quot;. </target>
+        <source> To delete your account, please type your username (<x id="INTERPOLATION" equiv-text="{{ user.name }}"/>) in the field below and then click "Delete account now". </source>
+        <target state="new"> To delete your account, please type your username (<x id="INTERPOLATION" equiv-text="{{ user.name }}"/>) in the field below and then click "Delete account now". </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">471,474</context>
@@ -5379,8 +5343,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8261911902538602763" datatype="html">
-        <source>There was an error loading the style. Please report this to the style&apos;s maintainer.</source>
-        <target state="new">There was an error loading the style. Please report this to the style&apos;s maintainer.</target>
+        <source>There was an error loading the style. Please report this to the style's maintainer.</source>
+        <target state="new">There was an error loading the style. Please report this to the style's maintainer.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">700</context>
@@ -5483,16 +5447,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6060837509033289235" datatype="html">
-        <source>Contact information: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/></source>
-        <target state="new">Contact information: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/></target>
+        <source>Contact information: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/></source>
+        <target state="new">Contact information: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">72</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5353556497172163824" datatype="html">
-        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> will be made your primary <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>.</source>
-        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong&gt;"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code&gt;"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code&gt;"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong&gt;"/> will be made your primary <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>.</target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> will be made your primary <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>.</source>
+        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> will be made your primary <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">96</context>
@@ -5631,8 +5595,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5676197465127641757" datatype="html">
-        <source>You&apos;re logged in</source>
-        <target state="new">You&apos;re logged in</target>
+        <source>You're logged in</source>
+        <target state="new">You're logged in</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">15</context>
