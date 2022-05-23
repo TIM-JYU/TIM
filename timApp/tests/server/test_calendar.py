@@ -5,6 +5,8 @@ from timApp.tests.server.timroutetest import TimRouteTest
 
 class CalendarTest(TimRouteTest):
     def post_event(self, event_id: int):
+        """Helper function to post a basic event"""
+
         self.json_post(
             f"/calendar/events",
             {
@@ -28,6 +30,8 @@ class CalendarTest(TimRouteTest):
         )
 
     def test_event_add_and_delete(self):
+        """Events are queried, an event is created by Test user 1 and then deleted"""
+
         self.login_test1()
         self.get(
             f"/calendar/events",
@@ -66,6 +70,8 @@ class CalendarTest(TimRouteTest):
         self.logout()
 
     def test_event_modification(self):
+        """An event is created and then modified by user"""
+
         self.login_test1()
         self.get(f"/calendar/events", expect_status=200, expect_content=[])
         event_id = 2
@@ -115,6 +121,7 @@ class CalendarTest(TimRouteTest):
 
 class CalendarBookTest(TimRouteTest):
     def test_booking(self):
+        """Event is created by Test user 2 and booked by Test user 1."""
         initialize_db()
         self.login_test2()
         event_id = 1
@@ -142,6 +149,11 @@ class CalendarBookTest(TimRouteTest):
         )
         self.logout()
         self.login_test1()
+        self.get(
+            f"/calendar/events/{event_id}/bookers",
+            expect_status=403,
+            expect_content={"error": "No permission to see event bookers"},
+        )
         self.json_post(
             f"/calendar/bookings",
             {"event_id": event_id, "booker_msg": ""},
@@ -150,7 +162,9 @@ class CalendarBookTest(TimRouteTest):
 
         self.logout()
         self.login_test2()
+
         self.get(f"/calendar/events/{event_id}/bookers", expect_status=200)
+
         self.delete(
             f"calendar/events/{event_id}",
             expect_status=200,
@@ -158,6 +172,7 @@ class CalendarBookTest(TimRouteTest):
         self.logout()
 
     def post_event_to_book(self, event_id):
+        """Helper function to post a basic event to book"""
         self.json_post(
             f"/calendar/events",
             {
