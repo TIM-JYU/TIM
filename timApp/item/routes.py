@@ -843,13 +843,10 @@ def render_doc_view(
                             load_plugin_states=not hide_answers,
                         )
                         generate_review_groups(
-                            doc_info,
-                            full_document_for_review.plugins
+                            doc_info, full_document_for_review.plugins
                         )
                     else:
-                        generate_review_groups(
-                            doc_info, post_process_result.plugins
-                        )
+                        generate_review_groups(doc_info, post_process_result.plugins)
                     set_default_velp_group_selected_and_visible(doc_info)
                 except PeerReviewException as e:
                     flash(str(e))

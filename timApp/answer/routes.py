@@ -1292,8 +1292,10 @@ def preprocess_jsrunner_answer(
         answerdata["peerreviews"] = get_reviews_for_document(d)
     else:
         answerdata["peerreviews"] = get_reviews_for_document(d)
-    if True: ##TODO: KEKSI PAREMPI
-        answerdata["velps"] = get_annotations_with_comments_in_document(curr_user, d, False)
+    if d.document.get_settings().peer_review():
+        answerdata["velps"] = get_annotations_with_comments_in_document(
+            curr_user, d, False
+        )
 
     answerdata.pop(
         "paramComps", None
@@ -1591,7 +1593,9 @@ def save_fields(
                         # TODO: Add new reviewer or if reviewable have none
                         pass
                     if new:
-                        change_peerreviewers_for_user(current_doc, task, user_id, old, new)
+                        change_peerreviewers_for_user(
+                            current_doc, task, user_id, old, new
+                        )
                 except json.decoder.JSONDecodeError:
                     print("There was a problem accessing the equipment data")
     task_content_name_map = {}

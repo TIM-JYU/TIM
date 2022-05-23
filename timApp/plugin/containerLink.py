@@ -210,7 +210,7 @@ def get_plugins() -> dict[str, PluginReg]:
         ),
         PluginReg(
             name="drag", domain=DRAGPLUGIN_DOMAIN, regexattrs=DRAGATTRS, automd=True
-        )
+        ),
     ]
     plugins = {p.name: p for p in plugin_list}
     return plugins

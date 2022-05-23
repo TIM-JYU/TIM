@@ -156,7 +156,7 @@ blueprints = [
     user_select_plugin,
     messagelist,
     timMessage,
-    verify
+    verify,
 ]
 
 if app.config["BOOKMARKS_ENABLED"]:

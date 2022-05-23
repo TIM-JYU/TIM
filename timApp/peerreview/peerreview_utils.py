@@ -95,18 +95,17 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
             for a in filtered_answers:
                 if a.users_all[0].id in reviewables:
 
-                    #save_review(
+                    # save_review(
                     #    doc, reviewer, start_time_reviews, end_time_reviews, a, t, False
-                    #)
+                    # )
                     save_review(
                         a, t, doc, reviewer, start_time_reviews, end_time_reviews, False
                     )
 
-
     db.session.commit()
 
 
-#def save_review(
+# def save_review(
 #        doc: DocInfo,
 #        reviewer_id: int,
 #        reviewable_id: int,
@@ -115,15 +114,15 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
 #        answer: Answer | None = None,
 #        task_id: TaskId | None = None,
 #        reviewed: bool = False,
-#) -> PeerReview:
+# ) -> PeerReview:
 def save_review(
-            answer: Answer,
-            task_id: TaskId,
-            doc: DocInfo,
-            reviewer_id: int,
-            start_time: datetime,
-            end_time: datetime,
-            reviewed: bool = False,
+    answer: Answer,
+    task_id: TaskId,
+    doc: DocInfo,
+    reviewer_id: int,
+    start_time: datetime,
+    end_time: datetime,
+    reviewed: bool = False,
 ) -> PeerReview:
     """Saves a review to the database.
 
@@ -170,10 +169,10 @@ def get_reviews_to_user_query(d: DocInfo, user: User) -> Query:
 
 
 def has_review_access(
-        doc: DocInfo,
-        reviewer_user: User,
-        task_id: TaskId | None,
-        reviewable_user: User | None,
+    doc: DocInfo,
+    reviewer_user: User,
+    task_id: TaskId | None,
+    reviewable_user: User | None,
 ) -> bool:
     if not is_peerreview_enabled(doc):
         return False
@@ -198,31 +197,44 @@ def is_peerreview_enabled(doc: DocInfo) -> bool:
 
 
 def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
+    """Get peer-reviewers of current document from the database.
+    :param doc: Document containing reviewable answers.
+    """
     return PeerReview.query.filter_by(
         block_id=doc.id,
     ).all()
 
 
 def change_peerreviewers_for_user(
-        doc: DocInfo,
-        task: str,
-        reviewable: int,
-        old_reviewers: list[int],
-        new_reviewers: list[int],
+    doc: DocInfo,
+    task: str,
+    reviewable: int,
+    old_reviewers: list[int],
+    new_reviewers: list[int],
 ) -> bool:
+    """Change user reviewers in one task.
+
+    :param doc: Document containing reviewable answers.
+    :param task: task name.
+    :param reviewable: User ID for the review target user.
+    :param old_reviewers: List of old reviewers IDs
+    :param new_reviewers: List of new reviewers IDs
+    :param reviewed: Boolean indicating if review has been done.
+    """
+
     for i in range(0, len(new_reviewers)):
         try:
             if reviewable == new_reviewers[i]:
-                raise Exception('Same reviewer and reviewable')
+                continue
             else:
                 updated_user = PeerReview.query.filter_by(
                     block_id=doc.id,
                     reviewer_id=old_reviewers[i],
                     reviewable_id=reviewable,
-                    task_name=task
+                    task_name=task,
                 ).first()
                 updated_user.reviewer_id = new_reviewers[i]
                 db.session.commit()
         except Exception:
-            raise Exception('Error in reviewer update')
+            raise Exception("Error in reviewer update")
     return True
