@@ -455,7 +455,7 @@ class DragTask {
             this.mouseDown = false;
             this.drawing.upEvent(posToRelative(this.canvas, p));
         }
-        this.imgx.updateListeners();
+        this.imgx.checkChanges();
     }
 
     addRightAnswers(answers: RightAnswerT[]) {
@@ -1650,7 +1650,7 @@ export class ImageXComponent
         this.drawing.undo();
         this.dt.drawDragTask();
         this.drawing.redrawAll();
-        this.updateListeners();
+        this.checkChanges();
     }
 
     resetChanges() {
@@ -1667,8 +1667,13 @@ export class ImageXComponent
         this.dt.drawDragTask();
         this.drawing.redrawAll();
         this.prevAnswer = this.getContent();
-        this.updateListeners();
+        this.checkChanges();
+    }
+
+    checkChanges() {
+        this.result = "";
         this.cdr.detectChanges();
+        this.updateListeners();
     }
 
     updateListeners() {
@@ -1771,7 +1776,6 @@ export class ImageXComponent
     // Resets the positions of dragobjects.
     resetExercise() {
         this.error = "";
-        this.result = "";
         this.drawing.resetDrawing();
 
         for (const obj of this.drags) {
@@ -1783,6 +1787,7 @@ export class ImageXComponent
         // Draw the exercise so that reset appears instantly.
         this.dt.drawDragTask();
         this.drawing.redrawAll();
+        this.checkChanges();
     }
 
     svgImageSnippet() {
