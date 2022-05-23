@@ -48,9 +48,9 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    [disabled]="!isEditEnabled()"/>
                         </div>
                         <label for="maxSize" class="col-sm-2 control-label">Capacity</label>
-                        <div class="col-sm-2">
+                        <div class="col-sm-3">
                             <input type="number"
-                            min="0" max="200" [(ngModel)]="maxSize"
+                            min="0" max="2000" [(ngModel)]="maxSize"
                                    #ngModelMaxSize="ngModel"
                             (ngModelChange)="setMessage()"
                             id="maxSize" name="maxSize" class="form-control"
@@ -182,7 +182,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    (ngModelChange)="setMessage()"
                                     name="messageText"
                                     class="form-control">
-                        <button class="timButton" type="button" style="float: left"
+                        <button class="btn timButton message-btn" type="button"
                         (click)="updateBookMessage()">Send message
                         </button>
                     </div>
@@ -191,8 +191,8 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     </div>
                 </form>
-                <tim-alert *ngIf="(maxSize>200 || maxSize<0) && ngModelMaxSize.dirty" >
-                    <ng-container>Event capacity must be 0-200</ng-container>
+                <tim-alert *ngIf="(maxSize>2000 || maxSize<0) && ngModelMaxSize.dirty" >
+                    <ng-container>Event capacity must be 0-2000</ng-container>
                 </tim-alert>
 
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['bookingEndInvalid']">
@@ -236,18 +236,18 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         style="background-color: red; float: left">
                     Cancel Booking
                     </button>
-                    <button class="timButton col-sm-2" type="button" style="background-color: red; float: left"
+                    <button class="btn timButton col-sm-2" type="button" style="background-color: red; float: left"
                         (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!isEditEnabled()">
                     Delete
                     </button>
-                    <button class="timButton col-sm-4" type="button" style="float: left"
+                    <button class="btn timButton col-sm-4" type="button" style="float: left"
                         (click)="bookEvent()" [disabled]="eventIsFull() || !eventCanBeBooked()" [hidden]="hideBookingButton()">
                     Book event
                     </button>
                     <button i18n class="btn btn-default col-sm-2" type="button" style="float:right" (click)="dismiss()">
                     Cancel
                     </button>
-                    <button class="timButton col-sm-2" type="submit" style="float:right" (click)="saveChanges()" [disabled]="form.invalid"
+                    <button class="btn timButton col-sm-2" type="submit" style="float:right" (click)="saveChanges()" [disabled]="form.invalid"
                         [hidden]="!isEditEnabled()">
                     Save
                     </button>
@@ -305,11 +305,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         ) {
             this.maxSize = this.getEventCapacity();
         }
-        console.log(this.description);
-        console.log(this.location);
-        console.log(this.title);
-        console.log(this.bookingStopDate);
-        console.log(this.bookingStopTime);
 
         const eventToEdit = {
             max_size: this.maxSize,
@@ -489,7 +484,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (!(await showConfirm("Post message", "Post message to booking?"))) {
             return;
         }
-        console.log(bookMessage);
         const result = await toPromise(
             this.http.put("/calendar/bookings", {
                 event_id: eventToBook.id,
@@ -515,7 +509,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      */
     async bookEvent() {
         const eventToBook = this.data;
-        console.log(eventToBook);
         if (
             !(await showConfirm(
                 "Book an Event",
