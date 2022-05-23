@@ -1257,7 +1257,7 @@ interface IAnswerResponse {
             </div>
             <p class="csRunMenu"><span *ngIf="button" class="save">&nbsp;<button
                                                class="timButton"
-                                               [disabled]="isRunning"
+                                               [disabled]="(disableUnchanged && !isUnSaved()) || isRunning"
                                                (click)="save()">{{button}}
             </button></span>
                 <span  *ngIf="buttonPlay" class="videoPlay">
