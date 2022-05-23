@@ -1330,16 +1330,23 @@ export class Tools extends ToolsBase {
         return {user: this.data.user.id, fields: this.result};
     }
 
+    /**
+     * Check if the task is right
+     */
     isVelpTask(v: VelpDataT, task: string): boolean {
         const id = v.answer?.task_id;
         return id?.substr(id.indexOf(".") + 1) === task;
     }
-
+    /**
+     * Check if velp has been given to the current user
+     */
     isVelpForUser(v: VelpDataT): boolean {
         return v.answer?.users[0].id === this.data.user.id;
     }
-
-    getTaskPoints(task: string): number {
+    /**
+     * Get average of velp-points in one task
+     */
+    getVelpTaskPoints(task: string): number {
         const peerreviewers = this.getPeerReviewsForUser().map(
             (pr) => pr.reviewer_id
         );
@@ -1353,11 +1360,11 @@ export class Tools extends ToolsBase {
             .map((v) => v.points)
             .reduce((acc, p) => acc + (p !== null ? p : 0), 0);
         const count = this.getVelpedCount(task);
-        // this.println(sum, count);
-        return count ? sum / count : NaN;
-        // return sum / velps.length ? sum / velps.length : 0;
+        return count ? sum / count : 0;
     }
-
+    /**
+     * Get count of received velp-reviews for current user
+     */
     getVelpedCount(task: string): number {
         const seen = new Set();
         this.velps
@@ -1370,8 +1377,10 @@ export class Tools extends ToolsBase {
             .map((v) => seen.add(v.annotator.id));
         return seen.size;
     }
-
-    getReviewCount(task: string): number {
+    /**
+     * Get count of reviews made by current user in one task
+     */
+    getVelpReviewCount(task: string): number {
         const seen = new Set();
         this.velps
             .filter(
@@ -1385,8 +1394,10 @@ export class Tools extends ToolsBase {
             });
         return seen.size;
     }
-
-    getPoints(task: string) {
+    /**
+     * Get total velp-points of current user in one task
+     */
+    getVelpPoints(task: string) {
         const peerreviewers = this.getPeerReviewsForUser().map((pr) => pr.id);
         const velps = this.velps
             .filter(
@@ -1435,24 +1446,16 @@ export class Tools extends ToolsBase {
         );
     }
     /**
-     * Print every every name of users from peer_review table where document_id
-     * matches jsrunner origin doc id and target is current user
+     * Print reviewers and received points of current user
      */
-    getPeerReviewersForUser(usersObject: Users): string[] {
-        const reviewers = this.getPeerReviewsForUser().map(
-            (reviewer) => usersObject[reviewer.reviewer_id]
-        );
-        return reviewers;
-    }
-    /**
-     * Print every reviewers and received points of current user
-     */ getReviews(task: string, usersObject: Users): object[] {
+    getReviews(task: string, usersObject: Users): object[] {
+        const users = usersObject ? usersObject : this.users;
         const peerreviewers = this.getPeerReviewsForUser()
             .filter((pr) => pr.task_name === task)
             .map((pr) => {
                 return {
                     id: pr.reviewer_id,
-                    name: usersObject[pr.reviewer_id],
+                    name: users[pr.reviewer_id],
                     points: [0],
                 };
             });
