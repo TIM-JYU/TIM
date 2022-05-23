@@ -1725,10 +1725,6 @@ export class CsController extends CsBase implements ITimComponent {
         return this.markup.copyLink;
     }
 
-    get disableUnchanged() {
-        return this.markup.disableUnchanged;
-    }
-
     get footer() {
         return this.markup.footer;
     }

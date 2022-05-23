@@ -127,10 +127,6 @@ export class QstComponent
         return JSON.stringify(this.newAnswer);
     }
 
-    get disableUnchanged() {
-        return this.attrsall.markup.disableUnchanged;
-    }
-
     get undoButton() {
         return this.attrsall.markup.undo?.button;
     }

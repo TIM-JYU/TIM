@@ -157,10 +157,6 @@ export class NumericfieldPluginComponent
         super(el, http, domSanitizer);
     }
 
-    get disableUnchanged() {
-        return this.markup.disableUnchanged;
-    }
-
     get arrows() {
         return this.markup.arrows;
     }
