@@ -100,9 +100,9 @@ function time02String(time: number) {
 
 const youtubeDomains = new Set(["www.youtube.com", "youtube.com", "youtu.be"]);
 const moniviestinDomains = new Set(["m3.jyu.fi", "moniviestin.jyu.fi"]);
-// If a user provides a direct download link, extract the video ID to generate the correct iframe
 const moniviestinIdConverters = new Map<string, RegExp>([
-    ["m3static.cc.jyu.fi", /m3videos\/3\/jyumv\/([^\/]+)/],
+    // TODO: Moniviestin does not support video end, figure out how to get it
+    // ["m3static.cc.jyu.fi", /m3videos\/3\/jyumv\/([^\/]+)/],
 ]);
 
 const SubtitlesMarkup = t.type({
@@ -611,22 +611,11 @@ export class VideoComponent extends AngularPluginBase<
                 const data = moniviestinConvertPattern.exec(srcUrl.pathname);
                 if (data) {
                     srcUrl.hostname = "m3.jyu.fi";
-                    srcUrl.pathname = "/jyumv/embed";
+                    srcUrl.pathname = `/jyumv/embed`;
                     srcUrl.search = "";
                     srcUrl.searchParams.append("uid", data[1]);
-
-                    // Special case: some users might not have given width or height
-                    // Before with <video>, that would scale automatically
-                    // With Moniviestin iframe, we just guess based on 16:9 aspect ratio
-                    if (this.width !== undefined && this.height === undefined) {
-                        this.height = (this.width * 9) / 16;
-                    } else if (
-                        this.height !== undefined &&
-                        this.width === undefined
-                    ) {
-                        this.width = (this.height * 16) / 9;
-                    }
                 }
+                console.log(data);
             }
             const src = srcUrl.toString();
             this.isPdf =
