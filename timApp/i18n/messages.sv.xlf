@@ -4384,7 +4384,7 @@
       </trans-unit>
       <trans-unit id="3890309214395153699" datatype="html">
         <source> If you have not logged in to TIM before, TIM sent a password to your email now. </source>
-        <target state="new"> Om du har inte loggat in till TIM senare, TIM skickade dig ditt lösenord vid e-posten just ny. </target>
+        <target state="translated"> Om du har inte loggat in till TIM senare, TIM skickade dig ditt lösenord vid e-posten just ny. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">109,111</context>
@@ -4392,7 +4392,7 @@
       </trans-unit>
       <trans-unit id="4335926162389244328" datatype="html">
         <source>If you have logged in before, use your current password.</source>
-        <target state="new">Om du har loggat in senare, använda ditt nuvarande lösenord.</target>
+        <target state="translated">Om du har loggat in senare, använda ditt nuvarande lösenord.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">113</context>
@@ -4400,7 +4400,7 @@
       </trans-unit>
       <trans-unit id="1431416938026210429" datatype="html">
         <source>Password</source>
-        <target state="new">Lösenord</target>
+        <target state="translated">Lösenord</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">117</context>
@@ -4412,7 +4412,7 @@
       </trans-unit>
       <trans-unit id="892063502898494584" datatype="html">
         <source>I forgot my password</source>
-        <target state="new">Jag minns inte mitt lösenord</target>
+        <target state="translated">Jag minns inte mitt lösenord</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">126</context>
@@ -4420,7 +4420,7 @@
       </trans-unit>
       <trans-unit id="6962699013778688473" datatype="html">
         <source>Continue</source>
-        <target state="new">Fortsätta</target>
+        <target state="translated">Fortsätta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">132</context>
@@ -4432,7 +4432,7 @@
       </trans-unit>
       <trans-unit id="2336550011721758066" datatype="html">
         <source>Log in</source>
-        <target state="new">Logga in</target>
+        <target state="translated">Logga in</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">137</context>
@@ -5640,6 +5640,94 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">42</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5724363929304709833" datatype="html">
+        <source>lines</source>
+        <target state="new">lines</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">63</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1473635030596766447" datatype="html">
+        <source>words</source>
+        <target state="new">words</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">71</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="300084308343874513" datatype="html">
+        <source>chars</source>
+        <target state="new">chars</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">78</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4669611499325588249" datatype="html">
+        <source>Too few</source>
+        <target state="new">Too few</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">96</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7792690009197919735" datatype="html">
+        <source>min:</source>
+        <target state="new">min:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">100</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="412967389202098756" datatype="html">
+        <source>Too many</source>
+        <target state="new">Too many</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">106</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5599545427204775388" datatype="html">
+        <source>max:</source>
+        <target state="new">max:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">110</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7994802812720200611" datatype="html">
+        <source>Chars</source>
+        <target state="new">Chars</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">147</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7570842650861337346" datatype="html">
+        <source>Words</source>
+        <target state="new">Words</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">148</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3845152859531369645" datatype="html">
+        <source>Lines</source>
+        <target state="new">Lines</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
+          <context context-type="linenumber">149</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="499386805970351976" datatype="html">
+        <source>Swedish</source>
+        <target state="new">Swedish</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
+          <context context-type="linenumber">18</context>
         </context-group>
       </trans-unit>
     </body>
