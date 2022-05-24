@@ -6,8 +6,9 @@ import uuid
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from io import StringIO
+from textwrap import wrap
 
-from flask import Response, render_template_string, make_response
+from flask import Response, render_template_string, make_response, url_for
 from werkzeug.exceptions import NotFound
 
 from timApp.auth.accesshelper import verify_logged_in
@@ -129,7 +130,9 @@ def get_url() -> Response:
         ExportedCalendar.user_id == cur_user
     ).one_or_none()
     if user_data is not None:
-        url = url + user_data.calendar_hash
+        hash_code = user_data.calendar_hash
+        # url = url_for("calendar_plugin.get_ical", key=hash_code)
+        url = url + hash_code
         return text_response(url)
     hash_code = secrets.token_urlsafe(16)
     user_data = ExportedCalendar(
@@ -138,6 +141,7 @@ def get_url() -> Response:
     )
     db.session.add(user_data)
     db.session.commit()
+    # url = url_for("calendar_plugin.get_ical", key=hash_code)
     url = url + hash_code
     return text_response(url)
 
@@ -194,19 +198,7 @@ def string_to_lines(str_to_split: str) -> str:
 
     :return: str where lines are separated with \r\n + whitespace
     """
-    n = 60
-    if len(str_to_split) <= n:
-        return str_to_split
-    lines = [str_to_split[i : i + n] for i in range(0, len(str_to_split), n)]
-    new_str = ""
-    index = 0
-    for line in lines:
-        index += 1
-        if index == len(lines):
-            new_str = new_str + line
-            break
-        new_str = new_str + line + "\r\n "
-    return new_str
+    return "\r\n ".join(wrap(str_to_split, width=60))
 
 
 def events_of_user(cur_user: int, user_obj: User) -> list[Event]:
