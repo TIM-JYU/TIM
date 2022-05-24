@@ -1,3 +1,15 @@
+/**
+ * Component that provides navigation buttons and date header
+ * of the current view for the calendar plugin
+ *
+ * @author Miika Immonen
+ * @author Terhi Kamula
+ * @author Anssi Lepikko
+ * @author Touko Miettinen
+ * @author Joose Tikkanen
+ * @license MIT
+ * @date 24.5.2022
+ */
 import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
 import {
     CalendarDateFormatter,

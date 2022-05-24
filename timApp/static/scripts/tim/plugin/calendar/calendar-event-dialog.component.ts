@@ -1,3 +1,14 @@
+/**
+ * Component for the dialog that is used for modifying, deleting and booking events
+ *
+ * @author Miika Immonen
+ * @author Terhi Kamula
+ * @author Anssi Lepikko
+ * @author Touko Miettinen
+ * @author Joose Tikkanen
+ * @license MIT
+ * @date 24.5.2022
+ */
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -628,6 +639,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         return false; // Events should always have their meta field
     }
 
+    /**
+     * Returns true if user is manager or owner, otherwise false
+     */
     userIsManager() {
         return (
             itemglobals().curr_item.rights.manage ||

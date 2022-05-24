@@ -1,3 +1,6 @@
+"""
+The database classes for the calendar plugin
+"""
 from typing import Optional
 
 from timApp.auth.sessioninfo import get_current_user_id

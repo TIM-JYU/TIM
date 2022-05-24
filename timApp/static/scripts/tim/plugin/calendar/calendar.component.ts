@@ -1,3 +1,14 @@
+/**
+ * Main module the TIM-calendar plugin
+ *
+ * @author Miika Immonen
+ * @author Terhi Kamula
+ * @author Anssi Lepikko
+ * @author Touko Miettinen
+ * @author Joose Tikkanen
+ * @license MIT
+ * @date 24.5.2022
+ */
 import {
     ApplicationRef,
     ChangeDetectionStrategy,
@@ -304,7 +315,6 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
         "calendar.component.scss",
         "../../../../../node_modules/angular-calendar/css/angular-calendar.css",
     ],
-    // templateUrl: "template.html",
 })
 export class CalendarComponent
     extends AngularPluginBase<
@@ -359,24 +369,6 @@ export class CalendarComponent
         event?: TIMCalendarEvent;
     };
 
-    // actions: CalendarEventAction[] = [
-    //     {
-    //         label: '<i class="fas fa-fw fa-pencil-alt"></i>',
-    //         a11yLabel: "Edit",
-    //         onClick: ({event}: {event: CalendarEvent}): void => {
-    //             this.handleEventClick(event);
-    //         },
-    //     },
-    //     {
-    //         label: '<i class="fas fa-fw fa-trash-alt"></i>',
-    //         a11yLabel: "Delete",
-    //         onClick: ({event}: {event: CalendarEvent}): void => {
-    //             this.events = this.events.filter((iEvent) => iEvent !== event);
-    //             this.handleEventClick(event);
-    //         },
-    //     },
-    // ];
-
     constructor(
         el: ElementRef<HTMLElement>,
         http: HttpClient,
@@ -417,6 +409,9 @@ export class CalendarComponent
         this.segmentsInHour = 60 / this.segmentMinutes;
     }
 
+    /**
+     * Sets the locale language
+     */
     setLanguage() {
         const language = navigator.language;
         switch (language.toLowerCase()) {
@@ -571,11 +566,6 @@ export class CalendarComponent
                 );
                 if (newEnd > segment.date && newEnd < endOfView) {
                     dragToSelectEvent.end = newEnd;
-                    // dragToSelectEvent.title = `${segment.date
-                    //     .toTimeString()
-                    //     .substr(0, 5)}–${newEnd
-                    //     .toTimeString()
-                    //     .substr(0, 5)} Varattava aika`;
                     if (dragToSelectEvent.end) {
                         dragToSelectEvent.end = new Date(dragToSelectEvent.end);
                     }
@@ -617,7 +607,8 @@ export class CalendarComponent
      *
      * Updates the event's title if the begin matches the regular expression, e.g. "10:00-11.00"
      *
-     * TODO: handle localized time expressions (e.g. AM and PM)
+     * TODO: Can be used to add the time to event title.
+     * TODO: Handle localized time expressions (e.g. AM and PM)
      *
      * @param event Event to be updated
      * @private
@@ -664,10 +655,16 @@ export class CalendarComponent
         this.cdr.detectChanges();
     }
 
+    /**
+     * Returns calendar fields
+     */
     getAttributeType() {
         return CalendarFields;
     }
 
+    /**
+     * Returns empty markup
+     */
     getDefaultMarkup() {
         return {};
     }
@@ -877,6 +874,10 @@ export class CalendarComponent
         }
     }
 
+    /**
+     * Collects event information in ICS-format and copies a link
+     * to the ICS-file to the users clipboard
+     */
     async export() {
         if (
             !(await showConfirm(
@@ -938,6 +939,9 @@ export class CalendarComponent
         }
     }
 
+    /**
+     * Returns true if current user is manager or owner, otherwise false
+     */
     userIsManager(): boolean {
         return (
             itemglobals().curr_item.rights.manage ||

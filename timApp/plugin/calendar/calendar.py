@@ -1,3 +1,6 @@
+"""
+API endpoints for the calendar plugin
+"""
 import secrets
 import uuid
 from dataclasses import dataclass, asdict, field

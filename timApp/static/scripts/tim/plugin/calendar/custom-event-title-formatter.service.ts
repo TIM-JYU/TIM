@@ -1,3 +1,14 @@
+/**
+ * Formats the tool tip texts and event texts for the calendar plugin
+ *
+ * @author Miika Immonen
+ * @author Terhi Kamula
+ * @author Anssi Lepikko
+ * @author Touko Miettinen
+ * @author Joose Tikkanen
+ * @license MIT
+ * @date 24.5.2022
+ */
 import {Injectable} from "@angular/core";
 import {CalendarEventTitleFormatter, CalendarEvent} from "angular-calendar";
 import {TIMEventMeta} from "./calendar.component";
