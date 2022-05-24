@@ -42,12 +42,12 @@ import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
 import {showMessageDialog} from "../../ui/showMessageDialog";
-import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {CustomEventTitleFormatter} from "./custom-event-title-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
 import {showCalendarEventDialog} from "./showCalendarEventDialog";
 import {DateTimeValidatorDirective} from "./datetimevalidator.directive";
+import {CalendarHeaderModule} from "./calendar-header.component";
 
 /**
  * Helps calculate the size of a horizontally dragged event on the calendar view.
@@ -219,7 +219,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                     [viewDate]="viewDate"
                     [events]="events"
                     [locale]="locale"
-                    [weekStartsOn]="1"
+                    [weekStartsOn]="weekStartsOn"
                     (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
                     (dayClicked)="changeToDay($event.day.date)"
                     (eventClicked)="handleEventClick($event.event)"
@@ -229,14 +229,14 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                     *ngSwitchCase="'week'"
                     [viewDate]="viewDate"
                     [events]="events"
-                    [hourSegmentHeight]="30"
+                    [hourSegmentHeight]="segmentHeight"
                     [hourDuration]="60"
                     [hourSegments]="segmentsInHour"
                     [dayStartHour]="dayStartHour"
                     [dayEndHour]="dayEndHour"
                     [locale]="locale"
                     [minimumEventHeight]="minimumEventHeight"
-                    [weekStartsOn]="1"
+                    [weekStartsOn]="weekStartsOn"
                     (dayHeaderClicked)="viewDay($event.day.date)"
                     (hourSegmentClicked)="clickedDate = $event.date"
                     [hourSegmentTemplate]="weekViewHourSegmentTemplate"
@@ -300,7 +300,10 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
         
     `,
     encapsulation: ViewEncapsulation.None,
-    styleUrls: ["calendar.component.scss"],
+    styleUrls: [
+        "calendar.component.scss",
+        "../../../../../node_modules/angular-calendar/css/angular-calendar.css",
+    ],
     // templateUrl: "template.html",
 })
 export class CalendarComponent
@@ -348,6 +351,7 @@ export class CalendarComponent
     dayEndHour: number = 19;
     segmentMinutes: number = 20;
     segmentsInHour: number = 3;
+    segmentHeight: number = 30;
     minimumEventHeight: number = this.segmentMinutes;
 
     modalData?: {
@@ -637,7 +641,7 @@ export class CalendarComponent
      * @private
      */
     private refresh() {
-        this.events = [...this.events];
+        this.events = [...this.events]; // TODO: Find out what is the purpose of this line
         this.events.forEach((event) => {
             if (event.meta!.enrollments >= event.meta!.maxSize) {
                 event.color = colors.red;
@@ -676,9 +680,7 @@ export class CalendarComponent
         super.ngOnInit();
         this.initEventTypes();
         this.setLanguage();
-        if (Users.isLoggedIn()) {
-            void this.loadEvents();
-        }
+        void this.loadEvents();
     }
 
     /**
@@ -1001,12 +1003,12 @@ export class CalendarComponent
     ],
     exports: [CalendarComponent, DateTimeValidatorDirective],
 })
-export class KATTIModule implements DoBootstrap {
+export class TimCalendarModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
 const angularJsModule = createDowngradedModule((extraProviders) =>
-    platformBrowserDynamic(extraProviders).bootstrapModule(KATTIModule)
+    platformBrowserDynamic(extraProviders).bootstrapModule(TimCalendarModule)
 );
 
 doDowngrade(angularJsModule, "timCalendar", CalendarComponent);
