@@ -122,7 +122,7 @@ interface IRunResult {
             <div class="csRunMenuArea" *ngIf="!forcedupload">
                 <p class="csRunMenu">
                     <button *ngIf="isRun && buttonText()"
-                            [attr.disabled]="isRunning || preventSave || (markup.disableUnchanged && !isUnSaved() && isText)"
+                            [attr.disabled]="isRunning || preventSave || (disableUnchanged && !isUnSaved() && isText)"
                             class="timButton btn-sm"
                             title="(Ctrl-S)"
                             (click)="runCode()"
