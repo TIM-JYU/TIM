@@ -639,7 +639,7 @@ export class CalendarComponent
      * @private
      */
     private refresh() {
-        this.events = [...this.events];
+        this.events = [...this.events]; // TODO: Find out what is the purpose of this line
         this.events.forEach((event) => {
             if (event.meta!.enrollments >= event.meta!.maxSize) {
                 event.color = colors.red;
