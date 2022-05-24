@@ -264,7 +264,7 @@
       </trans-unit>
       <trans-unit id="5380796636693554872" datatype="html">
         <source>no fetches yet</source>
-        <target state="translated">Inga hämtningar ändå</target>
+        <target state="translated">inga hämtningar ändå</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
           <context context-type="linenumber">95</context>
@@ -644,7 +644,7 @@
       </trans-unit>
       <trans-unit id="2714492186629770050" datatype="html">
         <source> Manage scheduled functions </source>
-        <target state="translated">Hantera schemalagda funktioner</target>
+        <target state="translated"> Hantera schemalagda funktioner</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/document/scheduling/schedule-dialog.component.ts</context>
           <context context-type="linenumber">56,58</context>
@@ -660,7 +660,7 @@
       </trans-unit>
       <trans-unit id="7645217870616885605" datatype="html">
         <source>There are no functions.</source>
-        <target state="translated">Det finns inga funktioner</target>
+        <target state="translated">Det finns inga funktioner.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/document/scheduling/schedule-dialog.component.ts</context>
           <context context-type="linenumber">61</context>
@@ -756,7 +756,7 @@
       </trans-unit>
       <trans-unit id="4646834153496382565" datatype="html">
         <source>Add </source>
-        <target state="translated">Lägg till</target>
+        <target state="translated">Lägg till </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/document/scheduling/schedule-dialog.component.ts</context>
           <context context-type="linenumber">111,112</context>
@@ -856,7 +856,7 @@
       </trans-unit>
       <trans-unit id="4098460571712444283" datatype="html">
         <source> Accessibility statement </source>
-        <target state="translated">Tillgänglighetsförklaring</target>
+        <target state="translated"> Tillgänglighetsförklaring</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
           <context context-type="linenumber">44,46</context>
@@ -896,7 +896,7 @@
       </trans-unit>
       <trans-unit id="6800515273162166241" datatype="html">
         <source>Sign up </source>
-        <target state="translated">Registrera dig</target>
+        <target state="translated">Registrera dig </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
           <context context-type="linenumber">49,50</context>
@@ -1028,7 +1028,7 @@
       </trans-unit>
       <trans-unit id="5973984108338028678" datatype="html">
         <source> Various programming languages</source>
-        <target state="translated">Olika programmeringsspråk</target>
+        <target state="translated"> Olika programmeringsspråk</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
           <context context-type="linenumber">96,97</context>
@@ -1444,7 +1444,7 @@
       </trans-unit>
       <trans-unit id="5280522151948167204" datatype="html">
         <source>Notify owners on list changes (e.g. user subscribes) </source>
-        <target state="translated">Meddela ägare om liständringar (t.ex. användare prenumererar)</target>
+        <target state="translated">Meddela ägare om liständringar (t.ex. användare prenumererar) </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">66,68</context>
@@ -1544,7 +1544,7 @@
       </trans-unit>
       <trans-unit id="6189417014698334911" datatype="html">
         <source>No HTML messages allowed </source>
-        <target state="translated">Inga HTML-meddelanden tillåtna</target>
+        <target state="translated">Inga HTML-meddelanden tillåtna </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">134,135</context>
@@ -1944,7 +1944,7 @@
       </trans-unit>
       <trans-unit id="904878317972375868" datatype="html">
         <source> Create message list </source>
-        <target state="translated"> Skapa meddelandelista</target>
+        <target state="translated"> Skapa meddelandelista </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/message-list-create-dialog.component.ts</context>
           <context context-type="linenumber">50,52</context>
@@ -2780,7 +2780,7 @@
       </trans-unit>
       <trans-unit id="6437258484430887079" datatype="html">
         <source> There are <x id="INTERPOLATION" equiv-text="{{lastSearchResult.allMatchCount}}"/> matches. Only first <x id="INTERPOLATION_1" equiv-text="{{lastSearchResult.matches.length}}"/> are shown. Please give more specific keywords to show all results. </source>
-        <target state="translated">Det finns <x id="INTERPOLATION" equiv-text="{{lastSearchResult.allMatchCount}}"/> matchningar. Endast första <x id="INTERPOLATION_1" equiv-text="{{lastSearchResult.matches.length}}"/> visas. Ange mer specifika sökord för att visa alla resultat.</target>
+        <target state="translated">Det finns <x id="INTERPOLATION" equiv-text="{{lastSearchResult.allMatchCount}}"/> matchningar. Endast första <x id="INTERPOLATION_1" equiv-text="{{lastSearchResult.matches.length}}"/> visas. Ange mer specifika sökord för att visa alla resultat. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">240,244</context>
@@ -2828,7 +2828,7 @@
       </trans-unit>
       <trans-unit id="304342857963215927" datatype="html">
         <source>Auto apply on match</source>
-        <target state="new">Auto apply on match</target>
+        <target state="translated">Tillämpa automatiskt med matchning</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">375</context>
@@ -2836,7 +2836,7 @@
       </trans-unit>
       <trans-unit id="9159869723463881627" datatype="html">
         <source>Undone permissions for <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.</source>
-        <target state="new">Undone permissions for <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.</target>
+        <target state="translated">Ångrat behörigheter för <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">395</context>
@@ -2844,7 +2844,7 @@
       </trans-unit>
       <trans-unit id="5703267131879050829" datatype="html">
         <source>Permissions applied to <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.</source>
-        <target state="new">Permissions applied to <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.</target>
+        <target state="translated">Behörigheter tillämpas på <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">396</context>
@@ -2852,7 +2852,7 @@
       </trans-unit>
       <trans-unit id="5069481065713145900" datatype="html">
         <source>Are you sure you want to undo the last action?</source>
-        <target state="new">Are you sure you want to undo the last action?</target>
+        <target state="translated">Är du säker att du vill ångra den sista handling?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">406</context>
@@ -2860,7 +2860,7 @@
       </trans-unit>
       <trans-unit id="4014435728703990296" datatype="html">
         <source>Set permission</source>
-        <target state="new">Set permission</target>
+        <target state="translated">Ställa in behörighet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">523</context>
@@ -2868,7 +2868,7 @@
       </trans-unit>
       <trans-unit id="7127355890937941598" datatype="html">
         <source>Could not apply the permission.</source>
-        <target state="new">Could not apply the permission.</target>
+        <target state="translated">Kunde inte tillämpa behörighetet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">565</context>
@@ -2880,7 +2880,7 @@
       </trans-unit>
       <trans-unit id="2369555589256522210" datatype="html">
         <source>Could not search for user.</source>
-        <target state="new">Could not search for user.</target>
+        <target state="translated">Kunde inte sökä efter användaren.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">816</context>
@@ -2888,7 +2888,7 @@
       </trans-unit>
       <trans-unit id="1073782821840614775" datatype="html">
         <source>Failed to contact the server.</source>
-        <target state="new">Failed to contact the server.</target>
+        <target state="translated">Kunde inte kontakta server.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">916</context>
@@ -2896,7 +2896,7 @@
       </trans-unit>
       <trans-unit id="136263580583779538" datatype="html">
         <source>Display search panel</source>
-        <target state="new">Display search panel</target>
+        <target state="translated">Visa sökpanelen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/search/search-button.component.ts</context>
           <context context-type="linenumber">9</context>
@@ -2904,7 +2904,7 @@
       </trans-unit>
       <trans-unit id="4580988005648117665" datatype="html">
         <source>Search</source>
-        <target state="new">Search</target>
+        <target state="translated">Söka</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/search/search-button.component.ts</context>
           <context context-type="linenumber">12</context>
@@ -2916,7 +2916,7 @@
       </trans-unit>
       <trans-unit id="6293086773067204578" datatype="html">
         <source>TIM document search</source>
-        <target state="new">TIM document search</target>
+        <target state="translated">TIM dokumentsök</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/search/search-button.component.ts</context>
           <context context-type="linenumber">17</context>
@@ -2924,7 +2924,7 @@
       </trans-unit>
       <trans-unit id="1792806198663410166" datatype="html">
         <source>Bookmarks</source>
-        <target state="new">Bookmarks</target>
+        <target state="translated">Bokmärken</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/services/tab-entry-list.service.ts</context>
           <context context-type="linenumber">37</context>
@@ -2940,7 +2940,7 @@
       </trans-unit>
       <trans-unit id="4836175280518160350" datatype="html">
         <source>Document settings</source>
-        <target state="new">Document settings</target>
+        <target state="translated">Dokument inställningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/services/tab-entry-list.service.ts</context>
           <context context-type="linenumber">44</context>
@@ -2956,7 +2956,7 @@
       </trans-unit>
       <trans-unit id="7372224717222969507" datatype="html">
         <source>Document index</source>
-        <target state="new">Document index</target>
+        <target state="translated">Dokumentindex</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/services/tab-entry-list.service.ts</context>
           <context context-type="linenumber">51</context>
@@ -2968,7 +2968,7 @@
       </trans-unit>
       <trans-unit id="7025159553172419928" datatype="html">
         <source>Scoreboard</source>
-        <target state="new">Scoreboard</target>
+        <target state="translated">Poengbord</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/services/tab-entry-list.service.ts</context>
           <context context-type="linenumber">59</context>
@@ -2980,7 +2980,7 @@
       </trans-unit>
       <trans-unit id="8142657803643326364" datatype="html">
         <source>Get question</source>
-        <target state="new">Get question</target>
+        <target state="translated">Erhålla frågan</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/services/tab-entry-list.service.ts</context>
           <context context-type="linenumber">74</context>
@@ -2992,7 +2992,7 @@
       </trans-unit>
       <trans-unit id="9086145107498026183" datatype="html">
         <source>Lecture participants</source>
-        <target state="new">Lecture participants</target>
+        <target state="translated">Föreläsningsdeltagare</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/services/tab-entry-list.service.ts</context>
           <context context-type="linenumber">84</context>
@@ -3004,7 +3004,7 @@
       </trans-unit>
       <trans-unit id="1655491632914962338" datatype="html">
         <source>Show menu</source>
-        <target state="new">Show menu</target>
+        <target state="translated">Visa menyn</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/sidebar-menu.component.ts</context>
           <context context-type="linenumber">43</context>
@@ -3012,7 +3012,7 @@
       </trans-unit>
       <trans-unit id="2595203250116897745" datatype="html">
         <source>Open sidebar</source>
-        <target state="new">Open sidebar</target>
+        <target state="translated">Öppnä sidofältet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/sidebar-menu.component.ts</context>
           <context context-type="linenumber">44</context>
@@ -3020,7 +3020,7 @@
       </trans-unit>
       <trans-unit id="3880104539461951428" datatype="html">
         <source>Index <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;>"/>Go to top<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
-        <target state="new">Index <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;>"/>Go to top<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
+        <target state="translated">Index <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;>"/>Gå till toppen<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/index-tab.component.ts</context>
           <context context-type="linenumber">17</context>
@@ -3028,7 +3028,7 @@
       </trans-unit>
       <trans-unit id="2090184009856228643" datatype="html">
         <source>Go to top</source>
-        <target state="new">Go to top</target>
+        <target state="translated">Gå till toppen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/index-tab.component.ts</context>
           <context context-type="linenumber">17</context>
@@ -3036,7 +3036,7 @@
       </trans-unit>
       <trans-unit id="4189204903737125906" datatype="html">
         <source>Current Lectures</source>
-        <target state="new">Current Lectures</target>
+        <target state="translated">Nuvarande föreläsningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/lecture-info-tab.component.ts</context>
           <context context-type="linenumber">15</context>
@@ -3044,7 +3044,7 @@
       </trans-unit>
       <trans-unit id="8307140841776883735" datatype="html">
         <source>Join</source>
-        <target state="new">Join</target>
+        <target state="translated">Ansluta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/lecture-info-tab.component.ts</context>
           <context context-type="linenumber">21</context>
@@ -3052,7 +3052,7 @@
       </trans-unit>
       <trans-unit id="3731008746896061926" datatype="html">
         <source>Join </source>
-        <target state="new">Join </target>
+        <target state="translated">Ansluta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/lecture-info-tab.component.ts</context>
           <context context-type="linenumber">23,24</context>
@@ -3060,7 +3060,7 @@
       </trans-unit>
       <trans-unit id="5841796170470816198" datatype="html">
         <source>No current lectures</source>
-        <target state="new">No current lectures</target>
+        <target state="translated">Inga nuvarande föreläsningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/lecture-info-tab.component.ts</context>
           <context context-type="linenumber">26</context>
@@ -3068,7 +3068,7 @@
       </trans-unit>
       <trans-unit id="938697210411008517" datatype="html">
         <source>Upcoming Lectures</source>
-        <target state="new">Upcoming Lectures</target>
+        <target state="translated">Framkommande föreläsningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/lecture-info-tab.component.ts</context>
           <context context-type="linenumber">29</context>
@@ -3076,7 +3076,7 @@
       </trans-unit>
       <trans-unit id="3907274482954811556" datatype="html">
         <source>No upcoming lectures</source>
-        <target state="new">No upcoming lectures</target>
+        <target state="translated">Inga framkommande föreläsningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/lecture-info-tab.component.ts</context>
           <context context-type="linenumber">34</context>
@@ -3084,7 +3084,7 @@
       </trans-unit>
       <trans-unit id="5576848798701316291" datatype="html">
         <source>Past Lectures</source>
-        <target state="new">Past Lectures</target>
+        <target state="translated">Förgången föreläsningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/lecture-info-tab.component.ts</context>
           <context context-type="linenumber">37</context>
@@ -3092,7 +3092,7 @@
       </trans-unit>
       <trans-unit id="5354130303929057168" datatype="html">
         <source>No past lectures</source>
-        <target state="new">No past lectures</target>
+        <target state="translated">Inga föregången föreläsningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/lecture-info-tab.component.ts</context>
           <context context-type="linenumber">42</context>
@@ -3100,7 +3100,7 @@
       </trans-unit>
       <trans-unit id="1216488622109291174" datatype="html">
         <source>Not currently in document view.</source>
-        <target state="new">Not currently in document view.</target>
+        <target state="translated">Inte i nuvarande dokumentvisan.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/lecture-info-tab.component.ts</context>
           <context context-type="linenumber">61</context>
@@ -3108,7 +3108,7 @@
       </trans-unit>
       <trans-unit id="1835862130590080443" datatype="html">
         <source>Loading question manually...</source>
-        <target state="new">Loading question manually...</target>
+        <target state="translated">Laddar frågan manuelt...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/load-questions-tab.component.ts</context>
           <context context-type="linenumber">9</context>
@@ -3116,7 +3116,7 @@
       </trans-unit>
       <trans-unit id="2764567568324210100" datatype="html">
         <source>People logged in: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
-        <target state="new">People logged in: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
+        <target state="translated">Personer som är inloggade: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/> <x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/> <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">8</context>
@@ -3124,7 +3124,7 @@
       </trans-unit>
       <trans-unit id="3522945725389041013" datatype="html">
         <source>Lecturers (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</source>
-        <target state="new">Lecturers (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</target>
+        <target state="translated">Föreläsare (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">9</context>
@@ -3132,7 +3132,7 @@
       </trans-unit>
       <trans-unit id="5126591019026593033" datatype="html">
         <source>No lecturers</source>
-        <target state="new">No lecturers</target>
+        <target state="translated">Inga föreläsare</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">18</context>
@@ -3140,7 +3140,7 @@
       </trans-unit>
       <trans-unit id="4851338224428351823" datatype="html">
         <source>Students (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</source>
-        <target state="new">Students (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</target>
+        <target state="translated">Elever (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -3148,7 +3148,7 @@
       </trans-unit>
       <trans-unit id="5349114946599699330" datatype="html">
         <source>No students</source>
-        <target state="new">No students</target>
+        <target state="translated">Inga elever</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">29</context>
@@ -3156,7 +3156,7 @@
       </trans-unit>
       <trans-unit id="5967071017461085725" datatype="html">
         <source>Points on this page</source>
-        <target state="new">Points on this page</target>
+        <target state="translated">Poeng på denna sidan</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/score-info-tab.component.ts</context>
           <context context-type="linenumber">11</context>
@@ -3164,7 +3164,7 @@
       </trans-unit>
       <trans-unit id="4578192247039196794" datatype="html">
         <source>Task</source>
-        <target state="new">Task</target>
+        <target state="translated">Uppgift</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/score-info-tab.component.ts</context>
           <context context-type="linenumber">17</context>
@@ -3172,7 +3172,7 @@
       </trans-unit>
       <trans-unit id="5254622645701859101" datatype="html">
         <source>Points</source>
-        <target state="new">Points</target>
+        <target state="translated">Poeng</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/score-info-tab.component.ts</context>
           <context context-type="linenumber">18</context>
@@ -3184,7 +3184,7 @@
       </trans-unit>
       <trans-unit id="3448462145758383019" datatype="html">
         <source>Total</source>
-        <target state="new">Total</target>
+        <target state="translated">Totalt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/score-info-tab.component.ts</context>
           <context context-type="linenumber">33</context>
@@ -3196,7 +3196,7 @@
       </trans-unit>
       <trans-unit id="37144610564892257" datatype="html">
         <source>Points in this course</source>
-        <target state="new">Points in this course</target>
+        <target state="translated">Poäng på denna kursen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/score-info-tab.component.ts</context>
           <context context-type="linenumber">42</context>
@@ -3204,7 +3204,7 @@
       </trans-unit>
       <trans-unit id="1407560924967345762" datatype="html">
         <source>Page</source>
-        <target state="new">Page</target>
+        <target state="translated">Sida</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/score-info-tab.component.ts</context>
           <context context-type="linenumber">48</context>
@@ -3212,7 +3212,7 @@
       </trans-unit>
       <trans-unit id="7911416166208830577" datatype="html">
         <source>Help</source>
-        <target state="new">Help</target>
+        <target state="translated">Hjälp</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">54</context>
@@ -3220,7 +3220,7 @@
       </trans-unit>
       <trans-unit id="7890554627596125776" datatype="html">
         <source>Open quick start guide</source>
-        <target state="new">Open quick start guide</target>
+        <target state="translated">Öppna snabbstart guide</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">56</context>
@@ -3228,7 +3228,7 @@
       </trans-unit>
       <trans-unit id="4872395050569480088" datatype="html">
         <source>Open content creator guide</source>
-        <target state="new">Open content creator guide</target>
+        <target state="translated">Öppna innehållproducent guide</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">57</context>
@@ -3236,7 +3236,7 @@
       </trans-unit>
       <trans-unit id="5840095143381034047" datatype="html">
         <source>Open all guides</source>
-        <target state="new">Open all guides</target>
+        <target state="translated">Öppna alla guider</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">58</context>
@@ -3244,7 +3244,7 @@
       </trans-unit>
       <trans-unit id="6673660887182833564" datatype="html">
         <source>Customize</source>
-        <target state="new">Customize</target>
+        <target state="translated">Kundanpassning</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">62</context>
@@ -3252,7 +3252,7 @@
       </trans-unit>
       <trans-unit id="7719978079065752406" datatype="html">
         <source>Customize TIM</source>
-        <target state="new">Customize TIM</target>
+        <target state="translated">Anpassa TIM</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">63</context>
@@ -3260,7 +3260,7 @@
       </trans-unit>
       <trans-unit id="5816548728014346546" datatype="html">
         <source>Folder settings</source>
-        <target state="new">Folder settings</target>
+        <target state="translated">Mappinställningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">66</context>
@@ -3268,7 +3268,7 @@
       </trans-unit>
       <trans-unit id="2427868371025086218" datatype="html">
         <source>Set item relevance value</source>
-        <target state="new">Set item relevance value</target>
+        <target state="translated">Ställa in varors relevansvärder</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">68</context>
@@ -3280,7 +3280,7 @@
       </trans-unit>
       <trans-unit id="5372481859541149959" datatype="html">
         <source> Edit relevance (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;>"/><x id="INTERPOLATION" equiv-text="{{currentRelevance}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>) </source>
-        <target state="new"> Edit relevance (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;>"/><x id="INTERPOLATION" equiv-text="{{currentRelevance}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>) </target>
+        <target state="translated"> Redigera relevans (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;>"/><x id="INTERPOLATION" equiv-text="{{currentRelevance}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>) </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">70,72</context>
@@ -3292,7 +3292,7 @@
       </trans-unit>
       <trans-unit id="1697273389902247448" datatype="html">
         <source>Current relevance value</source>
-        <target state="new">Current relevance value</target>
+        <target state="translated">Nuvarande relevansvärde</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">71</context>
@@ -3304,7 +3304,7 @@
       </trans-unit>
       <trans-unit id="4606441938833173564" datatype="html">
         <source>Search with tags</source>
-        <target state="new">Search with tags</target>
+        <target state="translated">Söka med taggar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">77</context>
@@ -3316,7 +3316,7 @@
       </trans-unit>
       <trans-unit id="8962767638526774137" datatype="html">
         <source>Search with tags </source>
-        <target state="new">Search with tags </target>
+        <target state="translated">Söka med taggar </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">79,80</context>
@@ -3328,7 +3328,7 @@
       </trans-unit>
       <trans-unit id="5209674777822609466" datatype="html">
         <source>Toggle between showing full and partitioned document</source>
-        <target state="new">Toggle between showing full and partitioned document</target>
+        <target state="translated">Växla mellan att visa hela och partitionerade dokument</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">84</context>
@@ -3336,7 +3336,7 @@
       </trans-unit>
       <trans-unit id="3345795974962707996" datatype="html">
         <source>Show page in parts</source>
-        <target state="new">Show page in parts</target>
+        <target state="translated">Visa sidan i delar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">86</context>
@@ -3344,7 +3344,7 @@
       </trans-unit>
       <trans-unit id="6889818903589765008" datatype="html">
         <source>Show page in full</source>
-        <target state="new">Show page in full</target>
+        <target state="translated">Visa hela sidan</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">87</context>
@@ -3352,7 +3352,7 @@
       </trans-unit>
       <trans-unit id="6870002770937471970" datatype="html">
         <source>Open document partitioning settings</source>
-        <target state="new">Open document partitioning settings</target>
+        <target state="translated">Öppna inställningar för dokumentpartitionering</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">89</context>
@@ -3360,7 +3360,7 @@
       </trans-unit>
       <trans-unit id="1918757823540045913" datatype="html">
         <source>Edit settings </source>
-        <target state="new">Edit settings </target>
+        <target state="translated">Redigera inställningar </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">96,97</context>
@@ -3368,7 +3368,7 @@
       </trans-unit>
       <trans-unit id="3869833809499315130" datatype="html">
         <source>Mark all paragraphs of the document as read</source>
-        <target state="new">Mark all paragraphs of the document as read</target>
+        <target state="translated">Markera alla stycken i dokumentet som lästa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">106</context>
@@ -3376,7 +3376,7 @@
       </trans-unit>
       <trans-unit id="6957932615517356211" datatype="html">
         <source>Mark all as read </source>
-        <target state="new">Mark all as read </target>
+        <target state="translated">Markera alla som lästa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">108,109</context>
@@ -3384,7 +3384,7 @@
       </trans-unit>
       <trans-unit id="2380551472651543272" datatype="html">
         <source>Mark document as translated</source>
-        <target state="new">Mark document as translated</target>
+        <target state="translated">Markera dokumentet som översatt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">112</context>
@@ -3392,7 +3392,7 @@
       </trans-unit>
       <trans-unit id="7349786524326779367" datatype="html">
         <source>Mark all as translated </source>
-        <target state="new">Mark all as translated </target>
+        <target state="translated">Markera alla som översatt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">114,115</context>
@@ -3400,7 +3400,7 @@
       </trans-unit>
       <trans-unit id="4082647858622460612" datatype="html">
         <source>Mark translations as checked</source>
-        <target state="new">Mark translations as checked</target>
+        <target state="translated">Markera översättningar som checkade</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">118</context>
@@ -3408,7 +3408,7 @@
       </trans-unit>
       <trans-unit id="3196267353835684811" datatype="html">
         <source>Mark all translations as checked </source>
-        <target state="new">Mark all translations as checked </target>
+        <target state="translated">Markera alla översättningar som checkade</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">120,121</context>
@@ -3416,7 +3416,7 @@
       </trans-unit>
       <trans-unit id="4524211632765712656" datatype="html">
         <source>Delete all read marks from all users who visited this document</source>
-        <target state="new">Delete all read marks from all users who visited this document</target>
+        <target state="translated">Ta bort alla läsmärken från alla användare som besökte detta dokument</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">124</context>
@@ -3424,7 +3424,7 @@
       </trans-unit>
       <trans-unit id="6820301256035752309" datatype="html">
         <source>Delete all read marks </source>
-        <target state="new">Delete all read marks </target>
+        <target state="translated">Ta bort alla läsmärken </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">126,127</context>
@@ -3432,7 +3432,7 @@
       </trans-unit>
       <trans-unit id="3053229305335522001" datatype="html">
         <source>Refresh numbering</source>
-        <target state="new">Refresh numbering</target>
+        <target state="translated">Uppdatera numrering</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">129</context>
@@ -3440,7 +3440,7 @@
       </trans-unit>
       <trans-unit id="8992183302589733178" datatype="html">
         <source>Refresh numbering </source>
-        <target state="new">Refresh numbering </target>
+        <target state="translated">Uppdatera numrering</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">131,132</context>
@@ -3448,7 +3448,7 @@
       </trans-unit>
       <trans-unit id="2102652226889166925" datatype="html">
         <source>Refresh also remote documents numbering</source>
-        <target state="new">Refresh also remote documents numbering</target>
+        <target state="translated">Uppdatera även numrering av fjärrdokument</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">133</context>
@@ -3464,7 +3464,7 @@
       </trans-unit>
       <trans-unit id="1379043122676738303" datatype="html">
         <source>Lecture settings</source>
-        <target state="new">Lecture settings</target>
+        <target state="translated">Inställningar för föreläsningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">141</context>
@@ -3472,7 +3472,7 @@
       </trans-unit>
       <trans-unit id="1304170677752702304" datatype="html">
         <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;>"/> Show wall</source>
-        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;>"/> Show wall</target>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;>"/> Visa väggen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">143,144</context>
@@ -3480,7 +3480,7 @@
       </trans-unit>
       <trans-unit id="2865158227582611884" datatype="html">
         <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;>"/> Show questions </source>
-        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;>"/> Show questions </target>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;>"/> Visa frågor </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">148,149</context>
@@ -3488,7 +3488,7 @@
       </trans-unit>
       <trans-unit id="4058133633628035062" datatype="html">
         <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;>"/> Show answers</source>
-        <target state="new"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;>"/> Show answers</target>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;>"/> Visa svar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">152</context>
@@ -3496,7 +3496,7 @@
       </trans-unit>
       <trans-unit id="5246904666467741975" datatype="html">
         <source>Print document</source>
-        <target state="new">Print document</target>
+        <target state="translated">Skriv ut dokument</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">158</context>
@@ -3504,7 +3504,7 @@
       </trans-unit>
       <trans-unit id="3194632546640105400" datatype="html">
         <source>Printing help</source>
-        <target state="new">Printing help</target>
+        <target state="translated">Hjälp med utskrivning</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">160</context>
@@ -3512,7 +3512,7 @@
       </trans-unit>
       <trans-unit id="839821745420040019" datatype="html">
         <source>Print using LaTeX (best quality)</source>
-        <target state="new">Print using LaTeX (best quality)</target>
+        <target state="translated">Använda LaTeX för utskrivning (bäst kvalitet)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">164</context>
@@ -3520,7 +3520,7 @@
       </trans-unit>
       <trans-unit id="2867932944205413375" datatype="html">
         <source>Print document </source>
-        <target state="new">Print document </target>
+        <target state="translated">Skriv ut dokument</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">166,167</context>
@@ -3528,7 +3528,7 @@
       </trans-unit>
       <trans-unit id="1115486133630608977" datatype="html">
         <source>Print via browser's print dialog</source>
-        <target state="new">Print via browser's print dialog</target>
+        <target state="translated">Skriv ut via webbläsarens utskrivningsdialog</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">169</context>
@@ -3536,7 +3536,7 @@
       </trans-unit>
       <trans-unit id="6673833826773813241" datatype="html">
         <source>Browser print </source>
-        <target state="new">Browser print </target>
+        <target state="translated">Utskrift av webbläsare </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">171,172</context>
@@ -3544,7 +3544,7 @@
       </trans-unit>
       <trans-unit id="3210031722423452183" datatype="html">
         <source>Document tags</source>
-        <target state="new">Document tags</target>
+        <target state="translated">Dokumenttaggar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">174</context>
@@ -3552,7 +3552,7 @@
       </trans-unit>
       <trans-unit id="8500529743832016473" datatype="html">
         <source>Teachers' help for course code</source>
-        <target state="new">Teachers' help for course code</target>
+        <target state="translated">Lärarnas hjälp för kurskod</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">177</context>
@@ -3560,7 +3560,7 @@
       </trans-unit>
       <trans-unit id="796342827742465145" datatype="html">
         <source>Add or remove document tags</source>
-        <target state="new">Add or remove document tags</target>
+        <target state="translated">Lägg till eller ta bort dokumenttaggar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">182</context>
@@ -3568,7 +3568,7 @@
       </trans-unit>
       <trans-unit id="8419930286535843500" datatype="html">
         <source>Edit tags </source>
-        <target state="new">Edit tags </target>
+        <target state="translated">Redigera taggar </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">184,185</context>
@@ -3576,7 +3576,7 @@
       </trans-unit>
       <trans-unit id="142266713619376539" datatype="html">
         <source>Set document as a course main page</source>
-        <target state="new">Set document as a course main page</target>
+        <target state="translated">Ställa in documenten som kursens huvudsida</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">193</context>
@@ -3584,7 +3584,7 @@
       </trans-unit>
       <trans-unit id="7186682572276045583" datatype="html">
         <source>Set as course </source>
-        <target state="new">Set as course </target>
+        <target state="translated">Ställa sin som kurs </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">195,196</context>
@@ -3592,7 +3592,7 @@
       </trans-unit>
       <trans-unit id="4831905470722737048" datatype="html">
         <source>Memo/Minutes</source>
-        <target state="new">Memo/Minutes</target>
+        <target state="translated">Promemoria/Protokoll</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">198</context>
@@ -3600,7 +3600,7 @@
       </trans-unit>
       <trans-unit id="7443667377498048368" datatype="html">
         <source>Create extracts</source>
-        <target state="new">Create extracts</target>
+        <target state="translated">Skapa utdrag</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">201</context>
@@ -3608,7 +3608,7 @@
       </trans-unit>
       <trans-unit id="9055027655819547507" datatype="html">
         <source>Create extracts </source>
-        <target state="new">Create extracts </target>
+        <target state="translated">Skapa utdrag </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">203,204</context>
@@ -3616,7 +3616,7 @@
       </trans-unit>
       <trans-unit id="157958031009700619" datatype="html">
         <source>Create minutes</source>
-        <target state="new">Create minutes</target>
+        <target state="translated">Skapa protokoll</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">207</context>
@@ -3624,7 +3624,7 @@
       </trans-unit>
       <trans-unit id="6906618302973581092" datatype="html">
         <source>Create minutes </source>
-        <target state="new">Create minutes </target>
+        <target state="translated">Skapa protokoll </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">209,210</context>
@@ -3632,7 +3632,7 @@
       </trans-unit>
       <trans-unit id="6521772601711563783" datatype="html">
         <source>Display attachments, check their validity, and merge them into single file.</source>
-        <target state="new">Display attachments, check their validity, and merge them into single file.</target>
+        <target state="translated">Visa bilagor, kontrollera deras giltighet och slå samman dem till en enda fil.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">213</context>
@@ -3640,7 +3640,7 @@
       </trans-unit>
       <trans-unit id="2922112108601535475" datatype="html">
         <source>Merge attachments </source>
-        <target state="new">Merge attachments </target>
+        <target state="translated">Slå samman bilagor </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">215,216</context>
@@ -3648,7 +3648,7 @@
       </trans-unit>
       <trans-unit id="5944812089887969249" datatype="html">
         <source>Groups</source>
-        <target state="new">Groups</target>
+        <target state="translated">Grupper</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">220</context>
@@ -3656,7 +3656,7 @@
       </trans-unit>
       <trans-unit id="6629565544048409582" datatype="html">
         <source>Linked course groups</source>
-        <target state="new">Linked course groups</target>
+        <target state="translated">Länkade kursgrupper</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">222</context>
@@ -3664,7 +3664,7 @@
       </trans-unit>
       <trans-unit id="7359309035708185948" datatype="html">
         <source>Linked <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;>"/>course groups<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
-        <target state="new">Linked <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;>"/>course groups<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
+        <target state="translated">Länkade <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;>"/>kursgrupper<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">223</context>
@@ -3672,7 +3672,7 @@
       </trans-unit>
       <trans-unit id="9167217071684260011" datatype="html">
         <source>Create a new group</source>
-        <target state="new">Create a new group</target>
+        <target state="translated">Skapa en ny grupp</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">231</context>
@@ -3680,7 +3680,7 @@
       </trans-unit>
       <trans-unit id="3608133900881958958" datatype="html">
         <source>Create a new group </source>
-        <target state="new">Create a new group </target>
+        <target state="translated">Skapa en ny grupp</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">233,234</context>
@@ -3688,7 +3688,7 @@
       </trans-unit>
       <trans-unit id="693041585772677385" datatype="html">
         <source>Browse existing groups</source>
-        <target state="new">Browse existing groups</target>
+        <target state="translated">Bläddra bland befintliga grupper</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">235</context>
@@ -3696,7 +3696,7 @@
       </trans-unit>
       <trans-unit id="8270778862044299635" datatype="html">
         <source>Message lists</source>
-        <target state="new">Message lists</target>
+        <target state="translated">Meddelandelistor</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">239</context>
@@ -3704,7 +3704,7 @@
       </trans-unit>
       <trans-unit id="8114530713963818593" datatype="html">
         <source>Create a new message list</source>
-        <target state="new">Create a new message list</target>
+        <target state="translated">Skapa en ny meddelandelista</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">241</context>
@@ -3712,7 +3712,7 @@
       </trans-unit>
       <trans-unit id="8721037582942680707" datatype="html">
         <source>Create a new message list </source>
-        <target state="new">Create a new message list </target>
+        <target state="translated">Skapa en ny meddelandelista</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">245,246</context>
@@ -3720,7 +3720,7 @@
       </trans-unit>
       <trans-unit id="3873948078150985312" datatype="html">
         <source>Browse existing message lists</source>
-        <target state="new">Browse existing message lists</target>
+        <target state="translated">Bläddra befintliga meddelandelistor</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">247</context>
@@ -3728,7 +3728,7 @@
       </trans-unit>
       <trans-unit id="1095317955616667267" datatype="html">
         <source>Browse archives</source>
-        <target state="new">Browse archives</target>
+        <target state="translated">Bläddra arkiver</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">249</context>
@@ -3736,7 +3736,7 @@
       </trans-unit>
       <trans-unit id="6385104003676355545" datatype="html">
         <source>Cache</source>
-        <target state="new">Cache</target>
+        <target state="translated">Cache</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">253</context>
@@ -3744,7 +3744,7 @@
       </trans-unit>
       <trans-unit id="5258902172762305772" datatype="html">
         <source>Refresh cache</source>
-        <target state="new">Refresh cache</target>
+        <target state="translated">Uppdatera cachen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">254</context>
@@ -3752,7 +3752,7 @@
       </trans-unit>
       <trans-unit id="7579022756495200164" datatype="html">
         <source>Scheduled functions</source>
-        <target state="new">Scheduled functions</target>
+        <target state="translated">Schemalagda funktioner</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">258</context>
@@ -3760,7 +3760,7 @@
       </trans-unit>
       <trans-unit id="1578848287330297609" datatype="html">
         <source>Manage scheduled functions</source>
-        <target state="new">Manage scheduled functions</target>
+        <target state="translated">Hantera schemalagda funktioner</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">259</context>
@@ -3768,7 +3768,7 @@
       </trans-unit>
       <trans-unit id="7835587227233053307" datatype="html">
         <source>Could not mark the document as read.</source>
-        <target state="new">Could not mark the document as read.</target>
+        <target state="translated">Kunde inte markera dokumentet som läst.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">366</context>
@@ -3780,7 +3780,7 @@
       </trans-unit>
       <trans-unit id="7448359457332551623" datatype="html">
         <source>This document is in exam mode. Marking document unread will remove read marks from all users! Continue?</source>
-        <target state="new">This document is in exam mode. Marking document unread will remove read marks from all users! Continue?</target>
+        <target state="translated">Detta dokument är i examensläge. Markering av dokument som oläst tar bort läsmärken från alla användare! Fortsätta?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">382</context>
@@ -3788,7 +3788,7 @@
       </trans-unit>
       <trans-unit id="8844824116862224576" datatype="html">
         <source>This will affect <x id="PH" equiv-text="r.result"/> users in total.</source>
-        <target state="new">This will affect <x id="PH" equiv-text="r.result"/> users in total.</target>
+        <target state="translated">Detta kommer att påverka <x id="PH" equiv-text="r.result"/> användare totalt.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">385</context>
@@ -3796,7 +3796,7 @@
       </trans-unit>
       <trans-unit id="3706234110800937438" datatype="html">
         <source>This will mark all paragraphs in this document as translated. Continue?</source>
-        <target state="new">This will mark all paragraphs in this document as translated. Continue?</target>
+        <target state="translated">Detta kommer att markera alla stycken i detta dokument som översatta. Fortsätta?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">392</context>
@@ -3804,7 +3804,7 @@
       </trans-unit>
       <trans-unit id="4302420491905014187" datatype="html">
         <source>This will mark the translations in all paragraphs in this document as checked. Continue?</source>
-        <target state="new">This will mark the translations in all paragraphs in this document as checked. Continue?</target>
+        <target state="translated">Detta kommer att markera översättningarna i alla stycken i detta dokument som checkade. Fortsätta?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">399</context>
@@ -3812,7 +3812,7 @@
       </trans-unit>
       <trans-unit id="4324458214369202050" datatype="html">
         <source>Not in a document</source>
-        <target state="new">Not in a document</target>
+        <target state="translated">Inte i ett dokument</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">555</context>
@@ -3820,7 +3820,7 @@
       </trans-unit>
       <trans-unit id="4588307427431053874" datatype="html">
         <source>The document has no 'knro' macro defined</source>
-        <target state="new">The document has no 'knro' macro defined</target>
+        <target state="translated">Dokumentet har inget 'knro' makro definierat</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">561</context>
@@ -3828,7 +3828,7 @@
       </trans-unit>
       <trans-unit id="9024197238502753926" datatype="html">
         <source>Top level </source>
-        <target state="new">Top level </target>
+        <target state="translated">Högsta nivån </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/bookmarks.component.ts</context>
           <context context-type="linenumber">24</context>
@@ -3836,7 +3836,7 @@
       </trans-unit>
       <trans-unit id="1337103674652096673" datatype="html">
         <source>New bookmark...</source>
-        <target state="new">New bookmark...</target>
+        <target state="translated">Nytt bokmärke...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/bookmarks.component.ts</context>
           <context context-type="linenumber">38</context>
@@ -3844,7 +3844,7 @@
       </trans-unit>
       <trans-unit id="6079930386351127608" datatype="html">
         <source>Done editing</source>
-        <target state="new">Done editing</target>
+        <target state="translated">Redigering färdig</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/bookmarks.component.ts</context>
           <context context-type="linenumber">44</context>
@@ -3852,7 +3852,7 @@
       </trans-unit>
       <trans-unit id="7878303393719404217" datatype="html">
         <source>Edit...</source>
-        <target state="new">Edit...</target>
+        <target state="translated">Redigera...</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/bookmarks.component.ts</context>
           <context context-type="linenumber">45</context>
@@ -3860,7 +3860,7 @@
       </trans-unit>
       <trans-unit id="1115554361326660855" datatype="html">
         <source>Delete this folder</source>
-        <target state="new">Delete this folder</target>
+        <target state="translated">Ta bort denna mapp</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/bookmarks.component.ts</context>
           <context context-type="linenumber">50</context>
@@ -3868,7 +3868,7 @@
       </trans-unit>
       <trans-unit id="8327531442582201391" datatype="html">
         <source><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-plus&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> New bookmark... </source>
-        <target state="new"><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-plus&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> New bookmark... </target>
+        <target state="translated"><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-plus&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> Nytt bokmärke… </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/bookmarks.component.ts</context>
           <context context-type="linenumber">59,60</context>
@@ -3876,7 +3876,7 @@
       </trans-unit>
       <trans-unit id="1790032515357564728" datatype="html">
         <source>Align to the center</source>
-        <target state="new">Align to the center</target>
+        <target state="translated">Rikta in mot mitten</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/switch-button.component.ts</context>
           <context context-type="linenumber">10</context>
@@ -3884,7 +3884,7 @@
       </trans-unit>
       <trans-unit id="6311820510318489653" datatype="html">
         <source>Align to the left</source>
-        <target state="new">Align to the left</target>
+        <target state="translated">Rikta in åt vänster</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/switch-button.component.ts</context>
           <context context-type="linenumber">19</context>
@@ -3892,7 +3892,7 @@
       </trans-unit>
       <trans-unit id="1282825972440368994" datatype="html">
         <source> I allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> to be used for scientific research purposes after anonymization. </source>
-        <target state="new"> I allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> to be used for scientific research purposes after anonymization. </target>
+        <target state="translated">Jag tillåter att <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> den insamlade informationen <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> används för vetenskapliga forskningsändamål efter anonymisering.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/consent-choice.component.ts</context>
           <context context-type="linenumber">11,17</context>
@@ -3900,7 +3900,7 @@
       </trans-unit>
       <trans-unit id="7549221046249449872" datatype="html">
         <source> I do not allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> to be used for scientific research purposes after anonymization. </source>
-        <target state="new"> I do not allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> to be used for scientific research purposes after anonymization. </target>
+        <target state="translated">Jag förbjuder att <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> den insamlade informationen <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> används för vetenskapliga forskningsändamål efter anonymisering.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/consent-choice.component.ts</context>
           <context context-type="linenumber">23,29</context>
@@ -3908,7 +3908,7 @@
       </trans-unit>
       <trans-unit id="6586656662938056988" datatype="html">
         <source>Email or password is incorrect.</source>
-        <target state="new">Email or password is incorrect.</target>
+        <target state="translated">E-postadress eller lösenord är felaktigt.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">7</context>
@@ -3916,7 +3916,7 @@
       </trans-unit>
       <trans-unit id="1648564222394912726" datatype="html">
         <source> Email or password is incorrect. Haka members (e.g. universities) can use Haka login. </source>
-        <target state="new"> Email or password is incorrect. Haka members (e.g. universities) can use Haka login. </target>
+        <target state="translated">E-postadress eller lösenord är felaktigt. Haka-medlemmar (t.ex. universitet) kan använda Haka-inloggning.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">8,10</context>
@@ -3924,7 +3924,7 @@
       </trans-unit>
       <trans-unit id="8723157802996630308" datatype="html">
         <source>Incorrect temporary password.</source>
-        <target state="new">Incorrect temporary password.</target>
+        <target state="translated">Felaktigt tillfälligt lösenord.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">11</context>
@@ -3932,7 +3932,7 @@
       </trans-unit>
       <trans-unit id="1543538730036692975" datatype="html">
         <source>Passwords do not match.</source>
-        <target state="new">Passwords do not match.</target>
+        <target state="translated">Lösenorden matchar inte.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">12</context>
@@ -3940,7 +3940,7 @@
       </trans-unit>
       <trans-unit id="1013846159132120615" datatype="html">
         <source>Password is too short.</source>
-        <target state="new">Password is too short.</target>
+        <target state="translated">Lösenord är för kort.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">13</context>
@@ -3948,7 +3948,7 @@
       </trans-unit>
       <trans-unit id="760077316150181312" datatype="html">
         <source>User already exists.</source>
-        <target state="new">User already exists.</target>
+        <target state="translated">Användare finns redan.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">14</context>
@@ -3956,7 +3956,7 @@
       </trans-unit>
       <trans-unit id="5294935611457119224" datatype="html">
         <source> Two different accounts for this email were found. Please contact TIM administrators to merge them. </source>
-        <target state="new"> Two different accounts for this email were found. Please contact TIM administrators to merge them. </target>
+        <target state="translated"> Två olika konton för detta e-postmeddelande hittades. Kontakta TIM-administratörer för att slå samman dem. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">15,17</context>
@@ -3964,7 +3964,7 @@
       </trans-unit>
       <trans-unit id="8431069647749784053" datatype="html">
         <source>Login is not allowed from this IP address.</source>
-        <target state="new">Login is not allowed from this IP address.</target>
+        <target state="translated">Inloggning är förbjuden från denna IP adress.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">18</context>
@@ -3972,7 +3972,7 @@
       </trans-unit>
       <trans-unit id="3718716956158473811" datatype="html">
         <source>Password reset is disabled.</source>
-        <target state="new">Password reset is disabled.</target>
+        <target state="translated">Lösenordsåterställning är inaktiverad.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">19</context>
@@ -3980,7 +3980,7 @@
       </trans-unit>
       <trans-unit id="7157889813294733336" datatype="html">
         <source>Unknown error: <x id="INTERPOLATION" equiv-text="{{error}}"/></source>
-        <target state="new">Unknown error: <x id="INTERPOLATION" equiv-text="{{error}}"/></target>
+        <target state="translated">Okänt fel: <x id="INTERPOLATION" equiv-text="{{error}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -3988,7 +3988,7 @@
       </trans-unit>
       <trans-unit id="6523327060540361491" datatype="html">
         <source>Loading, please wait.</source>
-        <target state="new">Loading, please wait.</target>
+        <target state="translated">Laddar, vänligen vänta.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">51</context>
@@ -3996,7 +3996,7 @@
       </trans-unit>
       <trans-unit id="6822439865982379707" datatype="html">
         <source>Opens in <x id="INTERPOLATION" equiv-text="&quot;{&quot;"/>0<x id="INTERPOLATION_1" equiv-text="&quot;}&quot;"/>.</source>
-        <target state="new">Opens in <x id="INTERPOLATION" equiv-text="&quot;{&quot;"/>0<x id="INTERPOLATION_1" equiv-text="&quot;}&quot;"/>.</target>
+        <target state="translated">Öppnar i <x id="INTERPOLATION" equiv-text="&quot;{&quot;"/>0<x id="INTERPOLATION_1" equiv-text="&quot;}&quot;"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">62</context>
@@ -4004,7 +4004,7 @@
       </trans-unit>
       <trans-unit id="4604922124233283335" datatype="html">
         <source>You don't have permission to view that document.</source>
-        <target state="new">You don't have permission to view that document.</target>
+        <target state="translated">Du har inte behörigheten att visa detta dokument.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">160</context>
@@ -4012,7 +4012,7 @@
       </trans-unit>
       <trans-unit id="4213264030715523096" datatype="html">
         <source>Your access expired <x id="PH" equiv-text="pastDue"/> ago.</source>
-        <target state="new">Your access expired <x id="PH" equiv-text="pastDue"/> ago.</target>
+        <target state="translated">Din åtkomst upphörde för <x id="PH" equiv-text="pastDue"/> sedan.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">195</context>
@@ -4020,7 +4020,7 @@
       </trans-unit>
       <trans-unit id="4412589376849932534" datatype="html">
         <source>You have unsaved changes. Save them or click the link again.</source>
-        <target state="new">You have unsaved changes. Save them or click the link again.</target>
+        <target state="translated">Du har osparade ändringar. Spara dem eller klicka på länken igen.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">207</context>
@@ -4028,7 +4028,7 @@
       </trans-unit>
       <trans-unit id="3154844608097457238" datatype="html">
         <source>You can access the link now.</source>
-        <target state="new">You can access the link now.</target>
+        <target state="translated">Du kan komma åt länken nu.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">237</context>
@@ -4036,7 +4036,7 @@
       </trans-unit>
       <trans-unit id="2333314224059826550" datatype="html">
         <source>Mark all as read</source>
-        <target state="new">Mark all as read</target>
+        <target state="translated">Markera alla som lästa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/mark-all-as-read.component.ts</context>
           <context context-type="linenumber">37</context>
@@ -4044,7 +4044,7 @@
       </trans-unit>
       <trans-unit id="7711803407150719014" datatype="html">
         <source> Session check </source>
-        <target state="new"> Session check </target>
+        <target state="translated"> Sessionskontroll </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">28,30</context>
@@ -4052,7 +4052,7 @@
       </trans-unit>
       <trans-unit id="3505358436479235655" datatype="html">
         <source> The session is expired. Ask the supervisor to scan the QR code below. </source>
-        <target state="new"> The session is expired. Ask the supervisor to scan the QR code below. </target>
+        <target state="translated"> Sessionen har löpt ut. Be handledaren skanna QR-koden nedan. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">32,34</context>
@@ -4060,7 +4060,7 @@
       </trans-unit>
       <trans-unit id="8303849156036972853" datatype="html">
         <source>Verify a new login</source>
-        <target state="new">Verify a new login</target>
+        <target state="translated">Verifiera en ny inloggning</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">35</context>
@@ -4068,7 +4068,7 @@
       </trans-unit>
       <trans-unit id="212118607883345467" datatype="html">
         <source>This session was expired because you logged in too many times.</source>
-        <target state="new">This session was expired because you logged in too many times.</target>
+        <target state="translated">Den här sessionen har löpt ut eftersom du loggat in för många gånger.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">36</context>
@@ -4076,7 +4076,7 @@
       </trans-unit>
       <trans-unit id="5098547321898510813" datatype="html">
         <source> Please ask the supervisor to scan the code below to continue. </source>
-        <target state="new"> Please ask the supervisor to scan the code below to continue. </target>
+        <target state="translated"> Be handledaren att skanna koden nedan för att fortsätta. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">38,40</context>
@@ -4084,7 +4084,7 @@
       </trans-unit>
       <trans-unit id="8437774784999642776" datatype="html">
         <source>Once the code has been scanned, press "Check status" to re-check your verification.</source>
-        <target state="new">Once the code has been scanned, press "Check status" to re-check your verification.</target>
+        <target state="translated">När koden har skannats, tryck på "Kontrollera status" för att kontrollera din verifiering igen.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">46</context>
@@ -4092,7 +4092,7 @@
       </trans-unit>
       <trans-unit id="6118193036130472402" datatype="html">
         <source> Check status </source>
-        <target state="new"> Check status </target>
+        <target state="translated"> Kolla statusen </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">51,53</context>
@@ -4100,7 +4100,7 @@
       </trans-unit>
       <trans-unit id="2481381240140660033" datatype="html">
         <source>Preview style</source>
-        <target state="new">Preview style</target>
+        <target state="translated">Förhandsgranska stil</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
           <context context-type="linenumber">23</context>
@@ -4108,7 +4108,7 @@
       </trans-unit>
       <trans-unit id="2310889859686019497" datatype="html">
         <source>Refresh preview</source>
-        <target state="new">Refresh preview</target>
+        <target state="translated">Uppdatera förhandsgranskning</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
           <context context-type="linenumber">24</context>
@@ -4116,7 +4116,7 @@
       </trans-unit>
       <trans-unit id="5266971436861475365" datatype="html">
         <source>Stop preview</source>
-        <target state="new">Stop preview</target>
+        <target state="translated">Stoppa förhandsgranskning</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
           <context context-type="linenumber">26</context>
@@ -4124,7 +4124,7 @@
       </trans-unit>
       <trans-unit id="8326853458642984838" datatype="html">
         <source>This component only works for documents</source>
-        <target state="new">This component only works for documents</target>
+        <target state="translated">Den här komponenten fungerar bara för dokument</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
           <context context-type="linenumber">44</context>
@@ -4132,7 +4132,7 @@
       </trans-unit>
       <trans-unit id="8818816501730146130" datatype="html">
         <source>Only styles in styles folder can be previewed</source>
-        <target state="new">Only styles in styles folder can be previewed</target>
+        <target state="translated">Endast stilar i stilar-mappen kan förhandsgranskas</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
           <context context-type="linenumber">53</context>
@@ -4140,7 +4140,7 @@
       </trans-unit>
       <trans-unit id="3259167026260282906" datatype="html">
         <source>Move the document under styles folder to see the preview</source>
-        <target state="new">Move the document under styles folder to see the preview</target>
+        <target state="translated">Flytta dokumentet under stil-mappen för att se förhandsgranskningen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
           <context context-type="linenumber">54</context>
@@ -4148,7 +4148,7 @@
       </trans-unit>
       <trans-unit id="1399830849016085959" datatype="html">
         <source>The style could not be compiled</source>
-        <target state="new">The style could not be compiled</target>
+        <target state="translated">Stilen kunde inte kompileras</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
           <context context-type="linenumber">86</context>
@@ -4156,7 +4156,7 @@
       </trans-unit>
       <trans-unit id="85180954696096344" datatype="html">
         <source>The following error occurred:</source>
-        <target state="new">The following error occurred:</target>
+        <target state="translated">Följande fel inträffade:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
           <context context-type="linenumber">87</context>
@@ -4164,7 +4164,7 @@
       </trans-unit>
       <trans-unit id="8479238231731054887" datatype="html">
         <source>Time left:</source>
-        <target state="new">Time left:</target>
+        <target state="translated">Tid kvar:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/time-left.component.ts</context>
           <context context-type="linenumber">22</context>
@@ -4172,7 +4172,7 @@
       </trans-unit>
       <trans-unit id="4446520826455854628" datatype="html">
         <source>The time is about to run out, remember to save your answers.</source>
-        <target state="new">The time is about to run out, remember to save your answers.</target>
+        <target state="translated">Tiden är på väg att ta slut, kom ihåg att spara dina svar.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/time-left.component.ts</context>
           <context context-type="linenumber">32</context>
@@ -4180,7 +4180,7 @@
       </trans-unit>
       <trans-unit id="6063653534564513310" datatype="html">
         <source>Time is up. You can still save answers for a while, but any new saves will be marked as late.</source>
-        <target state="new">Time is up. You can still save answers for a while, but any new saves will be marked as late.</target>
+        <target state="translated">Tiden är ute. Du kan fortfarande spara svar ett tag, men alla nya sparningar kommer att markeras som sena.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/time-left.component.ts</context>
           <context context-type="linenumber">97</context>
@@ -4188,7 +4188,7 @@
       </trans-unit>
       <trans-unit id="5084737096054125136" datatype="html">
         <source> Add new machine translator API key </source>
-        <target state="new"> Add new machine translator API key </target>
+        <target state="translated"> Lägg till ny maskinöversättare API-nyckel </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
           <context context-type="linenumber">29,31</context>
@@ -4196,7 +4196,7 @@
       </trans-unit>
       <trans-unit id="8751302521403822705" datatype="html">
         <source>Machine translator</source>
-        <target state="new">Machine translator</target>
+        <target state="translated">Maskinöversättare</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
           <context context-type="linenumber">36</context>
@@ -4204,7 +4204,7 @@
       </trans-unit>
       <trans-unit id="4671562292257026998" datatype="html">
         <source>API key</source>
-        <target state="new">API key</target>
+        <target state="translated">API-nyckel</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
           <context context-type="linenumber">44</context>
@@ -4212,7 +4212,7 @@
       </trans-unit>
       <trans-unit id="1082620254802126635" datatype="html">
         <source> The API key was added successfully! </source>
-        <target state="new"> The API key was added successfully! </target>
+        <target state="translated"> API-nyckeln har lagts till! </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
           <context context-type="linenumber">49,51</context>
@@ -4220,7 +4220,7 @@
       </trans-unit>
       <trans-unit id="4620843381482583521" datatype="html">
         <source> Could not add the new API key: <x id="INTERPOLATION" equiv-text="{{addError}}"/> </source>
-        <target state="new"> Could not add the new API key: <x id="INTERPOLATION" equiv-text="{{addError}}"/> </target>
+        <target state="translated"> Kunde inte lägga till den nya API-nyckeln: <x id="INTERPOLATION" equiv-text="{{addError}}"/> </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
           <context context-type="linenumber">52,54</context>
@@ -4228,7 +4228,7 @@
       </trans-unit>
       <trans-unit id="577038887888857351" datatype="html">
         <source> Add </source>
-        <target state="new"> Add </target>
+        <target state="translated"> Lägg till </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
           <context context-type="linenumber">64,66</context>
@@ -4240,7 +4240,7 @@
       </trans-unit>
       <trans-unit id="6953733615016806387" datatype="html">
         <source> Add new contact information </source>
-        <target state="new"> Add new contact information </target>
+        <target state="translated"> Lägg till ny kontaktinformation </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-contact-dialog.component.ts</context>
           <context context-type="linenumber">19,21</context>
@@ -4248,7 +4248,7 @@
       </trans-unit>
       <trans-unit id="5462361983940693567" datatype="html">
         <source>Channel</source>
-        <target state="new">Channel</target>
+        <target state="translated">Kanal</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-contact-dialog.component.ts</context>
           <context context-type="linenumber">26</context>
@@ -4256,7 +4256,7 @@
       </trans-unit>
       <trans-unit id="3419120863121333151" datatype="html">
         <source>Contact info</source>
-        <target state="new">Contact info</target>
+        <target state="translated">Kontaktinformation</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-contact-dialog.component.ts</context>
           <context context-type="linenumber">32</context>
@@ -4264,7 +4264,7 @@
       </trans-unit>
       <trans-unit id="6002829667985638171" datatype="html">
         <source> A verification link was sent to this contact. Please check possible spam filters. </source>
-        <target state="new"> A verification link was sent to this contact. Please check possible spam filters. </target>
+        <target state="translated"> En verifieringslänk skickades till den här kontakten. Kontrollera eventuella spamfilter. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-contact-dialog.component.ts</context>
           <context context-type="linenumber">37,40</context>
@@ -4272,7 +4272,7 @@
       </trans-unit>
       <trans-unit id="1747823725213733333" datatype="html">
         <source> Could not add the new contact: <x id="INTERPOLATION" equiv-text="{{addError}}"/> </source>
-        <target state="new"> Could not add the new contact: <x id="INTERPOLATION" equiv-text="{{addError}}"/> </target>
+        <target state="translated"> Kunde inte lägga till den nya kontakten: <x id="INTERPOLATION" equiv-text="{{addError}}"/> </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-contact-dialog.component.ts</context>
           <context context-type="linenumber">41,43</context>
@@ -4280,7 +4280,7 @@
       </trans-unit>
       <trans-unit id="8747125763308501031" datatype="html">
         <source>Federation logo</source>
-        <target state="new">Federation logo</target>
+        <target state="translated">Federation logo</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
           <context context-type="linenumber">66</context>
@@ -4636,7 +4636,7 @@
       </trans-unit>
       <trans-unit id="6136750245088897520" datatype="html">
         <source>Authenticate to <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/> with TIM</source>
-        <target state="new">Authenticate to <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/> with TIM</target>
+        <target state="translated">Autentisera till <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/> med TIM</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">42</context>
@@ -4644,7 +4644,7 @@
       </trans-unit>
       <trans-unit id="426514155240557396" datatype="html">
         <source>You are attempting to authenticate to <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> with TIM.</source>
-        <target state="new">You are attempting to authenticate to <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> with TIM.</target>
+        <target state="translated">Du försöker autentisera till <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> med TIM.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">43</context>
@@ -4652,7 +4652,7 @@
       </trans-unit>
       <trans-unit id="3914978142342238712" datatype="html">
         <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> will be able to</source>
-        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> will be able to</target>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> kommer att kunna</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">44</context>
@@ -4660,7 +4660,7 @@
       </trans-unit>
       <trans-unit id="880812500174154923" datatype="html">
         <source>Do you want to proceed?</source>
-        <target state="new">Do you want to proceed?</target>
+        <target state="translated">Vill du fortsätta?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">49</context>
@@ -4668,7 +4668,7 @@
       </trans-unit>
       <trans-unit id="3456557310846343541" datatype="html">
         <source>Authenticate to <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/></source>
-        <target state="new">Authenticate to <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/></target>
+        <target state="translated">Autentisera till <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">52</context>
@@ -4676,7 +4676,7 @@
       </trans-unit>
       <trans-unit id="1323492625993889978" datatype="html">
         <source>Log in with the button above in order to authenticate</source>
-        <target state="new">Log in with the button above in order to authenticate</target>
+        <target state="translated">Logga in med knappen ovan för att autentisera</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">57</context>
@@ -4684,7 +4684,7 @@
       </trans-unit>
       <trans-unit id="7000649363168371045" datatype="html">
         <source>Save changes</source>
-        <target state="new">Save changes</target>
+        <target state="translated">Spara ändringar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">46</context>
@@ -4692,7 +4692,7 @@
       </trans-unit>
       <trans-unit id="6786637141307824568" datatype="html">
         <source>Emails</source>
-        <target state="new">Emails</target>
+        <target state="translated">E--postmeddelanden</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">67</context>
@@ -4700,7 +4700,7 @@
       </trans-unit>
       <trans-unit id="657310079267053935" datatype="html">
         <source>Style</source>
-        <target state="new">Style</target>
+        <target state="translated">Stil</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">91</context>
@@ -4708,7 +4708,7 @@
       </trans-unit>
       <trans-unit id="8650499415827640724" datatype="html">
         <source>Type</source>
-        <target state="new">Type</target>
+        <target state="translated">Typ</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">93</context>
@@ -4716,7 +4716,7 @@
       </trans-unit>
       <trans-unit id="5537140202564681782" datatype="html">
         <source>TIM settings</source>
-        <target state="new">TIM settings</target>
+        <target state="translated">TIM inställningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">119</context>
@@ -4724,7 +4724,7 @@
       </trans-unit>
       <trans-unit id="712909229315222468" datatype="html">
         <source>Preferred language</source>
-        <target state="new">Preferred language</target>
+        <target state="translated">Önskat språk</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">121</context>
@@ -4732,7 +4732,7 @@
       </trans-unit>
       <trans-unit id="6977749640368501596" datatype="html">
         <source>Styles</source>
-        <target state="new">Styles</target>
+        <target state="translated">Stilar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">127</context>
@@ -4740,7 +4740,7 @@
       </trans-unit>
       <trans-unit id="1680943533060739363" datatype="html">
         <source>Selected styles</source>
-        <target state="new">Selected styles</target>
+        <target state="translated">Väljade stilar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">133</context>
@@ -4748,7 +4748,7 @@
       </trans-unit>
       <trans-unit id="7016510469271315963" datatype="html">
         <source> Styles that you currently use are listed here. You can review and remove styles that you use. </source>
-        <target state="new"> Styles that you currently use are listed here. You can review and remove styles that you use. </target>
+        <target state="translated">Stilar som du använder för närvarande listas här. Du kan granska och ta bort stilar som du använder.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">135,138</context>
@@ -4756,7 +4756,7 @@
       </trans-unit>
       <trans-unit id="2124612323077640701" datatype="html">
         <source> You can also reorder styles by dragging them in the list below. Reordering the styles will change their priority which might affect the final generated theme for TIM. </source>
-        <target state="new"> You can also reorder styles by dragging them in the list below. Reordering the styles will change their priority which might affect the final generated theme for TIM. </target>
+        <target state="translated">Du kan också ändra ordning på stilar genom att dra dem i listan nedan. Om du ändrar ordningen på stilarna kommer deras prioritet att ändras, vilket kan påverka det slutgiltiga genererade temat för TIM.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">139,142</context>
@@ -4764,7 +4764,7 @@
       </trans-unit>
       <trans-unit id="5869016768847683779" datatype="html">
         <source>Loading active styles, please wait</source>
-        <target state="new">Loading active styles, please wait</target>
+        <target state="translated">Laddar aktiva stilar, vänligen vänta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">146</context>
@@ -4772,7 +4772,7 @@
       </trans-unit>
       <trans-unit id="5380572116300325278" datatype="html">
         <source> You have no styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab. </source>
-        <target state="new"> You have no styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab. </target>
+        <target state="translated">Du har inga stilar valda. Du kan lägga till stilar via fliken <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Tillgängliga stilar<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">150,152</context>
@@ -4780,7 +4780,7 @@
       </trans-unit>
       <trans-unit id="8852490424970169127" datatype="html">
         <source>Official</source>
-        <target state="new">Official</target>
+        <target state="translated">Officiell</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">167</context>
@@ -4788,7 +4788,7 @@
       </trans-unit>
       <trans-unit id="6381490568322624964" datatype="html">
         <source>Deleted</source>
-        <target state="new">Deleted</target>
+        <target state="translated">Borttagen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">168</context>
@@ -4796,7 +4796,7 @@
       </trans-unit>
       <trans-unit id="414678636665913931" datatype="html">
         <source>Delete style</source>
-        <target state="new">Delete style</target>
+        <target state="translated">Ta bort stilen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">173</context>
@@ -4804,7 +4804,7 @@
       </trans-unit>
       <trans-unit id="178441188618264876" datatype="html">
         <source>Available styles</source>
-        <target state="new">Available styles</target>
+        <target state="translated">Tillgängliga stilar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">181</context>
@@ -4812,7 +4812,7 @@
       </trans-unit>
       <trans-unit id="3945744289027552408" datatype="html">
         <source> The table below lists all styles available on TIM. You can preview and add new styles using the table below. </source>
-        <target state="new"> The table below lists all styles available on TIM. You can preview and add new styles using the table below. </target>
+        <target state="translated">Tabellen nedan listar alla stilar som är tillgängliga på TIM. Du kan förhandsgranska och lägga till nya stilar med hjälp av tabellen nedan.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">183,186</context>
@@ -4820,7 +4820,7 @@
       </trans-unit>
       <trans-unit id="3197188819017309601" datatype="html">
         <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Official styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> are maintained and supported by TIM maintainers. </source>
-        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Official styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> are maintained and supported by TIM maintainers. </target>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Officiella stilar<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> underhålls och stöds av TIM-underhållare.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">188,190</context>
@@ -4828,7 +4828,7 @@
       </trans-unit>
       <trans-unit id="4598159830582790095" datatype="html">
         <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>User-made styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> are made and maintained by TIM's users. For more information, see <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.</source>
-        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>User-made styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> are made and maintained by TIM's users. For more information, see <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.</target>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Användargjorda stilar<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> skapas och underhålls av TIMs användare. För mer information, se <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>guide för stilförfattare<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">191</context>
@@ -4836,7 +4836,7 @@
       </trans-unit>
       <trans-unit id="5633802735834461146" datatype="html">
         <source>To remove styles or edit their ordering, use the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(0)&quot;>"/>Selected styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab.</source>
-        <target state="new">To remove styles or edit their ordering, use the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(0)&quot;>"/>Selected styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab.</target>
+        <target state="translated">För att ta bort stilar eller redigera deras ordning, använd fliken <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(0)&quot;>"/>Valda stilar<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">193,194</context>
@@ -4844,7 +4844,7 @@
       </trans-unit>
       <trans-unit id="2068094190303764265" datatype="html">
         <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Note:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Your current styles will be temporarily disabled while previewing.</source>
-        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Note:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Your current styles will be temporarily disabled while previewing.</target>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Obs!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Dina nuvarande stilar kommer att inaktiveras tillfälligt under förhandsgranskning.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">195</context>
@@ -4852,7 +4852,7 @@
       </trans-unit>
       <trans-unit id="1623742637107569850" datatype="html">
         <source>Loading available styles, please wait</source>
-        <target state="new">Loading available styles, please wait</target>
+        <target state="translated">Laddar tillgängliga stilar, vänligen vänta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">198</context>
@@ -4860,7 +4860,7 @@
       </trans-unit>
       <trans-unit id="3022574657658302514" datatype="html">
         <source> No styles available. </source>
-        <target state="new"> No styles available. </target>
+        <target state="translated"> Inga tillgängliga stilar. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">202,204</context>
@@ -4868,7 +4868,7 @@
       </trans-unit>
       <trans-unit id="8466254912507014180" datatype="html">
         <source>Show user-made styles</source>
-        <target state="new">Show user-made styles</target>
+        <target state="translated">Visa användargjorda stilar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">211</context>
@@ -4876,7 +4876,7 @@
       </trans-unit>
       <trans-unit id="525875498967023195" datatype="html">
         <source> Add to Selected styles </source>
-        <target state="new"> Add to Selected styles </target>
+        <target state="translated"> Lägg till i valda stilar </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">216,218</context>
@@ -4884,7 +4884,7 @@
       </trans-unit>
       <trans-unit id="4230722003940734690" datatype="html">
         <source> Clear preview </source>
-        <target state="new"> Clear preview </target>
+        <target state="translated"> Rensa förhandsgranskning </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">219,221</context>
@@ -4892,7 +4892,7 @@
       </trans-unit>
       <trans-unit id="6720823601286643090" datatype="html">
         <source>Custom CSS</source>
-        <target state="new">Custom CSS</target>
+        <target state="translated">Anpassad CSS</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">226</context>
@@ -4904,7 +4904,7 @@
       </trans-unit>
       <trans-unit id="9049192107970830125" datatype="html">
         <source> You can define your personal custom styles using CSS. The styles are applied to all TIM pages and all devices you use. </source>
-        <target state="new"> You can define your personal custom styles using CSS. The styles are applied to all TIM pages and all devices you use. </target>
+        <target state="translated"> Du kan definiera dina personliga anpassade stilar med CSS. Stilarna tillämpas på alla TIM-sidor och alla enheter du använder. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">228,231</context>
@@ -4912,7 +4912,7 @@
       </trans-unit>
       <trans-unit id="4387425307250994986" datatype="html">
         <source> For extended styling using SCSS, refer to <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </source>
-        <target state="new"> For extended styling using SCSS, refer to <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </target>
+        <target state="translated"> För utökad stil med SCSS, se <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>guide för stilförfattare<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">232,234</context>
@@ -4920,7 +4920,7 @@
       </trans-unit>
       <trans-unit id="870309451926918163" datatype="html">
         <source>Add Print Settings</source>
-        <target state="new">Add Print Settings</target>
+        <target state="translated">Lägg till utskriftsinställningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">241</context>
@@ -4928,7 +4928,7 @@
       </trans-unit>
       <trans-unit id="7981859935878968709" datatype="html">
         <source>Compiling style, please wait</source>
-        <target state="new">Compiling style, please wait</target>
+        <target state="translated">Kompilering av stilen är pågående, vänligen vänta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">247</context>
@@ -4936,7 +4936,7 @@
       </trans-unit>
       <trans-unit id="3742657416068781599" datatype="html">
         <source>Editor</source>
-        <target state="new">Editor</target>
+        <target state="translated">Redigerare</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">250</context>
@@ -4944,7 +4944,7 @@
       </trans-unit>
       <trans-unit id="4555072505974958625" datatype="html">
         <source>Use words from the document in ACE editor autocomplete</source>
-        <target state="new">Use words from the document in ACE editor autocomplete</target>
+        <target state="translated">Använd ord från dokumentet i ACE editor autocomplete</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">255</context>
@@ -4952,7 +4952,7 @@
       </trans-unit>
       <trans-unit id="558670288813283974" datatype="html">
         <source>ACE editor additional word list for autocomplete (1 word per line)</source>
-        <target state="new">ACE editor additional word list for autocomplete (1 word per line)</target>
+        <target state="translated">ACE editor ytterligare ordlista för autoslutförande (1 ord per rad)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">259</context>
@@ -4960,7 +4960,7 @@
       </trans-unit>
       <trans-unit id="5851560788527570644" datatype="html">
         <source>Notifications</source>
-        <target state="new">Notifications</target>
+        <target state="translated">Aviseringar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">265</context>
@@ -4968,7 +4968,7 @@
       </trans-unit>
       <trans-unit id="6034381739174789830" datatype="html">
         <source>Subscribed items</source>
-        <target state="new">Subscribed items</target>
+        <target state="translated">Prenumererade objekt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">266</context>
@@ -4976,7 +4976,7 @@
       </trans-unit>
       <trans-unit id="7309234468513395994" datatype="html">
         <source>You get emails from the following documents and folders:</source>
-        <target state="new">You get emails from the following documents and folders:</target>
+        <target state="translated">Du får e-postmeddelanden från följande dokument och mappar:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">267</context>
@@ -4984,7 +4984,7 @@
       </trans-unit>
       <trans-unit id="5590923235316551885" datatype="html">
         <source>You haven't subscribed to any documents or folders.</source>
-        <target state="new">You haven't subscribed to any documents or folders.</target>
+        <target state="translated">Du har inte prenumererat på några dokument eller mappar.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">268</context>
@@ -4992,7 +4992,7 @@
       </trans-unit>
       <trans-unit id="4328531336907265149" datatype="html">
         <source>Document modifications</source>
-        <target state="new">Document modifications</target>
+        <target state="translated">Dokumentändringar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">276</context>
@@ -5000,7 +5000,7 @@
       </trans-unit>
       <trans-unit id="4074382476478364073" datatype="html">
         <source>New comments</source>
-        <target state="new">New comments</target>
+        <target state="translated">Nya kommentarer</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">279</context>
@@ -5008,7 +5008,7 @@
       </trans-unit>
       <trans-unit id="1165813152477840259" datatype="html">
         <source>Comment modifications</source>
-        <target state="new">Comment modifications</target>
+        <target state="translated">Kommentarsändringar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">282</context>
@@ -5016,7 +5016,7 @@
       </trans-unit>
       <trans-unit id="6644632063501552458" datatype="html">
         <source>Answer posts</source>
-        <target state="new">Answer posts</target>
+        <target state="translated">Svara på inlägg</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">285</context>
@@ -5024,7 +5024,7 @@
       </trans-unit>
       <trans-unit id="6381140642359438701" datatype="html">
         <source> Show all </source>
-        <target state="new"> Show all </target>
+        <target state="translated"> Visa allt </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">290,292</context>
@@ -5032,7 +5032,7 @@
       </trans-unit>
       <trans-unit id="2135976272181506504" datatype="html">
         <source>Exclusion list</source>
-        <target state="new">Exclusion list</target>
+        <target state="translated">Uteslutningslista</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">293</context>
@@ -5040,7 +5040,7 @@
       </trans-unit>
       <trans-unit id="8257562403982749238" datatype="html">
         <source> Sometimes you may want to subscribe to emails from a folder but exclude some documents within it. Using the list below you can specify which folders and documents should be excluded from your email subscriptions. </source>
-        <target state="new"> Sometimes you may want to subscribe to emails from a folder but exclude some documents within it. Using the list below you can specify which folders and documents should be excluded from your email subscriptions. </target>
+        <target state="translated"> Ibland kanske du vill prenumerera på e-postmeddelanden från en mapp men utesluta vissa dokument i den. Med hjälp av listan nedan kan du ange vilka mappar och dokument som ska uteslutas från dina e-postprenumerationer. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">294,298</context>
@@ -5048,7 +5048,7 @@
       </trans-unit>
       <trans-unit id="3568299798809723019" datatype="html">
         <source>Type one regular expression per line that should match any part of the path of the folder or document, e.g. <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> would match any path with <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> in it.</source>
-        <target state="new">Type one regular expression per line that should match any part of the path of the folder or document, e.g. <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> would match any path with <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> in it.</target>
+        <target state="translated">Skriv ett reguljärt uttryck per rad som ska matcha någon del av sökvägen till mappen eller dokumentet, t.ex. <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> skulle matcha vilken sökväg som helst med <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> i den.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">299,301</context>
@@ -5056,7 +5056,7 @@
       </trans-unit>
       <trans-unit id="7883643903366928120" datatype="html">
         <source>Menus</source>
-        <target state="new">Menus</target>
+        <target state="translated">Menyer</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">308</context>
@@ -5064,7 +5064,7 @@
       </trans-unit>
       <trans-unit id="6969149839776519170" datatype="html">
         <source> Collapse document index with more than </source>
-        <target state="new"> Collapse document index with more than </target>
+        <target state="translated"> Komprimera dokumentindex med mer än </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">310,312</context>
@@ -5072,7 +5072,7 @@
       </trans-unit>
       <trans-unit id="3100303375549436775" datatype="html">
         <source>40 (default)</source>
-        <target state="new">40 (default)</target>
+        <target state="translated">40 (standard)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">316</context>
@@ -5080,7 +5080,7 @@
       </trans-unit>
       <trans-unit id="413346167952108153" datatype="html">
         <source>items</source>
-        <target state="new">items</target>
+        <target state="translated">objekt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">318</context>
@@ -5088,7 +5088,7 @@
       </trans-unit>
       <trans-unit id="1238583382012712938" datatype="html">
         <source> Clear </source>
-        <target state="new"> Clear </target>
+        <target state="translated"> Tömma </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">320,322</context>
@@ -5096,7 +5096,7 @@
       </trans-unit>
       <trans-unit id="5779525952863625402" datatype="html">
         <source>Opening settings</source>
-        <target state="new">Opening settings</target>
+        <target state="translated">Öppningsinställningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">325</context>
@@ -5104,7 +5104,7 @@
       </trans-unit>
       <trans-unit id="3499139199268648475" datatype="html">
         <source>Disable opening menus with mouse hover</source>
-        <target state="new">Disable opening menus with mouse hover</target>
+        <target state="translated">Inaktivera öppning av menyer med muspekaren</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">332</context>
@@ -5112,7 +5112,7 @@
       </trans-unit>
       <trans-unit id="5489694556410190560" datatype="html">
         <source>Side bar menu: remember the last selected tab</source>
-        <target state="new">Side bar menu: remember the last selected tab</target>
+        <target state="translated">Sidofältsmeny: kom ihåg den senast valda fliken</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">340</context>
@@ -5120,7 +5120,7 @@
       </trans-unit>
       <trans-unit id="8612150435699790067" datatype="html">
         <source>Side bar menu: remember the last open state</source>
-        <target state="new">Side bar menu: remember the last open state</target>
+        <target state="translated">Sidofältsmeny: kom ihåg det senast öppna tillståndet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">348</context>
@@ -5128,7 +5128,7 @@
       </trans-unit>
       <trans-unit id="4556067542101854371" datatype="html">
         <source>Other settings</source>
-        <target state="new">Other settings</target>
+        <target state="translated">Andra inställningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">355</context>
@@ -5136,7 +5136,7 @@
       </trans-unit>
       <trans-unit id="7935817138132972193" datatype="html">
         <source>Automatically mark document as read when opening it for the first time </source>
-        <target state="new">Automatically mark document as read when opening it for the first time </target>
+        <target state="translated">Markera dokumentet automatiskt som läst när du öppnar det för första gången</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">359,360</context>
@@ -5144,7 +5144,7 @@
       </trans-unit>
       <trans-unit id="2789223311546332195" datatype="html">
         <source>Clear local settings storage </source>
-        <target state="new">Clear local settings storage </target>
+        <target state="translated">Tömma lagring av lokala inställningar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">363,364</context>
@@ -5152,7 +5152,7 @@
       </trans-unit>
       <trans-unit id="6834921107917590608" datatype="html">
         <source>Local storage cleared.</source>
-        <target state="new">Local storage cleared.</target>
+        <target state="translated">Lokal lagring har tömmats.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">365</context>
@@ -5160,7 +5160,7 @@
       </trans-unit>
       <trans-unit id="6680843893435633489" datatype="html">
         <source>Your account information</source>
-        <target state="new">Your account information</target>
+        <target state="translated">Din kontoinformation</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">368</context>
@@ -5168,7 +5168,7 @@
       </trans-unit>
       <trans-unit id="8636086114930438800" datatype="html">
         <source>Account ID</source>
-        <target state="new">Account ID</target>
+        <target state="translated">Konto ID</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">373</context>
@@ -5176,7 +5176,7 @@
       </trans-unit>
       <trans-unit id="8301535046747035390" datatype="html">
         <source>Full name</source>
-        <target state="new">Full name</target>
+        <target state="translated">Fullständiga namn</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">375</context>
@@ -5184,7 +5184,7 @@
       </trans-unit>
       <trans-unit id="126971847219968204" datatype="html">
         <source>Primary email</source>
-        <target state="new">Primary email</target>
+        <target state="translated">Primär e-postadress</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">378</context>
@@ -5192,7 +5192,7 @@
       </trans-unit>
       <trans-unit id="8894738602661871576" datatype="html">
         <source> A verification email was sent to the current primary email. </source>
-        <target state="new"> A verification email was sent to the current primary email. </target>
+        <target state="translated">Ett verifieringsmeddelande skickades till den nuvarande primära e-postadressen.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">388,390</context>
@@ -5200,7 +5200,7 @@
       </trans-unit>
       <trans-unit id="2749345556422798610" datatype="html">
         <source> Primary email is used to send you notifications and message list messages. </source>
-        <target state="new"> Primary email is used to send you notifications and message list messages. </target>
+        <target state="translated">Primär e-post används för att skicka aviseringar och meddelanden från meddelandelistan.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">391,393</context>
@@ -5208,7 +5208,7 @@
       </trans-unit>
       <trans-unit id="582891413766289599" datatype="html">
         <source> This email is managed by <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong                                     [style.color]=&quot;originInfo.bgColor&quot;>"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>. The address will be automatically updated by the system. </source>
-        <target state="new"> This email is managed by <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong                                     [style.color]=&quot;originInfo.bgColor&quot;>"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>. The address will be automatically updated by the system. </target>
+        <target state="translated">Det här e-postmeddelandet hanteras av <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong                                     [style.color]=&quot;originInfo.bgColor&quot;>"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>. Adressen kommer automatiskt att uppdateras av systemet.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">394,398</context>
@@ -5216,7 +5216,7 @@
       </trans-unit>
       <trans-unit id="8066516358153551219" datatype="html">
         <source>You will receive any TIM mail to this address.</source>
-        <target state="new">You will receive any TIM mail to this address.</target>
+        <target state="translated">Du kommer att få alla TIM-poster till denna adress.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">406</context>
@@ -5224,7 +5224,7 @@
       </trans-unit>
       <trans-unit id="5628164219997802241" datatype="html">
         <source>Primary</source>
-        <target state="new">Primary</target>
+        <target state="translated">Primär</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">408</context>
@@ -5232,7 +5232,7 @@
       </trans-unit>
       <trans-unit id="5082720704336620067" datatype="html">
         <source>This email is managed by <x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/>. You cannot delete managed contacts yourself.</source>
-        <target state="new">This email is managed by <x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/>. You cannot delete managed contacts yourself.</target>
+        <target state="translated">Den här e-posten hanteras av <x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/>. Du kan inte ta bort hanterade kontakter själv.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">410</context>
@@ -5240,7 +5240,7 @@
       </trans-unit>
       <trans-unit id="1988296410516021787" datatype="html">
         <source>This email is verified to be owned by you.</source>
-        <target state="new">This email is verified to be owned by you.</target>
+        <target state="translated">Den här e-postadressen är verifierad att ägs av dig.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">414</context>
@@ -5248,7 +5248,7 @@
       </trans-unit>
       <trans-unit id="5014960004929658159" datatype="html">
         <source>Verified</source>
-        <target state="new">Verified</target>
+        <target state="translated">Verifierad</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">416</context>
@@ -5256,7 +5256,7 @@
       </trans-unit>
       <trans-unit id="6246339007657164183" datatype="html">
         <source> Resend verification </source>
-        <target state="new"> Resend verification </target>
+        <target state="translated"> Skicka verifiering igen </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">422,424</context>
@@ -5264,7 +5264,7 @@
       </trans-unit>
       <trans-unit id="6613022658286983426" datatype="html">
         <source> Verification sent! </source>
-        <target state="new"> Verification sent! </target>
+        <target state="translated"> Verifiering har skickats! </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">425,427</context>
@@ -5272,7 +5272,7 @@
       </trans-unit>
       <trans-unit id="888422761114341906" datatype="html">
         <source>Machine translator API Keys</source>
-        <target state="new">Machine translator API Keys</target>
+        <target state="translated">Maskinöversättare API-nycklar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">438</context>
@@ -5280,7 +5280,7 @@
       </trans-unit>
       <trans-unit id="266304783365394512" datatype="html">
         <source> Check key's quota </source>
-        <target state="new"> Check key's quota </target>
+        <target state="translated"> Checka nyckelns kvot </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">446,448</context>
@@ -5288,7 +5288,7 @@
       </trans-unit>
       <trans-unit id="3085067064598901346" datatype="html">
         <source>Add new contact</source>
-        <target state="new">Add new contact</target>
+        <target state="translated">Lägg till ny kontakt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">461</context>
@@ -5296,7 +5296,7 @@
       </trans-unit>
       <trans-unit id="2312247969910854946" datatype="html">
         <source>Add new API key</source>
-        <target state="new">Add new API key</target>
+        <target state="translated">Lägg till ny API-nyckel</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">462</context>
@@ -5304,7 +5304,7 @@
       </trans-unit>
       <trans-unit id="3122895472333547524" datatype="html">
         <source>Delete your account</source>
-        <target state="new">Delete your account</target>
+        <target state="translated">Radera ditt konto</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">465</context>
@@ -5312,7 +5312,7 @@
       </trans-unit>
       <trans-unit id="6339286474742811814" datatype="html">
         <source>Delete account... </source>
-        <target state="new">Delete account... </target>
+        <target state="translated">Radera konto... </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">468,469</context>
@@ -5320,7 +5320,7 @@
       </trans-unit>
       <trans-unit id="5705192456342684849" datatype="html">
         <source> To delete your account, please type your username (<x id="INTERPOLATION" equiv-text="{{ user.name }}"/>) in the field below and then click "Delete account now". </source>
-        <target state="new"> To delete your account, please type your username (<x id="INTERPOLATION" equiv-text="{{ user.name }}"/>) in the field below and then click "Delete account now". </target>
+        <target state="translated">För att radera ditt konto, skriv ditt användarnamn (<x id="INTERPOLATION" equiv-text="{{ user.name }}"/>) i fältet nedan och klicka sedan på "Radera konto nu".</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">471,474</context>
@@ -5328,7 +5328,7 @@
       </trans-unit>
       <trans-unit id="3989709900019074353" datatype="html">
         <source>Delete account now </source>
-        <target state="new">Delete account now </target>
+        <target state="translated">Radera konto nu  </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">482,483</context>
@@ -5336,7 +5336,7 @@
       </trans-unit>
       <trans-unit id="1863815165411662122" datatype="html">
         <source>Could not preview the style</source>
-        <target state="new">Could not preview the style</target>
+        <target state="translated">Kunde inte förhandsgranska stilen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">699</context>
@@ -5344,7 +5344,7 @@
       </trans-unit>
       <trans-unit id="8261911902538602763" datatype="html">
         <source>There was an error loading the style. Please report this to the style's maintainer.</source>
-        <target state="new">There was an error loading the style. Please report this to the style's maintainer.</target>
+        <target state="translated">Det gick inte att läsa in stilen. Vänligen rapportera detta till stilens underhållare.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">700</context>
@@ -5352,7 +5352,7 @@
       </trans-unit>
       <trans-unit id="537234808337595283" datatype="html">
         <source>This style document was deleted</source>
-        <target state="new">This style document was deleted</target>
+        <target state="translated">Detta stildokument togs bort</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">796</context>
@@ -5360,7 +5360,7 @@
       </trans-unit>
       <trans-unit id="6349061979723436398" datatype="html">
         <source>Deleted style (id: <x id="PH" equiv-text="missingStyleDoc"/>)</source>
-        <target state="new">Deleted style (id: <x id="PH" equiv-text="missingStyleDoc"/>)</target>
+        <target state="translated">Raderad stil (id: <x id="PH" equiv-text="missingStyleDoc"/>)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">798</context>
@@ -5368,7 +5368,7 @@
       </trans-unit>
       <trans-unit id="6951970569231900824" datatype="html">
         <source>Deleted style</source>
-        <target state="new">Deleted style</target>
+        <target state="translated">Raderad stil</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">799</context>
@@ -5376,7 +5376,7 @@
       </trans-unit>
       <trans-unit id="2555678606396740558" datatype="html">
         <source>Private style</source>
-        <target state="new">Private style</target>
+        <target state="translated">Privat stil</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">808</context>
@@ -5384,7 +5384,7 @@
       </trans-unit>
       <trans-unit id="8048992932975974823" datatype="html">
         <source>This style is private or has no description</source>
-        <target state="new">This style is private or has no description</target>
+        <target state="translated">Denna stil är privat eller har ingen beskrivning</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">811</context>
@@ -5392,7 +5392,7 @@
       </trans-unit>
       <trans-unit id="7647637024834266730" datatype="html">
         <source>Could not load selected styles</source>
-        <target state="new">Could not load selected styles</target>
+        <target state="translated">Kunde inte ladda valda stilar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">825</context>
@@ -5400,7 +5400,7 @@
       </trans-unit>
       <trans-unit id="8810487195258066411" datatype="html">
         <source>Could not load available styles</source>
-        <target state="new">Could not load available styles</target>
+        <target state="translated">Kunde inte ladda tillgängliga stilar</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">864</context>
@@ -5408,7 +5408,7 @@
       </trans-unit>
       <trans-unit id="7699608300673344939" datatype="html">
         <source>Failed to change the primary email: <x id="PH" equiv-text="r.result.error.error"/></source>
-        <target state="new">Failed to change the primary email: <x id="PH" equiv-text="r.result.error.error"/></target>
+        <target state="translated">Kunde inte förändra primär e-postadress <x id="PH" equiv-text="r.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">1085</context>
@@ -5416,7 +5416,7 @@
       </trans-unit>
       <trans-unit id="4776877460869970640" datatype="html">
         <source>Are you sure you want to delete your account (<x id="PH" equiv-text="this.user.name"/>)?</source>
-        <target state="new">Are you sure you want to delete your account (<x id="PH" equiv-text="this.user.name"/>)?</target>
+        <target state="translated">Är du säker på att du vill radera ditt konto (<x id="PH" equiv-text="this.user.name"/>)?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">1165</context>
@@ -5424,7 +5424,7 @@
       </trans-unit>
       <trans-unit id="5830520205989474611" datatype="html">
         <source>E-mail address</source>
-        <target state="new">E-mail address</target>
+        <target state="translated">E-postadress</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">63</context>
@@ -5432,7 +5432,7 @@
       </trans-unit>
       <trans-unit id="3168001900910257601" datatype="html">
         <source>The following contact information will be added to your account:</source>
-        <target state="new">The following contact information will be added to your account:</target>
+        <target state="translated">Följande kontaktinformation kommer att läggas till ditt konto:</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">69</context>
@@ -5440,7 +5440,7 @@
       </trans-unit>
       <trans-unit id="8518958070193835562" datatype="html">
         <source>Type: <x id="INTERPOLATION" equiv-text="{{contactType}}"/></source>
-        <target state="new">Type: <x id="INTERPOLATION" equiv-text="{{contactType}}"/></target>
+        <target state="translated">Typ: <x id="INTERPOLATION" equiv-text="{{contactType}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">71</context>
@@ -5448,7 +5448,7 @@
       </trans-unit>
       <trans-unit id="6060837509033289235" datatype="html">
         <source>Contact information: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/></source>
-        <target state="new">Contact information: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/></target>
+        <target state="translated">Kontaktinformation: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">72</context>
@@ -5456,7 +5456,7 @@
       </trans-unit>
       <trans-unit id="5353556497172163824" datatype="html">
         <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> will be made your primary <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>.</source>
-        <target state="new"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> will be made your primary <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>.</target>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> kommer att bli din primära <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">96</context>
@@ -5464,7 +5464,7 @@
       </trans-unit>
       <trans-unit id="8097524220608794552" datatype="html">
         <source>Return to TIM settings.</source>
-        <target state="new">Return to TIM settings.</target>
+        <target state="translated">Återgå till TIM-inställningarna.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">124</context>
@@ -5476,7 +5476,7 @@
       </trans-unit>
       <trans-unit id="8418612238495526418" datatype="html">
         <source> Cannot verify: <x id="INTERPOLATION" equiv-text="{{verifyGlobals.verifyError}}"/> </source>
-        <target state="new"> Cannot verify: <x id="INTERPOLATION" equiv-text="{{verifyGlobals.verifyError}}"/> </target>
+        <target state="translated">Kan inte verifiera: <x id="INTERPOLATION" equiv-text="{{verifyGlobals.verifyError}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">131,133</context>
@@ -5484,7 +5484,7 @@
       </trans-unit>
       <trans-unit id="977838737730575488" datatype="html">
         <source>Verify action</source>
-        <target state="new">Verify action</target>
+        <target state="translated">Verifiera åtgärden</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">141</context>
@@ -5492,7 +5492,7 @@
       </trans-unit>
       <trans-unit id="3981277675019788437" datatype="html">
         <source> Please verify or deny the action. You will not be able to access this page once you select either option. </source>
-        <target state="new"> Please verify or deny the action. You will not be able to access this page once you select either option. </target>
+        <target state="translated">Vänligen verifiera eller neka åtgärden. Du kommer inte att kunna komma åt den här sidan när du väl har valt något av alternativen.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">145,148</context>
@@ -5500,7 +5500,7 @@
       </trans-unit>
       <trans-unit id="8116175184239166510" datatype="html">
         <source>Decline</source>
-        <target state="new">Decline</target>
+        <target state="translated">Avböja</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">151</context>
@@ -5508,7 +5508,7 @@
       </trans-unit>
       <trans-unit id="8905995985388209337" datatype="html">
         <source>Accept</source>
-        <target state="new">Accept</target>
+        <target state="translated">Acceptera</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">153</context>
@@ -5516,7 +5516,7 @@
       </trans-unit>
       <trans-unit id="7777471189814028806" datatype="html">
         <source>This verification type is not yet supported.</source>
-        <target state="new">This verification type is not yet supported.</target>
+        <target state="translated">Denna verifieringstyp stöds inte ännu.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">197</context>
@@ -5524,7 +5524,7 @@
       </trans-unit>
       <trans-unit id="3220030750644872932" datatype="html">
         <source>Verification successful.</source>
-        <target state="new">Verification successful.</target>
+        <target state="translated">Verifieringen lyckades.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">223</context>
@@ -5532,7 +5532,7 @@
       </trans-unit>
       <trans-unit id="1952397367456792334" datatype="html">
         <source>Verification was successfully denied. If you believe you got this link by mistake, please report this to <x id="PH" equiv-text="genericglobals().config.helpEmail"/>.</source>
-        <target state="new">Verification was successfully denied. If you believe you got this link by mistake, please report this to <x id="PH" equiv-text="genericglobals().config.helpEmail"/>.</target>
+        <target state="translated">Verifieringen avvisades. Om du tror att du fick den här länken av misstag, rapportera detta till <x id="PH" equiv-text="genericglobals().config.helpEmail"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">229,231</context>
@@ -5540,7 +5540,7 @@
       </trans-unit>
       <trans-unit id="4285864746501832121" datatype="html">
         <source>Could not verify action because of an error: <x id="PH" equiv-text="res.result.error.error"/>. Please report this to <x id="PH_1" equiv-text="genericglobals().config.helpEmail"/>.</source>
-        <target state="new">Could not verify action because of an error: <x id="PH" equiv-text="res.result.error.error"/>. Please report this to <x id="PH_1" equiv-text="genericglobals().config.helpEmail"/>.</target>
+        <target state="translated">Det gick inte att verifiera åtgärden på grund av ett fel: <x id="PH" equiv-text="res.result.error.error"/>. Vänligen rapportera detta till <x id="PH_1" equiv-text="genericglobals().config.helpEmail"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">239,241</context>
@@ -5548,7 +5548,7 @@
       </trans-unit>
       <trans-unit id="5581588744689339912" datatype="html">
         <source> Create group </source>
-        <target state="new"> Create group </target>
+        <target state="translated"> Skapa grupp </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">15,17</context>
@@ -5556,7 +5556,7 @@
       </trans-unit>
       <trans-unit id="6736759031683445755" datatype="html">
         <source>Enter the name of the user group</source>
-        <target state="new">Enter the name of the user group</target>
+        <target state="translated">Ange namnet på användargruppen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">31</context>
@@ -5564,7 +5564,7 @@
       </trans-unit>
       <trans-unit id="7046259383943324039" datatype="html">
         <source>Folder</source>
-        <target state="new">Folder</target>
+        <target state="translated">Mapp</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">42</context>
@@ -5572,7 +5572,7 @@
       </trans-unit>
       <trans-unit id="2000929266442515663" datatype="html">
         <source>Enter the location or leave empty</source>
-        <target state="new">Enter the location or leave empty</target>
+        <target state="translated">Ange platsen eller lämna tomt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">51</context>
@@ -5580,7 +5580,7 @@
       </trans-unit>
       <trans-unit id="3323415564519831786" datatype="html">
         <source> Name is required. </source>
-        <target state="new"> Name is required. </target>
+        <target state="translated"> Namn krävs. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">66,68</context>
@@ -5588,7 +5588,7 @@
       </trans-unit>
       <trans-unit id="3322954622926844982" datatype="html">
         <source> Name should not contain the slash character. </source>
-        <target state="new"> Name should not contain the slash character. </target>
+        <target state="translated"> Namnet får inte innehålla snedstreck. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-group-dialog.component.ts</context>
           <context context-type="linenumber">69,71</context>
@@ -5596,7 +5596,7 @@
       </trans-unit>
       <trans-unit id="5676197465127641757" datatype="html">
         <source>You're logged in</source>
-        <target state="new">You're logged in</target>
+        <target state="translated">Du är inloggad</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">15</context>
@@ -5604,7 +5604,7 @@
       </trans-unit>
       <trans-unit id="1825006444405211276" datatype="html">
         <source>and <x id="ICU" equiv-text="{numSession(), plural, =1 {one other} other {{{numSession()}} others}}"/></source>
-        <target state="new">and <x id="ICU" equiv-text="{numSession(), plural, =1 {one other} other {{{numSession()}} others}}"/></target>
+        <target state="translated">och  <x id="ICU" equiv-text="{numSession(), plural, =1 {one other} other {{{numSession()}} others}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">18</context>
@@ -5620,7 +5620,7 @@
       </trans-unit>
       <trans-unit id="6544990678338608326" datatype="html">
         <source>Log everyone out</source>
-        <target state="new">Log everyone out</target>
+        <target state="translated">Logga ut alla</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">37</context>
@@ -5628,7 +5628,7 @@
       </trans-unit>
       <trans-unit id="7507948636555938109" datatype="html">
         <source>Log out</source>
-        <target state="new">Log out</target>
+        <target state="translated">Logga ut</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">38</context>
@@ -5636,7 +5636,7 @@
       </trans-unit>
       <trans-unit id="897844800644136099" datatype="html">
         <source>Log <x id="INTERPOLATION" equiv-text="{{ u.real_name }}"/> out</source>
-        <target state="new">Log <x id="INTERPOLATION" equiv-text="{{ u.real_name }}"/> out</target>
+        <target state="translated">Logga ut <x id="INTERPOLATION" equiv-text="{{ u.real_name }}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">42</context>
