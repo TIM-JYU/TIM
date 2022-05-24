@@ -101,3 +101,5 @@ class ExportedCalendar(db.Model):
         db.Integer, db.ForeignKey("useraccount.id"), primary_key=True, nullable=False
     )
     calendar_hash = db.Column(db.Text, nullable=False)
+
+    user = db.relationship(User)

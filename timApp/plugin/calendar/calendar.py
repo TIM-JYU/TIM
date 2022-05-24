@@ -159,7 +159,7 @@ def get_ical(key: str) -> Response:
         raise NotFound()
 
     user_id = user_data.user_id
-    user_obj = get_current_user_object()
+    user_obj = user_data.user
     events = events_of_user(user_id, user_obj)
 
     buf = StringIO()
