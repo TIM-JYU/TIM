@@ -96,16 +96,3 @@ export class CalendarHeaderComponent {
 
     CalendarView = CalendarView;
 }
-
-@NgModule({
-    imports: [CommonModule, FormsModule, CalendarModule],
-    declarations: [CalendarHeaderComponent, ShowWeekComponent],
-    exports: [CalendarHeaderComponent],
-    providers: [
-        {
-            provide: CalendarDateFormatter,
-            useClass: CustomDateFormatter,
-        },
-    ],
-})
-export class CalendarHeaderModule {}

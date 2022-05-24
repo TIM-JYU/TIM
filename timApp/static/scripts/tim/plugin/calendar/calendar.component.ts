@@ -42,12 +42,13 @@ import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
 import {showMessageDialog} from "../../ui/showMessageDialog";
-import {CalendarHeaderModule} from "./calendar-header.component";
+import {CalendarHeaderComponent} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {CustomEventTitleFormatter} from "./custom-event-title-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
 import {showCalendarEventDialog} from "./showCalendarEventDialog";
 import {DateTimeValidatorDirective} from "./datetimevalidator.directive";
+import {ShowWeekComponent} from "./show-week.component";
 
 /**
  * Helps calculate the size of a horizontally dragged event on the calendar view.
@@ -990,15 +991,26 @@ export class CalendarComponent
             provide: DateAdapter,
             useFactory: adapterFactory,
         }),
-        CalendarHeaderModule,
         NgbModalModule,
     ],
     declarations: [
         CalendarComponent,
+        CalendarHeaderComponent,
+        ShowWeekComponent,
         TimeViewSelectorComponent,
         DateTimeValidatorDirective,
     ],
-    exports: [CalendarComponent, DateTimeValidatorDirective],
+    exports: [
+        CalendarComponent,
+        CalendarHeaderComponent,
+        DateTimeValidatorDirective,
+    ],
+    providers: [
+        {
+            provide: CalendarDateFormatter,
+            useClass: CustomDateFormatter,
+        },
+    ],
 })
 export class TimCalendarModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
