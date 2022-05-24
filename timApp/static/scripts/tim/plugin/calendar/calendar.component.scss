@@ -45,7 +45,12 @@
   width: fit-content;
 }
 
-.modal {
+.message-btn {
+  float: left;
+  margin-top: 0.5em;
+}
+
+.modal{
   opacity: 1;
   z-index: 1056;
 }
