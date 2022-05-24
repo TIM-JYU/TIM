@@ -19,7 +19,6 @@ from timApp.auth.sessioninfo import (
 from timApp.notification.send_email import send_email
 from timApp.plugin.calendar.models import Event, EventGroup, Enrollment, EnrollmentType
 from timApp.plugin.calendar.models import ExportedCalendar
-from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_access
 from timApp.user.user import User, manage_access_set, edit_access_set
@@ -123,16 +122,13 @@ def get_url() -> Response:
     :return: URL with hash code
     """
     verify_logged_in()
-    domain = app.config["TIM_HOST"]
-    url = domain + "/calendar/ical?key="
     cur_user = get_current_user_id()
     user_data: ExportedCalendar = ExportedCalendar.query.filter(
         ExportedCalendar.user_id == cur_user
     ).one_or_none()
     if user_data is not None:
         hash_code = user_data.calendar_hash
-        # url = url_for("calendar_plugin.get_ical", key=hash_code)
-        url = url + hash_code
+        url = url_for("calendar_plugin.get_ical", key=hash_code, _external=True)
         return text_response(url)
     hash_code = secrets.token_urlsafe(16)
     user_data = ExportedCalendar(
@@ -141,8 +137,7 @@ def get_url() -> Response:
     )
     db.session.add(user_data)
     db.session.commit()
-    # url = url_for("calendar_plugin.get_ical", key=hash_code)
-    url = url + hash_code
+    url = url_for("calendar_plugin.get_ical", key=hash_code, _external=True)
     return text_response(url)
 
 
