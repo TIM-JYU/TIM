@@ -1,3 +1,7 @@
+__authors__ = [ "Miika Immonen", "Terhi Kamula", "Anssi Lepikko", "Touko Miettinen", "Joose Tikkanen" ]
+__license__ = "MIT"
+__date__ = "24.5.2022"
+
 from typing import Optional
 
 from timApp.auth.sessioninfo import get_current_user_id

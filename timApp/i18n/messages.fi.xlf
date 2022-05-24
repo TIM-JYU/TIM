@@ -5536,6 +5536,218 @@
           <context context-type="linenumber">109</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3904900366807853260" datatype="html">
+        <source>The event is full.</source>
+        <target state="translated">Tapahtuma on täynnä.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">238</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7581997491514928120" datatype="html">
+        <source>You have booked this event.</source>
+        <target state="translated">Olet varannut tämän tapahtuman.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">241</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3605420808001945080" datatype="html">
+        <source> Cancel Booking </source>
+        <target state="translated"> Peruuta varaus </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">246,248</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6660925946511264619" datatype="html">
+        <source> Delete </source>
+        <target state="translated"> Poista </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">250,252</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8070111471967683012" datatype="html">
+        <source> Book event </source>
+        <target state="translated"> Varaa tapahtuma </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">254,256</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3620188369327429839" datatype="html">
+        <source> Save </source>
+        <target state="translated"> Tallenna </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">261,263</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7619465163363849216" datatype="html">
+        <source>Back to current date </source>
+        <target state="translated">Takaisin nykyiseen päivään </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-header.component.ts</context>
+          <context context-type="linenumber">60,61</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5701618810648052610" datatype="html">
+        <source>Title</source>
+        <target state="translated">Otsikko</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="471816275243265264" datatype="html">
+        <source>Location</source>
+        <target state="translated">Sijainti</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">38</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7825570888384392250" datatype="html">
+        <source>Capacity</source>
+        <target state="translated">Kapasiteetti</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">50</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">61</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="331357107633545024" datatype="html">
+        <source>Booker</source>
+        <target state="translated">Varaaja</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">68</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8391795420886886120" datatype="html">
+        <source>Booker email</source>
+        <target state="translated">Varaajan sähköpostiosoite</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">80</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8324085579894805354" datatype="html">
+        <source>Bookers</source>
+        <target state="translated">Osallistujat</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">93</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6424116655268760911" datatype="html">
+        <source>Book before</source>
+        <target state="translated">Varattava ennen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">143</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1435160629736962657" datatype="html">
+        <source>Event description</source>
+        <target state="translated">Tapahtuman kuvaus</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">169</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1137972907092556746" datatype="html">
+        <source>Message (optional)</source>
+        <target state="translated">Viesti (valinnainen)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">179</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1019391340370106304" datatype="html">
+        <source> Month </source>
+        <target state="translated"> Kuukausi </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-header.component.ts</context>
+          <context context-type="linenumber">62,64</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6739432097196840926" datatype="html">
+        <source> Week </source>
+        <target state="translated">Viikko </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-header.component.ts</context>
+          <context context-type="linenumber">68,70</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3717379413627445117" datatype="html">
+        <source> Day </source>
+        <target state="translated"> Päivä </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-header.component.ts</context>
+          <context context-type="linenumber">74,76</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7585826646011739428" datatype="html">
+        <source>Edit</source>
+        <target state="translated">Muokkaa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
+          <context context-type="linenumber">172</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6328943491200318160" datatype="html">
+        <source>Export calendar</source>
+        <target state="translated">Vie kalenteri</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
+          <context context-type="linenumber">268</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5184373289520493569" datatype="html">
+        <source> OK </source>
+        <target state="translated"> OK </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
+          <context context-type="linenumber">295,297</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5345773632901719846" datatype="html">
+        <source>Set view with timeslots of </source>
+        <target state="new">Set view with timeslots of </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/timeviewselector.component.ts</context>
+          <context context-type="linenumber">11</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="893841469692026422" datatype="html">
+        <source> minutes from </source>
+        <target state="new"> minutes from </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/timeviewselector.component.ts</context>
+          <context context-type="linenumber">15</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5203279511751768967" datatype="html">
+        <source>From</source>
+        <target state="translated">Alkaa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">100</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1640609344969975994" datatype="html">
+        <source>To</source>
+        <target state="translated">Päättyy</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">123</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

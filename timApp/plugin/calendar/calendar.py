@@ -1,3 +1,7 @@
+__authors__ = [ "Miika Immonen", "Terhi Kamula", "Anssi Lepikko", "Touko Miettinen", "Joose Tikkanen" ]
+__license__ = "MIT"
+__date__ = "24.5.2022"
+
 import secrets
 import uuid
 from dataclasses import dataclass, asdict, field

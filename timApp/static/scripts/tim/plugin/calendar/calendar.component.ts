@@ -168,8 +168,8 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
         <div class="row text-center">
             <div class="col-md-4">
                 <div class="btn-group edit-btn" [hidden]="!userIsManager() || this.eventTypes.length == 0">
-                    <button (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
-                    <button (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
+                    <button i18n (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
+                    <button i18n (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
                 </div>
             </div>
             <div class="col-md-4">
@@ -183,7 +183,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
             <div class="col-md-4">
                 <div class="checkbox-group"> Show:
                     <div *ngFor="let box of checkboxEvents"> 
-                        <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
+                        <input i18n (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
                                [(ngModel)]="box.checked" [checked]="">{{box.name}}
                     </div>
                 </div>
@@ -265,7 +265,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                 (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
                                 (evening)="setEvening($event)"></tim-time-view-selector>
         <div>
-            <button class="btn timButton" (click)="export()">Export calendar</button>
+            <button i18n class="btn timButton" (click)="export()">Export calendar</button>
             <!--input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL"-->
             <span class="exportDone"><b>{{exportDone}}</b></span>
         </div>
@@ -287,12 +287,12 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                 </div>
             </div>
             <div class="modal-footer">
-                <!-- <button [style.visibility] = "editEnabled ? 'visible' : 'hidden'" type="button" class="btn btn-out
+                <!-- <button i18n [style.visibility] = "editEnabled ? 'visible' : 'hidden'" type="button" class="btn btn-out
                 line-secondary timButton"
                         (click)=" close(); deleteEvent(modalData?.event)">
                     Delete
                 </button> -->
-                <button type="button" class="btn btn-outline-secondary timButton" (click)="close()">
+                <button i18n type="button" class="btn btn-outline-secondary timButton" (click)="close()">
                     OK
                 </button>
             </div>

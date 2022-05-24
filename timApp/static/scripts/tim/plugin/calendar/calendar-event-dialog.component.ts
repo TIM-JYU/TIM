@@ -23,7 +23,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     <div class="form-group"
                          [ngClass]="{'has-error': ngModelTitle.invalid && ngModelTitle.dirty}">
 
-                        <label for="title" class="col-sm-2 control-label">Title</label>
+                        <label i18n for="title" class="col-sm-2 control-label">Title</label>
                         <div class="col-sm-9">
                             <input type="text" required
                                    maxlength="280"
@@ -35,7 +35,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    placeholder="Set title"
                                    [disabled]="!isEditEnabled()"/>
                         </div>
-                        <label for="location" class="col-sm-2 control-label">Location</label>
+                        <label i18n for="location" class="col-sm-2 control-label">Location</label>
                         <div class="col-sm-9">
                             <input type="text"
                             maxlength="120"
@@ -47,7 +47,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    class="form-control"
                                    [disabled]="!isEditEnabled()"/>
                         </div>
-                        <label for="maxSize" class="col-sm-2 control-label">Capacity</label>
+                        <label i18n for="maxSize" class="col-sm-2 control-label">Capacity</label>
                         <div class="col-sm-3">
                             <input type="number"
                             min="0" max="2000" [(ngModel)]="maxSize"
@@ -58,14 +58,14 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     </div>
                     <div class="form-group" [hidden]="isPersonalEvent()">
-                            <label for="capacity" class="col-sm-2 control-label">Capacity</label>
+                            <label i18n for="capacity" class="col-sm-2 control-label">Capacity</label>
                             <div class="col-sm-10">
                                 <b><abbr title="Amount of enrolled users">{{getEventEnrollments()}}</abbr> / <abbr title="Maximum capacity of the event">{{getEventCapacity()}}</abbr></b>
                             </div>
                         </div>
                     <div [hidden]="multipleBookers()">
                         <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
-                            <label for="booker" class="col-sm-2 control-label">Booker</label>
+                            <label i18n for="booker" class="col-sm-2 control-label">Booker</label>
                             <div class="col-sm-9">
                                 <input type="text"
                                        [(ngModel)]="booker"
@@ -77,7 +77,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             </div>
                         </div>
                         <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
-                            <label for="bookerEmail" class="col-sm-2 control-label">Booker email</label>
+                            <label i18n for="bookerEmail" class="col-sm-2 control-label">Booker email</label>
                             <div class="col-sm-9">
                                 <input type="text"
                                        [(ngModel)]="bookerEmail"
@@ -90,17 +90,17 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     </div>
                     <div [hidden]="hideBookerListLink()" class="form-group">
-                        <label for="bookers" class="col-sm-2 control-label">Bookers</label>
+                        <label i18n for="bookers" class="col-sm-2 control-label">Bookers</label>
                         <a href="/calendar/events/{{this.data.id}}/bookers" target="_blank" class="col-sm-10">Show list
                             of all bookers</a>
                     </div>
 
                     <div class="form-group">
                         <div class="col-sm-4">
-                        <label for="startDate" class="col-sm-8 control-label">From</label>
+                        <label i18n for="startDate" class="col-sm-8 control-label">From</label>
                         
                             <div class="input-group">
-                                <input i18n-placeholder type="date"
+                                <input type="date"
                                        required
                                        [(ngModel)]="startDate"
                                        (ngModelChange)="setMessage()"
@@ -109,7 +109,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        [disabled]="!isEditEnabled()"
                                 >
 
-                                <input i18n-placeholder type="time"
+                                <input type="time"
                                        required
                                        [(ngModel)]="startTime"
                                        (ngModelChange)="setMessage()"
@@ -120,9 +120,9 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             </div>
                         </div>
                     <div class="col-sm-4">
-                        <label for="endDate" class="col-sm-6 control-label">To</label>
+                        <label i18n for="endDate" class="col-sm-6 control-label">To</label>
                             <div class="input-group">
-                                <input i18n-placeholder type="date"
+                                <input type="date"
                                        required
                                        [(ngModel)]="endDate"
                                        (ngModelChange)="setMessage()"
@@ -130,7 +130,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
                                 >
-                                <input i18n-placeholder type="time"
+                                <input type="time"
                                        required
                                        [(ngModel)]="endTime"
                                        (ngModelChange)="setMessage()"
@@ -140,7 +140,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             </div>
                         </div>
                         <div class="col-sm-4" [hidden]="!isEditEnabled() || isPersonalEvent()">
-                        <label for="bookingStopDate" class="col-sm-12 control-label">Book before</label>
+                        <label i18n for="bookingStopDate" class="col-sm-12 control-label">Book before</label>
                             <div class="input-group">
 
                                 <input type="date"
@@ -166,7 +166,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     <div class="form-group">
                         <div class="input-group">
                             <div class="col-sm-12">
-                            <label class="col-sm-12 control-label" for="description">Event description</label>
+                            <label i18n class="col-sm-12 control-label" for="description">Event description</label>
                             <textarea maxlength="1020" id="description" 
                              [(ngModel)]="description" #ngModelDescription="ngModel"
                              (ngModelChange)="setMessage()"
@@ -176,7 +176,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                             </textarea>
                         </div>
                     <div class="col-sm-12" [hidden] ="hideBookerMessage()">
-                        <label for="bookerMessage" class="col-sm-12 control-label">Message (optional)</label>
+                        <label i18n for="bookerMessage" class="col-sm-12 control-label">Message (optional)</label>
                             <input type="text" [disabled] = "hideBookerMessage()"
                                    [(ngModel)]="messageText"
                                    (ngModelChange)="setMessage()"
@@ -225,29 +225,29 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
             <ng-container class="col-sm-12" footer>
                 <div class="col-sm-12 row">
                 <span [hidden]="hideEventFulLSpan()" style="float: left; margin-left: 10px">
-                    <b>The event is full.</b>
+                    <b i18n>The event is full.</b>
                 </span>
                 <span [hidden]="!userHasBooked()" style="float: left">
-                    <b>You have booked this event.</b>
+                    <b i18n>You have booked this event.</b>
                 </span>
             </div>
                 <div class="col-sm-12 row">
-                    <button class="btn timButton col-sm-4" type="button" [hidden]="!userHasBooked() || isEditEnabled()" (click)="cancelBooking()"
+                    <button i18n class="btn timButton col-sm-4" type="button" [hidden]="!userHasBooked() || isEditEnabled()" (click)="cancelBooking()"
                         style="background-color: red; float: left">
                     Cancel Booking
                     </button>
-                    <button class="btn timButton col-sm-2" type="button" style="background-color: red; float: left"
+                    <button i18n class="btn timButton col-sm-2" type="button" style="background-color: red; float: left"
                         (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!isEditEnabled()">
                     Delete
                     </button>
-                    <button class="btn timButton col-sm-4" type="button" style="float: left"
+                    <button i18n class="btn timButton col-sm-4" type="button" style="float: left"
                         (click)="bookEvent()" [disabled]="eventIsFull() || !eventCanBeBooked()" [hidden]="hideBookingButton()">
                     Book event
                     </button>
                     <button i18n class="btn btn-default col-sm-2" type="button" style="float:right" (click)="dismiss()">
                     Cancel
                     </button>
-                    <button class="btn timButton col-sm-2" type="submit" style="float:right" (click)="saveChanges()" [disabled]="form.invalid"
+                    <button i18n class="btn timButton col-sm-2" type="submit" style="float:right" (click)="saveChanges()" [disabled]="form.invalid"
                         [hidden]="!isEditEnabled()">
                     Save
                     </button>

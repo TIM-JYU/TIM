@@ -43,7 +43,7 @@ import {CustomDateFormatter} from "./custom-date-formatter.service";
               <span class="glyphicon glyphicon-arrow-right"></span>
           </button>
         </div>
-          <button class="btn timButton currentDay col-md-10"
+          <button i18n class="btn timButton currentDay col-md-10"
                 mwlCalendarToday
                 [(viewDate)]="viewDate"
                 (viewDateChange)="viewDateChange.next(viewDate)"
@@ -56,19 +56,19 @@ import {CustomDateFormatter} from "./custom-date-formatter.service";
       </div>
       <div class="col-md-4">
         <div class="btn-group">
-          <button
+          <button i18n
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Month)"
             [class.active]="view === CalendarView.Month">
             Month
           </button>
-          <button
+          <button i18n
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Week)"
             [class.active]="view === CalendarView.Week">
             Week
           </button>
-          <button
+          <button i18n
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Day)"
             [class.active]="view === CalendarView.Day">
@@ -86,7 +86,7 @@ export class CalendarHeaderComponent {
 
     @Input() viewDate: Date = new Date();
 
-    @Input() locale: string = "fi-FI";
+    @Input() locale: string = window.navigator.language;
 
     @Input() weekStartsOn: number = 1;
 
