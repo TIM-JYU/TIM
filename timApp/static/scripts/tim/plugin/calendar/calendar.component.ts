@@ -341,7 +341,7 @@ export class CalendarComponent
 
     locale: string = "Fi-fi";
 
-    weekStartsOn: 1 = 1;
+    weekStartsOn: number = 1;
 
     /* The default values of calendar view that can be adjusted with the time view selector -component. */
     dayStartHour: number = 8;
