@@ -1,6 +1,6 @@
 import {Component} from "@angular/core";
 import {getVisibilityVars} from "tim/timRoot";
-import {genericglobals} from "tim/util/globals";
+import {documentglobals, genericglobals} from "tim/util/globals";
 
 @Component({
     selector: "tim-footer",
@@ -15,9 +15,9 @@ import {genericglobals} from "tim/util/globals";
                         <div class="row">
                             <div class="col-xs-6">
                                 <p>
-                                    <ng-container i18n>TIM last updated</ng-container>:
-                                    <ng-container *ngIf="hide.links">{{config.gitLastestCommitTimestamp}}
-                                        <br>
+                                    <ng-container *ngIf="!docGlobals.requires_login || !hide.links" i18n>TIM last updated: </ng-container>
+                                    <ng-container *ngIf="hide.links && !docGlobals.requires_login">{{config.gitLastestCommitTimestamp}}
+                                        <br>    
                                         <ng-container i18n>Problems and questions about TIM</ng-container>: {{config.helpEmail}}
                                     </ng-container>
                                     <ng-container *ngIf="!hide.links">
@@ -27,10 +27,15 @@ import {genericglobals} from "tim/util/globals";
                                         :
                                         <a href="mailto:{{config.helpEmail}}">{{config.helpEmail}}</a>
                                     </ng-container>
-                                    <ng-container *ngIf="config.gitBranch != 'master'">
+                                    <ng-container *ngIf="config.gitBranch != 'master' && !docGlobals.requires_login">
                                         (
                                         <ng-container i18n>branch</ng-container>
                                         : {{config.gitBranch}})
+                                    </ng-container>
+                                    <ng-container *ngIf="docGlobals.requires_login && hide.links">
+                                        <ng-container i18n>Problems and questions about TIM</ng-container>
+                                        :
+                                        <a href="mailto:{{config.helpEmail}}">{{config.helpEmail}}</a>
                                     </ng-container>
                                 </p>
                             </div>
@@ -56,6 +61,7 @@ import {genericglobals} from "tim/util/globals";
 })
 export class FooterComponent {
     hide = getVisibilityVars();
+    docGlobals = documentglobals();
     config = genericglobals().config;
     layout = genericglobals().layout;
     footerDocs = genericglobals().footerDocs;

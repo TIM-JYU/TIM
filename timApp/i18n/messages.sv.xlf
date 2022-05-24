@@ -818,14 +818,6 @@
           <context context-type="linenumber">214</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8938936775438707024" datatype="html">
-        <source>TIM last updated</source>
-        <target state="new">TIM last updated</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
-          <context context-type="linenumber">18</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="3571750275565841763" datatype="html">
         <source>Problems and questions about TIM</source>
         <target state="new">Problems and questions about TIM</target>
@@ -5727,6 +5719,14 @@
         <target state="new">Swedish</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2359734220283743798" datatype="html">
+        <source>TIM last updated: </source>
+        <target state="new">TIM last updated: </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
           <context context-type="linenumber">18</context>
         </context-group>
       </trans-unit>

@@ -3980,14 +3980,6 @@
           <context context-type="linenumber">40</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8938936775438707024" datatype="html">
-        <source>TIM last updated</source>
-        <target state="translated">TIM viimeksi päivitetty</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
-          <context context-type="linenumber">18</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="3571750275565841763" datatype="html">
         <source>Problems and questions about TIM</source>
         <target state="translated">TIMiin liittyvät ongelmat ja kysymykset</target>
@@ -5838,6 +5830,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">modules/cs/js/editor/countboard.ts</context>
           <context context-type="linenumber">149</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2359734220283743798" datatype="html">
+        <source>TIM last updated: </source>
+        <target state="translated">TIM viimeksi päivitetty: </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
+          <context context-type="linenumber">18</context>
         </context-group>
       </trans-unit>
     </body>

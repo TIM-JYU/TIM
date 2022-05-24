@@ -117,6 +117,9 @@ export function getVisibilityVars() {
         if (g.hide_sidemenu) {
             hideSideMenu(hide);
         }
+        if (g.requires_login) {
+            hide.footer = false;
+        }
     }
 
     // If bookmarks are globally disabled, don't show the tab.
