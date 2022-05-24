@@ -16,7 +16,7 @@ const eveningHours: number[] = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
         <select [(ngModel)]="selectedStart" (change)="submit(selectedAccuracy, selectedStart, selectedEnd)">
             <option *ngFor="let hour of morningHours" [value]="hour">{{ hour | number:'2.0' }}</option>
         </select>
-        <span> to </span>
+        <span i18n > to </span>
         <select [(ngModel)]="selectedEnd" (change)="submit(selectedAccuracy, selectedStart, selectedEnd)">
             <option *ngFor="let hour of eveningHours" [value]="hour">{{ hour | number:'2.0' }}</option>
         </select>

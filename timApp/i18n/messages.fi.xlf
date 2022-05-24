@@ -5718,7 +5718,7 @@
       </trans-unit>
       <trans-unit id="5345773632901719846" datatype="html">
         <source>Set view with timeslots of </source>
-        <target state="new">Set view with timeslots of </target>
+        <target state="translated">Näytä kalenteri </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/timeviewselector.component.ts</context>
           <context context-type="linenumber">11</context>
@@ -5746,6 +5746,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">123</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1042662561872819815" datatype="html">
+        <source> to </source>
+        <target state="translated"> - </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/timeviewselector.component.ts</context>
+          <context context-type="linenumber">19</context>
         </context-group>
       </trans-unit>
     </body>
