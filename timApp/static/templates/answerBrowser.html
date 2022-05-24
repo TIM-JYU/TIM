@@ -17,7 +17,7 @@
                             focus-me="!$ctrl.selectedAnswer && $ctrl.shouldFocus #blurWhenFalse"
                             ng-model="$ctrl.user"
                             ng-options="(user.real_name + ' (' + user.name + ')') for user in $ctrl.users track by user.id"
-                            ng-change="$ctrl.getAnswersAndUpdate()"></select>
+                            ng-change="$ctrl.userSelected()"></select>
                     <span class="input-group-btn">
              <button title="Next user" class="btn btn-primary" ng-click="$ctrl.changeStudent(+1)">&darr;</button>
             </span>

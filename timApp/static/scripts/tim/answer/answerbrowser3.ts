@@ -702,6 +702,22 @@ export class AnswerBrowserController
         this.changeAnswer(true);
     }
 
+    userSelected() {
+        this.tryChangeDocumentSelectedUser();
+        this.getAnswersAndUpdate();
+    }
+
+    /**
+     * Inform viewcontrol about new selected user
+     */
+    tryChangeDocumentSelectedUser() {
+        // TODO:
+        //  corner case: this.getAvailableUsers may have user not in current userList or related entries
+        if (this.user) {
+            this.viewctrl.changeUserFromAb(this.user, this.taskId);
+        }
+    }
+
     async changeUser(user: IUser, updateAll: boolean) {
         if (this.isGlobal() || this.isUseCurrentUser()) {
             return;
@@ -1161,6 +1177,7 @@ export class AnswerBrowserController
             return;
         }
         this.user = this.users[newIndex];
+        this.tryChangeDocumentSelectedUser();
         await this.getAnswersAndUpdate();
 
         if (shouldRefocusPoints) {

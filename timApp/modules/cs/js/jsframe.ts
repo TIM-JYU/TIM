@@ -247,10 +247,6 @@ export class JsframeComponent
         super(el, http, domSanitizer);
     }
 
-    get disableUnchanged() {
-        return this.markup.disableUnchanged;
-    }
-
     get english() {
         return this.markup.lang === "en";
     }

@@ -65,7 +65,7 @@ interface IConfig {
     messageListsEnabled: boolean;
 }
 
-export type Locale = "fi" | "en-US";
+export type Locale = "fi" | "sv" | "en-US";
 
 export interface IFooterDocs {
     privacyNotice?: string;
@@ -146,6 +146,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     score_infos: IDocScoreInfo[] | null;
     current_list_user?: IUser;
     show_unpublished_bg: boolean;
+    requires_login?: boolean;
 }
 
 export enum NotificationType {

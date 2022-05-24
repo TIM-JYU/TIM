@@ -55,6 +55,10 @@ export abstract class AngularPluginBase<
         return this.markup.undo?.confirmation;
     }
 
+    get disableUnchanged() {
+        return this.markup.disableUnchanged;
+    }
+
     get markup(): Readonly<MarkupType> {
         return this.attrsall.markup;
     }
