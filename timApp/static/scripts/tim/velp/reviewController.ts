@@ -1391,7 +1391,7 @@ export class ReviewController {
         if (this.vctrl.selectedUser.id !== uid) {
             for (const u of this.vctrl.users) {
                 if (u.user.id === uid) {
-                    await this.vctrl.changeUser(u.user, false);
+                    await this.vctrl.changeUser(u.user);
                     break;
                 }
             }

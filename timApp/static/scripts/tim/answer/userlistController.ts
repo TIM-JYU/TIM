@@ -45,12 +45,7 @@ export class UserListController implements IController {
         gridMenuCustomItems: unknown;
     };
     private gridApi?: uiGrid.IGridApiOf<IUserListEntry>;
-    private instantUpdate: boolean = false;
-    private syncAnswerBrowsers: boolean = false;
-    private onUserChange!: Binding<
-        (params: {$USER: IUser; $UPDATEALL: boolean}) => void,
-        "&"
-    >;
+    private onUserChange!: Binding<(params: {$USER: IUser}) => void, "&">;
     private viewctrl!: Require<ViewCtrl>;
     private preventedChange = false;
     private currentRowCol?: uiGrid.cellNav.IRowCol<IUserListEntry>;
@@ -162,11 +157,6 @@ export class UserListController implements IController {
                     sortingAlgorithm: numericSort,
                 },
             ]);
-        const formMode = this.viewctrl.docSettings.form_mode ?? false;
-        this.instantUpdate = formMode || getViewName() === "review";
-        this.syncAnswerBrowsers =
-            this.viewctrl.docSettings.sync_answerbrowsers ??
-            this.syncAnswerBrowsers;
 
         this.viewctrl.userList = this;
 
@@ -190,7 +180,7 @@ export class UserListController implements IController {
                         this.preventedChange = false;
                         return;
                     }
-                    this.fireUserChange(row, this.instantUpdate);
+                    this.fireUserChange(row);
                 });
                 if (this.gridOptions?.data) {
                     gridApi.grid.modifyRows(
@@ -277,10 +267,10 @@ export class UserListController implements IController {
                 {
                     title: "Enable instant update",
                     action: ($event: IAngularEvent) => {
-                        this.instantUpdate = true;
+                        this.viewctrl.instantUpdateTasks = true;
                     },
                     shown: () => {
-                        return !this.instantUpdate;
+                        return !this.viewctrl.instantUpdateTasks;
                     },
                     leaveOpen: true,
                     order: 20,
@@ -288,10 +278,10 @@ export class UserListController implements IController {
                 {
                     title: "Disable instant update",
                     action: ($event: IAngularEvent) => {
-                        this.instantUpdate = false;
+                        this.viewctrl.instantUpdateTasks = false;
                     },
                     shown: () => {
-                        return this.instantUpdate;
+                        return this.viewctrl.instantUpdateTasks;
                     },
                     leaveOpen: true,
                     order: 30,
@@ -299,10 +289,10 @@ export class UserListController implements IController {
                 {
                     title: "Sync selected users in tasks",
                     action: ($event: IAngularEvent) => {
-                        this.syncAnswerBrowsers = true;
+                        this.viewctrl.syncAnswerBrowsers = true;
                     },
                     shown: () => {
-                        return !this.syncAnswerBrowsers;
+                        return !this.viewctrl.syncAnswerBrowsers;
                     },
                     leaveOpen: true,
                     order: 40,
@@ -311,10 +301,10 @@ export class UserListController implements IController {
                     // TODO: better desc
                     title: "De-sync selected users in taks",
                     action: ($event: IAngularEvent) => {
-                        this.syncAnswerBrowsers = false;
+                        this.viewctrl.syncAnswerBrowsers = false;
                     },
                     shown: () => {
-                        return this.syncAnswerBrowsers;
+                        return this.viewctrl.syncAnswerBrowsers;
                     },
                     leaveOpen: true,
                     order: 50,
@@ -379,16 +369,8 @@ export class UserListController implements IController {
         };
     }
 
-    getInstantUpdate() {
-        return this.instantUpdate;
-    }
-
-    getSyncAnswerBrowsers() {
-        return this.syncAnswerBrowsers;
-    }
-
-    fireUserChange(row: uiGrid.IGridRowOf<IUserListEntry>, updateAll: boolean) {
-        this.onUserChange({$USER: row.entity.user, $UPDATEALL: updateAll});
+    fireUserChange(row: uiGrid.IGridRowOf<IUserListEntry>) {
+        this.onUserChange({$USER: row.entity.user});
     }
 
     /**

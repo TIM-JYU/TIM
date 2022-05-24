@@ -15,6 +15,7 @@ import {setViewCtrl} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
 import {
     getURLParameter,
+    getViewName,
     isPageDirty,
     markAsUsed,
     markPageNotDirty,
@@ -228,6 +229,8 @@ export class ViewCtrl implements IController {
         "editMenu_openOnLeft",
         t.boolean
     );
+    public instantUpdateTasks = false;
+    public syncAnswerBrowsers = false;
 
     private timTables = new Map<string, TimTableComponent>();
     private tableForms = new Map<string, TableFormComponent>();
@@ -738,6 +741,11 @@ export class ViewCtrl implements IController {
                 }
             });
         }
+        this.instantUpdateTasks =
+            (this.docSettings.form_mode ?? this.instantUpdateTasks) ||
+            getViewName() === "review";
+        this.syncAnswerBrowsers =
+            this.docSettings.sync_answerbrowsers ?? this.syncAnswerBrowsers;
     }
 
     /**
@@ -1030,37 +1038,29 @@ export class ViewCtrl implements IController {
      * @param abId taskId of ab who called the change
      */
     changeUserFromAb(user: IUser, abId: TaskId) {
-        if (
-            !(
-                this.userList?.getSyncAnswerBrowsers() ??
-                this.docSettings.sync_answerbrowsers
-            )
-        ) {
+        if (!this.syncAnswerBrowsers) {
             return;
         }
-        let updateAll = false;
         if (this.userList) {
             const userListEntry = this.findUserByName(user.name);
             if (userListEntry) {
                 this.userList.changeUserWithoutFiring(userListEntry);
             }
-            updateAll = this.userList.getInstantUpdate();
         }
-        this.changeUser(user, updateAll, abId);
+        this.changeUser(user, abId);
     }
 
     /**
      * Change selected user in all answerbrowsers
      * @param user selected user
-     * @param updateAll if true, update answerbrowsers instantly
      * @param triggerer_id optional taskId of answerbrowser who called the change (skipped in update)
      */
-    async changeUser(user: IUser, updateAll: boolean, triggerer_id?: TaskId) {
+    async changeUser(user: IUser, triggerer_id?: TaskId) {
         this.selectedUser = user;
         for (const uc of this.userChangeListeners.values()) {
             uc.userChanged(user);
         }
-        if (updateAll) {
+        if (this.instantUpdateTasks) {
             for (const lo of this.ldrs.values()) {
                 lo.loadPlugin();
                 // await lo.abLoad.promise;
@@ -1106,7 +1106,7 @@ export class ViewCtrl implements IController {
         // - do the same for /taskinfo and /getState requests
         for (const ab of this.abs.entities.values()) {
             if (triggerer_id != ab.taskId) {
-                ab.changeUser(user, updateAll);
+                ab.changeUser(user, this.instantUpdateTasks);
             }
         }
     }
