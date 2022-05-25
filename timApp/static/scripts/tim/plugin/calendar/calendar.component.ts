@@ -127,7 +127,7 @@ const colors = {
         secondary: "#FDF1BA",
     },
     gray: {
-        primary: "#d5d5d5",
+        primary: "#aaaaaa",
         secondary: "#d5d5d5",
     },
     green: {

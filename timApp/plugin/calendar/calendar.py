@@ -475,7 +475,10 @@ def user_is_event_manager(event_id: int) -> bool:
         return False
     if event.creator_user_id == get_current_user_id():
         return True
-    event_groups = Event.event_groups
+    # event_groups = Event.event_groups
+    event_groups: list[EventGroup] = EventGroup.query.filter(
+        EventGroup.event_id == event_id
+    ).all()
     for event_group in event_groups:
         ug: UserGroup = EventGroup.user_group
         if ug is not None:
