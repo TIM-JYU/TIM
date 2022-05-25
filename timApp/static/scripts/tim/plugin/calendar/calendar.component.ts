@@ -761,7 +761,6 @@ export class CalendarComponent
                     max_size: capacity,
                 };
             });
-            console.log(eventsToAdd);
             const result = await toPromise(
                 this.http.post<TIMCalendarEvent[]>("/calendar/events", {
                     events: eventsToAdd,
@@ -799,8 +798,6 @@ export class CalendarComponent
                         });
                     }
                 });
-                console.log("events sent");
-                console.log(result.result);
                 this.refresh();
             } else {
                 console.error(result.result.error.error);
@@ -856,7 +853,6 @@ export class CalendarComponent
             })
         );
         if (result.ok) {
-            console.log(result.result);
         } else {
             console.error(result.result.error.error);
             if (result.result.error.error) {
@@ -923,7 +919,6 @@ export class CalendarComponent
             const modifiedEvent = result.result;
             if (modifiedEvent.meta) {
                 if (modifiedEvent.meta.deleted) {
-                    console.log("deleted");
                     this.events.splice(this.events.indexOf(modifiedEvent), 1);
                 }
             }

@@ -335,7 +335,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             })
         );
         if (result.ok) {
-            console.log(result.result);
             this.data.meta!.maxSize = eventToEdit.max_size;
             this.data.title = eventToEdit.title;
             this.data.meta!.description = eventToEdit.description;
@@ -376,7 +375,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 this.http.delete(`/calendar/events/${eventToDelete.id}`)
             );
             if (result.ok) {
-                console.log(result.result);
                 eventToDelete.meta.deleted = true;
                 this.close(eventToDelete);
             } else {
@@ -502,9 +500,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 booker_group: bookerGroup,
             })
         );
-        console.log(result);
         if (result.ok) {
-            console.log(result.result);
             this.bookerMessage = bookMessage;
             this.messageText = "";
             if (this.data.meta) {
@@ -538,9 +534,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 booker_msg: this.messageText,
             })
         );
-        console.log(result);
         if (result.ok) {
-            console.log(result.result);
             this.data.meta!.enrollments++;
 
             const booker = Users.getCurrent().groups.find((group) => {
@@ -597,9 +591,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         const result = await toPromise(
             this.http.delete(`/calendar/bookings/${eventId}`)
         );
-        console.log(result);
         if (result.ok) {
-            console.log(result.result);
             this.data.meta!.enrollments--;
 
             this.data.meta!.booker_groups.forEach((group) => {
