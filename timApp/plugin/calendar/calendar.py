@@ -221,63 +221,56 @@ def get_events() -> Response:
 
     event_objs = []
     for event in events:
-        event_optional = Event.get_event_by_id(event.event_id)
-        if event_optional is not None:
-            event_obj = event_optional
-            enrollment_amount = len(event_obj.enrolled_users)
-            booker_groups = event_obj.enrolled_users
-            groups = []
+        enrollment_amount = len(event.enrolled_users)
+        booker_groups = event.enrolled_users
+        groups = []
 
-            for group in booker_groups:
-                enrollment = Enrollment.get_enrollment_by_ids(event.event_id, group.id)
-                if enrollment is not None:
-                    book_msg = enrollment.booker_message
-                else:
-                    book_msg = ""
-                users = []
-                cur_user_booking = False
-                for user in group.users:
-                    if user.id == cur_user:
-                        cur_user_booking = True
-                    users.append(
-                        {
-                            "id": user.id,
-                            "name": user.real_name,
-                            "email": user.email,
-                        }
-                    )
-
-                groups.append(
+        for group in booker_groups:
+            enrollment = Enrollment.get_enrollment_by_ids(event.event_id, group.id)
+            if enrollment is not None:
+                book_msg = enrollment.booker_message
+            else:
+                book_msg = ""
+            users = []
+            cur_user_booking = False
+            for user in group.users:
+                if user.id == cur_user:
+                    cur_user_booking = True
+                users.append(
                     {
-                        "name": group.name,
-                        "message": book_msg,
-                        "users": users,
+                        "id": user.id,
+                        "name": user.real_name,
+                        "email": user.email,
                     }
                 )
 
-                if user_is_event_manager(event_obj.event_id) or cur_user_booking:
-                    groups.append({"name": group.name, "users": users})
-
-            event_objs.append(
+            groups.append(
                 {
-                    "id": event_obj.event_id,
-                    "title": event_obj.title,
-                    "start": event_obj.start_time,
-                    "end": event_obj.end_time,
-                    "meta": {
-                        "description": event_obj.message,
-                        "enrollments": enrollment_amount,
-                        "maxSize": event_obj.max_size,
-                        "location": event_obj.location,
-                        "booker_groups": groups,
-                        "signup_before": event_obj.signup_before,
-                    },
+                    "name": group.name,
+                    "message": book_msg,
+                    "users": users,
                 }
             )
-        else:
-            print(
-                "Error fetching the event by the id of", event.event_id
-            )  # should be never possible
+
+            if user_is_event_manager(event.event_id) or cur_user_booking:
+                groups.append({"name": group.name, "users": users})
+
+        event_objs.append(
+            {
+                "id": event.event_id,
+                "title": event.title,
+                "start": event.start_time,
+                "end": event.end_time,
+                "meta": {
+                    "description": event.message,
+                    "enrollments": enrollment_amount,
+                    "maxSize": event.max_size,
+                    "location": event.location,
+                    "booker_groups": groups,
+                    "signup_before": event.signup_before,
+                },
+            }
+        )
 
     return json_response(event_objs)
 
