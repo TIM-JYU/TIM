@@ -37,7 +37,6 @@ import {WeekViewHourSegment} from "calendar-utils";
 import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {CommonModule, registerLocaleData} from "@angular/common";
-import localeFr from "@angular/common/locales/fi";
 import localeFi from "@angular/common/locales/fi";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -140,7 +139,6 @@ const colors = {
 const segmentHeight = 30;
 // const minutesInSegment = 20;
 
-registerLocaleData(localeFr);
 registerLocaleData(localeFi);
 
 export type TIMEventMeta = {
