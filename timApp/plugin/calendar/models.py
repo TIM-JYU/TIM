@@ -19,6 +19,12 @@ class EventGroup(db.Model):
     )
     manager = db.Column(db.Boolean)
 
+    user_group = db.relationship(
+        UserGroup,
+        primaryjoin=usergroup_id == UserGroup.id,
+        lazy="select",
+    )
+
 
 class Enrollment(db.Model):
     """Table for enrollments; combines event, user group and enrollment type."""
@@ -78,6 +84,8 @@ class Event(db.Model):
     )
 
     creator: User = db.relationship(User)
+
+    event_groups = db.relationship(EventGroup, foreign_keys="EventGroup.event_id")
 
     @staticmethod
     def get_event_by_id(event_id: int) -> Optional["Event"]:
