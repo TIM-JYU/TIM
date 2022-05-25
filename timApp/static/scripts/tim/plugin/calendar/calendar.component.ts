@@ -193,12 +193,14 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                 </div>
             </div>
             <div class="col-md-4">
+                <!-- TODO: Checkboxes for filtering purposes
                 <div class="checkbox-group"> Show:
                     <div *ngFor="let box of checkboxEvents"> 
                         <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
                                [(ngModel)]="box.checked" [checked]="">{{box.name}}
                     </div>
                 </div>
+                -->
             </div>
         </div>
 
@@ -278,7 +280,6 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                                 (evening)="setEvening($event)"></tim-time-view-selector>
         <div>
             <button class="btn timButton" (click)="export()">Export calendar</button>
-            <!--input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL"-->
             <span class="exportDone"><b>{{exportDone}}</b></span>
         </div>
         <ng-template #modalContent let-close="close">
@@ -299,11 +300,6 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                 </div>
             </div>
             <div class="modal-footer">
-                <!-- <button [style.visibility] = "editEnabled ? 'visible' : 'hidden'" type="button" class="btn btn-out
-                line-secondary timButton"
-                        (click)=" close(); deleteEvent(modalData?.event)">
-                    Delete
-                </button> -->
                 <button type="button" class="btn btn-outline-secondary timButton" (click)="close()">
                     OK
                 </button>
@@ -347,11 +343,14 @@ export class CalendarComponent
     eventTypes: string[] = [];
     selectedEvent: string = "";
 
+    /*
+    TODO: Checkbox values
     checkboxEvents = [
         {name: "Ohjaus", value: "1", checked: true},
         {name: "Luento", value: "2", checked: true},
         {name: "Opetusryhmä", value: "3", checked: true},
     ];
+    */
 
     locale: string = "Fi-fi";
 
@@ -486,7 +485,7 @@ export class CalendarComponent
 
     /**
      * Get what type of events user wants to view in view-mode
-     */
+     * TODO: To be used with the checkbox filtering
     getEventsToView() {
         const viewEvents = this.checkboxEvents
             .filter((box) => box.checked)
@@ -494,6 +493,7 @@ export class CalendarComponent
         console.log(viewEvents);
         return viewEvents;
     }
+    */
 
     /**
      * Called when the user starts creating a new event by clicking and dragging
@@ -695,7 +695,6 @@ export class CalendarComponent
                 if (event.end) {
                     event.end = new Date(event.end);
                 }
-                // event.actions = this.actions;
                 event.meta = {
                     description: event.meta!.description,
                     tmpEvent: false,
