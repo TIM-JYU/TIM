@@ -17,7 +17,7 @@ from timApp.auth.sessioninfo import (
     get_current_user_object,
 )
 from timApp.notification.send_email import send_email
-from timApp.plugin.calendar.models import Event, EventGroup, Enrollment, EnrollmentType
+from timApp.plugin.calendar.models import Event, EventGroup, Enrollment
 from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_access
@@ -35,21 +35,6 @@ from tim_common.pluginserver_flask import (
 )
 
 calendar_plugin = TypedBlueprint("calendar_plugin", __name__, url_prefix="/calendar")
-
-
-@calendar_plugin.before_app_first_request
-def initialize_db() -> None:
-    """Initializes the enrollment types in the database when the TIM-server is launched the first time,
-    before the first request."""
-
-    types = EnrollmentType.query.filter(
-        EnrollmentType.enroll_type_id == 0
-    ).all()  # Remember to add filters here if you add new enrollment types
-    if len(types) == 0:
-        db.session.add(
-            EnrollmentType(enroll_type_id=0, enroll_type="booking")
-        )  # TODO: proper enrollment types
-        db.session.commit()
 
 
 @dataclass

@@ -1,5 +1,4 @@
 """Server tests for TIM-calendar"""
-from timApp.plugin.calendar.calendar import initialize_db
 from timApp.tests.server.timroutetest import TimRouteTest
 
 
@@ -122,7 +121,6 @@ class CalendarTest(TimRouteTest):
 class CalendarBookTest(TimRouteTest):
     def test_booking(self):
         """Event is created by Test user 2 and booked by Test user 1."""
-        initialize_db()
         self.login_test2()
         event_id = 1
         self.post_event_to_book(event_id)
