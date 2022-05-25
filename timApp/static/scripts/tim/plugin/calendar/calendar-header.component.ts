@@ -10,16 +10,9 @@
  * @license MIT
  * @date 24.5.2022
  */
-import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
-import {
-    CalendarDateFormatter,
-    CalendarModule,
-    CalendarView,
-} from "angular-calendar";
-import {CommonModule} from "@angular/common";
-import {FormsModule} from "@angular/forms";
-import {ShowWeekComponent} from "./show-week.component";
-import {CustomDateFormatter} from "./custom-date-formatter.service";
+
+import {Component, EventEmitter, Input, Output} from "@angular/core";
+import {CalendarView} from "angular-calendar";
 
 @Component({
     selector: "tim-calendar-header",
@@ -108,16 +101,3 @@ export class CalendarHeaderComponent {
 
     CalendarView = CalendarView;
 }
-
-@NgModule({
-    imports: [CommonModule, FormsModule, CalendarModule],
-    declarations: [CalendarHeaderComponent, ShowWeekComponent],
-    exports: [CalendarHeaderComponent],
-    providers: [
-        {
-            provide: CalendarDateFormatter,
-            useClass: CustomDateFormatter,
-        },
-    ],
-})
-export class CalendarHeaderModule {}
