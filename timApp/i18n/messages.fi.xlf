@@ -5718,7 +5718,7 @@
       </trans-unit>
       <trans-unit id="5345773632901719846" datatype="html">
         <source>Set view with timeslots of </source>
-        <target state="translated">Näytä kalenteri </target>
+        <target state="translated">Näytä kalenteri aikaväleissä </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/timeviewselector.component.ts</context>
           <context context-type="linenumber">11</context>
@@ -5726,7 +5726,7 @@
       </trans-unit>
       <trans-unit id="893841469692026422" datatype="html">
         <source> minutes from </source>
-        <target state="new"> minutes from </target>
+        <target state="translated"> minuutin aikaväleissä välillä </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/timeviewselector.component.ts</context>
           <context context-type="linenumber">15</context>
