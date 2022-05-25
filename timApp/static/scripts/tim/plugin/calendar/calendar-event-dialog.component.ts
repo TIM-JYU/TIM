@@ -15,7 +15,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
     selector: "tim-calendar-event-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container i18n header>
+            <ng-container header>
                 Edit event
             </ng-container>
             <ng-container body>
@@ -37,12 +37,12 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                         <label i18n for="location" class="col-sm-2 control-label">Location</label>
                         <div class="col-sm-9">
-                            <input i18n type="text"
+                            <input type="text"
                             maxlength="120"
                                    [(ngModel)]="location" #ngModelLocation="ngModel"
                                    (ngModelChange)="setMessage()"
                                    id="location"
-                                   placeholder="Settt location"
+                                   placeholder="Set location" i18n-placeholder
                                    name="location"
                                    class="form-control"
                                    [disabled]="!isEditEnabled()" />
@@ -182,7 +182,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                                    (ngModelChange)="setMessage()"
                                     name="messageText"
                                     class="form-control">
-                        <button class="btn timButton message-btn" type="button"
+                        <button i18n class="btn timButton message-btn" type="button"
                         (click)="updateBookMessage()">Send message
                         </button>
                     </div>
@@ -192,23 +192,23 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     </div>
                 </form>
                 <tim-alert *ngIf="(maxSize>2000 || maxSize<0) && ngModelMaxSize.dirty" >
-                    <ng-container i18n >Event capacity must be 0-2000</ng-container>
+                    <ng-container>Event capacity must be 0-2000</ng-container>
                 </tim-alert>
 
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['bookingEndInvalid']">
-                <ng-container i18n *ngIf="form.errors?.['bookingEndInvalid']">Booking must be done before the event</ng-container>
+                <ng-container *ngIf="form.errors?.['bookingEndInvalid']">Booking must be done before the event</ng-container>
                 </tim-alert>
                 
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['dateInvalid']">
-                <ng-container i18n *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.</ng-container>
+                <ng-container *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.</ng-container>
 
                 </tim-alert>
                 <tim-alert *ngIf="ngModelTitle.invalid && ngModelTitle.dirty" severity="danger">
-                    <ng-container i18n *ngIf="ngModelTitle.errors?.['required']">
+                    <ng-container *ngIf="ngModelTitle.errors?.['required']">
                         Title is required.
                     </ng-container>
 
-                    <ng-container i18n *ngIf="ngModelTitle.errors?.['pattern']">
+                    <ng-container *ngIf="ngModelTitle.errors?.['pattern']">
                         Title should not contain the slash character. <!--TODO: Think about the pattern-->
                     </ng-container>
                     <!-- <ng-container i18n *ngIf="ngModelTitle.errors?.['pattern']">
@@ -216,7 +216,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     </ng-container> -->
                 </tim-alert>
                 <tim-alert *ngIf="message" severity="danger">
-                    <ng-container i18n *ngIf="message">
+                    <ng-container *ngIf="message">
                         {{message}}
                     </ng-container>
                 </tim-alert>
@@ -242,10 +242,10 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     </button>
                     <button i18n class="btn timButton col-sm-4" type="button" style="float: left"
                         (click)="bookEvent()" [disabled]="eventIsFull() || !eventCanBeBooked()" [hidden]="hideBookingButton()">
-                    Book event
+                    Book event222
                     </button>
                     <button i18n class="btn btn-default col-sm-2" type="button" style="float:right" (click)="dismiss()">
-                    Cancel
+                    Cancelcancel
                     </button>
                     <button i18n class="btn timButton col-sm-2" type="submit" style="float:right" (click)="saveChanges()" [disabled]="form.invalid"
                         [hidden]="!isEditEnabled()">
@@ -358,7 +358,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             !eventToDelete.meta.tmpEvent &&
             (await showConfirm(
                 "Delete an Event",
-                `Are you sure you want to delete the event "${this.data.title}"?`
+                $localize`Are you sure you want to delete the event "${this.data.title}"?`
             ))
         ) {
             const result = await toPromise(
@@ -481,7 +481,12 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             "fi-FI"
         )}: ${this.messageText}`;
 
-        if (!(await showConfirm("Post message", "Post message to booking?"))) {
+        if (
+            !(await showConfirm(
+                "Post message",
+                $localize`Post message to booking?`
+            ))
+        ) {
             return;
         }
         const result = await toPromise(
@@ -512,7 +517,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (
             !(await showConfirm(
                 "Book an Event",
-                `Book the event "${this.data.title}"?`
+                $localize`Book the event "${this.data.title}"?`
             ))
         ) {
             return;
@@ -578,7 +583,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             !eventId ||
             !(await showConfirm(
                 "Cancel booking",
-                `Are you sure you want to cancel booking "${this.data.title}"?`
+                $localize`Are you sure you want to cancel booking "${this.data.title}"?`
             ))
         ) {
             return;
