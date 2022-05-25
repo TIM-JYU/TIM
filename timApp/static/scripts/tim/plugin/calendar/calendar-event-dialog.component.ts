@@ -15,7 +15,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
     selector: "tim-calendar-event-dialog",
     template: `
         <tim-dialog-frame>
-            <ng-container header>
+            <ng-container i18n header>
                 Edit event
             </ng-container>
             <ng-container body>
@@ -25,7 +25,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
 
                         <label i18n for="title" class="col-sm-2 control-label">Title</label>
                         <div class="col-sm-9">
-                            <input type="text" required
+                            <input i18n type="text" required
                                    maxlength="280"
                                    [(ngModel)]="title" #ngModelTitle="ngModel"
                                    (ngModelChange)="setMessage()"
@@ -37,15 +37,15 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                         <label i18n for="location" class="col-sm-2 control-label">Location</label>
                         <div class="col-sm-9">
-                            <input type="text"
+                            <input i18n type="text"
                             maxlength="120"
                                    [(ngModel)]="location" #ngModelLocation="ngModel"
                                    (ngModelChange)="setMessage()"
                                    id="location"
-                                   placeholder="Set location"
+                                   placeholder="Settt location"
                                    name="location"
                                    class="form-control"
-                                   [disabled]="!isEditEnabled()"/>
+                                   [disabled]="!isEditEnabled()" />
                         </div>
                         <label i18n for="maxSize" class="col-sm-2 control-label">Capacity</label>
                         <div class="col-sm-3">
@@ -192,23 +192,23 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     </div>
                 </form>
                 <tim-alert *ngIf="(maxSize>2000 || maxSize<0) && ngModelMaxSize.dirty" >
-                    <ng-container>Event capacity must be 0-2000</ng-container>
+                    <ng-container i18n >Event capacity must be 0-2000</ng-container>
                 </tim-alert>
 
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['bookingEndInvalid']">
-                <ng-container *ngIf="form.errors?.['bookingEndInvalid']">Booking must be done before the event</ng-container>
+                <ng-container i18n *ngIf="form.errors?.['bookingEndInvalid']">Booking must be done before the event</ng-container>
                 </tim-alert>
                 
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['dateInvalid']">
-                <ng-container *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.</ng-container>
+                <ng-container i18n *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.</ng-container>
 
                 </tim-alert>
                 <tim-alert *ngIf="ngModelTitle.invalid && ngModelTitle.dirty" severity="danger">
-                    <ng-container *ngIf="ngModelTitle.errors?.['required']">
+                    <ng-container i18n *ngIf="ngModelTitle.errors?.['required']">
                         Title is required.
                     </ng-container>
 
-                    <ng-container *ngIf="ngModelTitle.errors?.['pattern']">
+                    <ng-container i18n *ngIf="ngModelTitle.errors?.['pattern']">
                         Title should not contain the slash character. <!--TODO: Think about the pattern-->
                     </ng-container>
                     <!-- <ng-container i18n *ngIf="ngModelTitle.errors?.['pattern']">
@@ -216,7 +216,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     </ng-container> -->
                 </tim-alert>
                 <tim-alert *ngIf="message" severity="danger">
-                    <ng-container *ngIf="message">
+                    <ng-container i18n *ngIf="message">
                         {{message}}
                     </ng-container>
                 </tim-alert>
