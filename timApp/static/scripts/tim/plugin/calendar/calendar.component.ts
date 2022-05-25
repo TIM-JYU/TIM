@@ -893,20 +893,14 @@ export class CalendarComponent
             })
         );
         if (result.ok) {
-            let copyOk = true;
             this.icsURL = result.result;
-            navigator.clipboard.writeText(this.icsURL).then(
-                function () {
-                    /* clipboard successfully set */
-                    copyOk = true;
-                },
-                function () {
-                    /* clipboard write failed */
-                    copyOk = false;
-                }
+            const copyResult = await to2(
+                navigator.clipboard.writeText(this.icsURL)
             );
-            if (copyOk) {
+            if (copyResult.ok) {
                 this.exportDone = "ICS-url copied to clipboard.";
+            } else {
+                this.exportDone = "Error occurred when creating ICS-url.";
             }
             this.refresh();
         } else {
