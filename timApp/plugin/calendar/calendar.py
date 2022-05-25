@@ -8,10 +8,10 @@ from datetime import datetime
 from io import StringIO
 from textwrap import wrap
 
-from flask import Response, render_template_string, make_response, url_for
+from flask import Response, render_template_string, url_for
 from werkzeug.exceptions import NotFound
 
-from timApp.auth.accesshelper import verify_logged_in
+from timApp.auth.accesshelper import verify_logged_in, AccessDenied
 from timApp.auth.sessioninfo import (
     get_current_user_id,
     get_current_user_object,
@@ -292,11 +292,12 @@ def get_event_bookers(event_id: int) -> str | Response:
 
     verify_logged_in()
     if not user_is_event_manager(event_id):
-        return make_response({"error": "No permission to see event bookers"}, 403)
+        raise AccessDenied("No permission to see event bookers")
 
     event = Event.get_event_by_id(event_id)
     if event is None:
-        raise NotExist(f"Event not found by the id of {0}".format(event_id))
+        no_event_found = f"Event not found by the id of {event_id}"
+        raise NotExist(no_event_found)
 
     bookers_info = []
     booker_groups = event.enrolled_users
@@ -448,7 +449,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     """
     verify_logged_in()
     if not user_is_event_manager(event_id):
-        return make_response({"error": "No permission to edit the event"}, 403)
+        raise AccessDenied("No permission to edit the event")
     old_event = Event.get_event_by_id(event_id)
     if not old_event:
         raise NotFound()
@@ -504,7 +505,7 @@ def delete_event(event_id: int) -> Response:
     verify_logged_in()
 
     if not user_is_event_manager(event_id):
-        return make_response({"error": "No permission to delete the event"}, 403)
+        raise AccessDenied("No permission to delete the event")
 
     event = Event.get_event_by_id(event_id)
     user_obj = get_current_user_object()
