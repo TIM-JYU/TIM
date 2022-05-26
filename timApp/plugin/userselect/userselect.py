@@ -785,9 +785,7 @@ def apply_group_actions(
     remove: list[str],
     change_to: ChangeGroupAction | None,
 ) -> None:
-    add_groups, remove_groups, change_to_groups = get_groups(
-        cur_user, add, remove, change_to.all_groups if change_to else []
-    )
+    add_groups, remove_groups, _ = get_groups(cur_user, add, remove, [])
 
     for ug in add_groups:
         user_acc.add_to_group(ug, cur_user)
@@ -803,11 +801,12 @@ def apply_group_actions(
         expire_membership(ug)
 
     if change_to:
-        user_member_groups = {g.name for g in user_acc.groups}
-        for ug in change_to_groups:
-            if ug.name == change_to.changeTo:
-                user_acc.add_to_group(ug, cur_user)
-            elif ug.name in user_member_groups:
+        all_groups_set = set(change_to.allGroups)
+        change_to_group = UserGroup.get_by_name(change_to.changeTo)
+        if change_to_group:
+            user_acc.add_to_group(change_to_group, cur_user)
+        for ug in user_acc.groups:
+            if ug.name != change_to.changeTo and ug.name in all_groups_set:
                 expire_membership(ug)
 
 
