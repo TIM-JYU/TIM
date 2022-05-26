@@ -803,10 +803,11 @@ def apply_group_actions(
         expire_membership(ug)
 
     if change_to:
+        user_member_groups = {g.name for g in user_acc.groups}
         for ug in change_to_groups:
             if ug.name == change_to.changeTo:
                 user_acc.add_to_group(ug, cur_user)
-            else:
+            elif ug.name in user_member_groups:
                 expire_membership(ug)
 
 
