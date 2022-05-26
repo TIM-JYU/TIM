@@ -5912,6 +5912,14 @@
           <context context-type="linenumber">94,95</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="756965796750357045" datatype="html">
+        <source> Week: <x id="INTERPOLATION" equiv-text="{{getWeekNumberFromDate(viewDate)}}"/> </source>
+        <target state="translated"> Viikko: <x id="INTERPOLATION" equiv-text="{{getWeekNumberFromDate(viewDate)}}"/> </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/show-week.component.ts</context>
+          <context context-type="linenumber">9</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
