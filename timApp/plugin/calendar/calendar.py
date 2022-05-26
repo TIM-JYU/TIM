@@ -1,4 +1,4 @@
-__authors__ = [ "Miika Immonen", "Terhi Kamula", "Anssi Lepikko", "Touko Miettinen", "Joose Tikkanen" ]
+__authors__ = ["Miika Immonen", "Terhi Kamula", "Anssi Lepikko", "Touko Miettinen", "Joose Tikkanen"]
 __license__ = "MIT"
 __date__ = "24.5.2022"
 
@@ -198,7 +198,7 @@ def string_to_lines(str_to_split: str) -> str:
     n = 60
     if len(str_to_split) <= n:
         return str_to_split
-    lines = [str_to_split[i : i + n] for i in range(0, len(str_to_split), n)]
+    lines = [str_to_split[i: i + n] for i in range(0, len(str_to_split), n)]
     new_str = ""
     index = 0
     for line in lines:
