@@ -810,11 +810,11 @@ export class CalendarComponent
 
                 if (result.result.error.error) {
                     await showMessageDialog(
-                        `Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
+                        $localize`Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
                     );
                 } else {
                     await showMessageDialog(
-                        `Something went wrong. TIM admins have been notified about the issue.`
+                        $localize`Something went wrong. TIM admins have been notified about the issue.`
                     );
                 }
                 this.events.forEach((event) => {
@@ -866,7 +866,7 @@ export class CalendarComponent
                 await showMessageDialog(result.result.error.error);
             } else {
                 await showMessageDialog(
-                    `Something went wrong. TIM admins have been notified about the issue.`
+                    $localize`Something went wrong. TIM admins have been notified about the issue.`
                 );
             }
             event.start = oldStart;
