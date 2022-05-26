@@ -5856,6 +5856,62 @@
           <context context-type="linenumber">869</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="8509196275779546716" datatype="html">
+        <source> Edit event </source>
+        <target state="translated"> Muokkaa tapahtumaa </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">18,20</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3029054132897287289" datatype="html">
+        <source>Event capacity must be 0-2000</source>
+        <target state="translated">Kapasiteetin on oltava 0-2000</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">195</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6749934902228585627" datatype="html">
+        <source>Booking must be done before the event</source>
+        <target state="translated">Varaus on tehtävä ennen tapatumaa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">199</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5934265517281512724" datatype="html">
+        <source>Start of the event must be before end.</source>
+        <target state="new">Tapahtuman alkamisajan on oltava ennen päättymisaikaa.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">203</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3695400929536588338" datatype="html">
+        <source> Title is required. </source>
+        <target state="new"> Otsikko vaaditaan. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">207,209</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5738577586081128660" datatype="html">
+        <source> Title should not contain the slash character. </source>
+        <target state="translated"> Otsikko ei saa sisältää vinoviivaa. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">211,212</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3670246119861199957" datatype="html">
+        <source>Show list of all bookers</source>
+        <target state="translated">Näytä lista osallistujista</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">94,95</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

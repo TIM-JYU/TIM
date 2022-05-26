@@ -91,7 +91,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                     </div>
                     <div [hidden]="hideBookerListLink()" class="form-group">
                         <label i18n for="bookers" class="col-sm-2 control-label">Bookers</label>
-                        <a href="/calendar/events/{{this.data.id}}/bookers" target="_blank" class="col-sm-10">Show list
+                        <a i18n href="/calendar/events/{{this.data.id}}/bookers" target="_blank" class="col-sm-10">Show list
                             of all bookers</a>
                     </div>
 
