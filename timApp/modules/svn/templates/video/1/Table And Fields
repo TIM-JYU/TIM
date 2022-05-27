@@ -82,6 +82,7 @@ updateFields:
  - TASK_P_%%i%%
 {% endfor %}
  - TASK_Riitauta
+ nextRunner: TASK_runnerVari
 preprogram: |!!
 //
     const parsed = JSON.parse(this.g);
