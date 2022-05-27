@@ -149,6 +149,8 @@ interface PeerReviewerUser {
     name: string;
     points: number[];
 }
+
+interface Point {
     x: number;
     y: number;
 }
