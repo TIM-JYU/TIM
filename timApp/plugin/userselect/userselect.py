@@ -6,6 +6,7 @@ from typing import Literal, Callable
 import filelock
 from flask import render_template_string, Response, current_app
 
+from timApp.answer.backup import sync_user_group_memberships_if_enabled
 from timApp.answer.routes import save_fields, FieldSaveRequest, FieldSaveUserEntry
 from timApp.auth.accesshelper import verify_logged_in, verify_view_access
 from timApp.auth.accesstype import AccessType
@@ -576,17 +577,20 @@ def undo_group_actions(
     add: list[str],
     remove: list[str],
     change: ChangeGroupAction | None,
-) -> None:
+) -> bool:
     add_groups, remove_groups, change_all_groups = get_groups(
         cur_user, add, remove, change.all_groups if change else []
     )
 
     # We cannot safely add user back to a group because we don't know if the user was removed from it
-
+    changed = False
     for ug in add_groups + change_all_groups:
         membership = ug.current_memberships.get(user_acc.id, None)
         if membership:
+            changed = True
             membership.set_expired(time_offset=group_expired_offset)
+
+    return changed
 
 
 @user_select_plugin.post("/undo")
@@ -619,7 +623,7 @@ def undo(
     try:
         # Undo the group actions before dist rights because dist rights can might depend on the group
         # Moreover, undoing is generally a soft action, so we can always manually restore the group safely
-        undo_group_actions(
+        changed = undo_group_actions(
             user_acc,
             cur_user,
             model.actions.addToGroups,
@@ -628,6 +632,9 @@ def undo(
         )
         # Flush so that right distribution is handled correctly
         db.session.flush()
+
+        if changed:
+            sync_user_group_memberships_if_enabled(user_acc)
 
         errors = undo_dist_right_actions(user_acc, model.actions.distributeRight)
 
@@ -784,18 +791,22 @@ def apply_group_actions(
     add: list[str],
     remove: list[str],
     change_to: ChangeGroupAction | None,
-) -> None:
+) -> bool:
     add_groups, remove_groups, _ = get_groups(cur_user, add, remove, [])
+    changed = False
 
     for ug in add_groups:
         user_acc.add_to_group(ug, cur_user)
+        changed = True
 
     def expire_membership(ugg: UserGroup) -> None:
+        nonlocal changed
         m = user_acc.memberships_dyn.filter(
             membership_current & (UserGroupMember.group == ugg)
         ).first()
         if m:
             m.set_expired(time_offset=group_expired_offset)
+            changed = True
 
     for ug in remove_groups:
         expire_membership(ug)
@@ -805,9 +816,12 @@ def apply_group_actions(
         change_to_group = UserGroup.get_by_name(change_to.changeTo)
         if change_to_group:
             user_acc.add_to_group(change_to_group, cur_user)
+            changed = True
         for ug in user_acc.groups:
             if ug.name != change_to.changeTo and ug.name in all_groups_set:
                 expire_membership(ug)
+
+    return changed
 
 
 class NeedsVerifyReasons(Enum):
@@ -867,7 +881,7 @@ def apply(
         lock.acquire()
 
     try:
-        apply_group_actions(
+        changed = apply_group_actions(
             user_acc,
             cur_user,
             model.actions.addToGroups,
@@ -875,6 +889,9 @@ def apply(
             model.actions.changeGroup,
         )
         db.session.flush()
+
+        if changed:
+            sync_user_group_memberships_if_enabled(user_acc)
 
         apply_field_actions(cur_user, user_acc, model.actions.setValue)
 

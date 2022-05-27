@@ -260,6 +260,19 @@ BACKUP_ANSWER_FILE = "answers.backup"
 # The hosts where to back up the answers. Every entry should start with "https://".
 BACKUP_ANSWER_HOSTS = None
 
+SYNC_USER_GROUPS_SEND_SECRET = None
+"""
+Secret to use to when syncing user group info. If None, no user group memberships.
+
+..note: Right now, syncing only is done in UserSelect.
+"""
+
+SYNC_USER_GROUPS_HOSTS = []
+"""Groups to sync user group info to."""
+
+SYNC_USER_GROUPS_RECEIVE_SECRET = None
+"""Secret to check against when syncing group info."""
+
 # DIST_RIGHTS_* variables are related to distributing rights.
 
 # A mapping of target identifiers to lists of hosts.
