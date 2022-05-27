@@ -219,7 +219,6 @@ def change_peerreviewers_for_user(
     :param reviewable: User ID for the review target user.
     :param old_reviewers: List of old reviewers IDs
     :param new_reviewers: List of new reviewers IDs
-    :param reviewed: Boolean indicating if review has been done.
     """
 
     for i in range(0, len(new_reviewers)):
