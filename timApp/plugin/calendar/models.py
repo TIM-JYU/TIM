@@ -1,3 +1,18 @@
+"""
+The database classes for the calendar plugin
+"""
+
+__authors__ = [
+    "Miika Immonen",
+    "Terhi Kamula",
+    "Anssi Lepikko",
+    "Touko Miettinen",
+    "Joose Tikkanen",
+]
+__license__ = "MIT"
+__date__ = "24.5.2022"
+
+
 from typing import Optional
 
 from timApp.auth.sessioninfo import get_current_user_id
@@ -32,7 +47,7 @@ class Enrollment(db.Model):
 
     @staticmethod
     def get_enrollment_by_ids(
-            event_id: int, user_group_id: int
+        event_id: int, user_group_id: int
     ) -> Optional["Enrollment"]:
         """Returns a specific enrollment (or none) that match the user group id and event id"""
         return Enrollment.query.filter(
