@@ -16,7 +16,7 @@ Arviointitilanne
 \
 #- {defaultplugin="textfield" readonly="view" .fieldCell}
 Tehtävän arvioineet:\
-{%for i in range(0, arvosteltavia)%}
+{%for i in range(0, peer_review_count)%}
 {#TASK_Arvioija_%%i+1%% stem: Arvioija %%i+1%%, cols: 10 #}
 {#TASK_P_%%i+1%% stem: P, cols: 2 #}
 {% endfor -%}
@@ -35,14 +35,14 @@ fields:
  - TASK_VpOpe=VpOpe
  - TASK_Pisteet=Pisteet
  - TASK_Ope=Ope
-{% for i in range(1,arvosteltavia+1) %}
+{% for i in range(1,peer_review_count+1) %}
  - TASK_Arvioija_%%i%%=Arvioija%%i%%
  - TASK_P_%%i%%=P%%i%%
 {% endfor %}
  - TASK_Riita=Riita
  - TASK_Riitauta=Riitauta
 lockedFields:
-{% for i in range(1,arvosteltavia+1) %}
+{% for i in range(1,peer_review_count+1) %}
  - P%%i%%
 {% endfor %}
 header: Demotaulukko
@@ -61,13 +61,13 @@ emailUsersButtonText: "Lähetä sähköpostia"
 ``` {#TASK_runnerVari plugin="jsrunner"}
 groups:
  - %%group%%
-buttonText: Päivitä tilanne
+buttonText: Päivitä pistetilanne
 fields:
  - TASK_Ope=Ope
  - TASK_Pisteet=Pisteet
  - TASK_Vp=Vp
  - TASK_VpOpe=VpOpe
-{% for i in range(1,arvosteltavia+1) %}
+{% for i in range(1,peer_review_count+1) %}
  - TASK_Arvioija_%%i%%
  - TASK_P_%%i%%=P%%i%%
 {% endfor %}
@@ -77,7 +77,7 @@ updateFields:
  - TASK_Pisteet
  - TASK_Vp
  - TASK_VpOpe
-{% for i in range(1,arvosteltavia+1) %}
+{% for i in range(1,peer_review_count+1) %}
  - TASK_Arvioija_%%i%%
  - TASK_P_%%i%%
 {% endfor %}
@@ -92,15 +92,15 @@ preprogram: |!!
 !!
 program: |!!
 
-    let compensation = 1; // Compensation from peer-review
-    let maxDiff = 6; // The maximum difference allowed between the points
+    let compensation = %%peer_review_points%%;
+    let maxDiff = %maxEro%%;
 
     let reviewCount = tools.getVelpReviewCount("TASK");
     let vp = reviewCount * compensation
     tools.setDouble("Vp", vp);
 
-    let velpPoints = tools.getVelpTaskPoints("TASK"); // The average of student's scores
-    let teacherCorrection = tools.getDouble("Ope", -100); // Correction made by teacher
+    let velpPoints = tools.getVelpTaskPoints("TASK");
+    let teacherCorrection = tools.getDouble("Ope", -100);
     if (teacherCorrection != -100) {
         tools.setDouble("Pisteet", ope);
     }
@@ -141,22 +141,23 @@ program: |!!
 ```
 \
 ``` {#TASK_changeReviewersRunner plugin="jsrunner"}
-button: Aseta uudet arvioijat
+button: Päivitä arvioijat
 groups:
  - %%group%%
 fields:
-{% for i in range(1,arvosteltavia+1) %}
+{% for i in range(1,peer_review_count+1) %}
  - TASK_Arvioija_%%i%%
 {% endfor %}
 updateFields:
-{% for i in range(1,arvosteltavia+1) %}
+{% for i in range(1,peer_review_count+1) %}
  - TASK_Arvioija_%%i%%
 {% endfor %}
 paramFields:
-{% for i in range(1,arvosteltavia+1) %}
+{% for i in range(1,peer_review_count+1) %}
  - TASK_Arvioija_%%i%%
 {% endfor %}
 peerReviewField: TASK_vaihto
+nextRunner: TASK_runnerVari
 preprogram: |!!
     const parsed = JSON.parse(this.g);
     gtools.users = {};

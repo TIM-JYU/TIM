@@ -132,6 +132,12 @@ const ABSOLUTE_FIELD_REGEX = /^[0-9]+\./;
 
 type Users = Record<string | number, string>;
 
+interface PeerReviewerUser {
+    id: number;
+    name: string;
+    points: number[];
+}
+
 interface Point {
     x: number;
     y: number;
@@ -1448,14 +1454,14 @@ export class Tools extends ToolsBase {
     /**
      * Print reviewers and received points of current user
      */
-    getReviews(task: string, usersObject: Users): object[] {
+    getReviews(task: string, usersObject: Users): PeerReviewerUser[] {
         const users = usersObject ? usersObject : this.users;
         const peerreviewers = this.getPeerReviewsForUser()
             .filter((pr) => pr.task_name === task)
             .map((pr) => {
                 return {
-                    id: pr.reviewer_id,
-                    name: users[pr.reviewer_id],
+                    id: pr?.reviewer_id,
+                    name: users[pr?.reviewer_id],
                     points: [0],
                 };
             });
@@ -1469,7 +1475,7 @@ export class Tools extends ToolsBase {
             }));
 
         //
-        velps.filter((v) =>
+        velps?.filter((v) =>
             peerreviewers.forEach((pr) => {
                 return pr.id == v.id;
             })
