@@ -14,7 +14,8 @@ macros:
      - t4
      - t5
      - t6
-  arvosteltavia: 2
+  peer_review_count: 2
+  peer_review_points: 2
   maxEro: 1
 form_mode: true
 peer_review: false
