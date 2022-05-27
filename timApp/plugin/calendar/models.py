@@ -85,7 +85,9 @@ class Event(db.Model):
 
     creator: User = db.relationship(User)
 
-    event_groups = db.relationship(EventGroup, foreign_keys="EventGroup.event_id")
+    event_groups: list[EventGroup] = db.relationship(
+        EventGroup, foreign_keys="EventGroup.event_id"
+    )
 
     @staticmethod
     def get_event_by_id(event_id: int) -> Optional["Event"]:
