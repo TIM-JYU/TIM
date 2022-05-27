@@ -93,7 +93,7 @@ preprogram: |!!
 program: |!!
 
     let compensation = %%peer_review_points%%;
-    let maxDiff = %maxEro%%;
+    let maxDiff = %%maxEro%%;
 
     let reviewCount = tools.getVelpReviewCount("TASK");
     let vp = reviewCount * compensation
