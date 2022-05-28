@@ -81,6 +81,7 @@ updateFields:
  - TASK_Arvioija_%%i%%
  - TASK_P_%%i%%
 {% endfor %}
+ - TASK_Riita
  - TASK_Riitauta
  nextRunner: TASK_runnerVari
 preprogram: |!!
@@ -136,6 +137,9 @@ program: |!!
         if (delta >= maxDiff && pointsArray.length > 1 ) {
             tools.setDouble("TASK_Riita", delta);
             tools.setString("TASK_Riita.styles", '{"backgroundColor": "red"}');
+        else {
+            tools.setDouble("TASK_Riita", delta);
+            tools.setString("rc_Riita.styles", '{"backgroundColor": "white"}');
         }
     }
 !!
