@@ -163,7 +163,7 @@ def get_rnd_macros(
     return ret
 
 
-urlmacros_tester = re.compile(r"[^0-9A-Za-zÅÄÖåäöÜü.,_ \-/@+]+")
+urlmacros_tester = re.compile(r"[^0-9A-Za-zÅÄÖåäöÜü.,_ \-/@+=]+")
 
 
 def get_url_macros(
