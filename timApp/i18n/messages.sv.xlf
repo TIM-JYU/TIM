@@ -3892,7 +3892,7 @@
       </trans-unit>
       <trans-unit id="1282825972440368994" datatype="html">
         <source> I allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> to be used for scientific research purposes after anonymization. </source>
-        <target state="translated">Jag tillåter att <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> den insamlade informationen <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> används för vetenskapliga forskningsändamål efter anonymisering. </target>
+        <target state="translated"> Jag tillåter att <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> den insamlade informationen <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> används för vetenskapliga forskningsändamål efter anonymisering. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/consent-choice.component.ts</context>
           <context context-type="linenumber">11,17</context>
@@ -3900,7 +3900,7 @@
       </trans-unit>
       <trans-unit id="7549221046249449872" datatype="html">
         <source> I do not allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> to be used for scientific research purposes after anonymization. </source>
-        <target state="translated">Jag förbjuder att <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> den insamlade informationen <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> används för vetenskapliga forskningsändamål efter anonymisering. </target>
+        <target state="translated"> Jag förbjuder att <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> den insamlade informationen <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> används för vetenskapliga forskningsändamål efter anonymisering. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/consent-choice.component.ts</context>
           <context context-type="linenumber">23,29</context>
@@ -3908,7 +3908,7 @@
       </trans-unit>
       <trans-unit id="6586656662938056988" datatype="html">
         <source>Email or password is incorrect.</source>
-        <target state="translated">E-postadress eller lösenord är felaktigt.</target>
+        <target state="translated">E-postadressen eller lösenordet är felaktig(t).</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">7</context>
@@ -3916,7 +3916,7 @@
       </trans-unit>
       <trans-unit id="1648564222394912726" datatype="html">
         <source> Email or password is incorrect. Haka members (e.g. universities) can use Haka login. </source>
-        <target state="translated">E-postadress eller lösenord är felaktigt. Haka-medlemmar (t.ex. universitet) kan använda Haka-inloggning. </target>
+        <target state="translated"> E-postadress eller lösenord är felaktigt. Haka-medlemmar (t.ex. universitet) kan använda Haka-inloggning. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">8,10</context>
@@ -3924,7 +3924,7 @@
       </trans-unit>
       <trans-unit id="8723157802996630308" datatype="html">
         <source>Incorrect temporary password.</source>
-        <target state="translated">Felaktigt tillfälligt lösenord.</target>
+        <target state="translated">Det tillfälliga lösenordet är felaktigt.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">11</context>
@@ -3932,7 +3932,7 @@
       </trans-unit>
       <trans-unit id="1543538730036692975" datatype="html">
         <source>Passwords do not match.</source>
-        <target state="translated">Lösenorden matchar inte.</target>
+        <target state="translated">Lösenorden är inte lika.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">12</context>
@@ -3964,7 +3964,7 @@
       </trans-unit>
       <trans-unit id="8431069647749784053" datatype="html">
         <source>Login is not allowed from this IP address.</source>
-        <target state="translated">Inloggning är förbjuden från denna IP adress.</target>
+        <target state="translated">Det är inte tillåtet att logga in från denna IP-adress.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">18</context>
@@ -3988,7 +3988,7 @@
       </trans-unit>
       <trans-unit id="6523327060540361491" datatype="html">
         <source>Loading, please wait.</source>
-        <target state="translated">Laddar, vänligen vänta.</target>
+        <target state="translated">Laddar, var god vänta.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">51</context>
@@ -4004,7 +4004,7 @@
       </trans-unit>
       <trans-unit id="4604922124233283335" datatype="html">
         <source>You don't have permission to view that document.</source>
-        <target state="translated">Du har inte behörigheten att visa detta dokument.</target>
+        <target state="translated">Du har inte tillstånd att titta på det dokumentet.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">160</context>
@@ -4028,7 +4028,7 @@
       </trans-unit>
       <trans-unit id="3154844608097457238" datatype="html">
         <source>You can access the link now.</source>
-        <target state="translated">Du kan komma åt länken nu.</target>
+        <target state="translated">Du har åtkomst till länken nu.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">237</context>
@@ -4052,7 +4052,7 @@
       </trans-unit>
       <trans-unit id="3505358436479235655" datatype="html">
         <source> The session is expired. Ask the supervisor to scan the QR code below. </source>
-        <target state="translated"> Sessionen har löpt ut. Be handledaren skanna QR-koden nedan. </target>
+        <target state="translated"> Sessionen har avslutats. Be en övervakare att skanna QR-koden nedan.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">32,34</context>
@@ -4060,7 +4060,7 @@
       </trans-unit>
       <trans-unit id="8303849156036972853" datatype="html">
         <source>Verify a new login</source>
-        <target state="translated">Verifiera en ny inloggning</target>
+        <target state="translated">Bekräfta en ny inloggning</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">35</context>
@@ -4068,7 +4068,7 @@
       </trans-unit>
       <trans-unit id="212118607883345467" datatype="html">
         <source>This session was expired because you logged in too many times.</source>
-        <target state="translated">Den här sessionen har löpt ut eftersom du loggat in för många gånger.</target>
+        <target state="translated">Denna session har avslutats för att du har loggat in för många gånger.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">36</context>
@@ -4076,7 +4076,7 @@
       </trans-unit>
       <trans-unit id="5098547321898510813" datatype="html">
         <source> Please ask the supervisor to scan the code below to continue. </source>
-        <target state="translated"> Be handledaren att skanna koden nedan för att fortsätta. </target>
+        <target state="translated"> Be en övervakare att skanna koden nedan för att fortsätta.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">38,40</context>
@@ -4084,7 +4084,7 @@
       </trans-unit>
       <trans-unit id="8437774784999642776" datatype="html">
         <source>Once the code has been scanned, press "Check status" to re-check your verification.</source>
-        <target state="translated">När koden har skannats, tryck på "Kontrollera status" för att kontrollera din verifiering igen.</target>
+        <target state="translated">Då koden har skannats, tryck på "Kolla status" för att kolla din verifiering på nytt.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">46</context>
@@ -4092,7 +4092,7 @@
       </trans-unit>
       <trans-unit id="6118193036130472402" datatype="html">
         <source> Check status </source>
-        <target state="translated"> Kolla statusen </target>
+        <target state="translated"> Kolla status </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">51,53</context>
@@ -4376,7 +4376,7 @@
       </trans-unit>
       <trans-unit id="5192694303323354537" datatype="html">
         <source> If you have not logged in before, and your email corresponds to the one in Studyinfo.fi, TIM sent a password to your email now. Please read the email in a separate browser tab, and please wait for the email at least 5 minutes if you don't get the email right away. Check your spam folder too. </source>
-        <target state="translated"> Om du har inte loggat in till TIM tidigare och din e-postadress motsvarar den i Studieinfo.fi, TIM skickade dig ditt lösenord vid e-posten just ny. Snälla läsa e-posten i en separat webbläsarflik och vänta för e-posten minst 5 minuter om du inte har fått e-posten direkt. Checka din spam-mapp också. </target>
+        <target state="translated"> Om du inte har loggat in i TIM tidigare och din e-postadress finns i Studieinfo.fi, skickade TIM just ett lösenord till din e-post. Vänligen läs e-posten i en separat flik i webbläsaren och vänta på e-posten minst 5 minuter, om du inte har fått e-posten direkt. Kolla också din spam-mapp. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">100,108</context>
@@ -4384,7 +4384,7 @@
       </trans-unit>
       <trans-unit id="3890309214395153699" datatype="html">
         <source> If you have not logged in to TIM before, TIM sent a password to your email now. </source>
-        <target state="translated"> Om du har inte loggat in till TIM tidigare, TIM skickade dig ditt lösenord vid e-posten just ny. </target>
+        <target state="translated"> Om du inte har loggat in i TIM tidigare, skickade TIM just ett lösenord till din e-post. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">109,111</context>
@@ -4420,7 +4420,7 @@
       </trans-unit>
       <trans-unit id="6962699013778688473" datatype="html">
         <source>Continue</source>
-        <target state="translated">Fortsätta</target>
+        <target state="translated">Fortsätt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">132</context>
@@ -4552,7 +4552,7 @@
       </trans-unit>
       <trans-unit id="6047139372036217996" datatype="html">
         <source> Create a new password (at least <x id="INTERPOLATION" equiv-text="{{ minPasswordLength }}"/> characters) </source>
-        <target state="translated"> Skapa ett nytt lösenord (mindestens <x id="INTERPOLATION" equiv-text="{{ minPasswordLength }}"/> bokstäver) </target>
+        <target state="translated"> Skapa ett nytt lösenord (åtminstone <x id="INTERPOLATION" equiv-text="{{ minPasswordLength }}"/> tecken) </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">239,241</context>
@@ -4560,7 +4560,7 @@
       </trans-unit>
       <trans-unit id="7688307851659303493" datatype="html">
         <source> Retype the above password </source>
-        <target state="translated"> Ange lösenordet ovanför igen </target>
+        <target state="translated"> Skriv lösenordet ovan på nytt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">255,257</context>
@@ -4568,7 +4568,7 @@
       </trans-unit>
       <trans-unit id="4621828901734430721" datatype="html">
         <source>Retype password</source>
-        <target state="translated">Ange lösenordet igen</target>
+        <target state="translated">Skriv lösenordet på nytt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">267</context>
@@ -4576,7 +4576,7 @@
       </trans-unit>
       <trans-unit id="1109115297424558158" datatype="html">
         <source>Finish </source>
-        <target state="translated">Avsluta </target>
+        <target state="translated">Sluta </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">273,274</context>
@@ -4748,7 +4748,7 @@
       </trans-unit>
       <trans-unit id="7016510469271315963" datatype="html">
         <source> Styles that you currently use are listed here. You can review and remove styles that you use. </source>
-        <target state="translated">Stilar som du använder för närvarande listas här. Du kan granska och ta bort stilar som du använder. </target>
+        <target state="translated"> Stilar som du använder för närvarande listas här. Du kan granska och ta bort stilar som du använder. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">135,138</context>
@@ -4756,7 +4756,7 @@
       </trans-unit>
       <trans-unit id="2124612323077640701" datatype="html">
         <source> You can also reorder styles by dragging them in the list below. Reordering the styles will change their priority which might affect the final generated theme for TIM. </source>
-        <target state="translated">Du kan också ändra ordning på stilar genom att dra dem i listan nedan. Om du ändrar ordningen på stilarna kommer deras prioritet att ändras, vilket kan påverka det slutgiltiga genererade temat för TIM. </target>
+        <target state="translated"> Du kan också ändra ordning på stilar genom att dra dem i listan nedan. Om du ändrar ordningen på stilarna kommer deras prioritet att ändras, vilket kan påverka det slutgiltiga genererade temat för TIM. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">139,142</context>
@@ -4772,7 +4772,7 @@
       </trans-unit>
       <trans-unit id="5380572116300325278" datatype="html">
         <source> You have no styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab. </source>
-        <target state="translated">Du har inga stilar valda. Du kan lägga till stilar via fliken <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Tillgängliga stilar<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </target>
+        <target state="translated"> Du har inga stilar valda. Du kan lägga till stilar via fliken <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Tillgängliga stilar<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">150,152</context>
@@ -4812,7 +4812,7 @@
       </trans-unit>
       <trans-unit id="3945744289027552408" datatype="html">
         <source> The table below lists all styles available on TIM. You can preview and add new styles using the table below. </source>
-        <target state="translated">Tabellen nedan listar alla stilar som är tillgängliga på TIM. Du kan förhandsgranska och lägga till nya stilar med hjälp av tabellen nedan. </target>
+        <target state="translated"> Tabellen nedan listar alla stilar som är tillgängliga på TIM. Du kan förhandsgranska och lägga till nya stilar med hjälp av tabellen nedan. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">183,186</context>
@@ -5192,7 +5192,7 @@
       </trans-unit>
       <trans-unit id="8894738602661871576" datatype="html">
         <source> A verification email was sent to the current primary email. </source>
-        <target state="translated">Ett verifieringsmeddelande skickades till den nuvarande primära e-postadressen. </target>
+        <target state="translated"> Ett verifieringsmeddelande skickades till den nuvarande primära e-postadressen. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">388,390</context>
@@ -5200,7 +5200,7 @@
       </trans-unit>
       <trans-unit id="2749345556422798610" datatype="html">
         <source> Primary email is used to send you notifications and message list messages. </source>
-        <target state="translated">Primär e-post används för att skicka aviseringar och meddelanden från meddelandelistan. </target>
+        <target state="translated"> Primär e-post används för att skicka aviseringar och meddelanden från meddelandelistan. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">391,393</context>
@@ -5208,7 +5208,7 @@
       </trans-unit>
       <trans-unit id="582891413766289599" datatype="html">
         <source> This email is managed by <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong                                     [style.color]=&quot;originInfo.bgColor&quot;>"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>. The address will be automatically updated by the system. </source>
-        <target state="translated">Det här e-postmeddelandet hanteras av <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong                                     [style.color]=&quot;originInfo.bgColor&quot;>"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>. Adressen kommer automatiskt att uppdateras av systemet. </target>
+        <target state="translated"> Det här e-postmeddelandet hanteras av <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong                                     [style.color]=&quot;originInfo.bgColor&quot;>"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>. Adressen kommer automatiskt att uppdateras av systemet. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">394,398</context>
@@ -5320,7 +5320,7 @@
       </trans-unit>
       <trans-unit id="5705192456342684849" datatype="html">
         <source> To delete your account, please type your username (<x id="INTERPOLATION" equiv-text="{{ user.name }}"/>) in the field below and then click "Delete account now". </source>
-        <target state="translated">För att radera ditt konto, skriv ditt användarnamn (<x id="INTERPOLATION" equiv-text="{{ user.name }}"/>) i fältet nedan och klicka sedan på "Radera konto nu". </target>
+        <target state="translated"> För att radera ditt konto, skriv ditt användarnamn (<x id="INTERPOLATION" equiv-text="{{ user.name }}"/>) i fältet nedan och klicka sedan på "Radera konto nu". </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">471,474</context>
@@ -5492,7 +5492,7 @@
       </trans-unit>
       <trans-unit id="3981277675019788437" datatype="html">
         <source> Please verify or deny the action. You will not be able to access this page once you select either option. </source>
-        <target state="translated">Vänligen verifiera eller neka åtgärden. Du kommer inte att kunna komma åt den här sidan när du väl har valt något av alternativen. </target>
+        <target state="translated"> Vänligen verifiera eller neka åtgärden. Du kommer inte att kunna komma åt den här sidan när du väl har valt något av alternativen. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">145,148</context>
