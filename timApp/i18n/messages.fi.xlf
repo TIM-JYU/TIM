@@ -5788,14 +5788,6 @@
           <context context-type="linenumber">361</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3605420808001945080" datatype="html">
-        <source> Cancel Booking </source>
-        <target state="translated"> Peruuta varaus </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
-          <context context-type="linenumber">236,238</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="8070111471967683012" datatype="html">
         <source> Book event </source>
         <target state="translated"> Varaa tapahtuma </target>
@@ -5882,7 +5874,7 @@
       </trans-unit>
       <trans-unit id="5934265517281512724" datatype="html">
         <source>Start of the event must be before end.</source>
-        <target state="new">Tapahtuman alkamisajan on oltava ennen päättymisaikaa.</target>
+        <target state="translated">Tapahtuman alkamisajan on oltava ennen päättymisaikaa.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">203</context>
@@ -5890,7 +5882,7 @@
       </trans-unit>
       <trans-unit id="3695400929536588338" datatype="html">
         <source> Title is required. </source>
-        <target state="new"> Otsikko vaaditaan. </target>
+        <target state="translated"> Otsikko vaaditaan. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">207,209</context>
@@ -5918,6 +5910,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/show-week.component.ts</context>
           <context context-type="linenumber">9</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3605420808001945080" datatype="html">
+        <source> Cancel Booking </source>
+        <target state="new"> Cancel Booking </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">236,238</context>
         </context-group>
       </trans-unit>
     </body>
