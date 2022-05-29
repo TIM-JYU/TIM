@@ -203,12 +203,14 @@ export interface Iframesettings {
                 <button class="timButton btn-sm" *ngIf="saveButton"
                         (click)="getData('getDataSave')"
                         [disabled]="disableUnchanged && !isUnSaved()" [innerHtml]="saveButton | purify"></button>
-                &nbsp;
-                <a href="#" *ngIf="resetText"
-                   (click)="resetDrawing(); $event.preventDefault()">{{resetText}}</a>
                 <ng-container>
                 &nbsp;
                 <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle" (click)="tryResetChanges($event)">{{undoButton}}</a>
+                </ng-container>
+                <ng-container *ngIf="resetText">
+                &nbsp;
+                <a href="#"
+                   (click)="resetDrawing(); $event.preventDefault()">{{resetText}}</a>
                 </ng-container>
                 &nbsp;
                 <span class="jsframe message"
