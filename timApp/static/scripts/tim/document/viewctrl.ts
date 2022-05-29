@@ -84,6 +84,7 @@ export interface IChangeListener {
 
 export interface IUnsavedComponent {
     isUnSaved: (userChange?: boolean) => boolean;
+    allowUnsavedLeave?: boolean;
 }
 
 export interface ITimComponent extends IUnsavedComponent {
@@ -1008,7 +1009,10 @@ export class ViewCtrl implements IController {
             }
         }
         for (const component of this.timComponents.values()) {
-            if (component.isUnSaved(userChange)) {
+            if (
+                !component.allowUnsavedLeave &&
+                component.isUnSaved(userChange)
+            ) {
                 return true;
             }
         }
