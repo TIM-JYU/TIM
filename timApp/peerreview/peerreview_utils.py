@@ -1,4 +1,11 @@
-""""""
+"""
+Short description of Python module
+"""
+
+__authors__ = ["Mika Lehtinen", "Simo Lehtinen", "Alexander Södergård"]
+__license__ = "MIT"
+__date__ = "29.5.2022"
+
 from collections import defaultdict
 from datetime import datetime
 from random import shuffle
@@ -218,8 +225,7 @@ def change_peerreviewers_for_user(
     old_reviewers: list[int],
     new_reviewers: list[int],
 ) -> bool:
-    """Change user reviewers in one task.
-
+    """Change reviewers in one task.
     :param doc: Document containing reviewable answers.
     :param task: task name.
     :param reviewable: User ID for the review target user.
