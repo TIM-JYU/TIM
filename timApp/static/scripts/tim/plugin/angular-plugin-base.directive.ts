@@ -51,6 +51,10 @@ export abstract class AngularPluginBase<
         return this.markup.undo?.title;
     }
 
+    get undoConfirmationTitle() {
+        return this.markup.undo?.confirmationTitle;
+    }
+
     get undoConfirmation() {
         return this.markup.undo?.confirmation;
     }
@@ -121,7 +125,7 @@ export abstract class AngularPluginBase<
         if (this.undoConfirmation) {
             if (
                 !(await showConfirm(
-                    this.undoTitle ?? this.undoConfirmation,
+                    this.undoConfirmationTitle ?? this.undoConfirmation,
                     this.undoConfirmation
                 ))
             ) {

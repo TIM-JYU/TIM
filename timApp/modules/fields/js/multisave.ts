@@ -445,7 +445,7 @@ export class MultisaveComponent
         if (this.undoConfirmation) {
             if (
                 !(await showConfirm(
-                    this.undoTitle ?? this.undoConfirmation,
+                    this.undoConfirmationTitle ?? this.undoConfirmation,
                     this.undoConfirmation
                 ))
             ) {
