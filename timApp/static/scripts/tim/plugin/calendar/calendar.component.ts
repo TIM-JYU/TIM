@@ -7,8 +7,6 @@ import {
     ElementRef,
     NgModule,
     OnInit,
-    TemplateRef,
-    ViewChild,
     ViewEncapsulation,
 } from "@angular/core";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
@@ -33,7 +31,6 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek} from "date-fns";
-import {NgbModalModule} from "@ng-bootstrap/ng-bootstrap";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
@@ -270,35 +267,6 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
             <!--input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL"-->
             <span class="exportDone"><b>{{exportDone}}</b></span>
         </div>
-        <ng-template #modalContent let-close="close">
-            <div class="modal-header">
-                <h5 class="modal-title">Event action occurred</h5>
-                <button type="button" class="close" (click)="close()">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div>
-                    Action:
-                    <pre>{{ modalData?.action }}</pre>
-                </div>
-                <div>
-                    Event:
-                    <pre>{{ modalData?.event | json }}</pre>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <!-- <button [style.visibility] = "editEnabled ? 'visible' : 'hidden'" type="button" class="btn btn-out
-                line-secondary timButton"
-                        (click)=" close(); deleteEvent(modalData?.event)">
-                    Delete
-                </button> -->
-                <button type="button" class="btn btn-outline-secondary timButton" (click)="close()">
-                    OK
-                </button>
-            </div>
-        </ng-template>
-        
     `,
     encapsulation: ViewEncapsulation.None,
     styleUrls: [
@@ -315,8 +283,6 @@ export class CalendarComponent
     >
     implements OnInit
 {
-    @ViewChild("modalContent", {static: true})
-    modalContent?: TemplateRef<never>;
     exportDone: string = "";
     icsURL: string = "";
     view: CalendarView = CalendarView.Week;
@@ -354,11 +320,6 @@ export class CalendarComponent
     segmentsInHour: number = 3;
     segmentHeight: number = 30;
     minimumEventHeight: number = this.segmentMinutes;
-
-    modalData?: {
-        action: string;
-        event?: TIMCalendarEvent;
-    };
 
     // actions: CalendarEventAction[] = [
     //     {
@@ -994,7 +955,6 @@ export class CalendarComponent
             provide: DateAdapter,
             useFactory: adapterFactory,
         }),
-        NgbModalModule,
     ],
     declarations: [
         CalendarComponent,
