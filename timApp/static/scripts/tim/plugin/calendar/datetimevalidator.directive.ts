@@ -1,3 +1,14 @@
+/**
+ * Custom validator for date and time inputs in the calendar plugin
+ *
+ * @author Miika Immonen
+ * @author Terhi Kamula
+ * @author Anssi Lepikko
+ * @author Touko Miettinen
+ * @author Joose Tikkanen
+ * @license MIT
+ * @date 24.5.2022
+ */
 import {Directive, OnInit} from "@angular/core";
 import {
     NG_VALIDATORS,
