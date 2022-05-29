@@ -1,3 +1,14 @@
+/**
+ * A custom date formatter for calendar plugin
+ *
+ * @author Miika Immonen
+ * @author Terhi Kamula
+ * @author Anssi Lepikko
+ * @author Touko Miettinen
+ * @author Joose Tikkanen
+ * @license MIT
+ * @date 24.5.2022
+ */
 import {
     CalendarDateFormatter,
     DateFormatterParams,
@@ -13,7 +24,7 @@ export class CustomDateFormatter extends CalendarDateFormatter {
     }
 
     /**
-     *  Custom formatted that takes into special account finnish language. Returns a formatted
+     *  Custom formatter that takes into special account finnish language. Returns a formatted
      *  title with the name of the month and the year.
      *  There is a default 'ta' -ending in the default formatDate -function. This function removes the last 2 letters of all those
      *  huhtikuuta, tammikuuta etc. month names and brings them closer to natural finnish language.
@@ -55,10 +66,20 @@ export class CustomDateFormatter extends CalendarDateFormatter {
         return formatDate(date, "MMMM", locale!);
     }
 
+    /**
+     * Formats week view column header
+     * @param date date
+     * @param locale locale
+     */
     public weekViewColumnHeader({date, locale}: DateFormatterParams): string {
         return formatDate(date, "EEE", locale!);
     }
 
+    /**
+     * Formats week view column sub-header
+     * @param date date
+     * @param locale locale
+     */
     public weekViewColumnSubHeader({
         date,
         locale,
@@ -129,10 +150,20 @@ export class CustomDateFormatter extends CalendarDateFormatter {
         return formatDate(date, "EEEE, M/d/y", locale!);
     }
 
+    /**
+     * Formats time in day view
+     * @param date date
+     * @param locale locale
+     */
     public dayViewHour({date, locale}: DateFormatterParams): string {
         return formatDate(date, "HH:mm", locale!);
     }
 
+    /**
+     * Formats time in week view
+     * @param date date
+     * @param locale locale
+     */
     public weekViewHour({date, locale}: DateFormatterParams): string {
         return formatDate(date, "HH:mm", locale!);
     }

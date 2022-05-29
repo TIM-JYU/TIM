@@ -1,3 +1,14 @@
+/**
+ * Component for the dialog that is used for modifying, deleting and booking events
+ *
+ * @author Miika Immonen
+ * @author Terhi Kamula
+ * @author Anssi Lepikko
+ * @author Touko Miettinen
+ * @author Joose Tikkanen
+ * @license MIT
+ * @date 24.5.2022
+ */
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -324,7 +335,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             })
         );
         if (result.ok) {
-            console.log(result.result);
             this.data.meta!.maxSize = eventToEdit.max_size;
             this.data.title = eventToEdit.title;
             this.data.meta!.description = eventToEdit.description;
@@ -365,7 +375,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 this.http.delete(`/calendar/events/${eventToDelete.id}`)
             );
             if (result.ok) {
-                console.log(result.result);
                 eventToDelete.meta.deleted = true;
                 this.close(eventToDelete);
             } else {
@@ -491,9 +500,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 booker_group: bookerGroup,
             })
         );
-        console.log(result);
         if (result.ok) {
-            console.log(result.result);
             this.bookerMessage = bookMessage;
             this.messageText = "";
             if (this.data.meta) {
@@ -527,9 +534,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 booker_msg: this.messageText,
             })
         );
-        console.log(result);
         if (result.ok) {
-            console.log(result.result);
             this.data.meta!.enrollments++;
 
             const booker = Users.getCurrent().groups.find((group) => {
@@ -586,9 +591,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         const result = await toPromise(
             this.http.delete(`/calendar/bookings/${eventId}`)
         );
-        console.log(result);
         if (result.ok) {
-            console.log(result.result);
             this.data.meta!.enrollments--;
 
             this.data.meta!.booker_groups.forEach((group) => {
@@ -628,6 +631,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         return false; // Events should always have their meta field
     }
 
+    /**
+     * Returns true if user is manager or owner, otherwise false
+     */
     userIsManager() {
         return (
             itemglobals().curr_item.rights.manage ||

@@ -1,3 +1,6 @@
+"""
+The database classes for the calendar plugin
+"""
 from typing import Optional
 
 from timApp.auth.sessioninfo import get_current_user_id
@@ -15,6 +18,12 @@ class EventGroup(db.Model):
         db.Integer, db.ForeignKey("usergroup.id"), primary_key=True
     )
     manager = db.Column(db.Boolean)
+
+    user_group = db.relationship(
+        UserGroup,
+        primaryjoin=usergroup_id == UserGroup.id,
+        lazy="select",
+    )
 
 
 class Enrollment(db.Model):
@@ -76,6 +85,10 @@ class Event(db.Model):
 
     creator: User = db.relationship(User)
 
+    event_groups: list[EventGroup] = db.relationship(
+        EventGroup, foreign_keys="EventGroup.event_id"
+    )
+
     @staticmethod
     def get_event_by_id(event_id: int) -> Optional["Event"]:
         # cur_user = get_current_user_id()
@@ -98,3 +111,5 @@ class ExportedCalendar(db.Model):
         db.Integer, db.ForeignKey("useraccount.id"), primary_key=True, nullable=False
     )
     calendar_hash = db.Column(db.Text, nullable=False)
+
+    user = db.relationship(User)

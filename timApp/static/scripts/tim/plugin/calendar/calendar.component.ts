@@ -1,3 +1,14 @@
+/**
+ * Main module the TIM-calendar plugin
+ *
+ * @author Miika Immonen
+ * @author Terhi Kamula
+ * @author Anssi Lepikko
+ * @author Touko Miettinen
+ * @author Joose Tikkanen
+ * @license MIT
+ * @date 24.5.2022
+ */
 import {
     ApplicationRef,
     ChangeDetectionStrategy,
@@ -26,7 +37,6 @@ import {WeekViewHourSegment} from "calendar-utils";
 import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {CommonModule, registerLocaleData} from "@angular/common";
-import localeFr from "@angular/common/locales/fi";
 import localeFi from "@angular/common/locales/fi";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -117,7 +127,7 @@ const colors = {
         secondary: "#FDF1BA",
     },
     gray: {
-        primary: "#d5d5d5",
+        primary: "#aaaaaa",
         secondary: "#d5d5d5",
     },
     green: {
@@ -129,7 +139,6 @@ const colors = {
 const segmentHeight = 30;
 // const minutesInSegment = 20;
 
-registerLocaleData(localeFr);
 registerLocaleData(localeFi);
 
 export type TIMEventMeta = {
@@ -182,12 +191,14 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                 </div>
             </div>
             <div class="col-md-4">
+                <!-- TODO: Checkboxes for filtering purposes
                 <div class="checkbox-group"> Show:
                     <div *ngFor="let box of checkboxEvents"> 
                         <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
                                [(ngModel)]="box.checked" [checked]="">{{box.name}}
                     </div>
                 </div>
+                -->
             </div>
         </div>
 
@@ -267,7 +278,6 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                                 (evening)="setEvening($event)"></tim-time-view-selector>
         <div>
             <button class="btn timButton" (click)="export()">Export calendar</button>
-            <!--input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL"-->
             <span class="exportDone"><b>{{exportDone}}</b></span>
         </div>
         <ng-template #modalContent let-close="close">
@@ -288,11 +298,6 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                 </div>
             </div>
             <div class="modal-footer">
-                <!-- <button [style.visibility] = "editEnabled ? 'visible' : 'hidden'" type="button" class="btn btn-out
-                line-secondary timButton"
-                        (click)=" close(); deleteEvent(modalData?.event)">
-                    Delete
-                </button> -->
                 <button type="button" class="btn btn-outline-secondary timButton" (click)="close()">
                     OK
                 </button>
@@ -305,7 +310,6 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
         "calendar.component.scss",
         "../../../../../node_modules/angular-calendar/css/angular-calendar.css",
     ],
-    // templateUrl: "template.html",
 })
 export class CalendarComponent
     extends AngularPluginBase<
@@ -337,11 +341,14 @@ export class CalendarComponent
     eventTypes: string[] = [];
     selectedEvent: string = "";
 
+    /*
+    TODO: Checkbox values
     checkboxEvents = [
         {name: "Ohjaus", value: "1", checked: true},
         {name: "Luento", value: "2", checked: true},
         {name: "Opetusryhmä", value: "3", checked: true},
     ];
+    */
 
     locale: string = "Fi-fi";
 
@@ -359,24 +366,6 @@ export class CalendarComponent
         action: string;
         event?: TIMCalendarEvent;
     };
-
-    // actions: CalendarEventAction[] = [
-    //     {
-    //         label: '<i class="fas fa-fw fa-pencil-alt"></i>',
-    //         a11yLabel: "Edit",
-    //         onClick: ({event}: {event: CalendarEvent}): void => {
-    //             this.handleEventClick(event);
-    //         },
-    //     },
-    //     {
-    //         label: '<i class="fas fa-fw fa-trash-alt"></i>',
-    //         a11yLabel: "Delete",
-    //         onClick: ({event}: {event: CalendarEvent}): void => {
-    //             this.events = this.events.filter((iEvent) => iEvent !== event);
-    //             this.handleEventClick(event);
-    //         },
-    //     },
-    // ];
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -418,6 +407,9 @@ export class CalendarComponent
         this.segmentsInHour = 60 / this.segmentMinutes;
     }
 
+    /**
+     * Sets the locale language
+     */
     setLanguage() {
         const language = navigator.language;
         switch (language.toLowerCase()) {
@@ -491,7 +483,7 @@ export class CalendarComponent
 
     /**
      * Get what type of events user wants to view in view-mode
-     */
+     * TODO: To be used with the checkbox filtering
     getEventsToView() {
         const viewEvents = this.checkboxEvents
             .filter((box) => box.checked)
@@ -499,6 +491,7 @@ export class CalendarComponent
         console.log(viewEvents);
         return viewEvents;
     }
+    */
 
     /**
      * Called when the user starts creating a new event by clicking and dragging
@@ -572,11 +565,6 @@ export class CalendarComponent
                 );
                 if (newEnd > segment.date && newEnd < endOfView) {
                     dragToSelectEvent.end = newEnd;
-                    // dragToSelectEvent.title = `${segment.date
-                    //     .toTimeString()
-                    //     .substr(0, 5)}–${newEnd
-                    //     .toTimeString()
-                    //     .substr(0, 5)} Varattava aika`;
                     if (dragToSelectEvent.end) {
                         dragToSelectEvent.end = new Date(dragToSelectEvent.end);
                     }
@@ -618,7 +606,8 @@ export class CalendarComponent
      *
      * Updates the event's title if the begin matches the regular expression, e.g. "10:00-11.00"
      *
-     * TODO: handle localized time expressions (e.g. AM and PM)
+     * TODO: Can be used to add the time to event title.
+     * TODO: Handle localized time expressions (e.g. AM and PM)
      *
      * @param event Event to be updated
      * @private
@@ -665,10 +654,16 @@ export class CalendarComponent
         this.cdr.detectChanges();
     }
 
+    /**
+     * Returns calendar fields
+     */
     getAttributeType() {
         return CalendarFields;
     }
 
+    /**
+     * Returns empty markup
+     */
     getDefaultMarkup() {
         return {};
     }
@@ -698,7 +693,6 @@ export class CalendarComponent
                 if (event.end) {
                     event.end = new Date(event.end);
                 }
-                // event.actions = this.actions;
                 event.meta = {
                     description: event.meta!.description,
                     tmpEvent: false,
@@ -767,7 +761,6 @@ export class CalendarComponent
                     max_size: capacity,
                 };
             });
-            console.log(eventsToAdd);
             const result = await toPromise(
                 this.http.post<TIMCalendarEvent[]>("/calendar/events", {
                     events: eventsToAdd,
@@ -805,8 +798,6 @@ export class CalendarComponent
                         });
                     }
                 });
-                console.log("events sent");
-                console.log(result.result);
                 this.refresh();
             } else {
                 console.error(result.result.error.error);
@@ -862,7 +853,6 @@ export class CalendarComponent
             })
         );
         if (result.ok) {
-            console.log(result.result);
         } else {
             console.error(result.result.error.error);
             if (result.result.error.error) {
@@ -878,6 +868,10 @@ export class CalendarComponent
         }
     }
 
+    /**
+     * Collects event information in ICS-format and copies a link
+     * to the ICS-file to the users clipboard
+     */
     async export() {
         if (
             !(await showConfirm(
@@ -893,20 +887,14 @@ export class CalendarComponent
             })
         );
         if (result.ok) {
-            let copyOk = true;
             this.icsURL = result.result;
-            navigator.clipboard.writeText(this.icsURL).then(
-                function () {
-                    /* clipboard successfully set */
-                    copyOk = true;
-                },
-                function () {
-                    /* clipboard write failed */
-                    copyOk = false;
-                }
+            const copyResult = await to2(
+                navigator.clipboard.writeText(this.icsURL)
             );
-            if (copyOk) {
+            if (copyResult.ok) {
                 this.exportDone = "ICS-url copied to clipboard.";
+            } else {
+                this.exportDone = "Error occurred when creating ICS-url.";
             }
             this.refresh();
         } else {
@@ -931,7 +919,6 @@ export class CalendarComponent
             const modifiedEvent = result.result;
             if (modifiedEvent.meta) {
                 if (modifiedEvent.meta.deleted) {
-                    console.log("deleted");
                     this.events.splice(this.events.indexOf(modifiedEvent), 1);
                 }
             }
@@ -939,6 +926,9 @@ export class CalendarComponent
         }
     }
 
+    /**
+     * Returns true if current user is manager or owner, otherwise false
+     */
     userIsManager(): boolean {
         return (
             itemglobals().curr_item.rights.manage ||
