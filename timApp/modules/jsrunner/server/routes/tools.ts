@@ -1,3 +1,15 @@
+/**
+ * Classes required for the JsRunner-plugin
+ *
+ * @author Denis Zhidkikh
+ * @author Mika Lehtinen
+ * @author Vesa Lappalainen
+ * @author Simo Lehtinen
+ * @author Alexander Södergård
+ * @license MIT
+ * @date 29.5.2022
+ */
+
 import * as t from "io-ts";
 import {widenFields} from "tim/util/common";
 import {
@@ -1350,7 +1362,7 @@ export class Tools extends ToolsBase {
         return v.answer.users[0].id === this.data.user.id;
     }
     /**
-     * Get average of velp-points in one task
+     * Print average of velp-points in one task
      */
     getVelpTaskPoints(task: string): number {
         const peerreviewers = this.getPeerReviewsForUser().map(
@@ -1369,7 +1381,7 @@ export class Tools extends ToolsBase {
         return count ? sum / count : 0;
     }
     /**
-     * Get count of received velp-reviews for current user
+     * Print count of received velp-reviews for current user
      */
     getVelpedCount(task: string): number {
         const seen = new Set();
@@ -1384,7 +1396,7 @@ export class Tools extends ToolsBase {
         return seen.size;
     }
     /**
-     * Get count of reviews made by current user in one task
+     * Print count of reviews made by current user in one task
      */
     getVelpReviewCount(task: string): number {
         const seen = new Set();
@@ -1398,7 +1410,7 @@ export class Tools extends ToolsBase {
         return seen.size;
     }
     /**
-     * Get total velp-points of current user in one task
+     * Print velp-points of current user in one task
      */
     getVelpPoints(task: string) {
         const peerreviewers = this.getPeerReviewsForUser().map((pr) => pr.id);
@@ -1450,7 +1462,7 @@ export class Tools extends ToolsBase {
     /**
      * Print reviewers and received points of current user
      */
-    getReviews(task: string, usersObject: Users): PeerReviewerUser[] {
+    getReviews(task: string, usersObject?: Users): PeerReviewerUser[] {
         const users = usersObject ? usersObject : this.users;
         const peerreviewers = this.getPeerReviewsForUser()
             .filter((pr) => pr.task_name === task)
@@ -1507,7 +1519,7 @@ export class Tools extends ToolsBase {
     /**
      * Change reviewers of current user
      */
-    changePeerReviewer(usersObject: Users): void {
+    changePeerReviewer(usersObject?: Users): void {
         const users = usersObject ? usersObject : this.users;
         const reviewableID = this.data.user.id;
         const fields = this.markup.paramFields ? this.markup.paramFields : [""];
