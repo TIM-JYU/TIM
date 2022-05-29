@@ -1,4 +1,3 @@
-
 import {IAngularEvent, IController, IScope} from "angular";
 import {timApp} from "tim/app";
 import uiGrid from "ui-grid";
@@ -21,13 +20,10 @@ import {
 } from "../util/utils";
 
 export interface IExportOptions {
-
     totalPointField: string;
     velpPointField: string;
     taskPointField: string;
     copy: boolean;
-
-
 }
 
 function numericSort(a: number | null, b: number | null) {
@@ -44,13 +40,11 @@ function numericSort(a: number | null, b: number | null) {
 }
 
 export class UserListController implements IController {
-
     static $inject = ["$scope", "$element"];
     private gridOptions?: uiGrid.IGridOptionsOf<IUserListEntry> & {
         gridMenuCustomItems: unknown;
     };
     private gridApi?: uiGrid.IGridApiOf<IUserListEntry>;
-
 
     private instantUpdate: boolean = false;
     private onUserChange!: Binding<
@@ -63,7 +57,6 @@ export class UserListController implements IController {
     constructor(private scope: IScope, private element: JQLite) {}
 
     $onInit() {
-
         this.scope.$watch(
             () => this.element[0].offsetHeight + this.element[0].offsetWidth,
             (sum) => {
@@ -423,14 +416,10 @@ export class UserListController implements IController {
         opened.document.write(dataKorppi);
         opened.close();
         */
-
-
     }
-
 }
 
 timApp.component("timUserList", {
-
     bindings: {
         onUserChange: "&",
         users: "<", // unused?
@@ -440,7 +429,7 @@ timApp.component("timUserList", {
         viewctrl: "^timView",
     },
 
-template: `
+    template: `
         
 <div
      class="userlist" hide="true"
@@ -454,4 +443,5 @@ template: `
 <div ng-if="!$ctrl.users">
     No answerers.
 </div>
-`,});
+`,
+});
