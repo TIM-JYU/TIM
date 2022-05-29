@@ -1,4 +1,3 @@
-import os
 import subprocess
 
 
@@ -11,7 +10,7 @@ def try_fix_safe_dir_config() -> None:
                 "--global",
                 "--add",
                 "safe.directory",
-                os.path.dirname(os.getcwd()),
+                "/service",
             ]
         )
     except:

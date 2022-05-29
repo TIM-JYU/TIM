@@ -20,6 +20,7 @@ import {
     parseRGBAColor,
     shouldUseDarkText,
 } from "tim/util/colorUtils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 export interface IDrawVisibleOptions {
     // Interface to define which options should be visible in the drawing toolbar
@@ -296,7 +297,12 @@ export class DrawToolbarComponent implements AfterViewInit {
 
 @NgModule({
     declarations: [DrawToolbarComponent],
-    imports: [CommonModule, FormsModule, ButtonsModule.forRoot()],
+    imports: [
+        CommonModule,
+        FormsModule,
+        ButtonsModule.forRoot(),
+        TimUtilityModule,
+    ],
     exports: [DrawToolbarComponent],
 })
 export class DrawToolbarModule implements DoBootstrap {

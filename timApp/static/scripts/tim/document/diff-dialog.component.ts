@@ -5,6 +5,7 @@ import {BrowserModule} from "@angular/platform-browser";
 import {NgxTextDiffModule} from "ngx-text-diff";
 import {Pos} from "tim/ui/pos";
 import {copyToClipboard, timeout} from "tim/util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 export interface IDiffParams {
     left: string;
@@ -70,6 +71,6 @@ export class DiffDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [DiffDialogComponent],
-    imports: [BrowserModule, DialogModule, NgxTextDiffModule],
+    imports: [BrowserModule, DialogModule, NgxTextDiffModule, TimUtilityModule],
 })
 export class DiffDialogModule {}

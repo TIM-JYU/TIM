@@ -59,12 +59,13 @@ interface IConfig {
     gitBranch: string;
     hakaEnabled: boolean;
     emailRegistrationEnabled: boolean;
+    passwordResetEnabled: boolean;
     simpleEmailLogin: boolean;
     hosts?: IHostConfig;
     messageListsEnabled: boolean;
 }
 
-export type Locale = "fi" | "en-US";
+export type Locale = "fi" | "sv" | "en-US";
 
 export interface IFooterDocs {
     privacyNotice?: string;
@@ -86,6 +87,11 @@ export interface IGenericGlobals {
     layout: ILayout;
     footerDocs: IFooterDocs;
     lectureInfo: {in_lecture: boolean; is_lecturer: boolean};
+}
+
+export interface IErrorGlobals extends IGenericGlobals {
+    errorCode: number;
+    errorStatus: string;
 }
 
 export interface IItemGlobals extends IGenericGlobals {
@@ -140,6 +146,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     score_infos: IDocScoreInfo[] | null;
     current_list_user?: IUser;
     show_unpublished_bg: boolean;
+    requires_login?: boolean;
 }
 
 export enum NotificationType {
@@ -276,6 +283,10 @@ export function verificationglobals(): IVerificationGlobals {
 
 export function isDocumentGlobals(g: SomeGlobals): g is IDocumentGlobals {
     return "docSettings" in g;
+}
+
+export function isErrorGlobals(g: SomeGlobals): g is IErrorGlobals {
+    return "errorCode" in g;
 }
 
 function someGlobals<T extends IGenericGlobals>(): T {

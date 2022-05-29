@@ -2,6 +2,7 @@ import deepmerge from "deepmerge";
 import * as t from "io-ts";
 import {
     ApplicationRef,
+    ChangeDetectorRef,
     Component,
     DoBootstrap,
     ElementRef,
@@ -33,6 +34,7 @@ import {
 } from "../util/utils";
 import {editorChangeValue} from "../editor/editorScope";
 import {
+    ChangeType,
     ITimComponent,
     IVelpableComponent,
     ViewCtrl,
@@ -196,12 +198,10 @@ class DragTask {
                 (event) => {
                     const c = String.fromCharCode(event.keyCode);
                     if (event.keyCode === 26) {
-                        this.drawing.undo();
+                        this.imgx.undo();
                     }
                     if (c === "c") {
-                        this.drawing.resetDrawing();
-                        this.drawDragTask();
-                        this.drawing.redrawAll();
+                        this.imgx.resetExercise();
                     }
                     if (c === "r") {
                         this.setColor("#f00");
@@ -455,22 +455,17 @@ class DragTask {
             this.mouseDown = false;
             this.drawing.upEvent(posToRelative(this.canvas, p));
         }
+        this.imgx.checkChanges();
     }
 
     addRightAnswers(answers: RightAnswerT[]) {
         this.lines = [];
         const objects = this.drawObjects;
         for (const d of answers) {
-            for (const o of objects) {
-                if (o.id === d.id) {
-                    const line = new Line(
-                        "green",
-                        2,
-                        o,
-                        tupleToCoords(d.position)
-                    );
-                    this.lines.push(line);
-                }
+            const o = objects.find((obj) => obj.id === d.id);
+            if (o) {
+                const line = new Line("green", 2, o, tupleToCoords(d.position));
+                this.lines.push(line);
             }
         }
         this.drawDragTask();
@@ -1262,7 +1257,7 @@ interface IAnswerResponse {
             </div>
             <p class="csRunMenu"><span *ngIf="button" class="save">&nbsp;<button
                                                class="timButton"
-                                               [disabled]="isRunning"
+                                               [disabled]="(disableUnchanged && !isUnSaved()) || isRunning"
                                                (click)="save()">{{button}}
             </button></span>
                 <span  *ngIf="buttonPlay" class="videoPlay">
@@ -1291,6 +1286,9 @@ interface IAnswerResponse {
                 &nbsp;&nbsp;<a
                                (click)="resetExercise()">{{resetText}}</a>
                     </span>
+                &nbsp;
+                <a href="" *ngIf="undoButton && isUnSaved() && undoButton" title="{{undoTitle}}"
+                    (click)="tryResetChanges($event);">{{undoButton}}</a> 
                 <span *ngIf="muokattu" class="initCode">
                 &nbsp;&nbsp;<a
                         href="" (click)="initCode()">{{resetText}}</a>
@@ -1407,8 +1405,11 @@ export class ImageXComponent
     };
     // public color = "";
     public drawing!: Drawing;
+    private previousDrawing: DrawItem[] = [];
+
     public coords = "";
     public drags: DragObject[] = [];
+    private previousDrags: (IPoint & {did: string})[] = [];
     public userHasAnswered = false;
 
     public muokattu: boolean;
@@ -1432,7 +1433,12 @@ export class ImageXComponent
         this.dt.drawDragTask();
     }
 
-    constructor(el: ElementRef, http: HttpClient, domSanitizer: DomSanitizer) {
+    constructor(
+        el: ElementRef,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private cdr: ChangeDetectorRef
+    ) {
         super(el, http, domSanitizer);
         this.muokattu = false;
         this.result = "";
@@ -1576,11 +1582,10 @@ export class ImageXComponent
             const userDrags = this.attrsall.state.userAnswer.drags;
             if (userDrags && userDrags.length > 0) {
                 for (const o of objects) {
-                    for (const ud of userDrags) {
-                        if (o.did === ud.did) {
-                            o.x = ud.position[0];
-                            o.y = ud.position[1];
-                        }
+                    const ud = userDrags.find((u) => u.did === o.did);
+                    if (ud) {
+                        o.x = ud.position[0];
+                        o.y = ud.position[1];
                     }
                 }
             }
@@ -1610,6 +1615,12 @@ export class ImageXComponent
         this.drawing.redrawAll();
 
         this.previewColor = globalPreviewColor;
+        this.previousDrags = this.drags.map((drag) => ({
+            did: drag.did,
+            x: drag.x,
+            y: drag.y,
+        }));
+        this.previousDrawing = [...this.drawing.getDrawing()];
         this.prevAnswer = this.getContent();
         this.init = true;
     }
@@ -1639,6 +1650,45 @@ export class ImageXComponent
         this.drawing.undo();
         this.dt.drawDragTask();
         this.drawing.redrawAll();
+        this.checkChanges();
+    }
+
+    resetChanges() {
+        this.drawing.setDrawData([...this.previousDrawing]);
+        for (const o of this.dt.drawObjects) {
+            const prevPos = this.previousDrags.find(
+                (prev) => prev.did == o.did
+            );
+            if (prevPos) {
+                o.x = prevPos.x;
+                o.y = prevPos.y;
+            }
+        }
+        this.dt.drawDragTask();
+        this.drawing.redrawAll();
+        this.prevAnswer = this.getContent();
+        this.checkChanges();
+    }
+
+    checkChanges() {
+        this.result = "";
+        this.cdr.detectChanges();
+        this.updateListeners();
+    }
+
+    updateListeners() {
+        if (!this.vctrl) {
+            return;
+        }
+        const taskId = this.pluginMeta.getTaskId();
+        if (!taskId) {
+            return;
+        }
+        this.vctrl.informChangeListeners(
+            taskId,
+            this.isUnSaved() ? ChangeType.Modified : ChangeType.Saved,
+            this.attrsall.markup.tag ? this.attrsall.markup.tag : undefined
+        );
     }
 
     lineMode(): boolean {
@@ -1726,7 +1776,6 @@ export class ImageXComponent
     // Resets the positions of dragobjects.
     resetExercise() {
         this.error = "";
-        this.result = "";
         this.drawing.resetDrawing();
 
         for (const obj of this.drags) {
@@ -1738,7 +1787,7 @@ export class ImageXComponent
         // Draw the exercise so that reset appears instantly.
         this.dt.drawDragTask();
         this.drawing.redrawAll();
-        this.prevAnswer = this.getContent();
+        this.checkChanges();
     }
 
     svgImageSnippet() {
@@ -1805,10 +1854,19 @@ export class ImageXComponent
             this.userHasAnswered = true;
             this.replyImage = data.web["-replyImage"];
             this.replyHTML = data.web["-replyHTML"];
+            this.previousDrags = this.drags.map((drag) => ({
+                did: drag.did,
+                x: drag.x,
+                y: drag.y,
+            }));
+            this.previousDrawing = [...this.drawing.getDrawing()];
             this.prevAnswer = this.getContent();
+            this.updateListeners();
+            this.cdr.detectChanges();
             return {saved: true, message: undefined};
         } else {
             this.error = "Ikuinen silmukka tai jokin muu vika?";
+            this.cdr.detectChanges();
             return {saved: false, message: this.error};
         }
     }
@@ -1867,6 +1925,9 @@ export class ImageXComponent
     }
 
     isUnSaved(): boolean {
+        if (!this.init) {
+            return false;
+        }
         return this.getContent() !== this.prevAnswer;
     }
 }

@@ -4,6 +4,7 @@ import {IBookmark} from "tim/bookmark/bookmark.service";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
+import {TimUtilityModule} from "../ui/tim-utility.module";
 
 @Component({
     selector: "tim-bookmark-dialog",
@@ -116,6 +117,6 @@ export class BookmarkDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [BookmarkDialogComponent],
-    imports: [BrowserModule, DialogModule, FormsModule],
+    imports: [BrowserModule, DialogModule, FormsModule, TimUtilityModule],
 })
 export class BookmarkDialogModule {}

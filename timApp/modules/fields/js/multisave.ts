@@ -41,6 +41,7 @@ import {
 
 const multisaveMarkup = t.intersection([
     t.partial({
+        aliases: t.record(t.string, t.string),
         allSavedText: t.string,
         areas: t.array(t.string),
         tags: t.array(t.string),
@@ -93,8 +94,8 @@ const multisaveAll = t.intersection([
         <div *ngIf="!allSaved()">
             {{unsavedText}}
             <ul>
-                <li *ngFor="let tag of unsaveds">
-                    <a href="" (click)="scrollTo(tag); $event.preventDefault()">{{tag.getName()}}</a>
+                <li *ngFor="let tag of unsavedTasksWithAliases">
+                    <a href="" (click)="scrollTo(tag.component); $event.preventDefault()">{{tag.alias}}</a>
                 </li>
             </ul>
         </div>
@@ -104,7 +105,7 @@ const multisaveAll = t.intersection([
     </div> <!-- unsaved fields -->
     <div *ngIf="!livefeed || !allSaved()">
     <button class="timButton"
-            [disabled]="(markup.disableUnchanged && listener && allSaved())"
+            [disabled]="(disableUnchanged && listener && allSaved())"
             *ngIf="buttonText() && !markup.destCourse"
             (click)="save()">
         {{buttonText()}}
@@ -161,7 +162,7 @@ export class MultisaveComponent
     get unsavedText() {
         return this.markup.unsavedText?.replace(
             "{count}",
-            this.unsavedTimComps.size.toString()
+            this.unsavedTasksWithAliases.length.toString()
         );
     }
 
@@ -177,15 +178,46 @@ export class MultisaveComponent
         return this.markup.livefeed;
     }
 
-    get unsaveds() {
-        const ret = [];
+    /**
+     * Return parsed list unsaved tasks with aliases
+     * If multiple tasks have same alias, only add first one to the returned list
+     */
+    get unsavedTasksWithAliases(): {
+        component: ITimComponent;
+        alias: string | undefined;
+    }[] {
+        const ret: {component: ITimComponent; alias: string | undefined}[] = [];
         for (const name of this.unsavedTimComps) {
             const c = this.vctrl.getTimComponentByName(name);
             if (c) {
-                ret.push(c);
+                const alias = this.getUnsavedAlias(c);
+                if (!alias || !ret.find((r) => r.alias === alias)) {
+                    ret.push({component: c, alias});
+                }
             }
         }
         return ret;
+    }
+
+    /**
+     * Return alias or name for an unsaved task
+     * Preference:
+     * alias by docid.taskname -> alias by taskname -> getName -> undefined
+     * @param task ITimComponent task to look up
+     */
+    getUnsavedAlias(task: ITimComponent): string | undefined {
+        if (this.markup.aliases) {
+            const tid = task.getTaskId();
+            if (tid) {
+                const alias =
+                    this.markup.aliases[tid.docTask().toString()] ??
+                    this.markup.aliases[tid.name];
+                if (alias) {
+                    return alias;
+                }
+            }
+        }
+        return task.getName();
     }
 
     ngOnInit() {
@@ -338,7 +370,10 @@ export class MultisaveComponent
 
             let link = this.markup.jumplink;
             for (let i = 0; i < values.length; i++) {
-                link = link.replace("{" + i + "}", values[i] ?? "");
+                link = link.replace(
+                    "{" + i + "}",
+                    encodeURIComponent(values[i] ?? "")
+                );
             }
             const target = this.markup.jumptarget ?? "_self";
             window.open(link, target);
@@ -410,7 +445,7 @@ export class MultisaveComponent
         if (this.undoConfirmation) {
             if (
                 !(await showConfirm(
-                    this.undoTitle ?? this.undoConfirmation,
+                    this.undoConfirmationTitle ?? this.undoConfirmation,
                     this.undoConfirmation
                 ))
             ) {

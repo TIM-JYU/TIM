@@ -6,7 +6,7 @@ import {Component, Input} from "@angular/core";
         <a [href]="doclink"
            rel="noopener"
            [target]="target">
-            <i class="glyphicon glyphicon-book"></i>&ngsp;{{doctext}}</a>
+            <i class="glyphicon glyphicon-book"></i>&ngsp;<span [innerHTML]="doctext | purify"></span></a>
     `,
 })
 export class VideoLinkComponent {

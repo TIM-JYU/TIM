@@ -1,13 +1,17 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from enum import Enum
 from typing import Literal, Callable
 
+import filelock
 from flask import render_template_string, Response, current_app
 
+from timApp.answer.backup import sync_user_group_memberships_if_enabled
 from timApp.answer.routes import save_fields, FieldSaveRequest, FieldSaveUserEntry
 from timApp.auth.accesshelper import verify_logged_in, verify_view_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
+from timApp.auth.session.util import distribute_session_verification
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -37,6 +41,7 @@ from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_edit_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import membership_current, UserGroupMember
 from timApp.util.flask.requesthelper import (
     NotExist,
     RouteException,
@@ -45,7 +50,7 @@ from timApp.util.flask.requesthelper import (
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups
-from timApp.util.logger import log_warning
+from timApp.util.logger import log_warning, log_info
 from timApp.util.utils import get_current_time
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
@@ -100,7 +105,7 @@ class SetTaskValueAction:
 
 @dataclass
 class DistributeRightAction:
-    operation: Literal["confirm", "quit", "unlock", "changetime"]
+    operation: Literal["confirm", "quit", "unlock", "changetime", "undoquit"]
     target: str | list[str]
     timestamp: datetime | None = None
     minutes: float = 0.0
@@ -121,6 +126,11 @@ RIGHT_TO_OP: dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
         email=usr,
         timestamp=r.timestamp_or_now,
     ),
+    "undoquit": lambda r, usr: UndoQuitOp(
+        type="undoquit",
+        email=usr,
+        timestamp=r.timestamp_or_now,
+    ),
     "unlock": lambda r, usr: UnlockOp(
         type="unlock",
         email=usr,
@@ -136,6 +146,17 @@ RIGHT_TO_OP: dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
 
 
 @dataclass
+class ChangeGroupAction:
+    changeTo: str
+    allGroups: list[str]
+    verify: bool = False
+
+    @property
+    def all_groups(self) -> list[str]:
+        return self.allGroups + [self.changeTo]
+
+
+@dataclass
 class ActionCollection:
     addPermission: list[AddPermission] = field(default_factory=list)
     confirmPermission: list[ConfirmPermission] = field(default_factory=list)
@@ -145,6 +166,9 @@ class ActionCollection:
     setValue: list[SetTaskValueAction] = field(default_factory=list)
     addToGroups: list[str] = field(default_factory=list)
     removeFromGroups: list[str] = field(default_factory=list)
+    changeGroup: ChangeGroupAction | None = None
+    verifyRemoteSessions: list[str] = field(default_factory=list)
+    invalidateRemoteSessions: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -156,6 +180,7 @@ class ScannerOptions:
     waitBetweenScans: float = 0.0
     beepOnSuccess: bool = False
     beepOnFailure: bool = False
+    parameterSeparator: str | None = "#"
 
 
 @dataclass
@@ -166,6 +191,7 @@ class TextOptions:
     undone: str | None = None
     undo: str | None = None
     undoWarning: str | None = None
+    verifyReasons: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -228,13 +254,14 @@ selectOnce: false        # If true, hide other users when selecting one.
 allowUndo: false         # Can the action be undone. Undoing is not supported by all actions.
 preFetch: false          # If true, all users are prefetched. This makes initial load longer but searches are faster.
 scanner:                 # Camera scanner options
-  enabled: false         # Show the scanner button
-  applyOnMatch: false    # If true and only one user is found from scanning, apply actions on them without verifying 
-  continuousMatch: false # If true, scanner is not disabled after a successful scan
-  waitBetweenScans: 0    # If continuousMatch is true, how many seconds to wait before restarting the scanner
-  beepOnSuccess: false   # Play a "beep" sound on successful scan.
-  beepOnFailure: true    # Play a "beep" sound if scan was successful but no matching users were found. 
-  scanInterval: 1.5      # Time interval between scan attempts in seconds. Lower value means faster scans but higher energy usage.
+  enabled: false           # Show the scanner button
+  parameterSeparator: "#"  # String to separate the user query from the search parameter when scanning. If null, no separation is done.
+  applyOnMatch: false      # If true and only one user is found from scanning, apply actions on them without verifying 
+  continuousMatch: false   # If true, scanner is not disabled after a successful scan
+  waitBetweenScans: 0      # If continuousMatch is true, how many seconds to wait before restarting the scanner
+  beepOnSuccess: false     # Play a "beep" sound on successful scan.
+  beepOnFailure: true      # Play a "beep" sound if scan was successful but no matching users were found. 
+  scanInterval: 1.5        # Time interval between scan attempts in seconds. Lower value means faster scans but higher energy usage.
 actions:                 # Actions to apply for the selected user
 
     #addPermission:               # Add permissions to documents
@@ -269,8 +296,20 @@ actions:                 # Actions to apply for the selected user
     #addToGroups:               # Add the user to the groups
     #  - somegroups
 
+    #changeGroup:                 # Change the user's group
+    #  changeTo: somegroup        # Group to change to. The user will become a member of this group.
+    #  allGroups:                 # All groups to check. User is removed from other all groups that are not the same as changeTo.
+    #    - somegroup
+    #  verify: false              # Show a verification message if user is already a member of a group in allGroups.
+
     #removeFromGroups:          # Remove the user from the groups. This will do a soft delete (i.e. add removal date)
     #  - somegroups
+
+    #verifyRemoteSessions:    # Verify sessions for remote targets. Use DIST_RIGHTS_HOSTS to specify the actual hosts.
+    #  - target1
+    
+    #invalidateRemoteSessions: # Invalidate sessions for remote targets. Use DIST_RIGHTS_HOSTS to specify the actual hosts.
+    #  - target1
 #text:              # UI texts
 #  apply: Apply permissions
 #  cancel: Cancel
@@ -300,6 +339,12 @@ actions:                 # Actions to apply for the selected user
         "multihtml": True,
         "editor_tabs": editor_tabs,
     }
+
+
+def log_user_select(msg: str) -> None:
+    if not current_app.config["LOG_USER_SELECT_ACTIONS"]:
+        return
+    log_info(f"USER_SELECT: {msg}")
 
 
 def get_plugin_markup(
@@ -417,7 +462,7 @@ def has_distribution_moderation_access(doc: DocInfo) -> bool:
 
 def get_plugin_info(
     username: str, task_id: str | None = None, par: GlobalParId | None = None
-) -> tuple[UserSelectMarkupModel, User, UserGroup, User]:
+) -> tuple[UserSelectMarkupModel, User, UserGroup, User, DocInfo]:
     model, doc, _, _ = get_plugin_markup(task_id, par)
     # Ensure user actually has access to document with the plugin
     verify_view_access(doc)
@@ -431,12 +476,20 @@ def get_plugin_info(
         raise RouteException(f"Cannot find user {username}")
 
     if not model.actions:
-        return model, cur_user, user_group, user_acc
+        return model, cur_user, user_group, user_acc, doc
 
-    if model.actions.distributeRight and not has_distribution_moderation_access(doc):
+    can_distribute_rights = has_distribution_moderation_access(doc)
+
+    if model.actions.distributeRight and not can_distribute_rights:
         raise RouteException("distributeRight is not allowed in this document")
 
-    return model, cur_user, user_group, user_acc
+    if model.actions.verifyRemoteSessions and not can_distribute_rights:
+        raise RouteException("verifyRemoteSessions is not allowed in this document")
+
+    if model.actions.invalidateRemoteSessions and not can_distribute_rights:
+        raise RouteException("invalidateRemoteSessions is not allowed in this document")
+
+    return model, cur_user, user_group, user_acc, doc
 
 
 def undo_dist_right_actions(
@@ -476,7 +529,7 @@ def undo_dist_right_actions(
 
 
 def undo_field_actions(
-    cur_user: UserGroup, user_acc: User, set_value: list[SetTaskValueAction]
+    cur_user: User, user_acc: User, set_value: list[SetTaskValueAction]
 ) -> None:
     fields_to_save = {set_val.taskId: "" for set_val in set_value}
     if fields_to_save:
@@ -491,14 +544,17 @@ def undo_field_actions(
 
 
 def get_groups(
-    cur_user: User, add: list[str], remove: list[str]
-) -> tuple[list[UserGroup], list[UserGroup]]:
+    cur_user: User, add: list[str], remove: list[str], change_all_groups: list[str]
+) -> tuple[list[UserGroup], list[UserGroup], list[UserGroup]]:
     add_groups: list[UserGroup] = UserGroup.query.filter(UserGroup.name.in_(add)).all()
     remove_groups: list[UserGroup] = UserGroup.query.filter(
         UserGroup.name.in_(remove)
     ).all()
+    change_all_groups_ugs: list[UserGroup] = UserGroup.query.filter(
+        UserGroup.name.in_(change_all_groups)
+    ).all()
     all_groups: dict[str, UserGroup] = {
-        ug.name: ug for ug in (add_groups + remove_groups)
+        ug.name: ug for ug in (add_groups + remove_groups + change_all_groups_ugs)
     }
 
     for ug in all_groups.values():
@@ -508,50 +564,99 @@ def get_groups(
             )
         verify_group_edit_access(ug, cur_user)
 
-    return add_groups, remove_groups
+    return add_groups, remove_groups, change_all_groups_ugs
+
+
+# It can be useful to offset the time a little to ensure any checks for expired memberships can pass
+group_expired_offset = timedelta(seconds=1)
 
 
 def undo_group_actions(
-    user_acc: User, cur_user: User, add: list[str], remove: list[str]
-) -> None:
-    add_groups, remove_groups = get_groups(cur_user, add, remove)
+    user_acc: User,
+    cur_user: User,
+    add: list[str],
+    remove: list[str],
+    change: ChangeGroupAction | None,
+) -> bool:
+    add_groups, remove_groups, change_all_groups = get_groups(
+        cur_user, add, remove, change.all_groups if change else []
+    )
 
-    for ug in remove_groups:
-        user_acc.add_to_group(ug, cur_user)
-
-    for ug in add_groups:
+    # We cannot safely add user back to a group because we don't know if the user was removed from it
+    changed = False
+    for ug in add_groups + change_all_groups:
         membership = ug.current_memberships.get(user_acc.id, None)
         if membership:
-            membership.set_expired()
+            changed = True
+            membership.set_expired(time_offset=group_expired_offset)
+
+    return changed
 
 
 @user_select_plugin.post("/undo")
 def undo(
-    username: str, task_id: str | None = None, par: GlobalParId | None = None
+    username: str,
+    task_id: str | None = None,
+    par: GlobalParId | None = None,
+    param: str | None = None,  # TODO: Use
 ) -> Response:
-    model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
+    model, cur_user, user_group, user_acc, doc = get_plugin_info(username, task_id, par)
     # No permissions to undo
     if not model.actions:
-        return ok_response()
+        return json_response({"distributionErrors": []})
 
-    # Undo the group actions before dist rights because dist rights can might depend on the group
-    # Moreover, undoing is generally a soft action, so we can always manually restore the group safely
-    undo_group_actions(
-        user_acc, cur_user, model.actions.addToGroups, model.actions.removeFromGroups
+    log_user_select(
+        f"[{cur_user.name}] undo on {user_acc.name} in {doc.path} (param = {param})"
     )
-    # Flush so that right distribution is handled correctly
-    db.session.flush()
 
-    errors = undo_dist_right_actions(user_acc, model.actions.distributeRight)
+    groups = set(model.actions.addToGroups) | set(model.actions.removeFromGroups)
+    if model.actions.changeGroup:
+        groups |= set(model.actions.changeGroup.all_groups)
+    locks = [
+        filelock.FileLock(f"/tmp/userselect_groupaction_{group}.lock")
+        for group in groups
+    ]
 
-    # If there are errors undoing, don't reset the fields because it may have been caused by a race condition
-    if errors:
-        db.session.rollback()
-        return json_response({"distributionErrors": errors})
+    for lock in locks:
+        lock.acquire()
 
-    undo_field_actions(user_group, user_acc, model.actions.setValue)
+    try:
+        # Undo the group actions before dist rights because dist rights can might depend on the group
+        # Moreover, undoing is generally a soft action, so we can always manually restore the group safely
+        changed = undo_group_actions(
+            user_acc,
+            cur_user,
+            model.actions.addToGroups,
+            model.actions.removeFromGroups,
+            model.actions.changeGroup,
+        )
+        # Flush so that right distribution is handled correctly
+        db.session.flush()
 
-    db.session.commit()
+        if changed:
+            sync_user_group_memberships_if_enabled(user_acc)
+
+        errors = undo_dist_right_actions(user_acc, model.actions.distributeRight)
+
+        # If there are errors undoing, don't reset the fields because it may have been caused by a race condition
+        if errors:
+            db.session.rollback()
+            return json_response({"distributionErrors": errors})
+
+        undo_field_actions(cur_user, user_acc, model.actions.setValue)
+
+        errors += apply_verify_session(
+            "verify", user_acc, param, model.actions.invalidateRemoteSessions
+        )
+
+        errors += apply_verify_session(
+            "invalidate", user_acc, param, model.actions.verifyRemoteSessions
+        )
+
+        db.session.commit()
+    finally:
+        for lock in locks:
+            lock.release()
 
     return json_response({"distributionErrors": errors})
 
@@ -638,7 +743,7 @@ def apply_permission_actions(
 
 
 def apply_field_actions(
-    user_acc: User, cur_user: User, set_values: list[SetTaskValueAction]
+    cur_user: User, user_acc: User, set_values: list[SetTaskValueAction]
 ) -> None:
     fields_to_save = {set_val.taskId: set_val.value for set_val in set_values}
     if fields_to_save:
@@ -674,48 +779,146 @@ def apply_dist_right_actions(
     return errors
 
 
+def apply_verify_session(
+    action: str, user_acc: User, session_id: str | None, targets: list[str]
+) -> list[str]:
+    return distribute_session_verification(action, user_acc.name, session_id, targets)
+
+
 def apply_group_actions(
-    user_acc: User, cur_user: User, add: list[str], remove: list[str]
-) -> None:
-    add_groups, remove_groups = get_groups(cur_user, add, remove)
+    user_acc: User,
+    cur_user: User,
+    add: list[str],
+    remove: list[str],
+    change_to: ChangeGroupAction | None,
+) -> bool:
+    add_groups, remove_groups, _ = get_groups(cur_user, add, remove, [])
+    changed = False
 
     for ug in add_groups:
         user_acc.add_to_group(ug, cur_user)
+        changed = True
+
+    def expire_membership(ugg: UserGroup) -> None:
+        nonlocal changed
+        m = user_acc.memberships_dyn.filter(
+            membership_current & (UserGroupMember.group == ugg)
+        ).first()
+        if m:
+            m.set_expired(time_offset=group_expired_offset)
+            changed = True
 
     for ug in remove_groups:
-        membership = ug.current_memberships.get(user_acc.id, None)
-        if membership:
-            membership.set_expired()
+        expire_membership(ug)
+
+    if change_to:
+        all_groups_set = set(change_to.allGroups)
+        change_to_group = UserGroup.get_by_name(change_to.changeTo)
+        if change_to_group:
+            user_acc.add_to_group(change_to_group, cur_user)
+            changed = True
+        for ug in user_acc.groups:
+            if ug.name != change_to.changeTo and ug.name in all_groups_set:
+                expire_membership(ug)
+
+    return changed
+
+
+class NeedsVerifyReasons(Enum):
+    CHANGE_GROUP_BELONGS = "changeGroupBelongs"
+    CHANGE_GROUP_ALREADY_MEMBER = "changeGroupAlreadyMember"
+
+
+@user_select_plugin.post("/needsVerify")
+def needs_verify(username: str, par: GlobalParId) -> Response:
+    model, cur_user, user_group, user_acc, _ = get_plugin_info(username, None, par)
+
+    if not model.actions:
+        return json_response({"needsVerify": False, "reasons": []})
+
+    verify_reasons = []
+
+    if model.actions.changeGroup and model.actions.changeGroup.verify:
+        membership_groups: set[str] = {g.name for g in user_acc.groups}
+        if model.actions.changeGroup.changeTo in membership_groups:
+            verify_reasons.append(NeedsVerifyReasons.CHANGE_GROUP_ALREADY_MEMBER)
+        # No need to add the other reason because "already member" is more important
+        elif any(
+            True for g in model.actions.changeGroup.allGroups if g in membership_groups
+        ):
+            verify_reasons.append(NeedsVerifyReasons.CHANGE_GROUP_BELONGS)
+
+    return json_response(
+        {"needsVerify": len(verify_reasons) > 0, "reasons": verify_reasons}
+    )
 
 
 @user_select_plugin.post("/apply")
 def apply(
-    username: str, task_id: str | None = None, par: GlobalParId | None = None
+    username: str,
+    task_id: str | None = None,
+    par: GlobalParId | None = None,
+    param: str | None = None,  # TODO: Use
 ) -> Response:
-    model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
+    model, cur_user, user_group, user_acc, doc = get_plugin_info(username, task_id, par)
     # No permissions to apply, simply return
     if not model.actions:
         return ok_response()
 
-    apply_group_actions(
-        user_acc, cur_user, model.actions.addToGroups, model.actions.removeFromGroups
-    )
-    db.session.flush()
-
-    apply_field_actions(user_acc, cur_user, model.actions.setValue)
-    right_dist_errors = apply_dist_right_actions(
-        user_acc, model.actions.distributeRight
+    log_user_select(
+        f"[{cur_user.name}] apply on {user_acc.name} in {doc.path} (param = {param})"
     )
 
-    update_messages = apply_permission_actions(
-        user_group,
-        model.actions.addPermission,
-        model.actions.removePermission,
-        model.actions.confirmPermission,
-        model.actions.changePermissionTime,
-    )
+    all_groups = set(model.actions.addToGroups) | set(model.actions.removeFromGroups)
+    if model.actions.changeGroup:
+        all_groups |= set(model.actions.changeGroup.all_groups)
+    locks = [
+        filelock.FileLock(f"/tmp/userselect_groupaction_{group}.lock")
+        for group in all_groups
+    ]
 
-    db.session.commit()
+    for lock in locks:
+        lock.acquire()
+
+    try:
+        changed = apply_group_actions(
+            user_acc,
+            cur_user,
+            model.actions.addToGroups,
+            model.actions.removeFromGroups,
+            model.actions.changeGroup,
+        )
+        db.session.flush()
+
+        if changed:
+            sync_user_group_memberships_if_enabled(user_acc)
+
+        apply_field_actions(cur_user, user_acc, model.actions.setValue)
+
+        right_dist_errors = apply_dist_right_actions(
+            user_acc, model.actions.distributeRight
+        )
+
+        session_verification_errors = apply_verify_session(
+            "verify", user_acc, param, model.actions.verifyRemoteSessions
+        )
+
+        session_invalidation_errors = apply_verify_session(
+            "invalidate", user_acc, param, model.actions.invalidateRemoteSessions
+        )
+
+        update_messages = apply_permission_actions(
+            user_group,
+            model.actions.addPermission,
+            model.actions.removePermission,
+            model.actions.confirmPermission,
+            model.actions.changePermissionTime,
+        )
+
+        db.session.commit()
+    finally:
+        for lock in locks:
+            lock.release()
 
     for msg in update_messages:
         log_right(msg)
@@ -725,11 +928,25 @@ def apply(
             f"RIGHT_DIST: problem distributing rights for user {user_acc.email}: {error}"
         )
 
+    for error in session_verification_errors:
+        log_warning(
+            f"SESSION_VERIFICATION: problem verifying session for user {user_acc.email}: {error}"
+        )
+
+    for error in session_invalidation_errors:
+        log_warning(
+            f"SESSION_VERIFICATION: problem invalidating session for user {user_acc.email}: {error}"
+        )
+
+    all_errors = (
+        right_dist_errors + session_verification_errors + session_invalidation_errors
+    )
+
     # Better throw an error here. This should prompt the user to at least try again
     # Unlike with undoing, it's better to get the user to reapply the rights or properly fix them
     # Moreover, this should encourage the user to report the problem with distribution ASAP
-    if right_dist_errors:
-        raise RouteException("\n".join([f"* {error}" for error in right_dist_errors]))
+    if all_errors:
+        raise RouteException("\n".join([f"* {error}" for error in all_errors]))
 
     return ok_response()
 

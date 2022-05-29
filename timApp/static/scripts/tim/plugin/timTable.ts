@@ -286,6 +286,7 @@ export interface TimTable {
         button?: string;
         title?: string;
         confirmation?: string;
+        confirmationTitle?: string;
     };
     dataView?: DataViewSettings | null;
     isPreview: boolean;
@@ -859,6 +860,10 @@ export class TimTableComponent
 
     get undoTitle() {
         return this.data.undo?.title;
+    }
+
+    get undoConfirmationTitle() {
+        return this.data.undo?.confirmationTitle;
     }
 
     get undoConfirmation() {
@@ -4506,7 +4511,7 @@ export class TimTableComponent
         if (this.undoConfirmation) {
             if (
                 !(await showConfirm(
-                    this.undoTitle ?? this.undoConfirmation,
+                    this.undoConfirmationTitle ?? this.undoConfirmation,
                     this.undoConfirmation
                 ))
             ) {

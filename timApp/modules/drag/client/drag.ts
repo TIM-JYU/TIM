@@ -16,6 +16,7 @@ import {
     OnInit,
 } from "@angular/core";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
+import {SessionVerify} from "tim/util/session-verify.interceptor";
 import {ITimComponent} from "../../../static/scripts/tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -320,6 +321,7 @@ export class DragComponent
 }
 
 @NgModule({
+    providers: [SessionVerify],
     declarations: [DragComponent],
     imports: [
         BrowserModule,

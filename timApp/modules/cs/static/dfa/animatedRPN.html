@@ -350,14 +350,18 @@
               btns.afwd = true;
               btns.end = true;
           }
-          if (btns.start) this.createButton(() => this.jumpToStart(), "|<", "reset");
-          if (btns.aback) this.createButton(() => this.animateBack(), "<<<", "animate back to start");
+          let btnTxts = {};
+          if (this.params.buttonTexts) {
+              btnTxts = this.params.buttonTexts;
+          }
+          if (btns.start) this.createButton(() => this.jumpToStart(), "|<", btnTxts.start || "reset");
+          if (btns.aback) this.createButton(() => this.animateBack(), "<<<", btnTxts.aback || "animate back to start");
           // this.createButton(() => this.animateBack(1), "<<", "animate one step back");
-          if (btns.back)  this.createButton(() => this.stepBack(), "<", "back one step");
-          if (btns.fwd) this.createButton(() => this.stepFwd(), ">", "do one step");
+          if (btns.back)  this.createButton(() => this.stepBack(), "<", btnTxts.back || "back one step");
+          if (btns.fwd) this.createButton(() => this.stepFwd(), ">", btnTxts.fwd || "do one step");
           // this.createButton(() => this.animateFwd(1), ">>", "animate one step");
-          if (btns.afwd) this.createButton(() => this.animateFwd(), ">>>", "animate to end");
-          if (btns.end) this.createButton(() => this.jumpToEnd(), ">|", "run to end");
+          if (btns.afwd) this.createButton(() => this.animateFwd(), ">>>", btnTxts.afwd || "animate to end");
+          if (btns.end) this.createButton(() => this.jumpToEnd(), ">|", btnTxts.end || "run to end");
           this.buttonDiv.classList.remove("hidden");
       }
 

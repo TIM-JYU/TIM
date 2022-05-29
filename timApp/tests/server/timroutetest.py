@@ -33,6 +33,7 @@ from timApp.document.specialnames import (
 )
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
+from timApp.document.translation.language import Language
 from timApp.item.item import Item
 from timApp.item.routes import create_item_direct
 from timApp.messaging.messagelist.listinfo import ArchiveType
@@ -119,6 +120,22 @@ class TimRouteTest(TimDbTest):
     def setUpClass(cls):
         super().setUpClass()
         cls.client = testclient
+        # Default language on create_translation NOTE not same as british or
+        # american english.
+        cls.add_language("english")
+        db.session.commit()
+
+    @classmethod
+    def add_language(cls, lang_name: str) -> Language:
+        """
+        Add a Language to the database.
+
+        :param lang_name: Name of the language that langcodes could recognize.
+        :return: The newly added Language.
+        """
+        lang = Language.create_from_name(lang_name)
+        db.session.add(lang)
+        return lang
 
     def get(
         self,
@@ -752,6 +769,7 @@ class TimRouteTest(TimDbTest):
         username: str | None = None,
         force: bool = False,
         clear_last_doc: bool = True,
+        manual: bool = False,
         add: bool = False,
         **kwargs,
     ):
@@ -762,10 +780,11 @@ class TimRouteTest(TimDbTest):
         :param passw: The password of the user.
         :param force: Whether to force the login route to be called even if the user is already logged in.
         :param add: Whether to add this user to the session group.
+        :param manual: If true, always executes the login manually (without quick user context creation).
         :return: Response as a JSON dict.
 
         """
-        if self.client.application.got_first_request:
+        if self.client.application.got_first_request and not manual:
             if not force and not add:
                 u = User.get_by_name(username)
                 # if not flask.has_request_context():
@@ -930,7 +949,7 @@ class TimRouteTest(TimDbTest):
                 "name": doc.short_name,
             }
         j = self.json_post(
-            f"/translate/{doc.id}/{lang}",
+            f"/translate/{doc.id}/{lang}/Manual",
             {"doc_title": doc_title},
             expect_contains=expect_contains,
             expect_content=expect_content,

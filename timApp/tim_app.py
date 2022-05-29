@@ -20,6 +20,7 @@ from timApp.answer.answer import Answer, AnswerSaver
 from timApp.answer.answer_models import AnswerTag, AnswerUpload, UserAnswer
 from timApp.auth.auth_models import AccessTypeModel, BlockAccess
 from timApp.auth.oauth2.models import OAuth2Token, OAuth2AuthorizationCode
+from timApp.auth.session.model import UserSession
 from timApp.celery_sqlalchemy_scheduler import (
     IntervalSchedule,
     CrontabSchedule,
@@ -30,6 +31,17 @@ from timApp.celery_sqlalchemy_scheduler import (
 from timApp.document.docentry import DocEntry
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
+from timApp.document.translation.language import Language
+from timApp.document.translation.translator import (
+    TranslationService,
+    RegisteredTranslationService,
+    TranslationServiceKey,
+)
+from timApp.document.translation.deepl import (
+    DeeplTranslationService,
+    DeeplProTranslationService,
+)
+from timApp.document.translation.reversingtranslator import ReversingTranslationService
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.blockassociation import BlockAssociation
@@ -142,6 +154,8 @@ all_models = (
     ConsentChange,
     ContactAddVerification,
     SetPrimaryContactVerification,
+    DeeplTranslationService,
+    DeeplProTranslationService,
     DocEntry,
     DocumentNotification,
     Enrollment,
@@ -155,6 +169,7 @@ all_models = (
     InternalMessageReadReceipt,
     InternalMessageDisplay,
     LabelInVelp,
+    Language,
     Lecture,
     LectureAnswer,
     LectureUsers,
@@ -176,6 +191,8 @@ all_models = (
     Question,
     QuestionActivity,
     ReadParagraph,
+    RegisteredTranslationService,
+    ReversingTranslationService,
     RowOwnerInfo,
     Runningquestion,
     ScimUserGroup,
@@ -184,6 +201,8 @@ all_models = (
     Tag,
     TaskBlock,
     Translation,
+    TranslationService,
+    TranslationServiceKey,
     User,
     Useractivity,
     UserAnswer,
@@ -192,6 +211,7 @@ all_models = (
     UserGroupDoc,
     UserGroupMember,
     UserNote,
+    UserSession,
     Velp,
     VelpContent,
     VelpGroup,

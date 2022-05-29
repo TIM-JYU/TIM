@@ -3,6 +3,7 @@ import {
     ChangeDetectorRef,
     Component,
     EventEmitter,
+    HostBinding,
     Input,
     Output,
     ViewChild,
@@ -31,6 +32,14 @@ export class Mode {
         [Mode.ACE]: "Highlight",
         [Mode.Parsons]: "Parsons",
         [Mode.JSParsons]: "JS Parsons",
+    };
+
+    static readonly modeClasses = {
+        [Mode.Default]: "default",
+        [Mode.Normal]: "normal",
+        [Mode.ACE]: "ace",
+        [Mode.Parsons]: "parsons",
+        [Mode.JSParsons]: "jsparsons",
     };
 
     public id: ModeID;
@@ -523,6 +532,10 @@ export class EditorComponent implements IMultiEditor {
     set modeIndex(index: number) {
         this.modeIndex_ = index;
         this.mode = this.mode; // save and make sure it is in range
+    }
+
+    @HostBinding("class") get className() {
+        return `editor-${Mode.modeClasses[this.mode]}`;
     }
 
     get mode(): ModeID {

@@ -1,7 +1,11 @@
+from unittest.mock import patch, Mock
+
+from timApp import tim_celery
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
@@ -327,6 +331,60 @@ class GroupTest(TimRouteTest):
         db.session.commit()
         self.login_test2()
         self.assertIn(no_access_msg, self.get(d.get_url_for_view("teacher")))
+
+    def test_group_member_sync(self):
+        self.login_test1()
+        UserGroup.get_or_create_group("test_group_sync")
+        db.session.commit()
+
+        with self.temp_config(
+            {
+                "SYNC_USER_GROUPS_SEND_SECRET": "xxx",
+                "SYNC_USER_GROUPS_RECEIVE_SECRET": "xxx",
+                "SYNC_USER_GROUPS_HOSTS": [
+                    f'http://{app.config["INTERNAL_PLUGIN_DOMAIN"]}:5001'
+                ],
+            }
+        ):
+            with patch.object(
+                tim_celery.sync_user_group_memberships,
+                "delay",
+                wraps=tim_celery.do_send_user_group_info,
+            ) as m:  # type: Mock
+                with self.internal_container_ctx():
+                    tim_celery.sync_user_group_memberships.delay(
+                        self.test_user_1.email,
+                        [ug.name for ug in self.test_user_1.groups]
+                        + ["test_group_sync"],
+                    )
+                    db.session.commit()
+                    self.assertEqual(
+                        {
+                            u.name
+                            for u in UserGroup.get_by_name("test_group_sync").users
+                        },
+                        {self.test_user_1.name},
+                    )
+
+                    tim_celery.sync_user_group_memberships.delay(
+                        self.test_user_1.email,
+                        [
+                            ug.name
+                            for ug in self.test_user_1.groups
+                            if ug.name != "test_group_sync"
+                        ],
+                    )
+                    db.session.commit()
+                    self.assertEqual(
+                        len(
+                            [
+                                u.name
+                                for u in UserGroup.get_by_name("test_group_sync").users
+                            ]
+                        ),
+                        0,
+                    )
+                self.assertEqual(2, m.call_count)
 
 
 class GroupTest2(TimRouteTest):

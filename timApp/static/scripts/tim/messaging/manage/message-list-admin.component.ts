@@ -28,6 +28,10 @@ import {Users} from "../../user/userService";
                         Send a message to the list
                     </button>
                     <a class="timButton" *ngIf="archiveURL" [href]="archiveURL" i18n>View archives</a>
+                    <a class="timButton" *ngIf="exportArchiveURL" [href]="exportArchiveURL" (click)="exportArchiveClicked = true" i18n>Export archives</a>
+                    <ng-container *ngIf="exportArchiveClicked">
+                        <span><tim-loading></tim-loading> <ng-container i18n>Please wait...</ng-container></span>    
+                    </ng-container>
                 </div>
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
             </bootstrap-panel>
@@ -309,6 +313,7 @@ export class MessageListAdminComponent implements OnInit {
     listname: string = "";
 
     archive?: ArchiveType;
+    exportArchiveClicked = false;
 
     domain?: string;
     domains: string[] = [];
@@ -328,6 +333,7 @@ export class MessageListAdminComponent implements OnInit {
 
     emailAdminURL?: string;
     archiveURL?: string;
+    exportArchiveURL?: string;
 
     canUnsubscribe?: boolean;
     defaultSendRight?: boolean;
@@ -576,6 +582,7 @@ export class MessageListAdminComponent implements OnInit {
         // If some type of archiving exists for the list, provide a link to it.
         if (this.archive !== ArchiveType.NONE) {
             this.archiveURL = `/view/archives/${this.listname}`;
+            this.exportArchiveURL = `/messagelist/archive/export/${this.listname}`;
         }
 
         this.timUsersCanJoin = listOptions.tim_users_can_join;

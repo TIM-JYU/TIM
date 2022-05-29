@@ -23,6 +23,7 @@ class MultisaveStateModel:
 
 @dataclass
 class MultisaveMarkupModel(GenericMarkupModel):
+    aliases: dict[str, str] | Missing = missing
     areas: list[str] | Missing = missing
     autoUpdateDuplicates: bool | Missing = True
     autoUpdateTables: bool | Missing = True

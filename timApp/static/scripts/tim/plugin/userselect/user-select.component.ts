@@ -9,7 +9,7 @@ import {
 import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import * as t from "io-ts";
-import {HttpClientModule, HttpParams} from "@angular/common/http";
+import {HttpClientModule} from "@angular/common/http";
 import {FormsModule, NgForm} from "@angular/forms";
 import {race, Subject, Subscription} from "rxjs";
 import {Observable} from "rxjs/internal/Observable";
@@ -26,6 +26,7 @@ import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
 import {
+    getUrlHttpParams,
     isMobileDevice,
     templateString,
     timeout,
@@ -43,6 +44,12 @@ import {
     ServerQueryHandler,
     UserResult,
 } from "./searchQueryHandlers";
+import {T9KeyboardComponent} from "./t9-keyboard.component";
+
+const NeedsVerifyReasons = t.type({
+    changeGroupBelongs: t.string,
+    changeGroupAlreadyMember: t.string,
+});
 
 const PluginMarkup = t.intersection([
     GenericPluginMarkup,
@@ -63,6 +70,7 @@ const PluginMarkup = t.intersection([
             waitBetweenScans: t.number,
             beepOnSuccess: t.boolean,
             beepOnFailure: t.boolean,
+            parameterSeparator: nullable(t.string),
         }),
         text: t.type({
             apply: nullable(t.string),
@@ -71,9 +79,17 @@ const PluginMarkup = t.intersection([
             undone: nullable(t.string),
             undo: nullable(t.string),
             undoWarning: nullable(t.string),
+            verifyReasons: t.partial(NeedsVerifyReasons.props),
         }),
     }),
 ]);
+
+interface INeedsVerifyReasons extends t.TypeOf<typeof NeedsVerifyReasons> {}
+
+const DEFAULT_VERIFY_REASONS: INeedsVerifyReasons = {
+    changeGroupBelongs: $localize`The user already belongs to a group. Are you sure you want to change the group?`,
+    changeGroupAlreadyMember: $localize`The user is already a member of this group. Are you sure you want to assign them to this group again?`,
+};
 
 const PluginFields = t.intersection([
     getTopLevelFields(PluginMarkup),
@@ -148,7 +164,7 @@ class ToggleOption {
                    autocomplete="off"
                    [(ngModel)]="searchString"
                    (ngModelChange)="inputTyped.next($event)"
-                   [disabled]="!queryHandler || undoing"
+                   [disabled]="!queryHandler || undoing || applying"
                    minlength="{{ inputMinLength }}"
                    required
                    #searchInput>
@@ -254,6 +270,17 @@ class ToggleOption {
                 </span>
             </div>
         </tim-alert>
+        <tim-alert severity="warning" *ngIf="verifyMessages && verifyAccept && verifyReject">
+            <div class="undoable-message">
+                <ul class="undoable-text">
+                   <li *ngFor="let message of verifyMessages">{{message}}</li> 
+                </ul>
+                <span class="undo-button">
+                    <button (click)="verifyAccept()" class="btn btn-success">{{applyButtonText}}</button>
+                    <button (click)="verifyReject()" class="btn btn-danger">{{cancelButtonText}}</button>
+                </span>
+            </div>
+        </tim-alert>
         <tim-alert class="small" *ngIf="undoErrors.length > 0" severity="warning">
             <ng-container i18n>
                 <p>
@@ -288,48 +315,7 @@ class ToggleOption {
                 </ng-container>
             </div>
         </tim-alert>
-        <table class="t9kbd" *ngIf="t9Mode.value">
-            <tr>
-                <td>
-                    <button (click)="applyT9('1')">1<br>&nbsp;</button>
-                </td>
-                <td>
-                    <button (click)="applyT9('2')">2<br>ABC</button>
-                <td>
-                    <button (click)="applyT9('3')">3<br>DEF</button>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <button (click)="applyT9('4')">4<br>GHI</button>
-                </td>
-                <td>
-                    <button (click)="applyT9('5')">5<br>JKL</button>
-                <td>
-                    <button (click)="applyT9('6')">6<br>MNO</button>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <button (click)="applyT9('7')">7<br>PQRS</button>
-                </td>
-                <td>
-                    <button (click)="applyT9('8')">8<br>TUV</button>
-                <td>
-                    <button (click)="applyT9('9')">9<br>WXYZ</button>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <button (click)="applyT9('clr')">clr<br>&nbsp;</button>
-                </td>
-                <td>
-                    <button (click)="applyT9('0')">0<br>space</button>
-                <td>
-                    <button (click)="applyT9('<=')"><=<br>&nbsp;</button>
-                </td>
-            </tr>
-        </table>
+        <tim-t9-keyboard (applyT9)="applyT9($event)" *ngIf="t9Mode.value"></tim-t9-keyboard>
     `,
     styleUrls: ["user-select.component.scss"],
 })
@@ -348,6 +334,7 @@ export class UserSelectComponent extends AngularPluginBase<
     detailedError?: string;
 
     searchString: string = "";
+    searchParameter?: string;
     inputMinLength!: number;
     searching: boolean = false;
     applying: boolean = false;
@@ -388,6 +375,11 @@ export class UserSelectComponent extends AngularPluginBase<
         $localize`Auto apply on match`
     );
     verifyUndo: boolean = false;
+
+    verifyReasonTemplates!: INeedsVerifyReasons;
+    verifyMessages?: string[];
+    verifyAccept?: (v?: unknown) => void;
+    verifyReject?: () => void;
 
     get successMessage() {
         if (!this.lastAddedUser) {
@@ -439,18 +431,15 @@ export class UserSelectComponent extends AngularPluginBase<
         this.undoing = true;
         this.verifyUndo = false;
 
-        // Pass possible urlmacros
-        const params = new HttpParams({
-            fromString: window.location.search.replace("?", "&"),
-        });
         const result = await toPromise(
             this.http.post<{distributionErrors: string[]}>(
                 "/userSelect/undo",
                 {
                     username: this.lastAddedUser.user.name,
                     par: this.getPar()!.par.getJsonForServer(),
+                    param: this.searchParameter,
                 },
-                {params}
+                {params: getUrlHttpParams()}
             )
         );
 
@@ -491,6 +480,20 @@ export class UserSelectComponent extends AngularPluginBase<
         }
         this.searchString = result.getText();
 
+        if (this.markup.scanner.parameterSeparator) {
+            const hashIndex = this.searchString.indexOf(
+                this.markup.scanner.parameterSeparator
+            );
+            if (hashIndex >= 0) {
+                this.searchParameter = this.searchString.substr(hashIndex + 1);
+                this.searchString = this.searchString.substr(0, hashIndex);
+            } else {
+                this.searchParameter = undefined;
+            }
+        } else {
+            this.searchParameter = undefined;
+        }
+
         await this.search(
             this.markup.scanner.applyOnMatch,
             this.markup.scanner.beepOnSuccess,
@@ -508,6 +511,10 @@ export class UserSelectComponent extends AngularPluginBase<
 
     ngOnInit() {
         super.ngOnInit();
+        this.verifyReasonTemplates = {
+            ...DEFAULT_VERIFY_REASONS,
+            ...this.markup.text.verifyReasons,
+        };
         this.isInPreview = this.isPreview();
         this.supportsMediaDevices = MediaDevicesSupported;
         this.initToggleOptions();
@@ -535,6 +542,62 @@ export class UserSelectComponent extends AngularPluginBase<
         void this.initQueryHandler();
     }
 
+    private async verifyAction() {
+        if (!this.selectedUser) {
+            return false;
+        }
+        const res = await toPromise(
+            this.http.post<{
+                needsVerify: boolean;
+                reasons: (keyof INeedsVerifyReasons)[];
+            }>(
+                "/userSelect/needsVerify",
+                {
+                    username: this.selectedUser.user.name,
+                    par: this.getPar()!.par.getJsonForServer(),
+                },
+                {params: getUrlHttpParams()}
+            )
+        );
+
+        if (!res.ok) {
+            this.setError(
+                $localize`Could not apply the permission.`,
+                res.result.error.error
+            );
+            return false;
+        }
+
+        if (!res.result.needsVerify) {
+            return true;
+        }
+
+        this.verifyMessages = [];
+        for (const reason of res.result.reasons) {
+            this.verifyMessages.push(
+                templateString(
+                    this.verifyReasonTemplates[reason],
+                    this.selectedUser.fields
+                )
+            );
+        }
+
+        if (this.markup.scanner.beepOnFailure) {
+            this.beepFail = await playBeep("beep_fail", this.beepFail);
+        }
+
+        const mainPromise = new Promise((accept, reject) => {
+            this.verifyAccept = accept;
+            this.verifyReject = reject;
+        });
+        await mainPromise;
+        // Remove the info already here to hide the message box
+        this.verifyMessages = undefined;
+        this.verifyAccept = undefined;
+        this.verifyReject = undefined;
+        return true;
+    }
+
     async apply() {
         if (!this.selectedUser) {
             return;
@@ -542,18 +605,22 @@ export class UserSelectComponent extends AngularPluginBase<
         this.applying = true;
         this.resetError();
 
-        // Pass possible urlmacros
-        const params = new HttpParams({
-            fromString: window.location.search.replace("?", "&"),
-        });
+        const verifyResult = await to2(this.verifyAction());
+        if (!verifyResult.ok || !verifyResult.result) {
+            this.applying = false;
+            this.resetView();
+            return;
+        }
+
         const result = await toPromise(
             this.http.post<{distributionErrors: string[]}>(
                 "/userSelect/apply",
                 {
                     par: this.getPar()!.par.getJsonForServer(),
                     username: this.selectedUser.user.name,
+                    param: this.searchParameter,
                 },
-                {params}
+                {params: getUrlHttpParams()}
             )
         );
 
@@ -574,7 +641,11 @@ export class UserSelectComponent extends AngularPluginBase<
         this.selectedUser = undefined;
         this.lastSearchResult = undefined;
         this.searchString = "";
+        this.searchParameter = undefined;
         this.verifyUndo = false;
+        this.verifyMessages = undefined;
+        this.verifyAccept = undefined;
+        this.verifyReject = undefined;
         if (!isMobileDevice()) {
             this.searchInput.nativeElement.focus();
         }
@@ -618,6 +689,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 waitBetweenScans: 0,
                 beepOnSuccess: false,
                 beepOnFailure: false,
+                parameterSeparator: "#",
             },
             text: {
                 apply: null,
@@ -626,6 +698,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 undone: null,
                 undo: null,
                 undoWarning: null,
+                verifyReasons: {},
             },
             inputMinLength: 3,
             autoSearchDelay: 0,
@@ -850,7 +923,11 @@ export class UserSelectComponent extends AngularPluginBase<
 }
 
 @NgModule({
-    declarations: [UserSelectComponent, CodeScannerComponent],
+    declarations: [
+        UserSelectComponent,
+        CodeScannerComponent,
+        T9KeyboardComponent,
+    ],
     imports: [
         BrowserModule,
         HttpClientModule,

@@ -12,6 +12,7 @@ import {Changes} from "tim/util/angularchanges";
 import {BrowserModule} from "@angular/platform-browser";
 import {NgChartsModule} from "ng2-charts";
 import * as t from "io-ts";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {clone, TimStorage, truncate} from "../util/utils";
 import {
     IAskedQuestion,
@@ -530,7 +531,7 @@ export class AnswerChartComponent implements OnChanges {
 
 @NgModule({
     declarations: [AnswerChartComponent],
-    imports: [BrowserModule, NgChartsModule],
+    imports: [BrowserModule, NgChartsModule, TimUtilityModule],
     exports: [AnswerChartComponent],
 })
 export class AnswerChartModule {}

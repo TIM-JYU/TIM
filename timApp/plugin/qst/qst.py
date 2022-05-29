@@ -134,6 +134,7 @@ class QstMarkupModel(GenericMarkupModel):
     defaultPoints: int | float | None | Missing = missing
     savedText: str | None | Missing = missing
     size: str | None | Missing = missing
+    customHeader: str | None | Missing = missing
 
 
 QstBasicState = list[list[str]]

@@ -52,7 +52,11 @@ const DEFAULT_PIECE_SIZE = 20;
         <ng-template i18n>Document settings</ng-template>
         <ng-container>
             <h5 i18n>Help</h5>
-            <a i18n-title title="Open TIM-guide" href="/view/tim/TIM-ohjeet" i18n>User guide</a>
+            <div class="flex cl">
+                <a i18n-title title="Open quick start guide" href="/view/tim/ohjeita/pikaohje" i18n>Quick start</a>
+                <a i18n-title title="Open content creator guide" href="/view/tim/ohjeita/ohjeet" i18n>Content creator guide</a>  
+                <a i18n-title title="Open all guides" href="/view/tim/TIM-ohjeet" i18n>All guides</a>  
+            </div>
         </ng-container>
         <ng-container *ngIf="users.isLoggedIn()">
             <h5 i18n>Customize</h5>
@@ -108,6 +112,12 @@ const DEFAULT_PIECE_SIZE = 20;
                     title="Mark document as translated" i18n-title
                     (click)="markTranslated()"
                     i18n>Mark all as translated
+            </button>
+            <button *ngIf="vctrl?.isTranslation()"
+                    class="timButton btn-block"
+                    title="Mark translations as checked" i18n-title
+                    (click)="markTranslationChecked()"
+                    i18n>Mark all translations as checked
             </button>
             <button *ngIf="docSettings?.exam_mode && item.rights.manage"
                     class="timButton btn-block"
@@ -381,6 +391,13 @@ export class SettingsTabComponent implements OnInit {
         await this.confirmPost(
             $localize`This will mark all paragraphs in this document as translated. Continue?`,
             `/markTranslated/${this.item!.id}`
+        );
+    }
+
+    async markTranslationChecked() {
+        await this.confirmPost(
+            $localize`This will mark the translations in all paragraphs in this document as checked. Continue?`,
+            `/markChecked/${this.item!.id}`
         );
     }
 
