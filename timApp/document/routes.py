@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from flask import Response
+from flask import Response, request
 
 from timApp.auth.accesshelper import (
     get_doc_or_abort,
@@ -16,7 +16,7 @@ from timApp.document.document import Document
 from timApp.document.documentversion import DocumentVersion
 from timApp.timdb.exceptions import TimDbException
 from timApp.util.flask.requesthelper import NotExist
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 doc_bp = TypedBlueprint("document", __name__, url_prefix="")

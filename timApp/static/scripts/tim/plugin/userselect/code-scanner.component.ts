@@ -8,8 +8,9 @@ import {
     Output,
     ViewChild,
 } from "@angular/core";
-import {BrowserMultiFormatReader, Exception, Result} from "@zxing/library";
 import * as t from "io-ts";
+import {Exception, Result} from "@zxing/library";
+import {BrowserMultiFormatReader} from "@zxing/browser";
 import {TimStorage} from "../../util/utils";
 import {
     cameraConstraintSupported,
@@ -45,6 +46,7 @@ import {
             <span *ngIf="!hasCameras" class="label label-danger not-supported" i18n>No cameras found</span>
             <span *ngIf="hasCameras && !supportsConstraint('torch')" class="label label-default not-supported" i18n>Flashlight is not supported</span>
         </div>
+        <tim-loading *ngIf="loadingCamera"></tim-loading>
         <video [class.hidden]="!codeReaderStream" #barcodeOutput></video>
     `,
     styleUrls: ["./code-scanner.component.scss"],
@@ -62,6 +64,7 @@ export class CodeScannerComponent implements OnInit, OnDestroy {
     hasCameras = true;
     enableTorch = false;
     showSettings = false;
+    loadingCamera = false;
     private selectedCameraStorage = new TimStorage(
         "codeScannerSelectedCamera",
         t.string
@@ -69,10 +72,9 @@ export class CodeScannerComponent implements OnInit, OnDestroy {
     selectedCamera = this.selectedCameraStorage.get();
 
     constructor() {
-        this.codeReader = new BrowserMultiFormatReader(
-            undefined,
-            this.scanInterval
-        );
+        this.codeReader = new BrowserMultiFormatReader(undefined, {
+            delayBetweenScanAttempts: this.scanInterval,
+        });
     }
 
     supportsConstraint(name: string) {
@@ -109,6 +111,7 @@ export class CodeScannerComponent implements OnInit, OnDestroy {
     }
 
     private async startCamera() {
+        this.loadingCamera = true;
         await this.destroyCamera();
 
         // Always query for video devices before doing anything to cameras because some devices give access only by permission
@@ -117,7 +120,7 @@ export class CodeScannerComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const devices = await this.codeReader.listVideoInputDevices();
+        const devices = await BrowserMultiFormatReader.listVideoInputDevices();
         this.availableCameras = devices.map((d) => ({
             id: d.deviceId,
             name: d.label,
@@ -147,6 +150,7 @@ export class CodeScannerComponent implements OnInit, OnDestroy {
         // Sync currently selected camera ID with the storage
         this.selectedCameraStorage.set(this.selectedCamera);
 
+        this.loadingCamera = false;
         const readHandle = this.codeReader.decodeFromStream(
             this.codeReaderStream,
             this.barcodeOutput.nativeElement,
@@ -172,7 +176,7 @@ export class CodeScannerComponent implements OnInit, OnDestroy {
         }
 
         await setStreamConstraints(this.codeReaderStream, {torch: false});
-        this.codeReader.reset();
+        BrowserMultiFormatReader.releaseAllStreams();
         this.codeReaderStream
             ?.getVideoTracks()
             .forEach((track) => track.stop());

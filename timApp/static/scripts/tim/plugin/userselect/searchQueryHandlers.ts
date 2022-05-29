@@ -1,5 +1,5 @@
-import {HttpClient, HttpParams} from "@angular/common/http";
-import {Result, toPromise} from "../../util/utils";
+import {HttpClient} from "@angular/common/http";
+import {getUrlHttpParams, Result, toPromise} from "../../util/utils";
 import {IUser} from "../../user/IUser";
 
 export interface UserResult {
@@ -34,9 +34,6 @@ export class ServerQueryHandler implements IQueryHandler {
     }
 
     async searchUser(queryStrings: string[]) {
-        const params = new HttpParams({
-            fromString: window.location.search.replace("?", "&"),
-        });
         const result = await toPromise(
             this.http.post<SearchResult>(
                 "/userSelect/search",
@@ -44,7 +41,7 @@ export class ServerQueryHandler implements IQueryHandler {
                     par: this.par,
                     search_strings: queryStrings,
                 },
-                {params}
+                {params: getUrlHttpParams()}
             )
         );
         // seems like proper typing is needed here
@@ -69,9 +66,7 @@ export class PrefetchedQueryHandler implements IQueryHandler {
     ) {}
 
     async initialize() {
-        const params = new HttpParams({
-            fromString: window.location.search.replace("?", "&"),
-        })
+        const params = getUrlHttpParams()
             .append("doc_id", this.par.doc_id.toString())
             .append("par_id", this.par.par_id);
         const r = await toPromise(

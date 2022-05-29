@@ -1,3 +1,10 @@
+"""
+List and defaults for all configuration options in TIM.
+
+.. note:: Please don't modify this file directly in your server or local development setup.
+          This avoids merge conflicts. Override the values with prodconfig.py or debugconfig.py instead.
+"""
+
 import logging
 import multiprocessing
 import os
@@ -6,6 +13,10 @@ from pathlib import Path
 
 from celery.schedules import crontab
 
+from timApp.document.translation.deepl import (
+    DeeplTranslationService,
+    DeeplProTranslationService,
+)
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.util.git_utils import get_latest_commit_timestamp, get_current_branch
 
@@ -249,6 +260,19 @@ BACKUP_ANSWER_FILE = "answers.backup"
 # The hosts where to back up the answers. Every entry should start with "https://".
 BACKUP_ANSWER_HOSTS = None
 
+SYNC_USER_GROUPS_SEND_SECRET = None
+"""
+Secret to use to when syncing user group info. If None, no user group memberships.
+
+..note: Right now, syncing only is done in UserSelect.
+"""
+
+SYNC_USER_GROUPS_HOSTS = []
+"""Groups to sync user group info to."""
+
+SYNC_USER_GROUPS_RECEIVE_SECRET = None
+"""Secret to check against when syncing group info."""
+
 # DIST_RIGHTS_* variables are related to distributing rights.
 
 # A mapping of target identifiers to lists of hosts.
@@ -307,6 +331,9 @@ IP_BLOCK_LOG_ONLY = False
 # The set of documents for which the right is inherited from its containing folder.
 INHERIT_FOLDER_RIGHTS_DOCS = {}
 
+LOG_USER_SELECT_ACTIONS = False
+"""Log any actions applied via UserSelect component."""
+
 # A list of OAuth2 applications that can authenticate with TIM
 # Refer to OAuth2Client class in timApp/auth/oauth2/models.py for documentation of each field
 # Example:
@@ -338,3 +365,97 @@ VERIFICATION_UNREACTED_CLEANUP_INTERVAL = 10 * 60
 # How long reacted verifications should be persisted for in seconds
 # Default: 30 days
 VERIFICATION_REACTED_CLEANUP_INTERVAL = 30 * 24 * 60 * 60
+
+# Supported languages for document translation.
+# Database entries for languages are created when TIM is started/re-started.
+# Pre-existing entries are skipped.
+# Default list includes languages supported by the translation service
+# DeepL: https://https://www.deepl.com/docs-api/translating-text/
+# Custom language syntax is the following:
+# {
+#   "lang_code": "<standardized tag>",
+#   "lang_name": "<name in English>",
+#   "autonym": "<name in its language>",
+# }
+# The standardized tag lang_code should adhere to IETF BCP47,
+# detailed in RFC5646 (https://www.rfc-editor.org/info/rfc5646).
+LANGUAGES = [
+    "Bulgarian",
+    "Czech",
+    "Danish",
+    "German",
+    "Greek",
+    "American English",
+    "British English",
+    "Spanish",
+    "Estonian",
+    "Finnish",
+    "French",
+    "Hungarian",
+    "Italian",
+    "Japanese",
+    "Lithuanian",
+    "Latvian",
+    "Dutch",
+    "Polish",
+    "Portuguese",
+    "Brazilian Portuguese",
+    "Romanian",
+    "Russian",
+    "Slovak",
+    "Slovenian",
+    "Swedish",
+    "Chinese",
+    # TODO Change lang_code to the accurate tag-format of Simple Finnish.
+    {"lang_code": "fi-simple", "lang_name": "Simple Finnish", "autonym": "selkosuomi"},
+    # TODO Remove this from list in production and during automatic tests.
+    # REVERSE_LANG,
+]
+
+# Translation services with their initialization values are listed below.
+# Syntax for inserting a new translation service is the following:
+# (
+#   <Class of the TranslationService>,
+#   <Some type (Any), that is used in initializing the TranslationService>
+# )
+
+MACHINE_TRANSLATORS = [
+    (
+        DeeplTranslationService,
+        {
+            "service_url": "https://api-free.deepl.com/v2",
+            "ignore_tag": "😂",
+        },
+    ),
+    (
+        DeeplProTranslationService,
+        {
+            "service_url": "https://api.deepl.com/v2",
+            "ignore_tag": "😂",
+        },
+    ),
+    # TODO Remove this from list in production and during automatic tests.
+    # (
+    #    ReversingTranslationService,
+    #    None,
+    # ),
+]
+
+# Options related to session management
+
+SESSIONS_ENABLE = False
+"""If enabled, session management information will be stored and logged."""
+
+SESSIONS_MAX_CONCURRENT_SESSIONS_PER_USER = 1
+"""
+How many concurrent sessions are allowed for a single user for a protected document.
+If this limit is reached, the user is not given an active session which prevents accessing documents.
+
+If None, there is no limit.
+"""
+
+SESSION_BLOCK_IGNORE_DOCUMENTS = {}
+"""
+Paths of documents that should be ignored when blocking sessions.
+All users will be able to access the document regardless of the session blocking.
+"""

@@ -73,6 +73,7 @@ fixedobjects:
         )
         db.session.commit()
         self.goto_document(d)
+        # TODO: Add better check for imagex loading
         canvas = self.find_element_avoid_staleness("imagex-runner canvas")
         sleep(2)
         # legacy format loads correctly

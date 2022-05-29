@@ -7,13 +7,83 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import Document
 from timApp.document.translation.translation import Translation
+from timApp.document.translation.language import Language
+from timApp.document.translation.deepl import DeeplTranslationService
+from timApp.document.translation.reversingtranslator import (
+    ReversingTranslationService,
+    REVERSE_LANG,
+)
+from timApp.document.translation.translator import Usage, TranslateBlock
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.util.utils import static_tim_doc
 
 
-class TranslationTest(TimRouteTest):
+MAX_TEST_CHAR_QUOTA = 50
+"""Amount of characters to initialize the quota-limited test translator
+with.
+"""
+
+
+class TimTranslationTest(TimRouteTest):
+    """Test class containing the reversing translation service and its
+    preferred target language.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        db.session.add(ReversingTranslationService())
+        db.session.add(QuotaLimitedTestTranslator(character_limit=MAX_TEST_CHAR_QUOTA))
+        cls.reverselang = Language(**REVERSE_LANG)
+        db.session.add(cls.reverselang)
+        db.session.commit()
+
+
+class QuotaLimitedTestTranslator(ReversingTranslationService):
+    """A test translator that can run out of quota mid-translation. Used for
+    simulating a translation service, that returns an error when
+    translation-quota is exceeded by the caller (such as the case with DeepL
+    Free).
+    """
+
+    character_limit = db.Column(db.Integer, default=MAX_TEST_CHAR_QUOTA)
+    """Amount of characters allowed to translate."""
+
+    _character_count = 0
+    """Holds the state of characters translated with the translator."""
+
+    def translate(
+        self,
+        texts: list[TranslateBlock],
+        source_lang: Language,
+        target_lang: Language,
+        *,
+        tag_handling: str = "",
+    ) -> list[str]:
+        # Translate everything at first, because it's easier to implement here.
+        result = super().translate(
+            texts, source_lang, target_lang, tag_handling=tag_handling
+        )
+        # Apply changes to the quota (based on the translated text, as it does
+        # not matter with ReversingTranslationService).
+        for text in result:
+            self._character_count += len(text)
+            if self._character_count > self.character_limit:
+                raise Exception(f"Translation quota ({self.character_limit}) exceeded")
+
+        return result
+
+    def usage(self) -> Usage:
+        return Usage(
+            character_limit=self.character_limit, character_count=self._character_count
+        )
+
+    __mapper_args__ = {"polymorphic_identity": "QuotaLimited"}
+
+
+class TranslationTest(TimTranslationTest):
     def test_translation_create(self):
         self.login_test1()
         doc = self.create_doc()
@@ -30,7 +100,9 @@ class TranslationTest(TimRouteTest):
         self.get(t.url)
         self.logout()
         self.json_post(
-            f"/translate/{doc.id}/{lang}", {"doc_title": doc_title}, expect_status=403
+            f"/translate/{doc.id}/{lang}/Manual",
+            {"doc_title": doc_title},
+            expect_status=403,
         )
 
     def test_translation_create_with_settings(self):
@@ -337,3 +409,368 @@ c
         d = DocEntry.find_by_path(f"roskis/tl_{tr.id}_{d.id}_{tr.lang_id}_deleted")
         self.assertIsNotNone(d)
         self.assertEqual(len(d.translations), 2)
+
+    def test_invalid_language(self):
+        lang = Language(lang_code="baz", lang_name="foo", autonym="foo")
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+Foo
+#-
+Bar
+#-
+Baz
+"""
+        )
+        d.lang_id = "orig"
+        # TODO Would rather use ReversingTranslationService.service_name but
+        #  is not str
+        data = "Reversing"
+        self.json_post(
+            f"/translate/{d.id}/{lang.lang_code}/{data}",
+            {"doc_title": "title"},
+            expect_status=404,
+        )
+
+    def test_document_machine_translation_route(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+Foo
+#-
+Bar
+#-
+Baz
+"""
+        )
+        d.lang_id = "orig"
+        # TODO Would rather use ReversingTranslationService.service_name but
+        #  is not str
+        data = "Reversing"
+        tr_json = self.json_post(
+            f"/translate/{d.id}/{lang.lang_code}/{data}", {"doc_title": "title"}
+        )
+        tr_doc = Translation.query.get(tr_json["id"]).document
+        tr_doc.clear_mem_cache()
+        mds = map(lambda x: x.md, tr_doc.get_paragraphs())
+        self.assertEqual("ooF", next(mds))
+        self.assertEqual("raB", next(mds))
+        self.assertEqual("zaB", next(mds))
+        self.assertEqual(None, next(mds, None))
+
+    def test_document_machine_translation_route_no_api_key(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+Foo
+#-
+Bar
+#-
+Baz
+"""
+        )
+        d.lang_id = "orig"
+        data = DeeplTranslationService.query.first().service_name
+        self.json_post(
+            f"/translate/{d.id}/{lang.lang_code}/{data}",
+            {"doc_title": "title"},
+            expect_status=404,
+        )
+
+    def test_document_machine_translation_route_forbidden(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+Foo
+#-
+Bar
+#-
+Baz
+"""
+        )
+
+        d.lang_id = "orig"
+        self.logout()
+        self.login_test2()
+        data = DeeplTranslationService.query.first().service_name
+        self.json_post(
+            f"/translate/{d.id}/{lang.lang_code}/{data}",
+            {"doc_title": "title"},
+            expect_status=403,
+        )
+
+    def test_paragraph_machine_translation_route(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+[Foo]{.notranslate}
+#-
+Bar
+#-
+Baz
+"""
+        )
+        tr = self.create_translation(d)
+        tr_doc = tr.document
+        id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
+        # TODO Would rather use ReversingTranslationService.service_name but
+        #  is not str
+        data = "Reversing"
+        r = self.json_post(
+            f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}/{data}"
+        )
+        tr_doc.clear_mem_cache()
+        self.assertEqual(r["status"], "ok")
+        # TIM doesn't (seem) to strip the paragraph contents on its own, so
+        # because of it the newlines are kept at this point.
+        self.assertEqual("\n[Foo]{.notranslate}\n", tr_doc.get_paragraph(id1).md)
+        self.assertEqual("", tr_doc.get_paragraph(id2).md)
+        self.assertEqual("", tr_doc.get_paragraph(id3).md)
+
+        self.json_post(f"/translate/paragraph/{tr.id}/{id2}/{lang.lang_code}/{data}")
+        tr_doc.clear_mem_cache()
+        self.assertEqual("\nraB\n", tr_doc.get_paragraph(id2).md)
+
+        self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}/{data}")
+        tr_doc.clear_mem_cache()
+        self.assertEqual("\nzaB\n", tr_doc.get_paragraph(id3).md)
+
+        self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}/{data}")
+        tr_doc.clear_mem_cache()
+        # Applying translation again uses the SOURCE paragraph, so the result
+        # is the same.
+        self.assertEqual("\nzaB\n", tr_doc.get_paragraph(id3).md)
+
+    def test_paragraph_machine_translation_route_no_api_key(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+Foo
+#-
+Bar
+#-
+Baz
+"""
+        )
+        tr = self.create_translation(d)
+        tr_doc = tr.document
+        id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
+        data = DeeplTranslationService.query.first().service_name
+        self.json_post(
+            f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}/{data}",
+            expect_status=404,
+        )
+
+    def test_paragraph_machine_translation_route_forbidden(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+Foo
+#-
+Bar
+#-
+Baz
+"""
+        )
+        tr = self.create_translation(d)
+        self.logout()
+        self.login_test2()
+        tr_doc = tr.document
+        id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
+        data = DeeplTranslationService.query.first().service_name
+        self.json_post(
+            f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}/{data}",
+            expect_status=403,
+        )
+
+    def test_paragraph_machine_translation_route_plugin(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+Foo
+``` {plugin="csPlugin" #btn-tex2 .miniSnippets}
+header: Harjoittele matemaattisen vastauksen kirjoittamista.
+notexistingkey: Bar baz
+```
+#-
+Qux
+"""
+        )
+        tr = self.create_translation(d)
+        tr_doc = tr.document
+        id1, id2, id3, *_ = [x.id for x in tr_doc.get_paragraphs()]
+        data = "Reversing"
+
+        self.json_post(f"/translate/paragraph/{tr.id}/{id1}/{lang.lang_code}/{data}")
+        tr_doc.clear_mem_cache()
+        self.assertEqual("\nooF\n", tr_doc.get_paragraph(id1).md)
+
+        self.json_post(f"/translate/paragraph/{tr.id}/{id2}/{lang.lang_code}/{data}")
+        tr_doc.clear_mem_cache()
+        tr_par2 = tr_doc.get_paragraph(id2)
+        orig_par2 = d.document.get_paragraph(tr_par2.get_attr("rp"))
+        self.assertEqual("btn-tex2", orig_par2.get_attr("taskId"))
+        self.assertEqual(["miniSnippets"], orig_par2.get_attr("classes"))
+        self.assertEqual("csPlugin", orig_par2.get_attr("plugin"))
+        self.assertEqual(
+            """
+```
+header: .atsimattiojrik neskuatsav nesittaametam elettiojraH
+notexistingkey: Bar baz
+```""",
+            tr_par2.md,
+        )
+
+        self.json_post(f"/translate/paragraph/{tr.id}/{id3}/{lang.lang_code}/{data}")
+        tr_doc.clear_mem_cache()
+        self.assertEqual("\nxuQ\n", tr_doc.get_paragraph(id3).md)
+
+    def test_text_machine_translation_route(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc()
+        tr = self.create_translation(d)
+
+        md = r"""
+# Foo
+[Bar]{.notranslate}\
+
+Baz qux [qux](www.example.com)
+  """
+
+        data = {
+            "originaltext": md,
+        }
+        resp = self.json_post(
+            f"/translate/{tr.id}/{lang.lang_code}/translate_block/Reversing", data
+        )
+        # NOTE Apparently Pandoc likes to add to headers their text-content as identifier,
+        # which does not seem to be a TIM-convention (which could be a problem?).
+        self.assertEqual(
+            r"""
+# ooF{#foo}
+
+[Bar]{.notranslate}\
+ xuq zaB
+
+[xuq](www.example.com)
+  """,
+            resp,
+        )
+
+    def test_text_machine_translation_route_no_api_key(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc()
+        tr = self.create_translation(d)
+
+        md = r"""
+# Foo
+[Bar]{.notranslate}\
+
+Baz qux [qux](www.example.com)
+"""
+
+        transl = DeeplTranslationService.query.first().service_name
+        data = {
+            "originaltext": md,
+        }
+        self.json_post(
+            f"/translate/{tr.id}/{lang.lang_code}/translate_block/{transl}",
+            data,
+            expect_status=404,
+        )
+
+    def test_text_machine_translation_route_forbidden(self):
+        lang = self.reverselang
+        self.login_test1()
+        d = self.create_doc()
+        tr = self.create_translation(d)
+        self.logout()
+        self.login_test2()
+
+        md = r"""
+# Foo
+[Bar]{.notranslate}\
+
+Baz qux [qux](www.example.com)
+"""
+
+        transl = DeeplTranslationService.query.first().service_name
+        data = {
+            "originaltext": md,
+        }
+        self.json_post(
+            f"/translate/{tr.id}/{lang.lang_code}/translate_block/{transl}",
+            data,
+            expect_status=403,
+        )
+
+    def test_quota_exceeded_error(self):
+        """Test the case where quota runs out during translation."""
+        lang = self.reverselang
+        translator = QuotaLimitedTestTranslator.__mapper_args__["polymorphic_identity"]
+        self.login_test1()
+
+        # Create some paragraphs with length equal to the translator's max quota.
+        # TODO/NOTE This data is made for the reason, that partially applying
+        #  the translation before failure might be implemented in the _future_.
+        #  Without that, this is kind of overkill...
+        text = "ab" * (MAX_TEST_CHAR_QUOTA // 2) + "a" * (MAX_TEST_CHAR_QUOTA % 2)
+        pars_count = 3
+        par_len = len(text) // pars_count
+        # Split text between paragraphs into equal parts.
+        pars_content = [
+            text[i : i + par_len] for i in range(par_len, MAX_TEST_CHAR_QUOTA, par_len)
+        ]
+        pars_content[-1] += text[:par_len]
+
+        # Sanity check that the data is of required length.
+        chars_in_content = sum(len(par) for par in pars_content)
+        self.assertEqual(pars_count, len(pars_content))
+        self.assertEqual(MAX_TEST_CHAR_QUOTA, chars_in_content)
+
+        d = self.create_doc(initial_par="\n#-\n".join(pars_content))
+        d.lang_id = "orig"
+
+        # Failing to finish automatic translation (exceeding quota)
+        err_resp = self.json_post(
+            f"/translate/{d.id}/{lang.lang_code}/{translator}",
+            {"doc_title": "title"},
+            expect_status=400,  # The code of RouteException.
+        )
+        # See that the translator's error message was returned.
+        self.assertTrue(
+            f"Translation quota ({len(text)}) exceeded" in err_resp["error"]
+        )
+
+        # Refresh the document.
+        d = DocEntry.find_by_id(d.id)
+
+        # See that the failed translation created the document with correct
+        # references and contents.
+
+        self.assertTrue(d.has_translation(lang.lang_code))
+        self.assertEqual(2, len(d.translations))
+
+        # Get the newly created translation doc.
+        tr_doc = d.translations[1].document
+
+        src_paras = d.document.get_paragraphs()
+        tr_paras = tr_doc.get_paragraphs()
+        self.assertEqual(len(src_paras), len(tr_paras))
+
+        for src_par, tr_par in zip(src_paras, tr_paras):
+            self.assertEqual("", tr_par.md)
+            self.assertEqual(src_par.id, tr_par.get_attr("rp"))
+
+
+# TODO Add cases for all 3 translation routes for the special cases (basically
+#  just for plugins and tables)

@@ -13,6 +13,7 @@ import {
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {documentglobals} from "../util/globals";
+import {TimUtilityModule} from "../ui/tim-utility.module";
 
 @Component({
     selector: "tim-slide-view",
@@ -39,7 +40,7 @@ export class SlideViewComponent implements OnInit {
 
 @NgModule({
     declarations: [SlideViewComponent],
-    imports: [BrowserModule],
+    imports: [BrowserModule, TimUtilityModule],
 })
 export class SlideViewModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

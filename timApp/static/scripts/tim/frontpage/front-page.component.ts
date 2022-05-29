@@ -18,7 +18,7 @@ import {to, to2} from "../util/utils";
                 <h1 class="text-center">TIM - The Interactive Material</h1>
             </div>
             <div class="col-lg-3" *ngIf="isLoggedIn()">
-                <tim-language-selector [saveOnChange]="true"></tim-language-selector>
+                <tim-language-selector [saveOnChange]="true" [(language)]="settings.language"></tim-language-selector>
             </div>
         </div>
         <div class="row">
@@ -33,8 +33,8 @@ import {to, to2} from "../util/utils";
         </div>
         <div class="row">
             <div class="col-md-5 col-md-offset-2">
-                <a href="/view/tim/TIM-esittely">
-                    <img class="img-responsive" alt="TIM-esittely" i18n-alt src="/static/images/responsive.jpg"/>
+                <a href="/view/about">
+                    <img class="img-responsive" alt="TIM brochure" i18n-alt src="/static/images/responsive.jpg"/>
                 </a>
             </div>
             <div class="col-md-4">
@@ -84,7 +84,9 @@ import {to, to2} from "../util/utils";
                 <h3>TIM</h3>
                 <ul class="list-unstyled">
                     <li><a href="{{ getIntroLink() }}" i18n>Introduction</a></li>
-                    <li><a href="/view/tim/TIM-ohjeet" i18n>User guide</a><sup *ngIf="notFinnish()"> (F)</sup></li>
+                    <li><a href="/view/tim/ohjeita/pikaohje" i18n>Quick start</a><sup *ngIf="notFinnish()"> (F)</sup></li>
+                    <li><a href="/view/tim/ohjeita/ohjeet" i18n>Content creator guide</a><sup *ngIf="notFinnish()"> (F)</sup></li>
+                    <li><a href="/view/tim/TIM-ohjeet" i18n>All guides</a><sup *ngIf="notFinnish()"> (F)</sup></li>
                 </ul>
             </div>
             <div class="col-md-4">
@@ -109,6 +111,7 @@ export class FrontPageComponent implements IController {
     creatingNew: boolean;
     private docListOpen: boolean;
     bookmarks?: IBookmarkGroup[]; // For My courses.
+    settings = genericglobals().userPrefs;
 
     constructor() {
         this.creatingNew = false;
@@ -162,9 +165,9 @@ export class FrontPageComponent implements IController {
     }
 
     getIntroLink() {
-        const link = "/view/tim/TIM-esittely";
+        const link = "/view/about";
         if (this.notFinnish()) {
-            return link + "/en";
+            return link + "/en-US";
         } else {
             return link;
         }

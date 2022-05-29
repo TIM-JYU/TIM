@@ -5,7 +5,7 @@
 const convert = require("xml-js");
 const fs = require("fs");
 
-const LOCALES = ["fi"];
+const LOCALES = ["fi", "sv"];
 
 function read(path, translationsList) {
     const messagesXLIF = fs.readFileSync(path, {encoding: "utf8"});

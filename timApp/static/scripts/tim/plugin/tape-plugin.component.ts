@@ -466,7 +466,6 @@ function scrollElementVisibleInParent(
                 </span>
             </div>
             </div>
-        <textarea style= "height: 1px; width: 1px; position: unset;" class="hiddenRobotProgram"></textarea>
     </div>
     `,
     styleUrls: ["tape-plugin.component.scss"],

@@ -98,6 +98,7 @@ export const AskedJsonJsonCodec = mandatoryAndOptional(
         defaultPoints: t.number,
         expl: nullable(t.record(t.string, t.string)),
         doNotMove: t.union([t.number, t.array(t.number)]),
+        customHeader: t.string,
         matrixType: t.keyof({
             textArea: null,
             "radiobutton-horizontal": null,

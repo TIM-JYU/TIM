@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 from typing import Union, Any, Callable, TypedDict, DefaultDict
 
 from flask import Response
+from flask import current_app
 from flask import request
-from flask import session, current_app
 from marshmallow import validates_schema, ValidationError
 from marshmallow.utils import missing
 from sqlalchemy import func
@@ -57,6 +57,7 @@ from timApp.auth.sessioninfo import (
     logged_in,
     user_context_with_logged_in,
     get_other_session_users_objs,
+    clear_session,
 )
 from timApp.auth.sessioninfo import get_current_user_object, get_current_user_group
 from timApp.document.caching import clear_doc_cache
@@ -480,6 +481,7 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     program: str | Missing = missing
     overrideGrade: bool = False
     showInView: bool = False
+    canOverwritePoints: bool = False
     confirmText: str | Missing = missing
     timeout: int | Missing = missing
     updateFields: list[str] | Missing = missing
@@ -686,7 +688,7 @@ def post_answer_impl(
     # It is rare but possible that the current user has been deleted (for example as the result of merging 2 accounts).
     # We assume it's the case here, so we clear the session and ask to log in again.
     if curr_user.is_deleted:
-        session.clear()
+        clear_session()
         raise AccessDenied("Please refresh the page and log in again.")
 
     rights = get_user_rights_for_item(d, curr_user)
@@ -899,11 +901,19 @@ def post_answer_impl(
 
     if "savedata" in jsonresp:
         siw = answer_call_data.get("markup", {}).get("showInView", False)
+        overwrite_points = answer_call_data.get("markup", {}).get(
+            "canOverwritePoints", False
+        )
         add_group = None
         if plugin.type == "importData":
             add_group = plugin.values.get("addUsersToGroup")
         saveresult = save_fields(
-            jsonresp, curr_user, d, allow_non_teacher=siw, add_users_to_group=add_group
+            jsonresp,
+            curr_user,
+            d,
+            allow_non_teacher=siw,
+            add_users_to_group=add_group,
+            overwrite_previous_points=overwrite_points,
         )
 
         # TODO: Could report the result to other plugins too.
@@ -1167,6 +1177,10 @@ def post_answer_impl(
     db.session.commit()
 
     for u in users:
+        if (
+            origin and origin.doc_id != d.id
+        ):  # Origin might be different from the actual document
+            clear_doc_cache(origin.doc_id, u)
         clear_doc_cache(d, u)
 
     try:
@@ -1519,6 +1533,7 @@ def save_fields(
     current_doc: DocInfo | None = None,
     allow_non_teacher: bool = False,
     add_users_to_group: str | None = None,
+    overwrite_previous_points: bool = False,
 ) -> FieldSaveResult:
     save_obj = jsonresp.get("savedata")
     ignore_missing = jsonresp.get("ignoreMissing", False)
@@ -1689,6 +1704,7 @@ def save_fields(
             points = None
             content = {}
             new_answer = False
+            points_changed = False
             if an:
                 points = an.points
                 content = json.loads(an.content)
@@ -1706,7 +1722,7 @@ def save_fields(
                                 f"Value {value} is not valid point value for task {task_id.task_name}"
                             )
                     if points != value:
-                        new_answer = True
+                        points_changed = True
                     points = value
                 elif field == "styles":
                     if isinstance(value, str):
@@ -1741,6 +1757,13 @@ def save_fields(
                     if not an or content.get(field, "") != value:
                         new_answer = True
                     content[field] = value
+
+            if points_changed:
+                if an and not new_answer and overwrite_previous_points:
+                    an.points = points
+                else:
+                    new_answer = True
+
             if not new_answer:
                 saveresult.fields_unchanged += 1
                 continue

@@ -13,6 +13,11 @@ import {
     toggleFullScreen,
 } from "tim/util/fullscreen";
 import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
+import {IDocument, ILanguage, ITranslator} from "tim/item/IItem";
+import {
+    updateTranslationData,
+    updateTranslatorLanguages,
+} from "tim/document/languages";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
@@ -208,6 +213,8 @@ export class PareditorController extends DialogController<
         editortab: TimStorage<string>;
         wrap: TimStorage<string>;
         oldMode: TimStorage<string>;
+        diffSideBySide: TimStorage<boolean>;
+        translator: TimStorage<string>;
     };
     private touchDevice: boolean;
     private autocomplete!: boolean; // $onInit
@@ -225,6 +232,21 @@ export class PareditorController extends DialogController<
     private perusliiteMacroStringBegin = "%%perusliite("; // Attachment macro without stamping.
     private perusliiteMacroStringEnd = ")%%";
     private lastKnownDialogHeight?: number;
+    private sourceLanguages: ILanguage[] = [];
+    private targetLanguages: ILanguage[] = [];
+    private documentLanguages: ILanguage[] = [];
+    private translators: ITranslator[] = [];
+    private docTranslator: string = "";
+    private translatorAvailable = true;
+    private sideBySide: boolean = false;
+    private hideDiff: boolean = true;
+    private hidePreview: boolean = false;
+    private hideOriginalPreview: boolean = false;
+    private translationInProgress: boolean = false;
+    private nothingSelected: boolean = false;
+    private errorMessage = "";
+    private availableTranslators: string[] = [];
+    private originalDocument: boolean = true;
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
@@ -559,6 +581,12 @@ ${backTicks}
                         title: "Heading 5 (Ctrl-5)",
                         func: () => this.editor!.headerClicked("#####"),
                         name: "H5",
+                    },
+                    {
+                        title: "No translation",
+                        func: () =>
+                            this.editor!.styleClicked("Teksti", "notranslate"),
+                        name: "No translation",
                     },
                 ],
                 name: "Style",
@@ -1073,8 +1101,37 @@ ${backTicks}
         return this.wrap.n * (this.wrap.auto ? 1 : -1);
     }
 
+    /**
+     * Tracks the editing and Difference in original document views' positioning (see pareditor.html).
+     */
+    changePositioning() {
+        if (this.originalDocument) {
+            return;
+        }
+        const doc = document.getElementById("editorflex");
+        const editdoc = document.getElementById("editorbox");
+        if (doc != null && this.sideBySide) {
+            doc.classList.remove("sidebyside");
+            doc.classList.add("stacked");
+            this.sideBySide = false;
+            if (editdoc != null) {
+                editdoc.classList.remove("forceHalfSize");
+            }
+        } else if (doc != null) {
+            doc.classList.remove("stacked");
+            doc.classList.add("sidebyside");
+            this.sideBySide = true;
+            if (editdoc != null) {
+                editdoc.classList.add("forceHalfSize");
+            }
+        }
+
+        this.refreshEditorSize();
+    }
+
     $onInit() {
         super.$onInit();
+        this.docSettings = documentglobals().docSettings;
         const saveTag = this.getSaveTag();
         this.storage = {
             acebehaviours: new TimStorage("acebehaviours" + saveTag, t.boolean),
@@ -1086,14 +1143,32 @@ ${backTicks}
             proeditor: new TimStorage("proeditor" + saveTag, t.boolean),
             spellcheck: new TimStorage("spellcheck" + saveTag, t.boolean),
             wrap: new TimStorage("wrap" + saveTag, t.string),
+            diffSideBySide: new TimStorage(
+                "diffSideBySide" + saveTag,
+                t.boolean
+            ),
+            translator: new TimStorage<string>(
+                "translator" + saveTag,
+                t.string
+            ),
         };
         setCurrentEditor(this);
+
+        this.originalDocument = this.isOriginalDocument();
+
+        this.docTranslator = this.storage.translator.get() ?? "";
+
         this.spellcheck = this.storage.spellcheck.get() ?? false;
         this.autocomplete = this.storage.autocomplete.get() ?? false;
         this.proeditor =
             this.storage.proeditor.get() ??
             (saveTag === "par" || saveTag === TIM_TABLE_CELL);
         this.activeTab = this.storage.editortab.get() ?? "navigation";
+        if (this.originalDocument && this.activeTab == "translator") {
+            this.activeTab = "navigation";
+        }
+        this.sideBySide = this.storage.diffSideBySide.get() ?? true;
+        this.changePositioning();
         this.lastTab = this.activeTab;
         this.citeText = this.getCiteText();
         const sn = this.storage.wrap.get();
@@ -1132,13 +1207,72 @@ ${backTicks}
                 this.isAce()?.setAutoCompletion(this.autocomplete);
             }
         );
-        this.docSettings = documentglobals().docSettings;
         this.memoMinutesSettings = documentglobals().memoMinutesSettings;
 
         this.activeAttachments = this.updateAttachments(
             true,
             undefined,
             undefined
+        );
+
+        if (!this.originalDocument) {
+            void this.initTranslatorData();
+        }
+    }
+
+    /**
+     * Fetches the translator data on initialization and adds it to the lists.
+     */
+    async initTranslatorData() {
+        const result = await updateTranslationData(
+            this.docTranslator,
+            this.errorMessage,
+            false
+        );
+        this.sourceLanguages = result.source;
+        this.documentLanguages = result.document;
+        this.targetLanguages = result.target;
+        this.translators = result.translators;
+        this.availableTranslators = result.availableTransls;
+        this.errorMessage = result.error;
+
+        if (this.errorMessage != "") {
+            this.translatorAvailable = false;
+        } else if (this.availableTranslators.length == 0) {
+            this.errorMessage =
+                "You do not have any machine translator API keys added to you account.";
+            this.translatorAvailable = false;
+        }
+    }
+
+    /**
+     * Compiles the preview of the source block (the original document's block the current block is based on) in
+     * translation documents.
+     */
+    async compileOriginalPreview() {
+        const previewOriginalDiv = angular.element(".previeworiginalcontent");
+        // This is called for the first time before this component is created, so this check is needed to avoid
+        // needless running of this function.
+        if (previewOriginalDiv.length == 0) {
+            await this.editorChanged();
+            return;
+        }
+
+        let text = "";
+        if (this.trdiff != undefined) {
+            text = this.trdiff.new;
+        }
+        const spellCheckInEffect = this.spellcheck && this.isFinnishDoc();
+        const data = await this.resolve.params.previewCb(
+            text,
+            spellCheckInEffect
+        );
+
+        await ParCompiler.compileAndAppendTo(
+            previewOriginalDiv,
+            data,
+            this.scope,
+            this.resolve.params.viewCtrl
         );
     }
 
@@ -1161,11 +1295,11 @@ ${backTicks}
             } // TODO: get a better value here
             const lines = remainingSpace / lh;
             ace.editor.setOptions({
-                maxLines: Math.max(lines, 5),
+                maxLines: Math.max(lines, 10),
                 minLines: Math.min(lines, 5),
             });
         } else if (this.editor?.type == EditorType.Textarea) {
-            this.editor.editor.height(remainingSpace);
+            this.editor.editor.height(Math.max(remainingSpace, 100));
         }
     }
 
@@ -1312,6 +1446,9 @@ ${backTicks}
         window.setTimeout(() => {
             const editor = this.element;
             const previewContent = this.element.find(".previewcontent");
+            const previewOriginalContent = this.element.find(
+                ".previeworiginalcontent"
+            );
             // Check that editor doesn't go out of bounds
             const editorOffset = editor.offset();
             if (!editorOffset) {
@@ -1327,6 +1464,7 @@ ${backTicks}
             editor.offset(newOffset);
             if (this.scrollPos) {
                 previewContent.scrollTop(this.scrollPos);
+                previewOriginalContent.scrollTop(this.scrollPos);
             }
         }, 25);
     }
@@ -1401,6 +1539,9 @@ ${backTicks}
                     $compile(e)(this.scope);
                 });
         }
+        if (this.trdiff != undefined) {
+            await this.compileOriginalPreview();
+        }
         this.getEditorContainer().resize();
         this.scope.$applyAsync();
     }
@@ -1464,6 +1605,191 @@ ${backTicks}
         if (this.resolve.params.initialText === this.editor!.getEditorText()) {
             this.close({type: "markunread"});
         }
+    }
+
+    /**
+     * Updates the list of target languages based on the selected translator.
+     */
+    async updatePareditorTranslatorLanguages() {
+        const result = await updateTranslatorLanguages(this.docTranslator);
+        if (result.ok) {
+            this.sourceLanguages = [];
+            this.targetLanguages = [];
+            this.sourceLanguages.push(...result.result.source);
+            this.targetLanguages.push(...result.result.target);
+            this.translatorAvailable = true;
+            this.errorMessage = "";
+        } else {
+            this.translatorAvailable = false;
+            this.errorMessage = result.result;
+        }
+    }
+
+    /**
+     * Checks if the document is a translation document and if its languages are supported by the selected translator.
+     * @returns Whether or not the document can be translated automatically
+     */
+    isTranslationSupported() {
+        if (this.originalDocument) {
+            return false;
+        }
+        const trs = documentglobals().translations;
+        const orig = trs.find((tab) => tab.id === tab.src_docid);
+        if (orig && this.resolve.params.viewCtrl?.item.lang_id) {
+            const orig_lang = orig.lang_id;
+            const tr_lang = this.resolve.params.viewCtrl.item.lang_id;
+            return this.isTranslationPairSupported(orig_lang, tr_lang);
+        }
+        return false;
+    }
+
+    /**
+     * Checks whether the language combination is supported by the selected translator.
+     * @param orig The source document's language code
+     * @param tr The curent document's language code
+     * @returns Whether or not the language combination is supported
+     */
+    isTranslationPairSupported(orig: string, tr: string) {
+        for (const target of this.targetLanguages) {
+            if (target.code.toUpperCase() == tr.toUpperCase()) {
+                for (const source of this.sourceLanguages) {
+                    if (source.code.toUpperCase() == orig.toUpperCase()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks whether or not the document is the original document.
+     */
+    isOriginalDocument() {
+        const tags = this.getExtraData().tags;
+        return tags.marktranslated == undefined;
+    }
+
+    /**
+     * Translates the whole block.
+     */
+    async translateParagraph() {
+        const parId = this.getExtraData().par!.originalPar.id;
+        const docId = this.resolve.params.viewCtrl!.item.id;
+        this.translationInProgress = true;
+
+        const lang = this.resolve.params.viewCtrl!.item.lang_id!;
+        const r = await to(
+            $http.post<IDocument>(
+                `/translate/paragraph/${docId}/${parId}/${lang}/${this.docTranslator}`,
+                {
+                    originaltext: this.trdiff!.new,
+                }
+            )
+        );
+        if (r.ok) {
+            const response = await to(
+                $http.get<{text: string}>(`/getBlock/${docId}/${parId}`)
+            );
+            if (response.ok) {
+                this.getEditor()!.setEditorText(response.result.data.text);
+            } else {
+                await showMessageDialog(response.result.data.error);
+            }
+        } else {
+            await showMessageDialog(r.result.data.error);
+        }
+    }
+
+    /**
+     * Handles sending either the selected editor text or the entire block to the translator.
+     */
+    async translateClicked() {
+        const translatableText = this.getTranslatableText();
+        const helper = this.getEditor()!.getEditorText();
+        const editText = helper.substring(helper.indexOf("\n") + 1);
+
+        const mayContinue = await this.checkMayTranslate(editText);
+
+        if (mayContinue) {
+            this.translationInProgress = true;
+            if (this.nothingSelected) {
+                await this.translateParagraph();
+            } else {
+                const lang = this.resolve.params.viewCtrl!.item.lang_id!;
+                const r = await to(
+                    $http.post<string>(
+                        `/translate/${
+                            this.resolve.params.viewCtrl!.item.id
+                        }/${lang}/translate_block/${this.docTranslator}`,
+                        {
+                            originaltext: translatableText,
+                        }
+                    )
+                );
+                if (r.ok) {
+                    const resultText = r.result.data;
+                    if (
+                        this.trdiff == undefined ||
+                        translatableText != this.trdiff.new
+                    ) {
+                        this.editor!.replaceTranslation(resultText);
+                    } else {
+                    }
+                } else {
+                    await showMessageDialog(r.result.data.error);
+                }
+            }
+            this.translationInProgress = false;
+        }
+    }
+
+    /**
+     * Checks whether translation may be done.
+     * @param editText The editor's text, used for comparison to original block's text in trdiff
+     * @returns True if translation may be done, false if not
+     */
+    async checkMayTranslate(editText: string) {
+        if (this.nothingSelected && this.trdiff == undefined) {
+            await showMessageDialog(
+                "There is no original text to be translated. Please check the Difference in original document view."
+            );
+            return false;
+        } else if (!this.resolve.params.viewCtrl?.item.lang_id) {
+            await showMessageDialog(
+                "This document does not have a language set. Please set a language and try again."
+            );
+            return false;
+        } else if (
+            this.trdiff != undefined &&
+            this.trdiff.new != editText &&
+            this.trdiff.old != editText &&
+            this.nothingSelected
+        ) {
+            return window.confirm(
+                "This will overwrite all previous changes to this block and cannot be undone!" +
+                    " Do you want to continue?"
+            );
+        }
+        return true;
+    }
+
+    /**
+     * Gets the text to be sent to the translator.
+     * @returns The selected text, the source block's text or nothing if there is neither
+     */
+    getTranslatableText() {
+        const selection = this.getEditor()!.checkTranslationSelection();
+        if (selection == "") {
+            this.nothingSelected = true;
+            if (this.trdiff == null) {
+                return selection;
+            } else {
+                return this.trdiff.new;
+            }
+        }
+        this.nothingSelected = false;
+        return selection;
     }
 
     close(r: IEditorResult) {
@@ -1551,7 +1877,7 @@ ${backTicks}
         }
         const text = this.editor!.getEditorText();
         if (text.trim() === "") {
-            this.deleteClicked();
+            await this.deleteClicked();
             this.saving = false;
             return;
         }
@@ -1664,7 +1990,7 @@ ${backTicks}
 
     async onFileSelect(file: File) {
         const editor = this.editor!;
-        this.focusEditor();
+        await this.focusEditor();
         this.file = file;
         const editorText = editor.getEditorText();
         let autostamp = false;
@@ -1792,7 +2118,7 @@ ${backTicks}
                         }
                     }
                     ed.insertTemplate(`${start}${this.uploadedFile}${end}`);
-                    // Separate from isPlugin so this is ran only when there are attachments with stamps.
+                    // Separate from isPlugin so this is run only when there are attachments with stamps.
                     if (macroRange && kokousDate) {
                         stamped.uploadUrl = this.uploadedFile;
                         this.activeAttachments = this.updateAttachments(
@@ -1812,7 +2138,7 @@ ${backTicks}
     }
 
     async putTemplate(data: string) {
-        this.focusEditor();
+        await this.focusEditor();
         data = await replaceTemplateValues(data);
         if (!data) {
             return;
@@ -1834,7 +2160,7 @@ ${backTicks}
             return;
         }
         this.editor!.insertTemplate(data);
-        this.focusEditor();
+        await this.focusEditor();
     }
 
     tabClicked() {
@@ -2085,6 +2411,10 @@ ${backTicks}
         const ace = this.isAce();
         this.storage.oldMode.set(ace ? "ace" : "text");
         this.storage.wrap.set("" + this.wrapValue());
+        if (!this.originalDocument) {
+            this.storage.diffSideBySide.set(!this.sideBySide);
+        }
+        this.storage.translator.set(this.docTranslator);
         const acc = this.getExtraData().access;
         if (acc != null) {
             this.storage.noteAccess.set(acc);

@@ -235,6 +235,16 @@ function roundToNearest(num, decimals) {
 // Base class for all calculator operations
 class CalculatorOp {
 
+    static power = {
+        precedence: 5,
+        associativity: "left"
+    };
+
+    static sign = {
+        precedence: 7,
+        associativity: "right"
+    };
+
     static factor = {
         precedence: 3,
         associativity: "left"
@@ -338,7 +348,7 @@ class BinOperation extends  CalculatorOp {
 }
 
 class SignOperation extends FuncRROperation{
-    type() { return CalculatorOp.func; }
+    type() { return CalculatorOp.sign; }
     extraSpaceAfter() { return ""; }
     output(extraBefore) { return extraBefore + this.name().trim(); }
     newCalcOperation() { return new BinOperation(this.calculator); }
@@ -414,7 +424,7 @@ class Div extends BinOperation {
 
 class Pow extends BinOperation {
     reg() { return /\^/; }
-    type() { return CalculatorOp.factor; }
+    type() { return CalculatorOp.power; }
     extraSpaceAfter() { return ""; }
     output(extraBefore) { return this.name().trim(); }
     doCalc(a, b) { return Math.pow(a , b); }

@@ -29,6 +29,7 @@ from timApp.bookmark.bookmarks import LAST_EDITED_GROUP
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
+from timApp.document.docsettings import DocSettings
 from timApp.document.document import Document, get_duplicate_id_msg
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
@@ -44,6 +45,7 @@ from timApp.document.translation.synchronize_translations import (
 )
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx
+from timApp.document.yamlblock import YamlBlock
 from timApp.item.validation import validate_uploaded_document_content
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.notification.notification import NotificationType
@@ -62,7 +64,7 @@ from timApp.util.flask.requesthelper import (
     RouteException,
     NotExist,
 )
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import json_response, ok_response, Response
 from timApp.util.utils import get_error_html
 
 edit_page = Blueprint("edit_page", __name__, url_prefix="")  # TODO: Better URL prefix.
@@ -329,6 +331,9 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: str 
         else:
             p.set_attr("rt", None)
 
+        if p.is_translation():
+            mark_translation_as_checked(p)
+
         if p.is_different_from(original_par):
             verify_par_edit_access(original_par)
             par = doc.modify_paragraph_obj(par_id=par_id, p=p)
@@ -374,6 +379,16 @@ def mark_as_translated(p: DocParagraph):
     return deref
 
 
+def mark_translation_as_checked(p: DocParagraph) -> None:
+    """
+    Mark a paragraph as checked by removing its mt-attribute.
+
+    :param p: The paragraph to mark as checked.
+    :return: None.
+    """
+    p.set_attr("mt", None)
+
+
 def abort_if_duplicate_ids(doc: Document, pars_to_add: list[DocParagraph]):
     conflicting_ids = {p.get_id() for p in pars_to_add} & set(doc.get_par_ids())
     if conflicting_ids:
@@ -390,6 +405,10 @@ def preview_paragraphs(doc_id):
     """
     (text,) = verify_json_params("text")
     (proofread,) = verify_json_params("proofread", require=False, default=False)
+    (settings,) = verify_json_params("settings", require=False, default={})
+    extra_doc_settings = (
+        YamlBlock(settings) if settings and isinstance(settings, dict) else None
+    )
     docinfo = get_doc_or_abort(doc_id)
     rjson = request.get_json()
     if not rjson.get("isComment"):
@@ -401,7 +420,13 @@ def preview_paragraphs(doc_id):
             blocks = [DocParagraph.create(doc=doc, md="", html=get_error_html(e))]
             proofread = False
             edit_request = None
-        return par_response(blocks, docinfo, proofread, edit_request=edit_request)
+        return par_response(
+            blocks,
+            docinfo,
+            proofread,
+            edit_request=edit_request,
+            extra_doc_settings=extra_doc_settings,
+        )
     else:
         comment_html = md_to_html(text)
         if proofread:
@@ -436,6 +461,7 @@ def par_response(
     edit_result: DocumentEditResult | None = None,
     filter_return: GlobalParId | None = None,
     partial_doc_pars: bool = False,
+    extra_doc_settings: YamlBlock | None = None,
 ):
     """Return a JSON response containing updated paragraphs and updated HTMLs.
 
@@ -450,11 +476,16 @@ def par_response(
     :param filter_return: Return only paragraphs with this document and paragraph id.
     :param partial_doc_pars: If True, assumes that pars list includes partial document (e.g. areas may be incomplete).
                              The option disables some checks that would be otherwise done for full paragraphs.
+    :param extra_doc_settings: Extra settings to apply to the paragraph.
     :return: JSON object containing HTMLs, JS and CSS dependencies of changed paragraphs.
     """
     user_ctx = user_context_with_logged_in(None)
     doc = docu.document
     new_doc_version = doc.get_version()
+    settings = doc.get_settings()
+
+    if extra_doc_settings:
+        settings = DocSettings(doc, settings.get_dict().merge_with(extra_doc_settings))
 
     if edit_result:
         preview = False
@@ -477,14 +508,13 @@ def par_response(
     if update_cache:
         changed_pars = DocParagraph.preload_htmls(
             doc.get_paragraphs(include_preamble=True),
-            doc.get_settings(),
+            settings,
             view_ctx,
             persist=update_cache,
         )
     else:
         changed_pars = []
         ctx = None
-        settings = doc.get_settings()
         if edit_request:
             ctx = edit_request.context_par
 
@@ -564,6 +594,7 @@ def par_response(
                     doc.get_docinfo(), user_ctx.logged_user
                 ),
                 preview=preview,
+                hide_readmarks=settings.hide_readmarks(),
             ),
             "js": post_process_result.js_paths,
             "css": post_process_result.css_paths,
@@ -575,6 +606,7 @@ def par_response(
                     rights=get_user_rights_for_item(
                         doc.get_docinfo(), user_ctx.logged_user
                     ),
+                    hide_readmarks=settings.hide_readmarks(),
                 )
                 for p in changed_post_process_result.texts
                 if not is_area_start_or_end(p)
@@ -630,7 +662,7 @@ def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
     if not need_new_task_id:
         return task_id
 
-    # Otherwise determine a new one
+    # Otherwise, determine a new one
     else:
         # Split the name into text and trailing number
         task_id_body = ""
@@ -670,7 +702,7 @@ def check_and_rename_pluginnamehere(blocks: list[DocParagraph], doc: Document):
     i = 1
     j = 0
     # For all blocks check if taskId is pluginnamehere, if it is find next available name.
-    for p in blocks:  # go thru all new pars if they need to be renamed
+    for p in blocks:  # go through all new pars if they need to be renamed
         if p.is_task():
             task_id = p.get_attr("taskId")
             if task_id == "PLUGINNAMEHERE":
@@ -989,6 +1021,51 @@ def mark_translated_route(doc_id):
             if old_rt != p.get_attr("rt"):
                 p.save()
     return ok_response()
+
+
+@edit_page.post("/markChecked/<int:doc_id>")
+def mark_all_checked_route(doc_id: int) -> Response:
+    """
+    Marks all the paragraphs in a translation document checked.
+
+    :param doc_id: The id of the translation document to be handled.
+    :return: OK response if successful
+    """
+
+    d = get_doc_or_abort(doc_id)
+    verify_edit_access(d)
+    for p in d.document_as_current_user.get_paragraphs():
+        if p.is_translation() and not p.is_setting():
+            old_rc = p.get_attr("mt")
+            mark_translation_as_checked(p)
+            if old_rc is not None:
+                p.save()
+    return ok_response()
+
+
+@edit_page.post("/markChecked/<int:doc_id>/<par_id>")
+def mark_checked_route(doc_id: int, par_id: str) -> Response:
+    """
+    Marks a paragraph checked.
+
+    :param doc_id: The id of the document the paragraph belongs to.
+    :param par_id: The id of the paragraph to be marked checked.
+    :return: The modified paragraph.
+    """
+    d = get_doc_or_abort(doc_id)
+    verify_edit_access(d)
+    doc = d.document_as_current_user
+
+    par = doc.get_paragraph(par_id=par_id)
+    old_rc = par.get_attr("mt")
+    mark_translation_as_checked(par)
+    if old_rc is not None:
+        par.save()
+    return par_response(
+        [par],
+        d,
+        update_cache=current_app.config["IMMEDIATE_PRELOAD"],
+    )
 
 
 @dataclass

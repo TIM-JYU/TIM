@@ -32,7 +32,7 @@
 
     {% if teacher_mode %}
         <div save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed click="true" caption="{{ '{{ $ctrl.users.length }}' }} users with answers">
-            <tim-user-list class="draggable-content" on-user-change="$ctrl.changeUser($USER, $UPDATEALL)" users="$ctrl.users"></tim-user-list>
+            <tim-user-list class="draggable-content" on-user-change="$ctrl.changeUser($USER)" users="$ctrl.users"></tim-user-list>
         </div>
     {% endif %}
 {% endblock %}

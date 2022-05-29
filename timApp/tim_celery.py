@@ -172,6 +172,39 @@ def handle_exportdata(result: AnswerRouteResult, u: User, wod: WithOutData) -> N
 
 
 @celery.task
+def sync_user_group_memberships(email: str, user_memberships: list[str]):
+    do_send_user_group_info(email, user_memberships)
+
+
+def do_send_user_group_info(email: str, user_memberships: list[str]):
+    sync_hosts = app.config["SYNC_USER_GROUPS_HOSTS"]
+    sync_secret = app.config["SYNC_USER_GROUPS_SEND_SECRET"]
+    session = FuturesSession()
+    futures: list[Future] = []
+    for host in sync_hosts:
+        f = session.post(
+            f"{host}/backup/user/memberships",
+            json={
+                "email": email,
+                "secret": sync_secret,
+                "memberships": user_memberships,
+            },
+        )
+        futures.append(f)
+
+    for f in futures:
+        try:
+            res = f.result()
+        except Exception as e:
+            logger.error(f"Failed to sync user group memberships: {e}")
+        else:
+            if res.status_code != 200:
+                logger.error(
+                    f"Failed to sync user group memberships: {res.status_code}: {res.text}"
+                )
+
+
+@celery.task
 def send_unlock_op(
     email: str,
     target: list[str],

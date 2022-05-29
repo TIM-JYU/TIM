@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING, Iterable, Any
+from urllib.parse import quote_plus
 
 from jinja2 import TemplateSyntaxError
 from lxml import html, etree
@@ -405,6 +406,12 @@ def get_document_path(doc_id: Any) -> str:
     return doc.path if doc else ""
 
 
+def url_quote(s: Any) -> str:
+    if isinstance(s, str):
+        return quote_plus(s)
+    return ""
+
+
 tim_filters = {
     "Pz": Pz,
     "gfields": genfields,
@@ -421,6 +428,7 @@ tim_filters = {
     "fmt": fmt,
     "docid": get_document_id,
     "docpath": get_document_path,
+    "urlquote": url_quote,
 }
 
 

@@ -18,6 +18,7 @@ export const undoType = t.partial({
     button: nullable(t.string),
     title: nullable(t.string),
     confirmation: nullable(t.string),
+    confirmationTitle: nullable(t.string),
 });
 
 // Attributes that are valid for all plugins.

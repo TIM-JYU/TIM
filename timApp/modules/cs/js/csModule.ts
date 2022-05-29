@@ -1,8 +1,8 @@
 import {
+    ApplicationRef,
     DoBootstrap,
     NgModule,
     StaticProvider,
-    ApplicationRef,
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {HttpClientModule} from "@angular/common/http";
@@ -18,9 +18,9 @@ import {CsRunnerComponent} from "./csPlugin";
 import {CsTextComponent} from "./text";
 import {CsConsoleComponent} from "./console";
 import {
+    CustomOutputDirective,
     ExtcheckComponent,
     OutputContainerComponent,
-    CustomOutputDirective,
 } from "./extcheck";
 import {GitRegComponent} from "./gitreg";
 import {CsErrorComponent} from "./language_error";

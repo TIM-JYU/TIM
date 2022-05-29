@@ -45,13 +45,10 @@ export class UserListController implements IController {
         gridMenuCustomItems: unknown;
     };
     private gridApi?: uiGrid.IGridApiOf<IUserListEntry>;
-    private instantUpdate: boolean = false;
-    private onUserChange!: Binding<
-        (params: {$USER: IUser; $UPDATEALL: boolean}) => void,
-        "&"
-    >;
+    private onUserChange!: Binding<(params: {$USER: IUser}) => void, "&">;
     private viewctrl!: Require<ViewCtrl>;
     private preventedChange = false;
+    private currentRowCol?: uiGrid.cellNav.IRowCol<IUserListEntry>;
 
     constructor(private scope: IScope, private element: JQLite) {}
 
@@ -64,7 +61,6 @@ export class UserListController implements IController {
                 grid.css("height", this.element[0].offsetHeight - 30 + "px");
             }
         );
-
         let anyAnnotations = false;
         let smallFieldWidth = 59;
         // check if server gave student ids for users
@@ -161,8 +157,8 @@ export class UserListController implements IController {
                     sortingAlgorithm: numericSort,
                 },
             ]);
-        const formMode = this.viewctrl.docSettings.form_mode ?? false;
-        this.instantUpdate = formMode || getViewName() === "review";
+
+        this.viewctrl.userList = this;
 
         this.gridOptions = {
             exporterMenuPdf: false,
@@ -180,7 +176,11 @@ export class UserListController implements IController {
                 this.gridApi = gridApi;
 
                 gridApi.selection.on.rowSelectionChanged(this.scope, (row) => {
-                    this.fireUserChange(row, this.instantUpdate);
+                    if (this.preventedChange) {
+                        this.preventedChange = false;
+                        return;
+                    }
+                    this.fireUserChange(row);
                 });
                 if (this.gridOptions?.data) {
                     gridApi.grid.modifyRows(
@@ -208,6 +208,7 @@ export class UserListController implements IController {
                 gridApi.cellNav.on.navigate(
                     this.scope,
                     (newRowCol, oldRowCol) => {
+                        this.currentRowCol = newRowCol;
                         // TODO: check if simple way to cancel this event here
                         //  or make unsavitimcomponents checks at keyboardpress/click events before on.navigate gets called
                         if (this.preventedChange) {
@@ -266,10 +267,10 @@ export class UserListController implements IController {
                 {
                     title: "Enable instant update",
                     action: ($event: IAngularEvent) => {
-                        this.instantUpdate = true;
+                        this.viewctrl.instantUpdateTasks = true;
                     },
                     shown: () => {
-                        return !this.instantUpdate;
+                        return !this.viewctrl.instantUpdateTasks;
                     },
                     leaveOpen: true,
                     order: 20,
@@ -277,13 +278,36 @@ export class UserListController implements IController {
                 {
                     title: "Disable instant update",
                     action: ($event: IAngularEvent) => {
-                        this.instantUpdate = false;
+                        this.viewctrl.instantUpdateTasks = false;
                     },
                     shown: () => {
-                        return this.instantUpdate;
+                        return this.viewctrl.instantUpdateTasks;
                     },
                     leaveOpen: true,
                     order: 30,
+                },
+                {
+                    title: "Sync selected users in tasks",
+                    action: ($event: IAngularEvent) => {
+                        this.viewctrl.syncAnswerBrowsers = true;
+                    },
+                    shown: () => {
+                        return !this.viewctrl.syncAnswerBrowsers;
+                    },
+                    leaveOpen: true,
+                    order: 40,
+                },
+                {
+                    // TODO: better desc
+                    title: "De-sync selected users in taks",
+                    action: ($event: IAngularEvent) => {
+                        this.viewctrl.syncAnswerBrowsers = false;
+                    },
+                    shown: () => {
+                        return this.viewctrl.syncAnswerBrowsers;
+                    },
+                    leaveOpen: true,
+                    order: 50,
                 },
                 {
                     title: "Answers as plain text/JSON",
@@ -298,7 +322,7 @@ export class UserListController implements IController {
                             })
                         );
                     },
-                    order: 40,
+                    order: 60,
                 },
                 {
                     title: "Create Feedback Report",
@@ -333,7 +357,7 @@ export class UserListController implements IController {
                             })
                         );
                     },
-                    order: 50,
+                    order: 70,
                 },
             ],
             rowTemplate: `
@@ -345,8 +369,24 @@ export class UserListController implements IController {
         };
     }
 
-    fireUserChange(row: uiGrid.IGridRowOf<IUserListEntry>, updateAll: boolean) {
-        this.onUserChange({$USER: row.entity.user, $UPDATEALL: updateAll});
+    fireUserChange(row: uiGrid.IGridRowOf<IUserListEntry>) {
+        this.onUserChange({$USER: row.entity.user});
+    }
+
+    /**
+     * Change selected user externally and block subsequent on.navigate call
+     * @param user user to select
+     */
+    changeUserWithoutFiring(user: IUserListEntry) {
+        this.preventedChange = true;
+        this.gridApi?.selection.selectRow(user);
+        if (this.currentRowCol) {
+            this.gridApi?.cellNav.scrollToFocus(
+                user,
+                this.currentRowCol.col.colDef
+            );
+        }
+        this.currentRowCol = this.gridApi?.cellNav.getFocusedCell();
     }
 
     exportKorppi(options: IExportOptions) {

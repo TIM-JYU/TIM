@@ -7,7 +7,6 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {toPromise} from "../util/utils";
 import {IStampingData} from "./pareditor";
 
-// The close states dialog can return.
 export enum RestampDialogClose {
     RestampedReturnToEditor,
     NoRestampingReturnToEditor,

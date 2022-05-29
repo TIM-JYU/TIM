@@ -117,6 +117,9 @@ export function getVisibilityVars() {
         if (g.hide_sidemenu) {
             hideSideMenu(hide);
         }
+        if (g.requires_login) {
+            hide.footer = false;
+        }
     }
 
     // If bookmarks are globally disabled, don't show the tab.
@@ -134,6 +137,10 @@ export function getVisibilityVars() {
 
     if (!g.config.messageListsEnabled) {
         hide.messageListCreate = true;
+    }
+
+    if (!g.config.passwordResetEnabled) {
+        hide.passwordRecovery = true;
     }
 
     if (params.get("hide_top_buttons")) {

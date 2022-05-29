@@ -83,6 +83,7 @@
             config.gitBranch = {{config.GIT_BRANCH|tojson}};
             config.hakaEnabled = {{config.HAKA_ENABLED|tojson}};
             config.emailRegistrationEnabled = {{config.EMAIL_REGISTRATION_ENABLED|tojson}};
+            config.passwordResetEnabled = {{config.PASSWORD_RESET_ENABLED|tojson}};
             config.simpleEmailLogin = {{config.SIMPLE_EMAIL_LOGIN|tojson}};
             config.simpleLoginUseStudyInfoMessage = {{config.SIMPLE_LOGIN_USE_STUDY_INFO_MESSAGE|tojson}};
             config.minPasswordLength = {{config.MIN_PASSWORD_LENGTH|tojson}};
@@ -139,7 +140,7 @@
                 </div>
             </div>
         </div>
-        <div class="row" ng-if="!$ctrl.hide.messages" ng-cloak>
+        <div class="row hidden-print" ng-if="!$ctrl.hide.messages" ng-cloak>
             <div class="col-lg-{{ col_2_lg }} col-lg-offset-{{ col_1_lg }}
                         col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
                         col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
