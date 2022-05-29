@@ -193,7 +193,7 @@ import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
                                    (ngModelChange)="setMessage()"
                                     name="messageText"
                                     class="form-control">
-                        <button class="btn timButton message-btn" type="button"
+                        <button class="btn timButton message-btn" type="button" [disabled]="messageText.length<1"
                         (click)="updateBookMessage()">Send message
                         </button>
                     </div>
