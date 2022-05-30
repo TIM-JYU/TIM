@@ -240,7 +240,7 @@ import {KATTIModule, TIMCalendarEvent} from "./calendar.component";
                         (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!isEditEnabled()">
                     Delete
                     </button>
-                    <button i18n classgit status="btn timButton col-sm-4" type="button" style="float: left"
+                    <button i18n class status="btn timButton col-sm-4" type="button" style="float: left"
                         (click)="bookEvent()" [disabled]="eventIsFull() || !eventCanBeBooked()" [hidden]="hideBookingButton()">
                     Book event
                     </button>
