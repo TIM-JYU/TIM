@@ -1282,13 +1282,15 @@ interface IAnswerResponse {
                     Show correct answer
                 </button>
                     </span>
+                <span *ngIf="undoButton && isUnSaved() && undoButton">
+                    &nbsp;
+                    <a href="" title="{{undoTitle}}"
+                        (click)="tryResetChanges($event);">{{undoButton}}</a>
+                </span>
                 <span *ngIf="button" class="resetExercise">
-                &nbsp;&nbsp;<a
-                               (click)="resetExercise()">{{resetText}}</a>
-                    </span>
-                &nbsp;
-                <a href="" *ngIf="undoButton && isUnSaved() && undoButton" title="{{undoTitle}}"
-                    (click)="tryResetChanges($event);">{{undoButton}}</a> 
+                    &nbsp;
+                    <a (click)="resetExercise()">{{resetText}}</a>
+                </span>
                 <span *ngIf="muokattu" class="initCode">
                 &nbsp;&nbsp;<a
                         href="" (click)="initCode()">{{resetText}}</a>
