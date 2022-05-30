@@ -86,7 +86,9 @@ class Event(db.Model):
     creator: User = db.relationship(User)
 
     event_groups: list[EventGroup] = db.relationship(
-        EventGroup, foreign_keys="EventGroup.event_id"
+        EventGroup,
+        foreign_keys="EventGroup.event_id",
+        cascade="all,delete-orphan",
     )
 
     @staticmethod
