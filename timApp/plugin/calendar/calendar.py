@@ -202,7 +202,8 @@ def events_of_user(cur_user: int, user_obj: User) -> list[Event]:
                 if event_obj not in events:
                     events.append(event_obj)
             else:
-                print("Event not found by the id of", group_event.event_id)
+                no_event_found = f"Event not found by the id of {group_event.event_id}"
+                raise NotExist(no_event_found)
     return events
 
 
@@ -469,9 +470,6 @@ def user_is_event_manager(event_id: int) -> bool:
         return True
     event = Event.get_event_by_id(event_id)
     if event is None:
-        print(
-            f"Event not found by the id of {event_id} when checking user's rights to the event"
-        )
         return False
     if event.creator_user_id == get_current_user_id():
         return True
