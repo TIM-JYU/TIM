@@ -95,7 +95,7 @@ def clear_doc_cache(doc: DocInfoOrDocument | int, user: Optional["User"]) -> Non
     if user:
         prefix += f"{user.id}-"
     prefix += "*"
-    for key in rclient.scan_iter(match=prefix):
+    for key in rclient.scan_iter(match=prefix, count=1000):
         rclient.delete(key)
 
 
