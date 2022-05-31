@@ -307,8 +307,8 @@ services:
   restart: unless-stopped
   read_only: true
  redis:
-  image: redis
-  command: ["redis-server", "--appendonly", "yes"]
+  image: eqalpha/keydb
+  command: ["keydb-server", "--appendonly", "yes"]
   restart: unless-stopped
   read_only: true
   volumes:
