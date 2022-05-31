@@ -177,6 +177,7 @@ def sync_user_group_memberships(email: str, user_memberships: list[str]):
 
 
 def do_send_user_group_info(email: str, user_memberships: list[str]):
+    logger.info(f"Sending user group info for {email}: {user_memberships}")
     sync_hosts = app.config["SYNC_USER_GROUPS_HOSTS"]
     sync_secret = app.config["SYNC_USER_GROUPS_SEND_SECRET"]
     session = FuturesSession()
