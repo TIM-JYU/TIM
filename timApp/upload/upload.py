@@ -147,7 +147,6 @@ def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
             raise AccessDenied(
                 "Sorry, you don't have permission to access this upload."
             )
-
     up = PluginUpload(block)
     p = up.filesystem_path.as_posix()
     mt = get_mimetype(p)
