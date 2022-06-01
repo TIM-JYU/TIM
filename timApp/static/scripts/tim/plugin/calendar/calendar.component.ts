@@ -275,7 +275,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                                 (evening)="setEvening($event)">
         </tim-time-view-selector>
         <div>
-            <button class="btn timButton" (click)="export()">Export calendar</button>
+            <button i18n class="btn timButton" (click)="export()">Export calendar</button>
             <span class="exportDone"><b>{{exportDone}}</b></span>
         </div>
     `,

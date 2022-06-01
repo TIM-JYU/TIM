@@ -5689,8 +5689,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="242398302074250894" datatype="html">
-        <source>Book the event &quot;<x id="PH" equiv-text="this.data.title"/>&quot;?</source>
-        <target state="translated">Varataanko tapahtuma &quot;<x id="PH" equiv-text="this.data.title"/>&quot;?</target>
+        <source>Book the event "<x id="PH" equiv-text="this.data.title"/>"?</source>
+        <target state="translated">Varataanko tapahtuma "<x id="PH" equiv-text="this.data.title"/>"?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">515</context>
@@ -5713,8 +5713,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="773072824822412077" datatype="html">
-        <source>Are you sure you want to cancel booking &quot;<x id="PH" equiv-text="this.data.title"/>&quot;?</source>
-        <target state="translated">Haluatko varmasti peruuttaa varauksen &quot;<x id="PH" equiv-text="this.data.title"/>&quot;?</target>
+        <source>Are you sure you want to cancel booking "<x id="PH" equiv-text="this.data.title"/>"?</source>
+        <target state="translated">Haluatko varmasti peruuttaa varauksen "<x id="PH" equiv-text="this.data.title"/>"?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">586</context>
@@ -5729,8 +5729,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8620159010953252294" datatype="html">
-        <source>Are you sure you want to delete the event &quot;<x id="PH" equiv-text="this.data.title"/>&quot;?</source>
-        <target state="translated">Haluatko varmasti poistaa tapahtuman &quot;<x id="PH" equiv-text="this.data.title"/>&quot;?</target>
+        <source>Are you sure you want to delete the event "<x id="PH" equiv-text="this.data.title"/>"?</source>
+        <target state="translated">Haluatko varmasti poistaa tapahtuman "<x id="PH" equiv-text="this.data.title"/>"?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">361</context>
@@ -6206,6 +6206,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
           <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6328943491200318160" datatype="html">
+        <source>Export calendar</source>
+        <target state="translated">Vie kalenteri</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
+          <context context-type="linenumber">278</context>
         </context-group>
       </trans-unit>
     </body>
