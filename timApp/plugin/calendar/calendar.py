@@ -191,7 +191,7 @@ def events_of_user(cur_user: int, user_obj: User) -> list[Event]:
     :return: list of events
     """
     events: list[Event] = Event.query.filter(Event.creator_user_id == cur_user).all()
-
+    # TODO: Makes too many queries to db, to be refactored
     for group in user_obj.groups:
         group_events = EventGroup.query.filter(
             EventGroup.usergroup_id == group.id
