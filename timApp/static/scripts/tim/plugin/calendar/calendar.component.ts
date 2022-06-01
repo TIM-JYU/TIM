@@ -272,47 +272,12 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
         </div>
         <tim-time-view-selector [style.visibility]="view == 'month' ? 'hidden' : 'visible'"
                 (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
-                                (evening)="setEvening($event)"></tim-time-view-selector>
+                                (evening)="setEvening($event)">
+        </tim-time-view-selector>
         <div>
-<<<<<<< HEAD
-            <button i18n class="btn timButton" (click)="export()">Export calendar</button>
-            <!--input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL"-->
-            <span class="exportDone"><b>{{exportDone}}</b></span>
-        </div>
-        <ng-template #modalContent let-close="close">
-            <div class="modal-header">
-                <h5 class="modal-title">Event action occurred</h5>
-                <button type="button" class="close" (click)="close()">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div>
-                    Action:
-                    <pre>{{ modalData?.action }}</pre>
-                </div>
-                <div>
-                    Event:
-                    <pre>{{ modalData?.event | json }}</pre>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <!-- <button i18n [style.visibility] = "editEnabled ? 'visible' : 'hidden'" type="button" class="btn btn-out
-                line-secondary timButton"
-                        (click)=" close(); deleteEvent(modalData?.event)">
-                    Delete
-                </button> -->
-                <button i18n type="button" class="btn btn-outline-secondary timButton" (click)="close()">
-                    OK
-                </button>
-            </div>
-        </ng-template>
-        
-=======
             <button class="btn timButton" (click)="export()">Export calendar</button>
             <span class="exportDone"><b>{{exportDone}}</b></span>
         </div>
->>>>>>> 5be81a426fa667fd6b96e4662114769e0150c626
     `,
     encapsulation: ViewEncapsulation.None,
     styleUrls: [
