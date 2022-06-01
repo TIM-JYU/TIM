@@ -2,7 +2,7 @@ import re
 from copy import deepcopy
 from enum import Enum
 from textwrap import shorten
-from typing import Optional, Generator
+from typing import Generator
 
 import yaml
 from yaml import YAMLError, CSafeLoader, Event, AliasEvent, NodeEvent
@@ -99,10 +99,13 @@ def strip_code_block(md: str) -> str:
     code_block_marker = get_code_block_str(md)
     if len(code_block_marker) < 3:
         return md
+    # Strip only after verifying we have a code block, otherwise we might break YAML spacing
+    md = md.strip()
     return md.split("\n", 1)[1].rstrip(f"\n{code_block_marker}")
 
 
 def get_code_block_str(md: str) -> str:
+    md = md.lstrip()  # Strip to ensure correct count
     code_block_marker = "`" * count_chars_from_beginning(md, "`")
     return code_block_marker
 
@@ -117,9 +120,9 @@ def compare_same(s1: str, s2: str, n: int) -> bool:
     if not n:
         n = 0
     i = s1.find(s2)
-    if i < 0 or i > n:  #  No match or too far
+    if i < 0 or i > n:  # No match or too far
         return False
-    if i + len(s2) != len(s1):  #  The end part is not exactly same
+    if i + len(s2) != len(s1):  # The end part is not exactly same
         return False
     return count_chars_from_beginning(s1, " ") <= n
 
@@ -137,16 +140,16 @@ def correct_obj(text: str) -> str:
      Problem analyze:
         il = atribute line indent len,   fi = first line indent
         indent = string that must be inserted to every line, len = it's lenght
-       
+
         |a1: @!            il = 0, fi = 0     il-fi+1  = 1 
         |a            => indent=" "   len 1 
-    
+
         |a1: @!            il = 0, fi = 4     il-fi+1  = -3 
         |    a        => indent=""    len 0
-    
+
         |a1: @!            il = 0, fi = 1     il-fi+1  = 2
         | a           => indent=""    len 0
-    
+
         | a1: @!           il = 1  fi = 1     il-fi+1  = 2
         | a           => indent=" "   len 1
 
@@ -155,23 +158,23 @@ def correct_obj(text: str) -> str:
 
         |  a1: @!          il = 2  fi = 1     il-fi+1  = 2  
         | a           => indent="  "  len 2
-        
+
     Note: This is almost the same as correct_yaml-body but no hint handling.
     It may be possible to put them just one code but then it is even more difficult to
     understand what is happening.  One small difference is that in this code we look for @
     and do not put it back as we do with | in correct_yaml.
-    
+
     And the idea is to run this as many times as there is no changes any more in object level.
     The objects could be nested, string can not be.  There is still a problem that if string
     includes object start, this function will destroy it, f.ex:
-    
+
         |a1: |!!
         |cat
         |  o1: @!
         |a:1
         |!
         |!!
-        
+
     even should be    
 
         |a1: |
