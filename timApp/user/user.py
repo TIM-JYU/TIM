@@ -45,6 +45,7 @@ from timApp.user.special_group_names import (
     ANONYMOUS_USERNAME,
     LOGGED_IN_GROUPNAME,
     SPECIAL_USERNAMES,
+    LOGGED_IN_USERNAME,
 )
 from timApp.user.usercontact import (
     UserContact,
@@ -685,6 +686,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         group_to_find = self.name
         if self.name == ANONYMOUS_USERNAME:
             group_to_find = ANONYMOUS_GROUPNAME
+        elif self.name == LOGGED_IN_USERNAME:
+            group_to_find = LOGGED_IN_GROUPNAME
         for g in self.groups:
             if g.name == group_to_find:
                 return g
