@@ -29,6 +29,7 @@ from timApp.auth.accesshelper import verify_edit_access, verify_logged_in
 from timApp.auth.login import login_page
 from timApp.auth.oauth2.oauth2 import init_oauth
 from timApp.auth.saml import saml
+from timApp.auth.session.routes import user_sessions
 from timApp.auth.sessioninfo import (
     get_current_user_object,
     get_other_users_as_list,
@@ -145,6 +146,7 @@ blueprints = [
     view_page,
     scheduling,
     mailman_events,
+    user_sessions,
     # plugins
     calendar_plugin,
     importData_plugin,
@@ -222,6 +224,7 @@ def get_angularscripts(index_file: str, locale: str | None = None):
 
 KNOWN_LANGUAGES = [
     "fi",
+    "sv",
     "en-US",
 ]
 
@@ -375,6 +378,7 @@ def update_user_course_bookmarks():
 
 @app.get("/en")
 @app.get("/fi")
+@app.get("/sv")
 @app.get("/")
 def start_page():
     update_user_course_bookmarks()

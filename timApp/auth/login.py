@@ -1,8 +1,7 @@
 """Routes related to email signup and login."""
 import hashlib
-import random
 import re
-import string
+import secrets
 
 from flask import current_app, Response
 from flask import flash
@@ -19,7 +18,8 @@ from timApp.auth.accesshelper import (
     verify_ip_ok,
     check_admin_access,
 )
-from timApp.auth.sessioninfo import get_current_user_id, logged_in
+from timApp.auth.session.util import expire_user_session, add_user_session
+from timApp.auth.sessioninfo import get_current_user_id, logged_in, clear_session
 from timApp.auth.sessioninfo import (
     get_other_users,
     get_session_users_ids,
@@ -47,6 +47,8 @@ login_page = TypedBlueprint(
     url_prefix="",  # TODO: Better URL prefix.
 )
 
+unambiguous_characters = "ABCDEFGJKLMNPQRSTUVWXYZ23456789"
+
 
 def get_real_name(email: str) -> str:
     atindex = email.index("@")
@@ -60,6 +62,10 @@ def get_real_name(email: str) -> str:
     return " ".join(parts2)
 
 
+def _save_sessions() -> bool:
+    return current_app.config["SESSIONS_ENABLE"]
+
+
 @login_page.post("/logout")
 def logout(user_id: int | None = None) -> Response:
     if user_id is not None and user_id != get_current_user_id():
@@ -67,7 +73,9 @@ def logout(user_id: int | None = None) -> Response:
         group.pop(str(user_id), None)
         session["other_users"] = group
     else:
-        session.clear()
+        expire_user_session(get_current_user_object(), session.get("session_id"))
+        db.session.commit()
+        clear_session()
     return login_response()
 
 
@@ -162,9 +170,12 @@ def set_single_user_to_session(user: User) -> None:
     h.update(user.name.encode("utf-8"))
     h.update(str(user.id).encode("utf-8"))
     h.update(get_current_time().isoformat().encode("utf-8"))
-    session["session_id"] = h.hexdigest(4)
+    session_hash = h.hexdigest(8)
+    session["session_id"] = session_hash
 
-    # Compute a hash of user_id, user_name and current time as a preliminary session ID
+    add_user_session(
+        user, session_hash, f"[{request.remote_addr}] {request.user_agent.string}"
+    )
 
     session.pop("other_users", None)
 
@@ -216,6 +227,10 @@ def is_email_registration_enabled() -> bool:
     return current_app.config["EMAIL_REGISTRATION_ENABLED"]
 
 
+def is_simple_email_login_enabled() -> bool:
+    return current_app.config["SIMPLE_EMAIL_LOGIN"]
+
+
 def do_email_signup_or_password_reset(
     email_or_u: str,
     url: str | None = None,
@@ -245,15 +260,17 @@ def do_email_signup_or_password_reset(
     if only_password_reset and not current_app.config["PASSWORD_RESET_ENABLED"]:
         raise AccessDenied("PasswordResetDisabled")
 
-    password = "".join(
-        random.choice(string.ascii_uppercase + string.digits) for _ in range(6)
-    )
+    password = "".join(secrets.choice(unambiguous_characters) for _ in range(8))
 
-    nu = NewUser.query.get(email)
     password_hash = create_password_hash(password)
-    if nu:
-        nu.pass_ = password_hash
-    else:
+    new_password = True
+    if not is_simple_email_login_enabled():
+        nu = NewUser.query.filter_by(email=email).first()
+        if nu:
+            nu.pass_ = password_hash
+            new_password = False
+
+    if new_password:
         nu = NewUser(email=email, pass_=password_hash)
         db.session.add(nu)
 
@@ -287,16 +304,21 @@ def do_email_signup_or_password_reset(
 
 
 def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
-    nu = NewUser.query.get(email_or_username)
-    if not nu:
-        u = User.get_by_name(email_or_username)
-        if u:
-            nu = NewUser.query.get(u.email)
-    if not (nu and nu.check_password(oldpass)):
+    u = User.get_by_name(email_or_username)
+    if u:
+        name_filter = [u.name, u.email]
+    else:
+        name_filter = [email_or_username]
+    nus = NewUser.query.filter(NewUser.email.in_(name_filter))
+    valid_nu = None
+    for nu in nus:
+        if nu.check_password(oldpass):
+            valid_nu = nu
+    if not valid_nu:
         masked = oldpass[0] + "*****" if oldpass else ""
         log_warning(f'Wrong temp password for "{email_or_username}": "{masked}"')
         raise RouteException("WrongTempPassword")
-    return nu
+    return valid_nu
 
 
 @login_page.post("/emailSignupFinish")
@@ -371,10 +393,12 @@ def email_signup_finish(
         )
         db.session.flush()
 
-    db.session.delete(nu)
-    db.session.commit()
-
+    NewUser.query.filter(NewUser.email.in_((user.name, user.email))).delete(
+        synchronize_session=False
+    )
+    db.session.flush()
     set_user_to_session(user)
+    db.session.commit()
     return json_response({"status": success_status})
 
 
@@ -434,9 +458,7 @@ def do_email_login(
 
             set_user_to_session(user)
 
-            # if password hash was updated, save it
-            if old_hash != user.pass_:
-                db.session.commit()
+            db.session.commit()
             return login_user_data()
         else:
             log_warning(f"Failed login (wrong password): {email_or_username}")
@@ -494,9 +516,8 @@ def simple_login_password(email: str, password: str) -> Response:
       it is the user's self-made password.
     """
     verify_simple_email_login_enabled()
-    users = User.get_by_email_case_insensitive_or_username(
-        convert_email_to_lower(email)
-    )
+    email_lower = convert_email_to_lower(email)
+    users = User.get_by_email_case_insensitive_or_username(email_lower)
     if len(users) == 1 and users[0].pass_ is not None:
         return json_response({"type": "login", "data": do_email_login(email, password)})
     elif len(users) <= 1:
@@ -505,7 +526,7 @@ def simple_login_password(email: str, password: str) -> Response:
         if users and users[0].real_name:
             name = users[0].real_name
         try:
-            check_temp_pw(email, password)
+            check_temp_pw(email_lower, password)
         except RouteException:
             raise AccessDenied("EmailOrPasswordNotMatch")
         else:
@@ -563,6 +584,7 @@ def quick_login(username: str) -> Response:
         verify_admin()
 
     set_single_user_to_session(user)
+    db.session.commit()
     flash(f"Logged in as: {username}")
     return safe_redirect(url_for("view_page.index_page"))
 

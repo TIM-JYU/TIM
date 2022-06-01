@@ -51,15 +51,16 @@ def check_doc_cache(
         return not_cached
 
     try:
-        cached: tuple[bytes, bytes, bytes] = rclient.lrange(cache_key, 0, -1)  # type: ignore
+        cached: tuple[bytes, bytes, bytes, bytes] = rclient.lrange(cache_key, 0, -1)  # type: ignore
     except ResponseError:
         return not_cached
     if cached:
         try:
-            head_b, content_b, override_b = cached
+            head_b, content_b, override_b, hide_readmarks_b = cached
             head = head_b.decode()
             content = content_b.decode()
             override = override_b.decode() if override_b else None
+            hide_readmarks = bool(int(hide_readmarks_b))
         except ValueError:
             # If for whatever reason the cache is corrupted, just ignore it.
             return not_cached
@@ -69,6 +70,7 @@ def check_doc_cache(
                 content_html=content,
                 allowed_to_cache=True,
                 override_theme=override,
+                hide_readmarks=hide_readmarks,
             ),
             key=cache_key,
         )
@@ -87,8 +89,9 @@ def get_doc_cache_key(
     return f"timdoc-{doc.id}-{user.id}-{h.hexdigest(10)}"
 
 
-def clear_doc_cache(doc: DocInfoOrDocument, user: Optional["User"]) -> None:
-    prefix = f"timdoc-{doc.id}-"
+def clear_doc_cache(doc: DocInfoOrDocument | int, user: Optional["User"]) -> None:
+    doc_id: int = doc if isinstance(doc, int) else doc.id
+    prefix = f"timdoc-{doc_id}-"
     if user:
         prefix += f"{user.id}-"
     prefix += "*"
@@ -104,8 +107,9 @@ def set_doc_cache(
         key,
         value.head_html,
         value.content_html,
-        value.override_theme
-        or "",  # Redis doesn't accept None value, so convert it to empty string.
+        # Redis doesn't accept None value, so convert it to empty string.
+        value.override_theme or "",
+        int(value.hide_readmarks),
     )
     refresh_doc_expire(key, ex)
 

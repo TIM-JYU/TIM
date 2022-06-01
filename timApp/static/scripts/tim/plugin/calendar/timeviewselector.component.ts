@@ -1,3 +1,15 @@
+/**
+ * Component that controls the time period and the length
+ * of the time slots that are shown to the user
+ *
+ * @author Miika Immonen
+ * @author Terhi Kamula
+ * @author Anssi Lepikko
+ * @author Touko Miettinen
+ * @author Joose Tikkanen
+ * @license MIT
+ * @date 24.5.2022
+ */
 import {Component, EventEmitter, OnInit, Output} from "@angular/core";
 
 const accuracies: number[] = [15, 20, 30, 60];
@@ -40,8 +52,17 @@ export class TimeViewSelectorComponent implements OnInit {
 
     constructor() {}
 
+    /**
+     * Called when component is loaded
+     */
     ngOnInit() {}
 
+    /**
+     * Submits the values user has selected to the calendar component
+     * @param selectedAccuracy selected accuracy value
+     * @param selectedStart selected start value
+     * @param selectedEnd selected end value
+     */
     submit(
         selectedAccuracy: number,
         selectedStart: number,

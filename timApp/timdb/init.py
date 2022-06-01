@@ -11,6 +11,8 @@ from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from sqlalchemy_utils import database_exists, create_database
 
+from timApp.admin.language_cli import add_all_supported_languages
+from timApp.admin.translationservice_cli import add_all_tr_services_to_session
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel
 from timApp.document.docentry import DocEntry
@@ -26,6 +28,7 @@ from timApp.errorhandlers import ERROR_CODES_FOLDER
 from timApp.folder.folder import Folder
 from timApp.item.block import BlockType
 from timApp.messaging.messagelist.messagelist_utils import MESSAGE_LIST_DOC_PREFIX
+from timApp.plugin.calendar.models import EnrollmentType
 from timApp.tim_app import app
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db, get_tim_main_engine
@@ -93,6 +96,8 @@ def initialize_database(create_docs: bool = True) -> None:
         sess.add(AccessTypeModel(id=5, name="see answers"))
         sess.add(AccessTypeModel(id=6, name="owner"))
         sess.add(AccessTypeModel(id=7, name="copy"))
+
+        create_enrollment_types(sess)
 
         create_special_usergroups(sess)
         sess.add(UserGroup.create(app.config["HOME_ORGANIZATION"] + ORG_GROUP_SUFFIX))
@@ -182,6 +187,12 @@ def initialize_database(create_docs: bool = True) -> None:
 
             create_style_docs()
 
+        # Add the machine-translators to database with their default values.
+        add_all_tr_services_to_session()
+
+        # Create and add all supported languages to the database
+        add_all_supported_languages()
+
         sess.commit()
         log_info("Database initialization done.")
 
@@ -251,6 +262,11 @@ def exit_if_not_db_up_to_date():
             script.run_env()
         logging.getLogger("alembic").level = prev_level
         enable_loggers()
+
+
+def create_enrollment_types(sess):
+    """Initializes the enrollment types used in TIM-calendar event enrollments"""
+    sess.add(EnrollmentType(enroll_type_id=0, enroll_type="booking"))
 
 
 if __name__ == "__main__":

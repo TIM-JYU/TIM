@@ -145,6 +145,7 @@ class UndoInfo:
     button: str | None | Missing = missing
     title: str | None | Missing = missing
     confirmation: str | None | Missing = missing
+    confirmationTitle: str | None | Missing = missing
 
 
 @dataclass

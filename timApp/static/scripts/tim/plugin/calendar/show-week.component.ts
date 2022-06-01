@@ -1,3 +1,14 @@
+/**
+ * A component that provides week number for the calendar plugin
+ *
+ * @author Miika Immonen
+ * @author Terhi Kamula
+ * @author Anssi Lepikko
+ * @author Touko Miettinen
+ * @author Joose Tikkanen
+ * @license MIT
+ * @date 24.5.2022
+ */
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import {CalendarView} from "angular-calendar";
 import {getISOWeek} from "date-fns";
@@ -14,8 +25,6 @@ export class ShowWeekComponent {
     @Input() view: CalendarView = CalendarView.Week;
 
     @Input() viewDate: Date = new Date();
-
-    // @Input() locale: string = "fi-FI";
 
     @Output() viewChange = new EventEmitter<CalendarView>();
 

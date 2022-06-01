@@ -10,6 +10,7 @@ Group membership contains useful information about the user such as:
 
 All this information is contained in :class:`UserGroupMember` which links a user to the group they belong to.
 """
+from datetime import timedelta
 
 from sqlalchemy import func
 
@@ -66,16 +67,20 @@ class UserGroupMember(db.Model):
     )
     """Group that this membership belongs to. Relationship of the :attr:`usergroup_id` column."""
 
-    def set_expired(self, sync_mailing_lists: bool = True) -> None:
+    def set_expired(
+        self, time_offset: timedelta | None = None, sync_mailing_lists: bool = True
+    ) -> None:
         """
         Expires this membership.
 
         .. note:: Expired membership is not permanently deleted.
                   Instead, :attr:`membership_end` is set to the current time.
 
+        :param time_offset: The offset to the expiration date.
         :param sync_mailing_lists: If True, informs the mailing lists of the change immediately.
         """
-        self.membership_end = get_current_time()
+        delta = time_offset if time_offset else timedelta(seconds=0)
+        self.membership_end = get_current_time() - delta
         if sync_mailing_lists:
             from timApp.messaging.messagelist.messagelist_utils import (
                 sync_message_list_on_expire,

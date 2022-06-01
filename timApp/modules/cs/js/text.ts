@@ -20,7 +20,7 @@ import {CsController} from "./csPlugin";
                 (ngModelChange)="onContentChange($event)"
                 (keypress)="runCodeIfCR($event)"/>
             <button *ngIf="isRun"
-                    [disabled]="isRunning || preventSave || (markup.disableUnchanged && !isUnSaved())"
+                    [disabled]="isRunning || preventSave || (disableUnchanged && !isUnSaved())"
                     class = "timButton"
                     title="(Ctrl-S)"
                     (click)="runCode();"

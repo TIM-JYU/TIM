@@ -9,7 +9,11 @@ export function countLines(s: string): number {
 }
 
 export function countWords(str: string): number {
-    return str.trim().split(/\s+/).length;
+    const s = str.trim().split(/\s+/);
+    if (s.length === 1 && s[0].length === 0) {
+        return 0;
+    }
+    return s.length;
 }
 
 export function getInt(s: string | number) {

@@ -67,6 +67,8 @@ def add_annotation(
 ) -> Response:
     """Adds a new annotation."""
     d = get_doc_or_abort(doc_id)
+    if not has_teacher_access(d) and d.document.get_settings().exam_mode():
+        raise AccessDenied("You cannot add annotations to this document.")
     verify_view_access(d)
     validate_color(color)
     annotator = get_current_user_object()

@@ -6,6 +6,7 @@ from flask import current_app, Response
 from timApp.answer.answer import Answer
 from timApp.answer.exportedanswer import ExportedAnswer
 from timApp.document.docentry import DocEntry
+from timApp.user.user import User
 from timApp.util.flask.responsehelper import to_json_str, ok_response
 from timApp.util.logger import log_error
 from timApp.util.secret import check_secret
@@ -53,3 +54,12 @@ def send_answer_backup_if_enabled(a: Answer) -> None:
             "host": current_app.config["TIM_HOST"],
         }
     )
+
+
+def sync_user_group_memberships_if_enabled(user: User) -> None:
+    if current_app.config["SYNC_USER_GROUPS_SEND_SECRET"] is None:
+        return
+
+    from timApp.tim_celery import sync_user_group_memberships
+
+    sync_user_group_memberships.delay(user.email, [ug.name for ug in user.groups])

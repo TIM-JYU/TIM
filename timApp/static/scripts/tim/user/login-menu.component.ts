@@ -15,7 +15,7 @@ import {Users} from "./userService";
 <button *ngIf="!isLoggedIn()"
         (click)="openLoginDialog()"
         type="button"
-        class="btn btn-default">Log in</button>
+        class="btn btn-default" i18n>Log in</button>
 <tim-user-menu *ngIf="isLoggedIn()"></tim-user-menu>
     `,
 })

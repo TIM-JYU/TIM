@@ -30,8 +30,12 @@ function getDocumentForElement(el: Element) {
     if (root.contains(el)) {
         return getActiveDocument();
     }
-    // If the element wasn't in the main content area, this must be in preview.
-    const d = new TimDocument($(el).parents(".previewcontent")[0]);
+    // If the element wasn't in the main content area, this must be in the previews.
+    let d = new TimDocument($(el).parents(".previewcontent")[0]);
+    // If the root is undefined, it must be in source block preview.
+    if (d.getRoot() == undefined) {
+        d = new TimDocument($(el).parents(".previeworiginalcontent")[0]);
+    }
     d.buildSections();
     return d;
 }

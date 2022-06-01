@@ -20,7 +20,6 @@ import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {AngularPluginBase} from "./angular-plugin-base.directive";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 
-// this.attrs
 const TimMenuMarkup = t.intersection([
     t.partial({
         backgroundColor: nullable(t.string),

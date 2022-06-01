@@ -1,3 +1,14 @@
+/**
+ * Main module the TIM-calendar plugin
+ *
+ * @author Miika Immonen
+ * @author Terhi Kamula
+ * @author Anssi Lepikko
+ * @author Touko Miettinen
+ * @author Joose Tikkanen
+ * @license MIT
+ * @date 24.5.2022
+ */
 import {
     ApplicationRef,
     ChangeDetectionStrategy,
@@ -7,8 +18,6 @@ import {
     ElementRef,
     NgModule,
     OnInit,
-    TemplateRef,
-    ViewChild,
     ViewEncapsulation,
 } from "@angular/core";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
@@ -26,14 +35,12 @@ import {WeekViewHourSegment} from "calendar-utils";
 import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {CommonModule, registerLocaleData} from "@angular/common";
-import localeFr from "@angular/common/locales/fi";
 import localeFi from "@angular/common/locales/fi";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek} from "date-fns";
-import {NgbModalModule} from "@ng-bootstrap/ng-bootstrap";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
@@ -42,12 +49,13 @@ import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
 import {showMessageDialog} from "../../ui/showMessageDialog";
-import {CalendarHeaderModule} from "./calendar-header.component";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {CustomEventTitleFormatter} from "./custom-event-title-formatter.service";
 import {TimeViewSelectorComponent} from "./timeviewselector.component";
 import {showCalendarEventDialog} from "./showCalendarEventDialog";
 import {DateTimeValidatorDirective} from "./datetimevalidator.directive";
+import {CalendarHeaderComponent} from "./calendar-header.component";
+import {ShowWeekComponent} from "./show-week.component";
 
 /**
  * Helps calculate the size of a horizontally dragged event on the calendar view.
@@ -116,7 +124,7 @@ const colors = {
         secondary: "#FDF1BA",
     },
     gray: {
-        primary: "#d5d5d5",
+        primary: "#aaaaaa",
         secondary: "#d5d5d5",
     },
     green: {
@@ -128,7 +136,6 @@ const colors = {
 const segmentHeight = 30;
 // const minutesInSegment = 20;
 
-registerLocaleData(localeFr);
 registerLocaleData(localeFi);
 
 export type TIMEventMeta = {
@@ -181,12 +188,14 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                 </div>
             </div>
             <div class="col-md-4">
+                <!-- TODO: Checkboxes for filtering purposes
                 <div class="checkbox-group"> Show:
                     <div *ngFor="let box of checkboxEvents"> 
                         <input i18n (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
                                [(ngModel)]="box.checked" [checked]="">{{box.name}}
                     </div>
                 </div>
+                -->
             </div>
         </div>
 
@@ -219,7 +228,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                     [viewDate]="viewDate"
                     [events]="events"
                     [locale]="locale"
-                    [weekStartsOn]="1"
+                    [weekStartsOn]="weekStartsOn"
                     (columnHeaderClicked)="clickedColumn = $event.isoDayNumber"
                     (dayClicked)="changeToDay($event.day.date)"
                     (eventClicked)="handleEventClick($event.event)"
@@ -229,14 +238,14 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                     *ngSwitchCase="'week'"
                     [viewDate]="viewDate"
                     [events]="events"
-                    [hourSegmentHeight]="30"
+                    [hourSegmentHeight]="segmentHeight"
                     [hourDuration]="60"
                     [hourSegments]="segmentsInHour"
                     [dayStartHour]="dayStartHour"
                     [dayEndHour]="dayEndHour"
                     [locale]="locale"
                     [minimumEventHeight]="minimumEventHeight"
-                    [weekStartsOn]="1"
+                    [weekStartsOn]="weekStartsOn"
                     (dayHeaderClicked)="viewDay($event.day.date)"
                     (hourSegmentClicked)="clickedDate = $event.date"
                     [hourSegmentTemplate]="weekViewHourSegmentTemplate"
@@ -265,6 +274,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                 (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
                                 (evening)="setEvening($event)"></tim-time-view-selector>
         <div>
+<<<<<<< HEAD
             <button i18n class="btn timButton" (click)="export()">Export calendar</button>
             <!--input type="text" [(ngModel)]="icsURL" name="icsURL" class="icsURL"-->
             <span class="exportDone"><b>{{exportDone}}</b></span>
@@ -298,10 +308,17 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
             </div>
         </ng-template>
         
+=======
+            <button class="btn timButton" (click)="export()">Export calendar</button>
+            <span class="exportDone"><b>{{exportDone}}</b></span>
+        </div>
+>>>>>>> 5be81a426fa667fd6b96e4662114769e0150c626
     `,
     encapsulation: ViewEncapsulation.None,
-    styleUrls: ["calendar.component.scss"],
-    // templateUrl: "template.html",
+    styleUrls: [
+        "calendar.component.scss",
+        "../../../../../node_modules/angular-calendar/css/angular-calendar.css",
+    ],
 })
 export class CalendarComponent
     extends AngularPluginBase<
@@ -311,8 +328,6 @@ export class CalendarComponent
     >
     implements OnInit
 {
-    @ViewChild("modalContent", {static: true})
-    modalContent?: TemplateRef<never>;
     exportDone: string = "";
     icsURL: string = "";
     view: CalendarView = CalendarView.Week;
@@ -333,11 +348,14 @@ export class CalendarComponent
     eventTypes: string[] = [];
     selectedEvent: string = "";
 
+    /*
+    TODO: Checkbox values
     checkboxEvents = [
         {name: "Ohjaus", value: "1", checked: true},
         {name: "Luento", value: "2", checked: true},
         {name: "Opetusryhmä", value: "3", checked: true},
     ];
+    */
 
     locale: string = "Fi-fi";
 
@@ -348,30 +366,8 @@ export class CalendarComponent
     dayEndHour: number = 19;
     segmentMinutes: number = 20;
     segmentsInHour: number = 3;
+    segmentHeight: number = 30;
     minimumEventHeight: number = this.segmentMinutes;
-
-    modalData?: {
-        action: string;
-        event?: TIMCalendarEvent;
-    };
-
-    // actions: CalendarEventAction[] = [
-    //     {
-    //         label: '<i class="fas fa-fw fa-pencil-alt"></i>',
-    //         a11yLabel: "Edit",
-    //         onClick: ({event}: {event: CalendarEvent}): void => {
-    //             this.handleEventClick(event);
-    //         },
-    //     },
-    //     {
-    //         label: '<i class="fas fa-fw fa-trash-alt"></i>',
-    //         a11yLabel: "Delete",
-    //         onClick: ({event}: {event: CalendarEvent}): void => {
-    //             this.events = this.events.filter((iEvent) => iEvent !== event);
-    //             this.handleEventClick(event);
-    //         },
-    //     },
-    // ];
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -413,6 +409,9 @@ export class CalendarComponent
         this.segmentsInHour = 60 / this.segmentMinutes;
     }
 
+    /**
+     * Sets the locale language
+     */
     setLanguage() {
         const language = navigator.language;
         switch (language.toLowerCase()) {
@@ -486,7 +485,7 @@ export class CalendarComponent
 
     /**
      * Get what type of events user wants to view in view-mode
-     */
+     * TODO: To be used with the checkbox filtering
     getEventsToView() {
         const viewEvents = this.checkboxEvents
             .filter((box) => box.checked)
@@ -494,6 +493,7 @@ export class CalendarComponent
         console.log(viewEvents);
         return viewEvents;
     }
+    */
 
     /**
      * Called when the user starts creating a new event by clicking and dragging
@@ -567,11 +567,6 @@ export class CalendarComponent
                 );
                 if (newEnd > segment.date && newEnd < endOfView) {
                     dragToSelectEvent.end = newEnd;
-                    // dragToSelectEvent.title = `${segment.date
-                    //     .toTimeString()
-                    //     .substr(0, 5)}–${newEnd
-                    //     .toTimeString()
-                    //     .substr(0, 5)} Varattava aika`;
                     if (dragToSelectEvent.end) {
                         dragToSelectEvent.end = new Date(dragToSelectEvent.end);
                     }
@@ -613,7 +608,8 @@ export class CalendarComponent
      *
      * Updates the event's title if the begin matches the regular expression, e.g. "10:00-11.00"
      *
-     * TODO: handle localized time expressions (e.g. AM and PM)
+     * TODO: Can be used to add the time to event title.
+     * TODO: Handle localized time expressions (e.g. AM and PM)
      *
      * @param event Event to be updated
      * @private
@@ -637,7 +633,7 @@ export class CalendarComponent
      * @private
      */
     private refresh() {
-        this.events = [...this.events];
+        this.events = [...this.events]; // TODO: Find out what is the purpose of this line
         this.events.forEach((event) => {
             if (event.meta!.enrollments >= event.meta!.maxSize) {
                 event.color = colors.red;
@@ -660,10 +656,16 @@ export class CalendarComponent
         this.cdr.detectChanges();
     }
 
+    /**
+     * Returns calendar fields
+     */
     getAttributeType() {
         return CalendarFields;
     }
 
+    /**
+     * Returns empty markup
+     */
     getDefaultMarkup() {
         return {};
     }
@@ -676,9 +678,7 @@ export class CalendarComponent
         super.ngOnInit();
         this.initEventTypes();
         this.setLanguage();
-        if (Users.isLoggedIn()) {
-            void this.loadEvents();
-        }
+        void this.loadEvents();
     }
 
     /**
@@ -695,7 +695,6 @@ export class CalendarComponent
                 if (event.end) {
                     event.end = new Date(event.end);
                 }
-                // event.actions = this.actions;
                 event.meta = {
                     description: event.meta!.description,
                     tmpEvent: false,
@@ -764,7 +763,6 @@ export class CalendarComponent
                     max_size: capacity,
                 };
             });
-            console.log(eventsToAdd);
             const result = await toPromise(
                 this.http.post<TIMCalendarEvent[]>("/calendar/events", {
                     events: eventsToAdd,
@@ -802,8 +800,6 @@ export class CalendarComponent
                         });
                     }
                 });
-                console.log("events sent");
-                console.log(result.result);
                 this.refresh();
             } else {
                 console.error(result.result.error.error);
@@ -859,7 +855,6 @@ export class CalendarComponent
             })
         );
         if (result.ok) {
-            console.log(result.result);
         } else {
             console.error(result.result.error.error);
             if (result.result.error.error) {
@@ -875,6 +870,10 @@ export class CalendarComponent
         }
     }
 
+    /**
+     * Collects event information in ICS-format and copies a link
+     * to the ICS-file to the users clipboard
+     */
     async export() {
         if (
             !(await showConfirm(
@@ -890,20 +889,14 @@ export class CalendarComponent
             })
         );
         if (result.ok) {
-            let copyOk = true;
             this.icsURL = result.result;
-            navigator.clipboard.writeText(this.icsURL).then(
-                function () {
-                    /* clipboard successfully set */
-                    copyOk = true;
-                },
-                function () {
-                    /* clipboard write failed */
-                    copyOk = false;
-                }
+            const copyResult = await to2(
+                navigator.clipboard.writeText(this.icsURL)
             );
-            if (copyOk) {
+            if (copyResult.ok) {
                 this.exportDone = "ICS-url copied to clipboard.";
+            } else {
+                this.exportDone = "Error occurred when creating ICS-url.";
             }
             this.refresh();
         } else {
@@ -928,7 +921,6 @@ export class CalendarComponent
             const modifiedEvent = result.result;
             if (modifiedEvent.meta) {
                 if (modifiedEvent.meta.deleted) {
-                    console.log("deleted");
                     this.events.splice(this.events.indexOf(modifiedEvent), 1);
                 }
             }
@@ -936,6 +928,9 @@ export class CalendarComponent
         }
     }
 
+    /**
+     * Returns true if current user is manager or owner, otherwise false
+     */
     userIsManager(): boolean {
         return (
             itemglobals().curr_item.rights.manage ||
@@ -991,22 +986,28 @@ export class CalendarComponent
             provide: DateAdapter,
             useFactory: adapterFactory,
         }),
-        CalendarHeaderModule,
-        NgbModalModule,
     ],
     declarations: [
         CalendarComponent,
         TimeViewSelectorComponent,
         DateTimeValidatorDirective,
+        CalendarHeaderComponent,
+        ShowWeekComponent,
     ],
     exports: [CalendarComponent, DateTimeValidatorDirective],
+    providers: [
+        {
+            provide: CalendarDateFormatter,
+            useClass: CustomDateFormatter,
+        },
+    ],
 })
-export class KATTIModule implements DoBootstrap {
+export class TimCalendarModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
 const angularJsModule = createDowngradedModule((extraProviders) =>
-    platformBrowserDynamic(extraProviders).bootstrapModule(KATTIModule)
+    platformBrowserDynamic(extraProviders).bootstrapModule(TimCalendarModule)
 );
 
 doDowngrade(angularJsModule, "timCalendar", CalendarComponent);

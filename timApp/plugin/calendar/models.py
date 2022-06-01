@@ -1,6 +1,7 @@
 """
 The database classes for the calendar plugin
 """
+<<<<<<< HEAD
 
 __authors__ = [
     "Miika Immonen",
@@ -13,9 +14,10 @@ __license__ = "MIT"
 __date__ = "24.5.2022"
 
 
+=======
+>>>>>>> 5be81a426fa667fd6b96e4662114769e0150c626
 from typing import Optional
 
-from timApp.auth.sessioninfo import get_current_user_id
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -30,6 +32,12 @@ class EventGroup(db.Model):
         db.Integer, db.ForeignKey("usergroup.id"), primary_key=True
     )
     manager = db.Column(db.Boolean)
+
+    user_group = db.relationship(
+        UserGroup,
+        primaryjoin=usergroup_id == UserGroup.id,
+        lazy="select",
+    )
 
 
 class Enrollment(db.Model):
@@ -72,9 +80,6 @@ class Event(db.Model):
         db.Integer, db.ForeignKey("useraccount.id"), nullable=False
     )
 
-    # def __json__(self):
-    #   return ["event_id", "title", "start_time", "end_time"]
-
     enrolled_users: list[UserGroup] = db.relationship(
         UserGroup,
         Enrollment.__table__,
@@ -91,9 +96,14 @@ class Event(db.Model):
 
     creator: User = db.relationship(User)
 
+    event_groups: list[EventGroup] = db.relationship(
+        EventGroup,
+        foreign_keys="EventGroup.event_id",
+        cascade="all,delete-orphan",
+    )
+
     @staticmethod
     def get_event_by_id(event_id: int) -> Optional["Event"]:
-        # cur_user = get_current_user_id()
         return Event.query.filter(Event.event_id == event_id).one_or_none()
 
 
@@ -113,3 +123,5 @@ class ExportedCalendar(db.Model):
         db.Integer, db.ForeignKey("useraccount.id"), primary_key=True, nullable=False
     )
     calendar_hash = db.Column(db.Text, nullable=False)
+
+    user = db.relationship(User)

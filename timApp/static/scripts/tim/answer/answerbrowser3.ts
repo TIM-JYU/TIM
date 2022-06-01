@@ -392,7 +392,10 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     isPreview() {
-        return this.element.parents(".previewcontent").length > 0;
+        return (
+            this.element.parents(".previewcontent").length > 0 ||
+            this.element.parents(".previeworiginalcontent").length > 0
+        );
     }
 
     isInFormMode() {
@@ -697,6 +700,22 @@ export class AnswerBrowserController
     reviewToggled(): void {
         // TODO: Separate function and route for just review
         this.changeAnswer(true);
+    }
+
+    userSelected() {
+        this.tryChangeDocumentSelectedUser();
+        this.getAnswersAndUpdate();
+    }
+
+    /**
+     * Inform viewcontrol about new selected user
+     */
+    tryChangeDocumentSelectedUser() {
+        // TODO:
+        //  corner case: this.getAvailableUsers may have user not in current userList or related entries
+        if (this.user) {
+            this.viewctrl.changeUserFromAb(this.user, this.taskId);
+        }
     }
 
     async changeUser(user: IUser, updateAll: boolean) {
@@ -1158,6 +1177,7 @@ export class AnswerBrowserController
             return;
         }
         this.user = this.users[newIndex];
+        this.tryChangeDocumentSelectedUser();
         await this.getAnswersAndUpdate();
 
         if (shouldRefocusPoints) {

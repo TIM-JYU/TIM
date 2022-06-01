@@ -64,10 +64,9 @@ tim-alert {
 
 #actions-panel .actions {
   display: flex;
+  align-items: center;
 
-  & > *:not(:first-child) {
-    margin-left: 0.5em;
-  }
+  column-gap: 0.5em;
 }
 
 #members-tab .contents {

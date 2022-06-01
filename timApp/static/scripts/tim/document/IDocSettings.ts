@@ -37,6 +37,8 @@ export interface IDocSettings {
     peer_review?: boolean;
     max_uncollapsed_toc_items?: number;
     description?: string;
+    translator?: string;
+    sync_answerbrowsers?: boolean;
 }
 
 export interface ISlideDocSettings extends IDocSettings {

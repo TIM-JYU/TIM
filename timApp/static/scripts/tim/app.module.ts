@@ -40,6 +40,7 @@ import {ParRefComponent} from "tim/document/par-ref.component";
 import {GamificationMapComponent} from "tim/gamification/gamification-map.component";
 import {SelfExpireComponent} from "tim/item/self-expire.component";
 import {SearchButtonComponent} from "tim/search/search-button.component";
+import {SessionVerify} from "tim/util/session-verify.interceptor";
 
 @NgModule({
     declarations: [
@@ -85,6 +86,7 @@ import {SearchButtonComponent} from "tim/search/search-button.component";
         TabsModule.forRoot(),
     ],
     providers: [
+        SessionVerify,
         {
             provide: HTTP_INTERCEPTORS,
             useClass: TimeStampToMomentConverter,

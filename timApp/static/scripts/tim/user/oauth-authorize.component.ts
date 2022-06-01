@@ -10,6 +10,7 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {BrowserModule} from "@angular/platform-browser";
 import {IOAuthGlobals, oauthglobals} from "../util/globals";
 import {getCookie} from "../util/utils";
+import {TimUtilityModule} from "../ui/tim-utility.module";
 import {Users} from "./userService";
 
 const OAUTH_SCOPES: Record<string, string> = {
@@ -67,7 +68,7 @@ export class OAuthAuthorizeComponent {
 @NgModule({
     declarations: [OAuthAuthorizeComponent, OAuthButtonComponent],
     exports: [OAuthAuthorizeComponent],
-    imports: [BrowserModule],
+    imports: [BrowserModule, TimUtilityModule],
 })
 export class OAuthAuthorizeModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

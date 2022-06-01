@@ -16,7 +16,8 @@
       "i18n": {
         "sourceLocale": "en-US",
         "locales": {
-          "fi": "i18n/messages.fi.xlf"
+          "fi": "i18n/messages.fi.xlf",
+          "sv": "i18n/messages.sv.xlf"
         }
       },
       "architect": {
@@ -101,8 +102,7 @@
               "node_modules/angular-ui-grid/ui-grid.min.css",
               "node_modules/katex/dist/katex.min.css",
               "node_modules/mobile-drag-drop/default.css",
-              "node_modules/ngx-bootstrap/datepicker/bs-datepicker.css",
-              "node_modules/angular-calendar/css/angular-calendar.css"
+              "node_modules/ngx-bootstrap/datepicker/bs-datepicker.css"
             ],
             "scripts": [
             ],
@@ -131,8 +131,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "6kb",
-                  "maximumError": "10kb"
+                  "maximumWarning": "20kb",
+                  "maximumError": "20kb"
                 }
               ]
             },

@@ -13,6 +13,7 @@ import {BrowserModule} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import moment from "moment";
 import {DatetimePopupModule} from "vendor/ngx-bootstrap-datetime-popup/ngx-bootstrap-datetime-popup.module";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
 
@@ -85,6 +86,7 @@ export class DatetimePickerComponent implements OnInit, OnChanges {
         NoopAnimationsModule,
         DatetimePopupModule,
         FormsModule,
+        TimUtilityModule,
     ],
     exports: [DatetimePickerComponent],
 })

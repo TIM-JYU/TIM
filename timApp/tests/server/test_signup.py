@@ -182,7 +182,7 @@ class TestSignUp(TimRouteTest):
             },
         )
         self.get("/")  # refresh session
-        self.assertIsNone(NewUser.query.get(bot_email))
+        self.assertIsNone(NewUser.query.filter_by(email=bot_email).first())
 
         for allowed_email in ("test@jyu.fi", "test@gmail.com"):
             self.json_post(
@@ -193,7 +193,7 @@ class TestSignUp(TimRouteTest):
                 },
             )
             self.get("/")  # refresh session
-            self.assertIsNotNone(NewUser.query.get(allowed_email))
+            self.assertIsNotNone(NewUser.query.filter_by(email=allowed_email).first())
         NewUser.query.delete()
         db.session.commit()
 
