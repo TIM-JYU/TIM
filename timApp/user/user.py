@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Optional, Union, MutableMapping
 
+import filelock
 from flask import current_app
 from sqlalchemy import func
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -729,14 +730,15 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 f"Found multiple personal folders for user {self.name}: {[f.name for f in folders]}"
             )
         if not folders:
-            f = Folder.create(
-                "users/" + self.derive_personal_folder_name(),
-                self.get_personal_group(),
-                title=f"{self.real_name}",
-                creation_opts=FolderCreationOptions(apply_default_rights=True),
-            )
-            db.session.commit()
-            return f
+            with filelock.FileLock(f"/tmp/tim_personal_folder_create_{self.id}.lock"):
+                f = Folder.create(
+                    f"users/{self.derive_personal_folder_name()}",
+                    self.get_personal_group(),
+                    title=f"{self.real_name}",
+                    creation_opts=FolderCreationOptions(apply_default_rights=True),
+                )
+                db.session.commit()
+                return f
         return folders[0]
 
     def get_prefs(self) -> Preferences:
