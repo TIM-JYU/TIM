@@ -3,7 +3,6 @@ The database classes for the calendar plugin
 """
 from typing import Optional
 
-from timApp.auth.sessioninfo import get_current_user_id
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -66,9 +65,6 @@ class Event(db.Model):
         db.Integer, db.ForeignKey("useraccount.id"), nullable=False
     )
 
-    # def __json__(self):
-    #   return ["event_id", "title", "start_time", "end_time"]
-
     enrolled_users: list[UserGroup] = db.relationship(
         UserGroup,
         Enrollment.__table__,
@@ -93,7 +89,6 @@ class Event(db.Model):
 
     @staticmethod
     def get_event_by_id(event_id: int) -> Optional["Event"]:
-        # cur_user = get_current_user_id()
         return Event.query.filter(Event.event_id == event_id).one_or_none()
 
 
