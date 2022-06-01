@@ -527,6 +527,7 @@ def send_email_to_enrolled_users(event: Event, user_obj: User) -> None:
         if user_account is None:
             raise NotExist()
         user_accounts.append(user_account)
+    # TODO Should use users own timezone
     start_time = event.start_time.astimezone(fin_timezone).strftime("%d.%m.%Y %H:%M")
     end_time = event.end_time.astimezone(fin_timezone).strftime("%H:%M (UTC %z)")
     event_time = f"{start_time}-{end_time}"
@@ -644,6 +645,7 @@ def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> None
     if not event:
         raise NotExist()
     creator = event.creator
+    # TODO Should use users own timezone
     start_time = event.start_time.astimezone(fin_timezone).strftime("%d.%m.%Y %H:%M")
     end_time = event.end_time.astimezone(fin_timezone).strftime("%H:%M (UTC %z)")
     event_time = f"{start_time}-{end_time}"
