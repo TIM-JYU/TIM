@@ -138,7 +138,6 @@ def get_ical(key: str) -> Response:
     if user_data is None:
         raise NotFound()
 
-    # user_id = user_data.user_id
     user_obj = user_data.user
     events = events_of_user(user_obj)
 
