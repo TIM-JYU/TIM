@@ -5500,7 +5500,6 @@
           <context context-type="linenumber">109</context>
         </context-group>
       </trans-unit>
-<<<<<<< HEAD
       <trans-unit id="3904900366807853260" datatype="html">
         <source>The event is full.</source>
         <target state="translated">Tapahtuma on täynnä.</target>
@@ -5883,7 +5882,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">236,238</context>
-=======
       <trans-unit id="7711803407150719014" datatype="html">
         <source> Session check </source>
         <target state="translated"> Istunnon tarkistus </target>
@@ -6222,7 +6220,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
           <context context-type="linenumber">18</context>
->>>>>>> 5be81a426fa667fd6b96e4662114769e0150c626
         </context-group>
       </trans-unit>
     </body>
