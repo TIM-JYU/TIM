@@ -1,4 +1,3 @@
-import * as Console from "console";
 import {
     Component,
     EventEmitter,
