@@ -20,15 +20,15 @@ const eveningHours: number[] = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
     selector: "tim-time-view-selector",
     template: `
     <ng-container>
-        <span>Set view with timeslots of </span>
+        <span i18n >Set view with timeslots of </span>
         <select [(ngModel)]="selectedAccuracy" (change)="submit(selectedAccuracy, selectedStart, selectedEnd)">
             <option *ngFor="let item of accuracies" [value]="item">{{ item | number:'2.0' }}</option>
         </select>
-        <span> minutes from </span>
+        <span i18n > minutes from </span>
         <select [(ngModel)]="selectedStart" (change)="submit(selectedAccuracy, selectedStart, selectedEnd)">
             <option *ngFor="let hour of morningHours" [value]="hour">{{ hour | number:'2.0' }}</option>
         </select>
-        <span> to </span>
+        <span i18n > to </span>
         <select [(ngModel)]="selectedEnd" (change)="submit(selectedAccuracy, selectedStart, selectedEnd)">
             <option *ngFor="let hour of eveningHours" [value]="hour">{{ hour | number:'2.0' }}</option>
         </select>

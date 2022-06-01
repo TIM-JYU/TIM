@@ -48,7 +48,7 @@ import {CalendarView} from "angular-calendar";
               <span class="glyphicon glyphicon-arrow-right"></span>
           </button>
         </div>
-          <button class="btn timButton currentDay col-md-10"
+          <button i18n class="btn timButton currentDay col-md-10"
                 mwlCalendarToday
                 [(viewDate)]="viewDate"
                 (viewDateChange)="viewDateChange.next(viewDate)"
@@ -61,19 +61,19 @@ import {CalendarView} from "angular-calendar";
       </div>
       <div class="col-md-4">
         <div class="btn-group">
-          <button
+          <button i18n
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Month)"
             [class.active]="view === CalendarView.Month">
             Month
           </button>
-          <button
+          <button i18n
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Week)"
             [class.active]="view === CalendarView.Week">
             Week
           </button>
-          <button
+          <button i18n
             class="btn btn-primary"
             (click)="viewChange.emit(CalendarView.Day)"
             [class.active]="view === CalendarView.Day">

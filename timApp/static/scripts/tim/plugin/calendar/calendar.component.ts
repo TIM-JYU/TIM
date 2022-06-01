@@ -175,8 +175,8 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
         <div class="row text-center">
             <div class="col-md-4">
                 <div class="btn-group edit-btn" [hidden]="!userIsManager() || this.eventTypes.length == 0">
-                    <button (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
-                    <button (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
+                    <button i18n (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
+                    <button i18n (click)="enableEditing(true)" [class.active]="editEnabled" class="btn timButton">Edit</button>
                 </div>
             </div>
             <div class="col-md-4">
@@ -191,7 +191,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                 <!-- TODO: Checkboxes for filtering purposes
                 <div class="checkbox-group"> Show:
                     <div *ngFor="let box of checkboxEvents"> 
-                        <input (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
+                        <input i18n (change)="getEventsToView()" type="checkbox" name="checkboxEvents" value="box.value"
                                [(ngModel)]="box.checked" [checked]="">{{box.name}}
                     </div>
                 </div>
@@ -272,9 +272,10 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
         </div>
         <tim-time-view-selector [style.visibility]="view == 'month' ? 'hidden' : 'visible'"
                 (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
-                                (evening)="setEvening($event)"></tim-time-view-selector>
+                                (evening)="setEvening($event)">
+        </tim-time-view-selector>
         <div>
-            <button class="btn timButton" (click)="export()">Export calendar</button>
+            <button i18n class="btn timButton" (click)="export()">Export calendar</button>
             <span class="exportDone"><b>{{exportDone}}</b></span>
         </div>
     `,
@@ -773,11 +774,11 @@ export class CalendarComponent
             } else {
                 if (result.result.error.error) {
                     await showMessageDialog(
-                        `Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
+                        $localize`Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
                     );
                 } else {
                     await showMessageDialog(
-                        `Something went wrong. TIM admins have been notified about the issue.`
+                        $localize`Something went wrong. TIM admins have been notified about the issue.`
                     );
                 }
                 this.events.forEach((event) => {
@@ -827,7 +828,7 @@ export class CalendarComponent
                 await showMessageDialog(result.result.error.error);
             } else {
                 await showMessageDialog(
-                    `Something went wrong. TIM admins have been notified about the issue.`
+                    $localize`Something went wrong. TIM admins have been notified about the issue.`
                 );
             }
             event.start = oldStart;
