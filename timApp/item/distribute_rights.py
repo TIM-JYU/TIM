@@ -1,15 +1,17 @@
 import itertools
+import multiprocessing
 from collections import defaultdict
 from concurrent.futures import Future
-from dataclasses import dataclass, replace, field
+from dataclasses import dataclass, replace, field, fields, Field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Literal, Union, Optional, DefaultDict, Callable, TypeVar
+from typing import Literal, Union, DefaultDict, Callable, TypeVar, Any, get_args
 from urllib.parse import urlparse
 
 import filelock
 from flask import Response, flash, request
 from isodate import Duration
+from marshmallow import Schema
 from werkzeug.utils import secure_filename
 
 from timApp.auth.accesshelper import AccessDenied, verify_admin
@@ -46,35 +48,35 @@ from tim_common.vendor.requests_futures import FuturesSession
 dist_bp = TypedBlueprint("dist_rights", __name__, url_prefix="/distRights")
 
 
-@dataclass
+@dataclass(slots=True)
 class ConfirmOp:
     type: Literal["confirm"]
     email: str
     timestamp: datetime
 
 
-@dataclass
+@dataclass(slots=True)
 class ConfirmGroupOp:
     type: Literal["confirmgroup"]
     group: str
     timestamp: datetime
 
 
-@dataclass
+@dataclass(slots=True)
 class QuitOp:
     type: Literal["quit"]
     email: str
     timestamp: datetime
 
 
-@dataclass
+@dataclass(slots=True)
 class UnlockOp:
     type: Literal["unlock"]
     email: str
     timestamp: datetime
 
 
-@dataclass
+@dataclass(slots=True)
 class ChangeTimeOp:
     type: Literal["changetime"]
     email: str
@@ -82,7 +84,7 @@ class ChangeTimeOp:
     timestamp: datetime
 
 
-@dataclass
+@dataclass(slots=True)
 class ChangeTimeGroupOp:
     type: Literal["changetimegroup"]
     group: str
@@ -90,21 +92,21 @@ class ChangeTimeGroupOp:
     timestamp: datetime
 
 
-@dataclass
+@dataclass(slots=True)
 class UndoConfirmOp:
     type: Literal["undoconfirm"]
     email: str
     timestamp: datetime
 
 
-@dataclass
+@dataclass(slots=True)
 class UndoQuitOp:
     type: Literal["undoquit"]
     email: str
     timestamp: datetime
 
 
-@dataclass
+@dataclass(slots=True)
 class ChangeStartTimeGroupOp:
     type: Literal["changestarttimegroup"]
     group: str
@@ -112,7 +114,7 @@ class ChangeStartTimeGroupOp:
     timestamp: datetime
 
 
-@dataclass
+@dataclass(slots=True)
 class Right:
     require_confirm: bool
     duration_from: datetime | None
@@ -143,6 +145,22 @@ GroupOps = (
     ChangeStartTimeGroupOp,
     ConfirmGroupOp,
 )
+
+
+def _get_op_name(op_type: RightOp) -> str:
+    type_field: Field = next((f for f in fields(op_type) if f.name == "type"))
+    return get_args(type_field.type)[0]
+
+
+right_op_types: dict[str, Schema] = {
+    _get_op_name(op_type): class_schema(op_type)() for op_type in get_args(RightOp)
+}
+
+
+# It's faster to deserialize using class schemas instead of generating a field schema for RightOp
+def _deserialize_right(line: dict[str, Any]) -> RightOp:
+    return right_op_types[line["type"]].load(line)
+
 
 RightOpSchema = field_for_schema(RightOp)  # type: ignore[arg-type]
 
@@ -313,7 +331,7 @@ def get_current_rights(target: str) -> tuple[RightLog, Path]:
 
 def read_rights(path: Path, index: int) -> tuple[list[RightOp], list[dict]]:
     lines = read_json_lines(path)
-    return [RightOpSchema.deserialize(line) for line in lines[index:]], lines
+    return [_deserialize_right(line) for line in lines[index:]], lines
 
 
 def do_register_right(op: RightOp, target: str) -> tuple[RightLog | None, str | None]:
@@ -338,7 +356,7 @@ def do_register_right(op: RightOp, target: str) -> tuple[RightLog | None, str | 
 
 def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> list[str]:
     emails = rights.group_cache[op.group] if isinstance(op, GroupOps) else [op.email]
-    session = FuturesSession()
+    session = FuturesSession(max_workers=multiprocessing.cpu_count())
     futures = []
     host_config = app.config["DIST_RIGHTS_HOSTS"][target]
     dist_rights_send_secret = get_secret_or_abort("DIST_RIGHTS_SEND_SECRET")
@@ -495,7 +513,7 @@ def register_op_to_hosts(
     register_hosts = [
         h for h in app.config["DIST_RIGHTS_REGISTER_HOSTS"] if h != curr_host
     ]
-    session = FuturesSession()
+    session = FuturesSession(max_workers=multiprocessing.cpu_count())
     futures: list[Future] = []
     for h in register_hosts:
         f = session.post(
