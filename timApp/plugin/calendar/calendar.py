@@ -139,9 +139,8 @@ def get_ical(key: str) -> Response:
     if user_data is None:
         raise NotFound()
 
-    user_id = user_data.user_id
     user_obj = user_data.user
-    events = events_of_user(user_id, user_obj)
+    events = events_of_user(user_obj)
 
     buf = StringIO()
     buf.write("BEGIN:VCALENDAR\r\n")
@@ -182,14 +181,14 @@ def string_to_lines(str_to_split: str) -> str:
     return "\r\n ".join(wrap(str_to_split, width=60))
 
 
-def events_of_user(cur_user: int, user_obj: User) -> list[Event]:
+def events_of_user(user_obj: User) -> list[Event]:
     """
     Fetches users events
 
-    :param: cur_user current user id: int
     :param: user_obj current user object: User
     :return: list of events
     """
+    cur_user = user_obj.id
     events: list[Event] = Event.query.filter(Event.creator_user_id == cur_user).all()
     # TODO: Makes too many queries to db, to be refactored
     for group in user_obj.groups:
@@ -219,7 +218,7 @@ def get_events() -> Response:
     cur_user = get_current_user_id()
     user_obj = get_current_user_object()
 
-    events = events_of_user(cur_user, user_obj)
+    events = events_of_user(user_obj)
 
     event_objs = []
     for event in events:
