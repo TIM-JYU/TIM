@@ -5866,7 +5866,7 @@
       </trans-unit>
       <trans-unit id="6749934902228585627" datatype="html">
         <source>Booking must be done before the event</source>
-        <target state="translated">Varaus on tehtävä ennen tapatumaa</target>
+        <target state="translated">Varaus on tehtävä ennen tapahtumaa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">199</context>
