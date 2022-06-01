@@ -1,7 +1,6 @@
 """
 API endpoints for the calendar plugin
 """
-<<<<<<< HEAD
 
 __authors__ = [
     "Miika Immonen",
@@ -14,8 +13,6 @@ __license__ = "MIT"
 __date__ = "24.5.2022"
 
 
-=======
->>>>>>> 5be81a426fa667fd6b96e4662114769e0150c626
 import secrets
 import uuid
 from dataclasses import dataclass, asdict, field
