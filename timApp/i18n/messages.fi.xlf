@@ -5648,22 +5648,6 @@
           <context context-type="linenumber">172</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6328943491200318160" datatype="html">
-        <source>Export calendar</source>
-        <target state="translated">Vie kalenteri</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
-          <context context-type="linenumber">268</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5184373289520493569" datatype="html">
-        <source> OK </source>
-        <target state="translated"> OK </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
-          <context context-type="linenumber">295,297</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5345773632901719846" datatype="html">
         <source>Set view with timeslots of </source>
         <target state="translated">Näytä kalenteri </target>
