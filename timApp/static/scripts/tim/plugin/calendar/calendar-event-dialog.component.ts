@@ -207,14 +207,11 @@ import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
                 <tim-alert *ngIf="(maxSize>2000 || maxSize<0) && ngModelMaxSize.dirty" >
                     <ng-container i18n >Event capacity must be 0-2000</ng-container>
                 </tim-alert>
-
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['bookingEndInvalid']">
                 <ng-container i18n *ngIf="form.errors?.['bookingEndInvalid']">Booking must be done before the event</ng-container>
                 </tim-alert>
-                
                 <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['dateInvalid']">
                 <ng-container i18n *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.</ng-container>
-
                 </tim-alert>
                 <tim-alert *ngIf="ngModelTitle.invalid && ngModelTitle.dirty" severity="danger">
                     <ng-container i18n *ngIf="ngModelTitle.errors?.['required']">
@@ -222,18 +219,14 @@ import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
                     </ng-container>
 
                     <ng-container i18n *ngIf="ngModelTitle.errors?.['pattern']">
-                        Title should not contain the slash character. <!--TODO: Think about the pattern-->
+                        Title should not contain the slash character.
                     </ng-container>
-                    <!-- <ng-container i18n *ngIf="ngModelTitle.errors?.['pattern']">
-                        End time has to be after the start. TODO: Figure aut custom form validation 
-                    </ng-container> -->
                 </tim-alert>
                 <tim-alert *ngIf="message" severity="danger">
                     <ng-container *ngIf="message">
                         {{message}}
                     </ng-container>
                 </tim-alert>
-
             </ng-container>
             <ng-container class="col-sm-12" footer>
                 <div class="col-sm-12 row">
@@ -346,7 +339,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.data.meta!.signup_before = eventToEdit.signup_before;
             this.close(this.data);
         } else {
-            console.error(result.result.error.error);
             if (result.result.error.error) {
                 this.setMessage(result.result.error.error);
             } else {
@@ -380,7 +372,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 eventToDelete.meta.deleted = true;
                 this.close(eventToDelete);
             } else {
-                console.error(result.result.error.error);
                 if (result.result.error.error) {
                     this.setMessage(result.result.error.error);
                 } else {
@@ -567,7 +558,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
 
             this.close(eventToBook);
         } else {
-            console.error(result.result.error.error);
             if (result.result.error.error) {
                 this.setMessage(result.result.error.error);
             } else {
@@ -614,7 +604,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             });
             this.close(openEvent);
         } else {
-            console.error(result.result.error.error);
             if (result.result.error.error) {
                 this.setMessage(result.result.error.error);
             } else {

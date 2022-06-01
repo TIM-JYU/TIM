@@ -143,7 +143,7 @@ def get_url() -> Response:
 def get_ical(key: str) -> Response:
     """Fetches users events in a ICS format. User ID is sorted out from hash code from query parameter
 
-    :return: ICS file that can be exported
+    :return: ICS file that can be exported otherwise 404 if user data does not exist.
     """
     user_data: ExportedCalendar = ExportedCalendar.query.filter(
         ExportedCalendar.calendar_hash == key
@@ -451,7 +451,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
 
     :param event_id: Event id
     :param event: Updated event
-    :return: HTTP 200 if succeeded, otherwise 400
+    :return: HTTP 200 if succeeded, otherwise 404
     """
     verify_logged_in()
     if not user_is_event_manager(event_id):
@@ -556,6 +556,7 @@ def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Re
     :param event_id: the id of the event that has the enrollment
     :param booker_msg: Updated message chain to the enrollment
     :param booker_group: the involved booker group of the enrollment
+    :return: HTTP 200 if succeeded, otherwise 404
     """
     verify_logged_in()
     event = Event.get_event_by_id(event_id)
@@ -623,7 +624,7 @@ def delete_booking(event_id: int) -> Response:
     """Deletes the booking or enrollment to an event for current user's personal user group.
 
     :param event_id: Event id that matches with the enrollment
-    :return: HTTP 200 if succeeded, otherwise 400
+    :return: HTTP 200 if succeeded, otherwise 404
     """
     verify_logged_in()
     user_obj = get_current_user_object()
@@ -648,7 +649,7 @@ def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> None
 
     :param: event_id of the event
     :param: msg_type of the message, reservation (True) or cancellation (False)
-    :return: None, otherwise NotExist()
+    :return: None, otherwise 404
     """
     event = Event.get_event_by_id(event_id)
     if not event:

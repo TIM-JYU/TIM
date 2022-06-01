@@ -678,8 +678,13 @@ export class CalendarComponent
             this.events = result.result;
             this.refresh();
         } else {
-            // TODO: Handle error responses properly
-            console.error(result.result.error.error);
+            if (result.result.error.error) {
+                await showMessageDialog(result.result.error.error);
+            } else {
+                await showMessageDialog(
+                    `Something went wrong. TIM admins have been notified about the issue.`
+                );
+            }
         }
     }
 
@@ -767,8 +772,6 @@ export class CalendarComponent
                 });
                 this.refresh();
             } else {
-                console.error(result.result.error.error);
-
                 if (result.result.error.error) {
                     await showMessageDialog(
                         $localize`Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
@@ -821,7 +824,6 @@ export class CalendarComponent
         );
         if (result.ok) {
         } else {
-            console.error(result.result.error.error);
             if (result.result.error.error) {
                 await showMessageDialog(result.result.error.error);
             } else {
@@ -865,8 +867,13 @@ export class CalendarComponent
             }
             this.refresh();
         } else {
-            // TODO: Handle error responses properly
-            console.error(result.result.error.error);
+            if (result.result.error.error) {
+                await showMessageDialog(result.result.error.error);
+            } else {
+                await showMessageDialog(
+                    `Something went wrong. TIM admins have been notified about the issue.`
+                );
+            }
         }
     }
 
