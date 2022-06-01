@@ -8,8 +8,10 @@ Plugins for one task
 \
 #- {area="TASK_demo" visible="%% False | isview%%" nocache="true"}
 Tehtävä: TASK
-#- {area="TASK_fields" collapse="true"}
+
+#- {area="TASK_fields" visible="%% False | isview%%" collapse="true"}
 Arviointitilanne
+
 
 #- {defaultplugin="numericfield" readonly="view" .fieldCell}
 %% 'TASK_Pisteet=Pisteet;TASK_Ope=Ope;TASK_Vp=Vp;TASK_VpOpe=VpOpe' | gfields('cols: 5') -%%
