@@ -5882,6 +5882,8 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">236,238</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="7711803407150719014" datatype="html">
         <source> Session check </source>
         <target state="translated"> Istunnon tarkistus </target>
