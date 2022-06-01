@@ -528,7 +528,7 @@ def send_email_to_enrolled_users(event: Event, user_obj: User) -> None:
             raise NotExist()
         user_accounts.append(user_account)
     start_time = event.start_time.astimezone(fin_timezone).strftime("%d.%m.%Y %H:%M")
-    end_time = event.end_time.astimezone(fin_timezone).strftime("%H:%M")
+    end_time = event.end_time.astimezone(fin_timezone).strftime("%H:%M (UTC %z)")
     event_time = f"{start_time}-{end_time}"
     name = user_obj.name
     msg = f"TIM-Calendar event {event.title} {event_time} has been cancelled by {name}."
@@ -645,7 +645,7 @@ def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> None
         raise NotExist()
     creator = event.creator
     start_time = event.start_time.astimezone(fin_timezone).strftime("%d.%m.%Y %H:%M")
-    end_time = event.end_time.astimezone(fin_timezone).strftime("%H:%M")
+    end_time = event.end_time.astimezone(fin_timezone).strftime("%H:%M (UTC %z)")
     event_time = f"{start_time}-{end_time}"
     name = user_obj.name
     match msg_type:
