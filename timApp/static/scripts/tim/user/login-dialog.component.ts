@@ -92,6 +92,7 @@ interface ISimpleRegistrationResponse {
                    #loginEmail
                    [(ngModel)]="loginForm.email"
                    (keydown.enter)="handleEmailGiven()"
+                   autocomplete="username"
                    type="text">
         </div>
 
@@ -122,6 +123,7 @@ interface ISimpleRegistrationResponse {
                    (keydown.enter)="loginWithEmail()"
                    focusMe
                    [enable]="focusPassword"
+                   autocomplete="current-password"
                    type="password">
             <p *ngIf="!hideVars.passwordRecovery" class="text-smaller"><a href="#" (click)="forgotPassword()" i18n>I forgot my password</a></p>
         </div>
@@ -154,7 +156,7 @@ interface ISimpleRegistrationResponse {
         </ng-container>
     </ng-container>
 
-    <div class="form" *ngIf="showSignup">
+    <form class="form" *ngIf="showSignup">
         <div class="text-center" *ngIf="!resetPassword">
             <p i18n>If you don't have an existing TIM or {{getHomeOrgDisplayName()}} account, you can create a TIM account here.</p>
             <p i18n>Please input your email address to receive a temporary password.</p>
@@ -173,6 +175,7 @@ interface ISimpleRegistrationResponse {
                    name="email"
                    required
                    i18n-placeholder
+                   autocomplete="username"
                    placeholder="Email or username"
                    type="text"/>
             <label [ngStyle]="urlStyle" for="url" class="control-label" i18n>Do not type anything here</label>
@@ -200,18 +203,19 @@ interface ISimpleRegistrationResponse {
         </button>
         <div *ngIf="emailSent">
             <div class="form-group" *ngIf="!tempPasswordProvided">
-                <label for="password-signup" class="control-label" i18n>
+                <label for="one-time-code-signup" class="control-label" i18n>
                     TIM sent you a temporary password. Please check your email and type the password below to continue.
                 </label>
                 <input class="form-control"
-                       id="password-signup"
+                       id="one-time-code-signup"
                        focusMe
                        [(ngModel)]="tempPassword"
                        (keydown.enter)="provideTempPassword()"
-                       name="tempPassword"
+                       name="oneTimeCode"
                        required
                        i18n-placeholder
                        placeholder="Password you received"
+                       autocomplete="one-time-code"
                        type="password"/>
             </div>
             <button (click)="provideTempPassword()"
@@ -232,6 +236,7 @@ interface ISimpleRegistrationResponse {
                            name="name"
                            required
                            i18n-placeholder
+                           autocomplete="name"
                            placeholder="Your name"
                            type="text"/>
                 </div>
@@ -249,6 +254,7 @@ interface ISimpleRegistrationResponse {
                            required
                            i18n-placeholder
                            placeholder="Password"
+                           autocomplete="new-password"
                            type="password"/>
                 </div>
                 <div class="form-group">
@@ -264,6 +270,7 @@ interface ISimpleRegistrationResponse {
                            name="rePassword"
                            required
                            i18n-placeholder
+                           autocomplete="new-password"
                            placeholder="Retype password"
                            type="password"/>
                 </div>
@@ -285,11 +292,13 @@ interface ISimpleRegistrationResponse {
                 the page to log in.
             </span>
         </div>
-        <tim-loading *ngIf="signUpRequestInProgress"></tim-loading>
+        <div class="flex justify-center">
+            <tim-loading *ngIf="signUpRequestInProgress"></tim-loading>
+        </div>
         <tim-alert severity="danger" *ngIf="signUpError">
             <tim-error-description [error]="signUpError"></tim-error-description>
         </tim-alert>
-    </div>
+    </form>
     </div>
 </div>
     </ng-container>
