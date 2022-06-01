@@ -26,6 +26,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.utils import fin_timezone
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import (
@@ -526,8 +527,8 @@ def send_email_to_enrolled_users(event: Event, user_obj: User) -> None:
         if user_account is None:
             raise NotExist()
         user_accounts.append(user_account)
-    start_time = event.start_time.strftime("%d.%m.%Y %H:%M")
-    end_time = event.end_time.strftime("%H:%M")
+    start_time = event.start_time.astimezone(fin_timezone).strftime("%d.%m.%Y %H:%M")
+    end_time = event.end_time.astimezone(fin_timezone).strftime("%H:%M")
     event_time = f"{start_time}-{end_time}"
     name = user_obj.name
     msg = f"TIM-Calendar event {event.title} {event_time} has been cancelled by {name}."
@@ -643,8 +644,8 @@ def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> None
     if not event:
         raise NotExist()
     creator = event.creator
-    start_time = event.start_time.strftime("%d.%m.%Y %H:%M")
-    end_time = event.end_time.strftime("%H:%M")
+    start_time = event.start_time.astimezone(fin_timezone).strftime("%d.%m.%Y %H:%M")
+    end_time = event.end_time.astimezone(fin_timezone).strftime("%H:%M")
     event_time = f"{start_time}-{end_time}"
     name = user_obj.name
     match msg_type:
