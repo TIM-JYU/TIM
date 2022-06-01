@@ -46,8 +46,6 @@ export class DateTimeValidatorDirective implements Validator, OnInit {
 export const dateCheckedValidator: ValidatorFn = (
     control: AbstractControl
 ): ValidationErrors | null => {
-    // TODO: Check that startTime + -date is before endTime + -date.
-
     const values: {
         title: string;
         startDate: string;
