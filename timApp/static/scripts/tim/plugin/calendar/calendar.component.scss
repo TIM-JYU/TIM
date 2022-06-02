@@ -27,6 +27,12 @@ The style sheet for the calendar plugin
   width: calc(89% - 2px);
 }
 
+@media (max-width: 991px) {
+  .row {
+    margin: 0;
+  }
+}
+
 @media (min-width: 992px) {
   .currentDay {
     margin-top: 5px;
