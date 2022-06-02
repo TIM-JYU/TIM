@@ -28,6 +28,12 @@ The style sheet for the calendar plugin
 }
 
 @media (max-width: 991px) {
+    .cal-events-container {
+    width: calc(69% - 2px);
+  }
+}
+
+@media (max-width: 991px) {
   .row {
     margin: 0;
   }
