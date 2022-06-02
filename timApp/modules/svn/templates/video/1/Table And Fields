@@ -85,7 +85,7 @@ updateFields:
 {% endfor %}
  - TASK_Riita
  - TASK_Riitauta
- nextRunner: TASK_runnerVari
+nextRunner: TASK_runnerVari
 preprogram: |!!
 //
     const parsed = JSON.parse(this.g);
@@ -97,7 +97,7 @@ preprogram: |!!
 program: |!!
 
     let compensation = %%peer_review_points%%;
-    let maxDiff = %maxEro%%;
+    let maxDiff = %%maxEro%%;
 
     let reviewCount = tools.getVelpReviewCount("TASK");
     let vp = reviewCount * compensation
