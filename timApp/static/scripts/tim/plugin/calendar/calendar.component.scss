@@ -27,9 +27,22 @@ The style sheet for the calendar plugin
   width: calc(89% - 2px);
 }
 
+@media (max-width: 991px) {
+    .cal-events-container {
+    width: calc(69% - 2px);
+  }
+}
+
+@media (max-width: 991px) {
+  .row {
+    margin: 0;
+  }
+}
+
 @media (min-width: 992px) {
   .currentDay {
     margin-top: 5px;
+    padding: 6px;
   }
 }
 
@@ -61,17 +74,9 @@ The style sheet for the calendar plugin
   margin-top: 0.5em;
 }
 
-.modal{
-  opacity: 1;
-  z-index: 1056;
-}
-
-.modal-dialog {
-  margin-top: 15em;
-}
-
-.modal-backdrop.fade {
-  opacity: 0.5;
+.dialog-label {
+  margin: 0;
+  padding-left: 3px;
 }
 
 .time-period-btn {

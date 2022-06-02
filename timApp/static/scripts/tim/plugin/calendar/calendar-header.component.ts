@@ -17,43 +17,47 @@ import {CalendarView} from "angular-calendar";
 @Component({
     selector: "tim-calendar-header",
     template: `
-    <div class="row text-center">
-    </div>
-     <div class="row text-center">   
+     <div class="row text-center">
       <div class="col-md-4">
-        <div class="btn-group time-period-btn col-md-10">
-          <button
-            class="btn btn-primary"
-            mwlCalendarPreviousView
-            [view]="view"
-            [(viewDate)]="viewDate"
-            (viewDateChange)="viewDateChange.next(viewDate)">
-              <span class="glyphicon glyphicon-arrow-left"></span>
-          </button>
-          <button
-            class="btn btn-outline-secondary"
-            mwlCalendarToday
-            [(viewDate)]="viewDate"
-            (viewDateChange)="viewDateChange.next(viewDate)">
-              <ng-container >  <span [hidden]="!(view== CalendarView.Day)" >{{viewDate | calendarDate:'weekViewColumnSubHeader':locale}}</span> </ng-container>
-            <tim-show-week [hidden]="!(view == CalendarView.Week)" [(view)]="view" [(viewDate)]="viewDate"></tim-show-week>
-              <ng-container >  <span  [hidden]="!(view== CalendarView.Month)">{{viewDate | calendarDate :'viewMonth':locale}}</span> </ng-container>
-          </button>
-          <button
-            class="btn btn-primary"
-            mwlCalendarNextView
-            [view]="view"
-            [(viewDate)]="viewDate"
-            (viewDateChange)="viewDateChange.next(viewDate)">
-              <span class="glyphicon glyphicon-arrow-right"></span>
-          </button>
-        </div>
-          <button i18n class="btn timButton currentDay col-md-10"
-                mwlCalendarToday
-                [(viewDate)]="viewDate"
-                (viewDateChange)="viewDateChange.next(viewDate)"
-                >Back to current date
-        </button>
+          <div class="row">
+              <div class="row">
+                  <div class="btn-group time-period-btn">
+                      <button
+                        class="btn btn-primary"
+                        mwlCalendarPreviousView
+                        [view]="view"
+                        [(viewDate)]="viewDate"
+                        (viewDateChange)="viewDateChange.next(viewDate)">
+                          <span class="glyphicon glyphicon-arrow-left"></span>
+                      </button>
+                      <button
+                        class="btn btn-outline-secondary"
+                        mwlCalendarToday
+                        [(viewDate)]="viewDate"
+                        (viewDateChange)="viewDateChange.next(viewDate)">
+                          <ng-container >  <span [hidden]="!(view== CalendarView.Day)" >{{viewDate | calendarDate:'weekViewColumnSubHeader':locale}}</span> </ng-container>
+                        <tim-show-week [hidden]="!(view == CalendarView.Week)" [(view)]="view" [(viewDate)]="viewDate"></tim-show-week>
+                          <ng-container >  <span  [hidden]="!(view== CalendarView.Month)">{{viewDate | calendarDate :'viewMonth':locale}}</span> </ng-container>
+                      </button>
+                      <button
+                        class="btn btn-primary"
+                        mwlCalendarNextView
+                        [view]="view"
+                        [(viewDate)]="viewDate"
+                        (viewDateChange)="viewDateChange.next(viewDate)">
+                          <span class="glyphicon glyphicon-arrow-right"></span>
+                      </button>
+                  </div>
+              </div>
+              <div class="row">
+                  <button i18n class="btn timButton currentDay"
+                        mwlCalendarToday
+                        [(viewDate)]="viewDate"
+                        (viewDateChange)="viewDateChange.next(viewDate)"
+                        >Back to current date
+                  </button>
+              </div>
+      </div>
       </div>
       <div class="col-md-4">
           <h2 [hidden]="view != 'day'">{{ viewDate | calendarDate:('viewDay'):locale}}</h2>

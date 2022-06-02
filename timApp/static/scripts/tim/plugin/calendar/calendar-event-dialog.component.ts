@@ -34,8 +34,8 @@ import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
                     <div class="form-group"
                          [ngClass]="{'has-error': ngModelTitle.invalid && ngModelTitle.dirty}">
 
-                        <label i18n for="title" class="col-sm-2 control-label">Title</label>
-                        <div class="col-sm-9">
+                        <label i18n for="title" class="col-sm-3 control-label">Title</label>
+                        <div class="col-sm-8">
                             <input i18n type="text" required
                                    maxlength="280"
                                    [(ngModel)]="title" #ngModelTitle="ngModel"
@@ -46,8 +46,8 @@ import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
                                    placeholder="Set title"
                                    [disabled]="!isEditEnabled()"/>
                         </div>
-                        <label i18n for="location" class="col-sm-2 control-label">Location</label>
-                        <div class="col-sm-9">
+                        <label i18n for="location" class="col-sm-3 control-label">Location</label>
+                        <div class="col-sm-8">
                             <input type="text"
                             maxlength="120"
                                    [(ngModel)]="location" #ngModelLocation="ngModel"
@@ -58,7 +58,7 @@ import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
                                    class="form-control"
                                    [disabled]="!isEditEnabled()" />
                         </div>
-                        <label i18n for="maxSize" class="col-sm-2 control-label">Capacity</label>
+                        <label i18n for="maxSize" class="col-sm-3 control-label">Capacity</label>
                         <div class="col-sm-3">
                             <input type="number"
                             min="0" max="2000" [(ngModel)]="maxSize"
@@ -69,15 +69,15 @@ import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     </div>
                     <div class="form-group" [hidden]="isPersonalEvent()">
-                            <label i18n for="capacity" class="col-sm-2 control-label">Capacity</label>
-                            <div class="col-sm-10">
+                            <label i18n for="capacity" class="col-sm-3 control-label">Capacity</label>
+                            <div class="col-sm-8">
                                 <b><abbr title="Amount of enrolled users">{{getEventEnrollments()}}</abbr> / <abbr title="Maximum capacity of the event">{{getEventCapacity()}}</abbr></b>
                             </div>
                         </div>
                     <div [hidden]="multipleBookers()">
                         <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
-                            <label i18n for="booker" class="col-sm-2 control-label">Booker</label>
-                            <div class="col-sm-9">
+                            <label i18n for="booker" class="col-sm-3 control-label">Booker</label>
+                            <div class="col-sm-8">
                                 <input type="text"
                                        [(ngModel)]="booker"
                                        (ngModelChange)="setMessage()"
@@ -88,8 +88,8 @@ import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
                             </div>
                         </div>
                         <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
-                            <label i18n for="bookerEmail" class="col-sm-2 control-label">Booker email</label>
-                            <div class="col-sm-9">
+                            <label i18n for="bookerEmail" class="col-sm-3 control-label">Booker email</label>
+                            <div class="col-sm-8">
                                 <input type="text"
                                        [(ngModel)]="bookerEmail"
                                        (ngModelChange)="setMessage()"
@@ -101,14 +101,14 @@ import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
                         </div>
                     </div>
                     <div [hidden]="hideBookerListLink()" class="form-group">
-                        <label i18n for="bookers" class="col-sm-2 control-label">Bookers</label>
-                        <a i18n href="/calendar/events/{{this.data.id}}/bookers" target="_blank" class="col-sm-10">Show list
+                        <label i18n for="bookers" class="col-sm-3 control-label">Bookers</label>
+                        <a i18n href="/calendar/events/{{this.data.id}}/bookers" target="_blank" class="col-sm-9">Show list
                             of all bookers</a>
                     </div>
 
                     <div class="form-group">
                         <div class="col-sm-4">
-                        <label i18n for="startDate" class="col-sm-8 control-label">From</label>
+                        <label i18n for="startDate" class="dialog-label col-sm-8 control-label">From</label>
                         
                             <div class="input-group">
                                 <input type="date"
@@ -131,7 +131,7 @@ import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
                             </div>
                         </div>
                     <div class="col-sm-4">
-                        <label i18n for="endDate" class="col-sm-6 control-label">To</label>
+                        <label i18n for="endDate" class="dialog-label col-sm-6 control-label">To</label>
                             <div class="input-group">
                                 <input type="date"
                                        required
@@ -151,7 +151,7 @@ import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
                             </div>
                         </div>
                         <div class="col-sm-4" [hidden]="!isEditEnabled() || isPersonalEvent()">
-                        <label i18n for="bookingStopDate" class="col-sm-12 control-label">Book before</label>
+                        <label i18n for="bookingStopDate" class="dialog-label col-sm-12 control-label">Book before</label>
                             <div class="input-group">
 
                                 <input type="date"
