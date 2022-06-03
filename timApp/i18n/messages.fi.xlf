@@ -5862,7 +5862,7 @@
       </trans-unit>
       <trans-unit id="3605420808001945080" datatype="html">
         <source> Cancel Booking </source>
-        <target state="new"> Cancel Booking </target>
+        <target state="translated"> Peruuta varaus </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">236,238</context>
