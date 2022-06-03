@@ -805,6 +805,7 @@ export class CalendarComponent
             location: string;
             signup_before: Date;
             description: string;
+            maxSize: number;
         } = event.meta;
 
         const id = event.id;
@@ -815,6 +816,7 @@ export class CalendarComponent
             location: values.location,
             end: event.end,
             signup_before: values.signup_before,
+            max_size: values.maxSize,
         };
 
         const result = await toPromise(
