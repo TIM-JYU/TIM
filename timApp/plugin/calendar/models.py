@@ -83,13 +83,6 @@ class Event(db.Model):
         lazy="select",
     )
 
-    groups_in_event: list[UserGroup] = db.relationship(
-        UserGroup,
-        EventGroup.__table__,
-        primaryjoin=event_id == EventGroup.event_id,
-        lazy="select",
-    )
-
     creator: User = db.relationship(User)
 
     event_groups: list[EventGroup] = db.relationship(
