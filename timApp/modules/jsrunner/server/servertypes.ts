@@ -28,11 +28,13 @@ export const VelpData = t.intersection([
             name: t.string,
             real_name: nullable(t.string),
         }),
-        answer: t.type({
-            id: t.Int,
-            users: t.array(User),
-            task_id: t.string,
-        }),
+        answer: nullable(
+            t.type({
+                id: t.Int,
+                users: t.array(User),
+                task_id: t.string,
+            })
+        ),
     }),
     t.partial({
         groupinfo: t.type({
