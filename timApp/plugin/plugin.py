@@ -105,6 +105,7 @@ NEVERLAZY_PLUGINS = {
     "rbfield",
     "dropdown",
     "userSelect",
+    "calendar",
 }
 
 NO_ANSWERBROWSER_PLUGINS = {
