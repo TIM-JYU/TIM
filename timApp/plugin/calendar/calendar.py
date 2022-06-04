@@ -21,7 +21,6 @@ from io import StringIO
 from textwrap import wrap
 
 from flask import Response, render_template_string, url_for
-from werkzeug.exceptions import NotFound
 
 from timApp.auth.accesshelper import verify_logged_in, AccessDenied
 from timApp.auth.sessioninfo import (
@@ -149,7 +148,7 @@ def get_ical(key: str) -> Response:
         ExportedCalendar.calendar_hash == key
     ).one_or_none()
     if user_data is None:
-        raise NotFound()
+        raise NotExist()
 
     user_obj = user_data.user
     events = events_of_user(user_obj)
@@ -458,7 +457,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
         raise AccessDenied("No permission to edit the event")
     old_event = Event.get_event_by_id(event_id)
     if not old_event:
-        raise NotFound()
+        raise NotExist()
     old_event.title = event.title
     old_event.location = event.location
     old_event.message = event.description
@@ -510,7 +509,7 @@ def delete_event(event_id: int) -> Response:
     event = Event.get_event_by_id(event_id)
     user_obj = get_current_user_object()
     if not event:
-        raise NotFound()
+        raise NotExist()
 
     enrolled_users = event.enrolled_users
     if len(enrolled_users) > 0:
@@ -561,7 +560,7 @@ def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Re
     verify_logged_in()
     event = Event.get_event_by_id(event_id)
     if event is None:
-        raise NotFound()
+        raise NotExist()
 
     user_group = UserGroup.get_by_name(booker_group)
     enrollment = Enrollment.get_enrollment_by_ids(event_id, user_group.id)
@@ -570,7 +569,7 @@ def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Re
         enrollment.booker_message = booker_msg
         db.session.commit()
     else:
-        raise NotFound()
+        raise NotExist()
 
     return ok_response()
 
@@ -591,24 +590,17 @@ def book_event(event_id: int, booker_msg: str) -> Response:
         if len(event_obj.enrolled_users) >= event_obj.max_size:
             raise RouteException("Event is already full")
     else:
-        raise RouteException(f"Event not found by the id of {0}".format(event_id))
+        raise RouteException(f"Event not found by the id of {event_id}")
     user_obj = get_current_user_object()
+    user_group = user_obj.get_personal_group()
 
-    group_id = -1
-    for group in user_obj.groups:
-        if group.name == user_obj.name:
-            group_id = group.id
-
-    if group_id < 0:
-        raise NotExist("User's personal group was not found")  # Should be impossible
-
-    enrollment = Enrollment.get_enrollment_by_ids(event_id, group_id)
+    enrollment = Enrollment.get_enrollment_by_ids(event_id, user_group.id)
     if enrollment is not None:
-        raise RouteException("Event is already booked by the same user group")
+        raise RouteException("Event is already booked by the user")
 
     enrollment = Enrollment(
         event_id=event_id,
-        usergroup_id=group_id,
+        usergroup_id=user_group.id,
         enroll_type_id=0,
         booker_message=booker_msg,
     )  # TODO: add enrollment types
@@ -635,7 +627,7 @@ def delete_booking(event_id: int) -> Response:
 
     enrollment = Enrollment.get_enrollment_by_ids(event_id, group_id)
     if not enrollment:
-        raise NotFound()
+        raise NotExist()
 
     db.session.delete(enrollment)
     db.session.commit()
