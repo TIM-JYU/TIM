@@ -251,7 +251,20 @@ function runner(d: IRunnerData): RunnerResult {
 router.put("/", async (req, res, next) => {
     const decoded = JsrunnerAnswer.decode(req.body);
     if (isLeft(decoded)) {
-        res.json({web: {error: "Invalid input to jsrunner answer route."}});
+        const rep = decoded.left.map((err) => {
+            const ctx = err.context[err.context.length - 1];
+            return {
+                actual: ctx.actual,
+                key: ctx.key,
+                type: ctx.type.name,
+            };
+        });
+        res.json({
+            web: {
+                error: "Invalid inputs to jsrunner answer route",
+                invalidInputs: rep,
+            },
+        });
         return;
     }
     const value = decoded.right;

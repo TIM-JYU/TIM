@@ -12,13 +12,13 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "8.4.2022"
 
-import langcodes
 import click
+import langcodes
 from flask.cli import AppGroup
 
+from timApp.document.translation.language import Language
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
-from timApp.document.translation.language import Language
 from timApp.util.logger import log_error, log_info, log_debug
 
 language_cli = AppGroup("language")
@@ -80,10 +80,10 @@ def add_all_languages() -> None:
 
     :return: None.
     """
-    add_all_supported_languages()
+    add_all_supported_languages(True)
 
 
-def add_all_supported_languages() -> None:
+def add_all_supported_languages(log: bool = False) -> None:
     """
     Add all supported languages to the database. Supported languages are
     defined in the configuration variable LANGUAGES in timApp\defaultconfig.py.
@@ -110,16 +110,18 @@ def add_all_supported_languages() -> None:
                 click.echo(f"Failed to create language: {str(e)}")
         if lang.lang_code not in langset:
             # TODO Are these logs unnecessary?
-            log_info(f"Adding new language '{lang.lang_name} ({lang.lang_code})'")
-            click.echo(f"Adding new language '{lang.lang_name} ({lang.lang_code})'")
+            log_debug(f"Adding new language '{lang.lang_name} ({lang.lang_code})'")
+            if log:
+                click.echo(f"Adding new language '{lang.lang_name} ({lang.lang_code})'")
             db.session.add(lang)
         else:
             log_info(
                 f"Skipping language '{lang.lang_name} ({lang.lang_code})': Already in database"
             )
-            click.echo(
-                f"Language code '{lang.lang_code}' already exists in the database."
-            )
+            if log:
+                click.echo(
+                    f"Language code '{lang.lang_code}' already exists in the database."
+                )
     db.session.commit()
 
 

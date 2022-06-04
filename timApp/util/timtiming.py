@@ -4,6 +4,8 @@ import time
 from functools import wraps
 from typing import Callable, Any
 
+from timApp.util.logger import log_info
+
 timing_last = time.perf_counter()
 timing_last_t = time.time()
 timing_last_z = time.perf_counter()
@@ -69,7 +71,7 @@ def with_timing(*print_args: str) -> Callable:
 
             all_params = {k: resolve_arg(n, k) for n, k in enumerate(sig_params.keys())}
             args_str = ", ".join(f"{name}={all_params[name]}" for name in print_args)
-            print(f"{f.__name__}: {time_after - time_before:.4g} {args_str}")
+            log_info(f"{f.__name__}: {time_after - time_before:.4g} {args_str}")
             return result
 
         return wrapper

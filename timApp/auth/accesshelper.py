@@ -712,7 +712,7 @@ def verify_ip_ok(user: User | None, msg: str = "IPNotAllowed"):
         )
         msg_end = "Request was blocked." if should_block else "Request was allowed."
         reply_tos = [cfg["ERROR_EMAIL"]]
-        if user:
+        if user and user.email:
             reply_tos.append(user.email)
         if not is_in_blocklist:
             send_email(

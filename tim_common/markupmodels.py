@@ -165,6 +165,7 @@ class GenericMarkupModel(KnownMarkupFields):
 
     button: str | None | Missing = missing
     buttonText: str | None | Missing = missing
+    allowUnsavedLeave: bool | Missing | None = missing
     disableUnchanged: bool | Missing | None = missing
     footer: str | Missing = missing
     forceBrowser: bool | Missing | None = missing

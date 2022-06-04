@@ -59,6 +59,10 @@ export abstract class AngularPluginBase<
         return this.markup.undo?.confirmation;
     }
 
+    get allowUnsavedLeave() {
+        return this.markup.allowUnsavedLeave ?? false;
+    }
+
     get disableUnchanged() {
         return this.markup.disableUnchanged;
     }

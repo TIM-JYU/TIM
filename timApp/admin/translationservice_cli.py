@@ -15,10 +15,9 @@ __date__ = "5.5.2022"
 import click
 from flask.cli import AppGroup
 
+from timApp.document.translation.translator import TranslationService
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
-from timApp.document.translation.translator import TranslationService
-
 
 tr_service_cli = AppGroup("trservice")
 
@@ -34,11 +33,11 @@ def add_all_new() -> None:
 
     :return: None.
     """
-    add_all_tr_services_to_session()
+    add_all_tr_services_to_session(True)
     db.session.commit()
 
 
-def add_all_tr_services_to_session() -> None:
+def add_all_tr_services_to_session(log: bool = False) -> None:
     """
     Add all supported translation services to be commited to database.
     Note: session.commit must be called afterwards to save the changes!
@@ -60,14 +59,16 @@ def add_all_tr_services_to_session() -> None:
     for translator, init_data in app.config["MACHINE_TRANSLATORS"]:
         service_name = translator.__mapper_args__["polymorphic_identity"]
         if service_name in existing_services:
-            click.echo(
-                f"Skipping adding translation service '{service_name}': Already in database."
-            )
+            if log:
+                click.echo(
+                    f"Skipping adding translation service '{service_name}': Already in database."
+                )
         else:
             # Call the TranslationService's constructor with the specified
             # values if any.
             # TODO Implement some better method of constructing
             #  TranslationServices without dynamic typing like thought here.
             service = translator() if init_data is None else translator(init_data)
-            click.echo(f"Adding new translation service '{service_name}'")
+            if log:
+                click.echo(f"Adding new translation service '{service_name}'")
             db.session.add(service)

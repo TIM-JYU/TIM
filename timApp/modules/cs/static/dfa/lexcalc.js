@@ -440,6 +440,11 @@ class Cos extends FuncRROperation {
     doCalc(a) { return Math.cos(this.calculator.toAngle(a)); }
 },
 
+class Tan extends FuncRROperation {
+    reg() { return /tan/; }
+    doCalc(a) { return Math.tan(this.calculator.toAngle(a)); }
+},
+
 class Sqrt extends FuncRROperation {
     reg() { return /sqrt/; }
     doCalc(a) { return Math.sqrt(a); }
@@ -707,7 +712,9 @@ class Calculator {
                 r = this.calcOne(tline);
             r.calc = `r${i}: ${r.calc}${toMem}`;
             if (expected !== null) {
-                if (""+r.res == expected) r.calc = ""; // OK, do not display
+                let res = r.res;
+                if ( typeof res === 'number') res = (Math.round(res*1000000)/1000000);
+                if (""+res === expected) r.calc = ""; // OK, do not display
                 else r.calc += " expected " + expected;
             }
             if (r.calc) result.push(r);
