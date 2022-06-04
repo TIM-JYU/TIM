@@ -6106,6 +6106,30 @@
           <context context-type="linenumber">278</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1521925891097959460" datatype="html">
+        <source>Export calendar information in ics-format?</source>
+        <target state="new">Export calendar information in ics-format?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
+          <context context-type="linenumber">830</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2537259444028776879" datatype="html">
+        <source>ICS-url copied to clipboard.</source>
+        <target state="new">ICS-url copied to clipboard.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
+          <context context-type="linenumber">846</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7354137443452135620" datatype="html">
+        <source>Error occurred when creating ICS-url.</source>
+        <target state="new">Error occurred when creating ICS-url.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
+          <context context-type="linenumber">848</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

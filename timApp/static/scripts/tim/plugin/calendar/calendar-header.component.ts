@@ -13,6 +13,7 @@
 
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import {CalendarView} from "angular-calendar";
+import {Users} from "../../user/userService";
 
 @Component({
     selector: "tim-calendar-header",
@@ -95,7 +96,7 @@ export class CalendarHeaderComponent {
 
     @Input() viewDate: Date = new Date();
 
-    @Input() locale: string = window.navigator.language;
+    @Input() locale: string = Users.getCurrentLocale();
 
     @Input() weekStartsOn: number = 1;
 
@@ -104,4 +105,8 @@ export class CalendarHeaderComponent {
     @Output() viewDateChange = new EventEmitter<Date>();
 
     CalendarView = CalendarView;
+
+    ngOnInit() {
+        console.log(this.locale);
+    }
 }

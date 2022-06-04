@@ -20,7 +20,7 @@ import {toPromise} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
-import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
+import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
 
 @Component({
     selector: "tim-calendar-event-dialog",
@@ -242,7 +242,7 @@ import {TimCalendarModule, TIMCalendarEvent} from "./calendar.component";
                         style="background-color: red; float: left">
                     Cancel Booking
                     </button>
-                    <button i18n class="btn timButton col-sm-2" type="button" style="background-color: red; float: left"
+                    <button i18n class="btn timButton btn-danger col-sm-2" type="button" style="float: left"
                         (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!isEditEnabled()">
                     Delete
                     </button>

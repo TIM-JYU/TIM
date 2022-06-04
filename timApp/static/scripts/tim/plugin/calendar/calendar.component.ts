@@ -36,6 +36,7 @@ import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {CommonModule, registerLocaleData} from "@angular/common";
 import localeFi from "@angular/common/locales/fi";
+import localeSv from "@angular/common/locales/sv";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
@@ -137,6 +138,7 @@ const segmentHeight = 30;
 // const minutesInSegment = 20;
 
 registerLocaleData(localeFi);
+registerLocaleData(localeSv);
 
 export type TIMEventMeta = {
     tmpEvent: boolean;
@@ -322,7 +324,7 @@ export class CalendarComponent
     ];
     */
 
-    locale: string = "Fi-fi";
+    locale: string = Users.getCurrentLocale();
 
     weekStartsOn: 1 = 1;
 
@@ -372,27 +374,6 @@ export class CalendarComponent
             this.minimumEventHeight = 30;
         }
         this.segmentsInHour = 60 / this.segmentMinutes;
-    }
-
-    /**
-     * Sets the locale language
-     */
-    setLanguage() {
-        const language = navigator.language;
-        switch (language.toLowerCase()) {
-            case "fi-fi":
-                this.locale = "fi-fi";
-                break;
-            case "fi":
-                this.locale = "fi";
-                break;
-            case "en-us":
-                this.locale = "en-us";
-                break;
-            default:
-                this.locale = "en-us";
-                break;
-        }
     }
 
     /**
@@ -642,7 +623,6 @@ export class CalendarComponent
         this.icsURL = "";
         super.ngOnInit();
         this.initEventTypes();
-        this.setLanguage();
         void this.loadEvents();
     }
 
@@ -847,7 +827,7 @@ export class CalendarComponent
         if (
             !(await showConfirm(
                 "ICS",
-                `Export calendar information in ics-format?`
+                $localize`Export calendar information in ics-format?`
             ))
         ) {
             return;
@@ -863,9 +843,9 @@ export class CalendarComponent
                 navigator.clipboard.writeText(this.icsURL)
             );
             if (copyResult.ok) {
-                this.exportDone = "ICS-url copied to clipboard.";
+                this.exportDone = $localize`ICS-url copied to clipboard.`;
             } else {
-                this.exportDone = "Error occurred when creating ICS-url.";
+                this.exportDone = $localize`Error occurred when creating ICS-url.`;
             }
             this.refresh();
         } else {
@@ -873,7 +853,7 @@ export class CalendarComponent
                 await showMessageDialog(result.result.error.error);
             } else {
                 await showMessageDialog(
-                    `Something went wrong. TIM admins have been notified about the issue.`
+                    $localize`Something went wrong. TIM admins have been notified about the issue.`
                 );
             }
         }

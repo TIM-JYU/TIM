@@ -5626,7 +5626,7 @@
       </trans-unit>
       <trans-unit id="6739432097196840926" datatype="html">
         <source> Week </source>
-        <target state="translated">Viikko </target>
+        <target state="translated"> Viikko </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-header.component.ts</context>
           <context context-type="linenumber">68,70</context>
@@ -6214,6 +6214,30 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
           <context context-type="linenumber">278</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1521925891097959460" datatype="html">
+        <source>Export calendar information in ics-format?</source>
+        <target state="translated">Viedäänkö kalenteritiedot ICS-muodossa?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
+          <context context-type="linenumber">830</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2537259444028776879" datatype="html">
+        <source>ICS-url copied to clipboard.</source>
+        <target state="translated">ICS-osoite kalenteriin kopioitu leikepöydälle.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
+          <context context-type="linenumber">846</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7354137443452135620" datatype="html">
+        <source>Error occurred when creating ICS-url.</source>
+        <target state="translated">Virhe luotaessa kalenterin ICS-osoite.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
+          <context context-type="linenumber">848</context>
         </context-group>
       </trans-unit>
     </body>
