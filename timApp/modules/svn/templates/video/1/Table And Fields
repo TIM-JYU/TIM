@@ -85,7 +85,7 @@ updateFields:
 {% endfor %}
  - TASK_Riita
  - TASK_Riitauta
-nextRunner: TASK_runnerVari
+
 preprogram: |!!
 //
     const parsed = JSON.parse(this.g);
@@ -100,7 +100,7 @@ program: |!!
     let maxDiff = %%maxEro%%;
 
     let reviewCount = tools.getVelpReviewCount("TASK");
-    let vp = reviewCount * compensation
+    let vp = reviewCount * compensation;
     tools.setDouble("Vp", vp);
 
     let velpPoints = tools.getVelpTaskPoints("TASK");
@@ -122,7 +122,7 @@ program: |!!
 
     let pointsArray = [];
     let reviews = tools.getReviews("TASK", gtools.users);
-    for (let i =1; i <= reviews.length; i++) {
+    for (let i = 1; i < reviews.length + 1; i++) {
         tools.setString("TASK_Arvioija_${i}"+i, reviews[i-1].name);
         points = reviews[i-1].points;
         totalPoints = 0;
@@ -142,7 +142,7 @@ program: |!!
         }
         else {
             tools.setDouble("TASK_Riita", delta);
-            tools.setString("rc_Riita.styles", '{"backgroundColor": "white"}');
+            tools.setString("TASK_Riita.styles", '{"backgroundColor": "white"}');
         }
     }
 !!
@@ -165,12 +165,12 @@ paramFields:
  - TASK_Arvioija_%%i%%
 {% endfor %}
 peerReviewField: TASK_vaihto
-nextRunner: TASK_runnerVari
+
 preprogram: |!!
     const parsed = JSON.parse(this.g);
     gtools.users = {};
     for (a of parsed.data) {
-       gtools.users[a.user.id] = a.user.name
+       gtools.users[a.user.id] = a.user.name;
     }
 !!
 program: |!!
