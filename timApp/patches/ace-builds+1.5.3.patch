@@ -1,0 +1,65 @@
+diff --git a/node_modules/ace-builds/css/ace.css b/node_modules/ace-builds/css/ace.css
+index a269772..b57095f 100644
+--- a/node_modules/ace-builds/css/ace.css
++++ b/node_modules/ace-builds/css/ace.css
+@@ -786,7 +786,7 @@ color: blue;
+ .ace_autocomplete .ace_completion-highlight{
+ text-shadow: 0 0 0.01em;
+ }
+-.ace_autocomplete {
++.ace_editor.ace_autocomplete {
+ width: 280px;
+ z-index: 200000;
+ background: #fbfbfb;
+diff --git a/node_modules/ace-builds/src-noconflict/ext-language_tools.js b/node_modules/ace-builds/src-noconflict/ext-language_tools.js
+index 169b26b..62bcdde 100644
+--- a/node_modules/ace-builds/src-noconflict/ext-language_tools.js
++++ b/node_modules/ace-builds/src-noconflict/ext-language_tools.js
+@@ -1354,7 +1354,7 @@ dom.importCssString("\
+ .ace_autocomplete .ace_completion-highlight{\
+     text-shadow: 0 0 0.01em;\
+ }\
+-.ace_autocomplete {\
++.ace_editor.ace_autocomplete {\
+     width: 280px;\
+     z-index: 200000;\
+     background: #fbfbfb;\
+diff --git a/node_modules/ace-builds/src-noconflict/ext-prompt.js b/node_modules/ace-builds/src-noconflict/ext-prompt.js
+index ebb31d7..34d49e9 100644
+--- a/node_modules/ace-builds/src-noconflict/ext-prompt.js
++++ b/node_modules/ace-builds/src-noconflict/ext-prompt.js
+@@ -377,7 +377,7 @@ dom.importCssString("\
+ .ace_autocomplete .ace_completion-highlight{\
+     text-shadow: 0 0 0.01em;\
+ }\
+-.ace_autocomplete {\
++.ace_editor.ace_autocomplete {\
+     width: 280px;\
+     z-index: 200000;\
+     background: #fbfbfb;\
+diff --git a/node_modules/ace-builds/src/ext-language_tools.js b/node_modules/ace-builds/src/ext-language_tools.js
+index df3f25d..c8df1fc 100644
+--- a/node_modules/ace-builds/src/ext-language_tools.js
++++ b/node_modules/ace-builds/src/ext-language_tools.js
+@@ -1354,7 +1354,7 @@ dom.importCssString("\
+ .ace_autocomplete .ace_completion-highlight{\
+     text-shadow: 0 0 0.01em;\
+ }\
+-.ace_autocomplete {\
++.ace_editor.ace_autocomplete {\
+     width: 280px;\
+     z-index: 200000;\
+     background: #fbfbfb;\
+diff --git a/node_modules/ace-builds/src/ext-prompt.js b/node_modules/ace-builds/src/ext-prompt.js
+index 1623504..4c8cbc2 100644
+--- a/node_modules/ace-builds/src/ext-prompt.js
++++ b/node_modules/ace-builds/src/ext-prompt.js
+@@ -377,7 +377,7 @@ dom.importCssString("\
+ .ace_autocomplete .ace_completion-highlight{\
+     text-shadow: 0 0 0.01em;\
+ }\
+-.ace_autocomplete {\
++.ace_editor.ace_autocomplete {\
+     width: 280px;\
+     z-index: 200000;\
+     background: #fbfbfb;\
