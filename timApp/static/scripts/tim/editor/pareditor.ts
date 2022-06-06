@@ -2256,6 +2256,15 @@ ${backTicks}
             neweditor.getSession().on("change", () => {
                 this.editorChanged();
             });
+            this.editor.addContainerEventListener("paste", (e) =>
+                this.onPaste(e)
+            );
+            this.editor.addContainerEventListener("drop", (e) =>
+                this.onDrop(e)
+            );
+            this.editor.addContainerEventListener("dragover", (e) =>
+                this.allowDrop(e)
+            );
             /*
             neweditor.getSession().on("paste", (e) => {
                 this.onPaste(e); // TODO: does never fire
