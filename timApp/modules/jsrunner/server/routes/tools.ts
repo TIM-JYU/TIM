@@ -1348,7 +1348,7 @@ export class Tools extends ToolsBase {
     }
 
     /**
-     * Check if the task is right
+     * Checks that the valp-data corresponds to the task given by the second parameter
      */
     isVelpTask(v: VelpDataT, task: string): boolean {
         const id = v.answer?.task_id;
