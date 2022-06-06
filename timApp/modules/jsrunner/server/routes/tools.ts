@@ -1331,12 +1331,12 @@ export class Tools extends ToolsBase {
     }
 
     isVelpTask(v: VelpDataT, task: string): boolean {
-        const id: string = v.answer.task_id;
-        return id.substr(id.indexOf(".") + 1) === task;
+        const id = v.answer?.task_id;
+        return id?.substr(id.indexOf(".") + 1) === task;
     }
 
     isVelpForUser(v: VelpDataT): boolean {
-        return v.answer.users[0].id === this.data.user.id;
+        return v.answer?.users[0].id === this.data.user.id;
     }
 
     getTaskPoints(task: string): number {
@@ -1377,9 +1377,12 @@ export class Tools extends ToolsBase {
             .filter(
                 (v) =>
                     v.annotator.id === this.data.user.id &&
-                    this.isVelpTask(v, task)
+                    this.isVelpTask(v, task) &&
+                    v.answer != null
             )
-            .map((v) => seen.add(v.answer.id));
+            .forEach((v) => {
+                seen.add(v.answer!.id);
+            });
         return seen.size;
     }
 
@@ -1390,13 +1393,14 @@ export class Tools extends ToolsBase {
                 (v) =>
                     this.isVelpForUser(v) &&
                     this.isVelpTask(v, task) &&
-                    peerreviewers.includes(v.annotator.id)
+                    peerreviewers.includes(v.annotator.id) &&
+                    v.answer != null
             )
             .map((v) => ({
                 id: v.annotator.id,
                 name: v.annotator.name,
                 points: v.points ? v.points : NaN,
-                task: v.answer.task_id,
+                task: v.answer!.task_id,
             }));
         const points = velps.map((v) => v.points).filter((n) => !isNaN(n));
         // this.output += points

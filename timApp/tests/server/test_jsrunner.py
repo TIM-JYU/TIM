@@ -95,7 +95,18 @@ class JsRunnerTest(JsRunnerTestBase):
             #  'Invalid field access: y', 400),
             (
                 'fields: []\ngroup: testuser1\nprogram: ""\ntimeout: 4500',
-                {"web": {"error": "Invalid input to jsrunner answer route."}},
+                {
+                    "web": {
+                        "error": "Invalid inputs to jsrunner answer route",
+                        "invalidInputs": [
+                            {
+                                "actual": 4500,
+                                "key": "timeout",
+                                "type": "(number | <function1>)",
+                            }
+                        ],
+                    }
+                },
                 200,
             ),
             (

@@ -213,6 +213,7 @@ def get_plugins() -> dict[str, PluginReg]:
         ),
         PluginReg(
             name="myPlugin", domain=internal_domain, port=qst_port, path="/myplugin/"
+            name="calendar", domain=internal_domain, port=qst_port, path="/calendar/"
         ),
     ]
     plugins = {p.name: p for p in plugin_list}

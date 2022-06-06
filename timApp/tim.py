@@ -78,6 +78,7 @@ from timApp.plugin.tape.tape import tape_plugin
 from timApp.plugin.timmenu.timMenu import timMenu_plugin
 from timApp.plugin.timtable.timTable import timTable_plugin
 from timApp.plugin.userselect.userselect import user_select_plugin
+from timApp.plugin.calendar.calendar import calendar_plugin
 from timApp.printing.print import print_blueprint
 from timApp.readmark.routes import readings
 from timApp.scheduling.scheduling_routes import scheduling
@@ -148,6 +149,7 @@ blueprints = [
     mailman_events,
     user_sessions,
     # plugins
+    calendar_plugin,
     importData_plugin,
     qst_plugin,
     reviewcanvas_plugin,

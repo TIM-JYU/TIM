@@ -1,0 +1,94 @@
+/*
+The style sheet for the calendar plugin
+* @author Miika Immonen
+ * @author Terhi Kamula
+ * @author Anssi Lepikko
+ * @author Touko Miettinen
+ * @author Joose Tikkanen
+ * @license MIT
+ * @date 24.5.2022
+ */
+
+.cal-week-view .cal-day-headers .cal-header {
+  padding: 5px 0px;
+}
+
+.cal-event-title {
+  font-size: 10px;
+}
+
+/* Disable event creation when clicking the time in the week view */
+.cal-time-label-column {
+  pointer-events: none;
+}
+
+/* Dictates event size so that multiple events can be added in same timeslot by clicking */
+.cal-events-container {
+  width: calc(89% - 2px);
+}
+
+@media (max-width: 991px) {
+    .cal-events-container {
+    width: calc(69% - 2px);
+  }
+}
+
+@media (max-width: 991px) {
+  .row {
+    margin: 0;
+  }
+}
+
+@media (min-width: 992px) {
+  .currentDay {
+    margin-top: 5px;
+    padding: 6px;
+  }
+}
+
+.edit-btn {
+  margin-bottom: 20px;
+}
+
+.event-btn {
+  margin-bottom: 20px;
+}
+
+.event-btn button {
+  padding: 6px 5px;
+}
+
+@media (min-width: 768px) {
+  .form-horizontal .control-label {
+    text-align: left;
+  }
+}
+
+.exportDone {
+  margin-left: 5px;
+  width: fit-content;
+}
+
+.message-btn {
+  float: left;
+  margin-top: 0.5em;
+}
+
+.dialog-label {
+  margin: 0;
+  padding-left: 3px;
+}
+
+.time-period-btn {
+  width: max-content;
+  //margin-top: 26px;
+}
+
+.checkbox-group{
+  text-align: left;
+  float: right;
+}
+
+input[type="checkbox"] {
+  margin-right: 4px;
+}

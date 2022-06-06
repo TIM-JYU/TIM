@@ -1,8 +1,8 @@
 """Sets up logging for the application."""
 import logging
 import os
-
 import sys
+from logging.handlers import TimedRotatingFileHandler
 
 from flask import Flask
 
@@ -18,7 +18,12 @@ def setup_logging(app: Flask) -> None:
         logging.getLogger("alembic").level = logging.INFO
     formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s ")
     os.makedirs(app.config["LOG_DIR"], exist_ok=True)
-    file_handler = logging.FileHandler(app.config["LOG_PATH"])
+    file_handler = TimedRotatingFileHandler(
+        app.config["LOG_PATH"],
+        when="D",
+        interval=30,
+        backupCount=12,
+    )
     file_handler.setLevel(app.config["LOG_LEVEL"])
     file_handler.setFormatter(formatter)
     global tim_logger

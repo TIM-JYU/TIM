@@ -1673,6 +1673,7 @@ def save_fields(
             Answer.task_id.in_(
                 [tid.doc_task for tid in parsed_task_ids.values() if not tid.is_global]
             )
+            & (Answer.valid == True)
         )
         .join(User, Answer.users)
         .filter(User.id.in_(user_map.keys()))

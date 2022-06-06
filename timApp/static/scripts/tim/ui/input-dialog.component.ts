@@ -109,7 +109,7 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
     }
 
     cancelText(): string {
-        return this.data.cancelText ?? "Cancel";
+        return this.data.cancelText ?? $localize`Cancel`;
     }
 
     text() {

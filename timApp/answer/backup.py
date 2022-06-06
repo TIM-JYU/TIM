@@ -6,7 +6,10 @@ from flask import current_app, Response
 from timApp.answer.answer import Answer
 from timApp.answer.exportedanswer import ExportedAnswer
 from timApp.document.docentry import DocEntry
+from timApp.timdb.sqa import db
 from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.responsehelper import to_json_str, ok_response
 from timApp.util.logger import log_error
 from timApp.util.secret import check_secret
@@ -62,4 +65,18 @@ def sync_user_group_memberships_if_enabled(user: User) -> None:
 
     from timApp.tim_celery import sync_user_group_memberships
 
-    sync_user_group_memberships.delay(user.email, [ug.name for ug in user.groups])
+    # Do a manual query to ensure there is no relationship cache in the middle
+    user_groups: list[str] = [
+        ugn
+        for ugn, in (
+            db.session.query(UserGroup.name)
+            .join(
+                UserGroupMember,
+                (UserGroup.id == UserGroupMember.usergroup_id) & membership_current,
+            )
+            .filter(UserGroupMember.user_id == user.id)
+            .all()
+        )
+    ]
+
+    sync_user_group_memberships.delay(user.email, user_groups)
