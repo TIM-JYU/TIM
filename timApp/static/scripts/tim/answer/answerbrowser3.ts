@@ -1578,6 +1578,10 @@ export class AnswerBrowserController
             );
     }
 
+    updateReviewers() {
+        this.setReviewerUsers();
+    }
+
     getReviewerUser() {
         return this.reviewerUser;
     }

@@ -20,6 +20,7 @@ import {
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ParContext} from "tim/document/structure/parContext";
 import {createParContext} from "tim/document/structure/create";
+import {AnswerBrowserController} from "tim/answer/answerbrowser3";
 import {IUser} from "../user/IUser";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
@@ -931,7 +932,8 @@ export class ReviewController {
                 );
                 return;
             }
-            const answerInfo = this.getAnswerInfo(parelement);
+            const ab = this.getAnswerBrowserFromElement(parelement);
+            const answerInfo = ab?.selectedAnswer;
             if (answerInfo != null) {
                 newAnnotation.answer_id = answerInfo.id;
             } else {
@@ -949,6 +951,7 @@ export class ReviewController {
                 },
                 velp
             );
+            ab?.updateReviewers();
             ann.draw_data = velpDrawing;
 
             const ele = this.compilePopOver(
@@ -1012,7 +1015,8 @@ export class ReviewController {
             }
 
             const elementPath = this.getElementPositionInTree(startElement, []);
-            const answerInfo = this.getAnswerInfo(startElement);
+            const ab = this.getAnswerBrowserFromElement(parelement);
+            const answerInfo = ab?.selectedAnswer;
 
             const startoffset = this.getRealStartOffset(
                 this.selectedArea.startContainer,
@@ -1035,6 +1039,7 @@ export class ReviewController {
                 {start: {par_id: parelement.id}, end: {par_id: parelement.id}},
                 velp
             );
+            ab?.updateReviewers();
             const added = this.addAnnotationToCoord(
                 this.selectedArea,
                 ann,
@@ -1095,12 +1100,13 @@ export class ReviewController {
                 },
             };
 
-            const answerInfo = this.getAnswerInfo(this.selectedElement);
-
+            const ab = this.getAnswerBrowserFromElement(this.selectedElement);
+            const answerInfo = ab?.selectedAnswer;
             if (answerInfo != null) {
                 newAnnotation.answer_id = answerInfo.id;
             }
             const ann = await this.addAnnotation(newAnnotation, coord, velp);
+            ab?.updateReviewers();
             this.addAnnotationToMargin(
                 this.selectedElement,
                 ann,
@@ -1125,11 +1131,13 @@ export class ReviewController {
     }
 
     /**
-     * Gets the answer info of the element. Returns null if no answer found.
+     * Gets the answerbrowser of the element. Returns null if no answerbrowser found.
      * @param start - Paragraph where the answerbrowser element is searched for.
-     * @returns {Element|null} answerbrowser element or null.
+     * @returns {AnswerBrowserController|null} answerbrowser element or null.
      */
-    getAnswerInfo(start: ParContext | Element): IAnswer | undefined {
+    getAnswerBrowserFromElement(
+        start: ParContext | Element
+    ): AnswerBrowserController | undefined {
         if (start instanceof ParContext) {
             const answ =
                 start.par.htmlElement.getElementsByTagName("tim-plugin-loader");
@@ -1145,8 +1153,7 @@ export class ReviewController {
                 if (isInline) {
                     return;
                 }
-                const ab = this.getAnswerBrowserFromPluginLoader(first);
-                return ab?.selectedAnswer;
+                return this.getAnswerBrowserFromPluginLoader(first);
             }
             return;
         }
@@ -1155,8 +1162,17 @@ export class ReviewController {
         if (!loader) {
             return;
         }
-        const ctrl = this.getAnswerBrowserFromPluginLoader(loader);
-        return ctrl?.selectedAnswer;
+        return this.getAnswerBrowserFromPluginLoader(loader);
+    }
+
+    /**
+     * Gets the answer info of the element. Returns null if no answer found.
+     * @param start - Paragraph where the answerbrowser element is searched for.
+     * @returns {Element|null} answerbrowser element or null.
+     */
+    getAnswerInfo(start: ParContext | Element): IAnswer | undefined {
+        const ab = this.getAnswerBrowserFromElement(start);
+        return ab?.selectedAnswer;
     }
 
     /**
