@@ -2265,21 +2265,6 @@ ${backTicks}
             this.editor.addContainerEventListener("dragover", (e) =>
                 this.allowDrop(e)
             );
-            /*
-            neweditor.getSession().on("paste", (e) => {
-                this.onPaste(e); // TODO: does never fire
-            });
-            neweditor.getSession().on("drop", (e) => {
-                this.onDrop(e); // TODO: does never fire
-            });
-            neweditor.getSession().on("dragover", (e) => {
-                this.allowDrop(e); // TODO: does never fire
-            });
-            neweditor.onPaste = (e) => {
-               // this.onPaste(e); // only works for text input.
-                return;
-            };
-            */
             neweditor.setBehavioursEnabled(
                 this.storage.acebehaviours.get() ?? false
             );
