@@ -17,6 +17,14 @@ interface ISnippetManager {
     insertSnippet(editor: AceAjax.Editor, text: string): void;
 }
 
+type EditorElementEventHandler<TType extends string> = JQuery.TypeEventHandler<
+    HTMLElement,
+    undefined,
+    HTMLElement,
+    HTMLElement,
+    TType
+>;
+
 export class AceParEditor extends BaseParEditor {
     public editor: IAceEditor;
     private snippetManager: ISnippetManager;
@@ -215,6 +223,19 @@ export class AceParEditor extends BaseParEditor {
                 this.checkWrap();
             },
         });
+    }
+
+    /**
+     * Add an event listener to the editor container.
+     *
+     * @param events Events to listen to. Follows jQuery format.
+     * @param handler Handler for the events.
+     */
+    addContainerEventListener<TType extends string>(
+        events: TType,
+        handler: EditorElementEventHandler<TType>
+    ) {
+        $(this.editor.container).on(events, handler);
     }
 
     // Navigation
