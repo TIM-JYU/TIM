@@ -1661,7 +1661,6 @@ export class ViewCtrl implements IController {
             ).toISOString();
 
             console.log(startTime <= currentTime && currentTime < endTime);
-
             if (startTime <= currentTime && currentTime < endTime) {
                 return true;
             }

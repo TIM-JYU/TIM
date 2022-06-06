@@ -144,10 +144,6 @@ program: |!!
             tools.setDouble("TASK_Riita", delta);
             tools.setString("TASK_Riita.styles", '{"backgroundColor": "white"}');
         }
-        else {
-            tools.setDouble("TASK_Riita", delta);
-            tools.setString("rc_Riita.styles", '{"backgroundColor": "white"}');
-        }
     }
 !!
 ```
