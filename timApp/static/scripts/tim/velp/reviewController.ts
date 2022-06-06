@@ -652,6 +652,10 @@ export class ReviewController {
                 canvas.deleteDrawItem(annotation.id);
             }
         }
+        const tid = annotation?.answer?.task_id;
+        if (tid) {
+            this.vctrl.getAnswerBrowser(tid)?.updateReviewers();
+        }
         this.removeAnnotationElement(id);
         await to($http.post("/invalidate_annotation", {id: id}));
     }
