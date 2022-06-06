@@ -1303,7 +1303,6 @@ def preprocess_jsrunner_answer(
             curr_user, d, False
         )
         answerdata["peerreviews"] = get_reviews_for_document(d)
-
     answerdata.pop(
         "paramComps", None
     )  # This isn't needed by jsrunner server, so don't send it.
