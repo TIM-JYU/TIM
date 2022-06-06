@@ -77,11 +77,8 @@ export function angularWait(): IPromise<void> {
     return $timeout(() => {}, 100);
 }
 
-export function assertIsText(n: Node): n is Text {
-    if (n.nodeType !== Node.TEXT_NODE) {
-        throw new Error("Expected a Text node, got " + typeof n);
-    }
-    return true;
+export function isText(n: Node): n is Text {
+    return n.nodeType === Node.TEXT_NODE;
 }
 
 export function stringOrNull(x: {toString: () => string}): string {
