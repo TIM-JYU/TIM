@@ -845,7 +845,9 @@ def render_doc_view(
                             load_plugin_states=not hide_answers,
                         )
                         generate_review_groups(
-                            doc_info, full_document_for_review.plugins
+                            doc_info,
+                            full_document_for_review.plugins,
+                            doc_settings.group(),
                         )
                     else:
                         generate_review_groups(doc_info, post_process_result.plugins)

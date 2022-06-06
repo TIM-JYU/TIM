@@ -74,7 +74,6 @@ export async function replaceTemplateValues(data: string): Promise<string> {
 
     for (const param of replaceList) {
         data = await showTemplateReplaceDialog(data, param);
-        console.log("data, param", data, param);
         if (!data) {
             return "";
         }
