@@ -969,7 +969,6 @@ export interface IToolsResult {
 
 export class Tools extends ToolsBase {
     private result: Record<string, unknown> = {};
-    groups: IGroupData = {};
 
     constructor(
         protected data: UserFieldDataT,

@@ -448,7 +448,6 @@ export class UserListController implements IController {
         document.body.appendChild(elem);
         elem.click();
         document.body.removeChild(elem);
-
         /*
         const opened = window.open("text/plain", "replace");
         if ( !opened ) { return; }
@@ -468,9 +467,8 @@ timApp.component("timUserList", {
         viewctrl: "^timView",
     },
 
-    template: `
-<div
-     class="userlist" hide="true"
+    template: `<div
+     class="userlist"
      ng-if="$ctrl.users"
      ui-grid="$ctrl.gridOptions"
      ui-grid-selection
