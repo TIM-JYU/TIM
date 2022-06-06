@@ -10,7 +10,7 @@ from collections import defaultdict
 from datetime import datetime
 from typing import DefaultDict
 
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, Query
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, get_latest_valid_answers_query
@@ -20,9 +20,6 @@ from timApp.plugin.plugin import Plugin
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.user.usergroup import UserGroup
-import dateutil.parser
-import pytz
 
 
 class PeerReviewException(Exception):
