@@ -12,14 +12,16 @@ import {deserialize} from "typescript-json-serializer";
 import {TaskId} from "tim/plugin/taskid";
 import {
     DrawCanvasComponent,
-    DrawItem,
     getDrawingDimensions,
+    IDrawingWithID,
     IDrawUpdate,
     isCoordWithinDrawing,
 } from "tim/plugin/drawCanvas";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ParContext} from "tim/document/structure/parContext";
 import {createParContext} from "tim/document/structure/create";
+import {AnswerBrowserController} from "tim/answer/answerbrowser3";
+import {IUser} from "../user/IUser";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -28,9 +30,9 @@ import {documentglobals} from "../util/globals";
 import {$compile, $http, $rootScope} from "../util/ngimport";
 import {
     angularWait,
-    assertIsText,
     checkIfElement,
     getElementParent,
+    isText,
     log,
     to,
     truncate,
@@ -80,7 +82,8 @@ function tryCreateRange(
     try {
         range.setEnd(endElem ?? startElem, end.offset);
     } catch {
-        // Ignore exception; it is still possibly useful to put the annotation in text even though it's zero sized.
+        // Ignore exception; overlapping text annotations may cause zero sized annotations,
+        // which can be opened only via margin but still retain their approximate position in text
     }
     return range;
 }
@@ -327,23 +330,51 @@ export class ReviewController {
     }
 
     /**
-     * Loads the annotations to the answer if given and removes answer annotations not associated with the answer.
+     * Removes <Annotation> elements from an answer
+     * @param answerId answer to clear
+     */
+    clearAnswerAnnotationElements(answerId: number): void {
+        const annotations = this.getAnnotationsByAnswerId(answerId);
+        for (const a of annotations) {
+            const ann = this.vctrl.getAnnotation(`t${a.id}`);
+            if (ann?.annotation.answer) {
+                this.removeAnnotationElement(a.id);
+            }
+        }
+    }
+
+    /**
+     * Clears any annotations from an answer par and loads new annotations if possible.
+     * Cleared annotations include margin annotations, annotation elements in answer and any drawn annotations
+     * Loads the annotation elements and drawings to the answer if answer is given
      * @param answerId - Optional answer ID
      * @param par - Paragraph element
+     * @param user - Optional user to filter loaded annotations with
      */
     loadAnnotationsToAnswer(
         answerId: number | undefined,
-        par: ParContext
+        par: ParContext,
+        user?: IUser
     ): void {
         this.clearAnswerAnnotationsFromParMargin(par);
         if (answerId == undefined) {
             return;
         }
-        const annotations = this.getAnnotationsByAnswerId(answerId);
+        this.clearAnswerAnnotationElements(answerId);
+        const canvas = this.vctrl.getVelpCanvas(answerId);
+        if (canvas) {
+            canvas.clearObjectContainer();
+        }
+        let annotations = this.getAnnotationsByAnswerId(answerId);
+        if (user) {
+            annotations = annotations.filter((a) => a.annotator.id == user.id);
+        }
+        const drawings: IDrawingWithID[] = [];
         for (const a of annotations) {
             const placeInfo = a.coord;
             let added = false;
             if (a.draw_data) {
+                drawings.push({id: a.id, drawData: a.draw_data});
                 const targ = par.par.htmlElement.querySelector(
                     ".canvasObjectContainer"
                 );
@@ -432,6 +463,9 @@ export class ReviewController {
                     : AnnotationPlacement.InMarginOnly
             );
         }
+        if (canvas) {
+            canvas.setPersistentDrawData(drawings);
+        }
         $rootScope.$applyAsync(); // TODO: run only if we are in Angular zone
     }
 
@@ -448,6 +482,19 @@ export class ReviewController {
             (a, b) => (b.coord.start.offset ?? 0) - (a.coord.start.offset ?? 0)
         );
         return annotations;
+    }
+
+    /**
+     * Gets all users who made annotations to a given answer
+     * @param id - Answer id
+     * @returns {IUser[]} - List of users
+     */
+    getAnnotationersByAnswerId(id: number): IUser[] {
+        const uniqueUsers = new Map<number, IUser>();
+        this.getAnnotationsByAnswerId(id).forEach((ann) => {
+            uniqueUsers.set(ann.annotator.id, ann.annotator);
+        });
+        return Array.from(uniqueUsers.values());
     }
 
     /**
@@ -597,38 +644,56 @@ export class ReviewController {
      * @param id - Annotation ID
      */
     async deleteAnnotation(id: number) {
-        const annotationParents = document.querySelectorAll(`[aid="${id}"]`);
-        const annotationHighlights =
-            annotationParents[0].getElementsByClassName("highlighted");
         const annotation = this.annotations.find((a) => a.id == id);
         this.annotations = this.annotations.filter((a) => a.id !== id);
-        if (
-            annotation?.draw_data &&
-            annotation?.answer?.id &&
-            annotationParents.length > 1
-        ) {
-            // const canvas = this.getElementParentUntilAttribute(annotationParents[0], "lol");
+        if (annotation?.draw_data && annotation?.answer?.id) {
             const canvas = this.vctrl.getVelpCanvas(annotation.answer.id);
             if (canvas) {
-                this.drawAnnotationsOnCanvas(canvas, annotation.answer.id);
+                canvas.deleteDrawItem(annotation.id);
             }
-            $(annotationParents).remove();
-        } else if (annotationParents.length > 1) {
-            let savedHTML = "";
-            for (const a of annotationHighlights) {
-                let addHTML = a.innerHTML.replace(
-                    '<span class="ng-scope">',
-                    ""
-                );
-                addHTML = addHTML.replace("</span>", "");
-                savedHTML += addHTML;
-            }
-            annotationParents[0].outerHTML = savedHTML;
-            $(annotationParents[1]).remove();
-        } else {
-            $(annotationParents[0]).remove();
         }
+        const tid = annotation?.answer?.task_id;
+        if (tid) {
+            this.vctrl.getAnswerBrowser(tid)?.updateReviewers();
+        }
+        this.removeAnnotationElement(id);
         await to($http.post("/invalidate_annotation", {id: id}));
+    }
+
+    /**
+     * Removes an annotation element
+     * Removes the annotation from the margin
+     * Removes the annotation element in text or in drawing if present
+     * @param id - Annotation to remove
+     */
+    removeAnnotationElement(id: number) {
+        const annotationParents = document.querySelectorAll(`[aid="${id}"]`);
+        if (annotationParents.length == 0) {
+            return;
+        }
+        const annotationHighlights =
+            annotationParents[0].getElementsByClassName("highlighted");
+        for (const annParent of annotationParents) {
+            const parent = annParent.parentElement;
+            if (
+                parent?.classList.contains("notes") ||
+                parent?.classList.contains("canvasObjectContainer")
+            ) {
+                $(annParent).remove();
+            } else {
+                let savedHTML = "";
+                for (const a of annotationHighlights) {
+                    let addHTML = a.innerHTML.replace(
+                        '<span class="ng-scope">',
+                        ""
+                    );
+                    addHTML = addHTML.replace("</span>", "");
+                    savedHTML += addHTML;
+                }
+                annParent.outerHTML = savedHTML;
+                parent?.normalize();
+            }
+        }
     }
 
     /**
@@ -871,7 +936,8 @@ export class ReviewController {
                 );
                 return;
             }
-            const answerInfo = this.getAnswerInfo(parelement);
+            const ab = this.getAnswerBrowserFromElement(parelement);
+            const answerInfo = ab?.selectedAnswer;
             if (answerInfo != null) {
                 newAnnotation.answer_id = answerInfo.id;
             } else {
@@ -889,6 +955,7 @@ export class ReviewController {
                 },
                 velp
             );
+            ab?.updateReviewers();
             ann.draw_data = velpDrawing;
 
             const ele = this.compilePopOver(
@@ -928,8 +995,7 @@ export class ReviewController {
             if (saved.ok) {
                 const annCopy = saved.result;
                 this.updateAnnotation(annCopy);
-
-                this.selectedCanvas.storeDrawing();
+                this.selectedCanvas.saveAndStoreDrawing(ann.id);
             }
             // TODO clear indicators and margins if !saved.ok
             this.selectedElement = undefined;
@@ -953,7 +1019,8 @@ export class ReviewController {
             }
 
             const elementPath = this.getElementPositionInTree(startElement, []);
-            const answerInfo = this.getAnswerInfo(startElement);
+            const ab = this.getAnswerBrowserFromElement(parelement);
+            const answerInfo = ab?.selectedAnswer;
 
             const startoffset = this.getRealStartOffset(
                 this.selectedArea.startContainer,
@@ -963,7 +1030,7 @@ export class ReviewController {
             if (innerDiv.childElementCount === 0) {
                 const lastChild =
                     innerDiv.childNodes[innerDiv.childNodes.length - 1];
-                if (assertIsText(lastChild)) {
+                if (isText(lastChild)) {
                     endOffset = startoffset + lastChild.length;
                 }
             }
@@ -976,6 +1043,7 @@ export class ReviewController {
                 {start: {par_id: parelement.id}, end: {par_id: parelement.id}},
                 velp
             );
+            ab?.updateReviewers();
             const added = this.addAnnotationToCoord(
                 this.selectedArea,
                 ann,
@@ -1036,12 +1104,13 @@ export class ReviewController {
                 },
             };
 
-            const answerInfo = this.getAnswerInfo(this.selectedElement);
-
+            const ab = this.getAnswerBrowserFromElement(this.selectedElement);
+            const answerInfo = ab?.selectedAnswer;
             if (answerInfo != null) {
                 newAnnotation.answer_id = answerInfo.id;
             }
             const ann = await this.addAnnotation(newAnnotation, coord, velp);
+            ab?.updateReviewers();
             this.addAnnotationToMargin(
                 this.selectedElement,
                 ann,
@@ -1066,11 +1135,13 @@ export class ReviewController {
     }
 
     /**
-     * Gets the answer info of the element. Returns null if no answer found.
+     * Gets the answerbrowser of the element. Returns null if no answerbrowser found.
      * @param start - Paragraph where the answerbrowser element is searched for.
-     * @returns {Element|null} answerbrowser element or null.
+     * @returns {AnswerBrowserController|null} answerbrowser element or null.
      */
-    getAnswerInfo(start: ParContext | Element): IAnswer | undefined {
+    getAnswerBrowserFromElement(
+        start: ParContext | Element
+    ): AnswerBrowserController | undefined {
         if (start instanceof ParContext) {
             const answ =
                 start.par.htmlElement.getElementsByTagName("tim-plugin-loader");
@@ -1086,8 +1157,7 @@ export class ReviewController {
                 if (isInline) {
                     return;
                 }
-                const ab = this.getAnswerBrowserFromPluginLoader(first);
-                return ab?.selectedAnswer;
+                return this.getAnswerBrowserFromPluginLoader(first);
             }
             return;
         }
@@ -1096,8 +1166,17 @@ export class ReviewController {
         if (!loader) {
             return;
         }
-        const ctrl = this.getAnswerBrowserFromPluginLoader(loader);
-        return ctrl?.selectedAnswer;
+        return this.getAnswerBrowserFromPluginLoader(loader);
+    }
+
+    /**
+     * Gets the answer info of the element. Returns null if no answer found.
+     * @param start - Paragraph where the answerbrowser element is searched for.
+     * @returns {Element|null} answerbrowser element or null.
+     */
+    getAnswerInfo(start: ParContext | Element): IAnswer | undefined {
+        const ab = this.getAnswerBrowserFromElement(start);
+        return ab?.selectedAnswer;
     }
 
     /**
@@ -1167,7 +1246,7 @@ export class ReviewController {
                     el.getElementsByClassName("highlighted")[0];
                 const lastInnerLastChild =
                     this.getLastChildUntilNull(innerElements);
-                if (assertIsText(lastInnerLastChild)) {
+                if (isText(lastInnerLastChild)) {
                     storedOffset += lastInnerLastChild.length;
                 }
 
@@ -1181,7 +1260,7 @@ export class ReviewController {
             } else if (el.nodeName !== startType) {
                 return storedOffset;
             } else {
-                if (assertIsText(el)) {
+                if (isText(el)) {
                     storedOffset += el.length;
                 }
             }
@@ -1433,24 +1512,6 @@ export class ReviewController {
         canvas.clearObjectContainer();
         canvas.id = answerId;
         this.vctrl.addVelpCanvas(answerId, canvas);
-        this.drawAnnotationsOnCanvas(canvas, answerId);
-    }
-
-    /**
-     * Draws annotation drawings on canvas
-     * @param canvas - DrawCanvasComponent to use
-     * @param answerId - Answer for which to find annotations
-     */
-    drawAnnotationsOnCanvas(canvas: DrawCanvasComponent, answerId: number) {
-        const annotationDrawings = this.getAnnotationsByAnswerId(
-            answerId
-        ).reduce((arr: DrawItem[], ann: Annotation) => {
-            if (ann.draw_data) {
-                arr = arr.concat(ann.draw_data);
-            }
-            return arr;
-        }, []);
-        canvas.setAndAdjustPersistentDrawData(annotationDrawings);
     }
 
     /**
