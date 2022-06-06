@@ -1538,21 +1538,20 @@ export class Tools extends ToolsBase {
         const fields = this.markup.paramFields ? this.markup.paramFields : [""];
         const datafield = this.markup.peerReviewField;
         this.setString(datafield, "");
-    /*
-     * Print every every name, id and given velppoints of users
-     * who have reviewed current user
-     */
-    changePeerReviewer(usersObject: Users): object {
-        const reviewableID = this.data.user.id;
-        const fields = this.markup.paramFields ? this.markup.paramFields : [""];
+        const task = fields[0].substring(0, fields[0].indexOf("_"));
+        let changed = false;
+        const from: string[] = [];
+        const to: string[] = [];
+        const reviewers = this.getPeerReviewsForUser();
+        const initialReviewers = reviewers.map((reviewer) =>
+            reviewer.reviewer_id.toString()
+        );
+        const updatedReviewers = fields.map((f) =>
             Object.keys(users).find((key) => {
                 return users[key] == this.getString(f);
             })
         );
 
-        let changed = false;
-        const from: string[] = [];
-        const to: string[] = [];
         initialReviewers.forEach((reviewer) => {
             if (!updatedReviewers.includes(reviewer)) {
                 changed = true;
