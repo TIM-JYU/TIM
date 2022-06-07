@@ -1296,13 +1296,11 @@ def preprocess_jsrunner_answer(
         if runner_req.input.userNames
         else None,
     )
+    answerdata["peerreviews"] = get_reviews_for_document(d)
+    answerdata["velps"] = get_annotations_with_comments_in_document(curr_user, d, False)
     if runnermarkup.peerReview:
         if not curr_user.has_teacher_access(d):
             raise AccessDenied("Teacher access required to browse all peer reviews")
-        answerdata["peerreviews"] = get_reviews_for_document(d)
-        answerdata["velps"] = get_annotations_with_comments_in_document(
-            curr_user, d, False
-        )
     answerdata.pop(
         "paramComps", None
     )  # This isn't needed by jsrunner server, so don't send it.
@@ -1590,9 +1588,9 @@ def save_fields(
                 raise RouteException(f"Doc id missing: {tid}")
             if id_num.doc_id not in doc_map:
                 doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
-            if pr_data is not None:
-                user_id = item.get("user")
-                try:
+            if pr_data and pr_data in tid:
+                if len(task_u.get(tid)) > 0:
+                    user_id = item.get("user")
                     peer_review_data = json.loads(task_u.get(tid))
                     old = peer_review_data.get("from")
                     new = peer_review_data.get("to")
@@ -1600,12 +1598,10 @@ def save_fields(
                     if not old:
                         # TODO: Add new reviewer or if reviewable have none
                         pass
-                    if new:
+                    if new and old and task:
                         change_peerreviewers_for_user(
                             current_doc, task, user_id, old, new
                         )
-                except json.decoder.JSONDecodeError:
-                    print("There was a problem accessing the equipment data")
     task_content_name_map = {}
     for task in tasks:
         t_id = TaskId.parse(

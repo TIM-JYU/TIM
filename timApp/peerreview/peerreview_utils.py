@@ -10,7 +10,8 @@ from collections import defaultdict
 from datetime import datetime
 from typing import DefaultDict
 
-from sqlalchemy.orm import joinedload
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload, Query
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, get_latest_valid_answers_query
@@ -23,6 +24,8 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 import dateutil.parser
 import pytz
+
+from timApp.util.flask.requesthelper import RouteException
 
 
 class PeerReviewException(Exception):
@@ -168,11 +171,11 @@ def get_reviews_for_user_query(d: DocInfo, user: User) -> Query:
 
 
 def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
-    return PeerReview.query.filter_by(block_id=doc.id, task_name="rc1").all()
+    return PeerReview.query.filter_by(block_id=doc.id).all()
 
 
 def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
-    return PeerReview.query.filter_by(block_id=doc.id, task_name="rc1").all()
+    return PeerReview.query.filter_by(block_id=doc.id).all()
 
 
 def get_reviews_to_user(d: DocInfo, user: User) -> list[PeerReview]:
@@ -237,17 +240,15 @@ def change_peerreviewers_for_user(
     """
     for i in range(0, len(new_reviewers)):
         try:
-            if reviewable == new_reviewers[i]:
-                continue
-            else:
-                updated_user = PeerReview.query.filter_by(
-                    block_id=doc.id,
-                    reviewer_id=old_reviewers[i],
-                    reviewable_id=reviewable,
-                    task_name=task,
-                ).first()
-                updated_user.reviewer_id = new_reviewers[i]
-                db.session.commit()
-        except Exception:
-            raise Exception("Error in reviewer update")
+            updated_user = PeerReview.query.filter_by(
+                block_id=doc.id,
+                reviewer_id=old_reviewers[i],
+                reviewable_id=reviewable,
+                task_name=task,
+            ).first()
+            updated_user.reviewer_id = new_reviewers[i]
+            db.session.commit()
+        except IntegrityError:
+            raise RouteException("Same reviewer more than once in one task")
+
     return True

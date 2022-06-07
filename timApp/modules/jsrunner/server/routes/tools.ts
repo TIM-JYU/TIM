@@ -1551,6 +1551,9 @@ export class Tools extends ToolsBase {
                 return users[key] == this.getString(f);
             })
         );
+        if (new Set(updatedReviewers).size !== updatedReviewers.length) {
+            this.print("Error: Same reviewer more than once in one task");
+        }
 
         initialReviewers.forEach((reviewer) => {
             if (!updatedReviewers.includes(reviewer)) {
@@ -1564,7 +1567,6 @@ export class Tools extends ToolsBase {
                 if (!initialReviewers.includes(reviewer) && reviewer) {
                     if (reviewer == reviewableID.toString()) {
                         this.print("Same reviewer and reviewable");
-                        return;
                     }
                     changed = true;
                     to.push(reviewer);
