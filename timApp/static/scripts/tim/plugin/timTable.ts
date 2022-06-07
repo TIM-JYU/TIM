@@ -79,6 +79,10 @@ import {
 import {computeHiddenRowsFromFilters} from "tim/plugin/filtering";
 import {createParContext} from "tim/document/structure/create";
 import {showConfirm} from "tim/ui/showConfirmDialog";
+import {
+    ICtrlWithMenuFunctionEntry,
+    IMenuFunctionEntry,
+} from "tim/document/viewutils";
 import {onClick, OnClickArg} from "../document/eventhandlers";
 import {
     ChangeType,
@@ -725,7 +729,8 @@ export class TimTableComponent
         DoCheck,
         AfterViewChecked,
         AfterViewInit,
-        DataModelProvider
+        DataModelProvider,
+        ICtrlWithMenuFunctionEntry
 {
     error: string = "";
     public viewctrl?: ViewCtrl;
@@ -1009,6 +1014,13 @@ export class TimTableComponent
 
         // For performance, we detach the automatic change detector for this component and call it manually.
         this.cdr.detach();
+
+        await (async () => {
+            if (this.viewctrl) {
+                await this.viewctrl.documentUpdate;
+                this.viewctrl.addParMenuEntry(this, this.getPar()!);
+            }
+        })();
     }
 
     ngAfterViewInit() {
@@ -1442,6 +1454,14 @@ export class TimTableComponent
      */
     public isInEditMode() {
         return (this.editing || this.forcedEditMode) && !this.data.locked;
+    }
+
+    getMenuEntry(): IMenuFunctionEntry {
+        return {
+            func: () => this.toggleEditMode(),
+            desc: this.editing ? "Close table editor" : "Edit table",
+            show: !this.isInForcedEditMode() && !this.isLocked(),
+        };
     }
 
     public addRowEnabled() {
