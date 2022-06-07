@@ -67,6 +67,7 @@ code_navigation:
   stage: test  # not really a test, but we want to execute this in parallel
   image: node:lts
   script:
+  - npm install -g npm@6
   - cd timApp
   - npm install --unsafe-perm
   - npm install -g @sourcegraph/lsif-tsc
@@ -80,6 +81,7 @@ ts_lint:
   stage: lint
   image: node:lts-slim
   script:
+  - npm install -g npm@6
   - cd timApp
   - npm install --unsafe-perm
   - npm run lint
@@ -88,6 +90,7 @@ stats:
   stage: test
   image: node:lts-slim
   script:
+  - npm install -g npm@6
   - cd timApp
   - npm install --unsafe-perm
   - npm install -g webpack-bundle-analyzer
@@ -101,6 +104,7 @@ jsrunner_lint:
   stage: lint
   image: node:14  # cannot use lts-slim here; some part of this requires Python; use Node 14 because of old lockfile
   script:
+  - npm install -g npm@6
   - cd timApp
   - npm install --unsafe-perm
   - cd modules/jsrunner/server
@@ -111,6 +115,7 @@ ts_format:
   stage: lint
   image: node:14-slim # Use old Node temporarily because of old package versions
   script:
+  - npm install -g npm@6
   - cd timApp
   - rm package-lock.json
   - npm install --no-package-lock --no-save prettier@2.4.1
