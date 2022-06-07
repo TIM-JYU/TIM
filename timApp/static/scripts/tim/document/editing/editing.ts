@@ -613,7 +613,7 @@ auto_number_headings: 0${CURSOR}
             return undefined;
         }
 
-        if (tableCtrl.isInForcedEditMode()) {
+        if (tableCtrl.isInForcedEditMode() || tableCtrl.isLocked()) {
             return undefined;
         }
 

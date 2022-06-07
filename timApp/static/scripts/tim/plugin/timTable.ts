@@ -252,6 +252,7 @@ export interface TimTable {
     // hiddenRows?: IRow[];
     hiddenRows?: number[];
     hiddenColumns?: number[];
+    locked?: boolean;
     lockedCells?: string[];
     lockedColumns?: string[];
     // cellsTosave may include un-rect area (not at the moment but maybe in future
@@ -696,7 +697,7 @@ export enum ClearSort {
                 </div>
                     </ng-template>
             </div>
-            <div class="csRunMenuArea" *ngIf="task && !data.hideSaveButton">
+            <div class="csRunMenuArea" *ngIf="task && !data.hideSaveButton && !isLocked()">
                 <p class="csRunMenu">
                     <button class="timButton" [disabled]="disableUnchanged && !edited" *ngIf="task && button"
                             (click)="handleClickSave()">{{button}}</button>
@@ -1192,6 +1193,10 @@ export class TimTableComponent
         return this.forcedEditMode;
     }
 
+    public isLocked() {
+        return this.data.locked;
+    }
+
     public coliToLetters(coli: number) {
         if (this.intRow) {
             return this.intRowStart + coli;
@@ -1436,7 +1441,7 @@ export class TimTableComponent
      * @returns {boolean} True if the table is in edit mode, otherwise false.
      */
     public isInEditMode() {
-        return this.editing || this.forcedEditMode;
+        return (this.editing || this.forcedEditMode) && !this.data.locked;
     }
 
     public addRowEnabled() {
