@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Any, Mapping, NewType
 
 import marshmallow
-from marshmallow import missing, pre_load
+from marshmallow import missing, pre_load, EXCLUDE
 
 from tim_common.utils import Missing
 
@@ -12,7 +12,7 @@ from tim_common.utils import Missing
 @dataclass
 class PointsRule:
     class Meta:
-        unknown = "EXCLUDE"  # Plugins may have custom rules - TIM can ignore them.
+        unknown = EXCLUDE  # Plugins may have custom rules - TIM can ignore them.
 
     maxPoints: str | int | float | None | Missing = missing
     allowUserMin: int | float | None | Missing = missing

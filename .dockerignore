@@ -1,3 +1,5 @@
 # We can ignore all files because we don't need them when building the image.
 *
-!requirements*.txt
+!pyproject.toml
+!poetry.lock
+!poetry.toml

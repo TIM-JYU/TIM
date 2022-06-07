@@ -28,7 +28,9 @@ x-caddy:
 services:
  tim:
   image: timimages/tim:${TIM_IMAGE_TAG:?}
-  build: ./timApp
+  build:
+    dockerfile: ./timApp/Dockerfile
+    context: ./
   depends_on:
    # - stack-api-server
    - postgresql

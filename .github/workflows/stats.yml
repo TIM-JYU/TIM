@@ -14,8 +14,7 @@ jobs:
         with:
           path: |
             timApp/node_modules
-            timApp/modules/jsrunner/server/node_modules
-          key: ${{ runner.os }}-ts-stats-npm-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-ts-stats-npm-${{ hashFiles('timApp/package-lock.json') }}
       - name: Install packages
         run: |
           npm i --global npm@6
