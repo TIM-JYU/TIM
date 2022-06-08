@@ -72,6 +72,18 @@
                         </div>
                     </form>
                 </div>
+                <div>
+                    <form class="form-inline adjustForm">
+                        <div class="form-group">
+                            <label class="formLabel" for="displayVelps">Display velps for:</label>
+                            <select id="displayVelps" ng-model="$ctrl.groupAttachment.target_type"
+                                    ng-change="$ctrl.updateVelpList()">
+                                <option ng-value="0">Whole document</option>
+                                <option ng-value="1">Selected paragraph</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
 
                 <button class="timButton margin-4"
                         ng-disabled="!$ctrl.initialized"
@@ -84,44 +96,32 @@
                      click="true"
                      resize="false"
                      caption="Available velps">
-                    <div class="draggable-content available-velps">
-                        <div class="display-velps-selection" name="displayVelpsSelector">
-                            <form class="form-inline">
-                                <div class="form-group">
-                                    <label class="formLabel" for="displayVelps">Display velps for:</label>
-                                    <select id="displayVelps" ng-model="$ctrl.groupAttachment.target_type"
-                                            ng-change="$ctrl.updateVelpList()">
-                                        <option ng-value="0">Whole document</option>
-                                        <option ng-value="1">Selected paragraph</option>
-                                    </select>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="velp-stack">
-                            <velp-window class="velp" ng-style="{top: 0}"
-                                         ng-show="$ctrl.newVelp.edit"
-                                         velp="$ctrl.newVelp"
-                                         index="-1"
-                                         velp-groups="$ctrl.velpGroups"
-                                         teacher-right="$ctrl.vctrl.item.rights.teacher"
-                                         labels="$ctrl.labels"
-                                         new="true"
-                                         vctrl="$ctrl.vctrl"
-                                         advanced-on="$ctrl.advancedOn"></velp-window>
-                            <velp-window
-                                    ng-repeat="velp in filteredVelps = ($ctrl.rctrl.velps | filter:{content:$ctrl.filterVelp} | orderByWhenNotEditing:$ctrl.order:filteredVelps | filterByVelpGroups:$ctrl.velpGroups | filterByLabels:$ctrl.labels:$ctrl.advancedOn
+
+                    <div class="velp-stack draggable-content">
+                        <velp-window class="velp" ng-style="{top: 0}"
+                                     ng-show="$ctrl.newVelp.edit"
+                                     velp="$ctrl.newVelp"
+                                     index="-1"
+                                     velp-groups="$ctrl.velpGroups"
+                                     teacher-right="$ctrl.vctrl.item.rights.teacher"
+                                     labels="$ctrl.labels"
+                                     new="true"
+                                     vctrl="$ctrl.vctrl"
+                                     advanced-on="$ctrl.advancedOn"></velp-window>
+                        <velp-window
+                                ng-repeat="velp in filteredVelps = ($ctrl.rctrl.velps | filter:{content:$ctrl.filterVelp} | orderByWhenNotEditing:$ctrl.order:filteredVelps | filterByVelpGroups:$ctrl.velpGroups | filterByLabels:$ctrl.labels:$ctrl.advancedOn
                                                  ) track by $index"
-                                    advanced-on="$ctrl.advancedOn"
-                                    doc-id="$ctrl.docId"
-                                    index="$index"
-                                    labels="$ctrl.labels"
-                                    new="false"
-                                    on-velp-select="$ctrl.rctrl.useVelp($VELP)"
-                                    teacher-right="$ctrl.vctrl.item.rights.teacher"
-                                    velp-groups="$ctrl.velpGroups"
-                                    velp="velp"></velp-window>
-                        </div>
+                                advanced-on="$ctrl.advancedOn"
+                                doc-id="$ctrl.docId"
+                                index="$index"
+                                labels="$ctrl.labels"
+                                new="false"
+                                on-velp-select="$ctrl.rctrl.useVelp($VELP)"
+                                teacher-right="$ctrl.vctrl.item.rights.teacher"
+                                velp-groups="$ctrl.velpGroups"
+                                velp="velp"></velp-window>
                     </div>
+
                 </div>
    </div>
         </uib-tab>
