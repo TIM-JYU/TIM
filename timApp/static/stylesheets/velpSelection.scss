@@ -267,6 +267,7 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 
 .bottom-part{
     padding-top: 8em;
+    //padding-top: 2em;
     width: 100%;
 }
 
@@ -433,9 +434,4 @@ $inactive: whitesmoke;
 #selection {
     min-height: 3em;
     margin: 0;
-}
-
-.display-velps-selection {
-    background: white;
-    visibility: visible;
 }
