@@ -106,7 +106,7 @@ program: |!!
     let velpPoints = tools.getVelpTaskPoints("TASK");
     let teacherCorrection = tools.getDouble("Ope", -100);
     if (teacherCorrection != -100) {
-        tools.setDouble("Pisteet", ope);
+        tools.setDouble("Pisteet", Ope);
     }
     else {
         tools.setString("Pisteet", velpPoints);
