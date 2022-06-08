@@ -239,16 +239,17 @@ def change_peerreviewers_for_user(
     :param new_reviewers: List of new reviewers IDs
     """
     for i in range(0, len(new_reviewers)):
-        try:
-            updated_user = PeerReview.query.filter_by(
-                block_id=doc.id,
-                reviewer_id=old_reviewers[i],
-                reviewable_id=reviewable,
-                task_name=task,
-            ).first()
-            updated_user.reviewer_id = new_reviewers[i]
-            db.session.commit()
-        except IntegrityError:
-            raise RouteException("Same reviewer more than once in one task")
-
+        updated_user = PeerReview.query.filter_by(
+            block_id=doc.id,
+            reviewer_id=old_reviewers[i],
+            reviewable_id=reviewable,
+            task_name=task,
+        ).first()
+        updated_user.reviewer_id = new_reviewers[i]
+    try:
+        db.session.flush()
+    except IntegrityError:
+        db.session.rollback()
+        raise RouteException("Error: Same reviewer more than once in one task")
+    db.session.commit()
     return True
