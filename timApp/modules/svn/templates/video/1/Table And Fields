@@ -85,6 +85,7 @@ updateFields:
 {% endfor %}
  - TASK_Riita
  - TASK_Riitauta
+peerReview: true
 
 preprogram: |!!
 //
@@ -104,9 +105,9 @@ program: |!!
     tools.setDouble("Vp", vp);
 
     let velpPoints = tools.getVelpTaskPoints("TASK");
-    let teacherCorrection = tools.getDouble("Ope", -100);
-    if (teacherCorrection != -100) {
-        tools.setDouble("Pisteet", Ope);
+    let teachersCorrection = tools.getDouble("Ope", -100);
+    if (teachersCorrection != -100) {
+        tools.setDouble("Pisteet", teachersCorrection);
     }
     else {
         tools.setString("Pisteet", velpPoints);
@@ -164,6 +165,7 @@ paramFields:
 {% for i in range(1,peer_review_count+1) %}
  - TASK_Arvioija_%%i%%
 {% endfor %}
+peerReview: true
 peerReviewField: TASK_vaihto
 
 preprogram: |!!
@@ -174,6 +176,6 @@ preprogram: |!!
     }
 !!
 program: |!!
-    tools.changePeerReviewer(gtools.users)
+    tools.changePeerReviewer(gtools.users);
 !!
 ```
