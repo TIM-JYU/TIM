@@ -166,7 +166,6 @@ paramFields:
 {% endfor %}
 peerReviewField: TASK_vaihto
 
-
 preprogram: |!!
     const parsed = JSON.parse(this.g);
     gtools.users = {};
