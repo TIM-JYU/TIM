@@ -938,6 +938,9 @@ def post_answer_impl(
     resultmd = result["web"].get("md", None)
     if resultmd:
         result["web"]["md"] = call_dumbo([resultmd])[0]
+    resultmd = result["web"].get("outdata", {}).get("md", None)
+    if resultmd:  # mostly for jsrunner
+        result["web"]["outdata"]["md"] = call_dumbo([resultmd])[0]
 
     if not get_task:
         add_reply(result["web"], "-replyImage")

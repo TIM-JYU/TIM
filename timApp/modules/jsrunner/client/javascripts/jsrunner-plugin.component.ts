@@ -38,7 +38,7 @@ import {vctrlInstance} from "../../../../static/scripts/tim/document/viewctrlins
 @Component({
     selector: "tim-js-runner",
     template: `
-<div *ngIf="isVisible()" style="display: inline-block">
+<div *ngIf="isVisible()" style="display: inline-block" class="jsrunner">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
     <h4 *ngIf="header" [innerHtml]="header"></h4>
     <p *ngIf="stem" [innerHtml]="stem"></p>
@@ -58,6 +58,8 @@ import {vctrlInstance} from "../../../../static/scripts/tim/document/viewctrlins
     <pre *ngIf="error">{{error.msg}}</pre>
     <pre *ngIf="error">{{error.stackTrace}}</pre>
     <jsrunner-error *ngFor="let err of scriptErrors" [e]="err"></jsrunner-error>
+    <div *ngIf="md" class="md" [innerHTML]="md | purify"></div>    
+    <div *ngIf="html" class="html" [innerHTML]="html | purify"></div>    
     <div class="jsrunner-output" *ngIf="output">
     <p class="pull-right">
         <a class="smalltext" (click)="copyText()" title="Copy to clipboard" 
@@ -85,6 +87,8 @@ export class JsRunnerPluginComponent
     error?: IError;
     isRunning = false;
     output: string = "";
+    md: string = "";
+    html: string = "";
     fieldlist: string = "";
     private vctrl!: ViewCtrl;
     scriptErrors?: ErrorList;
@@ -215,6 +219,8 @@ export class JsRunnerPluginComponent
                 this.error = undefined;
                 this.scriptErrors = data.web.errors;
                 this.output = data.web.output;
+                this.md = data.web.outdata?.md ?? "";
+                this.html = data.web.outdata?.html ?? "";
                 if (this.attrsall.markup.updateFields) {
                     await this.vctrl.updateFields(
                         this.attrsall.markup.updateFields
