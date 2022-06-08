@@ -39,7 +39,7 @@ from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_error, log_warning, log_info
-from timApp.util.utils import is_valid_email, get_current_time
+from timApp.util.utils import is_valid_email, get_current_time, convert_email_to_lower
 
 login_page = TypedBlueprint(
     "login_page",
@@ -543,13 +543,6 @@ def simple_login_password(email: str, password: str) -> Response:
 def verify_simple_email_login_enabled() -> None:
     if not current_app.config["SIMPLE_EMAIL_LOGIN"]:
         raise RouteException("Simple email login is not enabled.")
-
-
-def convert_email_to_lower(email_or_username: str) -> str:
-    email_or_username = email_or_username.strip()
-    if is_valid_email(email_or_username):
-        return email_or_username.lower()
-    return email_or_username
 
 
 def save_came_from() -> None:

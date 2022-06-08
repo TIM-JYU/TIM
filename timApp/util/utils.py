@@ -402,6 +402,13 @@ def is_valid_email(email: str) -> bool:
     )
 
 
+def convert_email_to_lower(email_or_username: str) -> str:
+    email_or_username = email_or_username.strip()
+    if is_valid_email(email_or_username):
+        return email_or_username.lower()
+    return email_or_username
+
+
 def approximate_real_name(email: str) -> str:
     nameparts = email.split("@")[0].split(".")
     approx_name = f"{nameparts[-1].title()} {nameparts[0].title()}"
