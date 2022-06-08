@@ -1341,7 +1341,7 @@ export class Tools extends ToolsBase {
         const sum = this.testvelps
             .filter((v) => this.isVelpForUser(v) && this.isVelpTask(v, task))
             .map((v) => v.points)
-            .reduce((acc, p) => acc + (p !== null ? p : 0), 0);
+            .reduce<number>((acc, p) => acc + (p ?? 0), 0);
         const count = this.getVelpedCount(task);
         // this.println(sum, count);
         return count ? sum / count : NaN;
