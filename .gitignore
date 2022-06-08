@@ -4,7 +4,6 @@
 *.printing_whitelist.*
 *.pyc
 *~
-.cabal-sandbox/
 .cache/
 .dmypy.json
 .idea
@@ -12,10 +11,7 @@
 .settings
 .stack-work/
 .webassets-cache/
-/Dumbo/**/*.iml
-/Dumbo/cache/
-/Dumbo/out/
-/Dumbo/tmp/
+/Dumbo/
 /screenshots
 /tim_logs/
 /timApp/.angular/cache

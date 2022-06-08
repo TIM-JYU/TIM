@@ -1,6 +1,0 @@
-*.swp
-dist/
-pandoc-asciimath
-asciimath
-.stack-work
-cabal-helper*

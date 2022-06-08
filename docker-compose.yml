@@ -293,23 +293,16 @@ services:
   tmpfs:
    - /tmp
  dumbo:
-  image: timimages/dumbo:${TIM_IMAGE_TAG:?}
-  build:
-   context: ./Dumbo
-   dockerfile: Dockerfile
-   args:
-    TIM_IMAGE_TAG: ${TIM_IMAGE_TAG:?}
-  command: ./Dumbo --port 5000 --cacheDir /dumbocache --tmpDir /dumbotmp
-  working_dir: /Dumbo
+  image: timimages/dumbo:latest
   volumes:
-   - ./Dumbo/cache:/dumbocache
-   - ./Dumbo/tmp:/dumbotmp
+   - ./Dumbo/cache:/dumbo_cache
+   - ./Dumbo/tmp:/dumbo_tmp
   logging:
    driver: none
   restart: unless-stopped
   read_only: true
  redis:
-  image: eqalpha/keydb
+  image: eqalpha/keydb:latest
   command: ["keydb-server", "--appendonly", "yes"]
   restart: unless-stopped
   read_only: true
