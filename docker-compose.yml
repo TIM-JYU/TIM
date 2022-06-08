@@ -382,15 +382,9 @@ services:
   environment:
    BROWSER_URL: ${TIM_HOST:?}
  oiko:
-  image: timimages/tim:${TIM_IMAGE_TAG:?}
-  command: gunicorn -b 0.0.0.0:5000 app:app
+  image: timimages/oiko:latest
   restart: unless-stopped
-  working_dir: /service
   read_only: true
-  volumes:
-   - ./oiko:/service:ro
-  tmpfs:
-   - /tmp
  caddy:
   <<: *caddy-common
   profiles:
