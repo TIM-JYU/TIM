@@ -385,6 +385,8 @@ services:
   image: timimages/oiko:latest
   restart: unless-stopped
   read_only: true
+  tmpfs:
+   - /tmp
  caddy:
   <<: *caddy-common
   profiles:
