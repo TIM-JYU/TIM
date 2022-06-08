@@ -1015,12 +1015,10 @@ export class TimTableComponent
         // For performance, we detach the automatic change detector for this component and call it manually.
         this.cdr.detach();
 
-        await (async () => {
-            if (this.viewctrl) {
-                await this.viewctrl.documentUpdate;
-                this.viewctrl.addParMenuEntry(this, this.getPar()!);
-            }
-        })();
+        if (this.viewctrl) {
+            await this.viewctrl.documentUpdate;
+            this.viewctrl.addParMenuEntry(this, this.getPar()!);
+        }
     }
 
     ngAfterViewInit() {
