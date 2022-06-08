@@ -1019,7 +1019,7 @@ export class ReviewController {
             }
 
             const elementPath = this.getElementPositionInTree(startElement, []);
-            const ab = this.getAnswerBrowserFromElement(parelement);
+            const ab = this.getAnswerBrowserFromElement(startElement);
             const answerInfo = ab?.selectedAnswer;
 
             const startoffset = this.getRealStartOffset(
