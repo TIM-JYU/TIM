@@ -1,4 +1,5 @@
 import ipaddress
+import json
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -595,6 +596,16 @@ def verify_task_access(
         else:
             is_invalid = True
             invalidate_reason = "You haven't started this task yet."
+    if (
+        not is_invalid
+        and found_plugin.known.accessField
+        and required_task_access_level == TaskIdAccess.ReadWrite
+    ):
+        is_invalid = not check_access_from_field(
+            context_user, found_plugin.known.accessField, found_plugin.task_id
+        )
+        if is_invalid:
+            invalidate_reason = "You have expired your access to this task."
 
     return TaskAccessVerification(
         plugin=found_plugin,
@@ -603,6 +614,25 @@ def verify_task_access(
         is_invalid=is_invalid,
         invalidate_reason=invalidate_reason,
     )
+
+
+def check_access_from_field(
+    context_user: UserContext, field_to_check: str, task_id: TaskId
+):
+    current_user = context_user.logged_user
+    tid = TaskId.parse(field_to_check, require_doc_id=False)
+    if not tid.doc_id:
+        tid = TaskId.parse(str(task_id.doc_id) + "." + field_to_check)
+    prev = current_user.get_answers_for_task(tid.doc_task).first()
+    if not prev:
+        return True
+    try:
+        value = json.loads(prev.content)["c"]
+        if value == "1" or value == 1:
+            return False
+    except json.decoder.JSONDecodeError:
+        return True
+    return True
 
 
 def grant_access_to_session_users(i: ItemOrBlock):

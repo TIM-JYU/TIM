@@ -73,6 +73,7 @@ class KnownMarkupFields(HiddenFieldsMixin):
 
     accessDuration: int | None | Missing = missing
     accessEndText: str | None | Missing = missing
+    accessField: str | None | Missing = missing
     anonymous: bool | None | Missing = missing
     answerLimit: int | None | Missing = missing
     automd: bool | None | Missing = missing

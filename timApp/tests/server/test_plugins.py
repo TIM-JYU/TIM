@@ -11,7 +11,7 @@ from lxml.html import HtmlElement
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
-from timApp.answer.answers import get_points_by_rule
+from timApp.answer.answers import get_points_by_rule, save_answer
 from timApp.answer.pointsumrule import PointSumRule, PointType
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import user_context_with_logged_in
@@ -2310,3 +2310,69 @@ useCurrentUser: true
 
         self.assertEqual(0, len(self.get_task_answers(f"{d.id}.b")))
         self.assertEqual(0, len(self.get_task_answers(f"{d.id}.GLO_d")))
+
+    def test_accessfield(self):
+        """Invalidate answer if accessField target has answer c: 1"""
+        self.login_test1()
+        d_ext = self.create_doc(
+            initial_par="""
+#- {#access_ext plugin=cbfield}
+        """
+        )
+        d = self.create_doc(
+            initial_par=(
+                """
+#- {#access plugin=cbfield}
+
+#- {#question plugin=textfield}
+accessField: access
+
+#- {#question_ext_accessfield plugin=textfield}
+        """
+                f"accessField: {d_ext.id}.access_ext"
+            )
+        )
+        self.test_user_2.grant_access(d, AccessType.view)
+        self.test_user_2.grant_access(d_ext, AccessType.view)
+        db.session.commit()
+        self.login_test2()
+        access_error = "You have expired your access to this task."
+        resp = self.post_answer(
+            "textfield", f"{d.id}.question", user_input={"c": "testuser2@d"}
+        )
+        self.assertNotIn("error", resp)
+        self.post_answer("cbfield", f"{d.id}.access", user_input={"c": "1"})
+        # int 1 is not valid answer via cbfield answer route, but might be set by jsrunner
+        save_answer(
+            [self.test_user_2],
+            TaskId.parse(f"{d_ext.id}.access_ext"),
+            content={"c": 1},
+            points=None,
+        )
+        db.session.commit()
+        resp = self.post_answer(
+            "textfield", f"{d.id}.question", user_input={"c": "testuser2@d.2"}
+        )
+        self.assertEqual(
+            {
+                "web": {"result": "saved"},
+                "savedNew": 4,
+                "valid": False,
+                "error": access_error,
+            },
+            resp,
+        )
+        resp = self.post_answer(
+            "textfield",
+            f"{d.id}.question_ext_accessfield",
+            user_input={"c": "testuser2@d_ext"},
+        )
+        self.assertEqual(
+            {
+                "web": {"result": "saved"},
+                "savedNew": 5,
+                "valid": False,
+                "error": access_error,
+            },
+            resp,
+        )
