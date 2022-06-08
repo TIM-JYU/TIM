@@ -295,7 +295,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
             f"failed screenshot saved to screenshots/{f}{fail_suffix} "
             f"and difference to screenshots/{f}{fail_suffix}_DIFF"
         )
-        new_screenshots = 1  # change here 1 for generating new screenshots
+        new_screenshots = 0  # change here 1 for generating new screenshots
         if new_screenshots == 0:
             self.assertTrue(False, msg=assert_msg)
 
