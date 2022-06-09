@@ -190,15 +190,10 @@ services:
   networks:
    - csplugin_db
  haskellplugins:
-  image: timimages/haskellplugins:latest
-  build:
-   context: ./timApp/modules/Haskell
-   dockerfile: Dockerfile
-  volumes:
-   - ./timApp/modules/Haskell:/Haskell
-  working_dir: /Haskell
-  command: ./startAll.sh
+  image: timimages/haskellplugins:latest-gh
   restart: unless-stopped
+  logging:
+   driver: none
   read_only: true
  showfile:
   image: timimages/cs3${CSPLUGIN_TARGET:-}:elixir
