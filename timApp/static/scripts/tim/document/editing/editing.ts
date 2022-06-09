@@ -477,20 +477,6 @@ auto_number_headings: 0${CURSOR}
         this.toggleParEditor({type: EditType.Edit, pars: sel}, {});
     }
 
-    /**
-     * Toggles the edit mode of a table in a given table paragraph.
-     */
-    toggleTableEditor(e: MouseEvent, par: ParContext) {
-        const tableCtrl = this.viewctrl.getTableControllerFromParId(par);
-
-        if (tableCtrl == null) {
-            void showMessageDialog("Could not find table controller");
-            return;
-        }
-
-        tableCtrl.toggleEditMode();
-    }
-
     handleDelete(position: EditPosition) {
         void this.viewctrl.updateDocument(() => {
             if (position.type === EditType.Edit) {
@@ -599,27 +585,6 @@ auto_number_headings: 0${CURSOR}
         this.viewctrl.parmenuHandler.showOptionsWindow(e, par);
     }
 
-    /**
-     * Checks whether the given paragraph is a table paragraph and in edit mode.
-     * @param par The paragraph.
-     * @returns True if the paragraph is a table paragraph in edit mode, false
-     * if the paragraph is a table paragraph but not in edit mode, undefined if the paragraph is not a table paragraph
-     * at all or the table has forced edit mode.
-     */
-    isTimTableInEditMode(par: ParContext): boolean | undefined {
-        const tableCtrl = this.viewctrl.getTableControllerFromParId(par);
-
-        if (tableCtrl == null) {
-            return undefined;
-        }
-
-        if (tableCtrl.isInForcedEditMode()) {
-            return undefined;
-        }
-
-        return tableCtrl.isInEditMode();
-    }
-
     isQST(par: ParContext): boolean {
         return par.par.attrs.plugin === "qst";
     }
@@ -670,7 +635,6 @@ auto_number_headings: 0${CURSOR}
             ];
         }
         const parEditable = canEditPar(this.viewctrl.item, par);
-        const timTableEditMode = this.isTimTableInEditMode(par);
         const qstPar = this.isQST(par);
         const customParMenuEntry = this.getParMenuEntry(par, parEditable);
         const fns: MenuFunctionList = [];
@@ -809,21 +773,6 @@ auto_number_headings: 0${CURSOR}
                     show: parEditable,
                 });
             }
-            fns.push(
-                {
-                    func: (e) => this.toggleTableEditor(e, par),
-                    desc: "Edit table",
-                    show:
-                        parEditable &&
-                        timTableEditMode === false &&
-                        !par.isReference(),
-                },
-                {
-                    func: (e) => this.toggleTableEditor(e, par),
-                    desc: "Close table editor",
-                    show: parEditable && timTableEditMode === true,
-                }
-            );
             if (customParMenuEntry) {
                 fns.push(customParMenuEntry);
             }

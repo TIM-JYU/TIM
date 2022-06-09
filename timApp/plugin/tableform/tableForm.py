@@ -116,6 +116,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     includeUsers: MembershipFilter = field(
         default=MembershipFilter.Current, metadata={"by_value": True}
     )
+    locked: bool | Missing | None = missing
     lockedFields: list[str] | Missing = missing
     maxCols: str | Missing | None = missing
     maxRows: str | Missing | None = missing
@@ -315,6 +316,8 @@ class TableformAnswerResp(PluginAnswerResp):
 
 
 def answer(args: TableFormAnswerModel) -> PluginAnswerResp:
+    if args.markup.locked:
+        raise RouteException("This table is not editable.")
     rows = args.input.replyRows
     save_rows = []
     for uid, r in rows.items():
