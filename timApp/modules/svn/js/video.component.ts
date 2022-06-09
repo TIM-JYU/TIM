@@ -619,7 +619,7 @@ export class VideoComponent extends AngularPluginBase<
             }
             const src = srcUrl.toString();
             this.isPdf =
-                src.includes(".pdf") && // TODO: hack for Mac Safari see https://gitlab.com/tim-jyu/tim/-/issues/2114
+                src.includes(".pdf") && // TODO: hack for Mac Safari see https://github.com/TIM-JYU/TIM/issues/2114
                 isSafari();
             const iframeopts = parseIframeopts(
                 this.markup.iframeopts ??

@@ -3,7 +3,7 @@ from base64 import b64encode
 
 from languages import Language, get_by_id, html_change
 
-# We can't use newer version yet, see https://gitlab.com/tim-jyu/tim/-/issues/2359
+# We can't use newer version yet, see https://github.com/TIM-JYU/TIM/issues/2359
 GEOGEBRA_DEFAULT_VERSION = "5.0.642.0"
 
 GEOGEBRA_DEFAULT_SRC_HTML = """

@@ -65,11 +65,8 @@ class TimDbTest(unittest.TestCase):
         timApp.timdb.init.initialize_database(create_docs=cls.create_docs)
 
     def setUp(self):
-        if (
-            running_in_gitlab()
-            and remove_prefix(self.id(), "timApp.") in GITLAB_SKIP_TESTS
-        ):
-            self.skipTest("This test fails in GitLab")
+        if running_in_ci() and remove_prefix(self.id(), "timApp.") in CI_SKIP_TESTS:
+            self.skipTest("This test is skipped in CI")
         self.db = TimDb(files_root_path=self.test_files_path)
 
     def tearDown(self):
@@ -178,11 +175,11 @@ TEST_USER_2_USERNAME = "testuser2"
 TEST_USER_3_USERNAME = "testuser3"
 
 
-GITLAB_SKIP_TESTS = {
+CI_SKIP_TESTS = {
     # STACK image is not yet pulled in CI
     "tests.browser.test_csplugin.StackRandomTest.test_csplugin_answernr_stack1",
 }
 
 
-def running_in_gitlab():
-    return os.environ.get("GITLAB_CI") == "true"
+def running_in_ci():
+    return os.environ.get("CI") == "true"

@@ -427,7 +427,7 @@ services:
   environment:
    TIM_SETTINGS: testconfig.py
    PYTHONPATH: /service
-   GITLAB_CI: ${CI:-false}
+   CI: ${CI:-false}
   depends_on:
    - csplugin
    - pali

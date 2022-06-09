@@ -2,15 +2,15 @@ from selenium.webdriver.common.by import By
 
 from timApp.auth.accesstype import AccessType
 from timApp.tests.browser.browsertest import BrowserTest
-from timApp.tests.db.timdbtest import running_in_gitlab
+from timApp.tests.db.timdbtest import running_in_ci
 from timApp.timdb.sqa import db
 
 
 class FormTest(BrowserTest):
     def test_plugin_user_modifiers(self):
         """Save and show answers in browser according to global field and useCurrentUser logic"""
-        if running_in_gitlab():
-            self.skipTest("Plugin user modifiers not supported in GitLab")
+        if running_in_ci():
+            self.skipTest("Plugin user modifiers not supported in CI")
 
         def wait_fields_loaded():
             self.wait_until_present_and_vis("#a .textfieldNoSaveDiv input")

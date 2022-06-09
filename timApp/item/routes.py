@@ -482,7 +482,7 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
             .joinedload(BlockAccess.usergroup),
             joinedload(DocEntry.trs)
             # TODO: These joinedloads are for some reason very inefficient at least for certain documents.
-            #  See https://gitlab.com/tim-jyu/tim/-/issues/2201. Needs more investigation.
+            #  See https://github.com/TIM-JYU/TIM/issues/2201. Needs more investigation.
             # .joinedload(Translation.docentry),
             # joinedload(DocEntry.trs).joinedload(Translation._block)
         ),

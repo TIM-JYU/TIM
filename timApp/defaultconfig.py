@@ -138,6 +138,7 @@ PROXY_WHITELIST = [
     "korppi.jyu.fi",
     "plus.cs.aalto.fi",
     "gitlab.com",
+    "github.com",
     "gitlab.jyu.fi",
     "tim.jyu.fi",
     "www.foreca.com",

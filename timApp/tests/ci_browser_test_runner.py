@@ -1,9 +1,9 @@
 """
-Special browser test runner for GitLab CI.
+Special browser test runner for CI.
 
-Right now, CI tests are run in a Docker container on GitLab CI.
+Right now, CI tests are run in a Docker container on CI.
 This appears to cause problems with Selenium + Flask in Python's own unittest.
-See https://gitlab.com/tim-jyu/tim/-/issues/2559
+See https://github.com/TIM-JYU/TIM/issues/2559
 
 The solution is to run each test in a separate, unforked process and force each process to properly shut down and close
 all collections.
