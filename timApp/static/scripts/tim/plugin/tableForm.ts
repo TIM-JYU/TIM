@@ -82,6 +82,7 @@ const TableFormMarkup = t.intersection([
 
         hiddenColumns: t.array(t.number),
         hiddenRows: t.array(t.number),
+        locked: t.boolean,
         lockedFields: t.array(t.string),
         maxWidth: t.string,
         minWidth: t.string,
@@ -199,7 +200,7 @@ const sortLang = "fi";
 
             <div class="hidden-print">
                 <button class="timButton"
-                        *ngIf="tableCheck() && !autosave"
+                        *ngIf="tableCheck() && !autosave && !locked"
                         (click)="saveText()">
                     {{ buttonText() }}
                 </button>
@@ -371,6 +372,10 @@ export class TableFormComponent
 
     get autosave() {
         return this.markup.autosave;
+    }
+
+    get locked() {
+        return this.markup.locked;
     }
 
     get hideButtonText() {
@@ -627,6 +632,7 @@ export class TableFormComponent
         this.data.toolbarTemplates = this.markup.toolbarTemplates;
         this.data.dataView = this.markup.dataView;
         this.data.isPreview = this.isPreview();
+        this.data.locked = this.markup.locked;
         // this.cdr.detectChanges();
     }
 
@@ -1276,7 +1282,7 @@ export class TableFormComponent
      * @param cellsToSave list of cells that needs to be saved
      */
     async cellChanged(cellsToSave: CellToSave[] | CellAttrToSave[]) {
-        if (this.attrsall.markup.sisugroups) {
+        if (this.attrsall.markup.sisugroups || this.markup.locked) {
             return;
         }
         for (const c of cellsToSave) {
