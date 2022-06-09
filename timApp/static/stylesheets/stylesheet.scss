@@ -281,11 +281,17 @@ a .glyphicon {
     .large       { font-size: large; }
     .x-large     { font-size: x-large; }
     .xx-large    { font-size: xx-large; }
+
     img.smallimage {
         display: inline;
     }
+
+    .text-start .parContent {
+        text-align: left !important;
+    }
+    /* ready styles end */
+
     span.button {
-     /* ready styles end */
         border: black;
         border-style: solid;
         background: lightgray;
@@ -308,9 +314,6 @@ a .glyphicon {
         content: "\002b";
         color: $basic-color
     }
-
-
-     /* ready styles end */
 
     .removePre pre { /* for chat */
         visibility: collapse;
