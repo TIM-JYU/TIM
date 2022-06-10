@@ -845,9 +845,7 @@ def render_doc_view(
                             load_plugin_states=not hide_answers,
                         )
                         generate_review_groups(
-                            doc_info,
-                            full_document_for_review.plugins,
-                            doc_settings.group(),
+                            doc_info, full_document_for_review.plugins
                         )
                     else:
                         generate_review_groups(doc_info, post_process_result.plugins)
@@ -950,8 +948,19 @@ def render_doc_view(
             dict.fromkeys(doc_settings.exam_mode_themes() + document_themes)
         )
     override_theme = None
-    if document_themes:
-        document_theme_docs = resolve_themes(document_themes)
+    document_themes_final = []
+    for theme in document_themes:
+        parts = theme.split(":", 1)
+        if len(parts) == 2:
+            view_route, theme = parts
+            if not theme:
+                continue
+            if view_route and view_ctx.route.value != view_route:
+                continue
+        document_themes_final.append(theme)
+
+    if document_themes_final:
+        document_theme_docs = resolve_themes(document_themes_final)
         # If the user themes are not overridden, they are merged with document themes
         user_themes = current_user.get_prefs().theme_docs()
         if user_themes and not doc_settings.override_user_themes():

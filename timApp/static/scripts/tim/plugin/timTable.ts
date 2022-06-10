@@ -79,6 +79,10 @@ import {
 import {computeHiddenRowsFromFilters} from "tim/plugin/filtering";
 import {createParContext} from "tim/document/structure/create";
 import {showConfirm} from "tim/ui/showConfirmDialog";
+import {
+    ICtrlWithMenuFunctionEntry,
+    IMenuFunctionEntry,
+} from "tim/document/viewutils";
 import {onClick, OnClickArg} from "../document/eventhandlers";
 import {
     ChangeType,
@@ -252,6 +256,7 @@ export interface TimTable {
     // hiddenRows?: IRow[];
     hiddenRows?: number[];
     hiddenColumns?: number[];
+    locked?: boolean;
     lockedCells?: string[];
     lockedColumns?: string[];
     // cellsTosave may include un-rect area (not at the moment but maybe in future
@@ -696,7 +701,7 @@ export enum ClearSort {
                 </div>
                     </ng-template>
             </div>
-            <div class="csRunMenuArea" *ngIf="task && !data.hideSaveButton">
+            <div class="csRunMenuArea" *ngIf="task && !data.hideSaveButton && !isLocked()">
                 <p class="csRunMenu">
                     <button class="timButton" [disabled]="disableUnchanged && !edited" *ngIf="task && button"
                             (click)="handleClickSave()">{{button}}</button>
@@ -724,7 +729,8 @@ export class TimTableComponent
         DoCheck,
         AfterViewChecked,
         AfterViewInit,
-        DataModelProvider
+        DataModelProvider,
+        ICtrlWithMenuFunctionEntry
 {
     error: string = "";
     public viewctrl?: ViewCtrl;
@@ -1008,6 +1014,11 @@ export class TimTableComponent
 
         // For performance, we detach the automatic change detector for this component and call it manually.
         this.cdr.detach();
+
+        if (this.viewctrl) {
+            await this.viewctrl.documentUpdate;
+            this.viewctrl.addParMenuEntry(this, this.getPar()!);
+        }
     }
 
     ngAfterViewInit() {
@@ -1190,6 +1201,10 @@ export class TimTableComponent
      */
     public isInForcedEditMode() {
         return this.forcedEditMode;
+    }
+
+    public isLocked() {
+        return this.data.locked;
     }
 
     public coliToLetters(coli: number) {
@@ -1436,7 +1451,15 @@ export class TimTableComponent
      * @returns {boolean} True if the table is in edit mode, otherwise false.
      */
     public isInEditMode() {
-        return this.editing || this.forcedEditMode;
+        return (this.editing || this.forcedEditMode) && !this.data.locked;
+    }
+
+    getMenuEntry(): IMenuFunctionEntry {
+        return {
+            func: () => this.toggleEditMode(),
+            desc: this.editing ? "Close table editor" : "Edit table",
+            show: !this.isInForcedEditMode() && !this.isLocked(),
+        };
     }
 
     public addRowEnabled() {

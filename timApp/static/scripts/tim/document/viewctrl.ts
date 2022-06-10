@@ -1641,7 +1641,7 @@ export class ViewCtrl implements IController {
 
     /**
      * Checks if peer review is on
-     * TODO: Timezones may cause some problems with this solution
+     * TODO: Timezones may cause some problems with this solution; rewrite using moment.js
      */
     peerReviewInProcess(): boolean {
         if (this.docSettings.peer_review) {
@@ -1660,12 +1660,7 @@ export class ViewCtrl implements IController {
                 this.docSettings.peer_review_stop
             ).toISOString();
 
-            console.log(startTime <= currentTime && currentTime < endTime);
-            if (startTime <= currentTime && currentTime < endTime) {
-                return true;
-            }
-
-            return false;
+            return startTime <= currentTime && currentTime < endTime;
         }
         return false;
     }

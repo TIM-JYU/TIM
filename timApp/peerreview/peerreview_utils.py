@@ -7,7 +7,8 @@ __license__ = "MIT"
 __date__ = "29.5.2022"
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
+from random import shuffle
 from typing import DefaultDict
 
 from sqlalchemy.exc import IntegrityError
@@ -22,10 +23,9 @@ from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-import dateutil.parser
-import pytz
-
+from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.requesthelper import RouteException
+from timApp.util.utils import get_current_time
 
 
 class PeerReviewException(Exception):
@@ -36,17 +36,32 @@ class PeerReviewException(Exception):
 def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
     task_ids = []
 
+    settings = doc.document.get_settings()
+
     for task in tasks:
         if task.task_id:
             task_ids.append(task.task_id)
 
-    points = get_points_by_rule(None, task_ids, None)
+    user_group = settings.group()
+    user_ids = None
+    if user_group:
+        user_ids = [
+            uid
+            for uid, in (
+                UserGroupMember.query.join(UserGroup, UserGroupMember.group)
+                .filter(membership_current & (UserGroup.name == user_group))
+                .with_entities(UserGroupMember.user_id)
+                .all()
+            )
+        ]
+
+    points = get_points_by_rule(None, task_ids, user_ids)
 
     users = []
     for user in points:
         users.append(user["user"])
 
-    settings = doc.document.get_settings()
+    shuffle(users)
     review_count = settings.peer_review_count()
 
     # TODO: [Kuvio] get timestamps from doc settings
@@ -105,27 +120,13 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
         for reviewer, reviewables in pairing.items():
             for a in filtered_answers:
                 if a.users_all[0].id in reviewables:
-
-                    # save_review(
-                    #    doc, reviewer, start_time_reviews, end_time_reviews, a, t, False
-                    # )
                     save_review(
-                        a, t, doc, reviewer, start_time_reviews, end_time_reviews, False
+                        a, t, doc, reviewer, start_time_reviews, end_time_reviews
                     )
 
     db.session.commit()
 
 
-# def save_review(
-#        doc: DocInfo,
-#        reviewer_id: int,
-#        reviewable_id: int,
-#        start_time: datetime,
-#        end_time: datetime,
-#        answer: Answer | None = None,
-#        task_id: TaskId | None = None,
-#        reviewed: bool = False,
-# ) -> PeerReview:
 def save_review(
     answer: Answer,
     task_id: TaskId,
@@ -174,10 +175,6 @@ def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
     return PeerReview.query.filter_by(block_id=doc.id).all()
 
 
-def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
-    return PeerReview.query.filter_by(block_id=doc.id).all()
-
-
 def get_reviews_to_user(d: DocInfo, user: User) -> list[PeerReview]:
     q = get_reviews_to_user_query(d, user).options(joinedload(PeerReview.reviewable))
     return q.all()
@@ -212,7 +209,21 @@ def check_review_grouping(doc: DocInfo) -> bool:
 
 
 def is_peerreview_enabled(doc: DocInfo) -> bool:
-    return doc.document.get_settings().peer_review()
+    settings = doc.document.get_settings()
+
+    peer_review_start = settings.peer_review_start()
+    peer_review_stop = settings.peer_review_stop()
+
+    if not peer_review_start or not peer_review_stop:
+        return doc.document.get_settings().peer_review()
+
+    peer_review_start = peer_review_start.astimezone(timezone.utc)
+    peer_review_stop = peer_review_stop.astimezone(timezone.utc)
+    current_time = get_current_time()
+
+    if not peer_review_start or not peer_review_stop:
+        return doc.document.get_settings().peer_review()
+    return peer_review_start <= current_time < peer_review_stop
 
 
 def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
@@ -230,7 +241,7 @@ def change_peerreviewers_for_user(
     reviewable: int,
     old_reviewers: list[int],
     new_reviewers: list[int],
-) -> bool:
+) -> None:
     """Change reviewers in one task.
     :param doc: Document containing reviewable answers.
     :param task: task name.
@@ -238,6 +249,7 @@ def change_peerreviewers_for_user(
     :param old_reviewers: List of old reviewers IDs
     :param new_reviewers: List of new reviewers IDs
     """
+    # TODO: Clean up; don't do one query per loop: instead fetch all users at once!
     for i in range(0, len(new_reviewers)):
         updated_user = PeerReview.query.filter_by(
             block_id=doc.id,
@@ -251,5 +263,4 @@ def change_peerreviewers_for_user(
     except IntegrityError:
         db.session.rollback()
         raise RouteException("Error: Same reviewer more than once in one task")
-    db.session.commit()
-    return True
+    # Note: Don't commit here because the function is used in other functions that update the DB

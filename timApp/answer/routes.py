@@ -135,7 +135,11 @@ from timApp.util.get_fields import (
     GetFieldsAccess,
 )
 from timApp.util.logger import log_info
-from timApp.util.utils import get_current_time, approximate_real_name
+from timApp.util.utils import (
+    get_current_time,
+    approximate_real_name,
+    convert_email_to_lower,
+)
 from timApp.util.utils import local_timezone
 from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
 from timApp.velp.annotations import get_annotations_with_comments_in_document
@@ -830,7 +834,8 @@ def post_answer_impl(
     if preprocessor:
         preprocessor(answerdata, curr_user, d, plugin)
 
-    # print(json.dumps(answerdata)) # uncomment this to follow what answers are used in browser tests
+    # uncomment this to follow what answers are used in browser tests
+    # print(json.dumps(answerdata))
 
     answer_call_data = {
         "markup": plugin.values,
@@ -938,6 +943,9 @@ def post_answer_impl(
     resultmd = result["web"].get("md", None)
     if resultmd:
         result["web"]["md"] = call_dumbo([resultmd])[0]
+    resultmd = result["web"].get("outdata", {}).get("md", None)
+    if resultmd:  # mostly for jsrunner
+        result["web"]["outdata"]["md"] = call_dumbo([resultmd])[0]
 
     if not get_task:
         add_reply(result["web"], "-replyImage")
@@ -1300,9 +1308,7 @@ def preprocess_jsrunner_answer(
         if not curr_user.has_teacher_access(d):
             raise AccessDenied("Teacher access required to browse all peer reviews")
         answerdata["peerreviews"] = get_reviews_for_document(d)
-        answerdata["velps"] = get_annotations_with_comments_in_document(
-            curr_user, d, False
-        )
+        answerdata["velps"] = get_annotations_with_comments_in_document(curr_user, d)
     else:
         answerdata["peerreviews"] = []
         answerdata["velps"] = []
@@ -1316,7 +1322,6 @@ def preprocess_jsrunner_answer(
         localoffset = localtz.utcoffset(datetime.now())
         tzd = localoffset.total_seconds() / 3600
         plugin.values["timeZoneDiff"] = tzd
-    # print(answerdata)
     if runnermarkup.program is missing:
         raise PluginException("Attribute 'program' is required.")
 
@@ -1929,12 +1934,13 @@ def export_answers(doc_path: str) -> Response:
 
 @answers.post("/importAnswers")
 def import_answers(
-    answers: list[ExportedAnswer],
+    exported_answers: list[ExportedAnswer],
     allow_missing_users: bool = False,
+    match_email_case: bool = True,
     doc_map: dict[str, str] = field(default_factory=dict),
 ) -> Response:
     verify_admin()
-    doc_paths = {doc_map.get(a.doc, a.doc) for a in answers}
+    doc_paths = {doc_map.get(a.doc, a.doc) for a in exported_answers}
     docs = DocEntry.query.filter(DocEntry.name.in_(doc_paths)).all()
     doc_path_map = {d.path: d for d in docs}
     missing_docs = doc_paths - set(doc_path_map)
@@ -1951,22 +1957,50 @@ def import_answers(
         .with_entities(Answer, User.email)
         .all()
     )
+
+    def convert_email_case(email: str) -> str:
+        return email if match_email_case else convert_email_to_lower(email)
+
     existing_set = {
-        (a.parsed_task_id.doc_id, a.task_name, a.answered_on, a.valid, a.points, email)
+        (
+            a.parsed_task_id.doc_id,
+            a.task_name,
+            a.answered_on,
+            a.valid,
+            a.points,
+            convert_email_case(email),
+        )
         for a, email in existing_answers
     }
+    email_field = User.email if match_email_case else func.lower(User.email)
+
     dupes = 0
-    users = {
-        u.email: u
-        for u in User.query.filter(User.email.in_([a.email for a in answers])).all()
-    }
-    requested_users = {a.email for a in answers}
+    all_users = User.query.filter(
+        email_field.in_([a.email for a in exported_answers])
+    ).all()
+
+    if not match_email_case:
+        all_emails = defaultdict(list)
+        for u in all_users:
+            email = convert_email_case(u.email)
+            all_emails[email].append(u.email)
+        all_duplicates = {
+            e: emails for e, emails in all_emails.items() if len(emails) > 1
+        }
+        if all_duplicates:
+            raise RouteException(
+                f"There are multiple users for the same email, "
+                f"cannot import with match_email_case = False: {all_duplicates}"
+            )
+
+    users = {convert_email_case(u.email): u for u in all_users}
+    requested_users = {convert_email_case(a.email) for a in exported_answers}
     missing_users = requested_users - set(users.keys())
     if missing_users and not allow_missing_users:
         raise RouteException(f"Email(s) not found: {seq_to_str(list(missing_users))}")
-    answers.sort(key=lambda a: a.time)
+    exported_answers.sort(key=lambda a: a.time)
     all_imported = []
-    for a in answers:
+    for a in exported_answers:
         doc_id = doc_path_map[doc_map.get(a.doc, a.doc)].id
         if (doc_id, a.task, a.time, a.valid, a.points, a.email) not in existing_set:
             u = users.get(a.email)

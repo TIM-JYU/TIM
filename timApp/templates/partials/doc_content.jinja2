@@ -6,7 +6,8 @@
     <tim-view-range-navigation></tim-view-range-navigation>
     {% if peer_review_start and peer_review_stop %}
     <div class="taskSummary">
-             Time before review starts:
+             {# TODO: Make a general-purpose component for displaying text depending on countdown state (not ended/ended). #}
+            Time before review starts:
             <tim-countdown parse-end-time="{{ peer_review_start }}"></tim-countdown>.
             Time left to review tasks:
             <tim-countdown parse-end-time="{{ peer_review_stop }}"></tim-countdown>.

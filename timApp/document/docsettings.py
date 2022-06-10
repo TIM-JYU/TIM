@@ -71,6 +71,8 @@ class DocSettingTypes:
     exam_mode_themes: list[str]
     hide_readmarks: bool
     sync_answerbrowsers: bool
+    peer_review_start: datetime
+    peer_review_stop: datetime
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -94,8 +96,6 @@ class DocSettings:
     heading_format_key = "heading_format"
     heading_ref_format_key = "heading_ref_format"
     show_task_summary_key = "show_task_summary"
-    peer_review_start_key = "peer_review_start"
-    peer_review_stop_key = "peer_review_stop"
     no_question_auto_numbering_key = "no_question_auto_numbering"
     slide_background_url_key = "slide_background_url"
     slide_background_color_key = "slide_background_color"
@@ -558,11 +558,13 @@ class DocSettings:
     def peer_review_count(self) -> int:
         return self.get_setting_or_default("peer_review_count", 1)
 
-    def peer_review_start(self) -> datetime:
-        return self.__dict.get(self.peer_review_start_key, None)
+    def peer_review_start(self) -> datetime | None:
+        # PyYAML already deserializes datetimes
+        return self.__dict.get("peer_review_start", None)
 
-    def peer_review_stop(self) -> datetime:
-        return self.__dict.get(self.peer_review_stop_key, None)
+    def peer_review_stop(self) -> datetime | None:
+        # PyYAML already deserializes datetimes
+        return self.__dict.get("peer_review_stop", None)
 
     def access_denied_message(self) -> str | None:
         return self.get_setting_or_default("access_denied_message", None)

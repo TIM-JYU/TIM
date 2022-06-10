@@ -21,7 +21,7 @@ export const User = t.interface({
 });
 
 export const VelpData = t.type({
-    points: nullable(t.Int),
+    points: nullable(t.number),
     annotator: t.type({
         id: t.Int,
         name: t.string,

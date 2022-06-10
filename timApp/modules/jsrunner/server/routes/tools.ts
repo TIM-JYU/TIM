@@ -838,6 +838,7 @@ export class GTools extends ToolsBase {
     public tools: Tools;
 
     groups: IGroupData = {};
+
     constructor(
         currDoc: string,
         markup: IJsRunnerMarkup,
@@ -1348,18 +1349,20 @@ export class Tools extends ToolsBase {
     }
 
     /**
-     * Checks that the valp-data corresponds to the task given by the second parameter
+     * Checks that the velp-data corresponds to the task given by the second parameter
      */
     isVelpTask(v: VelpDataT, task: string): boolean {
         const id = v.answer?.task_id;
         return id?.substr(id.indexOf(".") + 1) === task;
     }
+
     /**
      * Check if velp has been given to the current user
      */
     isVelpForUser(v: VelpDataT): boolean {
         return v.answer?.users[0].id === this.data.user.id;
     }
+
     /**
      * Print average of velp-points in one task
      */
@@ -1375,10 +1378,11 @@ export class Tools extends ToolsBase {
                     peerreviewers.includes(v.annotator.id)
             )
             .map((v) => v.points)
-            .reduce((acc, p) => acc + (p !== null ? p : 0), 0);
+            .reduce<number>((acc, p) => acc + (p ?? 0), 0);
         const count = this.getVelpedCount(task);
         return count ? sum / count : 0;
     }
+
     /**
      * Print count of received velp-reviews for current user
      */
@@ -1394,6 +1398,7 @@ export class Tools extends ToolsBase {
             .map((v) => seen.add(v.annotator.id));
         return seen.size;
     }
+
     /**
      * Print count of reviews made by current user in one task
      */
@@ -1411,6 +1416,7 @@ export class Tools extends ToolsBase {
             });
         return seen.size;
     }
+
     /**
      * Print velp-points of current user in one task
      */
@@ -1462,6 +1468,7 @@ export class Tools extends ToolsBase {
             (rev) => rev.reviewable_id == this.data.user.id
         );
     }
+
     /**
      * Print reviewers and received points of current user
      */
@@ -1531,6 +1538,8 @@ export class Tools extends ToolsBase {
 
     /**
      * Change reviewers of current user
+     *
+     * TODO: Is usersObject needed at all?
      */
     changePeerReviewer(usersObject?: Users): void {
         const users = usersObject ? usersObject : this.users;

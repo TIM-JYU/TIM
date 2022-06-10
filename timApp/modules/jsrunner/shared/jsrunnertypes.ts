@@ -83,6 +83,8 @@ interface AnswerReturnSuccess {
         outdata?: {
             exportdata?: ExportData;
             areaVisibility?: Record<string, boolean>;
+            md?: string;
+            html?: string;
         };
     };
     savedata: IToolsResult[];

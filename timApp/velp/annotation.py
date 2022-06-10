@@ -206,8 +206,8 @@ def invalidate_annotation(id: int) -> Response:
     """Invalidates an annotation by setting its valid_until to current moment."""
 
     verify_logged_in()
-    annotation = get_annotation_or_abort(id)
     user = get_current_user_object()
+    annotation = get_annotation_or_abort(id)
     can_edit, _ = check_annotation_edit_access_and_maybe_get_doc(user, annotation)
     if not can_edit:
         raise AccessDenied(
@@ -219,7 +219,8 @@ def invalidate_annotation(id: int) -> Response:
 
 
 def get_annotation_or_abort(ann_id: int) -> Annotation:
-    ann = set_annotation_query_opts(Annotation.query).get(ann_id)
+    # Possibly bug: We need to create a new query object, otherwise raiseload() seems to pollute User's relations
+    ann = set_annotation_query_opts(db.session.query(Annotation)).get(ann_id)
     if not ann:
         raise RouteException(f"Annotation with id {ann_id} not found")
     return ann
