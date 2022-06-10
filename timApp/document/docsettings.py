@@ -1,5 +1,5 @@
 from dataclasses import dataclass, fields
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 from typing import Optional, Iterable, TypeVar, Any, TYPE_CHECKING, Union
 
 import yaml
@@ -558,13 +558,20 @@ class DocSettings:
     def peer_review_count(self) -> int:
         return self.get_setting_or_default("peer_review_count", 1)
 
-    def peer_review_start(self) -> datetime | None:
+    def _get_datetime_option(self, key: str) -> datetime | None:
         # PyYAML already deserializes datetimes
-        return self.__dict.get("peer_review_start", None)
+        res = self.__dict.get(key, None)
+        if res is not None and not isinstance(res, datetime):
+            res = self.get_setting_or_default(key, None)
+        if res is None:
+            return None
+        return res.astimezone(timezone.utc)
+
+    def peer_review_start(self) -> datetime | None:
+        return self._get_datetime_option("peer_review_start")
 
     def peer_review_stop(self) -> datetime | None:
-        # PyYAML already deserializes datetimes
-        return self.__dict.get("peer_review_stop", None)
+        return self._get_datetime_option("peer_review_stop")
 
     def access_denied_message(self) -> str | None:
         return self.get_setting_or_default("access_denied_message", None)

@@ -7,7 +7,7 @@ __license__ = "MIT"
 __date__ = "29.5.2022"
 
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime
 from random import shuffle
 from typing import DefaultDict
 
@@ -63,10 +63,8 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
 
     shuffle(users)
     review_count = settings.peer_review_count()
-
-    # TODO: [Kuvio] get timestamps from doc settings
-    start_time_reviews = datetime.now()
-    end_time_reviews = datetime.now()
+    start_time_reviews: datetime = settings.peer_review_start() or get_current_time()
+    end_time_reviews: datetime = settings.peer_review_stop() or get_current_time()
 
     # Dictionary containing review pairs,
     # has reviewer user ID as key and value is list containing reviewable user IDs
@@ -82,9 +80,11 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
             f"peer_review_count setting is too low ({review_count})"
         )
 
-    # Decreases review count if it exceeds available user count
     if review_count >= len(users):
-        review_count = len(users) - 1
+        raise PeerReviewException(
+            "peer_review_count setting is too high to form review groups "
+            f"(set to {review_count} but {len(users)} users have answered so far)"
+        )
 
     for idx, user in enumerate(users):
         pairings_left = review_count + 1
@@ -210,20 +210,13 @@ def check_review_grouping(doc: DocInfo) -> bool:
 
 def is_peerreview_enabled(doc: DocInfo) -> bool:
     settings = doc.document.get_settings()
-
     peer_review_start = settings.peer_review_start()
     peer_review_stop = settings.peer_review_stop()
 
     if not peer_review_start or not peer_review_stop:
         return doc.document.get_settings().peer_review()
 
-    peer_review_start = peer_review_start.astimezone(timezone.utc)
-    peer_review_stop = peer_review_stop.astimezone(timezone.utc)
-    current_time = get_current_time()
-
-    if not peer_review_start or not peer_review_stop:
-        return doc.document.get_settings().peer_review()
-    return peer_review_start <= current_time < peer_review_stop
+    return peer_review_start <= get_current_time() < peer_review_stop
 
 
 def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
