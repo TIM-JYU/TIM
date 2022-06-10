@@ -21,6 +21,8 @@ from timApp.plugin.plugin import Plugin
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.requesthelper import RouteException
 
 
@@ -32,17 +34,31 @@ class PeerReviewException(Exception):
 def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
     task_ids = []
 
+    settings = doc.document.get_settings()
+
     for task in tasks:
         if task.task_id:
             task_ids.append(task.task_id)
 
-    points = get_points_by_rule(None, task_ids, None)
+    user_group = settings.group()
+    user_ids = None
+    if user_group:
+        user_ids = [
+            uid
+            for uid, in (
+                UserGroupMember.query.join(UserGroup, UserGroupMember.group)
+                .filter(membership_current & (UserGroup.name == user_group))
+                .with_entities(UserGroupMember.user_id)
+                .all()
+            )
+        ]
+
+    points = get_points_by_rule(None, task_ids, user_ids)
 
     users = []
     for user in points:
         users.append(user["user"])
 
-    settings = doc.document.get_settings()
     review_count = settings.peer_review_count()
 
     # TODO: [Kuvio] get timestamps from doc settings
