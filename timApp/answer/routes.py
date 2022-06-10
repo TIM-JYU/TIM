@@ -1308,9 +1308,7 @@ def preprocess_jsrunner_answer(
         if not curr_user.has_teacher_access(d):
             raise AccessDenied("Teacher access required to browse all peer reviews")
         answerdata["peerreviews"] = get_reviews_for_document(d)
-        answerdata["velps"] = get_annotations_with_comments_in_document(
-            curr_user, d, False
-        )
+        answerdata["velps"] = get_annotations_with_comments_in_document(curr_user, d)
     else:
         answerdata["peerreviews"] = []
         answerdata["velps"] = []
