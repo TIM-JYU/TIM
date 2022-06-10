@@ -2322,26 +2322,49 @@ useCurrentUser: true
         d = self.create_doc(
             initial_par=(
                 """
-#- {#access plugin=cbfield}
+#- {#access plugin=textfield}
 
 #- {#question plugin=textfield}
-accessField: access
+accessField:
+ field: access
+ limit: 2
 
 #- {#question_ext_accessfield plugin=textfield}
-        """
-                f"accessField: {d_ext.id}.access_ext"
+accessField:
+ field: %d.access_ext
+ limit: 1
+ error: "You already locked your access to this task"
+"""
+                % d_ext.id
             )
         )
         self.test_user_2.grant_access(d, AccessType.view)
         self.test_user_2.grant_access(d_ext, AccessType.view)
         db.session.commit()
         self.login_test2()
-        access_error = "You have expired your access to this task."
+        access_error_default = "You have expired your access to this task."
         resp = self.post_answer(
-            "textfield", f"{d.id}.question", user_input={"c": "testuser2@d"}
+            "textfield", f"{d.id}.question", user_input={"c": "testuser2@d part 1"}
         )
         self.assertNotIn("error", resp)
-        self.post_answer("cbfield", f"{d.id}.access", user_input={"c": "1"})
+        self.post_answer("textfield", f"{d.id}.access", user_input={"c": "1"})
+        resp = self.post_answer(
+            "textfield", f"{d.id}.question", user_input={"c": "testuser2@d part 2"}
+        )
+        self.assertNotIn("error", resp)
+        self.post_answer("textfield", f"{d.id}.access", user_input={"c": "2"})
+        resp = self.post_answer(
+            "textfield", f"{d.id}.question", user_input={"c": "testuser2@d.2"}
+        )
+        self.assertEqual(
+            {
+                "web": {"result": "saved"},
+                "savedNew": 5,
+                "valid": False,
+                "error": access_error_default,
+            },
+            resp,
+        )
         # int 1 is not valid answer via cbfield answer route, but might be set by jsrunner
         save_answer(
             [self.test_user_2],
@@ -2351,18 +2374,6 @@ accessField: access
         )
         db.session.commit()
         resp = self.post_answer(
-            "textfield", f"{d.id}.question", user_input={"c": "testuser2@d.2"}
-        )
-        self.assertEqual(
-            {
-                "web": {"result": "saved"},
-                "savedNew": 4,
-                "valid": False,
-                "error": access_error,
-            },
-            resp,
-        )
-        resp = self.post_answer(
             "textfield",
             f"{d.id}.question_ext_accessfield",
             user_input={"c": "testuser2@d_ext"},
@@ -2370,9 +2381,9 @@ accessField: access
         self.assertEqual(
             {
                 "web": {"result": "saved"},
-                "savedNew": 5,
+                "savedNew": 7,
                 "valid": False,
-                "error": access_error,
+                "error": "You already locked your access to this task",
             },
             resp,
         )

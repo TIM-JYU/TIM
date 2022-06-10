@@ -45,6 +45,7 @@ from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import get_option, RouteException, NotExist
 from timApp.util.logger import log_warning
 from timApp.util.utils import get_current_time
+from tim_common.markupmodels import AccessField
 
 
 def get_doc_or_abort(doc_id: int, msg: str | None = None) -> DocInfo:
@@ -605,7 +606,10 @@ def verify_task_access(
             context_user, found_plugin.known.accessField, found_plugin.task_id
         )
         if is_invalid:
-            invalidate_reason = "You have expired your access to this task."
+            invalidate_reason = (
+                found_plugin.known.accessField.error
+                or "You have expired your access to this task."
+            )
 
     return TaskAccessVerification(
         plugin=found_plugin,
@@ -617,9 +621,10 @@ def verify_task_access(
 
 
 def check_access_from_field(
-    context_user: UserContext, field_to_check: str, task_id: TaskId
+    context_user: UserContext, access_field: AccessField, task_id: TaskId
 ):
     current_user = context_user.logged_user
+    field_to_check = access_field.field
     tid = TaskId.parse(field_to_check, require_doc_id=False)
     if not tid.doc_id:
         tid = TaskId.parse(str(task_id.doc_id) + "." + field_to_check)
@@ -627,11 +632,11 @@ def check_access_from_field(
     if not prev:
         return True
     try:
-        value = json.loads(prev.content)["c"]
-        if value == "1" or value == 1:
+        value = int(json.loads(prev.content)["c"])
+        if value >= access_field.limit:
             return False
-    except json.decoder.JSONDecodeError:
-        return True
+    except (json.decoder.JSONDecodeError, ValueError):
+        pass
     return True
 
 
