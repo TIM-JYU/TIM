@@ -7,7 +7,7 @@ __license__ = "MIT"
 __date__ = "29.5.2022"
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import DefaultDict
 
 from sqlalchemy.exc import IntegrityError
@@ -24,6 +24,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.requesthelper import RouteException
+from timApp.util.utils import get_current_time
 
 
 class PeerReviewException(Exception):
@@ -206,7 +207,21 @@ def check_review_grouping(doc: DocInfo) -> bool:
 
 
 def is_peerreview_enabled(doc: DocInfo) -> bool:
-    return doc.document.get_settings().peer_review()
+    settings = doc.document.get_settings()
+
+    peer_review_start = settings.peer_review_start()
+    peer_review_stop = settings.peer_review_stop()
+
+    if not peer_review_start or not peer_review_stop:
+        return doc.document.get_settings().peer_review()
+
+    peer_review_start = peer_review_start.astimezone(timezone.utc)
+    peer_review_stop = peer_review_stop.astimezone(timezone.utc)
+    current_time = get_current_time()
+
+    if not peer_review_start or not peer_review_stop:
+        return doc.document.get_settings().peer_review()
+    return peer_review_start <= current_time < peer_review_stop
 
 
 def get_reviews_for_document(doc: DocInfo) -> list[PeerReview]:
