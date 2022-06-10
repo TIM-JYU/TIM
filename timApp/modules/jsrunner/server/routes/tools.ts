@@ -1538,6 +1538,8 @@ export class Tools extends ToolsBase {
 
     /**
      * Change reviewers of current user
+     *
+     * TODO: Is usersObject needed at all?
      */
     changePeerReviewer(usersObject?: Users): void {
         const users = usersObject ? usersObject : this.users;
