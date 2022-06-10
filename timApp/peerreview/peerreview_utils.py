@@ -216,6 +216,7 @@ def change_peerreviewers_for_user(
     :param old_reviewers: List of old reviewers IDs
     :param new_reviewers: List of new reviewers IDs
     """
+    # TODO: Clean up; don't do one query per loop: instead fetch all users at once!
     for i in range(0, len(new_reviewers)):
         updated_user = PeerReview.query.filter_by(
             block_id=doc.id,
