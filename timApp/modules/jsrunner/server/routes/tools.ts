@@ -1375,7 +1375,7 @@ export class Tools extends ToolsBase {
                     peerreviewers.includes(v.annotator.id)
             )
             .map((v) => v.points)
-            .reduce((acc, p) => acc + (p !== null ? p : 0), 0);
+            .reduce<number>((acc, p) => acc + (p ?? 0), 0);
         const count = this.getVelpedCount(task);
         return count ? sum / count : 0;
     }

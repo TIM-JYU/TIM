@@ -42,7 +42,7 @@
     "@angular/upgrade": "^13.0.2",
     "@zxing/browser": "^0.1.1",
     "@zxing/library": "^0.19.1",
-    "ace-builds": "^1.4.13",
+    "ace-builds": "^1.5.3",
     "angular": "^1.8.2",
     "angular-calendar": "^0.29.0",
     "angular-diff-match-patch": "^0.8.3",

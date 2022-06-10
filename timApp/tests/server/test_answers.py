@@ -103,14 +103,14 @@ class AnswerTest(TimRouteTest):
         path_map = {old_path: d.path}
         self.json_post(
             f"/importAnswers",
-            {"answers": exported, "doc_map": path_map},
+            {"exported_answers": exported, "doc_map": path_map},
             expect_content="This action requires administrative rights.",
             expect_status=403,
         )
         self.make_admin(self.current_user)
         self.json_post(
             f"/importAnswers",
-            {"answers": exported, "doc_map": path_map},
+            {"exported_answers": exported, "doc_map": path_map},
             expect_content={
                 "imported": 3,
                 "skipped_duplicates": 0,
@@ -119,7 +119,7 @@ class AnswerTest(TimRouteTest):
         )
         self.json_post(
             f"/importAnswers",
-            {"answers": exported, "doc_map": path_map},
+            {"exported_answers": exported, "doc_map": path_map},
             expect_content={
                 "imported": 0,
                 "skipped_duplicates": 3,
@@ -129,7 +129,11 @@ class AnswerTest(TimRouteTest):
         exported[0]["email"] = "xxx"
         self.json_post(
             f"/importAnswers",
-            {"answers": exported, "doc_map": path_map, "allow_missing_users": True},
+            {
+                "exported_answers": exported,
+                "doc_map": path_map,
+                "allow_missing_users": True,
+            },
             expect_content={
                 "imported": 0,
                 "skipped_duplicates": 2,
@@ -138,7 +142,7 @@ class AnswerTest(TimRouteTest):
         )
         self.json_post(
             f"/importAnswers",
-            {"answers": exported, "doc_map": path_map},
+            {"exported_answers": exported, "doc_map": path_map},
             expect_content="Email(s) not found: xxx",
             expect_status=400,
         )

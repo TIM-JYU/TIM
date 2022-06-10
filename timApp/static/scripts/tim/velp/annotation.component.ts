@@ -641,7 +641,8 @@ export class AnnotationComponent
     }
 
     commentChanged() {
-        return this.newcomment.length > 0;
+        // in test environment newcomment might end up undefined
+        return this.newcomment?.length > 0;
     }
 
     /**

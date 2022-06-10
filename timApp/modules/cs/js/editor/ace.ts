@@ -14,7 +14,7 @@ type IAceEditor = Ace.Editor;
         </pre>`,
 })
 export class AceEditorComponent implements IEditor {
-    private aceEditor!: IAceEditor;
+    private aceEditor?: IAceEditor;
     private languageMode_: string = "text";
     private minRows_: number = 1;
     private maxRows_: number = 100;
@@ -120,8 +120,9 @@ export class AceEditorComponent implements IEditor {
     }
 
     get content(): string {
-        return this.aceEditor?.getValue() ?? this.content_;
+        return this.aceEditor?.getValue() ?? this.content_ ?? "";
     }
+
     set content(str: string) {
         if (this.aceEditor) {
             this.aceEditor.setValue(str, 1);
@@ -131,6 +132,9 @@ export class AceEditorComponent implements IEditor {
     }
 
     insert(str: string, strPos?: number): void {
+        if (!this.aceEditor) {
+            return;
+        }
         const sess = this.aceEditor.getSession();
         let cursor;
         let back = -1;
@@ -151,6 +155,10 @@ export class AceEditorComponent implements IEditor {
     }
 
     doWrap(wrap: number) {
+        if (!this.aceEditor) {
+            return;
+        }
+
         const r = wrapText(this.content, wrap);
         if (!r.modified) {
             return;

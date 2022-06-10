@@ -77,6 +77,11 @@ export interface IDrawUpdate {
 
 export type DrawItem = IRectangle | IEllipse | IFreeHand | IArrow;
 
+export interface IDrawingWithID {
+    id: number;
+    drawData: DrawItem[];
+}
+
 /**
  * Gets dimensions (start coordinates, width, height) from given drawing
  * @param drawing DrawItem[] to check
@@ -986,6 +991,8 @@ export class DrawCanvasComponent
     loading = false;
 
     drawHandler?: Drawing;
+    // track DrawItem arrays to enable deleting a piece of drawing
+    drawItems: Map<number, DrawItem[]> = new Map();
 
     // optional function to call when image is loaded to let external users know the canvas is ready for use
     @Input() imgLoadCallback?: (arg0: this) => void;
@@ -1337,16 +1344,36 @@ export class DrawCanvasComponent
     /**
      * Moves current drawing progress to permanent storage (e.g makes it immune to undo)
      */
-    storeDrawing() {
-        this.drawHandler?.storeDrawing();
+    saveAndStoreDrawing(id: number) {
+        if (!this.drawHandler) {
+            return;
+        }
+        this.drawItems.set(id, this.drawHandler.getDrawing());
+        this.drawHandler.storeDrawing();
     }
 
     /**
-     * Sets and draws the given permanent drawing on canvas
-     * @param data Drawing to draw
+     * Sets and draws the given permanent drawings on canvas
+     * @param data IDrawingWithID array of drawings to draw
      */
-    setAndAdjustPersistentDrawData(data: DrawItem[]): void {
-        this.drawHandler?.setPersistentDrawData(data);
+    setPersistentDrawData(data: IDrawingWithID[]): void {
+        const drawings: DrawItem[] = [];
+        this.drawItems.clear();
+        data.forEach((item) => {
+            this.drawItems.set(item.id, item.drawData);
+            drawings.push(...item.drawData);
+        });
+        this.drawHandler?.setPersistentDrawData(drawings);
+    }
+
+    /**
+     * Delete a piece of drawing
+     * @param removableId drawing to delete
+     */
+    deleteDrawItem(removableId: number): void {
+        this.drawItems.delete(removableId);
+        const drawings = Array.from(this.drawItems.values()).flat();
+        this.drawHandler?.setPersistentDrawData(drawings);
     }
 
     /**

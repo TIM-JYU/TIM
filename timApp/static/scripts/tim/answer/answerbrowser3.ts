@@ -508,8 +508,10 @@ export class AnswerBrowserController
     private viewctrl!: Require<ViewCtrl>;
     private user: IUser | undefined;
     private fetchedUser: IUser | undefined;
+    private reviewerUser: IUser | undefined;
     private saveTeacher: boolean = false;
     private users: IUser[] | undefined;
+    private reviewerUsers: IUser[] = [];
     private answers: IAnswer[] = [];
     private filteredAnswers: IAnswer[] = [];
     private onlyValid: boolean = true;
@@ -956,6 +958,7 @@ export class AnswerBrowserController
                 }
             }
             if (this.review) {
+                this.reviewerUser = undefined;
                 let newReviewHtml = r.result.data.reviewHtml;
                 // Check if component itself provides review data and try to load it instead
                 const comp = this.viewctrl.getTimComponentByName(
@@ -1006,6 +1009,7 @@ export class AnswerBrowserController
                 } else {
                     this.reviewHtml = undefined;
                 }
+                this.setReviewerUsers();
                 await $timeout();
             }
         }
@@ -1013,7 +1017,8 @@ export class AnswerBrowserController
         if (!(this.imageReview && this.review)) {
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(
                 this.selectedAnswer?.id,
-                par
+                par,
+                this.reviewerUser
             );
         }
         if (!changeReviewOnly) {
@@ -1060,7 +1065,8 @@ export class AnswerBrowserController
             this.viewctrl.reviewCtrl.setCanvas(this.selectedAnswer.id, canvas);
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(
                 this.selectedAnswer.id,
-                par
+                par,
+                this.reviewerUser
             );
         }
     };
@@ -1559,6 +1565,39 @@ export class AnswerBrowserController
         }
         const info = this.pluginInfo();
         return info?.askNew ?? false;
+    }
+
+    setReviewerUsers() {
+        if (!this.selectedAnswer) {
+            this.reviewerUser = undefined;
+            return;
+        }
+        this.reviewerUsers =
+            this.viewctrl.reviewCtrl.getAnnotationersByAnswerId(
+                this.selectedAnswer.id
+            );
+    }
+
+    updateReviewers() {
+        this.setReviewerUsers();
+    }
+
+    getReviewerUser() {
+        return this.reviewerUser;
+    }
+
+    changeReviewerUser() {
+        if (this.selectedAnswer && this.reviewHtml) {
+            const par = this.getPar();
+            if (!par) {
+                return;
+            }
+            this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(
+                this.selectedAnswer.id,
+                par,
+                this.reviewerUser
+            );
+        }
     }
 
     showVelpsCheckBox() {
