@@ -834,7 +834,8 @@ def post_answer_impl(
     if preprocessor:
         preprocessor(answerdata, curr_user, d, plugin)
 
-    # print(json.dumps(answerdata)) # uncomment this to follow what answers are used in browser tests
+    # uncomment this to follow what answers are used in browser tests
+    # print(json.dumps(answerdata))
 
     answer_call_data = {
         "markup": plugin.values,
@@ -1323,7 +1324,6 @@ def preprocess_jsrunner_answer(
         localoffset = localtz.utcoffset(datetime.now())
         tzd = localoffset.total_seconds() / 3600
         plugin.values["timeZoneDiff"] = tzd
-    # print(answerdata)
     if runnermarkup.program is missing:
         raise PluginException("Attribute 'program' is required.")
 

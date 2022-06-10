@@ -21,10 +21,6 @@ from timApp.plugin.plugin import Plugin
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.user.usergroup import UserGroup
-import dateutil.parser
-import pytz
-
 from timApp.util.flask.requesthelper import RouteException
 
 
@@ -105,27 +101,13 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
         for reviewer, reviewables in pairing.items():
             for a in filtered_answers:
                 if a.users_all[0].id in reviewables:
-
-                    # save_review(
-                    #    doc, reviewer, start_time_reviews, end_time_reviews, a, t, False
-                    # )
                     save_review(
-                        a, t, doc, reviewer, start_time_reviews, end_time_reviews, False
+                        a, t, doc, reviewer, start_time_reviews, end_time_reviews
                     )
 
     db.session.commit()
 
 
-# def save_review(
-#        doc: DocInfo,
-#        reviewer_id: int,
-#        reviewable_id: int,
-#        start_time: datetime,
-#        end_time: datetime,
-#        answer: Answer | None = None,
-#        task_id: TaskId | None = None,
-#        reviewed: bool = False,
-# ) -> PeerReview:
 def save_review(
     answer: Answer,
     task_id: TaskId,
@@ -168,10 +150,6 @@ def get_reviews_for_user(d: DocInfo, user: User) -> list[PeerReview]:
 
 def get_reviews_for_user_query(d: DocInfo, user: User) -> Query:
     return PeerReview.query.filter_by(block_id=d.id, reviewer_id=user.id)
-
-
-def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
-    return PeerReview.query.filter_by(block_id=doc.id).all()
 
 
 def get_all_reviews(doc: DocInfo) -> list[PeerReview]:
@@ -230,7 +208,7 @@ def change_peerreviewers_for_user(
     reviewable: int,
     old_reviewers: list[int],
     new_reviewers: list[int],
-) -> bool:
+) -> None:
     """Change reviewers in one task.
     :param doc: Document containing reviewable answers.
     :param task: task name.
@@ -251,5 +229,4 @@ def change_peerreviewers_for_user(
     except IntegrityError:
         db.session.rollback()
         raise RouteException("Error: Same reviewer more than once in one task")
-    db.session.commit()
-    return True
+    # Note: Don't commit here because the function is used in other functions that update the DB
