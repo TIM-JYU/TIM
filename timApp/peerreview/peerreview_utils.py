@@ -8,6 +8,7 @@ __date__ = "29.5.2022"
 
 from collections import defaultdict
 from datetime import datetime, timezone
+from random import shuffle
 from typing import DefaultDict
 
 from sqlalchemy.exc import IntegrityError
@@ -60,6 +61,7 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
     for user in points:
         users.append(user["user"])
 
+    shuffle(users)
     review_count = settings.peer_review_count()
 
     # TODO: [Kuvio] get timestamps from doc settings
