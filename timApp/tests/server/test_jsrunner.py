@@ -1329,6 +1329,33 @@ rows:
             },
         )
 
+    def test_count_field(self):
+        d = self.create_jsrun(
+            """
+fields:
+ - t1.count
+ - t2.count
+group: tg
+program: |!!
+tools.println(tools.getDouble("t1.count", 0));
+tools.println(tools.getValue("t2.count"));
+!!
+        """
+        )
+        self.create_test_group("tg")
+        d.document.add_text("#- {plugin=textfield #t1}\n#- {plugin=textfield #t2}")
+        self.add_answer(d, "t1", "tu1.1.1", user=self.test_user_1)
+        self.add_answer(d, "t1", "tu1.1.2", user=self.test_user_1)
+        self.add_answer(d, "t1", "tu1.1.3", user=self.test_user_1)
+        self.add_answer(d, "t2", "tu2.2.1", user=self.test_user_2)
+        db.session.commit()
+        self.do_jsrun(
+            d,
+            expect_content={
+                "web": {"errors": [], "outdata": {}, "output": "3\n0\n0\n1\n"}
+            },
+        )
+
 
 class JsRunnerGroupTest(JsRunnerTestBase):
     def test_jsrunner_group(self):

@@ -207,6 +207,7 @@ def get_fields_and_users(
 
     tasks_without_fields = []
     tally_fields: list[tuple[TallyField, str | None]] = []
+    tasks_with_count_field = []
     for field in u_fields:
         try:
             t, a, *rest = field.split("=")
@@ -244,6 +245,8 @@ def get_fields_and_users(
         else:
             if task_id.field is None:
                 tasks_without_fields.append(task_id)
+            elif task_id.field == "count":
+                tasks_with_count_field.append(task_id)
             task_ids.append(task_id)
 
             if not task_id.doc_id:
@@ -367,6 +370,23 @@ def get_fields_and_users(
     for mu in missing_users:
         answers_with_users.append((mu, None))
     answers_with_users.sort(key=lambda au: au[0])
+    counts: dict[int, dict[str, int]] = {}
+    if tasks_with_count_field:
+        for u in users:
+            counts[u.id] = {}
+        cnt = func.count(Answer.id).label("cnt")
+        answer_counts = (
+            Answer.query.filter(
+                Answer.task_id.in_([tid.doc_task for tid in tasks_with_count_field])
+            )
+            .join(User, Answer.users)
+            .filter(User.id.in_([u.id for u in users]))
+            .group_by(User.id, Answer.task_id)
+            .with_entities(User.id, Answer.task_id, cnt)
+            .all()
+        )
+        for (uid, taskid, count) in answer_counts:
+            counts[uid][taskid] = count
     last_user = None
     user_tasks = None
     user_fieldstyles = None
@@ -378,6 +398,11 @@ def get_fields_and_users(
             tally_values = tally_field_values.get(uid)
             if tally_values:
                 user_tasks = {a: v for v, a in tally_values}
+            elif tasks_with_count_field:
+                user_tasks = {
+                    tid.doc_task_with_field: counts.get(uid).get(tid.doc_task, 0)
+                    for tid in tasks_with_count_field
+                }
             else:
                 user_tasks = {}
             user_fieldstyles = {}
@@ -414,6 +439,8 @@ def get_fields_and_users(
                     value = datetime_isoformat(a.answered_on)
                 elif task.field == "ALL":
                     value = p
+                elif task.field == "count":
+                    continue
                 else:
                     if task.field:
                         try:

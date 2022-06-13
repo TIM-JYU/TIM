@@ -1641,12 +1641,15 @@ def save_fields(
             task_content_name_map[task] = "c"
             continue
 
-        if t_id.field and t_id.field != "points" and t_id.field != "styles":
-            if plugin.type == "numericfield" or plugin.type == "textfield":
-                if t_id.field != plugin.get_content_field_name():
-                    raise RouteException(
-                        f"Error saving to {task}: {t_id.field} is not an accepted field."
-                    )
+        if t_id.field:
+            if t_id.field == "count":
+                raise RouteException("Cannot edit answer count value")
+            if t_id.field != "points" and t_id.field != "styles":
+                if plugin.type == "numericfield" or plugin.type == "textfield":
+                    if t_id.field != plugin.get_content_field_name():
+                        raise RouteException(
+                            f"Error saving to {task}: {t_id.field} is not an accepted field."
+                        )
             task_content_name_map[task] = t_id.field
         else:
             task_content_name_map[task] = plugin.get_content_field_name()
