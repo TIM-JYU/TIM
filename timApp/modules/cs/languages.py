@@ -1668,7 +1668,7 @@ JSAV_DEFAULT_SRC_HTML = """
 <head>
   <title>A JSAV Animation</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <link rel="stylesheet" href="/cs/jsav/css/JSAV.css" type="text/css" />
+  <link rel="stylesheet" href="/csstatic/jsav/css/JSAV.css" type="text/css" />
   <link rel="stylesheet" href="/cs/css/jsav-tim.css" type="text/css" />
 </head>
 <body>
@@ -1680,9 +1680,9 @@ JSAV_DEFAULT_SRC_HTML = """
 <div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
-<script src="/cs/jsav/lib/jquery.transit.js"></script>
-<script src="/cs/jsav/lib/raphael.js"></script>
-<script src="/cs/jsav/build/JSAV.js"></script>
+<script src="/csstatic/jsav/lib/jquery.transit.js"></script>
+<script src="/csstatic/jsav/lib/raphael.js"></script>
+<script src="/csstatic/jsav/build/JSAV.js"></script>
 
 //JSAVHTML
 

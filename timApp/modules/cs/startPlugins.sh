@@ -28,6 +28,17 @@ if [ ! -d "$GLOWSCRIPT_PATH" ]; then
     git clone https://github.com/vpython/glowscript "$GLOWSCRIPT_PATH"
 fi
 
+JSAV_PATH="$DATA_PATH/static/jsav"
+
+if [ ! -d "$JSAV_PATH" ]; then
+    echo "GET JSAV"
+    mkdir -p "$JSAV_PATH"
+
+    wget https://github.com/TIM-JYU/JSAV/releases/download/latest/JSAV.zip -O "$JSAV_PATH/JSAV.zip"
+    unzip "$JSAV_PATH/JSAV.zip" -d "$JSAV_PATH"
+    rm "$JSAV_PATH/JSAV.zip"
+fi
+
 mkdir -p /tmp/cache
 chown -R agent:agent /tmp
 rm /tmp/cache/* > /dev/null 2>&1

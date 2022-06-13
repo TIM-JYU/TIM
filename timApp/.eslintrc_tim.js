@@ -15,7 +15,6 @@ module.exports = {
         "prefer-arrow"
     ],
     "ignorePatterns": [
-        "modules/cs/jsav/",
         "modules/cs/static/mindsim/",
         "modules/cs/simcir/",
         "modules/jsrunner/server/",
