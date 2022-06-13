@@ -1547,18 +1547,26 @@ export class Tools extends ToolsBase {
         const fields = this.markup.paramFields ? this.markup.paramFields : [""];
         const datafield = this.markup.peerReviewField;
         this.setString(datafield, "");
-        const task = fields[0].substring(0, fields[0].indexOf("_"));
+        const taskSeparatorPos = fields[0].indexOf("_");
+        if (taskSeparatorPos < 0) {
+            this.print(
+                "Error: peerReviewField must be of format `taskname_fieldname`, where taskname is the name of the peer review task."
+            );
+            return;
+        }
+        const task = fields[0].substring(0, taskSeparatorPos);
         let changed = false;
         const from: string[] = [];
         const to: string[] = [];
-        const reviewers = this.getPeerReviewsForUser();
+        const reviewers = this.getPeerReviewsForUser().filter(
+            (pr) => pr.task_name === task
+        );
         const initialReviewers = reviewers.map((reviewer) =>
             reviewer.reviewer_id.toString()
         );
+        const userIds = Object.keys(users);
         const updatedReviewers = fields.map((f) =>
-            Object.keys(users).find((key) => {
-                return users[key] == this.getString(f);
-            })
+            userIds.find((key) => users[key] == this.getString(f))
         );
         if (new Set(updatedReviewers).size !== updatedReviewers.length) {
             this.print("Error: Same reviewer more than once in one task");
