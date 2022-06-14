@@ -750,6 +750,7 @@ fields:
  - {f2.id}.t3.points=d11
  - op(0,5)
  - t1
+ - op1.count
  - d1
 updateFields:  
  - t1
@@ -769,6 +770,7 @@ program: |!!
     tools.getDouble("op2"),
     tools.getDouble("op3"),
     tools.getDouble("op4"),
+    tools.getValue("op1.count"),
   );
 !!"""
         )
@@ -799,7 +801,7 @@ program: |!!
                 "web": {
                     "errors": [],
                     "outdata": {},
-                    "output": "0 0\n1 10 100 1000 10000 100000 1000000\n",
+                    "output": "0 0\n1 10 100 1000 10000 100000 1000000 1\n",
                 },
             },
         )
@@ -1326,6 +1328,33 @@ rows:
             d,
             expect_content={
                 "web": {"errors": [], "outdata": {}, "output": '1\n[["2"]]\n'}
+            },
+        )
+
+    def test_count_field(self):
+        d = self.create_jsrun(
+            """
+fields:
+ - t1.count
+ - t2.count
+group: tg
+program: |!!
+tools.println(tools.getDouble("t1.count", 0));
+tools.println(tools.getValue("t2.count"));
+!!
+        """
+        )
+        self.create_test_group("tg")
+        d.document.add_text("#- {plugin=textfield #t1}\n#- {plugin=textfield #t2}")
+        self.add_answer(d, "t1", "tu1.1.1", user=self.test_user_1)
+        self.add_answer(d, "t1", "tu1.1.2", user=self.test_user_1)
+        self.add_answer(d, "t1", "tu1.1.3", user=self.test_user_1)
+        self.add_answer(d, "t2", "tu2.2.1", user=self.test_user_2)
+        db.session.commit()
+        self.do_jsrun(
+            d,
+            expect_content={
+                "web": {"errors": [], "outdata": {}, "output": "3\n0\n0\n1\n"}
             },
         )
 
