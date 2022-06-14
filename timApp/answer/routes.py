@@ -1642,6 +1642,8 @@ def save_fields(
             continue
 
         if t_id.field and t_id.field != "points" and t_id.field != "styles":
+            if t_id.field == "count":
+                raise RouteException("Cannot edit answer count value")
             if plugin.type == "numericfield" or plugin.type == "textfield":
                 if t_id.field != plugin.get_content_field_name():
                     raise RouteException(
