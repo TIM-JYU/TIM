@@ -1,11 +1,11 @@
 import {Component, Input, OnInit} from "@angular/core";
 import moment, {Moment} from "moment";
 import {formatString, toPromise} from "tim/util/utils";
-import {IRight} from "tim/item/rightsEditor";
 import humanizeDuration from "humanize-duration";
 import {Users} from "tim/user/userService";
 import {HttpClient} from "@angular/common/http";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {IRight} from "tim/item/access-role.service";
 
 interface IViewAccessStatus {
     can_access: boolean;

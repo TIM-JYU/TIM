@@ -41,6 +41,7 @@ import {GamificationMapComponent} from "tim/gamification/gamification-map.compon
 import {SelfExpireComponent} from "tim/item/self-expire.component";
 import {SearchButtonComponent} from "tim/search/search-button.component";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
+import {RoleInfoComponent} from "./header/role-info.component";
 
 @NgModule({
     declarations: [
@@ -71,6 +72,7 @@ import {SessionVerify} from "tim/util/session-verify.interceptor";
         ParRefComponent,
         GamificationMapComponent,
         SelfExpireComponent,
+        RoleInfoComponent,
     ],
     imports: [
         BrowserModule,

@@ -157,6 +157,9 @@ class BlockAccess(db.Model):
     def __ne__(self, other):
         return not self == other
 
+    def __repr__(self):
+        return f"BlockAccess(usergroup={self.usergroup_id} perm={self.info_str})"
+
     def to_json(self):
         return {
             "block_id": self.block_id,

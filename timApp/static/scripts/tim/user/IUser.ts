@@ -1,4 +1,5 @@
 import {Channel} from "tim/messaging/listOptionTypes";
+import {AccessType} from "tim/item/access-role.service";
 import {IDocument, IFolder} from "../item/IItem";
 import {ConsentType} from "../ui/consent";
 
@@ -48,6 +49,10 @@ export interface IFullUser extends IUser {
     consent: ConsentType | undefined;
     folder: IFolder | null; // Folder is null only when not logged in.
     last_name: string | null;
+}
+
+export interface ICurrentUser extends IFullUser {
+    locked_access?: AccessType;
 }
 
 export interface IGroup {

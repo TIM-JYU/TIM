@@ -6216,6 +6216,78 @@
           <context context-type="linenumber">848</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="7897580452702919280" datatype="html">
+        <source>Could not reset lock: <x id="PH" equiv-text="r.result.error.error"/></source>
+        <target state="translated">Lukitusta ei voitu tyhjentää: <x id="PH" equiv-text="r.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/role-info.component.ts</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7734085109097277635" datatype="html">
+        <source>See answers</source>
+        <target state="translated">Vastausten katselu</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/access-role.service.ts</context>
+          <context context-type="linenumber">57</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3715596725146409911" datatype="html">
+        <source>Owner</source>
+        <target state="translated">Omistaja</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/access-role.service.ts</context>
+          <context context-type="linenumber">58</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4323470180912194028" datatype="html">
+        <source>Copy</source>
+        <target state="translated">Kopiointi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/access-role.service.ts</context>
+          <context context-type="linenumber">59</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9187855490716817910" datatype="html">
+        <source>Disable</source>
+        <target state="translated">Poista käytöstä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">60</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6399772650014693596" datatype="html">
+        <source> You are previewing the page with access limited to level "<x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{lockedAccessName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>". </source>
+        <target state="translated"> Esikatselet sivua, jonka käyttöoikeus on rajoitettu tasolle "<x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{lockedAccessName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>". </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/role-info.component.ts</context>
+          <context context-type="linenumber">14,16</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2253874024252632708" datatype="html">
+        <source>Lock access</source>
+        <target state="translated">Lukitse käyttöoikeus</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">47</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4876853629820098686" datatype="html">
+        <source>Could not lock access: <x id="PH" equiv-text="r.result.error.error"/></source>
+        <target state="translated">Käyttöoikeutta ei voitu lukita: <x id="PH" equiv-text="r.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">129</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7998168716554229167" datatype="html">
+        <source>Turn off access limit</source>
+        <target state="translated">Ota käyttöoikeuden rajoitus pois käytöstä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/role-info.component.ts</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
