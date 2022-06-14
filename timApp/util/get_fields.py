@@ -400,7 +400,9 @@ def get_fields_and_users(
                 user_tasks = {a: v for v, a in tally_values}
             elif tasks_with_count_field:
                 user_tasks = {
-                    tid.doc_task_with_field: counts.get(uid).get(tid.doc_task, 0)
+                    alias_map.get(
+                        tid.extended_or_doc_task, tid.extended_or_doc_task
+                    ): counts.get(uid).get(tid.doc_task, 0)
                     for tid in tasks_with_count_field
                 }
             else:
