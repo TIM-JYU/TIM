@@ -750,6 +750,7 @@ fields:
  - {f2.id}.t3.points=d11
  - op(0,5)
  - t1
+ - op1.count
  - d1
 updateFields:  
  - t1
@@ -769,6 +770,7 @@ program: |!!
     tools.getDouble("op2"),
     tools.getDouble("op3"),
     tools.getDouble("op4"),
+    tools.getValue("op1.count"),
   );
 !!"""
         )
@@ -799,7 +801,7 @@ program: |!!
                 "web": {
                     "errors": [],
                     "outdata": {},
-                    "output": "0 0\n1 10 100 1000 10000 100000 1000000\n",
+                    "output": "0 0\n1 10 100 1000 10000 100000 1000000 1\n",
                 },
             },
         )

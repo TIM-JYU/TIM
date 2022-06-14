@@ -396,17 +396,16 @@ def get_fields_and_users(
         if last_user != uid:
             user_index += 1
             tally_values = tally_field_values.get(uid)
+            user_tasks = {}
             if tally_values:
-                user_tasks = {a: v for v, a in tally_values}
-            elif tasks_with_count_field:
-                user_tasks = {
+                user_tasks = user_tasks | {a: v for v, a in tally_values}
+            if tasks_with_count_field:
+                user_tasks = user_tasks | {
                     alias_map.get(
                         tid.extended_or_doc_task, tid.extended_or_doc_task
                     ): counts.get(uid).get(tid.doc_task, 0)
                     for tid in tasks_with_count_field
                 }
-            else:
-                user_tasks = {}
             user_fieldstyles = {}
             user = users[user_index]
             assert user.id == uid
