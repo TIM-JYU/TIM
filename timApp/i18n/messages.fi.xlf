@@ -784,18 +784,10 @@
       </trans-unit>
       <trans-unit id="5866254605255506989" datatype="html">
         <source>English</source>
-        <target state="translated">englanti</target>
+        <target state="translated">English</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
           <context context-type="linenumber">16</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="861663369293303028" datatype="html">
-        <source>Finnish</source>
-        <target state="translated">suomi</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
-          <context context-type="linenumber">17</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4817865548432760172" datatype="html">
@@ -6184,14 +6176,6 @@
           <context context-type="linenumber">147</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="499386805970351976" datatype="html">
-        <source>Swedish</source>
-        <target state="translated">ruotsi</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
-          <context context-type="linenumber">18</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="3845152859531369645" datatype="html">
         <source>Lines</source>
         <target state="translated">Rivejä</target>
@@ -6238,6 +6222,22 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
           <context context-type="linenumber">848</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="501706373310077692" datatype="html">
+        <source>Suomi</source>
+        <target state="new">Suomi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
+          <context context-type="linenumber">17</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3662069198540952627" datatype="html">
+        <source>Svenska</source>
+        <target state="new">Svenska</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
+          <context context-type="linenumber">18</context>
         </context-group>
       </trans-unit>
     </body>

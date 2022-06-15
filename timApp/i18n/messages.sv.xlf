@@ -4320,18 +4320,10 @@
       </trans-unit>
       <trans-unit id="5866254605255506989" datatype="html">
         <source>English</source>
-        <target state="translated">Engelska</target>
+        <target state="translated">English</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
           <context context-type="linenumber">16</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="861663369293303028" datatype="html">
-        <source>Finnish</source>
-        <target state="translated">Finska</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
-          <context context-type="linenumber">17</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4814606488888120626" datatype="html">
@@ -5714,14 +5706,6 @@
           <context context-type="linenumber">149</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="499386805970351976" datatype="html">
-        <source>Swedish</source>
-        <target state="translated">Svenska</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
-          <context context-type="linenumber">18</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="2359734220283743798" datatype="html">
         <source>TIM last updated: </source>
         <target state="translated">TIM uppdaterad sist: </target>
@@ -5951,8 +5935,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8620159010953252294" datatype="html">
-        <source>Are you sure you want to delete the event &quot;<x id="PH" equiv-text="this.data.title"/>&quot;?</source>
-        <target state="new">Are you sure you want to delete the event &quot;<x id="PH" equiv-text="this.data.title"/>&quot;?</target>
+        <source>Are you sure you want to delete the event "<x id="PH" equiv-text="this.data.title"/>"?</source>
+        <target state="new">Are you sure you want to delete the event "<x id="PH" equiv-text="this.data.title"/>"?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">373</context>
@@ -5983,8 +5967,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="242398302074250894" datatype="html">
-        <source>Book the event &quot;<x id="PH" equiv-text="this.data.title"/>&quot;?</source>
-        <target state="new">Book the event &quot;<x id="PH" equiv-text="this.data.title"/>&quot;?</target>
+        <source>Book the event "<x id="PH" equiv-text="this.data.title"/>"?</source>
+        <target state="new">Book the event "<x id="PH" equiv-text="this.data.title"/>"?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">529</context>
@@ -5999,8 +5983,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="773072824822412077" datatype="html">
-        <source>Are you sure you want to cancel booking &quot;<x id="PH" equiv-text="this.data.title"/>&quot;?</source>
-        <target state="new">Are you sure you want to cancel booking &quot;<x id="PH" equiv-text="this.data.title"/>&quot;?</target>
+        <source>Are you sure you want to cancel booking "<x id="PH" equiv-text="this.data.title"/>"?</source>
+        <target state="new">Are you sure you want to cancel booking "<x id="PH" equiv-text="this.data.title"/>"?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">593</context>
@@ -6128,6 +6112,22 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
           <context context-type="linenumber">848</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="501706373310077692" datatype="html">
+        <source>Suomi</source>
+        <target state="new">Suomi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
+          <context context-type="linenumber">17</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3662069198540952627" datatype="html">
+        <source>Svenska</source>
+        <target state="new">Svenska</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
+          <context context-type="linenumber">18</context>
         </context-group>
       </trans-unit>
     </body>
