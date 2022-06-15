@@ -3448,7 +3448,7 @@
       </trans-unit>
       <trans-unit id="2348778533763369806" datatype="html">
         <source>recurse </source>
-        <target state="new">recurse </target>
+        <target state="translated">rekursivt </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">135,136</context>
@@ -4316,22 +4316,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
           <context context-type="linenumber">15</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5866254605255506989" datatype="html">
-        <source>English</source>
-        <target state="translated">Engelska</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
-          <context context-type="linenumber">16</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="861663369293303028" datatype="html">
-        <source>Finnish</source>
-        <target state="translated">Finska</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/language-selector.component.ts</context>
-          <context context-type="linenumber">17</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4814606488888120626" datatype="html">
@@ -5920,7 +5904,7 @@
       </trans-unit>
       <trans-unit id="8070111471967683012" datatype="html">
         <source> Book event </source>
-        <target state="translated">Boka evenemang</target>
+        <target state="translated"> Boka evenemang </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">257,259</context>
