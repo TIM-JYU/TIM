@@ -1,7 +1,11 @@
 /** Layout styles **/
 .fulldiv {
+    display: block;
     width: 100%;
     float: left;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 20em;
 }
 
 .div-90 {
@@ -24,14 +28,17 @@
 .velpFill {
     top: 0;
     bottom: 0;
-    height: 100%;
 }
 
 .velpFixed {
+    box-sizing: border-box;
     position: fixed;
-    min-width: 15em;
+    min-width: fit-content;
     max-width: 22.5em;
-    min-height: 17em;
+    min-height: 24em;
+    height: fit-content;
+    height: -webkit-fit-content;
+    max-height: 80em;
     right: 0;
     top: 50px;
     bottom: 0;
@@ -44,17 +51,15 @@
 /** Velp area styles **/
 .velpMenu {
     /* position: fixed; */
-    min-width: 15em;
+    min-width: fit-content;
     max-width: 22.5em;
     word-wrap: break-word;
     border: 1px solid gainsboro;
     background: white;
     z-index: 1001;
-    /*overflow-y: auto;*/
     padding-left: 0.5em;
     top: 0;
     bottom: 0;
-    height: 95%;
 }
 
 .velpMenu .nav-tabs {
@@ -94,7 +99,7 @@
 /* needs media queries */
 .velpArea .velp-stack {
     background: white;
-    height: 1em;
+    min-height: 10em;
     width: 18em;
     position: relative;
 }
@@ -266,7 +271,8 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 }
 
 .bottom-part{
-    padding-top: 8em;
+    height: 8em;
+    //padding-top: 8em;
     width: 100%;
 }
 
