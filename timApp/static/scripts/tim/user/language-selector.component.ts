@@ -13,9 +13,9 @@ const webBrowser = "UseWebBrowser";
                     (ngModelChange)="onChange($event)"
             >
                 <option [ngValue]="webBrowser" i18n>Use web browser preference</option>
-                <option [ngValue]="'en-US'" i18n>English</option>
-                <option [ngValue]="'fi'" i18n>Finnish</option>
-                <option [ngValue]="'sv'" i18n>Swedish</option>
+                <option [ngValue]="'en-US'">English</option>
+                <option [ngValue]="'fi'">Suomi</option>
+                <option [ngValue]="'sv'">Svenska</option>
             </select>
         </label>
     `,
