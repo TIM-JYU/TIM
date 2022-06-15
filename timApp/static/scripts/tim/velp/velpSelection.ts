@@ -64,6 +64,7 @@ export class VelpSelectionController implements IController {
     private order!: string; // $onInit
     private selectedLabels: number[] = [];
     private advancedOn: boolean = false;
+    private displayedVelpGroupsScope: number = 0;
     private defaultVelpGroup: IVelpGroupUI;
     private labelAdded: boolean = false;
     public vctrl!: Require<ViewCtrl>;
@@ -76,6 +77,7 @@ export class VelpSelectionController implements IController {
 
     private storage!: {
         velpOrdering: TimStorage<string>;
+        velpGroupsDisplayed: TimStorage<number>;
         velpLabels: TimStorage<number[]>;
         advancedOn: TimStorage<boolean>;
     };
@@ -164,6 +166,7 @@ export class VelpSelectionController implements IController {
         const docId = this.docId;
         this.storage = {
             velpOrdering: new TimStorage("velpOrdering_" + docId, t.string),
+            velpGroupsDisplayed: new TimStorage("velpGroupsDisplayed_" + docId, t.number),
             velpLabels: new TimStorage(
                 "velpLabels_" + docId,
                 t.array(t.number)
@@ -173,6 +176,7 @@ export class VelpSelectionController implements IController {
 
         // Values to store in localstorage:
         this.order = this.storage.velpOrdering.get() ?? "content";
+        this.displayedVelpGroupsScope = this.storage.velpGroupsDisplayed.get() ?? 0;
         this.selectedLabels = this.storage.velpLabels.get() ?? [];
         this.advancedOn = this.storage.advancedOn.get() ?? false;
 
@@ -320,6 +324,11 @@ export class VelpSelectionController implements IController {
 
     changeOrdering(order: string) {
         this.storage.velpOrdering.set(order);
+    }
+
+    changeDisplayedVelpGroupsScope(scope: number) {
+        this.storage.velpGroupsDisplayed.set(scope);
+        this.updateVelpList();
     }
 
     changeSelectedLabels() {
@@ -567,7 +576,8 @@ export class VelpSelectionController implements IController {
     updateVelpList() {
         this.velpGroups.forEach((g) => {
             if (
-                this.isAttachedToParagraph() &&
+                this.isInDisplayedVelpGroupsScope() &&
+                // this.isAttachedToParagraph() &&
                 this.rctrl.selectedElement != null
             ) {
                 g.show = this.isVelpGroupShownHere(
@@ -932,6 +942,10 @@ export class VelpSelectionController implements IController {
 
     private isAttachedToParagraph() {
         return this.groupAttachment.target_type === 1;
+    }
+
+    private isInDisplayedVelpGroupsScope() {
+        return this.displayedVelpGroupsScope === 1;
     }
 
     /**
