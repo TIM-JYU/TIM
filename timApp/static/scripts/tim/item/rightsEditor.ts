@@ -1,5 +1,5 @@
 import {IController, IHttpResponse, IScope} from "angular";
-import moment, {Duration, Moment} from "moment";
+import moment from "moment";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/ui/focusMe";
 import {
@@ -11,37 +11,24 @@ import {
     Result,
     to,
 } from "tim/util/utils";
+
 import {durationTypes} from "../ui/duration-picker.component";
 import {IGroup} from "../user/IUser";
 import {genericglobals, itemglobals} from "../util/globals";
 import {$http, $timeout} from "../util/ngimport";
-import {IItem} from "./IItem";
+import {
+    accessOrder,
+    IAccessType,
+    IItemWithRights,
+    IRight,
+} from "./access-role.service";
 
 markAsUsed(focusMe);
 
-interface IGroupWithAdminDocPath extends IGroup {
-    admin_doc_path: string | null;
-}
-
-export interface IRight {
-    type: number;
-    duration_to: Moment | null;
-    duration_from: Moment | null;
-    duration: null | Duration;
-    accessible_to: Moment;
-    accessible_from: Moment;
-    usergroup: IGroupWithAdminDocPath;
-    require_confirm?: boolean;
-}
-
-export interface IAccessType {
-    id: number;
-    name: keyof typeof accessOrder;
-}
-
-interface IItemWithRights extends IItem {
-    grouprights: IRight[];
-}
+const tips = {
+    teacher: "Teacher right does not give edit right by itself.",
+    "see answers": "Seeing answers does not give edit right by itself.",
+};
 
 enum ActionOption {
     Add = "add",
@@ -53,21 +40,6 @@ enum ActionOption {
 interface IPermissionEditResponse {
     not_exist: string[];
 }
-
-const accessOrder = {
-    view: 1,
-    copy: 2,
-    edit: 3,
-    "see answers": 4,
-    teacher: 5,
-    manage: 6,
-    owner: 7,
-};
-
-const tips = {
-    teacher: "Teacher right does not give edit right by itself.",
-    "see answers": "Seeing answers does not give edit right by itself.",
-};
 
 class RightsEditorController implements IController {
     static $inject = ["$scope", "$element"];

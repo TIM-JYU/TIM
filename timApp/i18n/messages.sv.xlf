@@ -3448,7 +3448,7 @@
       </trans-unit>
       <trans-unit id="2348778533763369806" datatype="html">
         <source>recurse </source>
-        <target state="new">recurse </target>
+        <target state="translated">rekursivt </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">135,136</context>
@@ -4044,7 +4044,7 @@
       </trans-unit>
       <trans-unit id="3505358436479235655" datatype="html">
         <source> The session is expired. Ask the supervisor to scan the QR code below. </source>
-        <target state="translated"> Sessionen har avslutats. Be en övervakare att skanna QR-koden nedan.</target>
+        <target state="translated"> Sessionen har avslutats. Be en övervakare att skanna QR-koden nedan. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">32,34</context>
@@ -4068,7 +4068,7 @@
       </trans-unit>
       <trans-unit id="5098547321898510813" datatype="html">
         <source> Please ask the supervisor to scan the code below to continue. </source>
-        <target state="translated"> Be en övervakare att skanna koden nedan för att fortsätta.</target>
+        <target state="translated"> Be en övervakare att skanna koden nedan för att fortsätta. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/session-check/session-check-dialog.component.ts</context>
           <context context-type="linenumber">38,40</context>
@@ -4536,7 +4536,7 @@
       </trans-unit>
       <trans-unit id="7688307851659303493" datatype="html">
         <source> Retype the above password </source>
-        <target state="translated"> Skriv lösenordet ovan på nytt</target>
+        <target state="translated"> Skriv lösenordet ovan på nytt </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">255,257</context>
@@ -5452,7 +5452,7 @@
       </trans-unit>
       <trans-unit id="8418612238495526418" datatype="html">
         <source> Cannot verify: <x id="INTERPOLATION" equiv-text="{{verifyGlobals.verifyError}}"/> </source>
-        <target state="translated"> Kan inte verifiera: <x id="INTERPOLATION" equiv-text="{{verifyGlobals.verifyError}}"/></target>
+        <target state="translated"> Kan inte verifiera: <x id="INTERPOLATION" equiv-text="{{verifyGlobals.verifyError}}"/> </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">131,133</context>
@@ -5580,7 +5580,7 @@
       </trans-unit>
       <trans-unit id="1825006444405211276" datatype="html">
         <source>and <x id="ICU" equiv-text="{numSession(), plural, =1 {one other} other {{{numSession()}} others}}"/></source>
-        <target state="translated">och  <x id="ICU" equiv-text="{numSession(), plural, =1 {one other} other {{{numSession()}} others}}"/></target>
+        <target state="translated">och  {numSession(), plural, =1 {en annan} annan {{{numSession()}} andra}}</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">18</context>
@@ -5588,7 +5588,7 @@
       </trans-unit>
       <trans-unit id="6578095239916214296" datatype="html">
         <source>{VAR_PLURAL, plural, =1 {one other} other {<x id="INTERPOLATION"/> others}}</source>
-        <target state="new">{VAR_PLURAL, plural, =1 {one other} other {<x id="INTERPOLATION"/> others}}</target>
+        <target state="translated">{VAR_PLURAL, plural, =1 {en annan} annan {<x id="INTERPOLATION"/> andra}}</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">18</context>
@@ -5708,7 +5708,7 @@
       </trans-unit>
       <trans-unit id="8509196275779546716" datatype="html">
         <source> Edit event </source>
-        <target state="new"> Edit event </target>
+        <target state="translated"> Redigera händelse </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">29,31</context>
@@ -5716,7 +5716,7 @@
       </trans-unit>
       <trans-unit id="5701618810648052610" datatype="html">
         <source>Title</source>
-        <target state="new">Title</target>
+        <target state="translated">Titel</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">37</context>
@@ -5724,7 +5724,7 @@
       </trans-unit>
       <trans-unit id="471816275243265264" datatype="html">
         <source>Location</source>
-        <target state="new">Location</target>
+        <target state="translated">Platsen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">49</context>
@@ -5732,7 +5732,7 @@
       </trans-unit>
       <trans-unit id="6990424485062673905" datatype="html">
         <source>Set location</source>
-        <target state="new">Set location</target>
+        <target state="translated">Ange plats</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">56</context>
@@ -5740,7 +5740,7 @@
       </trans-unit>
       <trans-unit id="7825570888384392250" datatype="html">
         <source>Capacity</source>
-        <target state="new">Capacity</target>
+        <target state="translated">Kapacitet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">61</context>
@@ -5752,7 +5752,7 @@
       </trans-unit>
       <trans-unit id="331357107633545024" datatype="html">
         <source>Booker</source>
-        <target state="new">Booker</target>
+        <target state="translated">Bokare</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">79</context>
@@ -5760,7 +5760,7 @@
       </trans-unit>
       <trans-unit id="8391795420886886120" datatype="html">
         <source>Booker email</source>
-        <target state="new">Booker email</target>
+        <target state="translated">Bookers e-postadress</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">91</context>
@@ -5768,7 +5768,7 @@
       </trans-unit>
       <trans-unit id="8324085579894805354" datatype="html">
         <source>Bookers</source>
-        <target state="new">Bookers</target>
+        <target state="translated">Bokare</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">104</context>
@@ -5776,7 +5776,7 @@
       </trans-unit>
       <trans-unit id="3670246119861199957" datatype="html">
         <source>Show list of all bookers</source>
-        <target state="new">Show list of all bookers</target>
+        <target state="translated">Visa en lista över alla bokare</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">105,106</context>
@@ -5784,7 +5784,7 @@
       </trans-unit>
       <trans-unit id="5203279511751768967" datatype="html">
         <source>From</source>
-        <target state="new">From</target>
+        <target state="translated">Från</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">111</context>
@@ -5792,7 +5792,7 @@
       </trans-unit>
       <trans-unit id="1640609344969975994" datatype="html">
         <source>To</source>
-        <target state="new">To</target>
+        <target state="translated">Till</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">134</context>
@@ -5800,7 +5800,7 @@
       </trans-unit>
       <trans-unit id="6424116655268760911" datatype="html">
         <source>Book before</source>
-        <target state="new">Book before</target>
+        <target state="translated">Boka innan</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">154</context>
@@ -5808,7 +5808,7 @@
       </trans-unit>
       <trans-unit id="1435160629736962657" datatype="html">
         <source>Event description</source>
-        <target state="new">Event description</target>
+        <target state="translated">Beskrivning av evenemanget</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">180</context>
@@ -5816,7 +5816,7 @@
       </trans-unit>
       <trans-unit id="1137972907092556746" datatype="html">
         <source>Message (optional)</source>
-        <target state="new">Message (optional)</target>
+        <target state="translated">Meddelande (valfritt)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">190</context>
@@ -5824,7 +5824,7 @@
       </trans-unit>
       <trans-unit id="4455047079966420112" datatype="html">
         <source>Send message </source>
-        <target state="new">Send message </target>
+        <target state="translated">Skicka meddelande </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">199,200</context>
@@ -5832,7 +5832,7 @@
       </trans-unit>
       <trans-unit id="3029054132897287289" datatype="html">
         <source>Event capacity must be 0-2000</source>
-        <target state="new">Event capacity must be 0-2000</target>
+        <target state="translated">Evenemangets kapacitet måste vara 0-2000</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">208</context>
@@ -5840,7 +5840,7 @@
       </trans-unit>
       <trans-unit id="6749934902228585627" datatype="html">
         <source>Booking must be done before the event</source>
-        <target state="new">Booking must be done before the event</target>
+        <target state="translated">Bokning måste göras före evenemanget</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">212</context>
@@ -5848,7 +5848,7 @@
       </trans-unit>
       <trans-unit id="5934265517281512724" datatype="html">
         <source>Start of the event must be before end.</source>
-        <target state="new">Start of the event must be before end.</target>
+        <target state="translated">Evenemangets början måste vara före slutet.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">216</context>
@@ -5856,7 +5856,7 @@
       </trans-unit>
       <trans-unit id="3695400929536588338" datatype="html">
         <source> Title is required. </source>
-        <target state="new"> Title is required. </target>
+        <target state="translated"> Titel krävs. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">220,222</context>
@@ -5864,7 +5864,7 @@
       </trans-unit>
       <trans-unit id="5738577586081128660" datatype="html">
         <source> Title should not contain the slash character. </source>
-        <target state="new"> Title should not contain the slash character. </target>
+        <target state="translated"> Titeln får inte innehålla snedstreck. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">224,225</context>
@@ -5872,7 +5872,7 @@
       </trans-unit>
       <trans-unit id="3904900366807853260" datatype="html">
         <source>The event is full.</source>
-        <target state="new">The event is full.</target>
+        <target state="translated">Evenemanget är fullbokat.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">241</context>
@@ -5880,7 +5880,7 @@
       </trans-unit>
       <trans-unit id="7581997491514928120" datatype="html">
         <source>You have booked this event.</source>
-        <target state="new">You have booked this event.</target>
+        <target state="translated">Du har bokat detta evenemang.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">244</context>
@@ -5888,7 +5888,7 @@
       </trans-unit>
       <trans-unit id="3605420808001945080" datatype="html">
         <source> Cancel Booking </source>
-        <target state="new"> Cancel Booking </target>
+        <target state="translated"> Avbryt bokningen </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">249,251</context>
@@ -5896,7 +5896,7 @@
       </trans-unit>
       <trans-unit id="6660925946511264619" datatype="html">
         <source> Delete </source>
-        <target state="new"> Delete </target>
+        <target state="translated"> Ta bort </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">253,255</context>
@@ -5904,7 +5904,7 @@
       </trans-unit>
       <trans-unit id="8070111471967683012" datatype="html">
         <source> Book event </source>
-        <target state="new"> Book event </target>
+        <target state="translated"> Boka evenemang </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">257,259</context>
@@ -5912,7 +5912,7 @@
       </trans-unit>
       <trans-unit id="3620188369327429839" datatype="html">
         <source> Save </source>
-        <target state="new"> Save </target>
+        <target state="translated"> Spara </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">264,266</context>
@@ -5920,7 +5920,7 @@
       </trans-unit>
       <trans-unit id="9100694024427114777" datatype="html">
         <source>Delete an Event</source>
-        <target state="new">Delete an Event</target>
+        <target state="translated">Ta bort en händelse</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">372</context>
@@ -5928,7 +5928,7 @@
       </trans-unit>
       <trans-unit id="8620159010953252294" datatype="html">
         <source>Are you sure you want to delete the event "<x id="PH" equiv-text="this.data.title"/>"?</source>
-        <target state="new">Are you sure you want to delete the event "<x id="PH" equiv-text="this.data.title"/>"?</target>
+        <target state="translated">Är du säker på att du vill ta bort händelsen "<x id="PH" equiv-text="this.data.title"/>"?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">373</context>
@@ -5936,7 +5936,7 @@
       </trans-unit>
       <trans-unit id="3858204506322052983" datatype="html">
         <source>Post message</source>
-        <target state="new">Post message</target>
+        <target state="translated">Sicka ett meddelande</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">497</context>
@@ -5944,7 +5944,7 @@
       </trans-unit>
       <trans-unit id="2897165205337024437" datatype="html">
         <source>Post message to booking?</source>
-        <target state="new">Post message to booking?</target>
+        <target state="translated">Skicka ett meddelande till bokningen?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">498</context>
@@ -5952,7 +5952,7 @@
       </trans-unit>
       <trans-unit id="7275458925110244871" datatype="html">
         <source>Book an Event</source>
-        <target state="new">Book an Event</target>
+        <target state="translated">Boka ett evenemang</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">528</context>
@@ -5960,7 +5960,7 @@
       </trans-unit>
       <trans-unit id="242398302074250894" datatype="html">
         <source>Book the event "<x id="PH" equiv-text="this.data.title"/>"?</source>
-        <target state="new">Book the event "<x id="PH" equiv-text="this.data.title"/>"?</target>
+        <target state="translated">Boka evenemanget "<x id="PH" equiv-text="this.data.title"/>"?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">529</context>
@@ -5968,7 +5968,7 @@
       </trans-unit>
       <trans-unit id="5919003124973103671" datatype="html">
         <source>Cancel booking</source>
-        <target state="new">Cancel booking</target>
+        <target state="translated">Avbryt bokningen</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">592</context>
@@ -5976,7 +5976,7 @@
       </trans-unit>
       <trans-unit id="773072824822412077" datatype="html">
         <source>Are you sure you want to cancel booking "<x id="PH" equiv-text="this.data.title"/>"?</source>
-        <target state="new">Are you sure you want to cancel booking "<x id="PH" equiv-text="this.data.title"/>"?</target>
+        <target state="translated">Are you sure you want to cancel booking "<x id="PH" equiv-text="this.data.title"/>"?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">593</context>
@@ -5984,7 +5984,7 @@
       </trans-unit>
       <trans-unit id="7619465163363849216" datatype="html">
         <source>Back to current date </source>
-        <target state="new">Back to current date </target>
+        <target state="translated">Tillbaka till aktuellt datum </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-header.component.ts</context>
           <context context-type="linenumber">55,56</context>
@@ -5992,7 +5992,7 @@
       </trans-unit>
       <trans-unit id="1019391340370106304" datatype="html">
         <source> Month </source>
-        <target state="new"> Month </target>
+        <target state="translated"> Månad </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-header.component.ts</context>
           <context context-type="linenumber">67,69</context>
@@ -6000,7 +6000,7 @@
       </trans-unit>
       <trans-unit id="6739432097196840926" datatype="html">
         <source> Week </source>
-        <target state="new"> Week </target>
+        <target state="translated"> Vecka </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-header.component.ts</context>
           <context context-type="linenumber">73,75</context>
@@ -6008,7 +6008,7 @@
       </trans-unit>
       <trans-unit id="3717379413627445117" datatype="html">
         <source> Day </source>
-        <target state="new"> Day </target>
+        <target state="translated"> Dag </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-header.component.ts</context>
           <context context-type="linenumber">79,81</context>
@@ -6016,7 +6016,7 @@
       </trans-unit>
       <trans-unit id="7585826646011739428" datatype="html">
         <source>Edit</source>
-        <target state="new">Edit</target>
+        <target state="translated">Redigera</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
           <context context-type="linenumber">179</context>
@@ -6024,7 +6024,7 @@
       </trans-unit>
       <trans-unit id="1694853129228993648" datatype="html">
         <source>Sorry, you do not have a permission to add events for given group(s): <x id="PH" equiv-text="result.result.error.error"/></source>
-        <target state="new">Sorry, you do not have a permission to add events for given group(s): <x id="PH" equiv-text="result.result.error.error"/></target>
+        <target state="translated">Du har tyvärr inte behörighet att lägga till händelser för angivna grupper: <x id="PH" equiv-text="result.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
           <context context-type="linenumber">774</context>
@@ -6032,7 +6032,7 @@
       </trans-unit>
       <trans-unit id="7328385940658434527" datatype="html">
         <source>Something went wrong. TIM admins have been notified about the issue.</source>
-        <target state="new">Something went wrong. TIM admins have been notified about the issue.</target>
+        <target state="translated">Något gick fel. TIM-administratörer har informerats om problemet.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
           <context context-type="linenumber">778</context>
@@ -6044,7 +6044,7 @@
       </trans-unit>
       <trans-unit id="756965796750357045" datatype="html">
         <source> Week: <x id="INTERPOLATION" equiv-text="{{getWeekNumberFromDate(viewDate)}}"/> </source>
-        <target state="new"> Week: <x id="INTERPOLATION" equiv-text="{{getWeekNumberFromDate(viewDate)}}"/> </target>
+        <target state="translated"> Veckan: <x id="INTERPOLATION" equiv-text="{{getWeekNumberFromDate(viewDate)}}"/> </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/show-week.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -6052,7 +6052,7 @@
       </trans-unit>
       <trans-unit id="5345773632901719846" datatype="html">
         <source>Set view with timeslots of </source>
-        <target state="new">Set view with timeslots of </target>
+        <target state="translated">Ställ in vy med tidsintervaller av </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/timeviewselector.component.ts</context>
           <context context-type="linenumber">23</context>
@@ -6060,7 +6060,7 @@
       </trans-unit>
       <trans-unit id="893841469692026422" datatype="html">
         <source> minutes from </source>
-        <target state="new"> minutes from </target>
+        <target state="translated"> minuter från </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/timeviewselector.component.ts</context>
           <context context-type="linenumber">27</context>
@@ -6068,7 +6068,7 @@
       </trans-unit>
       <trans-unit id="1042662561872819815" datatype="html">
         <source> to </source>
-        <target state="new"> to </target>
+        <target state="translated"> till </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/timeviewselector.component.ts</context>
           <context context-type="linenumber">31</context>
@@ -6076,7 +6076,7 @@
       </trans-unit>
       <trans-unit id="6328943491200318160" datatype="html">
         <source>Export calendar</source>
-        <target state="new">Export calendar</target>
+        <target state="translated">Exportera kalender</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
           <context context-type="linenumber">278</context>
@@ -6084,7 +6084,7 @@
       </trans-unit>
       <trans-unit id="1521925891097959460" datatype="html">
         <source>Export calendar information in ics-format?</source>
-        <target state="new">Export calendar information in ics-format?</target>
+        <target state="translated">Exportera kalenderinformation i ics-format?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
           <context context-type="linenumber">830</context>
@@ -6092,7 +6092,7 @@
       </trans-unit>
       <trans-unit id="2537259444028776879" datatype="html">
         <source>ICS-url copied to clipboard.</source>
-        <target state="new">ICS-url copied to clipboard.</target>
+        <target state="translated">ICS-url kopierad till klippbordet.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
           <context context-type="linenumber">846</context>
@@ -6100,10 +6100,90 @@
       </trans-unit>
       <trans-unit id="7354137443452135620" datatype="html">
         <source>Error occurred when creating ICS-url.</source>
-        <target state="new">Error occurred when creating ICS-url.</target>
+        <target state="translated">Ett fel inträffade när ICS-url skapades.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
           <context context-type="linenumber">848</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7897580452702919280" datatype="html">
+        <source>Could not reset lock: <x id="PH" equiv-text="r.result.error.error"/></source>
+        <target state="translated">Låset kunde inte återställas: <x id="PH" equiv-text="r.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/role-info.component.ts</context>
+          <context context-type="linenumber">45</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7734085109097277635" datatype="html">
+        <source>See answers</source>
+        <target state="translated">Se svar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/access-role.service.ts</context>
+          <context context-type="linenumber">57</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3715596725146409911" datatype="html">
+        <source>Owner</source>
+        <target state="translated">Ägare</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/access-role.service.ts</context>
+          <context context-type="linenumber">58</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4323470180912194028" datatype="html">
+        <source>Copy</source>
+        <target state="translated">Kopiera</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/access-role.service.ts</context>
+          <context context-type="linenumber">59</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9187855490716817910" datatype="html">
+        <source>Disable</source>
+        <target state="translated">Inaktivera</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">60</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6399772650014693596" datatype="html">
+        <source> You are previewing the page with access limited to level "<x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{lockedAccessName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>". </source>
+        <target state="translated"> Du förhandsgranskar sidan med begränsad åtkomst till nivån "<x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{lockedAccessName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>". </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/role-info.component.ts</context>
+          <context context-type="linenumber">14,16</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2253874024252632708" datatype="html">
+        <source>Lock access</source>
+        <target state="translated">Lås åtkomst</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">47</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4876853629820098686" datatype="html">
+        <source>Could not lock access: <x id="PH" equiv-text="r.result.error.error"/></source>
+        <target state="translated">Det gick inte att låsa åtkomsten: <x id="PH" equiv-text="r.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">129</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7998168716554229167" datatype="html">
+        <source>Turn off access limit</source>
+        <target state="translated">Slå av åtkomstbegränsningen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/role-info.component.ts</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="336898121996677951" datatype="html">
+        <source>You're logged in (access locked to "<x id="PH" equiv-text="accessTypeDisplayNames[this.currentLockedAccess]"/>")</source>
+        <target state="translated">Du är inloggad (tillgång låst till "<x id="PH" equiv-text="accessTypeDisplayNames[this.currentLockedAccess]"/>")</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">107,109</context>
         </context-group>
       </trans-unit>
     </body>

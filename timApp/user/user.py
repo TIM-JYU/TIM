@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Optional, Union, MutableMapping
 
 import filelock
-from flask import current_app
+from flask import current_app, has_request_context
 from sqlalchemy import func
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Query, joinedload, defaultload
@@ -17,6 +17,7 @@ from sqlalchemy.orm.strategy_options import loader_option
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import UserAnswer
+from timApp.auth.access.util import get_locked_access_type
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import UserItemRights
@@ -521,6 +522,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def logged_in(self):
+        """Whether the user is an authenticated user (i.e. not anonymous)."""
         return self.id > 0
 
     @property
@@ -544,6 +546,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def is_email_user(self):
         """Returns whether the user signed up via email and has not been "upgraded" to Korppi or Sisu user."""
         return "@" in self.name or self.name.startswith("testuser")
+
+    @property
+    def is_current_user(self):
+        """Returns whether the user is the one currently in session."""
+        from timApp.auth.sessioninfo import get_current_user_id
+
+        return has_request_context() and get_current_user_id() == self.id
 
     @property
     def pretty_full_name(self):
@@ -1035,6 +1044,41 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             if puc.user_collection_key not in self.uniquecodes:
                 self.uniquecodes[puc.user_collection_key] = puc
 
+    def _downgrade_access(
+        self, access_vals: set[int], access: BlockAccess | None
+    ) -> BlockAccess | None:
+        if access is None:
+            return None
+        if not self.is_current_user:
+            return access
+        if access.require_confirm:
+            return access
+
+        max_access = get_locked_access_type()
+        if not max_access:
+            return access
+
+        max_access_val = max_access.value
+
+        if max_access_val not in access_vals:
+            return None
+
+        if access.type <= max_access_val:
+            return access
+
+        access = BlockAccess(
+            block_id=access.block_id,
+            usergroup_id=access.usergroup_id,
+            type=max_access_val,
+            accessible_from=access.accessible_from,
+            accessible_to=access.accessible_to,
+            duration=access.duration,
+            duration_from=access.duration_from,
+            duration_to=access.duration_to,
+        )
+
+        return access
+
     def has_some_access(
         self,
         i: ItemOrBlock,
@@ -1044,7 +1088,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         duration: bool = False,
     ) -> BlockAccess | None:
         """
-            Check if the user has any possible access to the given item or block.
+        Check if the user has any possible access to the given item or block.
 
         :param i: The item or block to check
         :param vals: Access types to check. See AccessType for available values.
@@ -1055,12 +1099,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         :return: The best access object that user currently has for the given item or block and access types.
         """
         if allow_admin and self.is_admin:
-            return BlockAccess(
+            result = BlockAccess(
                 block_id=i.id,
                 accessible_from=datetime.min.replace(tzinfo=timezone.utc),
                 type=AccessType.owner.value,
                 usergroup_id=self.get_personal_group().id,
             )
+            return self._downgrade_access(vals, result)
 
         from timApp.auth.session.util import session_has_access
 
@@ -1092,7 +1137,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             if (a.accessible_from or maxdate) <= now < (to_time or maxdate):
                 # If the end time of the access is unrestricted, there is no better access.
                 if to_time is None:
-                    return a
+                    return self._downgrade_access(vals, a)
                 # If the end time of the access is restricted, there might be a better access,
                 # so we'll continue looping.
                 if best_access is None or best_access.accessible_to < a.accessible_to:
@@ -1102,8 +1147,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 and a.unlockable
                 and ((a.duration_from or maxdate) <= now < (a.duration_to or maxdate))
             ):
-                return a
-        return best_access
+                return self._downgrade_access(vals, a)
+        return self._downgrade_access(vals, best_access)
 
     def has_access(
         self,
@@ -1113,7 +1158,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         duration: bool = False,
     ) -> BlockAccess | None:
         """
-            Check if the user has access to the given item or block.
+        Check if the user has access to the given item or block.
 
         :param i: Item or block to check
         :param access: Access type to check. See AccessType for available values.
@@ -1354,6 +1399,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
         if contacts:
             result |= {"contacts": self.contacts}
+
+        if (
+            self.logged_in
+            and self.is_current_user
+            and (locked_access := get_locked_access_type())
+        ):
+            result |= {"locked_access": locked_access}
 
         return result
 

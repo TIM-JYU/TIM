@@ -1,6 +1,6 @@
 import hashlib
 from dataclasses import dataclass
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional, Union, TYPE_CHECKING, overload
 
 import redis
 from redis import ResponseError
@@ -89,9 +89,29 @@ def get_doc_cache_key(
     return f"timdoc-{doc.id}-{user.id}-{h.hexdigest(10)}"
 
 
-def clear_doc_cache(doc: DocInfoOrDocument | int, user: Optional["User"]) -> None:
-    doc_id: int = doc if isinstance(doc, int) else doc.id
-    prefix = f"timdoc-{doc_id}-"
+@overload
+def clear_doc_cache(doc: DocInfoOrDocument | int, user: "User") -> None:
+    ...
+
+
+@overload
+def clear_doc_cache(doc: DocInfoOrDocument | int, user: None) -> None:
+    ...
+
+
+@overload
+def clear_doc_cache(doc: None, user: "User") -> None:
+    ...
+
+
+def clear_doc_cache(
+    doc: DocInfoOrDocument | int | None, user: Optional["User"]
+) -> None:
+    if not doc:
+        prefix = "timdoc-*-"
+    else:
+        doc_id: int = doc if isinstance(doc, int) else doc.id
+        prefix = f"timdoc-{doc_id}-"
     if user:
         prefix += f"{user.id}-"
     prefix += "*"

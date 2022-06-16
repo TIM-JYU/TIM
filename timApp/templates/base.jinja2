@@ -150,6 +150,7 @@
                         <i class="glyphicon glyphicon-info-sign"></i> {{ n|safe }}
                     </div>
                 {% endfor %}
+                <tim-role-info></tim-role-info>
                 <tim-message-view></tim-message-view>
                 {% with messages = get_flashed_messages(with_categories=True) %}
                     {% if messages %}
