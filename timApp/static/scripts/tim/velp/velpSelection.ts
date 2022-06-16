@@ -332,6 +332,7 @@ export class VelpSelectionController implements IController {
 
     changeDisplayedVelpGroupsScope(scope: number) {
         this.storage.velpGroupsDisplayed.set(scope);
+        this.groupAttachment.target_type = scope;
         this.updateVelpList();
     }
 
@@ -580,8 +581,8 @@ export class VelpSelectionController implements IController {
     updateVelpList() {
         this.velpGroups.forEach((g) => {
             if (
-                this.isInDisplayedVelpGroupsScope() &&
-                // this.isAttachedToParagraph() &&
+                // this.isInDisplayedVelpGroupsScope() &&
+                this.isAttachedToParagraph() &&
                 this.rctrl.selectedElement != null
             ) {
                 g.show = this.isVelpGroupShownHere(
