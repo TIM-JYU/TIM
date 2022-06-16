@@ -199,6 +199,8 @@ class VelpTest(TimRouteTest):
         self.get("/999/get_velp_groups", expect_status=404)
         self.get("/999/get_default_velp_group", expect_status=404)
 
+
+class VelpAnonymizationTest(TimRouteTest):
     def test_annotation_anonymization(self):
         self.login_test1()
         d = self.create_doc(
