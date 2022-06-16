@@ -444,3 +444,9 @@ $inactive: whitesmoke;
 .available-velps {
     background: white;
 }
+
+.editVelp-scrollarea {
+    display: block;
+    max-height: 16em;
+    overflow-y: auto;
+}

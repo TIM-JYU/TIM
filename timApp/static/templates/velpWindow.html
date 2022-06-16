@@ -69,7 +69,7 @@
                           ng-style="{ color: $ctrl.getColor(l) }">
                     </span>
                 </legend>
-
+                <div class="editVelp-scrollarea">
                 <span ng-repeat="l in $ctrl.labels">
 
                     <!-- Show this when label IS NOT being edited -->
@@ -109,7 +109,7 @@
                         </span>
                     </span>
                 </span>
-
+                </div>
                 <!-- Add new label -->
                 <input class="addLabelField" placeholder="Add label"
                        ng-change="$ctrl.setLabelValid($ctrl.newLabel)"
@@ -122,17 +122,19 @@
             <!-- Velp groups -->
             <fieldset ng-show="$ctrl.advancedOn">
                 <legend>Velp groups</legend>
+                <div class="editVelp-scrollarea">
                 <span ng-repeat="g in $ctrl.velpGroups">
 
-                    <label  title="{{ !g.show ? 'This group is not shown in the selected area. Change setting in manage tab.' : ''}}"
-                            ng-class="{disabled: !g.edit_access, gray: !g.show}"><input type="checkbox"
-                                                                        ng-click="$ctrl.updateVelpGroups(g)"
-                                                                        ng-checked="$ctrl.isGroupInVelp(g)"
-                                                                        ng-disabled="!g.edit_access">
+                    <label title="{{ !g.show ? 'This group is not shown in the selected area. Change setting in manage tab.' : ''}}"
+                           ng-class="{disabled: !g.edit_access, gray: !g.show}"><input type="checkbox"
+                                                                                       ng-click="$ctrl.updateVelpGroups(g)"
+                                                                                       ng-checked="$ctrl.isGroupInVelp(g)"
+                                                                                       ng-disabled="!g.edit_access">
                         {{ g.name }}
                     </label>
                     <br>
                 </span>
+                </div>
             </fieldset>
             <p class="error velpInfoText" ng-show="!$ctrl.isSomeVelpGroupSelected()">
                 {{ $ctrl.settings.velpGroupError }}
