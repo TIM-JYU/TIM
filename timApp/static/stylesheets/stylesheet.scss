@@ -942,6 +942,8 @@ input[type="number"].no-step {
 
 /* For user list in teacher view ================================*/
 .userFixed {
+    max-height: 90%;
+    height: clamp(10em, 40%, 90%);
     position: fixed;
     bottom: 0;
     top: 20px;
@@ -961,17 +963,8 @@ input[type="number"].no-step {
 }
 
 .userlist {
-
     $list-max-height: 95vh;
     height: 100%;
-
-    overflow: auto;
-    overflow-x: hidden;
-    min-height: 25em;
-    /* min-height: $list-max-height; */
-    /*max-height: $list-max-height; */
-
-    /*position: relative;*/
     background-color: #e6e6e6;
     padding: 2px;
 }

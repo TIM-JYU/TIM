@@ -62,7 +62,7 @@
                     <form class="form-inline adjustForm">
                         <div class="form-group">
                             <label class="formLabel" for="orderVelps">Order velps:</label>
-                            <select id="orderVelps" ng-model="$ctrl.order" ng-change="$ctrl.changeOrdering(order)">
+                            <select id="orderVelps" ng-model="$ctrl.order" ng-change="$ctrl.changeOrdering($ctrl.order)">
                                 <option value="content">Alphabetical</option>
                                 <option value="-used">Most used</option>
                                 <option value="label">Labels</option>
@@ -76,8 +76,8 @@
                     <form class="form-inline adjustForm">
                         <div class="form-group">
                             <label class="formLabel" for="displayVelps">Display velps for:</label>
-                            <select id="displayVelps" ng-model="$ctrl.groupAttachment.target_type"
-                                    ng-change="$ctrl.updateVelpList()">
+                            <select id="displayVelps" ng-model="$ctrl.displayedVelpGroupsScope"
+                                    ng-change="$ctrl.changeDisplayedVelpGroupsScope($ctrl.displayedVelpGroupsScope)">
                                 <option ng-value="0">Whole document</option>
                                 <option ng-value="1">Selected paragraph</option>
                             </select>
@@ -97,7 +97,7 @@
                      resize="false"
                      caption="Available velps">
 
-                    <div class="velp-stack draggable-content">
+                    <div class="velp-stack draggable-content available-velps">
                         <velp-window class="velp" ng-style="{top: 0}"
                                      ng-show="$ctrl.newVelp.edit"
                                      velp="$ctrl.newVelp"
@@ -121,9 +121,8 @@
                                 velp-groups="$ctrl.velpGroups"
                                 velp="velp"></velp-window>
                     </div>
-
                 </div>
-   </div>
+            </div>
         </uib-tab>
 
         <!-- MANAGE VELPS -->
@@ -137,12 +136,12 @@
                             <h5>Choose area for velp group:</h5>
                             <fieldset>
                                 <input type="radio" ng-model="$ctrl.groupAttachment.target_type"
-                                       ng-value="0" name="selArea" id="selDoc">
+                                       ng-value="0" name="selArea" id="selDoc" ng-change="$ctrl.updateVelpList()">
                                 <label for="selDoc">Whole document</label><br/>
                                 <input title="A paragraph must be clicked to choose this option" type="radio"
                                        ng-model="$ctrl.groupAttachment.target_type" ng-value="1"
                                        name="selArea" id="selPar" ng-class="{disabled: $ctrl.rctrl.selectedElement == null}"
-                                       ng-disabled="$ctrl.rctrl.selectedElement == null">
+                                       ng-disabled="$ctrl.rctrl.selectedElement == null" ng-change="$ctrl.updateVelpList()">
                                 <label for="selPar" ng-class="{'disabled':$ctrl.rctrl.selectedElement == null}">Selected paragraph</label>
                             </fieldset>
 
