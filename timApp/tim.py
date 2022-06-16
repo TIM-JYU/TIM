@@ -25,6 +25,7 @@ from timApp.admin.global_notification import global_notification
 from timApp.admin.routes import admin_bp
 from timApp.answer.feedbackanswer import feedback
 from timApp.answer.routes import answers
+from timApp.auth.access.routes import access
 from timApp.auth.accesshelper import verify_edit_access, verify_logged_in
 from timApp.auth.login import login_page
 from timApp.auth.oauth2.oauth2 import init_oauth
@@ -68,6 +69,7 @@ from timApp.messaging.timMessage.routes import timMessage
 from timApp.modules.fields.cbcountfield import cbcountfield_route
 from timApp.note.routes import notes
 from timApp.notification.notify import notify
+from timApp.plugin.calendar.calendar import calendar_plugin
 from timApp.plugin.importdata.importData import importData_plugin
 from timApp.plugin.qst.qst import qst_plugin
 from timApp.plugin.reviewcanvas.reviewcanvas import reviewcanvas_plugin
@@ -77,7 +79,6 @@ from timApp.plugin.tape.tape import tape_plugin
 from timApp.plugin.timmenu.timMenu import timMenu_plugin
 from timApp.plugin.timtable.timTable import timTable_plugin
 from timApp.plugin.userselect.userselect import user_select_plugin
-from timApp.plugin.calendar.calendar import calendar_plugin
 from timApp.printing.print import print_blueprint
 from timApp.readmark.routes import readings
 from timApp.scheduling.scheduling_routes import scheduling
@@ -110,6 +111,7 @@ from timApp.velp.velp import velps
 cache.init_app(app)
 
 blueprints = [
+    access,
     admin_bp,
     annotations,
     answers,

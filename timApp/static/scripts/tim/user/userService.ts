@@ -2,23 +2,28 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {genericglobals, Locale} from "../util/globals";
 import {$http} from "../util/ngimport";
 import {to, ToReturn} from "../util/utils";
-import {ADMIN_GROUPNAME, IFullUser, IUser, TEACHERS_GROUPNAME} from "./IUser";
+import {
+    ADMIN_GROUPNAME,
+    ICurrentUser,
+    IUser,
+    TEACHERS_GROUPNAME,
+} from "./IUser";
 
 export interface ILoginResponse {
     other_users: IUser[];
-    current_user: IFullUser;
+    current_user: ICurrentUser;
 }
 
 export class UserService {
-    private current: IFullUser; // currently logged in user
+    private current: ICurrentUser; // currently logged in user
     private group: IUser[]; // any additional users that have been added in the session - this does not include the main user
 
-    constructor(current: IFullUser, group: IUser[]) {
+    constructor(current: ICurrentUser, group: IUser[]) {
         this.current = current;
         this.group = group;
     }
 
-    public getCurrent(): IFullUser {
+    public getCurrent(): ICurrentUser {
         return this.current;
     }
 
