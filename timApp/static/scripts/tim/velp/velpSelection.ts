@@ -581,7 +581,6 @@ export class VelpSelectionController implements IController {
     updateVelpList() {
         this.velpGroups.forEach((g) => {
             if (
-                // this.isInDisplayedVelpGroupsScope() &&
                 this.isAttachedToParagraph() &&
                 this.rctrl.selectedElement != null
             ) {
@@ -947,10 +946,6 @@ export class VelpSelectionController implements IController {
 
     private isAttachedToParagraph() {
         return this.groupAttachment.target_type === 1;
-    }
-
-    private isInDisplayedVelpGroupsScope() {
-        return this.displayedVelpGroupsScope === 1;
     }
 
     /**

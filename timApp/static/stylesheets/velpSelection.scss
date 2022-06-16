@@ -31,7 +31,6 @@
 }
 
 .velpFixed {
-    box-sizing: border-box;
     position: fixed;
     min-width: fit-content;
     max-width: 22.5em;
@@ -54,7 +53,6 @@
     min-width: fit-content;
     max-width: 22.5em;
     word-wrap: break-word;
-    border: 1px solid gainsboro;
     background: white;
     z-index: 1001;
     padding-left: 0.5em;
@@ -272,7 +270,6 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 
 .bottom-part{
     height: 8em;
-    //padding-top: 8em;
     width: 100%;
 }
 
