@@ -179,7 +179,6 @@ type: python
         )
         db.session.commit()
         answs = self.get("/settings/info")["answers"]
-        print(answs)
         for a in answs:
             self.assertIsNone(a["points"])
             self.assertNotIn("points", json.loads(a["content"]))
