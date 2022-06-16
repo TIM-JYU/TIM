@@ -48,6 +48,15 @@ class AnnotationComment(db.Model):
 
     commenter = db.relationship("User")
 
+    def to_json(self):
+        return {
+            "annotation_id": self.annotation_id,
+            "comment_time": self.comment_time,
+            "commenter": self.commenter,
+            "content": self.content,
+            "id": self.id,
+        }
+
 
 class LabelInVelp(db.Model):
     """Associates VelpLabels with Velps."""

@@ -189,6 +189,8 @@ def update_annotation(
         ann.style = style
 
     db.session.commit()
+    if d.document.get_settings().anonymize_teachers() and not has_teacher_access(d):
+        anonymize_annotations([ann], user.id)
     return json_response(ann, date_conversion=True)
 
 
@@ -232,17 +234,30 @@ def add_comment_route(id: int, content: str) -> Response:
     verify_logged_in()
     commenter = get_current_user_object()
     a = get_annotation_or_abort(id)
-    vis, _ = check_visibility_and_maybe_get_doc(commenter, a)
+    vis, d = check_visibility_and_maybe_get_doc(commenter, a)
     if not vis:
         raise AccessDenied(
             "Sorry, you don't have permission to add comments to this annotation."
         )
     if not content:
         raise RouteException("Comment must not be empty")
+    if not d:
+        d = get_doc_or_abort(a.document_id)
     a.comments.append(AnnotationComment(content=content, commenter_id=commenter.id))
     # TODO: Send email to annotator if commenter is not the annotator.
     db.session.commit()
+    if d.document.get_settings().anonymize_teachers() and not has_teacher_access(d):
+        anonymize_annotations([a], commenter.id)
     return json_response(a, date_conversion=True)
+
+
+def anonymize_annotations(anns: [Annotation], current_user_id: int):
+    for ann in anns:
+        if ann.annotator.id != current_user_id:
+            ann.annotator.anonymize = True
+        for c in ann.comments:
+            if c.commenter.id != current_user_id:
+                c.commenter.anonymize = True
 
 
 @annotations.get("/<int:doc_id>/get_annotations")
@@ -258,7 +273,11 @@ def get_annotations(doc_id: int, only_own: bool = False) -> Response:
     results = get_annotations_with_comments_in_document(
         get_current_user_object(), d, only_own
     )
-    if is_peerreview_enabled(d) and not has_seeanswers_access(d):
+
+    if d.document.get_settings().anonymize_teachers() and not has_teacher_access(d):
+        curruser_id = get_current_user_object().id
+        anonymize_annotations(results, curruser_id)
+    elif is_peerreview_enabled(d) and not has_seeanswers_access(d):
         # TODO: these checks should be changed to something else
         #  - peerreview might be disabled later, but the annotation should remain anonymous to target
         #  - in future peerreview pairing may be changeable, but anonymization info should persist

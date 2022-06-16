@@ -71,6 +71,7 @@ class DocSettingTypes:
     exam_mode_themes: list[str]
     hide_readmarks: bool
     sync_answerbrowsers: bool
+    anonymize_teachers: bool
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -549,6 +550,9 @@ class DocSettings:
 
     def hide_readmarks(self) -> bool:
         return self.get_setting_or_default("hide_readmarks", False)
+
+    def anonymize_teachers(self) -> bool:
+        return self.get_setting_or_default("anonymize_teachers", False)
 
     def peer_review(self) -> bool:
         return self.get_setting_or_default("peer_review", False)

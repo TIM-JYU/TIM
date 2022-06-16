@@ -168,9 +168,22 @@ type: python
         """
         )
         self.post_answer("csPlugin", f"{d.id}.t", {"usercode": 'print("hi")'})
+        self.add_answer(
+            d,
+            "t1",
+            {"usercode": 'print("hi")'},
+            points=5,
+            content_key=None,
+            user=self.test_user_1,
+            last_points_modifier=self.test_user_2.id,
+        )
+        db.session.commit()
         answs = self.get("/settings/info")["answers"]
-        self.assertIsNone(answs[0]["points"])
-        self.assertNotIn("points", json.loads(answs[0]["content"]))
+        print(answs)
+        for a in answs:
+            self.assertIsNone(a["points"])
+            self.assertNotIn("points", json.loads(a["content"]))
+            self.assertIsNone(a["last_points_modifier"])
 
     def test_settings_save(self):
         # Create dummy doc for test

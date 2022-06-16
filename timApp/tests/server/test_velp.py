@@ -11,10 +11,15 @@ Tested routes from velp.py:
   /<int:doc_id>/create_velp_group
   /<int:doc_id>/create_default_velp_group
 """
+import json
+
+from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
+from timApp.velp.annotation import Annotation
+from timApp.velp.velp import create_new_velp
 
 
 class VelpTest(TimRouteTest):
@@ -193,3 +198,89 @@ class VelpTest(TimRouteTest):
     def test_nonexistent_group(self):
         self.get("/999/get_velp_groups", expect_status=404)
         self.get("/999/get_default_velp_group", expect_status=404)
+
+    def test_annotation_anonymization(self):
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+``` {#text1 plugin="textfield"}
+form:false
+```
+
+                        """
+        )
+        d.document.set_settings({"anonymize_teachers": "true"})
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        _, velp_ver = create_new_velp(
+            self.test_user_1.id,
+            "content",
+            0,
+        )
+        ans = self.add_answer(
+            d,
+            "text1",
+            "tu2 answer",
+            user=self.test_user_2,
+        )
+        ann1 = Annotation(
+            velp_version_id=velp_ver.id,
+            visible_to=4,
+            points=1,
+            annotator_id=self.test_user_1.id,
+            document_id=d.id,
+            color=None,
+            answer_id=ans.id,
+            style=1,
+        )
+        db.session.add(ann1)
+        ann2 = Annotation(
+            velp_version_id=velp_ver.id,
+            visible_to=4,
+            points=1,
+            annotator_id=self.test_user_2.id,
+            document_id=d.id,
+            color=None,
+            answer_id=ans.id,
+            style=1,
+        )
+        db.session.add(ann2)
+        db.session.commit()
+        self.post(
+            "/add_annotation_comment",
+            query_string={"id": ann1.id, "content": "tu1@own_velp"},
+        )
+        self.post(
+            "/add_annotation_comment",
+            query_string={"id": ann2.id, "content": "tu1@tu2's_velp"},
+        )
+        self.login_test2()
+        anns = self.get(f"{d.id}/get_annotations")
+
+        def check_ann_for_testuser1(ann: dict):
+            annotator = ann.get("annotator")
+            dump = json.dumps(annotator)
+            self.assertNotIn(f'id": {self.test_user_1.id}', dump)
+            self.assertNotIn(self.test_user_1.name, dump)
+            for c in ann.get("comments"):
+                dump = json.dumps(c.get("commenter"))
+                self.assertNotIn(f'id": {self.test_user_1.id}', dump)
+                self.assertNotIn(self.test_user_1.name, dump)
+
+        for ann in anns:
+            check_ann_for_testuser1(ann)
+
+        ann = self.post(
+            "/add_annotation_comment",
+            query_string={"id": ann2.id, "content": "tu2@tu2's_velp"},
+        )
+        check_ann_for_testuser1(ann)
+        ann = self.json_post(
+            "/update_annotation",
+            {
+                "id": ann2.id,
+                "visible_to": 4,
+                "color": "blue",
+            },
+        )
+        check_ann_for_testuser1(ann)

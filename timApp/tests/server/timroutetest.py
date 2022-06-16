@@ -1202,6 +1202,7 @@ class TimRouteTest(TimDbTest):
         valid: bool = True,
         content_key: str | None = "c",
         user: User | None = None,
+        last_points_modifier: int | None = None,
     ):
         if user is None:
             user = self.current_user
@@ -1213,6 +1214,7 @@ class TimRouteTest(TimDbTest):
             else json.dumps(content),
             points=points,
             valid=valid,
+            last_points_modifier=last_points_modifier,
         )
         db.session.add(a)
         return a
