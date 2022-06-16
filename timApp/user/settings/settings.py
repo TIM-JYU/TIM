@@ -134,9 +134,14 @@ def get_user_info(u: User, include_doc_content: bool = False) -> dict[str, Any]:
     answers_no_points = list(map(hide_points_modifier, answers_no_points))
     for d in docs:
         d.serialize_content = include_doc_content
+    annotations = u.annotations.all()
+    for ann in annotations:
+        for c in ann.comments:
+            if c.commenter.id != u.id:
+                c.commenter.anonymize = True
 
     return {
-        "annotations": u.annotations.all(),
+        "annotations": annotations,
         "answers": answers_no_points,
         "answer_uploads": answer_uploads,
         "groups": u.groups,

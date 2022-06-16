@@ -284,3 +284,6 @@ form:false
             },
         )
         check_ann_for_testuser1(ann)
+        info_anns = self.get("/settings/info")["annotations"]
+        for iann in info_anns:
+            check_ann_for_testuser1(iann)
