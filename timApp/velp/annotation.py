@@ -251,7 +251,7 @@ def add_comment_route(id: int, content: str) -> Response:
     return json_response(a, date_conversion=True)
 
 
-def anonymize_annotations(anns: [Annotation], current_user_id: int):
+def anonymize_annotations(anns: list[Annotation], current_user_id: int) -> None:
     for ann in anns:
         if ann.annotator.id != current_user_id:
             ann.annotator.anonymize = True
