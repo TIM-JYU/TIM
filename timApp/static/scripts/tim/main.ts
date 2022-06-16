@@ -68,6 +68,7 @@ import {
     handleExpiredSession,
     SESSION_VERIFICATION_NEEDED_CODE,
 } from "tim/util/session-verify.interceptor";
+import {RoleInfoComponent} from "tim/header/role-info.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals, isErrorGlobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -138,6 +139,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timMarkAllAsRead", MarkAllAsReadComponent);
     doDowngrade(dg, "timSelfExpire", SelfExpireComponent);
     doDowngrade(dg, "timSearchButton", SearchButtonComponent);
+    doDowngrade(dg, "timRoleInfo", RoleInfoComponent);
     return dg;
 }
 

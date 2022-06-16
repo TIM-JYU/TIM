@@ -987,3 +987,27 @@ export const MomentFromString = new t.Type<moment.Moment, string, unknown>(
         }),
     (a) => a.toISOString()
 );
+
+/**
+ * Given the list of strings, shorten them to the shortest unique prefix.
+ *
+ * For example ["Adam", "David", "Addy", "Bob"] => ["Ada", "D", "Add", "B"]
+ *
+ * @param strs Strings to shorten and to keep unique.
+ */
+export function shortestUniquePrefixes(strs: string[]): string[] {
+    const result = [];
+    for (const str of strs) {
+        let prefixLength = 0;
+        while (
+            prefixLength < str.length &&
+            strs.some(
+                (s) => s != str && s.startsWith(str.substring(0, prefixLength))
+            )
+        ) {
+            prefixLength++;
+        }
+        result.push(str.substring(0, prefixLength));
+    }
+    return result;
+}
