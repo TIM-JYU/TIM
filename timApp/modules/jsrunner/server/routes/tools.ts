@@ -1565,9 +1565,9 @@ export class Tools extends ToolsBase {
             reviewer.reviewer_id.toString()
         );
         const userIds = Object.keys(users);
-        const updatedReviewers = fields.map((f) =>
-            userIds.find((key) => users[key] == this.getString(f))
-        );
+        const updatedReviewers = fields
+            .map((f) => userIds.find((key) => users[key] == this.getString(f)))
+            .filter((u) => !!u); // Filter out any non-existing reviewers (e.g. empty value)
         if (new Set(updatedReviewers).size !== updatedReviewers.length) {
             this.print("Error: Same reviewer more than once in one task");
         }
