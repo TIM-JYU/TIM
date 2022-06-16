@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {Duration, Moment} from "moment";
-import {toPromise} from "tim/util/utils";
+import {shortestUniquePrefixes, toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {IGroup} from "../user/IUser";
 import {IItem} from "./IItem";
@@ -58,6 +58,16 @@ export const accessTypeDisplayNames: Record<AccessType, string> = {
     [AccessType.Owner]: $localize`Owner`,
     [AccessType.Copy]: $localize`Copy`,
 };
+
+export const accessTypeDisplayNamePrefixes: Record<AccessType, string> =
+    (() => {
+        const keys = Object.keys(accessTypeDisplayNames);
+        const values = shortestUniquePrefixes(
+            Object.values(accessTypeDisplayNames)
+        );
+        const entries = keys.map((key, i) => [key, values[i]]);
+        return Object.fromEntries(entries);
+    })();
 
 export type AccessTypeName = keyof typeof AccessType;
 

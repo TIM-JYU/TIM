@@ -4,6 +4,7 @@ import {showLoginDialog} from "tim/user/showLoginDialog";
 import {
     AccessRoleService,
     AccessType,
+    accessTypeDisplayNamePrefixes,
     accessTypeDisplayNames,
 } from "tim/item/access-role.service";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
@@ -18,9 +19,10 @@ import {Users} from "./userService";
     selector: "tim-user-menu",
     template: `
         <div class="btn-group" dropdown container="body">
-            <button type="button" title="You're logged in" i18n-title
+            <button type="button" [title]="buttonTitle"
                     class="btn btn-primary dropdown-toggle user-button" dropdownToggle>
                 <span class="user-name">
+                    <ng-container *ngIf="accessTypePrefix">{{accessTypePrefix}}:</ng-container>
                     {{ getCurrentUser().real_name }}
                     <ng-container i18n
                                   *ngIf="numSession() > 0">and {numSession(), plural, =1 {one other} other {{{numSession()}} others}}</ng-container>
@@ -37,8 +39,7 @@ import {Users} from "./userService";
 
                     <li role="menuitem">
                         <a (click)="addUser()" role="button">
-                            <ng-container i18n>Add a user to this session</ng-container>
-                            ...
+                            <ng-container i18n>Add a user to this session</ng-container>...
                         </a>
                     </li>
 
@@ -89,6 +90,8 @@ export class UserMenuComponent implements OnInit {
         AccessType.Manage,
     ];
     accessTypeDisplayNames = accessTypeDisplayNames;
+    accessTypePrefix?: string;
+    buttonTitle = $localize`You're logged in`;
 
     constructor(private access: AccessRoleService) {}
 
@@ -98,6 +101,13 @@ export class UserMenuComponent implements OnInit {
         }
 
         this.currentLockedAccess = this.getCurrentUser().locked_access;
+        if (this.currentLockedAccess) {
+            this.accessTypePrefix =
+                accessTypeDisplayNamePrefixes[this.currentLockedAccess];
+            this.buttonTitle = $localize`You're logged in (access locked to "${
+                accessTypeDisplayNames[this.currentLockedAccess]
+            }")`;
+        }
     }
 
     isLoggedIn = () => Users.isLoggedIn();
