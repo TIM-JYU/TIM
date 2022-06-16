@@ -7,7 +7,8 @@ class AccessLockTest(TimRouteTest):
     """Tests for access locking and unlocking"""
 
     def tearDown(self):
-        self.logout()
+        with self.client.session_transaction() as s:
+            s.clear()
 
     def test_access_lock_document_redirect(self):
         """Test that document viewing is restricted when access level is locked."""

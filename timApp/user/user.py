@@ -1400,8 +1400,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if contacts:
             result |= {"contacts": self.contacts}
 
-        if self.logged_in and self.is_current_user:
-            result |= {"locked_access": get_locked_access_type()}
+        if (
+            self.logged_in
+            and self.is_current_user
+            and (locked_access := get_locked_access_type())
+        ):
+            result |= {"locked_access": locked_access}
 
         return result
 
