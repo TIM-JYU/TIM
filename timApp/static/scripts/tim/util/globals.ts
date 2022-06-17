@@ -18,7 +18,7 @@ import {
 } from "../item/IItem";
 import {ILecture} from "../lecture/lecturetypes";
 import {
-    IFullUser,
+    ICurrentUser,
     IGroup,
     IGroupWithSisuPath,
     IUser,
@@ -74,7 +74,7 @@ export interface IFooterDocs {
 
 export interface IGenericGlobals {
     IS_TESTING: boolean;
-    current_user: IFullUser;
+    current_user: ICurrentUser;
     locale: Locale;
     other_users: IUser[];
     bookmarks: IBookmarkGroup[] | null;

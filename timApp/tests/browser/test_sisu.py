@@ -76,5 +76,7 @@ group: {ug_students.name}
             By.CSS_SELECTOR, "tim-dialog-frame div.modal-dialog"
         )
         self.assert_same_screenshot(
-            dialog_el, "sisu/blocked_dialog", move_to_element=True
+            dialog_el,
+            ["sisu/blocked_dialog", "sisu/blocked_dialog_alt"],
+            move_to_element=True,
         )

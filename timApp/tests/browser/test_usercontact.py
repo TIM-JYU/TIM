@@ -8,7 +8,7 @@ class UserContactTest(BrowserTest):
         return 8000
 
     def test_email_add(self):
-        def screenshot(name: str):
+        def screenshot(name: str | list[str]):
             self.wait_until_present(
                 "bootstrap-form-panel[title='Your account information']"
             )
@@ -37,7 +37,9 @@ class UserContactTest(BrowserTest):
         ).click()
         self.drv.find_element(By.CSS_SELECTOR, ".timButton:nth-child(2)").click()
 
-        screenshot("usercontact/add_new_unverified")
+        screenshot(
+            ["usercontact/add_new_unverified", "usercontact/add_new_unverified_alt"]
+        )
 
         emails = self.sent_emails
         last_email_msg = emails[-1]
