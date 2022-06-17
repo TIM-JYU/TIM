@@ -2067,10 +2067,8 @@ def get_answers(task_id: str, user_id: int) -> Response:
                 maybe_hide_name(d, u, model_u)
     if p and not p.known.show_points() and not curr_user.has_teacher_access(d):
         user_answers = list(map(hide_points, user_answers))
-    if (
-        d.document.get_settings().anonymize_teachers()
-        and not curr_user.has_teacher_access(d)
-    ):
+    rights = get_user_rights_for_item(d, curr_user)
+    if has_no_higher_right(d.document.get_settings().anonymize_reviewers(), rights):
         user_answers = list(map(hide_points_modifier, user_answers))
     return json_response(user_answers)
 
