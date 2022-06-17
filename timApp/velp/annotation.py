@@ -253,11 +253,17 @@ def add_comment_route(id: int, content: str) -> Response:
 
 
 def should_anonymize_annotations(d: DocInfo, u: User):
+    """
+    Determines whether annotation author and comment authors should be hidden from an user
+    """
     rights = get_user_rights_for_item(d, u)
     return has_no_higher_right(d.document.get_settings().anonymize_reviewers(), rights)
 
 
 def anonymize_annotations(anns: list[Annotation], current_user_id: int) -> None:
+    """
+    Fully anonymizes annotation authors and comment authors unless they were created by same user
+    """
     for ann in anns:
         if ann.annotator.id != current_user_id:
             ann.annotator.anonymize = True

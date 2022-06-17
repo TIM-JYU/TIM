@@ -1330,10 +1330,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def is_name_hidden(self):
+        """Hides names and email of the user, but not user ID"""
         return getattr(self, "hide_name", False)
 
     @property
     def is_anonymized(self):
+        """Hides names, email and ID of the user"""
         return getattr(self, "anonymize", False)
 
     @property
