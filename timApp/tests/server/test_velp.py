@@ -211,7 +211,7 @@ form:false
 
                         """
         )
-        d.document.set_settings({"anonymize_teachers": "true"})
+        d.document.set_settings({"anonymize_reviewers": "teacher"})
         self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
         _, velp_ver = create_new_velp(
