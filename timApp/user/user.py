@@ -1330,7 +1330,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def is_name_hidden(self):
+        """Hides names and email of the user, but not user ID"""
         return getattr(self, "hide_name", False)
+
+    @property
+    def is_anonymized(self):
+        """Hides names, email and ID of the user"""
+        return getattr(self, "anonymize", False)
 
     @property
     def is_sisu_teacher(self) -> bool:
@@ -1351,19 +1357,26 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def basic_info_dict(self):
-        if not self.is_name_hidden:
+        if self.is_anonymized:
             info_dict = {
-                "id": self.id,
-                "name": self.name,
-                "real_name": self.real_name,
-                "email": self.email,
+                "id": 1,
+                "name": f"Anonymous",
+                "real_name": f"Anonymous",
+                "email": f"Anonymous@example.com",
             }
-        else:
+        elif self.is_name_hidden:
             info_dict = {
                 "id": self.id,
                 "name": f"user{self.id}",
                 "real_name": f"User {self.id}",
                 "email": f"user{self.id}@example.com",
+            }
+        else:
+            info_dict = {
+                "id": self.id,
+                "name": self.name,
+                "real_name": self.real_name,
+                "email": self.email,
             }
 
         if is_attribute_loaded("uniquecodes", self):
