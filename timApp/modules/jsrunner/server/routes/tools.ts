@@ -1,3 +1,15 @@
+/**
+ * Classes required for the JsRunner-plugin
+ *
+ * @author Denis Zhidkikh
+ * @author Mika Lehtinen
+ * @author Vesa Lappalainen
+ * @author Simo Lehtinen
+ * @author Alexander Södergård
+ * @license MIT
+ * @date 29.5.2022
+ */
+
 import * as t from "io-ts";
 import {widenFields} from "tim/util/common";
 import {
@@ -129,6 +141,14 @@ function round(c: number, decim: number): number {
 }
 
 const ABSOLUTE_FIELD_REGEX = /^[0-9]+\./;
+
+type Users = Record<string | number, string>;
+
+interface PeerReviewerUser {
+    id: number;
+    name: string;
+    points: number[];
+}
 
 interface Point {
     x: number;
@@ -815,7 +835,6 @@ export class GTools extends ToolsBase {
     public dists: Record<string, Distribution> = {};
     public xys: Record<string, XY> = {};
     public stats: Record<string, Stats> = {};
-
     public tools: Tools;
 
     groups: IGroupData = {};
@@ -954,10 +973,11 @@ export class Tools extends ToolsBase {
 
     constructor(
         protected data: UserFieldDataT,
+        protected users: Users,
         currDoc: string,
         markup: IJsRunnerMarkup,
         aliases: AliasDataT,
-        protected testvelps: VelpDataT[],
+        protected velps: VelpDataT[],
         protected peerreviews: PeerReviewDataT[]
     ) {
         super(currDoc, markup, aliases);
@@ -1328,29 +1348,47 @@ export class Tools extends ToolsBase {
         return {user: this.data.user.id, fields: this.result};
     }
 
+    /**
+     * Checks that the velp-data corresponds to the task given by the second parameter
+     */
     isVelpTask(v: VelpDataT, task: string): boolean {
         const id = v.answer?.task_id;
         return id?.substr(id.indexOf(".") + 1) === task;
     }
 
+    /**
+     * Check if velp has been given to the current user
+     */
     isVelpForUser(v: VelpDataT): boolean {
         return v.answer?.users[0].id === this.data.user.id;
     }
 
-    getTaskPoints(task: string): number {
-        const sum = this.testvelps
-            .filter((v) => this.isVelpForUser(v) && this.isVelpTask(v, task))
+    /**
+     * Print average of velp-points in one task
+     */
+    getVelpTaskPoints(task: string): number {
+        const peerreviewers = this.getPeerReviewsForUser().map(
+            (pr) => pr.reviewer_id
+        );
+        const sum = this.velps
+            .filter(
+                (v) =>
+                    this.isVelpForUser(v) &&
+                    this.isVelpTask(v, task) &&
+                    peerreviewers.includes(v.annotator.id)
+            )
             .map((v) => v.points)
             .reduce<number>((acc, p) => acc + (p ?? 0), 0);
         const count = this.getVelpedCount(task);
-        // this.println(sum, count);
-        return count ? sum / count : NaN;
-        // return sum / velps.length ? sum / velps.length : 0;
+        return count ? sum / count : 0;
     }
 
+    /**
+     * Print count of received velp-reviews for current user
+     */
     getVelpedCount(task: string): number {
         const seen = new Set();
-        this.testvelps
+        this.velps
             .filter(
                 (v) =>
                     this.isVelpForUser(v) &&
@@ -1361,9 +1399,12 @@ export class Tools extends ToolsBase {
         return seen.size;
     }
 
-    getReviewCount(task: string): number {
+    /**
+     * Print count of reviews made by current user in one task
+     */
+    getVelpReviewCount(task: string): number {
         const seen = new Set();
-        this.testvelps
+        this.velps
             .filter(
                 (v) =>
                     v.annotator.id === this.data.user.id &&
@@ -1376,37 +1417,17 @@ export class Tools extends ToolsBase {
         return seen.size;
     }
 
-    getReviews(task: string): object[] {
-        const velps = this.testvelps
-            .filter((v) => this.isVelpForUser(v) && this.isVelpTask(v, task))
-            .map((v) => ({
-                id: v.annotator.id,
-                name: v.annotator.name,
-                points: v.points !== null ? v.points : NaN,
-            }));
-        // this.output += velps;
-
-        const result = Array.from(new Set(velps.map((s) => s.id))).map((id) => {
-            const reviewer = velps.find((s) => s.id === id);
-            const points = velps
-                .filter((s) => s.id === id)
-                .map((velp) => (velp.points !== null ? velp.points : NaN))
-                .filter((n) => !isNaN(n));
-            return {
-                id: id,
-                name: reviewer ? reviewer.name : "",
-                points: points,
-            };
-        });
-        return result;
-    }
-
-    getPoints(task: string) {
-        const velps = this.testvelps
+    /**
+     * Print velp-points of current user in one task
+     */
+    getVelpPoints(task: string) {
+        const peerreviewers = this.getPeerReviewsForUser().map((pr) => pr.id);
+        const velps = this.velps
             .filter(
                 (v) =>
                     this.isVelpForUser(v) &&
                     this.isVelpTask(v, task) &&
+                    peerreviewers.includes(v.annotator.id) &&
                     v.answer != null
             )
             .map((v) => ({
@@ -1415,7 +1436,6 @@ export class Tools extends ToolsBase {
                 points: v.points ? v.points : NaN,
                 task: v.answer!.task_id,
             }));
-
         const points = velps.map((v) => v.points).filter((n) => !isNaN(n));
         // this.output += points
         const sum = points.reduce((a, b) => a + b, 0);
@@ -1447,5 +1467,138 @@ export class Tools extends ToolsBase {
         return this.getAllPeerReviews().filter(
             (rev) => rev.reviewable_id == this.data.user.id
         );
+    }
+
+    /**
+     * Print reviewers and received points of current user
+     */
+    getPeerReviewersForUser(usersObject: Users): string[] {
+        const reviewers = this.getPeerReviewsForUser().map(
+            (reviewer) => usersObject[reviewer.reviewer_id]
+        );
+        return reviewers;
+    }
+
+    /*
+     * Print reviewers and received points of current user
+     */
+    getReviews(task: string, usersObject?: Users): PeerReviewerUser[] {
+        const users = usersObject ? usersObject : this.users;
+        const peerreviewers = this.getPeerReviewsForUser()
+            .filter((pr) => pr.task_name === task)
+            .map((pr) => {
+                return {
+                    id: pr?.reviewer_id,
+                    name: users[pr?.reviewer_id],
+                    points: [0],
+                };
+            });
+
+        const velps = this.velps
+            .filter((v) => this.isVelpForUser(v) && this.isVelpTask(v, task))
+            .map((v) => ({
+                id: v.annotator.id,
+                name: v.annotator.name,
+                points: v.points !== null ? v.points : NaN,
+            }));
+
+        //
+        velps?.filter((v) =>
+            peerreviewers.forEach((pr) => {
+                return pr.id == v.id;
+            })
+        );
+
+        const velpResult = Array.from(new Set(velps.map((s) => s.id))).map(
+            (id) => {
+                const reviewer = velps.find((s) => s.id === id);
+                const points = velps
+                    .filter((s) => s.id === id)
+                    .map((velp) => (velp.points !== null ? velp.points : NaN))
+                    .filter((n) => !isNaN(n));
+                return {
+                    id: id,
+                    name: reviewer ? reviewer.name : "",
+                    points: points,
+                    peerreviewers,
+                };
+            }
+        );
+
+        velpResult.forEach((vr) => {
+            peerreviewers.forEach((pr) => {
+                if (pr.id == vr.id) {
+                    pr.points = vr.points;
+                }
+            });
+        });
+
+        return peerreviewers;
+    }
+
+    /**
+     * Change reviewers of current user
+     *
+     * TODO: Is usersObject needed at all?
+     */
+    changePeerReviewer(usersObject?: Users): void {
+        const users = usersObject ? usersObject : this.users;
+        const reviewableID = this.data.user.id;
+        const fields = this.markup.paramFields ? this.markup.paramFields : [""];
+        const datafield = this.markup.peerReviewField;
+        this.setString(datafield, "");
+        const taskSeparatorPos = fields[0].indexOf("_");
+        if (taskSeparatorPos < 0) {
+            this.print(
+                "Error: peerReviewField must be of format `taskname_fieldname`, where taskname is the name of the peer review task."
+            );
+            return;
+        }
+        const task = fields[0].substring(0, taskSeparatorPos);
+        let changed = false;
+        const from: string[] = [];
+        const to: string[] = [];
+        const reviewers = this.getPeerReviewsForUser().filter(
+            (pr) => pr.task_name === task
+        );
+        const initialReviewers = reviewers.map((reviewer) =>
+            reviewer.reviewer_id.toString()
+        );
+        const userIds = Object.keys(users);
+        const updatedReviewers = fields
+            .map((f) => userIds.find((key) => users[key] == this.getString(f)))
+            .filter((u) => !!u); // Filter out any non-existing reviewers (e.g. empty value)
+        if (new Set(updatedReviewers).size !== updatedReviewers.length) {
+            this.print("Error: Same reviewer more than once in one task");
+        }
+
+        initialReviewers.forEach((reviewer) => {
+            if (!updatedReviewers.includes(reviewer)) {
+                changed = true;
+                from.push(reviewer);
+            }
+        });
+
+        updatedReviewers.forEach((reviewer) => {
+            if (typeof reviewer == "string") {
+                if (!initialReviewers.includes(reviewer) && reviewer) {
+                    if (reviewer == reviewableID.toString()) {
+                        this.print("Same reviewer and reviewable");
+                    }
+                    changed = true;
+                    to.push(reviewer);
+                }
+            }
+        });
+
+        const data = {
+            reviewableID,
+            task,
+            from,
+            to,
+        };
+        if (changed) {
+            this.setString(datafield, JSON.stringify(data));
+        }
     }
 }

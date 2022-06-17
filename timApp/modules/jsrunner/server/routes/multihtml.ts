@@ -28,6 +28,7 @@ router.post("/", (req, res, next) => {
                 "failGrade",
                 "fields",
                 "gradeField",
+                "peerReviewField",
                 "gradingScale",
                 "group",
                 "groups",

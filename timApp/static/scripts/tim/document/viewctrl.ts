@@ -1638,6 +1638,32 @@ export class ViewCtrl implements IController {
             });
         }
     }
+
+    /**
+     * Checks if peer review is on
+     * TODO: Timezones may cause some problems with this solution; rewrite using moment.js
+     */
+    peerReviewInProcess(): boolean {
+        if (this.docSettings.peer_review) {
+            const currentTime = new Date().toISOString();
+            if (
+                !this.docSettings.peer_review_start ||
+                !this.docSettings.peer_review_stop
+            ) {
+                return this.docSettings.peer_review;
+            }
+
+            const startTime = new Date(
+                this.docSettings.peer_review_start
+            ).toISOString();
+            const endTime = new Date(
+                this.docSettings.peer_review_stop
+            ).toISOString();
+
+            return startTime <= currentTime && currentTime < endTime;
+        }
+        return false;
+    }
 }
 
 class EntityRegistry<K, V> {

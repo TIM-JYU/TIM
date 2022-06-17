@@ -703,6 +703,8 @@ def render_doc_view(
     if points_sum_rule and points_sum_rule.scoreboard_error:
         flash(f"Error in point_sum_rule scoreboard: {points_sum_rule.scoreboard_error}")
     usergroup = m.group
+    peer_review_start = doc_settings.peer_review_start()
+    peer_review_stop = doc_settings.peer_review_stop()
     if teacher_or_see_answers:
         user_list = None
         ug = None
@@ -843,14 +845,10 @@ def render_doc_view(
                             load_plugin_states=not hide_answers,
                         )
                         generate_review_groups(
-                            doc_info,
-                            full_document_for_review.plugins,
-                            doc_settings.group(),
+                            doc_info, full_document_for_review.plugins
                         )
                     else:
-                        generate_review_groups(
-                            doc_info, post_process_result.plugins, doc_settings.group()
-                        )
+                        generate_review_groups(doc_info, post_process_result.plugins)
                     set_default_velp_group_selected_and_visible(doc_info)
                 except PeerReviewException as e:
                     flash(str(e))
@@ -1022,6 +1020,8 @@ def render_doc_view(
             "groups": task_groups,
             "breaklines": breaklines,
         },
+        peer_review_start=peer_review_start,
+        peer_review_stop=peer_review_stop,
         doc_settings=doc_settings,
         word_list=word_list,
         memo_minutes=doc_settings.memo_minutes(),
