@@ -444,7 +444,7 @@ def get_answers_for_tasks(tasks: list[str], user_id: int) -> Response:
                 raise RouteException(f"Task ID {task_id} is missing document ID.")
             if tid.doc_id not in doc_map:
                 dib = get_doc_or_abort(tid.doc_id, f"Document {tid.doc_id} not found")
-                if not dib.document.get_settings().peer_review():
+                if not is_peerreview_enabled(dib):
                     verify_seeanswers_access(dib)
                 doc_map[tid.doc_id] = dib.document
             if tid.is_global:
