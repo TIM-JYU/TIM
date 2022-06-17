@@ -22,6 +22,7 @@ from timApp.auth.accesshelper import (
     verify_teacher_access,
     has_seeanswers_access,
 )
+from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.document.viewcontext import default_view_ctx
@@ -31,7 +32,7 @@ from timApp.peerreview.peerreview_utils import (
     is_peerreview_enabled,
 )
 from timApp.timdb.sqa import db
-from timApp.user.user import User
+from timApp.user.user import User, has_no_higher_right
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import (
     json_response,
@@ -189,6 +190,8 @@ def update_annotation(
         ann.style = style
 
     db.session.commit()
+    if should_anonymize_annotations(d, user):
+        anonymize_annotations([ann], user.id)
     return json_response(ann, date_conversion=True)
 
 
@@ -232,17 +235,41 @@ def add_comment_route(id: int, content: str) -> Response:
     verify_logged_in()
     commenter = get_current_user_object()
     a = get_annotation_or_abort(id)
-    vis, _ = check_visibility_and_maybe_get_doc(commenter, a)
+    vis, d = check_visibility_and_maybe_get_doc(commenter, a)
     if not vis:
         raise AccessDenied(
             "Sorry, you don't have permission to add comments to this annotation."
         )
     if not content:
         raise RouteException("Comment must not be empty")
+    if not d:
+        d = get_doc_or_abort(a.document_id)
     a.comments.append(AnnotationComment(content=content, commenter_id=commenter.id))
     # TODO: Send email to annotator if commenter is not the annotator.
     db.session.commit()
+    if should_anonymize_annotations(d, commenter):
+        anonymize_annotations([a], commenter.id)
     return json_response(a, date_conversion=True)
+
+
+def should_anonymize_annotations(d: DocInfo, u: User) -> bool:
+    """
+    Determines whether annotation author and comment authors should be hidden from an user
+    """
+    rights = get_user_rights_for_item(d, u)
+    return has_no_higher_right(d.document.get_settings().anonymize_reviewers(), rights)
+
+
+def anonymize_annotations(anns: list[Annotation], current_user_id: int) -> None:
+    """
+    Fully anonymizes annotation authors and comment authors unless they were created by same user
+    """
+    for ann in anns:
+        if ann.annotator.id != current_user_id:
+            ann.annotator.anonymize = True
+        for c in ann.comments:
+            if c.commenter.id != current_user_id:
+                c.commenter.anonymize = True
 
 
 @annotations.get("/<int:doc_id>/get_annotations")
@@ -255,21 +282,21 @@ def get_annotations(doc_id: int, only_own: bool = False) -> Response:
     d = get_doc_or_abort(doc_id)
     verify_view_access(d)
 
-    results = get_annotations_with_comments_in_document(
-        get_current_user_object(), d, only_own
-    )
-    if is_peerreview_enabled(d) and not has_seeanswers_access(d):
+    current_user = get_current_user_object()
+    results = get_annotations_with_comments_in_document(current_user, d, only_own)
+
+    if should_anonymize_annotations(d, current_user):
+        curruser_id = current_user.id
+        anonymize_annotations(results, curruser_id)
+    elif is_peerreview_enabled(d) and not has_seeanswers_access(d):
         # TODO: these checks should be changed to something else
         #  - peerreview might be disabled later, but the annotation should remain anonymous to target
         #  - in future peerreview pairing may be changeable, but anonymization info should persist
         #  - instead of querying peer_reviews every time annotation could directly contain info about anonymization
-        revs = get_reviews_to_user(d, get_current_user_object())
+        revs = get_reviews_to_user(d, current_user)
         revset = {r.reviewer_id for r in revs}
         for ann in results:
-            if (
-                ann.annotator.id != get_current_user_object().id
-                and ann.annotator_id in revset
-            ):
+            if ann.annotator.id != current_user.id and ann.annotator_id in revset:
                 ann.annotator.hide_name = True
 
     return no_cache_json_response(results, date_conversion=True)

@@ -73,6 +73,7 @@ class DocSettingTypes:
     sync_answerbrowsers: bool
     peer_review_start: datetime
     peer_review_stop: datetime
+    anonymize_reviewers: str
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -551,6 +552,9 @@ class DocSettings:
 
     def hide_readmarks(self) -> bool:
         return self.get_setting_or_default("hide_readmarks", False)
+
+    def anonymize_reviewers(self) -> str | None:
+        return self.get_setting_or_default("anonymize_reviewers", None)
 
     def peer_review(self) -> bool:
         return self.get_setting_or_default("peer_review", False)

@@ -1891,17 +1891,25 @@ def find_tim_vars(plugin: Plugin) -> dict:
     return tim_vars
 
 
-def hide_points(a: Answer) -> dict:
-    j = a.to_json()
+def hide_points_modifier(a: Answer | dict) -> dict:
+    j = a if isinstance(a, dict) else a.to_json()
+    j["last_points_modifier"] = None
+    return j
+
+
+def hide_points(a: Answer | dict) -> dict:
+    already_json = isinstance(a, dict)
+    j = a if already_json else a.to_json()
     j["points"] = None
 
     # TODO: Hack for csPlugin
-    c = a.content_as_json
+    c = a["content"] if already_json else a.content_as_json
     if isinstance(c, dict):
         c.pop("points", None)
         j["content"] = json.dumps(c)
 
-    if a.points is not None:
+    points = a["points"] if already_json else a.points
+    if points is not None:
         j["points_hidden"] = True
     return j
 
@@ -2077,6 +2085,9 @@ def get_answers(task_id: str, user_id: int) -> Response:
                 maybe_hide_name(d, u, model_u)
     if p and not p.known.show_points() and not curr_user.has_teacher_access(d):
         user_answers = list(map(hide_points, user_answers))
+    rights = get_user_rights_for_item(d, curr_user)
+    if has_no_higher_right(d.document.get_settings().anonymize_reviewers(), rights):
+        user_answers = list(map(hide_points_modifier, user_answers))
     return json_response(user_answers)
 
 
