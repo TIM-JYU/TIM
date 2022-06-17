@@ -551,7 +551,7 @@ class DocSettings:
     def hide_readmarks(self) -> bool:
         return self.get_setting_or_default("hide_readmarks", False)
 
-    def anonymize_reviewers(self) -> None:
+    def anonymize_reviewers(self) -> str | None:
         return self.get_setting_or_default("anonymize_reviewers", None)
 
     def peer_review(self) -> bool:

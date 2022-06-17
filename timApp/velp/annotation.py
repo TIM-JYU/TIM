@@ -252,7 +252,7 @@ def add_comment_route(id: int, content: str) -> Response:
     return json_response(a, date_conversion=True)
 
 
-def should_anonymize_annotations(d: DocInfo, u: User):
+def should_anonymize_annotations(d: DocInfo, u: User) -> bool:
     """
     Determines whether annotation author and comment authors should be hidden from an user
     """
