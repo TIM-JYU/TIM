@@ -286,6 +286,11 @@ form:false
             },
         )
         check_ann_for_testuser1(ann)
+        d.document.set_settings({"anonymize_reviewers": "view"})
+        self.test_user_2.grant_access(d, AccessType.see_answers)
+        db.session.commit()
+        anns = self.get(f"{d.id}/get_annotations")
+        self.assertEqual(anns[0].get("annotator").get("name"), self.test_user_1.name)
         info_anns = self.get("/settings/info")["annotations"]
         for iann in info_anns:
             check_ann_for_testuser1(iann)
