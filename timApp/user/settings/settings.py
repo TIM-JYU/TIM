@@ -8,7 +8,7 @@ from jinja2 import TemplateNotFound
 
 from timApp.admin.user_cli import do_soft_delete
 from timApp.answer.answer_models import AnswerUpload
-from timApp.answer.routes import hide_points
+from timApp.answer.routes import hide_points, hide_points_modifier
 from timApp.auth.accesshelper import verify_logged_in, verify_admin, verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object, clear_session
 from timApp.document.docentry import DocEntry
@@ -131,11 +131,17 @@ def get_user_info(u: User, include_doc_content: bool = False) -> dict[str, Any]:
         AnswerUpload.answer_id.in_([a.id for a in answers])
     ).all()
     answers_no_points = list(map(hide_points, answers))
+    answers_no_points = list(map(hide_points_modifier, answers_no_points))
     for d in docs:
         d.serialize_content = include_doc_content
+    annotations = u.annotations.all()
+    for ann in annotations:
+        for c in ann.comments:
+            if c.commenter.id != u.id:
+                c.commenter.anonymize = True
 
     return {
-        "annotations": u.annotations.all(),
+        "annotations": annotations,
         "answers": answers_no_points,
         "answer_uploads": answer_uploads,
         "groups": u.groups,
