@@ -89,6 +89,7 @@ from timApp.peerreview.peerreview_utils import (
     get_reviews_for_user,
     is_peerreview_enabled,
     get_reviews_for_document,
+    change_peerreviewers_for_user,
 )
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.importdata.importData import MissingUser
@@ -443,7 +444,7 @@ def get_answers_for_tasks(tasks: list[str], user_id: int) -> Response:
                 raise RouteException(f"Task ID {task_id} is missing document ID.")
             if tid.doc_id not in doc_map:
                 dib = get_doc_or_abort(tid.doc_id, f"Document {tid.doc_id} not found")
-                if not dib.document.get_settings().peer_review():
+                if not is_peerreview_enabled(dib):
                     verify_seeanswers_access(dib)
                 doc_map[tid.doc_id] = dib.document
             if tid.is_global:
@@ -472,6 +473,7 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     failGrade: str | Missing = missing
     fieldhelper: bool | Missing = missing
     gradeField: str | Missing = missing
+    peerReviewField: str | Missing = missing
     gradingScale: dict[Any, Any] | Missing = missing
     group: str | Missing = missing
     groups: list[str] | Missing = missing
@@ -832,7 +834,8 @@ def post_answer_impl(
     if preprocessor:
         preprocessor(answerdata, curr_user, d, plugin)
 
-    # print(json.dumps(answerdata))  # uncomment this to follow what answers are used in browser tests
+    # uncomment this to follow what answers are used in browser tests
+    # print(json.dumps(answerdata))
 
     answer_call_data = {
         "markup": plugin.values,
@@ -911,12 +914,14 @@ def post_answer_impl(
         add_group = None
         if plugin.type == "importData":
             add_group = plugin.values.get("addUsersToGroup")
+        pr_data = plugin.values.get("peerReviewField", None)
         saveresult = save_fields(
             jsonresp,
             curr_user,
             d,
             allow_non_teacher=siw,
             add_users_to_group=add_group,
+            pr_data=pr_data,
             overwrite_previous_points=overwrite_points,
         )
 
@@ -1303,12 +1308,10 @@ def preprocess_jsrunner_answer(
         if not curr_user.has_teacher_access(d):
             raise AccessDenied("Teacher access required to browse all peer reviews")
         answerdata["peerreviews"] = get_reviews_for_document(d)
+        answerdata["velps"] = get_annotations_with_comments_in_document(curr_user, d)
     else:
         answerdata["peerreviews"] = []
-
-    answerdata["testvelps"] = get_annotations_with_comments_in_document(
-        curr_user, d, False
-    )
+        answerdata["velps"] = []
     answerdata.pop(
         "paramComps", None
     )  # This isn't needed by jsrunner server, so don't send it.
@@ -1541,6 +1544,7 @@ def save_fields(
     allow_non_teacher: bool = False,
     add_users_to_group: str | None = None,
     overwrite_previous_points: bool = False,
+    pr_data: str | None = None,
 ) -> FieldSaveResult:
     save_obj = jsonresp.get("savedata")
     ignore_missing = jsonresp.get("ignoreMissing", False)
@@ -1594,6 +1598,20 @@ def save_fields(
                 raise RouteException(f"Doc id missing: {tid}")
             if id_num.doc_id not in doc_map:
                 doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
+            if pr_data and pr_data in tid:
+                if len(task_u.get(tid)) > 0:
+                    user_id = item.get("user")
+                    peer_review_data = json.loads(task_u.get(tid))
+                    old = peer_review_data.get("from")
+                    new = peer_review_data.get("to")
+                    task = peer_review_data.get("task")
+                    if not old:
+                        # TODO: Add new reviewer or if reviewable have none
+                        pass
+                    if new and old and task:
+                        change_peerreviewers_for_user(
+                            current_doc, task, user_id, old, new
+                        )
     task_content_name_map = {}
     for task in tasks:
         t_id = TaskId.parse(

@@ -20,28 +20,21 @@ export const User = t.interface({
     name: t.string,
 });
 
-export const VelpData = t.intersection([
-    t.type({
-        points: nullable(t.number),
-        annotator: t.type({
+export const VelpData = t.type({
+    points: nullable(t.number),
+    annotator: t.type({
+        id: t.Int,
+        name: t.string,
+        real_name: nullable(t.string),
+    }),
+    answer: nullable(
+        t.type({
             id: t.Int,
-            name: t.string,
-            real_name: nullable(t.string),
-        }),
-        answer: nullable(
-            t.type({
-                id: t.Int,
-                users: t.array(User),
-                task_id: t.string,
-            })
-        ),
-    }),
-    t.partial({
-        groupinfo: t.type({
-            membership_end: t.number,
-        }),
-    }),
-]);
+            users: t.array(User),
+            task_id: t.string,
+        })
+    ),
+});
 
 export const PeerReviewData = t.type({
     id: t.Int,
@@ -70,7 +63,7 @@ export const JsrunnerAnswer = t.type({
     input: t.type({
         data: t.array(UserFieldData),
         aliases: AliasData,
-        testvelps: t.array(VelpData),
+        velps: t.array(VelpData),
         peerreviews: t.array(PeerReviewData),
     }),
     taskID: t.string,

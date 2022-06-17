@@ -46,10 +46,10 @@ class PeerReviewTest(TimRouteTest):
                 .all()
             )
             self.assertEqual(2, len(prs))
-            self.assertEqual(None, prs[0].task_name)
+            self.assertEqual("t2", prs[0].task_name, "Test user 2 answered to t2")
             self.assertEqual(self.test_user_1.id, prs[0].reviewer_id)
             self.assertEqual(self.test_user_2.id, prs[0].reviewable_id)
-            self.assertEqual(None, prs[1].task_name)
+            self.assertEqual("t", prs[1].task_name, "Test user 1 answered to t")
             self.assertEqual(self.test_user_2.id, prs[1].reviewer_id)
             self.assertEqual(self.test_user_1.id, prs[1].reviewable_id)
 

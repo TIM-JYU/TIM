@@ -466,6 +466,7 @@ timApp.component("timUserList", {
     require: {
         viewctrl: "^timView",
     },
+
     template: `<div
      class="userlist"
      ng-if="$ctrl.users"
@@ -477,5 +478,6 @@ timApp.component("timUserList", {
 </div>
 <div ng-if="!$ctrl.users">
     No answerers.
-</div>`,
+</div>
+`,
 });

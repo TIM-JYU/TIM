@@ -1,43 +1,10 @@
-Review summary
-Summary Table
-
+Review summary by macro
+Button to update all fields ans summary table
 ## Arvostelut yhteensä {defaultplugin="numericfield" readonly="view" .fieldCell}
 %% 'vp;points' |  gfields('cols: 3')  %%
 
-``` {#runnerSummary plugin="jsrunner"}
-{%if tasks is string%}
-{%set tasks = [tasks] %}
-{%endif%}
-groups:
- - %%group%%
-buttonText: Päivitä Kokonaistilanne
-peerReview: true
-fields:
-{% for TASK in tasks %}
- - %%TASK%%_Pisteet
- - %%TASK%%_Vp
-{% endfor %}
- - vp
- - points
-updateFields:
-{% for TASK in tasks %}
- - %%TASK%%_Pisteet
- - %%TASK%%_Vp
-{% endfor %}
- - vp
- - points
-program: |!!
-    let points = 0;
-    let vp_points = 0;
-    for (let TASK of %%tasks%%) {
-        tools.setDouble(TASK + "_Pisteet", tools.getDouble(TASK+ "_Pisteet"))
-        points += tools.getDouble(TASK+ "_Pisteet")
-        tools.setDouble(TASK + "_Vp", tools.getDouble(TASK+ "_Vp"))
-        vp_points += tools.getDouble(TASK+ "_Vp")
-    }
-    tools.setDouble("vp", vp_points)
-    tools.setDouble("points", points)
-!!
+``` {#runnerUpdateAll plugin="jsrunner"}
+%%REVIEW_UPDATE(tasks,arvosteltavia,1,maxEro)%%
 ```
 
 ``` {#tableReviewSummary plugin="tableForm"}

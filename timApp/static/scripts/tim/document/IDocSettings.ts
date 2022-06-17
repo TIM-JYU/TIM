@@ -35,6 +35,8 @@ export interface IDocSettings {
     exam_mode?: string;
     cache?: boolean;
     peer_review?: boolean;
+    peer_review_start?: string;
+    peer_review_stop?: string;
     max_uncollapsed_toc_items?: number;
     description?: string;
     translator?: string;

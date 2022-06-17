@@ -50,6 +50,7 @@ export async function showTemplateReplaceDialog(
         flags = param.flags ?? "gm";
     }
     const what = param.what ?? "\\\\\\?";
+
     return data.replace(new RegExp(what, flags), replace.result);
 }
 

@@ -106,6 +106,8 @@ def get_upload(relfilename: str):
 
 
 def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
+    from timApp.peerreview.peerreview_utils import is_peerreview_enabled
+
     slashes = relfilename.count("/")
     if slashes < 2:
         raise RouteException()
@@ -142,7 +144,7 @@ def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
         if (
             not verify_seeanswers_access(d, require=False)
             and get_current_user_object() not in answer.users_all
-            and not d.document.get_settings().peer_review()
+            and not is_peerreview_enabled(d)
         ):
             raise AccessDenied(
                 "Sorry, you don't have permission to access this upload."

@@ -1,46 +1,52 @@
 Table And Fields
 Plugins for one task
-- {"what": "XX", "text": "Arvioitavan tehtävän nimi", "default": ""}
+- {"what": "TASK", "text": "Arvioitavan tehtävän nimi", "default": ""}
 \
 
 #- {defaultplugin="textfield" .fieldCell}
-%% 'XX_Riitauta=Riitauta XX: Kirjoita tähän, jos et tykkää arvioista' | gfields('cols: 25') -%%
+%% 'TASK_Riitauta=Riitauta TASK: Kirjoita tähän, jos et tykkää arvioista' | gfields('cols: 25') -%%
 \
-#- {area="XX_demo" visible="%% False | isview%%" nocache="true"}
-Tehtävä: XX
-#- {area="XX_fields" collapse="true"}
+#- {area="TASK_demo" visible="%% False | isview%%" nocache="true"}
+Tehtävä: TASK
+
+#- {area="TASK_fields" visible="%% False | isview%%" collapse="true"}
 Arviointitilanne
 
+
 #- {defaultplugin="numericfield" readonly="view" .fieldCell}
-%% 'XX_Pisteet=Pisteet;XX_Ope=Ope;XX_Vp=Vp;XX_VpOpe=VpOpe' | gfields('cols: 5') -%%
+%% 'TASK_Pisteet=Pisteet;TASK_Ope=Ope;TASK_Vp=Vp;TASK_VpOpe=VpOpe' | gfields('cols: 5') -%%
 \
 #- {defaultplugin="textfield" readonly="view" .fieldCell}
 Tehtävän arvioineet:\
-{%for i in range(0, arvosteltavia)%}
-{#XX_Arvioija_%%i+1%% stem: Arvioija %%i+1%%, cols: 10 #}
-{#XX_P_%%i+1%% stem: P, cols: 2 #}
+{%for i in range(0, peer_review_count)%}
+{#TASK_Arvioija_%%i+1%% stem: Arvioija %%i+1%%, cols: 10 #}
+{#TASK_P_%%i+1%% stem: P, cols: 2 #}
 {% endfor -%}
 \
 #- {defaultplugin="textfield" readonly="view" .fieldCell}
-%% 'XX_Riita=Riita' | gfields('cols: 5') -%%
+%% 'TASK_Riita=Riita;TASK_vaihto=Vaihto' | gfields('cols: 5') -%%
 \
-#- {area_end="XX_fields"}
-#- {area_end="XX_demo"}
+#- {area_end="TASK_fields"}
+#- {area_end="TASK_demo"}
 \
-``` {#XX_demotable plugin="tableForm" visible="%% False | isview%%" nocache="true"}
+``` {#TASK_demotable plugin="tableForm" visible="%% False | isview%%" nocache="true"}
 groups:
  - %%group%%
 fields:
- - XX_Vp=Vp
- - XX_VpOpe=VpOpe
- - XX_Pisteet=Pisteet
- - XX_Ope=Ope
-{% for i in range(1,arvosteltavia+1) %}
- - XX_Arvioija_%%i%%=Arvioija%%i%%
- - XX_P_%%i%%=P%%i%%
+ - TASK_Vp=Vp
+ - TASK_VpOpe=VpOpe
+ - TASK_Pisteet=Pisteet
+ - TASK_Ope=Ope
+{% for i in range(1,peer_review_count+1) %}
+ - TASK_Arvioija_%%i%%=Arvioija%%i%%
+ - TASK_P_%%i%%=P%%i%%
 {% endfor %}
- - XX_Riita=Riita
- - XX_Riitauta=Riitauta
+ - TASK_Riita=Riita
+ - TASK_Riitauta=Riitauta
+lockedFields:
+{% for i in range(1,peer_review_count+1) %}
+ - P%%i%%
+{% endfor %}
 header: Demotaulukko
 minWidth: 3em
 singleLine: true
@@ -54,47 +60,60 @@ emailUsersButtonText: Lähetä ruksituille sähköpostia
 emailUsersButtonText: "Lähetä sähköpostia"
 ```
 \
-``` {#XX_runnerVari plugin="jsrunner"}
+``` {#TASK_runnerVari plugin="jsrunner"}
 groups:
  - %%group%%
-buttonText: Päivitä tilanne
+buttonText: Päivitä pistetilanne
 fields:
- - XX_Ope=Ope
- - XX_Pisteet=Pisteet
- - XX_Vp=Vp
- - XX_VpOpe=VpOpe
- - XX_Arvioija_(1,%%arvosteltavia%%)=Arvioija_%%i%%
- - XX_P_(1,%%arvosteltavia%%)=P_%%i%%
- - XX_Riitauta=Riitauta
-updateFields:
- - XX_Ope
- - XX_Pisteet
- - XX_Vp
- - XX_VpOpe
-{% for i in range(1,arvosteltavia+1) %}
- - XX_Arvioija_%%i%%
- - XX_P_%%i%%
+ - TASK_Ope=Ope
+ - TASK_Pisteet=Pisteet
+ - TASK_Vp=Vp
+ - TASK_VpOpe=VpOpe
+{% for i in range(1,peer_review_count+1) %}
+ - TASK_Arvioija_%%i%%
+ - TASK_P_%%i%%=P%%i%%
 {% endfor %}
- - XX_Riitauta
+ - TASK_Riitauta=Riitauta
+updateFields:
+ - TASK_Ope
+ - TASK_Pisteet
+ - TASK_Vp
+ - TASK_VpOpe
+{% for i in range(1,peer_review_count+1) %}
+ - TASK_Arvioija_%%i%%
+ - TASK_P_%%i%%
+{% endfor %}
+ - TASK_Riita
+ - TASK_Riitauta
+peerReview: true
+
+preprogram: |!!
+//
+    const parsed = JSON.parse(this.g);
+    gtools.users = {};
+    for (a of parsed.data) {
+       gtools.users[a.user.id] = a.user.name;
+    }
+!!
 program: |!!
 
-    let hyvitys = 1; // Arvioinnista saatu hyvityspiste
-    let value = 6; // Suurin sallittu ero pisteiden välillä
+    let compensation = %%peer_review_points%%;
+    let maxDiff = %%maxEro%%;
 
-    let arviotLkm = tools.getReviewCount("XX"); // Opiskelijan tekemien arvioiden lkm
-    let vp = arviotLkm * hyvitys
+    let reviewCount = tools.getVelpReviewCount("TASK");
+    let vp = reviewCount * compensation;
     tools.setDouble("Vp", vp);
 
-    let pisteet = tools.getTaskPoints("XX"); // Keskiarvo vertaisarviointien pistemääristä
-    let ope = tools.getDouble("Ope", -100); //Opettajan tekemä korjaus pisteytykseen
-    if (ope != -100) {
-        tools.setDouble("Pisteet", ope);
+    let velpPoints = tools.getVelpTaskPoints("TASK");
+    let teachersCorrection = tools.getDouble("Ope", -100);
+    if (teachersCorrection != -100) {
+        tools.setDouble("Pisteet", teachersCorrection);
     }
     else {
-        tools.setString("Pisteet", pisteet);
+        tools.setString("Pisteet", velpPoints);
     }
 
-    let VpOpe = tools.getDouble("VpOpe", -100); //Opettajan tekemä korjaus pisteytykseen
+    let VpOpe = tools.getDouble("VpOpe", -100);
     if (VpOpe != -100) {
         tools.setDouble("Vp", VpOpe);
     }
@@ -102,27 +121,61 @@ program: |!!
         tools.setString("Vp", vp);
     }
 
-    pointsArray = [];
-    arvioinnit = tools.getReviews("XX");
-    for (let i =1; i <= arvioinnit.length; i++) {
-        tools.setString("XX_Arvioija_${i}"+i, arvioinnit[i-1].name);
-        points = arvioinnit[i-1].points;
+    let pointsArray = [];
+    let reviews = tools.getReviews("TASK", gtools.users);
+    for (let i = 1; i <= reviews.length; i++) {
+        tools.setString("TASK_Arvioija_${i}"+i, reviews[i-1].name);
+        points = reviews[i-1].points;
         totalPoints = 0;
         for (let j=0; j<points.length; j++) {
             totalPoints += points[j];
         }
         avg = totalPoints / points.length;
-        tools.setString("XX_P_"+i, avg);
+        tools.setString("TASK_P_"+i, avg);
 
         pointsArray.push(avg);
         max = Math.max(...pointsArray);
         min = Math.min(...pointsArray);
         delta = max - min;
-        if (delta >= value && pointsArray.length > 1 ) {
-            tools.setDouble("XX_Riita", delta);
-            tools.setString("XX_Riita.styles", '{"backgroundColor": "red"}');
+        if (delta >= maxDiff && pointsArray.length > 1 ) {
+            tools.setDouble("TASK_Riita", delta);
+            tools.setString("TASK_Riita.styles", '{"backgroundColor": "red"}');
+        }
+        else {
+            tools.setDouble("TASK_Riita", delta);
+            tools.setString("TASK_Riita.styles", '{"backgroundColor": "white"}');
         }
     }
 !!
 ```
 \
+``` {#TASK_changeReviewersRunner plugin="jsrunner"}
+button: Päivitä arvioijat
+groups:
+ - %%group%%
+fields:
+{% for i in range(1,peer_review_count+1) %}
+ - TASK_Arvioija_%%i%%
+{% endfor %}
+updateFields:
+{% for i in range(1,peer_review_count+1) %}
+ - TASK_Arvioija_%%i%%
+{% endfor %}
+paramFields:
+{% for i in range(1,peer_review_count+1) %}
+ - TASK_Arvioija_%%i%%
+{% endfor %}
+peerReview: true
+peerReviewField: TASK_vaihto
+
+preprogram: |!!
+    const parsed = JSON.parse(this.g);
+    gtools.users = {};
+    for (a of parsed.data) {
+       gtools.users[a.user.id] = a.user.name;
+    }
+!!
+program: |!!
+    tools.changePeerReviewer(gtools.users);
+!!
+```

@@ -595,7 +595,7 @@ export class AnswerBrowserController
         const isPeerReview = getViewName() == "review";
         this.isPeerReview = isPeerReview;
         this.review = isPeerReview;
-        this.peerReviewEnabled = this.viewctrl.docSettings.peer_review ?? false;
+        this.peerReviewEnabled = this.viewctrl.peerReviewInProcess() ?? false;
         if (!this.viewctrl.item.rights.teacher && isPeerReview) {
             this.showBrowseAnswers = false;
         }
