@@ -78,3 +78,5 @@ venv/
 /docs/
 /python_docs/
 build_docs.sh
+/timApp/modules/Haskell/
+/timApp/modules/cs/jsav/
