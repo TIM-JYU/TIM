@@ -6424,6 +6424,22 @@
           <context context-type="linenumber">45</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5300093725150016824" datatype="html">
+        <source>You are previewing the page with limited group memberships. This affects your active permissions.</source>
+        <target state="translated">Esikatselet sivua, rajoitetulla ryhmäjäsenyydellä. Tämä vaikuttaa aktiivisiin oikeuksiin.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/role-info.component.ts</context>
+          <context context-type="linenumber">19</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="618974627817361434" datatype="html">
+        <source>Reset group lock</source>
+        <target state="translated">Nollaa ryhmälukitus</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/role-info.component.ts</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

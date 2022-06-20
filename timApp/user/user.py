@@ -540,8 +540,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
         def effective_real_groups():
             res = list(self.groups)
-            res.append(UserGroup.get_logged_in_group())
             res.append(UserGroup.get_anonymous_group())
+            if self.logged_in:
+                res.append(UserGroup.get_logged_in_group())
             return res
 
         if not self.is_current_user:
@@ -562,10 +563,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         """
 
         def effective_real_groups():
-            return {g.id for g in self.groups} | {
-                UserGroup.get_logged_in_group().id,
-                UserGroup.get_anonymous_group().id,
-            }
+            res = {g.id for g in self.groups}
+            res.add(UserGroup.get_anonymous_group().id)
+            if self.logged_in:
+                res.add(UserGroup.get_logged_in_group().id)
+            return res
 
         if not self.is_current_user:
             return effective_real_groups()
@@ -576,7 +578,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @cached_property
     def is_admin(self):
-        admins_id = UserGroup.get_admin_group()
+        admins_id = UserGroup.get_admin_group().id
         return admins_id in self.effective_group_ids
 
     @property

@@ -60,14 +60,15 @@ def lock_active_groups(group_ids: list[int] | None) -> Response:
         UserGroup.get_anonymous_group().id,
     }
 
-    groups: list[UserGroup] = UserGroup.query.filter(
-        UserGroup.id.in_(group_ids_set)
-    ).all()
-    for ug in groups:
-        if not verify_group_edit_access(ug, user, require=False):
-            raise AccessDenied(
-                f"You must be a member of or have edit access to group {ug.name} in order to lock your role."
-            )
+    if not user.is_admin:
+        groups: list[UserGroup] = UserGroup.query.filter(
+            UserGroup.id.in_(group_ids_set)
+        ).all()
+        for ug in groups:
+            if not verify_group_edit_access(ug, user, require=False):
+                raise AccessDenied(
+                    f"You must be a member of or have edit access to group {ug.name} in order to lock your role."
+                )
 
     set_locked_active_groups(set(group_ids))
     return ok_response()
@@ -85,7 +86,8 @@ def show_edit_info(group_name: str) -> Response:
     user = get_current_user_object()
     user.bypass_access_lock = True
     ug = get_group_or_abort(group_name)
-    verify_group_edit_access(ug)
+    if not user.is_admin:
+        verify_group_edit_access(ug)
     return json_response(
         {
             "id": ug.id,
@@ -110,7 +112,9 @@ def find_editable_groups(
     user = get_current_user_object()
     user.bypass_access_lock = True
     ugs = UserGroup.query.filter(UserGroup.id.in_(group_ids)).all()
-    visible_ugs = [ug for ug in ugs if verify_group_edit_access(ug, require=False)]
+    visible_ugs = [
+        ug for ug in ugs if user.is_admin or verify_group_edit_access(ug, require=False)
+    ]
     return json_response(
         [
             {
