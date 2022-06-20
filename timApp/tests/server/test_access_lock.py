@@ -1,6 +1,9 @@
 from timApp.auth.accesstype import AccessType
+from timApp.markdown.markdownconverter import md_to_html
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 
 
 class AccessLockTest(TimRouteTest):
@@ -135,4 +138,141 @@ cols: 20
             f"{d.id}.pali",
             {"nosave": False, "paliOK": True, "userword": "1"},
             expect_status=200,
+        )
+
+
+class ActiveGroupLockTest(TimRouteTest):
+    """Tests for active group locking and unlocking"""
+
+    def tearDown(self):
+        with self.client.session_transaction() as s:
+            s.clear()
+
+    def test_active_group_lock_visibility(self):
+        self.login_test1()
+
+        ug = UserGroup.create("testgroup1")
+        admin_doc = self.create_doc()
+        ug.admin_doc = admin_doc.block
+        self.test_user_3.add_to_group(ug, None)
+        self.test_user_1.remove_access(admin_doc.block.id, "owner")
+        db.session.commit()
+
+        d = self.create_doc(
+            initial_par="""
+#- {visible="%%'Logged-in users' | belongs%%"}
+Logged-in users
+
+#- {visible="%%'testgroup1' | belongs%%"}
+Test group 1
+
+#- {visible="%%'testuser2' | belongs%%"}
+Test user 2
+"""
+        )
+        d.block.add_rights([UserGroup.get_anonymous_group()], AccessType.view)
+        db.session.commit()
+
+        # Basic case: Test user 1 is logged in and has access to the document
+        self.get(
+            d.get_url_for_view("view"),
+            expect_contains=[
+                md_to_html("Logged-in users"),
+            ],
+        )
+
+        # Case 1: User cannot lock access to the document (no access)
+        self.json_post(
+            "/access/groups/lock",
+            {
+                "group_ids": [ug.id],
+            },
+            expect_status=403,
+        )
+
+        ug = UserGroup.get_by_name("testgroup1")
+        self.test_user_1.add_to_group(ug, None)
+        db.session.commit()
+
+        # Case 2: User can lock active group to testgroup1 (testuser1 is in testgroup1)
+        self.json_post(
+            "/access/groups/lock",
+            {
+                "group_ids": [
+                    ug.id,
+                    UserGroup.get_anonymous_group().id,
+                    UserGroup.get_logged_in_group().id,
+                ],
+            },
+            expect_status=200,
+        )
+        self.get(
+            d.get_url_for_view("view"),
+            expect_contains=[
+                md_to_html("Logged-in users"),
+                md_to_html("Test group 1"),
+            ],
+        )
+
+        # Case 3: User can lock active group to testgroup1 (testuser1 has edit access)
+        ugm: UserGroupMember = self.test_user_1.memberships_dyn.filter(
+            UserGroupMember.usergroup_id == ug.id
+        ).first()
+        ugm.set_expired()
+        self.test_user_1.grant_access(admin_doc.block, AccessType.edit)
+        db.session.commit()
+        self.json_post(
+            "/access/groups/lock",
+            {
+                "group_ids": [
+                    ug.id,
+                    UserGroup.get_anonymous_group().id,
+                    UserGroup.get_logged_in_group().id,
+                ],
+            },
+            expect_status=200,
+        )
+        self.get(
+            d.get_url_for_view("view"),
+            expect_contains=[
+                md_to_html("Logged-in users"),
+                md_to_html("Test group 1"),
+            ],
+        )
+
+        # Case 4: Non-admin cannot lock active group to testuser2
+        self.json_post(
+            "/access/groups/lock",
+            {
+                "group_ids": [
+                    self.test_user_2.get_personal_group().id,
+                    ug.id,
+                    UserGroup.get_anonymous_group().id,
+                    UserGroup.get_logged_in_group().id,
+                ],
+            },
+            expect_status=400,
+        )
+
+        # Case 5: Admin can lock active group to anyone
+        self.make_admin(self.test_user_1)
+        self.json_post(
+            "/access/groups/lock",
+            {
+                "group_ids": [
+                    self.test_user_2.get_personal_group().id,
+                    ug.id,
+                    UserGroup.get_anonymous_group().id,
+                    UserGroup.get_logged_in_group().id,
+                ],
+            },
+            expect_status=200,
+        )
+        self.get(
+            d.get_url_for_view("view"),
+            expect_contains=[
+                md_to_html("Logged-in users"),
+                md_to_html("Test group 1"),
+                md_to_html("Test user 2"),
+            ],
         )
