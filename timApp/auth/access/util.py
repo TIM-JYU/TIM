@@ -24,3 +24,19 @@ def set_locked_access_type(access_type: AccessType | None) -> None:
         session["locked_access_type"] = access_type.value
 
     clear_doc_cache(None, get_current_user_object())
+
+
+def get_locked_active_groups() -> set[int] | None:
+    res = session.get("locked_active_groups", None)
+    return set(res) if res is not None else None
+
+
+def set_locked_active_groups(active_groups: set[int] | None) -> None:
+    from timApp.auth.sessioninfo import get_current_user_object
+
+    if active_groups is None:
+        session.pop("locked_active_groups", None)
+    else:
+        session["locked_active_groups"] = list(active_groups)
+
+    clear_doc_cache(None, get_current_user_object())

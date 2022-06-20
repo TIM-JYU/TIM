@@ -186,9 +186,11 @@ def get_tim_messages_as_list(item_id: int | None = None) -> list[TimMessageData]
             raise NotExist("No document or folder found")
 
         parent_paths = current_page_obj.parent_paths()  # parent folders
-        group_ids = get_current_user_object().group_ids
+        current_group_ids = get_current_user_object().effective_group_ids
 
-        is_user_specific = (InternalMessageDisplay.usergroup_id.in_(group_ids)) & (
+        is_user_specific = (
+            InternalMessageDisplay.usergroup_id.in_(current_group_ids)
+        ) & (
             (InternalMessageDisplay.display_doc_id == current_page_obj.id)
             | (tuple_(Folder.location, Folder.name).in_(parent_paths))
         )

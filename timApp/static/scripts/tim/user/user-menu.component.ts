@@ -34,6 +34,9 @@ import {Users} from "./userService";
                 role="menu"
                 aria-labelledby="single-button">
                 <ng-container *ngIf="!hideOptions.userMenuOptions">
+                    <li role="menuitem">
+                        <a (click)="lockActiveGroups()">Test</a>
+                    </li>
                     <li role="menuitem"><a
                             href="/view/{{ getCurrentUser().folder!.path }}" i18n>My documents</a></li>
 
@@ -137,6 +140,15 @@ export class UserMenuComponent implements OnInit {
         if (!r.ok) {
             await showMessageDialog(
                 $localize`Could not lock access: ${r.result.error.error}`
+            );
+        }
+    }
+
+    async lockActiveGroups() {
+        const r = await this.access.lockGroups([10]);
+        if (!r.ok) {
+            await showMessageDialog(
+                $localize`Could not set groups: ${r.result.error.error}`
             );
         }
     }
