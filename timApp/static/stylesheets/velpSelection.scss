@@ -5,7 +5,7 @@
     float: left;
     overflow-y: auto;
     overflow-x: hidden;
-    max-height: 20em;
+    max-height: 18em;
 }
 
 .div-90 {
@@ -446,4 +446,16 @@ $inactive: whitesmoke;
     display: block;
     max-height: 16em;
     overflow-y: auto;
+}
+
+@media screen and (max-height: 800px) {
+    .editVelp-scrollarea {
+        display: block;
+        max-height: 6em;
+        overflow-y: auto;
+    }
+
+    .labels-scrollarea {
+        max-height: 2.4em;
+    }
 }
