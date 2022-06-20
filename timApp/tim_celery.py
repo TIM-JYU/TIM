@@ -114,6 +114,9 @@ def do_run_user_function(user_id: int, task_id: str, plugin_input: dict[str, Any
         else:
             handle_exportdata(result, u, wod)
 
+        if output := result.result.get("web", {}).get("output"):
+            logger.info(f"Plugin run: {u.name}, result: {output}")
+
         # The user-provided parameters go only to the first plugin. Others will get no parameters.
         plugin_input = {}
 
