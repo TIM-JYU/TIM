@@ -2,7 +2,11 @@ from timApp.auth.accesstype import AccessType
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import (
+    UserGroup,
+    get_logged_in_group_id,
+    get_anonymous_group_id,
+)
 from timApp.user.usergroupmember import UserGroupMember
 
 
@@ -200,8 +204,8 @@ Test user 2
             {
                 "group_ids": [
                     ug.id,
-                    UserGroup.get_anonymous_group().id,
-                    UserGroup.get_logged_in_group().id,
+                    get_anonymous_group_id(),
+                    get_logged_in_group_id(),
                 ],
             },
             expect_status=200,
@@ -226,8 +230,8 @@ Test user 2
             {
                 "group_ids": [
                     ug.id,
-                    UserGroup.get_anonymous_group().id,
-                    UserGroup.get_logged_in_group().id,
+                    get_anonymous_group_id(),
+                    get_logged_in_group_id(),
                 ],
             },
             expect_status=200,
@@ -247,8 +251,8 @@ Test user 2
                 "group_ids": [
                     self.test_user_2.get_personal_group().id,
                     ug.id,
-                    UserGroup.get_anonymous_group().id,
-                    UserGroup.get_logged_in_group().id,
+                    get_anonymous_group_id(),
+                    get_logged_in_group_id(),
                 ],
             },
             expect_status=400,
@@ -262,8 +266,8 @@ Test user 2
                 "group_ids": [
                     self.test_user_2.get_personal_group().id,
                     ug.id,
-                    UserGroup.get_anonymous_group().id,
-                    UserGroup.get_logged_in_group().id,
+                    get_anonymous_group_id(),
+                    get_logged_in_group_id(),
                 ],
             },
             expect_status=200,

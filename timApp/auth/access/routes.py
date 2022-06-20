@@ -11,7 +11,11 @@ from timApp.auth.accesshelper import verify_logged_in, AccessDenied
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.user.groups import verify_group_edit_access, get_group_or_abort
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import (
+    UserGroup,
+    get_logged_in_group_id,
+    get_anonymous_group_id,
+)
 from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
@@ -56,8 +60,8 @@ def lock_active_groups(group_ids: list[int] | None) -> Response:
     group_ids_set = set(group_ids)
     group_ids_set -= set(ug.id for ug in user.groups)
     group_ids_set -= {
-        UserGroup.get_logged_in_group().id,
-        UserGroup.get_anonymous_group().id,
+        get_logged_in_group_id(),
+        get_anonymous_group_id(),
     }
 
     if not user.is_admin:
