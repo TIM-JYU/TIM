@@ -6178,12 +6178,140 @@
           <context context-type="linenumber">18</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="336898121996677951" datatype="html">
-        <source>You're logged in (access locked to "<x id="PH" equiv-text="accessTypeDisplayNames[this.currentLockedAccess]"/>")</source>
-        <target state="translated">Du är inloggad (tillgång låst till "<x id="PH" equiv-text="accessTypeDisplayNames[this.currentLockedAccess]"/>")</target>
+      <trans-unit id="4518320880087467484" datatype="html">
+        <source> Could not find the group. Make sure the group exists and you have at least "edit" permissions to it. Details: <x id="INTERPOLATION" equiv-text="{{searchError}}"/> </source>
+        <target state="translated"> Kunde inte hitta gruppen. Kontrollera att gruppen finns och att du åtminstone har "redigeringsbehörighet" för den. Detaljer: <x id="INTERPOLATION" equiv-text="{{searchError}}"/> </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">38,41</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="547513919687889104" datatype="html">
+        <source>Add groups by using the search box above and pressing "Add".</source>
+        <target state="translated">Lägg till grupper genom att använda sökrutan ovan och trycka på "Lägg till".</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">55</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1196729008918170847" datatype="html">
+        <source>Filter groups</source>
+        <target state="translated">Filtrera grupper</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">68</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8565771256009142015" datatype="html">
+        <source>Search groups</source>
+        <target state="translated">Sök grupper</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">83</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3273397109081134139" datatype="html">
+        <source>Switch active groups</source>
+        <target state="translated">Byt aktiv grupp</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">185</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1661747046706720918" datatype="html">
+        <source> You can change active groups by selecting groups from the lists below. Changing active groups allows you to preview the documents as a member of other groups. </source>
+        <target state="translated"> Du kan ändra aktiva grupper genom att välja grupper från listorna nedan. Om du ändrar aktiva grupper kan du förhandsgranska dokumenten som medlem i andra grupper. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">188,191</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2871426016872254457" datatype="html">
+        <source>Special groups</source>
+        <target state="translated">Speciella grupper</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">194</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4348166027193418896" datatype="html">
+        <source>Groups you are a member of</source>
+        <target state="translated">Grupper som du är medlem i</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">198</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5628156195126648528" datatype="html">
+        <source>Other groups (manual search)</source>
+        <target state="translated">Andra grupper (manuell sökning)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">202</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7808756054397155068" datatype="html">
+        <source>Reset</source>
+        <target state="translated">Återställ</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">208</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4391289919356861627" datatype="html">
+        <source>Apply</source>
+        <target state="translated">Ansök på</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">209</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2964263852977363734" datatype="html">
+        <source>Could not change active groups: <x id="PH" equiv-text="r.result.error.error"/></source>
+        <target state="translated">Kunde inte ändra aktiva grupper: <x id="PH" equiv-text="r.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">309</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2125919316179555751" datatype="html">
+        <source>Could not reset active groups: <x id="PH" equiv-text="r.result.error.error"/></source>
+        <target state="translated">Det gick inte att återställa aktiva grupper: <x id="PH" equiv-text="r.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">318</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4571331022425790402" datatype="html">
+        <source>Change active groups</source>
+        <target state="translated">Ändra aktiva grupper</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
-          <context context-type="linenumber">107,109</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8066011139730077836" datatype="html">
+        <source><x id="PH" equiv-text="this.buttonTitle"/> (access locked to "<x id="PH_1" equiv-text="accessTypeDisplayNames[this.currentLockedAccess]"/>")</source>
+        <target state="translated"><x id="PH" equiv-text="this.buttonTitle"/> (tillgång låst till "<x id="PH_1" equiv-text="accessTypeDisplayNames[this.currentLockedAccess]"/>")</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">122,126</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2023139374168209004" datatype="html">
+        <source><x id="PH" equiv-text="this.buttonTitle"/> (group access locked)</source>
+        <target state="translated"><x id="PH" equiv-text="this.buttonTitle"/> (gruppåtkomst låst)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
+          <context context-type="linenumber">134</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3249513483374643425" datatype="html">
+        <source>Add</source>
+        <target state="translated">Lägg till</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">45</context>
         </context-group>
       </trans-unit>
     </body>

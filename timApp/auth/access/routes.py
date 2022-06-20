@@ -1,3 +1,7 @@
+"""
+Common routes for access management.
+"""
+
 from dataclasses import field
 
 from flask import Response
@@ -6,9 +10,9 @@ from timApp.auth.access.util import set_locked_access_type, set_locked_active_gr
 from timApp.auth.accesshelper import verify_logged_in, AccessDenied
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.user.groups import verify_group_edit_access
+from timApp.user.groups import verify_group_edit_access, get_group_or_abort
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.responsehelper import ok_response
+from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 access = TypedBlueprint("access", __name__, url_prefix="/access")
@@ -18,6 +22,13 @@ access = TypedBlueprint("access", __name__, url_prefix="/access")
 def lock_access(
     access_type: AccessType | None = field(metadata={"by_value": True}),
 ) -> Response:
+    """
+    Lock user's access level.
+    Users with locked access level can preview documents with lower permissions than their own.
+
+    :param access_type: Access type to limit access to. If None, resets access level.
+    :return: OK response.
+    """
     verify_logged_in()
     set_locked_access_type(access_type)
     return ok_response()
@@ -25,6 +36,14 @@ def lock_access(
 
 @access.post("groups/lock")
 def lock_active_groups(group_ids: list[int] | None) -> Response:
+    """
+    Lock users active group list.
+    Users with locked active group list can preview documents as member of only the specified groups.
+
+    :param group_ids: List of group IDs that the user should be locked to.
+                      The user must be either a member of the group or can have edit access to it.
+    :return: OK response.
+    """
     verify_logged_in()
 
     if group_ids is None:
@@ -32,6 +51,7 @@ def lock_active_groups(group_ids: list[int] | None) -> Response:
         return ok_response()
 
     user = get_current_user_object()
+    user.bypass_access_lock = True
 
     group_ids_set = set(group_ids)
     group_ids_set -= set(ug.id for ug in user.groups)
@@ -51,3 +71,52 @@ def lock_active_groups(group_ids: list[int] | None) -> Response:
 
     set_locked_active_groups(set(group_ids))
     return ok_response()
+
+
+@access.get("/groups/editable/info/<group_name>")
+def show_edit_info(group_name: str) -> Response:
+    """
+    Get basic info about a group if the user has edit access to it.
+
+    :param group_name: Group name.
+    :return: JSON of group ID and group name if the user has edit access to the group.
+    """
+    verify_logged_in()
+    user = get_current_user_object()
+    user.bypass_access_lock = True
+    ug = get_group_or_abort(group_name)
+    verify_group_edit_access(ug)
+    return json_response(
+        {
+            "id": ug.id,
+            "name": ug.name,
+        }
+    )
+
+
+@access.get("/groups/editable/find")
+def find_editable_groups(
+    group_ids: list[int] = field(
+        default_factory=list, metadata={"list_type": "delimited"}
+    )
+) -> Response:
+    """
+    Gets a list of groups that the user has edit access to.
+
+    :param group_ids: List of group IDs to filter by.
+    :return: JSON of group IDs and group names that the user has edit access to.
+    """
+    verify_logged_in()
+    user = get_current_user_object()
+    user.bypass_access_lock = True
+    ugs = UserGroup.query.filter(UserGroup.id.in_(group_ids)).all()
+    visible_ugs = [ug for ug in ugs if verify_group_edit_access(ug, require=False)]
+    return json_response(
+        [
+            {
+                "id": ug.id,
+                "name": ug.name,
+            }
+            for ug in visible_ugs
+        ]
+    )
