@@ -68,11 +68,19 @@ class HiddenFieldsMixin:
 
 
 @dataclass
+class AccessField:
+    field: str
+    limit: int
+    error: str | None | Missing = missing
+
+
+@dataclass
 class KnownMarkupFields(HiddenFieldsMixin):
     """Represents the plugin markup fields that are known and used by TIM."""
 
     accessDuration: int | None | Missing = missing
     accessEndText: str | None | Missing = missing
+    accessField: AccessField | None | Missing = missing
     anonymous: bool | None | Missing = missing
     answerLimit: int | None | Missing = missing
     automd: bool | None | Missing = missing
