@@ -1,7 +1,0 @@
-{ route =
-    "markdown"
-, body =
-    "{\"content\":[\"My equation: \$H_2 O\$.\"],\"mathOption\":\"svg\"}"
-, name =
-    "markdown-svg-math-1"
-}

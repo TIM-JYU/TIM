@@ -8,7 +8,7 @@ from typing import Iterable, Generator, Match, Any
 
 import yaml
 from jinja2 import Environment, BaseLoader
-from marshmallow import missing, ValidationError
+from marshmallow import missing, ValidationError, EXCLUDE
 
 from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
@@ -214,7 +214,7 @@ class Plugin:
         try:
             self.known: KnownMarkupFields = KnownMarkupFieldsSchema.load(
                 {k: v for k, v in values.items()},
-                unknown="EXCLUDE",
+                unknown=EXCLUDE,
             )
         except ValidationError as e:
             raise PluginException(f"Invalid markup: {e}") from e

@@ -184,7 +184,7 @@ EXTRA_FIELD_NAME = "extra"
 
 @suppress_wuff(
     OperationalError,
-    "https://gitlab.com/tim-jyu/tim/-/issues/1975",
+    "https://github.com/TIM-JYU/TIM/issues/1975",
     r"LockNotAvailable.*canceling statement due to lock timeout",
 )
 def do_get_updates(m: GetUpdatesModel):
@@ -690,7 +690,7 @@ def create_lecture():
 
 @suppress_wuff(
     StaleDataError,
-    "https://gitlab.com/tim-jyu/tim/-/issues/1976",
+    "https://github.com/TIM-JYU/TIM/issues/1976",
     r"DELETE statement on table 'lectureusers' expected to delete",
 )
 def empty_lecture(lec: Lecture):

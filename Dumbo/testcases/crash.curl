@@ -1,7 +1,0 @@
-{ route =
-    "markdown/"
-, body =
-    ''{"content":["$a$"],"mathOption":"svg"}''
-, name =
-    "crash-1"
-}

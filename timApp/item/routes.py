@@ -15,6 +15,7 @@ from flask import render_template, make_response, Response, stream_with_context
 from flask import request
 from flask import session
 from markupsafe import Markup
+from marshmallow import EXCLUDE
 from sqlalchemy.orm import joinedload, defaultload
 
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
@@ -458,8 +459,8 @@ def goto_view(item_path, model: ViewParams) -> FlaskViewResult:
 
 def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskViewResult:
     taketime("view begin", zero=True)
-    m: DocViewParams = ViewModelSchema.load(request.args, unknown="EXCLUDE")
-    vp: ViewParams = ViewParamsSchema.load(request.args, unknown="EXCLUDE")
+    m: DocViewParams = ViewModelSchema.load(request.args, unknown=EXCLUDE)
+    vp: ViewParams = ViewParamsSchema.load(request.args, unknown=EXCLUDE)
 
     if vp.goto:
         return goto_view(item_path, vp)
@@ -481,7 +482,7 @@ def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskView
             .joinedload(BlockAccess.usergroup),
             joinedload(DocEntry.trs)
             # TODO: These joinedloads are for some reason very inefficient at least for certain documents.
-            #  See https://gitlab.com/tim-jyu/tim/-/issues/2201. Needs more investigation.
+            #  See https://github.com/TIM-JYU/TIM/issues/2201. Needs more investigation.
             # .joinedload(Translation.docentry),
             # joinedload(DocEntry.trs).joinedload(Translation._block)
         ),

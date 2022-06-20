@@ -4,6 +4,7 @@ from urllib.error import HTTPError
 
 from mailmanclient import Client, MailingList, Domain, Member
 from mailmanclient.restbase.connection import Connection
+from marshmallow import EXCLUDE
 
 from timApp.messaging.messagelist.listinfo import (
     ListInfo,
@@ -40,9 +41,7 @@ class MailmanConfig:
         )
 
 
-config: MailmanConfig = class_schema(MailmanConfig)().load(
-    app.config, unknown="EXCLUDE"
-)
+config: MailmanConfig = class_schema(MailmanConfig)().load(app.config, unknown=EXCLUDE)
 _client = (
     Client(config.MAILMAN_URL, config.MAILMAN_USER, config.MAILMAN_PASS)
     if config

@@ -28,7 +28,9 @@ x-caddy:
 services:
  tim:
   image: timimages/tim:${TIM_IMAGE_TAG:?}
-  build: ./timApp
+  build:
+    dockerfile: ./timApp/Dockerfile
+    context: ./
   depends_on:
    # - stack-api-server
    - postgresql
@@ -188,15 +190,10 @@ services:
   networks:
    - csplugin_db
  haskellplugins:
-  image: timimages/haskellplugins:latest
-  build:
-   context: ./timApp/modules/Haskell
-   dockerfile: Dockerfile
-  volumes:
-   - ./timApp/modules/Haskell:/Haskell
-  working_dir: /Haskell
-  command: ./startAll.sh
+  image: timimages/haskellplugins:latest-gh
   restart: unless-stopped
+  logging:
+   driver: none
   read_only: true
  showfile:
   image: timimages/cs3${CSPLUGIN_TARGET:-}:elixir
@@ -291,23 +288,16 @@ services:
   tmpfs:
    - /tmp
  dumbo:
-  image: timimages/dumbo:${TIM_IMAGE_TAG:?}
-  build:
-   context: ./Dumbo
-   dockerfile: Dockerfile
-   args:
-    TIM_IMAGE_TAG: ${TIM_IMAGE_TAG:?}
-  command: ./Dumbo --port 5000 --cacheDir /dumbocache --tmpDir /dumbotmp
-  working_dir: /Dumbo
+  image: timimages/dumbo:latest
   volumes:
-   - ./Dumbo/cache:/dumbocache
-   - ./Dumbo/tmp:/dumbotmp
+   - ./Dumbo/cache:/dumbo_cache
+   - ./Dumbo/tmp:/dumbo_tmp
   logging:
    driver: none
   restart: unless-stopped
   read_only: true
  redis:
-  image: eqalpha/keydb
+  image: eqalpha/keydb:latest
   command: ["keydb-server", "--appendonly", "yes"]
   restart: unless-stopped
   read_only: true
@@ -387,13 +377,9 @@ services:
   environment:
    BROWSER_URL: ${TIM_HOST:?}
  oiko:
-  image: timimages/tim:${TIM_IMAGE_TAG:?}
-  command: gunicorn -b 0.0.0.0:5000 app:app
+  image: timimages/oiko:latest
   restart: unless-stopped
-  working_dir: /service
   read_only: true
-  volumes:
-   - ./oiko:/service:ro
   tmpfs:
    - /tmp
  caddy:
@@ -436,7 +422,7 @@ services:
   environment:
    TIM_SETTINGS: testconfig.py
    PYTHONPATH: /service
-   GITLAB_CI: ${GITLAB_CI:-false}
+   CI: ${CI:-false}
   depends_on:
    - csplugin
    - pali

@@ -232,7 +232,7 @@ RUN printf "pkg install -forge io" | octave && \
  printf "pkg install -forge optim" | octave
 
 # Octave and gnuplot use Qt to generate plots and relevant UI (not used by us but it's a hard dependency)
-# Latest gnuplot fails to run on kernel versions below 3.15 (see https://gitlab.com/tim-jyu/tim/-/issues/2349)
+# Latest gnuplot fails to run on kernel versions below 3.15 (see https://github.com/TIM-JYU/TIM/issues/2349)
 # This adopts the following fix:
 # https://github.com/dnschneid/crouton/wiki/Fix-error-while-loading-shared-libraries:-libQt5Core.so.5
 RUN strip --remove-section=.note.ABI-tag /lib/x86_64-linux-gnu/libQt5Core.so.5

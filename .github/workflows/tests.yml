@@ -1,0 +1,60 @@
+name: Run tests
+
+on: push
+
+jobs:
+  ci_tests:
+    name: CI tests (${{ matrix.name }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - name: browser
+            command: |
+              TEST_COMMAND="python3 tests/ci_browser_test_runner.py" ./dc up --exit-code-from tests --abort-on-container-exit tests
+          - name: unit
+            command: |
+              TEST_COMMAND="python3 -m unittest discover -v tests/unit 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
+          - name: database
+            command: |
+              TEST_COMMAND="python3 -m unittest discover -v tests/db 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
+          - name: server
+            command: |
+              TEST_COMMAND="python3 -m unittest discover -v tests/server 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            timApp/node_modules
+            timApp/modules/jsrunner/server/node_modules
+          key: ${{ runner.os }}-ci-test-npm-${{ hashFiles('**/package-lock.json') }}
+      - name: Log info
+        run: |
+          uname -a
+          docker info
+          docker-compose --version
+      - name: Set up environment
+        run: |
+          cp variables.sh.template variables.sh
+          chmod +x variables.sh
+          sed -i 's/echo variables.sh/#echo variables.sh/' variables.sh
+          sed -i 's/COMPOSE_PROFILES=prod/COMPOSE_PROFILES=test/' variables.sh
+      - name: Pull images
+        run: ./dc pull --quiet
+      - name: Compile JavaScript
+        run: ./npmi && ./js
+      - name: Run tests
+        run: ${{ matrix.command }}
+        timeout-minutes: 40
+      - name: Upload screenshots
+        if: "${{ matrix.name == 'browser' && always() }}"
+        uses: actions/upload-artifact@v3.0.0
+        with:
+          name: Browser Screenshots
+          path: screenshots

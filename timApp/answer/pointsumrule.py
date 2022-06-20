@@ -3,7 +3,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Union, Generator, Optional
 
-from marshmallow import ValidationError
+from marshmallow import ValidationError, EXCLUDE
 
 from timApp.plugin.taskid import TaskId
 from tim_common.marshmallow_dataclass import class_schema
@@ -98,7 +98,7 @@ class PointSumRule:
 
         self.scoreboard_error = None
         try:
-            pr: PointSumRuleModel = PointSumRuleSchema().load(data, unknown="EXCLUDE")
+            pr: PointSumRuleModel = PointSumRuleSchema().load(data, unknown=EXCLUDE)
         except ValidationError as e:
             self.scoreboard_error = e
             pr = PointSumRuleModel()

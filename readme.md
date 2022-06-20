@@ -5,12 +5,12 @@
 > This repository will be archived on 21st June.
 
 <div align="center">
-  <img src="https://gitlab.com/tim-jyu/tim-extra/-/raw/main/docs/logot/tim-logo-with-text.svg" alt="TIM">
+  <img src="https://raw.githubusercontent.com/TIM-JYU/tim-extra/main/docs/logot/tim-logo-with-text.svg" alt="TIM">
 
 # TIM - The Interactive Material
 </div>
 
-[![Gitlab pipeline status](https://img.shields.io/gitlab/pipeline-status/tim-jyu/tim?branch=master&style=for-the-badge)](#)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/TIM-JYU/TIM/Run%20tests?style=for-the-badge)](https://github.com/TIM-JYU/TIM/actions)
 [![TIM docs](https://img.shields.io/gitlab/pipeline-status/tim-jyu/tim-api-docs?branch=main&label=docs&style=for-the-badge)](https://docs.tim.education/)
 ***
 

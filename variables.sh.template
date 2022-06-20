@@ -32,7 +32,7 @@ export CADDY_EXTRA_CONFIG='
 export STATUS_PAGE_URL=''
 
 # TIM image tag to use. Do not modify; it is computed automatically.
-export TIM_IMAGE_TAG=$(${DIR}/get_latest_date.sh)
+export TIM_IMAGE_TAG=$("${DIR}"/hash_container.sh timApp/Dockerfile pyproject.toml)
 
 # Maximum number of allowed connections to PostgreSQL.
 export PG_MAX_CONNECTIONS=200
@@ -54,7 +54,7 @@ export FILES_ROOT=${DIR}/timApp/tim_files
 # * prod: This is a single TIM instance running on a remote machine.
 # * prod_multi: This is one of multiple TIM instances running on the same remote machine.
 # * dev: This is a local development TIM instance.
-# * test: This instance is used only for running tests. Used mostly in GitLab CI.
+# * test: This instance is used only for running tests. Used mostly in CI.
 export COMPOSE_PROFILES=prod
 
 # Command to start csplugin when COMPOSE_PROFILES=dev; use empty command if you want to debug it with SSH.

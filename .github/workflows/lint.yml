@@ -1,0 +1,53 @@
+name: Lint code
+
+on: push
+
+jobs:
+  ts_lint:
+    name: Lint TypeScript
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            timApp/node_modules
+            timApp/modules/jsrunner/server/node_modules
+          key: ${{ runner.os }}-eslint-npm-${{ hashFiles('**/package-lock.json') }}
+      - name: Install packages
+        run: |
+          npm i --global npm@6
+          cd timApp
+          npm install --unsafe-perm
+          cd modules/jsrunner/server
+          npm install --unsafe-perm
+      - name: Lint main code
+        run: cd timApp && npm run lint
+      - name: Lint JSRunner
+        run: cd timApp/modules/jsrunner/server && npm run lint
+
+  py_lint:
+    name: Lint Python
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install APT Packages
+        uses: awalsh128/cache-apt-pkgs-action@v1.0.1
+        with:
+          packages: libxmlsec1-dev libxmlsec1-openssl
+          version: "1.0"
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+          cache: pip # Use PIP as we install global packages
+          cache-dependency-path: poetry.lock
+      - name: Install dependencies
+        run: |
+          pip install --upgrade --pre poetry
+          poetry install --only=dev
+      - name: Run MyPy
+        run: mypy -p timApp -p tim_common

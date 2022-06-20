@@ -1,7 +1,0 @@
-{ route =
-    "markdown/"
-, body =
-    "{\"content\":[\"My equation: \$H \\\\Yup O\$.\"],\"mathOption\":\"svg\"}"
-, name =
-    "usepackage-fail-1"
-}

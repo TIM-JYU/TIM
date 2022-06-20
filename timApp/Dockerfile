@@ -117,79 +117,12 @@ RUN bash -c "${APT_INSTALL} \
 RUN wget -q https://bootstrap.pypa.io/get-pip.py && python3.10 get-pip.py && rm get-pip.py
 
 ENV PIP_INSTALL="python3.10 -m pip install"
-RUN bash -c "${PIP_INSTALL} wheel setuptools && ${APT_CLEANUP}"
-RUN bash -c "${PIP_INSTALL} \
-attrs \
-authlib==1.0.0rc1 \
-autopep8 \
-beautifulsoup4 \
-bcrypt \
-bleach \
-celery[redis]==4.4 \
-cffi \
-cssselect \
-docformatter \
-filelock \
-flask \
-flask-apispec \
-flask-assets \
-flask-caching \
-flask-compress \
-flask-migrate \
-flask-oidc \
-flask-openid \
-flask-sqlalchemy \
-flask-testing \
-flask-wtf \
-gevent \
-git+https://github.com/miracle2k/webassets.git \
-gunicorn \
-html5lib \
-httpagentparser \
-humanize \
-isodate \
-langcodes[data] \
-libsass \
-lxml \
-mailmanclient \
-marshmallow \
-marshmallow-enum \
-marshmallow_union \
-mmh3 \
-mypy \
-pandocfilters \
-pillow \
-psycogreen \
-psycopg2-binary \
-pyaml \
-pylatex \
-pypandoc \
-python-dateutil \
-python-magic \
-python3-saml \
-pytz \
-recommonmark \
-responses \
-selenium \
-sphinx \
-sqlalchemy\<1.4.0 \
-sqlalchemy-utils \
-typing-inspect \
-voikko \
-wand \
-webargs==5.5 \
-&& ${PIP_INSTALL} requests six --upgrade && ${APT_CLEANUP}"
+RUN bash -c "${PIP_INSTALL} --upgrade poetry==1.2.0b2 requests && ${APT_CLEANUP}"
 
-# Install typings for MyPy
-RUN bash -c "${PIP_INSTALL} \
-types-bleach \
-types-filelock \
-types-python-dateutil \
-types-pytz \
-types-PyYAML \
-types-redis \
-types-requests \
-&& ${APT_CLEANUP}"
+COPY pyproject.toml poetry.lock poetry.toml ./
+RUN bash -c "poetry install && \
+${APT_CLEANUP} && \
+rm pyproject.toml poetry.lock poetry.toml"
 
 # Install Pandoc
 RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.14.2/pandoc-2.14.2-1-amd64.deb" -qO $FILE && \
@@ -197,7 +130,7 @@ RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.14.2/
 
 # Set name and email for git.
 RUN git config --global user.email "agent@docker.com" && git config --global user.name "agent"
-RUN git config --global --add safe.directory /service
+RUN git config --global --add safe.directory '*'
 
 RUN mkdir /service
 
