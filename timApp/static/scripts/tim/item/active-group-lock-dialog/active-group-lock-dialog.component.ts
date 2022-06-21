@@ -39,7 +39,7 @@ interface GroupInfo {
                 Could not find the group. Make sure the group exists and you have at least "edit" permissions to it.
                 Details: {{searchError}}
             </tim-alert>
-            <div class="with-searchbar input-group" *ngIf="hasSearchBar">
+            <div class="with-searchbar" [class.input-group]="manualAdd" *ngIf="hasSearchBar">
                 <input class="form-control" type="text" [placeholder]="searchPlaceholder" [ngModel]="searchFilter" (ngModelChange)="onSearchInput($event)">
                 <span class="input-group-btn" *ngIf="manualAdd">
                     <button class="btn btn-default" [disabled]="searchFilter.trim().length == 0" (click)="tryAddGroup()" i18n>Add</button>
