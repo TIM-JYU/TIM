@@ -53,6 +53,7 @@ export interface IFullUser extends IUser {
 
 export interface ICurrentUser extends IFullUser {
     locked_access?: AccessType;
+    locked_active_groups?: number[];
 }
 
 export interface IGroup {

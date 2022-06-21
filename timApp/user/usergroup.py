@@ -284,6 +284,11 @@ def get_anonymous_group_id() -> int:
     return UserGroup.get_anonymous_group().id
 
 
+@lru_cache
+def get_admin_group_id() -> int:
+    return UserGroup.get_admin_group().id
+
+
 def get_usergroup_eager_query():
     from timApp.item.block import Block
 

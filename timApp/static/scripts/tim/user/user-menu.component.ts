@@ -8,6 +8,8 @@ import {
     accessTypeDisplayNames,
 } from "tim/item/access-role.service";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {showGroupLockDialog} from "tim/item/active-group-lock-dialog/showGroupLockDialog";
+import {to2} from "tim/util/utils";
 import {IUser} from "./IUser";
 import {Users} from "./userService";
 
@@ -62,6 +64,10 @@ import {Users} from "./userService";
                             </li>
                         </ul>
                     </li>
+                    
+                    <li role="menuitem">
+                        <a (click)="openGroupDialog()" i18n>Change active groups</a>
+                    </li>
 
                     <li class="divider"></li>
                 </ng-container>
@@ -92,6 +98,7 @@ export class UserMenuComponent implements OnInit {
     accessTypeDisplayNames = accessTypeDisplayNames;
     accessTypePrefix?: string;
     buttonTitle = $localize`You're logged in`;
+    private groupSwitchOpened = false;
 
     constructor(private access: AccessRoleService) {}
 
@@ -101,12 +108,31 @@ export class UserMenuComponent implements OnInit {
         }
 
         this.currentLockedAccess = this.getCurrentUser().locked_access;
-        if (this.currentLockedAccess) {
-            this.accessTypePrefix =
-                accessTypeDisplayNamePrefixes[this.currentLockedAccess];
-            this.buttonTitle = $localize`You're logged in (access locked to "${
-                accessTypeDisplayNames[this.currentLockedAccess]
-            }")`;
+        const lockedActiveGroups = this.getCurrentUser().locked_active_groups;
+        const hasLockedActiveGroups =
+            lockedActiveGroups !== undefined && lockedActiveGroups !== null;
+        if (hasLockedActiveGroups || this.currentLockedAccess) {
+            this.buttonTitle = $localize`You're logged in`;
+            this.accessTypePrefix = "";
+
+            if (this.currentLockedAccess) {
+                this.accessTypePrefix = `${
+                    accessTypeDisplayNamePrefixes[this.currentLockedAccess]
+                }${this.accessTypePrefix}`;
+                this.buttonTitle = $localize`${
+                    this.buttonTitle
+                } (access locked to "${
+                    accessTypeDisplayNames[this.currentLockedAccess]
+                }")`;
+            }
+
+            if (
+                lockedActiveGroups !== undefined &&
+                lockedActiveGroups !== null
+            ) {
+                this.accessTypePrefix = `(*)${this.accessTypePrefix}`;
+                this.buttonTitle = $localize`${this.buttonTitle} (group access locked)`;
+            }
         }
     }
 
@@ -139,5 +165,14 @@ export class UserMenuComponent implements OnInit {
                 $localize`Could not lock access: ${r.result.error.error}`
             );
         }
+    }
+
+    async openGroupDialog() {
+        if (this.groupSwitchOpened) {
+            return;
+        }
+        this.groupSwitchOpened = true;
+        await to2(showGroupLockDialog());
+        this.groupSwitchOpened = false;
     }
 }

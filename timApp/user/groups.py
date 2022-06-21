@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from operator import attrgetter
-from typing import Any, Optional
+from typing import Any
 
 from flask import Response
 
@@ -63,6 +63,25 @@ def get_uid_gid(group_name, usernames) -> tuple[UserGroup, list[User]]:
     group = UserGroup.query.filter_by(name=group_name).first()
     raise_group_not_found_if_none(group_name, group)
     return group, users
+
+
+@groups.get("/special")
+def get_special_groups() -> Response:
+    """
+    Gets a list of special public metagroups that can be used to target users.
+
+    :return: A JSON list of common metagroups (logged-in users, anonymous users, etc.)
+    """
+    res = [UserGroup.get_anonymous_group(), UserGroup.get_logged_in_group()]
+    return json_response(
+        [
+            {
+                "id": ug.id,
+                "name": ug.name,
+            }
+            for ug in res
+        ]
+    )
 
 
 @groups.get("/getOrgs")

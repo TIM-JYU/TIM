@@ -12,7 +12,7 @@ from timApp.item.block import BlockType
 from timApp.item.block import insert_block
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import UserGroup, get_admin_group_id
 from timApp.util.utils import split_location
 
 if TYPE_CHECKING:
@@ -217,9 +217,7 @@ def create_document_and_block(
     document_id = block.id
     document = Document(
         document_id,
-        modifier_group_id=owner_group.id
-        if owner_group
-        else UserGroup.get_admin_group().id,
+        modifier_group_id=owner_group.id if owner_group else get_admin_group_id(),
     )
     document.create()
     return document

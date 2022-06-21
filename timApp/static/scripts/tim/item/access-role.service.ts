@@ -90,4 +90,16 @@ export class AccessRoleService {
         }
         return r;
     }
+
+    async lockGroups(groupIds: number[] | null) {
+        const r = await toPromise(
+            this.http.post("/access/groups/lock", {
+                group_ids: groupIds,
+            })
+        );
+        if (r.ok) {
+            location.reload();
+        }
+        return r;
+    }
 }

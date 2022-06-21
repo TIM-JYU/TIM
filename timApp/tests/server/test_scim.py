@@ -1,6 +1,6 @@
 import json
 from operator import itemgetter
-from typing import Any, Optional
+from typing import Any
 from unittest import mock
 from unittest.mock import Mock
 
@@ -20,7 +20,7 @@ from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserOrigin, UserInfo
 from timApp.user.usercontact import ContactOrigin
-from timApp.user.usergroup import UserGroup, DELETED_GROUP_PREFIX
+from timApp.user.usergroup import UserGroup, DELETED_GROUP_PREFIX, get_admin_group_id
 from timApp.util.utils import seq_to_str, get_current_time
 
 a = ("t", "pass")
@@ -969,7 +969,7 @@ class ScimTest(TimRouteTest):
                 for ac in d.block.accesses.values()
             },
         )
-        admin = UserGroup.get_admin_group().id
+        admin = get_admin_group_id()
         self.assertEqual(admin, d.document.get_changelog().entries[0].group_id)
         self.login(username="ut-1")
         self.get(d.url)
