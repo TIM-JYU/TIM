@@ -448,6 +448,34 @@ $inactive: whitesmoke;
     overflow-y: auto;
 }
 
+@media screen and (max-height: 1080px) {
+    #selection {
+        min-height: 1.6em;
+        margin: 0;
+    }
+
+    .editVelp-scrollarea {
+        display: block;
+        max-height: 5em;
+        overflow-y: auto;
+    }
+
+    .labels-scrollarea {
+        max-height: 1.8em;
+    }
+
+    .velp legend {
+        font-size: 1.1em;
+        font-weight: 600;
+    }
+
+    .velpArea legend {
+        font-size: 1.1em;
+        margin-top: 5px;
+        margin-bottom: 4px;
+    }
+}
+
 @media screen and (max-height: 800px) {
     #selection {
         min-height: 1.6em;
