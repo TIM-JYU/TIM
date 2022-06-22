@@ -94,6 +94,10 @@
     bottom: 0;
 }
 
+.autoscroll {
+    overflow-y: auto;
+}
+
 /* needs media queries */
 .velpArea .velp-stack {
     background: white;
@@ -446,6 +450,28 @@ $inactive: whitesmoke;
     display: block;
     max-height: 16em;
     overflow-y: auto;
+    border-bottom: 1px solid gainsboro;
+}
+
+.label-edit-glyphicons {
+    margin-left: 3px;
+}
+
+.velp-color-selector {
+    height: 2.4rem;
+    width: 5rem;
+    vertical-align: middle;
+}
+
+.btn-restore-velp-color {
+    height: 2.4rem;
+    width: 2rem;
+    padding: 2px 0;
+    vertical-align: middle;
+}
+
+.velpEdit-remove-margin {
+    margin: 0;
 }
 
 @media screen and (max-height: 1080px) {
@@ -456,7 +482,7 @@ $inactive: whitesmoke;
 
     .editVelp-scrollarea {
         display: block;
-        max-height: 5em;
+        max-height: 8em;
         overflow-y: auto;
     }
 
@@ -475,7 +501,7 @@ $inactive: whitesmoke;
         margin-bottom: 4px;
     }
 }
-
+/*
 @media screen and (max-height: 800px) {
     #selection {
         min-height: 1.6em;
@@ -499,6 +525,56 @@ $inactive: whitesmoke;
 
     .velpArea legend {
         font-size: 1.1em;
+        margin-top: 5px;
+        margin-bottom: 4px;
+    }
+}*/
+@media screen and (max-height: 800px) {
+
+    .form-group {
+        margin-bottom: 4px;
+    }
+
+    .formLabel {
+        font-size: 0.9rem;
+    }
+
+    .formInput {
+        max-width: 100%;
+        font-size: 1.1rem;
+    }
+
+    .velp .header {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    #selection {
+        min-height: 2rem;
+        margin: 0;
+    }
+
+    .editVelp-scrollarea {
+        display: block;
+        font-size: 1.2rem;
+        max-height: 4.8rem;
+        overflow-y: auto;
+        line-height: 1rem;
+    }
+
+    .labels-scrollarea {
+        font-size: 1.2rem;
+        max-height: 3.6rem;
+        line-height: 1rem;
+    }
+
+    .velp legend {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .velpArea legend {
+        font-size: 1.2rem;
         margin-top: 5px;
         margin-bottom: 4px;
     }
