@@ -46,7 +46,6 @@
                                 {{ label.content }} <span class="glyphicon glyphicon-ok"
                                                           ng-show="label.selected"></span>
                             </p>
-                            <hr/>
                         </div>
                     </div>
                 </div>
@@ -61,8 +60,9 @@
                 <div ng-show="$ctrl.advancedOn">
                     <form class="form-inline adjustForm">
                         <div class="form-group">
-                            <label class="formLabel" for="orderVelps">Order velps:</label>
-                            <select id="orderVelps" ng-model="$ctrl.order" ng-change="$ctrl.changeOrdering($ctrl.order)">
+                            <label class="formLabel" for="orderVelps">Order velps: </label>
+                            <select id="orderVelps" class="formInput" ng-model="$ctrl.order"
+                                    ng-change="$ctrl.changeOrdering($ctrl.order)">
                                 <option value="content">Alphabetical</option>
                                 <option value="-used">Most used</option>
                                 <option value="label">Labels</option>
@@ -75,8 +75,8 @@
                 <div>
                     <form class="form-inline adjustForm">
                         <div class="form-group">
-                            <label class="formLabel" for="displayVelps">Display velps for:</label>
-                            <select id="displayVelps" ng-model="$ctrl.displayedVelpGroupsScope"
+                            <label class="formLabel" for="displayVelps">Display velps for: </label>
+                            <select class="formInput" id="displayVelps" ng-model="$ctrl.displayedVelpGroupsScope"
                                     ng-change="$ctrl.changeDisplayedVelpGroupsScope($ctrl.displayedVelpGroupsScope)">
                                 <option ng-value="0">Whole document</option>
                                 <option ng-value="1">Selected paragraph</option>
@@ -85,7 +85,7 @@
                     </form>
                 </div>
 
-                <button class="timButton margin-4"
+                <button class="timButton" style="margin-bottom: 2px"
                         ng-disabled="!$ctrl.initialized"
                         ng-click="$ctrl.openCreateNewVelpWindow()"
                         value="">Create new velp</button>
@@ -129,12 +129,26 @@
         <uib-tab index="1" heading="Manage">
 
             <div class="velpArea">
-                <div class="velpSummary">
-                    <form>
+                <div class="velpSummary autoscroll">
+                    <form  style="border-bottom: 1px solid gainsboro">
                         <table class="fulldiv">
 
                             <h5>Choose area for velp group:</h5>
                             <fieldset>
+                                <select class="formInput" id="velpGroupArea" ng-model="$ctrl.groupAttachment.target_type"
+                                        ng-change="$ctrl.updateVelpList()" style="float: none; margin-bottom: 1rem"
+                                >
+                                    <option ng-value="0" name="selArea" id="selDoc">
+                                        Whole document
+                                    </option>
+                                    <option ng-value="1" name="selArea" id="selPar"
+                                            ng-class="{disabled: $ctrl.rctrl.selectedElement == null}"
+                                            ng-disabled="$ctrl.rctrl.selectedElement == null">
+                                        Selected paragraph
+                                    </option>
+                                </select>
+
+                                <!--
                                 <input type="radio" ng-model="$ctrl.groupAttachment.target_type"
                                        ng-value="0" name="selArea" id="selDoc" ng-change="$ctrl.updateVelpList()">
                                 <label for="selDoc">Whole document</label><br/>
@@ -143,6 +157,7 @@
                                        name="selArea" id="selPar" ng-class="{disabled: $ctrl.rctrl.selectedElement == null}"
                                        ng-disabled="$ctrl.rctrl.selectedElement == null" ng-change="$ctrl.updateVelpList()">
                                 <label for="selPar" ng-class="{'disabled':$ctrl.rctrl.selectedElement == null}">Selected paragraph</label>
+                                -->
                             </fieldset>
 
                             <tr>
@@ -174,22 +189,33 @@
                         </table>
                         <input type="button" class="timButton" title="Shows only the default velp groups in current area (document or paragraph)"
                                value="Set area default groups visible" ng-click="$ctrl.resetCurrentShowsToDefaults()"/>
-                        <input id="resetAllSelBtn" type="button" class="timButton"
+                        <input id="resetAllSelBtn" type="button" class="timButton" style="margin-bottom: 10px"
                                title="Shows only the default velp groups in all areas"
                                value="Set all default groups visible" ng-click="$ctrl.resetAllShowsToDefaults()"/>
                     </form>
-                    <hr>
                     <form ng-submit="$ctrl.addVelpGroup(addVelpGroupForm)" name="addVelpGroupForm">
                         <p><label>Create new velp group:</label><input type="text" ng-model="$ctrl.newVelpGroup.name"
                                                                        placeholder="Velp group name" required></p>
                         <fieldset>
+                            <label for="velpGroupSaveToSelect">Save to: </label>
+                            <select name="velpGroupSaveToSelect" id="velpGroupSaveToSelect"
+                                    ng-model="$ctrl.newVelpGroup.target_type"
+                                    class="formInput" style="float: none; margin-bottom: 1rem"
+                            >
+                                <option ng-value="0" selected>Personal collection</option>
+                                <option ng-value="1" ng-disabled="!$ctrl.vctrl.item.rights.editable">Document</option>
+                                <option ng-value="2" ng-disabled="!$ctrl.vctrl.item.rights.editable">Folder</option>
+                            </select>
+                            <!--
                             <p><input type="radio" name="group1" ng-model="$ctrl.newVelpGroup.target_type" id="radioPar"
                                       ng-value="0" checked="checked"> <label for="radioPar">Personal
                                 collection</label><br>
                                 <input type="radio" name="group1" ng-model="$ctrl.newVelpGroup.target_type" id="radioDoc"
                                        ng-value="1" ng-disabled="!$ctrl.vctrl.item.rights.editable"> <label for="radioDoc" ng-class="{'disabled':!$ctrl.vctrl.item.rights.editable}">Document</label><br>
                                 <input type="radio" name="group1" ng-model="$ctrl.newVelpGroup.target_type" id="radioFolder"
-                                       ng-value="2" ng-disabled="!$ctrl.vctrl.item.rights.editable"> <label for="radioFolder" ng-class="{'disabled':!$ctrl.vctrl.item.rights.editable}">Folder</label></p>
+                                       ng-value="2" ng-disabled="!$ctrl.vctrl.item.rights.editable"> <label for="radioFolder" ng-class="{'disabled':!$ctrl.vctrl.item.rights.editable}">Folder</label>
+                            </p>
+                            -->
                         </fieldset>
 
                         <p><input type="submit" class="timButton" value="Create velp group"></p>
