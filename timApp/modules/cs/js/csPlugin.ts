@@ -243,7 +243,7 @@ class LanguageTypes {
     }
 
     // What are known test types (be careful not to include partial word):
-    testTypes = ["ccomtest", "jcomtest", "comtest", "scomtest"];
+    testTypes = ["ccomtest", "jcomtest", "comtest", "scomtest", "runtest"];
     testAceModes = ["c_cpp", "java", "csharp", "scala"];
     unitTestTypes = ["junit", "unit"];
 

@@ -11,7 +11,7 @@ from timApp.item.block import BlockType
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.sqa import db
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import get_anonymous_group_id
 from timApp.user.users import get_rights_holders, get_default_rights_holders
 from timApp.user.userutils import grant_default_access, default_right_paths
 
@@ -34,7 +34,7 @@ class DefaultRightTest(TimRouteTest):
             [kg], users_folder, AccessType.view, BlockType.Document
         )
         db.session.commit()
-        anon_id = UserGroup.get_anonymous_group().id
+        anon_id = get_anonymous_group_id()
         for obj_type_str in ("document", "folder"):
             obj_type = BlockType.from_str(obj_type_str)
             def_rights = get_default_rights_holders(folder, obj_type)
@@ -147,7 +147,7 @@ class DefaultRightTest(TimRouteTest):
                 {
                     "id": folder.id,
                     "type": AccessType.view.value,
-                    "group": UserGroup.get_anonymous_group().id,
+                    "group": get_anonymous_group_id(),
                     "item_type": obj_type_str,
                 },
                 expect_content=self.ok_resp,

@@ -17,7 +17,7 @@ from sqlalchemy.orm.strategy_options import loader_option
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import UserAnswer
-from timApp.auth.access.util import get_locked_access_type
+from timApp.auth.access.util import get_locked_access_type, get_locked_active_groups
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import UserItemRights
@@ -56,8 +56,9 @@ from timApp.user.usercontact import (
 )
 from timApp.user.usergroup import (
     UserGroup,
-    get_logged_in_group_id,
+    get_admin_group_id,
     get_anonymous_group_id,
+    get_logged_in_group_id,
 )
 from timApp.user.usergroupmember import (
     UserGroupMember,
@@ -532,15 +533,55 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         )
 
     @property
-    def group_ids(self):
-        return {g.id for g in self.groups}
+    def effective_groups(self) -> list[UserGroup]:
+        """
+        Returns the groups that the user effectively belongs to.
+
+        Unlike :attr:`groups`, this list includes all metagroups that the user belongs to.
+        Additionally, the list may be affected by user's current session settings.
+        """
+
+        def effective_real_groups():
+            res = list(self.groups)
+            res.append(UserGroup.get_anonymous_group())
+            if self.logged_in:
+                res.append(UserGroup.get_logged_in_group())
+            return res
+
+        if not self.is_current_user:
+            return effective_real_groups()
+        if self.skip_access_lock:
+            return effective_real_groups()
+        locked_groups = get_locked_active_groups()
+        if locked_groups is None:
+            return effective_real_groups()
+        return UserGroup.query.filter(UserGroup.id.in_(locked_groups)).all()
+
+    @property
+    def effective_group_ids(self):
+        """Returns the group IDs of the user's currently active groups.
+
+        Unlike :attr:`groups`, this property includes metagroups (e.g. anonymous, logged in, admin) and
+        can be affected by the user's current session settings. Use this property only to check for permissions.
+        """
+
+        def effective_real_groups():
+            res = {g.id for g in self.groups}
+            res.add(get_anonymous_group_id())
+            if self.logged_in:
+                res.add(get_logged_in_group_id())
+            return res
+
+        if not self.is_current_user:
+            return effective_real_groups()
+        if self.skip_access_lock:
+            return effective_real_groups()
+        locked_groups = get_locked_active_groups()
+        return locked_groups if locked_groups is not None else effective_real_groups()
 
     @cached_property
     def is_admin(self):
-        for g in self.groups:
-            if g.name == "Administrators":
-                return True
-        return False
+        return get_admin_group_id() in self.effective_group_ids
 
     @property
     def is_email_user(self):
@@ -1044,6 +1085,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             if puc.user_collection_key not in self.uniquecodes:
                 self.uniquecodes[puc.user_collection_key] = puc
 
+    @property
+    def skip_access_lock(self):
+        """If set, access any access locking is skipped when checking for permissions."""
+        return getattr(self, "bypass_access_lock", False)
+
     def _downgrade_access(
         self, access_vals: set[int], access: BlockAccess | None
     ) -> BlockAccess | None:
@@ -1052,6 +1098,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if not self.is_current_user:
             return access
         if access.require_confirm:
+            return access
+        if self.skip_access_lock:
             return access
 
         max_access = get_locked_access_type()
@@ -1098,7 +1146,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         :param duration: If True checks for duration access instead of active accesses.
         :return: The best access object that user currently has for the given item or block and access types.
         """
-        if allow_admin and self.is_admin:
+        curr_group_ids = self.effective_group_ids
+        admin_group_id = get_admin_group_id()
+        if allow_admin and admin_group_id in curr_group_ids:
             result = BlockAccess(
                 block_id=i.id,
                 accessible_from=datetime.min.replace(tzinfo=timezone.utc),
@@ -1120,15 +1170,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             return None
         now = get_current_time()
         best_access = None
-        curr_group_ids = self.group_ids
         for a in b.accesses.values():  # type: BlockAccess
             if a.usergroup_id not in curr_group_ids:
-                if self.logged_in and a.usergroup_id == get_logged_in_group_id():
-                    pass
-                elif a.usergroup_id == get_anonymous_group_id():
-                    pass
-                else:
-                    continue
+                continue
             if a.type not in vals:
                 continue
             to_time = a.accessible_to
@@ -1413,12 +1457,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if contacts:
             result |= {"contacts": self.contacts}
 
-        if (
-            self.logged_in
-            and self.is_current_user
-            and (locked_access := get_locked_access_type())
-        ):
-            result |= {"locked_access": locked_access}
+        if self.logged_in and self.is_current_user:
+            if locked_access := get_locked_access_type():
+                result |= {"locked_access": locked_access}
+            if (active_groups := get_locked_active_groups()) is not None:
+                result |= {"locked_active_groups": list(active_groups)}
 
         return result
 

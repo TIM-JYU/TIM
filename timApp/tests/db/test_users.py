@@ -1,4 +1,3 @@
-import unittest
 from datetime import timedelta
 
 from timApp.auth.accesstype import AccessType
@@ -181,7 +180,7 @@ class UserTest(TimDbTest):
 
         user.groups.append(UserGroup.get_admin_group())
         db.session.commit()
-        del user.__dict__["is_admin"]
+        user.__dict__.pop("is_admin", None)
         for b in (test_block, test_block_2):
             self.assertTrue(user.has_manage_access(b))
             self.assertTrue(user.has_edit_access(b))

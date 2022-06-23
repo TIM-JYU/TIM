@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from json import JSONDecodeError
 from textwrap import dedent
-from typing import Optional, Union, Any, Generator
+from typing import Any, Generator
 
 import requests
 from flask import Blueprint, current_app, request, Response
@@ -44,7 +44,11 @@ from timApp.user.groups import (
     verify_group_view_access,
 )
 from timApp.user.user import User
-from timApp.user.usergroup import UserGroup, get_sisu_groups_by_filter
+from timApp.user.usergroup import (
+    UserGroup,
+    get_sisu_groups_by_filter,
+    get_admin_group_id,
+)
 from timApp.util.flask.requesthelper import use_model, RouteException
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.get_fields import (
@@ -164,7 +168,7 @@ def create_groups_route(args: list[GroupCreateModel]) -> Response:
     }
     created = []
     updated = []
-    admin_id = UserGroup.get_admin_group().id
+    admin_id = get_admin_group_id()
     for r in requested_external_ids:
         g = group_map[r]
         name_m = name_map[r]
@@ -265,7 +269,7 @@ def refresh_sisu_grouplist_doc(ug: UserGroup) -> None:
             d = create_sisu_document(
                 sp, f"Sisu groups for course {gn.coursecode.upper()}", owner_group=ug
             )
-            admin_id = UserGroup.get_admin_group().id
+            admin_id = get_admin_group_id()
             d.document.modifier_group_id = admin_id
             d.document.set_settings(settings_to_set)
         else:
@@ -321,7 +325,7 @@ def refresh_sisu_grouplist_doc(ug: UserGroup) -> None:
                         continue
                     if plug.values.get("sisugroups") == ug.external_id.course_id:
                         return
-                d.document.modifier_group_id = UserGroup.get_admin_group().id
+                d.document.modifier_group_id = get_admin_group_id()
                 d.document.add_text(
                     f"""
 # Sisu groups for course {gn.coursecode_and_time}
