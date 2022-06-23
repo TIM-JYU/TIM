@@ -1,7 +1,7 @@
 import sre_constants
 import sys
 from argparse import ArgumentParser
-from typing import Generator, Optional, Callable, Union, TypeVar, Any, Iterable
+from typing import Generator, Callable, TypeVar, Any, Iterable
 
 import attr
 import click
@@ -14,7 +14,7 @@ from timApp.folder.folder import Folder
 from timApp.tim_app import app
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import get_admin_group_id
 
 
 @attr.s
@@ -37,7 +37,7 @@ class DryrunnableArguments(BasicArguments, DryrunnableOnly):
 
 def enum_docs(folder: Folder | None = None) -> Generator[DocInfo, None, None]:
     visited_docs: set[int] = set()
-    admin_id = UserGroup.get_admin_group().id
+    admin_id = get_admin_group_id()
     if not folder:
         folder = Folder.get_root()
     for d in folder.get_all_documents(include_subdirs=True):
@@ -66,7 +66,7 @@ def enum_pars(
     if isinstance(item, Folder) or item is None:
         collection: Iterable[DocInfo] = enum_docs(item)
     else:
-        item.document.modifier_group_id = UserGroup.get_admin_group().id
+        item.document.modifier_group_id = get_admin_group_id()
         collection = [item]
     for d in collection:
         for p in iterate_pars_skip_exceptions(d):

@@ -10,7 +10,7 @@ from timApp.item.item import Item
 from timApp.tests.server.test_default_rights import convert_to_old_format
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import UserGroup, get_logged_in_group_id
 from timApp.user.userutils import grant_access
 from timApp.util.utils import get_current_time
 
@@ -233,7 +233,7 @@ class PermissionTest(TimRouteTest):
             {
                 "id": d.id,
                 "type": AccessType.view.value,
-                "group": UserGroup.get_logged_in_group().id,
+                "group": get_logged_in_group_id(),
             },
         )
         self.login_test2()

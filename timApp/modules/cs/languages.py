@@ -1176,6 +1176,24 @@ class CComtest(Language):
         return code, out, err, pwddir
 
 
+class RunTest(Language, Modifier):
+    ttype = "runtest"
+
+    def __init__(self, query, sourcecode=""):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}"
+        self.fileext = ""
+        self.hide_compile_out = True
+        self.run_cmd = get_param(self.query, "testCmd", "")
+
+    def run(self, result, sourcelines, points_rule):
+        if not self.run_cmd:
+            return -1, "", "No test command (`testCmd`) present in plugin markup", ""
+        code, out, err, pwddir = self.runself([], uargs=self.run_cmd)
+        out, err = check_comtest(self, "runtest", code, out, err, result, points_rule)
+        return code, out, err, pwddir
+
+
 class Fortran(Language):
     ttype = "fortran"
 

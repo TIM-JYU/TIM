@@ -167,7 +167,9 @@ class Belongs:
         b = self.cache.get(groupname, None)
         if b is not None:
             return b
-        b = any(gr.name == groupname for gr in self.user_ctx.logged_user.groups)
+        b = any(
+            gr.name == groupname for gr in self.user_ctx.logged_user.effective_groups
+        )
         self.cache[groupname] = b
         return b
 

@@ -1,0 +1,43 @@
+:host {
+  display: block;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+
+.item-group {
+  .item-list {
+    overflow-y: auto;
+    max-height: 200px;
+    min-height: 20px;
+    padding-left: 1em;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+
+    &.with-searchbar {
+      border-top: none;
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+  }
+
+  p.small {
+    padding: 1em;
+    margin: 0;
+    color: #999;
+  }
+}
+
+.with-searchbar {
+  .form-control, .btn  {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+.loading {
+  opacity: 0;
+
+  * {
+    pointer-events: none;
+  }
+}
