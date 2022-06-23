@@ -516,8 +516,7 @@ export class AnnotationComponent
     }
 
     clearColor() {
-        this.values.color =
-            this.original.color == null ? "" : this.original.color;
+        this.values.color = this.original.color ?? "";
         this.onColorUpdate(this.values.color);
     }
 
