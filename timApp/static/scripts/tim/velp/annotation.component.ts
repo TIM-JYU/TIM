@@ -516,11 +516,13 @@ export class AnnotationComponent
     }
 
     clearColor() {
-        this.values.color = "";
+        this.values.color = this.original.color ?? "";
+        this.onColorUpdate(this.values.color);
     }
 
     whiteColor() {
         this.values.color = "#ffffff";
+        this.onColorUpdate(this.values.color);
     }
 
     isVelpCustomColor() {
