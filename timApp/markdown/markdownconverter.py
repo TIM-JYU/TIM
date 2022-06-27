@@ -678,6 +678,12 @@ def change_class(
     return [text_containing_html_tag, text_content]
 
 
+# Some header IDs conflict with clientside code, so we need to adjust them
+CONFLICTING_HEADER_IDS = {
+    "angular",  # Reserved by AngularJS
+}
+
+
 def insert_heading_numbers(
     html_str: str,
     heading_info,
@@ -706,9 +712,9 @@ def insert_heading_numbers(
             continue
         curr_id = title_to_id(e.text)
         hcount = used.get(curr_id, 0)
-        if hcount > 0:
+        if hcount > 0 or curr_id.lower() in CONFLICTING_HEADER_IDS:
             try:
-                e.attrib["id"] += "-" + str(hcount)
+                e.attrib["id"] += f"-{hcount}"
             except KeyError:
                 e.set("id", f"{curr_id}-{hcount}")
         if auto_number_headings:
