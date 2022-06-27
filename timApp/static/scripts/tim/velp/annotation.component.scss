@@ -73,7 +73,7 @@
 }
 
 .annotation-info input[type="color"] {
-  background: transparent;
+  /* background: transparent;*/
   cursor: pointer;
 }
 
@@ -115,7 +115,7 @@
     color: white;
   }
 
-  .fulldiv, .points-input, .comment-area, .visible-icon, .help-icon {
+  .fulldiv, .points-input, .comment-area, .visible-icon, .help-icon, .glyphicon {
     color: white;
   }
 
