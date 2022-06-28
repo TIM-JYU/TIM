@@ -202,8 +202,12 @@ export class GroupSelectListComponent implements OnInit, OnChanges {
                         [selectableGroups]="specialGroups"
                         [(selectedGroups)]="activeGroups"></tim-group-select-list>
                 <tim-group-select-list [class.loading]="loading"
-                        name="Groups you are a member of" i18n-name
-                        [selectableGroups]="groupsWithMemberships"
+                        name="Managed groups you are a member of" i18n-name
+                        [selectableGroups]="groupsWithMembershipsManaged"
+                        [(selectedGroups)]="activeGroups"></tim-group-select-list>
+                <tim-group-select-list [class.loading]="loading"
+                        name="Unmanaged groups you are a member of" i18n-name
+                        [selectableGroups]="groupsWithMembershipsUnmanaged"
                         [(selectedGroups)]="activeGroups"></tim-group-select-list>
                 <tim-group-select-list [class.loading]="loading"
                         name="Other groups (manual search)" i18n-name
@@ -227,7 +231,8 @@ export class ActiveGroupLockDialogComponent extends AngularDialogComponent<
     protected dialogName = "activeGroupLockDialog";
     loading = false;
     activeGroups: number[] = [];
-    groupsWithMemberships: GroupInfo[] = [];
+    groupsWithMembershipsManaged: GroupInfo[] = [];
+    groupsWithMembershipsUnmanaged: GroupInfo[] = [];
     groupsWithAccess: GroupInfo[] = [];
     specialGroups: GroupInfo[] = [];
     private defaultActiveGroups = new Set<number>();
@@ -246,7 +251,8 @@ export class ActiveGroupLockDialogComponent extends AngularDialogComponent<
             this.initPersonalGroups(),
         ]);
         this.defaultActiveGroups = new Set([
-            ...this.groupsWithMemberships.map((g) => g.id),
+            ...this.groupsWithMembershipsManaged.map((g) => g.id),
+            ...this.groupsWithMembershipsUnmanaged.map((g) => g.id),
             ...this.specialGroups.map((g) => g.id),
         ]);
         await this.initSelectedAccessibleGroups();
@@ -262,7 +268,12 @@ export class ActiveGroupLockDialogComponent extends AngularDialogComponent<
             this.http.get<GroupInfo[]>("/groups/usergroups")
         );
         if (r.ok) {
-            this.groupsWithMemberships = r.result;
+            this.groupsWithMembershipsManaged = r.result.filter(
+                (g) => g.managed
+            );
+            this.groupsWithMembershipsUnmanaged = r.result.filter(
+                (g) => !g.managed
+            );
         }
     }
 
