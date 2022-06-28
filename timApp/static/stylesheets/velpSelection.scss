@@ -458,16 +458,19 @@ $inactive: whitesmoke;
 }
 
 .velp-color-selector {
-    height: 2.4rem;
+    height: 2.35rem;
     width: 5rem;
-    vertical-align: middle;
+    vertical-align: top;
+    border-block: unset;
+    border: 1px solid gray;
+    border-radius: 3px;
 }
 
 .btn-restore-velp-color {
-    height: 2.4rem;
+    height: 2.35rem;
     width: 2rem;
     padding: 2px 0;
-    vertical-align: middle;
+    vertical-align: top;
 }
 
 .velpEdit-remove-margin {
@@ -476,6 +479,17 @@ $inactive: whitesmoke;
 
 .velpEdit-addLabel-controls {
     margin-top: 4px;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 3px;
+}
+
+input[type="color"]::-moz-color-swatch {
+  padding: 0;
+  border: 1px solid gray;
+  border-radius: 2px;
 }
 
 @media screen and (max-height: 1080px) {
@@ -505,34 +519,7 @@ $inactive: whitesmoke;
         margin-bottom: 4px;
     }
 }
-/*
-@media screen and (max-height: 800px) {
-    #selection {
-        min-height: 1.6em;
-        margin: 0;
-    }
 
-    .editVelp-scrollarea {
-        display: block;
-        max-height: 3.6em;
-        overflow-y: auto;
-    }
-
-    .labels-scrollarea {
-        max-height: 1.8em;
-    }
-
-    .velp legend {
-        font-size: 1.1em;
-        font-weight: 600;
-    }
-
-    .velpArea legend {
-        font-size: 1.1em;
-        margin-top: 5px;
-        margin-bottom: 4px;
-    }
-}*/
 @media screen and (max-height: 800px) {
 
     .form-group {
