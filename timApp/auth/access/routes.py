@@ -10,7 +10,11 @@ from timApp.auth.access.util import set_locked_access_type, set_locked_active_gr
 from timApp.auth.accesshelper import verify_logged_in, AccessDenied
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.user.groups import verify_group_edit_access, get_group_or_abort
+from timApp.user.groups import (
+    verify_group_edit_access,
+    get_group_or_abort,
+    UserGroupMeta,
+)
 from timApp.user.usergroup import (
     UserGroup,
     get_logged_in_group_id,
@@ -74,7 +78,11 @@ def lock_active_groups(group_ids: list[int] | None) -> Response:
                     f"You must be a member of or have edit access to group {ug.name} in order to lock your role."
                 )
 
-    set_locked_active_groups(set(group_ids))
+    # Ensure anonymous user group is always present
+    # This is not necessary but it generally doesn't make sense not to include it by default
+    # as all users inherit the anonymous group's rights.
+    locked_groups = set(group_ids) | {get_anonymous_group_id()}
+    set_locked_active_groups(locked_groups)
     return ok_response()
 
 
@@ -93,10 +101,7 @@ def show_edit_info(group_name: str) -> Response:
     if not user.is_admin:
         verify_group_edit_access(ug)
     return json_response(
-        {
-            "id": ug.id,
-            "name": ug.name,
-        }
+        UserGroupMeta(id=ug.id, name=ug.name, managed=ug.admin_doc is not None)
     )
 
 
@@ -121,10 +126,7 @@ def find_editable_groups(
     ]
     return json_response(
         [
-            {
-                "id": ug.id,
-                "name": ug.name,
-            }
+            UserGroupMeta(id=ug.id, name=ug.name, managed=ug.admin_doc is not None)
             for ug in visible_ugs
         ]
     )

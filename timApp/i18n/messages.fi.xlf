@@ -6344,14 +6344,6 @@
           <context context-type="linenumber">194</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="4348166027193418896" datatype="html">
-        <source>Groups you are a member of</source>
-        <target state="translated">Ryhmät, joihin kuulut</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
-          <context context-type="linenumber">198</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5628156195126648528" datatype="html">
         <source>Other groups (manual search)</source>
         <target state="translated">Muut ryhmät (manuaalihaku)</target>
@@ -6438,6 +6430,22 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/header/role-info.component.ts</context>
           <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2428405807903733182" datatype="html">
+        <source>Managed groups you are a member of</source>
+        <target state="translated">Hallitut ryhmät, joihin kuulut</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">205</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4723263024869597820" datatype="html">
+        <source>Unmanaged groups you are a member of</source>
+        <target state="translated">Hallitsemattomat ryhmät, joihin kuulut</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/item/active-group-lock-dialog/active-group-lock-dialog.component.ts</context>
+          <context context-type="linenumber">209</context>
         </context-group>
       </trans-unit>
     </body>

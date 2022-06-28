@@ -8,6 +8,7 @@ from timApp.auth.accesshelper import (
     verify_admin,
     check_admin_access,
     AccessDenied,
+    verify_logged_in,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -65,6 +66,13 @@ def get_uid_gid(group_name, usernames) -> tuple[UserGroup, list[User]]:
     return group, users
 
 
+@dataclass(frozen=True, slots=True)
+class UserGroupMeta:
+    id: int
+    name: str
+    managed: bool
+
+
 @groups.get("/special")
 def get_special_groups() -> Response:
     """
@@ -74,13 +82,7 @@ def get_special_groups() -> Response:
     """
     res = [UserGroup.get_anonymous_group(), UserGroup.get_logged_in_group()]
     return json_response(
-        [
-            {
-                "id": ug.id,
-                "name": ug.name,
-            }
-            for ug in res
-        ]
+        [UserGroupMeta(id=ug.id, name=ug.name, managed=False) for ug in res]
     )
 
 
@@ -94,6 +96,25 @@ def show_members(group_name: str) -> Response:
     ug = get_group_or_abort(group_name)
     verify_group_view_access(ug)
     return json_response(sorted(list(ug.users), key=attrgetter("id")))
+
+
+@groups.get("/usergroups")
+def get_current() -> Response:
+    """
+    Gets a list of all user groups the current logged-in user belongs to.
+
+    :return: A JSON list of user groups.
+    """
+    verify_logged_in()
+    u = get_current_user_object()
+
+    # TODO: Additionally maybe return admin doc path if the user has access to it
+    return json_response(
+        [
+            UserGroupMeta(id=ug.id, name=ug.name, managed=ug.admin_doc is not None)
+            for ug in u.groups
+        ]
+    )
 
 
 @groups.get("/usergroups/<username>")
