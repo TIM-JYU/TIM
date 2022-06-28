@@ -831,7 +831,15 @@ class DocParagraph:
         for e in blocks:
             level = count_chars_from_beginning(e["md"], "#")
             if 0 < level < 7:
-                title = e["md"][level:].strip()
+                title = e["md"][level:]
+                # In some cases, the title block has newlines, e.g.
+                #   # test
+                #   some text
+                # (translates to "#test\nsome text")
+                # Because of this, we need to split on the possible newline
+                title = title.split("\n", 1)[0]
+                title = title.strip()
+
                 title_ids.append(title_to_id(title))
                 deltas[level] += 1
                 for i in range(level + 1, 7):
