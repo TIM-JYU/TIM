@@ -19,9 +19,12 @@ import {showMessageDialog} from "../../ui/showMessageDialog";
 import {Users} from "../../user/userService";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 
+const ANONYMOUS_GROUPNAME = "Anonymous users";
+
 interface GroupInfo {
     id: number;
     name: string;
+    managed: boolean;
     selected?: boolean;
 }
 
@@ -29,7 +32,7 @@ interface GroupInfo {
     selector: "tim-group-select-list",
     template: `
         <div class="item-group">
-            <div class="checkbox">
+            <div class="checkbox" *ngIf="hasMultipleGroups">
                 <label>
                     <input type="checkbox" [indeterminate]="someSelected" [ngModel]="allSelected" (ngModelChange)="toggleAllSelected($event)">
                     {{name}}
@@ -45,7 +48,7 @@ interface GroupInfo {
                     <button class="btn btn-default" [disabled]="searchFilter.trim().length == 0" (click)="tryAddGroup()" i18n>Add</button>
                 </span>
             </div>
-            <div class="item-list" [class.with-searchbar]="hasSearchBar">
+            <div [class.item-list]="hasMultipleGroups" [class.with-searchbar]="hasSearchBar">
                 <div class="checkbox" *ngFor="let group of filteredGroups">
                     <label>
                         <input type="checkbox" [ngModel]="group.selected" (ngModelChange)="onSelectGroupChange(group, $event)"> {{group.name}}
@@ -76,6 +79,10 @@ export class GroupSelectListComponent implements OnInit, OnChanges {
 
     get hasSearchBar() {
         return this.manualAdd || this.selectableGroups.length > 10;
+    }
+
+    get hasMultipleGroups() {
+        return this.hasSearchBar || this.selectableGroups.length > 1;
     }
 
     ngOnInit() {
@@ -234,11 +241,10 @@ export class ActiveGroupLockDialogComponent extends AngularDialogComponent<
 
     async ngOnInit() {
         this.loading = true;
-        await this.initSpecialGroups();
-        this.groupsWithMemberships = Users.getCurrent().groups.map((g) => ({
-            id: g.id,
-            name: g.name,
-        }));
+        await Promise.all([
+            this.initSpecialGroups(),
+            this.initPersonalGroups(),
+        ]);
         this.defaultActiveGroups = new Set([
             ...this.groupsWithMemberships.map((g) => g.id),
             ...this.specialGroups.map((g) => g.id),
@@ -251,12 +257,24 @@ export class ActiveGroupLockDialogComponent extends AngularDialogComponent<
         this.loading = false;
     }
 
+    private async initPersonalGroups() {
+        const r = await toPromise(
+            this.http.get<GroupInfo[]>("/groups/usergroups")
+        );
+        if (r.ok) {
+            this.groupsWithMemberships = r.result;
+        }
+    }
+
     private async initSpecialGroups() {
         const r = await toPromise(
             this.http.get<GroupInfo[]>("/groups/special")
         );
         if (r.ok) {
-            this.specialGroups = r.result;
+            // Remove anonymous group since it's always active
+            this.specialGroups = r.result.filter(
+                (g) => g.name != ANONYMOUS_GROUPNAME
+            );
         }
     }
 
