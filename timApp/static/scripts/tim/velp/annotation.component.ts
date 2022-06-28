@@ -190,21 +190,6 @@ export async function updateAnnotationServer(
                                         </span>
 
                                     </span>
-                                    <!--
-                                    <span [hidden]="!canEditAnnotation()" style="float: right">
-                                        <input type="color" [(ngModel)]="values.color"
-                                               (ngModelChange)="onColorUpdate($event)"
-                                               class="colorchange-button" title="Change annotation color">
-                                        <button *ngIf="isVelpCustomColor()"
-                                                class="smallButton"
-                                                (click)="clearColor()"
-                                                title="Reset color to original value">R</button>
-                                        <button
-                                                class="smallButton"
-                                                (click)="whiteColor()"
-                                                title="Reset color to white">W</button>
-                                    </span>
-                                    -->
                                     <p>
                                         <span *ngIf="canEditAnnotation() && isImageAnnotation()">
                                             Style&nbsp;
@@ -218,7 +203,10 @@ export async function updateAnnotationServer(
                             </div>
                         </div>
                         <span>
-                            <button class="saveChanges timButton" *ngIf="hasChanged()" (click)="saveChanges()">
+                            <!--
+                            <button class="saveChanges timButton" *ngIf="hasChanged()" (click)="saveChanges()"> 
+                            -->
+                            <button class="saveChanges timButton" [disabled]="!hasChanged()" (click)="saveChanges()">
                                 Save
                             </button>
                         </span>
@@ -237,27 +225,6 @@ export async function updateAnnotationServer(
         </span>
     `,
     styleUrls: ["./annotation.component.scss"],
-    styles: [
-        ".annotation-color-selector { " +
-            "height: 1.8rem; " +
-            "width: 4rem;" +
-            "padding: 0 1px 0 1px;" +
-            "vertical-align: middle;" +
-            "}",
-        ".btn-restore-annotation-color { " +
-            "height: 1.8rem;" +
-            "width: 1.8rem;" +
-            "padding: 0;" +
-            "margin-left: 2px;" +
-            "color: black;" +
-            "vertical-align: middle;" +
-            "}",
-        ".glyph-delete-annotation { " +
-            "font-size: 3rem;" +
-            "padding: 0;" +
-            "vertical-align: middle;" +
-            "}",
-    ],
 })
 export class AnnotationComponent
     implements OnDestroy, OnInit, AfterViewInit, IAnnotationBindings
