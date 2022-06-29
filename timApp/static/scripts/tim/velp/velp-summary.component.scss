@@ -28,3 +28,22 @@
 .summThiColumn {
     text-align: center;
 }
+
+.velp-summary-autoscroll {
+    max-height: 36em;
+    overflow-y: auto;
+}
+
+@media screen and (max-height: 1080px) {
+    .velp-summary-autoscroll {
+        max-height: 24em;
+        overflow-y: auto;
+    }
+}
+
+@media screen and (max-height: 800px) {
+    .velp-summary-autoscroll {
+        max-height: 20em;
+        overflow-y: auto;
+    }
+}

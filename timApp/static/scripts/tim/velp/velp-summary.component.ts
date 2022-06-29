@@ -23,7 +23,7 @@ import {Annotation} from "./velptypes";
     selector: "velp-summary",
     template: `
         <div class="velpArea">
-            <div class="velpSummary">
+            <div class="velpSummary velp-summary-autoscroll">
                 <h5>{{ selectedUser.name }} task annotations</h5>
                 <table>
                     <tr>
