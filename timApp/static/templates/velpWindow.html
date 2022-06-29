@@ -57,10 +57,8 @@
                                                     ng-model="$ctrl.velp.points"
                                                     step="0.01"
                                                     placeholder="Points" value="0">
-                <!--<span class="velp-color-selector">-->
                 <input type="color" ng-model="$ctrl.velp.color" title="change Velp default color" class="velp-color-selector">
                 <input ng-if="$ctrl.isVelpCustomColor()" class="btn-restore-velp-color" type="button" ng-click="$ctrl.clearVelpColor()" title="Reset color to original value" value="R">
-                <!--</span>-->
             </p>
             <p ng-hide="$ctrl.allowChangePoints()" class="velpInfoText">{{ $ctrl.settings.teacherRightsError }}</p>
 

@@ -29,21 +29,16 @@
     text-align: center;
 }
 
+/* TODO remove media queries once component has been converted to Angular */
 .velp-summary-autoscroll {
     max-height: 36em;
     overflow-y: auto;
-}
 
-@media screen and (max-height: 1080px) {
-    .velp-summary-autoscroll {
+    @media screen and (max-height: 1080px) {
         max-height: 24em;
-        overflow-y: auto;
     }
-}
 
-@media screen and (max-height: 800px) {
-    .velp-summary-autoscroll {
+    @media screen and (max-height: 800px) {
         max-height: 20em;
-        overflow-y: auto;
     }
 }

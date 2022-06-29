@@ -72,7 +72,7 @@
                 <!-- LABELS -->
                 <div id="labels" ng-show="$ctrl.advancedOn">
                     <form class="form-inline adjustForm">
-                        <div class="form-group">
+                        <div class="form-group velp-filters-margin">
                             <label class="formLabel" for="searchLabels">Search labels:</label>
                             <input class="formInput" id="searchLabels" ng-model="$ctrl.filterLabel"
                                    placeholder="Filter labels">
@@ -92,7 +92,7 @@
                 </div>
                 <div>
                     <form class="form-inline adjustForm">
-                        <div class="form-group">
+                        <div class="form-group velp-filters-margin">
                             <label class="formLabel" for="searchVelps">Search velps:</label>
                             <input class="formInput" id="searchVelps" ng-model="$ctrl.filterVelp" placeholder="Filter velps">
                         </div>
@@ -100,7 +100,7 @@
                 </div>
                 <div ng-show="$ctrl.advancedOn">
                     <form class="form-inline adjustForm">
-                        <div class="form-group">
+                        <div class="form-group velp-filters-margin">
                             <label class="formLabel" for="orderVelps">Order velps: </label>
                             <select id="orderVelps" class="formInput" ng-model="$ctrl.order"
                                     ng-change="$ctrl.changeOrdering($ctrl.order)">
@@ -115,7 +115,7 @@
                 </div>
                 <div>
                     <form class="form-inline adjustForm">
-                        <div class="form-group">
+                        <div class="form-group velp-filters-margin">
                             <label class="formLabel" for="displayVelps">Display velps for: </label>
                             <select class="formInput" id="displayVelps" ng-model="$ctrl.displayedVelpGroupsScope"
                                     ng-change="$ctrl.changeDisplayedVelpGroupsScope($ctrl.displayedVelpGroupsScope)">

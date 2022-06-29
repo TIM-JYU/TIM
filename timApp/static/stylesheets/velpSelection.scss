@@ -104,7 +104,6 @@
     background: white;
     min-height: 10em;
     min-width: 20em;
-    //width: 18em;
     width: 100%;
     position: relative;
     resize: vertical;
@@ -454,7 +453,6 @@ $inactive: whitesmoke;
     display: block;
     max-height: 16em;
     overflow-y: auto;
-    //border-bottom: 1px solid gainsboro;
 }
 
 .label-edit-glyphicons {
@@ -514,13 +512,10 @@ input[type="color"]::-moz-color-swatch {
 
     #selection {
         min-height: 1.6em;
-        margin: 0;
     }
 
     .editVelp-scrollarea {
-        display: block;
         max-height: 8em;
-        overflow-y: auto;
     }
 
     .labels-scrollarea {
@@ -529,7 +524,6 @@ input[type="color"]::-moz-color-swatch {
 
     .velp legend {
         font-size: 1.1em;
-        font-weight: 600;
     }
 
     .velpArea legend {
@@ -545,7 +539,7 @@ input[type="color"]::-moz-color-swatch {
         max-height: 8em;
     }
 
-    .form-group {
+    .velp-filters-margin {
         margin-bottom: 4px;
     }
 
@@ -555,7 +549,7 @@ input[type="color"]::-moz-color-swatch {
 
     .formInput {
         max-width: 100%;
-        font-size: 1.1rem;
+        font-size: 0.9rem;
     }
 
     .velp .header {
@@ -565,14 +559,11 @@ input[type="color"]::-moz-color-swatch {
     }
     #selection {
         min-height: 2rem;
-        margin: 0;
     }
 
     .editVelp-scrollarea {
-        display: block;
         font-size: 1.2rem;
         max-height: 4.8rem;
-        overflow-y: auto;
         line-height: 1rem;
     }
 
@@ -584,7 +575,6 @@ input[type="color"]::-moz-color-swatch {
 
     .velp legend {
         font-size: 1.2rem;
-        font-weight: 600;
     }
 
     .velpArea legend {
