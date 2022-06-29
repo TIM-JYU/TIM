@@ -1,9 +1,3 @@
-> **NOTE** We have migrated!
->
-> TIM and all related repositories are now hosted on GitHub: <https://github.com/TIM-JYU/TIM>
->
-> This repository will be archived on 21st June.
-
 <div align="center">
   <img src="https://raw.githubusercontent.com/TIM-JYU/tim-extra/main/docs/logot/tim-logo-with-text.svg" alt="TIM">
 
