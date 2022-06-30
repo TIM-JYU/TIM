@@ -853,7 +853,7 @@ def get_color(
 
 
 def get_datablock_cell_data(
-    datablock: dict[str, Any], row: int, cell: int
+    datablock: dict[str, Any] | None, row: int, cell: int
 ) -> dict[str, Any] | str:
     """
     Returns data from datablock index.
@@ -1270,26 +1270,63 @@ def is_close(a: float, b: float, rel_tol: float = 1e-09, abs_tol: float = 0.0) -
     return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
-def decide_colspan_rowspan(
-    cell_colspan: int | None,
-    cell_rowspan: int | None,
-    datablock_colspan: int | None,
-    datablock_rowspan: int | None,
-) -> tuple[int, int]:
-    colspan = cell_colspan
-    rowspan = cell_rowspan
-    if datablock_colspan:
-        colspan = datablock_colspan
-    if not colspan:
-        colspan = default_colspan
-    if datablock_rowspan:
-        rowspan = datablock_rowspan
-    if not rowspan:
-        rowspan = default_rowspan
-    return colspan, rowspan
+@dataclass(slots=True)
+class StyleOptions:
+    bg_color: CellColor | None
+    text_color: CellColor | None
+    width: float | None
+    height: float | None
+    font_size: float | None
+    h_align: str | None
+    font_family: str | None
+    font_weight: str | None
+    span: tuple[int | None, int | None]
+    borders: CellBorders
+
+    @staticmethod
+    def from_dict(d: dict[str, Any], default_borders: CellBorders) -> "StyleOptions":
+        bg_color = get_color(d, "backgroundColor")
+        text_color = get_color(d, "color")
+        width = get_size(d, "width", None)
+        height = get_size(d, "height", None)
+        font_size = get_font_size(d, None)
+        h_align = get_text_horizontal_align(d, None)
+        font_family = get_font_family(d, None)
+        font_weight = get_key_value(d, "fontWeight", None)
+        span = get_span(d)
+        borders = get_borders(d, default_borders)
+
+        return StyleOptions(
+            bg_color,
+            text_color,
+            width,
+            height,
+            font_size,
+            h_align,
+            font_family,
+            font_weight,
+            span,
+            borders,
+        )
 
 
-def convert_table(table_json: dict[str, Any], draw_html_borders: bool = False) -> Table:
+def decide_colspan_rowspan(options: list[StyleOptions]) -> tuple[int, int]:
+    colspan_final = default_colspan
+    rowspan_final = default_rowspan
+    for o in options:
+        colspan, rowspan = o.span
+        if colspan:
+            colspan_final = colspan
+        if rowspan:
+            rowspan_final = rowspan
+    return colspan_final, rowspan_final
+
+
+def convert_table(
+    table_json: dict[str, Any],
+    user_data: dict[str, Any] | None = None,
+    draw_html_borders: bool = False,
+) -> Table:
     """
     Converts TimTable-json into LaTeX-compatible object.
     Note: for correct functioning all the other modules should use this.
@@ -1303,6 +1340,8 @@ def convert_table(table_json: dict[str, Any], draw_html_borders: bool = False) -
     table = Table(table_rows)
     datablock = get_datablock(table_json)
     table_json = add_missing_elements(table_json, datablock)
+    if user_data:
+        table_json = add_missing_elements(table_json, user_data)
     # TODO: Make the table size work with correct logic.
     # These may stretch the table until unreadable or outside the page.
     # Also, even if the same value is set horizontally and vertically,
@@ -1365,17 +1404,8 @@ def convert_table(table_json: dict[str, Any], draw_html_borders: bool = False) -
         table_row = table.get_or_create_row(i)
         row_data = table_json_rows[i]
 
-        row_bg_color = get_color(row_data, "backgroundColor")
-        row_text_color = get_color(row_data, "color")
-        row_width = get_size(row_data, key="width", default=None)
-        row_height = get_size(row_data, key="height", default=None)
-        row_font_size = get_font_size(row_data, None)
-        row_h_align = get_text_horizontal_align(row_data, None)
-        row_font_family = get_font_family(row_data, None)
-        row_font_weight = get_key_value(row_data, "fontWeight", None)
-
-        # TODO: Change the logic: in HTML these go around the whole row, not each cell!
-        row_borders = get_borders(row_data, table_borders)
+        # TODO: Change the logic for borers: in HTML these go around the whole row, not each cell!
+        row_options = StyleOptions.from_dict(row_data, table_borders)
 
         skip_index = 0
         for j in range(0, len(table_json_rows[i]["row"])):
@@ -1388,20 +1418,9 @@ def convert_table(table_json: dict[str, Any], draw_html_borders: bool = False) -
                 continue
 
             cell_data = table_json_rows[i]["row"][j]
-
             content = get_content(cell_data)
 
-            # Get cell attributes:
-            cell_bg_color = get_color(cell_data, "backgroundColor")
-            cell_text_color = get_color(cell_data, "color")
-            cell_height = get_size(cell_data, "height")
-            cell_width = get_size(cell_data, "width")
-            cell_h_align = get_text_horizontal_align(cell_data, None)
-            cell_font_family = get_font_family(cell_data, None)
-            cell_font_size = get_font_size(cell_data, None)
-            cell_font_weight = get_key_value(cell_data, "fontWeight", None)
-            cell_colspan, cell_rowspan = get_span(cell_data)
-            borders = get_borders(cell_data, row_borders)
+            cell_options = StyleOptions.from_dict(cell_data, row_options.borders)
 
             # Get datablock formats:
             datablock_cell_data = get_datablock_cell_data(datablock, i, j)
@@ -1411,17 +1430,19 @@ def convert_table(table_json: dict[str, Any], draw_html_borders: bool = False) -
             if not isinstance(datablock_cell_data, dict):
                 datablock_cell_data = {}
 
-            datablock_bg_color = get_color(datablock_cell_data, "backgroundColor")
-            datablock_text_color = get_color(datablock_cell_data, "color")
-            datablock_cell_height = get_size(datablock_cell_data, "height")
-            datablock_cell_width = get_size(datablock_cell_data, "width")
-            datablock_font_family = get_font_family(datablock_cell_data, None)
-            datablock_font_size = get_font_size(datablock_cell_data, None)
-            datablock_h_align = get_text_horizontal_align(datablock_cell_data, None)
-            datablock_font_weight = get_key_value(
-                datablock_cell_data, "fontWeight", None
+            datablock_options = StyleOptions.from_dict(
+                datablock_cell_data, row_options.borders
             )
-            datablock_colspan, datablock_rowspan = get_span(datablock_cell_data)
+
+            # Get user_data
+            user_cell_data = get_datablock_cell_data(user_data, i, j)
+
+            if user_cell_data or user_cell_data == "":
+                content = get_content(user_cell_data)
+            if not isinstance(user_cell_data, dict):
+                user_cell_data = {}
+
+            user_options = StyleOptions.from_dict(user_cell_data, row_options.borders)
 
             # Decide which styles to use (from table, column, row, cell or datablock)
             bg_color = decide_format_colors(
@@ -1429,9 +1450,10 @@ def convert_table(table_json: dict[str, Any], draw_html_borders: bool = False) -
                     table_bg_color,
                     table_default_cell_bgcolor,
                     column_bg_color_list[j],
-                    row_bg_color,
-                    cell_bg_color,
-                    datablock_bg_color,
+                    row_options.bg_color,
+                    cell_options.bg_color,
+                    datablock_options.bg_color,
+                    user_options.bg_color,
                 ]
             )
             text_color = decide_format_colors(
@@ -1439,65 +1461,72 @@ def convert_table(table_json: dict[str, Any], draw_html_borders: bool = False) -
                     table_text_color,
                     table_default_cell_textcolor,
                     column_text_color_list[j],
-                    row_text_color,
-                    cell_text_color,
-                    datablock_text_color,
+                    row_options.text_color,
+                    cell_options.text_color,
+                    datablock_options.text_color,
+                    user_options.text_color,
                 ]
             )
             height = decide_format_size(
                 [
                     table_default_row_height,
-                    row_height,
-                    cell_height,
-                    datablock_cell_height,
+                    row_options.height,
+                    cell_options.height,
+                    datablock_options.height,
+                    user_options.height,
                 ]
             )
             width = decide_format_size(
                 [
                     table_default_col_height,
                     column_width_list[j],
-                    row_width,
-                    cell_width,
-                    datablock_cell_width,
+                    row_options.width,
+                    cell_options.width,
+                    datablock_options.width,
+                    user_options.width,
                 ]
             )
             h_align = decide_format(
                 [
                     table_h_align,
                     column_h_align_list[j],
-                    row_h_align,
-                    cell_h_align,
-                    datablock_h_align,
+                    row_options.h_align,
+                    cell_options.h_align,
+                    datablock_options.h_align,
+                    user_options.h_align,
                 ]
             )
             font_family = decide_format(
                 [
                     table_font_family,
                     column_font_family_list[j],
-                    row_font_family,
-                    cell_font_family,
-                    datablock_font_family,
+                    row_options.font_family,
+                    cell_options.font_family,
+                    datablock_options.font_family,
+                    user_options.font_family,
                 ]
             )
             font_size = decide_format(
                 [
                     table_font_size,
                     column_font_size_list[j],
-                    row_font_size,
-                    cell_font_size,
-                    datablock_font_size,
+                    row_options.font_size,
+                    cell_options.font_size,
+                    datablock_options.font_size,
+                    user_options.font_size,
                 ]
             )
             font_weight = decide_format(
                 [
                     table_font_weight,
-                    row_font_weight,
-                    cell_font_weight,
-                    datablock_font_weight,
+                    row_options.font_weight,
+                    cell_options.font_weight,
+                    datablock_options.font_weight,
+                    user_options.font_weight,
                 ]
             )
             colspan, rowspan = decide_colspan_rowspan(
-                cell_colspan, cell_rowspan, datablock_colspan, datablock_rowspan
+                [row_options, cell_options, datablock_options, user_options]
             )
 
             c = Cell(
@@ -1511,7 +1540,7 @@ def convert_table(table_json: dict[str, Any], draw_html_borders: bool = False) -
                 rowspan=rowspan or default_rowspan,
                 cell_width=str(width) if width else default_width,
                 cell_height=str(height) if height else default_height,
-                borders=borders,
+                borders=user_options.borders,
                 font_weight=font_weight,
             )
 
