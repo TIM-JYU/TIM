@@ -513,6 +513,15 @@ input[type="color"]::-moz-color-swatch {
     line-height: unset;
 }
 
+velp-window.velp-edit-available {
+  z-index: 10;
+  position: fixed;
+
+  & > .velp {
+    top: 1em; // Ei oteta 0ksi, jotta se ei mene raahauspalkin päälle
+  }
+}
+
 @media screen and (max-height: 1080px) {
     .fulldiv {
         max-height: 12em;

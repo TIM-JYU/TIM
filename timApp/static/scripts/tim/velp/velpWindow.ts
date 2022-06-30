@@ -168,6 +168,8 @@ export class VelpWindowController implements IController {
         if (!this.velp.edit) {
             this.cancelEdit();
         } else {
+            this.element.addClass("velp-edit-available");
+
             if (this.new) {
                 this.velpLocal = clone(this.velp);
                 // TODO: focus velp content textarea
@@ -205,6 +207,7 @@ export class VelpWindowController implements IController {
     cancelEdit() {
         this.velp = clone(this.velpLocal);
         this.velp.edit = false;
+        this.element.removeClass("velp-edit-available");
     }
 
     useVelp() {
