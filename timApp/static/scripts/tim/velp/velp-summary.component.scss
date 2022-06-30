@@ -11,14 +11,19 @@
     padding: 0.5em;
     border-top-left-radius: 8px;
     border-bottom-left-radius: 8px;*/
+    min-width: 100%;
 }
 
 .velpSummary table {
-    margin-top: 1.3em;
-    margin-bottom: 2em;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
     margin-left: 0;
     width: 98%;
   /*  border: 1px solid gainsboro;*/
+}
+
+.velpSummary h5 {
+    margin-top: 2rem;
 }
 
 .summSecColumn {
