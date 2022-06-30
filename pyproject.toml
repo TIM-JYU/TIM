@@ -254,7 +254,6 @@ module = [
     "timApp.plugin.taskid",
     "timApp.plugin.timtable.row_owner_info",
     "timApp.plugin.timtable.timTable",
-    "timApp.plugin.timtable.timTableLatex",
     "timApp.plugin.qst.qst",
     "timApp.printing.documentprinter",
     "timApp.printing.pandoc_headernumberingfilter",

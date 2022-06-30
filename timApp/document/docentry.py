@@ -69,6 +69,9 @@ class DocEntry(db.Model, DocInfo):
 
     @property
     def lang_id(self) -> str | None:
+        if not self.tr:
+            return None
+        setattr(self, "lang_id", self.tr.lang_id)
         return self.tr.lang_id if self.tr else None
 
     @lang_id.setter
