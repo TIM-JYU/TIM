@@ -168,7 +168,9 @@ export class VelpWindowController implements IController {
         if (!this.velp.edit) {
             this.cancelEdit();
         } else {
-            this.element.addClass("velp-edit-available");
+            if (!this.new) {
+                this.element.addClass("velp-edit-available");
+            }
 
             if (this.new) {
                 this.velpLocal = clone(this.velp);
