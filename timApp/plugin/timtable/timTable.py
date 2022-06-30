@@ -309,7 +309,7 @@ def tim_table_add_row():
 @timTable_plugin.post("addUserSpecificRow")
 def tim_table_add_user_specific_row():
     """
-    Adds an user-specific row into the table.
+    Adds a user-specific row into the table.
     :return: The entire table's data after the row has been added.
     """
     doc_id, par_id = verify_json_params("docId", "parId")

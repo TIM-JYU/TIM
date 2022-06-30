@@ -245,6 +245,7 @@ export interface TimTable {
     globalAppendMode?: boolean;
     dataInput?: boolean;
     task?: boolean;
+    taskCanModifyTable?: boolean;
     taskBorders?: boolean;
     userdata?: DataEntity;
     editorBottom?: boolean;
@@ -604,7 +605,7 @@ export enum ClearSort {
                             <td class="nrcolumn totalnr" *ngIf="data.nrColumn"
                                 (click)="handleClickClearFilters()"
                                 title="Click to show all"
-                            >{{totalRows()}}</td>
+                            >{{totalRows}}</td>
                             <td *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbAllFilter"
                                                              (ngModelChange)="handleChangeCheckbox(-1)"
                                                              title="Check for all visible rows">
@@ -622,7 +623,7 @@ export enum ClearSort {
                         <tbody>
                         <tr *ngIf="filterRow"> <!-- Filter row -->
                             <td class="nrcolumn totalnr" *ngIf="data.nrColumn"><span
-                                    *ngIf="hiddenRowCount()">{{visibleRowCount()}}</span></td>
+                                    *ngIf="hiddenRowCount">{{visibleRowCount}}</span></td>
                             <td *ngIf="data.cbColumn"><input type="checkbox" [(ngModel)]="cbFilter"
                                                              (ngModelChange)="handleChangeFilter()"
                                                              title="Check to show only checked rows"></td>
@@ -830,6 +831,10 @@ export class TimTableComponent
     private rowClassCache = new Map<number, string>();
     private shouldSelectInputText = false;
     private columnResolveState: boolean[] = [];
+    // Number of rows in the table in its original state (i.e. no user state is applied)
+    private initialRowCount: number = 0;
+    // Number of rows in the table in its original state (i.e. no user state is applied)
+    private initialColCount: number = 0;
 
     constructor(
         private el: ElementRef,
@@ -1058,16 +1063,20 @@ export class TimTableComponent
         });
     }
 
-    totalRows() {
+    get totalRows() {
         return this.cellDataMatrix.length;
     }
 
-    hiddenRowCount() {
+    get totalCols() {
+        return this.cellDataMatrix[0].length;
+    }
+
+    get hiddenRowCount() {
         return this.currentHiddenRows.size;
     }
 
-    visibleRowCount() {
-        return this.totalRows() - this.hiddenRowCount();
+    get visibleRowCount() {
+        return this.totalRows - this.hiddenRowCount;
     }
 
     ngDoCheck() {}
@@ -1463,40 +1472,49 @@ export class TimTableComponent
     }
 
     public addRowEnabled() {
-        // return !this.task && this.editRight && this.isInEditMode() && !this.lockCellCount
-        return (
-            !this.task &&
-            this.editRight &&
-            this.isInEditMode() &&
-            !this.hide.addRow
-        );
+        if (this.hide.addRow) {
+            return false;
+        }
+        if (this.task) {
+            return this.data.taskCanModifyTable;
+        }
+        return this.editRight && this.isInEditMode();
     }
 
     public delRowEnabled() {
-        return (
-            !this.task &&
-            this.editRight &&
-            this.isInEditMode() &&
-            !this.hide.delRow
-        );
+        if (this.hide.delRow) {
+            return false;
+        }
+        if (this.task) {
+            return (
+                this.data.taskCanModifyTable &&
+                this.totalRows > this.initialRowCount
+            );
+        }
+        return !this.task && this.editRight && this.isInEditMode();
     }
 
     public addColEnabled() {
-        return (
-            !this.task &&
-            this.editRight &&
-            this.isInEditMode() &&
-            !this.hide.addCol
-        );
+        if (this.hide.addCol) {
+            return false;
+        }
+        if (this.task) {
+            return this.data.taskCanModifyTable;
+        }
+        return this.editRight && this.isInEditMode();
     }
 
     public delColEnabled() {
-        return (
-            !this.task &&
-            this.editRight &&
-            this.isInEditMode() &&
-            !this.hide.delCol
-        );
+        if (this.hide.delCol) {
+            return false;
+        }
+        if (this.task) {
+            return (
+                this.data.taskCanModifyTable &&
+                this.totalCols > this.initialColCount
+            );
+        }
+        return this.editRight && this.isInEditMode();
     }
 
     /**
@@ -3435,7 +3453,15 @@ export class TimTableComponent
             this.closeSmallEditor();
         }
 
-        if (this.isInGlobalAppendMode()) {
+        if (this.task) {
+            this.initUserData(this.userdata);
+            const colCount = this.totalCols;
+            // TODO: Move all previous rows if rowId is not the new row. We'd need to take into account locked rows.
+            for (let col = 0; col < colCount; col++) {
+                const coords = colnumToLetters(col) + (rowId + 1);
+                this.userdata.cells[coords] = "";
+            }
+        } else if (this.isInGlobalAppendMode()) {
             const response = await to(
                 $http.post<TimTable>("/timTable/addUserSpecificRow", {
                     docId,
@@ -3473,7 +3499,7 @@ export class TimTableComponent
             this.closeSmallEditor();
         }
 
-        const datablockOnly = this.isInDataInputMode();
+        const datablockOnly = this.isInDataInputMode() || this.task;
 
         if (rowId == -1) {
             if (datablockOnly) {
@@ -3490,18 +3516,26 @@ export class TimTableComponent
             return;
         }
 
-        const response = await to(
-            $http.post<TimTable>("/timTable/removeRow", {
-                docId,
-                parId,
-                rowId,
-                datablockOnly,
-            })
-        );
-        if (!response.ok) {
-            return;
+        if (this.task && this.userdata) {
+            const colCount = this.totalCols;
+            for (let col = 0; col < colCount; col++) {
+                const coords = colnumToLetters(col) + (rowId + 1);
+                delete this.userdata.cells[coords];
+            }
+        } else {
+            const response = await to(
+                $http.post<TimTable>("/timTable/removeRow", {
+                    docId,
+                    parId,
+                    rowId,
+                    datablockOnly,
+                })
+            );
+            if (!response.ok) {
+                return;
+            }
+            this.data = response.result.data;
         }
-        this.data = response.result.data;
         this.reInitialize();
     }
 
@@ -3525,6 +3559,17 @@ export class TimTableComponent
         this.c();
     }
 
+    private initUserData(
+        userData: DataEntity | undefined
+    ): asserts userData is DataEntity {
+        if (!this.userdata) {
+            this.userdata = {
+                type: "Relative",
+                cells: {},
+            };
+        }
+    }
+
     /**
      * Tells the server to add a new column into this table.
      */
@@ -3533,9 +3578,6 @@ export class TimTableComponent
             return;
         }
 
-        const route = this.isInDataInputMode()
-            ? "/timTable/addDatablockColumn"
-            : "/timTable/addColumn";
         const parId = this.getOwnParId();
         const docId = this.viewctrl.item.id;
         const rowLen = this.cellDataMatrix[0].length;
@@ -3547,13 +3589,28 @@ export class TimTableComponent
             this.closeSmallEditor();
         }
 
-        const response = await to(
-            $http.post<TimTable>(route, {docId, parId, colId, rowLen})
-        );
-        if (!response.ok) {
-            return;
+        if (this.task) {
+            this.initUserData(this.userdata);
+            const rowCount = this.totalRows;
+            // TODO: Move all previous columns if colId is not the new column. We'd need to take into account hardcoded columns.
+            for (let row = 0; row < rowCount; row++) {
+                const coords = colnumToLetters(colId) + (row + 1);
+                this.userdata.cells[coords] = "";
+            }
+        } else {
+            const route = this.isInDataInputMode()
+                ? "/timTable/addDatablockColumn"
+                : "/timTable/addColumn";
+
+            const response = await to(
+                $http.post<TimTable>(route, {docId, parId, colId, rowLen})
+            );
+            if (!response.ok) {
+                return;
+            }
+            this.data = response.result.data;
         }
-        this.data = response.result.data;
+
         this.reInitialize();
     }
 
@@ -3580,18 +3637,26 @@ export class TimTableComponent
             this.closeSmallEditor();
         }
 
-        const response = await to(
-            $http.post<TimTable>("/timTable/removeColumn", {
-                docId,
-                parId,
-                colId,
-                datablockOnly,
-            })
-        );
-        if (!response.ok) {
-            return;
+        if (this.task && this.userdata) {
+            const rowCount = this.totalRows;
+            for (let row = 0; row < rowCount; row++) {
+                const coords = colnumToLetters(colId) + (row + 1);
+                delete this.userdata.cells[coords];
+            }
+        } else {
+            const response = await to(
+                $http.post<TimTable>("/timTable/removeColumn", {
+                    docId,
+                    parId,
+                    colId,
+                    datablockOnly,
+                })
+            );
+            if (!response.ok) {
+                return;
+            }
+            this.data = response.result.data;
         }
-        this.data = response.result.data;
         this.reInitialize(ClearSort.No);
     }
 
@@ -3603,13 +3668,12 @@ export class TimTableComponent
     public reInitialize(clearSort: ClearSort = ClearSort.Yes) {
         this.initializeCellDataMatrix(clearSort);
         this.processDataBlockAndSpanInfo();
+        this.initialRowCount = this.totalRows;
+        this.initialColCount = this.totalCols;
         if (this.userdata) {
             this.processDataBlock(this.userdata.cells);
         } else {
-            this.userdata = {
-                type: "Relative",
-                cells: {},
-            };
+            this.initUserData(this.userdata);
         }
         if (clearSort == ClearSort.Yes) {
             this.clearSortOrder();
