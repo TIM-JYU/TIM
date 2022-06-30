@@ -41,7 +41,7 @@ const DEFAULT_CELL_BGCOLOR = "#FFFF00";
             <ng-container body>
                 <div class="row">
                     <div class="col-xs-12" style="top: -0.8em;">
-                        <div class="btn-group" role="menuitem" dropdown *ngIf="!hide?.editMenu">
+                        <div class="btn-group" role="menuitem" dropdown *ngIf="canRemoveCells">
                             <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Edit <span class="caret"></span></button>
                             <ul class="dropdown-menu" *dropdownMenu>
                                 <li role="menuitem" (click)="removeRow()"><a>Remove row</a></li>
@@ -49,7 +49,7 @@ const DEFAULT_CELL_BGCOLOR = "#FFFF00";
                             </ul>
                         </div>
                         &ngsp;
-                        <div class="btn-group" role="menuitem" dropdown *ngIf="!hide?.insertMenu">
+                        <div class="btn-group" role="menuitem" dropdown *ngIf="canInsertCells">
                             <button class="timButton btn-xs dropdown-toggle" dropdownToggle>Insert <span class="caret"></span></button>
                             <ul class="dropdown-menu" *dropdownMenu>
                                 <li role="menuitem" (click)="addRow(0)"><a>Row above</a></li>
@@ -146,12 +146,18 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
     void
 > {
     protected dialogName = "TableEditorToolbar";
+    canInsertCells = false;
+    canRemoveCells = false;
 
     ngOnInit() {
         setToolbarInstance(this);
         this.callbacks = this.data.callbacks;
         this.activeTable = this.data.activeTable;
         this.hide = this.activeTable.data.hide;
+
+        // TODO: Right now deleting specific rows/columns is not supported for tasks
+        this.canInsertCells = !this.activeTable.task && !this.hide?.insertMenu;
+        this.canRemoveCells = !this.activeTable.task && !this.hide?.editMenu;
     }
 
     public callbacks!: ITimTableToolbarCallbacks; // ngOnInit
