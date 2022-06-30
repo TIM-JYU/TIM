@@ -1,6 +1,7 @@
 /** Layout styles **/
 .fulldiv {
     display: block;
+    min-width: 100%;
     width: 100%;
     float: left;
     overflow-y: auto;
@@ -125,7 +126,9 @@
 
 .formInput {
     max-width: 59%;
+    display: inline-block;
     float: right;
+    margin-right: 0.3rem;
 }
 
 /* Table styles*/
@@ -505,6 +508,11 @@ input[type="color"]::-moz-color-swatch {
   border-radius: 2px;
 }
 
+.velp-filters {
+    margin-bottom: 4px;
+    line-height: unset;
+}
+
 @media screen and (max-height: 1080px) {
     .fulldiv {
         max-height: 12em;
@@ -539,7 +547,7 @@ input[type="color"]::-moz-color-swatch {
         max-height: 8em;
     }
 
-    .velp-filters-margin {
+    .velp-filters {
         margin-bottom: 4px;
     }
 
@@ -550,6 +558,8 @@ input[type="color"]::-moz-color-swatch {
     .formInput {
         max-width: 100%;
         font-size: 0.9rem;
+        display: inline-block;
+        margin-right: 0.3rem;
     }
 
     .velp .header {

@@ -28,15 +28,7 @@
             <label><input type="checkbox" ng-model="$ctrl.advancedOn" ng-change="$ctrl.setAdvancedOnlocalStorage($ctrl.advancedOn)"> Advanced view</label>
             <div class="velpArea">
 
-                <div save="%%PAGEID%%selectVelpsDiv"
-                     tim-draggable-fixed
-                     detachable="true"
-                     click="true"
-                     resize="false"
-                     caption="Available velps">
-
-                    <div class="velp-stack draggable-content available-velps autoscroll">
-                        <velp-window class="velp" ng-style="{top: '2.2em'}"
+                <velp-window class="velp" ng-style="{top: '2.2em'}"
                                      ng-show="$ctrl.newVelp.edit"
                                      velp="$ctrl.newVelp"
                                      index="-1"
@@ -46,6 +38,15 @@
                                      new="true"
                                      vctrl="$ctrl.vctrl"
                                      advanced-on="$ctrl.advancedOn"></velp-window>
+
+                <div save="%%PAGEID%%selectVelpsDiv"
+                     tim-draggable-fixed
+                     detachable="true"
+                     click="true"
+                     resize="false"
+                     caption="Available velps">
+
+                    <div class="velp-stack draggable-content available-velps autoscroll">
                         <velp-window
                                 ng-repeat="velp in filteredVelps = ($ctrl.rctrl.velps | filter:{content:$ctrl.filterVelp} | orderByWhenNotEditing:$ctrl.order:filteredVelps | filterByVelpGroups:$ctrl.velpGroups | filterByLabels:$ctrl.labels:$ctrl.advancedOn
                                                  ) track by $index"
@@ -72,7 +73,7 @@
                 <!-- LABELS -->
                 <div id="labels" ng-show="$ctrl.advancedOn">
                     <form class="form-inline adjustForm">
-                        <div class="form-group velp-filters-margin">
+                        <div class="form-group velp-filters">
                             <label class="formLabel" for="searchLabels">Search labels:</label>
                             <input class="formInput" id="searchLabels" ng-model="$ctrl.filterLabel"
                                    placeholder="Filter labels">
@@ -92,7 +93,7 @@
                 </div>
                 <div>
                     <form class="form-inline adjustForm">
-                        <div class="form-group velp-filters-margin">
+                        <div class="form-group velp-filters">
                             <label class="formLabel" for="searchVelps">Search velps:</label>
                             <input class="formInput" id="searchVelps" ng-model="$ctrl.filterVelp" placeholder="Filter velps">
                         </div>
@@ -100,7 +101,7 @@
                 </div>
                 <div ng-show="$ctrl.advancedOn">
                     <form class="form-inline adjustForm">
-                        <div class="form-group velp-filters-margin">
+                        <div class="form-group velp-filters">
                             <label class="formLabel" for="orderVelps">Order velps: </label>
                             <select id="orderVelps" class="formInput" ng-model="$ctrl.order"
                                     ng-change="$ctrl.changeOrdering($ctrl.order)">
@@ -115,7 +116,7 @@
                 </div>
                 <div>
                     <form class="form-inline adjustForm">
-                        <div class="form-group velp-filters-margin">
+                        <div class="form-group velp-filters">
                             <label class="formLabel" for="displayVelps">Display velps for: </label>
                             <select class="formInput" id="displayVelps" ng-model="$ctrl.displayedVelpGroupsScope"
                                     ng-change="$ctrl.changeDisplayedVelpGroupsScope($ctrl.displayedVelpGroupsScope)">
@@ -134,34 +135,34 @@
             <div class="velpArea">
                 <div class="velpSummary autoscroll">
                     <form  style="border-bottom: 1px solid gainsboro">
+
+                        <h5>Choose area for velp group:</h5>
+                        <fieldset>
+                            <select class="formInput" id="velpGroupArea" ng-model="$ctrl.groupAttachment.target_type"
+                                    ng-change="$ctrl.updateVelpList()" style="float: none; margin-bottom: 1rem"
+                            >
+                                <option ng-value="0" name="selArea" id="selDoc">
+                                    Whole document
+                                </option>
+                                <option ng-value="1" name="selArea" id="selPar"
+                                        ng-class="{disabled: $ctrl.rctrl.selectedElement == null}"
+                                        ng-disabled="$ctrl.rctrl.selectedElement == null">
+                                    Selected paragraph
+                                </option>
+                            </select>
+                        </fieldset>
                         <table class="fulldiv" style="margin-bottom: 8px">
-
-                            <h5>Choose area for velp group:</h5>
-                            <fieldset>
-                                <select class="formInput" id="velpGroupArea" ng-model="$ctrl.groupAttachment.target_type"
-                                        ng-change="$ctrl.updateVelpList()" style="float: none; margin-bottom: 1rem"
-                                >
-                                    <option ng-value="0" name="selArea" id="selDoc">
-                                        Whole document
-                                    </option>
-                                    <option ng-value="1" name="selArea" id="selPar"
-                                            ng-class="{disabled: $ctrl.rctrl.selectedElement == null}"
-                                            ng-disabled="$ctrl.rctrl.selectedElement == null">
-                                        Selected paragraph
-                                    </option>
-                                </select>
-
-                            </fieldset>
-
                             <tr>
                                 <th><label class="comment-info small"><input type="checkbox"
-                                                                            ng-model="$ctrl.settings.selectedAllShows"
-                                                                            ng-change="$ctrl.changeAllVelpGroupSelections('show')">Show</label>
+                                                                             ng-model="$ctrl.settings.selectedAllShows"
+                                                                             ng-change="$ctrl.changeAllVelpGroupSelections('show')">Show</label>
                                 </th>
-                                <th><label ng-class="['comment-info', 'small', {disabled: !$ctrl.vctrl.item.rights.manage}]"><input type="checkbox"
-                                                                            ng-model="$ctrl.settings.selectedAllDefault"
-                                                                            ng-disabled="!$ctrl.vctrl.item.rights.manage"
-                                                                            ng-change="$ctrl.changeAllVelpGroupSelections('default')">Default</label>
+                                <th><label
+                                        ng-class="['comment-info', 'small', {disabled: !$ctrl.vctrl.item.rights.manage}]"><input
+                                        type="checkbox"
+                                        ng-model="$ctrl.settings.selectedAllDefault"
+                                        ng-disabled="!$ctrl.vctrl.item.rights.manage"
+                                        ng-change="$ctrl.changeAllVelpGroupSelections('default')">Default</label>
                                 </th>
                                 <th><span class="small">Velp group</span></th>
                             </tr>
@@ -172,7 +173,8 @@
                                            ng-change="$ctrl.changeVelpGroupSelection(group, 'show')">
                                 </td>
                                 <td>
-                                    <input type="checkbox" ng-model="group.default" ng-disabled="!$ctrl.vctrl.item.rights.manage"
+                                    <input type="checkbox" ng-model="group.default"
+                                           ng-disabled="!$ctrl.vctrl.item.rights.manage"
                                            ng-change="$ctrl.changeVelpGroupSelection(group, 'default')">
                                 </td>
                                 <td>
