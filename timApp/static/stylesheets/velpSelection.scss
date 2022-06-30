@@ -518,7 +518,7 @@ velp-window.velp-edit-available {
   position: fixed;
 
   & > .velp {
-    top: 1em; // Ei oteta 0ksi, jotta se ei mene raahauspalkin päälle
+    top: 1em !important; // We need to force this change.
   }
 }
 
