@@ -70,6 +70,7 @@ type RunnerResult =
           fatalError?: never;
           outdata: Record<string, unknown>;
           groups: IGroupData;
+          newUsers: NewUserData[];
       }
     | {output: string; fatalError: IError; errorprg: string};
 
@@ -216,6 +217,7 @@ function runner(d: IRunnerData): RunnerResult {
             errors,
             outdata: gtools.outdata,
             groups: gtools.groups,
+            newUsers: gtools.newUsers,
         };
     } catch (e) {
         const err = e as Error;
@@ -331,6 +333,7 @@ router.put("/", async (req, res, next) => {
             r = {
                 savedata: result.res,
                 groups: result.groups,
+                newUsers: result.newUsers,
                 web: {
                     output: result.output,
                     errors: result.errors,

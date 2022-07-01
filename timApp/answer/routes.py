@@ -1,4 +1,5 @@
 """Answer-related routes."""
+import copy
 import json
 import re
 from collections import defaultdict
@@ -1476,26 +1477,37 @@ class UserFieldEntry(TypedDict):
     fields: dict[str, str]
 
 
+def _create_user_from_info(ui: UserInfo) -> User | None:
+    if ui.email is not None:
+        # A+ may give users with invalid mails like '6128@localhost'. Just skip over those.
+        if ui.email.endswith("@localhost"):
+            return None
+        if not is_valid_email(ui.email):
+            raise RouteException(f'Invalid email: "{ui.email}"')
+    if ui.username is None:
+        ui.username = ui.email
+    if ui.full_name is None and ui.email is not None:
+        # Approximate real name with the help of email.
+        # This won't be fully accurate, but we can't do better.
+        ui.full_name = approximate_real_name(ui.email)
+    # Since this function can be called by users, ensure that they cannot overwrite any existing user info
+    # (not even the username)
+    user = User.get_by_name(ui.username)
+    if not user:
+        user = User.get_by_email(ui.email)
+    if user:
+        return user
+    return create_or_update_user(ui, update_username=False)
+
+
 def create_missing_users(
     users: list[MissingUser],
 ) -> tuple[list[UserFieldEntry], list[User]]:
     created_users = []
     for mu in users:
-        ui = mu.user
-        if ui.email is not None:
-            # A+ may give users with invalid mails like '6128@localhost'. Just skip over those.
-            if ui.email.endswith("@localhost"):
-                continue
-            if not is_valid_email(ui.email):
-                raise RouteException(f'Invalid email: "{ui.email}"')
-        if ui.username is None:
-            ui.username = ui.email
-        if ui.full_name is None and ui.email is not None:
-            # Approximate real name with the help of email.
-            # This won't be fully accurate, but we can't do better.
-            ui.full_name = approximate_real_name(ui.email)
-        u = create_or_update_user(ui, update_username=False)
-        created_users.append(u)
+        u = _create_user_from_info(mu.user)
+        if u:
+            created_users.append(u)
     db.session.flush()
     fields = []
     for u, missing_u in zip(created_users, users):
@@ -1537,6 +1549,44 @@ def verify_user_create_right(curr_user: User) -> None:
         raise AccessDenied("You do not have permission to create users.")
 
 
+@dataclass
+class NewUserInfo:
+    full_name: str
+    username: str
+    email: str | None
+    password: str | None
+
+
+NewUserInfoSchema = class_schema(NewUserInfo)
+
+
+def _create_new_users(
+    users: list[NewUserInfo], groups: JsrunnerGroups | None
+) -> JsrunnerGroups | None:
+    user_infos = [
+        UserInfo(
+            full_name=u.full_name,
+            email=u.email,
+            username=u.username,
+            password=u.password,
+        )
+        for u in users
+    ]
+    created_users = [_create_user_from_info(ui) for ui in user_infos]
+    db.session.flush()
+    if not groups:
+        return None
+
+    # Rewrite group IDs to correct user IDs in case they are also being added to a group
+    groups = copy.deepcopy(groups)
+    for group_info in groups.values():
+        for uids in group_info.values():
+            for i, uid in enumerate(uids):
+                if uid < 0:
+                    uids[i] = created_users[-uid - 1].id
+    return groups
+
+
 def save_fields(
     jsonresp: FieldSaveRequest,
     curr_user: User,
@@ -1550,7 +1600,18 @@ def save_fields(
     ignore_missing = jsonresp.get("ignoreMissing", False)
     allow_missing = jsonresp.get("allowMissing", False)
     ignore_fields = {}
-    handle_jsrunner_groups(jsonresp.get("groups"), curr_user)
+    groups = jsonresp.get("groups")
+
+    new_users_json: dict | None = jsonresp.get("newUsers")
+    if new_users_json:
+        new_users: list[NewUserInfo] = NewUserInfoSchema().load(
+            new_users_json, many=True
+        )
+        if new_users:
+            verify_user_create_right(curr_user)
+            groups = _create_new_users(new_users, groups)
+
+    handle_jsrunner_groups(groups, curr_user)
     missing_users = jsonresp.get("missingUsers")
     saveresult = FieldSaveResult()
     if save_obj is None:

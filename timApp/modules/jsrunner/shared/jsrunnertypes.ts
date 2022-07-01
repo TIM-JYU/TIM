@@ -5,7 +5,7 @@ import {
     IncludeUsersOption,
     withDefault,
 } from "tim/plugin/attributes";
-import {IToolsResult} from "../server/routes/tools";
+import {IToolsResult, NewUserData} from "../server/routes/tools";
 
 export {IncludeUsersOption} from "tim/plugin/attributes";
 
@@ -89,6 +89,7 @@ interface AnswerReturnSuccess {
     };
     savedata: IToolsResult[];
     groups: IGroupData;
+    newUsers: NewUserData[];
 }
 
 interface AnswerReturnError {

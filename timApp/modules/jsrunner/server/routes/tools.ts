@@ -174,6 +174,20 @@ interface Linear {
     b: number;
 }
 
+const NewUserDataT = t.intersection([
+    t.type({
+        full_name: t.string,
+        username: t.string,
+    }),
+    t.partial({
+        password: t.string,
+        email: t.string,
+    }),
+]);
+
+// TODO: Figure out why this has to be exported from here (otherwise rollup fails)
+export type NewUserData = t.TypeOf<typeof NewUserDataT>;
+
 // const dummyGTools: GTools = new GTools(
 
 class WithGtools {
@@ -849,8 +863,8 @@ export class GTools extends ToolsBase {
     public xys: Record<string, XY> = {};
     public stats: Record<string, Stats> = {};
     public tools: Tools;
-
     groups: IGroupData = {};
+    newUsers: NewUserData[] = [];
 
     constructor(
         currDoc: string,
@@ -958,6 +972,31 @@ export class GTools extends ToolsBase {
 
     removeFromGroup(name: unknown, uids: unknown) {
         this.setGroupOperation(name, uids, "remove");
+    }
+
+    /**
+     * Create a new user. The user will be created if they don't exist yet.
+     *
+     * Note: User creation requires that the user running the JSRunner belongs to the "User creators" group.
+     *
+     * @param data User data object of form { email: string, full_name: string | undefined, password: string | undefined }
+     * @returns A pseudo-ID of the created user.
+     *          The ID can be used with addToGroup and removeFromGroup.
+     *          Note that the ID does not refer to the real final user ID.
+     */
+    createUser(data: unknown) {
+        if (!NewUserDataT.is(data)) {
+            throw Error(
+                "createUser: parameter should be an object containing at least full name and email"
+            );
+        }
+        const sameEmailIndex = this.newUsers.findIndex(
+            (u) => u.email == data.email
+        );
+        if (sameEmailIndex >= 0) {
+            return -sameEmailIndex - 1;
+        }
+        return -this.newUsers.push(data);
     }
 
     setGroupOperation(name: unknown, uids: unknown, key: keyof IGroupData) {
