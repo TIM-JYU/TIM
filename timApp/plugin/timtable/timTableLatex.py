@@ -818,7 +818,10 @@ def get_content(cell_data: Any) -> str:
     :return: Cell content.
     """
     try:
-        return str(cell_data["cell"]).strip()
+        cell = cell_data["cell"]
+        if not cell:
+            return ""
+        return str(cell).strip()
     # Cells that use simplified format (without 'cell').
     except TypeError:
         return str(cell_data)
