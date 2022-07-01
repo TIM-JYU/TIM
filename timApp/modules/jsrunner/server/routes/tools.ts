@@ -25,6 +25,19 @@ import {
     VelpDataT,
 } from "../servertypes";
 
+export function numberLines(s: string, delta: number): string {
+    if (!s) {
+        return "";
+    }
+    const lines = s.split("\n");
+    let result = "";
+    for (let i = 0; i < lines.length; i++) {
+        const space = i + delta < 10 ? "0" : "";
+        result += space + (i + delta) + ": " + lines[i] + "\n";
+    }
+    return result;
+}
+
 /**
  * From name=alias list returns two lists
  * @param fields list of name=alias pairs
