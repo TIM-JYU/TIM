@@ -1403,15 +1403,14 @@ def convert_table(
     table_json_rows = table_json.get("rows")
     if not table_json_rows:
         return table
-    for i in range(0, len(table_json_rows)):
+    for i, row_data in enumerate(table_json_rows):
         table_row = table.get_or_create_row(i)
-        row_data = table_json_rows[i]
 
         # TODO: Change the logic for borers: in HTML these go around the whole row, not each cell!
         row_options = StyleOptions.from_dict(row_data, table_borders)
 
         skip_index = 0
-        for j in range(0, len(table_json_rows[i]["row"])):
+        for j, _ in enumerate(row_data["row"]):
             # Skips following cells based on previous cell's colspan.
             if skip_index > 0:
                 skip_index -= 1
@@ -1420,7 +1419,7 @@ def convert_table(
             if table_row.get_cell(j):
                 continue
 
-            cell_data = table_json_rows[i]["row"][j]
+            cell_data = row_data["row"][j]
             content = get_content(cell_data)
 
             cell_options = StyleOptions.from_dict(cell_data, row_options.borders)
