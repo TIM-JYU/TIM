@@ -1,11 +1,12 @@
 /** Layout styles **/
 .fulldiv {
     display: block;
+    min-width: 100%;
     width: 100%;
     float: left;
     overflow-y: auto;
     overflow-x: hidden;
-    max-height: 20em;
+    max-height: 18em;
 }
 
 .div-90 {
@@ -94,12 +95,19 @@
     bottom: 0;
 }
 
+.autoscroll {
+    width: 100%;
+    overflow-y: auto;
+}
+
 /* needs media queries */
 .velpArea .velp-stack {
     background: white;
     min-height: 10em;
-    width: 18em;
+    min-width: 20em;
+    width: 100%;
     position: relative;
+    resize: vertical;
 }
 
 .adjustForm {
@@ -118,7 +126,9 @@
 
 .formInput {
     max-width: 59%;
+    display: inline-block;
     float: right;
+    margin-right: 0.3rem;
 }
 
 /* Table styles*/
@@ -446,4 +456,149 @@ $inactive: whitesmoke;
     display: block;
     max-height: 16em;
     overflow-y: auto;
+}
+
+.label-edit-glyphicons {
+    margin-left: 3px;
+}
+
+.velp-color-selector {
+    height: 2.35rem;
+    width: 5rem;
+    padding: 3px;
+    vertical-align: top;
+    border-block: unset;
+    border: 1px solid gray;
+    border-radius: 3px;
+}
+
+.btn-restore-velp-color {
+    height: 2.35rem;
+    width: 2rem;
+    padding: 2px 0;
+    vertical-align: top;
+}
+
+.velpEdit-remove-margin {
+    margin: 0;
+}
+
+.velpEdit-addLabel-controls {
+    margin-top: 4px;
+}
+
+.btn-create-new-velp {
+    margin-top: 0.3rem;
+    padding-top: 0.3rem;
+    border-top: 1px solid gainsboro;
+}
+
+.btn-set-vg-visible {
+    font-size: 1.2rem;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 3px;
+}
+
+input[type="color"]::-moz-color-swatch {
+  padding: 0;
+  border: 1px solid gray;
+  border-radius: 2px;
+}
+
+.velp-filters {
+    margin-bottom: 4px;
+    line-height: unset;
+}
+
+velp-window.velp-edit-available {
+  z-index: 10;
+  position: fixed;
+
+  & > .velp {
+    top: 1em !important;
+  }
+}
+
+@media screen and (max-height: 1080px) {
+    .fulldiv {
+        max-height: 12em;
+    }
+
+    #selection {
+        min-height: 1.6em;
+    }
+
+    .editVelp-scrollarea {
+        max-height: 8em;
+    }
+
+    .labels-scrollarea {
+        max-height: 1.8em;
+    }
+
+    .velp legend {
+        font-size: 1.1em;
+    }
+
+    .velpArea legend {
+        font-size: 1.1em;
+        margin-top: 5px;
+        margin-bottom: 4px;
+    }
+}
+
+@media screen and (max-height: 800px) {
+
+    .fulldiv {
+        max-height: 8em;
+    }
+
+    .velp-filters {
+        margin-bottom: 4px;
+    }
+
+    .formLabel {
+        font-size: 0.9rem;
+    }
+
+    .formInput {
+        max-width: 100%;
+        font-size: 0.9rem;
+        display: inline-block;
+        margin-right: 0.3rem;
+    }
+
+    .velp .header {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    #selection {
+        min-height: 2rem;
+    }
+
+    .editVelp-scrollarea {
+        font-size: 1.2rem;
+        max-height: 4.8rem;
+        line-height: 1rem;
+    }
+
+    .labels-scrollarea {
+        font-size: 1.2rem;
+        max-height: 3.6rem;
+        line-height: 1rem;
+    }
+
+    .velp legend {
+        font-size: 1.2rem;
+    }
+
+    .velpArea legend {
+        font-size: 1.2rem;
+        margin-top: 5px;
+        margin-bottom: 4px;
+    }
 }

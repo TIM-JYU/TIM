@@ -223,7 +223,10 @@ saveButton: Tallenna
         canvas = self.find_element_avoid_staleness(".drawbase")
         velper_selector_dropdown.select_by_index(1)
         velp_to_use = self.find_element_avoid_staleness(
-            "velp-window:nth-child(2) .velp"
+            # Original: "velp-window:nth-child(2) .velp"
+            # Since newVelp-velpWindow is now is outside velp container,
+            # must specify the correct container and take the first child
+            ".velp-stack velp-window:nth-child(1) .velp"
         )
         # ann 3
         ActionChains(self.drv).move_to_element(canvas).move_by_offset(

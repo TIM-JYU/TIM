@@ -1,4 +1,4 @@
-<div class="velp" ng-style="{top: 1+$ctrl.index*2 + 'em'}"  ng-click="$ctrl.notAnnotationRights($ctrl.velp.points) || $ctrl.useVelp()">
+<div class="velp" ng-style="{top: 1+$ctrl.index*2 + 'em'}"  ng-click="$ctrl.notAnnotationRights($ctrl.velp.points) || $ctrl.useVelp()" style="top: 1.2em">
     <div ng-class="['velp-data', 'emphasise', 'default',
                     {neutral: $ctrl.velp.points == 0,
                     positive: $ctrl.velp.points > 0,
@@ -39,7 +39,7 @@
         Show this when velp IS being edited
 
      --><div ng-if="$ctrl.velp.edit" class="content">
-                            <tim-close-button ng-click="$ctrl.toggleVelpToEdit(); $event.stopPropagation();"
+            <tim-close-button ng-click="$ctrl.toggleVelpToEdit(); $event.stopPropagation();"
                             class="clickable-icon"></tim-close-button>
 
         <form name="saveVelpForm" ng-submit="$ctrl.saveVelp(saveVelpForm)">
@@ -52,11 +52,14 @@
             </p>
 
 
-            <p ng-show="$ctrl.allowChangePoints()" class="header"><input id="addVelpPoints" type="number" style="width: 100%;"
+            <p ng-show="$ctrl.allowChangePoints()" class="header"><input id="addVelpPoints" type="number" style="width: 50%;"
                                                     title="Default points from this velp"
                                                     ng-model="$ctrl.velp.points"
                                                     step="0.01"
-                                                    placeholder="Points" value="0"></p>
+                                                    placeholder="Points" value="0">
+                <input type="color" ng-model="$ctrl.velp.color" title="change Velp default color" class="velp-color-selector">
+                <input ng-if="$ctrl.isVelpCustomColor()" class="btn-restore-velp-color" type="button" ng-click="$ctrl.clearVelpColor()" title="Reset color to original value" value="R">
+            </p>
             <p ng-hide="$ctrl.allowChangePoints()" class="velpInfoText">{{ $ctrl.settings.teacherRightsError }}</p>
 
             <p><textarea placeholder="Add default comment" ng-model="$ctrl.velp.default_comment" title="Default comment for annotation" ></textarea></p>
@@ -93,16 +96,18 @@
                                placeholder="Add label"
                                ng-change="$ctrl.setLabelValid($ctrl.labelToEdit)"
                                ng-model="$ctrl.labelToEdit.content">
-
-                        <span class="pull-right" ng-click="$ctrl.toggleLabelToEdit(l)"
-                              ng-class="['glyphicon', 'glyphicon-pencil', 'clickable-icon']">
+                        <span class="label-edit-glyphicons"
+                              ng-click="$ctrl.editLabel($ctrl.labelToEdit)"
+                              ng-class="['glyphicon', 'glyphicon-ok', 'clickable-icon']"
+                              ng-disabled="!$ctrl.isVelpValid($ctrl.velpToEdit)"
+                              ng-style="{color: 'green'}" title="Save">
                         </span>
-                        <input class="timButton" type="button"
-                               value="Save" ng-click="$ctrl.editLabel($ctrl.labelToEdit)"
-                               ng-disabled="!$ctrl.isVelpValid($ctrl.velpToEdit)">
-                        <input class="timButton" type="button"
-                               value="Cancel" ng-click="$ctrl.toggleLabelToEdit(l)">
-                        <br>
+                        <span class="label-edit-glyphicons"
+                              ng-click="$ctrl.toggleLabelToEdit(l)"
+                              ng-class="['glyphicon', 'glyphicon-ban-circle', 'clickable-icon']"
+                              ng-style="{color: 'red'}" title="Cancel">
+                        </span>
+
                         <span ng-hide="$ctrl.labelToEdit.valid">
                             <span class="error velpInfoText">{{ settings.labelContentError }}</span>
                             <br>
@@ -111,12 +116,15 @@
                 </span>
                 </div>
                 <!-- Add new label -->
-                <input class="addLabelField" placeholder="Add label"
-                       ng-change="$ctrl.setLabelValid($ctrl.newLabel)"
-                       ng-model="$ctrl.newLabel.content">
-                <input class="addLabelBtn" type="button" value="Add"
-                       ng-click="$ctrl.addLabel()">
-                <span ng-hide="$ctrl.newLabel.valid" class="error velpInfoText">{{ $ctrl.settings.labelContentError }}</span>
+                <div class="velpEdit-addLabel-controls">
+                    <input class="addLabelField" placeholder="Add label"
+                           ng-change="$ctrl.setLabelValid($ctrl.newLabel)"
+                           ng-model="$ctrl.newLabel.content">
+                    <input class="addLabelBtn" type="button" value="Add"
+                           ng-click="$ctrl.addLabel()">
+                    <span ng-hide="$ctrl.newLabel.valid"
+                          class="error velpInfoText">{{ $ctrl.settings.labelContentError }}</span>
+                </div>
             </fieldset>
 
             <!-- Velp groups -->
@@ -143,7 +151,7 @@
                 {{ $ctrl.settings.velpGroupWarning }}
             </p>
 
-            <p>
+            <p class="velpEdit-remove-margin" style="margin-top: 4px;">
                 <label>
                     <span title="Visible to"
                           class="glyphicon glyphicon-eye-open visible-icon">
@@ -161,12 +169,8 @@
                           popover-placement="top">
                     </span>
                 </label>
-                <span style="float: right">
-                <input type="color" ng-model="$ctrl.velp.color" title="change Velp default color" class="colorchange-button">
-                <input ng-if="$ctrl.isVelpCustomColor()" class="smallButton" type="button" ng-click="$ctrl.clearVelpColor()" title="Reset color to original value" value="R">
-                </span>
             </p>
-            <p>
+            <p class="velpEdit-remove-margin">
                 <label>
                     <span>Style</span>
                     <select ng-model="$ctrl.velp.style" title="Style"
