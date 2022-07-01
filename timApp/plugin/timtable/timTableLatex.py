@@ -1,12 +1,14 @@
 """
 Converts timTable-json into LaTeX.
-
-Visa Naukkarinen
 """
+__authors__ = ["Visa Naukkarinen"]
+
 
 import copy
+import dataclasses
 import re
-from typing import Callable, Any
+from dataclasses import dataclass, field
+from typing import Callable, Any, TypeVar, Literal
 
 # Default values:
 
@@ -60,47 +62,51 @@ class IndexConversionError(TimTableException):
     """
 
 
+@dataclass(slots=True)
+class CellColor:
+    color: str
+    is_hex: bool
+
+    @staticmethod
+    def default() -> "CellColor":
+        return CellColor(default_transparent_color, False)
+
+    def to_latex_str(self) -> str:
+        """
+        Converts color to LaTeX-format depending on whether it's
+        html or normal color.
+        :return: Just the color name, or HTML-option and hex code.
+        """
+        if self.is_hex:
+            return f"[HTML]{{{self.color}}}"
+        else:
+            return f"{{{self.color}}}"
+
+
+@dataclass(slots=True)
 class CellBorders:
     """
     Contains the attributes of a cell's borders.
     """
 
-    def __init__(
-        self,
-        left=False,
-        right=False,
-        top=False,
-        bottom=False,
-        color_bottom=(default_transparent_color, False),
-        color_top=(default_transparent_color, False),
-        color_left=(default_transparent_color, False),
-        color_right=(default_transparent_color, False),
-    ):
-        """
-        :param left: Whether the left-side cell border exists.
-        :param right: Right border existence.
-        :param top: Top border existence.
-        :param bottom: Bottom border existence.
-        :param color_bottom: The color of bottom border as tuple containing
-               color code/name and whether it's hex or not.
-        :param color_top: The color of top border.
-        :param color_left: The color of left border.
-        :param color_right: The color of right border.
-        """
-        # TODO: Add border style and thickness.
-        self.left = left
-        self.right = right
-        self.top = top
-        self.bottom = bottom
-        self.color_bottom = color_bottom
-        self.color_top = color_top
-        self.color_left = color_left
-        self.color_right = color_right
+    left: bool = False
+    """Left border existence."""
+    right: bool = False
+    """Right border existence."""
+    top: bool = False
+    """Top border existence."""
+    bottom: bool = False
+    """Bottom border existence."""
+    color_bottom: CellColor = field(default_factory=CellColor.default)
+    """The color of bottom border."""
+    color_top: CellColor = field(default_factory=CellColor.default)
+    """The color of top border."""
+    color_left: CellColor = field(default_factory=CellColor.default)
+    """The color of right border."""
+    color_right: CellColor = field(default_factory=CellColor.default)
+    """The color of right border."""
 
-    def __repr__(self) -> str:
-        return custom_repr(self)
-
-    def set_all_borders(self, color: tuple[str, bool]) -> None:
+    def set_all_borders(self, color: CellColor) -> None:
         """
         Set all borders visible and with same color.
 
@@ -117,68 +123,74 @@ class CellBorders:
         self.color_right = color
 
 
+@dataclass(slots=True)
 class Cell:
     """
     LaTeX-table cell containing all its attributes.
     """
 
-    def __init__(
-        self,
-        index: int = -1,
-        content: str = "",
-        colspan: int = default_colspan,
-        rowspan: int = default_rowspan,
-        text_color: None | str = default_text_color,
-        text_color_html: None | bool = False,
-        bg_color: None | str = default_transparent_color,
-        bg_color_html: None | bool = False,
-        h_align=default_text_h_align,
-        font_size: float = default_font_size,
-        cell_width=default_width,
-        cell_height=default_height,
-        line_space=0,
-        pbox="10cm",
-        font_family=default_font_family,
-        borders: CellBorders = CellBorders(),
-        font_weight=None,
-    ):
-        """
+    index: int = -1
+    """Cell index in a row."""
+    content: str = ""
+    """Cell content (text, math-symbols, etc.)."""
+    colspan: int = default_colspan
+    """How many columns the cell spans."""
+    rowspan: int = default_rowspan
+    """How many rows the cell spans."""
+    text_color: CellColor = field(
+        default_factory=lambda: CellColor(default_text_color, False)
+    )
+    """Cell text color code or name."""
+    bg_color: CellColor = field(default_factory=CellColor.default)
+    """Cell background color."""
+    h_align: str = default_text_h_align
+    """Text horizontal alignment."""
+    cell_width: str = default_width
+    """Width of the cell."""
+    cell_height: str = default_height
+    """Heigth of the cell."""
+    line_space: int = 0
+    """Unused attribute."""
+    pbox: str = "10cm"
+    """Length of an element that allows linebreaks in text (unused)."""
+    borders: CellBorders = field(default_factory=CellBorders)
+    """Object containing border-data."""
+    font_family: str = default_font_family
+    """Font family."""
+    font_size: float = default_font_size
+    """Font size."""
+    font_weight: str | None = None
+    """Font weight."""
 
-        :param index: Cell index in a row.
-        :param content: Cell content (text, math-symbols, etc.).
-        :param colspan: How many columns the cell spans.
-        :param rowspan: How many rows the cell spans.
-        :param text_color: Cell text color code or name.
-        :param text_color_html: Whether the text_color-attribute is a hex code.
-        :param bg_color: Cell background color code or name.
-        :param bg_color_html: Whether the bg_color-attribute is a hex code.
-        :param h_align: Text horizontal alignment.
-        :param font_size: Font size.
-        :param cell_width: Width of the cell.
-        :param cell_height: Heigth of the cell.
-        :param line_space: Unused attribute.
-        :param pbox: Length of an element that allows linebreaks in text (unused).
-        :param borders: Object containing border-data.
-        """
-        self.index = index
-        self.content = use_default_if_none(content, "")
-        self.colspan = colspan
-        self.rowspan = rowspan
-        self.text_color = use_default_if_none(text_color, default_text_color)
-        self.text_color_html = use_default_if_none(text_color_html, False)
-        self.bg_color = use_default_if_none(bg_color, default_transparent_color)
-        self.bg_color_html = use_default_if_none(bg_color_html, False)
-        self.h_align = use_default_if_none(h_align, default_text_h_align)
-        self.cell_width = use_default_if_none(cell_width, default_width)
-        self.cell_height = use_default_if_none(cell_height, default_height)
-        self.font_size = use_default_if_none(font_size, default_font_size)
+    def __post_init__(self) -> None:
         if self.font_size == 0:
             self.font_size = default_font_size
-        self.line_space = line_space
-        self.pbox = pbox
-        self.borders = borders
-        self.font_family = use_default_if_none(font_family, default_font_family)
-        self.font_weight = font_weight
+
+    def estimate_width(self) -> float:
+        """
+        Give estimation of cell width based on content and font size.
+
+        :return: Width of cell.
+        """
+        try:
+            return len(self.content) * float(self.font_size) / 2
+        except (TypeError, ValueError):
+            # If for some reason font size is not a number, use default.
+            return len(self.content) * default_font_size / 2
+
+    def estimate_height(self, width_constraint: float | None = None) -> float:
+        """
+        Gives estimation of cell height with width as constraint.
+
+        :param width_constraint: The width is locked before estimating height.
+        :return: Height of cell.
+        """
+        # The formula is just guesswork.
+        if width_constraint is None:
+            width_constraint = self.estimate_width()
+        if width_constraint == 0:
+            width_constraint = 1
+        return (self.font_size + 70) * len(self.content) / width_constraint
 
     def __str__(self) -> str:
         """
@@ -187,22 +199,20 @@ class Cell:
         # LaTeX has text-h-align and cell-v-borders in the same place:
         v_border_and_align = ""
         if self.borders.left:
-            l_b_color, l_b_html = self.borders.color_left
-            if not l_b_color == default_transparent_color:
+            if self.borders.color_left.color != default_transparent_color:
                 v_border_and_align += (
-                    rf"!{{\color{format_color(l_b_color, l_b_html)}\vrule}}"
+                    rf"!{{\color{self.borders.color_left.to_latex_str()}\vrule}}"
                 )
         v_border_and_align += self.h_align
         if self.borders.right:
-            r_b_color, r_b_html = self.borders.color_right
-            if not r_b_color == default_transparent_color:
+            if self.borders.color_right.color != default_transparent_color:
                 v_border_and_align += (
-                    rf"!{{\color{format_color(r_b_color, r_b_html)}\vrule}}"
+                    rf"!{{\color{self.borders.color_right.to_latex_str()}\vrule}}"
                 )
 
         # HTML-colors have an extra tag
-        cell_color = format_color(self.bg_color, self.bg_color_html)
-        if self.bg_color == default_transparent_color or not self.bg_color:
+        cell_color = self.bg_color.to_latex_str() if self.bg_color else ""
+        if not self.bg_color or self.bg_color.color == default_transparent_color:
             cell_color = ""
         else:
             cell_color = rf"\cellcolor{cell_color}"
@@ -243,15 +253,15 @@ class Cell:
             rf"\multirow{{{self.rowspan}}}{{{cell_width}}}{{"
             f"{cell_color}"
             rf"\fontsize{{{self.font_size}}}{{{self.line_space}}}"
-            rf"\selectfont{{\textcolor{{{self.text_color}}}{{{{{font_family_line}"
+            rf"\selectfont{{\textcolor{self.text_color.to_latex_str()}{{{{{font_family_line}"
             rf"{content}}}}}}}}}}}{font_family_line_postfix}"
         )
 
-    def __repr__(self) -> str:
-        return custom_repr(self)
+
+T = TypeVar("T")
 
 
-def use_default_if_none(value, default):
+def use_default_if_none(value: T | None, default: T) -> T:
     """
     Checks whether the value is None and uses default if it is.
 
@@ -259,42 +269,18 @@ def use_default_if_none(value, default):
     :param default: Default to use if value is None.
     :return: Value without changes or default, if value was None.
     """
-    if value is None:
-        return default
-    else:
-        return value
+    return value if value is not None else default
 
 
-def format_color(color: str, html_color: bool) -> str:
-    """
-    Converts color to LaTeX-format depending on whether it's
-    html or normal color.
-
-    :param color: Color name or hex-code.
-    :param html_color: Whether the color is in hex or not.
-    :return: Just the color name, or HTML-option and hex code.
-    """
-    if html_color:
-        return f"[HTML]{{{color}}}"
-    else:
-        return f"{{{color}}}"
-
-
+@dataclass(slots=True)
 class Row:
     """
     LaTeX-table row.
     """
 
-    def __init__(
-        self, index: int, cells: list[Cell], height: float | None = None
-    ) -> None:
-        """
-        :param index: Row index.
-        :param cells: A list of the cells this row contains.
-        """
-        self.index = index
-        self.cells = cells
-        self.height = height
+    index: int
+    cells: list[Cell]
+    height: float | None = None
 
     def __str__(self) -> str:
         """
@@ -307,13 +293,13 @@ class Row:
             output += f"& {str(self.cells[i])}"
         return output
 
-    def get_row_height(self) -> int | float:
+    def get_row_height(self) -> float:
         """
         Gives the largest cell height to be used as row height or row's height attribute, if it is taller.
         Note: sseparate cell heights aren't supported.
         :return: Row height.
         """
-        height = 0
+        height = 0.0
         try:
             for i in range(0, len(self.cells)):
                 height = max(float(height), float(self.cells[i].cell_height))
@@ -370,25 +356,43 @@ class Row:
                 return cell
         return None
 
-    def __repr__(self):
-        return custom_repr(self)
 
-
+@dataclass(slots=True)
 class HorizontalBorder:
     """
     Horizontal line between rows.
     """
 
-    def __init__(self, row_above: Row = None, row_below: Row = None) -> None:
-        """
-        In LaTeX there can't be duplicate h-lines, so the line needs to be a
-        composite of all cell-borders from rows above and below.
+    row_above: Row | None = None
+    """The row above the line."""
+    row_below: Row | None = None
+    """The row below the line."""
 
-        :param row_above: The row above the line.
-        :param row_below: The row below the line.
-        """
-        self.row_above = row_above
-        self.row_below = row_below
+    def _try_get_neighbour(
+        self, index: int, check_dir: Literal["top", "bottom"]
+    ) -> tuple[bool, int, CellColor | None]:
+        row_to_check: Row | None = (
+            self.row_above if check_dir == "top" else self.row_below
+        )
+        is_present = False
+        colspan = 1
+        color = None
+
+        if not row_to_check:
+            return is_present, colspan, color
+
+        try:
+            row_cell = row_to_check.cells[index]
+            borders = row_cell.borders
+            colspan = row_cell.colspan
+            is_present = borders.bottom if check_dir == "top" else borders.top
+            color = borders.color_bottom if check_dir == "top" else borders.color_top
+            if color.color == default_transparent_color:
+                color = None
+        except (IndexError, AttributeError):
+            pass
+
+        return is_present, colspan, color
 
     def __str__(self) -> str:
         r"""
@@ -403,15 +407,8 @@ class HorizontalBorder:
         # into wrong places when there's colspan.
 
         # Get cell-count from the rows.
-        try:
-            above_count = self.row_above.get_colspan()
-        # If there's no row:
-        except AttributeError:
-            above_count = 0
-        try:
-            below_count = self.row_below.get_colspan()
-        except AttributeError:
-            below_count = 0
+        above_count = self.row_above.get_colspan() if self.row_above else 0
+        below_count = self.row_below.get_colspan() if self.row_below else 0
 
         max_count = max(above_count, below_count)
         if max_count <= 0:
@@ -421,50 +418,14 @@ class HorizontalBorder:
         colspan_counter_upper = 0
 
         for i in range(0, max_count):
-            # Some default values:
-            i_upper = False
-            i_upper_colspan = 1
-            i_lower = False
-            i_lower_colspan = 1
-            color_above = None
-            color_below = None
-
-            # These try to keep count of index drift caused by multi-column cells.
             index_lower = i + colspan_counter_lower
             index_upper = i + colspan_counter_upper
-
-            # This block checks if there actually is a row above/below
-            # and tries getting data from there without crashing if thing
-            # this asks doesn't exist.
-
-            if self.row_above:
-                try:
-                    i_upper = self.row_above.cells[index_upper].borders.bottom
-                    i_upper_colspan = self.row_above.cells[index_upper].colspan
-                    # upper_cont = self.row_above.cells[index_upper].content
-                # If the row doesn't exist, won't assert the
-                # need for a line from that direction.
-                except (IndexError, AttributeError):
-                    pass
-                try:
-                    color_above = self.row_above.cells[index_upper].borders.color_bottom
-                    if color_above == default_transparent_color:
-                        color_above = None
-                except (IndexError, AttributeError):
-                    pass
-            if self.row_below:
-                try:
-                    i_lower = self.row_below.cells[index_lower].borders.top
-                    i_lower_colspan = self.row_below.cells[index_lower].colspan
-                    # lower_cont = self.row_below.cells[index_lower].content
-                except (IndexError, AttributeError):
-                    pass
-                try:
-                    color_below = self.row_below.cells[index_lower].borders.color_top
-                    if color_below == default_transparent_color:
-                        color_below = None
-                except (IndexError, AttributeError):
-                    pass
+            i_upper, i_upper_colspan, color_above = self._try_get_neighbour(
+                index_upper, "top"
+            )
+            i_lower, i_lower_colspan, color_below = self._try_get_neighbour(
+                index_lower, "bottom"
+            )
 
             colspan = max(i_upper_colspan, i_lower_colspan)
 
@@ -474,146 +435,44 @@ class HorizontalBorder:
             else:
                 # If border color of above cell is default or there's no row above,
                 # use color from below cell.
-                if (
-                    not color_above
-                    and color_below
-                    or color_above[0] == default_transparent_color
-                    and color_below
+                if color_below and (
+                    not color_above or color_above.color == default_transparent_color
                 ):
-                    color, html_color = color_below
+                    color = color_below
                 # Otherwise default to top color.
+                elif color_above:
+                    color = color_above
                 else:
-                    color, html_color = color_above
+                    color = None
                 # If no color, don't draw the line.
-                if color == default_transparent_color or not color:
+                if not color or color.color == default_transparent_color:
                     output += colspan * "~"
                 # Multicolumn cell counts as one cell but require multiple borderlines.
                 else:
-                    output += (
-                        colspan
-                        * rf">{{\arrayrulecolor{format_color(color, html_color)}}}-"
-                    )
+                    output += colspan * rf">{{\arrayrulecolor{color.to_latex_str()}}}-"
             colspan_counter_lower = colspan_counter_lower + i_upper_colspan - 1
             colspan_counter_upper = colspan_counter_upper + i_lower_colspan - 1
         return output
 
-    def __repr__(self) -> str:
-        return custom_repr(self)
 
-
-def estimate_cell_width(cell):
-    """
-    Give estimation of cell width based on content and font size.
-
-    :param cell: Cell to estimate.
-    :return: Width of cell.
-    """
-    try:
-        return len(cell.content) * float(cell.font_size) / 2
-    except (TypeError, ValueError):
-        # If for some reason font size is not a number, use default.
-        return len(cell.content) * default_font_size / 2
-
-
-def estimate_cell_height(cell, width_constraint):
-    """
-    Gives estimation of cell height with width as constraint.
-
-    :param cell: Cell to estimate.
-    :param width_constraint: The width is locked before estimating height.
-    :return: Height of cell.
-    """
-    # The formula is just guesswork.
-    if width_constraint == 0:
-        width_constraint = 1
-    return (cell.font_size + 70) * len(cell.content) / width_constraint
-
-
-def estimate_table_width(self) -> tuple[float, bool]:
-    """
-    Get total width of the table (i.e. width of longest row).
-    :return: Width.
-    """
-    width = 0
-    estimate = False
-    for row in self.rows:
-        for cell in row.cells:
-            try:
-                cell_width = float(parse_size_attribute(cell.cell_width))
-            except:
-                estimate = True
-                cell_width = estimate_cell_width(cell)
-            else:
-                if is_close(0, cell_width):
-                    estimate = True
-                    cell_width = estimate_cell_width(cell)
-            width += cell_width
-    return width, estimate
-
-
-def estimate_col_widths(rows):
-    """
-    Takes the most large set width of the column's cells,
-    or estimation of their needed content size, if all are automatic.
-
-    :param rows: Table rows.
-    :return: Estimation of column widths.
-    """
-    # TODO: Take colspan into account.
-    widths = []
-    for i in range(0, len(rows)):
-        i_widths = []
-        max_content_size = 0
-        for j in range(0, default_max_col_count):
-            try:
-                cell = rows[j].cells[i]
-            except IndexError:
-                break
-            else:
-                # Cells with lots of content are expected to be divided on separate lines.
-                # Magic number factors are there to balance things out.
-                content_size = estimate_cell_width(cell) * 0.8
-                if len(cell.content) > wrap_cell_threshold:
-                    content_size = content_size * 0.2
-                width = cell.cell_width
-                if content_size > max_content_size:
-                    max_content_size = content_size
-                if width != default_width:
-                    i_widths.append(width)
-
-        if i_widths:
-            widths.append(max(i_widths))
-        else:
-            widths.append(max_content_size)
-    return widths
-
-
+@dataclass(slots=True)
 class Table:
     """
     Table with rows, cells in rows, and horizontal borders between rows.
     """
 
-    def __init__(
-        self,
-        rows: list[Row],
-        width=default_table_width,
-        height=default_table_height,
-        fit_to_page_width: bool = False,
-    ) -> None:
-        """
-        :param rows: List of the rows of the table.
-        :param width: Table width.
-        :param height: Table height.
-        """
-        self.rows = rows
+    rows: list[Row]
+    """List of the rows of the table."""
+    width: str = default_table_width
+    """Table width."""
+    height: str = default_table_height
+    """Table height."""
+    fit_to_page_width: bool = False
+    """Whether to fit the table to the page width."""
 
-        self.width = width
-        self.height = height
-        self.hborders = []
-        self.col_count = None
-        self.largest_content_len = None
-        self.largest_col_count = None
-        self.fit_to_page_width = fit_to_page_width
+    hborders: list[HorizontalBorder] = field(default_factory=list)
+    largest_content_len: int | None = None
+    largest_col_count: int | None = None
 
     def __str__(self) -> str:
         """
@@ -679,8 +538,61 @@ class Table:
             HorizontalBorder(row_above=self.rows[len(self.rows) - 1], row_below=None)
         )
 
-    def __repr__(self) -> str:
-        return custom_repr(self)
+    def estimate_width(self) -> tuple[float, bool]:
+        """
+        Get total width of the table (i.e. width of longest row).
+        :return: Width.
+        """
+        width = 0.0
+        estimate = False
+        for row in self.rows:
+            for cell in row.cells:
+                try:
+                    cell_width = float(parse_size_attribute(cell.cell_width))
+                except:
+                    estimate = True
+                    cell_width = cell.estimate_width()
+                else:
+                    if is_close(0, cell_width):
+                        estimate = True
+                        cell_width = cell.estimate_width()
+                width += cell_width
+        return width, estimate
+
+    def estimate_col_widths(self) -> list[float]:
+        """
+        Takes the most large set width of the column's cells,
+        or estimation of their needed content size, if all are automatic.
+
+        :return: Estimation of column widths.
+        """
+        # TODO: Take colspan into account.
+        widths = []
+        for i in range(0, len(self.rows)):
+            i_widths = []
+            max_content_size = 0.0
+            for j in range(0, default_max_col_count):
+                try:
+                    cell = self.rows[j].cells[i]
+                except IndexError:
+                    break
+                else:
+                    # Cells with lots of content are expected to be divided on separate lines.
+                    # Magic number factors are there to balance things out.
+                    content_size = cell.estimate_width() * 0.8
+                    if len(cell.content) > wrap_cell_threshold:
+                        content_size = content_size * 0.2
+                    if content_size > max_content_size:
+                        max_content_size = content_size
+                    width = cell.cell_width
+                    if width != default_width:
+                        i_widths.append(parse_size_attribute(width))
+
+            if i_widths:
+                widths.append(max(i_widths))
+            else:
+                widths.append(max_content_size)
+        return widths
 
     def auto_size_cells(self) -> None:
         """
@@ -700,7 +612,7 @@ class Table:
         if not self.rows:
             return
         try:
-            widths = estimate_col_widths(self.rows)
+            widths = self.estimate_col_widths()
             # # Alternative way to do this, based on the first row.
             # for cell in self.rows[0].cells:
             #     cell_width = cell.cell_width
@@ -708,16 +620,16 @@ class Table:
             #         cell_width = estimate_cell_width(cell)
             #     widths.append(cell_width)
             for i in range(0, len(self.rows)):
-                max_height = 0  # Tallest estimated height in the cells of the row.
+                max_height = 0.0  # Tallest estimated height in the cells of the row.
                 for j in range(0, len(self.rows[i].cells)):
                     cell = self.rows[i].cells[j]
                     # Don't change width of the first row (because it is in most cases titles).
                     try:
                         if i != 0:
-                            cell.cell_width = widths[j]
-                        height = estimate_cell_height(cell, widths[j])
+                            cell.cell_width = str(widths[j])
+                        height = cell.estimate_height(widths[j])
                     except IndexError:
-                        height = estimate_cell_height(cell, estimate_cell_width(cell))
+                        height = cell.estimate_height()
                     # Row height will be decided by the tallest cell.
                     if height > max_height:
                         max_height = height
@@ -763,6 +675,7 @@ class Table:
             return self.largest_content_len
         else:
             self.save_largest()
+            assert self.largest_content_len is not None
             return self.largest_content_len
 
     def get_largest_col_count(self) -> int:
@@ -774,10 +687,11 @@ class Table:
             return self.largest_col_count
         else:
             self.save_largest()
+            assert self.largest_col_count is not None
             return self.largest_col_count
 
 
-def get_column_span(item):
+def get_column_span(item: dict[str, Any]) -> int:
     """
     Get column span value.
 
@@ -790,7 +704,9 @@ def get_column_span(item):
         return 1
 
 
-def get_column_color_list(key, table_data):
+def get_column_color_list(
+    key: str, table_data: dict[str, Any]
+) -> list[CellColor | None]:
     """
     Reads all the columns of the table and makes a list of their color formattings.
 
@@ -798,29 +714,29 @@ def get_column_color_list(key, table_data):
     :param table_data: Table JSON.
     :return: List of column colors.
     """
-    l = []
+    result: list[CellColor | None] = []
     try:
         columns_data = table_data["columns"]
     except:
         # Add empty entries as a quick fix for index out of bounds error.
-        return [(None, None)] * default_max_col_count
+        return [None] * default_max_col_count
     for i in range(0, len(columns_data)):
         span = get_column_span(columns_data[i])
         for j in range(0, span):
-            l.append(get_color(columns_data[i], key))
+            result.append(get_color(columns_data[i], key))
     for k in range(0, default_max_col_count):
-        l.append((None, None))
-    return l
+        result.append(None)
+    return result
 
 
-def get_column_width_list(table_data):
+def get_column_width_list(table_data: dict[str, Any]) -> list[float | None]:
     """
     Forms a list of column widths from the columns data.
 
     :param table_data: Table JSON.
     :return: List of column widths.
     """
-    l = []
+    result = []
     try:
         try:
             columns_data = table_data["columnstex"]
@@ -832,15 +748,15 @@ def get_column_width_list(table_data):
         span = get_column_span(columns_data[i])
         for j in range(0, span):
             try:
-                l.append(get_size(columns_data[i], "width"))
+                result.append(get_size(columns_data[i], "width"))
             except:
-                l.append(None)
+                result.append(None)
     for k in range(0, default_max_col_count):
-        l.append(None)
-    return l
+        result.append(None)
+    return result
 
 
-def get_column_style_list(table_data, key):
+def get_column_style_list(table_data: dict[str, Any], key: str) -> list[Any | None]:
     """
     Forms a list of styles corresponding to the key from the columns data.
 
@@ -848,7 +764,7 @@ def get_column_style_list(table_data, key):
     :param key: Style key.
     :return: List of column styles.
     """
-    l = []
+    result = []
     try:
         columns_data = table_data["columns"]
     except:
@@ -858,15 +774,17 @@ def get_column_style_list(table_data, key):
         span = get_column_span(column_data)
         for j in range(0, span):
             try:
-                l.append(column_data[key])
+                result.append(column_data[key])
             except:
-                l.append(None)
+                result.append(None)
     for k in range(0, default_max_col_count):
-        l.append(None)
-    return l
+        result.append(None)
+    return result
 
 
-def get_column_format_list(table_data, f: Callable[[dict, Any], Any]):
+def get_column_format_list(
+    table_data: dict[str, Any], f: Callable[[dict, Any], Any]
+) -> list[Any | None]:
     """
     Forms a list of font families from the columns data.
 
@@ -874,7 +792,7 @@ def get_column_format_list(table_data, f: Callable[[dict, Any], Any]):
     :param f: Function to get the format values from the column data.
     :return: List of column formats.
     """
-    l = []
+    result = []
     try:
         columns_data = table_data["columns"]
     except:
@@ -884,25 +802,15 @@ def get_column_format_list(table_data, f: Callable[[dict, Any], Any]):
         span = get_column_span(column_data)
         for j in range(0, span):
             try:
-                l.append(f(column_data, None))
+                result.append(f(column_data, None))
             except:
-                l.append(None)
+                result.append(None)
     for k in range(0, default_max_col_count):
-        l.append(None)
-    return l
+        result.append(None)
+    return result
 
 
-def custom_repr(obj) -> str:
-    """
-    Extended repr that displays all contents of the object.
-
-    :param obj: The object to repr.
-    :return: Full contents of the object and the objects it references.
-    """
-    return f"{str(obj.__class__)}: {str(obj.__dict__)}"
-
-
-def get_content(cell_data) -> str:
+def get_content(cell_data: Any) -> str:
     """
     Gets content from a cell.
 
@@ -910,15 +818,20 @@ def get_content(cell_data) -> str:
     :return: Cell content.
     """
     try:
-        return str(cell_data["cell"]).strip()
+        cell = cell_data["cell"]
+        if not cell:
+            return ""
+        return str(cell).strip()
     # Cells that use simplified format (without 'cell').
     except TypeError:
         return str(cell_data)
 
 
 def get_color(
-    item, key: str, default_color=None, default_color_html=None
-) -> (str, bool):
+    item: dict[str, Any],
+    key: str,
+    default_color: CellColor | None = None,
+) -> CellColor | None:
     """
     Parses color-data into LaTeX-format.
 
@@ -930,22 +843,21 @@ def get_color(
     """
     # Normal LaTex doesn't recognize some html colors,
     # so they need to be defined in the tex file (colors.txt in timApp/static/tex).
-    color = default_color
-    color_html = default_color_html
-    try:
-        color = item[key]
-        if "#" in color:
-            color_html = True
-            color = parse_hex_color(color)
+    color = item.get(key, None)
+    if color is not None and isinstance(color, str):
+        color = color.strip()
+        if color.startswith("#"):
+            color = parse_hex_color(color, default_transparent_color)
+            if color != default_transparent_color:
+                return CellColor(color, True)
         else:
-            color_html = False
-    except KeyError:
-        pass
-    finally:
-        return color, color_html
+            return CellColor(color, False)
+    return default_color
 
 
-def get_datablock_cell_data(datablock, row: int, cell: int):
+def get_datablock_cell_data(
+    datablock: dict[str, Any] | None, row: int, cell: int
+) -> dict[str, Any] | str:
     """
     Returns data from datablock index.
 
@@ -954,16 +866,14 @@ def get_datablock_cell_data(datablock, row: int, cell: int):
     :param cell: Cell index.
     :return: Datablock data for a cell, if it exists.
     """
+    from timApp.plugin.timtable.timTable import cell_coordinate
+
     if not datablock:
-        return None
-    try:
-        datablock_index = f"{int_to_datablock_index(cell)}{row+1}"
-        return datablock[datablock_index]
-    except:
-        return None
+        return {}
+    return datablock.get(cell_coordinate(row, cell), {})
 
 
-def convert_datablock_index(datablock_index) -> tuple[int, int]:
+def convert_datablock_index(datablock_index: str) -> tuple[int, int]:
     """
     A 1 -> 0, 0
     ZZ13 -> 51, 12
@@ -978,7 +888,9 @@ def convert_datablock_index(datablock_index) -> tuple[int, int]:
     return cell, row
 
 
-def add_missing_elements(table_json, datablock):
+def add_missing_elements(
+    table_json: dict[str, Any], datablock: dict[str, Any]
+) -> dict[str, Any]:
     """
     Add cells and rows only present in datablock.
 
@@ -1022,7 +934,9 @@ def add_missing_elements(table_json, datablock):
     return table_json
 
 
-def get_span(item, default=None) -> (int, int):
+def get_span(
+    item: dict[str, Any], default: int | None = None
+) -> tuple[int | None, int | None]:
     """
     Parses row and column span of the cell.
     If not specified, assume it's 1.
@@ -1031,18 +945,22 @@ def get_span(item, default=None) -> (int, int):
     :param default: Default used when not found.
     :return: Colspan and rowspan in a tuple.
     """
+    colspan = item.get("colspan", default)
+    rowspan = item.get("rowspan", default)
     try:
-        colspan = item["colspan"]
+        colspan = int(colspan)
     except:
         colspan = default
     try:
-        rowspan = item["rowspan"]
+        rowspan = int(rowspan)
     except:
         rowspan = default
     return colspan, rowspan
 
 
-def get_size(item, key: str, default=None) -> str | None:
+def get_size(
+    item: dict[str, Any], key: str, default: float | None = None
+) -> float | None:
     """
     Parse width or height into LaTeX-supported format.
 
@@ -1052,30 +970,26 @@ def get_size(item, key: str, default=None) -> str | None:
     :return: Cell width or height.
     """
     try:
-        size = parse_size_attribute(item[key])
-        if size == "auto":
-            return None
-        return size
+        return parse_size_attribute(item.get(key, ""))
     except:
         return default
 
 
-def get_font_family(item, default: str | None = default_font_family) -> str | None:
+def get_font_family(
+    item: dict[str, Any], default: str | None = default_font_family
+) -> str | None:
     """
     :param item: Cell or row data.
     :param default: Font family to use in case none set.
     :return: Set font family or default.
     """
-    try:
-        # Corresponding HTML and LaTeX codes need to be mapped in the 'fonts'.
-        ff = item["fontFamily"].lower()
-        font = fonts[ff]
-    except:
-        font = default
-    return font
+    ff = item.get("fontFamily", None)
+    if ff is None or not isinstance(ff, str):
+        return default
+    return fonts.get(ff, default)
 
 
-def get_text_horizontal_align(item, default):
+def get_text_horizontal_align(item: dict[str, Any], default: str | None) -> str | None:
     """
     Parses text horizontal alignment.
 
@@ -1083,16 +997,13 @@ def get_text_horizontal_align(item, default):
     :param default: Value to be used if no set align.
     :return: Set align or default.
     """
-    try:
-        # Options are center, right and left, which happen to be the same in LaTeX,
-        # except only first letters are used.
-        a = str(item["textAlign"]).strip()[:1]
-    except:
-        a = default
-    return a
+    align = item.get("textAlign", None)
+    if align is None:
+        return default
+    return str(align).strip()[:1]
 
 
-def get_font_size(item, default_size):
+def get_font_size(item: dict[str, Any], default_size: float | None) -> float | None:
     """
     Gets text size if set, and uses default otherwise.
 
@@ -1103,7 +1014,7 @@ def get_font_size(item, default_size):
     return get_size(item, "fontSize", default_size)
 
 
-def get_key_value(item, key, default=None):
+def get_key_value(item: dict[str, Any], key: str, default: Any) -> Any:
     """
     Returns a value from dictionary or default if key doesn't exist.
 
@@ -1119,7 +1030,7 @@ def get_key_value(item, key, default=None):
     return a
 
 
-def parse_hex_color(color, default_color=None) -> str | None:
+def parse_hex_color(color: str, default_color: str) -> str:
     """
     Removes non-hex characters and checks if result is valid.
 
@@ -1133,7 +1044,7 @@ def parse_hex_color(color, default_color=None) -> str | None:
     return color
 
 
-def get_border_color(border_data) -> tuple[str, bool]:
+def get_border_color(border_data: str) -> CellColor:
     """
     Parses border color from HTML border format.
 
@@ -1149,10 +1060,12 @@ def get_border_color(border_data) -> tuple[str, bool]:
         # if "#" in color:
         #     color_html = True
         #     color = parse_hex_color(color, default_text_color)
-    return color, color_html
+    return CellColor(color, color_html)
 
 
-def get_borders(item, default_borders=CellBorders()) -> CellBorders:
+def get_borders(
+    item: dict[str, Any], default_borders: CellBorders | None = None
+) -> CellBorders:
     """
     Creates a CellBorder object with corresponding border-data.
 
@@ -1160,47 +1073,19 @@ def get_borders(item, default_borders=CellBorders()) -> CellBorders:
     :param default_borders: Borders to be used in case none found.
     :return: CellBorders object for the item.
     """
-    try:
-        border_data = item["border"]
-        if border_data:
-            borders = CellBorders()
-            borders.set_all_borders(get_border_color(border_data))
-            return borders
-    except:
-        borders = copy.copy(default_borders)
-        try:
-            border_data = item["borderLeft"]
-            if border_data:
-                borders.left = True
-                (color, color_html) = get_border_color(border_data)
-                borders.color_left = color, color_html
-        except:
-            pass
-        try:
-            border_data = item["borderRight"]
-            if border_data:
-                borders.right = True
-                (color, color_html) = get_border_color(border_data)
-                borders.color_right = color, color_html
-        except:
-            pass
-        try:
-            border_data = item["borderTop"]
-            if border_data:
-                borders.top = True
-                (color, color_html) = get_border_color(border_data)
-                borders.color_top = color, color_html
-        except:
-            pass
-        try:
-            border_data = item["borderBottom"]
-            if border_data:
-                borders.bottom = True
-                (color, color_html) = get_border_color(border_data)
-                borders.color_bottom = color, color_html
-        except:
-            pass
+    border_data = item.get("border", None)
+    if border_data is not None and isinstance(border_data, str):
+        borders = CellBorders()
+        borders.set_all_borders(get_border_color(border_data))
         return borders
+
+    borders = dataclasses.replace(default_borders) if default_borders else CellBorders()
+    for d in ("top", "right", "bottom", "left"):
+        border_data = item.get(f"border{d.capitalize()}", None)
+        if border_data is not None and isinstance(border_data, str):
+            setattr(borders, d, True)
+            setattr(borders, f"color_{d}", get_border_color(border_data))
+    return borders
 
 
 def copy_cell(cell: Cell) -> Cell:
@@ -1215,18 +1100,18 @@ def copy_cell(cell: Cell) -> Cell:
     return n_cell
 
 
-def get_datablock(table_json):
+def get_datablock(table_json: dict[str, Any]) -> dict[str, Any]:
     """
     Looks for and returns datablock or None, if table has no tabledatablock element.
 
     :param table_json: Table data as json string.
     :return: Datablock or None.
     """
-    try:
-        datablock = table_json["tabledatablock"]["cells"]
-    except KeyError:
-        datablock = None
-    return datablock
+    tabledatablock = table_json.get("tabledatablock", {})
+    if not isinstance(tabledatablock, dict):
+        tabledatablock = {}
+    datablock = tabledatablock.get("cells", None)
+    return datablock if datablock is not None and isinstance(datablock, dict) else {}
 
 
 def int_to_datablock_index(i: int) -> str:
@@ -1243,9 +1128,9 @@ def int_to_datablock_index(i: int) -> str:
     return (a + 1) * str(chr(ord("A") + b))
 
 
-def parse_size_attribute(attribute: str) -> str:
+def parse_size_attribute(attribute: Any) -> float:
     """
-    Converts numeric attributes to pts and removes the unit sign.
+    Converts numeric CSS attributes to pts and removes the unit sign.
 
     :param attribute: Size attribute.
     :return: Parsed string.
@@ -1262,21 +1147,19 @@ def parse_size_attribute(attribute: str) -> str:
         "em": 10.00002,
     }
     if not attribute:
-        return "0"
+        return 0
     for key, value in conv_to_pt.items():
         if key in attribute:
             try:
-                return str(
-                    round(float(str(attribute).replace(key, "").strip()) * value, 2)
-                )
-            except Exception as e:
+                return round(float(str(attribute).replace(key, "").strip()) * value, 2)
+            except:
                 # TODO: Tell user about conversion errors.
                 pass
     # If not recognized, return zero.
-    return "0"
+    return 0
 
 
-def get_table_size(table_data):
+def get_table_size(table_data: dict[str, Any]) -> tuple[str, str]:
     """
     Sets table size attributes and uses default values if not found.
 
@@ -1284,17 +1167,21 @@ def get_table_size(table_data):
     :return: Table width and height as a tuple.
     """
     try:
-        width = parse_size_attribute(table_data["width"])
+        width = str(parse_size_attribute(table_data["width"]))
     except KeyError:
         width = default_table_width
     try:
-        height = parse_size_attribute(table_data["height"])
+        height = str(parse_size_attribute(table_data["height"]))
     except KeyError:
         height = default_table_height
     return width, height
 
 
-def get_table_resize(table_data, table_width_estimation, col_count) -> bool:
+def get_table_resize(
+    table_data: dict[str, Any],
+    table_width_estimation: tuple[float, bool],
+    col_count: int,
+) -> bool:
     """
     Whether table should be resized to fit the page width.
     If the attribute isn't set, automatically decide whether to resize.
@@ -1304,8 +1191,7 @@ def get_table_resize(table_data, table_width_estimation, col_count) -> bool:
     :param col_count Max number of columns (including colspans) in the table.
     :return: Table scaling true or false.
     """
-    table_width = table_width_estimation[0]
-    estimate = table_width_estimation[1]
+    table_width, estimate = table_width_estimation
     resize = False
     # If forced.
     try:
@@ -1321,45 +1207,45 @@ def get_table_resize(table_data, table_width_estimation, col_count) -> bool:
     return resize
 
 
-def decide_format_size(format_levels):
+def decide_format_size(format_levels: list[float | None]) -> str | float:
     """
     Decides which size (column, row, cell, datablock) to use by taking the longest one.
 
     :param format_levels: Table, column, row, cell, datablock.
     :return: Largest size.
     """
-    final_size = 0
+    final_size = 0.0
     for level in format_levels:
-        if level and default_width not in level:
-            try:
-                size = float(level)
-                if size > final_size:
-                    final_size = size
-            except ValueError:
-                continue
+        if level:
+            size = level
+            if size > final_size:
+                final_size = size
     if is_close(final_size, 0):
         return default_width
     else:
         return final_size
 
 
-def decide_format_tuple(format_levels):
+def decide_format_colors(format_levels: list[CellColor | None]) -> CellColor:
     """
-    Goes through a list of formats and returns the last non-empty one.
+    Goes through a list of color formats and returns the last non-empty one.
     The idea is to stack table, column, row and cell formats and take the
     topmost format.
 
-    :param format_levels: Table, column, row, cell, datablock.
+    :param format_levels: Possible values for cell colors.
     :return: Last non-empty format.
     """
-    final_format = (None, None)
+    final_color = None
     for level in format_levels:
-        if level[0]:
-            final_format = level
-    return final_format
+        if level:
+            final_color = level
+    return final_color or CellColor.default()
 
 
-def decide_format(format_levels):
+FT = TypeVar("FT")
+
+
+def decide_format(format_levels: list[FT]) -> FT | None:
     """
     Decides which format to use by taking the latest non-empty one.
 
@@ -1373,7 +1259,7 @@ def decide_format(format_levels):
     return final_format
 
 
-def is_close(a, b, rel_tol=1e-09, abs_tol=0.0) -> bool:
+def is_close(a: float, b: float, rel_tol: float = 1e-09, abs_tol: float = 0.0) -> bool:
     """
     Compares floats and returns true if they are almost same.
     Source: https://stackoverflow.com/questions/5595425/what-is-the-best-way-to-compare-floats-for-almost-equality-in-python
@@ -1387,23 +1273,63 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0) -> bool:
     return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
-def decide_colspan_rowspan(
-    cell_colspan, cell_rowspan, datablock_colspan, datablock_rowspan
-):
-    colspan = cell_colspan
-    rowspan = cell_rowspan
-    if datablock_colspan:
-        colspan = datablock_colspan
-    if not colspan:
-        colspan = default_colspan
-    if datablock_rowspan:
-        rowspan = datablock_rowspan
-    if not rowspan:
-        rowspan = default_rowspan
-    return colspan, rowspan
+@dataclass(slots=True)
+class StyleOptions:
+    bg_color: CellColor | None
+    text_color: CellColor | None
+    width: float | None
+    height: float | None
+    font_size: float | None
+    h_align: str | None
+    font_family: str | None
+    font_weight: str | None
+    span: tuple[int | None, int | None]
+    borders: CellBorders
+
+    @staticmethod
+    def from_dict(d: dict[str, Any], default_borders: CellBorders) -> "StyleOptions":
+        bg_color = get_color(d, "backgroundColor")
+        text_color = get_color(d, "color")
+        width = get_size(d, "width", None)
+        height = get_size(d, "height", None)
+        font_size = get_font_size(d, None)
+        h_align = get_text_horizontal_align(d, None)
+        font_family = get_font_family(d, None)
+        font_weight = get_key_value(d, "fontWeight", None)
+        span = get_span(d)
+        borders = get_borders(d, default_borders)
+
+        return StyleOptions(
+            bg_color,
+            text_color,
+            width,
+            height,
+            font_size,
+            h_align,
+            font_family,
+            font_weight,
+            span,
+            borders,
+        )
 
 
-def convert_table(table_json, draw_html_borders: bool = False) -> Table:
+def decide_colspan_rowspan(options: list[StyleOptions]) -> tuple[int, int]:
+    colspan_final = default_colspan
+    rowspan_final = default_rowspan
+    for o in options:
+        colspan, rowspan = o.span
+        if colspan:
+            colspan_final = colspan
+        if rowspan:
+            rowspan_final = rowspan
+    return colspan_final, rowspan_final
+
+
+def convert_table(
+    table_json: dict[str, Any],
+    user_data: dict[str, Any] | None = None,
+    draw_html_borders: bool = False,
+) -> Table:
     """
     Converts TimTable-json into LaTeX-compatible object.
     Note: for correct functioning all the other modules should use this.
@@ -1413,10 +1339,12 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     :param draw_html_borders Add light gray default borders around cells similarly to HTML-table.
     :return: Table-object containing the rows and cells in LaTex.
     """
-    table_rows = []
+    table_rows: list[Row] = []
     table = Table(table_rows)
     datablock = get_datablock(table_json)
     table_json = add_missing_elements(table_json, datablock)
+    if user_data:
+        table_json = add_missing_elements(table_json, user_data)
     # TODO: Make the table size work with correct logic.
     # These may stretch the table until unreadable or outside the page.
     # Also, even if the same value is set horizontally and vertically,
@@ -1431,12 +1359,11 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
 
     # Table settings will be used as defaults, if set.
     # Each level's format is saved in a variable, which will be empty, if
-    # that level doesn't have any formattings.
-    (table_bg_color, table_bg_color_html) = get_color(
-        table_json, "backgroundColor", default_transparent_color, False
-    )
-    (table_text_color, table_text_color_html) = get_color(
-        table_json, "color", default_text_color, False
+    # that level doesn't have any formatting.
+
+    table_bg_color = get_color(table_json, "backgroundColor", CellColor.default())
+    table_text_color = get_color(
+        table_json, "color", CellColor(default_text_color, False)
     )
     table_font_family = get_font_family(table_json, default_font_family)
     table_borders = get_borders(table_json, CellBorders())
@@ -1447,7 +1374,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     # Add light borders around every cell like in HTML-table.
     if draw_html_borders:
         table_borders = CellBorders()
-        table_borders.set_all_borders(("lightgray", False))
+        table_borders.set_all_borders(CellColor("lightgray", False))
 
     # Get column formattings:
     column_bg_color_list = get_column_color_list("backgroundColor", table_json)
@@ -1460,9 +1387,9 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     column_font_family_list = get_column_format_list(table_json, f=get_font_family)
 
     # Get default (applied to all of same type) attributes:
-    table_default_row_data = table_json.get("defrows")
-    table_default_col_data = table_json.get("defcols")
-    table_default_cell_data = table_json.get("defcells")
+    table_default_row_data = table_json.get("defrows", {})
+    table_default_col_data = table_json.get("defcols", {})
+    table_default_cell_data = table_json.get("defcells", {})
 
     table_default_row_height = get_size(
         table_default_row_data, key="height", default=None
@@ -1470,32 +1397,20 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     table_default_col_height = get_size(
         table_default_col_data, key="width", default=None
     )
-    table_default_cell_bgcolor = get_color(
-        table_default_cell_data, key="backgroundColor"
-    )
-    table_default_cell_textcolor = get_color(table_default_cell_data, key="color")
+    table_default_cell_bgcolor = get_color(table_default_cell_data, "backgroundColor")
+    table_default_cell_textcolor = get_color(table_default_cell_data, "color")
 
     table_json_rows = table_json.get("rows")
     if not table_json_rows:
-        return
-    for i in range(0, len(table_json_rows)):
+        return table
+    for i, row_data in enumerate(table_json_rows):
         table_row = table.get_or_create_row(i)
-        row_data = table_json_rows[i]
 
-        (row_bg_color, row_bg_color_html) = get_color(row_data, "backgroundColor")
-        (row_text_color, row_text_color_html) = get_color(row_data, "color")
-        row_width = get_size(row_data, key="width", default=None)
-        row_height = get_size(row_data, key="height", default=None)
-        row_font_size = get_font_size(row_data, None)
-        row_h_align = get_text_horizontal_align(row_data, None)
-        row_font_family = get_font_family(row_data, None)
-        row_font_weight = get_key_value(row_data, "fontWeight", None)
-
-        # TODO: Change the logic: in HTML these go around the whole row, not each cell!
-        row_borders = get_borders(row_data, table_borders)
+        # TODO: Change the logic for borers: in HTML these go around the whole row, not each cell!
+        row_options = StyleOptions.from_dict(row_data, table_borders)
 
         skip_index = 0
-        for j in range(0, len(table_json_rows[i]["row"])):
+        for j, _ in enumerate(row_data["row"]):
             # Skips following cells based on previous cell's colspan.
             if skip_index > 0:
                 skip_index -= 1
@@ -1504,141 +1419,130 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             if table_row.get_cell(j):
                 continue
 
-            cell_data = table_json_rows[i]["row"][j]
-
+            cell_data = row_data["row"][j]
             content = get_content(cell_data)
 
-            # Get cell attributes:
-            (cell_bg_color, cell_bg_color_html) = get_color(
-                cell_data, "backgroundColor"
-            )
-            (cell_text_color, cell_text_color_html) = get_color(cell_data, "color")
-            cell_height = get_size(cell_data, key="height")
-            cell_width = get_size(cell_data, key="width")
-            cell_h_align = get_text_horizontal_align(cell_data, None)
-            cell_font_family = get_font_family(cell_data, None)
-            cell_font_size = get_font_size(cell_data, None)
-            cell_font_weight = get_key_value(cell_data, "fontWeight", None)
-            (cell_colspan, cell_rowspan) = get_span(cell_data)
-            borders = get_borders(cell_data, row_borders)
+            cell_options = StyleOptions.from_dict(cell_data, row_options.borders)
 
             # Get datablock formats:
             datablock_cell_data = get_datablock_cell_data(datablock, i, j)
 
-            # Check being None instead of 'not datablock_cell_data' because need to
-            # also replace when this is an empty string.
-            if datablock_cell_data is None:
-                pass
-            else:
+            if datablock_cell_data or datablock_cell_data == "":
                 content = get_content(datablock_cell_data)
+            if not isinstance(datablock_cell_data, dict):
+                datablock_cell_data = {}
 
-            (datablock_bg_color, datablock_bg_color_html) = get_color(
-                datablock_cell_data, "backgroundColor"
+            datablock_options = StyleOptions.from_dict(
+                datablock_cell_data, row_options.borders
             )
-            (datablock_text_color, datablock_text_color_html) = get_color(
-                datablock_cell_data, "color"
-            )
-            datablock_cell_height = get_size(datablock_cell_data, key="height")
-            datablock_cell_width = get_size(datablock_cell_data, key="width")
-            datablock_font_family = get_font_family(datablock_cell_data, None)
-            datablock_font_size = get_font_size(datablock_cell_data, None)
-            datablock_h_align = get_text_horizontal_align(datablock_cell_data, None)
-            datablock_font_weight = get_key_value(
-                datablock_cell_data, "fontWeight", None
-            )
-            datablock_colspan, datablock_rowspan = get_span(datablock_cell_data)
+
+            # Get user_data
+            user_cell_data = get_datablock_cell_data(user_data, i, j)
+
+            if user_cell_data or user_cell_data == "":
+                content = get_content(user_cell_data)
+            if not isinstance(user_cell_data, dict):
+                user_cell_data = {}
+
+            user_options = StyleOptions.from_dict(user_cell_data, row_options.borders)
 
             # Decide which styles to use (from table, column, row, cell or datablock)
-            (bg_color, bg_color_html) = decide_format_tuple(
+            bg_color = decide_format_colors(
                 [
-                    (table_bg_color, table_bg_color_html),
+                    table_bg_color,
                     table_default_cell_bgcolor,
                     column_bg_color_list[j],
-                    (row_bg_color, row_bg_color_html),
-                    (cell_bg_color, cell_bg_color_html),
-                    (datablock_bg_color, datablock_bg_color_html),
+                    row_options.bg_color,
+                    cell_options.bg_color,
+                    datablock_options.bg_color,
+                    user_options.bg_color,
                 ]
             )
-            (text_color, text_color_html) = decide_format_tuple(
+            text_color = decide_format_colors(
                 [
-                    (table_text_color, table_text_color_html),
+                    table_text_color,
                     table_default_cell_textcolor,
                     column_text_color_list[j],
-                    (row_text_color, row_text_color_html),
-                    (cell_text_color, cell_text_color_html),
-                    (datablock_text_color, datablock_text_color_html),
+                    row_options.text_color,
+                    cell_options.text_color,
+                    datablock_options.text_color,
+                    user_options.text_color,
                 ]
             )
             height = decide_format_size(
                 [
                     table_default_row_height,
-                    row_height,
-                    cell_height,
-                    datablock_cell_height,
+                    row_options.height,
+                    cell_options.height,
+                    datablock_options.height,
+                    user_options.height,
                 ]
             )
             width = decide_format_size(
                 [
                     table_default_col_height,
                     column_width_list[j],
-                    row_width,
-                    cell_width,
-                    datablock_cell_width,
+                    row_options.width,
+                    cell_options.width,
+                    datablock_options.width,
+                    user_options.width,
                 ]
             )
             h_align = decide_format(
                 [
                     table_h_align,
                     column_h_align_list[j],
-                    row_h_align,
-                    cell_h_align,
-                    datablock_h_align,
+                    row_options.h_align,
+                    cell_options.h_align,
+                    datablock_options.h_align,
+                    user_options.h_align,
                 ]
             )
             font_family = decide_format(
                 [
                     table_font_family,
                     column_font_family_list[j],
-                    row_font_family,
-                    cell_font_family,
-                    datablock_font_family,
+                    row_options.font_family,
+                    cell_options.font_family,
+                    datablock_options.font_family,
+                    user_options.font_family,
                 ]
             )
             font_size = decide_format(
                 [
                     table_font_size,
                     column_font_size_list[j],
-                    row_font_size,
-                    cell_font_size,
-                    datablock_font_size,
+                    row_options.font_size,
+                    cell_options.font_size,
+                    datablock_options.font_size,
+                    user_options.font_size,
                 ]
             )
             font_weight = decide_format(
                 [
                     table_font_weight,
-                    row_font_weight,
-                    cell_font_weight,
-                    datablock_font_weight,
+                    row_options.font_weight,
+                    cell_options.font_weight,
+                    datablock_options.font_weight,
+                    user_options.font_weight,
                 ]
             )
             colspan, rowspan = decide_colspan_rowspan(
-                cell_colspan, cell_rowspan, datablock_colspan, datablock_rowspan
+                [row_options, cell_options, datablock_options, user_options]
             )
 
             c = Cell(
                 content=content,
-                font_family=font_family,
-                font_size=font_size,
-                h_align=h_align,
+                font_family=font_family or default_font_family,
+                font_size=font_size or default_font_size,
+                h_align=h_align or default_text_h_align,
                 bg_color=bg_color,
-                bg_color_html=bg_color_html,
                 text_color=text_color,
-                text_color_html=text_color_html,
-                colspan=colspan,
-                rowspan=rowspan,
-                cell_width=width,
-                cell_height=height,
-                borders=borders,
+                colspan=colspan or default_colspan,
+                rowspan=rowspan or default_rowspan,
+                cell_width=str(width) if width else default_width,
+                cell_height=str(height) if height else default_height,
+                borders=user_options.borders,
                 font_weight=font_weight,
             )
 
@@ -1649,19 +1553,19 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             # properly show bg-colors, and empty cells need to be placed
             # above to avoid overlap, since LaTeX doesn't automatically
             # move cells aside.
-            if rowspan > 1:
+            if rowspan and rowspan > 1:
                 # Take multicol-cells messing up indices into account with this:
                 cell_index = table_row.get_colspan()
                 for y in range(0, rowspan - 1):
                     # Empty filler cell has mostly same the settings as the multirow-cell:
                     d = copy_cell(c)
                     d.content = ""
-                    d.borders.color_bottom = (c.bg_color, c.bg_color_html)
+                    d.borders.color_bottom = dataclasses.replace(c.bg_color)
                     if y > 1:
-                        d.borders.color_top = (c.bg_color, c.bg_color_html)
+                        d.borders.color_top = dataclasses.replace(c.bg_color)
                     d.rowspan = 1
                     table.get_or_create_row(i + y).add_cell(cell_index, d)
-                c.borders.color_top = (c.bg_color, c.bg_color_html)
+                c.borders.color_top = dataclasses.replace(c.bg_color)
                 c.rowspan = -rowspan
                 table.get_or_create_row(i + rowspan - 1).add_cell(cell_index, c)
 
@@ -1676,7 +1580,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
         table.auto_size_cells()
     # Whether table should be fit to page.
     table.fit_to_page_width = get_table_resize(
-        table_json, estimate_table_width(table), table.get_largest_col_count()
+        table_json, table.estimate_width(), table.get_largest_col_count()
     )
     # Create horizontal border objects.
     table.create_hborders()
