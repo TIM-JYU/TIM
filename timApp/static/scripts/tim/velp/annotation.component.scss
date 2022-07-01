@@ -73,7 +73,6 @@
 }
 
 .annotation-info input[type="color"] {
-  background: transparent;
   cursor: pointer;
 }
 
@@ -115,11 +114,47 @@
     color: white;
   }
 
-  .fulldiv, .points-input, .comment-area, .visible-icon, .help-icon {
+  .fulldiv, .points-input, .comment-area, .visible-icon, .help-icon, .glyphicon {
     color: white;
   }
 
   ::ng-deep .timestamp {
     color: white;
   }
+}
+
+.annotation-color-selector {
+  height: 1.8rem;
+  width: 4rem;
+  padding: 3px;
+  vertical-align: top;
+  border-block: unset;
+  border: 1px solid gray;
+  border-radius: 3px;
+}
+
+.btn-restore-annotation-color {
+  height: 1.8rem;
+  width: 1.8rem;
+  padding: 0;
+  margin-left: 2px;
+  color: black;
+  vertical-align: top;
+}
+
+.glyph-delete-annotation {
+  font-size: 3rem;
+  padding: 0;
+  vertical-align: middle;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 3px;
+}
+
+input[type="color"]::-moz-color-swatch {
+  padding: 0;
+  border: 1px solid gray;
+  border-radius: 2px;
 }

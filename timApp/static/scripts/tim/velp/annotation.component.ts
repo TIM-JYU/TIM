@@ -130,6 +130,19 @@ export async function updateAnnotationServer(
                                            [(ngModel)]="values.points"
                                            step="any"
                                            [disabled]="!canEditAnnotation()"/></label>
+                            <span [hidden]="!canEditAnnotation()" style="float: right">
+                                <input type="color" [(ngModel)]="values.color"
+                                       (ngModelChange)="onColorUpdate($event)"
+                                       title="Change annotation color"
+                                       class="annotation-color-selector">
+                                <button *ngIf="isVelpCustomColor()"
+                                        class="btn-restore-annotation-color"
+                                        (click)="clearColor()"
+                                        title="Reset color to original value">R</button>
+                                <button class="btn-restore-annotation-color"
+                                        (click)="whiteColor()"
+                                        title="Reset color to white">W</button>
+                            </span>
                         </p>
                         <p *ngIf="!canEditAnnotation()"><label
                                 [hidden]="values.points == null">Points:  {{ values.points }}</label></p>
@@ -177,19 +190,6 @@ export async function updateAnnotationServer(
                                         </span>
 
                                     </span>
-                                    <span [hidden]="!canEditAnnotation()" style="float: right">
-                                        <input type="color" [(ngModel)]="values.color"
-                                               (ngModelChange)="onColorUpdate($event)"
-                                               class="colorchange-button" title="Change annotation color">
-                                        <button *ngIf="isVelpCustomColor()"
-                                                class="smallButton"
-                                                (click)="clearColor()"
-                                                title="Reset color to original value">R</button>
-                                        <button
-                                                class="smallButton"
-                                                (click)="whiteColor()"
-                                                title="Reset color to white">W</button>
-                                    </span>
                                     <p>
                                         <span *ngIf="canEditAnnotation() && isImageAnnotation()">
                                             Style&nbsp;
@@ -203,13 +203,16 @@ export async function updateAnnotationServer(
                             </div>
                         </div>
                         <span>
-                            <button class="saveChanges timButton" *ngIf="hasChanged()" (click)="saveChanges()">
+                            <!--
+                            <button class="saveChanges timButton" *ngIf="hasChanged()" (click)="saveChanges()"> 
+                            -->
+                            <button class="saveChanges timButton" [disabled]="!hasChanged()" (click)="saveChanges()">
                                 Save
                             </button>
                         </span>
                     </div>
                     <div *ngIf="showFull">
-                        <span class="pull-right glyphicon glyphicon-trash clickable-icon" title="Delete annotation"
+                        <span class="pull-right glyphicon glyphicon-trash clickable-icon glyph-delete-annotation" title="Delete annotation"
                               [hidden]="!canEditAnnotation()"
                               (click)="deleteAnnotation()"></span>
                     </div>
