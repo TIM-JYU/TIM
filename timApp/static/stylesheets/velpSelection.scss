@@ -84,6 +84,25 @@
     padding: 0.5em 1em;
 }
 
+.velpMenu .draggable-detached {
+    min-width: 19.5em;
+    max-width: 19.5em;
+
+    .velp-stack {
+        border-bottom: 1px solid gainsboro;
+        border-left: 1px solid gainsboro;
+        border-right: 1px solid gainsboro;
+
+        @media screen and (max-height: 1080px) {
+            min-height: 24em;
+        }
+
+        @media screen and (max-height: 800px) {
+            min-height: 20em;
+        }
+    }
+}
+
 .velpArea {
     width: 100%;
     margin-bottom: 1em;
@@ -103,11 +122,15 @@
 /* needs media queries */
 .velpArea .velp-stack {
     background: white;
-    min-height: 10em;
-    min-width: 20em;
+    min-height: 16em;
+    max-height: 60vh;
+    height: fit-content;
+    min-width: 19.5em;
     width: 100%;
+    max-width: 19.5em;
     position: relative;
     resize: vertical;
+
 }
 
 .adjustForm {
@@ -548,6 +571,11 @@ velp-window.velp-edit-available {
         margin-top: 5px;
         margin-bottom: 4px;
     }
+
+    .velpArea .velp-stack {
+        min-height: 16em;
+        max-height: 80vh;
+    }
 }
 
 @media screen and (max-height: 800px) {
@@ -600,5 +628,10 @@ velp-window.velp-edit-available {
         font-size: 1.2rem;
         margin-top: 5px;
         margin-bottom: 4px;
+    }
+
+    .velpArea .velp-stack {
+        min-height: 10em;
+        max-height: 80vh;
     }
 }
