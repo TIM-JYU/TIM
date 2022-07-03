@@ -1421,6 +1421,8 @@ def convert_table(
 
             cell_data = row_data["row"][j]
             content = get_content(cell_data)
+            if not isinstance(cell_data, dict):
+                cell_data = {}
 
             cell_options = StyleOptions.from_dict(cell_data, row_options.borders)
 
