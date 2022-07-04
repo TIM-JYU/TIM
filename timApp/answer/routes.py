@@ -1497,7 +1497,8 @@ def _create_user_from_info(ui: UserInfo) -> User | None:
         user = User.get_by_email(ui.email)
     if user:
         return user
-    return create_or_update_user(ui, update_username=False)
+
+    return create_or_update_user(ui, update_username=False, update_email=False)
 
 
 def create_missing_users(
