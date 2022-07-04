@@ -63,6 +63,12 @@ class TextfieldHtmlModel(
     def get_static_html(self) -> str:
         return render_static_textfield(self)
 
+    # TODO: Expand this to support HTML and other formats of outputs
+    def get_md(self) -> str:
+        if not self.userPrint or not self.state or self.state.c is None:
+            return ""
+        return f"**{self.state.c}**"
+
 
 @dataclass
 class TextfieldAnswerModel(
@@ -137,6 +143,7 @@ errormessage:    #inputcheckerin virheselite, tyhjä = selite on inputchecker
     return {
         "js": ["/field/js/build/textfield.js"],
         "multihtml": True,
+        "multimd": True,
         "css": ["/field/css/field.css"],
         "editor_tabs": [
             {
