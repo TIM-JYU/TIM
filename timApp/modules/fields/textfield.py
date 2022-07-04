@@ -67,6 +67,8 @@ class TextfieldHtmlModel(
     def get_md(self) -> str:
         if not self.userPrint or not self.state or self.state.c is None:
             return ""
+        if isinstance(self.state.c, str) and not self.state.c.strip():
+            return ""
         return f"**{self.state.c}**"
 
 
