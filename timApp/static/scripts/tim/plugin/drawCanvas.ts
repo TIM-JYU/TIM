@@ -1163,10 +1163,10 @@ export class DrawCanvasComponent
     ) {}
 
     ngOnInit() {
+        this.drawOptions = {...this.drawOptions, ...this.options};
         if (!this.toolBar) {
             this.drawOptions.enabled = false;
         }
-
         this.setBg();
     }
 
