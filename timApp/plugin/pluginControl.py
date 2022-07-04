@@ -748,6 +748,12 @@ def pluginify(
                 h = h.replace(plugin_key, plugin_html)
             par.plugin_htmls = None
             par.output = sanitize_html(h)
+    elif output_format == PluginOutputFormat.MD:
+        # No dumbo, just insert raw MD
+        for par in html_pars:
+            for plugin_key, plugin_html in par.plugin_htmls.items():
+                par.output = par.output.replace(plugin_key, plugin_html)
+
     taketime("phtml done")
 
     return PluginifyResult(
