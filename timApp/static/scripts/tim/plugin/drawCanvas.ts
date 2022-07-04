@@ -210,6 +210,11 @@ export function getDrawingDimensions(
     return {x: x, y: y, w: w, h: h};
 }
 
+/**
+ * Reduce dimensions (start coordinates, width, height) from given drawing by skipping erased pixels
+ * @param drawing DrawItem[] to check
+ * @param originalDims original dimensions to reduce
+ */
 export function getEraserAdjustedDrawingDimensions(
     drawing: DrawItem[],
     originalDims: {x: number; y: number; w: number; h: number}
