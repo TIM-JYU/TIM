@@ -548,7 +548,11 @@ class Table:
         for row in self.rows:
             for cell in row.cells:
                 try:
-                    cell_width = float(parse_size_attribute(cell.cell_width))
+                    # TODO: Instead of this kind of num->pt hack, make cell_width typed (number with unit, auto)
+                    if cell.cell_width != default_width:
+                        cell_width = float(parse_size_attribute(f"{cell.cell_width}pt"))
+                    else:
+                        cell_width = 0
                 except:
                     estimate = True
                     cell_width = cell.estimate_width()
@@ -586,7 +590,8 @@ class Table:
                         max_content_size = content_size
                     width = cell.cell_width
                     if width != default_width:
-                        i_widths.append(parse_size_attribute(width))
+                        # TODO: Instead of this kind of num->pt hack, make cell_width typed (number with unit, auto)
+                        i_widths.append(parse_size_attribute(f"{width}pt"))
 
             if i_widths:
                 widths.append(max(i_widths))
