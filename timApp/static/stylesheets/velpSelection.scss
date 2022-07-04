@@ -8,7 +8,6 @@
     overflow-x: hidden;
     min-height: 18em;
     max-height: 60vh;
-    resize: vertical;
 
     @media screen and (max-height: 1080px) {
         min-height: 12em;
@@ -17,6 +16,10 @@
     @media screen and (max-height: 800px) {
         min-height: 8em;
     }
+}
+
+.velp-groups-resize {
+    resize: vertical;
 }
 
 .div-90 {
@@ -318,8 +321,6 @@ position: absolute;
     padding-right: 0px;
 }
 
-
-
 .velp:hover .emphasise{
     margin-top: -1em;
     -webkit-box-shadow: 0px -11px 16px -12px rgba(0,0,0,1);
@@ -546,14 +547,15 @@ $inactive: whitesmoke;
 }
 
 .labels-scrollarea {
-
-    @media screen and (max-height: 1080px) {
-        max-height: 1.8em;
-    }
+    display: block;
+    float: left;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    max-height: 4em;
+    margin-bottom: 4px;
 
     @media screen and (max-height: 800px) {
         font-size: 1.2rem;
-        max-height: 3.6rem;
         line-height: 1rem;
     }
 }

@@ -80,7 +80,7 @@
                         </div>
                     </form>
                     <div>
-                        <div class="fulldiv labels-scrollarea">
+                        <div class="labels-scrollarea">
                             <p ng-repeat="label in filteredLabels = ( $ctrl.labels | filter:{content:$ctrl.filterLabel} )"
                                class="label tag-false"
                                ng-style="{ backgroundColor: $ctrl.getColor(label.id) };"
@@ -151,7 +151,7 @@
                                 </option>
                             </select>
                         </fieldset>
-                        <table class="fulldiv" style="margin-bottom: 8px">
+                        <table class="fulldiv velp-groups-resize" style="margin-bottom: 8px">
                             <tr>
                                 <th><label class="comment-info small"><input type="checkbox"
                                                                              ng-model="$ctrl.settings.selectedAllShows"
