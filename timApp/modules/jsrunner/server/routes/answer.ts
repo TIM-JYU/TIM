@@ -20,7 +20,14 @@ import {
     UserFieldDataT,
     VelpDataT,
 } from "../servertypes";
-import {GTools, IToolsResult, Tools, ToolsBase} from "./tools";
+import {
+    GTools,
+    IToolsResult,
+    NewUserData,
+    numberLines,
+    Tools,
+    ToolsBase,
+} from "./tools";
 
 console.log("answer");
 const router = express.Router();
@@ -63,6 +70,7 @@ type RunnerResult =
           fatalError?: never;
           outdata: Record<string, unknown>;
           groups: IGroupData;
+          newUsers: NewUserData[];
       }
     | {output: string; fatalError: IError; errorprg: string};
 
@@ -74,21 +82,6 @@ type RunnerResult =
  * @param d The data to use.
  */
 function runner(d: IRunnerData): RunnerResult {
-    // TODO: This is already in runscipt, but does not allow with 2 params???
-    // And for some reason it is not found if it is outside this function???
-    function numberLines2(s: string, delta: number): string {
-        if (!s) {
-            return "";
-        }
-        const lines = s.split("\n");
-        let result = "";
-        for (let i = 0; i < lines.length; i++) {
-            const space = i + delta < 10 ? "0" : "";
-            result += space + (i + delta) + ": " + lines[i] + "\n";
-        }
-        return result;
-    }
-
     let errorprg: string | undefined = "";
     let prgname: string | undefined = "";
     const data = d.data;
@@ -207,7 +200,7 @@ function runner(d: IRunnerData): RunnerResult {
         }
         if (guserErrs.length > 0) {
             // TODO: separate errors from pre, program and post
-            const prg = "\n" + prgname + ":\n" + numberLines2(errorprg, 1);
+            const prg = "\n" + prgname + ":\n" + numberLines(errorprg, 1);
             errors.push({
                 user: "program",
                 errors: [
@@ -224,10 +217,11 @@ function runner(d: IRunnerData): RunnerResult {
             errors,
             outdata: gtools.outdata,
             groups: gtools.groups,
+            newUsers: gtools.newUsers,
         };
     } catch (e) {
         const err = e as Error;
-        const prg = prgname + ":\n" + numberLines2(errorprg, 1);
+        const prg = prgname + ":\n" + numberLines(errorprg, 1);
         // const comp = ""; // d.compileProgram(errorprg);
         // prg = "\n" + comp + prg;
         let stack = err.stack ?? "";
@@ -339,6 +333,7 @@ router.put("/", async (req, res, next) => {
             r = {
                 savedata: result.res,
                 groups: result.groups,
+                newUsers: result.newUsers,
                 web: {
                     output: result.output,
                     errors: result.errors,
