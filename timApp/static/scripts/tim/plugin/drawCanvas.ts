@@ -914,12 +914,6 @@ export class Drawing {
         });
     }
 
-    disableEraser(): void {
-        this.activeContexts.forEach((ctx) => {
-            ctx.ctx.globalCompositeOperation = "source-over";
-        });
-    }
-
     /**
      * Redraws everything (current drawings, permanent drawings, possible freehand drawing)
      */

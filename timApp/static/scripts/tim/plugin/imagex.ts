@@ -1464,7 +1464,6 @@ export class ImageXComponent
         while (!this.init) {
             await timeout();
         }
-        // TODO: missing bg!
         const canvas = document.createElement("canvas");
         canvas.height = this.canvasheight;
         canvas.width = this.canvaswidth;

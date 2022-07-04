@@ -229,7 +229,6 @@ export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
                     i18n-title>
                 <i class="glyphicon glyphicon-repeat flip"></i>
             </button>
-            <button (click)="toolbarDebug($event)">DEBUG</button>
         </div>
     `,
     styleUrls: ["./draw-toolbar.component.scss"],
@@ -268,7 +267,6 @@ export class DrawToolbarComponent implements AfterViewInit {
     @ViewChild("colorInput") colorInput?: ElementRef<HTMLSpanElement>;
 
     @Input() public undo?: () => void;
-    @Input() public debug?: () => void;
     @Input() public optionsStorage?: string;
     selectorIconColor = "black";
 
@@ -342,13 +340,6 @@ export class DrawToolbarComponent implements AfterViewInit {
         e?.preventDefault();
         if (this.undo) {
             this.undo();
-        }
-    }
-
-    public toolbarDebug(e?: Event) {
-        e?.preventDefault();
-        if (this.debug) {
-            this.debug();
         }
     }
 
