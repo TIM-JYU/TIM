@@ -4,10 +4,8 @@ import {
     Component,
     DoBootstrap,
     ElementRef,
-    EventEmitter,
     Input,
     NgModule,
-    Output,
     ViewChild,
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
@@ -21,6 +19,7 @@ import {
     shouldUseDarkText,
 } from "tim/util/colorUtils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {TimStorage} from "tim/util/utils";
 
 export interface IDrawVisibleOptions {
     // Interface to define which options should be visible in the drawing toolbar
@@ -35,6 +34,7 @@ export interface IDrawVisibleOptions {
     color?: boolean;
     fill?: boolean;
     opacity?: boolean;
+    eraser?: boolean;
 }
 
 export enum DrawType {
@@ -59,14 +59,28 @@ const DrawTypeCodec = t.keyof({
     [DrawType.Arrow]: null,
 });
 
-export const DrawOptions = t.type({
-    color: t.string,
-    drawType: DrawTypeCodec,
-    enabled: t.boolean,
+export const FillAndWidth = t.type({
     fill: t.boolean,
-    opacity: t.number,
     w: t.number,
 });
+
+export const DrawOptions = t.intersection([
+    t.type({
+        color: t.string,
+        drawType: DrawTypeCodec,
+        enabled: t.boolean,
+        opacity: t.number,
+        eraser: t.boolean,
+    }),
+    FillAndWidth,
+]);
+
+export const DrawSaveOptions = t.type({
+    eraseMode: FillAndWidth,
+    default: DrawOptions,
+});
+
+export interface IFillAndWidth extends t.TypeOf<typeof FillAndWidth> {}
 
 export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
 
@@ -124,7 +138,7 @@ export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
                     <i class="gg-arrow-top-right"></i>
                 </label>
             </div>
-            <button class="btn btn-default fill-object"
+            <button class="btn btn-default toggle-option"
                     *ngIf="drawVisibleOptions.fill"
                     [(ngModel)]="drawSettings.fill"
                     btnCheckbox
@@ -132,6 +146,15 @@ export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
                     title="Fill object"
                     i18n-title>
                 <i class="gg-color-bucket "></i>
+            </button>
+            <button class="btn btn-default toggle-option"
+                    *ngIf="drawVisibleOptions.eraser"
+                    [(ngModel)]="drawSettings.eraser"
+                    btnCheckbox
+                    (ngModelChange)="onSettingsChanged()"
+                    title="Eraser"
+                    i18n-title>
+                <i class="glyphicon glyphicon-erase"></i>
             </button>
             <span class="sep"></span>
             <label class="text-input"
@@ -206,6 +229,7 @@ export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
                     i18n-title>
                 <i class="glyphicon glyphicon-repeat flip"></i>
             </button>
+            <button (click)="toolbarDebug($event)">DEBUG</button>
         </div>
     `,
     styleUrls: ["./draw-toolbar.component.scss"],
@@ -223,6 +247,7 @@ export class DrawToolbarComponent implements AfterViewInit {
         color: true,
         fill: true,
         opacity: true,
+        eraser: true,
     };
 
     @Input() public drawSettings: IDrawOptions = {
@@ -232,13 +257,22 @@ export class DrawToolbarComponent implements AfterViewInit {
         color: "red",
         fill: true,
         drawType: DrawType.Freehand,
+        eraser: false,
     };
-    @Output() drawSettingsChange = new EventEmitter<IDrawOptions>();
+    eraserOrNormalOptions: IFillAndWidth = {
+        w: 20,
+        fill: true,
+    };
+    eraserState = false;
 
     @ViewChild("colorInput") colorInput?: ElementRef<HTMLSpanElement>;
 
     @Input() public undo?: () => void;
+    @Input() public debug?: () => void;
+    @Input() public optionsStorage?: string;
     selectorIconColor = "black";
+
+    private storage?: TimStorage<t.TypeOf<typeof DrawSaveOptions>>;
 
     get drawTypeStr(): string {
         return DrawType[this.drawSettings.drawType];
@@ -248,12 +282,55 @@ export class DrawToolbarComponent implements AfterViewInit {
         this.drawSettings.drawType = DrawTypeReverseMap[value];
     }
 
+    ngOnInit() {
+        if (this.optionsStorage) {
+            this.storage = new TimStorage("drawCanvasOptions", DrawSaveOptions);
+            const prevSettings = this.storage.get();
+            if (prevSettings) {
+                this.loadOptions(prevSettings.default);
+                this.eraserOrNormalOptions = prevSettings.eraseMode;
+            }
+        }
+    }
+
     ngAfterViewInit() {
         this.updateVisuals();
     }
 
+    loadOptions(options: IDrawOptions) {
+        // TODO iterate
+        this.drawSettings.enabled = options.enabled;
+        this.drawSettings.w = options.w;
+        this.drawSettings.opacity = options.opacity;
+        this.drawSettings.color = options.color;
+        this.drawSettings.fill = options.fill;
+        this.drawSettings.drawType = options.drawType;
+        this.drawSettings.eraser = false;
+    }
+
     onSettingsChanged() {
-        this.drawSettingsChange.emit();
+        if (this.eraserState != this.drawSettings.eraser) {
+            const prev = {w: this.drawSettings.w, fill: this.drawSettings.fill};
+            this.drawSettings.w = this.eraserOrNormalOptions.w;
+            this.drawSettings.fill = this.eraserOrNormalOptions.fill;
+            this.eraserOrNormalOptions = prev;
+            this.eraserState = this.drawSettings.eraser;
+        }
+        if (this.storage) {
+            // save eraser always as false, fill and width separately for eraser or normal mode
+            this.storage.set({
+                default: {
+                    ...this.drawSettings,
+                    eraser: false,
+                    ...(this.drawSettings.eraser
+                        ? this.eraserOrNormalOptions
+                        : {}),
+                },
+                eraseMode: this.drawSettings.eraser
+                    ? {w: this.drawSettings.w, fill: this.drawSettings.fill}
+                    : this.eraserOrNormalOptions,
+            });
+        }
         this.updateVisuals();
     }
 
@@ -265,6 +342,13 @@ export class DrawToolbarComponent implements AfterViewInit {
         e?.preventDefault();
         if (this.undo) {
             this.undo();
+        }
+    }
+
+    public toolbarDebug(e?: Event) {
+        e?.preventDefault();
+        if (this.debug) {
+            this.debug();
         }
     }
 

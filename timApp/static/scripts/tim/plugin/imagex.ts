@@ -141,7 +141,8 @@ enum TargetState {
 }
 
 class DragTask {
-    public ctx: CanvasRenderingContext2D;
+    public bgCtx: CanvasRenderingContext2D; // for drags, task-related lines etc
+    public frontCtx: CanvasRenderingContext2D; // for custom drawing
     private mousePosition: IPoint;
     private drawing: Drawing;
     private mouseDown = false;
@@ -154,46 +155,48 @@ class DragTask {
     public lines?: Line[];
 
     constructor(
-        private canvas: HTMLCanvasElement,
+        private bgCanvas: HTMLCanvasElement,
+        private frontCanvas: HTMLCanvasElement,
         private imgx: ImageXComponent
     ) {
-        this.ctx = canvas.getContext("2d")!;
+        this.bgCtx = bgCanvas.getContext("2d")!;
+        this.frontCtx = frontCanvas.getContext("2d")!;
         this.drawObjects = [];
         this.mousePosition = {x: 0, y: 0};
         this.drawing = imgx.drawing;
 
-        this.canvas.style.touchAction = "double-tap-zoom"; // To get IE and EDGE touch to work
+        this.frontCanvas.style.touchAction = "double-tap-zoom"; // To get IE and EDGE touch to work
 
-        this.canvas.addEventListener("mousemove", (event) => {
+        this.frontCanvas.addEventListener("mousemove", (event) => {
             event.preventDefault();
             this.moveEvent(event, event);
         });
-        this.canvas.addEventListener("touchmove", (event) => {
+        this.frontCanvas.addEventListener("touchmove", (event) => {
             event.preventDefault();
             this.moveEvent(event, touchEventToTouch(event));
         });
-        this.canvas.addEventListener("mousedown", (event) => {
+        this.frontCanvas.addEventListener("mousedown", (event) => {
             event.preventDefault();
             this.downEvent(event, event);
         });
-        this.canvas.addEventListener("touchstart", (event) => {
+        this.frontCanvas.addEventListener("touchstart", (event) => {
             event.preventDefault();
             // this.imgx.getScope().$evalAsync(() => {
             //     this.downEvent(event, this.te(event));
             // });
             this.downEvent(event, touchEventToTouch(event));
         });
-        this.canvas.addEventListener("mouseup", (event) => {
+        this.frontCanvas.addEventListener("mouseup", (event) => {
             event.preventDefault();
             this.upEvent(event, event);
         });
-        this.canvas.addEventListener("touchend", (event) => {
+        this.frontCanvas.addEventListener("touchend", (event) => {
             event.preventDefault();
             this.upEvent(event, touchEventToTouch(event));
         });
 
         if (imgx.markup.freeHandShortCuts) {
-            this.canvas.addEventListener(
+            this.frontCanvas.addEventListener(
                 "keypress",
                 (event) => {
                     const c = String.fromCharCode(event.keyCode);
@@ -278,11 +281,12 @@ class DragTask {
     }
 
     drawDragTask() {
-        const canvas = this.canvas;
-        setIdentityTransform(this.ctx);
-        this.ctx.fillStyle = "white"; // TODO get from markup?
-        this.ctx.globalAlpha = 1;
-        this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const canvas = this.bgCanvas;
+        this.bgCtx.globalCompositeOperation = "source-over";
+        setIdentityTransform(this.bgCtx);
+        this.bgCtx.fillStyle = "white"; // TODO get from markup?
+        this.bgCtx.globalAlpha = 1;
+        this.bgCtx.clearRect(0, 0, canvas.width, canvas.height);
 
         if (this.activeDragObject) {
             const dobj = this.activeDragObject;
@@ -336,17 +340,17 @@ class DragTask {
                 o.state = TargetState.Normal;
             }
         }
-        setIdentityTransform(this.ctx);
+        setIdentityTransform(this.bgCtx);
         if (this.lines) {
             for (const l of this.lines) {
-                l.draw(this.ctx);
+                l.draw(this.bgCtx);
             }
         }
     }
 
     downEvent(event: Event, p: MouseOrTouch) {
         event.preventDefault();
-        this.mousePosition = posToRelative(this.canvas, p);
+        this.mousePosition = posToRelative(this.frontCanvas, p);
         let active = areObjectsOnTopOf(this.mousePosition, this.dragobjects, 0);
         if (!active) {
             active = areObjectsOnTopOf(
@@ -358,7 +362,7 @@ class DragTask {
 
         if (this.imgx.emotion) {
             drawFillCircle(
-                this.ctx,
+                this.frontCtx,
                 30,
                 this.mousePosition.x,
                 this.mousePosition.y,
@@ -374,7 +378,7 @@ class DragTask {
         if (active) {
             const array = this.drawObjects;
             array.push(array.splice(array.indexOf(active), 1)[0]); // put active last so that it gets drawn on top of others
-            this.canvas.style.cursor = "pointer";
+            this.frontCanvas.style.cursor = "pointer";
             this.activeDragObject = {
                 obj: active,
                 xoffset: this.mousePosition.x - active.x,
@@ -383,7 +387,7 @@ class DragTask {
             this.drawDragTask();
             this.drawing.redrawAll();
         } else if (this.imgx.drawSettings.enabled) {
-            this.canvas.style.cursor = "pointer";
+            this.frontCanvas.style.cursor = "pointer";
             this.mouseDown = true;
             if (!this.imgx.emotion) {
                 this.drawing.downEvent(this.mousePosition);
@@ -404,7 +408,7 @@ class DragTask {
             if (event != p) {
                 event.preventDefault();
             }
-            this.mousePosition = posToRelative(this.canvas, p);
+            this.mousePosition = posToRelative(this.frontCanvas, p);
             if (!this.imgx.emotion) {
                 this.drawDragTask();
                 this.drawing.redrawAll();
@@ -415,18 +419,18 @@ class DragTask {
             }
             if (!this.imgx.emotion) {
                 this.drawDragTask();
-                this.drawing.moveEvent(posToRelative(this.canvas, p));
+                this.drawing.moveEvent(posToRelative(this.frontCanvas, p));
             }
         }
     }
 
     upEvent(event: Event, p: MouseOrTouch) {
         if (this.activeDragObject) {
-            this.canvas.style.cursor = "default";
+            this.frontCanvas.style.cursor = "default";
             if (event != p) {
                 event.preventDefault();
             }
-            this.mousePosition = posToRelative(this.canvas, p);
+            this.mousePosition = posToRelative(this.frontCanvas, p);
 
             const isTarget = areObjectsOnTopOf(
                 this.activeDragObject.obj,
@@ -451,9 +455,9 @@ class DragTask {
                 this.drawing.redrawAll();
             }
         } else if (this.mouseDown) {
-            this.canvas.style.cursor = "default";
+            this.frontCanvas.style.cursor = "default";
             this.mouseDown = false;
-            this.drawing.upEvent(posToRelative(this.canvas, p));
+            this.drawing.upEvent(posToRelative(this.frontCanvas, p));
         }
         this.imgx.checkChanges();
     }
@@ -1248,8 +1252,14 @@ interface IAnswerResponse {
             <div class="pluginError" *ngIf="imageLoadError" [textContent]="imageLoadError"></div>
             <h4 *ngIf="header" [innerHtml]="header"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
-            <div class="imagex-content">
+            <div class="imagex-content" style="position:relative; height: {{canvasheight}}px">
                 <canvas class="canvas no-popup-menu"
+                        style="position:absolute;"
+                        tabindex="1"
+                        width={{canvaswidth}}
+                        height={{canvasheight}}></canvas>
+                <canvas class="canvas no-popup-menu"
+                        style="position:absolute;"
                         tabindex="1"
                         width={{canvaswidth}}
                         height={{canvasheight}}></canvas>
@@ -1396,6 +1406,7 @@ export class ImageXComponent
         color: true,
         fill: true,
         opacity: true,
+        eraser: true,
     };
     public drawSettings: IDrawOptions = {
         enabled: false,
@@ -1404,6 +1415,7 @@ export class ImageXComponent
         color: "",
         fill: false,
         opacity: 1,
+        eraser: false,
     };
     // public color = "";
     public drawing!: Drawing;
@@ -1424,7 +1436,8 @@ export class ImageXComponent
     private vctrl!: ViewCtrl;
     public replyImage?: string;
     public replyHTML?: string;
-    private canvas!: HTMLCanvasElement;
+    private bgCanvas!: HTMLCanvasElement;
+    private frontCanvas!: HTMLCanvasElement;
     private dt!: DragTask;
     private answer?: IAnswerResponse;
     private prevAnswer?: string;
@@ -1451,15 +1464,26 @@ export class ImageXComponent
         while (!this.init) {
             await timeout();
         }
-        return [this.canvas.toDataURL()];
+        // TODO: missing bg!
+        const canvas = document.createElement("canvas");
+        canvas.height = this.canvasheight;
+        canvas.width = this.canvaswidth;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(this.bgCanvas, 0, 0);
+        ctx.drawImage(this.frontCanvas, 0, 0);
+        return [canvas.toDataURL()];
     }
 
-    getCanvas(): HTMLCanvasElement {
-        return this.canvas;
+    getFrontCanvas(): HTMLCanvasElement {
+        return this.frontCanvas;
     }
 
-    getCanvasCtx() {
-        return this.canvas.getContext("2d")!;
+    getBgCanvasCtx() {
+        return this.bgCanvas.getContext("2d")!;
+    }
+
+    getFrontCanvasCtx() {
+        return this.frontCanvas.getContext("2d")!;
     }
 
     async ngOnInit() {
@@ -1470,7 +1494,8 @@ export class ImageXComponent
         }
         // timeout required; otherwise the canvas element will be overwritten with another by Angular
         await timeout();
-        this.canvas = this.element.find(".canvas")[0] as HTMLCanvasElement;
+        this.bgCanvas = this.element.find(".canvas")[0] as HTMLCanvasElement;
+        this.frontCanvas = this.element.find(".canvas")[1] as HTMLCanvasElement;
         this.element[0].addEventListener("touchstart", (event) => {
             // event.preventDefault();
         });
@@ -1486,7 +1511,7 @@ export class ImageXComponent
                 drawings.push({type: "freehand", drawData: obj});
             }
         }
-        this.drawing = new Drawing(this.drawSettings, [this.canvas], true);
+        this.drawing = new Drawing(this.drawSettings, [this.frontCanvas]);
         this.drawing.drawData = this.attrsall.state?.drawings ?? drawings;
         if (this.isFreeHandInUse) {
             this.drawSettings.enabled = true;
@@ -1499,7 +1524,7 @@ export class ImageXComponent
             this.drawSettings.drawType = DrawType.Line;
         }
 
-        const dt = new DragTask(this.canvas, this);
+        const dt = new DragTask(this.bgCanvas, this.frontCanvas, this);
         this.dt = dt;
 
         const userObjects = this.markup.objects;
@@ -1509,7 +1534,7 @@ export class ImageXComponent
         const fixedobjects = [];
         const targets = [];
         const objects = [];
-        const ctx = this.getCanvasCtx();
+        const ctx = this.getBgCanvasCtx();
 
         if (this.markup.background) {
             const background = new FixedObject(
@@ -1637,7 +1662,6 @@ export class ImageXComponent
         this.error = "";
         this.result = "";
     }
-
     passUndo = (e?: Event) => {
         if (e) {
             e.preventDefault();

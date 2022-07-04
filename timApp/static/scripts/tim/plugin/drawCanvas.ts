@@ -19,10 +19,10 @@ import {
     SafeResourceUrl,
 } from "@angular/platform-browser";
 import {
-    DrawOptions,
     DrawToolbarModule,
     DrawType,
     IDrawOptions,
+    IFillAndWidth,
 } from "tim/plugin/drawToolbar";
 import {
     ILine,
@@ -36,7 +36,6 @@ import {
     MouseOrTouch,
     numOrStringToNumber,
     posToRelative,
-    TimStorage,
     touchEventToTouch,
 } from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
@@ -82,20 +81,36 @@ export interface IDrawingWithID {
     drawData: DrawItem[];
 }
 
+const defaultDrawOptions: IDrawOptions = {
+    enabled: true,
+    drawType: DrawType.Freehand,
+    color: "red",
+    w: 3,
+    opacity: 1,
+    fill: false,
+    eraser: false,
+};
+
 /**
  * Gets dimensions (start coordinates, width, height) from given drawing
  * @param drawing DrawItem[] to check
  * @param minSize if width/height is less than this, then add extra padding (at both ends)
+ * @param adjustByEraser if false, include erased parts in the dimensions
  */
 export function getDrawingDimensions(
     drawing: DrawItem[],
-    minSize = 0
+    minSize = 0,
+    adjustByEraser = true
 ): {x: number; y: number; w: number; h: number} {
     let x = Number.MAX_SAFE_INTEGER;
     let y = Number.MAX_SAFE_INTEGER;
     let w = 0;
     let h = 0;
+    let erasers = false;
     for (const obj of drawing) {
+        if (obj.drawData.eraser && adjustByEraser) {
+            erasers = true;
+        }
         if (obj.type == "freehand") {
             for (const line of obj.drawData.lines) {
                 const width = obj.drawData.w
@@ -174,15 +189,116 @@ export function getDrawingDimensions(
             }
         }
     }
-    if (w - x < minSize) {
+    w = w - x;
+    h = h - y;
+    if (adjustByEraser && erasers) {
+        ({x, y, w, h} = getEraserAdjustedDrawingDimensions(drawing, {
+            x,
+            y,
+            w,
+            h,
+        }));
+    }
+    if (w < minSize) {
         x = Math.max(x - minSize, 0);
-        w = w + minSize;
+        w = w + 2 * minSize;
     }
-    if (h - y < minSize) {
+    if (h < minSize) {
         y = Math.max(y - minSize, 0);
-        h = h + minSize;
+        h = h + 2 * minSize;
     }
-    return {x: x, y: y, w: w - x, h: h - y};
+    return {x: x, y: y, w: w, h: h};
+}
+
+export function getEraserAdjustedDrawingDimensions(
+    drawing: DrawItem[],
+    originalDims: {x: number; y: number; w: number; h: number}
+) {
+    const dims = {
+        x: Math.floor(originalDims.x),
+        y: Math.floor(originalDims.y),
+        w: Math.ceil(originalDims.w),
+        h: Math.ceil(originalDims.h),
+    };
+    const canvas = document.createElement("canvas");
+    canvas.height = dims.h;
+    canvas.width = dims.w;
+    const ctx = canvas.getContext("2d")!;
+    ctx.lineCap = "round";
+    ctx.translate(-dims.x, -dims.y);
+    drawFromArray(drawing, defaultDrawOptions, ctx);
+
+    const output = ctx.getImageData(0, 0, dims.w, dims.h);
+    const data = output.data;
+    const getOpacity = function (x: number, y: number) {
+        const offset = dims.w * y + x;
+        return data[offset * 4 + 3];
+    };
+    const sides = {
+        left: 0,
+        right: dims.w,
+        top: 0,
+        bottom: dims.h,
+    };
+    let found = false;
+    for (let i = 0; i < dims.w; i++) {
+        for (let j = 0; j < dims.h; j++) {
+            if (getOpacity(i, j) > 0) {
+                sides.left = i;
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            break;
+        }
+    }
+    found = false;
+    for (let i = 0; i < dims.h; i++) {
+        for (let j = 0; j < dims.w; j++) {
+            if (getOpacity(j, i) > 0) {
+                sides.top = i;
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            break;
+        }
+    }
+    found = false;
+    // -1 is intentional
+    for (let i = dims.w - 1; i >= 0; i--) {
+        for (let j = dims.h; j >= 0; j--) {
+            if (getOpacity(i, j) > 0) {
+                sides.right = i;
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            break;
+        }
+    }
+    found = false;
+    for (let i = dims.h; i >= 0; i--) {
+        for (let j = dims.w; j >= 0; j--) {
+            if (getOpacity(j, i) > 0) {
+                sides.bottom = i;
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            break;
+        }
+    }
+    return {
+        x: dims.x + sides.left,
+        y: dims.y + sides.top,
+        w: sides.right - sides.left,
+        h: sides.bottom - sides.top,
+    };
 }
 
 /**
@@ -223,7 +339,10 @@ export function setContextSettingsFromObject(
     ctx.strokeStyle = obj.color ?? options.color;
     ctx.lineWidth = obj.lineWidth ?? options.w;
     ctx.fillStyle = obj.fillColor ?? "transparent";
-    ctx.globalAlpha = obj.opacity ?? options.opacity;
+    ctx.globalAlpha = obj.eraser ? 1 : obj.opacity ?? options.opacity;
+    ctx.globalCompositeOperation = obj.eraser
+        ? "destination-out"
+        : "source-over";
 }
 
 /**
@@ -239,7 +358,10 @@ export function setContextSettingsFromLine(
 ) {
     ctx.strokeStyle = line.color ?? options.color;
     ctx.lineWidth = line.w ?? options.w;
-    ctx.globalAlpha = line.opacity ?? options.opacity;
+    ctx.globalAlpha = line.eraser ? 1 : line.opacity ?? options.opacity;
+    ctx.globalCompositeOperation = line.eraser
+        ? "destination-out"
+        : "source-over";
 }
 
 /**
@@ -393,16 +515,22 @@ export function setContextSettingsFromOptions(
     options: IDrawOptions,
     ctx: CanvasRenderingContext2D
 ) {
-    ctx.globalAlpha = options.opacity;
+    ctx.globalAlpha = options.eraser ? 1 : options.opacity;
     ctx.strokeStyle = options.color;
     ctx.lineWidth = options.w;
     ctx.fillStyle = options.color;
+    ctx.globalCompositeOperation = options.eraser
+        ? "destination-out"
+        : "source-over";
 }
 
 function applyStyleAndWidth(ctx: CanvasRenderingContext2D, seg: ILineSegment) {
     ctx.strokeStyle = seg.color ?? ctx.strokeStyle;
     ctx.lineWidth = numOrStringToNumber(seg.w ?? ctx.lineWidth);
-    ctx.globalAlpha = seg.opacity ?? 1;
+    ctx.globalAlpha = seg.eraser ? 1 : seg.opacity ?? 1;
+    ctx.globalCompositeOperation = seg.eraser
+        ? "destination-out"
+        : "source-over";
 }
 
 interface IImageSizes {
@@ -426,18 +554,12 @@ export class Drawing {
     canvases: HTMLCanvasElement[];
     // CanvasRenderingContexts on canvases and their respective offsets
     ctxs: IOffsetContext[] = [];
-    externalClear = false;
 
     /**
      * @param drawOptions settings used when drawing new items
      * @param canvases CanvasElements to draw on
-     * @param externalClear if true, don't automatically clear canvas before redraws
      */
-    constructor(
-        drawOptions: IDrawOptions,
-        canvases: HTMLCanvasElement[],
-        externalClear?: boolean
-    ) {
+    constructor(drawOptions: IDrawOptions, canvases: HTMLCanvasElement[]) {
         if (canvases.length < 1) {
             console.error("Failed to receive canvases");
         }
@@ -454,9 +576,6 @@ export class Drawing {
             };
         });
         this.activeContexts = this.ctxs;
-        if (externalClear) {
-            this.externalClear = true;
-        }
     }
 
     // keep track of mousedown while drawing enabled
@@ -686,12 +805,14 @@ export class Drawing {
      * Create ILine based on draw coordinates and current settings
      */
     makeLine(): ILine {
+        const eraser = this.drawOptions.eraser ? {eraser: true} : {};
         return {
             start: {x: this.startX, y: this.startY},
             end: {x: this.endX, y: this.endY},
             w: this.drawOptions.w,
             opacity: this.drawOptions.opacity,
             color: this.drawOptions.color,
+            ...eraser,
         };
     }
 
@@ -705,6 +826,7 @@ export class Drawing {
         } else {
             fillOrBorder = {lineWidth: this.drawOptions.w};
         }
+        const eraser = this.drawOptions.eraser ? {eraser: true} : {};
         return {
             x: this.itemX,
             y: this.itemY,
@@ -713,6 +835,7 @@ export class Drawing {
             opacity: this.drawOptions.opacity,
             color: this.drawOptions.color,
             ...fillOrBorder,
+            ...eraser,
         };
     }
 
@@ -724,6 +847,9 @@ export class Drawing {
         const ns: ILineSegment = {lines: [p]};
         ns.color = this.drawOptions.color;
         ns.w = this.drawOptions.w;
+        if (this.drawOptions.eraser) {
+            ns.eraser = true;
+        }
         if (this.drawOptions.opacity < 1) {
             ns.opacity = this.drawOptions.opacity;
         }
@@ -776,9 +902,7 @@ export class Drawing {
     resetDrawing(): void {
         this.drawData = [];
         this.freeDrawing = undefined;
-        if (!this.externalClear) {
-            this.clearCanvas();
-        }
+        this.clearCanvas();
     }
 
     /**
@@ -790,14 +914,17 @@ export class Drawing {
         });
     }
 
+    disableEraser(): void {
+        this.activeContexts.forEach((ctx) => {
+            ctx.ctx.globalCompositeOperation = "source-over";
+        });
+    }
+
     /**
      * Redraws everything (current drawings, permanent drawings, possible freehand drawing)
-     * CanvasContext will be cleared first unless this.externalClear is true
      */
     redrawAll(): void {
-        if (!this.externalClear) {
-            this.clearCanvas();
-        }
+        this.clearCanvas();
         this.drawFromArray(this.persistentDrawData);
         this.drawFromArray(this.drawData);
         if (this.freeDrawing) {
@@ -866,7 +993,7 @@ export class Drawing {
      * Remove last drawn piece of non-permanent drawings
      */
     undo(): DrawItem | undefined {
-        const dimensions = getDrawingDimensions(this.drawData);
+        const dimensions = getDrawingDimensions(this.drawData, 0, false);
         this.minY = dimensions.y;
         this.maxY = dimensions.y + dimensions.h;
         this.setActiveContexts();
@@ -923,24 +1050,26 @@ const MIN_IMAGE_WIDTH = 700;
             <div style="position: absolute; top: 50%; left:-5%; display: flex; flex-flow: column; gap: 1em;
                          -ms-transform: translateY(-50%); transform: translateY(-50%); z-index: 4;">
                 <div *ngIf="bgSources.length > 1" style="display: flex; flex-flow: column;">
-                    <button title="Previous image" i18n-title class="btn btn-primary" (click)="scrollBgImage(false)">&uarr;
+                    <button title="Previous image" i18n-title class="btn btn-primary" (click)="scrollBgImage(false)">
+                        &uarr;
                     </button>
                     <button title="Next image" i18n-title class="btn btn-primary" (click)="scrollBgImage(true)">&darr;
                     </button>
                 </div>
                 <div style="display: flex; flex-flow: column;">
-                   <button title="Zoom in" i18n-title class="btn btn-primary" (click)="zoom(0.1)">
-                       <i class="glyphicon glyphicon-zoom-in"></i>
+                    <button title="Zoom in" i18n-title class="btn btn-primary" (click)="zoom(0.1)">
+                        <i class="glyphicon glyphicon-zoom-in"></i>
                     </button>
                     <!-- TODO icons-->
                     <button title="Reset zoom" i18n-title class="btn btn-primary" (click)="zoom(0)">R
                     </button>
                     <button title="Zoom out" i18n-title class="btn btn-primary" (click)="zoom(-0.1)">
-                       <i class="glyphicon glyphicon-zoom-out"></i>
+                        <i class="glyphicon glyphicon-zoom-out"></i>
                     </button>
                 </div>
             </div>
-            <div i18n *ngIf="loading" style="position: absolute; z-index: 1;">Loading images ({{loadedImages}}/{{bgSources.length}})
+            <div i18n *ngIf="loading" style="position: absolute; z-index: 1;">Loading images ({{loadedImages}}
+                                                                              /{{bgSources.length}})
                 <tim-loading></tim-loading>
             </div>
             <div #wrapper style="overflow: auto; position: relative; resize: both;"
@@ -956,15 +1085,16 @@ const MIN_IMAGE_WIDTH = 700;
                 <div #objectContainer class="canvasObjectContainer"
                      style="overflow: visible; position: absolute; height: 0; width: 0;">
                 </div>
-                <div class="zoomer" #canvasWrapper style="-webkit-transform-origin: 0 0;" [style.transform]="getZoomLevel()">
-                    <canvas #drawbases *ngFor="let item of bgImages; let i = index" class="drawbase" 
+                <div class="zoomer" #canvasWrapper style="-webkit-transform-origin: 0 0;"
+                     [style.transform]="getZoomLevel()">
+                    <canvas #drawbases *ngFor="let item of bgImages; let i = index" class="drawbase"
                             style="border:1px solid #000000; margin:-1px; position: absolute;">
                     </canvas>
                 </div>
             </div>
         </div>
-        <draw-toolbar *ngIf="toolBar" [drawSettings]="drawOptions" (drawSettingsChange)="saveSettings()"
-                      [undo]="undo"></draw-toolbar>
+        <draw-toolbar *ngIf="toolBar" [drawSettings]="drawOptions"
+                      [undo]="undo" optionsStorage="drawCanvasOptions"></draw-toolbar>
     `,
 })
 export class DrawCanvasComponent
@@ -999,15 +1129,23 @@ export class DrawCanvasComponent
 
     @Input() setExternalBg?: (arg0: string) => void;
 
+    eraserOrNormalOptions: IFillAndWidth = {
+        w: 20,
+        fill: true,
+    };
+
     // TODO: for now there's no option to draw for e.g filled rectangle with borders, but save format should support it
     drawOptions: IDrawOptions = {
         enabled: true,
         drawType: DrawType.Freehand,
         color: "red",
-        w: 3,
         opacity: 1,
+        eraser: false,
+        w: 3,
         fill: false,
     };
+
+    eraserState = false;
 
     // initial draw options
     @Input() options?: Partial<IDrawOptions>;
@@ -1020,8 +1158,6 @@ export class DrawCanvasComponent
     // identifier e.g for associating specific canvas with specific answer review
     public id: number = 0;
 
-    private optionsStorage = new TimStorage("drawCanvasOptions", DrawOptions);
-
     constructor(
         el: ElementRef<HTMLElement>,
         private domSanitizer: DomSanitizer
@@ -1030,13 +1166,6 @@ export class DrawCanvasComponent
     ngOnInit() {
         if (!this.toolBar) {
             this.drawOptions.enabled = false;
-        } else {
-            const prevSettings = this.optionsStorage.get();
-            if (prevSettings) {
-                this.drawOptions = prevSettings;
-            } else {
-                this.drawOptions = {...this.drawOptions, ...this.options};
-            }
         }
 
         this.setBg();
@@ -1069,10 +1198,6 @@ export class DrawCanvasComponent
         if (this.updateCallback) {
             this.updateCallback(this, {drawingUpdated: false, deleted: true});
         }
-    }
-
-    saveSettings() {
-        this.optionsStorage.set(this.drawOptions);
     }
 
     /**

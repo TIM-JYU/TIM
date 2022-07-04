@@ -13,6 +13,7 @@ const LineSegment = t.intersection([
         color: t.string,
         w: t.union([t.number, t.string]), // TODO should convert w to number only in database
         opacity: t.number,
+        eraser: t.boolean,
     }),
 ]);
 
@@ -21,6 +22,7 @@ const Line = t.intersection([
     t.partial({
         color: t.string,
         opacity: t.number,
+        eraser: t.boolean,
     }),
 ]);
 
@@ -31,6 +33,7 @@ const RectangleOrEllipse = t.intersection([
         fillColor: t.string,
         lineWidth: t.number,
         opacity: t.number,
+        eraser: t.boolean,
     }),
 ]);
 
