@@ -1092,7 +1092,7 @@ const MIN_IMAGE_WIDTH = 700;
                 </div>
             </div>
         </div>
-        <draw-toolbar *ngIf="toolBar" [drawSettings]="drawOptions"
+        <draw-toolbar *ngIf="toolBar" [(drawSettings)]="drawOptions"
                       [undo]="undo" optionsStorage="drawCanvasOptions"></draw-toolbar>
     `,
 })

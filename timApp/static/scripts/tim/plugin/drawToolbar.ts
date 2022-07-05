@@ -4,8 +4,10 @@ import {
     Component,
     DoBootstrap,
     ElementRef,
+    EventEmitter,
     Input,
     NgModule,
+    Output,
     ViewChild,
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
@@ -258,6 +260,8 @@ export class DrawToolbarComponent implements AfterViewInit {
         drawType: DrawType.Freehand,
         eraser: false,
     };
+    @Output() drawSettingsChange = new EventEmitter<IDrawOptions>();
+
     eraserOrNormalOptions: IFillAndWidth = {
         w: 20,
         fill: true,
@@ -296,14 +300,8 @@ export class DrawToolbarComponent implements AfterViewInit {
     }
 
     loadOptions(options: IDrawOptions) {
-        // TODO iterate
-        this.drawSettings.enabled = options.enabled;
-        this.drawSettings.w = options.w;
-        this.drawSettings.opacity = options.opacity;
-        this.drawSettings.color = options.color;
-        this.drawSettings.fill = options.fill;
-        this.drawSettings.drawType = options.drawType;
-        this.drawSettings.eraser = false;
+        this.drawSettings = options;
+        this.drawSettingsChange.emit(this.drawSettings);
     }
 
     onSettingsChanged() {
