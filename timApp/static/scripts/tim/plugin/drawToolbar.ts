@@ -173,6 +173,7 @@ export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
                        (ngModelChange)="onSettingsChanged()"/>
             </label>
             <label class="text-input"
+                   [ngClass]="{'dim': drawSettings.eraser}"
                    *ngIf="drawVisibleOptions.opacity"
                    title="Opacity"
                    i18n-title>
@@ -186,7 +187,9 @@ export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
                        (ngModelChange)="onSettingsChanged()"/>
             </label>
             <span class="sep"></span>
-            <div class="color-bar btn-group" *ngIf="drawVisibleOptions.color">
+            <div class="color-bar btn-group"
+                    *ngIf="drawVisibleOptions.color"
+                    [ngClass]="{'dim': drawSettings.eraser}">
                 <button class="btn btn-default color-selector"
                         #colorInput
                         title="Color picker"
