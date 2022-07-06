@@ -1252,17 +1252,15 @@ interface IAnswerResponse {
             <div class="pluginError" *ngIf="imageLoadError" [textContent]="imageLoadError"></div>
             <h4 *ngIf="header" [innerHtml]="header"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
-            <div class="imagex-content" style="position:relative; height: {{canvasheight}}px">
+            <div class="imagex-content" [style.height.px]="canvasheight">
                 <canvas class="canvas no-popup-menu"
-                        style="position:absolute;"
                         tabindex="1"
-                        width={{canvaswidth}}
-                        height={{canvasheight}}></canvas>
+                        [width]="canvaswidth"
+                        [height]="canvasheight"></canvas>
                 <canvas class="canvas no-popup-menu"
-                        style="position:absolute;"
                         tabindex="1"
-                        width={{canvaswidth}}
-                        height={{canvasheight}}></canvas>
+                        [width]="canvaswidth"
+                        [height]=canvasheight></canvas>
                 <div class="content"></div>
             </div>
             <p class="csRunMenu"><span *ngIf="button" class="save">&nbsp;<button
@@ -1326,6 +1324,7 @@ interface IAnswerResponse {
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
         </div>
     `,
+    styleUrls: ["./imagex.scss"],
 })
 export class ImageXComponent
     extends AngularPluginBase<
