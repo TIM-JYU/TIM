@@ -772,7 +772,12 @@ def create_default_velp_group_route(doc_id: int):
 
     doc = get_doc_or_abort(doc_id)
     verify_logged_in()
-    user_group = doc.block.owners[0]
+
+    if doc.block.owners:
+        user_group = doc.block.owners[0]
+    else:
+        raise RouteException("Cannot create default group for document: document has no owner.")
+
     verify_edit_access(doc)
     default, default_group_path, default_group_name = get_document_default_velp_group(
         doc
