@@ -3,10 +3,10 @@ import importlib
 import os
 from typing import Any, List, Dict
 
-from util.iter import pairwise
+from cli.util.iter import pairwise
 
 
-def main():
+def main() -> None:
     commands_path = os.path.realpath(
         os.path.join(os.path.dirname(__file__), "commands")
     )
@@ -39,7 +39,9 @@ def main():
             cur_module_path.append(cur)
             if cur not in subparsers_tree:
                 init_module_path = ".".join(cur_module_path)
-                init_module = importlib.import_module(f"commands.{init_module_path}")
+                init_module = importlib.import_module(
+                    f"cli.commands.{init_module_path}"
+                )
                 info = getattr(init_module, "info", {})
                 subparsers_tree[cur] = (
                     subparsers_tree[prev]
@@ -50,7 +52,7 @@ def main():
                         help="Additional help",
                     )
                 )
-        module = importlib.import_module(f"commands.{module_name}")
+        module = importlib.import_module(f"cli.commands.{module_name}")
         command_info = getattr(module, "info", {})
         init_func = getattr(module, "init", None)
         parser = subparsers_tree[search_path[-1]].add_parser(

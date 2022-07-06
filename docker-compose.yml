@@ -10,7 +10,7 @@ x-caddy:
   - ./certs/caddy:/certs:ro
   - ./Caddyfile:/etc/caddy/Caddyfile:ro
   - ./timApp/static:/tim/timApp/static:ro
-  - ${LOG_DIR:?}/caddy:/logs
+  - ${TIM_LOG_DIR:?}/caddy:/logs
   - ./timApp/modules/cs/generated:/tim/timApp/modules/cs/generated:ro
   - ./timApp/modules/cs/static:/tim/timApp/modules/cs/static:ro
   - csplugin_data:/cs_data:ro
@@ -19,10 +19,10 @@ x-caddy:
   - jsrunner
  environment:
   CADDY_DOMAINS: ${CADDY_DOMAINS:?}
-  CADDY_EXTRA_CONFIG: ${CADDY_EXTRA_CONFIG:?}
+  CADDY_EXTRA_CONFIG: ${CADDY_EXTRA_CONFIG?}
   CADDY_EXTRA_TIM_CONFIG: ${CADDY_EXTRA_TIM_CONFIG:-}
   COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
-  STATUS_PAGE_URL: ${STATUS_PAGE_URL:-}
+  STATUS_PAGE_URL: ${TIM_STATUS_PAGE_URL:-}
  restart: unless-stopped
 
 services:
@@ -46,8 +46,8 @@ services:
    - oiko
   volumes:
    - .:/service
-   - ${LOG_DIR:?}:/service/tim_logs
-   - ${FILES_ROOT:?}:/tim_files
+   - ${TIM_LOG_DIR:?}:/service/tim_logs
+   - ${TIM_FILES_ROOT:?}:/tim_files
    - cache:/cache
   working_dir: /service/timApp
   command: python3 launch.py --with-gunicorn
@@ -57,7 +57,7 @@ services:
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST:?}
-   PG_MAX_CONNECTIONS: ${PG_MAX_CONNECTIONS:?}
+   POSTGRESQL_MAX_CONNECTIONS: ${POSTGRESQL_MAX_CONNECTIONS:?}
    COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
   restart: unless-stopped
   networks:
@@ -99,13 +99,13 @@ services:
   command: [
     "postgres",
     "-c", "log_statement=mod",
-    "-c", "max_connections=${PG_MAX_CONNECTIONS:?}",
+    "-c", "max_connections=${POSTGRESQL_MAX_CONNECTIONS:?}",
   ]
   restart: unless-stopped
   networks:
    - db
   read_only: true
-  shm_size: ${PG_SHM_SIZE:?}
+  shm_size: ${POSTGRESQL_SHM_SIZE:?}
   tmpfs:
    - /run/postgresql
    - /tmp
@@ -132,13 +132,13 @@ services:
    context: ./timApp/modules/cs
    target: ${CSPLUGIN_TARGET:-complete}
   volumes:
-   - ${FILES_ROOT:?}/blocks/uploads:/uploads:ro
+   - ${TIM_FILES_ROOT:?}/blocks/uploads:/uploads:ro
    - ./timApp/modules/cs:/cs:ro
    - /var/run/docker.sock:/var/run/docker.sock
    - ./timApp/modules/cs/static:/csstatic:ro
    - ./tim_common:/cs/tim_common:ro
    - /tmp/${COMPOSE_PROJECT_NAME:?}_uhome:/tmp
-   - ${LOG_DIR:?}/cs:/logs
+   - ${TIM_LOG_DIR:?}/cs:/logs
    - /root/.ssh/
    - csplugin_data:/cs_data
    - csplugin_data_generated:/csgenerated
@@ -308,8 +308,8 @@ services:
   command: celery worker -A timApp.tim_celery.celery --concurrency 4
   volumes:
    - .:/service
-   - ${LOG_DIR:?}:/service/tim_logs
-   - ${FILES_ROOT:?}:/tim_files
+   - ${TIM_LOG_DIR:?}:/service/tim_logs
+   - ${TIM_FILES_ROOT:?}:/tim_files
    - cache:/cache
   working_dir: /service/timApp
   depends_on:
@@ -337,8 +337,8 @@ services:
    --pidfile /var/run/celery/celerybeat.pid
   volumes:
    - .:/service
-   - ${LOG_DIR:?}:/service/tim_logs
-   - ${FILES_ROOT:?}:/tim_files
+   - ${TIM_LOG_DIR:?}:/service/tim_logs
+   - ${TIM_FILES_ROOT:?}:/tim_files
    - cache:/cache
   working_dir: /service/timApp
   depends_on:

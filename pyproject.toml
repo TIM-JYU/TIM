@@ -116,8 +116,6 @@ exclude = [
     'timApp/tim_files',
     'mailman/',
     'tools/',
-    'oiko/',
-    'python_docs/',
 ]
 
 # Some modules have their own internal type checking, so we will always need to follow their imports
@@ -129,6 +127,7 @@ module = [
     "werkzeug.*",
     "bcrypt",
     "langcodes",
+    "cli"
 ]
 follow_imports = "normal"
 

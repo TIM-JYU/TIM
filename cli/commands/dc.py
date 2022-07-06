@@ -4,6 +4,8 @@ import subprocess
 from argparse import ArgumentParser
 from typing import List
 
+from cli.config import get_config
+
 info = {
     "help": "Run a docker-compose command on TIM containers",
     "description": """
@@ -19,13 +21,16 @@ class Arguments:
 
 
 def cmd(args: Arguments) -> None:
+    config = get_config()
     cwd = os.getcwd()
     env = os.environ.copy()
+    env = {**env, **config.env_dict()}
     extra_args = ["-f", os.path.join(cwd, "docker-compose.yml")]
-    if args.profile == "test":
+    profile = args.profile or config.get("compose", "profiles")
+    if profile == "test":
         env["CSPLUGIN_TARGET"] = "base"
         extra_args.extend(["--profile", "test"])
-    elif args.profile == "dev":
+    elif profile == "dev":
         env["CSPLUGIN_TARGET"] = "sudo"
         extra_args.extend(["-f", os.path.join(cwd, "docker-compose.dev.yml")])
 

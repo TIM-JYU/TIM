@@ -9,6 +9,7 @@
 .idea
 .mypy_cache/
 .settings
+tim.conf
 .stack-work/
 .webassets-cache/
 /Dumbo/

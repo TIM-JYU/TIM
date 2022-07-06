@@ -40,5 +40,5 @@ if ! check_python3_installed; then
     exit 1
 fi
 
-# Call cli/main.py passing all arguments (skip the first one)
-"$python_cmd" "$DIR/cli/cli.py" "${@:1}"
+# Call cli/tim.py passing all arguments (skip the first one)
+"$python_cmd" -m cli.tim "${@:1}"
