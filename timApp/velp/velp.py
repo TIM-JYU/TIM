@@ -33,11 +33,12 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.users import get_rights_holders
 from timApp.user.userutils import grant_access
-from timApp.util.flask.requesthelper import RouteException
+from timApp.util.flask.requesthelper import RouteException, JSONException
 from timApp.util.flask.responsehelper import (
     json_response,
     no_cache_json_response,
-    ok_response, html_error,
+    ok_response,
+    html_error,
 )
 from timApp.util.logger import log_warning
 from timApp.util.utils import split_location
@@ -723,11 +724,9 @@ def create_velp_group_route(doc_id: int) -> Response:
                 #     raise RouteException(f"Folder not found: {doc_path}")
                 # doc_name = ""
                 # original_owner = target.block.owners[0]
-                resp = {"error": "Cannot create group for document: document has no owner."}
-                return json_response(resp, 500)
-                # raise RouteException(
-                #     f"Cannot create group for document: document has no owner."
-                # )
+                raise RouteException(
+                    f"Cannot create group for document: document has no owner."
+                )
             velp_group = create_velp_group(
                 velp_group_name, original_owner, new_group_path
             )
@@ -739,11 +738,9 @@ def create_velp_group_route(doc_id: int) -> Response:
                         right.usergroup, velp_group.block, right.atype.to_enum()
                     )
         else:
-            resp = {"error": "Velp group with same name and location exists already."}
-            return json_response(resp)
-            # raise RouteException(
-            #     "Velp group with same name and location exists already."
-            # )
+            raise RouteException(
+                "Velp group with same name and location exists already."
+            )
 
     created_velp_group = dict()
     created_velp_group["id"] = velp_group.id
@@ -780,9 +777,9 @@ def create_default_velp_group_route(doc_id: int) -> Response:
     if doc.block.owners:
         user_group = doc.block.owners[0]
     else:
-        # raise RouteException("Cannot create default group for document: document has no owner.")
-        resp = {"error": "Cannot create default group for document: document has no owner."}
-        return json_response(resp, 500)
+        raise RouteException(
+            "Cannot create default group for document: document has no owner."
+        )
 
     verify_edit_access(doc)
     default, default_group_path, default_group_name = get_document_default_velp_group(
