@@ -289,7 +289,7 @@ export class DrawToolbarComponent implements AfterViewInit {
 
     ngOnInit() {
         if (this.optionsStorage) {
-            this.storage = new TimStorage("drawCanvasOptions", DrawSaveOptions);
+            this.storage = new TimStorage(this.optionsStorage, DrawSaveOptions);
             const prevSettings = this.storage.get();
             if (prevSettings) {
                 this.loadOptions(prevSettings.default);
