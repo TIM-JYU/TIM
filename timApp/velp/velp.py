@@ -711,7 +711,21 @@ def create_velp_group_route(doc_id: int) -> dict:
             new_group_path
         )  # Check name so no duplicates are made
         if group_exists is None:
-            original_owner = target.owners[0]
+            # Document may not have an owner, we have to account for that
+            if not len(target.owners) < 1:
+                original_owner = target.owners[0]
+            else:
+                # TODO Should owner default to folder owner in this case? These groups will not be visible
+                #      without sufficient folder rights, however. Otherwise we could end up checking for
+                #      owners until the root of the user folder.
+                # target = Folder.find_by_path(doc_path)
+                # if not target:
+                #     raise RouteException(f"Folder not found: {doc_path}")
+                # doc_name = ""
+                # original_owner = target.block.owners[0]
+                raise RouteException(
+                    "Cannot create group for document: document has no owner."
+                )
             velp_group = create_velp_group(
                 velp_group_name, original_owner, new_group_path
             )
