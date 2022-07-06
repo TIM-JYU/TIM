@@ -712,7 +712,7 @@ def create_velp_group_route(doc_id: int) -> dict:
         )  # Check name so no duplicates are made
         if group_exists is None:
             # Document may not have an owner, we have to account for that
-            if not len(target.owners) < 1:
+            if target.owners:
                 original_owner = target.owners[0]
             else:
                 # TODO Should owner default to folder owner in this case? These groups will not be visible
