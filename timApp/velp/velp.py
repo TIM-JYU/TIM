@@ -91,7 +91,7 @@ velps = Blueprint("velps", __name__, url_prefix="")
 
 
 @velps.get("/<int:doc_id>/get_default_velp_group")
-def get_default_velp_group(doc_id: int):
+def get_default_velp_group(doc_id: int) -> Response:
     """Get default velp group ID and if  velp group doesn't exist yet, create one.
 
     :param doc_id: ID of document
@@ -174,7 +174,7 @@ def get_default_velp_group(doc_id: int):
 
 
 @velps.get("/get_default_personal_velp_group")
-def get_default_personal_velp_group():
+def get_default_personal_velp_group() -> Response:
     """Get default personal velp group ID and if velp group doesn't exist yet, create one.
 
     :return: Dictionary containing personal velp group data.
@@ -222,7 +222,7 @@ def get_default_personal_velp_group():
 
 
 @velps.get("/<int:doc_id>/get_velps")
-def get_velps(doc_id: int):
+def get_velps(doc_id: int) -> Response:
     """Get all velps for document user has access to.
 
     :param doc_id: ID of document
@@ -236,7 +236,7 @@ def get_velps(doc_id: int):
 
 
 @velps.get("/<int:doc_id>/get_velp_groups")
-def get_velp_groups(doc_id: int):
+def get_velp_groups(doc_id: int) -> Response:
     """Gets all velp groups for document user has access to by using VelpGroupSelection table.
 
     :param doc_id: ID of document
@@ -259,7 +259,7 @@ def get_velp_groups(doc_id: int):
 
 
 @velps.get("/<int:doc_id>/get_velp_group_personal_selections")
-def get_velp_group_personal_selections(doc_id: int) -> dict:
+def get_velp_group_personal_selections(doc_id: int) -> Response:
     """Gets default velp group selections for velp groups user has access to in document.
 
     :param doc_id: ID of document
@@ -273,7 +273,7 @@ def get_velp_group_personal_selections(doc_id: int) -> dict:
 
 
 @velps.get("/<int:doc_id>/get_velp_group_default_selections")
-def get_velp_group_default_selections(doc_id: int) -> dict:
+def get_velp_group_default_selections(doc_id: int) -> Response:
     """Gets default velp group selections for velp groups user has access to in document.
 
     :param doc_id: ID of document
@@ -286,7 +286,7 @@ def get_velp_group_default_selections(doc_id: int) -> dict:
 
 
 @velps.get("/<int:doc_id>/get_velp_labels")
-def get_velp_labels(doc_id: int) -> "str":
+def get_velp_labels(doc_id: int) -> Response:
     """Gets all velp labels for document user has access to by using VelpGroupSelection table.
 
     :param doc_id: ID of document
@@ -300,7 +300,7 @@ def get_velp_labels(doc_id: int) -> "str":
 
 
 @velps.post("/add_velp")
-def add_velp() -> int:
+def add_velp() -> Response:
     """Creates a new velp and adds it to velp groups user chose.
 
     Required key(s):
@@ -375,7 +375,7 @@ def add_velp() -> int:
 
 
 @velps.post("/<int:doc_id>/update_velp")
-def update_velp_route(doc_id: int):
+def update_velp_route(doc_id: int) -> Response:
     """Updates the velp's data.
 
     Required key(s):
@@ -466,7 +466,7 @@ def update_velp_route(doc_id: int):
 
 
 @velps.post("/add_velp_label")
-def add_label() -> int:
+def add_label() -> Response:
     """Creates new velp label.
 
     Required key(s):
@@ -494,7 +494,7 @@ def add_label() -> int:
 
 
 @velps.post("/update_velp_label")
-def update_velp_label_route():
+def update_velp_label_route() -> Response:
     """Updates velp label content.
 
     Required key(s):
@@ -526,7 +526,7 @@ def update_velp_label_route():
 
 
 @velps.post("/<int:doc_id>/change_selection")
-def change_selection_route(doc_id: int):
+def change_selection_route(doc_id: int) -> Response:
     """Change selection for velp group in users VelpGroupSelection in current document.
 
     Required key(s):
@@ -571,7 +571,7 @@ def change_selection_route(doc_id: int):
 
 
 @velps.post("/<int:doc_id>/change_all_selections")
-def change_all_selections(doc_id: int):
+def change_all_selections(doc_id: int) -> Response:
     """Change selection for velp group in users VelpGroupSelection in current document.
 
     Required key(s):
@@ -608,7 +608,7 @@ def change_all_selections(doc_id: int):
 
 
 @velps.post("/<int:doc_id>/reset_target_area_selections_to_defaults")
-def reset_target_area_selections_to_defaults(doc_id: int):
+def reset_target_area_selections_to_defaults(doc_id: int) -> Response:
     """Changes user's personal velp group selections in target area to defaults.
 
     Required key(s):
@@ -633,7 +633,7 @@ def reset_target_area_selections_to_defaults(doc_id: int):
 
 
 @velps.post("/<int:doc_id>/reset_all_selections_to_defaults")
-def reset_all_selections_to_defaults(doc_id: int):
+def reset_all_selections_to_defaults(doc_id: int) -> Response:
     """Changes user's all personal velp group selections in document to defaults.
 
     :param doc_id: ID of document
@@ -818,7 +818,7 @@ def create_default_velp_group_route(doc_id: int) -> Response:
     return json_response(created_velp_group)
 
 
-def get_velp_groups_from_tree(doc: DocInfo):
+def get_velp_groups_from_tree(doc: DocInfo) -> list[DocEntry]:
     """Returns all velp groups found from tree from document to root and from users own velp folder.
 
     Checks document's own velp group folder first, then default velp group folders going up all the
