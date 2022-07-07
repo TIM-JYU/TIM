@@ -721,11 +721,6 @@ def create_velp_group_route(doc_id: int) -> Response:
                 # TODO Should owner default to folder owner in this case? These groups will not be visible
                 #      without sufficient folder rights, however. Otherwise we could end up checking for
                 #      owners until the root of the user folder.
-                # target = Folder.find_by_path(doc_path)
-                # if not target:
-                #     raise RouteException(f"Folder not found: {doc_path}")
-                # doc_name = ""
-                # original_owner = target.block.owners[0]
                 raise RouteException(
                     f"Cannot create group for document: document has no owner."
                 )
