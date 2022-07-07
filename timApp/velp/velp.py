@@ -33,12 +33,11 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.users import get_rights_holders
 from timApp.user.userutils import grant_access
-from timApp.util.flask.requesthelper import RouteException, JSONException
+from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import (
     json_response,
     no_cache_json_response,
     ok_response,
-    html_error,
 )
 from timApp.util.logger import log_warning
 from timApp.util.utils import split_location
