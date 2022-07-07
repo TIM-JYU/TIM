@@ -205,17 +205,20 @@ def get_default_personal_velp_group() -> Response:
         group = create_default_velp_group(group_name, user_group, new_group_path)
         created_new = True
 
-    created_velp_group = dict()
-    created_velp_group["id"] = group.id
-    created_velp_group["target_type"] = 0
-    created_velp_group["target_id"] = "0"
-    created_velp_group["name"] = group_name
-    created_velp_group["location"] = new_group_path
-    created_velp_group["show"] = True
-    created_velp_group["default"] = False
-    created_velp_group["edit_access"] = True
-    created_velp_group["default_group"] = True
-    created_velp_group["created_new_group"] = created_new
+    created_velp_group = dict(
+        {
+            "id": group.id,
+            "target_type": 0,
+            "target_id": "0",
+            "name": group_name,
+            "location": new_group_path,
+            "show": True,
+            "default": False,
+            "edit_access": True,
+            "default_group": True,
+            "created_new_group": created_new,
+        }
+    )
     db.session.commit()
 
     return no_cache_json_response(created_velp_group)
@@ -741,16 +744,19 @@ def create_velp_group_route(doc_id: int) -> Response:
                 "Velp group with same name and location exists already."
             )
 
-    created_velp_group = dict()
-    created_velp_group["id"] = velp_group.id
-    created_velp_group["target_type"] = 0
-    created_velp_group["target_id"] = "0"
-    created_velp_group["name"] = velp_group_name
-    created_velp_group["location"] = new_group_path
-    created_velp_group["selected"] = True
-    created_velp_group["show"] = True
-    created_velp_group["edit_access"] = True
-    created_velp_group["default_group"] = False
+    created_velp_group = dict(
+        {
+            "id": velp_group.id,
+            "target_type": 0,
+            "target_id": "0",
+            "name": velp_group_name,
+            "location": new_group_path,
+            "selected": True,
+            "show": True,
+            "edit_access": True,
+            "default_group": False,
+        }
+    )
 
     add_groups_to_document([velp_group], doc, user)
     # TODO Do we want to make just created velp group selected in document immediately?
@@ -797,18 +803,21 @@ def create_default_velp_group_route(doc_id: int) -> Response:
         vg.valid_until = None
         created_new_group = False
 
-    created_velp_group = dict()
-    created_velp_group["id"] = velp_group.id
-    created_velp_group["target_type"] = 0
-    created_velp_group["target_id"] = "0"
-    created_velp_group["name"] = default_group_name
-    created_velp_group["location"] = default_group_path
-    created_velp_group["selected"] = True
-    created_velp_group["show"] = True
-    created_velp_group["default"] = False
-    created_velp_group["edit_access"] = True
-    created_velp_group["default_group"] = True
-    created_velp_group["created_new_group"] = created_new_group
+    created_velp_group = dict(
+        {
+            "id": velp_group.id,
+            "target_type": 0,
+            "target_id": "0",
+            "name": default_group_name,
+            "location": default_group_path,
+            "selected": True,
+            "show": True,
+            "default": False,
+            "edit_access": True,
+            "default_group": True,
+            "created_new_group": created_new_group,
+        }
+    )
 
     add_groups_to_document([velp_group], doc, get_current_user_object())
 
