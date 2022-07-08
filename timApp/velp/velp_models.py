@@ -1,5 +1,6 @@
 """Defines all data models related to velps."""
 from datetime import datetime
+from typing import Dict, Any
 
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
@@ -152,7 +153,7 @@ class VelpGroup(db.Model):
     #     'DocEntry',
     # )
 
-    def to_json(self):
+    def to_json(self) -> dict[str, str | int | Any]:
         return {
             "id": self.id,
             "name": self.name,
