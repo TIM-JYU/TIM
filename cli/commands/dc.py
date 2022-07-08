@@ -40,8 +40,8 @@ def cmd(args: Arguments) -> None:
 def init(parser: ArgumentParser) -> None:
     parser.add_argument(
         "--profile",
-        help="TIM run profile override. Default is the same as defined in timconfig.py",
+        help="TIM run profile override. Default is the same as defined in tim.conf",
         choices=["dev", "prod", "test"],
     )
     parser.add_argument("args", nargs="*", help="Arguments to pass to docker-compose")
-    parser.set_defaults(func=cmd)
+    parser.set_defaults(run=cmd)

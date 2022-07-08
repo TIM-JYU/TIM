@@ -3,7 +3,9 @@ import importlib
 import os
 from typing import Any, List, Dict
 
+from cli.util.errors import CLIError
 from cli.util.iter import pairwise
+from cli.util.logging import log_error
 
 
 def main() -> None:
@@ -11,19 +13,21 @@ def main() -> None:
         os.path.join(os.path.dirname(__file__), "commands")
     )
     import_commands: List[List[str]] = []
-    for dirpath, dirnames, filenames in os.walk(commands_path):
-        if "__pycache__" in dirpath:
+    for dir_path, dir_names, filenames in os.walk(commands_path):
+        if "__pycache__" in dir_path:
             continue
         for filename in filenames:
             filename_no_ext, _ = os.path.splitext(filename)
             if filename_no_ext == "__init__":
                 continue
-            relative_path = os.path.relpath(dirpath, commands_path).strip(".")
+            relative_path = os.path.relpath(dir_path, commands_path).strip(".")
             module_parts = [p for p in relative_path.split(os.path.pathsep) if p]
             module_parts.append(filename_no_ext)
             import_commands.append(module_parts)
 
-    main_parser = argparse.ArgumentParser(prog="tim")
+    main_parser = argparse.ArgumentParser(
+        prog="tim", description="Manage the current TIM instance"
+    )
     subparsers = main_parser.add_subparsers(
         title="commands", description="Available commands", help="Additional help"
     )
@@ -62,10 +66,16 @@ def main() -> None:
             init_func(parser)
 
     args = main_parser.parse_args()
-    if hasattr(args, "func"):
-        args.func(args)
+    if hasattr(args, "run"):
+        try:
+            args.run(args)
+        except CLIError as e:
+            log_error(e.message)
+            exit(e.code)
+        except KeyboardInterrupt:
+            exit(0)
     else:
-        print("No command specified")
+        log_error("No command specified")
         main_parser.print_help()
 
 

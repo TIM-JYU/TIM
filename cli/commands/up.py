@@ -9,4 +9,4 @@ def cmd(args: Namespace) -> None:
 
 def init(parser: ArgumentParser) -> None:
     parser.add_argument("--name", help="Name to print")
-    parser.set_defaults(func=cmd)
+    parser.set_defaults(run=cmd)

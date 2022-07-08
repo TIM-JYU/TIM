@@ -5,7 +5,7 @@ from typing import Optional, Tuple
 from cli.config.config_file import TIMConfig
 from cli.config.default_config import DEFAULT_CONFIG
 from cli.config.migrations import apply_migrations
-from cli.util.logging import log_error
+from cli.util.errors import CLIError
 
 loaded_config: Optional[TIMConfig] = None
 
@@ -28,7 +28,7 @@ def _default_config() -> TIMConfig:
     return config
 
 
-def _find_config(create_if_not_exist: bool) -> Tuple[TIMConfig, int]:
+def _find_config(create_if_not_exist: bool) -> Tuple[Optional[TIMConfig], int]:
     # There are few options for config file:
     # 1. No config file, no variables.sh -> Error or return default based on create_if_not_exist
     # 2. No config file, variables.sh exists -> Load default config, return revision 0
@@ -44,10 +44,7 @@ def _find_config(create_if_not_exist: bool) -> Tuple[TIMConfig, int]:
     # Cases 1 and 2
     if not config_file_path.exists():
         if not old_variables_path.exists() and not create_if_not_exist:
-            log_error(
-                "TIM is not initialized. Please run `tim setup` to initialize and configure TIM."
-            )
-            exit(1)
+            return None, 0
         if old_variables_path.exists():
             return def_config, 0
     else:
@@ -56,10 +53,26 @@ def _find_config(create_if_not_exist: bool) -> Tuple[TIMConfig, int]:
     return def_config, def_config.getint("__meta__", "revision", fallback=-1)
 
 
+def has_config() -> bool:
+    global loaded_config
+    if loaded_config:
+        return loaded_config
+    cfg, revision = _find_config(False)
+    if not cfg:
+        return False
+    loaded_config = cfg
+    apply_migrations(loaded_config, revision)
+    return True
+
+
 def get_config(create_if_not_exist: bool = False) -> TIMConfig:
     global loaded_config
     if loaded_config:
         return loaded_config
     loaded_config, revision = _find_config(create_if_not_exist)
+    if not loaded_config:
+        raise CLIError(
+            "TIM is not initialized. Please run `tim setup` to initialize and configure TIM."
+        )
     apply_migrations(loaded_config, revision)
     return loaded_config
