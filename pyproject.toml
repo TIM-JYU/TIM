@@ -295,5 +295,11 @@ module = [
     "timApp.util.flask.search",
     "timApp.util.get_fields",
     "timApp.util.pdftools",
+    "timApp.velp.annotation_model",
+    "timApp.velp.annotations",
+    "timApp.velp.velp_folders",
+    "timApp.velp.velp_models",
+    "timApp.velp.velpgroups",
+    "timApp.velp.velps"
 ]
 ignore_errors = true
