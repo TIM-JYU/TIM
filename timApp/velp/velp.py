@@ -712,6 +712,8 @@ def create_velp_group_route(doc_id: int) -> Response:
             )
 
     else:
+        target: Folder | DocInfo | None
+
         if target_type == 2:
             target = Folder.find_by_path(doc_path)
             if not target:
@@ -722,8 +724,11 @@ def create_velp_group_route(doc_id: int) -> Response:
         else:
             raise RouteException("Unknown velp group target type.")
 
-        if not has_edit_access(target):
-            raise AccessDenied("Edit access is required.")
+        if target and target.block:
+            if not has_edit_access(target.block):
+                raise AccessDenied("Edit access is required.")
+        else:
+            raise RouteException(f"Could not find block: {doc_name}")
 
         # Gives path to either velp groups or velp groups/document name folder
         velps_folder_path = check_velp_group_folder_path(doc_path, user_group, doc_name)
@@ -733,26 +738,29 @@ def create_velp_group_route(doc_id: int) -> Response:
             new_group_path
         )  # Check name so no duplicates are made
         if group_exists is None:
-            # Document may not have an owner, we have to account for that
-            if target.owners:
-                original_owner = target.owners[0]
-            else:
-                # TODO Should owner default to folder owner in this case? These groups will not be visible
-                #      without sufficient folder rights, however. Otherwise we could end up checking for
-                #      owners until the root of the user folder.
-                raise RouteException(
-                    f"Cannot create group for document: document has no owner."
-                )
-            velp_group = create_velp_group(
-                velp_group_name, original_owner, new_group_path
-            )
-            rights = get_rights_holders(target.id)
-            # Copy all rights but view
-            for right in rights:
-                if not right.atype.name == "view":
-                    grant_access(
-                        right.usergroup, velp_group.block, right.atype.to_enum()
+            if target is not None:
+                # Document may not have an owner, we have to account for that
+                if target.owners:
+                    original_owner = target.owners[0]
+                else:
+                    # TODO Should owner default to folder owner in this case? These groups will not be visible
+                    #      without sufficient folder rights, however. Otherwise we could end up checking for
+                    #      owners until the root of the user folder.
+                    raise RouteException(
+                        f"Cannot create group for document: document has no owner."
                     )
+                velp_group = create_velp_group(
+                    velp_group_name, original_owner, new_group_path
+                )
+                rights = get_rights_holders(target.id)
+                # Copy all rights but view
+                for right in rights:
+                    if not right.atype.name == "view":
+                        grant_access(
+                            right.usergroup, velp_group.block, right.atype.to_enum()
+                        )
+            else:
+                raise RouteException(f"Could not find document or folder.")
         else:
             raise RouteException(
                 "Velp group with same name and location exists already."
