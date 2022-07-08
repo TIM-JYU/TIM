@@ -189,6 +189,7 @@ class VelpTest(TimRouteTest):
                 "id": 18,
                 "location": "users/test-user-1/velp-groups/Personal-default",
                 "name": "Personal-default",
+                "selected": True,
                 "show": True,
                 "target_id": "0",
                 "target_type": 0,

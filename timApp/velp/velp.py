@@ -1,4 +1,4 @@
-"""The module handles the main logic related to velps, velp groups and labels. This includes adding and modifiying velps
+"""The module handles the main logic related to velps, velp groups and labels. This includes adding and modifying velps
 and labels as well as adding new velp groups. The module also retrieves or creates the default velp group for the
 document and the personal default group for the user. Velp groups can be set to shown or shown as default in specific
 element (or in the whole document) through this module. The module also retrieves the velps, velp groups and labels to
@@ -67,6 +67,7 @@ from timApp.velp.velpgroups import (
     get_personal_selections_for_velp_groups,
     get_document_default_velp_group,
     set_default_velp_group_rights,
+    CreatedVelpGroup,
 )
 from timApp.velp.velps import (
     create_velp_version,
@@ -177,7 +178,7 @@ def get_default_velp_group(doc_id: int) -> Response:
 def get_default_personal_velp_group() -> Response:
     """Get default personal velp group ID and if velp group doesn't exist yet, create one.
 
-    :return: Dictionary containing personal velp group data.
+    :return: CreatedVelpGroup object containing personal velp group data.
 
     """
     user = get_current_user_object()
@@ -205,19 +206,12 @@ def get_default_personal_velp_group() -> Response:
         group = create_default_velp_group(group_name, user_group, new_group_path)
         created_new = True
 
-    created_velp_group = dict(
-        {
-            "id": group.id,
-            "target_type": 0,
-            "target_id": "0",
-            "name": group_name,
-            "location": new_group_path,
-            "show": True,
-            "default": False,
-            "edit_access": True,
-            "default_group": True,
-            "created_new_group": created_new,
-        }
+    created_velp_group = CreatedVelpGroup(
+        id=group.id,
+        name=group_name,
+        location=new_group_path,
+        default_group=True,
+        created_new_group=created_new,
     )
     db.session.commit()
 
@@ -658,7 +652,7 @@ def create_velp_group_route(doc_id: int) -> Response:
         - target_type: document, folder or personal group.
 
     :param doc_id: ID of the document
-    :return: Dictionary containing information of new velp group.
+    :return: CreatedVelpGroup object containing information of new velp group.
 
     """
 
@@ -739,18 +733,8 @@ def create_velp_group_route(doc_id: int) -> Response:
                 "Velp group with same name and location exists already."
             )
 
-    created_velp_group = dict(
-        {
-            "id": velp_group.id,
-            "target_type": 0,
-            "target_id": "0",
-            "name": velp_group_name,
-            "location": new_group_path,
-            "selected": True,
-            "show": True,
-            "edit_access": True,
-            "default_group": False,
-        }
+    created_velp_group = CreatedVelpGroup(
+        id=velp_group.id, name=velp_group_name, location=new_group_path
     )
 
     add_groups_to_document([velp_group], doc, user)
@@ -767,7 +751,7 @@ def create_default_velp_group_route(doc_id: int) -> Response:
     """Creates a default velp group document or changes existing document to default velp group.
 
     :param doc_id: ID of document
-    :return: Dictionary containing information of new default velp group.
+    :return: CreatedVelpGroup object containing information of new default velp group.
 
     """
 
@@ -798,20 +782,12 @@ def create_default_velp_group_route(doc_id: int) -> Response:
         vg.valid_until = None
         created_new_group = False
 
-    created_velp_group = dict(
-        {
-            "id": velp_group.id,
-            "target_type": 0,
-            "target_id": "0",
-            "name": default_group_name,
-            "location": default_group_path,
-            "selected": True,
-            "show": True,
-            "default": False,
-            "edit_access": True,
-            "default_group": True,
-            "created_new_group": created_new_group,
-        }
+    created_velp_group = CreatedVelpGroup(
+        id=velp_group.id,
+        name=default_group_name,
+        location=default_group_path,
+        default_group=True,
+        created_new_group=created_new_group,
     )
 
     add_groups_to_document([velp_group], doc, get_current_user_object())
@@ -826,7 +802,7 @@ def get_velp_groups_from_tree(doc: DocInfo) -> list[DocEntry]:
     """Returns all velp groups found from tree from document to root and from users own velp folder.
 
     Checks document's own velp group folder first, then default velp group folders going up all the
-    way to root. Doesn't branch side ways or down, only checks parents. After root has been reached,
+    way to root. Doesn't branch sideways or down, only checks parents. After root has been reached,
     finally checks users own velp group folder.
 
     Checks that user has minimum of view right for velp groups.
