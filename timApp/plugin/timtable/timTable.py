@@ -251,7 +251,13 @@ def tim_table_multimd():
     multi = []
     for jso in jsondata:
         tbl = jso[MARKUP][TABLE]
-        latexTable = str(convert_table(tbl, draw_html_borders=False))
+        state = jso.get("state", None) or {}
+        userdata = state.get(USERDATA, None)
+        if jso.get("userPrint", False) and isinstance(userdata, dict):
+            user_data = userdata.get("cells", {})
+        else:
+            user_data = None
+        latexTable = str(convert_table(tbl, user_data, draw_html_borders=False))
         multi.append(latexTable)
     return json_response(multi)
 

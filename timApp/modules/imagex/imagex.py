@@ -115,9 +115,6 @@ class ImagexServer(TimServer):
         # print("--templates--" + str(templs))
         ret = {
             "js": ["tim/plugin/imagex"],
-            "css": [
-                "css/imagex.css",
-            ],
             "multihtml": True,
         }
         # Add templates to reqs.

@@ -3,6 +3,8 @@ import * as t from "io-ts";
 import ivm from "isolated-vm";
 import {isLeft} from "fp-ts/lib/Either";
 import {Max1000} from "../../shared/jsrunnertypes";
+import {numberLines} from "./tools";
+
 console.log("rs");
 const router = express.Router();
 
@@ -15,16 +17,6 @@ const RunScriptInput = t.intersection([
         timeout: Max1000,
     }),
 ]);
-
-function numberLines(s: string, delta: number): string {
-    const lines = s.split("\n");
-    let result = "";
-    for (let i = 0; i < lines.length; i++) {
-        const space = i + delta < 10 ? "0" : "";
-        result += space + (i + delta) + ": " + lines[i] + "\n";
-    }
-    return result;
-}
 
 router.post("/", async (req, res, next) => {
     const decoded = RunScriptInput.decode(req.body);

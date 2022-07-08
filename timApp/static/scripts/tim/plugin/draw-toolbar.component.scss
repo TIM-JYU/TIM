@@ -52,7 +52,7 @@
   }
 
   .width {
-    width: 4em;
+    width: 5em;
   }
 
   .opacity {
@@ -83,12 +83,16 @@
   display: inline-flex;
 }
 
-.fill-object {
+.toggle-option {
   min-width: 35px;
 
   ::ng-deep &.btn.active {
     background-color: var(--button-bg-color);
     color: var(--bg-color);
   }
+}
+
+.dim {
+  opacity: 0.3;
 }
 

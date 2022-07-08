@@ -25,6 +25,19 @@ import {
     VelpDataT,
 } from "../servertypes";
 
+export function numberLines(s: string, delta: number): string {
+    if (!s) {
+        return "";
+    }
+    const lines = s.split("\n");
+    let result = "";
+    for (let i = 0; i < lines.length; i++) {
+        const space = i + delta < 10 ? "0" : "";
+        result += space + (i + delta) + ": " + lines[i] + "\n";
+    }
+    return result;
+}
+
 /**
  * From name=alias list returns two lists
  * @param fields list of name=alias pairs
@@ -160,6 +173,20 @@ interface Linear {
     a: number;
     b: number;
 }
+
+const NewUserDataT = t.intersection([
+    t.type({
+        full_name: t.string,
+        username: t.string,
+    }),
+    t.partial({
+        password: t.string,
+        email: t.string,
+    }),
+]);
+
+// TODO: Figure out why this has to be exported from here (otherwise rollup fails)
+export type NewUserData = t.TypeOf<typeof NewUserDataT>;
 
 // const dummyGTools: GTools = new GTools(
 
@@ -827,6 +854,123 @@ export class ToolsBase {
         );
         return str;
     }
+
+    /**
+     * Converts a column index (starting from 0) to an Excel-like column name.
+     *
+     * @example columnToLetter(0) === "A"
+     * @example columnToLetter(10) === "J"
+     * @example columnToLetter(26) === "AA"
+     * @example columnToLetter(701) === "ZZ"
+     *
+     * @param column Column index (starting from 0)
+     * @returns Excel-like column name
+     */
+    public columnToLetters(column: unknown): string {
+        if (!checkInt(column)) {
+            throw new Error(
+                "columnToLetters: Parameter 'column' must be integer."
+            );
+        }
+        const ASCII_OF_A = 65;
+        const ASCII_CHAR_COUNT = 26;
+        const lastChar = String.fromCharCode(
+            ASCII_OF_A + (column % ASCII_CHAR_COUNT)
+        );
+        const remainder = Math.floor(column / ASCII_CHAR_COUNT);
+
+        if (remainder == 0) {
+            return lastChar;
+        } else if (remainder <= ASCII_CHAR_COUNT) {
+            return String.fromCharCode(ASCII_OF_A + remainder - 1) + lastChar;
+        }
+        // recursive tail call to figure out the rest of the letters
+        return this.columnToLetters(remainder - 1) + lastChar;
+    }
+
+    /**
+     * Converts an Excel-like column name to a column index (starting from 0).
+     *
+     * @example letterToColumn("A") === 0
+     * @example letterToColumn("J") === 10
+     * @example letterToColumn("AA") === 26
+     * @example letterToColumn("ZZ") === 701
+     *
+     * @param letters Excel-like column name
+     * @returns Column index (starting from 0)
+     */
+    public columnLettersToIndex(letters: unknown): number {
+        if (!checkString(letters)) {
+            throw new Error(
+                "columnLettersToIndex: Parameter 'letters' must be string."
+            );
+        }
+        if (letters.match(/[^A-Z]/)) {
+            throw new Error(
+                "columnLettersToIndex: Parameter 'letters' must only contain uppercase letters."
+            );
+        }
+        const ASCII_OF_A = 65;
+        const ASCII_CHAR_COUNT = 26;
+        const ASCII_OF_NULL = ASCII_OF_A - 1;
+        return (
+            letters
+                .split("")
+                .map(
+                    (char, i) =>
+                        (char.charCodeAt(0) - ASCII_OF_NULL) *
+                        Math.pow(ASCII_CHAR_COUNT, letters.length - i - 1)
+                )
+                .reduce((p, c) => p + c, 0) - 1
+        );
+    }
+
+    /**
+     * Converts a cell position (col, row) to an Excel-like cell name.
+     *
+     * @example cellToLetter(0, 0) === "A1"
+     * @example cellToLetter(10, 10) === "J11"
+     *
+     * @param col Column index (starting from 0)
+     * @param row Row index (starting from 0)
+     * @returns Excel-like cell name
+     */
+    public tableCellToExcelCell(col: unknown, row: unknown): string {
+        if (!checkInt(col) || !checkInt(row)) {
+            throw new Error(
+                "tableCellToExcelCell: Parameters 'col' and 'row' must be integers."
+            );
+        }
+        return this.columnToLetters(col) + (row + 1);
+    }
+
+    /**
+     * Converts an Excel-like cell name to a cell position (col, row).
+     *
+     * @example excelCellToCell("A1") === [0, 0]
+     * @example excelCellToCell("J11") === [10, 10]
+     * @example excelCellToCell("AA11") === [26, 10]
+     *
+     * @param excelCell Excel-like cell name
+     * @returns Cell position as a [col, row] tuple
+     */
+    public excelCellToTableCell(excelCell: unknown): [number, number] {
+        if (!checkString(excelCell)) {
+            throw new Error(
+                "excelCellToTableCell: Parameter 'excelCell' must be string."
+            );
+        }
+        const letters = excelCell.match(/[A-Z]+/g);
+        const numbers = excelCell.match(/\d+/g);
+        if (letters == null || numbers == null) {
+            throw new Error(
+                `excelCellToTableCell: Cell format is invalid. Was '${excelCell}' but should be of format [A-Z]+[0-9]+`
+            );
+        }
+        const col = this.columnLettersToIndex(letters[0]);
+        const row = parseInt(numbers[0], 10) - 1;
+        return [col, row];
+    }
 }
 
 export class GTools extends ToolsBase {
@@ -836,8 +980,8 @@ export class GTools extends ToolsBase {
     public xys: Record<string, XY> = {};
     public stats: Record<string, Stats> = {};
     public tools: Tools;
-
     groups: IGroupData = {};
+    newUsers: NewUserData[] = [];
 
     constructor(
         currDoc: string,
@@ -945,6 +1089,31 @@ export class GTools extends ToolsBase {
 
     removeFromGroup(name: unknown, uids: unknown) {
         this.setGroupOperation(name, uids, "remove");
+    }
+
+    /**
+     * Create a new user. The user will be created if they don't exist yet.
+     *
+     * Note: User creation requires that the user running the JSRunner belongs to the "User creators" group.
+     *
+     * @param data User data object of form { email: string, full_name: string | undefined, password: string | undefined }
+     * @returns A pseudo-ID of the created user.
+     *          The ID can be used with addToGroup and removeFromGroup.
+     *          Note that the ID does not refer to the real final user ID.
+     */
+    createUser(data: unknown) {
+        if (!NewUserDataT.is(data)) {
+            throw Error(
+                "createUser: parameter should be an object containing at least full name and email"
+            );
+        }
+        const sameEmailIndex = this.newUsers.findIndex(
+            (u) => u.email == data.email
+        );
+        if (sameEmailIndex >= 0) {
+            return -sameEmailIndex - 1;
+        }
+        return -this.newUsers.push(data);
     }
 
     setGroupOperation(name: unknown, uids: unknown, key: keyof IGroupData) {
