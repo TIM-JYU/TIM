@@ -1,4 +1,4 @@
-"""The module handles the main logic related to velps, velp groups and labels. This includes adding and modifiying velps
+"""The module handles the main logic related to velps, velp groups and labels. This includes adding and modifying velps
 and labels as well as adding new velp groups. The module also retrieves or creates the default velp group for the
 document and the personal default group for the user. Velp groups can be set to shown or shown as default in specific
 element (or in the whole document) through this module. The module also retrieves the velps, velp groups and labels to
@@ -10,7 +10,7 @@ the document.
 
 """
 
-from flask import Blueprint
+from flask import Blueprint, Response
 from flask import request
 
 from timApp.auth.accesshelper import (
@@ -67,6 +67,7 @@ from timApp.velp.velpgroups import (
     get_personal_selections_for_velp_groups,
     get_document_default_velp_group,
     set_default_velp_group_rights,
+    CreatedVelpGroup,
 )
 from timApp.velp.velps import (
     create_velp_version,
@@ -91,7 +92,7 @@ velps = Blueprint("velps", __name__, url_prefix="")
 
 
 @velps.get("/<int:doc_id>/get_default_velp_group")
-def get_default_velp_group(doc_id: int):
+def get_default_velp_group(doc_id: int) -> Response:
     """Get default velp group ID and if  velp group doesn't exist yet, create one.
 
     :param doc_id: ID of document
@@ -174,10 +175,10 @@ def get_default_velp_group(doc_id: int):
 
 
 @velps.get("/get_default_personal_velp_group")
-def get_default_personal_velp_group():
+def get_default_personal_velp_group() -> Response:
     """Get default personal velp group ID and if velp group doesn't exist yet, create one.
 
-    :return: Dictionary containing personal velp group data.
+    :return: CreatedVelpGroup object containing personal velp group data.
 
     """
     user = get_current_user_object()
@@ -205,24 +206,20 @@ def get_default_personal_velp_group():
         group = create_default_velp_group(group_name, user_group, new_group_path)
         created_new = True
 
-    created_velp_group = dict()
-    created_velp_group["id"] = group.id
-    created_velp_group["target_type"] = 0
-    created_velp_group["target_id"] = "0"
-    created_velp_group["name"] = group_name
-    created_velp_group["location"] = new_group_path
-    created_velp_group["show"] = True
-    created_velp_group["default"] = False
-    created_velp_group["edit_access"] = True
-    created_velp_group["default_group"] = True
-    created_velp_group["created_new_group"] = created_new
+    created_velp_group = CreatedVelpGroup(
+        id=group.id,
+        name=group_name,
+        location=new_group_path,
+        default_group=True,
+        created_new_group=created_new,
+    )
     db.session.commit()
 
     return no_cache_json_response(created_velp_group)
 
 
 @velps.get("/<int:doc_id>/get_velps")
-def get_velps(doc_id: int):
+def get_velps(doc_id: int) -> Response:
     """Get all velps for document user has access to.
 
     :param doc_id: ID of document
@@ -236,7 +233,7 @@ def get_velps(doc_id: int):
 
 
 @velps.get("/<int:doc_id>/get_velp_groups")
-def get_velp_groups(doc_id: int):
+def get_velp_groups(doc_id: int) -> Response:
     """Gets all velp groups for document user has access to by using VelpGroupSelection table.
 
     :param doc_id: ID of document
@@ -259,7 +256,7 @@ def get_velp_groups(doc_id: int):
 
 
 @velps.get("/<int:doc_id>/get_velp_group_personal_selections")
-def get_velp_group_personal_selections(doc_id: int) -> dict:
+def get_velp_group_personal_selections(doc_id: int) -> Response:
     """Gets default velp group selections for velp groups user has access to in document.
 
     :param doc_id: ID of document
@@ -273,7 +270,7 @@ def get_velp_group_personal_selections(doc_id: int) -> dict:
 
 
 @velps.get("/<int:doc_id>/get_velp_group_default_selections")
-def get_velp_group_default_selections(doc_id: int) -> dict:
+def get_velp_group_default_selections(doc_id: int) -> Response:
     """Gets default velp group selections for velp groups user has access to in document.
 
     :param doc_id: ID of document
@@ -286,7 +283,7 @@ def get_velp_group_default_selections(doc_id: int) -> dict:
 
 
 @velps.get("/<int:doc_id>/get_velp_labels")
-def get_velp_labels(doc_id: int) -> "str":
+def get_velp_labels(doc_id: int) -> Response:
     """Gets all velp labels for document user has access to by using VelpGroupSelection table.
 
     :param doc_id: ID of document
@@ -300,7 +297,7 @@ def get_velp_labels(doc_id: int) -> "str":
 
 
 @velps.post("/add_velp")
-def add_velp() -> int:
+def add_velp() -> Response:
     """Creates a new velp and adds it to velp groups user chose.
 
     Required key(s):
@@ -375,7 +372,7 @@ def add_velp() -> int:
 
 
 @velps.post("/<int:doc_id>/update_velp")
-def update_velp_route(doc_id: int):
+def update_velp_route(doc_id: int) -> Response:
     """Updates the velp's data.
 
     Required key(s):
@@ -466,7 +463,7 @@ def update_velp_route(doc_id: int):
 
 
 @velps.post("/add_velp_label")
-def add_label() -> int:
+def add_label() -> Response:
     """Creates new velp label.
 
     Required key(s):
@@ -494,7 +491,7 @@ def add_label() -> int:
 
 
 @velps.post("/update_velp_label")
-def update_velp_label_route():
+def update_velp_label_route() -> Response:
     """Updates velp label content.
 
     Required key(s):
@@ -526,7 +523,7 @@ def update_velp_label_route():
 
 
 @velps.post("/<int:doc_id>/change_selection")
-def change_selection_route(doc_id: int):
+def change_selection_route(doc_id: int) -> Response:
     """Change selection for velp group in users VelpGroupSelection in current document.
 
     Required key(s):
@@ -571,7 +568,7 @@ def change_selection_route(doc_id: int):
 
 
 @velps.post("/<int:doc_id>/change_all_selections")
-def change_all_selections(doc_id: int):
+def change_all_selections(doc_id: int) -> Response:
     """Change selection for velp group in users VelpGroupSelection in current document.
 
     Required key(s):
@@ -608,7 +605,7 @@ def change_all_selections(doc_id: int):
 
 
 @velps.post("/<int:doc_id>/reset_target_area_selections_to_defaults")
-def reset_target_area_selections_to_defaults(doc_id: int):
+def reset_target_area_selections_to_defaults(doc_id: int) -> Response:
     """Changes user's personal velp group selections in target area to defaults.
 
     Required key(s):
@@ -633,7 +630,7 @@ def reset_target_area_selections_to_defaults(doc_id: int):
 
 
 @velps.post("/<int:doc_id>/reset_all_selections_to_defaults")
-def reset_all_selections_to_defaults(doc_id: int):
+def reset_all_selections_to_defaults(doc_id: int) -> Response:
     """Changes user's all personal velp group selections in document to defaults.
 
     :param doc_id: ID of document
@@ -647,7 +644,7 @@ def reset_all_selections_to_defaults(doc_id: int):
 
 
 @velps.post("/<int:doc_id>/create_velp_group")
-def create_velp_group_route(doc_id: int) -> dict:
+def create_velp_group_route(doc_id: int) -> Response:
     """Creates a new velp group.
 
     Required key(s):
@@ -655,7 +652,7 @@ def create_velp_group_route(doc_id: int) -> dict:
         - target_type: document, folder or personal group.
 
     :param doc_id: ID of the document
-    :return: Dictionary containing information of new velp group.
+    :return: CreatedVelpGroup object containing information of new velp group.
 
     """
 
@@ -711,7 +708,16 @@ def create_velp_group_route(doc_id: int) -> dict:
             new_group_path
         )  # Check name so no duplicates are made
         if group_exists is None:
-            original_owner = target.owners[0]
+            # Document may not have an owner, we have to account for that
+            if target.owners:
+                original_owner = target.owners[0]
+            else:
+                # TODO Should owner default to folder owner in this case? These groups will not be visible
+                #      without sufficient folder rights, however. Otherwise we could end up checking for
+                #      owners until the root of the user folder.
+                raise RouteException(
+                    f"Cannot create group for document: document has no owner."
+                )
             velp_group = create_velp_group(
                 velp_group_name, original_owner, new_group_path
             )
@@ -727,16 +733,9 @@ def create_velp_group_route(doc_id: int) -> dict:
                 "Velp group with same name and location exists already."
             )
 
-    created_velp_group = dict()
-    created_velp_group["id"] = velp_group.id
-    created_velp_group["target_type"] = 0
-    created_velp_group["target_id"] = "0"
-    created_velp_group["name"] = velp_group_name
-    created_velp_group["location"] = new_group_path
-    created_velp_group["selected"] = True
-    created_velp_group["show"] = True
-    created_velp_group["edit_access"] = True
-    created_velp_group["default_group"] = False
+    created_velp_group = CreatedVelpGroup(
+        id=velp_group.id, name=velp_group_name, location=new_group_path
+    )
 
     add_groups_to_document([velp_group], doc, user)
     # TODO Do we want to make just created velp group selected in document immediately?
@@ -748,17 +747,24 @@ def create_velp_group_route(doc_id: int) -> dict:
 
 
 @velps.post("/<int:doc_id>/create_default_velp_group")
-def create_default_velp_group_route(doc_id: int):
+def create_default_velp_group_route(doc_id: int) -> Response:
     """Creates a default velp group document or changes existing document to default velp group.
 
     :param doc_id: ID of document
-    :return: Dictionary containing information of new default velp group.
+    :return: CreatedVelpGroup object containing information of new default velp group.
 
     """
 
     doc = get_doc_or_abort(doc_id)
     verify_logged_in()
-    user_group = doc.block.owners[0]
+
+    if doc.block.owners:
+        user_group = doc.block.owners[0]
+    else:
+        raise RouteException(
+            "Cannot create default group for document: document has no owner."
+        )
+
     verify_edit_access(doc)
     default, default_group_path, default_group_name = get_document_default_velp_group(
         doc
@@ -776,18 +782,13 @@ def create_default_velp_group_route(doc_id: int):
         vg.valid_until = None
         created_new_group = False
 
-    created_velp_group = dict()
-    created_velp_group["id"] = velp_group.id
-    created_velp_group["target_type"] = 0
-    created_velp_group["target_id"] = "0"
-    created_velp_group["name"] = default_group_name
-    created_velp_group["location"] = default_group_path
-    created_velp_group["selected"] = True
-    created_velp_group["show"] = True
-    created_velp_group["default"] = False
-    created_velp_group["edit_access"] = True
-    created_velp_group["default_group"] = True
-    created_velp_group["created_new_group"] = created_new_group
+    created_velp_group = CreatedVelpGroup(
+        id=velp_group.id,
+        name=default_group_name,
+        location=default_group_path,
+        default_group=True,
+        created_new_group=created_new_group,
+    )
 
     add_groups_to_document([velp_group], doc, get_current_user_object())
 
@@ -797,11 +798,11 @@ def create_default_velp_group_route(doc_id: int):
     return json_response(created_velp_group)
 
 
-def get_velp_groups_from_tree(doc: DocInfo):
+def get_velp_groups_from_tree(doc: DocInfo) -> list[DocEntry]:
     """Returns all velp groups found from tree from document to root and from users own velp folder.
 
     Checks document's own velp group folder first, then default velp group folders going up all the
-    way to root. Doesn't branch side ways or down, only checks parents. After root has been reached,
+    way to root. Doesn't branch sideways or down, only checks parents. After root has been reached,
     finally checks users own velp group folder.
 
     Checks that user has minimum of view right for velp groups.

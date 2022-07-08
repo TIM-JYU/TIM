@@ -453,6 +453,7 @@ export class VelpSelectionController implements IController {
                 )
             );
             if (!json.ok) {
+                await showMessageDialog(json.result.data.error);
                 return null;
             }
             const newDefaultVelpGroup = json.result.data;
@@ -754,6 +755,7 @@ export class VelpSelectionController implements IController {
             )
         );
         if (!json.ok) {
+            await showMessageDialog(json.result.data.error);
             return;
         }
         const group: IVelpGroupUI = json.result.data;
