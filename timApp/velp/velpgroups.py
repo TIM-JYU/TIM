@@ -17,8 +17,8 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.user.users import get_rights_holders
 from timApp.user.usergroup import UserGroup
+from timApp.user.users import get_rights_holders
 from timApp.user.userutils import grant_access
 from timApp.util.utils import split_location
 from timApp.velp.velp_folders import (

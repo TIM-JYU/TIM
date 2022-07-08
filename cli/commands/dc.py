@@ -1,10 +1,11 @@
 import os
 import os.path
 import subprocess
-from argparse import ArgumentParser
+from argparse import ArgumentParser, REMAINDER
 from typing import List
 
 from cli.config import get_config
+from cli.docker.compose import init_compose
 
 info = {
     "help": "Run a docker-compose command on TIM containers",
@@ -22,19 +23,10 @@ class Arguments:
 
 def cmd(args: Arguments) -> None:
     config = get_config()
+    init_compose(args.profile or config.get("compose", "profiles"))
     cwd = os.getcwd()
-    env = os.environ.copy()
-    env = {**env, **config.env_dict()}
     extra_args = ["-f", os.path.join(cwd, "docker-compose.yml")]
-    profile = args.profile or config.get("compose", "profiles")
-    if profile == "test":
-        env["CSPLUGIN_TARGET"] = "base"
-        extra_args.extend(["--profile", "test"])
-    elif profile == "dev":
-        env["CSPLUGIN_TARGET"] = "sudo"
-        extra_args.extend(["-f", os.path.join(cwd, "docker-compose.dev.yml")])
-
-    subprocess.run(["docker-compose", *extra_args, *args.args], env=env)
+    subprocess.run(["docker-compose", *extra_args, *args.args])
 
 
 def init(parser: ArgumentParser) -> None:
@@ -43,5 +35,7 @@ def init(parser: ArgumentParser) -> None:
         help="TIM run profile override. Default is the same as defined in tim.conf",
         choices=["dev", "prod", "test"],
     )
-    parser.add_argument("args", nargs="*", help="Arguments to pass to docker-compose")
+    parser.add_argument(
+        "args", nargs=REMAINDER, help="Arguments to pass to docker-compose"
+    )
     parser.set_defaults(run=cmd)

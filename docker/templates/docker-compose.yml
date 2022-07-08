@@ -1,64 +1,32 @@
 version: "3.7"
-x-caddy:
- &caddy-common
- image: caddy:2.3.0
- command: caddy run --config /etc/caddy/Caddyfile
- read_only: true
- volumes:
-  - caddy_data:/data
-  - caddy_config:/config
-  - ./certs/caddy:/certs:ro
-  - ./Caddyfile:/etc/caddy/Caddyfile:ro
-  - ./timApp/static:/tim/timApp/static:ro
-  - ${TIM_LOG_DIR:?}/caddy:/logs
-  - ./timApp/modules/cs/generated:/tim/timApp/modules/cs/generated:ro
-  - ./timApp/modules/cs/static:/tim/timApp/modules/cs/static:ro
-  - csplugin_data:/cs_data:ro
-  - csplugin_data_generated:/csgenerated:ro
- depends_on:
-  - jsrunner
- environment:
-  CADDY_DOMAINS: ${CADDY_DOMAINS:?}
-  CADDY_EXTRA_CONFIG: ${CADDY_EXTRA_CONFIG?}
-  CADDY_EXTRA_TIM_CONFIG: ${CADDY_EXTRA_TIM_CONFIG:-}
-  COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
-  STATUS_PAGE_URL: ${TIM_STATUS_PAGE_URL:-}
- restart: unless-stopped
 
 services:
  tim:
-  image: timimages/tim:${TIM_IMAGE_TAG:?}
+  image: timimages/tim:${tim.image_tag}
   build:
     dockerfile: ./timApp/Dockerfile
     context: ./
+    target: base
   depends_on:
-   # - stack-api-server
    - postgresql
-   - csplugin
-   - pali
-   - fields
-   - showfile
-   - haskellplugins
-   - imagex
    - dumbo
-   - feedback
    - redis
-   - oiko
+   ${ "- postgresql-test" if tim.dev else "" }
   volumes:
    - .:/service
-   - ${TIM_LOG_DIR:?}:/service/tim_logs
-   - ${TIM_FILES_ROOT:?}:/tim_files
+   - ${tim.log_dir}:/service/tim_logs
+   - ${tim.files_root}:/tim_files
    - cache:/cache
   working_dir: /service/timApp
-  command: python3 launch.py --with-gunicorn
+  command: ${ "python3 launch.py --with-gunicorn" if not tim.dev else "sleep infinity" }
   environment:
    FLASK_APP: tim.py
    PYTHONPATH: /service
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
-   TIM_SETTINGS: ${CONFIG_FILE}
-   TIM_HOST: ${TIM_HOST:?}
-   POSTGRESQL_MAX_CONNECTIONS: ${POSTGRESQL_MAX_CONNECTIONS:?}
    COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
+   POSTGRESQL_MAX_CONNECTIONS: ${postgresql.max_connections}
+   TIM_SETTINGS: ${tim.config_file}
+   TIM_HOST: ${tim.host}
   restart: unless-stopped
   networks:
    - db
@@ -75,19 +43,19 @@ services:
    - prod_multi
    - dev
  timagent:
+  image: timimages/timagent:${tim.image_tag}
   profiles:
-   - prod
-   - prod_multi
    - dev
-  image: timimages/timagent
   build:
-   context: ./timApp
-   dockerfile: DockerfileAgent
-   args:
-    TIM_IMAGE_TAG: ${TIM_IMAGE_TAG:?}
+    dockerfile: ./timApp/Dockerfile
+    context: ./
+    target: agent
   command: sleep infinity
   restart: unless-stopped
   read_only: true
+  volumes:
+   - .:/service:ro
+   - /service/timApp/node_modules
  postgresql:
   profiles:
    - prod
@@ -99,13 +67,13 @@ services:
   command: [
     "postgres",
     "-c", "log_statement=mod",
-    "-c", "max_connections=${POSTGRESQL_MAX_CONNECTIONS:?}",
+    "-c", "max_connections=${postgresql.max_connections}",
   ]
   restart: unless-stopped
   networks:
    - db
   read_only: true
-  shm_size: ${POSTGRESQL_SHM_SIZE:?}
+  shm_size: ${postgresql.shm_size}
   tmpfs:
    - /run/postgresql
    - /tmp
@@ -118,27 +86,29 @@ services:
     max-size: "50m"
     max-file: "100"
  postgresql-test:
+  image: postgres:11
   profiles:
    - test
    - dev
-  image: postgres:11
+  restart: unless-stopped
   tmpfs:
    - /var/lib/postgresql/data
+  ports: ${ jsonify(["5433:5432"] if tim.dev else []) }
   environment:
    POSTGRES_PASSWORD: postgresql
  csplugin:
-  image: timimages/cs3${CSPLUGIN_TARGET:-}:elixir
+  image: timimages/cs3${csplugin.target}:${csplugin.image_tag}
   build:
    context: ./timApp/modules/cs
-   target: ${CSPLUGIN_TARGET:-complete}
+   target: ${ csplugin.target if csplugin.target else "complete" }
   volumes:
-   - ${TIM_FILES_ROOT:?}/blocks/uploads:/uploads:ro
+   - ${tim.files_root}/blocks/uploads:/uploads:ro
    - ./timApp/modules/cs:/cs:ro
    - /var/run/docker.sock:/var/run/docker.sock
    - ./timApp/modules/cs/static:/csstatic:ro
    - ./tim_common:/cs/tim_common:ro
    - /tmp/${COMPOSE_PROJECT_NAME:?}_uhome:/tmp
-   - ${TIM_LOG_DIR:?}/cs:/logs
+   - ${tim.log_dir}/cs:/logs
    - /root/.ssh/
    - csplugin_data:/cs_data
    - csplugin_data_generated:/csgenerated
@@ -146,13 +116,14 @@ services:
    - csplugin_db
    - default
   working_dir: /cs
-  command: ./startPlugins.sh
+  command: ${ "./startPlugins.sh" if not csplugin.dev else "sleep infinity" }
   environment:
    PYTHONUNBUFFERED: "1"
-   TIM_ROOT: ${TIM_ROOT:?}
-   TIM_HOST: ${TIM_HOST:?}
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
-   CSPLUGIN_TARGET: ${CSPLUGIN_TARGET:-}
+   CSPLUGIN_TARGET: ${csplugin.target}
+   CSPLUGIN_IMAGE_TAG: ${csplugin.image_tag}
+   TIM_ROOT: ${default.dir}
+   TIM_HOST: ${tim.host}
   user: root  # We need access to Docker socket.
   restart: unless-stopped
   read_only: true
@@ -182,8 +153,8 @@ services:
   environment:
    # We're not going to enable replication, so it's fine to listen to localhost
    CASSANDRA_LISTEN_ADDRESS: localhost
-   HEAP_NEWSIZE: ${CSPLUGIN_CASSANDRA_HEAP_NEWSIZE:-128M}
-   MAX_HEAP_SIZE: ${CSPLUGIN_CASSANDRA_MAX_HEAP_SIZE:-1024M}
+   HEAP_NEWSIZE: ${csplugin.cassandra_heap_newsize}
+   MAX_HEAP_SIZE: ${csplugin.cassandra_max_heap_size}
   volumes:
    - csplugin_db_data:/var/lib/cassandra
    - ./timApp/modules/cs/cassandra/cassandra.yaml:/etc/cassandra/cassandra.yaml
@@ -196,31 +167,31 @@ services:
    driver: none
   read_only: true
  showfile:
-  image: timimages/cs3${CSPLUGIN_TARGET:-}:elixir
+  image: timimages/cs3${csplugin.target}:${csplugin.image_tag}
   volumes:
    - ./timApp/modules/svn:/app/svn:ro
    - ./tim_common:/app/tim_common:ro
   working_dir: /app/svn
   environment:
    PYTHONPATH: /app
-  command: ./startAll.sh
+  command: ${ "./startAll.sh" if not showfile.dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
   tmpfs:
     - /tmp
  imagex:
-  image: timimages/cs3${CSPLUGIN_TARGET:-}:elixir
+  image: timimages/cs3${csplugin.target}:${csplugin.image_tag}
   volumes:
    - ./timApp/modules/imagex:/app/imagex:ro
    - ./tim_common:/app/tim_common:ro
   working_dir: /app/imagex
   environment:
    PYTHONPATH: /app
-  command: ./startAll.sh
+  command: ${ "./startAll.sh" if not imagex.dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
  pali:
-  image: timimages/tim:${TIM_IMAGE_TAG:?}
+  image: timimages/tim:${tim.image_tag}
   build: ./timApp/modules/pali
   volumes:
    - ./timApp/modules/pali:/app/pali:ro
@@ -229,13 +200,13 @@ services:
   environment:
     PYTHONPATH: /app
     COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
-  command: ./startAll.sh
+  command: ${ "./startAll.sh" if not pali.dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
   tmpfs:
    - /tmp
  fields:
-  image: timimages/tim:${TIM_IMAGE_TAG:?}
+  image: timimages/tim:${tim.image_tag}
   build: ./timApp/modules/fields
   volumes:
    - ./timApp/modules/fields:/app/fields:ro
@@ -243,46 +214,45 @@ services:
   working_dir: /app/fields
   environment:
    PYTHONPATH: /app
-  command: ./startAll.sh
+  command: ${ "./startAll.sh" if not fields.dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
   tmpfs:
    - /tmp
  jsrunner:
-  image: timimages/tim:${TIM_IMAGE_TAG:?}
-  #build: ./timApp/modules/multisave
+  image: timimages/tim:${tim.image_tag}
   volumes:
    - ./timApp/modules/jsrunner:/timApp/modules/jsrunner:rw
    - ./timApp/static/scripts:/timApp/static/scripts:ro
   working_dir: /timApp/modules/jsrunner/server
-  command: ./startAll.sh
+  command: ${ "./startAll.sh" if not jsrunner.dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
   tmpfs:
    - /root/.npm
    - /root/.config
  drag:
-  image: timimages/tim:${TIM_IMAGE_TAG:?}
+  image: timimages/tim:${tim.image_tag}
   volumes:
    - ./timApp/modules/drag:/app/drag:ro
    - ./tim_common:/app/tim_common:ro
   working_dir: /app/drag
   environment:
    PYTHONPATH: /app
-  command: ./startAll.sh
+  command: ${ "./startAll.sh" if not drag.dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
   tmpfs:
    - /tmp
  feedback:
-  image: timimages/tim:${TIM_IMAGE_TAG:?}
+  image: timimages/tim:${tim.image_tag}
   volumes:
    - ./timApp/modules/feedback:/app/feedback:ro
    - ./tim_common:/app/tim_common:ro
   working_dir: /app/feedback
   environment:
    PYTHONPATH: /app
-  command: ./startAll.sh
+  command: ${ "./startAll.sh" if not feedback.dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
   tmpfs:
@@ -304,12 +274,12 @@ services:
   volumes:
   - redis_data:/data
  celery:
-  image: timimages/tim:${TIM_IMAGE_TAG:?}
+  image: timimages/tim:${tim.image_tag}
   command: celery worker -A timApp.tim_celery.celery --concurrency 4
   volumes:
    - .:/service
-   - ${TIM_LOG_DIR:?}:/service/tim_logs
-   - ${TIM_FILES_ROOT:?}:/tim_files
+   - ${tim.log_dir}:/service/tim_logs
+   - ${tim.files_root}:/tim_files
    - cache:/cache
   working_dir: /service/timApp
   depends_on:
@@ -319,8 +289,8 @@ services:
    FLASK_APP: tim.py
    PYTHONPATH: /service
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
-   TIM_SETTINGS: ${CONFIG_FILE}
-   TIM_HOST: ${TIM_HOST:?}
+   TIM_SETTINGS: ${tim.config_file}
+   TIM_HOST: ${tim.host}
   restart: unless-stopped
   networks:
    - db
@@ -329,7 +299,7 @@ services:
   tmpfs:
    - /tmp
  celery-beat:
-  image: timimages/tim:${TIM_IMAGE_TAG:?}
+  image: timimages/tim:${tim.image_tag}
   command: >-
    celery beat
    -A timApp.tim_celery.celery
@@ -337,8 +307,8 @@ services:
    --pidfile /var/run/celery/celerybeat.pid
   volumes:
    - .:/service
-   - ${TIM_LOG_DIR:?}:/service/tim_logs
-   - ${TIM_FILES_ROOT:?}:/tim_files
+   - ${tim.log_dir}:/service/tim_logs
+   - ${tim.files_root}:/tim_files
    - cache:/cache
   working_dir: /service/timApp
   depends_on:
@@ -348,8 +318,8 @@ services:
    FLASK_APP: tim.py
    PYTHONPATH: /service:/service/timApp/modules/py
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
-   TIM_SETTINGS: ${CONFIG_FILE}
-   TIM_HOST: ${TIM_HOST:?}
+   TIM_SETTINGS: ${tim.config_file}
+   TIM_HOST: ${tim.host}
   restart: unless-stopped
   networks:
    - db
@@ -375,7 +345,7 @@ services:
    - maxima
   restart: unless-stopped
   environment:
-   BROWSER_URL: ${TIM_HOST:?}
+   BROWSER_URL: ${tim.host}
  oiko:
   image: timimages/oiko:latest
   restart: unless-stopped
@@ -383,22 +353,36 @@ services:
   tmpfs:
    - /tmp
  caddy:
-  <<: *caddy-common
+  image: caddy:2.3.0
+  command: caddy run --config /etc/caddy/Caddyfile
+  read_only: true
+  volumes:
+   - caddy_data:/data
+   - caddy_config:/config
+   - ./certs/caddy:/certs:ro
+   - ./Caddyfile:/etc/caddy/Caddyfile:ro
+   - ./timApp/static:/tim/timApp/static:ro
+   - ${tim.log_dir}/caddy:/logs
+   - ./timApp/modules/cs/generated:/tim/timApp/modules/cs/generated:ro
+   - ./timApp/modules/cs/static:/tim/timApp/modules/cs/static:ro
+   - csplugin_data:/cs_data:ro
+   - csplugin_data_generated:/csgenerated:ro
+   ${ "- ./mailman/web/static:/var/www/mailman3/static" if mailman.dev else "" }
+  environment:
+   COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
+   CADDY_DOMAINS: ${caddy.domains}
+   CADDY_EXTRA_CONFIG: ${ jsonify(caddy.extra_config) }
+   CADDY_EXTRA_TIM_CONFIG: ${ jsonify(caddy.extra_tim_config) }
+   STATUS_PAGE_URL: ${tim.status_page_url}
+  restart: unless-stopped
   profiles:
    - prod
    - dev
    - test
-  ports:
-   - "80:80"
-   - "443:443"
- caddy_multi:
-  <<: *caddy-common
-  profiles:
-   - prod_multi
-  ports:
-  - "${CADDY_MULTI_PORT}:80"
+  ports: ${ jsonify([l.strip() for l in caddy.port_mapping.splitlines()]) }
  mailman-test:
   image: timimages/mailman-core:dev
+  restart: unless-stopped
   profiles:
    - test
    - dev
@@ -415,7 +399,7 @@ services:
  tests:
   profiles:
    - test
-  image: timimages/tim:${TIM_IMAGE_TAG:?}
+  image: timimages/tim:${tim.image_tag}
   command: "${TEST_COMMAND:-python3 -m unittest discover tests/ 'test_*.py' .}"
   volumes:
    - .:/service:rw
@@ -444,6 +428,7 @@ services:
    - /root
   working_dir: /service/timApp
   read_only: true
+${ partial("mailman.tmpl") if mailman.dev else "" }
 volumes:
  data11:
  cache:

@@ -81,3 +81,6 @@ venv/
 build_docs.sh
 /timApp/modules/Haskell/
 /timApp/modules/cs/jsav/
+/.env
+/docker-compose.yml
+/docker-compose.dev.yml

@@ -9,6 +9,8 @@ from cli.util.logging import log_error
 
 
 def main() -> None:
+    # init_compose()
+    # return
     commands_path = os.path.realpath(
         os.path.join(os.path.dirname(__file__), "commands")
     )

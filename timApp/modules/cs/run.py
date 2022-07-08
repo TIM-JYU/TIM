@@ -12,7 +12,7 @@ from subprocess import PIPE, Popen
 from file_util import write_safe, is_safe_path, rm_safe
 from tim_common.fileParams import mkdirs, tquote, get_param
 
-CS3_TAG = "elixir"
+CS3_TAG = os.environ.get("CSPLUGIN_IMAGE_TAG", "")
 CS3_TARGET = os.environ.get("CSPLUGIN_TARGET", "")
 
 
