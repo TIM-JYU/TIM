@@ -297,7 +297,6 @@ module = [
     "timApp.util.pdftools",
     "timApp.velp.annotation_model",
     "timApp.velp.annotations",
-    "timApp.velp.velp",
     "timApp.velp.velp_folders",
     "timApp.velp.velp_models",
     "timApp.velp.velpgroups",
