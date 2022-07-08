@@ -74,7 +74,7 @@ def create_default_velp_group(
     return new_group
 
 
-def set_default_velp_group_rights(doc_id: int, velp_group: DocInfo):
+def set_default_velp_group_rights(doc_id: int, velp_group: DocInfo) -> None:
     rights = get_rights_holders(doc_id)
     # Copy all rights but view
     for right in rights:
@@ -82,7 +82,7 @@ def set_default_velp_group_rights(doc_id: int, velp_group: DocInfo):
             grant_access(right.usergroup, velp_group, right.access_type)
 
 
-def get_document_default_velp_group_info(doc_info: DocInfo):
+def get_document_default_velp_group_info(doc_info: DocInfo) -> tuple[str, str]:
     """
     Returns path and name for a document's default group
     """
@@ -94,7 +94,9 @@ def get_document_default_velp_group_info(doc_info: DocInfo):
     return velps_folder_path + "/" + velp_group_name, velp_group_name
 
 
-def get_document_default_velp_group(doc_info: DocInfo):
+def get_document_default_velp_group(
+    doc_info: DocInfo,
+) -> tuple[DocInfo | None, str, str]:
     """
     Returns document default velp group, default velp group path and default name for velp group
     """
@@ -102,7 +104,7 @@ def get_document_default_velp_group(doc_info: DocInfo):
     return DocEntry.find_by_path(velp_group_path), velp_group_path, velp_group_name
 
 
-def set_default_velp_group_selected_and_visible(doc_info: DocInfo):
+def set_default_velp_group_selected_and_visible(doc_info: DocInfo) -> None:
     """
     Makes document's default velp group visible and selected for everyone
     """
@@ -194,7 +196,7 @@ VelpGroupOrDocInfo = Union[VelpGroup, DocInfo]
 
 def add_groups_to_document(
     velp_groups: list[VelpGroupOrDocInfo], doc: DocInfo, user: User
-):
+) -> None:
     """Adds velp groups to VelpGroupsInDocument table."""
     existing: list[VelpGroupsInDocument] = VelpGroupsInDocument.query.filter_by(
         user_id=user.id, doc_id=doc.id
@@ -216,7 +218,7 @@ def change_selection(
     target_id: str,
     user_id: int,
     selected: bool,
-):
+) -> None:
     """Changes selection for velp group in VelpGroupSelection for specific user / document / target combo.
 
     :param doc_id: ID of document
@@ -250,7 +252,7 @@ def change_selection(
 
 def change_all_target_area_default_selections(
     doc_id: int, target_type: int, target_id: str, user_id: int, selected: bool
-):
+) -> None:
     """Change all default selections to True or False for currently chose area (document or paragraph)
 
     :param doc_id: ID of document
@@ -279,7 +281,7 @@ def change_all_target_area_default_selections(
 
 def change_all_target_area_selections(
     doc_id: int, target_type: int, target_id: str, user_id: int, selected: bool
-):
+) -> None:
     """Change all personal selections to True or False for currently chose area (document or paragraph)
 
     :param doc_id: ID of document
@@ -319,7 +321,7 @@ def change_all_target_area_selections(
 
 def change_default_selection(
     doc_id: int, velp_group_id: int, target_type: int, target_id: str, selected: bool
-):
+) -> None:
     """Changes selection for velp group's default selection in target area.
 
     :param doc_id: ID of document
@@ -354,7 +356,7 @@ def add_groups_to_selection_table(
     user_id: int,
     target_type: int,
     target_id: str,
-):
+) -> None:
     """Adds velp groups to VelpGroupSelection table."""
     vgs = VelpGroupSelection.query.filter_by(
         user_id=user_id,
@@ -377,12 +379,14 @@ def add_groups_to_selection_table(
         db.session.add(vgs)
 
 
-def process_selection_info(vgss: list[VelpGroupSelection] | list[VelpGroupDefaults]):
+def process_selection_info(
+    vgss: list[VelpGroupSelection] | list[VelpGroupDefaults],
+) -> dict[str, list | list[dict[str, int | bool]]]:
     if vgss:
         target_id = vgss[0].target_id
-        list_help = []
-        target_dict = dict()
-        group_dict = dict()
+        list_help: list[dict[str, int | bool]] = []
+        target_dict: dict[str, list | list[dict[str, int | bool]]] = dict()
+        group_dict: dict[str, int | bool] = dict()
         if target_id != "0":
             target_dict["0"] = []
         for i in range(len(vgss)):
@@ -413,7 +417,9 @@ def process_selection_info(vgss: list[VelpGroupSelection] | list[VelpGroupDefaul
         return {"0": []}
 
 
-def get_personal_selections_for_velp_groups(doc_id: int, user_id: int):
+def get_personal_selections_for_velp_groups(
+    doc_id: int, user_id: int
+) -> dict[str, list | list[dict[str, int | bool]]]:
     """Gets all velp group personal selections for document.
 
     :param doc_id: ID of document
@@ -429,7 +435,9 @@ def get_personal_selections_for_velp_groups(doc_id: int, user_id: int):
     return process_selection_info(vgss)
 
 
-def get_default_selections_for_velp_groups(doc_id: int):
+def get_default_selections_for_velp_groups(
+    doc_id: int,
+) -> dict[str, list | list[dict[str, int | bool]]]:
     """Gets all velp group default selections for document.
 
     :param doc_id: ID of document
