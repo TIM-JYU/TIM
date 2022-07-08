@@ -297,7 +297,5 @@ module = [
     "timApp.util.pdftools",
     "timApp.velp.annotation_model",
     "timApp.velp.annotations",
-    "timApp.velp.velp_models",
-    "timApp.velp.velps"
 ]
 ignore_errors = true
