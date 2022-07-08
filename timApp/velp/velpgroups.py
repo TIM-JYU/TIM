@@ -11,8 +11,7 @@ selections from the database.
 """
 
 import copy
-from dataclasses import dataclass
-from typing import Union
+from typing import Union, Any
 
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
@@ -32,23 +31,6 @@ from timApp.velp.velp_models import (
     VelpGroupSelection,
     VelpGroupDefaults,
 )
-
-
-@dataclass
-class CreatedVelpGroup:
-    """Represents a velp group. Used for passing velp group data to the user interface."""
-
-    id: int
-    name: str
-    location: str
-    target_type: int = 0
-    target_id: str = "0"
-    edit_access: bool = True
-    show: bool = True
-    selected: bool = True
-    default: bool = False
-    default_group: bool = False
-    created_new_group: bool = True
 
 
 def create_default_velp_group(
