@@ -6,7 +6,20 @@
     float: left;
     overflow-y: auto;
     overflow-x: hidden;
-    max-height: 18em;
+    min-height: 18em;
+    max-height: 60vh;
+
+    @media screen and (max-height: 1080px) {
+        min-height: 12em;
+    }
+
+    @media screen and (max-height: 800px) {
+        min-height: 8em;
+    }
+}
+
+.velp-groups-resize {
+    resize: vertical;
 }
 
 .div-90 {
@@ -84,6 +97,25 @@
     padding: 0.5em 1em;
 }
 
+.velpMenu .draggable-detached {
+    min-width: 19.5em;
+    max-width: 19.5em;
+
+    .velp-stack {
+        border-bottom: 1px solid gainsboro;
+        border-left: 1px solid gainsboro;
+        border-right: 1px solid gainsboro;
+
+        @media screen and (max-height: 1080px) {
+            min-height: 24em;
+        }
+
+        @media screen and (max-height: 800px) {
+            min-height: 20em;
+        }
+    }
+}
+
 .velpArea {
     width: 100%;
     margin-bottom: 1em;
@@ -103,11 +135,18 @@
 /* needs media queries */
 .velpArea .velp-stack {
     background: white;
-    min-height: 10em;
-    min-width: 20em;
+    min-height: 16em;
+    max-height: 60vh;
+    height: fit-content;
+    min-width: 19.5em;
     width: 100%;
+    max-width: 19.5em;
     position: relative;
     resize: vertical;
+
+    @media screen and (max-height: 800px) {
+        min-height: 10em;
+    }
 }
 
 .adjustForm {
@@ -122,6 +161,10 @@
 
 .formLabel {
     font-size: 0.9em;
+
+    @media screen and (max-height: 800px) {
+        font-size: 0.9rem;
+    }
 }
 
 .formInput {
@@ -129,6 +172,10 @@
     display: inline-block;
     float: right;
     margin-right: 0.3rem;
+
+    @media screen and (max-height: 800px) {
+        font-size: 0.9rem;
+    }
 }
 
 /* Table styles*/
@@ -158,6 +205,18 @@
     font-size: 1.1em;
     margin-top: 15px;
     margin-bottom: 0.3em;
+
+    @media screen and (max-height: 1080px) {
+        font-size: 1.1em;
+        margin-top: 5px;
+        margin-bottom: 4px;
+    }
+
+    @media screen and (max-height: 800px) {
+        font-size: 1.2rem;
+        margin-top: 5px;
+        margin-bottom: 4px;
+    }
 }
 
 .velpTable td{
@@ -213,6 +272,14 @@
 .velp legend{
     font-size: 1.5rem;
     font-weight: 600;
+
+    @media screen and (max-height: 1080px) {
+        font-size: 1.1em;
+    }
+
+    @media screen and (max-height: 800px) {
+        font-size: 1.2rem;
+    }
 }
 
 .velp .truncate{
@@ -253,8 +320,6 @@ position: absolute;
     padding-left: 0px;
     padding-right: 0px;
 }
-
-
 
 .velp:hover .emphasise{
     margin-top: -1em;
@@ -299,6 +364,11 @@ box-shadow: 0px -11px 16px -12px rgba(0,0,0,0.5);
 .velp .header{
     font-size: 1.5rem;
     font-weight: 600;
+
+    @media screen and (max-height: 800px) {
+        font-size: 1.2rem;
+        margin-bottom: 4px;
+    }
 }
 
 .velp .content .right{
@@ -446,6 +516,14 @@ $inactive: whitesmoke;
 #selection {
     min-height: 3em;
     margin: 0;
+
+    @media screen and (max-height: 1080px) {
+        min-height: 1.6em;
+    }
+
+    @media screen and (max-height: 800px) {
+        min-height: 2rem;
+    }
 }
 
 .available-velps {
@@ -456,6 +534,30 @@ $inactive: whitesmoke;
     display: block;
     max-height: 16em;
     overflow-y: auto;
+
+    @media screen and (max-height: 1080px) {
+        max-height: 8em;
+    }
+
+    @media screen and (max-height: 800px) {
+        font-size: 1.2rem;
+        max-height: 4.8rem;
+        line-height: 1rem;
+    }
+}
+
+.labels-scrollarea {
+    display: block;
+    float: left;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    max-height: 4em;
+    margin-bottom: 4px;
+
+    @media screen and (max-height: 800px) {
+        font-size: 1.2rem;
+        line-height: 1rem;
+    }
 }
 
 .label-edit-glyphicons {
@@ -511,6 +613,10 @@ input[type="color"]::-moz-color-swatch {
 .velp-filters {
     margin-bottom: 4px;
     line-height: unset;
+
+    @media screen and (max-height: 800px) {
+        margin-bottom: 4px;
+    }
 }
 
 velp-window.velp-edit-available {
@@ -520,85 +626,4 @@ velp-window.velp-edit-available {
   & > .velp {
     top: 1em !important;
   }
-}
-
-@media screen and (max-height: 1080px) {
-    .fulldiv {
-        max-height: 12em;
-    }
-
-    #selection {
-        min-height: 1.6em;
-    }
-
-    .editVelp-scrollarea {
-        max-height: 8em;
-    }
-
-    .labels-scrollarea {
-        max-height: 1.8em;
-    }
-
-    .velp legend {
-        font-size: 1.1em;
-    }
-
-    .velpArea legend {
-        font-size: 1.1em;
-        margin-top: 5px;
-        margin-bottom: 4px;
-    }
-}
-
-@media screen and (max-height: 800px) {
-
-    .fulldiv {
-        max-height: 8em;
-    }
-
-    .velp-filters {
-        margin-bottom: 4px;
-    }
-
-    .formLabel {
-        font-size: 0.9rem;
-    }
-
-    .formInput {
-        max-width: 100%;
-        font-size: 0.9rem;
-        display: inline-block;
-        margin-right: 0.3rem;
-    }
-
-    .velp .header {
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin-bottom: 4px;
-    }
-    #selection {
-        min-height: 2rem;
-    }
-
-    .editVelp-scrollarea {
-        font-size: 1.2rem;
-        max-height: 4.8rem;
-        line-height: 1rem;
-    }
-
-    .labels-scrollarea {
-        font-size: 1.2rem;
-        max-height: 3.6rem;
-        line-height: 1rem;
-    }
-
-    .velp legend {
-        font-size: 1.2rem;
-    }
-
-    .velpArea legend {
-        font-size: 1.2rem;
-        margin-top: 5px;
-        margin-bottom: 4px;
-    }
 }
