@@ -2864,6 +2864,7 @@ export class TimTableComponent
                     editedCellContent: value,
                     editedCellInitialContent: value,
                 };
+                this.getPar()?.addClass("live-update-pause");
             }
             // XXXX
             // Workaround: For some reason, if initial value is empty, the model is not always reflected in DOM.
@@ -3730,6 +3731,7 @@ export class TimTableComponent
         // if (this.editInput) {
         //     this.editInput.nativeElement.style.display = "none";
         // }
+        this.getPar()?.removeClass("live-update-pause");
         this.c();
     }
 
