@@ -166,14 +166,7 @@ class Annotation(db.Model):
 
     def to_json(
         self,
-    ) -> dict[
-        str,
-        int
-        | str
-        | dict[str, dict[str, int | None | list[int] | str]]
-        | datetime
-        | float,
-    ]:
+    ) -> dict:
         if self.element_path_start is not None and self.element_path_end is not None:
             try:
                 start_path = [int(i) for i in self.element_path_start[1:-1].split(",")]
