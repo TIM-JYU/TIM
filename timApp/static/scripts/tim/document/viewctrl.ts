@@ -19,6 +19,7 @@ import {
     isPageDirty,
     markAsUsed,
     markPageNotDirty,
+    timeout,
     TimStorage,
     to,
     to2,
@@ -586,12 +587,7 @@ export class ViewCtrl implements IController {
                     diff: DiffResult[];
                     live: number;
                 }>(
-                    "/getParDiff/" +
-                        this.docId +
-                        "/" +
-                        this.docVersion[0] +
-                        "/" +
-                        this.docVersion[1]
+                    `/getParDiff/${this.docId}/${this.docVersion[0]}/${this.docVersion[1]}`
                 )
             );
             if (!r.ok) {
@@ -602,6 +598,10 @@ export class ViewCtrl implements IController {
             this.liveUpdates = response.data.live; // TODO: start new loop by this or stop if None
             const replaceFn = async (d: DiffResult, parId: string) => {
                 const e = getElementByParId(parId);
+                while (e.hasClass("live-update-pause")) {
+                    // Pause live updates for now
+                    await timeout(Math.max(1000 * this.liveUpdates, 1000) / 2);
+                }
                 const _ = await ParCompiler.compileAndReplace(e, d.content, sc);
             };
             const afterFn = async (d: DiffResult, parId: string) => {
