@@ -5,6 +5,7 @@ from typing import List, Optional
 from cli.config import get_config
 from cli.docker.compose import init_compose
 from cli.util.errors import CLIError
+from cli.util.logging import log_debug
 
 _compose_ok = False
 
@@ -46,4 +47,6 @@ def run_compose(
     with_compose_file: bool = True,
     **kwargs,
 ) -> subprocess.CompletedProcess:
-    return subprocess.run(get_compose_cmd(args, profile, with_compose_file), **kwargs)
+    compose_args = get_compose_cmd(args, profile, with_compose_file)
+    log_debug(f"run_compose: {compose_args}")
+    return subprocess.run(compose_args, **kwargs)

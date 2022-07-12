@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from cli.docker.run import run_compose
 from cli.util.errors import CLIError
+from cli.util.logging import log_debug
 
 MAX_NPM_MAJOR_VERSION = 6
 
@@ -40,7 +41,9 @@ def run_npm(
     args: List[str], workdir: str, run_in_container: Optional[bool] = None
 ) -> None:
     if run_in_container is None:
+        log_debug(f"OS identifier: {platform.system()}")
         run_in_container = platform.system() != "Windows"
+    log_debug(f"Running npm with args: {args}; running in docker: {run_in_container}")
     if not run_in_container:
         verify_npm()
         subprocess.run(["npm", *args], shell=True, cwd=Path.cwd() / workdir)

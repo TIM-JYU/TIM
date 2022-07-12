@@ -8,7 +8,7 @@ os.system("")
 
 
 class ColoredFormatter(logging.Formatter):
-    grey = "\x1b[0;37m"
+    grey = "\x1b[0;90m"
     green = "\x1b[1;32m"
     yellow = "\x1b[1;33m"
     red = "\x1b[1;31m"
@@ -41,6 +41,11 @@ ch.setFormatter(ColoredFormatter())
 cli_logger.addHandler(ch)
 
 
+def enable_verbose() -> None:
+    cli_logger.setLevel(logging.DEBUG)
+    ch.setLevel(logging.DEBUG)
+
+
 def log_error(msg: str) -> None:
     cli_logger.error(msg)
 
@@ -51,3 +56,7 @@ def log_info(msg: str) -> None:
 
 def log_warning(msg: str) -> None:
     cli_logger.warning(msg)
+
+
+def log_debug(msg: str) -> None:
+    cli_logger.debug(msg)

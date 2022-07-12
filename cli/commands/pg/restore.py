@@ -6,7 +6,7 @@ from subprocess import Popen, PIPE
 from cli.docker.run import get_compose_cmd
 from cli.util.errors import CLIError
 from cli.util.iter import iter_chunked
-from cli.util.logging import log_info, log_warning
+from cli.util.logging import log_info, log_warning, log_debug
 
 info = {
     "help": "Restore the database from a gzipped SQL dump",
@@ -52,10 +52,13 @@ def cmd(args: Arguments) -> None:
         ]
     )
     with Popen(compose_cmd, stdin=PIPE) as proc:
+        log_debug(f"Opening gzip {input_file}")
         with gzip.open(input_file, "rb") as f:
+            log_debug("Writing gzip to stdin")
             for chunk in iter_chunked(f):
                 proc.stdin.write(chunk)
                 proc.stdin.flush()
+        log_debug("Closing stdin and waiting")
         proc.stdin.close()
         proc.wait()
         if proc.returncode != 0:

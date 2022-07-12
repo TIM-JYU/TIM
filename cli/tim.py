@@ -5,7 +5,7 @@ from typing import Any, List, Dict
 
 from cli.util.errors import CLIError
 from cli.util.iter import pairwise
-from cli.util.logging import log_error
+from cli.util.logging import log_error, enable_verbose
 
 
 class PrintHelp(argparse.Action):
@@ -52,6 +52,13 @@ def main() -> None:
     main_parser = argparse.ArgumentParser(
         prog="tim", description="Manage the current TIM instance"
     )
+    main_parser.add_argument(
+        "--verbose",
+        "-v",
+        help="Enable verbose logging",
+        action="store_true",
+        dest="logging_verbose",
+    )
     subparsers = main_parser.add_subparsers(
         title="commands", description="Available commands", help="Additional help"
     )
@@ -91,6 +98,8 @@ def main() -> None:
             init_func(parser)
 
     args = main_parser.parse_args()
+    if args.logging_verbose:
+        enable_verbose()
     if hasattr(args, "run"):
         try:
             args.run(args)

@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 from cli.commands.pg.backup import pg_backup
-from cli.util.logging import log_info
+from cli.util.logging import log_info, log_debug
 
 info = {
     "help": "Backup the database and rotate the backups to keep only the latest backups",
@@ -20,14 +20,14 @@ class Arguments:
 
 def cmd(args: Arguments) -> None:
     pg_backup(args.backup_dir)
-    log_info(f"Removing backups older than {args.rotate_days} days")
+    log_debug(f"Removing backups older than {args.rotate_days} days")
     p = Path(args.backup_dir)
     remove_older_than = (
         datetime.datetime.now() - datetime.timedelta(days=args.rotate_days)
     ).timestamp()
     for f in p.glob("*.sql.gz"):
         if f.stat().st_mtime < remove_older_than:
-            log_info(f"Removing {f}")
+            log_debug(f"Removing {f}")
             f.unlink()
     log_info("Backup rotation complete")
 
