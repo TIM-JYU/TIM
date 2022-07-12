@@ -9,9 +9,9 @@ def _jsonify(value: Any) -> str:
     return json.dumps(value)
 
 
-def _partial(name: str) -> str:
-    templates_path = Path.cwd() / "docker" / "templates"
-    template = templates_path / f"{name}.yml"
+def _partial(dir_path: str, name: str) -> str:
+    templates_path = Path.cwd() / dir_path
+    template = templates_path / name
     return template.read_text()
 
 

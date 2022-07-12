@@ -143,7 +143,7 @@ DEBUGGABLE_SERVICES = [
 
 for service in DEBUGGABLE_SERVICES:
     sec = DEFAULT_CONFIG.get(service, {})
-    sec["dev"] = (
+    sec["is_dev"] = (
         "no",
         f"""
 Enable development mode for {service} Docker service.

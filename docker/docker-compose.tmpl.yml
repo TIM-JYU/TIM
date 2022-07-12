@@ -11,14 +11,14 @@ services:
    - postgresql
    - dumbo
    - redis
-   ${ "- postgresql-test" if tim.dev else "" }
+   ${ "- postgresql-test" if tim.is_dev else "" }
   volumes:
    - .:/service
    - ${tim.log_dir}:/service/tim_logs
    - ${tim.files_root}:/tim_files
    - cache:/cache
   working_dir: /service/timApp
-  command: ${ "python3 launch.py --with-gunicorn" if not tim.dev else "sleep infinity" }
+  command: ${ "python3 launch.py --with-gunicorn" if not tim.is_dev else "sleep infinity" }
   environment:
    FLASK_APP: tim.py
    PYTHONPATH: /service
@@ -93,7 +93,7 @@ services:
   restart: unless-stopped
   tmpfs:
    - /var/lib/postgresql/data
-  ports: ${ jsonify(["5433:5432"] if tim.dev else []) }
+  ports: ${ jsonify(["5433:5432"] if tim.is_dev else []) }
   environment:
    POSTGRES_PASSWORD: postgresql
  csplugin:
@@ -116,7 +116,7 @@ services:
    - csplugin_db
    - default
   working_dir: /cs
-  command: ${ "./startPlugins.sh" if not csplugin.dev else "sleep infinity" }
+  command: ${ "./startPlugins.sh" if not csplugin.is_dev else "sleep infinity" }
   environment:
    PYTHONUNBUFFERED: "1"
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
@@ -174,7 +174,7 @@ services:
   working_dir: /app/svn
   environment:
    PYTHONPATH: /app
-  command: ${ "./startAll.sh" if not showfile.dev else "sleep infinity" }
+  command: ${ "./startAll.sh" if not showfile.is_dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
   tmpfs:
@@ -187,7 +187,7 @@ services:
   working_dir: /app/imagex
   environment:
    PYTHONPATH: /app
-  command: ${ "./startAll.sh" if not imagex.dev else "sleep infinity" }
+  command: ${ "./startAll.sh" if not imagex.is_dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
  pali:
@@ -200,7 +200,7 @@ services:
   environment:
     PYTHONPATH: /app
     COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
-  command: ${ "./startAll.sh" if not pali.dev else "sleep infinity" }
+  command: ${ "./startAll.sh" if not pali.is_dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
   tmpfs:
@@ -214,7 +214,7 @@ services:
   working_dir: /app/fields
   environment:
    PYTHONPATH: /app
-  command: ${ "./startAll.sh" if not fields.dev else "sleep infinity" }
+  command: ${ "./startAll.sh" if not fields.is_dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
   tmpfs:
@@ -225,7 +225,7 @@ services:
    - ./timApp/modules/jsrunner:/timApp/modules/jsrunner:rw
    - ./timApp/static/scripts:/timApp/static/scripts:ro
   working_dir: /timApp/modules/jsrunner/server
-  command: ${ "./startAll.sh" if not jsrunner.dev else "sleep infinity" }
+  command: ${ "./startAll.sh" if not jsrunner.is_dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
   tmpfs:
@@ -239,7 +239,7 @@ services:
   working_dir: /app/drag
   environment:
    PYTHONPATH: /app
-  command: ${ "./startAll.sh" if not drag.dev else "sleep infinity" }
+  command: ${ "./startAll.sh" if not drag.is_dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
   tmpfs:
@@ -252,7 +252,7 @@ services:
   working_dir: /app/feedback
   environment:
    PYTHONPATH: /app
-  command: ${ "./startAll.sh" if not feedback.dev else "sleep infinity" }
+  command: ${ "./startAll.sh" if not feedback.is_dev else "sleep infinity" }
   restart: unless-stopped
   read_only: true
   tmpfs:
@@ -359,15 +359,15 @@ services:
   volumes:
    - caddy_data:/data
    - caddy_config:/config
-   - ./certs/caddy:/certs:ro
-   - ./Caddyfile:/etc/caddy/Caddyfile:ro
+   - ./caddy/certs:/certs:ro
+   - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
    - ./timApp/static:/tim/timApp/static:ro
    - ${tim.log_dir}/caddy:/logs
    - ./timApp/modules/cs/generated:/tim/timApp/modules/cs/generated:ro
    - ./timApp/modules/cs/static:/tim/timApp/modules/cs/static:ro
    - csplugin_data:/cs_data:ro
    - csplugin_data_generated:/csgenerated:ro
-   ${ "- ./mailman/web/static:/var/www/mailman3/static" if mailman.dev else "" }
+   ${ "- ./mailman/web/static:/var/www/mailman3/static" if mailman.is_dev else "" }
   environment:
    COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
    CADDY_DOMAINS: ${caddy.domains}
@@ -428,7 +428,7 @@ services:
    - /root
   working_dir: /service/timApp
   read_only: true
-${ partial("mailman.tmpl") if mailman.dev else "" }
+${ partial("docker", "mailman.tmpl.yml") if mailman.is_dev else "" }
 volumes:
  data11:
  cache:

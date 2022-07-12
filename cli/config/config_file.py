@@ -50,7 +50,22 @@ class TIMConfig(ConfigParser):
             if section == "__meta__":
                 continue
             for key in self._sections[section].keys():  # type: ignore
-                env_dict[f"{section.upper()}_{key.upper()}"] = self.get(section, key)
+                if key.startswith("is_"):
+                    env_dict[f"{section.upper()}_{key.upper()}"] = (
+                        "1" if self.getboolean(section, key) else "0"
+                    )
+                elif key.startswith("int_"):
+                    env_dict[f"{section.upper()}_{key.upper()}"] = str(
+                        self.getint(section, key)
+                    )
+                elif key.startswith("float_"):
+                    env_dict[f"{section.upper()}_{key.upper()}"] = str(
+                        self.getfloat(section, key)
+                    )
+                else:
+                    env_dict[f"{section.upper()}_{key.upper()}"] = self.get(
+                        section, key
+                    )
 
         profile = profile or self.get("compose", "profiles")
         env_dict["COMPOSE_PROFILES"] = profile
@@ -64,8 +79,12 @@ class TIMConfig(ConfigParser):
         for section in self._sections:
             var_dict[section] = ProxyDict()
             for key in self._sections[section].keys():
-                if key == "dev":
+                if key.startswith("is_"):
                     var_dict[section].set(key, self.getboolean(section, key))
+                elif key.startswith("int_"):
+                    var_dict[section].set(key, self.getint(section, key))
+                elif key.startswith("float_"):
+                    var_dict[section].set(key, self.getfloat(section, key))
                 else:
                     var_dict[section].set(key, self.get(section, key))
         var_dict["default"] = ProxyDict()
@@ -76,7 +95,7 @@ class TIMConfig(ConfigParser):
         var_dict["compose"].set("profiles", profile)
         var_dict["tim"].set("image_tag", tim_image_tag())
         var_dict["csplugin"].set("image_tag", csplugin_image_tag())
-        var_dict["tim"].set("dev", profile == "dev")
+        var_dict["tim"].set("is_dev", profile == "dev")
         var_dict["csplugin"].set("target", csplugin_target(profile))
         return var_dict
 
