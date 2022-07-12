@@ -24,9 +24,11 @@ def verify_compose_installed() -> None:
         )
 
 
-def run_compose(
-    args: List[str], profile: Optional[str] = None, with_compose_file: bool = True
-) -> None:
+def get_compose_cmd(
+    args: List[str],
+    profile: Optional[str] = None,
+    with_compose_file: bool = True,
+) -> List[str]:
     verify_compose_installed()
     extra_args = []
     if profile:
@@ -35,4 +37,13 @@ def run_compose(
         config = get_config()
         init_compose(profile or config.get("compose", "profiles"))
         extra_args.extend(["-f", Path.cwd() / "docker-compose.yml"])
-    subprocess.run(["docker-compose", *extra_args, *args])
+    return ["docker-compose", *extra_args, *args]
+
+
+def run_compose(
+    args: List[str],
+    profile: Optional[str] = None,
+    with_compose_file: bool = True,
+    **kwargs,
+) -> subprocess.CompletedProcess:
+    return subprocess.run(get_compose_cmd(args, profile, with_compose_file), **kwargs)

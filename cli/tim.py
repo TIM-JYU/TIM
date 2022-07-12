@@ -8,6 +8,28 @@ from cli.util.iter import pairwise
 from cli.util.logging import log_error
 
 
+class PrintHelp(argparse.Action):
+    def __init__(
+        self,
+        option_strings,
+        dest=argparse.SUPPRESS,
+        default=argparse.SUPPRESS,
+        help=None,
+        **kwargs,
+    ):
+        super(PrintHelp, self).__init__(
+            option_strings=option_strings,
+            dest=dest,
+            default=default,
+            nargs=0,
+            help=help,
+        )
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        parser.print_help()
+        parser.exit()
+
+
 def main() -> None:
     # init_compose()
     # return
@@ -61,8 +83,9 @@ def main() -> None:
         module = importlib.import_module(f"cli.commands.{module_name}")
         command_info = getattr(module, "info", {})
         init_func = getattr(module, "init", None)
+        command_name = module_parts[-1].replace("_", "-")
         parser = subparsers_tree[search_path[-1]].add_parser(
-            module_parts[-1], **command_info
+            command_name, **command_info
         )
         if init_func:
             init_func(parser)
@@ -77,7 +100,7 @@ def main() -> None:
         except KeyboardInterrupt:
             exit(0)
     else:
-        log_error("No command specified")
+        log_error("No command specified, use --help for more information")
         main_parser.print_help()
 
 

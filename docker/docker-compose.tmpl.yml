@@ -79,6 +79,7 @@ services:
    - /tmp
   environment:
    POSTGRES_PASSWORD: postgresql
+  ports: ${ jsonify(["5432:5432"] if tim.is_dev else []) }
   logging:
    # According to docs, "local" is more compact and performant than the default json-file driver.
    driver: local
