@@ -1,12 +1,13 @@
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 
-info = {"help": "(Re)creates all containers and starts TIM"}
+from cli.docker.run import run_compose
+
+info = {"help": "(Re)create all containers and start TIM"}
 
 
-def cmd(args: Namespace) -> None:
-    print(f"hello world {args}")
+def cmd(*_) -> None:
+    run_compose(["up", "-d", "--remove-orphans"])
 
 
 def init(parser: ArgumentParser) -> None:
-    parser.add_argument("--name", help="Name to print")
     parser.set_defaults(run=cmd)

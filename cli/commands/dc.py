@@ -1,11 +1,7 @@
-import os
-import os.path
-import subprocess
 from argparse import ArgumentParser, REMAINDER
-from typing import List
+from typing import List, Optional
 
-from cli.config import get_config
-from cli.docker.compose import init_compose
+from cli.docker.run import run_compose
 
 info = {
     "help": "Run a docker-compose command on TIM containers",
@@ -17,16 +13,12 @@ This is a wrapper around docker-compose commands that takes into account extra T
 
 
 class Arguments:
-    profile: str
+    profile: Optional[str]
     args: List[str]
 
 
 def cmd(args: Arguments) -> None:
-    config = get_config()
-    init_compose(args.profile or config.get("compose", "profiles"))
-    cwd = os.getcwd()
-    extra_args = ["-f", os.path.join(cwd, "docker-compose.yml")]
-    subprocess.run(["docker-compose", *extra_args, *args.args])
+    run_compose(args.args, args.profile)
 
 
 def init(parser: ArgumentParser) -> None:
