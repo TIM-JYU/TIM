@@ -1,5 +1,6 @@
+from io import IOBase
 from itertools import tee
-from typing import Iterator, Tuple, Iterable, TypeVar, IO, AnyStr
+from typing import Iterator, Tuple, Iterable, TypeVar, Union, IO
 
 _T = TypeVar("_T")
 
@@ -16,7 +17,9 @@ def pairwise(iterable: Iterable[_T]) -> Iterator[Tuple[_T, _T]]:
     yield from zip(a, b)
 
 
-def iter_chunked(fp: IO[AnyStr], chunk_size: int = 8192) -> Iterator[bytes]:
+def iter_chunked(
+    fp: Union[IO[bytes], IOBase], chunk_size: int = 8192
+) -> Iterator[bytes]:
     """Yields chunks of data from a file-like object"""
     while True:
         chunk = fp.read(chunk_size)

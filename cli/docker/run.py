@@ -37,7 +37,7 @@ def get_compose_cmd(
     if with_compose_file:
         config = get_config()
         init_compose(profile or config.get("compose", "profiles"))
-        extra_args.extend(["-f", Path.cwd() / "docker-compose.yml"])
+        extra_args.extend(["-f", (Path.cwd() / "docker-compose.yml").as_posix()])
     return ["docker-compose", *extra_args, *args]
 
 
@@ -45,8 +45,7 @@ def run_compose(
     args: List[str],
     profile: Optional[str] = None,
     with_compose_file: bool = True,
-    **kwargs,
 ) -> subprocess.CompletedProcess:
     compose_args = get_compose_cmd(args, profile, with_compose_file)
     log_debug(f"run_compose: {compose_args}")
-    return subprocess.run(compose_args, **kwargs)
+    return subprocess.run(compose_args)

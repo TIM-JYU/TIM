@@ -56,7 +56,7 @@ def _find_config(create_if_not_exist: bool) -> Tuple[Optional[TIMConfig], int]:
 def has_config() -> bool:
     global loaded_config
     if loaded_config:
-        return loaded_config
+        return True
     cfg, revision = _find_config(False)
     if not cfg:
         return False

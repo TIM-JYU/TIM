@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from typing import Optional
+from typing import Optional, List, Any
 
 from cli.npm.run import run_npm
 
@@ -19,7 +19,7 @@ class Arguments:
     profile: Optional[str]
 
 
-def cmd(*_) -> None:
+def cmd(*_: List[Any]) -> None:
     run_npm(["install", "--unsafe-perm"], "timApp")
     # JSRunner has native deps, so it has to be run in container always
     run_npm(["install", "--unsafe-perm"], "timApp/modules/jsrunner/server", True)

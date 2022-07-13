@@ -76,8 +76,8 @@ def check_choices(
 
 
 def check_ports(
-    ports_string: Union[Optional[str], list[str]]
-) -> Tuple[Optional[list[str]], Optional[str]]:
+    ports_string: Union[Optional[str], List[str]]
+) -> Tuple[Optional[List[str]], Optional[str]]:
     if isinstance(ports_string, list):
         return ports_string, None
     if ports_string is None:

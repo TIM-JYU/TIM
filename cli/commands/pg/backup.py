@@ -46,6 +46,7 @@ def pg_backup(output: str) -> None:
         ]
     )
     with Popen(compose_cmd, stdout=PIPE) as proc:
+        assert proc.stdout is not None
         with gzip.open(output_file, "wb") as f:
             for chunk in iter_chunked(proc.stdout):
                 f.write(chunk)

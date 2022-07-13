@@ -52,6 +52,7 @@ def cmd(args: Arguments) -> None:
         ]
     )
     with Popen(compose_cmd, stdin=PIPE) as proc:
+        assert proc.stdin is not None
         log_debug(f"Opening gzip {input_file}")
         with gzip.open(input_file, "rb") as f:
             log_debug("Writing gzip to stdin")

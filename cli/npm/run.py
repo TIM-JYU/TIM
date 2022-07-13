@@ -46,7 +46,9 @@ def run_npm(
     log_debug(f"Running npm with args: {args}; running in docker: {run_in_container}")
     if not run_in_container:
         verify_npm()
-        subprocess.run(["npm", *args], shell=True, cwd=Path.cwd() / workdir)
+        subprocess.run(
+            ["npm", *args], shell=True, cwd=(Path.cwd() / workdir).as_posix()
+        )
     else:
         run_compose(
             [

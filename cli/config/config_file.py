@@ -76,9 +76,9 @@ class TIMConfig(ConfigParser):
 
     def var_ctx(self, profile: Optional[str] = None) -> Dict[str, Any]:
         var_dict = {}
-        for section in self._sections:
+        for section in self._sections:  # type: ignore
             var_dict[section] = ProxyDict()
-            for key in self._sections[section].keys():
+            for key in self._sections[section].keys():  # type: ignore
                 if key.startswith("is_"):
                     var_dict[section].set(key, self.getboolean(section, key))
                 elif key.startswith("int_"):
@@ -88,8 +88,8 @@ class TIMConfig(ConfigParser):
                 else:
                     var_dict[section].set(key, self.get(section, key))
         var_dict["default"] = ProxyDict()
-        for key in self._defaults.keys():
-            var_dict["default"].set(key, self._defaults[key])
+        for key in self._defaults.keys():  # type: ignore
+            var_dict["default"].set(key, self._defaults[key])  # type: ignore
 
         profile = profile or self.get("compose", "profiles")
         var_dict["compose"].set("profiles", profile)
@@ -97,6 +97,13 @@ class TIMConfig(ConfigParser):
         var_dict["csplugin"].set("image_tag", csplugin_image_tag())
         var_dict["tim"].set("is_dev", profile == "dev")
         var_dict["csplugin"].set("target", csplugin_target(profile))
+
+        if var_dict["mailman"].get("is_dev"):
+            var_dict["caddy"].set(
+                "extra_config",
+                f"{var_dict['caddy'].get('extra_config')}\nimport mailman_dev",
+            )
+
         return var_dict
 
     def write(
