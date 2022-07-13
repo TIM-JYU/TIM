@@ -9,8 +9,6 @@ from cli.util.logging import log_error, enable_verbose
 
 
 def main() -> None:
-    # init_compose()
-    # return
     commands_path = os.path.realpath(
         os.path.join(os.path.dirname(__file__), "commands")
     )
@@ -58,7 +56,7 @@ def main() -> None:
                 info = getattr(init_module, "info", {})
                 subparsers_tree[cur] = (
                     subparsers_tree[prev]
-                    .add_parser(cur, **info)
+                    .add_parser(cur.replace("_", "-"), **info)
                     .add_subparsers(
                         title="commands",
                         description="Available commands",
