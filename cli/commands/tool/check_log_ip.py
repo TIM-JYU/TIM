@@ -1,21 +1,40 @@
-# Read TIM-logfile and print  ip's that has many users
-# and users that has used many ip's
-# usage: python checkLogIp.py logname [ignoreusers]
-# ignoreusers is a file with one username/line who should
-# be forgot from analyses.
-# vesal 7.12.2021
+__authors__ = ["vesal"]
+__date__ = "2021-12-07"
+
 import re
+from argparse import ArgumentParser
+from pathlib import Path
+from typing import Optional
 
-import sys
+from cli.util.errors import CLIError
 
-# https://regex101.com/r/S6xh2p/latest
+info = {
+    "help": "Analyze IP usage from logs",
+    "description": """
+Read TIM-logfile and print IPs that has many users and users that has used many IPs.
+""",
+}
+
+
+class Arguments:
+    log_name: str
+    ignore_users: Optional[str]
+
+
 ipmatcher = re.compile(
     #  d     t    .sec  m   user     ip       prot res  time client processid
     r"^(.*) (.*),(.*) (.*) (.+) \[([0-9.]+)]: (.*) (.*) (.*) (.*) (.+)"
 )
+rightsmatcher = re.compile(
+    #  d     t  .sec                who  op   right    user      doc
+    "^(.*) (.*),(.*) INFO: RIGHTS: (.*) (.*) (.*) for ([^ ]*) in (.*)"
+)
+rightsmatcher2 = re.compile(
+    #  d     t    .sec  m   who     ip         prot              op    ip     user       what       res time client processid
+    r"^(.*) (.*),(.*) (.*) (.+) \[([0-9.]+)]: GET /permissions/(.*)/([0-9]*)/([^ /?]*)([/?](.*))? (.*) (.*) (.*) (.+)"
+)
 
 
-# 2021-12-02 00:08:20,484 INFO: aknakka [101.113.93.234]: PUT /read/113113/beEIXz36R3Uc/4 403 0.0307s android_linux_10/chrome/92.0.4515.115 4141
 def get_time_ip_and_user(line):
     match = ipmatcher.search(line)
     if not match:
@@ -24,23 +43,6 @@ def get_time_ip_and_user(line):
     return t, match.group(6), match.group(5)
 
 
-# https://regex101.com/r/Sjd9Kd/latest
-rightsmatcher = re.compile(
-    #  d     t  .sec                who  op   right    user      doc
-    "^(.*) (.*),(.*) INFO: RIGHTS: (.*) (.*) (.*) for ([^ ]*) in (.*)"
-)
-# 2021-12-02 05:54:12,348 INFO: RIGHTS: roankka added view(duration=4:00:00) for akankka in kurssit/tie/ohj1/2021s/tentti/20211202
-# 2021-12-02 14:05:56,112 INFO: RIGHTS: roankka removed view(duration=4:00:00,expired) for akankka in kurssit/tie/ohj1/2021s/tentti/20211202
-
-# https://regex101.com/r/hQ8zOI/latest
-rightsmatcher2 = re.compile(
-    #  d     t    .sec  m   who     ip         prot              op    ip     user       what       res time client processid
-    r"^(.*) (.*),(.*) (.*) (.+) \[([0-9.]+)]: GET /permissions/(.*)/([0-9]*)/([^ /?]*)([/?](.*))? (.*) (.*) (.*) (.+)"
-)
-
-
-# 2021-12-02 05:54:12,218 INFO: roankka [91.158.181.132]: GET /permissions/add/356445/akankka/?type=view&duration=4 302 0.00128s windows_10/chrome/96.0.4664.45 4132
-# 2021-12-02 14:04:41,358 INFO: roankka [84.251.211.181]: GET /permissions/expire/356445/akankka 200 0.048s windows_10/firefox/94.0 4131
 def get_time_user_op_rights(line):
     match = rightsmatcher.search(line)
     if match:
@@ -57,28 +59,30 @@ def get_time_user_op_rights(line):
     return None, None, None
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("Anna logitiedoston nimi")
-        exit(1)
-    logname = sys.argv[1]
-    ignoreusers = []
-    if len(sys.argv) >= 3:
-        with open(sys.argv[2]) as f:
-            for line in f:
-                ignoreusers.append(line.rstrip("\n"))
+def cmd(args: Arguments) -> None:
+    log_file_path = Path(args.log_name).resolve()
+    if not log_file_path.exists() or not log_file_path.is_file():
+        raise CLIError(f"Log does not exist: {log_file_path}")
+
+    ignore_users = []
+    if args.ignore_users:
+        ignore_users_path = Path(args.ignore_users).resolve()
+        if not ignore_users_path.exists() or not ignore_users_path.is_file():
+            raise CLIError(f"Ignore users file does not exist: {ignore_users_path}")
+        with ignore_users_path.open("r", encoding="utf-8") as f:
+            ignore_users = [line.strip() for line in f]
 
     n = 0
     ips = {}
     users = {}
-    with open(logname) as f:
+    with log_file_path.open("r", encoding="utf-8") as f:
         for line in f:
             # s = line.rstrip("\n")
             n += 1
             # print(n, s)
             dt, user, op = get_time_user_op_rights(line)
             if dt:
-                if user in ignoreusers:
+                if user in ignore_users:
                     continue
                 usr = users.get(user)
                 if not usr:
@@ -93,7 +97,7 @@ def main():
             dt, ip, user = get_time_ip_and_user(line)
             if not dt:
                 continue
-            if user in ignoreusers:
+            if user in ignore_users:
                 continue
 
             # print(ip, user)
@@ -153,5 +157,13 @@ def main():
     print(n)
 
 
-if __name__ == "__main__":
-    main()
+def init(parser: ArgumentParser) -> None:
+    parser.add_argument(
+        "--ignore_users",
+        help="File with users to ignore. One user per line.",
+    )
+    parser.add_argument(
+        "log_name",
+        help="Name of the log file to analyze",
+    )
+    parser.set_defaults(run=cmd)
