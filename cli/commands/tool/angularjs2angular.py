@@ -1,43 +1,56 @@
-"""Helper script for quickly doing most mechanical refactorings required when converting
-an AngularJS component to an Angular component."""
-
 import re
-import sys
-from dataclasses import dataclass
+from argparse import ArgumentParser
+from pathlib import Path
+from typing import Optional, Iterator
+
+from cli.util.errors import CLIError
+
+info = {
+    "help": "Convert AngularJS component to Angular 2 component",
+    "description": """
+Helper script for quickly doing most mechanical refactorings required when converting
+an AngularJS component to an Angular component.
+        """,
+}
 
 
-@dataclass
+class Arguments:
+    path: str
+
+
 class TypeScriptSrcEditor:
-    src: str
+    def __init__(self, src: str) -> None:
+        self.src = src
 
-    def add_imports(self, s):
+    def add_imports(self, s: str) -> None:
         imp = r"\n?(import \{)"
         self.regex_replace(imp, s + r"\n\1", count=1)
 
-    def delete_line(self, s):
+    def delete_line(self, s: str) -> None:
         self.src = re.sub(f" *{re.escape(s)}.*\n", "", self.src)
 
-    def replace(self, f, t):
+    def replace(self, f: str, t: str) -> None:
         self.src = self.src.replace(f, t)
 
-    def search(self, s):
+    def search(self, s: str) -> Optional[str]:
         m = re.search(s, self.src, re.DOTALL)
-        return m.groups(1)[0] if m else None
+        return str(m.groups(1)[0]) if m else None
 
-    def search_all(self, s):
+    def search_all(self, s: str) -> Iterator[str]:
         yield from re.findall(s, self.src, re.DOTALL)
 
-    def regex_replace(self, pat, to, flags=0, count=0):
+    def regex_replace(self, pat: str, to: str, flags: int = 0, count: int = 0) -> None:
         self.src = re.sub(pat, to, self.src, count=count, flags=flags)
 
 
-def main():
-    path = sys.argv[1]
-    if not path.endswith(".ts"):
-        print("not a ts file")
-        return
-    with open(path, encoding="utf8") as f:
-        src = f.read()
+def cmd(args: Arguments) -> None:
+    p = Path(args.path).resolve()
+    if not p.exists() or not p.is_file():
+        raise CLIError(f"File does not exist: {p}")
+    if p.suffix != ".ts":
+        raise CLIError(f"File is not a TypeScript file: {p}")
+
+    src = p.read_text(encoding="utf-8")
     s = TypeScriptSrcEditor(src)
     is_dialog = "extends DialogController" in src
     s.add_imports(
@@ -56,32 +69,40 @@ import {angularDialog} from "tim/ui/angulardialog/dialog.service";"""
         s.replace("extends DialogController", "extends AngularDialogComponent")
         s.replace("static component", "protected dialogName")
 
+    comp_name = None
     if is_dialog:
         comp_name_orig = s.search(r'protected dialogName = "(\w+)"( as const)?;')
-        comp_name = re.sub(r"Dialog$", "", comp_name_orig)
+        if comp_name_orig:
+            comp_name = re.sub(r"Dialog$", "", comp_name_orig)
         module_var = None
     else:
         comp_name_orig = s.search(r'\w+\.component\("(\w+)", (.|\n)+\)')
-        comp_name = comp_name_orig
+        if comp_name_orig:
+            comp_name = comp_name_orig
         module_var = s.search(r'(\w+)\.component\("\w+", (.|\n)+\)')
-    comp_name = re.sub(r"^tim", "", comp_name)
+    if comp_name is not None:
+        comp_name = re.sub(r"^tim", "", comp_name)
 
-    if comp_name_orig != comp_name:
+    if comp_name_orig and comp_name and comp_name_orig != comp_name:
         s.replace(comp_name_orig, comp_name)
 
-    comp_selector = re.sub(r"(?<!^)(?=[A-Z])", "-", comp_name).lower()
+    comp_selector = (
+        re.sub(r"(?<!^)(?=[A-Z])", "-", comp_name).lower() if comp_name else None
+    )
 
     template = s.search("template: `(.+)`")
     if not template:
-        template_url = s.search('templateUrl: "(.+)"').strip("/")
-        with open(template_url, encoding="utf8") as f:
-            template = f.read()
+        template_url = s.search('templateUrl: "(.+)"')
+        if template_url:
+            template_url = template_url.strip("/")
+            template = Path(template_url).read_text(encoding="utf-8")
 
     suffix = "-dialog" if is_dialog else ""
-    s.regex_replace(
-        "\n(export )?class",
-        f'\n@Component({{selector: "tim-{comp_selector}{suffix}", template: `{template}`}})\nexport class',
-    )
+    if comp_selector:
+        s.regex_replace(
+            "\n(export )?class",
+            f'\n@Component({{selector: "tim-{comp_selector}{suffix}", template: `{template}`}})\nexport class',
+        )
 
     s.replace("$onInit", "ngOnInit")
     s.replace("$doCheck", "ngDoCheck")
@@ -189,10 +210,12 @@ import {angularDialog} from "tim/ui/angulardialog/dialog.service";"""
         s.regex_replace(f"(private|protected) (async )?({var})", r"\2\3")
 
     s.regex_replace(rf'ng-repeat="(\w+) in ', r'*ngFor="let \1 of ')
-
-    with open(path, encoding="utf8", mode="wt", newline="\n") as f:
-        f.write(s.src)
+    p.write_text(s.src, encoding="utf-8", newline="\n")
 
 
-if __name__ == "__main__":
-    main()
+def init(parser: ArgumentParser) -> None:
+    parser.add_argument(
+        "path",
+        help="TypeScript file path to convert",
+    )
+    parser.set_defaults(run=cmd)

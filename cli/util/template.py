@@ -1,9 +1,6 @@
 import re
 from pathlib import Path
-from typing import Any, Optional, Dict, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from typing import Pattern, Match
+from typing import Any, Optional, Dict, Pattern, Match
 
 
 def _jsonify(value: Any) -> str:
@@ -15,14 +12,14 @@ def _jsonify(value: Any) -> str:
 def _partial(dir_path: str, name: str) -> str:
     templates_path = Path.cwd() / dir_path
     template = templates_path / name
-    return template.read_text()
+    return template.read_text(encoding="utf-8")
 
 
 class PyTemplate:
     delimiter: str = "$"
     idpattern: str = r"[^}]*"  # Note: this does not allow inserting {}s into the templates themselves
     flags: int = re.IGNORECASE
-    pattern: "Pattern"
+    pattern: Pattern
 
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
@@ -53,7 +50,7 @@ class PyTemplate:
             "partial": _partial,
         }
 
-        def convert(mo: "Match") -> str:
+        def convert(mo: Match) -> str:
             named = mo.group("braced")
             if named is not None:
                 try:
