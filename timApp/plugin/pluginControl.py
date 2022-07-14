@@ -591,10 +591,10 @@ def pluginify(
             plugin.values.pop("postprogram", None)
             plugin.values.pop("preprogram", None)
             model_answer = plugin.values.get("modelAnswer", None)
-            if not plugin.task_id:
-                continue
             if model_answer:
                 set_model_answer_info(model_answer, user_ctx, plugin)
+            if not plugin.task_id:
+                continue
             if plugin.task_id.is_global:
                 glb_task_ids.append(plugin.task_id)
                 glb_plugins_to_change.append(plugin)
