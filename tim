@@ -40,5 +40,9 @@ if ! check_python3_installed; then
     exit 1
 fi
 
+# Ensure the cwd is the location of this script
 # Call cli/tim.py passing all arguments (skip the first one)
-"$python_cmd" -m cli.tim "${@:1}"
+(
+    cd "$DIR"
+    "$python_cmd" -m cli.tim "${@:1}"
+)

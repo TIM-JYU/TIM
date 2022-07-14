@@ -194,7 +194,6 @@ services:
   read_only: true
  pali:
   image: timimages/tim:${tim.image_tag}
-  build: ./timApp/modules/pali
   volumes:
    - ./timApp/modules/pali:/app/pali:ro
    - ./tim_common:/app/tim_common:ro
