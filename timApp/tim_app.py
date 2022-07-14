@@ -274,8 +274,8 @@ app.json_encoder = TimJsonEncoder
 # Caddy sets the following headers:
 # X-Forwarded-For: <ip>
 # X-Forwarded-Proto: <http/https>
-# In prod_multi, there are 2 Caddys - the one in the container and the one in the host machine.
-num_proxies = 2 if os.environ.get("COMPOSE_PROFILES") == "prod_multi" else 1
+# There is always one proxy (internal caddy) + possible extra proxies
+num_proxies = 2 if os.environ.get("CADDY_IS_PROXIED") == "1" else 1
 app.wsgi_app = ProxyFix(
     app.wsgi_app,
     x_for=num_proxies,

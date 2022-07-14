@@ -85,7 +85,7 @@ def _migrate_variables(config: TIMConfig) -> None:
             "port_mapping",
             f"{variables.get('CADDY_MULTI_PORT', '50000')}:80",
         )
-        config.set("compose", "profiles", "prod")
+        config.set("caddy", "is_proxied", "yes")
 
 
 MIGRATIONS: List[Callable[[TIMConfig], None]] = [

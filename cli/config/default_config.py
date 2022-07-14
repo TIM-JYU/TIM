@@ -86,6 +86,13 @@ For production, replace with your server domain
 Specify how to map host ports to internal Caddy ports.
 """,
         ),
+        "is_proxied": (
+            "no",
+            """
+Whether the instance will run behind a reverse proxy.
+If enabled, the instance will apply fixes to IPs and headers to account for the reverse proxy.
+""",
+        ),
         "extra_tim_config": (
             "",
             """

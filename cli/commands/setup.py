@@ -22,12 +22,15 @@ class Arguments:
     hostname: Optional[str]
     ports: Optional[str]
     domains: Optional[str]
+    is_proxied: Optional[bool]
 
 
 _TOut = TypeVar("_TOut")
 
 
-def get_str_default(value: Any) -> str:
+def get_str_default(value: Any, default_text: Optional[str]) -> str:
+    if default_text is not None:
+        return default_text
     if isinstance(value, ParseResult):
         return f"{value.scheme}://{value.netloc}"
     return str(value)
@@ -42,6 +45,7 @@ def get_value(
         [Union[str, Optional[_TOut]]], Tuple[Optional[_TOut], Optional[str]]
     ],
     default_value: Optional[_TOut] = None,
+    default_value_text: Optional[str] = None,
 ) -> _TOut:
     if value is not None:
         val, _ = check(value)
@@ -53,7 +57,7 @@ def get_value(
         return default_value
     print(f"{'-'*20}\n{prompt_text.strip()}")
     if default_value is not None:
-        print(f"\nDefault value: {get_str_default(default_value)}")
+        print(f"\nDefault value: {get_str_default(default_value, default_value_text)}")
     while True:
         answer = input(f"{prompt_name}: ")
         if not answer and default_value is not None:
@@ -115,6 +119,18 @@ def check_hostname(
     return parsed_url, None
 
 
+def check_yes_no(
+    value: Optional[str],
+) -> Tuple[Optional[bool], Optional[str]]:
+    if value is None:
+        return None, "Value is required"
+    if value.lower() in ("yes", "y"):
+        return True, None
+    if value.lower() in ("no", "n"):
+        return False, None
+    return None, f"{value} is not a valid choice. Valid choices are: yes, y, no, n"
+
+
 def check_string(
     value: Optional[str],
 ) -> Tuple[Optional[str], Optional[str]]:
@@ -146,7 +162,7 @@ Select one of the following based on your needs:
         lambda x: check_choices(x, ["prod", "dev", "test"]),
     )
 
-    config.set("compose", "profiles", profile)
+    config.set("compose", "profile", profile)
 
     if profile == "prod":
         ports = get_value(
@@ -164,8 +180,33 @@ Examples:
 """,
             check_ports,
             ["80:80", "443:443"],
+            "80:80;443:443",
         )
         config.set("caddy", "port_mapping", "\n".join(ports))
+
+        has_non_common_ports = any(
+            True
+            for port in ports
+            if not port.startswith("80:") and not port.startswith("443:")
+        )
+
+        if has_non_common_ports:
+            is_proxy = get_value(
+                args.is_proxied,
+                args.prompt,
+                "--is-proxied",
+                """
+Will you run TIM behind a (reverse) proxy (yes/no)?
+
+You can run TIM behind a reverse proxy like nginx, Apache or Caddy.
+This is sometimes useful if you have a load balancer or a firewall
+in front of TIM, or if you want to run multiple instances on the same machine.
+                """,
+                check_yes_no,
+                False,
+                "no",
+            )
+            config.set("caddy", "is_proxied", "yes" if is_proxy else "no")
 
         hostname = get_value(
             args.hostname,
@@ -236,5 +277,12 @@ def init(parser: ArgumentParser) -> None:
         "--domains",
         help="Caddy domain list to listen to",
         metavar="http[s]://[HOSTNAME]",
+    )
+    parser.add_argument(
+        "--is-proxied",
+        help="If specified, the TIM instance will be configured to being able to run behind a reverse proxy.",
+        type=lambda x: True if x.lower() in ("yes", "y", "true") else False,
+        dest="is_proxied",
+        metavar="{yes,no}",
     )
     parser.set_defaults(run=cmd)

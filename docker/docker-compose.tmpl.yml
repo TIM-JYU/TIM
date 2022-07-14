@@ -24,6 +24,7 @@ services:
    PYTHONPATH: /service
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
    COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
+   CADDY_IS_PROXIED: ${ "1" if caddy.is_proxied else "0" }
    POSTGRESQL_MAX_CONNECTIONS: ${postgresql.max_connections}
    TIM_SETTINGS: ${tim.config_file}
    TIM_HOST: ${tim.host}
