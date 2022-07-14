@@ -2426,7 +2426,6 @@ def get_state(
             deref(),
             user_ctx,
             view_ctx,
-            view_ctx,
             custom_answer=answer,
             task_id=task_id,
             do_lazy=NEVERLAZY,
