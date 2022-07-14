@@ -4,10 +4,5 @@
 *.sh text eol=lf
 # Mono's dll mapping configs. Generally only read by mono
 *.dll.config eol=lf
-dc text eol=lf
-npmi text eol=lf
-npmiw text eol=lf
-r text eol=lf
-js text eol=lf
-*.sh.template text eol=lf
+tim text eol=lf
 pandoc_*filter.py text eol=lf

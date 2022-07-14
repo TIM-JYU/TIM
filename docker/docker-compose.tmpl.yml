@@ -27,6 +27,7 @@ services:
    POSTGRESQL_MAX_CONNECTIONS: ${postgresql.max_connections}
    TIM_SETTINGS: ${tim.config_file}
    TIM_HOST: ${tim.host}
+   RUN_MAILMAN_DEV: ${ "1" if mailman.is_dev else "0" }
   restart: unless-stopped
   networks:
    - db
@@ -387,14 +388,12 @@ services:
   profiles:
    - test
    - dev
-  volumes:
-   - ./mailman/core/mailman-extra.cfg:/opt/mailman/mailman-extra.cfg
-   - ./mailman/core/mailman-rest-event.cfg:/opt/mailman/mailman-rest-event.cfg
   environment:
    DATABASE_TYPE: sqlite
    DATABASE_URL: sqlite:////opt/mailmandb/mailmanweb.db
    DATABASE_CLASS: mailman.database.sqlite.SQLiteDatabase
    INIT_DEV: 1
+   TIM_DEV: 1
   tmpfs:
    - /opt/mailmandb
  tests:
