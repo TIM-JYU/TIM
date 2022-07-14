@@ -78,6 +78,7 @@ from timApp.document.viewcontext import (
 from timApp.item.block import Block, BlockType
 from timApp.item.taskblock import insert_task_block, TaskBlock
 from timApp.markdown.dumboclient import call_dumbo
+from timApp.markdown.markdownconverter import md_to_html
 from timApp.messaging.messagelist.messagelist_utils import (
     UserGroupDiff,
     sync_usergroup_messagelist_members,
@@ -2290,6 +2291,56 @@ def get_jsframe_data(task_id: str, user_id: str) -> Response:
         # return json_response({})
 
 
+@answers.get("/getModelAnswer/<task_id>")
+def get_model_answer(task_id: str) -> Response:
+    tid = TaskId.parse(task_id)
+    d = get_doc_or_abort(tid.doc_id)
+    verify_view_access(d)
+    doc = d.document
+    doc.insert_preamble_pars()
+    current_user = get_current_user_object()
+    view_ctx = ViewContext(ViewRoute.View, False, origin=get_origin_from_request())
+    user_ctx = user_context_with_logged_in(current_user)
+    try:
+        doc, plug = get_plugin_from_request(
+            doc, task_id=tid, u=user_ctx, view_ctx=view_ctx
+        )
+    except PluginException as e:
+        raise RouteException(str(e))
+    model_answer_info = plug.known.modelAnswer
+    if not model_answer_info:
+        raise RouteException(f"No model answer for task {task_id}")
+    if model_answer_info.count:
+        current_count = current_user.get_answers_for_task(tid.doc_task).count()
+        if current_count < model_answer_info.count:
+            raise RouteException(
+                f"You need to attempt at least {model_answer_info.count} times before viewing the model answer"
+            )
+
+    if model_answer_info.lock:
+        # def add_task_block(start_time, expire_time)
+        b = TaskBlock.get_by_task(tid.doc_task)
+        ba = None
+        if not b:
+            b = insert_task_block(task_id=tid.doc_task, owner_groups=d.owners)
+        else:
+            ba = BlockAccess.query.filter_by(
+                block_id=b.id,
+                type=AccessType.view.value,
+                usergroup_id=current_user.get_personal_group().id,
+            ).first()
+        if not ba:
+            grant_access(
+                current_user.get_personal_group(),
+                b.block,
+                AccessType.view,
+                accessible_to=get_current_time(),
+            )
+            db.session.commit()
+    answer_html = md_to_html(model_answer_info.answer)
+    return json_response({"answer": answer_html})
+
+
 @answers.get("/getState")
 def get_state(
     user_id: int,
@@ -2374,6 +2425,7 @@ def get_state(
             doc,
             deref(),
             user_ctx,
+            view_ctx,
             view_ctx,
             custom_answer=answer,
             task_id=task_id,
