@@ -30,6 +30,22 @@ class TIMConfig(ConfigParser):
         self._comment_lines: Dict[Tuple[str, str], str] = {}
         self._save_path = save_path
 
+    @property
+    def profile(self) -> str:
+        return self.get("compose", "profiles")
+
+    @property
+    def project_name(self) -> str:
+        return self.get("compose", "project_name")
+
+    @property
+    def mailman_dev(self) -> bool:
+        return self.getboolean("mailman", "is_dev")
+
+    @property
+    def host(self) -> str:
+        return self.get("tim", "host")
+
     def add_comment(self, section: str, option: str, comment: str) -> None:
         self._comment_lines[(section, option)] = comment.strip()
 

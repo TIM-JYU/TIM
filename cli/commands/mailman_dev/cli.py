@@ -14,7 +14,7 @@ class Arguments:
 
 def verify_mailman_dev() -> None:
     config = get_config()
-    if not config.getboolean("mailman", "is_dev"):
+    if not config.mailman_dev:
         raise CLIError(
             "Enable local mailman development first (set mailman.is_dev = yes in tim.conf)"
         )

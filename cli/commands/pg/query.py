@@ -21,7 +21,7 @@ class Arguments:
 def run_psql(args: List[str], test_db: bool) -> None:
     config = get_config()
     cwd = Path.cwd()
-    db_name = config.get("compose", "project_name") if not test_db else "tim-test"
+    db_name = config.project_name if not test_db else "tim-test"
     service = "postgresql" if not test_db else "postgresql-test"
     run_compose(
         [
