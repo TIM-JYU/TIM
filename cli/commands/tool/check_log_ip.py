@@ -4,7 +4,7 @@ __date__ = "2021-12-07"
 import re
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple, Dict, Any
 
 from cli.util.errors import CLIError
 
@@ -35,7 +35,9 @@ rightsmatcher2 = re.compile(
 )
 
 
-def get_time_ip_and_user(line):
+def get_time_ip_and_user(
+    line: str,
+) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     match = ipmatcher.search(line)
     if not match:
         return None, None, None
@@ -43,7 +45,9 @@ def get_time_ip_and_user(line):
     return t, match.group(6), match.group(5)
 
 
-def get_time_user_op_rights(line):
+def get_time_user_op_rights(
+    line: str,
+) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     match = rightsmatcher.search(line)
     if match:
         t = match.group(2)
@@ -73,15 +77,15 @@ def cmd(args: Arguments) -> None:
             ignore_users = [line.strip() for line in f]
 
     n = 0
-    ips = {}
-    users = {}
+    ips: Dict[str, Dict[str, Dict[str, Any]]] = {}
+    users: Dict[str, Dict[str, Any]] = {}
     with log_file_path.open("r", encoding="utf-8") as f:
         for line in f:
             # s = line.rstrip("\n")
             n += 1
             # print(n, s)
             dt, user, op = get_time_user_op_rights(line)
-            if dt:
+            if dt and user:
                 if user in ignore_users:
                     continue
                 usr = users.get(user)
@@ -95,7 +99,7 @@ def cmd(args: Arguments) -> None:
                 continue
 
             dt, ip, user = get_time_ip_and_user(line)
-            if not dt:
+            if not dt or not ip or not user:
                 continue
             if user in ignore_users:
                 continue
@@ -152,7 +156,8 @@ def cmd(args: Arguments) -> None:
             continue
         s = user + " "
         for ip in ipsip:
-            s += " " + ip
+            if ip:
+                s += " " + ip
         print(s)
     print(n)
 

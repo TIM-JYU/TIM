@@ -5,6 +5,7 @@ import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
 from subprocess import PIPE
+from typing import Optional
 
 from cli.config import get_config
 from cli.docker.run import run_docker
@@ -46,7 +47,7 @@ def cmd(args: Arguments) -> None:
     normalized_service = args.service.replace("-", "_")
     container_name = f"{config.project_name}_{normalized_service}_1"
     p = run_docker(["ps", "-q"], stdout=PIPE, encoding="utf-8")
-    found_pid = None
+    found_pid: Optional[str] = None
     for container in p.stdout.splitlines():
         container = container.strip()
         inspect_result = run_docker(
@@ -71,7 +72,7 @@ def cmd(args: Arguments) -> None:
     flamegraph_name = f"pyspy_{args.service}_{timestamp}.svg"
     flamegraph_path = Path.cwd() / "timApp" / "static" / "profiling" / flamegraph_name
 
-    args = [
+    cli_args = [
         "sudo",
         py_spy_path,
         "record",
@@ -82,8 +83,8 @@ def cmd(args: Arguments) -> None:
         "--subprocesses",
     ]
 
-    log_debug(f"py-spy args: {args}")
-    p = subprocess.run(args)
+    log_debug(f"py-spy args: {cli_args}")
+    p = subprocess.run(cli_args)
     if p.returncode == 0:
         log_info(f"Open flamegraph: {config.host}/static/profiling/{flamegraph_name}")
     exit(p.returncode)
