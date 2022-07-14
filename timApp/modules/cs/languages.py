@@ -22,7 +22,6 @@ from modifiers import Modifier
 from points import give_points
 from run import (
     generate_filename,
-    CS3_TARGET,
     CS3_TAG,
     get_imgsource,
     run2_subdir,
@@ -140,7 +139,7 @@ class Language:
             query.jso,
             "markup",
             "dockercontainer",
-            f"timimages/cs3{CS3_TARGET}:{CS3_TAG}",
+            f"timimages/cs3:{CS3_TAG}",
         )
         self.ulimit = get_param(query, "ulimit", None)
         self.savestate = get_param(query, "savestate", "")
@@ -2124,7 +2123,7 @@ class Octave(Language):
             self.query.jso,
             "markup",
             "dockercontainer",
-            f"timimages/cs3{CS3_TARGET}:{CS3_TAG}",
+            f"timimages/cs3:{CS3_TAG}",
         )
         code, out, err, pwddir = self.runself(
             ["octave", "--no-window-system", "--no-gui", "-qf", self.pure_exename],

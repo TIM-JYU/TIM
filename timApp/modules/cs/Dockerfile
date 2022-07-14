@@ -5,9 +5,9 @@
 # - sudo: complete + sudo access. Used in development.
 #
 # To build all three stages via TIM scripts, run the following commands in TIM root:
-# DEV=0 ./dc build csplugin
-# DEV=0 CSPLUGIN_TARGET=base ./dc build csplugin
-# DEV=0 CSPLUGIN_TARGET=sudo ./dc build csplugin
+# ./tim dc --profile dev build csplugin
+# ./tim dc --profile prod build csplugin
+# ./tim dc --profile test build csplugin
 
 
 FROM ubuntu:20.04 as base

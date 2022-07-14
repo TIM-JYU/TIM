@@ -1,5 +1,4 @@
 from configparser import ConfigParser
-from pathlib import Path
 from typing import Dict, Tuple, List, Any, TYPE_CHECKING, Optional
 
 from cli.docker.service_variables import (
@@ -59,36 +58,6 @@ class TIMConfig(ConfigParser):
     def save(self) -> None:
         with open(self._save_path, "w") as fp:
             self.write(fp)
-
-    def env_dict(self, profile: Optional[str] = None) -> Dict[str, str]:
-        env_dict: dict[str, Any] = {}
-        for section in self._sections:  # type: ignore
-            if section == "__meta__":
-                continue
-            for key in self._sections[section].keys():  # type: ignore
-                if key.startswith("is_"):
-                    env_dict[f"{section.upper()}_{key.upper()}"] = (
-                        "1" if self.getboolean(section, key) else "0"
-                    )
-                elif key.startswith("int_"):
-                    env_dict[f"{section.upper()}_{key.upper()}"] = str(
-                        self.getint(section, key)
-                    )
-                elif key.startswith("float_"):
-                    env_dict[f"{section.upper()}_{key.upper()}"] = str(
-                        self.getfloat(section, key)
-                    )
-                else:
-                    env_dict[f"{section.upper()}_{key.upper()}"] = self.get(
-                        section, key
-                    )
-
-        profile = profile or self.get("compose", "profile")
-        env_dict["COMPOSE_PROFILES"] = profile
-        env_dict["TIM_IMAGE_TAG"] = tim_image_tag()
-        env_dict["TIM_ROOT"] = Path.cwd().as_posix()
-        env_dict["CSPLUGIN_TARGET"] = csplugin_target(profile)
-        return env_dict
 
     def var_ctx(self, profile: Optional[str] = None) -> Dict[str, Any]:
         var_dict = {}

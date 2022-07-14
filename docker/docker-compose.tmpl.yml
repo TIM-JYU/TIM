@@ -101,10 +101,10 @@ services:
   environment:
    POSTGRES_PASSWORD: postgresql
  csplugin:
-  image: timimages/cs3${csplugin.target}:${csplugin.image_tag}
+  image: timimages/cs3:${csplugin.target}-${csplugin.image_tag}
   build:
    context: ./timApp/modules/cs
-   target: ${ csplugin.target if csplugin.target else "complete" }
+   target: ${csplugin.target}
   volumes:
    - ${tim.files_root}/blocks/uploads:/uploads:ro
    - ./timApp/modules/cs:/cs:ro
@@ -124,8 +124,7 @@ services:
   environment:
    PYTHONUNBUFFERED: "1"
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
-   CSPLUGIN_TARGET: ${csplugin.target}
-   CSPLUGIN_IMAGE_TAG: ${csplugin.image_tag}
+   CSPLUGIN_IMAGE_TAG: ${csplugin.target}-${csplugin.image_tag}
    TIM_ROOT: ${default.dir}
    TIM_HOST: ${tim.host}
   user: root  # We need access to Docker socket.
@@ -171,7 +170,7 @@ services:
    driver: none
   read_only: true
  showfile:
-  image: timimages/cs3${csplugin.target}:${csplugin.image_tag}
+  image: timimages/cs3:${csplugin.target}-${csplugin.image_tag}
   volumes:
    - ./timApp/modules/svn:/app/svn:ro
    - ./tim_common:/app/tim_common:ro
@@ -184,7 +183,7 @@ services:
   tmpfs:
     - /tmp
  imagex:
-  image: timimages/cs3${csplugin.target}:${csplugin.image_tag}
+  image: timimages/cs3:${csplugin.target}-${csplugin.image_tag}
   volumes:
    - ./timApp/modules/imagex:/app/imagex:ro
    - ./tim_common:/app/tim_common:ro

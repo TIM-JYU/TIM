@@ -8,7 +8,7 @@ def csplugin_target(profile: str) -> str:
         return "base"
     elif profile == "dev":
         return "sudo"
-    return ""
+    return "complete"
 
 
 def csplugin_image_tag() -> str:
