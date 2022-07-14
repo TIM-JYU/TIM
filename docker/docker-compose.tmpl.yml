@@ -26,9 +26,10 @@ services:
    COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
    CADDY_IS_PROXIED: ${ "1" if caddy.is_proxied else "0" }
    POSTGRESQL_MAX_CONNECTIONS: ${postgresql.max_connections}
-   TIM_SETTINGS: ${tim.config_file}
+   TIM_SETTINGS: ${compose.profile}config.py
    TIM_HOST: ${tim.host}
    RUN_MAILMAN_DEV: ${ "1" if mailman.is_dev else "0" }
+   AUTHLIB_INSECURE_TRANSPORT: ${ "1" if tim.is_dev else "0" }
   restart: unless-stopped
   networks:
    - db
@@ -291,7 +292,7 @@ services:
    FLASK_APP: tim.py
    PYTHONPATH: /service
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
-   TIM_SETTINGS: ${tim.config_file}
+   TIM_SETTINGS: ${compose.profile}config.py
    TIM_HOST: ${tim.host}
   restart: unless-stopped
   networks:
@@ -320,7 +321,7 @@ services:
    FLASK_APP: tim.py
    PYTHONPATH: /service:/service/timApp/modules/py
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
-   TIM_SETTINGS: ${tim.config_file}
+   TIM_SETTINGS: ${compose.profile}config.py
    TIM_HOST: ${tim.host}
   restart: unless-stopped
   networks:

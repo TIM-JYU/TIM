@@ -32,7 +32,7 @@ class TIMConfig(ConfigParser):
 
     @property
     def profile(self) -> str:
-        return self.get("compose", "profiles")
+        return self.get("compose", "profile")
 
     @property
     def project_name(self) -> str:
@@ -83,7 +83,7 @@ class TIMConfig(ConfigParser):
                         section, key
                     )
 
-        profile = profile or self.get("compose", "profiles")
+        profile = profile or self.get("compose", "profile")
         env_dict["COMPOSE_PROFILES"] = profile
         env_dict["TIM_IMAGE_TAG"] = tim_image_tag()
         env_dict["TIM_ROOT"] = Path.cwd().as_posix()
@@ -107,8 +107,8 @@ class TIMConfig(ConfigParser):
         for key in self._defaults.keys():  # type: ignore
             var_dict["default"].set(key, self._defaults[key])  # type: ignore
 
-        profile = profile or self.get("compose", "profiles")
-        var_dict["compose"].set("profiles", profile)
+        profile = profile or self.get("compose", "profile")
+        var_dict["compose"].set("profile", profile)
         var_dict["tim"].set("image_tag", tim_image_tag())
         var_dict["csplugin"].set("image_tag", csplugin_image_tag())
         var_dict["tim"].set("is_dev", profile == "dev")

@@ -18,10 +18,10 @@ DO NOT CHANGE THIS VALUE UNLESS YOU KNOW WHAT YOU ARE DOING.
         ),
     },
     "compose": {
-        "profiles": (
+        "profile": (
             "prod",
             """
-Possible values: prod, prod_multi, dev, test
+Possible values: prod, dev, test
 Explanations:
 * prod: This is a single TIM instance running on a remote machine.
 * dev: This is a local development TIM instance.

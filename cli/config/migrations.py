@@ -50,7 +50,7 @@ def _migrate_variables(config: TIMConfig) -> None:
         "PG_SHM_SIZE": ("postgresql", "shm_size"),
         "PALI_DEV_COMMAND": ("pali", "is_dev"),
         "FILES_ROOT": ("tim", "files_root"),
-        "COMPOSE_PROFILES": ("compose", "profiles"),
+        "COMPOSE_PROFILES": ("compose", "profile"),
         "COMPOSE_PROJECT_NAME": ("compose", "project_name"),
         "CONFIG_FILE": ("tim", "config_file"),
         "TEXTFIELD_DEV_COMMAND": ("fields", "is_dev"),
@@ -86,6 +86,7 @@ def _migrate_variables(config: TIMConfig) -> None:
             f"{variables.get('CADDY_MULTI_PORT', '50000')}:80",
         )
         config.set("caddy", "is_proxied", "yes")
+        config.set("compose", "profile", "prod")
 
 
 MIGRATIONS: List[Callable[[TIMConfig], None]] = [
