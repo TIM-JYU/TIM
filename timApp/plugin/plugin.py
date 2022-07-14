@@ -579,19 +579,18 @@ class Plugin:
         """
         if self.task_id:
             current_user = user if user else self.options.user_ctx.logged_user
-            if not current_user.has_teacher_access(self.par.doc.get_docinfo()):
-                # TODO: unlockable plugin shouldn't be a "placed" plugin in pluginify
-                b = TaskBlock.get_by_task(self.task_id.doc_task)
-                if not b:
-                    return
-                ba = BlockAccess.query.filter_by(
-                    block_id=b.id,
-                    type=AccessType.view.value,
-                    usergroup_id=current_user.get_personal_group().id,
-                ).first()
-                if not ba:
-                    return
-                self.access_end_for_user = ba.accessible_to
+            # TODO: unlockable plugin shouldn't be a "placed" plugin in pluginify
+            b = TaskBlock.get_by_task(self.task_id.doc_task)
+            if not b:
+                return
+            ba = BlockAccess.query.filter_by(
+                block_id=b.id,
+                type=AccessType.view.value,
+                usergroup_id=current_user.get_personal_group().id,
+            ).first()
+            if not ba:
+                return
+            self.access_end_for_user = ba.accessible_to
 
     # TODO: Instead of using AngularJS draggable, define dragging on Angular side
     def wrap_draggable(self, html_str: str, doc_task_id: str) -> str:
