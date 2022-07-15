@@ -266,7 +266,7 @@ def get_velp_group_personal_selections(doc_id: int) -> Response:
     user_id = get_current_user_id()
     velp_group_selections = get_personal_selections_for_velp_groups(doc_id, user_id)
 
-    return no_cache_json_response(velp_group_selections)
+    return no_cache_json_response(velp_group_selections.to_json())
 
 
 @velps.get("/<int:doc_id>/get_velp_group_default_selections")
@@ -279,7 +279,7 @@ def get_velp_group_default_selections(doc_id: int) -> Response:
     """
     velp_group_defaults = get_default_selections_for_velp_groups(doc_id)
 
-    return no_cache_json_response(velp_group_defaults)
+    return no_cache_json_response(velp_group_defaults.to_json())
 
 
 @velps.get("/<int:doc_id>/get_velp_labels")
@@ -831,7 +831,7 @@ def create_default_velp_group_route(doc_id: int) -> Response:
     return json_response(created_velp_group)
 
 
-def get_velp_groups_from_tree(doc: DocInfo) -> list[DocEntry]:
+def get_velp_groups_from_tree(doc: DocInfo) -> list[DocInfo]:
     """Returns all velp groups found from tree from document to root and from users own velp folder.
 
     Checks document's own velp group folder first, then default velp group folders going up all the
@@ -881,7 +881,7 @@ def get_velp_groups_from_tree(doc: DocInfo) -> list[DocEntry]:
 
     # remove duplicates
     velp_group_ids = set()
-    results = []
+    results: list[DocInfo] = []
     for v in velp_groups:
         if v.id not in velp_group_ids:
             velp_group_ids.add(v.id)

@@ -10,9 +10,8 @@ selections from the database.
 
 """
 
-import copy
-from typing import Union, Any
-
+from dataclasses import dataclass
+from typing import Union
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -31,6 +30,71 @@ from timApp.velp.velp_models import (
     VelpGroupSelection,
     VelpGroupDefaults,
 )
+
+
+@dataclass
+class CreatedVelpGroup:
+    """Represents a velp group. Used for passing velp group data to the user interface."""
+
+    id: int
+    name: str
+    location: str
+    target_type: int = 0
+    target_id: str = "0"
+    edit_access: bool = True
+    show: bool = True
+    selected: bool = True
+    default: bool = False
+    default_group: bool = False
+    created_new_group: bool = True
+
+
+@dataclass
+class GroupSelection:
+    """Stores information on a velp group's selection status"""
+
+    id: int
+    selected: bool
+
+    def to_json(self) -> dict[str, int | bool]:
+        return {"id": self.id, "selected": self.selected}
+
+
+@dataclass
+class VelpGroupSelectionInfo:
+    """Stores information on selected and default velp groups for a document. Used for
+    passing velp group selection data to the user interface.
+    """
+
+    target_ids: list[str]
+    selections: list[list[GroupSelection]]
+
+    def append(self, target_id: str, gs: GroupSelection) -> None:
+        if len(target_id) == 0:
+            return
+        else:
+            index = -1
+            for i in range(len(self.target_ids)):
+                if target_id == self.target_ids[i]:
+                    index = i
+                    break
+            if index < 0:
+                # if the index was not found, we need to create a new entry
+                self.target_ids.append(target_id)
+                self.selections.append([])
+                index = self.target_ids.index(target_id)
+        self.selections[index].append(gs)
+
+    # TODO IVelpGroupCollection in velptypes.ts currently uses Record
+    #      in the same form as below. A simpler format probably requires
+    #      still more refactoring, in the UI code as well.
+    def to_json(self) -> dict[str, list[dict[str, int | bool]]]:
+        result: dict[str, list[dict[str, int | bool]]] = {}
+        for i in range(len(self.target_ids)):
+            result[self.target_ids[i]] = list(
+                map(GroupSelection.to_json, self.selections[i])
+            )
+        return result
 
 
 def create_default_velp_group(
@@ -363,45 +427,35 @@ def add_groups_to_selection_table(
 
 def process_selection_info(
     vgss: list[VelpGroupSelection] | list[VelpGroupDefaults],
-) -> dict[str, list | list[dict[str, int | bool]]]:
+) -> VelpGroupSelectionInfo:
     if vgss:
-        target_id = vgss[0].target_id
-        list_help: list[dict[str, int | bool]] = []
-        target_dict: dict[str, list | list[dict[str, int | bool]]] = dict()
-        group_dict: dict[str, int | bool] = dict()
-        if target_id != "0":
-            target_dict["0"] = []
+        groups: VelpGroupSelectionInfo = VelpGroupSelectionInfo(
+            target_ids=[], selections=[]
+        )
+        target_id: str = ""
+
         for i in range(len(vgss)):
-            next_id = vgss[i].target_id
-            if next_id != target_id:
-                target_dict[target_id] = copy.deepcopy(list_help)
-                target_id = next_id
-                del list_help[:]
-                group_dict["id"] = vgss[i].velp_group_id
-                if vgss[i].selected:
-                    group_dict["selected"] = True
-                else:
-                    group_dict["selected"] = False
-                list_help.append(copy.deepcopy(group_dict))
-                group_dict.clear()
+
+            if target_id == vgss[i].target_id:
+                selection = GroupSelection(
+                    id=vgss[i].velp_group_id, selected=vgss[i].selected
+                )
+                groups.append(target_id, selection)
             else:
-                group_dict["id"] = vgss[i].velp_group_id
-                if vgss[i].selected:
-                    group_dict["selected"] = True
-                else:
-                    group_dict["selected"] = False
-                list_help.append(copy.deepcopy(group_dict))
-                group_dict.clear()
-            if i == len(vgss) - 1:
-                target_dict[target_id] = copy.deepcopy(list_help)
-        return target_dict
-    else:
-        return {"0": []}
+                target_id = vgss[i].target_id
+                # don't skip over current index
+                i -= 1
+
+            if i > len(vgss) - 1:
+                break
+        print(groups.to_json())
+        return groups
+    return VelpGroupSelectionInfo(target_ids=[], selections=[])
 
 
 def get_personal_selections_for_velp_groups(
     doc_id: int, user_id: int
-) -> dict[str, list | list[dict[str, int | bool]]]:
+) -> VelpGroupSelectionInfo:
     """Gets all velp group personal selections for document.
 
     :param doc_id: ID of document
@@ -419,7 +473,7 @@ def get_personal_selections_for_velp_groups(
 
 def get_default_selections_for_velp_groups(
     doc_id: int,
-) -> dict[str, list | list[dict[str, int | bool]]]:
+) -> VelpGroupSelectionInfo:
     """Gets all velp group default selections for document.
 
     :param doc_id: ID of document
