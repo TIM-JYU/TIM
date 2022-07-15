@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Dict, Any
 
-from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.orm.collections import attribute_mapped_collection  # type: ignore
 
 from timApp.item.block import Block
 from timApp.timdb.sqa import db
