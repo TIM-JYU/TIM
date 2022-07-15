@@ -1360,7 +1360,11 @@ export class AnswerBrowserController
             });
             return;
         }
-        if (this.modelAnswer?.lock && !this.modelAnswer?.alreadyLocked) {
+        if (
+            this.modelAnswer?.lock &&
+            !this.modelAnswer?.alreadyLocked &&
+            !this.viewctrl?.item.rights.teacher
+        ) {
             const defaultLockText = $localize`Lock the task and view the model answer?`;
             if (
                 !(await showConfirm(
