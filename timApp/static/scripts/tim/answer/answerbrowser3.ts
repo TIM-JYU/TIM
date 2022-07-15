@@ -1355,18 +1355,17 @@ export class AnswerBrowserController
             Math.max(this.modelAnswer?.count - this.answers.length, 0) > 0
         ) {
             this.alerts.push({
-                msg: `You need to attempt at least ${this.modelAnswer.count} times before viewing the model answer`,
+                msg: $localize`You need to attempt at least ${this.modelAnswer.count} times before viewing the model answer`,
                 type: "warning",
             });
             return;
         }
         if (this.modelAnswer?.lock && !this.modelAnswer?.alreadyLocked) {
+            const defaultLockText = $localize`Lock the task and view the model answer?`;
             if (
                 !(await showConfirm(
-                    this.modelAnswer?.lockText ??
-                        "Lock the task and view the model answer?",
-                    this.modelAnswer?.lockText ??
-                        "Lock the task and view the model answer?"
+                    this.modelAnswer?.lockText ?? defaultLockText,
+                    this.modelAnswer?.lockText ?? defaultLockText
                 ))
             ) {
                 return;
