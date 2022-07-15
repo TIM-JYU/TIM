@@ -2320,7 +2320,7 @@ def get_model_answer(task_id: str) -> Response:
                 f"You need to attempt at least {model_answer_info.count} times before viewing the model answer"
             )
 
-    if model_answer_info.lock:
+    if model_answer_info.lock and not has_teacher_access(d):
         b = TaskBlock.get_by_task(tid.doc_task)
         ba = None
         if not b:
