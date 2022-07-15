@@ -2321,7 +2321,6 @@ def get_model_answer(task_id: str) -> Response:
             )
 
     if model_answer_info.lock:
-        # def add_task_block(start_time, expire_time)
         b = TaskBlock.get_by_task(tid.doc_task)
         ba = None
         if not b:

@@ -1376,7 +1376,6 @@ export class AnswerBrowserController
             $http.get<{answer: string}>(this.getModelAnswerLink())
         );
         this.loading--;
-        console.log(r);
         if (!r.ok) {
             this.showError(r.result);
             return;
