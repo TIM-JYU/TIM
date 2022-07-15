@@ -21,6 +21,24 @@ export const undoType = t.partial({
     confirmationTitle: nullable(t.string),
 });
 
+export const modelAnswerType = t.intersection([
+    t.type({
+        linkText: t.string,
+        lock: withDefault(t.boolean, true),
+        // need full info dynamically instead of strict markupmodel (use taskInfo?)
+        // - already locked or not
+        // - answer maybe already present
+    }),
+    t.partial({
+        count: nullable(t.number),
+        lockText: t.string,
+        alreadyLocked: t.boolean,
+    }),
+]);
+
+export interface IModelAnswerSettings
+    extends t.TypeOf<typeof modelAnswerType> {}
+
 // Attributes that are valid for all plugins.
 export const GenericPluginMarkup = t.partial({
     answerLimit: nullable(t.Integer),
@@ -43,6 +61,7 @@ export const GenericPluginMarkup = t.partial({
     connectionErrorMessage: nullable(t.string),
     answerBrowser: nullable(AnswerBrowserSettings),
     warningFilter: nullable(t.string),
+    modelAnswer: nullable(modelAnswerType),
 });
 
 export const Info = nullable(

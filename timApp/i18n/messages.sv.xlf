@@ -6346,6 +6346,22 @@
           <context context-type="linenumber">155</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4677361144671545016" datatype="html">
+        <source>You need to attempt at least <x id="PH" equiv-text="this.modelAnswer.count"/> times before viewing the model answer</source>
+        <target state="translated">Du måste försöka minst <x id="PH" equiv-text="this.modelAnswer.count"/> gånger innan du får se modellsvaret</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="linenumber">1358</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="195293465269339079" datatype="html">
+        <source>Lock the task and view the model answer?</source>
+        <target state="translated">Låsa uppgiften och se modellsvaret?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="linenumber">1364</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

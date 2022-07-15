@@ -599,6 +599,16 @@ def verify_task_access(
             invalidate_reason = "You haven't started this task yet."
     if (
         not is_invalid
+        and (found_plugin.known.modelAnswer and found_plugin.known.modelAnswer.lock)
+        and required_task_access_level == TaskIdAccess.ReadWrite
+    ):
+        found_plugin.set_access_end_for_user(user=context_user.logged_user)
+        if found_plugin.access_end_for_user:
+            if found_plugin.access_end_for_user < get_current_time():
+                is_invalid = True
+                invalidate_reason = "You have already downloaded the model answer and can not save new answers anymore."
+    if (
+        not is_invalid
         and found_plugin.known.accessField
         and required_task_access_level == TaskIdAccess.ReadWrite
     ):

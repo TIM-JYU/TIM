@@ -1,7 +1,7 @@
 from copy import copy
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime, timezone
-from typing import Any, Mapping, NewType
+from typing import Any, Mapping, NewType, Literal
 
 import marshmallow
 from marshmallow import missing, pre_load, EXCLUDE
@@ -75,6 +75,15 @@ class AccessField:
 
 
 @dataclass
+class ModelAnswerInfo:
+    answer: str
+    linkText: str | None | Missing = missing
+    count: int | None | Missing = missing
+    lock: bool = True
+    lockText: str | None | Missing = missing
+
+
+@dataclass
 class KnownMarkupFields(HiddenFieldsMixin):
     """Represents the plugin markup fields that are known and used by TIM."""
 
@@ -101,6 +110,7 @@ class KnownMarkupFields(HiddenFieldsMixin):
     minHeight: str | None | Missing = field(
         metadata={"data_key": "min-height"}, default=missing
     )
+    modelAnswer: ModelAnswerInfo | None | Missing = missing
     pointsRule: PointsRule | None | Missing = missing
     pointsText: str | None | Missing = missing
     postprogram: str | Missing = missing

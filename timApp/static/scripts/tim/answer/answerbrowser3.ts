@@ -10,12 +10,14 @@ import {tryCreateParContextOrHelp} from "tim/document/structure/create";
 import {ParContext} from "tim/document/structure/parContext";
 import {ReadonlyMoment} from "tim/util/readonlymoment";
 import moment from "moment";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import {isVelpable, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {
     IAnswerBrowserMarkupSettings,
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
+    IModelAnswerSettings,
 } from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
 import {IUser, sortByRealName} from "../user/IUser";
@@ -541,6 +543,9 @@ export class AnswerBrowserController
     private pointsStep: number = 0.01;
     private markupSettings: IAnswerBrowserMarkupSettings =
         DEFAULT_MARKUP_CONFIG;
+    private modelAnswer?: IModelAnswerSettings;
+    private modelAnswerFetched = false;
+    private modelAnswerHtml?: string;
     private isValidAnswer = false;
     private hidden: boolean = false;
     private showDelete = false;
@@ -653,6 +658,9 @@ export class AnswerBrowserController
         const markup = this.loader.pluginMarkup();
         if (markup?.answerBrowser) {
             this.markupSettings = markup.answerBrowser;
+        }
+        if (markup?.modelAnswer) {
+            this.modelAnswer = markup.modelAnswer;
         }
 
         // Ensure the point step is never zero because some browsers don't like step="0" value in number inputs.
@@ -1335,6 +1343,52 @@ export class AnswerBrowserController
             size: 1,
             group: getUrlParams().get("group"),
         })}`;
+    }
+
+    getModelAnswerLink() {
+        return `/getModelAnswer/${this.taskId.docTask().toString()}`;
+    }
+
+    async showModelAnswer() {
+        if (
+            this.modelAnswer?.count &&
+            Math.max(this.modelAnswer?.count - this.answers.length, 0) > 0
+        ) {
+            this.alerts.push({
+                msg: $localize`You need to attempt at least ${this.modelAnswer.count} times before viewing the model answer`,
+                type: "warning",
+            });
+            return;
+        }
+        if (
+            this.modelAnswer?.lock &&
+            !this.modelAnswer?.alreadyLocked &&
+            !this.viewctrl?.item.rights.teacher
+        ) {
+            const defaultLockText = $localize`Lock the task and view the model answer?`;
+            if (
+                !(await showConfirm(
+                    this.modelAnswer?.lockText ?? defaultLockText,
+                    this.modelAnswer?.lockText ?? defaultLockText
+                ))
+            ) {
+                return;
+            }
+        }
+        this.loading++;
+        const r = await to(
+            $http.get<{answer: string}>(this.getModelAnswerLink())
+        );
+        this.loading--;
+        if (!r.ok) {
+            this.showError(r.result);
+            return;
+        }
+        if (this.modelAnswer?.lock) {
+            this.modelAnswer.alreadyLocked = true;
+        }
+        this.modelAnswerFetched = true;
+        this.modelAnswerHtml = r.result.data.answer;
     }
 
     updateAnswerFromURL() {

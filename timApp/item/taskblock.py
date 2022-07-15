@@ -28,6 +28,7 @@ class TaskBlock(db.Model):
 
 
 def insert_task_block(task_id: str, owner_groups: list[UserGroup]) -> TaskBlock:
+    # owner_groups may be redundant, would need to be kept up-to-date with task doc owners
     b = insert_block(BlockType.Task, description=task_id, owner_groups=owner_groups)
     task_block = TaskBlock(id=b.id, task_id=task_id, block=b)
     db.session.add(task_block)
