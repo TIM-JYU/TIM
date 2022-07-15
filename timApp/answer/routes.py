@@ -76,6 +76,9 @@ from timApp.document.viewcontext import (
     UrlMacros,
 )
 from timApp.item.block import Block, BlockType
+from timApp.item.manage import (
+    log_task_block,
+)
 from timApp.item.taskblock import insert_task_block, TaskBlock
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.markdown.markdownconverter import md_to_html
@@ -2330,13 +2333,17 @@ def get_model_answer(task_id: str) -> Response:
                 usergroup_id=current_user.get_personal_group().id,
             ).first()
         if not ba:
+            current_time = get_current_time()
             grant_access(
                 current_user.get_personal_group(),
                 b.block,
                 AccessType.view,
-                accessible_to=get_current_time(),
+                accessible_to=current_time,
             )
             db.session.commit()
+            log_task_block(
+                f"set task {tid.doc_task} access_end at {current_time} via modelAnswer"
+            )
     answer_html = md_to_html(model_answer_info.answer)
     return json_response({"answer": answer_html})
 
@@ -2593,6 +2600,10 @@ def unlock_task(task_id: str) -> Response:
             accessible_to=expire_time,
         )
         db.session.commit()
+        log_task_block(
+            f"set task {tid.doc_task} access_end at {expire_time} via accessDuration"
+        )
+
     else:
         expire_time = ba.accessible_to
     return json_response({"end_time": expire_time})

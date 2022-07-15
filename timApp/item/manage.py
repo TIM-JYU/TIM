@@ -306,6 +306,11 @@ def log_right(s: str):
     log_info(f"RIGHTS: {u.name} {s}")
 
 
+def log_task_block(s: str):
+    u = get_current_user_object()
+    log_info(f"TASKBLOCK: {u.name} {s}")
+
+
 def get_group_and_doc(doc_id: int, username: str) -> tuple[UserGroup, DocInfo]:
     i = get_item_or_abort(doc_id)
     verify_permission_edit_access(i, AccessType.view)
