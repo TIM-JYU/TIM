@@ -1,3 +1,4 @@
+import platform
 from argparse import ArgumentParser
 from typing import List, Optional, TypeVar, Callable, Union, Tuple, Any
 from urllib.parse import ParseResult, urlparse
@@ -153,8 +154,9 @@ def verify_tim_requirements() -> None:
     requirement_checkers = [
         verify_docker_installed,
         verify_compose_installed,
-        verify_npm,
     ]
+    if platform.system() == "Windows":
+        requirement_checkers.append(verify_npm)
     errors = []
     for checker in requirement_checkers:
         try:
