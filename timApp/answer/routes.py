@@ -2313,36 +2313,37 @@ def get_model_answer(task_id: str) -> Response:
     model_answer_info = plug.known.modelAnswer
     if not model_answer_info or not model_answer_info.answer:
         raise RouteException(f"No model answer for task {task_id}")
-    if model_answer_info.count:
-        current_count = current_user.get_answers_for_task(tid.doc_task).count()
-        if current_count < model_answer_info.count:
-            raise RouteException(
-                f"You need to attempt at least {model_answer_info.count} times before viewing the model answer"
-            )
+    if not has_teacher_access(d):
+        if model_answer_info.count:
+            current_count = current_user.get_answers_for_task(tid.doc_task).count()
+            if current_count < model_answer_info.count:
+                raise RouteException(
+                    f"You need to attempt at least {model_answer_info.count} times before viewing the model answer"
+                )
 
-    if model_answer_info.lock and not has_teacher_access(d):
-        b = TaskBlock.get_by_task(tid.doc_task)
-        ba = None
-        if not b:
-            b = insert_task_block(task_id=tid.doc_task, owner_groups=d.owners)
-        else:
-            ba = BlockAccess.query.filter_by(
-                block_id=b.id,
-                type=AccessType.view.value,
-                usergroup_id=current_user.get_personal_group().id,
-            ).first()
-        if not ba:
-            current_time = get_current_time()
-            grant_access(
-                current_user.get_personal_group(),
-                b.block,
-                AccessType.view,
-                accessible_to=current_time,
-            )
-            db.session.commit()
-            log_task_block(
-                f"set task {tid.doc_task} access_end at {current_time} via modelAnswer"
-            )
+        if model_answer_info.lock:
+            b = TaskBlock.get_by_task(tid.doc_task)
+            ba = None
+            if not b:
+                b = insert_task_block(task_id=tid.doc_task, owner_groups=d.owners)
+            else:
+                ba = BlockAccess.query.filter_by(
+                    block_id=b.id,
+                    type=AccessType.view.value,
+                    usergroup_id=current_user.get_personal_group().id,
+                ).first()
+            if not ba:
+                current_time = get_current_time()
+                grant_access(
+                    current_user.get_personal_group(),
+                    b.block,
+                    AccessType.view,
+                    accessible_to=current_time,
+                )
+                db.session.commit()
+                log_task_block(
+                    f"set task {tid.doc_task} access_end at {current_time} via modelAnswer"
+                )
     answer_html = md_to_html(model_answer_info.answer)
     return json_response({"answer": answer_html})
 

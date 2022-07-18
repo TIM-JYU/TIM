@@ -1351,29 +1351,27 @@ export class AnswerBrowserController
     }
 
     async showModelAnswer() {
-        if (
-            this.modelAnswer?.count &&
-            Math.max(this.modelAnswer?.count - this.answers.length, 0) > 0
-        ) {
-            this.alerts.push({
-                msg: $localize`You need to attempt at least ${this.modelAnswer.count} times before viewing the model answer`,
-                type: "warning",
-            });
-            return;
-        }
-        if (
-            this.modelAnswer?.lock &&
-            !this.modelAnswer?.alreadyLocked &&
-            !this.viewctrl?.item.rights.teacher
-        ) {
-            const defaultLockText = $localize`Lock the task and view the model answer?`;
+        if (!this.viewctrl?.item.rights.teacher) {
             if (
-                !(await showConfirm(
-                    this.modelAnswer?.lockText ?? defaultLockText,
-                    this.modelAnswer?.lockText ?? defaultLockText
-                ))
+                this.modelAnswer?.count &&
+                Math.max(this.modelAnswer?.count - this.answers.length, 0) > 0
             ) {
+                this.alerts.push({
+                    msg: $localize`You need to attempt at least ${this.modelAnswer.count} times before viewing the model answer`,
+                    type: "warning",
+                });
                 return;
+            }
+            if (this.modelAnswer?.lock && !this.modelAnswer?.alreadyLocked) {
+                const defaultLockText = $localize`Lock the task and view the model answer?`;
+                if (
+                    !(await showConfirm(
+                        this.modelAnswer?.lockText ?? defaultLockText,
+                        this.modelAnswer?.lockText ?? defaultLockText
+                    ))
+                ) {
+                    return;
+                }
             }
         }
         this.loading++;
