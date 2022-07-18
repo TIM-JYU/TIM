@@ -661,6 +661,7 @@ export class AnswerBrowserController
         }
         if (markup?.modelAnswer) {
             this.modelAnswer = markup.modelAnswer;
+            this.onlyValid = false;
         }
 
         // Ensure the point step is never zero because some browsers don't like step="0" value in number inputs.
