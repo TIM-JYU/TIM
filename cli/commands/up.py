@@ -6,8 +6,12 @@ from cli.docker.run import run_compose
 info = {"help": "(Re)create all containers and start TIM"}
 
 
-def cmd(*_: List[Any]) -> None:
+def up():
     run_compose(["up", "-d", "--remove-orphans"])
+
+
+def cmd(*_: List[Any]) -> None:
+    up()
 
 
 def init(parser: ArgumentParser) -> None:

@@ -39,7 +39,7 @@ jobs:
       - name: Compile JavaScript
         run: ./tim js
       - name: Run tests
-        run: ./tim test ${{ matrix.test_module }}
+        run: ./tim test --dc-up ${{ matrix.test_module }}
         timeout-minutes: 40
       - name: Upload screenshots
         if: "${{ matrix.test_module == 'browser' && always() }}"

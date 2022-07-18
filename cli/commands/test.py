@@ -1,6 +1,8 @@
 import shlex
 from argparse import ArgumentParser
+from time import sleep
 
+from cli.commands.up import up
 from cli.docker.run import run_compose
 from cli.util.logging import log_debug
 
@@ -10,6 +12,7 @@ info = {"help": "Run unit tests"}
 class Arguments:
     target: str
     down: bool
+    up: bool
 
 
 BROWSER_TEST_SCRIPT = """
@@ -54,6 +57,11 @@ for test_file in test_files:
 
 
 def cmd(args: Arguments) -> None:
+    if args.up:
+        up()
+        # Wait for the containers to be up for a small moment
+        sleep(5)
+
     if args.target == "all":
         test_parameters = ["discover", "-v", "tests/", "test_*.py", "."]
     elif "." in args.target:
@@ -85,6 +93,12 @@ def cmd(args: Arguments) -> None:
 
 
 def init(parser: ArgumentParser) -> None:
+    parser.add_argument(
+        "--dc-up",
+        help="Run docker-compose up before running tests. This is useful for ensuring all services are online.",
+        action="store_true",
+        dest="up",
+    )
     parser.add_argument(
         "--no-dc-down",
         help="Don't stop the all containers after the tests have finished.",
