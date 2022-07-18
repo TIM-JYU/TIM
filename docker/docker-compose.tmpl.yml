@@ -270,10 +270,13 @@ services:
   restart: unless-stopped
   read_only: true
   volumes:
-  - redis_data:/data
+   - redis_data:/data
  celery:
   image: timimages/tim:${tim.image_tag}
   command: celery worker -A timApp.tim_celery.celery --concurrency 4
+  profiles:
+   - prod
+   - dev
   volumes:
    - .:/service
    - ${tim.log_dir}:/service/tim_logs
@@ -298,6 +301,9 @@ services:
    - /tmp
  celery-beat:
   image: timimages/tim:${tim.image_tag}
+  profiles:
+   - prod
+   - dev
   command: >-
    celery beat
    -A timApp.tim_celery.celery
