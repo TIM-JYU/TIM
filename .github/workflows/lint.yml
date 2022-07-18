@@ -18,11 +18,10 @@ jobs:
           key: ${{ runner.os }}-eslint-npm-${{ hashFiles('**/package-lock.json') }}
       - name: Install packages
         run: |
-          npm i --global npm@6
           cd timApp
-          npm install --unsafe-perm
+          npm install
           cd modules/jsrunner/server
-          npm install --unsafe-perm
+          npm install
       - name: Lint main code
         run: cd timApp && npm run lint
       - name: Lint JSRunner

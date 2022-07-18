@@ -39,7 +39,9 @@ def verify_npm() -> None:
 
 
 def run_npm(
-    args: List[str], workdir: str, run_in_container: Optional[bool] = None
+    args: List[str],
+    workdir: str,
+    run_in_container: Optional[bool] = None,
 ) -> None:
     if run_in_container is None:
         log_debug(f"OS identifier: {platform.system()}")

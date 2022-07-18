@@ -43,26 +43,23 @@ services:
    - /run/gunicorn
   profiles:
    - prod
-   - prod_multi
    - dev
  timagent:
-  image: timimages/timagent:${tim.image_tag}
+  image: timimages/tim:${tim.image_tag}
   profiles:
    - dev
-  build:
-    dockerfile: ./timApp/Dockerfile
-    context: ./
-    target: agent
   command: sleep infinity
   restart: unless-stopped
   read_only: true
+  user: agent
+  tmpfs:
+   - /home/agent
+   - /tmp
   volumes:
-   - .:/service:ro
-   - /service/timApp/node_modules
+   - .:/service:rw
  postgresql:
   profiles:
    - prod
-   - prod_multi
    - dev
   image: postgres:11
   volumes:
@@ -134,7 +131,6 @@ services:
   image: mongo:5
   profiles:
    - prod
-   - prod_multi
    - dev
   restart: unless-stopped
   environment:
@@ -147,7 +143,6 @@ services:
  csplugin_cassandra: # Cassandra for csplugin
   profiles:
    - prod
-   - prod_multi
    - dev
   image: cassandra:4
   restart: unless-stopped
@@ -233,6 +228,7 @@ services:
   tmpfs:
    - /root/.npm
    - /root/.config
+   - /tmp
  drag:
   image: timimages/tim:${tim.image_tag}
   volumes:
@@ -333,14 +329,12 @@ services:
  maxima:
   profiles:
    - prod
-   - prod_multi
    - dev
   image: timimages/goemaxima:2020113001-latest
   restart: unless-stopped
  stack-api-server:
   profiles:
    - prod
-   - prod_multi
    - dev
   image: timimages/stack-api:latest
   depends_on:
@@ -414,6 +408,7 @@ services:
    - showfile
    - haskellplugins
    - imagex
+   - jsrunner
    - dumbo
    - feedback
    - redis

@@ -1,6 +1,8 @@
+import shlex
 from argparse import ArgumentParser
 
 from cli.docker.run import run_compose
+from cli.util.logging import log_debug
 
 info = {"help": "Run unit tests"}
 
@@ -10,20 +12,71 @@ class Arguments:
     down: bool
 
 
+BROWSER_TEST_SCRIPT = """
+import os
+import subprocess
+
+test_files = [f for f in os.listdir("tests/browser") if f.startswith("test_")]
+MAX_TRIES = 3
+for test_file in test_files:
+    cur_try = 0
+    while True:
+        try:
+            res = subprocess.run(
+                [
+                    "python3",
+                    "-m",
+                    "unittest",
+                    "discover",
+                    "-v",
+                    "tests/browser",
+                    f"{test_file}",
+                ],
+                timeout=3 * 60,
+            )
+
+            if res.returncode != 0:
+                cur_try += 1
+                if cur_try >= MAX_TRIES:
+                    print(f"{test_file} failed {MAX_TRIES} times")
+                    exit(1)
+                print(f"{test_file} failed, retrying")
+                continue
+            break
+
+        except subprocess.TimeoutExpired as e:
+            print(f"Timed out, retrying: {e}")
+            cur_try += 1
+            if cur_try >= MAX_TRIES:
+                print("Timed out, giving up")
+                exit(1)
+"""
+
+
 def cmd(args: Arguments) -> None:
     if args.target == "all":
-        test_parameters = "discover -v tests/ 'test_*.py' ."
+        test_parameters = ["discover", "-v", "tests/", "test_*.py", "."]
     elif "." in args.target:
-        test_parameters = f"tests.{args.target}"
+        test_parameters = [f"tests.{args.target}"]
     else:
-        test_parameters = f"discover -v tests/{args.target} 'test_*.py' ."
+        test_parameters = ["discover", "-v", f"tests/{args.target}", "test_*.py", "."]
+
+    test_command = ["python3", "-m", "unittest", *test_parameters]
+
+    # Browser tests can be flaky (in part of lackluster flask support for Selenium, in part of the tests).
+    # It's better to retry it a few times
+    if args.target == "browser":
+        test_command = ["python3", "-c", BROWSER_TEST_SCRIPT]
+
+    test_command_joined = shlex.join(test_command)
+    log_debug(f"test_command: {test_command_joined}")
 
     res = run_compose(
         ["up", "--exit-code-from", "tests", "--abort-on-container-exit", "tests"],
         "test",
         override_profile=False,
         extra_env={
-            "TEST_COMMAND": f"python3 -m unittest {test_parameters}",
+            "TEST_COMMAND": test_command_joined,
         },
     )
     if args.down:
