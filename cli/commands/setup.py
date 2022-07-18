@@ -17,7 +17,8 @@ This command is intended to be run once, but can be re-run to re-initialize the 
 
 class Arguments:
     force: bool
-    prompt: bool
+    interactive: bool
+    install: bool
     profile: Optional[str]
     hostname: Optional[str]
     ports: Optional[str]
@@ -149,7 +150,7 @@ def cmd(args: Arguments) -> None:
 
     profile = get_value(
         args.profile,
-        args.prompt,
+        args.interactive,
         "--profile",
         """
 Which TIM run profile should be used?
@@ -167,7 +168,7 @@ Select one of the following based on your needs:
     if profile == "prod":
         ports = get_value(
             args.ports,
-            args.prompt,
+            args.interactive,
             "--ports",
             """
 What ports should be used for the TIM instance?
@@ -193,7 +194,7 @@ Examples:
         if has_non_common_ports:
             is_proxy = get_value(
                 args.is_proxied,
-                args.prompt,
+                args.interactive,
                 "--is-proxied",
                 """
 Will you run TIM behind a (reverse) proxy (yes/no)?
@@ -210,7 +211,7 @@ in front of TIM, or if you want to run multiple instances on the same machine.
 
         hostname = get_value(
             args.hostname,
-            args.prompt,
+            args.interactive,
             "--hostname",
             """
 What is the primary address that TIM will be accessible from?
@@ -224,7 +225,7 @@ Specify the hostname along with the HTTP/HTTPS scheme in format http://hostname 
 
         domains = get_value(
             args.domains,
-            args.prompt,
+            args.interactive,
             "--domains",
             """
 Specify any external domains that TIM will be accessible from.
@@ -252,10 +253,10 @@ def init(parser: ArgumentParser) -> None:
         action="store_true",
     )
     parser.add_argument(
-        "--no-prompt",
-        help="Don't prompt for any configuration values. If a required value is not provided, the setup will fail.",
+        "--no-interactive",
+        help="No interactive mode. Prompts are disabled, and some commands are run in quiet mode.",
         action="store_false",
-        dest="prompt",
+        dest="interactive",
     )
     parser.add_argument(
         "--profile",
