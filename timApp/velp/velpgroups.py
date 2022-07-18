@@ -448,7 +448,6 @@ def process_selection_info(
 
             if i > len(vgss) - 1:
                 break
-        print(groups.to_json())
         return groups
     return VelpGroupSelectionInfo(target_ids=[], selections=[])
 
