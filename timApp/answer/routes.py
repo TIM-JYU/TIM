@@ -2311,7 +2311,7 @@ def get_model_answer(task_id: str) -> Response:
     except PluginException as e:
         raise RouteException(str(e))
     model_answer_info = plug.known.modelAnswer
-    if not model_answer_info:
+    if not model_answer_info or not model_answer_info.answer:
         raise RouteException(f"No model answer for task {task_id}")
     if model_answer_info.count:
         current_count = current_user.get_answers_for_task(tid.doc_task).count()
