@@ -11,6 +11,7 @@ from cli.config import get_config
 from cli.docker.run import run_docker
 from cli.util.errors import CLIError
 from cli.util.logging import log_info, log_debug
+from cli.util.proc import cmd
 
 info = {"help": "Profile Python code using py-spy"}
 
@@ -29,7 +30,7 @@ def get_pyspy() -> str:
         py_spy_path = shutil.which("py-spy")
         if not py_spy_path:
             raise CLIError(err)
-        subprocess.run([py_spy_path, "--version"], check=True, stdout=PIPE)
+        cmd([py_spy_path, "--version"], check=True, stdout=PIPE)
         return py_spy_path
     except subprocess.CalledProcessError:
         raise CLIError(err)
@@ -84,7 +85,7 @@ def cmd(args: Arguments) -> None:
     ]
 
     log_debug(f"py-spy args: {cli_args}")
-    p = subprocess.run(cli_args)
+    p = cmd(cli_args)
     if p.returncode == 0:
         log_info(f"Open flamegraph: {config.host}/static/profiling/{flamegraph_name}")
     exit(p.returncode)
