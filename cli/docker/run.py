@@ -6,7 +6,7 @@ from typing import List, Optional, Dict, Any
 from cli.config import get_config
 from cli.docker.compose import init_compose
 from cli.util.errors import CLIError
-from cli.util.proc import cmd
+from cli.util.proc import run_cmd
 
 _compose_ok = False
 _docker_ok = False
@@ -17,7 +17,7 @@ def verify_compose_installed() -> None:
     if _compose_ok:
         return
     try:
-        cmd(["docker-compose", "--version"], check=True, stdout=subprocess.PIPE)
+        run_cmd(["docker-compose", "--version"], check=True, stdout=subprocess.PIPE)
         _compose_ok = True
     except subprocess.CalledProcessError:
         raise CLIError(
@@ -30,7 +30,7 @@ def verify_docker_installed() -> None:
     if _docker_ok:
         return
     try:
-        cmd(["docker", "--version"], check=True, stdout=subprocess.PIPE)
+        run_cmd(["docker", "--version"], check=True, stdout=subprocess.PIPE)
         _docker_ok = True
     except subprocess.CalledProcessError:
         raise CLIError(
@@ -67,9 +67,9 @@ def run_compose(
     env = dict(os.environ)
     if extra_env:
         env.update(extra_env)
-    return cmd(compose_args, env=env)
+    return run_cmd(compose_args, env=env)
 
 
 def run_docker(args: List[str], **kwargs: Any) -> subprocess.CompletedProcess:
     verify_docker_installed()
-    return cmd(["docker", *args], **kwargs)
+    return run_cmd(["docker", *args], **kwargs)

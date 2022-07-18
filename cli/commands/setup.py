@@ -33,7 +33,7 @@ class Arguments:
     hostname: Optional[str]
     ports: Optional[str]
     domains: Optional[str]
-    is_proxied: Optional[bool]
+    is_proxied: Optional[str]
 
 
 _TOut = TypeVar("_TOut")
@@ -131,8 +131,10 @@ def check_hostname(
 
 
 def check_yes_no(
-    value: Optional[str],
+    value: Union[Optional[str], Optional[bool]],
 ) -> Tuple[Optional[bool], Optional[str]]:
+    if isinstance(value, bool):
+        return value, None
     if value is None:
         return None, "Value is required"
     if value.lower() in ("yes", "y"):
@@ -351,8 +353,7 @@ def init(parser: ArgumentParser) -> None:
     parser.add_argument(
         "--is-proxied",
         help="If specified, the TIM instance will be configured to being able to run behind a reverse proxy.",
-        type=lambda x: True if x.lower() in ("yes", "y", "true") else False,
+        choices=["yes", "no"],
         dest="is_proxied",
-        metavar="{yes,no}",
     )
     parser.set_defaults(run=cmd)

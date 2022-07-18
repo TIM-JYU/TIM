@@ -5,7 +5,7 @@ from typing import Any, List
 from cli.util.logging import log_debug
 
 
-def cmd(
+def run_cmd(
     args: List[str], check: bool = True, **kwargs: Any
 ) -> subprocess.CompletedProcess:
     log_debug(f"cmd: {shlex.join(args)}")

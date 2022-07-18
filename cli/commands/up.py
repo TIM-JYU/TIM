@@ -6,7 +6,7 @@ from cli.docker.run import run_compose
 info = {"help": "(Re)create all containers and start TIM"}
 
 
-def up():
+def up() -> None:
     run_compose(["up", "-d", "--remove-orphans"])
 
 

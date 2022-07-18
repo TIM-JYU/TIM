@@ -6,7 +6,7 @@ from typing import List, Optional
 from cli.docker.run import run_compose
 from cli.util.errors import CLIError
 from cli.util.logging import log_debug
-from cli.util.proc import cmd
+from cli.util.proc import run_cmd
 
 MAX_NPM_MAJOR_VERSION = 6
 
@@ -18,7 +18,7 @@ def verify_npm() -> None:
     if _npm_ok:
         return
     try:
-        res = cmd(
+        res = run_cmd(
             ["npm", "--version"],
             shell=True,
             check=True,
@@ -49,7 +49,7 @@ def run_npm(
     log_debug(f"Running npm with args: {args}; running in docker: {run_in_container}")
     if not run_in_container:
         verify_npm()
-        cmd(
+        run_cmd(
             ["npm", *args],
             shell=True,
             cwd=(Path.cwd() / workdir).as_posix(),
