@@ -31,13 +31,9 @@ jobs:
           uname -a
           docker info
           docker-compose --version
-      - name: Set up environment
+      - name: Set up
         run: |
-          ./tim setup --no-prompt --profile test
-      - name: Pull images
-        run: ./tim dc pull --quiet
-      - name: Compile JavaScript
-        run: ./tim js
+          ./tim setup --no-interactive --profile test
       - name: Run tests
         run: ./tim test --dc-up ${{ matrix.test_module }}
         timeout-minutes: 40

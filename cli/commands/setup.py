@@ -2,9 +2,18 @@ from argparse import ArgumentParser
 from typing import List, Optional, TypeVar, Callable, Union, Tuple, Any
 from urllib.parse import ParseResult, urlparse
 
+from cli.commands.js import js
+from cli.commands.npmi import npmi
+from cli.commands.up import up
 from cli.config import has_config, get_config
+from cli.docker.run import (
+    verify_docker_installed,
+    verify_compose_installed,
+    run_compose,
+)
+from cli.npm.run import verify_npm
 from cli.util.errors import CLIError
-from cli.util.logging import log_info
+from cli.util.logging import log_info, log_warning
 
 info = {
     "help": "Set up the TIM instance",
@@ -140,7 +149,37 @@ def check_string(
     return value.strip(), None
 
 
+def verify_tim_requirements() -> None:
+    requirement_checkers = [
+        verify_docker_installed,
+        verify_compose_installed,
+        verify_npm,
+    ]
+    errors = []
+    for checker in requirement_checkers:
+        try:
+            checker()
+        except CLIError as e:
+            errors.append(e)
+
+    if errors:
+        error_text = "\n".join(f"* {e}" for e in errors)
+        raise CLIError(
+            f"""
+The following errors were encountered while verifying the requirements:
+
+{error_text}
+
+Install the requirements before installing TIM.
+
+(if you want to run the setup without installing TIM, use the --no-install flag)
+"""
+        )
+
+
 def cmd(args: Arguments) -> None:
+    if args.install:
+        verify_tim_requirements()
     if has_config() and not args.force:
         raise CLIError(
             "TIM is already initialized. Use --force to force re-initialization."
@@ -245,6 +284,28 @@ In most cases, you can use the default value (which is the same as the TIM host)
     config.save()
     log_info("tim.conf created")
 
+    if not args.install:
+        log_warning(
+            "Skipping installation. You will need to install Docker images, NPM packages and build scripts manually."
+        )
+        return
+
+    log_info("Docker: Pulling TIM images")
+    dc_pull_args = ["--quiet"] if not args.interactive else []
+    run_compose(["pull", *dc_pull_args])
+
+    log_info("NPM: Installing TIM dependencies")
+    npmi()
+
+    if profile == "prod":
+        log_info("Building TIM scripts")
+        js(False, [])
+
+    log_info("Docker: Starting containers")
+    up()
+
+    log_info("TIM is now up and running!")
+
 
 def init(parser: ArgumentParser) -> None:
     parser.add_argument(
@@ -257,6 +318,12 @@ def init(parser: ArgumentParser) -> None:
         help="No interactive mode. Prompts are disabled, and some commands are run in quiet mode.",
         action="store_false",
         dest="interactive",
+    )
+    parser.add_argument(
+        "--no-install",
+        help="Skip installing TIM services and compiling scripts",
+        action="store_false",
+        dest="install",
     )
     parser.add_argument(
         "--profile",
