@@ -299,7 +299,7 @@ In most cases, you can use the default value (which is the same as the TIM host)
     log_info("NPM: Installing TIM dependencies")
     npmi()
 
-    if profile == "prod":
+    if profile != "dev":
         log_info("Building TIM scripts")
         js(False, [])
 
