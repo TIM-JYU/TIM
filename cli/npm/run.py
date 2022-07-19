@@ -13,7 +13,7 @@ MAX_NPM_MAJOR_VERSION = 6
 _npm_ok = False
 
 
-def verify_npm() -> None:
+def verify_npm(check_version: bool = True) -> None:
     global _npm_ok
     if _npm_ok:
         return
@@ -25,16 +25,18 @@ def verify_npm() -> None:
             stdout=subprocess.PIPE,
             encoding="utf-8",
         )
-        version = res.stdout.strip()
-        version_parts = [int(x) for x in version.split(".")]
-        if version_parts[0] > MAX_NPM_MAJOR_VERSION:
-            raise CLIError(
-                f"TIM requires NPM version {MAX_NPM_MAJOR_VERSION}.x to run locally. "
-                f"Run `npm i -g npm@{MAX_NPM_MAJOR_VERSION}` to install it."
-            )
-    except FileNotFoundError:
+        if check_version:
+            version = res.stdout.strip()
+            version_parts = [int(x) for x in version.split(".")]
+            if version_parts[0] > MAX_NPM_MAJOR_VERSION:
+                raise CLIError(
+                    f"TIM requires NPM version {MAX_NPM_MAJOR_VERSION}.x to run locally. "
+                    f"Run `npm i -g npm@{MAX_NPM_MAJOR_VERSION}` to install it."
+                )
+        _npm_ok = True
+    except subprocess.CalledProcessError:
         raise CLIError(
-            "npm is not installed; see https://docs.npmjs.com/getting-started/installing-node/ to install it"
+            "npm not found; see https://docs.npmjs.com/getting-started/installing-node/ to install it"
         )
 
 
