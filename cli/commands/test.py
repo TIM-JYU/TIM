@@ -1,10 +1,10 @@
-import shlex
 from argparse import ArgumentParser
 from time import sleep
 
 from cli.commands.up import up
 from cli.docker.run import run_compose
 from cli.util.logging import log_debug
+from cli.util.proc import sh_join
 
 info = {"help": "Run unit tests"}
 
@@ -76,7 +76,7 @@ def cmd(args: Arguments) -> None:
     if args.target == "browser":
         test_command = ["python3", "-c", BROWSER_TEST_SCRIPT]
 
-    test_command_joined = shlex.join(test_command)
+    test_command_joined = sh_join(test_command)
     log_debug(f"test_command: {test_command_joined}")
 
     res = run_compose(
