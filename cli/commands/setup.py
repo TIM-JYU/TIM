@@ -29,6 +29,7 @@ class Arguments:
     force: bool
     interactive: bool
     install: bool
+    up: bool
     profile: Optional[str]
     hostname: Optional[str]
     ports: Optional[str]
@@ -305,10 +306,14 @@ In most cases, you can use the default value (which is the same as the TIM host)
         log_info("Building TIM scripts")
         js(False, [])
 
-    log_info("Docker: Starting containers")
-    up()
-
-    log_info("TIM is now up and running!")
+    if args.up:
+        log_info("Docker: Starting containers")
+        up()
+        log_info("TIM is now up and running!")
+    else:
+        log_info(
+            "TIM is now installed! You can run `./tim up` to start the TIM instance."
+        )
 
 
 def init(parser: ArgumentParser) -> None:
@@ -328,6 +333,12 @@ def init(parser: ArgumentParser) -> None:
         help="Skip installing TIM services and compiling scripts",
         action="store_false",
         dest="install",
+    )
+    parser.add_argument(
+        "--no-up",
+        help="Skip starting TIM services",
+        action="store_false",
+        dest="up",
     )
     parser.add_argument(
         "--profile",
