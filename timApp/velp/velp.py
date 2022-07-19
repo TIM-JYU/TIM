@@ -83,7 +83,7 @@ from timApp.velp.velps import (
     add_velp_label_translation,
 )
 
-velps = TypedBlueprint("velps", __name__, url_prefix="")
+velps = Blueprint("velps", __name__, url_prefix="")
 
 
 # TODO: Add document handling for all velp group related stuff

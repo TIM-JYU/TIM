@@ -10,7 +10,7 @@ selections from the database.
 
 """
 import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Union
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
@@ -56,7 +56,7 @@ class GroupSelection:
     id: int
     selected: bool
 
-    def to_json(self) -> dict[str, int | bool]:
+    def to_json(self) -> dict:
         return {"id": self.id, "selected": self.selected}
 
 
@@ -66,36 +66,28 @@ class VelpGroupSelectionInfo:
     passing velp group selection data to the user interface.
     """
 
-    target_ids: list[str]
-    selections: list[list[GroupSelection]]
+    target_ids: list[str] = field(default_factory=list)
+    selections: list[list[GroupSelection]] = field(default_factory=list)
 
     def append(self, target_id: str, gs: GroupSelection) -> None:
-        if len(target_id) == 0:
+        if not target_id:
             return
-        else:
-            index = -1
-            for i in range(len(self.target_ids)):
-                if target_id == self.target_ids[i]:
-                    index = i
-                    break
-            if index < 0:
-                # if the index was not found, we need to create a new entry
-                self.target_ids.append(target_id)
-                self.selections.append([])
-                index = self.target_ids.index(target_id)
+        index = next(
+            (i for i, tid in enumerate(self.target_ids) if target_id == tid), -1
+        )
+        if index < 0:
+            # if the index was not found, we need to create a new entry
+            self.target_ids.append(target_id)
+            self.selections.append([])
+            index = self.target_ids.index(target_id)
         self.selections[index].append(gs)
 
-    # TODO IVelpGroupCollection in velptypes.ts currently uses Record
-    #      in the same form as below. A simpler format probably requires
-    #      still more refactoring, in the UI code as well.
-    def to_json(self) -> dict[str, list | list[dict[str, int | bool]]]:
+    def to_json(self) -> dict:
         if len(self.target_ids) == 0:
             return {"0": []}
-        result: dict[str, list | list[dict[str, int | bool]]] = dict()
-        for i in range(len(self.target_ids)):
-            result[self.target_ids[i]] = list(
-                map(GroupSelection.to_json, self.selections[i])
-            )
+        result = dict()
+        for t_id, selects in zip(self.target_ids, self.selections):
+            result[t_id] = list(map(GroupSelection.to_json, selects))
         return result
 
 
@@ -431,13 +423,12 @@ def process_selection_info(
     vgss: list[VelpGroupSelection] | list[VelpGroupDefaults],
 ) -> VelpGroupSelectionInfo:
 
-    groups = VelpGroupSelectionInfo(target_ids=[], selections=[])
+    groups = VelpGroupSelectionInfo()
     if vgss:
 
         target_id: str = "0"
         i: int = 0
         while i < len(vgss):
-
             if target_id == vgss[i].target_id:
                 selection = GroupSelection(
                     id=vgss[i].velp_group_id, selected=vgss[i].selected
@@ -446,6 +437,7 @@ def process_selection_info(
                 i += 1
             else:
                 target_id = vgss[i].target_id
+
     return groups
 
 
