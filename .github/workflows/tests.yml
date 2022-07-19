@@ -19,8 +19,14 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
+      - name: Cache Angular build assets
+        uses: actions/cache@v3
+        with:
+          path: timApp/.angular/cache
+          key: ${{ runner.os }}-angular-cache-${{ hashFiles('**/*.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-angular-cache-
       - name: Cache node modules
-        id: cache-npm
         uses: actions/cache@v3
         with:
           path: |
@@ -32,7 +38,6 @@ jobs:
           uname -a
           docker info
           docker-compose --version
-      # Run install steps manually to better capture run time
       - name: Set up
         run: ./tim setup --no-interactive --no-install --profile test
       - name: Download images
