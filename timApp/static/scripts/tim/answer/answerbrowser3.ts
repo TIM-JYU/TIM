@@ -1352,6 +1352,7 @@ export class AnswerBrowserController
 
     showModelAnswerLink() {
         return (
+            this.viewctrl?.item.rights.teacher ||
             !this.modelAnswer?.linkTextCount ||
             this.modelAnswer?.linkTextCount - this.answers.length <= 0
         );
