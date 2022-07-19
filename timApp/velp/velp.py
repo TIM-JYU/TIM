@@ -267,7 +267,7 @@ def get_velp_group_personal_selections(doc_id: int) -> Response:
     user_id = get_current_user_id()
     velp_group_selections = get_personal_selections_for_velp_groups(doc_id, user_id)
 
-    return no_cache_json_response(velp_group_selections.to_json())
+    return no_cache_json_response(velp_group_selections)
 
 
 @velps.get("/<int:doc_id>/get_velp_group_default_selections")
@@ -280,7 +280,7 @@ def get_velp_group_default_selections(doc_id: int) -> Response:
     """
     velp_group_defaults = get_default_selections_for_velp_groups(doc_id)
 
-    return no_cache_json_response(velp_group_defaults.to_json())
+    return no_cache_json_response(velp_group_defaults)
 
 
 @velps.get("/<int:doc_id>/get_velp_labels")
@@ -319,26 +319,26 @@ def add_velp() -> Response:
 
     """
     json_data = request.get_json()
-    if json_data is not None:
-        try:
-            velp_content = json_data["content"]
-            velp_group_ids = json_data["velp_groups"]
-        except KeyError as e:
-            raise RouteException("Missing data: " + e.args[0])
-        if not velp_content:
-            raise RouteException("Empty content string.")
-
-        # Optional stuff
-        default_points = json_data.get("points")
-        default_comment = json_data.get("default_comment")
-        language_id = json_data.get("language_id")
-        valid_until = json_data.get("valid_until")
-        velp_labels = json_data.get("labels")
-        visible_to = json_data.get("visible_to")
-        color = json_data.get("color")
-        style = json_data.get("style")
-    else:
+    if not json_data:
         raise RouteException("Unable to access request data")
+
+    try:
+        velp_content = json_data["content"]
+        velp_group_ids = json_data["velp_groups"]
+    except KeyError as e:
+        raise RouteException("Missing data: " + e.args[0])
+    if not velp_content:
+        raise RouteException("Empty content string.")
+
+    # Optional stuff
+    default_points = json_data.get("points")
+    default_comment = json_data.get("default_comment")
+    language_id = json_data.get("language_id")
+    valid_until = json_data.get("valid_until")
+    velp_labels = json_data.get("labels")
+    visible_to = json_data.get("visible_to")
+    color = json_data.get("color")
+    style = json_data.get("style")
 
     default_points = float(default_points) if default_points is not None else None
 
@@ -394,24 +394,24 @@ def update_velp_route(doc_id: int) -> Response:
     """
 
     json_data = request.get_json()
-    if json_data is not None:
-        try:
-            velp_id = json_data.get("id")
-            new_content = json_data.get("content")
-            language_id = json_data.get("language_id")
-            velp_group_ids = json_data["velp_groups"]
-        except KeyError as e:
-            raise RouteException("Missing data " + e.args[0])
-        if not new_content:
-            raise RouteException("Empty content string.")
-        default_points = json_data.get("points")
-        default_comment = json_data.get("default_comment")
-        color = json_data.get("color")
-        new_labels = set(json_data.get("labels") or [])
-        visible_to = json_data.get("visible_to")
-        style = json_data.get("style")
-    else:
+    if not json_data:
         raise RouteException("Unable to access request data")
+
+    try:
+        velp_id = json_data.get("id")
+        new_content = json_data.get("content")
+        language_id = json_data.get("language_id")
+        velp_group_ids = json_data["velp_groups"]
+    except KeyError as e:
+        raise RouteException("Missing data " + e.args[0])
+    if not new_content:
+        raise RouteException("Empty content string.")
+    default_points = json_data.get("points")
+    default_comment = json_data.get("default_comment")
+    color = json_data.get("color")
+    new_labels = set(json_data.get("labels") or [])
+    visible_to = json_data.get("visible_to")
+    style = json_data.get("style")
 
     verify_logged_in()
     user_id = get_current_user_id()
@@ -485,15 +485,15 @@ def add_label() -> Response:
 
     """
     json_data = request.get_json()
-    if json_data is not None:
-        try:
-            content = json_data["content"]
-        except KeyError as e:
-            raise RouteException("Missing data: " + e.args[0])
-        language_id = json_data.get("language_id")
-        language_id = "FI" if language_id is None else language_id
-    else:
+    if not json_data:
         raise RouteException("Unable to access request data")
+
+    try:
+        content = json_data["content"]
+    except KeyError as e:
+        raise RouteException("Missing data: " + e.args[0])
+    language_id = json_data.get("language_id")
+    language_id = "FI" if language_id is None else language_id
 
     label = VelpLabel(creator=get_current_user_object())
     db.session.add(label)
@@ -512,16 +512,16 @@ def update_velp_label_route() -> Response:
 
     """
     json_data = request.get_json()
-    if json_data is not None:
-        try:
-            content = json_data["content"]
-            velp_label_id = json_data["id"]
-        except KeyError as e:
-            raise RouteException("Missing data: " + e.args[0])
-        language_id = json_data.get("language_id")
-        language_id = "FI" if language_id is None else language_id
-    else:
+    if not json_data:
         raise RouteException("Unable to access request data")
+
+    try:
+        content = json_data["content"]
+        velp_label_id = json_data["id"]
+    except KeyError as e:
+        raise RouteException("Missing data: " + e.args[0])
+    language_id = json_data.get("language_id")
+    language_id = "FI" if language_id is None else language_id
 
     vlc: VelpLabelContent | None = VelpLabelContent.query.filter_by(
         language_id=language_id,
@@ -551,35 +551,35 @@ def change_selection_route(doc_id: int) -> Response:
     """
 
     json_data = request.get_json()
-    if json_data is not None:
+    if not json_data:
+        raise RouteException("Unable to access request data")
+
+    try:
+        velp_group_id = json_data["id"]
+        target_type = json_data["target_type"]
+        target_id = json_data["target_id"]
+        selection_type = json_data["selection_type"]
+    except KeyError as e:
+        raise RouteException("Missing data: " + e.args[0])
+    verify_logged_in()
+    user_id = get_current_user_id()
+    d = get_doc_or_abort(doc_id)
+    if selection_type == "show":
         try:
-            velp_group_id = json_data["id"]
-            target_type = json_data["target_type"]
-            target_id = json_data["target_id"]
-            selection_type = json_data["selection_type"]
+            selection = json_data["show"]
         except KeyError as e:
             raise RouteException("Missing data: " + e.args[0])
-        verify_logged_in()
-        user_id = get_current_user_id()
-        d = get_doc_or_abort(doc_id)
-        if selection_type == "show":
-            try:
-                selection = json_data["show"]
-            except KeyError as e:
-                raise RouteException("Missing data: " + e.args[0])
-            change_selection(
-                doc_id, velp_group_id, target_type, target_id, user_id, selection
-            )
-        elif selection_type == "default" and has_manage_access(d):
-            try:
-                selection = json_data["default"]
-            except KeyError as e:
-                raise RouteException("Missing data: " + e.args[0])
-            change_default_selection(
-                doc_id, velp_group_id, target_type, target_id, selection
-            )
-    else:
-        raise RouteException("Unable to access request data")
+        change_selection(
+            doc_id, velp_group_id, target_type, target_id, user_id, selection
+        )
+    elif selection_type == "default" and has_manage_access(d):
+        try:
+            selection = json_data["default"]
+        except KeyError as e:
+            raise RouteException("Missing data: " + e.args[0])
+        change_default_selection(
+            doc_id, velp_group_id, target_type, target_id, selection
+        )
 
     db.session.commit()
     return ok_response()
@@ -599,16 +599,17 @@ def change_all_selections(doc_id: int) -> Response:
     """
 
     json_data = request.get_json()
-    if json_data is not None:
-        try:
-            selection = json_data["selection"]
-            target_type = json_data["target_type"]
-            target_id = json_data["target_id"]
-            selection_type = json_data["selection_type"]
-        except KeyError as e:
-            raise RouteException("Missing data: " + e.args[0])
-    else:
+    if not json_data:
         raise RouteException("Unable to access request data")
+
+    try:
+        selection = json_data["selection"]
+        target_type = json_data["target_type"]
+        target_id = json_data["target_id"]
+        selection_type = json_data["selection_type"]
+    except KeyError as e:
+        raise RouteException("Missing data: " + e.args[0])
+
     verify_logged_in()
     user_id = get_current_user_id()
     d = get_doc_or_abort(doc_id)
@@ -636,13 +637,14 @@ def reset_target_area_selections_to_defaults(doc_id: int) -> Response:
     """
 
     json_data = request.get_json()
-    if json_data is not None:
-        try:
-            target_id = json_data["target_id"]
-        except KeyError as e:
-            raise RouteException("Missing data: " + e.args[0])
-    else:
+    if not json_data:
         raise RouteException("Unable to access request data")
+
+    try:
+        target_id = json_data["target_id"]
+    except KeyError as e:
+        raise RouteException("Missing data: " + e.args[0])
+
     user_id = get_current_user_id()
 
     VelpGroupSelection.query.filter_by(
@@ -680,14 +682,14 @@ def create_velp_group_route(doc_id: int) -> Response:
     """
 
     json_data = request.get_json()
-    if json_data is not None:
-        try:
-            velp_group_name = json_data.get("name")
-            target_type = json_data.get("target_type")
-        except KeyError as e:
-            raise RouteException("Missing data: " + e.args[0])
-    else:
+    if not json_data:
         raise RouteException("Unable to access request data")
+
+    try:
+        velp_group_name = json_data.get("name")
+        target_type = json_data.get("target_type")
+    except KeyError as e:
+        raise RouteException("Missing data: " + e.args[0])
 
     doc = get_doc_or_abort(doc_id)
     full_path = doc.path
