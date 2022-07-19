@@ -81,7 +81,7 @@ def _migrate_variables(config: TIMConfig) -> None:
 
     if variables["COMPOSE_PROFILES"] == "prod_multi":
         config.set(
-            "compose",
+            "caddy",
             "port_mapping",
             f"{variables.get('CADDY_MULTI_PORT', '50000')}:80",
         )
