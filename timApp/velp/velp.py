@@ -39,6 +39,7 @@ from timApp.util.flask.responsehelper import (
     no_cache_json_response,
     ok_response,
 )
+from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_warning
 from timApp.util.utils import split_location
 from timApp.velp.velp_folders import (
@@ -82,7 +83,7 @@ from timApp.velp.velps import (
     add_velp_label_translation,
 )
 
-velps = Blueprint("velps", __name__, url_prefix="")
+velps = TypedBlueprint("velps", __name__, url_prefix="")
 
 
 # TODO: Add document handling for all velp group related stuff

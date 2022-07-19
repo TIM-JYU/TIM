@@ -9,7 +9,7 @@ selections from the database.
 :version: 1.0.0
 
 """
-
+import copy
 from dataclasses import dataclass
 from typing import Union
 from timApp.auth.accesstype import AccessType
@@ -88,8 +88,10 @@ class VelpGroupSelectionInfo:
     # TODO IVelpGroupCollection in velptypes.ts currently uses Record
     #      in the same form as below. A simpler format probably requires
     #      still more refactoring, in the UI code as well.
-    def to_json(self) -> dict[str, list[dict[str, int | bool]]]:
-        result: dict[str, list[dict[str, int | bool]]] = {}
+    def to_json(self) -> dict[str, list | list[dict[str, int | bool]]]:
+        if len(self.target_ids) == 0:
+            return {"0": []}
+        result: dict[str, list | list[dict[str, int | bool]]] = dict()
         for i in range(len(self.target_ids)):
             result[self.target_ids[i]] = list(
                 map(GroupSelection.to_json, self.selections[i])
@@ -428,28 +430,23 @@ def add_groups_to_selection_table(
 def process_selection_info(
     vgss: list[VelpGroupSelection] | list[VelpGroupDefaults],
 ) -> VelpGroupSelectionInfo:
-    if vgss:
-        groups: VelpGroupSelectionInfo = VelpGroupSelectionInfo(
-            target_ids=[], selections=[]
-        )
-        target_id: str = ""
 
-        for i in range(len(vgss)):
+    groups = VelpGroupSelectionInfo(target_ids=[], selections=[])
+    if vgss:
+
+        target_id: str = "0"
+        i: int = 0
+        while i < len(vgss):
 
             if target_id == vgss[i].target_id:
                 selection = GroupSelection(
                     id=vgss[i].velp_group_id, selected=vgss[i].selected
                 )
                 groups.append(target_id, selection)
+                i += 1
             else:
                 target_id = vgss[i].target_id
-                # don't skip over current index
-                i -= 1
-
-            if i > len(vgss) - 1:
-                break
-        return groups
-    return VelpGroupSelectionInfo(target_ids=[], selections=[])
+    return groups
 
 
 def get_personal_selections_for_velp_groups(
