@@ -1,4 +1,5 @@
 import platform
+import subprocess
 from argparse import ArgumentParser
 from typing import List, Optional, TypeVar, Callable, Union, Tuple, Any
 from urllib.parse import ParseResult, urlparse
@@ -12,9 +13,10 @@ from cli.docker.run import (
     verify_compose_installed,
     run_compose,
 )
-from cli.npm.run import verify_npm
+from cli.npm.run import verify_npm, run_npm
 from cli.util.errors import CLIError
 from cli.util.logging import log_info, log_warning
+from cli.util.proc import run_cmd
 
 info = {
     "help": "Set up the TIM instance",
@@ -182,6 +184,80 @@ Install the requirements before installing TIM.
         )
 
 
+POETRY_MIN_VERSION = "1.2.0b3"
+PYTHON_MIN_VERSION = [3, 7]
+
+
+def verify_pip() -> List[str]:
+    pip_locations = [
+        ["pip"],
+        ["pip3"],
+        ["python3", "-m", "pip"],
+        ["py", "-m", "pip"],
+    ]
+
+    for pip_location in pip_locations:
+        try:
+            run_cmd(
+                [*pip_location, "--version"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            return pip_location
+        except subprocess.CalledProcessError:
+            pass
+    raise CLIError(
+        "Could not find pip which is needed to setup the local development environment. Make sure pip is installed."
+    )
+
+
+def verify_dev_python() -> List[str]:
+    python_locations = [
+        ["python"],
+        ["python3"],
+        ["py", "-3"],
+    ]
+    try:
+        for python_location in python_locations:
+            res = run_cmd(
+                [*python_location, "--version"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                encoding="utf-8",
+            )
+            stdout = res.stdout.strip()
+            if stdout.startswith("Python was not found"):
+                raise CLIError(stdout)
+            version = stdout.split(" ")[-1].split(".")
+            for i, part in enumerate(PYTHON_MIN_VERSION):
+                if int(version[i]) < part:
+                    raise CLIError("Not supported")
+            return python_location
+    except (subprocess.CalledProcessError, CLIError):
+        pass
+    raise CLIError(
+        "Could not find a supported Python version. Development requires Python 3.7+."
+    )
+
+
+def setup_dev() -> None:
+    log_info("Setting up the development environment")
+    pip = verify_pip()
+    python = verify_dev_python()
+    log_info("Downloading Poetry")
+    run_cmd([*pip, "install", "--upgrade", f"poetry=={POETRY_MIN_VERSION}"])
+
+    log_info("Installing Python development dependencies")
+    run_cmd([*python, "-m", "poetry", "install", "--only=dev"])
+
+    log_info("Installing Black formatter")
+    run_cmd([*pip, "install", "--upgrade", "black"])
+
+    log_info("Ensuring npm@6 is installed")
+    verify_npm(False)
+    run_npm(["install", "--global", "npm@6"], "timApp", False)
+
+
 def cmd(args: Arguments) -> None:
     if args.install:
         verify_tim_requirements()
@@ -294,6 +370,9 @@ In most cases, you can use the default value (which is the same as the TIM host)
             "Skipping installation. You will need to install Docker images, NPM packages and build scripts manually."
         )
         return
+
+    if profile == "dev":
+        setup_dev()
 
     log_info("Docker: Pulling TIM images")
     dc_pull_args = ["--quiet"] if not args.interactive else []
