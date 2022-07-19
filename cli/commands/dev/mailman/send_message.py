@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from typing import Optional
 
-from cli.commands.mailman_dev.cli import verify_mailman_dev
+from cli.commands.dev.mailman.cli import verify_mailman_dev
 from cli.docker.run import run_compose
 
 info = {"help": "Send a message to a mailing list"}

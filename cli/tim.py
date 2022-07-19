@@ -23,7 +23,7 @@ def main() -> None:
             if filename_no_ext == "__init__":
                 continue
             relative_path = os.path.relpath(dir_path, commands_path).strip(".")
-            module_parts = [p for p in relative_path.split(os.path.pathsep) if p]
+            module_parts = [p for p in relative_path.split(os.path.sep) if p]
             module_parts.append(filename_no_ext)
             import_commands.append(module_parts)
 
