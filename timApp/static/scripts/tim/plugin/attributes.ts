@@ -31,6 +31,7 @@ export const modelAnswerType = t.intersection([
     }),
     t.partial({
         count: nullable(t.number),
+        linkTextCount: nullable(t.number),
         lockText: t.string,
         alreadyLocked: t.boolean,
     }),

@@ -1350,6 +1350,13 @@ export class AnswerBrowserController
         return `/getModelAnswer/${this.taskId.docTask().toString()}`;
     }
 
+    showModelAnswerLink() {
+        return (
+            !this.modelAnswer?.linkTextCount ||
+            this.modelAnswer?.linkTextCount - this.answers.length <= 0
+        );
+    }
+
     async showModelAnswer() {
         if (!this.viewctrl?.item.rights.teacher) {
             if (
