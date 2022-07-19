@@ -83,7 +83,7 @@ class VelpGroupSelectionInfo:
         self.selections[index].append(gs)
 
     def to_json(self) -> dict:
-        if len(self.target_ids) == 0:
+        if not self.target_ids:
             return {"0": []}
         result = dict()
         for t_id, selects in zip(self.target_ids, self.selections):
