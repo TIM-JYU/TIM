@@ -46,14 +46,10 @@ from tim_common.fileParams import (
 """
 Adding new language to csPlugin:
 
-0. Install new compiler to cs/Dockerfile and build new Docker container from that
+0. Install new compiler to cs/Dockerfile and build new Docker containers from that
     - in /opt/tim directory, run:
-     - DEV=0 ./dc build csplugin
-     - DEV=0 CSPLUGIN_TARGET=base ./dc build csplugin
-     - DEV=0 CSPLUGIN_TARGET=sudo ./dc build csplugin
-     - DEV=0 ./dc push csplugin
-     - DEV=0 CSPLUGIN_TARGET=base ./dc push csplugin
-     - DEV=0 CSPLUGIN_TARGET=sudo ./dc push csplugin
+        ./tim dev build csplugin --push
+      NOTE: --push only works if you logged into Docker Hub first (use `docker login`).
 1. Add the language class starting with capital letter to this or new file
 2. Add language name to 'ttype' variable
 3. Mimic some existing language when creating the new class

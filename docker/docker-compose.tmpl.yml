@@ -6,7 +6,6 @@ services:
   build:
     dockerfile: ./timApp/Dockerfile
     context: ./
-    target: base
   depends_on:
    - postgresql
    - dumbo

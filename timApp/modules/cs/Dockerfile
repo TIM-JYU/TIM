@@ -5,9 +5,9 @@
 # - sudo: complete + sudo access. Used in development.
 #
 # To build all three stages via TIM scripts, run the following commands in TIM root:
-# ./tim dc --profile dev build csplugin
-# ./tim dc --profile prod build csplugin
-# ./tim dc --profile test build csplugin
+# ./tim dev build csplugin
+#
+# (add --push arg to also push the images automatically to Docker Hub)
 
 
 FROM ubuntu:20.04 as base
