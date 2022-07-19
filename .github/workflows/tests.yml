@@ -20,6 +20,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - name: Cache node modules
+        id: cache-npm
         uses: actions/cache@v3
         with:
           path: |
@@ -31,9 +32,15 @@ jobs:
           uname -a
           docker info
           docker-compose --version
+      # Run install steps manually to better capture run time
       - name: Set up
-        run: |
-          ./tim setup --no-interactive --profile test
+        run: ./tim setup --no-interactive --no-install --profile test
+      - name: Download images
+        run: ./tim dc pull --quiet
+      - name: Install dependencies
+        run: ./tim npmi
+      - name: Compile JS
+        run: ./tim js
       - name: Run tests
         run: ./tim test --dc-up ${{ matrix.test_module }}
         timeout-minutes: 40
