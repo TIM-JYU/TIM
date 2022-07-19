@@ -1350,6 +1350,10 @@ export class AnswerBrowserController
         return `/getModelAnswer/${this.taskId.docTask().toString()}`;
     }
 
+    getModelAnswerLinkText() {
+        return this.modelAnswer?.linkText ?? $localize`Show model answer`;
+    }
+
     showModelAnswerLink() {
         return (
             this.viewctrl?.item.rights.teacher ||

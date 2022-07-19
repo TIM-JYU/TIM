@@ -23,7 +23,6 @@ export const undoType = t.partial({
 
 export const modelAnswerType = t.intersection([
     t.type({
-        linkText: t.string,
         lock: withDefault(t.boolean, true),
         // need full info dynamically instead of strict markupmodel (use taskInfo?)
         // - already locked or not
@@ -31,6 +30,7 @@ export const modelAnswerType = t.intersection([
     }),
     t.partial({
         count: nullable(t.number),
+        linkText: t.string,
         linkTextCount: nullable(t.number),
         lockText: t.string,
         alreadyLocked: t.boolean,
