@@ -546,6 +546,7 @@ export class AnswerBrowserController
     private modelAnswer?: IModelAnswerSettings;
     private modelAnswerFetched = false;
     private modelAnswerHtml?: string;
+    private modelAnswerVisible = false;
     private isValidAnswer = false;
     private hidden: boolean = false;
     private showDelete = false;
@@ -1363,6 +1364,10 @@ export class AnswerBrowserController
     }
 
     async showModelAnswer() {
+        if (this.modelAnswerFetched) {
+            this.modelAnswerVisible = !this.modelAnswerVisible;
+            return;
+        }
         if (!this.viewctrl?.item.rights.teacher) {
             if (
                 this.modelAnswer?.count &&
@@ -1399,6 +1404,7 @@ export class AnswerBrowserController
             this.modelAnswer.alreadyLocked = true;
         }
         this.modelAnswerFetched = true;
+        this.modelAnswerVisible = true;
         this.modelAnswerHtml = r.result.data.answer;
     }
 

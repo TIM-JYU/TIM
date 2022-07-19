@@ -214,7 +214,7 @@
         <a ng-if="$ctrl.showModelAnswerLink()"
            title="Show model answer"
            ng-click="$ctrl.showModelAnswer()">{{$ctrl.getModelAnswerLinkText()}}</a>
-        <div ng-if="$ctrl.modelAnswerFetched" ng-bind-html="$ctrl.modelAnswerHtml">
+        <div ng-if="$ctrl.modelAnswerVisible" ng-bind-html="$ctrl.modelAnswerHtml">
 
         </div>
     </div>
