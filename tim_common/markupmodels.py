@@ -76,8 +76,9 @@ class AccessField:
 
 @dataclass
 class ModelAnswerInfo:
-    answer: str
+    answer: str | None | Missing = missing
     linkText: str | None | Missing = missing
+    linkTextCount: int | None | Missing = missing
     count: int | None | Missing = missing
     lock: bool = True
     lockText: str | None | Missing = missing

@@ -546,6 +546,7 @@ export class AnswerBrowserController
     private modelAnswer?: IModelAnswerSettings;
     private modelAnswerFetched = false;
     private modelAnswerHtml?: string;
+    private modelAnswerVisible = false;
     private isValidAnswer = false;
     private hidden: boolean = false;
     private showDelete = false;
@@ -661,6 +662,7 @@ export class AnswerBrowserController
         }
         if (markup?.modelAnswer) {
             this.modelAnswer = markup.modelAnswer;
+            this.onlyValid = false;
         }
 
         // Ensure the point step is never zero because some browsers don't like step="0" value in number inputs.
@@ -1349,30 +1351,44 @@ export class AnswerBrowserController
         return `/getModelAnswer/${this.taskId.docTask().toString()}`;
     }
 
+    getModelAnswerLinkText() {
+        return this.modelAnswer?.linkText ?? $localize`Show model answer`;
+    }
+
+    showModelAnswerLink() {
+        return (
+            this.viewctrl?.item.rights.teacher ||
+            !this.modelAnswer?.linkTextCount ||
+            this.modelAnswer?.linkTextCount - this.answers.length <= 0
+        );
+    }
+
     async showModelAnswer() {
-        if (
-            this.modelAnswer?.count &&
-            Math.max(this.modelAnswer?.count - this.answers.length, 0) > 0
-        ) {
-            this.alerts.push({
-                msg: $localize`You need to attempt at least ${this.modelAnswer.count} times before viewing the model answer`,
-                type: "warning",
-            });
+        if (this.modelAnswerFetched) {
+            this.modelAnswerVisible = !this.modelAnswerVisible;
             return;
         }
-        if (
-            this.modelAnswer?.lock &&
-            !this.modelAnswer?.alreadyLocked &&
-            !this.viewctrl?.item.rights.teacher
-        ) {
-            const defaultLockText = $localize`Lock the task and view the model answer?`;
+        if (!this.viewctrl?.item.rights.teacher) {
             if (
-                !(await showConfirm(
-                    this.modelAnswer?.lockText ?? defaultLockText,
-                    this.modelAnswer?.lockText ?? defaultLockText
-                ))
+                this.modelAnswer?.count &&
+                Math.max(this.modelAnswer?.count - this.answers.length, 0) > 0
             ) {
+                this.alerts.push({
+                    msg: $localize`You need to attempt at least ${this.modelAnswer.count} times before viewing the model answer`,
+                    type: "warning",
+                });
                 return;
+            }
+            if (this.modelAnswer?.lock && !this.modelAnswer?.alreadyLocked) {
+                const defaultLockText = $localize`Lock the task and view the model answer?`;
+                if (
+                    !(await showConfirm(
+                        this.modelAnswer?.lockText ?? defaultLockText,
+                        this.modelAnswer?.lockText ?? defaultLockText
+                    ))
+                ) {
+                    return;
+                }
             }
         }
         this.loading++;
@@ -1388,6 +1404,7 @@ export class AnswerBrowserController
             this.modelAnswer.alreadyLocked = true;
         }
         this.modelAnswerFetched = true;
+        this.modelAnswerVisible = true;
         this.modelAnswerHtml = r.result.data.answer;
     }
 
