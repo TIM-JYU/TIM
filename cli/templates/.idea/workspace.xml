@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="BRANCH:update-stack" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </select>
+  </component>
+  <component name="GithubProjectSettings">
+    <option name="branchProtectionPatterns">
+      <list>
+        <option value="master" />
+      </list>
+    </option>
+  </component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="tests" />
+      </set>
+    </option>
+  </component>
+  <component name="RunManager" selected="Python.tim">
+    <configuration name="FullStack" type="CompoundRunConfigurationType">
+      <toRun name="tim" type="PythonConfigurationType" />
+      <toRun name="bdw" type="js.build_tools.npm" />
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="CompoundRunConfigurationType">
+      <toRun name="tim" type="PythonConfigurationType" />
+      <toRun name="bdw" type="js.build_tools.npm" />
+      <method v="2" />
+    </configuration>
+    <configuration name="JS Debug" type="JavascriptDebugType" uri="http://localhost">
+      <mapping url="http://localhost" local-file="$PROJECT_DIR$/timApp" />
+      <method v="2" />
+    </configuration>
+    <configuration name="csplugin" type="PythonConfigurationType" factoryName="Python">
+      <module name="tim" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+        <env name="LANG" value="en_US.UTF8" />
+      </envs>
+      <option name="SDK_HOME" value="docker-compose://[docker-compose.yml]:csplugin/python3" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/timApp/modules/cs" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <PathMappingSettings>
+        <option name="pathMappings">
+          <list>
+            <mapping local-root="$PROJECT_DIR$/timApp/modules/cs" remote-root="/cs" />
+            <mapping local-root="$PROJECT_DIR$/tim_common" remote-root="/cs/tim_common" />
+          </list>
+        </option>
+      </PathMappingSettings>
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/timApp/modules/cs/cs.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="tim" type="PythonConfigurationType" factoryName="Python">
+      <module name="tim" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+        <env name="LC_ALL" value="en_US.UTF-8" />
+      </envs>
+      <option name="SDK_HOME" value="docker-compose://[docker-compose.yml]:tim/python3" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/timApp" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="DockerComposeSettingsRunConfigurationExtension" commandLine="exec" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <PathMappingSettings>
+        <option name="pathMappings">
+          <list>
+            <mapping local-root="$PROJECT_DIR$" remote-root="/service" />
+          </list>
+        </option>
+      </PathMappingSettings>
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/timApp/launch.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="bdw" type="js.build_tools.npm" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/timApp/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="bdw" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="bdwfast" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/timApp/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="bdwfast" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="extract-i18n" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/timApp/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="extract-i18n" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <configuration name="Test" type="tests" factoryName="Unittests" temporary="true">
+      <module name="tim" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="TIM_SETTINGS" value="testconfig.py" />
+      </envs>
+      <option name="SDK_HOME" value="docker-compose://[docker-compose.yml]:tim/python3" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/timApp" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <PathMappingSettings>
+        <option name="pathMappings">
+          <list>
+            <mapping local-root="$PROJECT_DIR$" remote-root="/service" />
+          </list>
+        </option>
+      </PathMappingSettings>
+      <option name="_new_pattern" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;timApp.tests&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Compound.FullStack" />
+      <item itemvalue="JavaScript Debug.JS Debug" />
+      <item itemvalue="npm.bdw" />
+      <item itemvalue="npm.extract-i18n" />
+      <item itemvalue="npm.bdwfast" />
+      <item itemvalue="Python.csplugin" />
+      <item itemvalue="Python.tim" />
+      <item itemvalue="Python tests.Test" />
+    </list>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+</project>

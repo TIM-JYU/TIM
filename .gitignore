@@ -6,7 +6,7 @@
 *~
 .cache/
 .dmypy.json
-.idea
+/.idea
 .mypy_cache/
 .settings
 tim.conf
@@ -74,6 +74,8 @@ venv/
 build_docs.sh
 /timApp/modules/Haskell/
 /timApp/modules/cs/jsav/
+
+# These are generated automatically from templates
 /.env
 /docker-compose.yml
 /docker-compose.dev.yml
