@@ -10,7 +10,7 @@ def _jsonify(value: Any) -> str:
 
 
 def _partial(dir_path: str, name: str) -> str:
-    templates_path = Path.cwd() / dir_path
+    templates_path = Path.cwd() / "cli" / "templates" / dir_path
     template = templates_path / name
     return template.read_text(encoding="utf-8")
 
@@ -37,8 +37,9 @@ class PyTemplate:
             """
         cls.pattern = re.compile(pattern, cls.flags | re.VERBOSE)
 
-    def __init__(self, template: str) -> None:
-        self.template = template
+    def __init__(self, template_name: str) -> None:
+        template_path = Path.cwd() / "cli" / "templates" / template_name
+        self.template = template_path.read_text(encoding="utf-8")
 
     def render(self, ctx: Optional[Dict[str, Any]] = None) -> str:
         if ctx is None:
