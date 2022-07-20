@@ -8,9 +8,12 @@ from typing import Any, List, Dict
 from cli.util.errors import CLIError
 from cli.util.iter import pairwise
 from cli.util.logging import log_error, enable_verbose, log_debug
+from cli.util.monkeypatches import patch_argparse_add_parser_info
 
 
 def main() -> None:
+    patch_argparse_add_parser_info()
+
     commands_path = os.path.realpath(
         os.path.join(os.path.dirname(__file__), "commands")
     )
@@ -96,7 +99,7 @@ def main() -> None:
             exit(e.returncode)
     else:
         log_error("No command specified, use --help for more information")
-        main_parser.print_help()
+        args.last_parser.print_help()
 
 
 if __name__ == "__main__":
