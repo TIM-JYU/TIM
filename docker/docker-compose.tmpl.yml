@@ -11,6 +11,16 @@ services:
    - dumbo
    - redis
    ${ "- postgresql-test" if tim.is_dev else "" }
+   ${ """
+   - csplugin
+   - pali
+   - fields
+   - showfile
+   - haskellplugins
+   - imagex
+   - feedback
+   - oiko
+   """ if not tim.is_dev else "" }
   volumes:
    - .:/service
    - ${tim.log_dir}:/service/tim_logs
