@@ -75,7 +75,7 @@ def get_value(
     if default_value is not None:
         print(f"\nDefault value: {get_str_default(default_value, default_value_text)}")
     while True:
-        answer = input(f"{prompt_name}: ")
+        answer = input(f"{prompt_name}= ")
         if not answer and default_value is not None:
             return default_value
         val, err = check(answer)
