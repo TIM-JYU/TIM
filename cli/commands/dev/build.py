@@ -52,6 +52,8 @@ def build_csplugin(tag: Optional[str]) -> Optional[str]:
             "build",
             "--tag",
             image_name,
+            "--target",
+            tag,
             context.as_posix(),
         ],
     )
