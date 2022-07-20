@@ -79,7 +79,7 @@ class Arguments:
     tasks: List[str]
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     built_images = []
     for task_name in args.tasks:
         parts = task_name.split(":", 1)
@@ -126,5 +126,3 @@ def init(parser: ArgumentParser) -> None:
         choices=choices,
         help="Tasks to build in format `task:tag`. If not specified, all tasks will be built.",
     )
-
-    parser.set_defaults(run=cmd)

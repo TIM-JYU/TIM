@@ -18,7 +18,7 @@ class Arguments:
     rotate_days: int
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     pg_backup(args.backup_dir)
     log_debug(f"Removing backups older than {args.rotate_days} days")
     p = Path(args.backup_dir)
@@ -46,4 +46,3 @@ def init(parser: ArgumentParser) -> None:
         type=int,
         dest="rotate_days",
     )
-    parser.set_defaults(run=cmd)

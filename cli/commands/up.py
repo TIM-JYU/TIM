@@ -1,4 +1,3 @@
-from argparse import ArgumentParser
 from typing import List, Any
 
 from cli.docker.run import run_compose
@@ -10,9 +9,5 @@ def up() -> None:
     run_compose(["up", "-d", "--remove-orphans"])
 
 
-def cmd(*_: List[Any]) -> None:
+def run(*_: List[Any]) -> None:
     up()
-
-
-def init(parser: ArgumentParser) -> None:
-    parser.set_defaults(run=cmd)

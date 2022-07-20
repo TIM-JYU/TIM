@@ -12,7 +12,7 @@ class Arguments:
     message: Optional[str]
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     verify_mailman_dev()
     cmd_args = [
         "exec",
@@ -41,4 +41,3 @@ def init(parser: ArgumentParser) -> None:
         "list",
         help="List to send message to",
     )
-    parser.set_defaults(run=cmd)

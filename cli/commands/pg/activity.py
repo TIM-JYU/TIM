@@ -11,7 +11,7 @@ class Arguments:
     test_db: bool
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     run_psql(
         [
             "-c",
@@ -35,4 +35,3 @@ def init(parser: ArgumentParser) -> None:
         dest="test_db",
         action="store_true",
     )
-    parser.set_defaults(run=cmd)

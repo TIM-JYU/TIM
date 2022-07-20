@@ -62,7 +62,7 @@ def handle_error(msg: str, current_interval: int, args: Arguments) -> int:
     return current_interval + 1
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     log_info("Starting healthcheck watchdog")
     try:
         interval = 1
@@ -115,4 +115,3 @@ def init(parser: ArgumentParser) -> None:
         required=True,
         dest="smtp_server",
     )
-    parser.set_defaults(run=cmd)

@@ -20,7 +20,7 @@ class Arguments:
     args: List[str]
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     run_args = ["run", "--rm"]
     if args.no_deps:
         run_args.append("--no-deps")
@@ -56,4 +56,3 @@ def init(parser: ArgumentParser) -> None:
     parser.add_argument(
         "args", nargs=REMAINDER, help="Arguments to pass to the container"
     )
-    parser.set_defaults(run=cmd)

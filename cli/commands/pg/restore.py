@@ -22,7 +22,7 @@ class Arguments:
     input: str
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     input_file = Path(args.input).resolve()
     if not input_file.exists() or not input_file.is_file():
         raise CLIError(f"{input_file} is not a file")
@@ -69,4 +69,3 @@ def cmd(args: Arguments) -> None:
 
 def init(parser: ArgumentParser) -> None:
     parser.add_argument("input", help="Input SQL file")
-    parser.set_defaults(run=cmd)

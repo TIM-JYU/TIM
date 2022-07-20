@@ -21,7 +21,7 @@ def js(run_npmi: bool, extra_args: List[str]) -> None:
     run_npm(["run", "b", "--", *extra_args], "timApp")
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     js(args.npmi, args.args)
 
 
@@ -34,4 +34,3 @@ def init(parser: ArgumentParser) -> None:
     parser.add_argument(
         "args", nargs=REMAINDER, help="Arguments to pass to docker-compose"
     )
-    parser.set_defaults(run=cmd)

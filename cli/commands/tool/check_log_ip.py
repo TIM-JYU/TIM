@@ -63,7 +63,7 @@ def get_time_user_op_rights(
     return None, None, None
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     log_file_path = Path(args.log_name).resolve()
     if not log_file_path.exists() or not log_file_path.is_file():
         raise CLIError(f"Log does not exist: {log_file_path}")
@@ -171,4 +171,3 @@ def init(parser: ArgumentParser) -> None:
         "log_name",
         help="Name of the log file to analyze",
     )
-    parser.set_defaults(run=cmd)

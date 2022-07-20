@@ -56,7 +56,7 @@ for test_file in test_files:
 """
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     if args.up:
         up()
         # Wait for the containers to be up for a small moment
@@ -111,4 +111,3 @@ def init(parser: ArgumentParser) -> None:
         "Run a specific test module or test function. Format is <module>[.<function>]. "
         "Special value 'all' runs all tests.",
     )
-    parser.set_defaults(run=cmd)

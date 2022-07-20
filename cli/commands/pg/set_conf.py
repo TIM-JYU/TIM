@@ -19,7 +19,7 @@ class Arguments:
     option_value: int
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     service = "postgresql" if not args.test_db else "postgresql-test"
     run_compose(
         [
@@ -53,4 +53,3 @@ def init(parser: ArgumentParser) -> None:
         "option_value",
         help="Value of the configuration option",
     )
-    parser.set_defaults(run=cmd)

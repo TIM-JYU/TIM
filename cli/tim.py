@@ -68,12 +68,16 @@ def main() -> None:
         module = importlib.import_module(f"cli.commands.{module_name}")
         command_info = getattr(module, "info", {})
         init_func = getattr(module, "init", None)
+        run_func = getattr(module, "run", None)
+        if not run_func:
+            continue
         command_name = module_parts[-1].replace("_", "-")
         parser = subparsers_tree[search_path[-1]].add_parser(
             command_name, **command_info
         )
         if init_func:
             init_func(parser)
+        parser.set_defaults(run=run_func)
 
     args = main_parser.parse_args()
     if args.logging_verbose:

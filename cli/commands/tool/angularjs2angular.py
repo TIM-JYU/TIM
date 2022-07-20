@@ -43,7 +43,7 @@ class TypeScriptSrcEditor:
         self.src = re.sub(pat, to, self.src, count=count, flags=flags)
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     p = Path(args.path).resolve()
     if not p.exists() or not p.is_file():
         raise CLIError(f"File does not exist: {p}")
@@ -218,4 +218,3 @@ def init(parser: ArgumentParser) -> None:
         "path",
         help="TypeScript file path to convert",
     )
-    parser.set_defaults(run=cmd)

@@ -50,7 +50,7 @@ def run_psql(args: List[str], test_db: bool) -> None:
     )
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     run_psql(args.args, args.test_db)
 
 
@@ -62,4 +62,3 @@ def init(parser: ArgumentParser) -> None:
         action="store_true",
     )
     parser.add_argument("args", nargs=REMAINDER, help="Arguments to pass to psql")
-    parser.set_defaults(run=cmd)

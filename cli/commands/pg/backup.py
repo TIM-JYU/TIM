@@ -56,10 +56,9 @@ def pg_backup(output: str) -> None:
     log_info(f"Backup complete")
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     pg_backup(args.output)
 
 
 def init(parser: ArgumentParser) -> None:
     parser.add_argument("output", help="Output directory of the backup file")
-    parser.set_defaults(run=cmd)

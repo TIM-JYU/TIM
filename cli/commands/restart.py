@@ -10,10 +10,9 @@ class Arguments:
     args: List[str]
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     run_compose(["restart", *args.args])
 
 
 def init(parser: ArgumentParser) -> None:
     parser.add_argument("args", nargs=REMAINDER, help="Arguments to pass to restart")
-    parser.set_defaults(run=cmd)

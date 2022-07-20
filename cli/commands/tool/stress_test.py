@@ -16,7 +16,7 @@ class Arguments:
     doc_path: str
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     script_to_run = textwrap.dedent(
         rf"""
         dir=/tmp/stresstest/{args.doc_path}
@@ -44,4 +44,3 @@ def init(parser: ArgumentParser) -> None:
         "doc_path",
         help="Document path or document ID to stress test",
     )
-    parser.set_defaults(run=cmd)

@@ -1,4 +1,3 @@
-from argparse import ArgumentParser
 from pathlib import Path
 from typing import Any
 
@@ -38,9 +37,5 @@ def npmi() -> None:
     run_npm(["install"], "timApp/modules/jsrunner/server", True)
 
 
-def cmd(*_: Any) -> None:
+def run(*_: Any) -> None:
     npmi()
-
-
-def init(parser: ArgumentParser) -> None:
-    parser.set_defaults(run=cmd)

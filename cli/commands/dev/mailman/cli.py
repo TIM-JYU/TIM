@@ -20,7 +20,7 @@ def verify_mailman_dev() -> None:
         )
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     verify_mailman_dev()
     exit(
         run_compose(
@@ -40,4 +40,3 @@ def init(parser: ArgumentParser) -> None:
     parser.add_argument(
         "args", nargs=REMAINDER, help="Arguments to pass to mailman CLI"
     )
-    parser.set_defaults(run=cmd)

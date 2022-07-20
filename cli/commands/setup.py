@@ -281,7 +281,7 @@ def setup_dev() -> None:
         log_info("Project workspace already exists, skipping copying template")
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     if args.install:
         verify_tim_requirements()
     if has_config() and not args.force:
@@ -469,4 +469,3 @@ def init(parser: ArgumentParser) -> None:
         choices=["yes", "no"],
         dest="is_proxied",
     )
-    parser.set_defaults(run=cmd)

@@ -36,7 +36,7 @@ def get_pyspy() -> str:
         raise CLIError(err)
 
 
-def cmd(args: Arguments) -> None:
+def run(args: Arguments) -> None:
     if platform.system() == "Windows":
         raise CLIError("Profiling is not supported on Windows")
     elif is_in_wsl():
@@ -93,4 +93,3 @@ def cmd(args: Arguments) -> None:
 
 def init(parser: ArgumentParser) -> None:
     parser.add_argument("service", help="Service to profile")
-    parser.set_defaults(run=cmd)
