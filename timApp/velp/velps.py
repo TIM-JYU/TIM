@@ -69,7 +69,9 @@ def create_velp_version(velp: Velp) -> VelpVersion:
     return vv
 
 
-def add_velp_label_translation(label: VelpLabel, language_id: str, content: str):
+def add_velp_label_translation(
+    label: VelpLabel, language_id: str, content: str
+) -> None:
     """Adds new translation to an existing label.
 
     :param label: Label
@@ -82,8 +84,8 @@ def add_velp_label_translation(label: VelpLabel, language_id: str, content: str)
 
 
 def create_velp_content(
-    version: VelpVersion, language_id: str, content: str, default_comment: str
-):
+    version: VelpVersion, language_id: str, content: str, default_comment: str | None
+) -> None:
     """Method to create content (text) for velp.
 
     :param version: The VelpVersion
@@ -109,7 +111,7 @@ def create_new_velp(
     valid_until: str | None = None,
     language_id: str = "FI",
     visible_to: int | None = None,
-    color: int | None = None,
+    color: str | None = None,
     style: int | None = None,
 ) -> tuple[Velp, VelpVersion]:
     """Creates a new velp with all information.
@@ -138,7 +140,7 @@ def create_new_velp(
 
 def update_velp(
     velp_id: int, default_points: str, color: str, visible_to: int, style: int
-):
+) -> None:
     """Changes the non-versioned properties of a velp. Does not update labels.
 
     :param velp_id: ID of velp that's being updated
@@ -158,7 +160,7 @@ def update_velp(
         v.style = style
 
 
-def add_labels_to_velp(velp_id: int, labels: Iterable[int]):
+def add_labels_to_velp(velp_id: int, labels: Iterable[int]) -> None:
     """Associates a set of labels to a velp. (Appends to existing labels)
 
     Do note that update_velp_labels depends on this method
@@ -173,7 +175,7 @@ def add_labels_to_velp(velp_id: int, labels: Iterable[int]):
             db.session.add(LabelInVelp(label_id=label_id, velp_id=velp_id))
 
 
-def update_velp_labels(velp_id: int, labels: Iterable[int]):
+def update_velp_labels(velp_id: int, labels: Iterable[int]) -> None:
     """Replaces the labels of a velp with new ones.
 
     :param velp_id: velp ID

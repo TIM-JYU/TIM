@@ -39,6 +39,7 @@ from timApp.util.flask.responsehelper import (
     no_cache_json_response,
     ok_response,
 )
+from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_warning
 from timApp.util.utils import split_location
 from timApp.velp.velp_folders import (
@@ -318,6 +319,9 @@ def add_velp() -> Response:
 
     """
     json_data = request.get_json()
+    if not json_data:
+        raise RouteException("Unable to access request data")
+
     try:
         velp_content = json_data["content"]
         velp_group_ids = json_data["velp_groups"]
@@ -389,8 +393,11 @@ def update_velp_route(doc_id: int) -> Response:
     :param doc_id: ID of document
     """
 
+    json_data = request.get_json()
+    if not json_data:
+        raise RouteException("Unable to access request data")
+
     try:
-        json_data = request.get_json()
         velp_id = json_data.get("id")
         new_content = json_data.get("content")
         language_id = json_data.get("language_id")
@@ -399,13 +406,13 @@ def update_velp_route(doc_id: int) -> Response:
         raise RouteException("Missing data " + e.args[0])
     if not new_content:
         raise RouteException("Empty content string.")
-
     default_points = json_data.get("points")
     default_comment = json_data.get("default_comment")
     color = json_data.get("color")
     new_labels = set(json_data.get("labels") or [])
     visible_to = json_data.get("visible_to")
     style = json_data.get("style")
+
     verify_logged_in()
     user_id = get_current_user_id()
     edit_access = False
@@ -444,9 +451,11 @@ def update_velp_route(doc_id: int) -> Response:
             velp.groups[g.id] = g
 
     old_velp = get_latest_velp_version(velp_id, language_id)
-    old_content = old_velp.content
-
-    old_default_comment = old_velp.default_comment
+    if old_velp is not None:
+        old_content = old_velp.content
+        old_default_comment = old_velp.default_comment
+    else:
+        raise RouteException(f"Could not find velp with id: {velp_id}")
 
     old_labels = {lbl.id for lbl in velp.labels.values()}
     if old_content != new_content or old_default_comment != default_comment:
@@ -476,6 +485,9 @@ def add_label() -> Response:
 
     """
     json_data = request.get_json()
+    if not json_data:
+        raise RouteException("Unable to access request data")
+
     try:
         content = json_data["content"]
     except KeyError as e:
@@ -500,6 +512,9 @@ def update_velp_label_route() -> Response:
 
     """
     json_data = request.get_json()
+    if not json_data:
+        raise RouteException("Unable to access request data")
+
     try:
         content = json_data["content"]
         velp_label_id = json_data["id"]
@@ -536,6 +551,9 @@ def change_selection_route(doc_id: int) -> Response:
     """
 
     json_data = request.get_json()
+    if not json_data:
+        raise RouteException("Unable to access request data")
+
     try:
         velp_group_id = json_data["id"]
         target_type = json_data["target_type"]
@@ -581,6 +599,9 @@ def change_all_selections(doc_id: int) -> Response:
     """
 
     json_data = request.get_json()
+    if not json_data:
+        raise RouteException("Unable to access request data")
+
     try:
         selection = json_data["selection"]
         target_type = json_data["target_type"]
@@ -588,6 +609,7 @@ def change_all_selections(doc_id: int) -> Response:
         selection_type = json_data["selection_type"]
     except KeyError as e:
         raise RouteException("Missing data: " + e.args[0])
+
     verify_logged_in()
     user_id = get_current_user_id()
     d = get_doc_or_abort(doc_id)
@@ -615,6 +637,9 @@ def reset_target_area_selections_to_defaults(doc_id: int) -> Response:
     """
 
     json_data = request.get_json()
+    if not json_data:
+        raise RouteException("Unable to access request data")
+
     try:
         target_id = json_data["target_id"]
     except KeyError as e:
@@ -657,6 +682,9 @@ def create_velp_group_route(doc_id: int) -> Response:
     """
 
     json_data = request.get_json()
+    if not json_data:
+        raise RouteException("Unable to access request data")
+
     try:
         velp_group_name = json_data.get("name")
         target_type = json_data.get("target_type")
@@ -687,6 +715,8 @@ def create_velp_group_route(doc_id: int) -> Response:
             )
 
     else:
+        target: Folder | DocInfo | None
+
         if target_type == 2:
             target = Folder.find_by_path(doc_path)
             if not target:
@@ -697,8 +727,11 @@ def create_velp_group_route(doc_id: int) -> Response:
         else:
             raise RouteException("Unknown velp group target type.")
 
-        if not has_edit_access(target):
-            raise AccessDenied("Edit access is required.")
+        if target and target.block:
+            if not has_edit_access(target.block):
+                raise AccessDenied("Edit access is required.")
+        else:
+            raise RouteException(f"Could not find block: {doc_name}")
 
         # Gives path to either velp groups or velp groups/document name folder
         velps_folder_path = check_velp_group_folder_path(doc_path, user_group, doc_name)
@@ -708,26 +741,29 @@ def create_velp_group_route(doc_id: int) -> Response:
             new_group_path
         )  # Check name so no duplicates are made
         if group_exists is None:
-            # Document may not have an owner, we have to account for that
-            if target.owners:
-                original_owner = target.owners[0]
-            else:
-                # TODO Should owner default to folder owner in this case? These groups will not be visible
-                #      without sufficient folder rights, however. Otherwise we could end up checking for
-                #      owners until the root of the user folder.
-                raise RouteException(
-                    f"Cannot create group for document: document has no owner."
-                )
-            velp_group = create_velp_group(
-                velp_group_name, original_owner, new_group_path
-            )
-            rights = get_rights_holders(target.id)
-            # Copy all rights but view
-            for right in rights:
-                if not right.atype.name == "view":
-                    grant_access(
-                        right.usergroup, velp_group.block, right.atype.to_enum()
+            if target is not None:
+                # Document may not have an owner, we have to account for that
+                if target.owners:
+                    original_owner = target.owners[0]
+                else:
+                    # TODO Should owner default to folder owner in this case? These groups will not be visible
+                    #      without sufficient folder rights, however. Otherwise we could end up checking for
+                    #      owners until the root of the user folder.
+                    raise RouteException(
+                        f"Cannot create group for document: document has no owner."
                     )
+                velp_group = create_velp_group(
+                    velp_group_name, original_owner, new_group_path
+                )
+                rights = get_rights_holders(target.id)
+                # Copy all rights but view
+                for right in rights:
+                    if not right.atype.name == "view":
+                        grant_access(
+                            right.usergroup, velp_group.block, right.atype.to_enum()
+                        )
+            else:
+                raise RouteException(f"Could not find document or folder.")
         else:
             raise RouteException(
                 "Velp group with same name and location exists already."
@@ -798,7 +834,7 @@ def create_default_velp_group_route(doc_id: int) -> Response:
     return json_response(created_velp_group)
 
 
-def get_velp_groups_from_tree(doc: DocInfo) -> list[DocEntry]:
+def get_velp_groups_from_tree(doc: DocInfo) -> list[DocInfo]:
     """Returns all velp groups found from tree from document to root and from users own velp folder.
 
     Checks document's own velp group folder first, then default velp group folders going up all the
@@ -848,7 +884,7 @@ def get_velp_groups_from_tree(doc: DocInfo) -> list[DocEntry]:
 
     # remove duplicates
     velp_group_ids = set()
-    results = []
+    results: list[DocInfo] = []
     for v in velp_groups:
         if v.id not in velp_group_ids:
             velp_group_ids.add(v.id)
@@ -864,7 +900,7 @@ def get_velp_groups_from_tree(doc: DocInfo) -> list[DocEntry]:
     return results
 
 
-def get_folder_velp_groups(folder, u: User) -> list[DocEntry]:
+def get_folder_velp_groups(folder: str, u: User) -> list[DocEntry]:
     return get_documents(
         include_nonpublic=False,
         filter_folder=folder,
