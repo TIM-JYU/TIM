@@ -1,7 +1,8 @@
 """Defines all data models related to velps."""
 from datetime import datetime
+from typing import Dict, Any
 
-from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.orm.collections import attribute_mapped_collection  # type: ignore
 
 from timApp.item.block import Block
 from timApp.timdb.sqa import db
@@ -48,7 +49,7 @@ class AnnotationComment(db.Model):
 
     commenter = db.relationship("User")
 
-    def to_json(self):
+    def to_json(self) -> dict:
         return {
             "annotation_id": self.annotation_id,
             "comment_time": self.comment_time,
@@ -107,7 +108,7 @@ class Velp(db.Model):
         "VelpVersion", order_by="VelpVersion.id.desc()"
     )
 
-    def to_json(self):
+    def to_json(self) -> dict:
         vv = self.velp_versions[0]
         vc = vv.content[0]
         return {
@@ -152,7 +153,7 @@ class VelpGroup(db.Model):
     #     'DocEntry',
     # )
 
-    def to_json(self):
+    def to_json(self) -> dict:
         return {
             "id": self.id,
             "name": self.name,
@@ -237,7 +238,7 @@ class VelpLabelContent(db.Model):
 
     velplabel = db.relationship("VelpLabel")
 
-    def to_json(self):
+    def to_json(self) -> dict:
         return {
             "id": self.velplabel_id,
             "language_id": self.language_id,

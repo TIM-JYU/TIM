@@ -3,7 +3,9 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 
 
-def check_velp_group_folder_path(root_path: str, owner_group: UserGroup, doc_name: str):
+def check_velp_group_folder_path(
+    root_path: str, owner_group: UserGroup, doc_name: str
+) -> str:
     """Checks if velp group folder path exists and if not, creates it.
 
     :param root_path: Root path where method was called from
@@ -48,7 +50,7 @@ def check_velp_group_folder_path(root_path: str, owner_group: UserGroup, doc_nam
     return doc_folder_path
 
 
-def check_personal_velp_folder(user: User):
+def check_personal_velp_folder(user: User) -> str:
     """Checks if personal velp group folder path exists and if not, creates it.
 
     :param user: Username of current user

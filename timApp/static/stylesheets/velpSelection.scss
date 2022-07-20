@@ -18,6 +18,10 @@
     }
 }
 
+annotation .fulldiv {
+    min-height: unset;
+}
+
 .velp-groups-resize {
     resize: vertical;
 }

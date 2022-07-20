@@ -6472,6 +6472,14 @@
           <context context-type="linenumber">1364</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4780188991166461286" datatype="html">
+        <source>Show model answer</source>
+        <target state="translated">Näytä mallivastaus</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="linenumber">1354</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

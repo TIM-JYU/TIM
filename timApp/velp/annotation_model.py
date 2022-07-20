@@ -144,7 +144,7 @@ class Annotation(db.Model):
         primaryjoin="VelpContent.version_id == foreign(Annotation.velp_version_id)",
     )
 
-    def set_position_info(self, coordinates: AnnotationPosition):
+    def set_position_info(self, coordinates: AnnotationPosition) -> None:
         start = coordinates.start
         end = coordinates.end
         self.offset_start = start.offset
@@ -164,7 +164,9 @@ class Annotation(db.Model):
         self.paragraph_id_end = end.par_id
         self.hash_end = end.t
 
-    def to_json(self):
+    def to_json(
+        self,
+    ) -> dict:
         if self.element_path_start is not None and self.element_path_end is not None:
             try:
                 start_path = [int(i) for i in self.element_path_start[1:-1].split(",")]

@@ -418,6 +418,9 @@ class PluginifyResult:
 def set_model_answer_info(
     model_answer_info: dict, context_user: UserContext, plugin: Plugin
 ):
+    if not model_answer_info.get("answer"):
+        plugin.values.pop("modelAnswer", None)
+        return
     model_answer_info.pop("answer", None)
     lock = model_answer_info.get("lock", True)
     if lock:
