@@ -576,6 +576,14 @@ export class VelpSelectionController implements IController {
         this.defaultVelpGroup = group;
     }
 
+    isDefaultGroup(group: IVelpGroup) {
+        return (
+            group.default ||
+            group.name === this.defaultPersonalVelpGroup.name ||
+            group.name === this.defaultVelpGroup.name
+        );
+    }
+
     /**
      * Updates the velp list according to how the velp groups are selected in the area.
      */
@@ -764,6 +772,30 @@ export class VelpSelectionController implements IController {
         this.velpGroups.push(json.result.data);
 
         // TODO: show in selected area
+    }
+
+    /**
+     * Removes the velp group.
+     * Largely copied from timApp\static\scripts\tim\item\manageCtrl.ts\deleteDocument()
+     * @param group the velp group to be deleted
+     */
+    async deleteVelpGroup(group: IVelpGroup) {
+        if (
+            window.confirm(
+                `Are you sure you want to delete this ${
+                    "velp group: " + group.name
+                }? Deletion cannot be undone!`
+            )
+        ) {
+            const r = await to($http.delete("/documents/" + group.id));
+            if (r.ok) {
+                // TODO soft-delete is not enough - need to delete from database as well,
+                //  since groups are retrieved and updated from the database
+                // TODO check that group isn't linked to any velps/annotations first
+            } else {
+                await showMessageDialog(r.result.data.error);
+            }
+        }
     }
 
     /**
