@@ -55,7 +55,7 @@
         <env name="PYTHONUNBUFFERED" value="1" />
         <env name="LANG" value="en_US.UTF8" />
       </envs>
-      <option name="SDK_HOME" value="docker-compose://[docker-compose.yml]:csplugin/python3" />
+      <option name="SDK_HOME" value="docker-compose://[$TIM_DOCKER_COMPOSE$]:csplugin/python3" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/timApp/modules/cs" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
@@ -86,12 +86,11 @@
         <env name="PYTHONUNBUFFERED" value="1" />
         <env name="LC_ALL" value="en_US.UTF-8" />
       </envs>
-      <option name="SDK_HOME" value="docker-compose://[docker-compose.yml]:tim/python3" />
+      <option name="SDK_HOME" value="docker-compose://[$TIM_DOCKER_COMPOSE$]:tim/python3" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/timApp" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="DockerComposeSettingsRunConfigurationExtension" commandLine="exec" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <PathMappingSettings>
         <option name="pathMappings">
@@ -146,7 +145,7 @@
       <envs>
         <env name="TIM_SETTINGS" value="testconfig.py" />
       </envs>
-      <option name="SDK_HOME" value="docker-compose://[docker-compose.yml]:tim/python3" />
+      <option name="SDK_HOME" value="docker-compose://[$TIM_DOCKER_COMPOSE$]:tim/python3" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/timApp" />
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />

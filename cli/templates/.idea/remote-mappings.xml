@@ -3,14 +3,14 @@
   <component name="RemoteMappingsManager">
     <list>
       <list>
-        <remote-mappings server-id="python@docker-compose://[docker-compose.yml]:tim/python3">
+        <remote-mappings server-id="python@docker-compose://[$TIM_DOCKER_COMPOSE$]:tim/python3">
           <settings>
             <list>
               <mapping local-root="$PROJECT_DIR$" remote-root="/service" />
             </list>
           </settings>
         </remote-mappings>
-        <remote-mappings server-id="python@docker-compose://[docker-compose.yml]:timagent/python3">
+        <remote-mappings server-id="python@docker-compose://[$TIM_DOCKER_COMPOSE$]:timagent/python3">
           <settings>
             <list>
               <mapping local-root="$PROJECT_DIR$" remote-root="/service" />

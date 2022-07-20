@@ -1,6 +1,8 @@
+import os
 import platform
 import subprocess
 from argparse import ArgumentParser
+from pathlib import Path
 from typing import List, Optional, TypeVar, Callable, Union, Tuple, Any
 from urllib.parse import ParseResult, urlparse
 
@@ -256,6 +258,27 @@ def setup_dev() -> None:
     log_info("Ensuring npm@6 is installed")
     verify_npm(False)
     run_npm(["install", "--global", "npm@6"], "timApp", False)
+
+    idea_path = Path.cwd() / ".idea"
+    if not idea_path.exists():
+        log_info("Copying project workspace template")
+        idea_template = Path.cwd() / "cli" / "templates" / ".idea"
+
+        # Iterate over all files in the template directory recursively and replace $TIM_DOCKER_COMPOSE$ with
+        # path to the compose file. This should make using the template workspace easier.
+        docker_compose_path = str(Path.cwd() / "docker-compose.yml")
+        for root, dirs, files in os.walk(idea_template):
+            for file in files:
+                file_path = Path(root) / file
+                file_contents = file_path.read_text(encoding="utf-8")
+                file_contents = file_contents.replace(
+                    "$TIM_DOCKER_COMPOSE$", docker_compose_path
+                )
+                target_path = idea_path / file_path.relative_to(idea_template)
+                target_path.parent.mkdir(parents=True, exist_ok=True)
+                target_path.write_text(file_contents, encoding="utf-8")
+    else:
+        log_info("Project workspace already exists, skipping copying template")
 
 
 def cmd(args: Arguments) -> None:
