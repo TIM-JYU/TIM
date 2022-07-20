@@ -77,6 +77,9 @@ class AccessField:
 @dataclass
 class ModelAnswerInfo:
     answer: str | None | Missing = missing
+    dueDate: PluginDateTime | datetime | None | Missing = (
+        missing  # TODO: this gets nullified when passed as str to external plugins
+    )
     linkText: str | None | Missing = missing
     linkTextCount: int | None | Missing = missing
     count: int | None | Missing = missing

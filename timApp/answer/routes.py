@@ -2314,6 +2314,9 @@ def get_model_answer(task_id: str) -> Response:
     if not model_answer_info or not model_answer_info.answer:
         raise RouteException(f"No model answer for task {task_id}")
     if not has_teacher_access(d):
+        if model_answer_info.dueDate:
+            if model_answer_info.dueDate > get_current_time():
+                raise RouteException("The model answer cannot be viewed yet")
         if model_answer_info.count:
             current_count = current_user.get_answers_for_task(tid.doc_task).count()
             if current_count < model_answer_info.count:

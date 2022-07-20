@@ -1356,11 +1356,27 @@ export class AnswerBrowserController
     }
 
     showModelAnswerLink() {
-        return (
-            this.viewctrl?.item.rights.teacher ||
-            !this.modelAnswer?.linkTextCount ||
-            this.modelAnswer?.linkTextCount - this.answers.length <= 0
-        );
+        if (!this.viewctrl?.item.rights.teacher) {
+            if (
+                this.modelAnswer?.linkTextCount &&
+                this.modelAnswer?.linkTextCount - this.answers.length > 0
+            ) {
+                return false;
+            }
+            if (this.modelAnswer?.dueDate) {
+                const endTime = new Date(
+                    this.modelAnswer?.dueDate
+                ).toISOString();
+                const currentTime = new Date().toISOString();
+                return endTime <= currentTime;
+            }
+        }
+        // return (
+        //     this.viewctrl?.item.rights.teacher ||
+        //     !this.modelAnswer?.linkTextCount ||
+        //     this.modelAnswer?.linkTextCount - this.answers.length <= 0
+        // );
+        return true;
     }
 
     async showModelAnswer() {
