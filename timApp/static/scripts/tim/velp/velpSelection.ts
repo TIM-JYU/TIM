@@ -779,7 +779,7 @@ export class VelpSelectionController implements IController {
      * Largely copied from timApp\static\scripts\tim\item\manageCtrl.ts\deleteDocument()
      * @param group the velp group to be deleted
      */
-    async deleteVelpGroup(group: IVelpGroup) {
+    async deleteVelpGroup(group: IVelpGroupUI) {
         if (
             window.confirm(
                 `Are you sure you want to delete this ${
@@ -787,13 +787,38 @@ export class VelpSelectionController implements IController {
                 }? Deletion cannot be undone!`
             )
         ) {
-            const r = await to($http.delete("/documents/" + group.id));
-            if (r.ok) {
-                // TODO soft-delete is not enough - need to delete from database as well,
-                //  since groups are retrieved and updated from the database
-                // TODO check that group isn't linked to any velps/annotations first
+            // TODO
+            //  - check that group isn't linked to any velps/annotations
+            //  - check that user has sufficient rights
+
+            const r_soft_del = await to($http.delete("/documents/" + group.id));
+            if (r_soft_del.ok) {
+                const r_hard_del = await to(
+                    $http.delete("/delete_velp_group_from_database/" + group.id)
+                );
+                if (r_hard_del.ok) {
+                    /*
+                    Soft-delete is not enough - need to delete from database as well
+                    Database tables to check/modify:
+                      - velpgroup (primary key: id -> velp_group_id)
+                      - velpgroupdefaults (velp_group_id)
+                      - velpgrouplabel (velp_group_id) NOT USED
+                      - velpgroupselection (velp_group_id)
+                      - velpgroupsindocument (velp_group_id)
+                      - velpingroup (velp_group_id) Velp link
+                      - velpgroupdefaults (velp_group_id)
+                      */
+
+                    /* Update velp group list in UI */
+                    const g_index = this.velpGroups.indexOf(group);
+                    if (g_index >= 0) {
+                        this.velpGroups.splice(g_index, 1);
+                    }
+                } else {
+                    await showMessageDialog(r_hard_del.result.data.error);
+                }
             } else {
-                await showMessageDialog(r.result.data.error);
+                await showMessageDialog(r_soft_del.result.data.error);
             }
         }
     }
