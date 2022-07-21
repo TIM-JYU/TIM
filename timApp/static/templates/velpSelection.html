@@ -182,7 +182,7 @@
                                     <a ng-href="/manage/{{ group.location }}">{{ group.name }}</a>
                                 </td>
                                 <td>
-                                    <span ng-click="$ctrl.deleteVelpGroup(group); $event.stopPropagation();"
+                                    <span ng-click="$ctrl.deleteVelpGroup(group);"
                                           ng-if="group.edit_access && !$ctrl.isDefaultGroup(group)"
                                           class="glyphicon glyphicon-trash clickable-icon"></span>
                                     <span ng-if="$ctrl.isDefaultGroup(group)" class="glyphicon glyphicon-lock"></span>
