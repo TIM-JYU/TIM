@@ -123,11 +123,11 @@ def scale_points(pts, points):
     return p
 
 
-GLOBAL_NUGET_PACKAGES_PATH = "/cs/dotnet/nuget_cache"
+GLOBAL_NUGET_PACKAGES_PATH = "/cs_data/dotnet/nuget_cache"
 
 
 def get_build_refs(ref_type):
-    with open(f"/cs/dotnet/configs/{ref_type}.build.deps", encoding="utf-8") as f:
+    with open(f"/cs_data/dotnet/configs/{ref_type}.build.deps", encoding="utf-8") as f:
         dep_paths = [
             os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip())
             for dep_line in f.readlines()
@@ -164,18 +164,24 @@ def main():
     if insert:
         f.write(insert)
     f.close()
-    ret = call(
-        [
-            "/cs/dotnet/csc",
-            "-nologo",
-            f"-out:{filename3}.dll",
-            "-target:library",
-            *get_build_refs("nunit_test"),
-            *get_build_refs("jypeli"),
-            filename3,
-        ]
-    )
+    args1 = [
+        "/cs/dotnet/csc",
+        "-nologo",
+        f"-out:{filename3}.dll",
+        "-target:library",
+        *get_build_refs("nunit_test"),
+        *get_build_refs("jypeli"),
+        filename3,
+    ]
+
+    sourceFiles = instructions.get("sourceFiles", [])
+    for sourceFile in sourceFiles:
+        args1.append(sourceFile)
+
+    ret = call(args1)
+
     # print(ret)
+    # print(args1)
     if ret != 0:
         print("Testikoodi ei käänny")
         return
@@ -186,7 +192,7 @@ def main():
         "--runtimeconfig",
         "/cs/dotnet/runtimeconfig.json",
         "--additional-deps",
-        "/cs/dotnet/configs/jypeli.deps.json:/cs/dotnet/configs/nunit_test.deps.json",
+        "/cs_data/dotnet/configs/jypeli.deps.json:/cs_data/dotnet/configs/nunit_test.deps.json",
         "--roll-forward",
         "LatestMajor",  # Force to use latest available .NET
         "/dotnet_tools/nunit.console.dll",
@@ -197,6 +203,7 @@ def main():
     ret = call(args, stdout=DEVNULL, stderr=DEVNULL, timeout=20)
 
     # https://docs.nunit.org/articles/nunit/running-tests/Console-Runner.html
+    # print(args)
     if ret < 0:
         print("Testikoodia ei voi ajaa")
 
