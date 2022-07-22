@@ -1377,11 +1377,6 @@ export class AnswerBrowserController
                 return endTime <= currentTime;
             }
         }
-        // return (
-        //     this.viewctrl?.item.rights.teacher ||
-        //     !this.modelAnswer?.linkTextCount ||
-        //     this.modelAnswer?.linkTextCount - this.answers.length <= 0
-        // );
         return true;
     }
 
