@@ -86,6 +86,8 @@ class ModelAnswerInfo:
     lock: bool = True
     lockText: str | None | Missing = missing
     lockedText: str | None | Missing = missing
+    # TODO: added automatically, this shouldn't be in user given markup
+    alreadyLocked: bool | None | Missing = missing
 
 
 @dataclass
