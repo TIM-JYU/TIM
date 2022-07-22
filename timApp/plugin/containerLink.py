@@ -3,14 +3,14 @@ import re
 from dataclasses import dataclass
 from functools import lru_cache
 from re import Pattern
-from typing import Optional, Any, Union
+from typing import Any
 
 import requests
 from flask import current_app
 from requests import Response
 
 from timApp.document.docsettings import DocSettings
-from timApp.document.timjsonencoder import TimJsonEncoder
+from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.markdown.dumboclient import call_dumbo, DumboOptions
 from timApp.plugin.plugin import Plugin, AUTOMD
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat

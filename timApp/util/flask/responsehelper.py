@@ -16,7 +16,7 @@ from flask import (
     flash,
 )
 
-from timApp.document.timjsonencoder import TimJsonEncoder
+from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.document.viewcontext import ViewContext
 from timApp.timdb.sqa import db
 

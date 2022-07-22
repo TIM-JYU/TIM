@@ -2,7 +2,7 @@ import json
 
 from timApp.document.create_item import get_templates_for_folder
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
-from timApp.document.timjsonencoder import TimJsonEncoder
+from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.tests.server.timroutetest import TimRouteTest
 
 

@@ -214,7 +214,6 @@ module = [
     "timApp.document.post_process",
     "timApp.document.randutils",
     "timApp.document.routes",
-    "timApp.document.timjsonencoder",
     "timApp.document.translation.routes",
     "timApp.document.translation.synchronize_translations",
     "timApp.document.translation.translation",
@@ -295,5 +294,6 @@ module = [
     "timApp.util.flask.search",
     "timApp.util.get_fields",
     "timApp.util.pdftools",
+    "tim_common.timjsonencoder",
 ]
 ignore_errors = true

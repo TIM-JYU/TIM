@@ -1,11 +1,11 @@
 """Defines a client interface for using Dumbo, the markdown converter."""
 import json
 from enum import Enum
-from typing import Union, NamedTuple, Optional, overload
+from typing import NamedTuple, overload
 
 import requests
 
-from timApp.document.timjsonencoder import TimJsonEncoder
+from tim_common.timjsonencoder import TimJsonEncoder
 
 
 class DumboHTMLException(Exception):

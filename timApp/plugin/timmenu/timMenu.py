@@ -7,7 +7,7 @@ from dataclasses import dataclass, asdict
 from flask import render_template_string
 from marshmallow.utils import missing
 
-from timApp.document.timjsonencoder import TimJsonEncoder
+from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.item.partitioning import INCLUDE_IN_PARTS_CLASS_NAME
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.tim_app import csrf
