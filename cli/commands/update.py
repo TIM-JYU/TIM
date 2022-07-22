@@ -58,9 +58,7 @@ def _stop_services(except_services: Set[str]) -> None:
     services_cmd = get_compose_cmd(["ps", "--services"])
     res = run_cmd(services_cmd, stdout=PIPE, encoding="utf-8")
     services = set(res.stdout.splitlines())
-    # Caddy is needed for downtime messages
-    # Postgres will be upgraded
-    services -= {"caddy", "postgresql"}
+    services -= except_services
     log_info(f"Stopping services")
     run_compose(["stop", *services])
 
