@@ -11,12 +11,21 @@ from cli.util.proc import run_cmd
 MAX_NPM_MAJOR_VERSION = 6
 
 _npm_ok = False
+_npm_version_ok = False
 
 
-def verify_npm(check_version: bool = True) -> None:
+def reset_npm_version() -> None:
+    global _npm_version_ok
     global _npm_ok
+    _npm_version_ok = False
+    _npm_ok = False
+
+
+def verify_npm(assert_version: bool = True) -> bool:
+    global _npm_ok
+    global _npm_version_ok
     if _npm_ok:
-        return
+        return _npm_version_ok
     try:
         res = run_cmd(
             ["npm", "--version"],
@@ -25,15 +34,16 @@ def verify_npm(check_version: bool = True) -> None:
             stdout=subprocess.PIPE,
             encoding="utf-8",
         )
-        if check_version:
-            version = res.stdout.strip()
-            version_parts = [int(x) for x in version.split(".")]
-            if version_parts[0] > MAX_NPM_MAJOR_VERSION:
-                raise CLIError(
-                    f"TIM requires NPM version {MAX_NPM_MAJOR_VERSION}.x to run locally. "
-                    f"Run `npm i -g npm@{MAX_NPM_MAJOR_VERSION}` to install it."
-                )
+        version = res.stdout.strip()
+        version_parts = [int(x) for x in version.split(".")]
+        _npm_version_ok = version_parts[0] <= MAX_NPM_MAJOR_VERSION
+        if not _npm_version_ok and assert_version:
+            raise CLIError(
+                f"TIM requires NPM version {MAX_NPM_MAJOR_VERSION}.x to run locally. "
+                f"Run `npm i -g npm@{MAX_NPM_MAJOR_VERSION}` to install it."
+            )
         _npm_ok = True
+        return _npm_version_ok
     except (subprocess.CalledProcessError, FileNotFoundError):
         raise CLIError(
             "npm not found; see https://docs.npmjs.com/getting-started/installing-node/ to install it"

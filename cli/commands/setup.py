@@ -16,7 +16,7 @@ from cli.docker.run import (
     verify_compose_installed,
     run_compose,
 )
-from cli.npm.run import verify_npm, run_npm
+from cli.npm.run import verify_npm, run_npm, reset_npm_version
 from cli.util.errors import CLIError
 from cli.util.logging import log_info, log_warning
 from cli.util.proc import run_cmd
@@ -256,9 +256,10 @@ def setup_dev() -> None:
     log_info("Installing Black formatter")
     run_cmd([*pip, "install", "--upgrade", "black"])
 
-    log_info("Ensuring npm@6 is installed")
-    verify_npm(False)
-    run_npm(["install", "--global", "npm@6"], "timApp", False)
+    if not verify_npm(False):
+        log_info("Ensuring npm@6 is installed")
+        run_npm(["install", "--global", "npm@6"], "timApp", False)
+        reset_npm_version()
 
     idea_path = Path.cwd() / ".idea"
     if not idea_path.exists():
