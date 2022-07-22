@@ -30,10 +30,11 @@ export const modelAnswerType = t.intersection([
     }),
     t.partial({
         count: nullable(t.number),
-        dueDate: nullable(t.string),
+        revealDate: nullable(t.string),
         linkText: t.string,
         linkTextCount: nullable(t.number),
-        lockText: t.string,
+        lockConfirmation: t.string,
+        lockedLinkText: t.string,
         alreadyLocked: t.boolean,
     }),
 ]);

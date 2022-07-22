@@ -77,15 +77,14 @@ class AccessField:
 @dataclass
 class ModelAnswerInfo:
     answer: str | None | Missing = missing
-    dueDate: PluginDateTime | datetime | None | Missing = (
-        missing  # TODO: this gets nullified when passed as str to external plugins
-    )
+    count: int | None | Missing = missing
     linkText: str | None | Missing = missing
     linkTextCount: int | None | Missing = missing
-    count: int | None | Missing = missing
     lock: bool = True
-    lockText: str | None | Missing = missing
-    lockedText: str | None | Missing = missing
+    lockedAnswerMessage: str | None | Missing = missing
+    lockConfirmation: str | None | Missing = missing
+    lockedLinkText: str | None | Missing = missing
+    revealDate: PluginDateTime | datetime | None | Missing = missing
     # TODO: added automatically, this shouldn't be in user given markup
     alreadyLocked: bool | None | Missing = missing
 

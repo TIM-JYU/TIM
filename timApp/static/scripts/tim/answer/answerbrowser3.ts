@@ -1352,6 +1352,12 @@ export class AnswerBrowserController
     }
 
     getModelAnswerLinkText() {
+        if (
+            this.modelAnswer?.alreadyLocked &&
+            this.modelAnswer.lockedLinkText
+        ) {
+            return this.modelAnswer.lockedLinkText;
+        }
         return this.modelAnswer?.linkText ?? $localize`Show model answer`;
     }
 
@@ -1363,9 +1369,9 @@ export class AnswerBrowserController
             ) {
                 return false;
             }
-            if (this.modelAnswer?.dueDate) {
+            if (this.modelAnswer?.revealDate) {
                 const endTime = new Date(
-                    this.modelAnswer?.dueDate
+                    this.modelAnswer?.revealDate
                 ).toISOString();
                 const currentTime = new Date().toISOString();
                 return endTime <= currentTime;
@@ -1399,8 +1405,8 @@ export class AnswerBrowserController
                 const defaultLockText = $localize`Lock the task and view the model answer?`;
                 if (
                     !(await showConfirm(
-                        this.modelAnswer?.lockText ?? defaultLockText,
-                        this.modelAnswer?.lockText ?? defaultLockText
+                        this.modelAnswer?.lockConfirmation ?? defaultLockText,
+                        this.modelAnswer?.lockConfirmation ?? defaultLockText
                     ))
                 ) {
                     return;
