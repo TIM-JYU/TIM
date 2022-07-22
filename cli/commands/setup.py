@@ -1,3 +1,4 @@
+import json
 import os
 import platform
 import subprocess
@@ -267,13 +268,16 @@ def setup_dev() -> None:
         # Iterate over all files in the template directory recursively and replace $TIM_DOCKER_COMPOSE$ with
         # path to the compose file. This should make using the template workspace easier.
         docker_compose_path = str(Path.cwd() / "docker-compose.yml")
+        prettier_path = json.dumps(
+            str(Path.cwd() / "timApp" / "node_modules" / "prettier")
+        ).strip('"')
         for root, dirs, files in os.walk(idea_template):
             for file in files:
                 file_path = Path(root) / file
                 file_contents = file_path.read_text(encoding="utf-8")
                 file_contents = file_contents.replace(
                     "$TIM_DOCKER_COMPOSE$", docker_compose_path
-                )
+                ).replace("$TIM_PRETTIER$", prettier_path)
                 target_path = idea_path / file_path.relative_to(idea_template)
                 target_path.parent.mkdir(parents=True, exist_ok=True)
                 target_path.write_text(file_contents, encoding="utf-8")

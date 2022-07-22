@@ -18,6 +18,17 @@
       </path>
     </select>
   </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.standard": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.standard": "",
+    "nodejs_package_manager_path": "npm",
+    "prettierjs.PrettierConfiguration.Package": "$TIM_PRETTIER$",
+    "settings.editor.selected.configurable": "settings.javascript.prettier"
+  }
+}]]></component>
   <component name="GithubProjectSettings">
     <option name="branchProtectionPatterns">
       <list>
