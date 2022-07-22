@@ -1,0 +1,27 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="true" type="tests" factoryName="Autodetect">
+    <module name="tim" />
+    <option name="INTERPRETER_OPTIONS" value="" />
+    <option name="PARENT_ENVS" value="true" />
+    <envs>
+      <env name="TIM_SETTINGS" value="testconfig.py" />
+    </envs>
+    <option name="SDK_HOME" value="docker-compose://[$TIM_DOCKER_COMPOSE$]:tim/python3" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/timApp" />
+    <option name="IS_MODULE_SDK" value="false" />
+    <option name="ADD_CONTENT_ROOTS" value="true" />
+    <option name="ADD_SOURCE_ROOTS" value="true" />
+    <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+    <PathMappingSettings>
+      <option name="pathMappings">
+        <list>
+          <mapping local-root="$PROJECT_DIR$" remote-root="/service" />
+        </list>
+      </option>
+    </PathMappingSettings>
+    <option name="_new_additionalArguments" value="&quot;&quot;" />
+    <option name="_new_target" value="&quot;&quot;" />
+    <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+    <method v="2" />
+  </configuration>
+</component>
