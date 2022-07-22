@@ -606,7 +606,10 @@ def verify_task_access(
         if found_plugin.access_end_for_user:
             if found_plugin.access_end_for_user < get_current_time():
                 is_invalid = True
-                invalidate_reason = "You have already downloaded the model answer and can not save new answers anymore."
+                invalidate_reason = (
+                    found_plugin.known.modelAnswer.lockedText
+                    or "You have already downloaded the model answer and can not save new answers anymore."
+                )
     if (
         not is_invalid
         and found_plugin.known.accessField

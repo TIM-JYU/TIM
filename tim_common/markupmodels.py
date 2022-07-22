@@ -85,6 +85,7 @@ class ModelAnswerInfo:
     count: int | None | Missing = missing
     lock: bool = True
     lockText: str | None | Missing = missing
+    lockedText: str | None | Missing = missing
 
 
 @dataclass
