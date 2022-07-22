@@ -1,0 +1,33 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="svn" type="PythonConfigurationType" factoryName="Python" folderName="Plugins">
+    <module name="tim" />
+    <option name="INTERPRETER_OPTIONS" value="" />
+    <option name="PARENT_ENVS" value="true" />
+    <envs>
+      <env name="LANG" value="en_US.UTF8" />
+      <env name="PYTHONBUFFERED" value="1" />
+    </envs>
+    <option name="SDK_HOME" value="docker-compose://[$TIM_DOCKER_COMPOSE$]:showfile/python3" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/timApp/modules/svn" />
+    <option name="IS_MODULE_SDK" value="false" />
+    <option name="ADD_CONTENT_ROOTS" value="true" />
+    <option name="ADD_SOURCE_ROOTS" value="true" />
+    <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+    <PathMappingSettings>
+      <option name="pathMappings">
+        <list>
+          <mapping local-root="$PROJECT_DIR$/timApp/modules/svn" remote-root="/app/svn" />
+          <mapping local-root="$PROJECT_DIR$/tim_common" remote-root="/app/tim_common" />
+        </list>
+      </option>
+    </PathMappingSettings>
+    <option name="SCRIPT_NAME" value="timApp.modules.svn.svn3" />
+    <option name="PARAMETERS" value="" />
+    <option name="SHOW_COMMAND_LINE" value="false" />
+    <option name="EMULATE_TERMINAL" value="false" />
+    <option name="MODULE_MODE" value="true" />
+    <option name="REDIRECT_INPUT" value="false" />
+    <option name="INPUT_FILE" value="" />
+    <method v="2" />
+  </configuration>
+</component>

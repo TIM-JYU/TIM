@@ -39,7 +39,14 @@
       <item itemvalue="npm.bdw" />
       <item itemvalue="npm.extract-i18n" />
       <item itemvalue="npm.bdwfast" />
+      <item itemvalue="Python.svn" />
+      <item itemvalue="Python.pali" />
+      <item itemvalue="Python.feedback" />
+      <item itemvalue="Python.drag" />
+      <item itemvalue="Python.imagex" />
       <item itemvalue="Python.csplugin" />
+      <item itemvalue="Python.fields" />
+      <item itemvalue="Python.CLI" />
       <item itemvalue="Python.tim" />
       <item itemvalue="Python tests.Test" />
     </list>
