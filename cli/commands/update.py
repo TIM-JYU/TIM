@@ -139,7 +139,9 @@ def run(args: Arguments) -> None:
         causes_downtime and args.yes and args.down
     )
     if not skip_verify:
-        log_info(f"The following update strategy will be used: {command.__name__}")
+        log_info(
+            f"The following update strategy will be used: {command.__name__} ({docstring})"
+        )
         if causes_downtime or args.down:
             log_warning(
                 "This strategy will cause downtime. Make sure you have informed the users first!"
