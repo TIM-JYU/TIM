@@ -10,19 +10,32 @@ from cli.util.proc import run_cmd
 
 _compose_ok = False
 _docker_ok = False
+_compose_cmd = []
 
 
 def verify_compose_installed() -> None:
     global _compose_ok
+    global _compose_cmd
     if _compose_ok:
         return
-    try:
-        run_cmd(["docker-compose", "--version"], check=True, stdout=subprocess.PIPE)
-        _compose_ok = True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        raise CLIError(
-            "docker-compose is not installed; see https://docs.docker.com/compose/install/ to install it"
-        )
+
+    compose_commands = [
+        ["docker", "compose"],
+        ["docker-compose"],
+    ]
+
+    for cmd in compose_commands:
+        try:
+            run_cmd([*cmd, "version"], check=True, stdout=subprocess.PIPE)
+            _compose_cmd = cmd
+            _compose_ok = True
+            return
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
+
+    raise CLIError(
+        "docker-compose is not installed; see https://docs.docker.com/compose/install/ to install it"
+    )
 
 
 def verify_docker_installed() -> None:
@@ -53,7 +66,7 @@ def get_compose_cmd(
         profile_override = profile or config.profile if override_profile else None
         init_compose(profile_override)
         extra_args.extend(["-f", (Path.cwd() / "docker-compose.yml").as_posix()])
-    return ["docker-compose", *extra_args, *args]
+    return [*_compose_cmd, *extra_args, *args]
 
 
 def run_compose(
