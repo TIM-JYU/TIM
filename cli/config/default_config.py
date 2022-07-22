@@ -4,6 +4,7 @@ Default configuration for TIM.
 
 # Update this value every time you change the default configuration!
 # This is used to automatically apply migrations to the config file.
+from enum import Enum
 
 CURRENT_REVISION = 1
 
@@ -136,25 +137,31 @@ Max heap size for Cassandra used for csplugin tasks
     },
 }
 
-DEBUGGABLE_SERVICES = [
-    "csplugin",
-    "fields",
-    "jsrunner",
-    "showfile",
-    "pali",
-    "feedback",
-    "drag",
-    "imagex",
-    "mailman",
+
+class DevServiceBehaviour(Enum):
+    StartStopped = "Service is started without an active command.\nThis can be used for starting the server manually."
+    Enable = "Service is downloaded and enabled."
+
+
+DEV_SERVICES = [
+    ("csplugin", DevServiceBehaviour.StartStopped),
+    ("fields", DevServiceBehaviour.StartStopped),
+    ("jsrunner", DevServiceBehaviour.StartStopped),
+    ("showfile", DevServiceBehaviour.StartStopped),
+    ("pali", DevServiceBehaviour.StartStopped),
+    ("feedback", DevServiceBehaviour.StartStopped),
+    ("drag", DevServiceBehaviour.StartStopped),
+    ("imagex", DevServiceBehaviour.StartStopped),
+    ("mailman", DevServiceBehaviour.Enable),
 ]
 
-for service in DEBUGGABLE_SERVICES:
+for service, behaviour in DEV_SERVICES:
     sec = DEFAULT_CONFIG.get(service, {})
     sec["is_dev"] = (
         "no",
         f"""
 Enable development mode for {service} Docker service.
-This allows you to manually start the service via an IDE.
+If enabled: {behaviour.value}
 """,
     )
     DEFAULT_CONFIG[service] = sec
