@@ -206,7 +206,7 @@ def verify_pip() -> List[str]:
                 stderr=subprocess.PIPE,
             )
             return pip_location
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, FileNotFoundError):
             pass
     raise CLIError(
         "Could not find pip which is needed to setup the local development environment. Make sure pip is installed."
@@ -235,7 +235,7 @@ def verify_dev_python() -> List[str]:
                 if int(version[i]) < part:
                     raise CLIError("Not supported")
             return python_location
-    except (subprocess.CalledProcessError, CLIError):
+    except (subprocess.CalledProcessError, FileNotFoundError, CLIError):
         pass
     raise CLIError(
         "Could not find a supported Python version. Development requires Python 3.7+."

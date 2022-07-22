@@ -32,7 +32,7 @@ def get_pyspy() -> str:
             raise CLIError(err)
         run_cmd([py_spy_path, "--version"], check=True, stdout=PIPE)
         return py_spy_path
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         raise CLIError(err)
 
 

@@ -34,7 +34,7 @@ def verify_npm(check_version: bool = True) -> None:
                     f"Run `npm i -g npm@{MAX_NPM_MAJOR_VERSION}` to install it."
                 )
         _npm_ok = True
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         raise CLIError(
             "npm not found; see https://docs.npmjs.com/getting-started/installing-node/ to install it"
         )

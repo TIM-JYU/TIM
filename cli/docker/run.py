@@ -19,7 +19,7 @@ def verify_compose_installed() -> None:
     try:
         run_cmd(["docker-compose", "--version"], check=True, stdout=subprocess.PIPE)
         _compose_ok = True
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         raise CLIError(
             "docker-compose is not installed; see https://docs.docker.com/compose/install/ to install it"
         )
@@ -32,7 +32,7 @@ def verify_docker_installed() -> None:
     try:
         run_cmd(["docker", "--version"], check=True, stdout=subprocess.PIPE)
         _docker_ok = True
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         raise CLIError(
             "docker is not installed; see https://docs.docker.com/install/ to install it"
         )
