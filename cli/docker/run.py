@@ -26,7 +26,12 @@ def verify_compose_installed() -> None:
 
     for cmd in compose_commands:
         try:
-            run_cmd([*cmd, "version"], check=True, stdout=subprocess.PIPE)
+            run_cmd(
+                [*cmd, "version"],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
             _compose_cmd = cmd
             _compose_ok = True
             return
