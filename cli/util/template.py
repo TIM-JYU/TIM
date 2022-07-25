@@ -2,6 +2,8 @@ import re
 from pathlib import Path
 from typing import Any, Optional, Dict, Pattern, Match
 
+from cli.util.logging import log_debug
+
 
 def _jsonify(value: Any) -> str:
     import json
@@ -55,8 +57,9 @@ class PyTemplate:
             named = mo.group("braced")
             if named is not None:
                 try:
-                    return eval(named, ctx)
-                except (NameError, SyntaxError):
+                    return eval(f"({named})", ctx)
+                except (NameError, SyntaxError) as e:
+                    log_debug(f"Failed to interpolate {named}: {e}")
                     return mo.group()
             if mo.group("escaped") is not None:
                 return self.delimiter
