@@ -6,12 +6,10 @@ services:
   build:
     dockerfile: ./timApp/Dockerfile
     context: ./
-  depends_on:
+  depends_on: ${"""
    - postgresql
    - dumbo
    - redis
-   ${ "- postgresql-test" if tim.is_dev else "" }
-   ${"""
    - csplugin
    - pali
    - fields
@@ -20,7 +18,7 @@ services:
    - imagex
    - feedback
    - oiko
-   """ if not tim.is_dev else ""}
+   """ if not tim.is_dev else "[]"}
   volumes:
    - .:/service
    - ${tim.log_dir}:/service/tim_logs
