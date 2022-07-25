@@ -1352,15 +1352,32 @@ export class AnswerBrowserController
     }
 
     getModelAnswerLinkText() {
+        if (
+            this.modelAnswer?.alreadyLocked &&
+            this.modelAnswer.lockedLinkText
+        ) {
+            return this.modelAnswer.lockedLinkText;
+        }
         return this.modelAnswer?.linkText ?? $localize`Show model answer`;
     }
 
     showModelAnswerLink() {
-        return (
-            this.viewctrl?.item.rights.teacher ||
-            !this.modelAnswer?.linkTextCount ||
-            this.modelAnswer?.linkTextCount - this.answers.length <= 0
-        );
+        if (!this.viewctrl?.item.rights.teacher) {
+            if (
+                this.modelAnswer?.linkTextCount &&
+                this.modelAnswer?.linkTextCount - this.answers.length > 0
+            ) {
+                return false;
+            }
+            if (this.modelAnswer?.revealDate) {
+                const endTime = new Date(
+                    this.modelAnswer?.revealDate
+                ).toISOString();
+                const currentTime = new Date().toISOString();
+                return endTime <= currentTime;
+            }
+        }
+        return true;
     }
 
     async showModelAnswer() {
@@ -1383,8 +1400,8 @@ export class AnswerBrowserController
                 const defaultLockText = $localize`Lock the task and view the model answer?`;
                 if (
                     !(await showConfirm(
-                        this.modelAnswer?.lockText ?? defaultLockText,
-                        this.modelAnswer?.lockText ?? defaultLockText
+                        this.modelAnswer?.lockConfirmation ?? defaultLockText,
+                        this.modelAnswer?.lockConfirmation ?? defaultLockText
                     ))
                 ) {
                     return;

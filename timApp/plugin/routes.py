@@ -9,7 +9,7 @@ from timApp.auth.sessioninfo import (
     logged_in,
     user_context_with_logged_in,
 )
-from timApp.document.timjsonencoder import TimJsonEncoder
+from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.document.viewcontext import default_view_ctx
 from timApp.plugin.containerLink import call_plugin_resource, call_plugin_generic
 from timApp.plugin.pluginexception import PluginException

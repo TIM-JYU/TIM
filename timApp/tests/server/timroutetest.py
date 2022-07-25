@@ -31,7 +31,7 @@ from timApp.document.specialnames import (
     PREAMBLE_FOLDER_NAME,
     DEFAULT_PREAMBLE_DOC,
 )
-from timApp.document.timjsonencoder import TimJsonEncoder
+from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
 from timApp.document.translation.language import Language
 from timApp.item.item import Item

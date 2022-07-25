@@ -13,7 +13,7 @@ from webargs.flaskparser import use_args
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
-from timApp.document.timjsonencoder import TimJsonEncoder
+from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewRoute, ViewContext
 from timApp.item.block import Block

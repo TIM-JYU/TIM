@@ -29,7 +29,7 @@ from timApp.celery_sqlalchemy_scheduler import (
     PeriodicTask,
 )
 from timApp.document.docentry import DocEntry
-from timApp.document.timjsonencoder import TimJsonEncoder
+from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
 from timApp.document.translation.language import Language
 from timApp.document.translation.translator import (

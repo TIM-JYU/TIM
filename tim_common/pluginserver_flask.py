@@ -37,6 +37,7 @@ from webargs.flaskparser import use_args
 
 from tim_common.markupmodels import list_not_missing_fields, GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
+from tim_common.timjsonencoder import TimJsonEncoder
 from tim_common.utils import Missing
 
 
@@ -222,7 +223,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         return self.get_md()
 
     def get_json_encoder(self) -> type[json.JSONEncoder]:
-        return PluginJsonEncoder
+        return TimJsonEncoder
 
     def get_component_html_name(self) -> str:
         """Gets the name of the Angular component as it should be in HTML."""

@@ -6,7 +6,13 @@ from enum import Enum
 from isodate import duration_isoformat
 from isodate.duration import Duration
 from jinja2 import Undefined
-from sqlalchemy.ext.declarative import DeclarativeMeta
+
+try:
+    from sqlalchemy.ext.declarative import DeclarativeMeta
+
+    sqlalchemy_imported = True
+except ImportError:
+    sqlalchemy_imported = False
 
 
 class TimJsonEncoder(json.JSONEncoder):
@@ -26,7 +32,7 @@ class TimJsonEncoder(json.JSONEncoder):
         if tojson:
             return tojson()
         # from http://stackoverflow.com/a/31569287 with some changes
-        if isinstance(o.__class__, DeclarativeMeta):
+        if sqlalchemy_imported and isinstance(o.__class__, DeclarativeMeta):
             data = {}
             if hasattr(o, "__json__"):
                 flds = o.__json__()

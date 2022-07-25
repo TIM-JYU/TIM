@@ -17,7 +17,7 @@ from timApp.admin.import_accounts import import_accounts_impl
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document
-from timApp.document.timjsonencoder import TimJsonEncoder
+from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.sqa import db
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
