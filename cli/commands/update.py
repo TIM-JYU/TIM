@@ -4,6 +4,7 @@ from typing import Optional, Set
 
 from cli.commands.js import js
 from cli.commands.up import up
+from cli.config import get_config
 from cli.docker.run import run_compose, get_compose_cmd
 from cli.util.logging import log_info, log_warning, log_error
 from cli.util.proc import run_cmd
@@ -127,14 +128,18 @@ def run(args: Arguments) -> None:
             log_info(f"  {command.__name__:<{max_name_length}} - {docstring.strip()}")
         return
 
+    config = get_config()
+
     command = next(
         command for command in update_commands if command.__name__ == args.strategy
     )
     docstring = command.__doc__ or ""
 
     causes_downtime = "downtime" in docstring.lower()
-    skip_verify = (not causes_downtime and args.yes) or (
-        causes_downtime and args.yes and args.down
+    skip_verify = (
+        config.profile == "dev"
+        or (not causes_downtime and args.yes)
+        or (causes_downtime and args.yes and args.down)
     )
     if not skip_verify:
         log_info(
