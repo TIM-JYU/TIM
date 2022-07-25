@@ -6,7 +6,7 @@ from typing import Callable, List
 
 from cli.config.config_file import TIMConfig
 from cli.config.default_config import CURRENT_REVISION
-from cli.util.logging import log_error, log_info
+from cli.util.logging import log_error, log_info, log_warning
 
 
 def _migrate_variables(config: TIMConfig) -> None:
@@ -21,8 +21,15 @@ def _migrate_variables(config: TIMConfig) -> None:
     res = subprocess.run(
         shlex.split(f'sh -c ". ./variables.sh && env"'),
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         encoding="utf-8",
     )
+
+    if res.stderr:
+        log_warning(f"There was an error when parsing variable.sh: {res.stderr}")
+        log_warning(
+            f"This is probably not a problem, but you should check the generated tim.conf file for mistakes."
+        )
 
     variables = {}
     cur_key = ""
