@@ -7,6 +7,7 @@
 .cache/
 .dmypy.json
 /.idea
+/.run
 .mypy_cache/
 .settings
 tim.conf
