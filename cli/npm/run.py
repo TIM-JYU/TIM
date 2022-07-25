@@ -1,6 +1,7 @@
 import platform
 import subprocess
 from pathlib import Path
+from shutil import which
 from typing import List, Optional
 
 from cli.docker.run import run_compose
@@ -12,6 +13,7 @@ MAX_NPM_MAJOR_VERSION = 6
 
 _npm_ok = False
 _npm_version_ok = False
+_npm_cmd = []
 
 
 def reset_npm_version() -> None:
@@ -24,12 +26,17 @@ def reset_npm_version() -> None:
 def verify_npm(assert_version: bool = True) -> bool:
     global _npm_ok
     global _npm_version_ok
+    global _npm_cmd
     if _npm_ok:
         return _npm_version_ok
     try:
+        # On Windows (and on Linux with nvm), npm is run via proxy cmd (and not executable)
+        # Therefore, we need to use the "which" command to find the command
+        npm_cmd = which("npm")
+        if not npm_cmd:
+            raise FileNotFoundError()
         res = run_cmd(
-            ["npm", "--version"],
-            shell=True,
+            [npm_cmd, "--version"],
             check=True,
             stdout=subprocess.PIPE,
             encoding="utf-8",
@@ -43,6 +50,7 @@ def verify_npm(assert_version: bool = True) -> bool:
                 f"Run `npm i -g npm@{MAX_NPM_MAJOR_VERSION}` to install it."
             )
         _npm_ok = True
+        _npm_cmd = [npm_cmd]
         return _npm_version_ok
     except (subprocess.CalledProcessError, FileNotFoundError):
         raise CLIError(
@@ -62,8 +70,7 @@ def run_npm(
     if not run_in_container:
         verify_npm()
         run_cmd(
-            ["npm", *args],
-            shell=True,
+            [*_npm_cmd, *args],
             cwd=(Path.cwd() / workdir).as_posix(),
         )
     else:
