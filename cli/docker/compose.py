@@ -8,7 +8,6 @@ from cli.util.template import PyTemplate
 def init_compose(profile: Optional[str] = None) -> None:
     config = get_config()
 
-    docker_path = Path.cwd() / "docker"
     docker_compose_target = Path.cwd() / "docker-compose.yml"
     dotenv_target = Path.cwd() / ".env"
 

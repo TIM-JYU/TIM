@@ -388,7 +388,12 @@ services:
    - prod
    - dev
    - test
-  ports: ${ jsonify([l.strip() for l in caddy.port_mapping.splitlines()]) }
+  ports: ${
+     jsonify(
+       ([ caddy.http_port  + ":80" ] if caddy.http_port  else []) +
+       ([ caddy.https_port + ":443"] if caddy.https_port else [])
+     )
+ }
  mailman-test:
   image: timimages/mailman-core:dev
   restart: unless-stopped

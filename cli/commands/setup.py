@@ -35,9 +35,10 @@ class Arguments:
     interactive: bool
     install: bool
     up: bool
+    http_port: Optional[int]
+    https_port: Optional[int]
     profile: Optional[str]
     hostname: Optional[str]
-    ports: Optional[str]
     domains: Optional[str]
     is_proxied: Optional[str]
 
@@ -96,27 +97,24 @@ def check_choices(
     )
 
 
-def check_ports(
-    ports_string: Union[Optional[str], List[str]]
-) -> Tuple[Optional[List[str]], Optional[str]]:
-    if isinstance(ports_string, list):
-        return ports_string, None
-    if ports_string is None:
-        return None, "Ports are required"
-    ports = ports_string.split(";")
-    ports_result = []
-    for port_mapping in ports:
-        split_vals = port_mapping.split(":")
-        if len(split_vals) != 2:
-            return None, f"Invalid port mapping: {port_mapping}"
-        from_port, to_port = split_vals
-        if not from_port or not to_port:
-            return (
-                None,
-                f"Invalid port mapping: {port_mapping}. Port mapping must be in format 'host_port:tim_port'",
-            )
-        ports_result.append(port_mapping.strip())
-    return ports_result, None
+def check_port(
+    port_val: Union[Optional[str], str]
+) -> Tuple[Optional[str], Optional[str]]:
+    if port_val is None:
+        return None, "Port number is required (specify 'none' to disable)"
+    if port_val.lower() == "none":
+        return "", None
+    try:
+        return str(make_port(port_val)), None
+    except (ValueError, CLIError):
+        return None, f"{port_val} is not a valid port (specify 'none' to disable)"
+
+
+def make_port(port: str) -> int:
+    port_int = int(port)
+    if port_int < 1 or port_int > 65535:
+        raise CLIError(f"Port must be between 1 and 65535")
+    return port_int
 
 
 def check_hostname(
@@ -314,48 +312,53 @@ Select one of the following based on your needs:
     config.set("compose", "profile", profile)
 
     if profile == "prod":
-        ports = get_value(
-            args.ports,
+        http_port = get_value(
+            str(args.http_port) if args.http_port else "",
             args.interactive,
-            "--ports",
+            "--http-port",
             """
-What ports should be used for the TIM instance?
-By default, TIM runs internally on ports 80 and 443 (you may change these defaults later in tim.conf).
-Specify a ;-separated list of port mapping between the machine and internal TIM ports.
-
-Examples:
-  * Map machine's ports 80 and 443 to TIM's ports 80 and 443 (uses Caddy's HTTPS for 443): 80:80;443:443
-  * Map machine's port 50000 to TIM's port 80 (allows running multiple instances with custom HTTPS): 50000:80
+What port should HTTP requests be served on?
+Specify a port number or specify 'none' to not accept HTTP requests.
 """,
-            check_ports,
-            ["80:80", "443:443"],
-            "80:80;443:443",
+            check_port,
+            "80",
+            "80",
         )
-        config.set("caddy", "port_mapping", "\n".join(ports))
+        config.set("caddy", "http_port", http_port)
 
-        has_non_common_ports = any(
-            True
-            for port in ports
-            if not port.startswith("80:") and not port.startswith("443:")
+        https_port = get_value(
+            str(args.https_port) if args.https_port else "",
+            args.interactive,
+            "--https-port",
+            """
+What port should HTTPS requests be served on?
+Specify a port number or specify 'none' to not accept HTTPS requests.
+
+Note: TIM will attempt to acquire a HTTPS certificate via Let's Encrypt if HTTPS is enabled.
+Disable HTTPS if you are using a custom reverse proxy with custom certificate management.
+""",
+            check_port,
+            "443",
+            "443",
         )
+        config.set("caddy", "https_port", https_port)
 
-        if has_non_common_ports:
-            is_proxy = get_value(
-                args.is_proxied,
-                args.interactive,
-                "--is-proxied",
-                """
+        is_proxy = get_value(
+            args.is_proxied,
+            args.interactive,
+            "--is-proxied",
+            """
 Will you run TIM behind a (reverse) proxy (yes/no)?
 
 You can run TIM behind a reverse proxy like nginx, Apache or Caddy.
 This is sometimes useful if you have a load balancer or a firewall
 in front of TIM, or if you want to run multiple instances on the same machine.
-                """,
-                check_yes_no,
-                False,
-                "no",
-            )
-            config.set("caddy", "is_proxied", "yes" if is_proxy else "no")
+            """,
+            check_yes_no,
+            False,
+            "no",
+        )
+        config.set("caddy", "is_proxied", "yes" if is_proxy else "no")
 
         hostname = get_value(
             args.hostname,
@@ -391,7 +394,7 @@ In most cases, you can use the default value (which is the same as the TIM host)
 
     log_info("Creating tim.conf")
     config.save()
-    log_info("tim.conf created")
+    log_info("Created tim.conf created. Check the config file for more options.")
 
     if not args.install:
         log_warning(
@@ -453,10 +456,18 @@ def init(parser: ArgumentParser) -> None:
         choices=["dev", "prod", "test"],
     )
     parser.add_argument(
-        "--ports",
-        help="Port mapping for the TIM instance in format 'host_port:tim_port'. "
-        "Specify multiple ports by separating them with `;`.",
-        metavar="host_port1:tim_port1[;host_port2:tim_port2[;...]]",
+        "--http-port",
+        help="HTTP port mapping to use for TIM instance",
+        metavar="[0-65535]",
+        type=make_port,
+        dest="http_port",
+    )
+    parser.add_argument(
+        "--https-port",
+        help="HTTPS port mapping to use for TIM instance",
+        metavar="[0-65535]",
+        type=make_port,
+        dest="https_port",
     )
     parser.add_argument(
         "--hostname",

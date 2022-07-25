@@ -81,10 +81,17 @@ This is important when connecting to local TIM with other devices such as a mobi
 For production, replace with your server domain
 """,
         ),
-        "port_mapping": (
-            "80:80\n443:443",
+        "http_port": (
+            "80",
             """
-Specify how to map host ports to internal Caddy ports.
+What port to listen on for HTTP requests. If empty, HTTP requests are will not be forwarded to Caddy.
+""",
+        ),
+        "https_port": (
+            "443",
+            """
+What port to listen on for HTTPS requests. If empty, HTTPS requests are will not be forwarded to Caddy.
+This may be useful if you are using a custom reverse proxy that will handle HTTPS requests itself.
 """,
         ),
         "is_proxied": (
