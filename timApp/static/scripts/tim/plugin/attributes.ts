@@ -24,9 +24,9 @@ export const undoType = t.partial({
 export const modelAnswerType = t.intersection([
     t.type({
         lock: withDefault(t.boolean, true),
+        count: withDefault(t.number, 1),
     }),
     t.partial({
-        count: nullable(t.number),
         revealDate: nullable(t.string),
         linkText: t.string,
         linkTextCount: nullable(t.number),
