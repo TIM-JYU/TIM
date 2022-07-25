@@ -218,8 +218,8 @@ def verify_dev_python() -> List[str]:
         ["python3"],
         ["py", "-3"],
     ]
-    try:
-        for python_location in python_locations:
+    for python_location in python_locations:
+        try:
             res = run_cmd(
                 [*python_location, "--version"],
                 stdout=subprocess.PIPE,
@@ -234,8 +234,8 @@ def verify_dev_python() -> List[str]:
                 if int(version[i]) < part:
                     raise CLIError("Not supported")
             return python_location
-    except (subprocess.CalledProcessError, FileNotFoundError, CLIError):
-        pass
+        except (subprocess.CalledProcessError, FileNotFoundError, CLIError) as e:
+            pass
     raise CLIError(
         "Could not find a supported Python version. Development requires Python 3.7+."
     )
