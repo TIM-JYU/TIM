@@ -10,7 +10,7 @@ from cli.util.proc import run_cmd
 
 _compose_ok = False
 _docker_ok = False
-_compose_cmd = []
+_compose_cmd: List[str] = []
 
 
 def verify_compose_installed() -> None:

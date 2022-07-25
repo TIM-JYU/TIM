@@ -13,7 +13,7 @@ MAX_NPM_MAJOR_VERSION = 6
 
 _npm_ok = False
 _npm_version_ok = False
-_npm_cmd = []
+_npm_cmd: List[str] = []
 
 
 def reset_npm_version() -> None:
