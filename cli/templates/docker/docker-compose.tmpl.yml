@@ -370,7 +370,7 @@ services:
   volumes:
    - caddy_data:/data
    - caddy_config:/config
-   - ./caddy/certs:/certs:ro
+   - ./certs/caddy:/certs:ro
    - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
    - ./timApp/static:/tim/timApp/static:ro
    - ${tim.log_dir}/caddy:/logs
