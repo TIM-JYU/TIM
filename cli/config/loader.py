@@ -7,7 +7,7 @@ from cli.config.default_config import DEFAULT_CONFIG
 from cli.config.migrations import apply_migrations
 from cli.util.errors import CLIError
 
-loaded_config: Optional[TIMConfig] = None
+_loaded_config: Optional[TIMConfig] = None
 
 config_name = "tim.conf"
 
@@ -54,25 +54,26 @@ def _find_config(create_if_not_exist: bool) -> Tuple[Optional[TIMConfig], int]:
 
 
 def has_config() -> bool:
-    global loaded_config
-    if loaded_config:
+    global _loaded_config
+    if _loaded_config:
         return True
     cfg, revision = _find_config(False)
     if not cfg:
         return False
-    loaded_config = cfg
-    apply_migrations(loaded_config, revision)
+    apply_migrations(cfg, revision)
+    _loaded_config = cfg
     return True
 
 
 def get_config(create_if_not_exist: bool = False) -> TIMConfig:
-    global loaded_config
-    if loaded_config:
-        return loaded_config
-    loaded_config, revision = _find_config(create_if_not_exist)
-    if not loaded_config:
+    global _loaded_config
+    if _loaded_config:
+        return _loaded_config
+    cfg, revision = _find_config(create_if_not_exist)
+    if not cfg:
         raise CLIError(
             "TIM is not initialized. Please run `tim setup` to initialize and configure TIM."
         )
-    apply_migrations(loaded_config, revision)
-    return loaded_config
+    apply_migrations(cfg, revision)
+    _loaded_config = cfg
+    return _loaded_config
