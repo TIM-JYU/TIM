@@ -1,6 +1,7 @@
 import json
 import os
 import platform
+import secrets
 import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
@@ -162,7 +163,11 @@ def verify_tim_requirements() -> None:
         verify_compose_installed,
     ]
     if platform.system() == "Windows":
-        requirement_checkers.append(verify_npm)
+
+        def check_npm() -> None:
+            verify_npm()
+
+        requirement_checkers.append(check_npm)
     errors = []
     for checker in requirement_checkers:
         try:
@@ -239,6 +244,25 @@ def verify_dev_python() -> List[str]:
     raise CLIError(
         "Could not find a supported Python version. Development requires Python 3.7+."
     )
+
+
+def init_prod_config() -> None:
+    prod_config = Path.cwd() / "timApp" / "prodconfig.py"
+    if prod_config.exists():
+        log_info("TIM server config already exists, skipping generating one")
+        return
+    log_info("Generating TIM server config with random secret key")
+    secret_key = secrets.token_urlsafe(32)
+    with prod_config.open("w", encoding="utf-8") as f:
+        f.write(
+            f"""
+# This is the configuration for the main TIM server
+# Refer to defaultconfig.py for the default values
+
+SECRET_KEY = '{secret_key}' 
+"""
+        )
+    log_info(f"Generated default TIM server config to {prod_config}")
 
 
 def setup_dev() -> None:
@@ -405,6 +429,9 @@ In most cases, you can use the default value (which is the same as the TIM host)
     if profile == "dev":
         setup_dev()
 
+    if profile == "prod":
+        init_prod_config()
+
     log_info("Docker: Pulling TIM images")
     dc_pull_args = ["--quiet"] if not args.interactive else []
     run_compose(["pull", *dc_pull_args])
@@ -415,7 +442,6 @@ In most cases, you can use the default value (which is the same as the TIM host)
     if profile != "dev":
         log_info("Building TIM scripts")
         js(False, [])
-
     if args.up:
         log_info("Docker: Starting containers")
         up()
