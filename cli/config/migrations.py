@@ -52,7 +52,6 @@ def _migrate_variables(config: TIMConfig) -> None:
         "FILES_ROOT": ("tim", "files_root"),
         "COMPOSE_PROFILES": ("compose", "profile"),
         "COMPOSE_PROJECT_NAME": ("compose", "project_name"),
-        "CONFIG_FILE": ("tim", "config_file"),
         "TEXTFIELD_DEV_COMMAND": ("fields", "is_dev"),
         "PG_MAX_CONNECTIONS": ("postgresql", "max_connections"),
         "CADDY_EXTRA_TIM_CONFIG": ("caddy", "extra_tim_config"),

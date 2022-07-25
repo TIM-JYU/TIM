@@ -44,13 +44,6 @@ Modify only if there are multiple TIM instances in the same host.
 Hostname for the TIM instance.
 """,
         ),
-        "config_file": (
-            "prodconfig.py",
-            """
-Location of config file to use in addition to defaultconfig (relative to timApp directory).
-In production, you need to create the prodconfig.py file.
-""",
-        ),
         "status_page_url": (
             "",
             """
