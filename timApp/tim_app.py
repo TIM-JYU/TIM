@@ -29,19 +29,18 @@ from timApp.celery_sqlalchemy_scheduler import (
     PeriodicTask,
 )
 from timApp.document.docentry import DocEntry
-from tim_common.timjsonencoder import TimJsonEncoder
-from timApp.document.translation.translation import Translation
+from timApp.document.translation.deepl import (
+    DeeplTranslationService,
+    DeeplProTranslationService,
+)
 from timApp.document.translation.language import Language
+from timApp.document.translation.reversingtranslator import ReversingTranslationService
+from timApp.document.translation.translation import Translation
 from timApp.document.translation.translator import (
     TranslationService,
     RegisteredTranslationService,
     TranslationServiceKey,
 )
-from timApp.document.translation.deepl import (
-    DeeplTranslationService,
-    DeeplProTranslationService,
-)
-from timApp.document.translation.reversingtranslator import ReversingTranslationService
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.blockassociation import BlockAssociation
@@ -133,6 +132,7 @@ from timApp.velp.velp_models import (
     LabelInVelp,
     AnnotationComment,
 )
+from tim_common.timjsonencoder import TimJsonEncoder
 
 # All SQLAlchemy models must be imported in this module.
 all_models = (
