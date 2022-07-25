@@ -24,6 +24,7 @@ jobs:
           key: ${{ runner.os }}-ts-stats-npm-${{ hashFiles('timApp/package-lock.json') }}
       - name: Install packages
         run: |
+          npm i --global npm@6
           cd timApp
           npm install
           npm install -g webpack-bundle-analyzer
