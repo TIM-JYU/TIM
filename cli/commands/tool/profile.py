@@ -89,10 +89,14 @@ def run(args: Arguments) -> None:
     ]
 
     log_debug(f"py-spy args: {cli_args}")
-    p = run_cmd(cli_args, check=False)
-    if p.returncode == 0:
+    try:
+        p = run_cmd(cli_args)
+        ret_code = p.returncode
+    except KeyboardInterrupt:
+        ret_code = 0
+    if ret_code == 0:
         log_info(f"Open flamegraph: {config.host}/static/profiling/{flamegraph_name}")
-    exit(p.returncode)
+    exit(ret_code)
 
 
 def init(parser: ArgumentParser) -> None:
