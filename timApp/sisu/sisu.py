@@ -57,7 +57,7 @@ from timApp.util.get_fields import (
     UserFieldObj,
     RequestedGroups,
 )
-from timApp.util.logger import log_warning, log_info
+from timApp.util.logger import log_warning
 from timApp.util.utils import (
     remove_path_special_chars,
     seq_to_str,
@@ -582,7 +582,6 @@ def send_grades_to_sisu(
         completion_date = get_current_time().date()
     users_to_update = {a.user.id for a in assessments if a.is_passing_grade}
     completion_date_iso = completion_date.isoformat()
-    log_info(f"Completion date: {completion_date_iso}")
     validation_errors = []
     try:
         AssessmentSchema(many=True).load(

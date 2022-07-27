@@ -18,6 +18,7 @@ jobs:
           key: ${{ runner.os }}-eslint-npm-${{ hashFiles('**/package-lock.json') }}
       - name: Install packages
         run: |
+          npm i --global npm@6
           cd timApp
           npm install
           cd modules/jsrunner/server

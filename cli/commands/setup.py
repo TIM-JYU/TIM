@@ -30,6 +30,12 @@ This command is intended to be run once, but can be re-run to re-initialize the 
 """,
 }
 
+# Version of Poetry to install
+POETRY_MIN_VERSION = "1.2.0b3"
+
+# Minimal Python version needed for development
+PYTHON_MIN_DEV_VERSION = [3, 7]
+
 
 class Arguments:
     force: bool
@@ -190,10 +196,6 @@ Install the requirements before installing TIM.
         )
 
 
-POETRY_MIN_VERSION = "1.2.0b3"
-PYTHON_MIN_VERSION = [3, 7]
-
-
 def verify_pip() -> List[str]:
     pip_locations = [
         ["pip"],
@@ -235,14 +237,15 @@ def verify_dev_python() -> List[str]:
             if stdout.startswith("Python was not found"):
                 raise CLIError(stdout)
             version = stdout.split(" ")[-1].split(".")
-            for i, part in enumerate(PYTHON_MIN_VERSION):
+            for i, part in enumerate(PYTHON_MIN_DEV_VERSION):
                 if int(version[i]) < part:
                     raise CLIError("Not supported")
             return python_location
         except (subprocess.CalledProcessError, FileNotFoundError, CLIError) as e:
             pass
     raise CLIError(
-        "Could not find a supported Python version. Development requires Python 3.7+."
+        f"Could not find a supported Python version. "
+        f"Development requires Python {'.'.join([str(v) for v in PYTHON_MIN_DEV_VERSION])}+."
     )
 
 
