@@ -122,6 +122,18 @@ Size for /dev/shm for PostgreSQL container in bytes.
         ),
     },
     "csplugin": {
+        "is_cassandra_enabled": (
+            "no",
+            """
+Whether to enable Cassandra database for use in csplugin programming tasks.
+""",
+        ),
+        "is_mongodb_enabled": (
+            "no",
+            """
+Whether to enable MongoDB database for use in csplugin programming tasks.
+""",
+        ),
         "cassandra_heap_newsize": (
             "128M",
             """

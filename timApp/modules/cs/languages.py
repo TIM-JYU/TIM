@@ -1491,6 +1491,15 @@ class MongoDB(Language):
         self.drop_database = get_param(query, "dropDatabase", False)
 
     def run(self, result, sourcelines, points_rule):
+        mongodb_enabled = os.environ.get("MONGODB_ENABLED", "0") == "1"
+        if not mongodb_enabled:
+            return (
+                -1,
+                "",
+                "MongoDB tasks are disabled at the moment. Please contact administrators for more information",
+                "",
+            )
+
         cleaned_source: str = sourcelines.strip()
         if not cleaned_source:
             return 0, "", "", ""
@@ -1526,6 +1535,15 @@ class CQL(Language):
         self.drop_keyspace = get_param(query, "dropKeyspace", False)
 
     def run(self, result, sourcelines, points_rule):
+        cassandra_enabled = os.environ.get("CASSANDRA_ENABLED", "0") == "1"
+        if not cassandra_enabled:
+            return (
+                -1,
+                "",
+                "Cassandra tasks are disabled at the moment. Please contact administrators for more information",
+                "",
+            )
+
         cleaned_source: str = sourcelines.strip()
         if not cleaned_source:
             return 0, "", "", ""

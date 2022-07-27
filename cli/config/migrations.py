@@ -85,6 +85,10 @@ def _migrate_variables(config: TIMConfig) -> None:
         if value:
             config.set(section, option, value)
 
+    if variables["COMPOSE_PROFILES"] in ("prod", "prod_multi"):
+        config.set("csplugin", "is_cassandra_enabled", "yes")
+        config.set("csplugin", "is_mongodb_enabled", "yes")
+
     if variables["COMPOSE_PROFILES"] == "prod_multi":
         config.set(
             "caddy", "http_port", f"{variables.get('CADDY_MULTI_PORT', '50000')}"

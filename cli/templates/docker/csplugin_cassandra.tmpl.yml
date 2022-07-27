@@ -1,0 +1,18 @@
+ csplugin_cassandra: # Cassandra for csplugin
+  profiles:
+   - prod
+   - dev
+  image: cassandra:4
+  restart: unless-stopped
+  cap_add: # Needed for Cassandra to be able to bind to the Docker socket.
+   - SYS_NICE
+  environment:
+   # We're not going to enable replication, so it's fine to listen to localhost
+   CASSANDRA_LISTEN_ADDRESS: localhost
+   HEAP_NEWSIZE: ${csplugin.cassandra_heap_newsize}
+   MAX_HEAP_SIZE: ${csplugin.cassandra_max_heap_size}
+  volumes:
+   - csplugin_db_data:/var/lib/cassandra
+   - ./timApp/modules/cs/cassandra/cassandra.yaml:/etc/cassandra/cassandra.yaml
+  networks:
+   - csplugin_db

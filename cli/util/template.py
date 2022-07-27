@@ -1,20 +1,9 @@
+import json
 import re
 from pathlib import Path
 from typing import Any, Optional, Dict, Pattern, Match
 
 from cli.util.logging import log_debug
-
-
-def _jsonify(value: Any) -> str:
-    import json
-
-    return json.dumps(value)
-
-
-def _partial(dir_path: str, name: str) -> str:
-    templates_path = Path.cwd() / "cli" / "templates" / dir_path
-    template = templates_path / name
-    return template.read_text(encoding="utf-8")
 
 
 class PyTemplate:
@@ -43,21 +32,32 @@ class PyTemplate:
         template_path = Path.cwd() / "cli" / "templates" / template_name
         self.template = template_path.read_text(encoding="utf-8")
 
-    def render(self, ctx: Optional[Dict[str, Any]] = None) -> str:
+    @staticmethod
+    def _create_context(ctx: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         if ctx is None:
-            ctx = {}
+            full_ctx = {}
 
-        ctx = {
+        def _jsonify(value: Any) -> str:
+            return json.dumps(value)
+
+        def _partial(dir_path: str, name: str) -> str:
+            return PyTemplate(f"{dir_path}/{name}").render(ctx)
+
+        full_ctx = {
             **ctx,
             "jsonify": _jsonify,
             "partial": _partial,
         }
+        return full_ctx
+
+    def render(self, ctx: Optional[Dict[str, Any]] = None) -> str:
+        full_ctx = self._create_context(ctx)
 
         def convert(mo: Match) -> str:
             named = mo.group("braced")
             if named is not None:
                 try:
-                    return eval(f"({named})", ctx)
+                    return eval(f"({named})", full_ctx)
                 except (NameError, SyntaxError) as e:
                     log_debug(f"Failed to interpolate {named}: {e}")
                     return mo.group()

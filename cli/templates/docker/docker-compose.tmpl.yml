@@ -131,40 +131,13 @@ services:
    CSPLUGIN_IMAGE_TAG: ${csplugin.target}-${csplugin.image_tag}
    TIM_ROOT: ${default.dir}
    TIM_HOST: ${tim.host}
+   CASSANDRA_ENABLED: ${ "1" if csplugin.is_cassandra_enabled else "0" }
+   MONGODB_ENABLED: ${ "1" if csplugin.is_mongodb_enabled else "0" }
   user: root  # We need access to Docker socket.
   restart: unless-stopped
   read_only: true
- csplugin_mongo: # MongoDB for csplugin
-  image: mongo:5
-  profiles:
-   - prod
-   - dev
-  restart: unless-stopped
-  environment:
-   MONGO_INITDB_ROOT_USERNAME: mongo
-   MONGO_INITDB_ROOT_PASSWORD: mongodb
-  volumes:
-   - csplugin_db_data:/data/db
-  networks:
-   - csplugin_db
- csplugin_cassandra: # Cassandra for csplugin
-  profiles:
-   - prod
-   - dev
-  image: cassandra:4
-  restart: unless-stopped
-  cap_add: # Needed for Cassandra to be able to bind to the Docker socket.
-   - SYS_NICE
-  environment:
-   # We're not going to enable replication, so it's fine to listen to localhost
-   CASSANDRA_LISTEN_ADDRESS: localhost
-   HEAP_NEWSIZE: ${csplugin.cassandra_heap_newsize}
-   MAX_HEAP_SIZE: ${csplugin.cassandra_max_heap_size}
-  volumes:
-   - csplugin_db_data:/var/lib/cassandra
-   - ./timApp/modules/cs/cassandra/cassandra.yaml:/etc/cassandra/cassandra.yaml
-  networks:
-   - csplugin_db
+${ partial("docker", "csplugin_cassandra.tmpl.yml") if csplugin.is_cassandra_enabled else "" }
+${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled else "" }
  haskellplugins:
   image: timimages/haskellplugins:latest-gh
   restart: unless-stopped
