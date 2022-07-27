@@ -23,7 +23,6 @@ from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.auth.session.model import UserSession
 from timApp.document.docinfo import DocInfo
-from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
@@ -77,6 +76,7 @@ from timApp.util.utils import (
     cached_property,
     get_current_time,
 )
+from tim_common.timjsonencoder import TimJsonEncoder
 
 ItemOrBlock = Union[ItemBase, Block]
 maxdate = datetime.max.replace(tzinfo=timezone.utc)
@@ -1459,7 +1459,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
         if self.logged_in and self.is_current_user:
             if locked_access := get_locked_access_type():
-                result |= {"locked_access": locked_access}
+                result |= {"locked_access": locked_access.value}
             if (active_groups := get_locked_active_groups()) is not None:
                 result |= {"locked_active_groups": list(active_groups)}
 
