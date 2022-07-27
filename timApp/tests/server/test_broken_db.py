@@ -15,9 +15,8 @@ class BrokenDbTest(TimRouteTest):
         self.assertEqual(
             """
 Database has no users; you need to re-initialize it:
-./dc stop -t 0 tim celery postgresql
-docker volume rm tim-test_data11
+./tim dc down -v
 delete tim_files folder
-./up.sh""".strip(),
+./tim up""".strip(),
             str(e.exception),
         )
