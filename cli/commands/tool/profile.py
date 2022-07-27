@@ -1,4 +1,5 @@
 import datetime
+import os
 import platform
 import shutil
 import subprocess
@@ -41,6 +42,9 @@ def run(args: Arguments) -> None:
         raise CLIError("Profiling is not supported on Windows")
     elif is_in_wsl():
         raise CLIError("Profiling is not supported in Docker for Windows")
+
+    if os.getuid() != 0:
+        raise CLIError("You must run profiling command as root")
 
     py_spy_path = get_pyspy()
     log_debug(f"py-spy path: {py_spy_path}")
@@ -85,7 +89,7 @@ def run(args: Arguments) -> None:
     ]
 
     log_debug(f"py-spy args: {cli_args}")
-    p = run_cmd(cli_args)
+    p = run_cmd(cli_args, check=False)
     if p.returncode == 0:
         log_info(f"Open flamegraph: {config.host}/static/profiling/{flamegraph_name}")
     exit(p.returncode)
