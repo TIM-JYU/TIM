@@ -1,6 +1,6 @@
 from textwrap import dedent
 
-from flask import session, g, request, current_app
+from flask import session, g, request
 from sqlalchemy.orm import joinedload
 
 from timApp.document.usercontext import UserContext
@@ -36,10 +36,9 @@ def get_current_user_object() -> User:
                 dedent(
                     f"""
             Database has no users; you need to re-initialize it:
-            ./dc stop -t 0 tim celery postgresql
-            docker volume rm {current_app.config['TIM_NAME']}_data11
-            delete tim_files folder
-            ./up.sh"""
+            ./tim dc down -v
+            <delete tim_files folder>
+            ./tim up"""
                 ).strip()
             )
         g.user = u

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="MypyConfigService">
+    <option name="executableName" value="dmypy run -- --follow-imports=error ." />
+    <option name="pathSuffix" value="" />
+  </component>
+</project>

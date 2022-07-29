@@ -199,7 +199,7 @@ def inject_angular_scripts() -> dict:
                 "TypeScript files have not been built (compiled JavaScript files are missing).\n"
                 'If this is a local development TIM instance, start the "bdw" NPM script (in timApp/package.json) '
                 "from your IDE.\n"
-                'If this is not a local TIM instance, run "./js" from TIM root.'
+                'If this is not a local TIM instance, run "./tim js" from TIM root.'
             )
 
 

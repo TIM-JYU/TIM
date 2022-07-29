@@ -1,5 +1,4 @@
 """A test for markdownconverter module."""
-import unittest
 
 import timApp.markdown.dumboclient
 from timApp.document.docparagraph import DocParagraph
@@ -159,7 +158,7 @@ input_format: rst
             '<p><span class="testing">test</span></p>',
             md_to_html("[test]{.testing}"),
             msg="If this test fails, you probably do not have up-to-date Dumbo. "
-            "Run ./pull_all.sh to update.",
+            "Run `./tim update all` to update.",
         )
 
     def test_unsafe_not_allowed(self):

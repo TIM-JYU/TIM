@@ -1,0 +1,429 @@
+version: "3.7"
+
+services:
+ tim:
+  image: timimages/tim:${tim.image_tag}
+  build:
+    dockerfile: ./timApp/Dockerfile
+    context: ./
+  depends_on: ${"""
+   - postgresql
+   - dumbo
+   - redis
+   - csplugin
+   - pali
+   - fields
+   - showfile
+   - haskellplugins
+   - imagex
+   - feedback
+   - oiko
+   """ if not tim.is_dev else "[]"}
+  volumes:
+   - .:/service
+   - ${tim.log_dir}:/service/tim_logs
+   - ${tim.files_root}:/tim_files
+   - cache:/cache
+  working_dir: /service/timApp
+  command: ${ "python3 launch.py --with-gunicorn" if not tim.is_dev else "sleep infinity" }
+  environment:
+   FLASK_APP: tim.py
+   PYTHONPATH: /service
+   COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
+   COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
+   CADDY_IS_PROXIED: ${ "1" if caddy.is_proxied else "0" }
+   POSTGRESQL_MAX_CONNECTIONS: ${postgresql.max_connections}
+   TIM_SETTINGS: ${compose.profile}config.py
+   TIM_HOST: ${tim.host}
+   RUN_MAILMAN_DEV: ${ "1" if mailman.is_dev else "0" }
+   AUTHLIB_INSECURE_TRANSPORT: ${ "1" if tim.is_dev else "0" }
+  restart: unless-stopped
+  networks:
+   - db
+   - default
+  read_only: true
+  tmpfs:
+   - /root
+   - /tmp
+   - /var/cache
+   - /var/log
+   - /run/gunicorn
+  profiles:
+   - prod
+   - dev
+ timagent:
+  image: timimages/tim:${tim.image_tag}
+  profiles:
+   - dev
+  command: sleep infinity
+  restart: unless-stopped
+  read_only: true
+  user: agent
+  tmpfs:
+   - /home/agent
+   - /tmp
+  volumes:
+   - .:/service:rw
+ postgresql:
+  profiles:
+   - prod
+   - dev
+  image: postgres:11
+  volumes:
+   - data11:/var/lib/postgresql/data
+  command: [
+    "postgres",
+    "-c", "log_statement=mod",
+    "-c", "max_connections=${postgresql.max_connections}",
+  ]
+  restart: unless-stopped
+  networks:
+   - db
+  read_only: true
+  shm_size: ${postgresql.shm_size}
+  tmpfs:
+   - /run/postgresql
+   - /tmp
+  environment:
+   POSTGRES_PASSWORD: postgresql
+  ports: ${ jsonify(["5432:5432"] if tim.is_dev else []) }
+  logging:
+   # According to docs, "local" is more compact and performant than the default json-file driver.
+   driver: local
+   options:
+    max-size: "50m"
+    max-file: "100"
+ postgresql-test:
+  image: postgres:11
+  profiles:
+   - test
+   - dev
+  restart: unless-stopped
+  tmpfs:
+   - /var/lib/postgresql/data
+  ports: ${ jsonify(["5433:5432"] if tim.is_dev else []) }
+  environment:
+   POSTGRES_PASSWORD: postgresql
+ csplugin:
+  image: timimages/cs3:${csplugin.target}-${csplugin.image_tag}
+  build:
+   context: ./timApp/modules/cs
+   target: ${csplugin.target}
+  volumes:
+   - ${tim.files_root}/blocks/uploads:/uploads:ro
+   - ./timApp/modules/cs:/cs:ro
+   - /var/run/docker.sock:/var/run/docker.sock
+   - ./timApp/modules/cs/static:/csstatic:ro
+   - ./tim_common:/cs/tim_common:ro
+   - /tmp/${COMPOSE_PROJECT_NAME:?}_uhome:/tmp
+   - ${tim.log_dir}/cs:/logs
+   - /root/.ssh/
+   - csplugin_data:/cs_data
+   - csplugin_data_generated:/csgenerated
+  networks:
+   - csplugin_db
+   - default
+  working_dir: /cs
+  command: ${ "./startPlugins.sh" if not csplugin.is_dev else "sleep infinity" }
+  environment:
+   PYTHONUNBUFFERED: "1"
+   COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
+   CSPLUGIN_IMAGE_TAG: ${csplugin.target}-${csplugin.image_tag}
+   TIM_ROOT: ${default.dir}
+   TIM_HOST: ${tim.host}
+   CASSANDRA_ENABLED: ${ "1" if csplugin.is_cassandra_enabled else "0" }
+   MONGODB_ENABLED: ${ "1" if csplugin.is_mongodb_enabled else "0" }
+  user: root  # We need access to Docker socket.
+  restart: unless-stopped
+  read_only: true
+${ partial("docker", "csplugin_cassandra.tmpl.yml") if csplugin.is_cassandra_enabled else "" }
+${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled else "" }
+ haskellplugins:
+  image: timimages/haskellplugins:latest-gh
+  restart: unless-stopped
+  logging:
+   driver: none
+  read_only: true
+ showfile:
+  image: timimages/cs3:${csplugin.target}-${csplugin.image_tag}
+  volumes:
+   - ./timApp/modules/svn:/app/svn:ro
+   - ./tim_common:/app/tim_common:ro
+  working_dir: /app/svn
+  environment:
+   PYTHONPATH: /app
+  command: ${ "./startAll.sh" if not showfile.is_dev else "sleep infinity" }
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+    - /tmp
+ imagex:
+  image: timimages/cs3:${csplugin.target}-${csplugin.image_tag}
+  volumes:
+   - ./timApp/modules/imagex:/app/imagex:ro
+   - ./tim_common:/app/tim_common:ro
+  working_dir: /app/imagex
+  environment:
+   PYTHONPATH: /app
+  command: ${ "./startAll.sh" if not imagex.is_dev else "sleep infinity" }
+  restart: unless-stopped
+  read_only: true
+ pali:
+  image: timimages/tim:${tim.image_tag}
+  volumes:
+   - ./timApp/modules/pali:/app/pali:ro
+   - ./tim_common:/app/tim_common:ro
+  working_dir: /app/pali
+  environment:
+    PYTHONPATH: /app
+    COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
+  command: ${ "./startAll.sh" if not pali.is_dev else "sleep infinity" }
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+   - /tmp
+ fields:
+  image: timimages/tim:${tim.image_tag}
+  build: ./timApp/modules/fields
+  volumes:
+   - ./timApp/modules/fields:/app/fields:ro
+   - ./tim_common:/app/tim_common:ro
+  working_dir: /app/fields
+  environment:
+   PYTHONPATH: /app
+  command: ${ "./startAll.sh" if not fields.is_dev else "sleep infinity" }
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+   - /tmp
+ jsrunner:
+  image: timimages/tim:${tim.image_tag}
+  volumes:
+   - ./timApp/modules/jsrunner:/timApp/modules/jsrunner:rw
+   - ./timApp/static/scripts:/timApp/static/scripts:ro
+  working_dir: /timApp/modules/jsrunner/server
+  command: ${ "./startAll.sh" if not jsrunner.is_dev else "sleep infinity" }
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+   - /root/.npm
+   - /root/.config
+   - /tmp
+ drag:
+  image: timimages/tim:${tim.image_tag}
+  volumes:
+   - ./timApp/modules/drag:/app/drag:ro
+   - ./tim_common:/app/tim_common:ro
+  working_dir: /app/drag
+  environment:
+   PYTHONPATH: /app
+  command: ${ "./startAll.sh" if not drag.is_dev else "sleep infinity" }
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+   - /tmp
+ feedback:
+  image: timimages/tim:${tim.image_tag}
+  volumes:
+   - ./timApp/modules/feedback:/app/feedback:ro
+   - ./tim_common:/app/tim_common:ro
+  working_dir: /app/feedback
+  environment:
+   PYTHONPATH: /app
+  command: ${ "./startAll.sh" if not feedback.is_dev else "sleep infinity" }
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+   - /tmp
+ dumbo:
+  image: timimages/dumbo:latest
+  volumes:
+   - ./Dumbo/cache:/dumbo_cache
+   - ./Dumbo/tmp:/dumbo_tmp
+  logging:
+   driver: none
+  restart: unless-stopped
+  read_only: true
+ redis:
+  image: eqalpha/keydb:latest
+  command: ["keydb-server", "--appendonly", "yes"]
+  restart: unless-stopped
+  read_only: true
+  volumes:
+   - redis_data:/data
+ celery:
+  image: timimages/tim:${tim.image_tag}
+  command: celery worker -A timApp.tim_celery.celery --concurrency 4
+  profiles:
+   - prod
+   - dev
+  volumes:
+   - .:/service
+   - ${tim.log_dir}:/service/tim_logs
+   - ${tim.files_root}:/tim_files
+   - cache:/cache
+  working_dir: /service/timApp
+  depends_on:
+   - postgresql
+   - redis
+  environment:
+   FLASK_APP: tim.py
+   PYTHONPATH: /service
+   COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
+   TIM_SETTINGS: ${compose.profile}config.py
+   TIM_HOST: ${tim.host}
+  restart: unless-stopped
+  networks:
+   - db
+   - default
+  read_only: true
+  tmpfs:
+   - /tmp
+ celery-beat:
+  image: timimages/tim:${tim.image_tag}
+  profiles:
+   - prod
+   - dev
+  command: >-
+   celery beat
+   -A timApp.tim_celery.celery
+   -S timApp.celery_sqlalchemy_scheduler.schedulers:DatabaseScheduler
+   --pidfile /var/run/celery/celerybeat.pid
+  volumes:
+   - .:/service
+   - ${tim.log_dir}:/service/tim_logs
+   - ${tim.files_root}:/tim_files
+   - cache:/cache
+  working_dir: /service/timApp
+  depends_on:
+   - postgresql
+   - redis
+  environment:
+   FLASK_APP: tim.py
+   PYTHONPATH: /service:/service/timApp/modules/py
+   COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
+   TIM_SETTINGS: ${compose.profile}config.py
+   TIM_HOST: ${tim.host}
+  restart: unless-stopped
+  networks:
+   - db
+   - default
+  read_only: true
+  tmpfs:
+   - /tmp
+   - /run/celery
+ maxima:
+  profiles:
+   - prod
+   - dev
+  image: timimages/goemaxima:2020113001-latest
+  restart: unless-stopped
+ stack-api-server:
+  profiles:
+   - prod
+   - dev
+  image: timimages/stack-api:latest
+  depends_on:
+   - maxima
+  restart: unless-stopped
+  environment:
+   BROWSER_URL: ${tim.host}
+ oiko:
+  image: timimages/oiko:latest
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+   - /tmp
+ caddy:
+  image: caddy:2.3.0
+  command: caddy run --config /etc/caddy/Caddyfile
+  read_only: true
+  volumes:
+   - caddy_data:/data
+   - caddy_config:/config
+   - ./certs/caddy:/certs:ro
+   - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+   - ./timApp/static:/tim/timApp/static:ro
+   - ${tim.log_dir}/caddy:/logs
+   - ./timApp/modules/cs/generated:/tim/timApp/modules/cs/generated:ro
+   - ./timApp/modules/cs/static:/tim/timApp/modules/cs/static:ro
+   - csplugin_data:/cs_data:ro
+   - csplugin_data_generated:/csgenerated:ro
+   ${ "- ./mailman/web/static:/var/www/mailman3/static" if mailman.is_dev else "" }
+  environment:
+   COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
+   CADDY_DOMAINS: ${caddy.domains}
+   CADDY_EXTRA_CONFIG: ${ jsonify(caddy.extra_config) }
+   CADDY_EXTRA_TIM_CONFIG: ${ jsonify(caddy.extra_tim_config) }
+   STATUS_PAGE_URL: ${tim.status_page_url}
+  restart: unless-stopped
+  profiles:
+   - prod
+   - dev
+   - test
+  ports: ${
+     jsonify(
+       ([ caddy.http_port  + ":80" ] if caddy.http_port  else []) +
+       ([ caddy.https_port + ":443"] if caddy.https_port else [])
+     )
+ }
+ mailman-test:
+  image: timimages/mailman-core:dev
+  restart: unless-stopped
+  profiles:
+   - test
+   - dev
+  environment:
+   DATABASE_TYPE: sqlite
+   DATABASE_URL: sqlite:////opt/mailmandb/mailmanweb.db
+   DATABASE_CLASS: mailman.database.sqlite.SQLiteDatabase
+   INIT_DEV: 1
+   TIM_DEV: 1
+  tmpfs:
+   - /opt/mailmandb
+ tests:
+  profiles:
+   - test
+  image: timimages/tim:${tim.image_tag}
+  command: "${TEST_COMMAND:-python3 -m unittest discover tests/ 'test_*.py' .}"
+  volumes:
+   - .:/service:rw
+  environment:
+   TIM_SETTINGS: testconfig.py
+   PYTHONPATH: /service
+   CI: ${CI:-false}
+  depends_on:
+   - csplugin
+   - pali
+   - fields
+   - showfile
+   - haskellplugins
+   - imagex
+   - jsrunner
+   - dumbo
+   - feedback
+   - redis
+   - oiko
+   - caddy
+   - postgresql-test
+   - mailman-test
+  tmpfs:
+   - /tmp
+   - /tim_files
+   - /cache
+   - /root
+  working_dir: /service/timApp
+  read_only: true
+${ partial("docker", "mailman.tmpl.yml") if mailman.is_dev else "" }
+volumes:
+ data11:
+ cache:
+ caddy_data:
+ caddy_config:
+ redis_data:
+ csplugin_db_data:
+ csplugin_data:
+ csplugin_data_generated:
+networks:
+ db:
+ csplugin_db:

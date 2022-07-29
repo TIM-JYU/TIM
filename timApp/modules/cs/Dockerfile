@@ -2,12 +2,12 @@
 # The image is comprised of three stages
 # - base: The minimal setup to run the image. Contains only JDK, Python and Mono runtimes. Used in CI.
 # - complete: base + various additional languages and libraries. Used in production.
-# - sudo: complete + sshd and sudo access. Used in development.
+# - sudo: complete + sudo access. Used in development.
 #
 # To build all three stages via TIM scripts, run the following commands in TIM root:
-# DEV=0 ./dc build csplugin
-# DEV=0 CSPLUGIN_TARGET=base ./dc build csplugin
-# DEV=0 CSPLUGIN_TARGET=sudo ./dc build csplugin
+# ./tim dev build csplugin
+#
+# (add --push arg to also push the images automatically to Docker Hub)
 
 
 FROM ubuntu:20.04 as base
@@ -360,15 +360,7 @@ USER agent
 FROM complete as sudo
 
 USER root
-RUN bash -c "${APT_INSTALL} openssh-server && ${APT_CLEANUP}"
-RUN mkdir /var/run/sshd
-RUN echo 'root:test' | chpasswd
-RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-RUN echo agent:kissa | chpasswd
-
 ENV LANG en_US.UTF-8
 ENV CLASSPATH .:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar:/cs/java/gui.jar
 
-EXPOSE 22
-# CMD service /opt/cs/startAllSudo.sh && /bin/bash -c "su agent"
-CMD service ssh start && /bin/bash -c "su agent"
+CMD /bin/bash -c "su agent"

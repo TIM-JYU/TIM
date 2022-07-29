@@ -6,9 +6,11 @@
 *~
 .cache/
 .dmypy.json
-.idea
+/.idea
+/.run
 .mypy_cache/
 .settings
+tim.conf
 .stack-work/
 .webassets-cache/
 /Dumbo/
@@ -65,14 +67,7 @@ redate-settings
 temp
 Thumbs.db
 yubi.key
-/mailman/web/diskcache/
-/mailman/web/fulltext_index/
-/mailman/web/logs/
-/mailman/web/static/
-/mailman/messages/
-/mailman/db/
-/mailman/core/logs/
-/mailman/plugins/
+/mailman/
 venv/
 /test/
 /docs/
@@ -80,3 +75,8 @@ venv/
 build_docs.sh
 /timApp/modules/Haskell/
 /timApp/modules/cs/jsav/
+
+# These are generated automatically from templates
+/.env
+/docker-compose.yml
+/docker-compose.dev.yml

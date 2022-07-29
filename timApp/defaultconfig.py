@@ -2,7 +2,7 @@
 List and defaults for all configuration options in TIM.
 
 .. note:: Please don't modify this file directly in your server or local development setup.
-          This avoids merge conflicts. Override the values with prodconfig.py or debugconfig.py instead.
+          This avoids merge conflicts. Override the values with prodconfig.py or devconfig.py instead.
 """
 
 import logging

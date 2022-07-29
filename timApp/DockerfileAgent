@@ -1,3 +1,0 @@
-ARG TIM_IMAGE_TAG
-FROM timimages/tim:${TIM_IMAGE_TAG}
-USER agent

@@ -41,14 +41,6 @@ from tim_common.timjsonencoder import TimJsonEncoder
 from tim_common.utils import Missing
 
 
-class PluginJsonEncoder(json.JSONEncoder):
-    def default(self, o: Any) -> Any | None:
-        tojson = getattr(o, "to_json", None)
-        if tojson:
-            return tojson()
-        return None
-
-
 class PluginAnswerWeb(TypedDict, total=False):
     result: str
     error: str

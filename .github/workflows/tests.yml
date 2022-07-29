@@ -4,29 +4,28 @@ on: push
 
 jobs:
   ci_tests:
-    name: CI tests (${{ matrix.name }})
+    name: CI tests (${{ matrix.test_module }})
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        include:
-          - name: browser
-            command: |
-              TEST_COMMAND="python3 tests/ci_browser_test_runner.py" ./dc up --exit-code-from tests --abort-on-container-exit tests
-          - name: unit
-            command: |
-              TEST_COMMAND="python3 -m unittest discover -v tests/unit 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
-          - name: database
-            command: |
-              TEST_COMMAND="python3 -m unittest discover -v tests/db 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
-          - name: server
-            command: |
-              TEST_COMMAND="python3 -m unittest discover -v tests/server 'test_*.py' ." ./dc up --exit-code-from tests --abort-on-container-exit tests
+        test_module:
+          - browser
+          - unit
+          - db
+          - server
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
+      - name: Cache Angular build assets
+        uses: actions/cache@v3
+        with:
+          path: timApp/.angular/cache
+          key: ${{ runner.os }}-angular-cache-${{ hashFiles('**/*.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-angular-cache-
       - name: Cache node modules
         uses: actions/cache@v3
         with:
@@ -39,21 +38,19 @@ jobs:
           uname -a
           docker info
           docker-compose --version
-      - name: Set up environment
-        run: |
-          cp variables.sh.template variables.sh
-          chmod +x variables.sh
-          sed -i 's/echo variables.sh/#echo variables.sh/' variables.sh
-          sed -i 's/COMPOSE_PROFILES=prod/COMPOSE_PROFILES=test/' variables.sh
-      - name: Pull images
-        run: ./dc pull --quiet
-      - name: Compile JavaScript
-        run: ./npmi && ./js
+      - name: Set up
+        run: ./tim setup --no-interactive --no-install --profile test
+      - name: Download images
+        run: ./tim dc pull --quiet
+      - name: Install dependencies
+        run: ./tim npmi
+      - name: Compile JS
+        run: ./tim js
       - name: Run tests
-        run: ${{ matrix.command }}
+        run: ./tim test --dc-up ${{ matrix.test_module }}
         timeout-minutes: 40
       - name: Upload screenshots
-        if: "${{ matrix.name == 'browser' && always() }}"
+        if: "${{ matrix.test_module == 'browser' && always() }}"
         uses: actions/upload-artifact@v3.0.0
         with:
           name: Browser Screenshots

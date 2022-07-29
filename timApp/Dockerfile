@@ -91,7 +91,7 @@ RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/$
 # Install Python, pip and other necessary packages
 
 RUN bash -c "add-apt-repository -y ppa:deadsnakes/ppa && ${APT_CLEANUP}"
-RUN bash -c "${APT_INSTALL} openssh-server python3.10 python3.10-distutils && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} python3.10 python3.10-distutils && ${APT_CLEANUP}"
 
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 20
 
@@ -150,11 +150,7 @@ RUN bash -c "${APT_INSTALL} curl qpdf gpg-agent poppler-utils && ${APT_CLEANUP} 
 #
 # It has not yet been investigated whether it's because of Node or NPM update.
 RUN (curl -sL https://deb.nodesource.com/setup_16.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
-RUN npm i npm@6.14.8 -g && bash -c "${APT_CLEANUP}"
-
-RUN mkdir /var/run/sshd
-RUN echo 'root:test' | chpasswd
-RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN npm i npm@6 -g && bash -c "${APT_CLEANUP}"
 
 # Flask-Testing does not let us configure host, so we do it here.
 RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.10/dist-packages/flask_testing/utils.py
@@ -195,6 +191,5 @@ WORKDIR /service
 
 CMD python3 launch.py
 
-EXPOSE 22
 EXPOSE 5000
 EXPOSE 5001

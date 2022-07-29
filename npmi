@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-set -e
-
-./run_command_workdir.sh --dc-no-deps timApp /bin/bash -c "\
-npm install --unsafe-perm && \
-(cd modules/jsrunner/server && npm install --unsafe-perm)
-"

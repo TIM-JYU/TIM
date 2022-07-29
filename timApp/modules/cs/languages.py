@@ -22,7 +22,6 @@ from modifiers import Modifier
 from points import give_points
 from run import (
     generate_filename,
-    CS3_TARGET,
     CS3_TAG,
     get_imgsource,
     run2_subdir,
@@ -47,14 +46,10 @@ from tim_common.fileParams import (
 """
 Adding new language to csPlugin:
 
-0. Install new compiler to cs/Dockerfile and build new Docker container from that
+0. Install new compiler to cs/Dockerfile and build new Docker containers from that
     - in /opt/tim directory, run:
-     - DEV=0 ./dc build csplugin
-     - DEV=0 CSPLUGIN_TARGET=base ./dc build csplugin
-     - DEV=0 CSPLUGIN_TARGET=sudo ./dc build csplugin
-     - DEV=0 ./dc push csplugin
-     - DEV=0 CSPLUGIN_TARGET=base ./dc push csplugin
-     - DEV=0 CSPLUGIN_TARGET=sudo ./dc push csplugin
+        ./tim dev build csplugin --push
+      NOTE: --push only works if you logged into Docker Hub first (use `docker login`).
 1. Add the language class starting with capital letter to this or new file
 2. Add language name to 'ttype' variable
 3. Mimic some existing language when creating the new class
@@ -140,7 +135,7 @@ class Language:
             query.jso,
             "markup",
             "dockercontainer",
-            f"timimages/cs3{CS3_TARGET}:{CS3_TAG}",
+            f"timimages/cs3:{CS3_TAG}",
         )
         self.ulimit = get_param(query, "ulimit", None)
         self.savestate = get_param(query, "savestate", "")
@@ -1496,6 +1491,15 @@ class MongoDB(Language):
         self.drop_database = get_param(query, "dropDatabase", False)
 
     def run(self, result, sourcelines, points_rule):
+        mongodb_enabled = os.environ.get("MONGODB_ENABLED", "0") == "1"
+        if not mongodb_enabled:
+            return (
+                -1,
+                "",
+                "MongoDB tasks are disabled at the moment. Please contact administrators for more information",
+                "",
+            )
+
         cleaned_source: str = sourcelines.strip()
         if not cleaned_source:
             return 0, "", "", ""
@@ -1531,6 +1535,15 @@ class CQL(Language):
         self.drop_keyspace = get_param(query, "dropKeyspace", False)
 
     def run(self, result, sourcelines, points_rule):
+        cassandra_enabled = os.environ.get("CASSANDRA_ENABLED", "0") == "1"
+        if not cassandra_enabled:
+            return (
+                -1,
+                "",
+                "Cassandra tasks are disabled at the moment. Please contact administrators for more information",
+                "",
+            )
+
         cleaned_source: str = sourcelines.strip()
         if not cleaned_source:
             return 0, "", "", ""
@@ -2124,7 +2137,7 @@ class Octave(Language):
             self.query.jso,
             "markup",
             "dockercontainer",
-            f"timimages/cs3{CS3_TARGET}:{CS3_TAG}",
+            f"timimages/cs3:{CS3_TAG}",
         )
         code, out, err, pwddir = self.runself(
             ["octave", "--no-window-system", "--no-gui", "-qf", self.pure_exename],

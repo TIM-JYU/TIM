@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="BRANCH:update-stack" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </select>
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.standard": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.standard": "",
+    "nodejs_package_manager_path": "npm",
+    "prettierjs.PrettierConfiguration.Package": "$TIM_PRETTIER$",
+    "settings.editor.selected.configurable": "settings.javascript.prettier"
+  }
+}]]></component>
+  <component name="GithubProjectSettings">
+    <option name="branchProtectionPatterns">
+      <list>
+        <option value="master" />
+      </list>
+    </option>
+  </component>
+  <component name="RunDashboard">
+    <option name="configurationTypes">
+      <set>
+        <option value="tests" />
+      </set>
+    </option>
+  </component>
+  <component name="RunManager" selected="Python.tim">
+    <list>
+      <item itemvalue="Compound.FullStack" />
+      <item itemvalue="JavaScript Debug.JS Debug" />
+      <item itemvalue="npm.bdw" />
+      <item itemvalue="npm.extract-i18n" />
+      <item itemvalue="npm.bdwfast" />
+      <item itemvalue="Python.svn" />
+      <item itemvalue="Python.pali" />
+      <item itemvalue="Python.feedback" />
+      <item itemvalue="Python.drag" />
+      <item itemvalue="Python.imagex" />
+      <item itemvalue="Python.csplugin" />
+      <item itemvalue="Python.fields" />
+      <item itemvalue="Python.CLI" />
+      <item itemvalue="Python.tim" />
+      <item itemvalue="Python tests.Test" />
+    </list>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+</project>

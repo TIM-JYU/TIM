@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="FullStack" type="CompoundRunConfigurationType">
+    <toRun name="bdw" type="js.build_tools.npm" />
+    <toRun name="tim" type="PythonConfigurationType" />
+    <method v="2" />
+  </configuration>
+</component>

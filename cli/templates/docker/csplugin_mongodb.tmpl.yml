@@ -1,0 +1,13 @@
+ csplugin_mongo: # MongoDB for csplugin
+  image: mongo:5
+  profiles:
+   - prod
+   - dev
+  restart: unless-stopped
+  environment:
+   MONGO_INITDB_ROOT_USERNAME: mongo
+   MONGO_INITDB_ROOT_PASSWORD: mongodb
+  volumes:
+   - csplugin_db_data:/data/db
+  networks:
+   - csplugin_db

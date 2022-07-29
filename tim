@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Check that Python 3 is installed
+# Python 3 executable can be named differently depending on the OS
+# Possible names
+# - python3
+# - python3.6
+# - python
+# - py
+#
+# Additionally allow PYTHON_CMD env var to be set
+
+names_to_check=(
+    "$PYTHON_CMD"
+    "py"
+    "python"
+    "python3"
+    "python3.6"
+)
+
+function check_python3_installed() {
+    for name in "${names_to_check[@]}"; do
+        if command -v "$name" --version > /dev/null 2>&1; then
+            version=$("$name" --version 2>&1 | cut -d ' ' -f 2)
+            version_major=$(echo "$version" | cut -d '.' -f 1)
+            version_minor=$(echo "$version" | cut -d '.' -f 2)
+            if [ "$version_major" -ge 3 ] && [ "$version_minor" -ge 6 ]; then
+                python_cmd="$name"
+                return 0
+            fi
+        fi
+    done
+    return 1
+}
+
+if ! check_python3_installed; then
+    echo "Python 3.6 was not found in PATH. Install Python 3 (https://www.python.org/downloads/) and try again."
+    exit 1
+fi
+
+# Ensure the cwd is the location of this script
+# Call cli/tim.py passing all arguments (skip the first one)
+(
+    cd "$DIR"
+    "$python_cmd" -m cli.tim "${@:1}"
+)
