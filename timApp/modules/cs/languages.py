@@ -621,7 +621,7 @@ class Jypeli(CS, Modifier):
     @staticmethod
     @functools.cache
     def get_run_args():
-        return ["--depsfile", "/cs_data/dotnet/configs/jypeli.deps.json"]
+        return ["--additional-deps", "/cs_data/dotnet/configs/jypeli.deps.json"]
 
     def get_cmdline(self):
         mainfile = ""
