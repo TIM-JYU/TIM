@@ -35,7 +35,7 @@ class PyTemplate:
     @staticmethod
     def _create_context(ctx: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         if ctx is None:
-            full_ctx = {}
+            ctx = {}
 
         def _jsonify(value: Any) -> str:
             return json.dumps(value)

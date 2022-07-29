@@ -43,7 +43,7 @@ def run(args: Arguments) -> None:
     elif is_in_wsl():
         raise CLIError("Profiling is not supported in Docker for Windows")
 
-    if os.getuid() != 0:
+    if os.getuid() != 0:  # type: ignore
         raise CLIError("You must run profiling command as root")
 
     py_spy_path = get_pyspy()
