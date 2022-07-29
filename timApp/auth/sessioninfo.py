@@ -37,7 +37,7 @@ def get_current_user_object() -> User:
                     f"""
             Database has no users; you need to re-initialize it:
             ./tim dc down -v
-            delete tim_files folder
+            <delete tim_files folder>
             ./tim up"""
                 ).strip()
             )

@@ -53,9 +53,7 @@ def check_db_version(_, context: MigrationContext):
         != context.environment_context.get_head_revision()
     ):
         enable_loggers()
-        log_error(
-            "Your database is not up to date. To upgrade, run: ./r flask db upgrade"
-        )
+        log_error("Your database is not up to date. To upgrade, run: ./tim update db")
         sys.exit(-1)
     return []
 

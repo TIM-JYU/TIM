@@ -16,7 +16,7 @@ class BrokenDbTest(TimRouteTest):
             """
 Database has no users; you need to re-initialize it:
 ./tim dc down -v
-delete tim_files folder
+<delete tim_files folder>
 ./tim up""".strip(),
             str(e.exception),
         )
