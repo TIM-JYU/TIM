@@ -14,12 +14,13 @@ Backup the database and rotate the backups to keep only the latest backups.
 
 
 class Arguments:
+    shell: bool
     backup_dir: str
     rotate_days: int
 
 
 def run(args: Arguments) -> None:
-    pg_backup(args.backup_dir)
+    pg_backup(args.backup_dir, args.shell)
     log_debug(f"Removing backups older than {args.rotate_days} days")
     p = Path(args.backup_dir)
     remove_older_than = (
@@ -33,6 +34,12 @@ def run(args: Arguments) -> None:
 
 
 def init(parser: ArgumentParser) -> None:
+    parser.add_argument(
+        "--shell",
+        help="Whether to use shell and native gzip command to write the command."
+        "This assumes that `gzip` command is installed and available.",
+        action="store_true",
+    )
     parser.add_argument(
         "--backup-dir",
         help="Directory to store the backups. Default is <cwd>/pg_backup",
