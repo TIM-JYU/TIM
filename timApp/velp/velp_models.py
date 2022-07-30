@@ -103,6 +103,7 @@ class Velp(db.Model):
         back_populates="velps",
         secondary=VelpInGroup.__table__,
         collection_class=attribute_mapped_collection("id"),
+        cascade="all",
     )
     velp_versions: list["VelpVersion"] = db.relationship(
         "VelpVersion", order_by="VelpVersion.id.desc()"
@@ -144,6 +145,7 @@ class VelpGroup(db.Model):
         back_populates="groups",
         secondary=VelpInGroup.__table__,
         collection_class=attribute_mapped_collection("id"),
+        cascade="all",
     )
     block: Block = db.relationship(
         "Block",

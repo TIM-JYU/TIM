@@ -52,6 +52,9 @@ from timApp.velp.velp_models import (
     VelpGroupSelection,
     VelpLabel,
     VelpLabelContent,
+    VelpGroupsInDocument,
+    VelpGroupDefaults,
+    VelpInGroup,
 )
 from timApp.velp.velpgroups import (
     create_default_velp_group,
@@ -832,6 +835,28 @@ def create_default_velp_group_route(doc_id: int) -> Response:
     # timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, user_id)
     db.session.commit()
     return json_response(created_velp_group)
+
+
+@velps.delete("/delete_velp_group_from_database/<int:group_id>")
+def delete_velp_group_from_database(group_id: int) -> Response:
+    """Remove database entries for the specified velp group
+
+    :param group_id: Unique id of the velp group
+    :return: OK response, if the operation was successful
+    """
+    vg = VelpGroup.query.filter_by(id=group_id).first()
+    v_in_g = VelpInGroup.query.filter_by(velp_group_id=group_id).all()
+    vg_sel = VelpGroupSelection.query.filter_by(velp_group_id=group_id).all()
+    vg_def = VelpGroupDefaults.query.filter_by(velp_group_id=group_id).all()
+    vg_in_doc = VelpGroupsInDocument.query.filter_by(velp_group_id=group_id).all()
+
+    targets = [*vg_in_doc, *v_in_g, *vg_sel, *vg_def, vg]
+
+    for t in targets:
+        db.session.delete(t)
+
+    db.session.commit()
+    return ok_response()
 
 
 def get_velp_groups_from_tree(doc: DocInfo) -> list[DocInfo]:
