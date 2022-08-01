@@ -32,7 +32,7 @@ services:
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
    COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
    CADDY_IS_PROXIED: ${ "1" if caddy.is_proxied else "0" }
-   POSTGRESQL_MAX_CONNECTIONS: ${postgresql.max_connections}
+   PG_MAX_CONNECTIONS: ${postgresql.max_connections}
    TIM_SETTINGS: ${compose.profile}config.py
    TIM_HOST: ${tim.host}
    RUN_MAILMAN_DEV: ${ "1" if mailman.is_dev else "0" }
