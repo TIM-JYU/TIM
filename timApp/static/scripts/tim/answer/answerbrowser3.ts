@@ -498,6 +498,7 @@ export type AnswerBrowserData =
 
 const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     pointsStep: 0,
+    validOnlyText: "Show valid only",
 };
 
 export class AnswerBrowserController
