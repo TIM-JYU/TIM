@@ -14,7 +14,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
 import {isVelpable, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {
-    IAnswerBrowserMarkupSettings,
+    IAnswerBrowserSettings,
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
     IModelAnswerSettings,
@@ -496,7 +496,7 @@ export type AnswerBrowserData =
           answernr: number | undefined;
       };
 
-const DEFAULT_MARKUP_CONFIG: IAnswerBrowserMarkupSettings = {
+const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     pointsStep: 0,
 };
 
@@ -541,8 +541,7 @@ export class AnswerBrowserController
     private reviewHtml?: string;
     private answerLoader?: AnswerLoadCallback;
     private pointsStep: number = 0.01;
-    private markupSettings: IAnswerBrowserMarkupSettings =
-        DEFAULT_MARKUP_CONFIG;
+    private markupSettings: IAnswerBrowserSettings = DEFAULT_MARKUP_CONFIG;
     private modelAnswer?: IModelAnswerSettings;
     private modelAnswerFetched = false;
     private modelAnswerHtml?: string;
@@ -659,6 +658,8 @@ export class AnswerBrowserController
         const markup = this.loader.pluginMarkup();
         if (markup?.answerBrowser) {
             this.markupSettings = markup.answerBrowser;
+        } else if (this.viewctrl?.docSettings.answerBrowser) {
+            this.markupSettings = this.viewctrl.docSettings.answerBrowser;
         }
         if (markup?.modelAnswer) {
             this.modelAnswer = markup.modelAnswer;

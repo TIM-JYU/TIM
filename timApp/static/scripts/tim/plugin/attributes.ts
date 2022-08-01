@@ -5,11 +5,11 @@ So, do NOT import anything client-side-specific (like AngularJS) in this module 
 
 import * as t from "io-ts";
 
-export const AnswerBrowserSettings = t.type({
+export const AnswerBrowserSettings = t.partial({
     pointsStep: nullable(t.number),
 });
 
-export interface IAnswerBrowserMarkupSettings
+export interface IAnswerBrowserSettings
     extends t.TypeOf<typeof AnswerBrowserSettings> {
     // Empty
 }

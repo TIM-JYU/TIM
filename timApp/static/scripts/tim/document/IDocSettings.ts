@@ -1,3 +1,5 @@
+import {IAnswerBrowserSettings} from "tim/plugin/attributes";
+
 export type MeetingDateEntry = [string, string, string];
 
 export interface ITimeLeftSettings {
@@ -41,6 +43,7 @@ export interface IDocSettings {
     description?: string;
     translator?: string;
     sync_answerbrowsers?: boolean;
+    answerBrowser?: IAnswerBrowserSettings;
 }
 
 export interface ISlideDocSettings extends IDocSettings {
