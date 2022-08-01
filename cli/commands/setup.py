@@ -249,6 +249,26 @@ def verify_dev_python() -> List[str]:
     )
 
 
+def verify_poetry(python_cmd: List[str]) -> List[str]:
+    poetry_locations = [
+        ["poetry"],
+        [*python_cmd, "-m", "poetry"],
+    ]
+    for poetry_location in poetry_locations:
+        try:
+            run_cmd(
+                [*poetry_location, "--version"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            return poetry_location
+        except (subprocess.CalledProcessError, FileNotFoundError, CLIError) as e:
+            pass
+    raise CLIError(
+        f"Could not find Poetry (package manager used by TIM). Did previous install command work correctly?"
+    )
+
+
 def init_prod_config() -> None:
     prod_config = Path.cwd() / "timApp" / "prodconfig.py"
     if prod_config.exists():
@@ -274,9 +294,10 @@ def setup_dev() -> None:
     python = verify_dev_python()
     log_info("Downloading Poetry")
     run_cmd([*pip, "install", "--upgrade", f"poetry=={POETRY_MIN_VERSION}"])
+    poetry = verify_poetry(python)
 
     log_info("Installing Python development dependencies")
-    run_cmd([*python, "-m", "poetry", "install", "--only=dev"])
+    run_cmd([*poetry, "install", "--only=dev"])
 
     log_info("Installing Black formatter")
     run_cmd([*pip, "install", "--upgrade", "black"])
