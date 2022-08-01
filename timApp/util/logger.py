@@ -39,7 +39,7 @@ class StampedTimedRotatingFileHandler(TimedRotatingFileHandler):
             try:
                 return int(
                     isodate.parse_datetime(
-                        self.log_timestamp_file.read_text()
+                        self.log_timestamp_file.read_text().strip()
                     ).timestamp()
                 )
             except Exception:
