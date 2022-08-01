@@ -655,11 +655,18 @@ export class AnswerBrowserController
         this.feedback = "";
         this.showNewTask = this.isAndSetShowNewTask();
 
+        if (this.viewctrl?.docSettings.answerBrowser) {
+            this.markupSettings = {
+                ...this.markupSettings,
+                ...this.viewctrl.docSettings.answerBrowser,
+            };
+        }
         const markup = this.loader.pluginMarkup();
         if (markup?.answerBrowser) {
-            this.markupSettings = markup.answerBrowser;
-        } else if (this.viewctrl?.docSettings.answerBrowser) {
-            this.markupSettings = this.viewctrl.docSettings.answerBrowser;
+            this.markupSettings = {
+                ...this.markupSettings,
+                ...markup.answerBrowser,
+            };
         }
         if (markup?.modelAnswer) {
             this.modelAnswer = markup.modelAnswer;
