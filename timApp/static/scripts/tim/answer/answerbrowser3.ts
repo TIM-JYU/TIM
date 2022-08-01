@@ -678,6 +678,9 @@ export class AnswerBrowserController
         if (this.markupSettings.pointsStep) {
             this.pointsStep = this.markupSettings?.pointsStep;
         }
+        if (this.markupSettings.showValidOnly != undefined) {
+            this.onlyValid = this.markupSettings.showValidOnly;
+        }
 
         // noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
         this.scope.$watch(

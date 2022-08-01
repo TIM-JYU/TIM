@@ -8,6 +8,7 @@ import * as t from "io-ts";
 export const AnswerBrowserSettings = t.partial({
     pointsStep: nullable(t.number),
     validOnlyText: t.string,
+    showValidOnly: t.boolean,
 });
 
 export interface IAnswerBrowserSettings

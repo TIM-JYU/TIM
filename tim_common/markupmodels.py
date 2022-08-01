@@ -176,6 +176,7 @@ class UndoInfo:
 class AnswerBrowserInfo:
     pointsStep: float | None | Missing = missing
     validOnlyText: str | None | Missing = missing
+    showValidOnly: bool | None | Missing = missing
 
 
 @dataclass
