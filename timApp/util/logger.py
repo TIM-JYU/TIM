@@ -2,14 +2,10 @@
 import logging
 import os
 import sys
-import time
-from datetime import datetime
-from logging.handlers import TimedRotatingFileHandler
-from pathlib import Path
-from typing import Any
 
-import isodate
 from flask import Flask
+
+from timApp.util.tim_log_file_handler import TIMRotatingLogFileHandler
 
 tim_logger = logging.getLogger("tim")
 tim_logger.setLevel(logging.DEBUG)
@@ -18,50 +14,12 @@ wz = logging.getLogger("werkzeug")
 wz.setLevel(logging.ERROR)
 
 
-class StampedTimedRotatingFileHandler(TimedRotatingFileHandler):
-    """
-    Extended TimedRotatingFileHandler that tracks the last rotation time via an additional .log_timestamp file.
-    """
-
-    def __init__(self, filename: str, *args: Any, **kwargs: Any) -> None:
-        self.log_timestamp_file = None
-        _, ext = os.path.splitext(filename)
-        super().__init__(filename, *args, **kwargs)
-        base_dir = Path(filename).parent
-        self.log_timestamp_file = base_dir / ".log_timestamp"
-        t = self._get_log_time()
-        self.rolloverAt = self.computeRollover(t)
-
-    def _get_log_time(self) -> int:
-        assert self.log_timestamp_file is not None
-        if self.log_timestamp_file.exists():
-            # noinspection PyBroadException
-            try:
-                return int(
-                    isodate.parse_datetime(
-                        self.log_timestamp_file.read_text().strip()
-                    ).timestamp()
-                )
-            except Exception:
-                pass
-        return int(time.time())
-
-    # noinspection PyPep8Naming
-    def computeRollover(self, currentTime: int) -> int:
-        result = super().computeRollover(currentTime)
-        if self.log_timestamp_file:
-            self.log_timestamp_file.write_text(
-                isodate.datetime_isoformat(datetime.fromtimestamp(currentTime))
-            )
-        return result
-
-
 def setup_logging(app: Flask) -> None:
     if not app.config["TESTING"]:
         logging.getLogger("alembic").level = logging.INFO
     formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s ")
     os.makedirs(app.config["LOG_DIR"], exist_ok=True)
-    file_handler = StampedTimedRotatingFileHandler(
+    file_handler = TIMRotatingLogFileHandler(
         app.config["LOG_PATH"],
         when="D",
         interval=30,
