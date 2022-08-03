@@ -123,7 +123,7 @@ COPY pyproject.toml poetry.lock ./
 RUN bash -c " \
 poetry config virtualenvs.create false && \
 poetry config virtualenvs.in-project false && \
-poetry install && \
+poetry install --without dev && \
 ${APT_CLEANUP} && \
 rm pyproject.toml poetry.lock"
 
