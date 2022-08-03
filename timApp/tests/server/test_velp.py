@@ -319,7 +319,7 @@ class VelpGroupDeletionTest(TimRouteTest):
         db.session.commit()
 
         # Case 1:
-        # Test user 2 should not be able to delete velp group
+        # Test user 2 should not be able to delete velp group with view permissions
         self.login_test2()
         # try removing from directory
         self.delete(url=f"/documents/{g['id']}", expect_status=403)
@@ -329,7 +329,37 @@ class VelpGroupDeletionTest(TimRouteTest):
         )
 
         # Case 2:
-        # Test user 1 should be able to delete velp group
+        # Should not be able to delete with edit permissions
+        self.test_user_2.grant_access(d, AccessType.edit)
+        # try removing from directory
+        self.delete(url=f"/documents/{g['id']}", expect_status=403)
+        # try deleting from database
+        self.delete(
+            url=f"/delete_velp_group_from_database/{g['id']}", expect_status=403
+        )
+
+        # Case 3:
+        # Should not be able to delete with teacher rights
+        self.test_user_2.grant_access(d, AccessType.teacher)
+        # try removing from directory
+        self.delete(url=f"/documents/{g['id']}", expect_status=403)
+        # try deleting from database
+        self.delete(
+            url=f"/delete_velp_group_from_database/{g['id']}", expect_status=403
+        )
+
+        # Case 4:
+        # Should not be able to delete with manage rights
+        self.test_user_2.grant_access(d, AccessType.manage)
+        # try removing from directory
+        self.delete(url=f"/documents/{g['id']}", expect_status=403)
+        # try deleting from database
+        self.delete(
+            url=f"/delete_velp_group_from_database/{g['id']}", expect_status=403
+        )
+
+        # Case 5:
+        # Test user 1 (owner) should be able to delete velp group
         self.login_test1()
         # try removing from directory
         self.delete(url=f"/documents/{g['id']}", expect_status=200)
