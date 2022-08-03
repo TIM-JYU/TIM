@@ -269,7 +269,7 @@ def verify_poetry(python_cmd: List[str]) -> List[str]:
     )
 
 
-def verify_venv_pip() -> List[str]:
+def verify_venv_pip() -> None:
     venv_path = Path.cwd() / ".venv"
     if not venv_path.exists():
         raise CLIError(
@@ -287,7 +287,7 @@ def verify_venv_pip() -> List[str]:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
-            return [pip_command]
+            return
         except (subprocess.CalledProcessError, FileNotFoundError, CLIError) as e:
             pass
     raise CLIError(
@@ -325,10 +325,7 @@ def setup_dev() -> None:
 
     log_info("Installing Python development dependencies")
     run_cmd([*poetry, "install", "--only=dev"])
-
-    venv_pip = verify_venv_pip()
-    log_info("Installing Black formatter")
-    run_cmd([*venv_pip, "install", "--upgrade", "black"])
+    verify_venv_pip()
 
     if not verify_npm(False):
         log_info("Ensuring npm@6 is installed")
