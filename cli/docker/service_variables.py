@@ -18,4 +18,4 @@ def csplugin_image_tag() -> str:
 
 def tim_image_tag() -> str:
     cwd = Path.cwd()
-    return hash_file(cwd / "timApp" / "Dockerfile", cwd / "poetry.toml")
+    return hash_file(cwd / "timApp" / "Dockerfile", cwd / "poetry.lock")

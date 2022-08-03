@@ -117,12 +117,15 @@ RUN bash -c "${APT_INSTALL} \
 RUN wget -q https://bootstrap.pypa.io/get-pip.py && python3.10 get-pip.py && rm get-pip.py
 
 ENV PIP_INSTALL="python3.10 -m pip install"
-RUN bash -c "${PIP_INSTALL} --upgrade poetry==1.2.0b2 requests && ${APT_CLEANUP}"
+RUN bash -c "${PIP_INSTALL} --upgrade poetry==1.2.0b3 requests && ${APT_CLEANUP}"
 
-COPY pyproject.toml poetry.lock poetry.toml ./
-RUN bash -c "poetry install && \
+COPY pyproject.toml poetry.lock ./
+RUN bash -c " \
+poetry config virtualenvs.create false && \
+poetry config virtualenvs.in-project false && \
+poetry install && \
 ${APT_CLEANUP} && \
-rm pyproject.toml poetry.lock poetry.toml"
+rm pyproject.toml poetry.lock"
 
 # Install Pandoc
 RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.14.2/pandoc-2.14.2-1-amd64.deb" -qO $FILE && \
