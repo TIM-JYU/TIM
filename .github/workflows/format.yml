@@ -21,6 +21,8 @@ jobs:
   py_format:
     name: Check Python formatting
     runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: "3.10"
 
     steps:
       - uses: actions/checkout@v3
@@ -29,9 +31,11 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v3
         with:
-          python-version: "3.10"
+          python-version: "${{ env.PYTHON_VERSION }}"
           cache: poetry
       - name: Install dependencies
-        run: poetry install --only=dev
+        run: |
+          poetry env use "${{ env.PYTHON_VERSION }}"
+          poetry install --only=dev
       - name: Run format
         run: .venv/bin/black --check .
