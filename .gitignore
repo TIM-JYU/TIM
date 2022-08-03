@@ -68,7 +68,7 @@ temp
 Thumbs.db
 yubi.key
 /mailman/
-venv/
+.venv/
 /test/
 /docs/
 /python_docs/
