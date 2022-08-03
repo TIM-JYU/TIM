@@ -806,7 +806,6 @@ export class VelpSelectionController implements IController {
                       - velpgroupselection (velp_group_id)
                       - velpgroupsindocument (velp_group_id)
                       - velpingroup (velp_group_id) Velp link
-                      - velpgroupdefaults (velp_group_id)
                       */
 
                     /* Update velp group list in UI */

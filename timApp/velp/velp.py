@@ -20,6 +20,7 @@ from timApp.auth.accesshelper import (
     get_doc_or_abort,
     verify_edit_access,
     AccessDenied,
+    verify_ownership,
 )
 from timApp.auth.sessioninfo import (
     get_current_user_object,
@@ -678,6 +679,7 @@ def create_velp_group_route(doc_id: int) -> Response:
     Required key(s):
         - name: velp group name
         - target_type: document, folder or personal group.
+                       0 == personal, 1 == document, 2 == folder
 
     :param doc_id: ID of the document
     :return: CreatedVelpGroup object containing information of new velp group.
@@ -839,11 +841,14 @@ def create_default_velp_group_route(doc_id: int) -> Response:
 
 @velps.delete("/delete_velp_group_from_database/<int:group_id>")
 def delete_velp_group_from_database(group_id: int) -> Response:
-    """Remove database entries for the specified velp group
+    """Remove database entries for the specified velp group.
 
-    :param group_id: Unique id of the velp group
-    :return: OK response, if the operation was successful
+    :param group_id: Unique id of the velp group.
+    :return: OK response, if the operation was successful.
     """
+    d = get_doc_or_abort(group_id)
+    verify_ownership(d)
+
     vg = VelpGroup.query.filter_by(id=group_id).first()
     v_in_g = VelpInGroup.query.filter_by(velp_group_id=group_id).all()
     vg_sel = VelpGroupSelection.query.filter_by(velp_group_id=group_id).all()
