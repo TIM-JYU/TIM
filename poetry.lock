@@ -408,15 +408,15 @@ webassets = ">=2.0"
 
 [[package]]
 name = "flask-caching"
-version = "1.11.1"
+version = "2.0.1"
 description = "Adds caching support to Flask applications."
 category = "main"
 optional = false
 python-versions = ">=3.7"
 
 [package.dependencies]
-cachelib = "*"
-Flask = "*"
+cachelib = ">=0.9.0"
+Flask = "<3"
 
 [[package]]
 name = "flask-compress"
@@ -1790,7 +1790,7 @@ testing = ["coverage (>=5.0.3)", "zope-event", "zope-testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "d92f31bb4c68d0b7aff5af60a8b98e87c1e907c4bff858bb106b3658a193852d"
+content-hash = "0f6fb68d8e3142e429b1205380d2577a9f5c2b6743b8590206c077452b4ffe59"
 
 [metadata.files]
 alabaster = [
@@ -2093,8 +2093,8 @@ flask-assets = [
     {file = "Flask_Assets-2.0-py3-none-any.whl", hash = "sha256:2845bd3b479be9db8556801e7ebc2746ce2d9edb4e7b64a1c786ecbfc1e5867b"},
 ]
 flask-caching = [
-    {file = "Flask-Caching-1.11.1.tar.gz", hash = "sha256:28af189e97defb9e39b43ebe197b54a58aaee81bdeb759f46d969c26d7aa7810"},
-    {file = "Flask_Caching-1.11.1-py3-none-any.whl", hash = "sha256:36592812eec6cba86eca48bcda74eff24bfd6c8eaf6056ca0184474bb78c0dc4"},
+    {file = "Flask-Caching-2.0.1.tar.gz", hash = "sha256:10df200a03f032af60077befe41779dd94898b67c82040d34e87210b71ba2638"},
+    {file = "Flask_Caching-2.0.1-py3-none-any.whl", hash = "sha256:703df847cbe904d8ddffd5f5fb320e236a31cb7bebac4a93d6b1701dd16dbf37"},
 ]
 flask-compress = [
     {file = "Flask-Compress-1.12.tar.gz", hash = "sha256:e2159499f39d618a4d56ba0484e7b58b57956b9a2c6d3510f095f5bb14b7afc5"},
