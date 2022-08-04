@@ -269,6 +269,33 @@ def verify_poetry(python_cmd: List[str]) -> List[str]:
     )
 
 
+def verify_venv_pip() -> None:
+    venv_path = Path.cwd() / ".venv"
+    if not venv_path.exists():
+        raise CLIError(
+            f"Could not find a Python virtual environment at {venv_path}. "
+            "Did the previous poetry install command work correctly?"
+        )
+    pip_commands = [
+        str(venv_path / "bin" / "pip"),  # Linux,
+        str(venv_path / "Scripts" / "pip.exe"),  # Windows
+    ]
+    for pip_command in pip_commands:
+        try:
+            run_cmd(
+                [pip_command, "--version"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            return
+        except (subprocess.CalledProcessError, FileNotFoundError, CLIError) as e:
+            pass
+    raise CLIError(
+        f"Could not find pip in the Python virtual environment at {venv_path}. "
+        "Did the previous poetry install command work correctly?"
+    )
+
+
 def init_prod_config() -> None:
     prod_config = Path.cwd() / "timApp" / "prodconfig.py"
     if prod_config.exists():
@@ -298,9 +325,7 @@ def setup_dev() -> None:
 
     log_info("Installing Python development dependencies")
     run_cmd([*poetry, "install", "--only=dev"])
-
-    log_info("Installing Black formatter")
-    run_cmd([*pip, "install", "--upgrade", "black"])
+    verify_venv_pip()
 
     if not verify_npm(False):
         log_info("Ensuring npm@6 is installed")
@@ -318,13 +343,20 @@ def setup_dev() -> None:
         prettier_path = json.dumps(
             str(Path.cwd() / "timApp" / "node_modules" / "prettier")
         ).strip('"')
+        venv_bin_path = (
+            f"{Path.cwd() / '.venv' / 'bin'}{os.path.sep}"
+            if platform.system() == "Linux"
+            else f"{Path.cwd() / '.venv' / 'Scripts'}{os.path.sep}"
+        )
         for root, dirs, files in os.walk(idea_template):
             for file in files:
                 file_path = Path(root) / file
                 file_contents = file_path.read_text(encoding="utf-8")
-                file_contents = file_contents.replace(
-                    "$TIM_DOCKER_COMPOSE$", docker_compose_path
-                ).replace("$TIM_PRETTIER$", prettier_path)
+                file_contents = (
+                    file_contents.replace("$TIM_DOCKER_COMPOSE$", docker_compose_path)
+                    .replace("$TIM_PRETTIER$", prettier_path)
+                    .replace("$TIM_VENV_BIN$", venv_bin_path)
+                )
                 target_path = idea_path / file_path.relative_to(idea_template)
                 target_path.parent.mkdir(parents=True, exist_ok=True)
                 target_path.write_text(file_contents, encoding="utf-8")
