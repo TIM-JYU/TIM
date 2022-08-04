@@ -30,6 +30,7 @@ from timApp.auth.sessioninfo import (
 from timApp.document.docentry import DocEntry, get_documents_in_folder, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
+from timApp.item.manage import del_document
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.users import get_rights_holders
@@ -839,9 +840,9 @@ def create_default_velp_group_route(doc_id: int) -> Response:
     return json_response(created_velp_group)
 
 
-@velps.delete("/delete_velp_group_from_database/<int:group_id>")
-def delete_velp_group_from_database(group_id: int) -> Response:
-    """Remove database entries for the specified velp group.
+@velps.delete("/velp/group/<int:group_id>")
+def delete_velp_group(group_id: int) -> Response:
+    """Remove velp group document and the database entries for the specified velp group.
 
     :param group_id: Unique id of the velp group.
     :return: OK response, if the operation was successful.
@@ -849,6 +850,10 @@ def delete_velp_group_from_database(group_id: int) -> Response:
     d = get_doc_or_abort(group_id)
     verify_ownership(d)
 
+    # Remove document from directory, ie. soft delete
+    del_document(group_id)
+
+    # Delete associated entries/rows from database
     vg = VelpGroup.query.filter_by(id=group_id).first()
     v_in_g = VelpInGroup.query.filter_by(velp_group_id=group_id).all()
     vg_sel = VelpGroupSelection.query.filter_by(velp_group_id=group_id).all()

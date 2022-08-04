@@ -12,6 +12,7 @@ import {
 import * as velpSummary from "tim/velp/velp-summary.component";
 import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import {ViewCtrl} from "../document/viewctrl";
 import {$http} from "../util/ngimport";
 import {
@@ -776,48 +777,38 @@ export class VelpSelectionController implements IController {
 
     /**
      * Removes the velp group.
-     * Largely copied from timApp\static\scripts\tim\item\manageCtrl.ts\deleteDocument()
      * @param group the velp group to be deleted
      */
     async deleteVelpGroup(group: IVelpGroupUI) {
         if (
-            window.confirm(
-                `Are you sure you want to delete this ${
-                    "velp group: " + group.name
-                }? Deletion cannot be undone!`
-            )
+            !(await showConfirm(
+                $localize`Delete velp group?`,
+                $localize`Are you sure you want to delete this velp group: ${group.name}? \nDeletion cannot be undone!`
+            ))
         ) {
-            // TODO
-            //  - check that group isn't linked to any velps/annotations
-            //  - check that user has sufficient rights
+        } else {
+            const deleteResponse = await to(
+                $http.delete("/velp/group/" + group.id)
+            );
 
-            const r_soft_del = await to($http.delete("/documents/" + group.id));
-            if (r_soft_del.ok) {
-                const r_hard_del = await to(
-                    $http.delete("/delete_velp_group_from_database/" + group.id)
-                );
-                if (r_hard_del.ok) {
-                    /*
-                    Soft-delete is not enough - need to delete from database as well
-                    Database tables to check/modify:
-                      - velpgroup (primary key: id -> velp_group_id)
-                      - velpgroupdefaults (velp_group_id)
-                      - velpgrouplabel (velp_group_id) NOT USED
-                      - velpgroupselection (velp_group_id)
-                      - velpgroupsindocument (velp_group_id)
-                      - velpingroup (velp_group_id) Velp link
-                      */
+            if (deleteResponse.ok) {
+                /*
+                Database tables to check/modify:
+                  - velpgroup (primary key: id -> velp_group_id)
+                  - velpgroupdefaults (velp_group_id)
+                  - velpgrouplabel (velp_group_id) NOT USED
+                  - velpgroupselection (velp_group_id)
+                  - velpgroupsindocument (velp_group_id)
+                  - velpingroup (velp_group_id) Velp link
+                  */
 
-                    /* Update velp group list in UI */
-                    const g_index = this.velpGroups.indexOf(group);
-                    if (g_index >= 0) {
-                        this.velpGroups.splice(g_index, 1);
-                    }
-                } else {
-                    await showMessageDialog(r_hard_del.result.data.error);
+                /* Update velp group list in UI */
+                const g_index = this.velpGroups.indexOf(group);
+                if (g_index >= 0) {
+                    this.velpGroups.splice(g_index, 1);
                 }
             } else {
-                await showMessageDialog(r_soft_del.result.data.error);
+                await showMessageDialog(deleteResponse.result.data.error);
             }
         }
     }
