@@ -77,6 +77,7 @@ def run_npm(
         run_compose(
             [
                 "run",
+                "-T",
                 "--rm",
                 "--no-deps",
                 "--workdir",
