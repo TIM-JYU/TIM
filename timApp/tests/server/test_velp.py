@@ -316,6 +316,9 @@ class VelpGroupDeletionTest(TimRouteTest):
             f"/{d.document.id}/create_velp_group",
             {"name": "test-group1", "target_type": 1},
         )
+        # get velp group document
+        g_doc = get_doc_or_abort(g["id"])
+        self.test_user_2.grant_access(g_doc, AccessType.view)
         db.session.commit()
 
         # Case 1:
@@ -324,49 +327,43 @@ class VelpGroupDeletionTest(TimRouteTest):
         # try removing from directory
         self.delete(url=f"/documents/{g['id']}", expect_status=403)
         # try deleting from database
-        self.delete(
-            url=f"/delete_velp_group_from_database/{g['id']}", expect_status=403
-        )
+        self.delete(url=f"/velp/group/{g['id']}", expect_status=403)
 
         # Case 2:
         # Should not be able to delete with edit permissions
-        self.test_user_2.grant_access(d, AccessType.edit)
+        self.test_user_2.grant_access(g_doc, AccessType.edit)
+        db.session.commit()
         # try removing from directory
         self.delete(url=f"/documents/{g['id']}", expect_status=403)
         # try deleting from database
-        self.delete(
-            url=f"/delete_velp_group_from_database/{g['id']}", expect_status=403
-        )
+        self.delete(url=f"/velp/group/{g['id']}", expect_status=403)
 
         # Case 3:
         # Should not be able to delete with teacher rights
-        self.test_user_2.grant_access(d, AccessType.teacher)
+        self.test_user_2.grant_access(g_doc, AccessType.teacher)
+        db.session.commit()
         # try removing from directory
         self.delete(url=f"/documents/{g['id']}", expect_status=403)
         # try deleting from database
-        self.delete(
-            url=f"/delete_velp_group_from_database/{g['id']}", expect_status=403
-        )
+        self.delete(url=f"/velp/group/{g['id']}", expect_status=403)
 
         # Case 4:
         # Should not be able to delete with manage rights
-        self.test_user_2.grant_access(d, AccessType.manage)
+        self.test_user_2.grant_access(g_doc, AccessType.manage)
+        db.session.commit()
         # try removing from directory
         self.delete(url=f"/documents/{g['id']}", expect_status=403)
         # try deleting from database
-        self.delete(
-            url=f"/delete_velp_group_from_database/{g['id']}", expect_status=403
-        )
+        self.delete(url=f"/velp/group/{g['id']}", expect_status=403)
 
         # Case 5:
-        # Test user 1 (owner) should be able to delete velp group
-        self.login_test1()
+        # Should be able to delete velp group with owner rights
+        self.test_user_2.grant_access(g_doc, AccessType.owner)
+        db.session.commit()
         # try removing from directory
         self.delete(url=f"/documents/{g['id']}", expect_status=200)
         # try deleting from database
-        self.delete(
-            url=f"/delete_velp_group_from_database/{g['id']}", expect_status=200
-        )
+        self.delete(url=f"/velp/group/{g['id']}", expect_status=200)
         # velp group document should now be placed in the TIM 'trash bin' (/roskis)
         deleted = get_doc_or_abort(g["id"])
         self.assertEqual(f"roskis/{g['name']}", deleted.path)
