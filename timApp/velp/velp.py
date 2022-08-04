@@ -854,16 +854,19 @@ def delete_velp_group(group_id: int) -> Response:
     del_document(group_id)
 
     # Delete associated entries/rows from database
-    vg = VelpGroup.query.filter_by(id=group_id).first()
-    v_in_g = VelpInGroup.query.filter_by(velp_group_id=group_id).all()
-    vg_sel = VelpGroupSelection.query.filter_by(velp_group_id=group_id).all()
-    vg_def = VelpGroupDefaults.query.filter_by(velp_group_id=group_id).all()
-    vg_in_doc = VelpGroupsInDocument.query.filter_by(velp_group_id=group_id).all()
-
-    targets = [*vg_in_doc, *v_in_g, *vg_sel, *vg_def, vg]
-
-    for t in targets:
-        db.session.delete(t)
+    VelpInGroup.query.filter_by(velp_group_id=group_id).delete(
+        synchronize_session=False
+    )
+    VelpGroupSelection.query.filter_by(velp_group_id=group_id).delete(
+        synchronize_session=False
+    )
+    VelpGroupDefaults.query.filter_by(velp_group_id=group_id).delete(
+        synchronize_session=False
+    )
+    VelpGroupsInDocument.query.filter_by(velp_group_id=group_id).delete(
+        synchronize_session=False
+    )
+    VelpGroup.query.filter_by(id=group_id).delete(synchronize_session=False)
 
     db.session.commit()
     return ok_response()
