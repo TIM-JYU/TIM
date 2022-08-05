@@ -11,6 +11,7 @@ import * as t from "io-ts";
 import {CommonDialogOptions} from "tim/answer/commondialogoptions";
 import {ReadonlyMoment} from "tim/util/readonlymoment";
 import {maybeUndefined} from "tim/plugin/attributes";
+import {documentglobals} from "tim/util/globals";
 import {$httpParamSerializer} from "../util/ngimport";
 import {TimStorage, toPromise} from "../util/utils";
 
@@ -28,6 +29,7 @@ const AnswersDialogOptions = t.intersection([
         consent: t.string,
         format: t.keyof({text: null, json: null}),
         salt: maybeUndefined(t.string),
+        group: maybeUndefined(t.string),
     }),
     CommonDialogOptions,
 ]);
@@ -50,6 +52,21 @@ export interface IAllAnswersParams {
             </ng-container>
             <ng-container body>
                 <form class="form-horizontal">
+                    <div class="form-group" *ngIf="activeGroup">
+                        <div class="col-sm-3">
+                            <label class="radio-inline" i18n>Answer group</label>
+                        </div>
+                        <div class="col-sm-9">
+                            <label class="radio-inline">
+                                <input type="radio" [(ngModel)]="options.group" name="answer-group" [value]="undefined">
+                                <ng-container i18n>All answerers</ng-container>
+                            </label>
+                            <label class="radio-inline">
+                                <input type="radio" [(ngModel)]="options.group" name="answer-group" [value]="activeGroup">
+                                <ng-container i18n>Document group ({{ activeGroup }})</ng-container>
+                            </label>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <div class="col-sm-3">
                             <label class="radio-inline" i18n>Answer age</label>
@@ -278,6 +295,7 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
     options!: IOptions;
     private storage = new TimStorage("allAnswersOptions", AnswersDialogOptions);
     lastFetch?: ReadonlyMoment;
+    activeGroup?: string;
 
     constructor(private http: HttpClient) {
         super();
@@ -299,6 +317,7 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
     ngOnInit() {
         const options = this.data;
         this.showSort = options.allTasks;
+        this.activeGroup = documentglobals().group;
 
         const defs = {
             age: "max",
@@ -312,9 +331,13 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
             print: "all",
             format: "text",
             salt: undefined,
+            group: undefined,
         } as const;
 
         this.options = this.storage.get() ?? defs;
+        if (this.options.group && this.activeGroup) {
+            this.options.group = this.activeGroup;
+        }
 
         (async () => {
             const r = await toPromise(

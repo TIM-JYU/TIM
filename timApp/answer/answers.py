@@ -256,7 +256,11 @@ def get_all_answers(
         raise ValueError("Answer period must be specified.")
 
     q = get_all_answer_initial_query(
-        options.period_from, options.period_to, task_ids, options.valid
+        options.period_from,
+        options.period_to,
+        task_ids,
+        options.valid,
+        options.group,
     )
 
     q = q.options(defaultload(Answer.users).lazyload(User.groups))
@@ -401,6 +405,7 @@ def get_all_answer_initial_query(
     period_to: datetime,
     task_ids: list[TaskId],
     valid: ValidityOptions,
+    group: str | None = None,
 ) -> Query:
     q = Answer.query.filter(
         (period_from <= Answer.answered_on) & (Answer.answered_on < period_to)
@@ -413,6 +418,8 @@ def get_all_answer_initial_query(
         case ValidityOptions.VALID:
             q = q.filter_by(valid=True)
     q = q.join(User, Answer.users)
+    if group:
+        q = q.join(UserGroup, User.groups).filter(UserGroup.name == group)
     return q
 
 

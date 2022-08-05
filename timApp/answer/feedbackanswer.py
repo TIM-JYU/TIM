@@ -7,7 +7,7 @@ from flask import Blueprint, request
 from marshmallow import EXCLUDE
 
 from timApp.answer.answer import Answer
-from timApp.answer.answers import get_all_answer_initial_query
+from timApp.answer.answers import get_all_answer_initial_query, ValidityOptions
 from timApp.auth.accesshelper import verify_teacher_access, AccessDenied
 from timApp.auth.sessioninfo import user_context_with_logged_in
 from timApp.document.docentry import DocEntry, get_documents_in_folder
@@ -49,7 +49,13 @@ def get_all_feedback_answers(
     :return: Compiled list of test results.
     """
 
-    q = get_all_answer_initial_query(period_from, period_to, task_ids, valid)
+    # TODO: Parse using marshmallow (see AllAnswersOptions)
+    try:
+        validity = ValidityOptions(valid)
+    except ValueError:
+        validity = ValidityOptions.ALL
+
+    q = get_all_answer_initial_query(period_from, period_to, task_ids, validity)
 
     # Sorts the answers first with user then by time - for a report of whole test result by one user.
     q = q.order_by(User.name, Answer.answered_on)

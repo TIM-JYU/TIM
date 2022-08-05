@@ -118,7 +118,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     curr_item: IDocument;
     noBrowser: boolean;
     allowMove: boolean; // TODO this doesn't come from server and should be removed from globals
-    group: IGroup;
+    group?: string;
     docSettings: IDocSettings;
     memoMinutesSettings?: IMeetingMemoSettings;
     editMode: EditMode | null;

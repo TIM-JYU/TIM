@@ -6370,6 +6370,30 @@
           <context context-type="linenumber">1354</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6496645013696097846" datatype="html">
+        <source>Answer group</source>
+        <target state="translated">Svarsgrupp</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">57</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6224594385004959551" datatype="html">
+        <source>All answerers</source>
+        <target state="translated">Alla svarande</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">62</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8301861427771997270" datatype="html">
+        <source>Document group (<x id="INTERPOLATION" equiv-text="{{ activeGroup }}"/>)</source>
+        <target state="translated">Dokumentgrupp (<x id="INTERPOLATION" equiv-text="{{ activeGroup }}"/>)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/all-answers-dialog.component.ts</context>
+          <context context-type="linenumber">66</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
