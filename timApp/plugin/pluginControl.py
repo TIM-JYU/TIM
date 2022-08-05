@@ -55,7 +55,6 @@ from timApp.util.utils import (
     Range,
     get_error_html_block,
     get_error_html,
-    get_current_time,
 )
 from tim_common.html_sanitize import sanitize_html
 
@@ -415,21 +414,6 @@ class PluginifyResult:
     has_errors: bool
 
 
-def set_model_answer_info(
-    model_answer_info: dict, context_user: UserContext, plugin: Plugin
-):
-    if not model_answer_info.get("answer"):
-        plugin.values.pop("modelAnswer", None)
-        return
-    model_answer_info.pop("answer", None)
-    lock = model_answer_info.get("lock", True)
-    if lock:
-        plugin.set_access_end_for_user(user=context_user.logged_user)
-        if plugin.access_end_for_user:
-            if plugin.access_end_for_user < get_current_time():
-                model_answer_info["alreadyLocked"] = True
-
-
 def pluginify(
     doc: Document,
     pars: list[DocParagraph],
@@ -593,9 +577,7 @@ def pluginify(
         for _, plugin in plugin_block_map.items():
             plugin.values.pop("postprogram", None)
             plugin.values.pop("preprogram", None)
-            model_answer = plugin.values.get("modelAnswer", None)
-            if model_answer:
-                set_model_answer_info(model_answer, user_ctx, plugin)
+            plugin.values.pop("modelAnswer", None)
             if not plugin.task_id:
                 continue
             if plugin.task_id.is_global:
