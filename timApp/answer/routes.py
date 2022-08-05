@@ -2367,7 +2367,7 @@ def get_model_answer(task_id: str) -> Response:
                 )
                 db.session.commit()
                 log_task_block(
-                    f"set task {tid.doc_task} access_end at {current_time} via modelAnswer"
+                    f"set task {tid.doc_task} accessible_to at {current_time} via modelAnswer"
                 )
     answer_html = md_to_html(model_answer_info.answer)
     return json_response({"answer": answer_html})
@@ -2626,7 +2626,7 @@ def unlock_task(task_id: str) -> Response:
         )
         db.session.commit()
         log_task_block(
-            f"set task {tid.doc_task} access_end at {expire_time} via accessDuration"
+            f"set task {tid.doc_task} accessible_to at {expire_time} via accessDuration"
         )
 
     else:
