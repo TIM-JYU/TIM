@@ -14,7 +14,7 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
 import {isVelpable, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {
-    IAnswerBrowserMarkupSettings,
+    IAnswerBrowserSettings,
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
     IModelAnswerSettings,
@@ -496,8 +496,9 @@ export type AnswerBrowserData =
           answernr: number | undefined;
       };
 
-const DEFAULT_MARKUP_CONFIG: IAnswerBrowserMarkupSettings = {
+const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     pointsStep: 0,
+    validOnlyText: "Show valid only",
 };
 
 export class AnswerBrowserController
@@ -541,8 +542,7 @@ export class AnswerBrowserController
     private reviewHtml?: string;
     private answerLoader?: AnswerLoadCallback;
     private pointsStep: number = 0.01;
-    private markupSettings: IAnswerBrowserMarkupSettings =
-        DEFAULT_MARKUP_CONFIG;
+    private markupSettings: IAnswerBrowserSettings = DEFAULT_MARKUP_CONFIG;
     private modelAnswer?: IModelAnswerSettings;
     private modelAnswerFetched = false;
     private modelAnswerHtml?: string;
@@ -656,9 +656,18 @@ export class AnswerBrowserController
         this.feedback = "";
         this.showNewTask = this.isAndSetShowNewTask();
 
+        if (this.viewctrl?.docSettings.answerBrowser) {
+            this.markupSettings = {
+                ...this.markupSettings,
+                ...this.viewctrl.docSettings.answerBrowser,
+            };
+        }
         const markup = this.loader.pluginMarkup();
         if (markup?.answerBrowser) {
-            this.markupSettings = markup.answerBrowser;
+            this.markupSettings = {
+                ...this.markupSettings,
+                ...markup.answerBrowser,
+            };
         }
         if (markup?.modelAnswer) {
             this.modelAnswer = markup.modelAnswer;
@@ -668,6 +677,9 @@ export class AnswerBrowserController
         // Ensure the point step is never zero because some browsers don't like step="0" value in number inputs.
         if (this.markupSettings.pointsStep) {
             this.pointsStep = this.markupSettings?.pointsStep;
+        }
+        if (this.markupSettings.showValidOnly != undefined) {
+            this.onlyValid = this.markupSettings.showValidOnly;
         }
 
         // noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols

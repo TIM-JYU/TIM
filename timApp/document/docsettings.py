@@ -16,6 +16,7 @@ from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import MathType, DumboOptions, InputFormat
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
+from tim_common.markupmodels import AnswerBrowserInfo
 from tim_common.marshmallow_dataclass import field_for_schema
 
 if TYPE_CHECKING:
@@ -74,6 +75,7 @@ class DocSettingTypes:
     peer_review_start: datetime
     peer_review_stop: datetime
     anonymize_reviewers: str
+    answerBrowser: AnswerBrowserInfo
 
 
 doc_setting_field_map: dict[str, Field] = {

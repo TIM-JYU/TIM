@@ -173,6 +173,13 @@ class UndoInfo:
 
 
 @dataclass
+class AnswerBrowserInfo:
+    pointsStep: float | None | Missing = missing
+    validOnlyText: str | None | Missing = missing
+    showValidOnly: bool | None | Missing = missing
+
+
+@dataclass
 class GenericMarkupModel(KnownMarkupFields):
     """Specifies which fields the editor can use in the plugin markup.
     This base class defines some fields that are applicable to all plugins.
@@ -199,6 +206,7 @@ class GenericMarkupModel(KnownMarkupFields):
     resetText: str | Missing | None = missing
     connectionErrorMessage: str | Missing = missing
     undo: UndoInfo | Missing | None = missing
+    answerBrowser: AnswerBrowserInfo | Missing | None = missing
 
     def get_visible_data(self) -> dict:
         assert isinstance(self.hidden_keys, list)
