@@ -219,7 +219,7 @@ export class ViewCtrl implements IController {
     public item: IDocument;
     public docId: number;
 
-    public group: unknown;
+    public group?: string;
     public scope: IScope;
     public noBrowser: boolean;
     public docVersion: [number, number];
