@@ -1,0 +1,16 @@
+:host {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  display: block;
+}
+
+.button-panel {
+  display: flex;
+  align-items: center;
+  column-gap: 0.5em;
+}
+
+tim-alert {
+  margin-top: 0.5em;
+  display: block;
+}

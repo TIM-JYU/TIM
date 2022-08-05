@@ -106,6 +106,7 @@ NEVERLAZY_PLUGINS = {
     "dropdown",
     "userSelect",
     "calendar",
+    "groupJoin",
 }
 
 NO_ANSWERBROWSER_PLUGINS = {

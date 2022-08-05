@@ -200,6 +200,12 @@ def get_plugins() -> dict[str, PluginReg]:
             port=qst_port,
             path="/userSelect/",
         ),
+        PluginReg(
+            name="groupJoin",
+            domain=internal_domain,
+            port=qst_port,
+            path="/groupJoin/",
+        ),
         PluginReg(name="tape", domain=internal_domain, port=qst_port, path="/tape/"),
         PluginReg(name="echo", domain="tim", path="/echoRequest/", skip_reqs=True),
         PluginReg(

@@ -6394,6 +6394,74 @@
           <context context-type="linenumber">66</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="5883221348560502975" datatype="html">
+        <source>Could not join groups: <x id="INTERPOLATION" equiv-text="{{ errorMessage }}"/></source>
+        <target state="translated">Kunde inte gå med i grupper: <x id="INTERPOLATION" equiv-text="{{ errorMessage }}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">44</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7008985532330721572" datatype="html">
+        <source>Joined some groups:</source>
+        <target state="translated">Har lyckats ansluta sig till några grupper:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">46</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1097032444998081907" datatype="html">
+        <source>Refresh page</source>
+        <target state="translated">Uppdatera sidan</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">50</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">54</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6437242399841581528" datatype="html">
+        <source>Joined groups: <x id="INTERPOLATION" equiv-text="{{ groups }}"/></source>
+        <target state="translated">Anslutna grupper: <x id="INTERPOLATION" equiv-text="{{ groups }}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">53</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3924761988678008147" datatype="html">
+        <source>Join groups</source>
+        <target state="translated">Ansluta sig till grupper</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">64</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5687369005584224920" datatype="html">
+        <source>You already joined all groups</source>
+        <target state="translated">Du har redan anslutit dig till alla grupper</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">65</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2467080909324527008" datatype="html">
+        <source>Join a group?</source>
+        <target state="translated">Ansluta dig till en grupp?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">103</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1030519906928097978" datatype="html">
+        <source>You will join the following groups: <x id="PH" equiv-text="this.groups.join(                             &quot;, &quot;                         )"/>. Proceed?</source>
+        <target state="translated">Du kommer att ansluta dig till följande grupper: <x id="PH" equiv-text="this.groups.join(                             &quot;, &quot;                         )"/>. Fortsätt?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">105,107</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
