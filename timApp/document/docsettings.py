@@ -50,6 +50,7 @@ class GroupSelfJoinSettings:
         unknown = EXCLUDE
 
     canJoin: bool = False
+    canLeave: bool = False
 
     @staticmethod
     @functools.cache

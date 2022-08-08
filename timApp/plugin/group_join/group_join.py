@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Callable
 
 from flask import render_template_string, Response
 from marshmallow import missing
@@ -6,10 +7,12 @@ from marshmallow import missing
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
+from timApp.document.docsettings import GroupSelfJoinSettings
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_edit_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from tim_common.markupmodels import GenericMarkupModel
@@ -34,14 +37,21 @@ class GroupJoinInputModel:
 class GroupJoinTexts:
     join: str | None | Missing = missing
     joined: str | None | Missing = missing
-    confirmTitle: str | None | Missing = missing
-    confirmMessage: str | None | Missing = missing
+    leave: str | None | Missing = missing
+    left: str | None | Missing = missing
+    joinConfirmTitle: str | None | Missing = missing
+    joinConfirmMessage: str | None | Missing = missing
+    leaveConfirmTitle: str | None | Missing = missing
+    leaveConfirmMessage: str | None | Missing = missing
 
 
 @dataclass
 class GroupJoinMarkupModel(GenericMarkupModel):
     groups: list[str] = field(default_factory=list)
+    join: bool = True
+    leave: bool = True
     confirm: bool = False
+    autoRefresh: bool = False
     texts: GroupJoinTexts = field(default_factory=GroupJoinTexts)
 
 
@@ -50,34 +60,78 @@ class GroupJoinStateModel:
     pass
 
 
-def _can_self_join(group: UserGroup, user: User) -> bool:
-    admin_doc: DocEntry = group.admin_doc.docentries[0] if group.admin_doc else None
-    if admin_doc is None:
-        return False
-    self_join_info = admin_doc.document.get_settings().group_self_join_info()
-    # The order matters: group edit access also verifies that the group is not special
-    return (
-        verify_group_edit_access(group, user, require=False) or self_join_info.canJoin
-    )
-
-
 @group_join_plugin.post("/joinGroups")
-def join_group(groups: list[str]) -> Response:
+def join_groups(groups: list[str]) -> Response:
     """
     Join the currently logged user to a list of groups.
 
-    The groups must have self-join enable via document settings.
+    The groups must have self-join enabled via document settings.
 
     :param groups: List of groups to join.
     :return: JSON response with list of joined groups and possible status messages.
     """
     verify_logged_in()
     current_user = get_current_user_object()
-    current_user_groups: set[str] = set(
-        g
-        for g, in current_user.get_groups(include_expired=False).with_entities(
-            UserGroup.name
-        )
+
+    def do_join(user: User, group: UserGroup) -> None:
+        user.add_to_group(group, added_by=user)
+
+    all_ok, result = _do_group_op(
+        groups, current_user, "join", False, lambda i: i.canJoin, do_join
+    )
+
+    db.session.commit()
+
+    return json_response({"ok": all_ok, "result": result})
+
+
+@group_join_plugin.post("/leaveGroups")
+def leave_groups(groups: list[str]) -> Response:
+    """
+    Remove the current user from the groups.
+
+    The groups must have self-remove enabled via document settings.
+
+    :param groups: List of groups to leave from.
+    :return: JSON response with list of left groups and possible status message.
+    """
+    verify_logged_in()
+    current_user = get_current_user_object()
+
+    def do_leave(user: User, group: UserGroup) -> None:
+        membership: UserGroupMember = user.active_memberships.get(group.id)
+        membership.set_expired()
+
+    all_ok, result = _do_group_op(
+        groups, current_user, "leave", True, lambda i: i.canLeave, do_leave
+    )
+
+    db.session.commit()
+
+    return json_response({"ok": all_ok, "result": result})
+
+
+def _check_self_join(
+    group: UserGroup, user: User, check: Callable[[GroupSelfJoinSettings], bool]
+) -> bool:
+    admin_doc: DocEntry = group.admin_doc.docentries[0] if group.admin_doc else None
+    if admin_doc is None:
+        return False
+    self_join_info = admin_doc.document.get_settings().group_self_join_info()
+    # The order matters: group edit access also verifies that the group is not special
+    return verify_group_edit_access(group, user, require=False) or check(self_join_info)
+
+
+def _do_group_op(
+    groups: list[str],
+    user: User,
+    action: str,
+    ensure_joined: bool,
+    check_info: Callable[[GroupSelfJoinSettings], bool],
+    apply: Callable[[User, UserGroup], None],
+) -> tuple[bool, dict[str, str]]:
+    user_groups: set[str] = set(
+        g for g, in user.get_groups(include_expired=False).with_entities(UserGroup.name)
     )
 
     result = dict.fromkeys(groups, "")
@@ -85,25 +139,25 @@ def join_group(groups: list[str]) -> Response:
 
     all_ok = True
     for ug in ugs:
-        if ug.name in current_user_groups:
-            result[ug.name] = "You are already in this group"
+        if (ensure_joined and ug.name not in user_groups) or (
+            not ensure_joined and ug.name in user_groups
+        ):
+            result[ug.name] = f"User is {'not' if ensure_joined else ''} in this group"
             all_ok = False
             continue
-        if not _can_self_join(ug, current_user):
-            result[ug.name] = "Self-join not enabled for this group"
+        if not _check_self_join(ug, user, check_info):
+            result[ug.name] = f"Self-{action} not enabled for this group"
             all_ok = False
             continue
-        current_user.add_to_group(ug, added_by=current_user)
-        result[ug.name] = "Added to group"
+        apply(user, ug)
+        result[ug.name] = "OK"
 
     for g in result:
         if result[g] == "":
             result[g] = "Group not found"
             all_ok = False
 
-    db.session.commit()
-
-    return json_response({"ok": all_ok, "result": result})
+    return all_ok, result
 
 
 @dataclass
@@ -123,9 +177,22 @@ class GroupJoinHtmlModel(
 
 def _reqs_handler() -> PluginReqs:
     template = """
-``` {#group_join plugin="groupJoin"}
-groups:
+``` {plugin="groupJoin"}
+groups:            # List of groups to join/leave when the button is pressed
     - groupname
+join: true         # Enable join button? Group must have self-join enabled in group document settings.
+leave: false       # Enable leave button? Group must have self-remove enabled in group document settings.
+confirm: false     # Show confirmation dialog?
+autoRefresh: false # Refresh the page after joining/leaving?
+texts:             # Custom texts for buttons and dialogs. Leave empty for default texts.
+    join:
+    joined:
+    leave:
+    left:
+    joinConfirmTitle:
+    joinConfirmMessage:
+    leaveConfirmTitle:
+    leaveConfirmMessage:
 ```
 """
     editor_tabs: list[EditorTab] = [
