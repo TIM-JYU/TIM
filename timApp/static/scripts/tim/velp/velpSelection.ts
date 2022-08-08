@@ -83,6 +83,11 @@ export class VelpSelectionController implements IController {
         advancedOn: TimStorage<boolean>;
     };
 
+    public toolTipMessages: {
+        deleteVelpGroupInsufficientRights: string;
+        deleteVelpGroupLockedGroup: string;
+    };
+
     constructor() {
         this.labels = [];
         this.velpGroups = [];
@@ -153,6 +158,10 @@ export class VelpSelectionController implements IController {
             name: "Personal-default",
             target_type: null,
             default: true,
+        };
+        this.toolTipMessages = {
+            deleteVelpGroupInsufficientRights: $localize`Insufficient permissions to delete group`,
+            deleteVelpGroupLockedGroup: $localize`Permanent default group cannot be deleted`,
         };
     }
 
