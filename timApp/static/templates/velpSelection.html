@@ -183,9 +183,14 @@
                                 </td>
                                 <td>
                                     <span ng-click="$ctrl.deleteVelpGroup(group);"
-                                          ng-if="group.edit_access && !$ctrl.isDefaultGroup(group)"
+                                          ng-if="group.edit_access && !$ctrl.isDefaultLockedGroup(group)"
                                           class="glyphicon glyphicon-trash clickable-icon"></span>
-                                    <span ng-if="$ctrl.isDefaultGroup(group)" class="glyphicon glyphicon-lock"></span>
+                                    <span ng-if="!group.edit_access && !$ctrl.isDefaultLockedGroup(group)"
+                                          class="glyphicon glyphicon-trash lightgray"
+                                          uib-tooltip="Insufficient permissions to delete group" tooltip-placement="auto left"></span>
+                                    <span ng-if="$ctrl.isDefaultLockedGroup(group)"
+                                          class="glyphicon glyphicon-lock"
+                                          uib-tooltip="Permanent default group cannot be deleted" tooltip-placement="auto left"></span>
                                 </td>
                             </tr>
                         </table>

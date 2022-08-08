@@ -585,6 +585,11 @@ export class VelpSelectionController implements IController {
         );
     }
 
+    /* Whether the group is a non-removable default group for the document or the user */
+    isDefaultLockedGroup(group: IVelpGroup) {
+        return this.isVelpGroupDefaultFallBack(group.id);
+    }
+
     /**
      * Updates the velp list according to how the velp groups are selected in the area.
      */
@@ -780,11 +785,15 @@ export class VelpSelectionController implements IController {
      * @param group the velp group to be deleted
      */
     async deleteVelpGroup(group: IVelpGroupUI) {
+        const confirmMessage = $localize`Are you sure you want to delete this velp group: <b>${group.name}</b>?</br>
+                      The following changes will take effect after pressing 'OK':</br>
+                      - Velp group <b>${group.name}</b> will be deleted,</br>
+                      - Velp templates belonging <b>only</b> to this velp group will be removed.</br>
+                      </br>
+                      Velps attached to documents will not be removed, even if associated velp templates or velp groups are deleted or removed.`;
+
         if (
-            !(await showConfirm(
-                $localize`Delete velp group?`,
-                $localize`Are you sure you want to delete this velp group: ${group.name}? \nDeletion cannot be undone!`
-            ))
+            !(await showConfirm($localize`Delete velp group?`, confirmMessage))
         ) {
         } else {
             const deleteResponse = await to(
