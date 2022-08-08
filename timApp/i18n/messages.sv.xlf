@@ -6378,14 +6378,22 @@
           <context context-type="linenumber">785</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="7004322786252083191" datatype="html">
-        <source>Are you sure you want to delete this velp group: <x id="PH" equiv-text="group.name"/>? 
-Deletion cannot be undone!</source>
-        <target state="translated">Är du säkert att du vill radera denna velp gruppen: <x id="PH" equiv-text="group.name"/>? 
-Radering kan inte upphävas!</target>
+      <trans-unit id="635088315633247686" datatype="html">
+        <source>Are you sure you want to delete this velp group: &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt;?&lt;/br&gt;
+                      The following changes will take effect after pressing 'OK':&lt;/br&gt;
+                      - Velp group &lt;b&gt;<x id="PH_1" equiv-text="group.name"/>&lt;/b&gt; will be deleted,&lt;/br&gt;
+                      - Velp templates belonging &lt;b&gt;only&lt;/b&gt; to this velp group will be removed.&lt;/br&gt;
+                      &lt;/br&gt;
+                      Velps attached to documents will not be removed, even if associated velp templates or velp groups are deleted or removed.</source>
+        <target state="translated">Är du säkert att du vill radera den här velp gruppen: &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt;?&lt;/br&gt;
+                      Följande förändringar trader I kraft efter du trycker 'OK':&lt;/br&gt;
+                      - Velp gruppen &lt;b&gt;<x id="PH_1" equiv-text="group.name"/>&lt;/b&gt; kommer att raderas,&lt;/br&gt;
+                      - Velp mallar som tillhör &lt;b&gt;bara&lt;/b&gt; den här velp gruppen kommer att raderas.&lt;/br&gt;
+                      &lt;/br&gt;
+                      Velps som har läggats till dokumenter kommer inte att raderas, även om associerade velp mallar eller velp grupper tas bort.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/velp/velpSelection.ts</context>
-          <context context-type="linenumber">786</context>
+          <context context-type="linenumber">788,793</context>
         </context-group>
       </trans-unit>
     </body>
