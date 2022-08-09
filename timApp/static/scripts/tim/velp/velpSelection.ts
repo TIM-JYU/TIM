@@ -8,7 +8,6 @@ import {
     Require,
     TimStorage,
     to,
-    toWithStatus,
 } from "tim/util/utils";
 import * as velpSummary from "tim/velp/velp-summary.component";
 import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
@@ -587,14 +586,6 @@ export class VelpSelectionController implements IController {
         this.defaultVelpGroup = group;
     }
 
-    isDefaultGroup(group: IVelpGroup) {
-        return (
-            group.default ||
-            group.name === this.defaultPersonalVelpGroup.name ||
-            group.name === this.defaultVelpGroup.name
-        );
-    }
-
     /* Whether the group is a non-removable default group for the document or the user */
     isDefaultLockedGroup(group: IVelpGroup) {
         return this.isVelpGroupDefaultFallBack(group.id);
@@ -803,7 +794,7 @@ export class VelpSelectionController implements IController {
             !(await showConfirm($localize`Delete velp group?`, confirmMessage))
         ) {
         } else {
-            const deleteResponse = await toWithStatus(
+            const deleteResponse = await to(
                 $http.delete("/velp/group/" + group.id)
             );
 
