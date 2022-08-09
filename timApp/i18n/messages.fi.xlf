@@ -6504,6 +6504,106 @@
           <context context-type="linenumber">66</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1097032444998081907" datatype="html">
+        <source>Refresh page</source>
+        <target state="translated">Virkistä sivu</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">50</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">54</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3924761988678008147" datatype="html">
+        <source>Join groups</source>
+        <target state="translated">Liity ryhmiin</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">64</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5687369005584224920" datatype="html">
+        <source>You already joined all groups</source>
+        <target state="translated">Olet jo liittynyt kaikkiin ryhmiin</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">65</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2467080909324527008" datatype="html">
+        <source>Join a group?</source>
+        <target state="translated">Liity ryhmään?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">103</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1030519906928097978" datatype="html">
+        <source>You will join the following groups: <x id="PH" equiv-text="this.groups.join(                             &quot;, &quot;                         )"/>. Proceed?</source>
+        <target state="translated">Jatkamalla liityt seuraaviin ryhmiin: <x id="PH" equiv-text="this.groups.join(                             &quot;, &quot;                         )"/>. Jatketaanko?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">105,107</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2717849424826533463" datatype="html">
+        <source>Could not change group membership: <x id="INTERPOLATION" equiv-text="{{ errorMessage }}"/></source>
+        <target state="translated">Ryhmäjäsenyyttä ei voit muuttaa: <x id="INTERPOLATION" equiv-text="{{ errorMessage }}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">57</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6422071802173150528" datatype="html">
+        <source>Updated some group memberships:</source>
+        <target state="translated">Päivitetty joidenkin ryhmien jäsenyydet:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">59</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="638473705635843044" datatype="html">
+        <source>Updated group memberships for: <x id="INTERPOLATION" equiv-text="{{ groups }}"/></source>
+        <target state="translated">Päivitetty seuraavien ryhmien jäsenyydet: <x id="INTERPOLATION" equiv-text="{{ groups }}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">66</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7485200622198338898" datatype="html">
+        <source>Leave groups</source>
+        <target state="translated">Poistu ryhmistä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">79</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1336307506598687567" datatype="html">
+        <source>You left all groups</source>
+        <target state="translated">Poistuit kaikista ryhmistä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">80</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8839141420463592429" datatype="html">
+        <source>Leave a group?</source>
+        <target state="translated">Poistu ryhmästä?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">172</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1544968364888003074" datatype="html">
+        <source>You will leave the following groups: <x id="PH" equiv-text="this.groups.join(                             &quot;, &quot;                         )"/>. Proceed?</source>
+        <target state="translated">Jatkamalla poistut seuraavista ryhmistä: <x id="PH" equiv-text="this.groups.join(                             &quot;, &quot;                         )"/>. Jatka?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/groupJoin/group-join.component.ts</context>
+          <context context-type="linenumber">174,176</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

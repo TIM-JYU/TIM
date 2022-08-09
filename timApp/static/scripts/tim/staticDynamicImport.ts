@@ -90,6 +90,8 @@ export function staticDynamicImport(s: string) {
             return import("tim/messaging/tim-message-send.component");
         case "calendar":
             return import("tim/plugin/calendar/calendar.component");
+        case "groupJoin":
+            return import("tim/plugin/groupJoin/group-join.component");
     }
     throw Error(`Module was not statically known: ${s}`);
 }

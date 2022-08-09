@@ -1,9 +1,10 @@
+import functools
 from dataclasses import dataclass, fields
 from datetime import timedelta, datetime, timezone
 from typing import Optional, Iterable, TypeVar, Any, TYPE_CHECKING, Union
 
 import yaml
-from marshmallow import ValidationError
+from marshmallow import ValidationError, EXCLUDE
 from marshmallow.fields import Field
 
 from timApp.answer.pointsumrule import PointSumRule
@@ -43,6 +44,20 @@ def get_minimal_visibility_settings(item: Optional["Document"]):
 UrlMacroMap = dict[str, Union[int, float, str]]
 
 
+@dataclass
+class GroupSelfJoinSettings:
+    class Meta:
+        unknown = EXCLUDE
+
+    canJoin: bool = False
+    canLeave: bool = False
+
+    @staticmethod
+    @functools.cache
+    def default() -> "GroupSelfJoinSettings":
+        return GroupSelfJoinSettings()
+
+
 # TODO: Start moving DocSettings keys to this dataclass
 @dataclass
 class DocSettingTypes:
@@ -76,6 +91,7 @@ class DocSettingTypes:
     peer_review_stop: datetime
     anonymize_reviewers: str
     answerBrowser: AnswerBrowserInfo
+    groupSelfJoin: GroupSelfJoinSettings
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -605,6 +621,11 @@ class DocSettings:
 
     def is_style_document(self) -> bool:
         return self.get("description", None) is not None
+
+    def group_self_join_info(self) -> GroupSelfJoinSettings:
+        return self.get_setting_or_default(
+            "groupSelfJoin", GroupSelfJoinSettings.default()
+        )
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
