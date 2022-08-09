@@ -12,3 +12,14 @@ export interface IAnswer {
 export interface IAnswerWithUsers extends IAnswer {
     users: IUser[];
 }
+
+export type IModelAnswerSettings = {
+    lock: boolean;
+    count: number;
+    revealDate?: string;
+    linkText?: string;
+    linkTextCount?: number;
+    lockConfirmation?: string;
+    lockedLinkText?: string;
+    alreadyLocked?: boolean;
+};

@@ -17,7 +17,6 @@ import {
     IAnswerBrowserSettings,
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
-    IModelAnswerSettings,
 } from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
 import {IUser, sortByRealName} from "../user/IUser";
@@ -36,7 +35,7 @@ import {
     to,
     to2,
 } from "../util/utils";
-import {IAnswer, IAnswerWithUsers} from "./IAnswer";
+import {IAnswer, IAnswerWithUsers, IModelAnswerSettings} from "./IAnswer";
 
 /*
  * TODO: if forceBrowser and formMode, now does not show the browser after refresh in view-mode.
@@ -471,6 +470,7 @@ export interface ITaskInfo {
     showPoints: boolean;
     newtask?: boolean;
     buttonNewTask: string;
+    modelAnswer?: IModelAnswerSettings;
 }
 
 export interface IAnswerSaveEvent {
@@ -668,10 +668,6 @@ export class AnswerBrowserController
                 ...this.markupSettings,
                 ...markup.answerBrowser,
             };
-        }
-        if (markup?.modelAnswer) {
-            this.modelAnswer = markup.modelAnswer;
-            this.onlyValid = false;
         }
 
         // Ensure the point step is never zero because some browsers don't like step="0" value in number inputs.
@@ -1735,6 +1731,10 @@ export class AnswerBrowserController
             return;
         }
         this.taskInfo = r.result.data;
+        if (r.result.data.modelAnswer) {
+            this.modelAnswer = r.result.data.modelAnswer;
+            this.onlyValid = false;
+        }
         this.showNewTask = this.isAndSetShowNewTask();
         if (this.taskInfo.buttonNewTask) {
             this.buttonNewTask = this.taskInfo.buttonNewTask;

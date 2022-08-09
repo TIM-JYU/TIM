@@ -85,8 +85,6 @@ class ModelAnswerInfo:
     lockConfirmation: str | None | Missing = missing
     lockedLinkText: str | None | Missing = missing
     revealDate: PluginDateTime | datetime | None | Missing = missing
-    # TODO: added automatically, this shouldn't be in user given markup
-    alreadyLocked: bool | None | Missing = missing
 
 
 @dataclass

@@ -2209,6 +2209,7 @@ a: b
                 "triesText": "Tries left:",
                 "userMax": 0.5,
                 "userMin": 0.1,
+                "modelAnswer": None,
             },
         )
         p = Plugin.from_paragraph(d.document.get_paragraphs()[0], default_view_ctx)

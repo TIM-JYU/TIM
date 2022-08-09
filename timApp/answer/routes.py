@@ -148,7 +148,7 @@ from timApp.util.utils import (
 from timApp.util.utils import local_timezone
 from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
 from timApp.velp.annotations import get_annotations_with_comments_in_document
-from tim_common.markupmodels import GenericMarkupModel
+from tim_common.markupmodels import GenericMarkupModel, asdict_skip_missing
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import value_or_default
 from tim_common.utils import Missing
@@ -1917,6 +1917,22 @@ def maybe_hide_name(d: DocInfo, u: User, model_u: User | None) -> None:
         u.hide_name = True
 
 
+def set_model_answer_info(tim_vars: dict, context_user: UserContext, plugin: Plugin):
+    model_answer_info = tim_vars.get("modelAnswer")
+    if not model_answer_info:
+        return
+    if not model_answer_info.get("answer"):
+        tim_vars.pop("modelAnswer", None)
+        return
+    model_answer_info.pop("answer", None)
+    lock = model_answer_info.get("lock", True)
+    if lock:
+        plugin.set_access_end_for_user(user=context_user.logged_user)
+        if plugin.access_end_for_user:
+            if plugin.access_end_for_user < get_current_time():
+                model_answer_info["alreadyLocked"] = True
+
+
 @answers.get("/taskinfo/<task_id>")
 def get_task_info(task_id) -> Response:
     try:
@@ -1934,6 +1950,9 @@ def get_task_info(task_id) -> Response:
             view_ctx=default_view_ctx,
         )
         tim_vars = find_tim_vars(plugin)
+        model_answer = tim_vars.get("modelAnswer")
+        if model_answer:
+            set_model_answer_info(tim_vars, user_ctx, plugin)
     except PluginException as e:
         raise RouteException(str(e))
     return json_response(tim_vars)
@@ -1951,6 +1970,9 @@ def find_tim_vars(plugin: Plugin) -> dict:
         "triesText": plugin.known.tries_text(),
         "pointsText": plugin.known.points_text(),
         "buttonNewTask": plugin.values.get("buttonNewTask", None),
+        "modelAnswer": asdict_skip_missing(plugin.known.modelAnswer)
+        if plugin.known.modelAnswer
+        else None,
     }
     if plugin.is_new_task():
         tim_vars["newtask"] = True
@@ -2345,7 +2367,7 @@ def get_model_answer(task_id: str) -> Response:
                 )
                 db.session.commit()
                 log_task_block(
-                    f"set task {tid.doc_task} access_end at {current_time} via modelAnswer"
+                    f"set task {tid.doc_task} accessible_to at {current_time} via modelAnswer"
                 )
     answer_html = md_to_html(model_answer_info.answer)
     return json_response({"answer": answer_html})
@@ -2604,7 +2626,7 @@ def unlock_task(task_id: str) -> Response:
         )
         db.session.commit()
         log_task_block(
-            f"set task {tid.doc_task} access_end at {expire_time} via accessDuration"
+            f"set task {tid.doc_task} accessible_to at {expire_time} via accessDuration"
         )
 
     else:
