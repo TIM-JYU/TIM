@@ -8,7 +8,7 @@ import tempfile
 from dataclasses import field
 from pathlib import Path
 
-from flask import current_app
+from flask import current_app, render_template
 from flask import g
 from flask import make_response
 from flask import request
@@ -48,6 +48,7 @@ from timApp.util.flask.responsehelper import (
     ok_response,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from tim_common.html_sanitize import sanitize_html
 
 TEXPRINTTEMPLATE_KEY = "texprinttemplate"
 DEFAULT_PRINT_TEMPLATE_NAME = "templates/printing/runko"
@@ -343,6 +344,7 @@ def get_printed_document(
             + '&showerror=true">Recreate PDF</a></p>'
         )
         result += "\n</div>\n</body>\n</html>"
+        result = sanitize_html(result)
         response = make_response(result)
         add_no_cache_headers(response)
         add_csp_header(response)
@@ -351,7 +353,17 @@ def get_printed_document(
     mime = get_mimetype_for_format(orginal_print_type)
 
     if not line:
-        response = make_response(send_file(path_or_file=cached, mimetype=mime))
+        if orginal_print_type == PrintFormat.HTML:
+            with open(cached, "r", encoding="utf-8") as f:
+                result = f.read()
+            # TODO: This sanitizes the HTML, including PDF iframes.
+            #       Those should be added back by rendering plugins as HTML.
+            result = sanitize_html(result, allow_styles=True)
+            response = make_response(
+                render_template("html_print.jinja2", content=result, title=doc.name)
+            )
+        else:
+            response = make_response(send_file(path_or_file=cached, mimetype=mime))
         add_csp_if_not_pdf(response, mime, "sandbox allow-scripts")
     else:  # show LaTeX with line numbers
         styles = "p.red { color: red; }\n"
@@ -390,6 +402,7 @@ def get_printed_document(
                 )
                 n += 1
         result += "\n</div>\n</body>\n</html>"
+        result = sanitize_html(result, allow_styles=True)
         response = make_response(result)
         add_csp_header(response)
 
