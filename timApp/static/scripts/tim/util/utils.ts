@@ -380,6 +380,30 @@ export function to2<T, U = {error: {error: string}}>(
         });
 }
 
+/**
+ * Same as "to" function, but with response status code included for more granular handling of errors
+ * @param promise
+ */
+export function toWithStatus<T, U = {data: {error: string}; status: number}>(
+    promise: Promise<T> | IPromise<T>
+): Promise<Result<T, U>> {
+    return refreshAngularJS(to2WithStatus<T, U>(promise as Promise<T>));
+}
+
+/**
+ * Same as "to2" function, but with response status code included for more granular error handling
+ * @param promise
+ */
+export function to2WithStatus<T, U = {error: {error: string}; status: number}>(
+    promise: Promise<T>
+): Promise<Result<T, U>> {
+    return promise
+        .then<Success<T>>((data: T) => ({ok: true, result: data}))
+        .catch<Failure<U>>((err) => {
+            return {ok: false, result: err as U};
+        });
+}
+
 export function toPromise<T, U = {error: {error: string}}>(
     observable: Observable<T>
 ): Promise<Result<T, U>> {
