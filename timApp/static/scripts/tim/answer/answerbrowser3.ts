@@ -1733,6 +1733,7 @@ export class AnswerBrowserController
         this.taskInfo = r.result.data;
         if (r.result.data.modelAnswer) {
             this.modelAnswer = r.result.data.modelAnswer;
+            this.onlyValid = false;
         }
         this.showNewTask = this.isAndSetShowNewTask();
         if (this.taskInfo.buttonNewTask) {
