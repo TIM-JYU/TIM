@@ -342,6 +342,9 @@ interface Failure<T> {
 
 export type Result<T, U> = Success<T> | Failure<U>;
 
+type AngularJSError = {data: {error: string}; status?: number};
+type AngularError = {error: {error: string}; status?: number};
+
 export function mapSuccess<T, U, M>(
     r: Result<T, U>,
     f: (p: T) => M
@@ -360,7 +363,7 @@ export function mapSuccess<T, U, M>(
  * @param promise Promise to wrap.
  * @returns A promise that resolves to either a success or error.
  */
-export function to<T, U = {data: {error: string}}>(
+export function to<T, U = AngularJSError>(
     promise: Promise<T> | IPromise<T>
 ): Promise<Result<T, U>> {
     return refreshAngularJS(to2<T, U>(promise as Promise<T>));
@@ -370,7 +373,7 @@ export function to<T, U = {data: {error: string}}>(
  * Same as "to" function, but meant to be called from new Angular.
  * @param promise
  */
-export function to2<T, U = {error: {error: string}}>(
+export function to2<T, U = AngularError>(
     promise: Promise<T>
 ): Promise<Result<T, U>> {
     return promise
@@ -380,31 +383,7 @@ export function to2<T, U = {error: {error: string}}>(
         });
 }
 
-/**
- * Same as "to" function, but with response status code included for more granular handling of errors
- * @param promise
- */
-export function toWithStatus<T, U = {data: {error: string}; status: number}>(
-    promise: Promise<T> | IPromise<T>
-): Promise<Result<T, U>> {
-    return refreshAngularJS(to2WithStatus<T, U>(promise as Promise<T>));
-}
-
-/**
- * Same as "to2" function, but with response status code included for more granular error handling
- * @param promise
- */
-export function to2WithStatus<T, U = {error: {error: string}; status: number}>(
-    promise: Promise<T>
-): Promise<Result<T, U>> {
-    return promise
-        .then<Success<T>>((data: T) => ({ok: true, result: data}))
-        .catch<Failure<U>>((err) => {
-            return {ok: false, result: err as U};
-        });
-}
-
-export function toPromise<T, U = {error: {error: string}}>(
+export function toPromise<T, U = AngularError>(
     observable: Observable<T>
 ): Promise<Result<T, U>> {
     return lastValueFrom(observable)
