@@ -21,6 +21,7 @@ from timApp.auth.accesshelper import (
     verify_edit_access,
     AccessDenied,
     verify_ownership,
+    verify_manage_access,
 )
 from timApp.auth.sessioninfo import (
     get_current_user_object,
@@ -57,6 +58,8 @@ from timApp.velp.velp_models import (
     VelpGroupsInDocument,
     VelpGroupDefaults,
     VelpInGroup,
+    VelpVersion,
+    VelpContent,
 )
 from timApp.velp.velpgroups import (
     create_default_velp_group,
@@ -848,7 +851,23 @@ def delete_velp_group(group_id: int) -> Response:
     :return: OK response, if the operation was successful.
     """
     d = get_doc_or_abort(group_id)
-    verify_ownership(d)
+    verify_manage_access(
+        d, True, "You do not have sufficient permissions to delete this velp group."
+    )
+    # verify_ownership(d)
+
+    # Check for velps in this group and return a list of them as string if found
+    linked_velps = VelpInGroup.query.filter_by(velp_group_id=group_id).all()
+    linked_ver_ids = []
+    names = ""
+    if linked_velps:
+        for v in linked_velps:
+            ver = VelpVersion.query.filter_by(velp_id=v.velp_id).first()
+            linked_ver_ids.append(ver)
+        for i in linked_ver_ids:
+            ve = VelpContent.query.filter_by(version_id=i.id).first()
+            names += "- " + ve.content + "</br>"
+        return json_response(names, status_code=400)
 
     # Remove document from directory, ie. soft delete
     del_document(group_id)
