@@ -9,6 +9,7 @@ import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
+    nullable,
     withDefault,
 } from "../attributes";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
@@ -23,14 +24,14 @@ const PluginMarkup = t.intersection([
         groups: t.array(t.string),
         confirm: t.boolean,
         texts: t.partial({
-            join: t.string,
-            joined: t.string,
-            leave: t.string,
-            left: t.string,
-            joinConfirmTitle: t.string,
-            joinConfirmMessage: t.string,
-            leaveConfirmTitle: t.string,
-            leaveConfirmMessage: t.string,
+            join: nullable(t.string),
+            joined: nullable(t.string),
+            leave: nullable(t.string),
+            left: nullable(t.string),
+            joinConfirmTitle: nullable(t.string),
+            joinConfirmMessage: nullable(t.string),
+            leaveConfirmTitle: nullable(t.string),
+            leaveConfirmMessage: nullable(t.string),
         }),
     }),
     t.type({
