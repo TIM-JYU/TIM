@@ -8,7 +8,6 @@ import {
     Require,
     TimStorage,
     to,
-    toPromise,
     toWithStatus,
 } from "tim/util/utils";
 import * as velpSummary from "tim/velp/velp-summary.component";
