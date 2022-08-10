@@ -316,53 +316,42 @@ class VelpGroupDeletionTest(TimRouteTest):
             f"/{d.document.id}/create_velp_group",
             {"name": "test-group1", "target_type": 1},
         )
+        g2 = self.json_post(
+            f"/{d.document.id}/create_velp_group",
+            {"name": "test-group2", "target_type": 1},
+        )
         # get velp group document
         g_doc = get_doc_or_abort(g["id"])
+        g_doc2 = get_doc_or_abort(g2["id"])
         self.test_user_2.grant_access(g_doc, AccessType.view)
+        self.test_user_2.grant_access(g_doc2, AccessType.view)
         db.session.commit()
 
         # Case 1:
         # Test user 2 should not be able to delete velp group with view permissions
         self.login_test2()
-        # try removing from directory
-        self.delete(url=f"/documents/{g['id']}", expect_status=403)
-        # try deleting from database
+        # try to delete the document
         self.delete(url=f"/velp/group/{g['id']}", expect_status=403)
 
         # Case 2:
         # Should not be able to delete with edit permissions
         self.test_user_2.grant_access(g_doc, AccessType.edit)
         db.session.commit()
-        # try removing from directory
-        self.delete(url=f"/documents/{g['id']}", expect_status=403)
-        # try deleting from database
+        # try to delete the document
         self.delete(url=f"/velp/group/{g['id']}", expect_status=403)
 
         # Case 3:
         # Should not be able to delete with teacher rights
         self.test_user_2.grant_access(g_doc, AccessType.teacher)
         db.session.commit()
-        # try removing from directory
-        self.delete(url=f"/documents/{g['id']}", expect_status=403)
-        # try deleting from database
+        # try to delete the document
         self.delete(url=f"/velp/group/{g['id']}", expect_status=403)
 
         # Case 4:
-        # Should not be able to delete with manage rights
+        # Should be able to delete with manage rights
         self.test_user_2.grant_access(g_doc, AccessType.manage)
         db.session.commit()
-        # try removing from directory
-        self.delete(url=f"/documents/{g['id']}", expect_status=403)
-        # try deleting from database
-        self.delete(url=f"/velp/group/{g['id']}", expect_status=403)
-
-        # Case 5:
-        # Should be able to delete velp group with owner rights
-        self.test_user_2.grant_access(g_doc, AccessType.owner)
-        db.session.commit()
-        # try removing from directory
-        self.delete(url=f"/documents/{g['id']}", expect_status=200)
-        # try deleting from database
+        # try to delete the document
         self.delete(url=f"/velp/group/{g['id']}", expect_status=200)
         # velp group document should now be placed in the TIM 'trash bin' (/roskis)
         deleted = get_doc_or_abort(g["id"])
@@ -380,3 +369,26 @@ class VelpGroupDeletionTest(TimRouteTest):
         self.assertEqual(0, len(vg_sel))
         self.assertEqual(0, len(vg_def))
         self.assertEqual(0, len(vg_in_doc))
+
+        # Case 5:
+        # Should be able to delete velp group with owner rights
+        self.test_user_2.grant_access(g_doc2, AccessType.owner)
+        db.session.commit()
+        # try to delete the document
+        self.delete(url=f"/velp/group/{g2['id']}", expect_status=200)
+        # velp group document should now be placed in the TIM 'trash bin' (/roskis)
+        deleted = get_doc_or_abort(g2["id"])
+        self.assertEqual(f"roskis/{g2['name']}", deleted.path)
+
+        # database should not contain any references to the velp group
+        vg2 = VelpGroup.query.filter_by(id=g2["id"]).first()
+        v_in_g2 = VelpInGroup.query.filter_by(velp_group_id=g2["id"]).all()
+        vg_sel2 = VelpGroupSelection.query.filter_by(velp_group_id=g2["id"]).all()
+        vg_def2 = VelpGroupDefaults.query.filter_by(velp_group_id=g2["id"]).all()
+        vg_in_doc2 = VelpGroupsInDocument.query.filter_by(velp_group_id=g2["id"]).all()
+
+        self.assertEqual(None, vg2)
+        self.assertEqual(0, len(v_in_g2))
+        self.assertEqual(0, len(vg_sel2))
+        self.assertEqual(0, len(vg_def2))
+        self.assertEqual(0, len(vg_in_doc2))
