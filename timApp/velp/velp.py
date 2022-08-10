@@ -20,7 +20,10 @@ from timApp.auth.accesshelper import (
     get_doc_or_abort,
     verify_edit_access,
     AccessDenied,
+    verify_ownership,
+    verify_manage_access,
 )
+from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import (
     get_current_user_object,
     get_current_user_id,
@@ -29,6 +32,7 @@ from timApp.auth.sessioninfo import (
 from timApp.document.docentry import DocEntry, get_documents_in_folder, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
+from timApp.item.manage import del_document, soft_delete_document
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.users import get_rights_holders
@@ -52,6 +56,11 @@ from timApp.velp.velp_models import (
     VelpGroupSelection,
     VelpLabel,
     VelpLabelContent,
+    VelpGroupsInDocument,
+    VelpGroupDefaults,
+    VelpInGroup,
+    VelpVersion,
+    VelpContent,
 )
 from timApp.velp.velpgroups import (
     create_default_velp_group,
@@ -675,6 +684,7 @@ def create_velp_group_route(doc_id: int) -> Response:
     Required key(s):
         - name: velp group name
         - target_type: document, folder or personal group.
+                       0 == personal, 1 == document, 2 == folder
 
     :param doc_id: ID of the document
     :return: CreatedVelpGroup object containing information of new velp group.
@@ -832,6 +842,43 @@ def create_default_velp_group_route(doc_id: int) -> Response:
     # timdb.velp_groups.add_groups_to_selection_table([created_velp_group], doc_id, user_id)
     db.session.commit()
     return json_response(created_velp_group)
+
+
+@velps.delete("/velp/group/<int:group_id>")
+def delete_velp_group(group_id: int) -> Response:
+    """Remove velp group document and the database entries for the specified velp group.
+
+    :param group_id: Unique id of the velp group.
+    :return: OK response, if the operation was successful.
+    """
+
+    # If a user has manage access to the document, they should not need to have
+    # owner permissions to the velp group in order to delete it.
+    # TODO Automatically propagate permissions from document to its velp groups.
+    #      See https://github.com/TIM-JYU/TIM/issues/3107.
+
+    # Remove document from directory, ie. soft delete
+    d = get_doc_or_abort(group_id)
+    verify_manage_access(d)
+    soft_delete_document(d)
+
+    # Delete associated entries/rows from database
+    VelpInGroup.query.filter_by(velp_group_id=group_id).delete(
+        synchronize_session=False
+    )
+    VelpGroupSelection.query.filter_by(velp_group_id=group_id).delete(
+        synchronize_session=False
+    )
+    VelpGroupDefaults.query.filter_by(velp_group_id=group_id).delete(
+        synchronize_session=False
+    )
+    VelpGroupsInDocument.query.filter_by(velp_group_id=group_id).delete(
+        synchronize_session=False
+    )
+    VelpGroup.query.filter_by(id=group_id).delete(synchronize_session=False)
+
+    db.session.commit()
+    return ok_response()
 
 
 def get_velp_groups_from_tree(doc: DocInfo) -> list[DocInfo]:

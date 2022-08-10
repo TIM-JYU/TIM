@@ -165,6 +165,7 @@
                                         ng-change="$ctrl.changeAllVelpGroupSelections('default')">Default</label>
                                 </th>
                                 <th><span class="small">Velp group</span></th>
+                                <th><span class="small glyphicon glyphicon-trash"></span></th>
                             </tr>
 
                             <tr ng-repeat="group in $ctrl.velpGroups" ng-hide="group.id<0">
@@ -179,6 +180,17 @@
                                 </td>
                                 <td>
                                     <a ng-href="/manage/{{ group.location }}">{{ group.name }}</a>
+                                </td>
+                                <td>
+                                    <span ng-click="$ctrl.deleteVelpGroup(group);"
+                                          ng-if="group.edit_access && !$ctrl.isDefaultLockedGroup(group)"
+                                          class="glyphicon glyphicon-trash clickable-icon"></span>
+                                    <span ng-if="!group.edit_access && !$ctrl.isDefaultLockedGroup(group)"
+                                          class="glyphicon glyphicon-trash lightgray"
+                                          uib-tooltip-html="$ctrl.toolTipMessages.deleteVelpGroupInsufficientRights" tooltip-placement="auto left"></span>
+                                    <span ng-if="$ctrl.isDefaultLockedGroup(group)"
+                                          class="glyphicon glyphicon-lock"
+                                          uib-tooltip-html="$ctrl.toolTipMessages.deleteVelpGroupLockedGroup" tooltip-placement="auto left"></span>
                                 </td>
                             </tr>
                         </table>

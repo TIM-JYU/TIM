@@ -12,6 +12,7 @@ import {
 import * as velpSummary from "tim/velp/velp-summary.component";
 import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {showConfirm} from "tim/ui/showConfirmDialog";
 import {ViewCtrl} from "../document/viewctrl";
 import {$http} from "../util/ngimport";
 import {
@@ -80,6 +81,11 @@ export class VelpSelectionController implements IController {
         velpGroupsDisplayed: TimStorage<number>;
         velpLabels: TimStorage<number[]>;
         advancedOn: TimStorage<boolean>;
+    };
+
+    public toolTipMessages: {
+        deleteVelpGroupInsufficientRights: string;
+        deleteVelpGroupLockedGroup: string;
     };
 
     constructor() {
@@ -152,6 +158,10 @@ export class VelpSelectionController implements IController {
             name: "Personal-default",
             target_type: null,
             default: true,
+        };
+        this.toolTipMessages = {
+            deleteVelpGroupInsufficientRights: $localize`Insufficient permissions to delete group`,
+            deleteVelpGroupLockedGroup: $localize`Permanent default group cannot be deleted`,
         };
     }
 
@@ -576,6 +586,11 @@ export class VelpSelectionController implements IController {
         this.defaultVelpGroup = group;
     }
 
+    /* Whether the group is a non-removable default group for the document or the user */
+    isDefaultLockedGroup(group: IVelpGroup) {
+        return this.isVelpGroupDefaultFallBack(group.id);
+    }
+
     /**
      * Updates the velp list according to how the velp groups are selected in the area.
      */
@@ -764,6 +779,66 @@ export class VelpSelectionController implements IController {
         this.velpGroups.push(json.result.data);
 
         // TODO: show in selected area
+    }
+
+    /**
+     * Removes the velp group.
+     * @param group the velp group to be deleted
+     */
+    async deleteVelpGroup(group: IVelpGroupUI) {
+        /* Make a list of velps that belong to this velp group */
+        let velpsInGroupList = "";
+        this.rctrl.velps?.forEach((v) => {
+            if (this.isGroupInVelp(v, group)) {
+                velpsInGroupList += "- " + v.content + "</br>";
+            }
+        });
+        let warningGroupHasVelps = "";
+        if (velpsInGroupList.length > 0) {
+            warningGroupHasVelps = $localize`<b>Warning!</b> The velp group <b>${group.name}</b> still contains velps:</br>
+                                             </br>
+                                             ${velpsInGroupList}
+                                             </br>
+                                             If the listed velps do not belong to any other velp groups, they will not be shown in the velp templates list after this operation completes.</br>`;
+        }
+
+        const confirmMessage = $localize`Are you sure you want to delete this velp group: <b>${group.name}</b>?</br>
+                      </br>
+                      ${warningGroupHasVelps}
+                      Velps attached to documents will not be removed.`;
+
+        if (
+            !(await showConfirm($localize`Delete velp group?`, confirmMessage))
+        ) {
+        } else {
+            const deleteResponse = await to(
+                $http.delete("/velp/group/" + group.id)
+            );
+
+            if (deleteResponse.ok) {
+                /*
+                Database tables to check/modify:
+                  - velpgroup (primary key: id -> velp_group_id)
+                  - velpgroupdefaults (velp_group_id)
+                  - velpgrouplabel (velp_group_id) NOT USED
+                  - velpgroupselection (velp_group_id)
+                  - velpgroupsindocument (velp_group_id)
+                  - velpingroup (velp_group_id) Velp link
+                  */
+
+                /* Update velp group list in UI */
+                const g_index = this.velpGroups.indexOf(group);
+                if (g_index >= 0) {
+                    this.velpGroups.splice(g_index, 1);
+                }
+            } else {
+                let errMessage = "";
+                if (deleteResponse.result.status == 403) {
+                    errMessage = $localize`Insufficient permissions to delete velp group: <b>${group.name}</b>.`;
+                }
+                await showMessageDialog(errMessage);
+            }
+        }
     }
 
     /**
