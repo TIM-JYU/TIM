@@ -5,11 +5,13 @@ So, do NOT import anything client-side-specific (like AngularJS) in this module 
 
 import * as t from "io-ts";
 
-export const AnswerBrowserSettings = t.type({
+export const AnswerBrowserSettings = t.partial({
     pointsStep: nullable(t.number),
+    validOnlyText: t.string,
+    showValidOnly: t.boolean,
 });
 
-export interface IAnswerBrowserMarkupSettings
+export interface IAnswerBrowserSettings
     extends t.TypeOf<typeof AnswerBrowserSettings> {
     // Empty
 }
@@ -20,24 +22,6 @@ export const undoType = t.partial({
     confirmation: nullable(t.string),
     confirmationTitle: nullable(t.string),
 });
-
-export const modelAnswerType = t.intersection([
-    t.type({
-        lock: withDefault(t.boolean, true),
-        count: withDefault(t.number, 1),
-    }),
-    t.partial({
-        revealDate: nullable(t.string),
-        linkText: t.string,
-        linkTextCount: nullable(t.number),
-        lockConfirmation: t.string,
-        lockedLinkText: t.string,
-        alreadyLocked: t.boolean,
-    }),
-]);
-
-export interface IModelAnswerSettings
-    extends t.TypeOf<typeof modelAnswerType> {}
 
 // Attributes that are valid for all plugins.
 export const GenericPluginMarkup = t.partial({
@@ -61,7 +45,6 @@ export const GenericPluginMarkup = t.partial({
     connectionErrorMessage: nullable(t.string),
     answerBrowser: nullable(AnswerBrowserSettings),
     warningFilter: nullable(t.string),
-    modelAnswer: nullable(modelAnswerType),
 });
 
 export const Info = nullable(

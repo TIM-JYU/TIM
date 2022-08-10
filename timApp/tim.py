@@ -70,6 +70,7 @@ from timApp.modules.fields.cbcountfield import cbcountfield_route
 from timApp.note.routes import notes
 from timApp.notification.notify import notify
 from timApp.plugin.calendar.calendar import calendar_plugin
+from timApp.plugin.group_join.group_join import group_join_plugin
 from timApp.plugin.importdata.importData import importData_plugin
 from timApp.plugin.qst.qst import qst_plugin
 from timApp.plugin.reviewcanvas.reviewcanvas import reviewcanvas_plugin
@@ -125,6 +126,7 @@ blueprints = [
     feedback,
     generateMap,
     global_notification,
+    group_join_plugin,
     groups,
     saml,
     lecture_routes,

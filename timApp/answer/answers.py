@@ -256,7 +256,11 @@ def get_all_answers(
         raise ValueError("Answer period must be specified.")
 
     q = get_all_answer_initial_query(
-        options.period_from, options.period_to, task_ids, options.valid
+        options.period_from,
+        options.period_to,
+        task_ids,
+        options.valid,
+        options.group,
     )
 
     q = q.options(defaultload(Answer.users).lazyload(User.groups))
@@ -386,10 +390,41 @@ def get_all_answers(
 
                 result.append(res)
             case FormatOptions.JSON:
-                user_data = u if not anon_name else name
-                result_json.append(
-                    dict(user=user_data, answer=a, count=int(n), resolved_content=answ)
-                )
+                user_json = u.to_json() if print_header else {}
+                user_json["name"] = name
+                if options.name != NameOptions.BOTH:
+                    user_json.pop("real_name", None)
+                if anon_name:
+                    user_json.pop("id", None)
+                    user_json.pop("student_id", None)
+                    user_json.pop("email", None)
+                answer_json = a.to_json()
+
+                if not print_answers:
+                    answer_json.pop("content", None)
+                    answer_json.pop("origin_doc_id", None)
+                if not print_header:
+                    answer_json.pop("id", None)
+                    answer_json.pop("answered_on", None)
+                    answer_json.pop("valid", None)
+                    answer_json.pop("last_points_modifier", None)
+                    answer_json.pop("points", None)
+                    answer_json.pop("task_id", None)
+                    answer_json.pop("origin_doc_id", None)
+                    answer_json.pop("plugin", None)
+
+                result_json_item: dict[str, Any] = {
+                    "answer": answer_json,
+                }
+                if print_header:
+                    result_json_item |= {
+                        "count": int(n),
+                        "user": user_json,
+                    }
+                if print_answers:
+                    result_json_item |= {"resolved_content": answ}
+
+                result_json.append(result_json_item)
     if options.format == FormatOptions.TEXT:
         return result
     else:
@@ -401,6 +436,7 @@ def get_all_answer_initial_query(
     period_to: datetime,
     task_ids: list[TaskId],
     valid: ValidityOptions,
+    group: str | None = None,
 ) -> Query:
     q = Answer.query.filter(
         (period_from <= Answer.answered_on) & (Answer.answered_on < period_to)
@@ -413,6 +449,8 @@ def get_all_answer_initial_query(
         case ValidityOptions.VALID:
             q = q.filter_by(valid=True)
     q = q.join(User, Answer.users)
+    if group:
+        q = q.join(UserGroup, User.groups).filter(UserGroup.name == group)
     return q
 
 

@@ -371,7 +371,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     active_memberships = db.relationship(
         UserGroupMember,
         primaryjoin=(id == UserGroupMember.user_id) & membership_current,
-        collection_class=attribute_mapped_collection("UserGroupMember.usergroup_id"),
+        collection_class=attribute_mapped_collection("usergroup_id"),
         # back_populates="group",
     )
     """Active group memberships mapped by user group ID."""

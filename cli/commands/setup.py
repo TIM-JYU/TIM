@@ -343,6 +343,9 @@ def setup_dev() -> None:
         prettier_path = json.dumps(
             str(Path.cwd() / "timApp" / "node_modules" / "prettier")
         ).strip('"')
+        ts_path = json.dumps(
+            str(Path.cwd() / "timApp" / "node_modules" / "typescript" / "lib")
+        ).strip('"')
         venv_bin_path = (
             f"{Path.cwd() / '.venv' / 'bin'}{os.path.sep}"
             if platform.system() == "Linux"
@@ -356,6 +359,7 @@ def setup_dev() -> None:
                     file_contents.replace("$TIM_DOCKER_COMPOSE$", docker_compose_path)
                     .replace("$TIM_PRETTIER$", prettier_path)
                     .replace("$TIM_VENV_BIN$", venv_bin_path)
+                    .replace("$TIM_TS$", ts_path)
                 )
                 target_path = idea_path / file_path.relative_to(idea_template)
                 target_path.parent.mkdir(parents=True, exist_ok=True)

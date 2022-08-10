@@ -14,10 +14,9 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
 import {isVelpable, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {
-    IAnswerBrowserMarkupSettings,
+    IAnswerBrowserSettings,
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
-    IModelAnswerSettings,
 } from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
 import {IUser, sortByRealName} from "../user/IUser";
@@ -36,7 +35,7 @@ import {
     to,
     to2,
 } from "../util/utils";
-import {IAnswer, IAnswerWithUsers} from "./IAnswer";
+import {IAnswer, IAnswerWithUsers, IModelAnswerSettings} from "./IAnswer";
 
 /*
  * TODO: if forceBrowser and formMode, now does not show the browser after refresh in view-mode.
@@ -471,6 +470,7 @@ export interface ITaskInfo {
     showPoints: boolean;
     newtask?: boolean;
     buttonNewTask: string;
+    modelAnswer?: IModelAnswerSettings;
 }
 
 export interface IAnswerSaveEvent {
@@ -496,8 +496,9 @@ export type AnswerBrowserData =
           answernr: number | undefined;
       };
 
-const DEFAULT_MARKUP_CONFIG: IAnswerBrowserMarkupSettings = {
+const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     pointsStep: 0,
+    validOnlyText: "Show valid only",
 };
 
 export class AnswerBrowserController
@@ -541,8 +542,7 @@ export class AnswerBrowserController
     private reviewHtml?: string;
     private answerLoader?: AnswerLoadCallback;
     private pointsStep: number = 0.01;
-    private markupSettings: IAnswerBrowserMarkupSettings =
-        DEFAULT_MARKUP_CONFIG;
+    private markupSettings: IAnswerBrowserSettings = DEFAULT_MARKUP_CONFIG;
     private modelAnswer?: IModelAnswerSettings;
     private modelAnswerFetched = false;
     private modelAnswerHtml?: string;
@@ -656,18 +656,26 @@ export class AnswerBrowserController
         this.feedback = "";
         this.showNewTask = this.isAndSetShowNewTask();
 
+        if (this.viewctrl?.docSettings.answerBrowser) {
+            this.markupSettings = {
+                ...this.markupSettings,
+                ...this.viewctrl.docSettings.answerBrowser,
+            };
+        }
         const markup = this.loader.pluginMarkup();
         if (markup?.answerBrowser) {
-            this.markupSettings = markup.answerBrowser;
-        }
-        if (markup?.modelAnswer) {
-            this.modelAnswer = markup.modelAnswer;
-            this.onlyValid = false;
+            this.markupSettings = {
+                ...this.markupSettings,
+                ...markup.answerBrowser,
+            };
         }
 
         // Ensure the point step is never zero because some browsers don't like step="0" value in number inputs.
         if (this.markupSettings.pointsStep) {
             this.pointsStep = this.markupSettings?.pointsStep;
+        }
+        if (this.markupSettings.showValidOnly != undefined) {
+            this.onlyValid = this.markupSettings.showValidOnly;
         }
 
         // noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
@@ -1723,6 +1731,10 @@ export class AnswerBrowserController
             return;
         }
         this.taskInfo = r.result.data;
+        if (r.result.data.modelAnswer) {
+            this.modelAnswer = r.result.data.modelAnswer;
+            this.onlyValid = false;
+        }
         this.showNewTask = this.isAndSetShowNewTask();
         if (this.taskInfo.buttonNewTask) {
             this.buttonNewTask = this.taskInfo.buttonNewTask;
