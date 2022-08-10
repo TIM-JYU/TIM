@@ -699,9 +699,9 @@ def verify_permission_edit_access(i: ItemOrBlock, perm_type: AccessType) -> bool
 
 @manage_page.delete("/documents/<int:doc_id>")
 def del_document(doc_id: int) -> Response:
-    doc = get_doc_or_abort(doc_id)
-    verify_ownership(doc)
-    soft_delete_document(doc)
+    d = get_doc_or_abort(doc_id)
+    verify_ownership(d)
+    soft_delete_document(doc_id)
     db.session.commit()
     return ok_response()
 
