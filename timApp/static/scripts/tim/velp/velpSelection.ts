@@ -786,8 +786,25 @@ export class VelpSelectionController implements IController {
      * @param group the velp group to be deleted
      */
     async deleteVelpGroup(group: IVelpGroupUI) {
+        /* Make a list of velps that belong to this velp group */
+        let velpsInGroupList = "";
+        this.rctrl.velps?.forEach((v) => {
+            if (this.isGroupInVelp(v, group)) {
+                velpsInGroupList += "- " + v.content + "</br>";
+            }
+        });
+        let warningGroupHasVelps = "";
+        if (velpsInGroupList.length > 0) {
+            warningGroupHasVelps = $localize`<b>Warning!</b> The velp group <b>${group.name}</b> still contains velps:</br>
+                                             </br>
+                                             ${velpsInGroupList}
+                                             </br>
+                                             If the listed velps do not belong to any other velp groups, they will not be shown in the velp templates list after this operation completes.</br>`;
+        }
+
         const confirmMessage = $localize`Are you sure you want to delete this velp group: <b>${group.name}</b>?</br>
                       </br>
+                      ${warningGroupHasVelps}
                       Velps attached to documents will not be removed.`;
 
         if (
@@ -816,15 +833,7 @@ export class VelpSelectionController implements IController {
                 }
             } else {
                 let errMessage = "";
-                if (deleteResponse.result.status == 400) {
-                    const velpsInGroup = deleteResponse.result.data;
-                    errMessage = $localize`Cannot delete velp group <b>${group.name}</b>: velp group is not empty.</br>
-                                                 </br>
-                                                 The velp group still includes the following velps:</br>
-                                                  ${velpsInGroup}
-                                                 </br>
-                                                 You must first remove these velps from the group.`;
-                } else if (deleteResponse.result.status == 403) {
+                if (deleteResponse.result.status == 403) {
                     errMessage = $localize`Insufficient permissions to delete velp group: <b>${group.name}</b>.`;
                 }
                 await showMessageDialog(errMessage);
