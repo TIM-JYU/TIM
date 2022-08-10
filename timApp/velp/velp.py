@@ -860,7 +860,7 @@ def delete_velp_group(group_id: int) -> Response:
     # Remove document from directory, ie. soft delete
     d = get_doc_or_abort(group_id)
     verify_manage_access(d)
-    soft_delete_document(d)
+    soft_delete_document(group_id)
 
     # Delete associated entries/rows from database
     VelpInGroup.query.filter_by(velp_group_id=group_id).delete(
