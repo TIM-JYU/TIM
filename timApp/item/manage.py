@@ -699,11 +699,39 @@ def verify_permission_edit_access(i: ItemOrBlock, perm_type: AccessType) -> bool
 
 @manage_page.delete("/documents/<int:doc_id>")
 def del_document(doc_id: int) -> Response:
+    soft_delete_document(doc_id, AccessType.owner)
+    db.session.commit()
+    return ok_response()
+
+
+def soft_delete_document(doc_id: int, req_perm: AccessType) -> Response:
+    """Performs a 'soft delete' on the specified document by moving it to the trash folder.
+
+    When calling this function, a valid AccessType of either
+    AccessType.owner or AccessType.manage must be given as parameter.
+    Other AccessTypes are rejected.
+
+    :param doc_id: The document to be deleted.
+    :param req_perm: Permission to check for to allow the deletion.
+    :return: Response.
+    """
     d = get_doc_or_abort(doc_id)
-    verify_ownership(d)
+    if req_perm == AccessType.owner:
+        verify_ownership(d)
+    else:
+        if req_perm == AccessType.manage:
+            verify_manage_access(d)
+        else:
+            return json_response(
+                "Insufficient permissions to delete the specified document.",
+                status_code=403,
+            )
+
     f = get_trash_folder()
     if d.path.startswith(f.path):
+        # Document is already in the trash folder
         return ok_response()
+
     if isinstance(d, Translation):
         deleted_doc = DocEntry.create(
             f"{f.path}/tl_{d.id}_{d.src_docid}_{d.lang_id}_deleted",
@@ -712,7 +740,6 @@ def del_document(doc_id: int) -> Response:
         d.docentry = deleted_doc
     else:
         move_document(d, f)
-    db.session.commit()
     return ok_response()
 
 
