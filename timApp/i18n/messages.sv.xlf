@@ -6372,7 +6372,7 @@
       </trans-unit>
       <trans-unit id="4696554245997035138" datatype="html">
         <source>Delete velp group?</source>
-        <target state="translated">Radera velp gruppen?</target>
+        <target state="translated">Ta bort velpgruppen?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/velp/velpSelection.ts</context>
           <context context-type="linenumber">785</context>
@@ -6396,7 +6396,7 @@
       </trans-unit>
       <trans-unit id="2306522141194503753" datatype="html">
         <source>Insufficient permissions to delete velp group: &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt;.</source>
-        <target state="translated">Otillräckliga rättigheter för att ta bort velp gruppen: &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt;.</target>
+        <target state="translated">Otillräckliga rättigheter för att ta bort velpgruppen: &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt;.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/velp/velpSelection.ts</context>
           <context context-type="linenumber">839</context>
@@ -6408,11 +6408,11 @@
                                              <x id="PH_1" equiv-text="velpsInGroupList"/>
                                              &lt;/br&gt;
                                              If the listed velps do not belong to any other velp groups, they will not be shown in the velp templates list after this operation completes.&lt;/br&gt;</source>
-        <target state="translated">&lt;b&gt;Varning!&lt;/b&gt; Velp gruppen &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt; ännu innehåller velps:&lt;/br&gt;
+        <target state="translated">&lt;b&gt;Varning!&lt;/b&gt; Velpgruppen &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt; ännu innehåller velps:&lt;/br&gt;
                                              &lt;/br&gt;
                                              <x id="PH_1" equiv-text="velpsInGroupList"/>
                                              &lt;/br&gt;
-                                             Om de listade velps inte tillhör några andra velp grupper, kommer de inte att visas i listan med velp-mallar efter att denna operation har slutförts.&lt;/br&gt;</target>
+                                             Om de listade velps inte tillhör några andra velpgrupper, kommer de inte att visas i listan med velpmallar efter att denna operation har slutförts.&lt;/br&gt;</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/velp/velpSelection.ts</context>
           <context context-type="linenumber">798,802</context>
@@ -6423,7 +6423,7 @@
                       &lt;/br&gt;
                       <x id="PH_1" equiv-text="warningGroupHasVelps"/>
                       Velps attached to documents will not be removed.</source>
-        <target state="translated">Är du säkert att du vill ta bort denna velp gruppen: &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt;?&lt;/br&gt;
+        <target state="translated">Är du säkert att du vill ta bort denna velpgruppen: &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt;?&lt;/br&gt;
                       &lt;/br&gt;
                       <x id="PH_1" equiv-text="warningGroupHasVelps"/>
                       Velps som har läggats till dokumenter kommer inte att raderas.</target>

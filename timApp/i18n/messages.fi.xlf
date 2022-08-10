@@ -6506,7 +6506,7 @@
       </trans-unit>
       <trans-unit id="2306522141194503753" datatype="html">
         <source>Insufficient permissions to delete velp group: &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt;.</source>
-        <target state="translated">Riittämättömät oikeudet velp-ryhmän &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt; poistamiseen.</target>
+        <target state="translated">Riittämättömät oikeudet velpryhmän &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt; poistamiseen.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/velp/velpSelection.ts</context>
           <context context-type="linenumber">839</context>
@@ -6518,11 +6518,11 @@
                                              <x id="PH_1" equiv-text="velpsInGroupList"/>
                                              &lt;/br&gt;
                                              If the listed velps do not belong to any other velp groups, they will not be shown in the velp templates list after this operation completes.&lt;/br&gt;</source>
-        <target state="translated">&lt;b&gt;Varoitus!&lt;/b&gt; Velp-ryhmä &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt; sisältää vielä velppejä:&lt;/br&gt;
+        <target state="translated">&lt;b&gt;Varoitus!&lt;/b&gt; Velpryhmä &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt; sisältää vielä velppejä:&lt;/br&gt;
                                              &lt;/br&gt;
                                              <x id="PH_1" equiv-text="velpsInGroupList"/>
                                              &lt;/br&gt;
-                                             Jos listatus velpit eivät kuulu muihin velp-ryhmiin, niitä ei näytetä velppipohjien listassa tämän toiminnon suorittamisen jälkeen.&lt;/br&gt;</target>
+                                             Jos listatut velpit eivät kuulu muihin velpryhmiin, niitä ei näytetä velppipohjien listassa tämän toiminnon suorittamisen jälkeen.&lt;/br&gt;</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/velp/velpSelection.ts</context>
           <context context-type="linenumber">798,802</context>
@@ -6533,7 +6533,7 @@
                       &lt;/br&gt;
                       <x id="PH_1" equiv-text="warningGroupHasVelps"/>
                       Velps attached to documents will not be removed.</source>
-        <target state="translated">Haluatko varmasti poistaa tämän velp-ryhmän: &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt;?&lt;/br&gt;
+        <target state="translated">Haluatko varmasti poistaa tämän velpryhmän: &lt;b&gt;<x id="PH" equiv-text="group.name"/>&lt;/b&gt;?&lt;/br&gt;
                       &lt;/br&gt;
                       <x id="PH_1" equiv-text="warningGroupHasVelps"/>
                       Dokumentteihin lisättyjä velppejä ei poisteta.</target>
