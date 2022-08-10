@@ -26,7 +26,8 @@
     "node.js.selected.package.standard": "",
     "nodejs_package_manager_path": "npm",
     "prettierjs.PrettierConfiguration.Package": "$TIM_PRETTIER$",
-    "settings.editor.selected.configurable": "settings.javascript.prettier"
+    "settings.editor.selected.configurable": "settings.javascript.prettier",
+    "ts.external.directory.path": "$TIM_TS$"
   }
 }]]></component>
   <component name="GithubProjectSettings">
