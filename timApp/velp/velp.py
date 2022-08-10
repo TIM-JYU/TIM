@@ -23,6 +23,7 @@ from timApp.auth.accesshelper import (
     verify_ownership,
     verify_manage_access,
 )
+from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import (
     get_current_user_object,
     get_current_user_id,
@@ -31,7 +32,7 @@ from timApp.auth.sessioninfo import (
 from timApp.document.docentry import DocEntry, get_documents_in_folder, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
-from timApp.item.manage import del_document
+from timApp.item.manage import del_document, soft_delete_document
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.users import get_rights_holders
@@ -850,16 +851,16 @@ def delete_velp_group(group_id: int) -> Response:
     :param group_id: Unique id of the velp group.
     :return: OK response, if the operation was successful.
     """
-    d = get_doc_or_abort(group_id)
-    # verify_ownership(d)
+
     # If a user has manage access to the document, they should not need to have
     # owner permissions to the velp group in order to delete it.
     # TODO Automatically propagate permissions from document to its velp groups.
     #      See https://github.com/TIM-JYU/TIM/issues/3107.
-    verify_manage_access(d)
 
     # Remove document from directory, ie. soft delete
-    del_document(group_id)
+    softdel_res = soft_delete_document(group_id, AccessType.manage)
+    if softdel_res.status_code != 200:
+        return softdel_res
 
     # Delete associated entries/rows from database
     VelpInGroup.query.filter_by(velp_group_id=group_id).delete(
