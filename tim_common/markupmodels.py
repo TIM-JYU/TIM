@@ -88,6 +88,14 @@ class ModelAnswerInfo:
 
 
 @dataclass
+class PreviousTaskInfo:
+    taskid: str
+    requireLock: bool | None | Missing = False
+    count: int | None | Missing = missing
+    # errormessage, hide, hidetext
+
+
+@dataclass
 class KnownMarkupFields(HiddenFieldsMixin):
     """Represents the plugin markup fields that are known and used by TIM."""
 
@@ -119,6 +127,7 @@ class KnownMarkupFields(HiddenFieldsMixin):
     pointsText: str | None | Missing = missing
     postprogram: str | Missing = missing
     postoutput: str | Missing = missing
+    previousTask: PreviousTaskInfo | None | Missing = missing
     showPoints: bool | None | Missing = missing
     starttime: PluginDateTime | datetime | None | Missing = missing
     showInView: bool | Missing = missing

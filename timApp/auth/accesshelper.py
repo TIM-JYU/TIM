@@ -45,7 +45,7 @@ from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import get_option, RouteException, NotExist
 from timApp.util.logger import log_warning
 from timApp.util.utils import get_current_time
-from tim_common.markupmodels import AccessField
+from tim_common.markupmodels import AccessField, PreviousTaskInfo
 
 
 def get_doc_or_abort(doc_id: int, msg: str | None = None) -> DocInfo:
@@ -623,6 +623,18 @@ def verify_task_access(
                 found_plugin.known.accessField.error
                 or "You have expired your access to this task."
             )
+    if (
+        not is_invalid
+        and found_plugin.known.previousTask
+        and not ctx_user_teacher_access
+        and required_task_access_level == TaskIdAccess.ReadWrite
+    ):
+        valid, reason = check_access_from_previous_task(
+            context_user, view_ctx, found_plugin.known.previousTask, d.document
+        )
+        if not valid:
+            is_invalid = True
+            invalidate_reason = reason
 
     return TaskAccessVerification(
         plugin=found_plugin,
@@ -651,6 +663,42 @@ def check_access_from_field(
     except (json.decoder.JSONDecodeError, ValueError):
         pass
     return True
+
+
+def check_access_from_previous_task(
+    context_user: UserContext,
+    view_ctx: ViewContext,
+    prerequisite_info: PreviousTaskInfo,
+    current_doc: Document,
+) -> tuple[bool, str | None]:
+    prerequisite_taskid = TaskId.parse(prerequisite_info.taskid, require_doc_id=False)
+    prequisite_taskid_doc = current_doc
+    if not prerequisite_taskid.doc_id:
+        prerequisite_taskid = TaskId.parse(
+            str(current_doc.doc_id) + "." + prerequisite_info.taskid
+        )
+        prequisite_taskid_doc = get_doc_or_abort(prerequisite_taskid.doc_id).document
+    if prerequisite_info.requireLock:
+        _, prerequisite_plugin = get_plugin_from_request(
+            prequisite_taskid_doc, prerequisite_taskid, context_user, view_ctx
+        )
+        prerequisite_plugin.set_access_end_for_user(user=context_user.logged_user)
+        if (
+            not prerequisite_plugin.access_end_for_user
+            or prerequisite_plugin.access_end_for_user >= get_current_time()
+        ):
+            return False, "You need to lock the prerequisite task first"
+    if prerequisite_info.count:
+        current_user = context_user.logged_user
+        current_count = current_user.get_answers_for_task(
+            prerequisite_taskid.doc_task
+        ).count()
+        if current_count < prerequisite_info.count:
+            return (
+                False,
+                f"You need to attempt the prerequisite task at least {prerequisite_info.count} times first",
+            )
+    return True, None
 
 
 def grant_access_to_session_users(i: ItemOrBlock):
