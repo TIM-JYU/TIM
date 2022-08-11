@@ -6666,6 +6666,30 @@
           <context context-type="linenumber">805,808</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4329774551809528260" datatype="html">
+        <source>Add this page to 'My courses' bookmark folder</source>
+        <target state="translated">Lisää tämä sivu 'Kurssit'-kirjanmerkkikansioon</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/header.component.ts</context>
+          <context context-type="linenumber">49</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3647509096795216020" datatype="html">
+        <source> Add to 'My courses' </source>
+        <target state="translated"> Lisää 'Kursst'-kansioon </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/header.component.ts</context>
+          <context context-type="linenumber">51,53</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7870742601046615150" datatype="html">
+        <source>Log in to bookmark this course</source>
+        <target state="translated">Kirjaudu sisään lisätääkseen kurssi kirjanmerkkeihin</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/header/header.component.ts</context>
+          <context context-type="linenumber">161</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

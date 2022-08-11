@@ -47,8 +47,9 @@ function isExpired(tag: ITag) {
         <button *ngIf="!hideVars.headerDocumentActions && showAddToMyCourses()"
                 (click)="addToBookmarkFolder()"
                 title="Add this page to 'My courses' bookmark folder"
-                class="timButton label">
-            Add to My courses
+                i18n-title
+                class="timButton label" i18n>
+            Add to 'My courses'
         </button>
         <ng-container *ngIf="translations && translations.length > 1">
             <span *ngFor="let tr of translations">
@@ -157,7 +158,7 @@ export class HeaderComponent implements OnInit {
      */
     async addToBookmarkFolder() {
         if (!Users.isLoggedIn()) {
-            showMessageDialog("Log in to bookmark this course");
+            showMessageDialog($localize`Log in to bookmark this course`);
             return;
         }
         const viewctrl = rootInstance;
