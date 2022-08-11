@@ -487,7 +487,7 @@ def get_tally_field_values(
     tally_field_values: DefaultDict[int, list[tuple[float, str]]] = defaultdict(list)
     task_id_cache = {}
     field_groups = itertools.groupby(tally_fields, key=lambda f: f[0].grouping_key)
-    for _, x in field_groups:
+    for _, x in field_groups:  # type: str, list[tuple[TallyField, str | None]]
         fs = list(x)
         g = fs[0][0]
         doc = doc_map[g.doc_id].document if g.doc_id else d.document
@@ -521,7 +521,7 @@ def get_tally_field_values(
         for field, _ in fs:
             if field.field not in known_tally_fields:
                 raise RouteException(
-                    f"Unknown tally field: {field.field}. "
+                    f"Unknown tally field: {field.field} (full name: {field.doc_and_field}). "
                     f"Valid tally fields are: {seq_to_str(known_tally_fields)}."
                 )
         for r in pts:

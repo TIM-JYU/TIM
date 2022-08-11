@@ -847,7 +847,7 @@ tools.print(tools.getDouble("x"));
             ),
             (
                 "tally:x",
-                "Unknown tally field: x. Valid tally fields are: total_points, velp_points, task_points, task_count and velped_task_count.",
+                "Unknown tally field: x (full name: {}.x). Valid tally fields are: total_points, velp_points, task_points, task_count and velped_task_count.",
                 400,
             ),
         ]
@@ -863,7 +863,7 @@ program: |!!
             )
             self.do_jsrun(
                 d,
-                expect_content=e,
+                expect_content=e.format(d.id),
                 expect_status=s,
             )
         d.document.set_settings(
@@ -879,7 +879,7 @@ program: |!!
         )
         self.do_jsrun(
             d,
-            expect_content="Unknown tally field: x. Valid tally fields are: total_points, velp_points, task_points, task_count, velped_task_count, 1st, 2nd and 3rd.",
+            expect_content=f"Unknown tally field: x (full name: {d.id}.x). Valid tally fields are: total_points, velp_points, task_points, task_count, velped_task_count, 1st, 2nd and 3rd.",
             expect_status=400,
         )
 
