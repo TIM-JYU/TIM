@@ -352,7 +352,7 @@ def get_templates(item_path: str) -> Response:
     return json_response(templates, date_conversion=True)
 
 
-def update_user_course_bookmarks():
+def update_user_course_bookmarks() -> None:
     u = get_current_user_object()
     now = get_current_time()
     for gr in u.groups:  # type: UserGroup

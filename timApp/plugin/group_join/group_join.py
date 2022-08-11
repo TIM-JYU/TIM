@@ -76,9 +76,15 @@ def join_groups(groups: list[str]) -> Response:
     def do_join(user: User, group: UserGroup) -> None:
         user.add_to_group(group, added_by=user)
 
-    all_ok, result = _do_group_op(
+    all_ok, is_course, result = _do_group_op(
         groups, current_user, "join", False, lambda i: i.canJoin, do_join
     )
+
+    if is_course:
+        from timApp.tim import update_user_course_bookmarks
+
+        db.session.refresh(current_user)
+        update_user_course_bookmarks()
 
     db.session.commit()
 
@@ -102,7 +108,7 @@ def leave_groups(groups: list[str]) -> Response:
         membership: UserGroupMember = user.active_memberships.get(group.id)
         membership.set_expired()
 
-    all_ok, result = _do_group_op(
+    all_ok, _, result = _do_group_op(
         groups, current_user, "leave", True, lambda i: i.canLeave, do_leave
     )
 
@@ -129,7 +135,7 @@ def _do_group_op(
     ensure_joined: bool,
     check_info: Callable[[GroupSelfJoinSettings], bool],
     apply: Callable[[User, UserGroup], None],
-) -> tuple[bool, dict[str, str]]:
+) -> tuple[bool, bool, dict[str, str]]:
     user_groups: set[str] = set(
         g for g, in user.get_groups(include_expired=False).with_entities(UserGroup.name)
     )
@@ -138,6 +144,7 @@ def _do_group_op(
     ugs: list[UserGroup] = UserGroup.query.filter(UserGroup.name.in_(groups)).all()
 
     all_ok = True
+    is_course = False
     for ug in ugs:
         if (ensure_joined and ug.name not in user_groups) or (
             not ensure_joined and ug.name in user_groups
@@ -150,6 +157,7 @@ def _do_group_op(
             all_ok = False
             continue
         apply(user, ug)
+        is_course = is_course or ug.is_self_join_course
         result[ug.name] = "OK"
 
     for g in result:
@@ -157,7 +165,7 @@ def _do_group_op(
             result[g] = "Group not found"
             all_ok = False
 
-    return all_ok, result
+    return all_ok, is_course, result
 
 
 @dataclass
