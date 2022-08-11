@@ -217,8 +217,18 @@ function addData(datasets, datas, keys, dopros) {
             borderWidth: 1,
         };
         let od = datas[v];
-        if ( !od || od.length === 0) continue;
-        d.data = dopros ? pros(od) : od;
+        if ( !od ) continue;
+        let odData = [];
+        if ( typeof od === 'object' && Array.isArray(od.data) ) {
+            // Set odData still so that pros can work
+            odData = od.data;
+            mergeDeep(d, od);
+        } else if ( Array.isArray(od) ) {
+            odData = od;
+        } else {
+            continue;
+        }
+        d.data = dopros ? pros(odData) : odData;
         let wasIn = false;
         for (const di in datasets ) {
             if (datasets[di].label === d.label) {
