@@ -299,7 +299,7 @@ TIMJS.setData = function(P, data) {
                 for (let dk of Object.keys(P.originalData.datas)) {
                     let d = P.originalData.datas[dk];
                     if ( Array.isArray(d.data) ) {
-                        d.data = [];
+                        delete d.data;
                     } else if (Array.isArray(d)) {
                         delete P.originalData.datas[dk];
                     }
