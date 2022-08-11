@@ -492,3 +492,22 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         db.session.commit()
         # Should no longer be able to access velp group
         self.get(g_doc.url, expect_status=403)
+
+        # Case 6:
+        # New velp groups for the document should set permissions for
+        # all users with access to the document
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        self.login_test1()
+        g2 = self.json_post(
+            f"/{d.document.id}/create_velp_group",
+            {"name": "test-group2", "target_type": 1},
+        )
+
+        g2_doc = get_doc_or_abort(g2["id"])
+        self.login_test2()
+        self.get(g2_doc.url, expect_status=200)
+
+        self.test_user_2.remove_access(d, AccessType.view)
+        db.session.commit()
+        self.get(g2_doc.url, expect_status=403)
