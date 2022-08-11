@@ -51,6 +51,7 @@ class GroupSelfJoinSettings:
 
     canJoin: bool = False
     canLeave: bool = False
+    course: bool = False
 
     @staticmethod
     @functools.cache

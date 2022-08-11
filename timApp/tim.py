@@ -356,7 +356,7 @@ def update_user_course_bookmarks():
     u = get_current_user_object()
     now = get_current_time()
     for gr in u.groups:  # type: UserGroup
-        if gr.is_sisu_student_group:
+        if gr.is_sisu_student_group or gr.is_self_join_course:
             docs = (
                 DocEntry.query.join(Block)
                 .join(Tag)

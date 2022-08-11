@@ -30,6 +30,7 @@ from timApp.user.usergroupmember import UserGroupMember, membership_current
 
 if TYPE_CHECKING:
     from timApp.item.block import Block
+    from timApp.document.docentry import DocEntry
 
 # Prefix is no longer needed because scimusergroup determines the Sisu (SCIM) groups.
 SISU_GROUP_PREFIX = ""
@@ -197,6 +198,15 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     @property
     def is_sisu_student_group(self):
         return self.is_sisu and self.external_id.external_id.endswith("-students")
+
+    @property
+    def is_self_join_course(self):
+        if not self.admin_doc:
+            return False
+        doc: DocEntry = self.admin_doc.docentries[0]
+        settings = doc.document.get_settings()
+        self_join_info = settings.group_self_join_info()
+        return self_join_info.course
 
     @staticmethod
     def create(name: str) -> UserGroup:
