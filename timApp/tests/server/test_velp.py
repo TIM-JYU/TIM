@@ -15,6 +15,8 @@ import json
 
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.accesstype import AccessType
+from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
+from timApp.auth.sessioninfo import get_current_user, get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -392,3 +394,101 @@ class VelpGroupDeletionTest(TimRouteTest):
         self.assertEqual(0, len(vg_sel2))
         self.assertEqual(0, len(vg_def2))
         self.assertEqual(0, len(vg_in_doc2))
+
+
+class VelpGroupPermissionsPropagationTest(TimRouteTest):
+    """Tests propagation of document permissions to the document's velp groups.
+    The document's velp groups' permissions should be updated as users gain
+    or lose permissions to the document.
+    """
+
+    def test_velp_group_permissions(self):
+        # set up docs and velp groups
+        self.login_test1()
+        d = self.create_doc(title="test velp group permissions")
+
+        g = self.json_post(
+            f"/{d.document.id}/create_velp_group",
+            {"name": "test-group1", "target_type": 1},
+        )
+
+        # get velp group document
+        g_doc = get_doc_or_abort(g["id"])
+
+        # Document and velp group permissions should be the same
+        d_perms = get_user_rights_for_item(d, get_current_user_object())
+        g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
+        self.assertEqual(d_perms, g_perms)
+
+        # Case 1:
+        # Test user 2 should initially not be able to access velp group
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+        # Should be able to access velp group with view permissions
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        self.get(g_doc.url, expect_status=200)
+        self.test_user_2.remove_access(d, AccessType.view)
+        db.session.commit()
+        # Should no longer be able to access velp group
+        self.get(g_doc.url, expect_status=403)
+
+        # Document and velp group permissions should be the same
+        d_perms = get_user_rights_for_item(d, get_current_user_object())
+        g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
+        self.assertEqual(d_perms, g_perms)
+
+        # Case 2:
+        # Should be able to access velp group with edit permissions
+        self.test_user_2.grant_access(d, AccessType.edit)
+        db.session.commit()
+        self.get(g_doc.url, expect_status=200)
+        self.test_user_2.remove_access(d, AccessType.edit)
+        db.session.commit()
+        # Should no longer be able to access velp group
+        self.get(g_doc.url, expect_status=403)
+
+        # Document and velp group permissions should be the same
+        d_perms = get_user_rights_for_item(d, get_current_user_object())
+        g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
+        self.assertEqual(d_perms, g_perms)
+
+        # Case 3:
+        # Should be able to access velp group with teacher permissions
+        self.test_user_2.grant_access(d, AccessType.teacher)
+        db.session.commit()
+        self.get(g_doc.url, expect_status=200)
+        self.test_user_2.remove_access(d, AccessType.teacher)
+        db.session.commit()
+        # Should no longer be able to access velp group
+        self.get(g_doc.url, expect_status=403)
+
+        # Document and velp group permissions should be the same
+        d_perms = get_user_rights_for_item(d, get_current_user_object())
+        g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
+        self.assertEqual(d_perms, g_perms)
+
+        # Case 4:
+        # Should be able to access velp group with manage permissions
+        self.test_user_2.grant_access(d, AccessType.manage)
+        db.session.commit()
+        self.get(g_doc.url, expect_status=200)
+        self.test_user_2.remove_access(d, AccessType.manage)
+        db.session.commit()
+        # Should no longer be able to access velp group
+        self.get(g_doc.url, expect_status=403)
+
+        # Document and velp group permissions should be the same
+        d_perms = get_user_rights_for_item(d, get_current_user_object())
+        g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
+        self.assertEqual(d_perms, g_perms)
+
+        # Case 5:
+        # Should be able to access velp group with owner permissions
+        self.test_user_2.grant_access(d, AccessType.owner)
+        db.session.commit()
+        self.get(g_doc.url, expect_status=200)
+        self.test_user_2.remove_access(d, AccessType.owner)
+        db.session.commit()
+        # Should no longer be able to access velp group
+        self.get(g_doc.url, expect_status=403)
