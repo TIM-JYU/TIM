@@ -293,7 +293,21 @@ TIMJS.setData = function(P, data) {
     // noinspection JSUnresolvedVariable
       if ( P.originalData ) {
         let newData = {};
-        if ( P.chart ) P.originalData.datas = null; // prevent another add
+        if ( P.chart ) {
+            // prevent another add by cleaning the data
+            if (P.originalData.datas) {
+                for (let dk of Object.keys(P.originalData.datas)) {
+                    let d = P.originalData.datas[dk];
+                    if ( Array.isArray(d.data) ) {
+                        d.data = [];
+                    } else if (Array.isArray(d)) {
+                        delete P.originalData.datas[dk];
+                    }
+                }
+            } else {
+                P.originalData.datas = null;
+            }
+        }
         mergeDeep(newData, P.originalData, '#'); // do not loose possible !
         mergeDeep(newData, data);
         data = newData;
