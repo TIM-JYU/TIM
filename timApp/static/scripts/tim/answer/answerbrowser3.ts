@@ -2,7 +2,7 @@ import {IController, IScope, ITranscludeFunction} from "angular";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
-import {TaskId} from "tim/plugin/taskid";
+import {TaskId, TaskIdWithDefaultDocId} from "tim/plugin/taskid";
 import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAllAnswersDialog} from "tim/answer/showAllAnswersDialog";
@@ -204,6 +204,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             if (this.locked) {
                 this.hidePlugin();
                 this.lockedText = m?.previousTask?.hideText;
+                this.viewctrl?.addLockListener(this);
             }
         });
     }
@@ -386,6 +387,24 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             } else {
                 this.startTask();
             }
+        }
+    }
+
+    informAboutLock(sourceTask: TaskId) {
+        const prevInfo = this.pluginMarkup()?.previousTask;
+        if (!prevInfo || !this.viewctrl?.docId || !prevInfo.requireLock) {
+            return;
+        }
+        const tid = TaskIdWithDefaultDocId(
+            prevInfo.taskid,
+            this.viewctrl.docId
+        );
+        if (tid?.docTask() == sourceTask.docTask()) {
+            if (prevInfo.count) {
+                // todo
+                return;
+            }
+            this.unlockHiddenTask();
         }
     }
 
@@ -1472,6 +1491,7 @@ export class AnswerBrowserController
         }
         if (this.modelAnswer?.lock) {
             this.modelAnswer.alreadyLocked = true;
+            this.viewctrl.informAboutLock(this.taskId);
         }
         this.modelAnswerFetched = true;
         this.modelAnswerVisible = true;

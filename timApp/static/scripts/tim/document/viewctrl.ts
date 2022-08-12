@@ -248,6 +248,7 @@ export class ViewCtrl implements IController {
     private userChangeListeners: Map<string, IUserChanged> = new Map();
 
     private inputChangeListeners = new Set<IChangeListener>();
+    private lockListeners = new Set<PluginLoaderCtrl>();
 
     private pendingUpdates: PendingCollection = new Map<string, string>();
     private document?: TimDocument;
@@ -788,6 +789,17 @@ export class ViewCtrl implements IController {
 
     public getTableForm(taskId: string) {
         return this.tableForms.get(taskId);
+    }
+
+    public addLockListener(listener: PluginLoaderCtrl) {
+        this.lockListeners.add(listener);
+    }
+
+    public informAboutLock(tid: TaskId) {
+        // todo: integrate to generic listener?
+        this.lockListeners.forEach((listener) => {
+            listener.informAboutLock(tid);
+        });
     }
 
     public informChangeListeners(
