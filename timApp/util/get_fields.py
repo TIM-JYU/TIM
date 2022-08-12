@@ -515,6 +515,7 @@ def get_tally_field_values(
             if group_filter is not None
             else None,
             answer_filter=ans_filter,
+            with_answer_time=True,
         )
 
         known_tally_fields = list(

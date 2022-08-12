@@ -520,6 +520,7 @@ def get_users_for_tasks(
     group_by_user: bool = True,
     group_by_doc: bool = False,
     answer_filter: Any | None = None,
+    with_answer_time: bool = False,
 ) -> list[UserTaskEntry]:
     if not task_ids:
         return []
@@ -538,6 +539,14 @@ def get_users_for_tasks(
     ).subquery()
     if answer_filter is None:
         answer_filter = true()
+    time_labels = (
+        [
+            func.min(Answer.answered_on).label("answered_on_min"),
+            func.max(Answer.answered_on).label("answered_on_max"),
+        ]
+        if with_answer_time
+        else []
+    )
     subquery_user_answers = (
         valid_answers_query(task_ids)
         .filter(answer_filter)
@@ -547,8 +556,7 @@ def get_users_for_tasks(
             Answer.task_id,
             UserAnswer.user_id.label("uid"),
             func.max(Answer.id).label("aid"),
-            func.min(Answer.answered_on).label("answered_on_min"),
-            func.max(Answer.answered_on).label("answered_on_max"),
+            *time_labels,
         )
         .subquery()
     )
@@ -595,8 +603,18 @@ def get_users_for_tasks(
         .cast(Float)
         .label("velp_points")
     )
-    answered_on_min = func.min(sub_joined.c.answered_on_min).label("first_answer_on")
-    answered_on_max = func.max(sub_joined.c.answered_on_max).label("last_answer_on")
+    if with_answer_time:
+        answered_on_min = func.min(sub_joined.c.answered_on_min).label(
+            "first_answer_on"
+        )
+        answered_on_max = func.max(sub_joined.c.answered_on_max).label("last_answer_on")
+        time_cols = [
+            answered_on_min,
+            answered_on_max,
+            (answered_on_max - answered_on_min).label("answer_duration"),
+        ]
+    else:
+        time_cols = []
 
     main = main.with_entities(
         User,
@@ -607,9 +625,7 @@ def get_users_for_tasks(
         #  We want a+b to be null only if BOTH are null. For now, the summing is done in Python.
         # func.round((task_sum + velp_sum).cast(Numeric), 4).cast(Float).label('total_points'),
         func.count(sub_joined.c.annotation_answer_id).label("velped_task_count"),
-        answered_on_min,
-        answered_on_max,
-        (answered_on_max - answered_on_min).label("answer_duration"),
+        *time_cols,
         *cols,
     ).order_by(User.real_name)
 
@@ -694,6 +710,7 @@ def get_points_by_rule(
     user_ids: list[int] | None = None,
     answer_filter: Any | None = None,
     force_user: User | None = None,
+    with_answer_time: bool = False,
 ) -> (
     list[UserPoints] | list[UserTaskEntry]
 ):  # TODO: Would be better to return always same kind of list.
@@ -704,13 +721,19 @@ def get_points_by_rule(
     :param rule: The points rule.
     :param task_ids: The list of task ids to consider.
     :param user_ids: The list of users for which to compute the sum.
+    :param with_answer_time: Whether to include the answer time data (last answer time, first answer time) in the result.
+
     :return: The computed result.
 
     """
     if not rule:
         return get_users_for_tasks(task_ids, user_ids, answer_filter=answer_filter)
     tasks_users = get_users_for_tasks(
-        task_ids, user_ids, group_by_user=False, answer_filter=answer_filter
+        task_ids,
+        user_ids,
+        group_by_user=False,
+        answer_filter=answer_filter,
+        with_answer_time=with_answer_time,
     )
     result: DefaultDict[int, UserPointInfo] = defaultdict(
         lambda: {
@@ -805,14 +828,15 @@ def get_points_by_rule(
             group["task_sum"] = task_sum
             group["velp_sum"] = velp_sum
             group["total_sum"] = total_sum
-            first_answer_on = min(
-                (t["first_answer_on"] for t in group["tasks"] if t["first_answer_on"]),
-                default=None,
-            )
-            last_answer_on = max(
-                (t["last_answer_on"] for t in group["tasks"] if t["last_answer_on"]),
-                default=None,
-            )
+
+            def valid_dates(date_attr: str) -> Generator[datetime, None, None]:
+                for tt in group["tasks"]:
+                    d = tt.get(date_attr, None)
+                    if d is not None and isinstance(d, datetime):
+                        yield d
+
+            first_answer_on = min(valid_dates("first_answer_on"), default=None)
+            last_answer_on = max(valid_dates("last_answer_on"), default=None)
             answer_duration = (
                 last_answer_on - first_answer_on
                 if last_answer_on and first_answer_on

@@ -20,10 +20,6 @@ from timApp.util.utils import read_json_lines, get_current_time
 
 
 class AnswerTest(TimRouteTest):
-    def setUp(self):
-        super().setUp()
-        self.ref_date = get_current_time()
-
     def check_totals(
         self, user: User, task_ids: list[TaskId], task_count, total_points
     ):
@@ -36,9 +32,6 @@ class AnswerTest(TimRouteTest):
                     "total_points": total_points,
                     "velp_points": None,
                     "velped_task_count": 0,
-                    "first_answer_on": self.ref_date,
-                    "last_answer_on": self.ref_date,
-                    "answer_duration": timedelta(0),
                 }
             ],
             get_users_for_tasks(task_ids, [user.id]),
@@ -51,30 +44,20 @@ class AnswerTest(TimRouteTest):
         task_id2 = TaskId.parse("1.test2")
         self.check_user(user1, task_id1, task_id2)
         self.check_user(user2, task_id1, task_id2)
-        save_answer(
-            [user1, user2],
-            TaskId.parse("1.test"),
-            "content0",
-            0.5,
-            [],
-            True,
-            answered_on=self.ref_date,
-        )
+        save_answer([user1, user2], TaskId.parse("1.test"), "content0", 0.5, [], True)
         self.check_totals(user1, [task_id1, task_id2], 2, 1000.5)
         self.check_totals(user2, [task_id1, task_id2], 2, 1000.5)
 
     def check_user(self, u: User, task_id1: TaskId, task_id2: TaskId):
         uid = u.id
         self.assertListEqual([], get_users_for_tasks([task_id1], [uid]))
-        save_answer(
-            [u], task_id1, "content", 1.00001, [], True, answered_on=self.ref_date
-        )
+        save_answer([u], task_id1, "content", 1.00001, [], True)
         self.check_totals(u, [task_id1], 1, 1.0)
-        save_answer([u], task_id1, "content1", 10, [], False, answered_on=self.ref_date)
+        save_answer([u], task_id1, "content1", 10, [], False)
         self.check_totals(u, [task_id1], 1, 1.0)
-        save_answer([u], task_id1, "content", 100, [], True, answered_on=self.ref_date)
+        save_answer([u], task_id1, "content", 100, [], True)
         self.check_totals(u, [task_id1], 1, 100.0)
-        save_answer([u], task_id2, "content", 1000, [], True, answered_on=self.ref_date)
+        save_answer([u], task_id2, "content", 1000, [], True)
         self.check_totals(u, [task_id1], 1, 100.0)
         self.check_totals(u, [task_id1, task_id2], 2, 1100)
 

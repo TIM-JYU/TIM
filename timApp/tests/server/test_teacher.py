@@ -73,9 +73,6 @@ class TeacherTest(TimRouteTest):
                     },
                     "velp_points": None,
                     "velped_task_count": 0,
-                    "answer_duration": "P0D",
-                    "first_answer_on": now.isoformat(),
-                    "last_answer_on": now.isoformat(),
                 }
             ],
         )
