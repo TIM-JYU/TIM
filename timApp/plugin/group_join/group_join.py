@@ -6,6 +6,7 @@ from marshmallow import missing
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.bookmark.course import update_user_course_bookmarks
 from timApp.document.docentry import DocEntry
 from timApp.document.docsettings import GroupSelfJoinSettings
 from timApp.timdb.sqa import db
@@ -81,8 +82,6 @@ def join_groups(groups: list[str]) -> Response:
     )
 
     if is_course:
-        from timApp.tim import update_user_course_bookmarks
-
         db.session.refresh(current_user)
         update_user_course_bookmarks()
 

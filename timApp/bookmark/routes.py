@@ -17,6 +17,7 @@ from timApp.bookmark.bookmarks import (
     HIDDEN_COURSES_GROUP,
     LAST_READ_GROUP,
 )
+from timApp.bookmark.course import add_to_course_bookmark
 from timApp.document.course.validate import CourseException, verify_valid_course
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -73,14 +74,6 @@ def add_course_bookmark(path: str, require_group: bool = False) -> Response:
             "added_to_group": added_to_group,
         }
     )
-
-
-def add_to_course_bookmark(b: Bookmarks, d: DocInfo) -> None:
-    if b.has_bookmark(HIDDEN_COURSES_GROUP, d.title):
-        return
-    b.add_bookmark(
-        MY_COURSES_GROUP, d.title, d.url_relative, move_to_top=False
-    ).save_bookmarks()
 
 
 @bookmarks.post("/edit")

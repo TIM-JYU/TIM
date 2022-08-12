@@ -517,7 +517,7 @@ class DocSettings:
     def comments(self) -> str:
         return self.__dict.get(self.comments_key)
 
-    def sisu_require_manual_enroll(self):
+    def sisu_require_manual_enroll(self) -> bool:
         return self.__dict.get(self.sisu_require_manual_enroll_key, False)
 
     def course_allow_manual_enroll(self) -> bool:

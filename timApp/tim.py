@@ -38,6 +38,7 @@ from timApp.auth.sessioninfo import (
 )
 from timApp.backup.backup_routes import backup
 from timApp.bookmark.bookmarks import Bookmarks
+from timApp.bookmark.course import update_user_course_bookmarks
 from timApp.bookmark.routes import bookmarks, add_to_course_bookmark
 from timApp.defaultconfig import SECRET_KEY
 from timApp.document.course.routes import course_blueprint
@@ -350,34 +351,6 @@ def get_templates(item_path: str) -> Response:
     verify_edit_access(d)
     templates = get_templates_for_folder(d.parent)
     return json_response(templates, date_conversion=True)
-
-
-def update_user_course_bookmarks() -> None:
-    u = get_current_user_object()
-    now = get_current_time()
-    for gr in u.groups:  # type: UserGroup
-        if gr.is_sisu_student_group or gr.is_self_join_course:
-            docs = (
-                DocEntry.query.join(Block)
-                .join(Tag)
-                .filter(
-                    (Tag.name == GROUP_TAG_PREFIX + gr.name)
-                    & ((Tag.expires == None) | (Tag.expires > now))
-                )
-                .with_entities(DocEntry)
-                .all()
-            )
-            if not docs:
-                continue
-            if len(docs) > 1:
-                continue
-            d: DocEntry = docs[0]
-            if not is_course(d):
-                continue
-            if d.document.get_settings().sisu_require_manual_enroll():
-                continue
-            b = Bookmarks(u)
-            add_to_course_bookmark(b, d)
 
 
 @app.get("/en")
