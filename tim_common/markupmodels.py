@@ -92,7 +92,8 @@ class PreviousTaskInfo:
     taskid: str
     requireLock: bool | None | Missing = False
     count: int | None | Missing = missing
-    # errormessage, hide, hidetext
+    hide: bool | None | Missing = missing
+    hideText: str | None | Missing = missing
 
 
 @dataclass

@@ -225,6 +225,7 @@ class Plugin:
         self.output = None
         self.plugin_lazy = None
         self.access_end_for_user = None
+        self.hidden: None | bool = None
 
     # TODO don't set task_id in HTML or JSON at all if there isn't one.
     #  Currently at least csPlugin cannot handle taskID being None.
@@ -594,6 +595,40 @@ class Plugin:
                     return
                 self.access_end_for_user = ba.accessible_to
 
+    def hidden_by_prerequisite(self) -> bool:
+        if self.hidden is not None:
+            return self.hidden
+        self.hidden = False
+        current_user = self.options.user_ctx.logged_user
+        if (
+            self.known.previousTask is not None
+            and self.known.previousTask is not missing
+            and self.known.previousTask.hide
+            and (self.known.previousTask.count or self.known.previousTask.requireLock)
+            and not current_user.has_teacher_access(self.par.doc.get_docinfo())
+        ):
+            prev_info = self.known.previousTask
+            tid = TaskId.parse(prev_info.taskid, require_doc_id=False)
+            if not tid.doc_id:
+                tid = TaskId.parse(str(self.task_id.doc_id) + "." + prev_info.taskid)
+            if prev_info.requireLock:
+                self.hidden = True
+                b = TaskBlock.get_by_task(tid.doc_task)
+                if b:
+                    ba = BlockAccess.query.filter_by(
+                        block_id=b.id,
+                        type=AccessType.view.value,
+                        usergroup_id=current_user.get_personal_group().id,
+                    ).first()
+                    if ba:
+                        if ba.accessible_to < get_current_time():
+                            self.hidden = False
+            if prev_info.count:
+                current_count = current_user.get_answers_for_task(tid.doc_task).count()
+                if current_count < prev_info.count:
+                    self.hidden = True
+        return self.hidden
+
     # TODO: Instead of using AngularJS draggable, define dragging on Angular side
     def wrap_draggable(self, html_str: str, doc_task_id: str) -> str:
         if self.known.floatHeader is missing or self.options.preview:
@@ -648,6 +683,8 @@ class Plugin:
                     access_end = self.access_end_for_user.isoformat()
                 unlock_info = f"""access-duration='{self.known.accessDuration}' access-end="{access_end or ""}" 
                 access-header='{self.known.header or ""}' access-end-text='{self.known.accessEndText or ''}'"""
+            elif self.hidden_by_prerequisite():
+                unlock_info = f"""locked='true'"""
             if abtype and self.options.wraptype == PluginWrap.Full and False:
                 return self.wrap_draggable(
                     f"""

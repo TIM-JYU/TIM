@@ -132,6 +132,9 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     private accessEnd?: Binding<string, "@">;
     private accessEndText?: Binding<string, "@">;
     private accessHeader?: Binding<string, "@">;
+    private locked?: Binding<boolean, "<">;
+    private lockedText?: string;
+    private lockedError?: string;
 
     private timed = false;
     private expired = false;
@@ -166,8 +169,8 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                 this.loadPlugin();
             }
         }
-        const m = this.pluginMarkup();
         $timeout(() => {
+            const m = this.pluginMarkup();
             if (
                 m?.hideBrowser ||
                 this.viewctrl?.docSettings.hideBrowser ||
@@ -197,6 +200,10 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                         this.startTask();
                     }
                 }
+            }
+            if (this.locked) {
+                this.hidePlugin();
+                this.lockedText = m?.previousTask?.hideText;
             }
         });
     }
@@ -360,13 +367,16 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         e.css("visibility", "visible");
     }
 
-    async unlockTask() {
+    async unlockTimedTask() {
         const r = await to(
-            $http.get<{end_time: string; expired?: boolean}>("/unlockTask", {
-                params: {
-                    task_id: this.taskId,
-                },
-            })
+            $http.get<{end_time: string; expired?: boolean}>(
+                "/unlockTimedTask",
+                {
+                    params: {
+                        task_id: this.taskId,
+                    },
+                }
+            )
         );
         if (r.ok) {
             this.unlockable = false;
@@ -376,6 +386,22 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             } else {
                 this.startTask();
             }
+        }
+    }
+
+    async unlockHiddenTask() {
+        const r = await to(
+            $http.get<{unlocked: boolean}>("/unlockHiddenTask", {
+                params: {
+                    task_id: this.taskId,
+                },
+            })
+        );
+        if (r.ok) {
+            this.locked = false;
+            this.unHidePlugin();
+        } else {
+            this.lockedError = r.result.data.error;
         }
     }
 
@@ -408,6 +434,16 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         }
         return false;
     }
+
+    getPrerequisiteLockedText() {
+        return (
+            this.lockedText ?? $localize`You have not unlocked this task yet`
+        );
+    }
+
+    getPrerequisiteUnlockText() {
+        return $localize`Unlock task`;
+    }
 }
 
 // noinspection HtmlUnknownAttribute
@@ -420,6 +456,8 @@ timApp.component("timPluginLoader", {
         accessEnd: "@",
         accessHeader: "@",
         accessEndText: "@",
+        locked: "<",
+        lockedText: "@",
     },
     controller: PluginLoaderCtrl,
     require: {
@@ -448,9 +486,16 @@ timApp.component("timPluginLoader", {
     <h4 ng-if="$ctrl.accessHeader && $ctrl.taskHidden">{{::$ctrl.accessHeader}}</h4>
     <div ng-if="$ctrl.unlockable">
     Unlock task. You will have {{$ctrl.accessDuration}} seconds to answer to this task.
-    <button class="btn btn-primary" ng-click="$ctrl.unlockTask()" title="Unlock task">Unlock task</button>
+    <button class="btn btn-primary" ng-click="$ctrl.unlockTimedTask()" title="Unlock task">Unlock task</button>
     </div>
     <div ng-if="$ctrl.expired && $ctrl.accessEndText">{{::$ctrl.accessEndText}}</div>
+</div>
+<div ng-if="$ctrl.locked">
+    <div>
+    {{$ctrl.getPrerequisiteLockedText()}}
+    </div>
+    <button class="btn btn-primary" ng-click="$ctrl.unlockHiddenTask()" title="{{::$ctrl.getPrerequisiteUnlockText()}}">{{::$ctrl.getPrerequisiteUnlockText()}}</button>
+    <div ng-if="$ctrl.lockedError">{{::$ctrl.lockedError}}</div>
 </div>
     `,
     transclude: true,

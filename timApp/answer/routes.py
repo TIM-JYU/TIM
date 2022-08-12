@@ -2584,7 +2584,56 @@ def rename_answers(old_name: str, new_name: str, doc_path: str) -> Response:
     return json_response({"modified": len(answers_to_rename), "conflicts": conflicts})
 
 
-@answers.get("/unlockTask")
+@answers.get("/unlockHiddenTask")
+def unlock_locked_task(task_id: str) -> Response:
+    tid = TaskId.parse(task_id)
+    if tid.doc_id is None:
+        raise RouteException(f"Task ID is missing document: {task_id}")
+    d = get_doc_or_abort(tid.doc_id)
+    verify_view_access(d)
+    doc = d.document
+    current_user = get_current_user_object()
+    view_ctx = ViewContext(ViewRoute.View, False, origin=get_origin_from_request())
+    user_ctx = user_context_with_logged_in(current_user)
+    try:
+        doc, plug = get_plugin_from_request(
+            doc, task_id=tid, u=user_ctx, view_ctx=view_ctx
+        )
+    except PluginException as e:
+        raise RouteException(str(e))
+    prerequisite_info = plug.known.previousTask
+    if not prerequisite_info:
+        raise RouteException("Invalid task")
+    prerequisite_taskid = TaskId.parse(prerequisite_info.taskid, require_doc_id=False)
+    if not prerequisite_taskid.doc_id:
+        prerequisite_taskid = TaskId.parse(
+            str(tid.doc_id) + "." + prerequisite_info.taskid
+        )
+    if prerequisite_info.requireLock:
+        b = TaskBlock.get_by_task(prerequisite_taskid.doc_task)
+        if b:
+            ba = BlockAccess.query.filter_by(
+                block_id=b.id,
+                type=AccessType.view.value,
+                usergroup_id=current_user.get_personal_group().id,
+            ).first()
+            if ba and ba.accessible_to and ba.accessible_to < get_current_time():
+                return json_response({"unlocked": True})
+        raise RouteException(
+            prerequisite_info.hideText or "You haven't unlocked this task yet"
+        )
+    if prerequisite_info.count:
+        current_count = current_user.get_answers_for_task(
+            prerequisite_taskid.doc_task
+        ).count()
+        if current_count < prerequisite_info.count:
+            raise RouteException(
+                prerequisite_info.hideText or "You haven't unlocked this task yet"
+            )
+    return json_response({"unlocked": True})
+
+
+@answers.get("/unlockTimedTask")
 def unlock_task(task_id: str) -> Response:
     tid = TaskId.parse(task_id)
     if tid.doc_id is None:

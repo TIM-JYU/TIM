@@ -23,6 +23,14 @@ export const undoType = t.partial({
     confirmationTitle: nullable(t.string),
 });
 
+export const previousTaskType = t.partial({
+    taskid: t.string,
+    requireLock: t.boolean,
+    count: t.number,
+    hide: t.boolean,
+    hideText: t.string,
+});
+
 // Attributes that are valid for all plugins.
 export const GenericPluginMarkup = t.partial({
     answerLimit: nullable(t.Integer),
@@ -45,6 +53,7 @@ export const GenericPluginMarkup = t.partial({
     connectionErrorMessage: nullable(t.string),
     answerBrowser: nullable(AnswerBrowserSettings),
     warningFilter: nullable(t.string),
+    previousTask: nullable(previousTaskType),
 });
 
 export const Info = nullable(
