@@ -43,7 +43,7 @@ def chunks(l: list, n: int):
 
 
 tallyfield_re = re.compile(
-    r"tally:((?P<doc>\d+)\.)?(?P<field>[a-zA-Z0-9öäåÖÄÅ_-]+)(\[ *(?P<ds>[^\[\],]*) *, *(?P<de>[^\[\],]*) *\])?"
+    r"tally:((?P<doc>\d+)\.)?(?P<field>[a-zA-Z0-9öäåÖÄÅ_-]+)(?:.(?P<subfield>[a-zA-Z0-9öäåÖÄÅ_-]+))?(\[ *(?P<ds>[^\[\],]*) *, *(?P<de>[^\[\],]*) *\])?"
 )
 
 
@@ -52,6 +52,7 @@ class TallyField:
     """In Jsrunner, represents the "tally:" type of field."""
 
     field: str
+    subfield: str | None
     doc_id: int | None
     datetime_start: datetime | None
     datetime_end: datetime | None
@@ -90,6 +91,7 @@ class TallyField:
         doc = m.group("doc")
         return TallyField(
             field=m.group("field"),
+            subfield=m.group("subfield"),
             datetime_start=ds,
             datetime_end=de,
             doc_id=int(doc) if doc else None,
@@ -534,6 +536,10 @@ def get_tally_field_values(
                     value = groups[
                         field.field
                     ]  # The group should exist because the field was validated above.
-                    value = value["total_sum"]
+                    value = (
+                        value[field.subfield]
+                        if field.subfield in value
+                        else value["total_sum"]
+                    )
                 tally_field_values[u.id].append((value, alias or field.doc_and_field))
     return tally_field_values
