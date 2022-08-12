@@ -11,7 +11,7 @@ from lxml.html import HtmlElement
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
-from timApp.answer.answers import get_points_by_rule, save_answer
+from timApp.answer.answers import get_points_by_rule, save_answer, set_test_datetime
 from timApp.answer.pointsumrule import PointSumRule, PointType
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import user_context_with_logged_in
@@ -43,6 +43,15 @@ from timApp.velp.velps import create_new_velp
 
 class PluginTest(TimRouteTest):
     answer_error = {"error": "You don't have access to this answer."}
+
+    def setUp(self):
+        super().setUp()
+        self.ref_date = get_current_time()
+        set_test_datetime(self.ref_date)
+
+    def tearDown(self):
+        super().tearDown()
+        set_test_datetime(None)
 
     def test_plugin(self):
         self.login_test1()
@@ -871,6 +880,9 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "task_sum": 6.0,
                             "velp_sum": 7.0,
                             "total_sum": 13.0,
+                            "first_answer_on": self.ref_date,
+                            "last_answer_on": self.ref_date,
+                            "answer_duration": timedelta(0),
                         },
                     ),
                     (
@@ -882,6 +894,9 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "task_sum": 1.0,
                             "velp_sum": 5.0,
                             "total_sum": 6.0,
+                            "first_answer_on": self.ref_date,
+                            "last_answer_on": self.ref_date,
+                            "answer_duration": timedelta(0),
                         },
                     ),
                     (
@@ -893,6 +908,9 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "task_sum": 4.0,
                             "velp_sum": 4.0,
                             "total_sum": 8.0,
+                            "first_answer_on": self.ref_date,
+                            "last_answer_on": self.ref_date,
+                            "answer_duration": timedelta(0),
                         },
                     ),
                 ]
@@ -908,6 +926,9 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "task_sum": 3.0,
                             "velp_sum": 7.0,
                             "total_sum": 10.0,
+                            "first_answer_on": self.ref_date,
+                            "last_answer_on": self.ref_date,
+                            "answer_duration": timedelta(0),
                         },
                     ),
                     (
@@ -919,6 +940,9 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "task_sum": 8.0,
                             "velp_sum": 5.0,
                             "total_sum": 13.0,
+                            "first_answer_on": self.ref_date,
+                            "last_answer_on": self.ref_date,
+                            "answer_duration": timedelta(0),
                         },
                     ),
                     (
@@ -930,6 +954,9 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                             "task_sum": 5.0,
                             "velp_sum": 4.0,
                             "total_sum": 9.0,
+                            "first_answer_on": self.ref_date,
+                            "last_answer_on": self.ref_date,
+                            "answer_duration": timedelta(0),
                         },
                     ),
                 ]
@@ -1098,6 +1125,9 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                         "total_points": sum1,
                         "velped_task_count": 3,
                         "user": self.test_user_1,
+                        "first_answer_on": self.ref_date,
+                        "last_answer_on": self.ref_date,
+                        "answer_duration": timedelta(0),
                     },
                     {
                         "groups": pts2,
@@ -1107,6 +1137,9 @@ user_99934f03a2c8a14eed17b3ab3e46180b4b96a8c552768f7c7781f9003b22ca70; None; {re
                         "total_points": sum2,
                         "velped_task_count": 3,
                         "user": self.test_user_2,
+                        "first_answer_on": self.ref_date,
+                        "last_answer_on": self.ref_date,
+                        "answer_duration": timedelta(0),
                     },
                 ],
                 points,

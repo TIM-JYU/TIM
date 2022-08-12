@@ -3,6 +3,7 @@ from timApp.tests.db.timdbtest import TEST_USER_1_ID
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
+from timApp.util.utils import get_current_time
 
 
 class HideNamesTest(TimRouteTest):
@@ -11,8 +12,9 @@ class HideNamesTest(TimRouteTest):
         m_user, _ = User.create_with_group(UserInfo(username="mallivastaus"))
         db.session.commit()
         d = self.create_doc(initial_par="#- {#t plugin=textfield}")
-        self.add_answer(d, "t", content="test", user=m_user)
-        self.add_answer(d, "t", content="test2", user=self.test_user_1)
+        now = get_current_time()
+        self.add_answer(d, "t", content="test", user=m_user, answered_on=now)
+        self.add_answer(d, "t", content="test2", user=self.test_user_1, answered_on=now)
         self.test_user_2.grant_access(d, AccessType.see_answers)
         db.session.commit()
         self.login_test2()
@@ -25,6 +27,9 @@ class HideNamesTest(TimRouteTest):
                     "task_count": 1,
                     "task_points": None,
                     "total_points": None,
+                    "first_answer_on": now.isoformat(),
+                    "last_answer_on": now.isoformat(),
+                    "answer_duration": "P0D",
                     "user": {
                         "email": "user2@example.com",
                         "id": TEST_USER_1_ID,
@@ -38,6 +43,9 @@ class HideNamesTest(TimRouteTest):
                     "task_count": 1,
                     "task_points": None,
                     "total_points": None,
+                    "first_answer_on": now.isoformat(),
+                    "last_answer_on": now.isoformat(),
+                    "answer_duration": "P0D",
                     "user": {
                         "email": None,
                         "id": m_user.id,

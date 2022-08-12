@@ -3,7 +3,7 @@ import hashlib
 import json
 from collections import defaultdict, OrderedDict
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import (
     Iterable,
@@ -16,6 +16,8 @@ from typing import (
     ItemsView,
 )
 
+# This ref exits in bs4 but doesn't seem to be correctly exported
+# noinspection PyUnresolvedReferences
 from bs4 import UnicodeDammit
 from flask import current_app
 from sqlalchemy import func, Numeric, Float, true
@@ -36,6 +38,7 @@ from timApp.util.answerutil import (
     task_ids_to_strlist,
     AnswerPeriodOptions,
 )
+from timApp.util.flask.requesthelper import is_testing
 from timApp.util.logger import log_warning
 from timApp.velp.annotation_model import Annotation
 
@@ -103,6 +106,15 @@ class TooLargeAnswerException(Exception):
     pass
 
 
+_datetime_in_testing: datetime | None = None
+
+
+# Only used in tests to set a fixed datetime
+def set_test_datetime(dt: datetime | None) -> None:
+    global _datetime_in_testing
+    _datetime_in_testing = dt
+
+
 def save_answer(
     users: list[User],
     task_id: TaskId,
@@ -116,6 +128,7 @@ def save_answer(
     plugintype: PluginTypeLazy | None = None,
     max_content_len: int | None = None,
     origin: OriginInfo | None = None,
+    answered_on: datetime | None = None,
 ) -> Answer | None:
     """Saves an answer to the database.
 
@@ -131,6 +144,7 @@ def save_answer(
     :param points: Points for the task.
     :param force_save: Whether to force to save the answer even if the latest existing answer has the same content.
     :param origin: If known, the document from which the answer was sent.
+    :param answered_on: If specified, overrides the date when the answer was saved. If None, uses the current date.
 
     """
     content_str = json.dumps(content)
@@ -162,6 +176,10 @@ def save_answer(
         origin_doc_id=origin.doc_id if origin else None,
         plugin_type=plugintype.resolve() if plugintype else None,
     )
+    if _datetime_in_testing:
+        a.answered_on = _datetime_in_testing
+    if answered_on:
+        a.answered_on = answered_on
     db.session.add(a)
 
     for u in users:
@@ -469,6 +487,9 @@ basic_tally_fields = [
     "task_points",
     "task_count",
     "velped_task_count",
+    "first_answer_on",
+    "last_answer_on",
+    "answer_duration",
 ]
 
 
@@ -488,6 +509,9 @@ class UserTaskEntry(TypedDict):
     task_points: float | None
     velp_points: float | None
     task_id: str
+    first_answer_on: datetime | None
+    last_answer_on: datetime | None
+    answer_duration: timedelta | None
 
 
 def get_users_for_tasks(
@@ -500,7 +524,7 @@ def get_users_for_tasks(
     if not task_ids:
         return []
 
-    a3 = (
+    subquery_annotantions = (
         Annotation.query.filter_by(valid_until=None)
         .group_by(Annotation.answer_id)
         .with_entities(
@@ -509,10 +533,12 @@ def get_users_for_tasks(
         )
         .subquery()
     )
-    a2 = Answer.query.with_entities(Answer.id, Answer.points).subquery()
+    subquery_answers = Answer.query.with_entities(
+        Answer.id, Answer.points, Answer.answered_on
+    ).subquery()
     if answer_filter is None:
         answer_filter = true()
-    a1 = (
+    subquery_user_answers = (
         valid_answers_query(task_ids)
         .filter(answer_filter)
         .join(UserAnswer, UserAnswer.answer_id == Answer.id)
@@ -521,26 +547,32 @@ def get_users_for_tasks(
             Answer.task_id,
             UserAnswer.user_id.label("uid"),
             func.max(Answer.id).label("aid"),
+            func.min(Answer.answered_on).label("answered_on_min"),
+            func.max(Answer.answered_on).label("answered_on_max"),
         )
         .subquery()
     )
-    tmp = (
-        db.session.query(a1, a2, a3)
-        .join(a2, a1.c.aid == a2.c.id)
-        .outerjoin(a3, a3.c.annotation_answer_id == a1.c.aid)
+    sub_joined = (
+        db.session.query(subquery_user_answers, subquery_answers, subquery_annotantions)
+        .join(subquery_answers, subquery_user_answers.c.aid == subquery_answers.c.id)
+        .outerjoin(
+            subquery_annotantions,
+            subquery_annotantions.c.annotation_answer_id == subquery_user_answers.c.aid,
+        )
         .subquery()
     )
     main = User.query.join(UserAnswer, UserAnswer.user_id == User.id).join(
-        tmp, (tmp.c.aid == UserAnswer.answer_id) & (User.id == tmp.c.uid)
+        sub_joined,
+        (sub_joined.c.aid == UserAnswer.answer_id) & (User.id == sub_joined.c.uid),
     )
     group_by_cols = []
     cols = []
     if not group_by_user:
-        min_task_id = func.min(tmp.c.task_id).label("task_id")
-        group_by_cols.append(tmp.c.task_id)
+        min_task_id = func.min(sub_joined.c.task_id).label("task_id")
+        group_by_cols.append(sub_joined.c.task_id)
         cols.append(min_task_id)
     if group_by_doc:
-        doc_id = func.substring(tmp.c.task_id, r"(\d+)\..+").label("doc_id")
+        doc_id = func.substring(sub_joined.c.task_id, r"(\d+)\..+").label("doc_id")
         group_by_cols.append(doc_id)
         cols.append(doc_id)
     if user_ids is not None:
@@ -554,25 +586,30 @@ def get_users_for_tasks(
     main = main.options(selectinload(User.groups))
 
     task_sum = (
-        func.round(func.sum(tmp.c.points).cast(Numeric), 4)
+        func.round(func.sum(sub_joined.c.points).cast(Numeric), 4)
         .cast(Float)
         .label("task_points")
     )
     velp_sum = (
-        func.round(func.sum(tmp.c.velp_points).cast(Numeric), 4)
+        func.round(func.sum(sub_joined.c.velp_points).cast(Numeric), 4)
         .cast(Float)
         .label("velp_points")
     )
+    answered_on_min = func.min(sub_joined.c.answered_on_min).label("first_answer_on")
+    answered_on_max = func.max(sub_joined.c.answered_on_max).label("last_answer_on")
 
     main = main.with_entities(
         User,
-        func.count(tmp.c.task_id).label("task_count"),
+        func.count(sub_joined.c.task_id).label("task_count"),
         task_sum,
         velp_sum,
         # TODO: The following does not work because PostgreSQL evaluates a+b==null if a==null or b==null
         #  We want a+b to be null only if BOTH are null. For now, the summing is done in Python.
         # func.round((task_sum + velp_sum).cast(Numeric), 4).cast(Float).label('total_points'),
-        func.count(tmp.c.annotation_answer_id).label("velped_task_count"),
+        func.count(sub_joined.c.annotation_answer_id).label("velped_task_count"),
+        answered_on_min,
+        answered_on_max,
+        (answered_on_max - answered_on_min).label("answer_duration"),
         *cols,
     ).order_by(User.real_name)
 
@@ -617,7 +654,13 @@ class SumFields(TypedDict):
     total_sum: float | None
 
 
-class UserPointGroup(SumFields):
+class DateFields(TypedDict):
+    first_answer_on: datetime | None
+    last_answer_on: datetime | None
+    answer_duration: timedelta | None
+
+
+class UserPointGroup(SumFields, DateFields):
     tasks: list[UserTaskEntry]
     velped_task_count: int
 
@@ -626,7 +669,7 @@ class UserPointInfo(SumFields):
     groups: DefaultDict[str, UserPointGroup]
 
 
-class ResultGroup(SumFields):
+class ResultGroup(SumFields, DateFields):
     text: str
     link: bool
     linktext: str
@@ -640,6 +683,9 @@ class UserPoints(TypedDict):
     velped_task_count: int
     groups: dict[str, ResultGroup]
     user: User
+    first_answer_on: datetime | None
+    last_answer_on: datetime | None
+    answer_duration: timedelta | None
 
 
 def get_points_by_rule(
@@ -675,6 +721,9 @@ def get_points_by_rule(
                     "velp_sum": None,
                     "total_sum": None,
                     "velped_task_count": 0,
+                    "first_answer_on": None,
+                    "last_answer_on": None,
+                    "answer_duration": None,
                 }
             ),
             "task_sum": None,
@@ -695,6 +744,9 @@ def get_points_by_rule(
                     total_points=None,
                     task_points=None,
                     task_id=t.doc_task,
+                    first_answer_on=None,
+                    last_answer_on=None,
+                    answer_duration=None,
                 )
             )
     rule_groups = dict(rule.groups)
@@ -753,6 +805,22 @@ def get_points_by_rule(
             group["task_sum"] = task_sum
             group["velp_sum"] = velp_sum
             group["total_sum"] = total_sum
+            first_answer_on = min(
+                (t["first_answer_on"] for t in group["tasks"] if t["first_answer_on"]),
+                default=None,
+            )
+            last_answer_on = max(
+                (t["last_answer_on"] for t in group["tasks"] if t["last_answer_on"]),
+                default=None,
+            )
+            answer_duration = (
+                last_answer_on - first_answer_on
+                if last_answer_on and first_answer_on
+                else None
+            )
+            group["last_answer_on"] = last_answer_on
+            group["first_answer_on"] = first_answer_on
+            group["answer_duration"] = answer_duration
             groupsums.append((task_sum, velp_sum, total_sum))
         groupsums = sorted(
             groupsums,
@@ -789,6 +857,27 @@ def flatten_points_result(
     result_list = []
     hide_list = rule.hide
     for user_id, task_groups in result.items():
+        first_answer_on = min(
+            (
+                t["first_answer_on"]
+                for t in task_groups["groups"].values()
+                if t["first_answer_on"] is not None
+            ),
+            default=None,
+        )
+        last_answer_on = max(
+            (
+                t["last_answer_on"]
+                for t in task_groups["groups"].values()
+                if t["last_answer_on"] is not None
+            ),
+            default=None,
+        )
+        answer_duration = (
+            last_answer_on - first_answer_on
+            if last_answer_on and first_answer_on
+            else None
+        )
         row = UserPoints(
             total_points=task_groups["total_sum"],
             task_points=task_groups["task_sum"],
@@ -805,6 +894,9 @@ def flatten_points_result(
             ),
             groups=OrderedDict(),
             user=user_map[user_id],
+            first_answer_on=first_answer_on,
+            last_answer_on=last_answer_on,
+            answer_duration=answer_duration,
         )
 
         if rule.sort:
@@ -821,10 +913,16 @@ def flatten_points_result(
                 task_sum = gr["task_sum"]
                 velp_sum = gr["velp_sum"]
                 total_sum = gr["total_sum"]
+                first_answer_on = gr["first_answer_on"]
+                last_answer_on = gr["last_answer_on"]
+                answer_duration = gr["answer_duration"]
             else:
                 task_sum = None
                 velp_sum = None
                 total_sum = None
+                first_answer_on = None
+                last_answer_on = None
+                answer_duration = None
             try:
                 linktext = rg.linktext or rule.linktext
                 link = rg.link
@@ -847,6 +945,9 @@ def flatten_points_result(
                 "text": text,
                 "link": link,
                 "linktext": linktext,
+                "first_answer_on": first_answer_on,
+                "last_answer_on": last_answer_on,
+                "answer_duration": answer_duration,
             }
         result_list.append(row)
     return result_list

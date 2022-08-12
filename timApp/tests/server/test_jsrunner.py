@@ -533,8 +533,9 @@ tools.setString("t", "hi");
         self.do_jsrun(
             d2,
         )
-        a = self.verify_answer_content(f"{d2.id}.t", "c", "hi", self.test_user_2)
-        self.test_user_2.groups.append(UserGroup.get_teachers_group())
+        u2 = self.test_user_2
+        a = self.verify_answer_content(f"{d2.id}.t", "c", "hi", u2)
+        u2.groups.append(UserGroup.get_teachers_group())
         db.session.commit()
         self.do_jsrun(
             d2,
@@ -847,7 +848,7 @@ tools.print(tools.getDouble("x"));
             ),
             (
                 "tally:x",
-                "Unknown tally field: x (full name: {}.x). Valid tally fields are: total_points, velp_points, task_points, task_count and velped_task_count.",
+                "Unknown tally field: x (full name: {}.x). Valid tally fields are: total_points, velp_points, task_points, task_count, velped_task_count, first_answer_on, last_answer_on and answer_duration.",
                 400,
             ),
         ]
@@ -879,7 +880,7 @@ program: |!!
         )
         self.do_jsrun(
             d,
-            expect_content=f"Unknown tally field: x (full name: {d.id}.x). Valid tally fields are: total_points, velp_points, task_points, task_count, velped_task_count, 1st, 2nd and 3rd.",
+            expect_content=f"Unknown tally field: x (full name: {d.id}.x). Valid tally fields are: total_points, velp_points, task_points, task_count, velped_task_count, first_answer_on, last_answer_on, answer_duration, 1st, 2nd and 3rd.",
             expect_status=400,
         )
 

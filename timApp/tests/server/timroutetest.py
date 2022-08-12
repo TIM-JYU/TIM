@@ -7,6 +7,7 @@ import socket
 import warnings
 from base64 import b64encode
 from contextlib import contextmanager
+from datetime import datetime
 from functools import lru_cache
 from typing import Union, Any
 from urllib.parse import urlparse
@@ -1203,6 +1204,7 @@ class TimRouteTest(TimDbTest):
         content_key: str | None = "c",
         user: User | None = None,
         last_points_modifier: int | None = None,
+        answered_on: datetime | None = None,
     ):
         if user is None:
             user = self.current_user
@@ -1216,6 +1218,8 @@ class TimRouteTest(TimDbTest):
             valid=valid,
             last_points_modifier=last_points_modifier,
         )
+        if answered_on:
+            a.answered_on = answered_on
         db.session.add(a)
         return a
 

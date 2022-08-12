@@ -1,11 +1,13 @@
 """Server tests for xxx."""
 import json
+from datetime import timedelta
 
 from timApp.answer.answer import Answer
 from timApp.tests.db.timdbtest import TEST_USER_2_ID
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.sqa import db
+from timApp.util.utils import get_current_time
 
 
 class TeacherTest(TimRouteTest):
@@ -31,11 +33,22 @@ class TeacherTest(TimRouteTest):
     def test_teacher_single_user_in_group(self):
         self.login_test1()
         d = self.create_doc(initial_par="#- {plugin=textfield #t}")
+        now = get_current_time()
         self.test_user_1.answers.append(
-            Answer(content=json.dumps({"c": "x"}), valid=True, task_id=f"{d.id}.t")
+            Answer(
+                content=json.dumps({"c": "x"}),
+                valid=True,
+                task_id=f"{d.id}.t",
+                answered_on=now,
+            )
         )
         self.test_user_2.answers.append(
-            Answer(content=json.dumps({"c": "x"}), valid=True, task_id=f"{d.id}.t")
+            Answer(
+                content=json.dumps({"c": "x"}),
+                valid=True,
+                task_id=f"{d.id}.t",
+                answered_on=now,
+            )
         )
         db.session.commit()
         r = self.get(
@@ -60,6 +73,9 @@ class TeacherTest(TimRouteTest):
                     },
                     "velp_points": None,
                     "velped_task_count": 0,
+                    "answer_duration": "P0D",
+                    "first_answer_on": now.isoformat(),
+                    "last_answer_on": now.isoformat(),
                 }
             ],
         )
