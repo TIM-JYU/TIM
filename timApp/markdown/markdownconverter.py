@@ -414,6 +414,25 @@ def url_quote(s: Any) -> str:
     return ""
 
 
+def end_value(s: Any, defvalue: Any = "") -> str:
+    if not isinstance(s, str):
+        if isinstance(s, int):
+            return str(s)
+        return str(defvalue)
+    i = len(s)
+    if i == 0:
+        return str(defvalue)
+    i -= 1
+    c = s[i]
+    while i >= 0 and c in "0123456789":
+        i -= 1
+        c = s[i]
+    ret = s[i + 1 :]
+    if ret == "":
+        ret = str(defvalue)
+    return ret
+
+
 tim_filters = {
     "Pz": Pz,
     "gfields": genfields,
@@ -431,6 +450,7 @@ tim_filters = {
     "docid": get_document_id,
     "docpath": get_document_path,
     "urlquote": url_quote,
+    "endvalue": end_value,
 }
 
 
