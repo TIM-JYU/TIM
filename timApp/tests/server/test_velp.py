@@ -531,3 +531,21 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         self.test_user_2.remove_perm(d, AccessType.edit)
         db.session.commit()
         self.get(g2_doc.url, expect_status=403)
+
+    def test_deleted_velp_group_permissions(self):
+        d, g_doc = self.setup_velp_group_test()
+
+        # Case 7:
+        # Deleted velp groups should have their permissions cleared
+        self.login_test2()
+        self.test_user_2.grant_access(g_doc, AccessType.manage)
+        db.session.commit()
+        self.get(g_doc.url, expect_status=200)
+        self.json_delete(f"/velp/group/{g_doc.id}", expect_status=200)
+        deleted = get_doc_or_abort(g_doc.id)
+        # test user 2 should not have access anymore
+        self.get(deleted.url, expect_status=403)
+        # admin should still be able to access
+        test_user_2 = get_current_user_object()
+        self.make_admin(test_user_2)
+        self.get(deleted.url, expect_status=200)
