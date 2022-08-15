@@ -709,10 +709,6 @@ def del_document(doc_id: int) -> Response:
 def soft_delete_document(d: DocInfo) -> None:
     """Performs a 'soft delete' on the specified document by moving it to the trash folder.
 
-    When calling this function, a valid AccessType of either
-    AccessType.owner or AccessType.manage must be given as parameter.
-    Other AccessTypes are rejected.
-
     :param d: The document to be deleted.
     """
     f = get_trash_folder()
