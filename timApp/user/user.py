@@ -1292,6 +1292,14 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             require_confirm=require_confirm,
         )
 
+    def remove_perm(self, block: ItemOrBlock, access_type: AccessType):
+        """Remove user's permissions to the specified item (block)"""
+        BlockAccess.query.filter_by(
+            block_id=block.id,
+            usergroup_id=self.get_personal_group().id,
+            type=access_type.value,
+        ).delete()
+
     def remove_access(self, block_id: int, access_type: str):
         BlockAccess.query.filter_by(
             block_id=block_id,
