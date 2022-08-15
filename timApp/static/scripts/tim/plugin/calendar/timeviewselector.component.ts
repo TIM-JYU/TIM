@@ -12,9 +12,13 @@
  */
 import {Component, EventEmitter, OnInit, Output} from "@angular/core";
 
-const accuracies: number[] = [15, 20, 30, 60];
-const morningHours: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-const eveningHours: number[] = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+export const TIME_VIEW_SLOT_SIZES: number[] = [15, 20, 30, 60, 120];
+export const TIME_VIEW_MORNING_HOURS: number[] = new Array(12)
+    .fill(0)
+    .map((_, i) => i);
+export const TIME_VIEW_EVENING_HOURS: number[] = TIME_VIEW_MORNING_HOURS.map(
+    (i) => i + 12
+);
 
 @Component({
     selector: "tim-time-view-selector",
@@ -50,26 +54,7 @@ export class TimeViewSelectorComponent implements OnInit {
 
     @Output() morning = new EventEmitter<number>();
 
-    constructor() {}
-
-    /**
-     * Called when component is loaded
-     */
-    ngOnInit() {}
-
-    /**
-     * Submits the values user has selected to the calendar component
-     * @param selectedAccuracy selected accuracy value
-     * @param selectedStart selected start value
-     * @param selectedEnd selected end value
-     */
-    submit(
-        selectedAccuracy: number,
-        selectedStart: number,
-        selectedEnd: number
-    ) {
-        this.accuracy.emit(selectedAccuracy);
-        this.evening.emit(selectedEnd);
-        this.morning.emit(selectedStart);
-    }
+    accuracies = TIME_VIEW_SLOT_SIZES;
+    eveningHours = TIME_VIEW_EVENING_HOURS;
+    morningHours = TIME_VIEW_MORNING_HOURS;
 }
