@@ -35,7 +35,7 @@ from timApp.folder.folder import Folder
 from timApp.item.manage import del_document, soft_delete_document
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.user.users import get_rights_holders
+from timApp.user.users import get_rights_holders, remove_access
 from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import (
@@ -767,6 +767,8 @@ def create_velp_group_route(doc_id: int) -> Response:
                 )
                 rights = get_rights_holders(target.id)
                 # Copy all rights but view
+                # TODO is there a reason not to grant view rights? It seems logical to show velp groups (and velps)
+                #      attached to the document to all users with access to the document.
                 for right in rights:
                     if not right.atype.name == "view":
                         grant_access(
@@ -861,6 +863,9 @@ def delete_velp_group(group_id: int) -> Response:
     d = get_doc_or_abort(group_id)
     verify_manage_access(d)
     soft_delete_document(d)
+    # Velp group permissions should be removed after deletion to prevent
+    # potential misuse, since the file can still be found in the trash folder
+    remove_velp_group_perms(group_id)
 
     # Delete associated entries/rows from database
     VelpInGroup.query.filter_by(velp_group_id=group_id).delete(
@@ -954,3 +959,10 @@ def get_folder_velp_groups(folder: str, u: User) -> list[DocEntry]:
         search_recursively=False,
         filter_user=u,
     )
+
+
+def remove_velp_group_perms(group_id: int) -> None:
+    vg = get_doc_or_abort(group_id)
+    rights = get_rights_holders(vg.id)
+    for right in rights:
+        remove_access(right.usergroup, vg.block, right.access_type)
