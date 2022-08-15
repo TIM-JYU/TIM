@@ -94,6 +94,8 @@ class PreviousTaskInfo:
     count: int | None | Missing = missing
     hide: bool | None | Missing = missing
     hideText: str | None | Missing = missing
+    unlockText: str | None | Missing = missing
+    unlockError: str | None | Missing = missing
 
 
 @dataclass

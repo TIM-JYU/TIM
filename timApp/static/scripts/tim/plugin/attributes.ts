@@ -32,6 +32,7 @@ export const previousTaskType = t.intersection([
         count: t.number,
         hide: t.boolean,
         hideText: t.string,
+        unlockText: t.string,
     }),
 ]);
 

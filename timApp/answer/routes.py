@@ -2603,7 +2603,7 @@ def unlock_locked_task(task_id: str) -> Response:
         raise RouteException(str(e))
     prerequisite_info = plug.known.previousTask
     if not prerequisite_info:
-        raise RouteException("Invalid task")
+        raise RouteException("Missing prerequisite task")
     prerequisite_taskid = TaskId.parse(prerequisite_info.taskid, require_doc_id=False)
     if not prerequisite_taskid.doc_id:
         prerequisite_taskid = TaskId.parse(
@@ -2619,16 +2619,16 @@ def unlock_locked_task(task_id: str) -> Response:
             ).first()
             if ba and ba.accessible_to and ba.accessible_to < get_current_time():
                 return json_response({"unlocked": True})
-        raise RouteException(
-            prerequisite_info.hideText or "You haven't unlocked this task yet"
+        return json_response(
+            {"unlocked": False, "error": prerequisite_info.unlockError or None}
         )
     if prerequisite_info.count:
         current_count = current_user.get_answers_for_task(
             prerequisite_taskid.doc_task
         ).count()
         if current_count < prerequisite_info.count:
-            raise RouteException(
-                prerequisite_info.hideText or "You haven't unlocked this task yet"
+            return json_response(
+                {"unlocked": False, "error": prerequisite_info.unlockError or None}
             )
     return json_response({"unlocked": True})
 

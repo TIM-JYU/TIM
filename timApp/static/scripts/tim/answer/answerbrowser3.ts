@@ -134,6 +134,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     private accessHeader?: Binding<string, "@">;
     private locked?: Binding<boolean, "<">;
     private lockedText?: string;
+    private lockedButtonText?: string;
     private lockedError?: string;
 
     private timed = false;
@@ -204,6 +205,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             if (this.locked) {
                 this.hidePlugin();
                 this.lockedText = m?.previousTask?.hideText;
+                this.lockedButtonText = m?.previousTask?.unlockText;
                 this.viewctrl?.addLockListener(this);
             }
         });
@@ -410,15 +412,24 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
 
     async unlockHiddenTask() {
         const r = await to(
-            $http.get<{unlocked: boolean}>("/unlockHiddenTask", {
-                params: {
-                    task_id: this.taskId,
-                },
-            })
+            $http.get<{unlocked: boolean; error?: string}>(
+                "/unlockHiddenTask",
+                {
+                    params: {
+                        task_id: this.taskId,
+                    },
+                }
+            )
         );
         if (r.ok) {
-            this.locked = false;
-            this.unHidePlugin();
+            if (r.result.data.unlocked) {
+                this.locked = false;
+                this.unHidePlugin();
+            } else {
+                this.lockedError =
+                    r.result.data.error ??
+                    $localize`You haven't unlocked this task yet`;
+            }
         } else {
             this.lockedError = r.result.data.error;
         }
@@ -461,7 +472,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     getPrerequisiteUnlockText() {
-        return $localize`Unlock task`;
+        return this.lockedButtonText ?? $localize`Open task`;
     }
 }
 
@@ -513,8 +524,8 @@ timApp.component("timPluginLoader", {
     <div>
     {{$ctrl.getPrerequisiteLockedText()}}
     </div>
-    <button class="btn btn-primary" ng-click="$ctrl.unlockHiddenTask()" title="{{::$ctrl.getPrerequisiteUnlockText()}}">{{::$ctrl.getPrerequisiteUnlockText()}}</button>
-    <div ng-if="$ctrl.lockedError">{{::$ctrl.lockedError}}</div>
+    <button class="btn btn-primary" ng-click="$ctrl.unlockHiddenTask()" title="{{$ctrl.getPrerequisiteUnlockText()}}">{{$ctrl.getPrerequisiteUnlockText()}}</button>
+    <div ng-if="$ctrl.lockedError">{{$ctrl.lockedError}}</div>
 </div>
     `,
     transclude: true,
