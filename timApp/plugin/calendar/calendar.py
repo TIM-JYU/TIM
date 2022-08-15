@@ -44,6 +44,7 @@ from tim_common.pluginserver_flask import (
     GenericHtmlModel,
     PluginReqs,
     register_html_routes,
+    EditorTab,
 )
 
 calendar_plugin = TypedBlueprint("calendar_plugin", __name__, url_prefix="/calendar")
@@ -116,7 +117,55 @@ class CalendarHtmlModel(
 
 
 def reqs_handle() -> PluginReqs:
-    return {"js": ["calendar"], "multihtml": True}
+    template_full = """
+``` {plugin="calendar"}
+viewOptions:               # Default view options for the calendar
+    dayStartHour: 8        # Time at which the day starts (0-24)
+    dayEndHour: 20         # Time at which the day ends (0-24)
+    segmentDuration: 60    # Duration of a single time segment (a selectable slot in calendar) in minutes. Allowed values: 15, 20, 30, 60, 120
+eventTemplates:            # Event templates for the calendar. Used to create new events.
+    Event:                 # Name of the template. Can contain spaces.
+        title: Event name  # Name of the event.
+        bookers:           # List of groups that can see the event in their calendars and book it.
+          - bookersgroup
+        setters:           # List of groups that can edit the event details.
+          - settersgroup
+        capacity: 1        # Maximum number of people that can book the event.
+```
+"""
+
+    template_mini = """
+``` {plugin="calendar"}
+```
+"""
+
+    editor_tabs: list[EditorTab] = [
+        {
+            "text": "plugins",
+            "items": [
+                {
+                    "text": "Calendar",
+                    "items": [
+                        {
+                            "data": template_mini.strip(),
+                            "text": "Calendar (minimal)",
+                            "expl": "A minimal calendar that shows all events you can book",
+                        },
+                        {
+                            "data": template_full.strip(),
+                            "text": "Calendar (full example)",
+                            "expl": "A full example of the calendar plugin",
+                        },
+                    ],
+                },
+            ],
+        },
+    ]
+    return {
+        "js": ["calendar"],
+        "multihtml": True,
+        "editor_tabs": editor_tabs,
+    }
 
 
 @calendar_plugin.get("/export")
