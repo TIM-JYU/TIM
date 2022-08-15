@@ -77,11 +77,19 @@ class EventTemplate:
 
 
 @dataclass
+class ViewOptions:
+    dayStartHour: int = 8
+    dayEndHour: int = 20
+    segmentDuration: int = 60
+
+
+@dataclass
 class CalendarMarkup(GenericMarkupModel):
     """Highest level attributes in the calendar markup"""
 
     filter: FilterOptions = field(default_factory=FilterOptions)
     eventTemplates: dict[str, EventTemplate] = field(default_factory=dict)
+    viewOptions: ViewOptions = field(default_factory=ViewOptions)
 
 
 @dataclass

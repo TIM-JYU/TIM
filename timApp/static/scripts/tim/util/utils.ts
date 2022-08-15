@@ -1014,3 +1014,9 @@ export function shortestUniquePrefixes(strs: string[]): string[] {
     }
     return result;
 }
+
+export function closest(arr: number[], val: number): number {
+    return arr.reduce((prev, curr) =>
+        Math.abs(curr - val) < Math.abs(prev - val) ? curr : prev
+    );
+}

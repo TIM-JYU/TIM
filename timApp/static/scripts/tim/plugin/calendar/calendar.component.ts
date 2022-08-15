@@ -45,14 +45,19 @@ import {addDays, addMinutes, endOfWeek} from "date-fns";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
-import {to2, toPromise} from "../../util/utils";
+import {closest, to2, toPromise} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
 import {showMessageDialog} from "../../ui/showMessageDialog";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {CustomEventTitleFormatter} from "./custom-event-title-formatter.service";
-import {TimeViewSelectorComponent} from "./timeviewselector.component";
+import {
+    TIME_VIEW_EVENING_HOURS,
+    TIME_VIEW_MORNING_HOURS,
+    TIME_VIEW_SLOT_SIZES,
+    TimeViewSelectorComponent,
+} from "./timeviewselector.component";
 import {showCalendarEventDialog} from "./showCalendarEventDialog";
 import {DateTimeValidatorDirective} from "./datetimevalidator.directive";
 import {CalendarHeaderComponent} from "./calendar-header.component";
@@ -98,12 +103,21 @@ const FilterOptions = t.type({
     toDate: nullable(t.string),
 });
 
+const ViewOptions = t.type({
+    dayStartHour: t.number,
+    dayEndHour: t.number,
+    segmentDuration: t.number,
+});
+
 const CalendarMarkup = t.intersection([
     t.partial({
         filter: FilterOptions,
         eventTemplates: t.record(t.string, EventTemplate),
     }),
     GenericPluginMarkup,
+    t.type({
+        viewOptions: ViewOptions,
+    }),
 ]);
 
 const CalendarFields = t.intersection([
@@ -134,8 +148,7 @@ const colors = {
     },
 };
 
-const segmentHeight = 30;
-// const minutesInSegment = 20;
+const TIME_SLOT_HEIGHT = 30;
 
 registerLocaleData(localeFi);
 registerLocaleData(localeSv);
@@ -241,7 +254,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                     [viewDate]="viewDate"
                     [events]="events"
                     [hourSegmentHeight]="segmentHeight"
-                    [hourDuration]="60"
+                    [hourDuration]="hourDuration"
                     [hourSegments]="segmentsInHour"
                     [dayStartHour]="dayStartHour"
                     [dayEndHour]="dayEndHour"
@@ -259,7 +272,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                     *ngSwitchCase="'day'"
                     [viewDate]="viewDate"
                     [events]="events"
-                    [hourDuration]="60"
+                    [hourDuration]="hourDuration"
                     [hourSegments]="segmentsInHour"
                     [dayStartHour]="dayStartHour"
                     [dayEndHour]="dayEndHour"
@@ -273,8 +286,9 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
             </mwl-calendar-day-view>
         </div>
         <tim-time-view-selector [style.visibility]="view == 'month' ? 'hidden' : 'visible'"
-                (accuracy)="setAccuracy($event)" (morning)="setMorning($event)"
-                                (evening)="setEvening($event)">
+                                [(segmentDuration)]="segmentDuration"
+                                [(startHour)]="dayStartHour"
+                                [(endHour)]="dayEndHour">
         </tim-time-view-selector>
         <div>
             <button i18n class="btn timButton" (click)="export()">Export calendar</button>
@@ -329,12 +343,13 @@ export class CalendarComponent
     weekStartsOn: 1 = 1;
 
     /* The default values of calendar view that can be adjusted with the time view selector -component. */
-    dayStartHour: number = 8;
-    dayEndHour: number = 19;
-    segmentMinutes: number = 20;
-    segmentsInHour: number = 3;
-    segmentHeight: number = 30;
-    minimumEventHeight: number = this.segmentMinutes;
+    dayStartHour!: number;
+    dayEndHour!: number;
+    segmentsInHour!: number;
+    segmentHeight = TIME_SLOT_HEIGHT;
+
+    private segmentMinutes!: number;
+    minimumEventHeight!: number;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -364,32 +379,39 @@ export class CalendarComponent
     }
 
     /**
-     * Sets the desired size of timeslot in the day&week -views
-     * @param accuracy Size of time slot in minutes 15, 20, 30 or 60
+     * Sets the segment duration in minutes.
+     *
+     * A segment is a single slot in an "hour" (see `hourDuration` for more info).
+     * A segment will be visible as a single slot in the calendar view.
+     *
+     * @param accuracy Duration of a single segment in minutes.
+     *                 Durations over 60 minutes will only get one segment per hour.
      */
-    setAccuracy(accuracy: number) {
+    set segmentDuration(accuracy: number) {
         this.minimumEventHeight = accuracy;
         this.segmentMinutes = accuracy;
-        if (accuracy == 60) {
+        this.minimumEventHeight = accuracy;
+        if (accuracy >= 60) {
             this.minimumEventHeight = 30;
         }
-        this.segmentsInHour = 60 / this.segmentMinutes;
+        this.segmentsInHour = this.hourDuration / this.segmentMinutes;
+    }
+
+    get segmentDuration(): number {
+        return this.segmentMinutes;
     }
 
     /**
-     * Set the starting hours of day&week -views
-     * @param morning hour to start the day
+     * Duration of a single "hour" in minutes.
+     *
+     * Note: An "hour" in MWL Calendar is defined as a group of consecutive time slots within a time frame.
+     * For example
+     *   * a 60-minute "hour" means that the calendar will display groups 8:00, 9:00, 10:00 etc
+     *   * a 30-minute "hour" means that the calendar will display groups 8:00, 9:30, 10:00 etc
+     *   * a 120-minute "hour" means that the calendar will display groups 8:00, 10:00, 11:00
      */
-    setMorning(morning: number) {
-        this.dayStartHour = morning;
-    }
-
-    /**
-     * Set the ending hour of day&week -views
-     * @param evening hour to end the day
-     */
-    setEvening(evening: number) {
-        this.dayEndHour = evening - 1;
+    get hourDuration() {
+        return this.segmentMinutes > 60 ? this.segmentMinutes : 60;
     }
 
     /**
@@ -499,7 +521,7 @@ export class CalendarComponent
                 const minutesDiff = ceilToNearest(
                     mouseMoveEvent.clientY - segmentPosition.top,
                     this.segmentMinutes,
-                    segmentHeight
+                    this.segmentHeight
                 );
                 const daysDiff =
                     floorToNearest(
@@ -613,7 +635,13 @@ export class CalendarComponent
      * Returns empty markup
      */
     getDefaultMarkup() {
-        return {};
+        return {
+            viewOptions: {
+                dayStartHour: 8,
+                dayEndHour: 20,
+                segmentDuration: 60,
+            },
+        };
     }
 
     /**
@@ -622,6 +650,20 @@ export class CalendarComponent
     ngOnInit() {
         this.icsURL = "";
         super.ngOnInit();
+
+        this.segmentDuration = closest(
+            TIME_VIEW_SLOT_SIZES,
+            this.markup.viewOptions.segmentDuration
+        );
+        this.dayStartHour = closest(
+            TIME_VIEW_MORNING_HOURS,
+            this.markup.viewOptions.dayStartHour
+        );
+        this.dayEndHour = closest(
+            TIME_VIEW_EVENING_HOURS,
+            this.markup.viewOptions.dayEndHour
+        );
+
         this.initEventTypes();
         void this.loadEvents();
     }
