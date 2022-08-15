@@ -466,9 +466,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     }
 
     getPrerequisiteLockedText() {
-        return (
-            this.lockedText ?? $localize`You have not unlocked this task yet`
-        );
+        return this.lockedText ?? $localize`You haven't unlocked this task yet`;
     }
 
     getPrerequisiteUnlockText() {
