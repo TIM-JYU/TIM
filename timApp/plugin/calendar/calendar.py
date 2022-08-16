@@ -264,7 +264,7 @@ def events_of_user(user_obj: User) -> list[Event]:
             EventGroup.usergroup_id == group.id
         ).all()
         for group_event in group_events:
-            event = Event.get_event_by_id(group_event.event_id)
+            event = Event.get_by_id(group_event.event_id)
             if event is not None:
                 event_obj: Event = event
                 if event_obj not in events:
@@ -295,7 +295,7 @@ def get_events() -> Response:
         groups = []
 
         for group in booker_groups:
-            enrollment = Enrollment.get_enrollment_by_ids(event.event_id, group.id)
+            enrollment = Enrollment.get_by_event_and_user(event.event_id, group.id)
             if enrollment is not None:
                 book_msg = enrollment.booker_message
             else:
@@ -356,7 +356,7 @@ def get_event_bookers(event_id: int) -> str | Response:
     if not user_is_event_manager(event_id):
         raise AccessDenied("No permission to see event bookers")
 
-    event = Event.get_event_by_id(event_id)
+    event = Event.get_by_id(event_id)
     if event is None:
         no_event_found = f"Event not found by the id of {event_id}"
         raise NotExist(no_event_found)
@@ -512,7 +512,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     verify_logged_in()
     if not user_is_event_manager(event_id):
         raise AccessDenied("No permission to edit the event")
-    old_event = Event.get_event_by_id(event_id)
+    old_event = Event.get_by_id(event_id)
     if not old_event:
         raise NotExist()
     old_event.title = event.title
@@ -536,7 +536,7 @@ def user_is_event_manager(event_id: int) -> bool:
     usr = get_current_user_object()
     if usr.is_admin:
         return True
-    event = Event.get_event_by_id(event_id)
+    event = Event.get_by_id(event_id)
     if event is None:
         return False
     if event.creator_user_id == get_current_user_id():
@@ -563,7 +563,7 @@ def delete_event(event_id: int) -> Response:
     if not user_is_event_manager(event_id):
         raise AccessDenied("No permission to delete the event")
 
-    event = Event.get_event_by_id(event_id)
+    event = Event.get_by_id(event_id)
     user_obj = get_current_user_object()
     if not event:
         raise NotExist()
@@ -615,12 +615,12 @@ def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Re
     :return: HTTP 200 if succeeded, otherwise 404
     """
     verify_logged_in()
-    event = Event.get_event_by_id(event_id)
+    event = Event.get_by_id(event_id)
     if event is None:
         raise NotExist()
 
     user_group = UserGroup.get_by_name(booker_group)
-    enrollment = Enrollment.get_enrollment_by_ids(event_id, user_group.id)
+    enrollment = Enrollment.get_by_event_and_user(event_id, user_group.id)
 
     if enrollment is not None:
         enrollment.booker_message = booker_msg
@@ -641,7 +641,7 @@ def book_event(event_id: int, booker_msg: str) -> Response:
     :return: HTTP 200 if succeeded, 400 if the event is already full
     """
     verify_logged_in()
-    event = Event.get_event_by_id(event_id)
+    event = Event.get_by_id(event_id)
     if event is not None:
         event_obj: Event = event
         if len(event_obj.enrolled_users) >= event_obj.max_size:
@@ -651,7 +651,7 @@ def book_event(event_id: int, booker_msg: str) -> Response:
     user_obj = get_current_user_object()
     user_group = user_obj.get_personal_group()
 
-    enrollment = Enrollment.get_enrollment_by_ids(event_id, user_group.id)
+    enrollment = Enrollment.get_by_event_and_user(event_id, user_group.id)
     if enrollment is not None:
         raise RouteException("Event is already booked by the user")
 
@@ -682,7 +682,7 @@ def delete_booking(event_id: int) -> Response:
         if group.name == user_obj.name:
             group_id = group.id
 
-    enrollment = Enrollment.get_enrollment_by_ids(event_id, group_id)
+    enrollment = Enrollment.get_by_event_and_user(event_id, group_id)
     if not enrollment:
         raise NotExist()
 
@@ -700,7 +700,7 @@ def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> None
     :param: msg_type of the message, reservation (True) or cancellation (False)
     :return: None, otherwise 404
     """
-    event = Event.get_event_by_id(event_id)
+    event = Event.get_by_id(event_id)
     if not event:
         raise NotExist()
     creator = event.creator

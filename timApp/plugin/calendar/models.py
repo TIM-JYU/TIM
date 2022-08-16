@@ -20,37 +20,46 @@ from timApp.user.usergroup import UserGroup
 
 
 class EventGroup(db.Model):
-    """Table for combining events to specific usergroups"""
+    """Table for specifying special group information for events."""
 
     __tablename__ = "eventgroup"
     event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
+    """Event the the group belongs to"""
+
     usergroup_id = db.Column(
         db.Integer, db.ForeignKey("usergroup.id"), primary_key=True
     )
-    manager = db.Column(db.Boolean)
+    """The usergroup that belongs to the group"""
 
-    user_group = db.relationship(
-        UserGroup,
-        primaryjoin=usergroup_id == UserGroup.id,
-        lazy="select",
-    )
+    manager = db.Column(db.Boolean)
+    """Is the group a manager (i.e. is able to modify event settings)?"""
+
+    user_group = db.relationship(UserGroup, lazy="select")
+    """The usergroup that belongs to the group"""
 
 
 class Enrollment(db.Model):
-    """Table for enrollments; combines event, user group and enrollment type."""
+    """A single enrollment in an event"""
 
     __tablename__ = "enrollment"
     event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
+    """Event the enrollment is for"""
+
     usergroup_id = db.Column(
         db.Integer, db.ForeignKey("usergroup.id"), primary_key=True
     )
+    """The usergroup that is enrolled (i.e. booked) in the event"""
+
     booker_message = db.Column(db.Text)
+    """The message left by the booker"""
+
     enroll_type_id = db.Column(
         db.Integer, db.ForeignKey("enrollmenttype.enroll_type_id"), nullable=False
     )
+    """Type of the enrollment"""
 
     @staticmethod
-    def get_enrollment_by_ids(
+    def get_by_event_and_user(
         event_id: int, user_group_id: int
     ) -> Optional["Enrollment"]:
         """Returns a specific enrollment (or none) that match the user group id and event id"""
@@ -60,21 +69,40 @@ class Enrollment(db.Model):
 
 
 class Event(db.Model):
-    """Table for event. Contains all information of event"""
+    """A calendar event. Event can have"""
 
     __tablename__ = "event"
     event_id = db.Column(db.Integer, primary_key=True)
+    """Identification number of the event"""
+
     location = db.Column(db.Text)
+    """Location of the event"""
+
     max_size = db.Column(db.Integer)
+    """How many people can attend the event"""
+
+    # TODO: Remove
     event_tag = db.Column(db.Text)
+
     start_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    """Start time of the event"""
+
     end_time = db.Column(db.DateTime(timezone=True), nullable=False)
+    """End time of the event"""
+
     message = db.Column(db.Text)
+    """Message visible to anyone who can see the event"""
+
     title = db.Column(db.Text, nullable=False)
+    """Title of the event"""
+
     signup_before = db.Column(db.DateTime(timezone=True))
+    """Time until signup is closed"""
+
     creator_user_id = db.Column(
         db.Integer, db.ForeignKey("useraccount.id"), nullable=False
     )
+    """User who created the event originally"""
 
     enrolled_users: list[UserGroup] = db.relationship(
         UserGroup,
@@ -82,8 +110,10 @@ class Event(db.Model):
         primaryjoin=event_id == Enrollment.event_id,
         lazy="select",
     )
+    """List of usergroups that are enrolled in the event"""
 
     creator: User = db.relationship(User)
+    """User who created the event originally"""
 
     event_groups: list[EventGroup] = db.relationship(
         EventGroup,
@@ -92,8 +122,8 @@ class Event(db.Model):
     )
 
     @staticmethod
-    def get_event_by_id(event_id: int) -> Optional["Event"]:
-        return Event.query.filter(Event.event_id == event_id).one_or_none()
+    def get_by_id(event_id: int) -> Optional["Event"]:
+        return Event.query.filter_by(event_id=event_id).one_or_none()
 
 
 class EnrollmentType(db.Model):
@@ -101,16 +131,22 @@ class EnrollmentType(db.Model):
 
     __tablename__ = "enrollmenttype"
     enroll_type_id = db.Column(db.Integer, primary_key=True)
+    """Enrollment type"""
+
     enroll_type = db.Column(db.Text, nullable=False)
+    """Name of the enrollment type"""
 
 
 class ExportedCalendar(db.Model):
-    """Table for hash codes used in calendar exporting. Combines user to its hash code"""
+    """Information about exported calendars"""
 
     __tablename__ = "exportedcalendar"
     user_id = db.Column(
         db.Integer, db.ForeignKey("useraccount.id"), primary_key=True, nullable=False
     )
+    """User who created the exported calendar"""
+
     calendar_hash = db.Column(db.Text, nullable=False)
+    """Hash of the exported calendar"""
 
     user = db.relationship(User)
