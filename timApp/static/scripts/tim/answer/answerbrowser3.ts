@@ -171,6 +171,9 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                 this.loadPlugin();
             }
         }
+        if (this.lockedByPrerequisite) {
+            this.hidePlugin();
+        }
         $timeout(() => {
             const m = this.pluginMarkup();
             if (
@@ -208,7 +211,6 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                     return;
                 }
                 if (this.lockedByPrerequisite) {
-                    this.hidePlugin();
                     this.viewctrl?.addLockListener(this);
                     this.lockedText = m.previousTask.hideText;
                     this.lockedButtonText = m.previousTask.unlockText;
