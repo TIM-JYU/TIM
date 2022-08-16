@@ -132,7 +132,8 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     private accessEnd?: Binding<string, "@">;
     private accessEndText?: Binding<string, "@">;
     private accessHeader?: Binding<string, "@">;
-    private locked?: Binding<boolean, "<">;
+    private lockableByPrerequisite?: Binding<boolean, "<">;
+    private lockedByPrerequisite?: Binding<boolean, "<">;
     private lockedText?: string;
     private lockedButtonText?: string;
     private lockedError?: string;
@@ -202,11 +203,17 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                     }
                 }
             }
-            if (this.locked) {
-                this.hidePlugin();
-                this.lockedText = m?.previousTask?.hideText;
-                this.lockedButtonText = m?.previousTask?.unlockText;
-                this.viewctrl?.addLockListener(this);
+            if (this.lockableByPrerequisite) {
+                if (!m?.previousTask) {
+                    return;
+                }
+                if (this.lockedByPrerequisite) {
+                    this.hidePlugin();
+                    this.viewctrl?.addLockListener(this);
+                    this.lockedText = m.previousTask.hideText;
+                    this.lockedButtonText = m.previousTask.unlockText;
+                }
+                this.toggleLockedAreas();
             }
         });
     }
@@ -423,8 +430,9 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         );
         if (r.ok) {
             if (r.result.data.unlocked) {
-                this.locked = false;
+                this.lockedByPrerequisite = false;
                 this.unHidePlugin();
+                this.toggleLockedAreas();
             } else {
                 this.lockedError =
                     r.result.data.error ??
@@ -432,6 +440,46 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             }
         } else {
             this.lockedError = r.result.data.error;
+        }
+    }
+
+    /**
+     * Hide areas where previoustask-attribute matches plugin's previousTask.taskid and plugin is hidden
+     * until target plugin gets locked after revealing the model answer
+     * TODO:
+     *  This should be handled by the actual plugin containing the modelAnswer and the locks (and later
+     *  be handled server-side), but the current implementation of modelAnswer lock query is expensive and unoptimized
+     */
+    toggleLockedAreas() {
+        const m = this.pluginMarkup();
+        if (!m?.previousTask) {
+            return;
+        }
+        const dataAreas = document.querySelectorAll(
+            `[attrs*='"area"'][attrs*='"previoustask": "${m.previousTask.taskid}"']`
+        );
+        for (const da of dataAreas) {
+            const attrs = da.getAttribute("attrs");
+            if (attrs) {
+                try {
+                    const attrObj = JSON.parse(attrs) as {
+                        area: string;
+                    };
+                    const areaName = attrObj.area;
+                    if (areaName) {
+                        const area = document.querySelector(
+                            `div.area.area_${areaName} > .areaContent`
+                        );
+                        if (area && area instanceof HTMLElement) {
+                            area.style.setProperty(
+                                "display",
+                                this.lockedByPrerequisite ? "none" : "block",
+                                "important"
+                            );
+                        }
+                    }
+                } catch {}
+            }
         }
     }
 
@@ -484,7 +532,8 @@ timApp.component("timPluginLoader", {
         accessEnd: "@",
         accessHeader: "@",
         accessEndText: "@",
-        locked: "<",
+        lockableByPrerequisite: "<",
+        lockedByPrerequisite: "<",
         lockedText: "@",
     },
     controller: PluginLoaderCtrl,
@@ -518,7 +567,7 @@ timApp.component("timPluginLoader", {
     </div>
     <div ng-if="$ctrl.expired && $ctrl.accessEndText">{{::$ctrl.accessEndText}}</div>
 </div>
-<div ng-if="$ctrl.locked">
+<div ng-if="$ctrl.lockedByPrerequisite">
     <div>
     {{$ctrl.getPrerequisiteLockedText()}}
     </div>

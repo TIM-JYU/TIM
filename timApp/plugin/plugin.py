@@ -595,18 +595,20 @@ class Plugin:
                     return
                 self.access_end_for_user = ba.accessible_to
 
+    def can_be_hidden_by_prerequisite(self) -> bool:
+        return (
+            self.known.previousTask is not None
+            and self.known.previousTask is not missing
+            and self.known.previousTask.hide
+            and (self.known.previousTask.count or self.known.previousTask.requireLock)
+        )
+
     def hidden_by_prerequisite(self) -> bool:
         if self.hidden is not None:
             return self.hidden
         self.hidden = False
         current_user = self.options.user_ctx.logged_user
-        if (
-            self.known.previousTask is not None
-            and self.known.previousTask is not missing
-            and self.known.previousTask.hide
-            and (self.known.previousTask.count or self.known.previousTask.requireLock)
-            and not current_user.has_teacher_access(self.par.doc.get_docinfo())
-        ):
+        if not current_user.has_teacher_access(self.par.doc.get_docinfo()):
             prev_info = self.known.previousTask
             tid = TaskId.parse(prev_info.taskid, require_doc_id=False)
             if not tid.doc_id:
@@ -683,8 +685,8 @@ class Plugin:
                     access_end = self.access_end_for_user.isoformat()
                 unlock_info = f"""access-duration='{self.known.accessDuration}' access-end="{access_end or ""}" 
                 access-header='{self.known.header or ""}' access-end-text='{self.known.accessEndText or ''}'"""
-            elif self.hidden_by_prerequisite():
-                unlock_info = f"""locked='true'"""
+            elif self.can_be_hidden_by_prerequisite():
+                unlock_info = f"""lockable-by-prerequisite='true' locked-by-prerequisite='{'true' if self.hidden_by_prerequisite() else 'false'}'"""
             if abtype and self.options.wraptype == PluginWrap.Full and False:
                 return self.wrap_draggable(
                     f"""
