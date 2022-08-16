@@ -44,8 +44,13 @@ import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek} from "date-fns";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
-import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
-import {closest, to2, toPromise} from "../../util/utils";
+import {
+    GenericPluginMarkup,
+    getTopLevelFields,
+    nullable,
+    withDefault,
+} from "../attributes";
+import {closest, DateFromString, to2, toPromise} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
@@ -99,8 +104,9 @@ const EventTemplate = t.type({
 const FilterOptions = t.type({
     groups: nullable(t.array(t.string)),
     tags: nullable(t.array(t.string)),
-    fromDate: nullable(t.string), // TODO: figure out correct type for dates
-    toDate: nullable(t.string),
+    fromDate: nullable(DateFromString),
+    toDate: nullable(DateFromString),
+    includeBooked: withDefault(t.boolean, false),
 });
 
 const ViewOptions = t.type({
@@ -668,13 +674,38 @@ export class CalendarComponent
         void this.loadEvents();
     }
 
+    private get filterParams() {
+        let res: Record<string, string | string[]> = {};
+        if (!this.markup.filter) {
+            return res;
+        }
+        if (this.markup.filter.groups) {
+            res.groups = this.markup.filter.groups;
+        }
+        if (this.markup.filter.tags) {
+            res.tags = this.markup.filter.tags;
+        }
+        if (this.markup.filter.fromDate) {
+            res.fromDate = this.markup.filter.fromDate.toISOString();
+        }
+        if (this.markup.filter.toDate) {
+            res.toDate = this.markup.filter.toDate.toISOString();
+        }
+        if (this.markup.filter.includeBooked) {
+            res.includeBooked = this.markup.filter.includeBooked.toString();
+        }
+        return res;
+    }
+
     /**
      * Loads the user's events from the TIM server
      * @private
      */
     private async loadEvents() {
         const result = await toPromise(
-            this.http.get<TIMCalendarEvent[]>("/calendar/events")
+            this.http.get<TIMCalendarEvent[]>("/calendar/events", {
+                params: this.filterParams,
+            })
         );
         if (result.ok) {
             result.result.forEach((event) => {

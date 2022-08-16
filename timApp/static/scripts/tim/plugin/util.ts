@@ -13,7 +13,7 @@ import {TaskId} from "./taskid";
 export function getDefaults<
     MarkupType extends IGenericPluginMarkup,
     A extends IGenericPluginTopLevelFields<MarkupType>,
-    T extends Type<A>
+    T extends Type<A, unknown>
 >(runtimeType: T, defaultMarkup: MarkupType) {
     const defaults: IGenericPluginTopLevelFields<MarkupType> = {
         info: null,
@@ -104,7 +104,7 @@ export class PluginMeta {
 interface PluginInit<
     MarkupType extends IGenericPluginMarkup,
     A extends IGenericPluginTopLevelFields<MarkupType>,
-    T extends Type<A>
+    T extends Type<A, unknown>
 > {
     attrsall: Readonly<A>;
 
@@ -117,7 +117,7 @@ interface PluginInit<
 export function baseOnInit<
     MarkupType extends IGenericPluginMarkup,
     A extends IGenericPluginTopLevelFields<MarkupType>,
-    T extends Type<A>
+    T extends Type<A, unknown>
 >(self: PluginInit<MarkupType, A, T>) {
     const parsed = JSON.parse(atob(self.json)) as unknown;
     const validated = self.getAttributeType().decode(parsed);

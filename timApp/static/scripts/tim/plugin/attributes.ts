@@ -74,7 +74,7 @@ export const Info = nullable(
 );
 
 export function getTopLevelFields<M extends IGenericPluginMarkup>(
-    m: t.Type<M>
+    m: t.Type<M, unknown>
 ) {
     return t.intersection([
         t.partial({

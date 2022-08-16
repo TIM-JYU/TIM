@@ -119,7 +119,7 @@ class EventTag(db.Model):
 
 
 class Event(db.Model):
-    """A calendar event. Event can have"""
+    """A calendar event. Event has metadata (title, time, location) and various participating user groups."""
 
     __tablename__ = "event"
     event_id = db.Column(db.Integer, primary_key=True)

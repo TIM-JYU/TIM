@@ -22,6 +22,7 @@ from textwrap import wrap
 from typing import Any
 
 from flask import Response, render_template_string, url_for
+from sqlalchemy import false, true
 
 from timApp.auth.accesshelper import verify_logged_in, AccessDenied
 from timApp.auth.sessioninfo import (
@@ -55,10 +56,20 @@ calendar_plugin = TypedBlueprint("calendar_plugin", __name__, url_prefix="/calen
 class FilterOptions:
     """Calendar markup fields for filtering options"""
 
-    groups: list[str] | None = None
-    tags: list[str] | None = None
+    groups: list[str] | None = field(default=None, metadata={"list_type": "delimited"})
+    """Group filter. Show events only if the user belongs to one of these event groups."""
+
+    tags: list[str] | None = field(default=None, metadata={"list_type": "delimited"})
+    """Tag filter. Show events only the user has one of these tags."""
+
     fromDate: datetime | None = None
+    """Date filter. Show events only starting from this date."""
+
     toDate: datetime | None = None
+    """Date filter. Show events only ending before this date."""
+
+    includeBooked: bool = False
+    """Whether to show events that the user is already booked in"""
 
     def to_json(self) -> dict:
         return asdict(self)
@@ -202,8 +213,8 @@ def get_ical(key: str) -> Response:
 
     :return: ICS file that can be exported otherwise 404 if user data does not exist.
     """
-    user_data: ExportedCalendar = ExportedCalendar.query.filter(
-        ExportedCalendar.calendar_hash == key
+    user_data: ExportedCalendar = ExportedCalendar.query.filter_by(
+        calendar_hash=key
     ).one_or_none()
     if user_data is None:
         raise NotExist()
@@ -213,28 +224,32 @@ def get_ical(key: str) -> Response:
 
     buf = StringIO()
     buf.write("BEGIN:VCALENDAR\r\n")
-    buf.write("PRODID:-//TIM Katti-kalenteri//iCal4j 1.0//EN\r\n")
+    buf.write("PRODID:-//TIM-kalenteri//iCal4j 1.0//EN\r\n")
     buf.write("VERSION:2.0\r\n")
     buf.write("CALSCALE:GREGORIAN\r\n")
+
+    def wrap_lines(s: str) -> str:
+        return "\r\n ".join(wrap(s, width=60))
+
     for event in events:
         dts = event.start_time.strftime("%Y%m%dT%H%M%S")
         dtend = event.end_time.strftime("%Y%m%dT%H%M%S")
 
         buf.write("BEGIN:VEVENT\r\n")
-        buf.write("DTSTART:" + dts + "Z\r\n")
-        buf.write("DTEND:" + dtend + "Z\r\n")
-        buf.write("DTSTAMP:" + dts + "Z\r\n")
-        buf.write("UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\r\n")
-        buf.write("CREATED:" + dts + "Z\r\n")
+        buf.write(f"DTSTART:{dts}Z\r\n")
+        buf.write(f"DTEND:{dtend}Z\r\n")
+        buf.write(f"DTSTAMP:{dts}Z\r\n")
+        buf.write(f"UID:{uuid.uuid4().hex[:9]}@tim.jyu.fi\r\n")
+        buf.write(f"CREATED:{dts}Z\r\n")
         if event.title is None:
             event.title = ""
-        buf.write("SUMMARY:" + string_to_lines(event.title) + "\r\n")
+        buf.write(f"SUMMARY:{wrap_lines(event.title)}\r\n")
         if event.location is None:
             event.location = ""
-        buf.write("LOCATION:" + string_to_lines(event.location) + "\r\n")
+        buf.write(f"LOCATION:{wrap_lines(event.location)}\r\n")
         if event.message is None:
             event.message = ""
-        buf.write("DESCRIPTION:" + string_to_lines(event.message) + "\r\n")
+        buf.write(f"DESCRIPTION:{wrap_lines(event.message)}\r\n")
         buf.write("END:VEVENT\r\n")
 
     buf.write("END:VCALENDAR\r\n")
@@ -242,52 +257,76 @@ def get_ical(key: str) -> Response:
     return Response(result, mimetype="text/calendar")
 
 
-def string_to_lines(str_to_split: str) -> str:
-    """Splits long strings to n char lines
-
-    :return: str where lines are separated with \r\n + whitespace
-    """
-    return "\r\n ".join(wrap(str_to_split, width=60))
-
-
-def events_of_user(user_obj: User) -> list[Event]:
+def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Event]:
     """
     Fetches users events
 
-    :param: user_obj current user object: User
+    :param: u User to fetch events for
     :return: list of events
     """
-    cur_user = user_obj.id
-    events: list[Event] = Event.query.filter(Event.creator_user_id == cur_user).all()
-    # TODO: Makes too many queries to db, to be refactored
-    for group in user_obj.groups:
-        group_events = EventGroup.query.filter(
-            EventGroup.usergroup_id == group.id
-        ).all()
-        for group_event in group_events:
-            event = Event.get_by_id(group_event.event_id)
-            if event is not None:
-                event_obj: Event = event
-                if event_obj not in events:
-                    events.append(event_obj)
-            else:
-                no_event_found = f"Event not found by the id of {group_event.event_id}"
-                raise NotExist(no_event_found)
-    return events
+    filter_opts = filter_opts or FilterOptions()
+
+    q = Event.query
+    event_filter = false()
+
+    # Events come from different places:
+    # 1. Events that are created by the user
+    event_filter = event_filter | (Event.creator == u)
+
+    # 2. Events that the user is either a booker or setter for
+    subquery_event_groups = (
+        u.get_groups(include_expired=False)
+        .join(EventGroup, EventGroup.usergroup_id == UserGroup.id)
+        .with_entities(EventGroup.event_id)
+        .subquery()
+    )
+    event_filter |= Event.event_id.in_(subquery_event_groups)
+
+    # Filter out any tags and groups
+    if filter_opts.tags:
+        q = q.join(EventTag, Event.tags)
+        event_filter &= EventTag.tag.in_(filter_opts.tags)
+    if filter_opts.groups:
+        q = q.join(EventGroup, Event.event_groups).join(
+            UserGroup, EventGroup.usergroup_id == UserGroup.id
+        )
+        event_filter &= UserGroup.name.in_(filter_opts.groups)
+
+    # Add in all bookend events if asked
+    if filter_opts.includeBooked:
+        enrolled_subquery = (
+            u.get_groups(include_expired=False)
+            .join(Enrollment, Enrollment.usergroup_id == UserGroup.id)
+            .with_entities(Enrollment.event_id)
+            .subquery()
+        )
+        # We have to do this via union so that earlier filters are not applied
+        q = q.filter(event_filter)
+        q2 = Event.query.filter(Event.event_id.in_(enrolled_subquery))
+        q = q.union(q2)
+        event_filter = true()
+
+    # Apply date filter to all events
+    if filter_opts.fromDate:
+        event_filter &= Event.start_time >= filter_opts.fromDate
+    if filter_opts.toDate:
+        event_filter &= Event.end_time <= filter_opts.toDate
+
+    q = q.filter(event_filter)
+
+    return q.all()
 
 
-@calendar_plugin.get("/events")
-def get_events() -> Response:
+@calendar_plugin.get("/events", model=FilterOptions)
+def get_events(opts: FilterOptions) -> Response:
     """Fetches the events created by the user and the events that have a relation to user's groups from the database
     in JSON format
 
     :return: User's events in JSON format or HTTP 400 if failed
     """
     verify_logged_in()
-    cur_user = get_current_user_id()
-    user_obj = get_current_user_object()
-
-    events = events_of_user(user_obj)
+    cur_user = get_current_user_object()
+    events = events_of_user(cur_user, opts)
 
     event_objs = []
     for event in events:
@@ -304,7 +343,7 @@ def get_events() -> Response:
             users = []
             cur_user_booking = False
             for user in group.users:
-                if user.id == cur_user:
+                if user.id == cur_user.id:
                     cur_user_booking = True
                 users.append(
                     {
