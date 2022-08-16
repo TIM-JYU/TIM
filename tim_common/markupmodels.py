@@ -80,6 +80,7 @@ class ModelAnswerInfo:
     count: int | None | Missing = 1
     linkText: str | None | Missing = missing
     linkTextCount: int | None | Missing = missing
+    linkTextBeforeCount: str | None | Missing = missing
     lock: bool = True
     lockedAnswerMessage: str | None | Missing = missing
     lockConfirmation: str | None | Missing = missing

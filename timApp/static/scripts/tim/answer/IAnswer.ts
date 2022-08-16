@@ -19,6 +19,7 @@ export type IModelAnswerSettings = {
     revealDate?: string;
     linkText?: string;
     linkTextCount?: number;
+    linkTextBeforeCount?: string;
     lockConfirmation?: string;
     lockedLinkText?: string;
     alreadyLocked?: boolean;
