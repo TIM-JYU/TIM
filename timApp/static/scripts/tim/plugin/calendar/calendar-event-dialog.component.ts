@@ -238,8 +238,8 @@ import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
                 </span>
             </div>
                 <div class="col-sm-12 row">
-                    <button i18n class="btn timButton col-sm-4" type="button" [hidden]="!userHasBooked() || isEditEnabled()" (click)="cancelBooking()"
-                        style="background-color: red; float: left">
+                    <button i18n class="btn timButton btn-danger col-sm-4" type="button" [hidden]="!userHasBooked() || isEditEnabled()" (click)="cancelBooking()"
+                        style="float: left">
                     Cancel Booking
                     </button>
                     <button i18n class="btn timButton btn-danger col-sm-2" type="button" style="float: left"
