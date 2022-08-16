@@ -130,6 +130,14 @@ class CalendarHtmlModel(
 def reqs_handle() -> PluginReqs:
     template_full = """
 ``` {plugin="calendar"}
+#filter:                   # Optional filter options
+#    groups:               # Only show events for these groups
+#     - group1
+#    tags:                 # Only show events with these tags
+#     - tag1
+#    fromDate: 2022-08-16 20:00:00  # Only show events starting from this date
+#    toDate: 2022-08-16 20:00:00    # Only show events ending before this date
+#    includeBooked: true   # Whether to always show events that the user has already booked
 viewOptions:               # Default view options for the calendar
     dayStartHour: 8        # Time at which the day starts (0-24)
     dayEndHour: 20         # Time at which the day ends (0-24)
@@ -142,6 +150,8 @@ eventTemplates:            # Event templates for the calendar. Used to create ne
         setters:           # List of groups that can edit the event details.
           - settersgroup
         capacity: 1        # Maximum number of people that can book the event.
+        tags:              # List of tags that can be used to filter events.
+          - tag1
 ```
 """
 
@@ -328,7 +338,10 @@ def get_events(opts: FilterOptions) -> Response:
     events = events_of_user(cur_user, opts)
     # TODO: This needs further optimization
     return json_response(
-        [e.to_json(with_users=user_is_event_manager(e.event_id)) for e in events]
+        [
+            e.to_json(with_users=user_is_event_manager(e.event_id), for_user=cur_user)
+            for e in events
+        ]
     )
 
 

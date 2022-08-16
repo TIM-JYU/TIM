@@ -679,14 +679,15 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     userHasBooked() {
         this.userBooked = false;
         const bookers = this.data.meta!.booker_groups;
-        bookers.forEach((booker) => {
-            Users.getCurrent().groups.forEach((userGroup) => {
-                if (booker.name == userGroup.name) {
+        for (const booker1 of bookers) {
+            for (const userGroup of Users.getCurrent().groups) {
+                if (booker1.name == userGroup.name) {
                     this.userBooked = true;
+                    return true;
                 }
-            });
-        });
-        return this.userBooked;
+            }
+        }
+        return false;
     }
 
     /**

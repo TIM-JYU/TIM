@@ -205,7 +205,7 @@ class Event(db.Model):
     def get_by_id(event_id: int) -> Optional["Event"]:
         return Event.query.filter_by(event_id=event_id).one_or_none()
 
-    def to_json(self, with_users: bool = False) -> dict:
+    def to_json(self, with_users: bool = False, for_user: User | None = None) -> dict:
         meta = {
             "signup_before": self.signup_before,
             "enrollments": self.enrollments_count,
@@ -223,6 +223,19 @@ class Event(db.Model):
                         "message": e.booker_message,
                     }
                     for e in self.enrollments
+                ]
+            }
+        elif for_user:
+            user_group_ids = [ug.id for ug in for_user.groups]
+            meta |= {
+                "booker_groups": [
+                    {
+                        "name": e.usergroup.name,
+                        "users": [for_user.to_json()],
+                        "message": e.booker_message,
+                    }
+                    for e in self.enrollments
+                    if e.usergroup_id in user_group_ids
                 ]
             }
 
