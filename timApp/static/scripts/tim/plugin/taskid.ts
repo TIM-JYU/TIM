@@ -43,6 +43,21 @@ export interface DocIdDotName
 
 const docIdDotName = iso<DocIdDotName>();
 
+export function TaskIdWithDefaultDocId(
+    input: string,
+    defaultDocId: number
+): TaskId | undefined {
+    const tid = TaskId.tryParse(input, DocIdOption.Optional);
+    if (tid.ok) {
+        const res = tid.result;
+        if (!res.docId) {
+            res.docId = defaultDocId;
+        }
+        return res;
+    }
+    return undefined;
+}
+
 /**
  * Represents a task id. Every plugin that wants to save answers needs to have one.
  */

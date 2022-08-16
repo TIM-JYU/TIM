@@ -6690,6 +6690,22 @@
           <context context-type="linenumber">161</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="477178334933600676" datatype="html">
+        <source>You haven't unlocked this task yet</source>
+        <target state="translated">Et ole vielä avannut tätä tehtävää</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="linenumber">431</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5556218630376316917" datatype="html">
+        <source>Open task</source>
+        <target state="translated">Avaa tehtävä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="linenumber">475</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

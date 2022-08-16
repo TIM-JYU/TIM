@@ -2,7 +2,7 @@ import {IController, IScope, ITranscludeFunction} from "angular";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
-import {TaskId} from "tim/plugin/taskid";
+import {TaskId, TaskIdWithDefaultDocId} from "tim/plugin/taskid";
 import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAllAnswersDialog} from "tim/answer/showAllAnswersDialog";
@@ -132,6 +132,10 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     private accessEnd?: Binding<string, "@">;
     private accessEndText?: Binding<string, "@">;
     private accessHeader?: Binding<string, "@">;
+    private locked?: Binding<boolean, "<">;
+    private lockedText?: string;
+    private lockedButtonText?: string;
+    private lockedError?: string;
 
     private timed = false;
     private expired = false;
@@ -166,8 +170,8 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                 this.loadPlugin();
             }
         }
-        const m = this.pluginMarkup();
         $timeout(() => {
+            const m = this.pluginMarkup();
             if (
                 m?.hideBrowser ||
                 this.viewctrl?.docSettings.hideBrowser ||
@@ -197,6 +201,12 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
                         this.startTask();
                     }
                 }
+            }
+            if (this.locked) {
+                this.hidePlugin();
+                this.lockedText = m?.previousTask?.hideText;
+                this.lockedButtonText = m?.previousTask?.unlockText;
+                this.viewctrl?.addLockListener(this);
             }
         });
     }
@@ -360,13 +370,16 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         e.css("visibility", "visible");
     }
 
-    async unlockTask() {
+    async unlockTimedTask() {
         const r = await to(
-            $http.get<{end_time: string; expired?: boolean}>("/unlockTask", {
-                params: {
-                    task_id: this.taskId,
-                },
-            })
+            $http.get<{end_time: string; expired?: boolean}>(
+                "/unlockTimedTask",
+                {
+                    params: {
+                        task_id: this.taskId,
+                    },
+                }
+            )
         );
         if (r.ok) {
             this.unlockable = false;
@@ -376,6 +389,49 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
             } else {
                 this.startTask();
             }
+        }
+    }
+
+    informAboutLock(sourceTask: TaskId) {
+        const prevInfo = this.pluginMarkup()?.previousTask;
+        if (!prevInfo || !this.viewctrl?.docId || !prevInfo.requireLock) {
+            return;
+        }
+        const tid = TaskIdWithDefaultDocId(
+            prevInfo.taskid,
+            this.viewctrl.docId
+        );
+        if (tid?.docTask() == sourceTask.docTask()) {
+            if (prevInfo.count) {
+                // todo
+                return;
+            }
+            this.unlockHiddenTask();
+        }
+    }
+
+    async unlockHiddenTask() {
+        const r = await to(
+            $http.get<{unlocked: boolean; error?: string}>(
+                "/unlockHiddenTask",
+                {
+                    params: {
+                        task_id: this.taskId,
+                    },
+                }
+            )
+        );
+        if (r.ok) {
+            if (r.result.data.unlocked) {
+                this.locked = false;
+                this.unHidePlugin();
+            } else {
+                this.lockedError =
+                    r.result.data.error ??
+                    $localize`You haven't unlocked this task yet`;
+            }
+        } else {
+            this.lockedError = r.result.data.error;
         }
     }
 
@@ -408,6 +464,14 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
         }
         return false;
     }
+
+    getPrerequisiteLockedText() {
+        return this.lockedText ?? $localize`You haven't unlocked this task yet`;
+    }
+
+    getPrerequisiteUnlockText() {
+        return this.lockedButtonText ?? $localize`Open task`;
+    }
 }
 
 // noinspection HtmlUnknownAttribute
@@ -420,6 +484,8 @@ timApp.component("timPluginLoader", {
         accessEnd: "@",
         accessHeader: "@",
         accessEndText: "@",
+        locked: "<",
+        lockedText: "@",
     },
     controller: PluginLoaderCtrl,
     require: {
@@ -434,7 +500,7 @@ timApp.component("timPluginLoader", {
      ng-if="$ctrl.answerId && $ctrl.showPlaceholder && !$ctrl.isPreview()"
      style="width: 1px; height: 23px;"></div>
 <answerbrowser ng-class="{'has-answers': ($ctrl.answerId && !$ctrl.hideBrowser)}"
-               ng-if="$ctrl.showBrowser && !$ctrl.isPreview() && !$$ctrl.unlockable"
+               ng-if="$ctrl.showBrowser && !$ctrl.isPreview() && !$ctrl.unlockable && !$ctrl.locked"
                task-id="$ctrl.parsedTaskId"
                answer-id="$ctrl.answerId">
 </answerbrowser>
@@ -448,9 +514,16 @@ timApp.component("timPluginLoader", {
     <h4 ng-if="$ctrl.accessHeader && $ctrl.taskHidden">{{::$ctrl.accessHeader}}</h4>
     <div ng-if="$ctrl.unlockable">
     Unlock task. You will have {{$ctrl.accessDuration}} seconds to answer to this task.
-    <button class="btn btn-primary" ng-click="$ctrl.unlockTask()" title="Unlock task">Unlock task</button>
+    <button class="btn btn-primary" ng-click="$ctrl.unlockTimedTask()" title="Unlock task">Unlock task</button>
     </div>
     <div ng-if="$ctrl.expired && $ctrl.accessEndText">{{::$ctrl.accessEndText}}</div>
+</div>
+<div ng-if="$ctrl.locked">
+    <div>
+    {{$ctrl.getPrerequisiteLockedText()}}
+    </div>
+    <button class="btn btn-primary" ng-click="$ctrl.unlockHiddenTask()" title="{{$ctrl.getPrerequisiteUnlockText()}}">{{$ctrl.getPrerequisiteUnlockText()}}</button>
+    <div ng-if="$ctrl.lockedError">{{$ctrl.lockedError}}</div>
 </div>
     `,
     transclude: true,
@@ -1427,6 +1500,7 @@ export class AnswerBrowserController
         }
         if (this.modelAnswer?.lock) {
             this.modelAnswer.alreadyLocked = true;
+            this.viewctrl.informAboutLock(this.taskId);
         }
         this.modelAnswerFetched = true;
         this.modelAnswerVisible = true;

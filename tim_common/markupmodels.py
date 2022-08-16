@@ -80,11 +80,23 @@ class ModelAnswerInfo:
     count: int | None | Missing = 1
     linkText: str | None | Missing = missing
     linkTextCount: int | None | Missing = missing
+    linkTextBeforeCount: str | None | Missing = missing
     lock: bool = True
     lockedAnswerMessage: str | None | Missing = missing
     lockConfirmation: str | None | Missing = missing
     lockedLinkText: str | None | Missing = missing
     revealDate: PluginDateTime | datetime | None | Missing = missing
+
+
+@dataclass
+class PreviousTaskInfo:
+    taskid: str
+    requireLock: bool | None | Missing = False
+    count: int | None | Missing = missing
+    hide: bool | None | Missing = missing
+    hideText: str | None | Missing = missing
+    unlockText: str | None | Missing = missing
+    unlockError: str | None | Missing = missing
 
 
 @dataclass
@@ -119,6 +131,7 @@ class KnownMarkupFields(HiddenFieldsMixin):
     pointsText: str | None | Missing = missing
     postprogram: str | Missing = missing
     postoutput: str | Missing = missing
+    previousTask: PreviousTaskInfo | None | Missing = missing
     showPoints: bool | None | Missing = missing
     starttime: PluginDateTime | datetime | None | Missing = missing
     showInView: bool | Missing = missing
