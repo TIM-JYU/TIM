@@ -430,14 +430,12 @@ def add_events(events: list[CalendarEvent]) -> Response:
     event_tags_dict = {tag.tag: tag for tag in EventTag.get_or_create(event_tags)}
 
     def get_event_groups(
-        group_names: list[str] | None, access_set: set[int], **kwargs: Any
+        group_names: set[str], access_set: set[int], **kwargs: Any
     ) -> list[UserGroup]:
         res: list[UserGroup] = []
-        if not group_names:
-            return res
         for group_name in group_names:
             if not (ug := event_ugs_dict.get(group_name)):
-                raise NotExist(f"Group {group_name} not found")
+                raise NotExist(f"Group '{group_name}' not found")
             verify_group_access(ug, access_set)
             res.append(
                 EventGroup(
@@ -449,9 +447,13 @@ def add_events(events: list[CalendarEvent]) -> Response:
 
     result = []
     for event in events:
+        bookers = set(event.booker_groups or [])
+        setters = set(event.setter_groups or [])
+        # Bookers cannot also be setters because setters can already book events
+        bookers -= setters
         event_groups = [
-            *get_event_groups(event.booker_groups, manage_access_set, manager=False),
-            *get_event_groups(event.setter_groups, edit_access_set, manager=True),
+            *get_event_groups(bookers, manage_access_set, manager=False),
+            *get_event_groups(setters, edit_access_set, manager=True),
         ]
 
         event_data = Event(
