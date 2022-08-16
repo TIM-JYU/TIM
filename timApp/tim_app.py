@@ -85,6 +85,8 @@ from timApp.plugin.calendar.models import (
     Enrollment,
     EnrollmentType,
     ExportedCalendar,
+    EventTag,
+    EventTagAttachment,
 )
 from timApp.plugin.plugintype import PluginType
 from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
@@ -162,6 +164,8 @@ all_models = (
     EnrollmentType,
     Event,
     EventGroup,
+    EventTag,
+    EventTagAttachment,
     ExportedCalendar,
     Folder,
     HakaOrganization,

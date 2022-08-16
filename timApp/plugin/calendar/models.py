@@ -20,7 +20,7 @@ from timApp.user.usergroup import UserGroup
 
 
 class EventGroup(db.Model):
-    """Table for specifying special group information for events."""
+    """Information about a user group participating in an event."""
 
     __tablename__ = "eventgroup"
     event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
@@ -68,6 +68,56 @@ class Enrollment(db.Model):
         ).one_or_none()
 
 
+class EventTagAttachment(db.Model):
+    """Attachment information for the event tag"""
+
+    __tablename__ = "eventtagattachment"
+    event_id = db.Column(db.Integer, db.ForeignKey("event.event_id"), primary_key=True)
+    """Event the tag is attached to"""
+    tag_id = db.Column(db.Integer, db.ForeignKey("eventtag.tag_id"), primary_key=True)
+    """Tag that is attached to the event"""
+
+
+class EventTag(db.Model):
+    """A string tag that can be attached to an event"""
+
+    __tablename__ = "eventtag"
+    tag_id = db.Column(db.Integer, primary_key=True)
+    """The id of the tag"""
+
+    tag = db.Column(db.Text, nullable=False)
+    """The tag itself"""
+
+    events: list["Event"] = db.relationship(
+        "Event",
+        secondary=EventTagAttachment.__table__,
+        lazy="select",
+        back_populates="tags",
+    )
+
+    @staticmethod
+    def get_or_create(*args: list[str]) -> list["EventTag"]:
+        """
+        Gets or creates new tags.
+
+        If the tag does not exist, it is added to the session.
+
+        :param args: List of tags to get or create
+        :return: List of already existing or new event tags that match
+        """
+        result = []
+        existing_tags = EventTag.query.filter(EventTag.tag.in_(args)).all()
+        existing_tags_dict = {tag.tag: tag for tag in existing_tags}
+        for tag in args:
+            if tag in existing_tags_dict:
+                result.append(existing_tags_dict[tag])
+            else:
+                new_tag = EventTag(tag=tag)
+                db.session.add(new_tag)
+                result.append(new_tag)
+        return result
+
+
 class Event(db.Model):
     """A calendar event. Event can have"""
 
@@ -80,9 +130,6 @@ class Event(db.Model):
 
     max_size = db.Column(db.Integer)
     """How many people can attend the event"""
-
-    # TODO: Remove
-    event_tag = db.Column(db.Text)
 
     start_time = db.Column(db.DateTime(timezone=True), nullable=False)
     """Start time of the event"""
@@ -121,9 +168,32 @@ class Event(db.Model):
         cascade="all,delete-orphan",
     )
 
+    tags: list[EventTag] = db.relationship(
+        EventTag,
+        secondary=EventTagAttachment.__table__,
+        lazy="select",
+        back_populates="events",
+    )
+    """Tags attached to the event"""
+
     @staticmethod
     def get_by_id(event_id: int) -> Optional["Event"]:
         return Event.query.filter_by(event_id=event_id).one_or_none()
+
+    def to_json(self) -> dict:
+        return {
+            "id": self.event_id,
+            "title": self.title,
+            "start": self.start_time,
+            "end": self.end_time,
+            "meta": {
+                "signup_before": self.signup_before,
+                "enrollments": 0,
+                "maxSize": self.max_size,
+                "location": self.location,
+                "description": self.message,
+            },
+        }
 
 
 class EnrollmentType(db.Model):

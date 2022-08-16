@@ -715,33 +715,26 @@ export class CalendarComponent
      * Handles sending multiple events at the same time.
      */
     async saveChanges() {
-        let eventsToAdd = this.events.filter((event: TIMCalendarEvent) =>
-            this.isTempEvent(event)
-        );
-
-        const eventGroups: string[] = [];
-        const bookerGroups: string[] = [];
-        const setterGroups: string[] = [];
-        let capacity: number = 0;
-        if (this.markup.eventTemplates) {
-            this.markup.eventTemplates[this.selectedEvent].bookers.forEach(
-                (group) => {
-                    bookerGroups.push(group);
-                    eventGroups.push(group);
-                }
-            );
-            this.markup.eventTemplates[this.selectedEvent].setters.forEach(
-                (group) => {
-                    setterGroups.push(group);
-                    eventGroups.push(group);
-                }
-            );
-            capacity = this.markup.eventTemplates[this.selectedEvent].capacity;
+        let eventsToAdd = this.events.filter((e) => this.isTempEvent(e));
+        if (!eventsToAdd) {
+            return;
         }
 
-        if (eventsToAdd.length > 0) {
-            eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
-                return {
+        let bookerGroups: string[] = [];
+        let setterGroups: string[] = [];
+        let capacity: number = 0;
+        let tags: string[] = [];
+        if (this.markup.eventTemplates) {
+            const template = this.markup.eventTemplates[this.selectedEvent];
+            bookerGroups = template.bookers;
+            setterGroups = template.setters;
+            capacity = template.capacity;
+            tags = template.tags;
+        }
+
+        const result = await toPromise(
+            this.http.post<TIMCalendarEvent[]>("/calendar/events", {
+                events: eventsToAdd.map((event) => ({
                     id: event.id,
                     title: event.title,
                     location: event.meta!.location,
@@ -751,65 +744,57 @@ export class CalendarComponent
                     signup_before: new Date(event.meta!.signup_before),
                     booker_groups: bookerGroups,
                     setter_groups: setterGroups,
-                    event_groups: eventGroups,
                     max_size: capacity,
-                };
-            });
-            const result = await toPromise(
-                this.http.post<TIMCalendarEvent[]>("/calendar/events", {
-                    events: eventsToAdd,
-                })
-            );
-            if (result.ok) {
-                // Remove added events with wrong id from the event list
-                eventsToAdd.forEach((event) => {
-                    this.events.splice(this.events.indexOf(event), 1);
-                });
-                // Push new events with updated id to the event list
-                result.result.forEach((event) => {
-                    if (event.end) {
-                        this.events.push({
-                            id: event.id,
-                            title: event.title,
-                            start: new Date(event.start),
-                            end: new Date(event.end),
-                            meta: {
-                                tmpEvent: false,
-                                editEnabled: this.editEnabled,
-                                enrollments: event.meta!.enrollments,
-                                description: event.meta!.description,
-                                maxSize: event.meta!.maxSize,
-                                location: event.meta!.location,
-                                booker_groups: [],
-                                signup_before: new Date(
-                                    event.meta!.signup_before
-                                ),
-                            },
-                            resizable: {
-                                beforeStart: true,
-                                afterEnd: true,
-                            },
-                        });
-                    }
-                });
-                this.refresh();
-            } else {
-                if (result.result.error.error) {
-                    await showMessageDialog(
-                        $localize`Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
-                    );
-                } else {
-                    await showMessageDialog(
-                        $localize`Something went wrong. TIM admins have been notified about the issue.`
-                    );
+                    tags: tags,
+                })),
+            })
+        );
+        if (result.ok) {
+            // Remove temporary events as they have been added
+            this.events = this.events.filter((e) => !this.isTempEvent(e));
+            const addedEvents = result.result;
+            for (const event of addedEvents) {
+                if (!event.end) {
+                    continue;
                 }
-                this.events.forEach((event) => {
-                    if (this.isTempEvent(event)) {
-                        this.events.splice(this.events.indexOf(event));
-                    }
+                this.events.push({
+                    id: event.id,
+                    title: event.title,
+                    start: new Date(event.start),
+                    end: new Date(event.end),
+                    meta: {
+                        tmpEvent: false,
+                        editEnabled: this.editEnabled,
+                        enrollments: event.meta!.enrollments,
+                        description: event.meta!.description,
+                        maxSize: event.meta!.maxSize,
+                        location: event.meta!.location,
+                        booker_groups: [],
+                        signup_before: new Date(event.meta!.signup_before),
+                    },
+                    resizable: {
+                        beforeStart: true,
+                        afterEnd: true,
+                    },
                 });
-                this.refresh();
             }
+            this.refresh();
+        } else {
+            if (result.result.error.error) {
+                await showMessageDialog(
+                    $localize`Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
+                );
+            } else {
+                await showMessageDialog(
+                    $localize`Something went wrong. TIM admins have been notified about the issue.`
+                );
+            }
+            this.events.forEach((event) => {
+                if (this.isTempEvent(event)) {
+                    this.events.splice(this.events.indexOf(event));
+                }
+            });
+            this.refresh();
         }
     }
 
