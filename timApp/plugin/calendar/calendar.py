@@ -12,7 +12,6 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "24.5.2022"
 
-import itertools
 import secrets
 import uuid
 from dataclasses import dataclass, asdict, field
@@ -327,61 +326,10 @@ def get_events(opts: FilterOptions) -> Response:
     verify_logged_in()
     cur_user = get_current_user_object()
     events = events_of_user(cur_user, opts)
-
-    event_objs = []
-    for event in events:
-        enrollment_amount = len(event.enrolled_users)
-        booker_groups = event.enrolled_users
-        groups = []
-
-        for group in booker_groups:
-            enrollment = Enrollment.get_by_event_and_user(event.event_id, group.id)
-            if enrollment is not None:
-                book_msg = enrollment.booker_message
-            else:
-                book_msg = ""
-            users = []
-            cur_user_booking = False
-            for user in group.users:
-                if user.id == cur_user.id:
-                    cur_user_booking = True
-                users.append(
-                    {
-                        "id": user.id,
-                        "name": user.real_name,
-                        "email": user.email,
-                    }
-                )
-
-            groups.append(
-                {
-                    "name": group.name,
-                    "message": book_msg,
-                    "users": users,
-                }
-            )
-
-            if user_is_event_manager(event.event_id) or cur_user_booking:
-                groups.append({"name": group.name, "users": users})
-
-        event_objs.append(
-            {
-                "id": event.event_id,
-                "title": event.title,
-                "start": event.start_time,
-                "end": event.end_time,
-                "meta": {
-                    "description": event.message,
-                    "enrollments": enrollment_amount,
-                    "maxSize": event.max_size,
-                    "location": event.location,
-                    "booker_groups": groups,
-                    "signup_before": event.signup_before,
-                },
-            }
-        )
-
-    return json_response(event_objs)
+    # TODO: This needs further optimization
+    return json_response(
+        [e.to_json(with_users=user_is_event_manager(e.event_id)) for e in events]
+    )
 
 
 @calendar_plugin.get("/events/<int:event_id>/bookers")
@@ -459,21 +407,19 @@ def add_events(events: list[CalendarEvent]) -> Response:
     """
     verify_logged_in()
     cur_user = get_current_user_id()
-    event_ug_names = set(
-        itertools.chain.from_iterable(
-            [
-                *[event.booker_groups for event in events if event.booker_groups],
-                *[event.setter_groups for event in events if event.setter_groups],
-            ]
-        )
-    )
+    event_ug_names = {
+        *[ug for event in events if event.booker_groups for ug in event.booker_groups],
+        *[ug for event in events if event.setter_groups for ug in event.setter_groups],
+    }
     event_ugs = UserGroup.query.filter(UserGroup.name.in_(event_ug_names)).all()
     event_ugs_dict = {ug.name: ug for ug in event_ugs}
+    event_tags = set([tag for event in events if event.tags for tag in event.tags])
+    event_tags_dict = {tag.tag: tag for tag in EventTag.get_or_create(event_tags)}
 
     def get_event_groups(
         group_names: list[str] | None, access_set: set[int], **kwargs: Any
     ) -> list[UserGroup]:
-        res = []
+        res: list[UserGroup] = []
         if not group_names:
             return res
         for group_name in group_names:
@@ -504,7 +450,9 @@ def add_events(events: list[CalendarEvent]) -> Response:
             creator_user_id=cur_user,
             max_size=event.max_size,
             signup_before=event.signup_before,
-            tags=EventTag.get_or_create(*event.tags) if event.tags is not None else [],
+            tags=[event_tags_dict[tag] for tag in event.tags]
+            if event.tags is not None
+            else [],
             event_groups=event_groups,
         )
         result.append(event_data)
@@ -540,6 +488,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     return ok_response()
 
 
+# TODO: Refactor
 def user_is_event_manager(event_id: int) -> bool:
     """Checks if current user is a manager of the event
 

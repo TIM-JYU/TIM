@@ -675,7 +675,7 @@ export class CalendarComponent
     }
 
     private get filterParams() {
-        let res: Record<string, string | string[]> = {};
+        const res: Record<string, string | string[]> = {};
         if (!this.markup.filter) {
             return res;
         }
@@ -746,7 +746,7 @@ export class CalendarComponent
      * Handles sending multiple events at the same time.
      */
     async saveChanges() {
-        let eventsToAdd = this.events.filter((e) => this.isTempEvent(e));
+        const eventsToAdd = this.events.filter((e) => this.isTempEvent(e));
         if (!eventsToAdd) {
             return;
         }

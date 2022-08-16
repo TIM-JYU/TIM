@@ -12,7 +12,9 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "24.5.2022"
 
-from typing import Optional
+from typing import Optional, Iterable
+
+from sqlalchemy import func
 
 from timApp.timdb.sqa import db
 from timApp.user.user import User
@@ -58,6 +60,12 @@ class Enrollment(db.Model):
     )
     """Type of the enrollment"""
 
+    event = db.relationship("Event", lazy="select")
+    """The event the enrollment is related to"""
+
+    usergroup = db.relationship(UserGroup, lazy="select")
+    """User group that booked the event"""
+
     @staticmethod
     def get_by_event_and_user(
         event_id: int, user_group_id: int
@@ -96,19 +104,19 @@ class EventTag(db.Model):
     )
 
     @staticmethod
-    def get_or_create(*args: list[str]) -> list["EventTag"]:
+    def get_or_create(tags: Iterable[str]) -> list["EventTag"]:
         """
         Gets or creates new tags.
 
         If the tag does not exist, it is added to the session.
 
-        :param args: List of tags to get or create
+        :param tags: List of tags to get or create
         :return: List of already existing or new event tags that match
         """
         result = []
-        existing_tags = EventTag.query.filter(EventTag.tag.in_(args)).all()
+        existing_tags = EventTag.query.filter(EventTag.tag.in_(tags)).all()
         existing_tags_dict = {tag.tag: tag for tag in existing_tags}
-        for tag in args:
+        for tag in tags:
             if tag in existing_tags_dict:
                 result.append(existing_tags_dict[tag])
             else:
@@ -159,6 +167,14 @@ class Event(db.Model):
     )
     """List of usergroups that are enrolled in the event"""
 
+    enrollments: list[Enrollment] = db.relationship(
+        Enrollment,
+        lazy="select",
+        back_populates="event",
+        cascade="all, delete-orphan",
+    )
+    """Enrollment information for the event"""
+
     creator: User = db.relationship(User)
     """User who created the event originally"""
 
@@ -176,23 +192,46 @@ class Event(db.Model):
     )
     """Tags attached to the event"""
 
+    @property
+    def enrollments_count(self) -> int:
+        """Returns the number of enrollments in the event"""
+        return (
+            db.session.query(func.count(Enrollment.event_id))
+            .filter(Enrollment.event_id == self.event_id)
+            .scalar()
+        )
+
     @staticmethod
     def get_by_id(event_id: int) -> Optional["Event"]:
         return Event.query.filter_by(event_id=event_id).one_or_none()
 
-    def to_json(self) -> dict:
+    def to_json(self, with_users: bool = False) -> dict:
+        meta = {
+            "signup_before": self.signup_before,
+            "enrollments": self.enrollments_count,
+            "maxSize": self.max_size,
+            "location": self.location,
+            "description": self.message,
+        }
+
+        if with_users:
+            meta |= {
+                "booker_groups": [
+                    {
+                        "name": e.usergroup.name,
+                        "users": [u.to_json() for u in e.usergroup.users],
+                        "message": e.booker_message,
+                    }
+                    for e in self.enrollments
+                ]
+            }
+
         return {
             "id": self.event_id,
             "title": self.title,
             "start": self.start_time,
             "end": self.end_time,
-            "meta": {
-                "signup_before": self.signup_before,
-                "enrollments": 0,
-                "maxSize": self.max_size,
-                "location": self.location,
-                "description": self.message,
-            },
+            "meta": meta,
         }
 
 
