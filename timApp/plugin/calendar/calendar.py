@@ -81,6 +81,10 @@ class FilterOptions:
         if self.tags is not None and len(self.tags) == 1 and not self.tags[0]:
             self.tags = []
 
+        # Same for groups
+        if self.groups is not None and len(self.groups) == 1 and not self.groups[0]:
+            self.groups = []
+
     def to_json(self) -> dict:
         return asdict(self)
 
@@ -314,7 +318,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
     if filter_opts.tags is not None:
         q = q.join(EventTag, Event.tags)
         event_filter &= EventTag.tag.in_(filter_opts.tags)
-    if filter_opts.groups:
+    if filter_opts.groups is not None:
         q = q.join(EventGroup, Event.event_groups).join(
             UserGroup, EventGroup.usergroup_id == UserGroup.id
         )

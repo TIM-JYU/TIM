@@ -701,8 +701,15 @@ export class CalendarComponent
         if (!this.markup.filter) {
             return res;
         }
-        if (this.markup.filter.groups) {
+        if (
+            this.markup.filter.groups !== null &&
+            this.markup.filter.groups !== undefined
+        ) {
             res.groups = this.markup.filter.groups;
+            if (res.groups.length === 0) {
+                // Special value to denote no tags if an empty tag list was given
+                res.groups = [""];
+            }
         }
         if (
             this.markup.filter.tags !== null &&
