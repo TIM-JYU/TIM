@@ -5830,22 +5830,6 @@
           <context context-type="linenumber">208</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6749934902228585627" datatype="html">
-        <source>Booking must be done before the event</source>
-        <target state="translated">Bokning måste göras före evenemanget</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
-          <context context-type="linenumber">212</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="5934265517281512724" datatype="html">
-        <source>Start of the event must be before end.</source>
-        <target state="translated">Evenemangets början måste vara före slutet.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
-          <context context-type="linenumber">216</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="3695400929536588338" datatype="html">
         <source> Title is required. </source>
         <target state="translated"> Titel krävs. </target>
@@ -6594,6 +6578,38 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
           <context context-type="linenumber">475</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5594358409459015371" datatype="html">
+        <source>Booking must be done before the event </source>
+        <target state="translated">Bokning måste göras före evenemanget </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">218,220</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7042961134580461385" datatype="html">
+        <source>Start of the event must be before end. </source>
+        <target state="translated">Evenemangets början måste vara före slutet. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">223,224</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4324036327460875876" datatype="html">
+        <source>The event is full</source>
+        <target state="translated">Evenemanget är fulltaligt</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">683</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2558026494236727753" datatype="html">
+        <source>The booking time is over or the event has already passed</source>
+        <target state="translated">Bokningstiden har gått ut eller evenemanget har redan passerat</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">688</context>
         </context-group>
       </trans-unit>
     </body>
