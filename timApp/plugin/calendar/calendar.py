@@ -68,13 +68,13 @@ class FilterOptions:
     toDate: datetime | None = None
     """Date filter. Show events only ending before this date."""
 
-    includeBooked: bool = True
-    """Whether to show events that the user is already booked in"""
+    showBooked: bool = True
+    """Whether to always show events that the user is already booked in"""
 
     includeOwned: bool = False
     """Whether to include events that the user owns"""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Special case: if the tags list has only one empty string, treat it as empty list
         # This allows to handle query parameter like &tags= to specify
         # an empty list (as empty string tags are not allowed)
@@ -151,7 +151,7 @@ def reqs_handle() -> PluginReqs:
 #     - tag1
 #    fromDate: 2022-08-16 20:00:00  # Only show events starting from this date
 #    toDate: 2022-08-16 20:00:00    # Only show events ending before this date
-#    includeBooked: true   # Whether to *always* show events that the user has already booked
+#    showBooked: true      # Whether to *always* show events that the user has already booked
 #    includeOwned: false   # Whether to include events that the user has created (i.e. "owns")
 viewOptions:               # Default view options for the calendar
     dayStartHour: 8        # Time at which the day starts (0-24)
@@ -321,7 +321,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
         event_filter &= UserGroup.name.in_(filter_opts.groups)
 
     # Add in all bookend events if asked
-    if filter_opts.includeBooked:
+    if filter_opts.showBooked:
         enrolled_subquery = (
             u.get_groups(include_expired=False)
             .join(Enrollment, Enrollment.usergroup_id == UserGroup.id)
