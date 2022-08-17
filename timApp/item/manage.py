@@ -11,8 +11,9 @@ from flask import redirect
 from flask import render_template, Response
 from flask import request
 from isodate import Duration
-from sqlalchemy import inspect
+from sqlalchemy import inspect, event
 from sqlalchemy.orm.state import InstanceState
+from timApp.velp.velp_models import VelpGroupsInDocument, VelpGroup
 
 from timApp.auth.accesshelper import (
     verify_manage_access,
@@ -82,6 +83,7 @@ from timApp.util.utils import (
     cached_property,
     seq_to_str,
 )
+from timApp.velp.velpgroups import get_groups_from_document_table
 
 manage_page = TypedBlueprint(
     "manage_page", __name__, url_prefix=""
@@ -190,6 +192,7 @@ class PermissionEditModel:
     time: TimeOpt
     groups: list[str]
     confirm: bool | None
+    edit_velp_group_perms: bool | None
 
     def __post_init__(self):
         if self.confirm and self.time.type == TimeType.range and self.time.ffrom:
@@ -224,6 +227,7 @@ class PermissionRemoveModel:
     id: int
     type: AccessType = field(metadata={"by_value": True})
     group: int
+    edit_velp_group_perms: bool | None
 
 
 @dataclass
@@ -235,6 +239,7 @@ class DefaultPermissionRemoveModel(PermissionRemoveModel):
 class PermissionMassEditModel(PermissionEditModel):
     ids: list[int]
     action: EditOption = field(metadata={"by_value": True})
+    edit_velp_group_perms: bool | None
 
 
 @manage_page.get("/permissions/add/<int:doc_id>/<username>")
@@ -252,16 +257,23 @@ def add_permission_basic(
         )
 
     verify_permission_edit_access(i, AccessType.view)
-    accs = add_perm(
-        PermissionEditModel(
-            type=AccessType.view,
-            groups=[username],
-            time=TimeOpt(
-                type=TimeType.duration,
-                duration=Duration(hours=duration),
-            ),
-            confirm=False,
+    # We don't want to interrupt document permissions handling,
+    # check for velp group perms flag silently
+    edit_vg_perms = request.get_json(silent=True).get("edit_velp_group_perms")
+
+    p_model = PermissionEditModel(
+        type=AccessType.view,
+        groups=[username],
+        time=TimeOpt(
+            type=TimeType.duration,
+            duration=Duration(hours=duration),
         ),
+        confirm=False,
+        edit_velp_group_perms=edit_vg_perms,
+    )
+
+    accs = add_perm(
+        p_model,
         i,
         replace_active_duration=False,
     )
@@ -280,6 +292,13 @@ def add_permission_basic(
                 f"skipped {a.info_str} for {username} in {i.path} because an active right already exists"
             )
             res_message = "Skipped, because an active right already exists. Expire the active right first."
+
+        # copy permissions to document's velp groups
+        if p_model.edit_velp_group_perms:
+            ap = copy_doc_perms_to_velp_groups(i)
+            if ap:
+                log_right(f"added {ap[0].info_str} for {username} in {i.path}")
+
         db.session.commit()
     return json_response({"message": res_message})
 
@@ -293,6 +312,12 @@ def add_permission(m: PermissionSingleEditModel):
         a = accs[0]
         check_ownership_loss(is_owner, i)
         log_right(f"added {a.info_str} for {seq_to_str(m.groups)} in {i.path}")
+
+        # copy permissions to document's velp groups
+        if m.edit_velp_group_perms:
+            ag = copy_doc_perms_to_velp_groups(i)
+            log_right(f"added {ag[0].info_str} for {seq_to_str(m.groups)} in {i.path}")
+
         db.session.commit()
     return permission_response(m)
 
@@ -402,6 +427,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
         .all()
     )
     a = None
+    rm_groups = None
     owned_items_before = set()
     for i in items:
         checked_owner = verify_permission_edit_access(i, m.type)
@@ -411,9 +437,15 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
             accs = add_perm(m, i)
             if accs:
                 a = accs[0]
+            # copy permissions to item's/document's velp groups, if any
+            if m.edit_velp_group_perms:
+                rm_groups = copy_doc_perms_to_velp_groups(i)
         else:
             for g in groups:
                 a = remove_perm(g, i, m.type) or a
+                # Also remove permissions to item's/document's velp groups, if any
+                if m.edit_velp_group_perms:
+                    rm_groups = remove_velp_group_perms(i, g, m.type)
 
     if m.type == AccessType.owner:
         owned_items_after = set()
@@ -428,6 +460,11 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
         log_right(
             f"{action} {a.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}"
         )
+        if rm_groups:
+            log_right(
+                f"{action} {rm_groups[0].info_str} for {seq_to_str(m.groups)} in blocks: "
+                + f"{seq_to_str(list(str(x) for x in m.ids))}"
+            )
         db.session.commit()
     return permission_response(m)
 
@@ -459,6 +496,40 @@ def add_perm(
     return accs
 
 
+def copy_doc_perms_to_velp_groups(i: ItemOrBlock) -> list[BlockAccess]:
+    """Copy permissions from document to its attached velp groups
+
+    :param i: Document that the Velp Groups are attached to
+    """
+    vgs = (
+        VelpGroupsInDocument.query.filter_by(doc_id=i.id)
+        .join(VelpGroup)
+        .with_entities(VelpGroup)
+        .all()
+    )
+    ap_groups = []
+    doc_rights = get_rights_holders(i.id)
+    for vg in vgs:
+        if vg.name == "Personal-default":
+            pass  # don't add permissions to users' personal velp groups
+        else:
+            for right in doc_rights:
+                a = grant_access(
+                    right.usergroup,
+                    vg.block,
+                    access_type=right.access_type,
+                    accessible_from=right.accessible_from,
+                    accessible_to=right.accessible_to,
+                    duration_from=right.duration_from,
+                    duration_to=right.duration_to,
+                    duration=right.duration,
+                    require_confirm=False,  # 'parent' document access is confirmed already, no need for it here
+                    replace_active_duration=True,
+                )
+                ap_groups.append(a)
+    return ap_groups
+
+
 @manage_page.put("/permissions/remove", model=PermissionRemoveModel)
 def remove_permission(m: PermissionRemoveModel) -> Response:
     i = get_item_or_abort(m.id)
@@ -470,6 +541,14 @@ def remove_permission(m: PermissionRemoveModel) -> Response:
     check_ownership_loss(had_ownership, i)
 
     log_right(f"removed {a.info_str} for {ug.name} in {i.path}")
+
+    # Also remove permissions to item's/document's velp groups, if any
+    if m.edit_velp_group_perms:
+        rm_groups = remove_velp_group_perms(i, ug, m.type)
+        if rm_groups:
+            for rm in rm_groups:
+                log_right(f"removed {rm.info_str} for {ug.name} in {i.path}")
+
     db.session.commit()
     return ok_response()
 
@@ -494,6 +573,7 @@ def clear_permissions(m: PermissionClearModel) -> Response:
             for (ugid, permtype), v in i.block.accesses.items()
             if permtype != m.type.value
         }
+        # TODO propagate permission changes to document's velp groups
     db.session.commit()
     return ok_response()
 
@@ -514,6 +594,23 @@ def self_expire_permission(id: int) -> Response:
 
 def remove_perm(group: UserGroup, b: Block, t: AccessType):
     return remove_access(group, b, t)
+
+
+def remove_velp_group_perms(
+    i: ItemOrBlock, ug: UserGroup, acc: AccessType
+) -> list[BlockAccess]:
+    """Remove a UserGroup's permissions to Velp Groups that are attached to a specific document
+
+    :param i: Document that the Velp Groups are attached to
+    :param ug: UserGroup whose permissions will be removed
+    :param acc: AccessType of the permissions that will be removed
+    """
+    vgs = get_groups_from_document_table(i.id, ug.id)
+    rm_groups = []
+    for vg in vgs:
+        a = remove_perm(ug, i.block, acc)
+        rm_groups.append(a)
+    return rm_groups
 
 
 def check_ownership_loss(had_ownership, item):
