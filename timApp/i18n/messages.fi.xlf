@@ -6726,12 +6726,12 @@
           <context context-type="linenumber">440</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="1217595361493708833" datatype="html">
-        <source>Machine translator API Keys <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB#adding-a-translator-authentication-key&quot;>"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;glyphicon glyphicon-question-sign&quot; style=&quot;margin-left: 0.2em;&quot; title=&quot;Help with machine translation setup&quot; i18n-title>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
-        <target state="translated">Konekääntäjän käyttöavain (API key) <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB#adding-a-translator-authentication-key&quot;>"/><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span class=&quot;glyphicon glyphicon-question-sign&quot; style=&quot;margin-left: 0.2em;&quot; title=&quot;Help with machine translation setup&quot; i18n-title>"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/><x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
+      <trans-unit id="888422761114341906" datatype="html">
+        <source>Machine translator API Keys</source>
+        <target state="translated">Konekääntäjien käyttöavaimet (API key)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">438,441</context>
+          <context context-type="linenumber">439</context>
         </context-group>
       </trans-unit>
     </body>
