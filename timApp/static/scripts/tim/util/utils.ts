@@ -631,11 +631,11 @@ export class TimStorage<T, O = T> {
 }
 
 // from https://stackoverflow.com/a/1026087
-export function capitalizeFirstLetter(s: string) {
+export function capitalizeFirstLetter<T extends string>(s: T): Capitalize<T> {
     if (s.length === 0) {
-        return s;
+        return s as Capitalize<T>;
     }
-    return s.charAt(0).toUpperCase() + s.slice(1);
+    return (s.charAt(0).toUpperCase() + s.slice(1)) as Capitalize<T>;
 }
 
 export type ToReturn<T, U = {data: {error: string}}> = Promise<

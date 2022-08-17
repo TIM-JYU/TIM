@@ -23,7 +23,12 @@ export function getDefaults<
     };
     const d = runtimeType.decode(defaults);
     if (isLeft(d)) {
-        throw new Error("Could not get default markup");
+        throw new Error(
+            "Could not get default markup:\n" +
+                getErrors(d)
+                    .map((x) => `- ${x.name}: ${x.type}`)
+                    .join("\n")
+        );
     }
     return d.right;
 }

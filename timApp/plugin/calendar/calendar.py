@@ -15,10 +15,11 @@ __date__ = "24.5.2022"
 import secrets
 import uuid
 from dataclasses import dataclass, asdict, field
+from datetime import date as dtdate
 from datetime import datetime
 from io import StringIO
 from textwrap import wrap
-from typing import Any
+from typing import Any, Literal
 
 from flask import Response, render_template_string, url_for
 from sqlalchemy import false, true
@@ -100,6 +101,9 @@ class ViewOptions:
     dayStartHour: int = 8
     dayEndHour: int = 20
     segmentDuration: int = 60
+    date: dtdate | None = None
+    week: int | None = None
+    mode: Literal["day", "week", "month"] = "week"
 
 
 @dataclass
@@ -149,6 +153,9 @@ viewOptions:               # Default view options for the calendar
     dayStartHour: 8        # Time at which the day starts (0-24)
     dayEndHour: 20         # Time at which the day ends (0-24)
     segmentDuration: 60    # Duration of a single time segment (a selectable slot in calendar) in minutes. Allowed values: 15, 20, 30, 60, 120
+    week: null             # Week number to show (if not specified, show current week)
+    date: null             # Date to show (if not specified, show current date). Has higher priority than week.
+    mode: week             # Calendar mode to show (day, week, month)
 eventTemplates:            # Event templates for the calendar. Used to create new events.
     Event:                 # Name of the template. Can contain spaces.
         title: Event name  # Name of the event.

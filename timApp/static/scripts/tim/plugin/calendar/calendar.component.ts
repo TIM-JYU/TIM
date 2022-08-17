@@ -41,7 +41,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
-import {addDays, addMinutes, endOfWeek} from "date-fns";
+import {addDays, addMinutes, endOfWeek, setISOWeek} from "date-fns";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {
@@ -50,7 +50,13 @@ import {
     nullable,
     withDefault,
 } from "../attributes";
-import {closest, DateFromString, to2, toPromise} from "../../util/utils";
+import {
+    capitalizeFirstLetter,
+    closest,
+    DateFromString,
+    to2,
+    toPromise,
+} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
@@ -109,21 +115,28 @@ const FilterOptions = t.type({
     includeBooked: withDefault(t.boolean, true),
 });
 
+const CalendarViewMode = t.union([
+    t.literal("month"),
+    t.literal("week"),
+    t.literal("day"),
+]);
+
 const ViewOptions = t.type({
     dayStartHour: t.number,
     dayEndHour: t.number,
     segmentDuration: t.number,
+    date: nullable(DateFromString),
+    week: nullable(t.number),
+    mode: CalendarViewMode,
 });
 
 const CalendarMarkup = t.intersection([
     t.partial({
         filter: FilterOptions,
         eventTemplates: t.record(t.string, EventTemplate),
-    }),
-    GenericPluginMarkup,
-    t.type({
         viewOptions: ViewOptions,
     }),
+    GenericPluginMarkup,
 ]);
 
 const CalendarFields = t.intersection([
@@ -191,7 +204,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
         },
     ],
     template: `
-        <tim-calendar-header [locale]="locale" [(view)]="view" [(viewDate)]="viewDate">
+        <tim-calendar-header [locale]="locale" [(view)]="viewMode" [(viewDate)]="viewDate">
         </tim-calendar-header>
         <div class="row text-center">
             <div class="col-md-4">
@@ -243,7 +256,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
             </div>
         </ng-template>
 
-        <div [ngSwitch]="view">
+        <div [ngSwitch]="viewMode">
             <mwl-calendar-month-view
                     *ngSwitchCase="'month'"
                     [viewDate]="viewDate"
@@ -291,7 +304,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
             >
             </mwl-calendar-day-view>
         </div>
-        <tim-time-view-selector [style.visibility]="view == 'month' ? 'hidden' : 'visible'"
+        <tim-time-view-selector [style.visibility]="viewMode == 'month' ? 'hidden' : 'visible'"
                                 [(segmentDuration)]="segmentDuration"
                                 [(startHour)]="dayStartHour"
                                 [(endHour)]="dayEndHour">
@@ -317,9 +330,8 @@ export class CalendarComponent
 {
     exportDone: string = "";
     icsURL: string = "";
-    view: CalendarView = CalendarView.Week;
-
-    viewDate: Date = new Date();
+    viewMode!: CalendarView;
+    viewDate!: Date;
 
     events: TIMCalendarEvent[] = [];
 
@@ -427,7 +439,7 @@ export class CalendarComponent
     changeToDay(date: Date) {
         this.clickedDate = date;
         this.viewDate = date;
-        this.view = CalendarView.Week;
+        this.viewMode = CalendarView.Week;
     }
 
     /**
@@ -437,7 +449,7 @@ export class CalendarComponent
     viewDay(date: Date) {
         this.clickedDate = date;
         this.viewDate = date;
-        this.view = CalendarView.Day;
+        this.viewMode = CalendarView.Day;
     }
 
     /**
@@ -641,13 +653,11 @@ export class CalendarComponent
      * Returns empty markup
      */
     getDefaultMarkup() {
-        return {
-            viewOptions: {
-                dayStartHour: 8,
-                dayEndHour: 20,
-                segmentDuration: 60,
-            },
-        };
+        return {};
+    }
+
+    private get viewOptions() {
+        return this.markup.viewOptions!;
     }
 
     /**
@@ -657,21 +667,34 @@ export class CalendarComponent
         this.icsURL = "";
         super.ngOnInit();
 
+        this.viewMode =
+            CalendarView[capitalizeFirstLetter(this.viewOptions.mode)];
+        console.log(this.viewOptions.date);
+        if (this.viewOptions.date) {
+            this.viewDate = this.viewOptions.date;
+        } else if (this.viewOptions.week) {
+            this.viewDate = setISOWeek(new Date(), this.viewOptions.week);
+        } else {
+            this.viewDate = new Date();
+        }
+
         this.segmentDuration = closest(
             TIME_VIEW_SLOT_SIZES,
-            this.markup.viewOptions.segmentDuration
+            this.viewOptions.segmentDuration
         );
         this.dayStartHour = closest(
             TIME_VIEW_MORNING_HOURS,
-            this.markup.viewOptions.dayStartHour
+            this.viewOptions.dayStartHour
         );
         this.dayEndHour = closest(
             TIME_VIEW_EVENING_HOURS,
-            this.markup.viewOptions.dayEndHour
+            this.viewOptions.dayEndHour
         );
 
         this.initEventTypes();
-        void this.loadEvents();
+        if (!this.isPreview()) {
+            void this.loadEvents();
+        }
     }
 
     private get filterParams() {
