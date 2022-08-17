@@ -94,6 +94,7 @@ class EventTemplate:
     """Calendar markup fields for event template"""
 
     title: str | None = None
+    location: str | None = None
     bookers: list[str] = field(default_factory=list)
     setters: list[str] = field(default_factory=list)
     capacity: int = 0
@@ -167,6 +168,7 @@ viewOptions:               # Default view options for the calendar
 eventTemplates:            # Event templates for the calendar. Used to create new events.
     Event:                 # Name of the template. Can contain spaces.
         title: Event name  # Name of the event.
+        location:          # Location of the event
         bookers:           # List of groups that can see the event in their calendars and book it.
           - bookersgroup
         setters:           # List of groups that can edit the event details.
