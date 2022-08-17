@@ -669,7 +669,6 @@ export class CalendarComponent
 
         this.viewMode =
             CalendarView[capitalizeFirstLetter(this.viewOptions.mode)];
-        console.log(this.viewOptions.date);
         if (this.viewOptions.date) {
             this.viewDate = this.viewOptions.date;
         } else if (this.viewOptions.week) {
@@ -724,7 +723,6 @@ export class CalendarComponent
         if (this.markup.filter.includeBooked) {
             res.includeBooked = this.markup.filter.includeBooked.toString();
         }
-        console.log(res);
         return res;
     }
 

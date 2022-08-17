@@ -105,8 +105,4 @@ export class CalendarHeaderComponent {
     @Output() viewDateChange = new EventEmitter<Date>();
 
     CalendarView = CalendarView;
-
-    ngOnInit() {
-        console.log(this.locale);
-    }
 }
