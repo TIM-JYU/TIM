@@ -12,15 +12,17 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "24.5.2022"
 
-
 import secrets
 import uuid
 from dataclasses import dataclass, asdict, field
+from datetime import date as dtdate
 from datetime import datetime
 from io import StringIO
 from textwrap import wrap
+from typing import Any, Literal
 
 from flask import Response, render_template_string, url_for
+from sqlalchemy import false, true
 
 from timApp.auth.accesshelper import verify_logged_in, AccessDenied
 from timApp.auth.sessioninfo import (
@@ -28,7 +30,7 @@ from timApp.auth.sessioninfo import (
     get_current_user_object,
 )
 from timApp.notification.send_email import send_email
-from timApp.plugin.calendar.models import Event, EventGroup, Enrollment
+from timApp.plugin.calendar.models import Event, EventGroup, Enrollment, EventTag
 from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_access
@@ -54,10 +56,34 @@ calendar_plugin = TypedBlueprint("calendar_plugin", __name__, url_prefix="/calen
 class FilterOptions:
     """Calendar markup fields for filtering options"""
 
-    groups: list[str] | None = None
-    tags: list[str] | None = None
+    groups: list[str] | None = field(default=None, metadata={"list_type": "delimited"})
+    """Group filter. Show events only if the user belongs to one of these event groups."""
+
+    tags: list[str] | None = field(default=None, metadata={"list_type": "delimited"})
+    """Tag filter. Show events only the user has one of these tags."""
+
     fromDate: datetime | None = None
+    """Date filter. Show events only starting from this date."""
+
     toDate: datetime | None = None
+    """Date filter. Show events only ending before this date."""
+
+    showBooked: bool = True
+    """Whether to always show events that the user is already booked in"""
+
+    includeOwned: bool = False
+    """Whether to include events that the user owns"""
+
+    def __post_init__(self) -> None:
+        # Special case: if the tags list has only one empty string, treat it as empty list
+        # This allows to handle query parameter like &tags= to specify
+        # an empty list (as empty string tags are not allowed)
+        if self.tags is not None and len(self.tags) == 1 and not self.tags[0]:
+            self.tags = []
+
+        # Same for groups
+        if self.groups is not None and len(self.groups) == 1 and not self.groups[0]:
+            self.groups = []
 
     def to_json(self) -> dict:
         return asdict(self)
@@ -68,6 +94,7 @@ class EventTemplate:
     """Calendar markup fields for event template"""
 
     title: str | None = None
+    location: str | None = None
     bookers: list[str] = field(default_factory=list)
     setters: list[str] = field(default_factory=list)
     capacity: int = 0
@@ -82,6 +109,9 @@ class ViewOptions:
     dayStartHour: int = 8
     dayEndHour: int = 20
     segmentDuration: int = 60
+    date: dtdate | None = None
+    week: int | None = None
+    mode: Literal["day", "week", "month"] = "week"
 
 
 @dataclass
@@ -119,18 +149,33 @@ class CalendarHtmlModel(
 def reqs_handle() -> PluginReqs:
     template_full = """
 ``` {plugin="calendar"}
+#filter:                   # Optional filter options
+#    groups:               # Only show events for these groups
+#     - group1
+#    tags:                 # Only show events with these tags
+#     - tag1
+#    fromDate: 2022-08-16 20:00:00  # Only show events starting from this date
+#    toDate: 2022-08-16 20:00:00    # Only show events ending before this date
+#    showBooked: true      # Whether to *always* show events that the user has already booked
+#    includeOwned: false   # Whether to include events that the user has created (i.e. "owns")
 viewOptions:               # Default view options for the calendar
     dayStartHour: 8        # Time at which the day starts (0-24)
     dayEndHour: 20         # Time at which the day ends (0-24)
     segmentDuration: 60    # Duration of a single time segment (a selectable slot in calendar) in minutes. Allowed values: 15, 20, 30, 60, 120
+    week: null             # Week number to show (if not specified, show current week)
+    date: null             # Date to show (if not specified, show current date). Has higher priority than week.
+    mode: week             # Calendar mode to show (day, week, month)
 eventTemplates:            # Event templates for the calendar. Used to create new events.
     Event:                 # Name of the template. Can contain spaces.
         title: Event name  # Name of the event.
+        location:          # Location of the event
         bookers:           # List of groups that can see the event in their calendars and book it.
           - bookersgroup
         setters:           # List of groups that can edit the event details.
           - settersgroup
         capacity: 1        # Maximum number of people that can book the event.
+        tags:              # List of tags that can be used to filter events.
+          - tag1
 ```
 """
 
@@ -201,8 +246,8 @@ def get_ical(key: str) -> Response:
 
     :return: ICS file that can be exported otherwise 404 if user data does not exist.
     """
-    user_data: ExportedCalendar = ExportedCalendar.query.filter(
-        ExportedCalendar.calendar_hash == key
+    user_data: ExportedCalendar = ExportedCalendar.query.filter_by(
+        calendar_hash=key
     ).one_or_none()
     if user_data is None:
         raise NotExist()
@@ -212,28 +257,32 @@ def get_ical(key: str) -> Response:
 
     buf = StringIO()
     buf.write("BEGIN:VCALENDAR\r\n")
-    buf.write("PRODID:-//TIM Katti-kalenteri//iCal4j 1.0//EN\r\n")
+    buf.write("PRODID:-//TIM-kalenteri//iCal4j 1.0//EN\r\n")
     buf.write("VERSION:2.0\r\n")
     buf.write("CALSCALE:GREGORIAN\r\n")
+
+    def wrap_lines(s: str) -> str:
+        return "\r\n ".join(wrap(s, width=60))
+
     for event in events:
         dts = event.start_time.strftime("%Y%m%dT%H%M%S")
         dtend = event.end_time.strftime("%Y%m%dT%H%M%S")
 
         buf.write("BEGIN:VEVENT\r\n")
-        buf.write("DTSTART:" + dts + "Z\r\n")
-        buf.write("DTEND:" + dtend + "Z\r\n")
-        buf.write("DTSTAMP:" + dts + "Z\r\n")
-        buf.write("UID:" + uuid.uuid4().hex[:9] + "@tim.jyu.fi\r\n")
-        buf.write("CREATED:" + dts + "Z\r\n")
+        buf.write(f"DTSTART:{dts}Z\r\n")
+        buf.write(f"DTEND:{dtend}Z\r\n")
+        buf.write(f"DTSTAMP:{dts}Z\r\n")
+        buf.write(f"UID:{uuid.uuid4().hex[:9]}@tim.jyu.fi\r\n")
+        buf.write(f"CREATED:{dts}Z\r\n")
         if event.title is None:
             event.title = ""
-        buf.write("SUMMARY:" + string_to_lines(event.title) + "\r\n")
+        buf.write(f"SUMMARY:{wrap_lines(event.title)}\r\n")
         if event.location is None:
             event.location = ""
-        buf.write("LOCATION:" + string_to_lines(event.location) + "\r\n")
+        buf.write(f"LOCATION:{wrap_lines(event.location)}\r\n")
         if event.message is None:
             event.message = ""
-        buf.write("DESCRIPTION:" + string_to_lines(event.message) + "\r\n")
+        buf.write(f"DESCRIPTION:{wrap_lines(event.message)}\r\n")
         buf.write("END:VEVENT\r\n")
 
     buf.write("END:VCALENDAR\r\n")
@@ -241,107 +290,84 @@ def get_ical(key: str) -> Response:
     return Response(result, mimetype="text/calendar")
 
 
-def string_to_lines(str_to_split: str) -> str:
-    """Splits long strings to n char lines
-
-    :return: str where lines are separated with \r\n + whitespace
-    """
-    return "\r\n ".join(wrap(str_to_split, width=60))
-
-
-def events_of_user(user_obj: User) -> list[Event]:
+def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Event]:
     """
     Fetches users events
 
-    :param: user_obj current user object: User
+    :param: u User to fetch events for
     :return: list of events
     """
-    cur_user = user_obj.id
-    events: list[Event] = Event.query.filter(Event.creator_user_id == cur_user).all()
-    # TODO: Makes too many queries to db, to be refactored
-    for group in user_obj.groups:
-        group_events = EventGroup.query.filter(
-            EventGroup.usergroup_id == group.id
-        ).all()
-        for group_event in group_events:
-            event = Event.get_event_by_id(group_event.event_id)
-            if event is not None:
-                event_obj: Event = event
-                if event_obj not in events:
-                    events.append(event_obj)
-            else:
-                no_event_found = f"Event not found by the id of {group_event.event_id}"
-                raise NotExist(no_event_found)
-    return events
+    filter_opts = filter_opts or FilterOptions()
+
+    q = Event.query
+    event_filter = false()
+
+    # Events come from different places:
+    # 1. Events that are created by the user
+    if filter_opts.includeOwned:
+        event_filter |= Event.creator == u
+
+    # 2. Events that the user is either a booker or setter for
+    subquery_event_groups = (
+        u.get_groups(include_expired=False)
+        .join(EventGroup, EventGroup.usergroup_id == UserGroup.id)
+        .with_entities(EventGroup.event_id)
+        .subquery()
+    )
+    event_filter |= Event.event_id.in_(subquery_event_groups)
+
+    # Filter out any tags and groups
+    if filter_opts.tags is not None:
+        q = q.join(EventTag, Event.tags)
+        event_filter &= EventTag.tag.in_(filter_opts.tags)
+    if filter_opts.groups is not None:
+        q = q.join(EventGroup, Event.event_groups).join(
+            UserGroup, EventGroup.usergroup_id == UserGroup.id
+        )
+        event_filter &= UserGroup.name.in_(filter_opts.groups)
+
+    # Add in all bookend events if asked
+    if filter_opts.showBooked:
+        enrolled_subquery = (
+            u.get_groups(include_expired=False)
+            .join(Enrollment, Enrollment.usergroup_id == UserGroup.id)
+            .with_entities(Enrollment.event_id)
+            .subquery()
+        )
+        # We have to do this via union so that earlier filters are not applied
+        q = q.filter(event_filter)
+        q2 = Event.query.filter(Event.event_id.in_(enrolled_subquery))
+        q = q.union(q2)
+        event_filter = true()
+
+    # Apply date filter to all events
+    if filter_opts.fromDate:
+        event_filter &= Event.start_time >= filter_opts.fromDate
+    if filter_opts.toDate:
+        event_filter &= Event.end_time <= filter_opts.toDate
+
+    q = q.filter(event_filter)
+
+    return q.all()
 
 
-@calendar_plugin.get("/events")
-def get_events() -> Response:
+@calendar_plugin.get("/events", model=FilterOptions)
+def get_events(opts: FilterOptions) -> Response:
     """Fetches the events created by the user and the events that have a relation to user's groups from the database
     in JSON format
 
     :return: User's events in JSON format or HTTP 400 if failed
     """
     verify_logged_in()
-    cur_user = get_current_user_id()
-    user_obj = get_current_user_object()
-
-    events = events_of_user(user_obj)
-
-    event_objs = []
-    for event in events:
-        enrollment_amount = len(event.enrolled_users)
-        booker_groups = event.enrolled_users
-        groups = []
-
-        for group in booker_groups:
-            enrollment = Enrollment.get_enrollment_by_ids(event.event_id, group.id)
-            if enrollment is not None:
-                book_msg = enrollment.booker_message
-            else:
-                book_msg = ""
-            users = []
-            cur_user_booking = False
-            for user in group.users:
-                if user.id == cur_user:
-                    cur_user_booking = True
-                users.append(
-                    {
-                        "id": user.id,
-                        "name": user.real_name,
-                        "email": user.email,
-                    }
-                )
-
-            groups.append(
-                {
-                    "name": group.name,
-                    "message": book_msg,
-                    "users": users,
-                }
-            )
-
-            if user_is_event_manager(event.event_id) or cur_user_booking:
-                groups.append({"name": group.name, "users": users})
-
-        event_objs.append(
-            {
-                "id": event.event_id,
-                "title": event.title,
-                "start": event.start_time,
-                "end": event.end_time,
-                "meta": {
-                    "description": event.message,
-                    "enrollments": enrollment_amount,
-                    "maxSize": event.max_size,
-                    "location": event.location,
-                    "booker_groups": groups,
-                    "signup_before": event.signup_before,
-                },
-            }
-        )
-
-    return json_response(event_objs)
+    cur_user = get_current_user_object()
+    events = events_of_user(cur_user, opts)
+    # TODO: This needs further optimization
+    return json_response(
+        [
+            e.to_json(with_users=user_is_event_manager(e.event_id), for_user=cur_user)
+            for e in events
+        ]
+    )
 
 
 @calendar_plugin.get("/events/<int:event_id>/bookers")
@@ -356,7 +382,7 @@ def get_event_bookers(event_id: int) -> str | Response:
     if not user_is_event_manager(event_id):
         raise AccessDenied("No permission to see event bookers")
 
-    event = Event.get_event_by_id(event_id)
+    event = Event.get_by_id(event_id)
     if event is None:
         no_event_found = f"Event not found by the id of {event_id}"
         raise NotExist(no_event_found)
@@ -405,42 +431,63 @@ class CalendarEvent:
     description: str
     booker_groups: list[str] | None = None
     setter_groups: list[str] | None = None
-    event_groups: list[str] | None = None
+    tags: list[str] | None = None
     id: int = -1
 
 
 @calendar_plugin.post("/events")
 def add_events(events: list[CalendarEvent]) -> Response:
-    """Persists the given list of events to the database.
+    """Saves the calendar events.
     User must have at least manage rights to given booker groups and edit rights to given setter groups.
 
     :param events: List of events to be persisted
-    :return: Persisted events in JSON with updated ids
+    :return: Saved event information in JSON format
     """
-
     verify_logged_in()
-
     cur_user = get_current_user_id()
-    event_bookers: dict[int, list[str]] = {}
-    event_setters: dict[int, list[str]] = {}
-    event_objs: dict[int, Event] = {}
+    event_ug_names = {
+        *[ug for event in events if event.booker_groups for ug in event.booker_groups],
+        *[ug for event in events if event.setter_groups for ug in event.setter_groups],
+    }
+    event_ugs = UserGroup.query.filter(UserGroup.name.in_(event_ug_names)).all()
+    event_ugs_dict = {ug.name: ug for ug in event_ugs}
+    event_tags = set(
+        [
+            tag.strip()
+            for event in events
+            if event.tags
+            for tag in event.tags
+            if tag.strip()
+        ]
+    )
+    event_tags_dict = {tag.tag: tag for tag in EventTag.get_or_create(event_tags)}
+
+    def get_event_groups(
+        group_names: set[str], access_set: set[int], **kwargs: Any
+    ) -> list[UserGroup]:
+        res: list[UserGroup] = []
+        for group_name in group_names:
+            if not (ug := event_ugs_dict.get(group_name)):
+                raise NotExist(f"Group '{group_name}' not found")
+            verify_group_access(ug, access_set)
+            res.append(
+                EventGroup(
+                    user_group=ug,
+                    **kwargs,
+                )
+            )
+        return res
+
+    result = []
     for event in events:
-        event_bookers = {event.id: []}
-        event_setters = {event.id: []}
-        booker_groups = event.booker_groups
-        setter_groups = event.setter_groups
-        if booker_groups is not None:
-            for booker_group_str in booker_groups:
-                booker_group = UserGroup.get_by_name(booker_group_str)
-                if booker_group is not None:
-                    verify_group_access(booker_group, manage_access_set)
-                event_bookers[event.id].append(booker_group_str)
-        if setter_groups is not None:
-            for setter_group_str in setter_groups:
-                setter_group = UserGroup.get_by_name(setter_group_str)
-                if setter_group is not None:
-                    verify_group_access(setter_group, edit_access_set)
-                event_setters[event.id].append(setter_group_str)
+        bookers = set(event.booker_groups or [])
+        setters = set(event.setter_groups or [])
+        # Bookers cannot also be setters because setters can already book events
+        bookers -= setters
+        event_groups = [
+            *get_event_groups(bookers, manage_access_set, manager=False),
+            *get_event_groups(setters, edit_access_set, manager=True),
+        ]
 
         event_data = Event(
             title=event.title,
@@ -451,54 +498,17 @@ def add_events(events: list[CalendarEvent]) -> Response:
             creator_user_id=cur_user,
             max_size=event.max_size,
             signup_before=event.signup_before,
+            tags=[event_tags_dict[tag] for tag in event.tags]
+            if event.tags is not None
+            else [],
+            event_groups=event_groups,
         )
+        result.append(event_data)
         db.session.add(event_data)
-        event_objs[event.id] = event_data
-
-    db.session.flush()
-
-    # To fetch the new ids generated by the database and create appropriate EventGroups
-    event_list = []
-    for local_id in event_objs:
-        event_list.append(
-            {
-                "id": event_objs[local_id].event_id,
-                "title": event_objs[local_id].title,
-                "start": event_objs[local_id].start_time,
-                "end": event_objs[local_id].end_time,
-                "meta": {
-                    "signup_before": event_objs[local_id].signup_before,
-                    "enrollments": 0,
-                    "maxSize": event_objs[local_id].max_size,
-                    "location": event_objs[local_id].location,
-                    "description": event_objs[local_id].message,
-                },
-            }
-        )
-        for booker in event_bookers[local_id]:
-            ug = UserGroup.get_by_name(booker)
-            if ug is not None:
-                db.session.add(
-                    EventGroup(
-                        event_id=event_objs[local_id].event_id,
-                        usergroup_id=ug.id,
-                        manager=False,
-                    )
-                )
-        for setter in event_setters[local_id]:
-            ug = UserGroup.get_by_name(setter)
-            if ug is not None:
-                db.session.add(
-                    EventGroup(
-                        event_id=event_objs[local_id].event_id,
-                        usergroup_id=ug.id,
-                        manager=True,
-                    )
-                )
 
     db.session.commit()
 
-    return json_response(event_list)
+    return json_response(result)
 
 
 @calendar_plugin.put("/events/<int:event_id>")
@@ -512,7 +522,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     verify_logged_in()
     if not user_is_event_manager(event_id):
         raise AccessDenied("No permission to edit the event")
-    old_event = Event.get_event_by_id(event_id)
+    old_event = Event.get_by_id(event_id)
     if not old_event:
         raise NotExist()
     old_event.title = event.title
@@ -526,6 +536,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     return ok_response()
 
 
+# TODO: Refactor
 def user_is_event_manager(event_id: int) -> bool:
     """Checks if current user is a manager of the event
 
@@ -536,7 +547,7 @@ def user_is_event_manager(event_id: int) -> bool:
     usr = get_current_user_object()
     if usr.is_admin:
         return True
-    event = Event.get_event_by_id(event_id)
+    event = Event.get_by_id(event_id)
     if event is None:
         return False
     if event.creator_user_id == get_current_user_id():
@@ -563,7 +574,7 @@ def delete_event(event_id: int) -> Response:
     if not user_is_event_manager(event_id):
         raise AccessDenied("No permission to delete the event")
 
-    event = Event.get_event_by_id(event_id)
+    event = Event.get_by_id(event_id)
     user_obj = get_current_user_object()
     if not event:
         raise NotExist()
@@ -615,12 +626,12 @@ def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Re
     :return: HTTP 200 if succeeded, otherwise 404
     """
     verify_logged_in()
-    event = Event.get_event_by_id(event_id)
+    event = Event.get_by_id(event_id)
     if event is None:
         raise NotExist()
 
     user_group = UserGroup.get_by_name(booker_group)
-    enrollment = Enrollment.get_enrollment_by_ids(event_id, user_group.id)
+    enrollment = Enrollment.get_by_event_and_user(event_id, user_group.id)
 
     if enrollment is not None:
         enrollment.booker_message = booker_msg
@@ -641,7 +652,7 @@ def book_event(event_id: int, booker_msg: str) -> Response:
     :return: HTTP 200 if succeeded, 400 if the event is already full
     """
     verify_logged_in()
-    event = Event.get_event_by_id(event_id)
+    event = Event.get_by_id(event_id)
     if event is not None:
         event_obj: Event = event
         if len(event_obj.enrolled_users) >= event_obj.max_size:
@@ -651,7 +662,7 @@ def book_event(event_id: int, booker_msg: str) -> Response:
     user_obj = get_current_user_object()
     user_group = user_obj.get_personal_group()
 
-    enrollment = Enrollment.get_enrollment_by_ids(event_id, user_group.id)
+    enrollment = Enrollment.get_by_event_and_user(event_id, user_group.id)
     if enrollment is not None:
         raise RouteException("Event is already booked by the user")
 
@@ -682,7 +693,7 @@ def delete_booking(event_id: int) -> Response:
         if group.name == user_obj.name:
             group_id = group.id
 
-    enrollment = Enrollment.get_enrollment_by_ids(event_id, group_id)
+    enrollment = Enrollment.get_by_event_and_user(event_id, group_id)
     if not enrollment:
         raise NotExist()
 
@@ -700,7 +711,7 @@ def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> None
     :param: msg_type of the message, reservation (True) or cancellation (False)
     :return: None, otherwise 404
     """
-    event = Event.get_event_by_id(event_id)
+    event = Event.get_by_id(event_id)
     if not event:
         raise NotExist()
     creator = event.creator

@@ -41,11 +41,22 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
-import {addDays, addMinutes, endOfWeek} from "date-fns";
+import {addDays, addMinutes, endOfWeek, setISOWeek} from "date-fns";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
-import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
-import {closest, to2, toPromise} from "../../util/utils";
+import {
+    GenericPluginMarkup,
+    getTopLevelFields,
+    nullable,
+    withDefault,
+} from "../attributes";
+import {
+    capitalizeFirstLetter,
+    closest,
+    DateFromString,
+    to2,
+    toPromise,
+} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
@@ -90,6 +101,7 @@ function ceilToNearest(
 
 const EventTemplate = t.type({
     title: nullable(t.string),
+    location: nullable(t.string),
     bookers: t.array(t.string),
     setters: t.array(t.string),
     tags: t.array(t.string),
@@ -99,25 +111,34 @@ const EventTemplate = t.type({
 const FilterOptions = t.type({
     groups: nullable(t.array(t.string)),
     tags: nullable(t.array(t.string)),
-    fromDate: nullable(t.string), // TODO: figure out correct type for dates
-    toDate: nullable(t.string),
+    fromDate: nullable(DateFromString),
+    toDate: nullable(DateFromString),
+    showBooked: withDefault(t.boolean, true),
+    includeOwned: withDefault(t.boolean, false),
 });
+
+const CalendarViewMode = t.union([
+    t.literal("month"),
+    t.literal("week"),
+    t.literal("day"),
+]);
 
 const ViewOptions = t.type({
     dayStartHour: t.number,
     dayEndHour: t.number,
     segmentDuration: t.number,
+    date: nullable(DateFromString),
+    week: nullable(t.number),
+    mode: CalendarViewMode,
 });
 
 const CalendarMarkup = t.intersection([
     t.partial({
         filter: FilterOptions,
         eventTemplates: t.record(t.string, EventTemplate),
-    }),
-    GenericPluginMarkup,
-    t.type({
         viewOptions: ViewOptions,
     }),
+    GenericPluginMarkup,
 ]);
 
 const CalendarFields = t.intersection([
@@ -185,7 +206,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
         },
     ],
     template: `
-        <tim-calendar-header [locale]="locale" [(view)]="view" [(viewDate)]="viewDate">
+        <tim-calendar-header [locale]="locale" [(view)]="viewMode" [(viewDate)]="viewDate">
         </tim-calendar-header>
         <div class="row text-center">
             <div class="col-md-4">
@@ -237,7 +258,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
             </div>
         </ng-template>
 
-        <div [ngSwitch]="view">
+        <div [ngSwitch]="viewMode">
             <mwl-calendar-month-view
                     *ngSwitchCase="'month'"
                     [viewDate]="viewDate"
@@ -285,7 +306,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
             >
             </mwl-calendar-day-view>
         </div>
-        <tim-time-view-selector [style.visibility]="view == 'month' ? 'hidden' : 'visible'"
+        <tim-time-view-selector [style.visibility]="viewMode == 'month' ? 'hidden' : 'visible'"
                                 [(segmentDuration)]="segmentDuration"
                                 [(startHour)]="dayStartHour"
                                 [(endHour)]="dayEndHour">
@@ -311,9 +332,8 @@ export class CalendarComponent
 {
     exportDone: string = "";
     icsURL: string = "";
-    view: CalendarView = CalendarView.Week;
-
-    viewDate: Date = new Date();
+    viewMode!: CalendarView;
+    viewDate!: Date;
 
     events: TIMCalendarEvent[] = [];
 
@@ -421,7 +441,7 @@ export class CalendarComponent
     changeToDay(date: Date) {
         this.clickedDate = date;
         this.viewDate = date;
-        this.view = CalendarView.Week;
+        this.viewMode = CalendarView.Week;
     }
 
     /**
@@ -431,7 +451,7 @@ export class CalendarComponent
     viewDay(date: Date) {
         this.clickedDate = date;
         this.viewDate = date;
-        this.view = CalendarView.Day;
+        this.viewMode = CalendarView.Day;
     }
 
     /**
@@ -476,8 +496,11 @@ export class CalendarComponent
         segmentElement: HTMLElement
     ) {
         let title: string | null = "";
+        let location: string | null = "";
         if (this.markup.eventTemplates) {
             title = this.markup.eventTemplates[this.selectedEvent].title;
+            location =
+                this.markup.eventTemplates[this.selectedEvent].location ?? "";
         }
         if (!title) {
             title = this.selectedEvent;
@@ -493,7 +516,7 @@ export class CalendarComponent
                 signup_before: new Date(segment.date),
                 description: "",
                 enrollments: 0,
-                location: "",
+                location: location,
                 maxSize: 1, // TODO: temporary solution
                 booker_groups: [],
                 editEnabled: this.editEnabled,
@@ -635,13 +658,11 @@ export class CalendarComponent
      * Returns empty markup
      */
     getDefaultMarkup() {
-        return {
-            viewOptions: {
-                dayStartHour: 8,
-                dayEndHour: 20,
-                segmentDuration: 60,
-            },
-        };
+        return {};
+    }
+
+    private get viewOptions() {
+        return this.markup.viewOptions!;
     }
 
     /**
@@ -651,21 +672,69 @@ export class CalendarComponent
         this.icsURL = "";
         super.ngOnInit();
 
+        this.viewMode =
+            CalendarView[capitalizeFirstLetter(this.viewOptions.mode)];
+        if (this.viewOptions.date) {
+            this.viewDate = this.viewOptions.date;
+        } else if (this.viewOptions.week) {
+            this.viewDate = setISOWeek(new Date(), this.viewOptions.week);
+        } else {
+            this.viewDate = new Date();
+        }
+
         this.segmentDuration = closest(
             TIME_VIEW_SLOT_SIZES,
-            this.markup.viewOptions.segmentDuration
+            this.viewOptions.segmentDuration
         );
         this.dayStartHour = closest(
             TIME_VIEW_MORNING_HOURS,
-            this.markup.viewOptions.dayStartHour
+            this.viewOptions.dayStartHour
         );
         this.dayEndHour = closest(
             TIME_VIEW_EVENING_HOURS,
-            this.markup.viewOptions.dayEndHour
+            this.viewOptions.dayEndHour
         );
 
         this.initEventTypes();
-        void this.loadEvents();
+        if (!this.isPreview()) {
+            void this.loadEvents();
+        }
+    }
+
+    private get filterParams() {
+        const res: Record<string, string | string[]> = {};
+        if (!this.markup.filter) {
+            return res;
+        }
+        if (
+            this.markup.filter.groups !== null &&
+            this.markup.filter.groups !== undefined
+        ) {
+            res.groups = this.markup.filter.groups;
+            if (res.groups.length === 0) {
+                // Special value to denote no tags if an empty tag list was given
+                res.groups = [""];
+            }
+        }
+        if (
+            this.markup.filter.tags !== null &&
+            this.markup.filter.tags !== undefined
+        ) {
+            res.tags = this.markup.filter.tags;
+            if (res.tags.length === 0) {
+                // Special value to denote no tags if an empty tag list was given
+                res.tags = [""];
+            }
+        }
+        if (this.markup.filter.fromDate) {
+            res.fromDate = this.markup.filter.fromDate.toISOString();
+        }
+        if (this.markup.filter.toDate) {
+            res.toDate = this.markup.filter.toDate.toISOString();
+        }
+        res.showBooked = this.markup.filter.showBooked.toString();
+        res.includeOwned = this.markup.filter.includeOwned.toString();
+        return res;
     }
 
     /**
@@ -674,7 +743,9 @@ export class CalendarComponent
      */
     private async loadEvents() {
         const result = await toPromise(
-            this.http.get<TIMCalendarEvent[]>("/calendar/events")
+            this.http.get<TIMCalendarEvent[]>("/calendar/events", {
+                params: this.filterParams,
+            })
         );
         if (result.ok) {
             result.result.forEach((event) => {
@@ -715,33 +786,26 @@ export class CalendarComponent
      * Handles sending multiple events at the same time.
      */
     async saveChanges() {
-        let eventsToAdd = this.events.filter((event: TIMCalendarEvent) =>
-            this.isTempEvent(event)
-        );
-
-        const eventGroups: string[] = [];
-        const bookerGroups: string[] = [];
-        const setterGroups: string[] = [];
-        let capacity: number = 0;
-        if (this.markup.eventTemplates) {
-            this.markup.eventTemplates[this.selectedEvent].bookers.forEach(
-                (group) => {
-                    bookerGroups.push(group);
-                    eventGroups.push(group);
-                }
-            );
-            this.markup.eventTemplates[this.selectedEvent].setters.forEach(
-                (group) => {
-                    setterGroups.push(group);
-                    eventGroups.push(group);
-                }
-            );
-            capacity = this.markup.eventTemplates[this.selectedEvent].capacity;
+        const eventsToAdd = this.events.filter((e) => this.isTempEvent(e));
+        if (!eventsToAdd) {
+            return;
         }
 
-        if (eventsToAdd.length > 0) {
-            eventsToAdd = eventsToAdd.map<TIMCalendarEvent>((event) => {
-                return {
+        let bookerGroups: string[] = [];
+        let setterGroups: string[] = [];
+        let capacity: number = 0;
+        let tags: string[] = [];
+        if (this.markup.eventTemplates) {
+            const template = this.markup.eventTemplates[this.selectedEvent];
+            bookerGroups = template.bookers;
+            setterGroups = template.setters;
+            capacity = template.capacity;
+            tags = template.tags;
+        }
+
+        const result = await toPromise(
+            this.http.post<TIMCalendarEvent[]>("/calendar/events", {
+                events: eventsToAdd.map((event) => ({
                     id: event.id,
                     title: event.title,
                     location: event.meta!.location,
@@ -751,65 +815,57 @@ export class CalendarComponent
                     signup_before: new Date(event.meta!.signup_before),
                     booker_groups: bookerGroups,
                     setter_groups: setterGroups,
-                    event_groups: eventGroups,
                     max_size: capacity,
-                };
-            });
-            const result = await toPromise(
-                this.http.post<TIMCalendarEvent[]>("/calendar/events", {
-                    events: eventsToAdd,
-                })
-            );
-            if (result.ok) {
-                // Remove added events with wrong id from the event list
-                eventsToAdd.forEach((event) => {
-                    this.events.splice(this.events.indexOf(event), 1);
-                });
-                // Push new events with updated id to the event list
-                result.result.forEach((event) => {
-                    if (event.end) {
-                        this.events.push({
-                            id: event.id,
-                            title: event.title,
-                            start: new Date(event.start),
-                            end: new Date(event.end),
-                            meta: {
-                                tmpEvent: false,
-                                editEnabled: this.editEnabled,
-                                enrollments: event.meta!.enrollments,
-                                description: event.meta!.description,
-                                maxSize: event.meta!.maxSize,
-                                location: event.meta!.location,
-                                booker_groups: [],
-                                signup_before: new Date(
-                                    event.meta!.signup_before
-                                ),
-                            },
-                            resizable: {
-                                beforeStart: true,
-                                afterEnd: true,
-                            },
-                        });
-                    }
-                });
-                this.refresh();
-            } else {
-                if (result.result.error.error) {
-                    await showMessageDialog(
-                        $localize`Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
-                    );
-                } else {
-                    await showMessageDialog(
-                        $localize`Something went wrong. TIM admins have been notified about the issue.`
-                    );
+                    tags: tags,
+                })),
+            })
+        );
+        if (result.ok) {
+            // Remove temporary events as they have been added
+            this.events = this.events.filter((e) => !this.isTempEvent(e));
+            const addedEvents = result.result;
+            for (const event of addedEvents) {
+                if (!event.end) {
+                    continue;
                 }
-                this.events.forEach((event) => {
-                    if (this.isTempEvent(event)) {
-                        this.events.splice(this.events.indexOf(event));
-                    }
+                this.events.push({
+                    id: event.id,
+                    title: event.title,
+                    start: new Date(event.start),
+                    end: new Date(event.end),
+                    meta: {
+                        tmpEvent: false,
+                        editEnabled: this.editEnabled,
+                        enrollments: event.meta!.enrollments,
+                        description: event.meta!.description,
+                        maxSize: event.meta!.maxSize,
+                        location: event.meta!.location,
+                        booker_groups: [],
+                        signup_before: new Date(event.meta!.signup_before),
+                    },
+                    resizable: {
+                        beforeStart: true,
+                        afterEnd: true,
+                    },
                 });
-                this.refresh();
             }
+            this.refresh();
+        } else {
+            if (result.result.error.error) {
+                await showMessageDialog(
+                    $localize`Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
+                );
+            } else {
+                await showMessageDialog(
+                    $localize`Something went wrong. TIM admins have been notified about the issue.`
+                );
+            }
+            this.events.forEach((event) => {
+                if (this.isTempEvent(event)) {
+                    this.events.splice(this.events.indexOf(event));
+                }
+            });
+            this.refresh();
         }
     }
 

@@ -22,6 +22,9 @@ class TimJsonEncoder(json.JSONEncoder):
                 o = o.replace(tzinfo=datetime.timezone.utc)
             return o.isoformat()
 
+        if isinstance(o, datetime.date):
+            return o.isoformat()
+
         if isinstance(o, (datetime.timedelta, Duration)):
             return duration_isoformat(o)
 

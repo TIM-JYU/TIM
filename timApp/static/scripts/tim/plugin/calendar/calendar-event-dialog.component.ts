@@ -13,6 +13,7 @@ import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {CommonModule, formatDate} from "@angular/common";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {DialogModule} from "../../ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {AngularDialogComponent} from "../../ui/angulardialog/angular-dialog-component.directive";
@@ -49,31 +50,32 @@ import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
                         <label i18n for="location" class="col-sm-3 control-label">Location</label>
                         <div class="col-sm-8">
                             <input type="text"
-                            maxlength="120"
+                                   maxlength="120"
                                    [(ngModel)]="location" #ngModelLocation="ngModel"
                                    (ngModelChange)="setMessage()"
                                    id="location"
                                    placeholder="Set location" i18n-placeholder
                                    name="location"
                                    class="form-control"
-                                   [disabled]="!isEditEnabled()" />
+                                   [disabled]="!isEditEnabled()"/>
                         </div>
                         <label i18n for="maxSize" class="col-sm-3 control-label">Capacity</label>
                         <div class="col-sm-3">
                             <input type="number"
-                            min="0" max="2000" [(ngModel)]="maxSize"
+                                   min="0" max="2000" [(ngModel)]="maxSize"
                                    #ngModelMaxSize="ngModel"
-                            (ngModelChange)="setMessage()"
-                            id="maxSize" name="maxSize" class="form-control"
-                            [disabled] ="!isEditEnabled()">
+                                   (ngModelChange)="setMessage()"
+                                   id="maxSize" name="maxSize" class="form-control"
+                                   [disabled]="!isEditEnabled()">
                         </div>
                     </div>
                     <div class="form-group" [hidden]="isPersonalEvent()">
-                            <label i18n for="capacity" class="col-sm-3 control-label">Capacity</label>
-                            <div class="col-sm-8">
-                                <b><abbr title="Amount of enrolled users">{{getEventEnrollments()}}</abbr> / <abbr title="Maximum capacity of the event">{{getEventCapacity()}}</abbr></b>
-                            </div>
+                        <label i18n for="capacity" class="col-sm-3 control-label">Capacity</label>
+                        <div class="col-sm-8">
+                            <b><abbr title="Amount of enrolled users">{{getEventEnrollments()}}</abbr> / <abbr
+                                    title="Maximum capacity of the event">{{getEventCapacity()}}</abbr></b>
                         </div>
+                    </div>
                     <div [hidden]="multipleBookers()">
                         <div class="form-group" [hidden]="!userIsManager() || !eventHasBookings()">
                             <label i18n for="booker" class="col-sm-3 control-label">Booker</label>
@@ -102,14 +104,15 @@ import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
                     </div>
                     <div [hidden]="hideBookerListLink()" class="form-group">
                         <label i18n for="bookers" class="col-sm-3 control-label">Bookers</label>
-                        <a i18n href="/calendar/events/{{this.data.id}}/bookers" target="_blank" class="col-sm-9">Show list
+                        <a i18n href="/calendar/events/{{this.data.id}}/bookers" target="_blank" class="col-sm-9">Show
+                            list
                             of all bookers</a>
                     </div>
 
                     <div class="form-group">
                         <div class="col-sm-4">
-                        <label i18n for="startDate" class="dialog-label col-sm-8 control-label">From</label>
-                        
+                            <label i18n for="startDate" class="dialog-label col-sm-8 control-label">From</label>
+
                             <div class="input-group">
                                 <input type="date"
                                        required
@@ -130,8 +133,8 @@ import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
                                 >
                             </div>
                         </div>
-                    <div class="col-sm-4">
-                        <label i18n for="endDate" class="dialog-label col-sm-6 control-label">To</label>
+                        <div class="col-sm-4">
+                            <label i18n for="endDate" class="dialog-label col-sm-6 control-label">To</label>
                             <div class="input-group">
                                 <input type="date"
                                        required
@@ -151,7 +154,8 @@ import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
                             </div>
                         </div>
                         <div class="col-sm-4" [hidden]="!isEditEnabled() || isPersonalEvent()">
-                        <label i18n for="bookingStopDate" class="dialog-label col-sm-12 control-label">Book before</label>
+                            <label i18n for="bookingStopDate" class="dialog-label col-sm-12 control-label">Book
+                                before</label>
                             <div class="input-group">
 
                                 <input type="date"
@@ -161,7 +165,7 @@ import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
                                        id="bookingStopDate" name="bookingStopDate"
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
-                                       >
+                                >
 
                                 <input type="time"
                                        required
@@ -170,48 +174,54 @@ import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
                                        id="bookingStopTime" name="bookingStopTime"
                                        class="form-control"
                                        [disabled]="!isEditEnabled()"
-                                        >
-                            </div>
+                                >
                             </div>
                         </div>
+                    </div>
                     <div class="form-group">
                         <div class="input-group">
                             <div class="col-sm-12">
-                            <label i18n class="col-sm-12 control-label" for="description">Event description</label>
-                            <textarea maxlength="1020" id="description" 
-                             [(ngModel)]="description" #ngModelDescription="ngModel"
-                             (ngModelChange)="setMessage()"
-                             name="description"
-                             class="form-control"
-                             [disabled]="!isEditEnabled()">
+                                <label i18n class="col-sm-12 control-label" for="description">Event description</label>
+                                <textarea maxlength="1020" id="description"
+                                          [(ngModel)]="description" #ngModelDescription="ngModel"
+                                          (ngModelChange)="setMessage()"
+                                          name="description"
+                                          class="form-control"
+                                          [disabled]="!isEditEnabled()">
                             </textarea>
-                        </div>
-                    <div class="col-sm-12" [hidden] ="hideBookerMessage()">
-                        <label i18n for="bookerMessage" class="col-sm-12 control-label">Message (optional)</label>
-                            <input type="text" [disabled] = "hideBookerMessage()"
-                                   [(ngModel)]="messageText"
-                                   (ngModelChange)="setMessage()"
-                                    name="messageText"
-                                    class="form-control">
+                            </div>
+                            <div class="col-sm-12" [hidden]="hideBookerMessage()">
+                                <label i18n for="bookerMessage" class="col-sm-12 control-label">Message
+                                    (optional)</label>
+                                <input type="text" [disabled]="hideBookerMessage()"
+                                       [(ngModel)]="messageText"
+                                       (ngModelChange)="setMessage()"
+                                       name="messageText"
+                                       class="form-control">
 
-                        <button i18n class="btn timButton message-btn" type="button" [disabled]="messageText.length<1"
+                                <button i18n class="btn timButton message-btn" type="button"
+                                        [disabled]="messageText.length<1"
 
-                        (click)="updateBookMessage()">Send message
-                        </button>
-                    </div>
+                                        (click)="updateBookMessage()">Send message
+                                </button>
+                            </div>
                         </div>
-                        <div [(ngModel)]="bookerMessage" [hidden]="hideBookerMessage()" name="bookerMessage" ngDefaultControl class="col-sm-12" style="white-space: pre-line">{{bookerMessage}}
+                        <div [(ngModel)]="bookerMessage" [hidden]="hideBookerMessage()" name="bookerMessage"
+                             ngDefaultControl class="col-sm-12" style="white-space: pre-line">{{bookerMessage}}
                         </div>
                     </div>
                 </form>
-                <tim-alert *ngIf="(maxSize>2000 || maxSize<0) && ngModelMaxSize.dirty" >
-                    <ng-container i18n >Event capacity must be 0-2000</ng-container>
+                <tim-alert *ngIf="(maxSize>2000 || maxSize<0) && ngModelMaxSize.dirty">
+                    <ng-container i18n>Event capacity must be 0-2000</ng-container>
                 </tim-alert>
-                <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['bookingEndInvalid']">
-                <ng-container i18n *ngIf="form.errors?.['bookingEndInvalid']">Booking must be done before the event</ng-container>
+                <tim-alert *ngIf="form.invalid" severity="danger" [hidden]="!form.errors?.['bookingEndInvalid']">
+                    <ng-container i18n *ngIf="form.errors?.['bookingEndInvalid']">Booking must be done before the
+                        event
+                    </ng-container>
                 </tim-alert>
-                <tim-alert *ngIf="form.invalid" severity="danger" [hidden] ="!form.errors?.['dateInvalid']">
-                <ng-container i18n *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.</ng-container>
+                <tim-alert *ngIf="form.invalid" severity="danger" [hidden]="!form.errors?.['dateInvalid']">
+                    <ng-container i18n *ngIf="form.errors?.['dateInvalid']">Start of the event must be before end.
+                    </ng-container>
                 </tim-alert>
                 <tim-alert *ngIf="ngModelTitle.invalid && ngModelTitle.dirty" severity="danger">
                     <ng-container i18n *ngIf="ngModelTitle.errors?.['required']">
@@ -233,34 +243,41 @@ import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
                 <span [hidden]="hideEventFulLSpan()" style="float: left; margin-left: 10px">
                     <b i18n>The event is full.</b>
                 </span>
-                <span [hidden]="!userHasBooked()" style="float: left">
+                    <span [hidden]="!userHasBooked()" style="float: left">
                     <b i18n>You have booked this event.</b>
                 </span>
-            </div>
+                </div>
                 <div class="col-sm-12 row">
-                    <button i18n class="btn timButton col-sm-4" type="button" [hidden]="!userHasBooked() || isEditEnabled()" (click)="cancelBooking()"
-                        style="background-color: red; float: left">
-                    Cancel Booking
+                    <button i18n class="btn timButton btn-danger col-sm-4" type="button"
+                            [hidden]="!userHasBooked() || isEditEnabled()" (click)="cancelBooking()"
+                            style="float: left">
+                        Cancel Booking
                     </button>
                     <button i18n class="btn timButton btn-danger col-sm-2" type="button" style="float: left"
-                        (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!isEditEnabled()">
-                    Delete
+                            (click)="deleteEvent()" [disabled]="form.invalid" [hidden]="!isEditEnabled()">
+                        Delete
                     </button>
-                    <button i18n class="btn timButton col-sm-4" type="button" style="float: left"
-                        (click)="bookEvent()" [disabled]="eventIsFull() || !eventCanBeBooked()" [hidden]="hideBookingButton()">
-                    Book event
-                    </button>
+                    <span *ngIf="showBookingButton()" [tooltip]="eventBookState.reason" class="booking-button" container="body">
+                        <button i18n
+                                class="btn timButton" type="button"
+                                (click)="bookEvent()"
+                                [disabled]="!eventBookState.canBook">
+                            Book event
+                        </button>    
+                    </span>
                     <button i18n class="btn btn-default col-sm-2" type="button" style="float:right" (click)="dismiss()">
-                     Cancel
+                        Cancel
                     </button>
-                    <button i18n class="btn timButton col-sm-2" type="submit" style="float:right" (click)="saveChanges()" [disabled]="form.invalid"
-                        [hidden]="!isEditEnabled()">
-                    Save
+                    <button i18n class="btn timButton col-sm-2" type="submit" style="float:right"
+                            (click)="saveChanges()" [disabled]="form.invalid"
+                            [hidden]="!isEditEnabled()">
+                        Save
                     </button>
                 </div>
             </ng-container>
         </tim-dialog-frame>
     `,
+    styleUrls: ["./calendar-event-dialog.component.scss"],
 })
 export class CalendarEventDialogComponent extends AngularDialogComponent<
     TIMCalendarEvent,
@@ -284,6 +301,9 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     bookerMessage = "";
     description = "";
     userBooked = false;
+    eventBookState: {canBook: boolean; reason?: string} = {
+        canBook: true,
+    };
 
     constructor(private http: HttpClient) {
         super();
@@ -446,6 +466,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.endDate = endDateTime[0];
             this.endTime = endDateTime[1].split(".")[0];
         }
+        this.initEventBookState();
     }
 
     /**
@@ -522,7 +543,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         ) {
             return;
         }
-        if (!this.eventCanBeBooked()) {
+        if (!this.eventBookTimeOpen()) {
             return;
         }
 
@@ -649,10 +670,26 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      * Compares the current time to the time set by the maker of an event as the end time/date for booking.
      * Returns true if the current time allows the booking of the event.
      */
-    eventCanBeBooked() {
+    eventBookTimeOpen() {
         const nowDate = new Date();
         const bookBefore = new Date(this.data.meta!.signup_before);
         return bookBefore.getTime() > nowDate.getTime();
+    }
+
+    initEventBookState() {
+        if (this.eventIsFull()) {
+            this.eventBookState = {
+                canBook: false,
+                reason: $localize`The event is full`,
+            };
+        } else if (!this.eventBookTimeOpen()) {
+            this.eventBookState = {
+                canBook: false,
+                reason: $localize`The booking time is over or the event has already passed`,
+            };
+        } else {
+            this.eventBookState = {canBook: true, reason: undefined};
+        }
     }
 
     /**
@@ -679,14 +716,15 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     userHasBooked() {
         this.userBooked = false;
         const bookers = this.data.meta!.booker_groups;
-        bookers.forEach((booker) => {
-            Users.getCurrent().groups.forEach((userGroup) => {
-                if (booker.name == userGroup.name) {
+        for (const booker1 of bookers) {
+            for (const userGroup of Users.getCurrent().groups) {
+                if (booker1.name == userGroup.name) {
                     this.userBooked = true;
+                    return true;
                 }
-            });
-        });
-        return this.userBooked;
+            }
+        }
+        return false;
     }
 
     /**
@@ -734,13 +772,12 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      * True if max size of the event is 0.
      * If not: true if editing is enabled or user has booked the event. Otherwise, false.
      */
-    hideBookingButton() {
-        if (this.data.meta) {
-            if (this.data.meta.maxSize == 0) {
-                return true;
-            }
-        }
-        return this.isEditEnabled() || this.userHasBooked();
+    showBookingButton() {
+        return (
+            (!this.data.meta || this.data.meta.maxSize != 0) &&
+            !this.isEditEnabled() &&
+            !this.userHasBooked()
+        );
     }
 
     /**
@@ -773,6 +810,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         CommonModule,
         HttpClientModule,
         TimCalendarModule,
+        TooltipModule.forRoot(),
     ],
     exports: [CalendarEventDialogComponent],
 })

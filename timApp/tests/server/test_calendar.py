@@ -1,9 +1,10 @@
 """Server tests for TIM-calendar"""
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.user.user import User
 
 
 class CalendarTest(TimRouteTest):
-    def post_event(self, event_id: int):
+    def post_event(self, event_id: int, user: User):
         """Helper function to post a basic event"""
 
         self.json_post(
@@ -18,9 +19,9 @@ class CalendarTest(TimRouteTest):
                         "start": "2022-05-18T07:20:00+00:00",
                         "end": "2022-05-18T07:40:00+00:00",
                         "signup_before": "2022-05-18T07:20:00+00:00",
-                        "booker_groups": [""],
-                        "setter_groups": [""],
-                        "event_groups": ["", ""],
+                        "booker_groups": [user.name],
+                        "setter_groups": [user.name],
+                        "tags": [],
                         "max_size": 1,
                     }
                 ]
@@ -39,7 +40,7 @@ class CalendarTest(TimRouteTest):
         )
 
         event_id = 1
-        self.post_event(event_id)
+        self.post_event(event_id, self.test_user_1)
         self.get(
             f"calendar/events",
             expect_status=200,
@@ -74,7 +75,7 @@ class CalendarTest(TimRouteTest):
         self.login_test1()
         self.get(f"/calendar/events", expect_status=200, expect_content=[])
         event_id = 2
-        self.post_event(event_id)
+        self.post_event(event_id, self.test_user_1)
         self.json_put(
             f"/calendar/events/{event_id}",
             {
@@ -123,7 +124,7 @@ class CalendarBookTest(TimRouteTest):
         """Event is created by Test user 2 and booked by Test user 1."""
         self.login_test2()
         event_id = 1
-        self.post_event_to_book(event_id)
+        self.post_event_to_book(event_id, self.test_user_2)
 
         self.get(
             f"/calendar/events",
@@ -169,7 +170,7 @@ class CalendarBookTest(TimRouteTest):
         )
         self.logout()
 
-    def post_event_to_book(self, event_id):
+    def post_event_to_book(self, event_id, user):
         """Helper function to post a basic event to book"""
         self.json_post(
             f"/calendar/events",
@@ -183,9 +184,9 @@ class CalendarBookTest(TimRouteTest):
                         "start": "2023-05-18T07:20:00+00:00",
                         "end": "2023-05-18T07:40:00+00:00",
                         "signup_before": "2023-05-18T07:20:00+00:00",
-                        "booker_groups": [""],
-                        "setter_groups": [""],
-                        "event_groups": ["", ""],
+                        "booker_groups": [user.name],
+                        "setter_groups": [user.name],
+                        "tags": [],
                         "max_size": 2,
                     }
                 ]

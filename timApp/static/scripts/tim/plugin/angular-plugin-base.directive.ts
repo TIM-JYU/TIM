@@ -26,7 +26,7 @@ import {IAnswerSaveEvent} from "../answer/answerbrowser3";
 export abstract class AngularPluginBase<
         MarkupType extends IGenericPluginMarkup,
         A extends IGenericPluginTopLevelFields<MarkupType>,
-        T extends Type<A>
+        T extends Type<A, unknown>
     >
     extends PluginBaseCommon
     implements OnInit

@@ -1,0 +1,12 @@
+.booking-button {
+  width: 30%;
+  float: left;
+
+  button{
+    width: 100%;
+
+    &[disabled] {
+      pointer-events: none;
+    }
+  }
+}
