@@ -67,8 +67,15 @@ class FilterOptions:
     toDate: datetime | None = None
     """Date filter. Show events only ending before this date."""
 
-    includeBooked: bool = False
+    includeBooked: bool = True
     """Whether to show events that the user is already booked in"""
+
+    def __post_init__(self):
+        # Special case: if the tags list has only one empty string, treat it as empty list
+        # This allows to handle query parameter like &tags= to specify
+        # an empty list (as empty string tags are not allowed)
+        if self.tags is not None and len(self.tags) == 1 and not self.tags[0]:
+            self.tags = []
 
     def to_json(self) -> dict:
         return asdict(self)
@@ -292,7 +299,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
     event_filter |= Event.event_id.in_(subquery_event_groups)
 
     # Filter out any tags and groups
-    if filter_opts.tags:
+    if filter_opts.tags is not None:
         q = q.join(EventTag, Event.tags)
         event_filter &= EventTag.tag.in_(filter_opts.tags)
     if filter_opts.groups:
@@ -426,7 +433,15 @@ def add_events(events: list[CalendarEvent]) -> Response:
     }
     event_ugs = UserGroup.query.filter(UserGroup.name.in_(event_ug_names)).all()
     event_ugs_dict = {ug.name: ug for ug in event_ugs}
-    event_tags = set([tag for event in events if event.tags for tag in event.tags])
+    event_tags = set(
+        [
+            tag.strip()
+            for event in events
+            if event.tags
+            for tag in event.tags
+            if tag.strip()
+        ]
+    )
     event_tags_dict = {tag.tag: tag for tag in EventTag.get_or_create(event_tags)}
 
     def get_event_groups(

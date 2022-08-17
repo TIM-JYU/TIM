@@ -106,7 +106,7 @@ const FilterOptions = t.type({
     tags: nullable(t.array(t.string)),
     fromDate: nullable(DateFromString),
     toDate: nullable(DateFromString),
-    includeBooked: withDefault(t.boolean, false),
+    includeBooked: withDefault(t.boolean, true),
 });
 
 const ViewOptions = t.type({
@@ -682,8 +682,15 @@ export class CalendarComponent
         if (this.markup.filter.groups) {
             res.groups = this.markup.filter.groups;
         }
-        if (this.markup.filter.tags) {
+        if (
+            this.markup.filter.tags !== null &&
+            this.markup.filter.tags !== undefined
+        ) {
             res.tags = this.markup.filter.tags;
+            if (res.tags.length === 0) {
+                // Special value to denote no tags if an empty tag list was given
+                res.tags = [""];
+            }
         }
         if (this.markup.filter.fromDate) {
             res.fromDate = this.markup.filter.fromDate.toISOString();
@@ -694,6 +701,7 @@ export class CalendarComponent
         if (this.markup.filter.includeBooked) {
             res.includeBooked = this.markup.filter.includeBooked.toString();
         }
+        console.log(res);
         return res;
     }
 
