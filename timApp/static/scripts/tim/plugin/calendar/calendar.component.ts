@@ -112,7 +112,8 @@ const FilterOptions = t.type({
     tags: nullable(t.array(t.string)),
     fromDate: nullable(DateFromString),
     toDate: nullable(DateFromString),
-    includeBooked: withDefault(t.boolean, true),
+    showBooked: withDefault(t.boolean, true),
+    includeOwned: withDefault(t.boolean, false),
 });
 
 const CalendarViewMode = t.union([
@@ -727,9 +728,8 @@ export class CalendarComponent
         if (this.markup.filter.toDate) {
             res.toDate = this.markup.filter.toDate.toISOString();
         }
-        if (this.markup.filter.includeBooked) {
-            res.includeBooked = this.markup.filter.includeBooked.toString();
-        }
+        res.showBooked = this.markup.filter.showBooked.toString();
+        res.includeOwned = this.markup.filter.includeOwned.toString();
         return res;
     }
 
