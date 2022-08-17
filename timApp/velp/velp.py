@@ -9,9 +9,11 @@ the document.
 :version: 1.0.0
 
 """
-
 from flask import Blueprint, Response
 from flask import request
+from timApp.auth.auth_models import BlockAccess
+
+from timApp.user.usergroup import UserGroup
 
 from timApp.auth.accesshelper import (
     verify_logged_in,
@@ -32,11 +34,11 @@ from timApp.auth.sessioninfo import (
 from timApp.document.docentry import DocEntry, get_documents_in_folder, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
-from timApp.item.manage import del_document, soft_delete_document
+from timApp.item.manage import soft_delete_document
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.users import get_rights_holders, remove_access
-from timApp.user.userutils import grant_access
+from timApp.user.userutils import grant_access, get_usergroup_by_name
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import (
     json_response,
@@ -766,14 +768,20 @@ def create_velp_group_route(doc_id: int) -> Response:
                     velp_group_name, original_owner, new_group_path
                 )
                 rights = get_rights_holders(target.id)
-                # Copy all rights but view
-                # TODO is there a reason not to grant view rights? It seems logical to show velp groups (and velps)
-                #      attached to the document to all users with access to the document.
-                for right in rights:
-                    if not right.atype.name == "view":
-                        grant_access(
-                            right.usergroup, velp_group.block, right.atype.to_enum()
-                        )
+                # Don't copy view rights for Folder velp groups
+                if target_type == 2:
+                    # Copy all rights but view
+                    # TODO is there a reason not to grant view rights? It seems logical to show velp groups (and velps)
+                    #      attached to the document to all users with access to the document.
+                    for right in rights:
+                        if not right.atype.name == "view":
+                            grant_access(
+                                right.usergroup, velp_group.block, right.access_type
+                            )
+                else:
+                    # Copy all document rights to document velp group
+                    if target_type == 1:
+                        add_velp_group_perms(target.document.id, velp_group)
             else:
                 raise RouteException(f"Could not find document or folder.")
         else:
@@ -961,8 +969,53 @@ def get_folder_velp_groups(folder: str, u: User) -> list[DocEntry]:
     )
 
 
+def add_velp_group_perms(doc_id: int, vg: VelpGroup) -> None:
+    """Add document's permissions to document velp group"""
+    rights = get_rights_holders(doc_id)
+    for right in rights:
+        grant_access(right.usergroup, vg.block, right.access_type)
+
+
 def remove_velp_group_perms(group_id: int) -> None:
+    """Remove all permissions from velp group"""
     vg = get_doc_or_abort(group_id)
     rights = get_rights_holders(vg.id)
     for right in rights:
         remove_access(right.usergroup, vg.block, right.access_type)
+
+
+def remove_user_velp_group_perms(
+    ug: UserGroup, vg: VelpGroup, access_type: AccessType | None = None
+) -> None:
+    """Remove a specific user's permissions to the specified Velp Group
+
+    :param ug: UserGroup whose permissions should be revoked.
+    :param vg: Velp Group from which the permissions should be removed.
+    :param access_type: AccessType to be removed, if None remove all AccessTypes.
+    """
+    rights = get_rights_holders(vg.id)
+    if access_type:
+        rights = list(filter(lambda r: r.access_type == access_type, rights))
+    for right in rights:
+        if ug.id == right.usergroup.id:
+            remove_access(right.usergroup, vg.block, right.access_type)
+
+
+def remove_document_velp_group_perms_for_user(
+    doc_id: int, ug: UserGroup, access_type: AccessType | None = None
+) -> str | None:
+    """Remove a specific user's permissions to all document velp groups for a specific document
+
+    :param doc_id: ID of the document from which the permissions should be removed.
+    :param ug: UserGroup whose permissions should be revoked.
+    :param access_type: AccessType to be removed, if None remove all AccessTypes.
+    :return: Error message, or None if the operation was successful.
+    """
+    velp_groups = get_groups_from_document_table(doc_id, ug.id)
+    err = None
+    if velp_groups:
+        for vg in velp_groups:
+            remove_user_velp_group_perms(ug, vg, access_type)
+    else:
+        err = f"Document does not have any velp groups."
+    return err
