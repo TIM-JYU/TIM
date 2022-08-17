@@ -435,7 +435,12 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                         </div>
                     </ng-container>
                     <ng-container>
-                        <span class="form-label" i18n>Machine translator API Keys</span>
+                        <span class="form-label">
+                            <ng-container i18n>Machine translator API Keys</ng-container>
+                            <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB#adding-a-translator-authentication-key">
+                                <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;" title="Help with machine translation setup" i18n-title></span>
+                            </a>
+                        </span>
                         <div class="contact-collection">
                             <div class="contact-info" *ngFor="let APIkey of userAPIKeys">
                                 <input type="text" class="form-control" [value]="APIkey.APIkey" disabled>

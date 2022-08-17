@@ -5948,14 +5948,6 @@
           <context context-type="linenumber">442,444</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="888422761114341906" datatype="html">
-        <source>Machine translator API Keys</source>
-        <target state="translated">Konekääntäjän API-avaimet</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">434</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5084737096054125136" datatype="html">
         <source> Add new machine translator API key </source>
         <target state="translated"> Lisää uusi konekääntäjän API-avain </target>
@@ -6720,6 +6712,26 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">688</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3235193943641693247" datatype="html">
+        <source>Help with machine translation setup</source>
+        <target state="translated">Ohjeet konekääntäjään käyttöönottoon</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/add-api-key-dialog.component.ts</context>
+          <context context-type="linenumber">63</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">440</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="888422761114341906" datatype="html">
+        <source>Machine translator API Keys</source>
+        <target state="translated">Konekääntäjien käyttöavaimet (API key)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">439</context>
         </context-group>
       </trans-unit>
     </body>

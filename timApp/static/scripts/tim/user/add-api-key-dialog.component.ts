@@ -59,6 +59,9 @@ import {IUserApiKey} from "./IUser";
             <ng-container footer>
                 <i class="glyphicon glyphicon-ok success" *ngIf="saved"></i>
                 <tim-loading *ngIf="saving" style="margin-right: 1em;"></tim-loading>
+                <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB#adding-a-translator-authentication-key">
+                    <span class="glyphicon glyphicon-question-sign" style="margin-right: 1em; font-size: x-large; vertical-align: middle;" title="Help with machine translation setup" i18n-title></span>
+                </a>
                 <button class="timButton"
                         (click)="addNewAPIKey()"
                         [disabled]="!(chosenTranslator && apiKey) || saved" i18n>

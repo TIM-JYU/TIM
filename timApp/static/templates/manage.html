@@ -220,7 +220,11 @@
                                 <option ng-repeat="option in $ctrl.documentLanguages" value="{{option.code}}">{{option.name}} ({{option.code}})</option>
                         </select></div>
                         <div>
-                        <label for="translator">Translator:</label>
+                        <label for="translator">Translator:
+                             <a href="https://tim.jyu.fi/view/tim/ohjeita/dokumenttien-konekaantaminen/en-GB">
+                                <span class="glyphicon glyphicon-question-sign" style="margin-left: 0.2em;" title="Help with machine translation" i18n-title></span>
+                            </a>
+                        </label>
                         <select id="translator" name="translator-select" class="form-control"
                                ng-model="$ctrl.newTranslation.translator" ng-change="$ctrl.updateManageTranslatorLanguages()">
                                 <option ng-repeat="option in $ctrl.translators" ng-disabled="!option.available" value="{{option.name}}">{{option.name}}</option>
