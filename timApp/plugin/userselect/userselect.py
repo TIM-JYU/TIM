@@ -695,7 +695,7 @@ def apply_permission_actions(
         # Don't throw if we try to remove a permission from ourselves, just ignore it
         accs = add_perm(
             PermissionEditModel(
-                to_add.type, to_add.time, [user_group.name], to_add.confirm
+                to_add.type, to_add.time, [user_group.name], to_add.confirm, None
             ),
             doc_entry,
             replace_active_duration=False,
