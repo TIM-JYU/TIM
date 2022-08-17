@@ -23,7 +23,7 @@ from timApp.folder.folder import Folder
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.velp.annotation import Annotation
-from timApp.velp.velp import create_new_velp
+from timApp.velp.velp import create_new_velp, remove_document_velp_group_perms_for_user
 from timApp.velp.velp_models import (
     VelpGroup,
     VelpInGroup,
@@ -31,6 +31,7 @@ from timApp.velp.velp_models import (
     VelpGroupDefaults,
     VelpGroupsInDocument,
 )
+from cli.util.logging import log_info, log_debug
 
 
 class VelpTest(TimRouteTest):
@@ -505,6 +506,7 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         db.session.commit()
         self.get(g_doc.url, expect_status=200)
         self.test_user_2.remove_perm(d, AccessType.owner)
+        remove_document_velp_group_perms_for_user(d.id, self.test_user_2)
         db.session.commit()
         # Should no longer be able to access velp group
         self.get(g_doc.url, expect_status=403)
@@ -516,7 +518,7 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         # New velp groups for the document should set permissions for
         # all users with access to the document
         self.login_test2()
-        self.test_user_2.grant_access(d, AccessType.edit)
+        self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
         self.login_test1()
         g2 = self.json_post(
@@ -527,10 +529,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         g2_doc = get_doc_or_abort(g2["id"])
         self.login_test2()
         self.get(g2_doc.url, expect_status=200)
-
-        self.test_user_2.remove_perm(d, AccessType.edit)
-        db.session.commit()
-        self.get(g2_doc.url, expect_status=403)
 
     def test_deleted_velp_group_permissions(self):
         d, g_doc = self.setup_velp_group_test()
@@ -549,3 +547,16 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         test_user_2 = get_current_user_object()
         self.make_admin(test_user_2)
         self.get(deleted.url, expect_status=200)
+
+    def test_document_permissions_removed(self):
+        d, g_doc = self.setup_velp_group_test()
+
+        # Case 8:
+        # Velp groups' permissions should be removed in tandem with 'parent' document's permissions
+        self.login_test2()
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+
+        self.test_user_2.remove_perm(d, AccessType.view)
+        db.session.commit()
+        self.get(g_doc.url, expect_status=403)
