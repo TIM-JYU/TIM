@@ -622,7 +622,7 @@ class Plugin:
                         type=AccessType.view.value,
                         usergroup_id=current_user.get_personal_group().id,
                     ).first()
-                    if ba:
+                    if ba and ba.accessible_to:
                         if ba.accessible_to < get_current_time():
                             self.hidden = False
             if prev_info.count:
