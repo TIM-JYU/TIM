@@ -12,7 +12,6 @@ from marshmallow import missing, EXCLUDE, ValidationError
 
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
-from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
 from timApp.lecture.askedjson import normalize_question_json
@@ -51,6 +50,7 @@ from tim_common.pluginserver_flask import (
     render_validationerror,
     make_base64,
 )
+from tim_common.timjsonencoder import TimJsonEncoder
 from tim_common.utils import Missing
 
 qst_plugin = Blueprint(
@@ -135,6 +135,7 @@ class QstMarkupModel(GenericMarkupModel):
     savedText: str | None | Missing = missing
     size: str | None | Missing = missing
     customHeader: str | None | Missing = missing
+    autosave: bool | None | Missing = missing
 
 
 QstBasicState = list[list[str]]

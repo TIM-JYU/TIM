@@ -69,7 +69,7 @@ const PluginFields = t.intersection([
                 <div class="csRunMenu">
                     <button class="timButton"
                             [innerHtml]="button"
-                            *ngIf="button"
+                            *ngIf="button && !isAutosave"
                             [disabled]="isRunning || isInvalid() || (disableUnchanged && !isUnSaved())"
                             (click)="saveText()"></button>
                     <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event)">
@@ -137,6 +137,18 @@ export class QstComponent
 
     get undoConfirmation() {
         return this.attrsall.markup.undo?.confirmation;
+    }
+
+    get isAutosave() {
+        // TODO: Autosave should be enabled for all types, but it requires proper slowdown to prevent too many saves
+        const autoSaveType =
+            this.markup.matrixType !== "textArea" &&
+            this.markup.matrixType !== "inputText" &&
+            this.markup.answerFieldType !== "inputText" &&
+            this.markup.answerFieldType !== "text" &&
+            this.markup.questionType !== "textarea";
+
+        return (this.markup.autosave ?? false) && autoSaveType;
     }
 
     isUnSaved(userChange?: boolean | undefined): boolean {
@@ -210,7 +222,7 @@ export class QstComponent
         );
     }
 
-    updateAnswer(at: AnswerTable) {
+    async updateAnswer(at: AnswerTable) {
         // updateAnswer is called always at least once from dynamicAnswerSheet (see the ngOnChanges in that file).
         // Upon first call, we record the currently saved answer.
         if (this.newAnswer === undefined) {
@@ -220,7 +232,11 @@ export class QstComponent
         this.checkChanges();
         if (this.changes) {
             this.result = undefined;
+            if (this.isAutosave) {
+                await this.doSaveText(false);
+            }
         }
+
         this.cdr.detectChanges();
     }
 

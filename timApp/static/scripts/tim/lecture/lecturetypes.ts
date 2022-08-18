@@ -109,6 +109,7 @@ export const AskedJsonJsonCodec = mandatoryAndOptional(
         randomizedRows: t.number,
         timeLimit: t.number,
         size: t.string,
+        autosave: t.boolean,
     }
 );
 
