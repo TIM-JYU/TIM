@@ -215,6 +215,8 @@
            title="Show model answer"
            ng-click="$ctrl.showModelAnswer()">{{$ctrl.getModelAnswerLinkText()}}</a>
         <div ng-if="!$ctrl.showModelAnswerLink() && $ctrl.modelAnswer.linkTextBeforeCount">{{$ctrl.modelAnswer.linkTextBeforeCount}}</div>
+        <span ng-if="$ctrl.showClearModelAnswerLockLink()"> | <a ng-click="$ctrl.clearModelAnswerLock()" title="Manage model answer locks">Manage task locks</a>
+        </span>
         <div ng-if="$ctrl.modelAnswerVisible" ng-bind-html="$ctrl.modelAnswerHtml">
 
         </div>

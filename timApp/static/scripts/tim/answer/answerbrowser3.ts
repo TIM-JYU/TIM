@@ -11,6 +11,7 @@ import {ParContext} from "tim/document/structure/parContext";
 import {ReadonlyMoment} from "tim/util/readonlymoment";
 import moment from "moment";
 import {showConfirm} from "tim/ui/showConfirmDialog";
+import {showResetTaskLock} from "tim/answer/showResetTaskLock";
 import {isVelpable, ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {
@@ -1508,6 +1509,21 @@ export class AnswerBrowserController
             }
         }
         return true;
+    }
+
+    showClearModelAnswerLockLink() {
+        return this.viewctrl?.item.rights.teacher && this.modelAnswer?.lock;
+    }
+
+    async clearModelAnswerLock() {
+        if (!this.user) {
+            return;
+        }
+        // TODO: Fetch users who have taskBlocks to show as dropdown list in resetTaskLockDialog
+        await showResetTaskLock({
+            currentUser: this.user.name,
+            taskId: this.taskId.docTask().toString(),
+        });
     }
 
     async showModelAnswer() {
