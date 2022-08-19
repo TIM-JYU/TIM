@@ -187,14 +187,22 @@ def create_velp_group(
     return vg
 
 
-def get_groups_from_document_table(doc_id: int, user_id: int) -> list[VelpGroup]:
+def get_groups_from_document_table(doc_id: int, user_id: int | None) -> list[VelpGroup]:
     """Gets velp groups from VelpGroupsInDocument table of specific document / user combo.
+       If user_id is none, fetches all velp groups attached to the document.
 
     :param doc_id: ID of document
     :param user_id: ID of user
-    :return: velp groups in document that user has access to.
+    :return: velp groups in document that user has access to, or all velp groups in document if user_id is None
 
     """
+    if not user_id:
+        return (
+            VelpGroupsInDocument.query.filter_by(doc_id=doc_id)
+            .join(VelpGroup)
+            .with_entities(VelpGroup)
+            .all()
+        )
     return (
         VelpGroupsInDocument.query.filter_by(user_id=user_id, doc_id=doc_id)
         .join(VelpGroup)
