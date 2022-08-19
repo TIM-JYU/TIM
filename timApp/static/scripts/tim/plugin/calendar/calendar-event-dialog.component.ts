@@ -690,7 +690,6 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     }
 
     initEventBookState() {
-        console.log(this.data.meta);
         if (this.data.meta?.isExtra) {
             this.eventBookState = {canBook: true, reason: undefined};
             return;
@@ -750,7 +749,12 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      */
     multipleBookers() {
         if (this.data.meta) {
-            return this.data.meta.maxSize > 1;
+            return (
+                this.data.meta.maxSize > 1 ||
+                this.data.meta.enrollments +
+                    (this.data.meta.extraEnrollments ?? 0) >
+                    1
+            );
         }
         return false; // Events should always have their meta field
     }
