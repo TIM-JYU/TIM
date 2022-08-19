@@ -11,9 +11,8 @@ from flask import redirect
 from flask import render_template, Response
 from flask import request
 from isodate import Duration
-from sqlalchemy import inspect, event
+from sqlalchemy import inspect
 from sqlalchemy.orm.state import InstanceState
-from timApp.velp.velp import delete_velp_group
 
 from timApp.velp.velp_models import VelpGroupsInDocument, VelpGroup
 
@@ -85,7 +84,10 @@ from timApp.util.utils import (
     cached_property,
     seq_to_str,
 )
-from timApp.velp.velpgroups import get_groups_from_document_table
+from timApp.velp.velpgroups import (
+    get_groups_from_document_table,
+    delete_velp_group_from_database,
+)
 
 manage_page = TypedBlueprint(
     "manage_page", __name__, url_prefix=""
@@ -896,7 +898,7 @@ def del_document(doc_id: int) -> Response:
     vgs: [VelpGroup] = get_groups_from_document_table(d, None)
     if vgs:
         for vg in vgs:
-            delete_velp_group(vg.id)
+            delete_velp_group_from_database(vg)
 
     db.session.commit()
     return ok_response()
