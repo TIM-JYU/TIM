@@ -13,6 +13,8 @@ Tested routes from velp.py:
 """
 import json
 
+from timApp.user.usergroup import UserGroup, get_logged_in_group_id
+
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.accesstype import AccessType
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
@@ -23,7 +25,7 @@ from timApp.folder.folder import Folder
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.velp.annotation import Annotation
-from timApp.velp.velp import create_new_velp, remove_document_velp_group_perms_for_user
+from timApp.velp.velp import create_new_velp
 from timApp.velp.velp_models import (
     VelpGroup,
     VelpInGroup,
@@ -430,12 +432,37 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         self.login_test2()
         self.get(g_doc.url, expect_status=403)
         # Should be able to access velp group with view permissions
-        self.test_user_2.grant_access(d, AccessType.view)
-        db.session.commit()
+        self.login_test1()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.view.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+                "edit_velp_group_perms": True,
+            },
+        )
+        self.login_test2()
         self.get(g_doc.url, expect_status=200)
-        self.test_user_2.remove_perm(d, AccessType.view)
-        db.session.commit()
+
+        usergroup = UserGroup.query.filter_by(name="testuser2").first()
+        self.login_test1()
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.view.value,
+                "group": usergroup.id,
+                "edit_velp_group_perms": True,
+            },
+            expect_status=200,
+        )
         # Should no longer be able to access velp group
+        self.login_test2()
         self.get(g_doc.url, expect_status=403)
 
     def test_velp_group_permissions_edit(self):
@@ -446,14 +473,42 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
         self.assertEqual(d_perms, g_perms)
 
+        # Initially not able to access
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
         # Case 2:
         # Should be able to access velp group with edit permissions
-        self.test_user_2.grant_access(d, AccessType.edit)
-        db.session.commit()
+        self.login_test1()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.edit.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+                "edit_velp_group_perms": True,
+            },
+        )
+        self.login_test2()
         self.get(g_doc.url, expect_status=200)
-        self.test_user_2.remove_perm(d, AccessType.edit)
-        db.session.commit()
+
+        usergroup = UserGroup.query.filter_by(name="testuser2").first()
+
+        self.login_test1()
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.edit.value,
+                "group": usergroup.id,
+                "edit_velp_group_perms": True,
+            },
+        )
         # Should no longer be able to access velp group
+        self.login_test2()
         self.get(g_doc.url, expect_status=403)
 
     def test_velp_group_permissions_teacher(self):
@@ -464,14 +519,43 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
         self.assertEqual(d_perms, g_perms)
 
+        # Initially not able to access
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+
         # Case 3:
         # Should be able to access velp group with teacher permissions
-        self.test_user_2.grant_access(d, AccessType.teacher)
-        db.session.commit()
+        self.login_test1()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.teacher.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+                "edit_velp_group_perms": True,
+            },
+        )
+        self.login_test2()
         self.get(g_doc.url, expect_status=200)
-        self.test_user_2.remove_perm(d, AccessType.teacher)
-        db.session.commit()
+
+        usergroup = UserGroup.query.filter_by(name="testuser2").first()
+
+        self.login_test1()
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.teacher.value,
+                "group": usergroup.id,
+                "edit_velp_group_perms": True,
+            },
+        )
         # Should no longer be able to access velp group
+        self.login_test2()
         self.get(g_doc.url, expect_status=403)
 
     def test_velp_group_permissions_manage(self):
@@ -482,14 +566,44 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
         self.assertEqual(d_perms, g_perms)
 
+        # Initially not able to access
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+
         # Case 4:
         # Should be able to access velp group with manage permissions
-        self.test_user_2.grant_access(d, AccessType.manage)
-        db.session.commit()
+        usergroup = UserGroup.query.filter_by(name="testuser2").first()
+        self.login_test1()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.manage.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+                "edit_velp_group_perms": True,
+            },
+        )
+        self.login_test2()
         self.get(g_doc.url, expect_status=200)
-        self.test_user_2.remove_perm(d, AccessType.manage)
-        db.session.commit()
+
+        usergroup = UserGroup.query.filter_by(name="testuser2").first()
+
+        self.login_test1()
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.manage.value,
+                "group": usergroup.id,
+                "edit_velp_group_perms": True,
+            },
+        )
         # Should no longer be able to access velp group
+        self.login_test2()
         self.get(g_doc.url, expect_status=403)
 
     def test_velp_group_permissions_owner(self):
@@ -500,15 +614,43 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
         self.assertEqual(d_perms, g_perms)
 
+        # Initially not able to access
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+
         # Case 5:
         # Should be able to access velp group with owner permissions
-        self.test_user_2.grant_access(d, AccessType.owner)
-        db.session.commit()
+        self.login_test1()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.owner.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+                "edit_velp_group_perms": True,
+            },
+        )
+        self.login_test2()
         self.get(g_doc.url, expect_status=200)
-        self.test_user_2.remove_perm(d, AccessType.owner)
-        remove_document_velp_group_perms_for_user(d.id, self.test_user_2)
-        db.session.commit()
+
+        usergroup = UserGroup.query.filter_by(name="testuser2").first()
+
+        self.login_test1()
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.owner.value,
+                "group": usergroup.id,
+                "edit_velp_group_perms": True,
+            },
+        )
         # Should no longer be able to access velp group
+        self.login_test2()
         self.get(g_doc.url, expect_status=403)
 
     def test_velp_group_permissions_new_group(self):
@@ -547,16 +689,3 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         test_user_2 = get_current_user_object()
         self.make_admin(test_user_2)
         self.get(deleted.url, expect_status=200)
-
-    def test_document_permissions_removed(self):
-        d, g_doc = self.setup_velp_group_test()
-
-        # Case 8:
-        # Velp groups' permissions should be removed in tandem with 'parent' document's permissions
-        self.login_test2()
-        self.test_user_2.grant_access(d, AccessType.view)
-        db.session.commit()
-
-        self.test_user_2.remove_perm(d, AccessType.view)
-        db.session.commit()
-        self.get(g_doc.url, expect_status=403)

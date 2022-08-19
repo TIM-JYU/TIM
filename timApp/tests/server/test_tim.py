@@ -56,6 +56,7 @@ class TimTest(TimRouteTest):
                 "groups": ["Anonymous users"],
                 "type": AccessType.view.value,
                 "id": doc_id,
+                "edit_velp_group_perms": False,
             },
         )
         self.json_put(
@@ -68,6 +69,7 @@ class TimTest(TimRouteTest):
                 "groups": ["Logged-in users"],
                 "type": AccessType.view.value,
                 "id": doc_id_list[1],
+                "edit_velp_group_perms": False,
             },
         )
         self.json_put(
@@ -80,6 +82,7 @@ class TimTest(TimRouteTest):
                 "groups": ["testuser2"],
                 "type": AccessType.view.value,
                 "id": doc_id_list[2],
+                "edit_velp_group_perms": False,
             },
         )
         self.json_put(
@@ -92,6 +95,7 @@ class TimTest(TimRouteTest):
                 "groups": ["testuser2"],
                 "type": AccessType.edit.value,
                 "id": doc_id_list[3],
+                "edit_velp_group_perms": False,
             },
         )
         doc = Document(doc_id)
@@ -197,6 +201,7 @@ class TimTest(TimRouteTest):
                     "groups": ["testuser2"],
                     "type": AccessType.teacher.value,
                     "id": i,
+                    "edit_velp_group_perms": False,
                 },
             )
         glob_id = dict(doc_id=doc_id, par_id=first_id)
@@ -242,6 +247,7 @@ class TimTest(TimRouteTest):
                     "groups": ["testuser2"],
                     "type": AccessType.teacher.value,
                     "id": view_id,
+                    "edit_velp_group_perms": False,
                 },
                 expect_status=403,
             )
@@ -258,6 +264,7 @@ class TimTest(TimRouteTest):
                     "groups": ["testuser2"],
                     "type": AccessType.teacher.value,
                     "id": view_id,
+                    "edit_velp_group_perms": False,
                 },
                 expect_status=403,
             )
