@@ -20,7 +20,7 @@ from timApp.markdown.autocounters import (
     add_h_values,
     check_autonumber_error,
 )
-from timApp.markdown.dumboclient import call_dumbo
+from timApp.markdown.dumboclient import call_dumbo, DumboOptions
 from timApp.util.utils import get_error_html, title_to_id
 from timApp.util.utils import widen_fields
 from tim_common.html_sanitize import sanitize_html, presanitize_html_body
@@ -475,10 +475,14 @@ def create_environment(
 
 
 def md_to_html(
-    text: str, sanitize: bool = True, macros: dict[str, object] | None = None
+    text: str,
+    sanitize: bool = True,
+    macros: dict[str, object] | None = None,
+    dumbo_options: DumboOptions = DumboOptions.default(),
 ) -> str:
     """Converts the specified markdown text to HTML.
 
+    :param dumbo_options: Options for Dumbo.
     :param macros: The macros to use.
     :param sanitize: Whether the HTML should be sanitized. Default is True.
     :param text: The text to be converted.
@@ -494,9 +498,7 @@ def md_to_html(
             "%%", user_ctx=None, view_ctx=default_view_ctx, macros=macros
         ),
     )
-
-    raw = call_dumbo([text])
-
+    raw = call_dumbo([text], options=dumbo_options)
     if sanitize:
         return sanitize_html(str(raw[0]))
     else:
