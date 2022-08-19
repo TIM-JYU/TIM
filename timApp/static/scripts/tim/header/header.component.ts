@@ -42,38 +42,39 @@ function isExpired(tag: ITag) {
 @Component({
     selector: "tim-header",
     template: `
-<div *ngIf="!hideLinks && item">
-    <div class="pull-right">
-        <button *ngIf="!hideVars.headerDocumentActions && showAddToMyCourses()"
-                (click)="addToBookmarkFolder()"
-                title="Add this page to 'My courses' bookmark folder"
-                i18n-title
-                class="timButton label" i18n>
-            Add to 'My courses'
-        </button>
-        <ng-container *ngIf="translations && translations.length > 1">
+        <div *ngIf="!hideLinks && item">
+            <div class="pull-right">
+                <button *ngIf="!hideVars.headerDocumentActions && showAddToMyCourses()"
+                        (click)="addToBookmarkFolder()"
+                        title="Add this page to 'My courses' bookmark folder"
+                        i18n-title
+                        class="timButton label" i18n>
+                    Add to 'My courses'
+                </button>
+                <ng-container *ngIf="translations && translations.length > 1">
             <span *ngFor="let tr of translations">
-                <a class="label label-primary" href="/{{ route }}/{{ tr.path }}">{{ tr.lang_id || 'language not set' }}</a>&ngsp;
+                <a class="label label-primary"
+                   href="/{{ route }}/{{ tr.path }}">{{ tr.lang_id || 'language not set' }}</a>&ngsp;
             </span>
-        </ng-container>
-    </div>
-    <div class="doc-header" *ngIf="!hideVars.headerNav">
-        <div class="nav nav-tabs">
-            <li *ngFor="let link of itemLinks"
-                role="presentation"
-                [ngClass]="{active: isActive(link)}">
-                <a href="/{{ link.route }}/{{ item.path }}">{{ link.title }}</a>
-            </li>
+                </ng-container>
+            </div>
+            <div class="doc-header" *ngIf="!hideVars.headerNav">
+                <div class="nav nav-tabs">
+                    <li *ngFor="let link of itemLinks"
+                        role="presentation"
+                        [ngClass]="{active: isActive(link)}">
+                        <a [href]="getViewURL(link)">{{ link.title }}</a>
+                    </li>
+                </div>
+                <ol class="breadcrumb">
+                    <li *ngFor="let c of crumbs">
+                        <a href="/{{ route }}/{{ c.path }}">{{ c.title }}</a>
+                    </li>
+                    <li class="current">{{ item.title }}</li>
+                </ol>
+            </div>
         </div>
-        <ol class="breadcrumb">
-            <li *ngFor="let c of crumbs">
-                <a href="/{{ route }}/{{ c.path }}">{{ c.title }}</a>
-            </li>
-            <li class="current">{{ item.title }}</li>
-        </ol>
-    </div>
-</div>
-  `,
+    `,
     styleUrls: ["./header.component.scss"],
 })
 export class HeaderComponent implements OnInit {
@@ -116,6 +117,13 @@ export class HeaderComponent implements OnInit {
 
     isActive(i: IItemLink) {
         return this.route === i.route;
+    }
+
+    getViewURL(link: IItemLink) {
+        if (!this.item) {
+            return "";
+        }
+        return `/${link.route}/${this.item.path}${location.search}`;
     }
 
     getMainCourseDocPath() {
