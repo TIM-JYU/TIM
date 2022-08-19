@@ -1,6 +1,9 @@
 """Server tests for TIM-calendar"""
+from timApp.document.docentry import DocEntry
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.timdb.sqa import db
 from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 
 
 class CalendarTest(TimRouteTest):
@@ -56,6 +59,9 @@ class CalendarTest(TimRouteTest):
                         "enrollments": 0,
                         "location": "sijainti",
                         "maxSize": 1,
+                        "extraEnrollments": None,
+                        "isExtra": False,
+                        "send_notifications": True,
                         "signup_before": "2022-05-18T07:20:00+00:00",
                     },
                 }
@@ -105,6 +111,9 @@ class CalendarTest(TimRouteTest):
                         "booker_groups": [],
                         "description": "toinen kuvaus",
                         "enrollments": 0,
+                        "extraEnrollments": None,
+                        "isExtra": False,
+                        "send_notifications": True,
                         "location": "eri sijainti",
                         "maxSize": 1,
                         "signup_before": "2022-05-18T07:20:00+00:00",
@@ -122,12 +131,18 @@ class CalendarTest(TimRouteTest):
 class CalendarBookTest(TimRouteTest):
     def test_booking(self):
         """Event is created by Test user 2 and booked by Test user 1."""
+        ug = UserGroup.get_or_create_group("testbooking1")
+        self.test_user_1.add_to_group(ug, None)
+        d = DocEntry.create("testbooking1", self.test_user_2.get_personal_group())
+        ug.admin_doc = d.block
+        db.session.commit()
         self.login_test2()
+
         event_id = 1
-        self.post_event_to_book(event_id, self.test_user_2)
+        self.post_event_to_book(event_id, ug)
 
         self.get(
-            f"/calendar/events",
+            f"/calendar/events?includeOwned=true",
             expect_status=200,
             expect_content=[
                 {
@@ -141,6 +156,9 @@ class CalendarBookTest(TimRouteTest):
                         "enrollments": 0,
                         "location": "kerhohuone",
                         "maxSize": 2,
+                        "extraEnrollments": None,
+                        "isExtra": False,
+                        "send_notifications": True,
                         "signup_before": "2023-05-18T07:20:00+00:00",
                     },
                 }
@@ -185,7 +203,7 @@ class CalendarBookTest(TimRouteTest):
                         "end": "2023-05-18T07:40:00+00:00",
                         "signup_before": "2023-05-18T07:20:00+00:00",
                         "booker_groups": [user.name],
-                        "setter_groups": [user.name],
+                        "setter_groups": [],
                         "tags": [],
                         "max_size": 2,
                     }
