@@ -710,21 +710,13 @@ export class CalendarComponent
             this.markup.filter.groups !== null &&
             this.markup.filter.groups !== undefined
         ) {
-            res.groups = this.markup.filter.groups;
-            if (res.groups.length === 0) {
-                // Special value to denote no tags if an empty tag list was given
-                res.groups = [""];
-            }
+            res.groups = this.markup.filter.groups.join(",");
         }
         if (
             this.markup.filter.tags !== null &&
             this.markup.filter.tags !== undefined
         ) {
-            res.tags = this.markup.filter.tags;
-            if (res.tags.length === 0) {
-                // Special value to denote no tags if an empty tag list was given
-                res.tags = [""];
-            }
+            res.tags = this.markup.filter.tags.join(",");
         }
         if (this.markup.filter.fromDate) {
             res.fromDate = this.markup.filter.fromDate.toISOString();
