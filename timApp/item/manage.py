@@ -379,23 +379,33 @@ def expire_permission_url(doc_id: int, username: str, redir: str | None = None):
         ba.duration = None
         ba.duration_from = None
         ba.duration_to = None
-
-        # also expire permissions for document's velp groups
-        vgs = get_groups_from_document_table(i.id, g.id)
-        accs = [BlockAccess]
-        for vg in vgs:
-            acc: BlockAccess | None = BlockAccess.query.filter_by(
-                type=AccessType.view.value,
-                block_id=vg.id,
-                usergroup_id=g.id,
-            ).first()
-            if acc:
-                accs.append(acc)
-        for a in accs:
-            a.duration, a.duration_from, a.duration_to = None, None, None
+    # also expire permissions for document's velp groups
+    expire_doc_velp_groups_perms(i.id, g)
 
     db.session.commit()
     return ok_response() if not redir else safe_redirect(redir)
+
+
+def expire_doc_velp_groups_perms(doc_id: int, ug: UserGroup) -> None:
+    """Expire permissions for a document's VelpGroups for a specific UserGroup
+
+    :param doc_id: ID for the document
+    :param ug: UserGroup whose permissions will be expired
+    """
+    vgs = get_groups_from_document_table(doc_id, ug.id)
+    accs = [BlockAccess]
+    for vg in vgs:
+        acc: BlockAccess | None = BlockAccess.query.filter_by(
+            type=AccessType.view.value,
+            block_id=vg.id,
+            usergroup_id=ug.id,
+        ).first()
+        if acc:
+            accs.append(acc)
+    for a in accs:
+        a.accessible_to = get_current_time()
+        if a.duration:
+            a.duration, a.duration_from, a.duration_to = None, None, None
 
 
 @manage_page.get("/permissions/confirm/<int:doc_id>/<username>")
@@ -623,6 +633,11 @@ def self_expire_permission(id: int) -> Response:
         return ok_response()
     acc = get_single_view_access(i)
     acc.accessible_to = get_current_time()
+
+    # Expire perms for document's velp groups as well
+    if isinstance(i, DocInfo | DocEntry):
+        expire_doc_velp_groups_perms(i.id, acc.usergroup)
+
     log_right(f"self-expired view access in {i.path}")
     db.session.commit()
     return ok_response()
