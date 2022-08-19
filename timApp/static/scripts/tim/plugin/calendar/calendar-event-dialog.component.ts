@@ -60,12 +60,20 @@ import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
                                    [disabled]="!isEditEnabled()"/>
                         </div>
                         <label i18n for="maxSize" class="col-sm-3 control-label">Capacity</label>
-                        <div class="col-sm-3">
+                        <div class="col-sm-8">
                             <input type="number"
                                    min="0" max="2000" [(ngModel)]="maxSize"
                                    #ngModelMaxSize="ngModel"
                                    (ngModelChange)="setMessage()"
                                    id="maxSize" name="maxSize" class="form-control"
+                                   [disabled]="!isEditEnabled()">
+                        </div>
+                        <label i18n for="sendNotifications" class="col-sm-3 control-label">Notifications</label>
+                        <div class="col-sm-8">
+                            <input type="checkbox"
+                                   [(ngModel)]="sendNotifications"
+                                   (ngModelChange)="setMessage()"
+                                   id="sendNotifications" name="sendNotifications" class="form-control checkbox"
                                    [disabled]="!isEditEnabled()">
                         </div>
                     </div>
@@ -289,6 +297,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     title = "";
     location = "";
     maxSize = 0;
+    sendNotifications = true;
     message?: string;
     bookingStopTime = "";
     bookingStopDate = "";
@@ -343,6 +352,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             signup_before: new Date(
                 `${this.bookingStopDate}T${this.bookingStopTime}`
             ),
+            send_notifications: this.sendNotifications,
         };
 
         const result = await toPromise(
@@ -358,6 +368,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.data.start = eventToEdit.start;
             this.data.end = eventToEdit.end;
             this.data.meta!.signup_before = eventToEdit.signup_before;
+            this.data.meta!.send_notifications = eventToEdit.send_notifications;
             this.close(this.data);
         } else {
             if (result.result.error.error) {
@@ -422,6 +433,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         this.title = this.data.title;
         this.location = this.data.meta!.location;
         this.description = this.data.meta!.description;
+        this.sendNotifications = this.data.meta!.send_notifications;
         const startOffset = this.data.start.getTimezoneOffset();
         const startDate = new Date(
             this.data.start.getTime() - startOffset * 60 * 1000

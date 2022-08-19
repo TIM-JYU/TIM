@@ -5476,14 +5476,6 @@
           <context context-type="linenumber">109</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3904900366807853260" datatype="html">
-        <source>The event is full.</source>
-        <target state="translated">Tapahtuma on täynnä.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
-          <context context-type="linenumber">238</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7581997491514928120" datatype="html">
         <source>You have booked this event.</source>
         <target state="translated">Olet varannut tämän tapahtuman.</target>
@@ -6732,6 +6724,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">439</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7997419902971420998" datatype="html">
+        <source> (you can still book as extra)</source>
+        <target state="translated"> (voit silti ilmoittautua extrana)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">253</context>
         </context-group>
       </trans-unit>
     </body>

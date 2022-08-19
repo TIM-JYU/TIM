@@ -98,6 +98,7 @@ class EventTemplate:
     bookers: list[str] = field(default_factory=list)
     setters: list[str] = field(default_factory=list)
     extraBookers: list[str] = field(default_factory=list)
+    sendNotifications: bool = True
     capacity: int = 0
     tags: list[str] = field(default_factory=list)
 
@@ -178,6 +179,7 @@ eventTemplates:            # Event templates for the calendar. Used to create ne
         capacity: 1        # Maximum number of people that can book the event.
         tags:              # List of tags that can be used to filter events.
           - tag1
+        sendNotifications: true # Whether to send a notification to the bookers and setters when the event is booked.
 ```
 """
 
@@ -434,6 +436,7 @@ class CalendarEvent:
     booker_groups: list[str] | None = None
     setter_groups: list[str] | None = None
     extra_booker_groups: list[str] | None = None
+    send_notifications: bool = True
     tags: list[str] | None = None
     id: int = -1
 
@@ -503,6 +506,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
             creator_user_id=cur_user,
             max_size=event.max_size,
             signup_before=event.signup_before,
+            send_notifications=event.send_notifications,
             tags=[event_tags_dict[tag] for tag in event.tags]
             if event.tags is not None
             else [],
@@ -537,6 +541,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     old_event.end_time = event.end
     old_event.max_size = event.max_size
     old_event.signup_before = event.signup_before
+    old_event.send_notifications = event.send_notifications
     db.session.commit()
     return ok_response()
 
@@ -601,6 +606,8 @@ def send_email_to_enrolled_users(event: Event, user_obj: User) -> None:
     :param: user_obj user who deletes the event
     :return None, or NotExist()
     """
+    if not event.send_notifications:
+        return
     enrolled_users = event.enrolled_users
     user_accounts = []
     for user_group in enrolled_users:
@@ -615,10 +622,10 @@ def send_email_to_enrolled_users(event: Event, user_obj: User) -> None:
     name = user_obj.name
     msg = f"TIM-Calendar event {event.title} {event_time} has been cancelled by {name}."
     subject = msg
+    # TODO: This is very inefficient, send instead one mail using BCC
     for user in user_accounts:
         rcpt = user.email
         send_email(rcpt, subject, msg)
-    return
 
 
 @calendar_plugin.put("/bookings")
@@ -678,7 +685,7 @@ def book_event(event_id: int, booker_msg: str) -> Response:
 
     # TODO: add enrollment types
     enrollment = Enrollment(
-        user_group=user_group,
+        usergroup=user_group,
         enroll_type_id=0,
         booker_message=booker_msg,
         extra=right_info.extra,
@@ -722,6 +729,8 @@ def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> None
     event = Event.get_by_id(event_id)
     if not event:
         raise NotExist()
+    if not event.send_notifications:
+        return
     creator = event.creator
     # TODO Should use users own timezone
     start_time = event.start_time.astimezone(fin_timezone).strftime("%d.%m.%Y %H:%M")
@@ -736,7 +745,6 @@ def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> None
     rcpt = creator.email
     msg = subject
     send_email(rcpt, subject, msg)
-    return
 
 
 register_html_routes(calendar_plugin, class_schema(CalendarHtmlModel), reqs_handle)

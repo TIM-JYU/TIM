@@ -198,6 +198,9 @@ class Event(db.Model):
     creator: User = db.relationship(User)
     """User who created the event originally"""
 
+    send_notifications = db.Column(db.Boolean, nullable=False, default=True)
+    """Whether to send notifications related to enrollment to the event"""
+
     event_groups: list[EventGroup] = db.relationship(
         EventGroup,
         foreign_keys="EventGroup.event_id",
@@ -272,6 +275,7 @@ class Event(db.Model):
             "maxSize": self.max_size,
             "location": self.location,
             "description": self.message,
+            "send_notifications": self.send_notifications,
         }
 
         user_group_ids = []

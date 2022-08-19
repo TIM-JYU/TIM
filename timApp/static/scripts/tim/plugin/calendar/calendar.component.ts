@@ -107,6 +107,7 @@ const EventTemplate = t.type({
     extraBookers: t.array(t.string),
     tags: t.array(t.string),
     capacity: t.number,
+    sendNotifications: t.boolean,
 });
 
 const FilterOptions = t.type({
@@ -186,6 +187,7 @@ export type TIMEventMeta = {
     extraEnrollments?: number | null;
     maxSize: number;
     isExtra: boolean;
+    send_notifications: boolean;
     booker_groups: {
         name: string;
         message: string;
@@ -524,6 +526,7 @@ export class CalendarComponent
                 maxSize: 1, // TODO: temporary solution
                 booker_groups: [],
                 editEnabled: this.editEnabled,
+                send_notifications: true,
             },
         };
         if (Date.now() > dragToSelectEvent.start.getTime()) {
@@ -759,6 +762,7 @@ export class CalendarComponent
                     booker_groups: event.meta!.booker_groups,
                     isExtra: event.meta!.isExtra,
                     editEnabled: this.editEnabled,
+                    send_notifications: event.meta!.send_notifications,
                     signup_before: new Date(event.meta!.signup_before),
                 };
                 event.resizable = {
@@ -792,6 +796,7 @@ export class CalendarComponent
         let bookerGroups: string[] = [];
         let setterGroups: string[] = [];
         let extraBookersGroups: string[] = [];
+        let sendNotifications = true;
         let capacity: number = 0;
         let tags: string[] = [];
         if (this.markup.eventTemplates) {
@@ -801,6 +806,7 @@ export class CalendarComponent
             extraBookersGroups = template.extraBookers;
             capacity = template.capacity;
             tags = template.tags;
+            sendNotifications = template.sendNotifications;
         }
 
         const result = await toPromise(
@@ -816,6 +822,7 @@ export class CalendarComponent
                     booker_groups: bookerGroups,
                     setter_groups: setterGroups,
                     extra_booker_groups: extraBookersGroups,
+                    send_notifications: sendNotifications,
                     max_size: capacity,
                     tags: tags,
                 })),
@@ -843,6 +850,7 @@ export class CalendarComponent
                         maxSize: event.meta!.maxSize,
                         location: event.meta!.location,
                         isExtra: event.meta!.isExtra,
+                        send_notifications: event.meta!.send_notifications,
                         booker_groups: [],
                         signup_before: new Date(event.meta!.signup_before),
                     },
