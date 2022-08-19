@@ -771,8 +771,6 @@ def create_velp_group_route(doc_id: int) -> Response:
                 # Don't copy view rights for Folder velp groups
                 if target_type == 2:
                     # Copy all rights but view
-                    # TODO is there a reason not to grant view rights? It seems logical to show velp groups (and velps)
-                    #      attached to the document to all users with access to the document.
                     for right in rights:
                         if not right.atype.name == "view":
                             grant_access(
