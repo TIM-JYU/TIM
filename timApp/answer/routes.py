@@ -2349,27 +2349,19 @@ def get_model_answer(task_id: str) -> Response:
 
         if model_answer_info.lock:
             b = TaskBlock.get_by_task(tid.doc_task)
-            ba = None
             if not b:
                 b = insert_task_block(task_id=tid.doc_task, owner_groups=d.owners)
-            else:
-                ba = BlockAccess.query.filter_by(
-                    block_id=b.id,
-                    type=AccessType.view.value,
-                    usergroup_id=current_user.get_personal_group().id,
-                ).first()
-            if not ba:
-                current_time = get_current_time()
-                grant_access(
-                    current_user.get_personal_group(),
-                    b.block,
-                    AccessType.view,
-                    accessible_to=current_time,
-                )
-                db.session.commit()
-                log_task_block(
-                    f"set task {tid.doc_task} accessible_to at {current_time} via modelAnswer"
-                )
+            current_time = get_current_time()
+            grant_access(
+                current_user.get_personal_group(),
+                b.block,
+                AccessType.view,
+                accessible_to=current_time,
+            )
+            db.session.commit()
+            log_task_block(
+                f"set task {tid.doc_task} accessible_to at {current_time} via modelAnswer"
+            )
     answer_html = md_to_html(model_answer_info.answer)
     return json_response({"answer": answer_html})
 
@@ -2583,6 +2575,38 @@ def rename_answers(old_name: str, new_name: str, doc_path: str) -> Response:
         a.task_id = f"{d.id}.{new_name}"
     db.session.commit()
     return json_response({"modified": len(answers_to_rename), "conflicts": conflicts})
+
+
+@answers.post("/clearTaskBlock")
+def clear_task_block(user: str, task_id: str) -> Response:
+    """Sets user's task-related blockAccess access_end to None
+
+    For now task related blockAccesses have inverse logic: lack of blockAccess row or restrictions means free access
+    """
+    tid = TaskId.parse(task_id)
+    if tid.doc_id is None:
+        raise RouteException(f"Task ID is missing document: {task_id}")
+    d = get_doc_or_abort(tid.doc_id)
+    verify_teacher_access(d)
+    user_obj = User.get_by_name(user)
+    if not user_obj:
+        raise RouteException(f"User {user} not found")
+    b = TaskBlock.get_by_task(tid.doc_task)
+    if not b:
+        return json_response({"cleared": False})
+    ba = BlockAccess.query.filter_by(
+        block_id=b.id,
+        type=AccessType.view.value,
+        usergroup_id=user_obj.get_personal_group().id,
+    ).first()
+    if not ba or not ba.accessible_to:
+        return json_response({"cleared": False})
+    ba.accessible_to = None
+    db.session.commit()
+    log_task_block(
+        f"set task {tid.doc_task} accessible_to to None for user {user_obj.name} via clearTaskBlock"
+    )
+    return json_response({"cleared": True})
 
 
 @answers.get("/unlockHiddenTask")
