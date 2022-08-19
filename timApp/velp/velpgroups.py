@@ -29,6 +29,7 @@ from timApp.velp.velp_models import (
     VelpGroupsInDocument,
     VelpGroupSelection,
     VelpGroupDefaults,
+    VelpInGroup,
 )
 
 
@@ -482,3 +483,25 @@ def get_default_selections_for_velp_groups(
         .all()
     )
     return process_selection_info(vgds)
+
+
+def delete_velp_group_from_database(vg: VelpGroup) -> None:
+    """Delete database entries referencing the specified VelpGroup
+
+    Changes should be committed to the database separately after this function returns.
+
+    :param vg: The VelpGroup to be deleted
+    """
+
+    # Delete associated entries/rows from database
+    VelpInGroup.query.filter_by(velp_group_id=vg.id).delete(synchronize_session=False)
+    VelpGroupSelection.query.filter_by(velp_group_id=vg.id).delete(
+        synchronize_session=False
+    )
+    VelpGroupDefaults.query.filter_by(velp_group_id=vg.id).delete(
+        synchronize_session=False
+    )
+    VelpGroupsInDocument.query.filter_by(velp_group_id=vg.id).delete(
+        synchronize_session=False
+    )
+    VelpGroup.query.filter_by(id=vg.id).delete(synchronize_session=False)
