@@ -13,6 +13,8 @@ from flask import request
 from isodate import Duration
 from sqlalchemy import inspect, event
 from sqlalchemy.orm.state import InstanceState
+from timApp.velp.velp import delete_velp_group
+
 from timApp.velp.velp_models import VelpGroupsInDocument, VelpGroup
 
 from timApp.auth.accesshelper import (
@@ -298,7 +300,7 @@ def add_permission_basic(
 
         # copy permissions to document's velp groups
         if p_model.edit_velp_group_perms:
-            ap = copy_doc_perms_to_velp_groups(i)
+            ap = add_velp_group_permissions(p_model, i, replace_active_duration=False)
             if ap:
                 log_right(f"added {ap[0].info_str} for {username} in {i.path}")
 
@@ -320,7 +322,7 @@ def add_permission(m: PermissionSingleEditModel):
         if m.edit_velp_group_perms:
             # Currently only document velp group permissions are supported
             if isinstance(i, DocInfo | DocEntry):
-                ag = copy_doc_perms_to_velp_groups(i)
+                ag = add_velp_group_permissions(m, i)
                 log_right(
                     f"added {ag[0].info_str} for {seq_to_str(m.groups)} in {i.path}"
                 )
@@ -387,7 +389,7 @@ def expire_permission_url(doc_id: int, username: str, redir: str | None = None):
 
 
 def expire_doc_velp_groups_perms(doc_id: int, ug: UserGroup) -> None:
-    """Expire permissions for a document's VelpGroups for a specific UserGroup
+    """Expire view permissions for a document's VelpGroups for a specific UserGroup
 
     :param doc_id: ID for the document
     :param ug: UserGroup whose permissions will be expired
@@ -395,6 +397,7 @@ def expire_doc_velp_groups_perms(doc_id: int, ug: UserGroup) -> None:
     vgs = get_groups_from_document_table(doc_id, ug.id)
     accs = [BlockAccess]
     for vg in vgs:
+        # TODO Should this apply to ALL permissions, instead of just 'view'?
         acc: BlockAccess | None = BlockAccess.query.filter_by(
             type=AccessType.view.value,
             block_id=vg.id,
@@ -459,7 +462,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
         .all()
     )
     a = None
-    rm_groups = None
+    velp_groups = None
     owned_items_before = set()
     for i in items:
         checked_owner = verify_permission_edit_access(i, m.type)
@@ -473,13 +476,13 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
             if m.edit_velp_group_perms:
                 # Currently only document velp group permissions are supported
                 if isinstance(i, DocInfo | DocEntry):
-                    rm_groups = copy_doc_perms_to_velp_groups(i)
+                    velp_groups = add_velp_group_permissions(m, i)
         else:
             for g in groups:
                 a = remove_perm(g, i, m.type) or a
                 # Also remove permissions to item's/document's velp groups, if any
                 if m.edit_velp_group_perms:
-                    rm_groups = remove_velp_group_perms(i, g, m.type)
+                    velp_groups = remove_velp_group_perms(i, g, m.type)
 
     if m.type == AccessType.owner:
         owned_items_after = set()
@@ -494,11 +497,12 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
         log_right(
             f"{action} {a.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}"
         )
-        if rm_groups:
-            log_right(
-                f"{action} {rm_groups[0].info_str} for {seq_to_str(m.groups)} in blocks: "
-                + f"{seq_to_str(list(str(x) for x in m.ids))}"
-            )
+        if velp_groups:
+            for vg in velp_groups:
+                log_right(
+                    f"{action} {vg.info_str} for {seq_to_str(m.groups)} in blocks: "
+                    + f"{seq_to_str(list(str(x) for x in m.ids))}"
+                )
         db.session.commit()
     return permission_response(m)
 
@@ -530,10 +534,46 @@ def add_perm(
     return accs
 
 
-def copy_doc_perms_to_velp_groups(i: ItemOrBlock) -> list[BlockAccess]:
-    """Copy permissions from document to its attached velp groups
+def add_velp_group_permissions(
+    p: PermissionEditModel,
+    doc: DocInfo | DocEntry,
+    replace_active_duration: bool = True,
+) -> list[BlockAccess]:
 
-    :param i: Document that the Velp Groups are attached to
+    opt = p.time.effective_opt
+    accs = []
+    vgs: [VelpGroup] = get_groups_from_document_table(doc.id, None)
+    if not vgs:
+        return []
+    for vg in vgs:
+        # don't add permissions to users' personal velp groups
+        if not vg.name == "Personal-default":
+            for group in p.group_objects:
+                a = grant_access(
+                    group,
+                    vg.block,
+                    p.type,
+                    accessible_from=opt.ffrom,
+                    accessible_to=opt.to,
+                    duration_from=opt.durationFrom,
+                    duration_to=opt.durationTo,
+                    duration=opt.duration,
+                    require_confirm=False,  # Parent doc has been confirmed, no need to confirm VelpGroups
+                    replace_active_duration=replace_active_duration,
+                )
+                accs.append(a)
+    return accs
+
+
+def copy_doc_perms_to_velp_groups(i: ItemOrBlock) -> list[BlockAccess]:
+    """Copy permissions from document to its attached VelpGroups
+
+    NOTE: Any changes to the document's permissions should be committed
+    to the database before calling this function, otherwise the returned
+    list of BlockAccesses may contain outdated permissions for VelpGroups.
+
+    :param i: Document that the VelpGroups are attached to
+    :return: List of BlockAccess objects for the document's VelpGroups
     """
     vgs = (
         VelpGroupsInDocument.query.filter_by(doc_id=i.id)
@@ -813,6 +853,7 @@ def add_default_doc_permission(m: DefaultPermissionModel) -> Response:
         duration_to=opt.durationTo,
         duration=opt.duration,
     )
+
     db.session.commit()
     return permission_response(m)
 
@@ -850,6 +891,13 @@ def del_document(doc_id: int) -> Response:
     d = get_doc_or_abort(doc_id)
     verify_ownership(d)
     soft_delete_document(d)
+
+    # remove attached velp groups
+    vgs: [VelpGroup] = get_groups_from_document_table(d, None)
+    if vgs:
+        for vg in vgs:
+            delete_velp_group(vg.id)
+
     db.session.commit()
     return ok_response()
 
