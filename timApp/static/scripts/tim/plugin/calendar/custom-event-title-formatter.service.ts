@@ -10,7 +10,7 @@
  * @date 24.5.2022
  */
 import {Injectable} from "@angular/core";
-import {CalendarEventTitleFormatter, CalendarEvent} from "angular-calendar";
+import {CalendarEvent, CalendarEventTitleFormatter} from "angular-calendar";
 import {TIMEventMeta} from "./calendar.component";
 
 /**
@@ -23,14 +23,46 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
         super();
     }
 
+    private getEventShortName(event: CalendarEvent<TIMEventMeta>) {
+        if (!event.meta) {
+            return "";
+        }
+        let res = `(${event.meta.enrollments}/${event.meta.maxSize}`;
+        if (
+            event.meta.extraEnrollments !== undefined &&
+            event.meta.extraEnrollments !== null
+        ) {
+            res += ` +${event.meta.extraEnrollments}`;
+        }
+        res += `) ${event.title}`;
+        console.log(event.meta, res);
+        return res;
+    }
+
+    private getEventLongName(
+        event: CalendarEvent<TIMEventMeta>,
+        title: string
+    ) {
+        if (!event.meta) {
+            return "";
+        }
+        let res = `${title} (${event.meta.enrollments}/${event.meta.maxSize}`;
+        if (
+            event.meta.extraEnrollments !== undefined &&
+            event.meta.extraEnrollments !== null
+        ) {
+            res += `, ${event.meta.extraEnrollments} extra`;
+        }
+        res += ")";
+        return res;
+    }
+
     /**
      * Customize week title
      * @param event current Event in the calendar
      */
     week(event: CalendarEvent<TIMEventMeta>): string {
-        return ` ${event.title} (${event.meta!.enrollments}/${
-            event.meta!.maxSize
-        })`;
+        return this.getEventShortName(event);
     }
 
     /**
@@ -38,9 +70,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
      * @param event current Event in the calendar
      */
     day(event: CalendarEvent<TIMEventMeta>): string {
-        return ` ${event.title} (${event.meta!.enrollments}/${
-            event.meta!.maxSize
-        })`;
+        return this.getEventShortName(event);
     }
 
     /**
@@ -49,7 +79,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
      * @param title title of the Event
      */
     weekTooltip(event: CalendarEvent<TIMEventMeta>, title: string): string {
-        return `${title} (${event.meta!.enrollments}/${event.meta!.maxSize})`;
+        return this.getEventLongName(event, title);
     }
 
     /**
@@ -58,7 +88,7 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
      * @param title title of the Event
      */
     dayTooltip(event: CalendarEvent<TIMEventMeta>, title: string): string {
-        return `${title} (${event.meta!.enrollments}/${event.meta!.maxSize})`;
+        return this.getEventLongName(event, title);
     }
 
     /**
@@ -67,6 +97,6 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
      * @param title title of the Event
      */
     monthTooltip(event: CalendarEvent<TIMEventMeta>, title: string): string {
-        return `${title} (${event.meta!.enrollments}/${event.meta!.maxSize})`;
+        return this.getEventLongName(event, title);
     }
 }

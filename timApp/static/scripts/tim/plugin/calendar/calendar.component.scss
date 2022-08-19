@@ -13,8 +13,12 @@ The style sheet for the calendar plugin
   padding: 5px 0px;
 }
 
+.cal-event {
+  padding: 0 1px !important;
+}
+
 .cal-event-title {
-  font-size: 10px;
+  font-size: 9px;
 }
 
 /* Disable event creation when clicking the time in the week view */
