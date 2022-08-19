@@ -241,7 +241,8 @@ import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
             <ng-container class="col-sm-12" footer>
                 <div class="col-sm-12 row">
                 <span [hidden]="hideEventFulLSpan()" style="float: left; margin-left: 10px">
-                    <b i18n>The event is full.</b>
+                    <span i18n>The event is full</span>
+                    <span *ngIf="data.meta?.isExtra" i18n> (you can still book as extra)</span>
                 </span>
                     <span [hidden]="!userHasBooked()" style="float: left">
                     <b i18n>You have booked this event.</b>
@@ -677,6 +678,11 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     }
 
     initEventBookState() {
+        console.log(this.data.meta);
+        if (this.data.meta?.isExtra) {
+            this.eventBookState = {canBook: true, reason: undefined};
+            return;
+        }
         if (this.eventIsFull()) {
             this.eventBookState = {
                 canBook: false,

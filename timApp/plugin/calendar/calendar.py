@@ -19,7 +19,7 @@ from datetime import date as dtdate
 from datetime import datetime
 from io import StringIO
 from textwrap import wrap
-from typing import Any, Literal
+from typing import Literal
 
 from flask import Response, render_template_string, url_for
 from sqlalchemy import false, true
@@ -34,7 +34,7 @@ from timApp.plugin.calendar.models import Event, EventGroup, Enrollment, EventTa
 from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_access
-from timApp.user.user import User, manage_access_set, edit_access_set
+from timApp.user.user import User, edit_access_set
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
@@ -97,6 +97,7 @@ class EventTemplate:
     location: str | None = None
     bookers: list[str] = field(default_factory=list)
     setters: list[str] = field(default_factory=list)
+    extraBookers: list[str] = field(default_factory=list)
     capacity: int = 0
     tags: list[str] = field(default_factory=list)
 
@@ -173,6 +174,7 @@ eventTemplates:            # Event templates for the calendar. Used to create ne
           - bookersgroup
         setters:           # List of groups that can edit the event details.
           - settersgroup
+        extraBookers: []   # List of groups that can book the event but who will not affect the capacity.
         capacity: 1        # Maximum number of people that can book the event.
         tags:              # List of tags that can be used to filter events.
           - tag1
@@ -431,6 +433,7 @@ class CalendarEvent:
     description: str
     booker_groups: list[str] | None = None
     setter_groups: list[str] | None = None
+    extra_booker_groups: list[str] | None = None
     tags: list[str] | None = None
     id: int = -1
 
@@ -448,6 +451,12 @@ def add_events(events: list[CalendarEvent]) -> Response:
     event_ug_names = {
         *[ug for event in events if event.booker_groups for ug in event.booker_groups],
         *[ug for event in events if event.setter_groups for ug in event.setter_groups],
+        *[
+            ug
+            for event in events
+            if event.extra_booker_groups
+            for ug in event.extra_booker_groups
+        ],
     }
     event_ugs = UserGroup.query.filter(UserGroup.name.in_(event_ug_names)).all()
     event_ugs_dict = {ug.name: ug for ug in event_ugs}
@@ -462,32 +471,28 @@ def add_events(events: list[CalendarEvent]) -> Response:
     )
     event_tags_dict = {tag.tag: tag for tag in EventTag.get_or_create(event_tags)}
 
-    def get_event_groups(
-        group_names: set[str], access_set: set[int], **kwargs: Any
-    ) -> list[UserGroup]:
-        res: list[UserGroup] = []
-        for group_name in group_names:
-            if not (ug := event_ugs_dict.get(group_name)):
-                raise NotExist(f"Group '{group_name}' not found")
-            verify_group_access(ug, access_set)
-            res.append(
-                EventGroup(
-                    user_group=ug,
-                    **kwargs,
-                )
-            )
-        return res
-
     result = []
     for event in events:
         bookers = set(event.booker_groups or [])
         setters = set(event.setter_groups or [])
-        # Bookers cannot also be setters because setters can already book events
-        bookers -= setters
-        event_groups = [
-            *get_event_groups(bookers, manage_access_set, manager=False),
-            *get_event_groups(setters, edit_access_set, manager=True),
-        ]
+        extra_bookers = set(event.extra_booker_groups or [])
+        event_group_names = bookers | setters | extra_bookers
+        event_groups = []
+
+        for ug_name in event_group_names:
+            if not (ug := event_ugs_dict.get(ug_name)):
+                raise NotExist(f"Group '{ug_name}' not found")
+            manager = ug_name in setters
+            extra = ug_name in extra_bookers
+            require_access = edit_access_set if manager else edit_access_set
+            verify_group_access(ug, require_access)
+            event_groups.append(
+                EventGroup(
+                    user_group=ug,
+                    manager=manager,
+                    extra=extra,
+                )
+            )
 
         event_data = Event(
             title=event.title,
@@ -652,30 +657,36 @@ def book_event(event_id: int, booker_msg: str) -> Response:
     :return: HTTP 200 if succeeded, 400 if the event is already full
     """
     verify_logged_in()
+    user = get_current_user_object()
+    user_group = user.get_personal_group()
+
     event = Event.get_by_id(event_id)
-    if event is not None:
-        event_obj: Event = event
-        if len(event_obj.enrolled_users) >= event_obj.max_size:
-            raise RouteException("Event is already full")
-    else:
+    if not event:
         raise RouteException(f"Event not found by the id of {event_id}")
-    user_obj = get_current_user_object()
-    user_group = user_obj.get_personal_group()
+
+    right_info = event.get_enrollment_right(user)
+    if not right_info.can_enroll:
+        raise AccessDenied("No permission to enroll to the event")
+
+    e_cnt = event.enrollments_count
+    if not right_info.extra and e_cnt.normal >= event.max_size:
+        raise RouteException("Event is already full")
 
     enrollment = Enrollment.get_by_event_and_user(event_id, user_group.id)
     if enrollment is not None:
         raise RouteException("Event is already booked by the user")
 
+    # TODO: add enrollment types
     enrollment = Enrollment(
-        event_id=event_id,
-        usergroup_id=user_group.id,
+        user_group=user_group,
         enroll_type_id=0,
         booker_message=booker_msg,
-    )  # TODO: add enrollment types
+        extra=right_info.extra,
+    )
 
-    db.session.add(enrollment)
+    event.enrollments.append(enrollment)
     db.session.commit()
-    send_email_to_creator(event_id, True, user_obj)
+    send_email_to_creator(event_id, True, user)
     return ok_response()
 
 
@@ -687,19 +698,16 @@ def delete_booking(event_id: int) -> Response:
     :return: HTTP 200 if succeeded, otherwise 404
     """
     verify_logged_in()
-    user_obj = get_current_user_object()
-    group_id = -1
-    for group in user_obj.groups:
-        if group.name == user_obj.name:
-            group_id = group.id
+    user = get_current_user_object()
+    user_group = user.get_personal_group()
 
-    enrollment = Enrollment.get_by_event_and_user(event_id, group_id)
+    enrollment = Enrollment.get_by_event_and_user(event_id, user_group.id)
     if not enrollment:
         raise NotExist()
 
     db.session.delete(enrollment)
     db.session.commit()
-    send_email_to_creator(event_id, False, user_obj)
+    send_email_to_creator(event_id, False, user)
     return ok_response()
 
 

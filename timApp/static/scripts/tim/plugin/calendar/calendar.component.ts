@@ -104,6 +104,7 @@ const EventTemplate = t.type({
     location: nullable(t.string),
     bookers: t.array(t.string),
     setters: t.array(t.string),
+    extraBookers: t.array(t.string),
     tags: t.array(t.string),
     capacity: t.number,
 });
@@ -182,7 +183,9 @@ export type TIMEventMeta = {
     location: string;
     description: string;
     enrollments: number;
+    extraEnrollments?: number | null;
     maxSize: number;
+    isExtra: boolean;
     booker_groups: {
         name: string;
         message: string;
@@ -517,6 +520,7 @@ export class CalendarComponent
                 description: "",
                 enrollments: 0,
                 location: location,
+                isExtra: false,
                 maxSize: 1, // TODO: temporary solution
                 booker_groups: [],
                 editEnabled: this.editEnabled,
@@ -749,9 +753,11 @@ export class CalendarComponent
                     description: event.meta!.description,
                     tmpEvent: false,
                     enrollments: event.meta!.enrollments,
+                    extraEnrollments: event.meta!.extraEnrollments,
                     maxSize: event.meta!.maxSize,
                     location: event.meta!.location,
                     booker_groups: event.meta!.booker_groups,
+                    isExtra: event.meta!.isExtra,
                     editEnabled: this.editEnabled,
                     signup_before: new Date(event.meta!.signup_before),
                 };
@@ -785,12 +791,14 @@ export class CalendarComponent
 
         let bookerGroups: string[] = [];
         let setterGroups: string[] = [];
+        let extraBookersGroups: string[] = [];
         let capacity: number = 0;
         let tags: string[] = [];
         if (this.markup.eventTemplates) {
             const template = this.markup.eventTemplates[this.selectedEvent];
             bookerGroups = template.bookers;
             setterGroups = template.setters;
+            extraBookersGroups = template.extraBookers;
             capacity = template.capacity;
             tags = template.tags;
         }
@@ -807,6 +815,7 @@ export class CalendarComponent
                     signup_before: new Date(event.meta!.signup_before),
                     booker_groups: bookerGroups,
                     setter_groups: setterGroups,
+                    extra_booker_groups: extraBookersGroups,
                     max_size: capacity,
                     tags: tags,
                 })),
@@ -829,9 +838,11 @@ export class CalendarComponent
                         tmpEvent: false,
                         editEnabled: this.editEnabled,
                         enrollments: event.meta!.enrollments,
+                        extraEnrollments: event.meta!.extraEnrollments,
                         description: event.meta!.description,
                         maxSize: event.meta!.maxSize,
                         location: event.meta!.location,
+                        isExtra: event.meta!.isExtra,
                         booker_groups: [],
                         signup_before: new Date(event.meta!.signup_before),
                     },
