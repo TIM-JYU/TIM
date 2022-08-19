@@ -547,7 +547,8 @@ def copy_doc_perms_to_velp_groups(i: ItemOrBlock) -> list[BlockAccess]:
                     duration_from=right.duration_from,
                     duration_to=right.duration_to,
                     duration=right.duration,
-                    require_confirm=False,  # 'parent' document access is confirmed already, no need for it here
+                    # 'parent' document access is confirmed already, no need for it here
+                    require_confirm=False,
                     replace_active_duration=True,
                 )
                 ap_groups.append(a)
@@ -593,14 +594,24 @@ def clear_permissions(m: PermissionClearModel) -> Response:
         if not i:
             raise RouteException(f"Item not found: {p}")
         verify_ownership(i)
-        i.block.accesses = {
-            (ugid, permtype): v
-            for (ugid, permtype), v in i.block.accesses.items()
-            if permtype != m.type.value
-        }
-        # TODO propagate permission changes to document's velp groups
+        clear_doc_permissions(i, m.type)
+
+        # Clear permissions from document's velp groups
+        if m.edit_velp_group_perms and isinstance(i, DocInfo | DocEntry):
+            vgs = get_groups_from_document_table(i)
+            for vg in vgs:
+                clear_doc_permissions(vg, m.type)
+
     db.session.commit()
     return ok_response()
+
+
+def clear_doc_permissions(doc: DocInfo | DocEntry, a: AccessType) -> None:
+    doc.block.accesses = {
+        (ugid, permtype): v
+        for (ugid, permtype), v in doc.block.accesses.items()
+        if permtype != a.value
+    }
 
 
 # noinspection PyShadowingBuiltins
