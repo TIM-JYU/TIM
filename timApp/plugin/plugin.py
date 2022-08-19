@@ -115,6 +115,7 @@ NO_ANSWERBROWSER_PLUGINS = {
     "tableForm",
     "importData",
     "userSelect",
+    "calendar",
 }
 
 ALLOW_STYLES_PLUGINS = {
