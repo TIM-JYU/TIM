@@ -1529,6 +1529,11 @@ export class AnswerBrowserController
     async showModelAnswer() {
         if (this.modelAnswerFetched) {
             this.modelAnswerVisible = !this.modelAnswerVisible;
+            if (this.modelAnswerVisible) {
+                ParCompiler.processAllMathDelayed(
+                    this.element.find(".modelAnswer")
+                );
+            }
             return;
         }
         if (!this.viewctrl?.item.rights.teacher) {
@@ -1570,6 +1575,7 @@ export class AnswerBrowserController
         this.modelAnswerFetched = true;
         this.modelAnswerVisible = true;
         this.modelAnswerHtml = r.result.data.answer;
+        ParCompiler.processAllMathDelayed(this.element.find(".modelAnswer"));
     }
 
     updateAnswerFromURL() {

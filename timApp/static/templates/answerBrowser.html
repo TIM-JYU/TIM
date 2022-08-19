@@ -210,7 +210,7 @@
         <span ng-show="$ctrl.viewctrl.teacherMode && $ctrl.hasUserChanged() && !$ctrl.loading">(hover/click to update)</span>
         <!-- <img style="display: inline" src="/static/images/loading.gif" ng-show="$ctrl.loading"> -->
     </div>
-    <div ng-if="$ctrl.modelAnswer">
+    <div class="modelAnswer" ng-if="$ctrl.modelAnswer">
         <a ng-if="$ctrl.showModelAnswerLink()"
            title="Show model answer"
            ng-click="$ctrl.showModelAnswer()">{{$ctrl.getModelAnswerLinkText()}}</a>
