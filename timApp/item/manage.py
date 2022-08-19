@@ -239,7 +239,6 @@ class DefaultPermissionRemoveModel(PermissionRemoveModel):
 class PermissionMassEditModel(PermissionEditModel):
     ids: list[int]
     action: EditOption = field(metadata={"by_value": True})
-    edit_velp_group_perms: bool | None
 
 
 @manage_page.get("/permissions/add/<int:doc_id>/<username>")
@@ -250,6 +249,13 @@ def add_permission_basic(
         raise RouteException("Only 'view' is allowed to prevent misuse")
 
     i = get_item_or_abort(doc_id)
+
+    edit_vg_perms = None
+    # Currently only document velp group permissions are supported
+    if isinstance(i, DocInfo | DocEntry):
+        # Check for velp group perms flag silently
+        edit_vg_perms = request.get_json(silent=True).get("edit_velp_group_perms")
+
     settings = i.document.get_settings()
     if not settings.allow_url_permission_edits():
         raise AccessDenied(
@@ -257,9 +263,6 @@ def add_permission_basic(
         )
 
     verify_permission_edit_access(i, AccessType.view)
-    # We don't want to interrupt document permissions handling,
-    # check for velp group perms flag silently
-    edit_vg_perms = request.get_json(silent=True).get("edit_velp_group_perms")
 
     p_model = PermissionEditModel(
         type=AccessType.view,
@@ -315,8 +318,12 @@ def add_permission(m: PermissionSingleEditModel):
 
         # copy permissions to document's velp groups
         if m.edit_velp_group_perms:
-            ag = copy_doc_perms_to_velp_groups(i)
-            log_right(f"added {ag[0].info_str} for {seq_to_str(m.groups)} in {i.path}")
+            # Currently only document velp group permissions are supported
+            if isinstance(i, DocInfo | DocEntry):
+                ag = copy_doc_perms_to_velp_groups(i)
+                log_right(
+                    f"added {ag[0].info_str} for {seq_to_str(m.groups)} in {i.path}"
+                )
 
         db.session.commit()
     return permission_response(m)
@@ -372,6 +379,21 @@ def expire_permission_url(doc_id: int, username: str, redir: str | None = None):
         ba.duration = None
         ba.duration_from = None
         ba.duration_to = None
+
+        # also expire permissions for document's velp groups
+        vgs = get_groups_from_document_table(i.id, g.id)
+        accs = [BlockAccess]
+        for vg in vgs:
+            acc: BlockAccess | None = BlockAccess.query.filter_by(
+                type=AccessType.view.value,
+                block_id=vg.id,
+                usergroup_id=g.id,
+            ).first()
+            if acc:
+                accs.append(acc)
+        for a in accs:
+            a.duration, a.duration_from, a.duration_to = None, None, None
+
     db.session.commit()
     return ok_response() if not redir else safe_redirect(redir)
 
@@ -439,7 +461,9 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
                 a = accs[0]
             # copy permissions to item's/document's velp groups, if any
             if m.edit_velp_group_perms:
-                rm_groups = copy_doc_perms_to_velp_groups(i)
+                # Currently only document velp group permissions are supported
+                if isinstance(i, DocInfo | DocEntry):
+                    rm_groups = copy_doc_perms_to_velp_groups(i)
         else:
             for g in groups:
                 a = remove_perm(g, i, m.type) or a
@@ -557,6 +581,7 @@ def remove_permission(m: PermissionRemoveModel) -> Response:
 class PermissionClearModel:
     paths: list[str]
     type: AccessType = field(metadata={"by_value": True})
+    edit_velp_group_perms: bool | None
 
 
 @manage_page.put("/permissions/clear", model=PermissionClearModel)
