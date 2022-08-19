@@ -508,7 +508,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
                     f"{action} {vg.info_str} for {seq_to_str(m.groups)} in blocks: "
                     + f"{seq_to_str(list(str(x) for x in m.ids))}"
                 )
-    db.session.commit()
+        db.session.commit()
     return permission_response(m)
 
 
