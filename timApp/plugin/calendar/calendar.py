@@ -392,11 +392,17 @@ def get_event_bookers(event_id: int) -> str | Response:
         raise NotExist(no_event_found)
 
     bookers_info = []
-    booker_groups = event.enrolled_users
-    for booker_group in booker_groups:
-        bookers = booker_group.users
+    enrollments = event.enrollments
+    for enrollment in enrollments:
+        bookers = enrollment.usergroup.users
         for booker in bookers:
-            bookers_info.append({"full_name": booker.real_name, "email": booker.email})
+            bookers_info.append(
+                {
+                    "full_name": booker.real_name,
+                    "email": booker.email,
+                    "isExtra": "x" if enrollment.extra else "",
+                }
+            )
 
     return render_template_string(
         """
@@ -410,11 +416,13 @@ def get_event_bookers(event_id: int) -> str | Response:
             <tr>
                 <th>Full name</th>
                 <th>Email</th>
+                <th>Extra?</th>
             </tr>
             {% for booker in bookers_info %}
                 <tr>
                     <td>{{ booker.full_name }}</td>
                     <td>{{ booker.email }}</td>
+                    <td>{{ booker.isExtra }}</td>
                 </tr>
             {% endfor %}
         </table>
