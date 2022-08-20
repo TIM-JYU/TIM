@@ -35,7 +35,6 @@ export class CustomEventTitleFormatter extends CalendarEventTitleFormatter {
             res += ` +${event.meta.extraEnrollments}`;
         }
         res += `) ${event.title}`;
-        console.log(event.meta, res);
         return res;
     }
 

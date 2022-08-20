@@ -23,6 +23,7 @@ from textwrap import wrap
 from typing import Literal
 
 from flask import Response, render_template_string, url_for
+from marshmallow import missing
 from sqlalchemy import false, true
 
 from timApp.auth.accesshelper import verify_logged_in, AccessDenied
@@ -49,6 +50,7 @@ from tim_common.pluginserver_flask import (
     register_html_routes,
     EditorTab,
 )
+from tim_common.utils import Missing
 
 calendar_plugin = TypedBlueprint("calendar_plugin", __name__, url_prefix="/calendar")
 
@@ -149,6 +151,24 @@ class CalendarHtmlModel(
         """
 
 
+@dataclass
+class CalendarEvent:
+    title: str
+    start: datetime
+    end: datetime
+    signup_before: datetime
+    max_size: int
+    location: str
+    description: str
+    booker_groups: list[str] | None = None
+    setter_groups: list[str] | None = None
+    extra_booker_groups: list[str] | None = None
+    send_notifications: bool = True
+    tags: list[str] | None = None
+    id: int | Missing = missing
+    delete: bool | Missing = missing
+
+
 def reqs_handle() -> PluginReqs:
     template_full = """
 ``` {plugin="calendar"}
@@ -218,17 +238,93 @@ eventTemplates:            # Event templates for the calendar. Used to create ne
     }
 
 
-@calendar_plugin.get("/export")
-def get_url() -> Response:
+class CalendarExportFormat(Enum):
+    """Export formats for the calendar plugin"""
+
+    ICS = "ics"
+    TEMPLATE_JSON = "template-json"
+
+
+@dataclass
+class CalendarExportOptions(FilterOptions):
+    format: CalendarExportFormat = field(
+        default=CalendarExportFormat.ICS,
+        metadata={"by_value": True},
+    )
+
+
+@calendar_plugin.get("/export", model=CalendarExportOptions)
+def get_url(opts: CalendarExportOptions) -> Response:
     """Creates a unique URl for user to be used when calendar is exported. User ID is
     bind to specific hash code
 
     :return: URL with hash code
     """
     verify_logged_in()
-    cur_user = get_current_user_id()
+    cur_user = get_current_user_object()
+    match opts.format:
+        case CalendarExportFormat.ICS:
+            return export_ical(cur_user)
+        case CalendarExportFormat.TEMPLATE_JSON:
+            return export_template_json(cur_user, opts)
+    raise RouteException(f"Unknown export format: {format}")
+
+
+def export_template_json(user: User, opts: CalendarExportOptions) -> Response:
+    """
+    Exports the calendar as importable (i.e. template) JSON
+
+    :param user: User to export the calendar for
+    :param opts: Options for the export
+    :return:
+    """
+    events = events_of_user(user, opts)
+
+    result = []
+    for event in events:
+        cal_event = CalendarEvent(
+            title=event.title,
+            start=event.start_time,
+            end=event.end_time,
+            signup_before=event.signup_before,
+            max_size=event.max_size,
+            location=event.location,
+            description=event.message,
+            tags=[tag.tag for tag in event.tags],
+            send_notifications=event.send_notifications,
+            id=event.event_id,
+        )
+
+        bookers = []
+        setters = []
+        extra_bookers = []
+
+        for eg in event.event_groups:
+            if eg.manager:
+                setters.append(eg.user_group.name)
+            if not eg.manager:
+                bookers.append(eg.user_group.name)
+            if eg.extra:
+                extra_bookers.append(eg.user_group.name)
+
+        cal_event.booker_groups = bookers
+        cal_event.setter_groups = setters
+        cal_event.extra_booker_groups = extra_bookers
+
+        result.append(cal_event)
+
+    return json_response(result)
+
+
+def export_ical(user: User) -> Response:
+    """
+    Generate an ICS link for the user's calendar
+
+    :param user: User to generate ICS link for
+    :return:
+    """
     user_data: ExportedCalendar = ExportedCalendar.query.filter(
-        ExportedCalendar.user_id == cur_user
+        ExportedCalendar.user_id == user.id
     ).one_or_none()
     if user_data is not None:
         hash_code = user_data.calendar_hash
@@ -236,13 +332,21 @@ def get_url() -> Response:
         return text_response(url)
     hash_code = secrets.token_urlsafe(16)
     user_data = ExportedCalendar(
-        user_id=cur_user,
+        user_id=user.id,
         calendar_hash=hash_code,
     )
     db.session.add(user_data)
     db.session.commit()
     url = url_for("calendar_plugin.get_ical", key=hash_code, _external=True)
     return text_response(url)
+
+
+@calendar_plugin.post("/import")
+def import_events(events: list[CalendarEvent]) -> Response:
+    verify_logged_in()
+    save_events(get_current_user_object(), events, True)
+    db.session.commit()
+    return ok_response()
 
 
 @calendar_plugin.get("/ical")
@@ -438,33 +542,9 @@ def get_event_bookers(event_id: int) -> str | Response:
     )
 
 
-@dataclass
-class CalendarEvent:
-    title: str
-    start: datetime
-    end: datetime
-    signup_before: datetime
-    max_size: int
-    location: str
-    description: str
-    booker_groups: list[str] | None = None
-    setter_groups: list[str] | None = None
-    extra_booker_groups: list[str] | None = None
-    send_notifications: bool = True
-    tags: list[str] | None = None
-    id: int = -1
-
-
-@calendar_plugin.post("/events")
-def add_events(events: list[CalendarEvent]) -> Response:
-    """Saves the calendar events.
-    User must have at least manage rights to given booker groups and edit rights to given setter groups.
-
-    :param events: List of events to be persisted
-    :return: Saved event information in JSON format
-    """
-    verify_logged_in()
-    cur_user = get_current_user_id()
+def save_events(
+    user: User, events: list[CalendarEvent], modify_existing: bool = False
+) -> list[Event]:
     event_ug_names = {
         *[ug for event in events if event.booker_groups for ug in event.booker_groups],
         *[ug for event in events if event.setter_groups for ug in event.setter_groups],
@@ -489,11 +569,10 @@ def add_events(events: list[CalendarEvent]) -> Response:
     )
     event_tags_dict = {tag.tag: tag for tag in EventTag.get_or_create(event_tags)}
 
-    result = []
-    for event in events:
-        bookers = set(event.booker_groups or [])
-        setters = set(event.setter_groups or [])
-        extra_bookers = set(event.extra_booker_groups or [])
+    def get_event_groups(cal_event: CalendarEvent) -> list[EventGroup]:
+        bookers = set(cal_event.booker_groups or [])
+        setters = set(cal_event.setter_groups or [])
+        extra_bookers = set(cal_event.extra_booker_groups or [])
         event_group_names = bookers | setters | extra_bookers
         event_groups = []
 
@@ -511,27 +590,80 @@ def add_events(events: list[CalendarEvent]) -> Response:
                     extra=extra,
                 )
             )
+        return event_groups
 
+    def add_event(cal_event: CalendarEvent) -> Event:
+        event_groups = get_event_groups(cal_event)
         event_data = Event(
-            title=event.title,
-            message=event.description,
-            location=event.location,
-            start_time=event.start,
-            end_time=event.end,
-            creator_user_id=cur_user,
-            max_size=event.max_size,
-            signup_before=event.signup_before,
-            send_notifications=event.send_notifications,
-            tags=[event_tags_dict[tag] for tag in event.tags]
-            if event.tags is not None
+            title=cal_event.title,
+            message=cal_event.description,
+            location=cal_event.location,
+            start_time=cal_event.start,
+            end_time=cal_event.end,
+            creator_user_id=user.id,
+            max_size=cal_event.max_size,
+            signup_before=cal_event.signup_before,
+            send_notifications=cal_event.send_notifications,
+            tags=[event_tags_dict[tag] for tag in cal_event.tags]
+            if cal_event.tags is not None
             else [],
             event_groups=event_groups,
         )
-        result.append(event_data)
         db.session.add(event_data)
+        return event_data
 
+    # TODO: This could be probably deduplicated further
+    # noinspection DuplicatedCode
+    def update_event(cal_event: CalendarEvent, event: Event) -> Event:
+        event.title = cal_event.title
+        event.start_time = cal_event.start
+        event.end_time = cal_event.end
+        event.signup_before = cal_event.signup_before
+        event.max_size = cal_event.max_size
+        event.location = cal_event.location
+        event.message = cal_event.description
+        event.send_notifications = cal_event.send_notifications
+        event.tags = (
+            [event_tags_dict[tag] for tag in cal_event.tags] if cal_event.tags else []
+        )
+        event.event_groups = get_event_groups(cal_event)
+
+        return event
+
+    result = []
+    for calendar_event in events:
+        if calendar_event.id is not missing:
+            if not modify_existing:
+                raise AccessDenied("Cannot modify existing events via this route")
+            event: Event = Event.query.filter_by(event_id=calendar_event.id).first()
+            if not event:
+                raise NotExist(f"Event with id {calendar_event.id} not found")
+            rights = event.get_enrollment_right(user)
+            if not rights.can_manage_event:
+                raise AccessDenied(
+                    f"No permission to modify event with id {calendar_event.id}"
+                )
+            if calendar_event.delete:
+                db.session.delete(event)
+                continue
+            result.append(update_event(calendar_event, event))
+        else:
+            result.append(add_event(calendar_event))
+
+    return result
+
+
+@calendar_plugin.post("/events")
+def add_events(events: list[CalendarEvent]) -> Response:
+    """Saves the calendar events.
+    User must have at least manage rights to given booker groups and edit rights to given setter groups.
+
+    :param events: List of events to be persisted
+    :return: Saved event information in JSON format
+    """
+    verify_logged_in()
+    result = save_events(get_current_user_object(), events)
     db.session.commit()
-
     return json_response(result)
 
 

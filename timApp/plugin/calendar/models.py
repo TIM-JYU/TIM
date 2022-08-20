@@ -145,6 +145,11 @@ class EnrollmentRight:
     can_enroll: bool
     extra: bool
     manager: bool
+    creator: bool
+
+    @property
+    def can_manage_event(self) -> bool:
+        return self.manager or self.creator
 
 
 class Event(db.Model):
@@ -255,7 +260,7 @@ class Event(db.Model):
             (EventGroup.event_id == self.event_id) & EventGroup.usergroup_id.in_(ug_ids)
         ).all()
         if not event_groups:
-            return EnrollmentRight(False, False, False)
+            return EnrollmentRight(False, False, False, self.creator_user_id == user.id)
         extra = False
         manager = False
         for event_group in event_groups:
@@ -263,7 +268,7 @@ class Event(db.Model):
                 extra = True
             if event_group.manager:
                 manager = True
-        return EnrollmentRight(True, extra, manager)
+        return EnrollmentRight(True, extra, manager, self.creator_user_id == user.id)
 
     @staticmethod
     def get_by_id(event_id: int) -> Optional["Event"]:
