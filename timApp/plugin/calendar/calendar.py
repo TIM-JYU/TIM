@@ -362,7 +362,8 @@ def get_ical(key: str) -> Response:
         raise NotExist()
 
     user_obj = user_data.user
-    events = events_of_user(user_obj)
+    # TODO: Add proper per-ICS URL filtering (e.g. save FilterOptions to the database)
+    events = events_of_user(user_obj, FilterOptions(tags=[], groups=[]))
 
     buf = StringIO()
     buf.write("BEGIN:VCALENDAR\r\n")
