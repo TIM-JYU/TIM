@@ -259,8 +259,10 @@ class Event(db.Model):
         event_groups = EventGroup.query.filter(
             (EventGroup.event_id == self.event_id) & EventGroup.usergroup_id.in_(ug_ids)
         ).all()
+        is_creator = self.creator_user_id == user.id
         if not event_groups:
-            return EnrollmentRight(False, False, False, self.creator_user_id == user.id)
+            # Creators can self-enroll
+            return EnrollmentRight(is_creator, False, False, is_creator)
         extra = False
         manager = False
         for event_group in event_groups:
@@ -268,7 +270,7 @@ class Event(db.Model):
                 extra = True
             if event_group.manager:
                 manager = True
-        return EnrollmentRight(True, extra, manager, self.creator_user_id == user.id)
+        return EnrollmentRight(True, extra, manager, is_creator)
 
     @staticmethod
     def get_by_id(event_id: int) -> Optional["Event"]:
