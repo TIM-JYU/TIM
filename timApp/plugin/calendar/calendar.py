@@ -17,6 +17,7 @@ import uuid
 from dataclasses import dataclass, asdict, field
 from datetime import date as dtdate
 from datetime import datetime
+from enum import Enum
 from io import StringIO
 from textwrap import wrap
 from typing import Literal
@@ -163,7 +164,7 @@ def reqs_handle() -> PluginReqs:
 viewOptions:               # Default view options for the calendar
     dayStartHour: 8        # Time at which the day starts (0-24)
     dayEndHour: 20         # Time at which the day ends (0-24)
-    segmentDuration: 60    # Duration of a single time segment (a selectable slot in calendar) in minutes. Allowed values: 15, 20, 30, 60, 120
+    segmentDuration: 60    # Single segment duration in minutes. Allowed values: 15, 20, 30, 60, 120
     week: null             # Week number to show (if not specified, show current week)
     date: null             # Date to show (if not specified, show current date). Has higher priority than week.
     mode: week             # Calendar mode to show (day, week, month)
@@ -318,16 +319,19 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
         .with_entities(EventGroup.event_id)
         .subquery()
     )
+    # noinspection PyUnresolvedReferences
     event_filter |= Event.event_id.in_(subquery_event_groups)
 
     # Filter out any tags and groups
     if filter_opts.tags is not None:
         q = q.join(EventTag, Event.tags)
+        # noinspection PyUnresolvedReferences
         event_filter &= EventTag.tag.in_(filter_opts.tags)
     if filter_opts.groups is not None:
         q = q.join(EventGroup, Event.event_groups).join(
             UserGroup, EventGroup.usergroup_id == UserGroup.id
         )
+        # noinspection PyUnresolvedReferences
         event_filter &= UserGroup.name.in_(filter_opts.groups)
 
     # Add in all bookend events if asked
@@ -340,6 +344,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
         )
         # We have to do this via union so that earlier filters are not applied
         q = q.filter(event_filter)
+        # noinspection PyUnresolvedReferences
         q2 = Event.query.filter(Event.event_id.in_(enrolled_subquery))
         q = q.union(q2)
         event_filter = true()
@@ -470,6 +475,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
             for ug in event.extra_booker_groups
         ],
     }
+    # noinspection PyUnresolvedReferences
     event_ugs = UserGroup.query.filter(UserGroup.name.in_(event_ug_names)).all()
     event_ugs_dict = {ug.name: ug for ug in event_ugs}
     event_tags = set(
@@ -543,6 +549,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     old_event = Event.get_by_id(event_id)
     if not old_event:
         raise NotExist()
+    # noinspection DuplicatedCode
     old_event.title = event.title
     old_event.location = event.location
     old_event.message = event.description
@@ -702,7 +709,7 @@ def book_event(event_id: int, booker_msg: str) -> Response:
 
     event.enrollments.append(enrollment)
     db.session.commit()
-    send_email_to_creator(event_id, True, user)
+    send_email_to_creator(event_id, CalendarEmailEvent.Booked, user)
     return ok_response()
 
 
@@ -723,17 +730,23 @@ def delete_booking(event_id: int) -> Response:
 
     db.session.delete(enrollment)
     db.session.commit()
-    send_email_to_creator(event_id, False, user)
+    send_email_to_creator(event_id, CalendarEmailEvent.Cancelled, user)
     return ok_response()
 
 
-def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> None:
+class CalendarEmailEvent(Enum):
+    Booked = "booked"
+    Cancelled = "cancelled"
+
+
+def send_email_to_creator(
+    event_id: int, event_type: CalendarEmailEvent, user_obj: User
+) -> None:
     """
     Sends an email of cancelled/booked time to creator of the event
 
-    :param: event_id of the event
-    :param: msg_type of the message, reservation (True) or cancellation (False)
-    :return: None, otherwise 404
+    :param: event_id ID the event
+    :param: event_type Event type to inform of
     """
     event = Event.get_by_id(event_id)
     if not event:
@@ -746,13 +759,10 @@ def send_email_to_creator(event_id: int, msg_type: bool, user_obj: User) -> None
     end_time = event.end_time.astimezone(fin_timezone).strftime("%H:%M (UTC %z)")
     event_time = f"{start_time}-{end_time}"
     name = user_obj.name
-    match msg_type:
-        case True:
-            subject = f"TIM-Calendar reservation {event.title} {event_time} has been booked by {name}."
-        case False:
-            subject = f"TIM-Calendar reservation {event.title} {event_time} has been cancelled by {name}."
     rcpt = creator.email
-    msg = subject
+    msg = f"TIM-Calendar reservation {event.title} {event_time} has been {event_type.value} by {name}."
+    # TODO: Subject should be shorter
+    subject = msg
     send_email(rcpt, subject, msg)
 
 
