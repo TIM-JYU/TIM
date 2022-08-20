@@ -404,6 +404,7 @@ def get_event_bookers(event_id: int) -> str | Response:
                 }
             )
 
+    bookers_info = sorted(bookers_info, key=lambda x: 0 if x["isExtra"] else 1)
     return render_template_string(
         """
     <style>
