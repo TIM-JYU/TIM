@@ -6728,7 +6728,7 @@
       </trans-unit>
       <trans-unit id="7997419902971420998" datatype="html">
         <source> (you can still book as extra)</source>
-        <target state="translated"> (voit silti ilmoittautua extrana)</target>
+        <target state="translated"> (voit silti ilmoittautua ylimääräisenä osallistujana)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">253</context>
