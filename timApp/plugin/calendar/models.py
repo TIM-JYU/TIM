@@ -12,6 +12,7 @@ __authors__ = [
 __license__ = "MIT"
 __date__ = "24.5.2022"
 
+from dataclasses import dataclass
 from typing import Optional, Iterable
 
 from sqlalchemy import func
@@ -35,6 +36,9 @@ class EventGroup(db.Model):
 
     manager = db.Column(db.Boolean)
     """Is the group a manager (i.e. is able to modify event settings)?"""
+
+    extra = db.Column(db.Boolean, nullable=False, default=False)
+    """Is this group an extra group (i.e. can it enroll without affecting the event capacity)?"""
 
     user_group = db.relationship(UserGroup, lazy="select")
     """The usergroup that belongs to the group"""
@@ -65,6 +69,9 @@ class Enrollment(db.Model):
 
     usergroup = db.relationship(UserGroup, lazy="select")
     """User group that booked the event"""
+
+    extra = db.Column(db.Boolean, nullable=False, default=False)
+    """Is this an extra enrollment (i.e. can it enroll without affecting the event capacity)?"""
 
     @staticmethod
     def get_by_event_and_user(
@@ -126,6 +133,19 @@ class EventTag(db.Model):
         return result
 
 
+@dataclass(slots=True)
+class EnrollmentCounts:
+    normal: int
+    extra: int | None
+
+
+@dataclass(slots=True)
+class EnrollmentRight:
+    can_enroll: bool
+    extra: bool
+    manager: bool
+
+
 class Event(db.Model):
     """A calendar event. Event has metadata (title, time, location) and various participating user groups."""
 
@@ -178,6 +198,9 @@ class Event(db.Model):
     creator: User = db.relationship(User)
     """User who created the event originally"""
 
+    send_notifications = db.Column(db.Boolean, nullable=False, default=True)
+    """Whether to send notifications related to enrollment to the event"""
+
     event_groups: list[EventGroup] = db.relationship(
         EventGroup,
         foreign_keys="EventGroup.event_id",
@@ -193,26 +216,83 @@ class Event(db.Model):
     """Tags attached to the event"""
 
     @property
-    def enrollments_count(self) -> int:
+    def enrollments_count(self) -> EnrollmentCounts:
         """Returns the number of enrollments in the event"""
-        return (
-            db.session.query(func.count(Enrollment.event_id))
-            .filter(Enrollment.event_id == self.event_id)
-            .scalar()
+        has_extras = (
+            EventGroup.query.filter(
+                (EventGroup.event_id == self.event_id) & EventGroup.extra.is_(True)
+            )
+            .with_entities(EventGroup.extra)
+            .first()
+            is not None
         )
+
+        q = (
+            Enrollment.query.filter(Enrollment.event_id == self.event_id)
+            .group_by(Enrollment.extra)
+            .with_entities(
+                Enrollment.extra,
+                func.count(Enrollment.event_id).label("enrollments_count"),
+            )
+        )
+        res = {is_extra: count for is_extra, count in q}
+        return EnrollmentCounts(
+            res.get(False, 0), res.get(True, 0 if has_extras else None)
+        )
+
+    def get_enrollment_right(self, user: User) -> EnrollmentRight:
+        """
+        Gets the enrollment right information for the user.
+
+        :param user: User to get the right for
+        :return: Information about the user's rights for enrolling in the event
+        """
+        ug_ids = [ug.id for ug in user.groups]
+        event_groups = EventGroup.query.filter(
+            (EventGroup.event_id == self.event_id) & EventGroup.usergroup_id.in_(ug_ids)
+        ).all()
+        if not event_groups:
+            return EnrollmentRight(False, False, False)
+        extra = False
+        manager = False
+        for event_group in event_groups:
+            if event_group.extra:
+                extra = True
+            if event_group.manager:
+                manager = True
+        return EnrollmentRight(True, extra, manager)
 
     @staticmethod
     def get_by_id(event_id: int) -> Optional["Event"]:
         return Event.query.filter_by(event_id=event_id).one_or_none()
 
     def to_json(self, with_users: bool = False, for_user: User | None = None) -> dict:
+        e_cnt = self.enrollments_count
         meta = {
             "signup_before": self.signup_before,
-            "enrollments": self.enrollments_count,
+            "enrollments": e_cnt.normal,
+            "extraEnrollments": e_cnt.extra,
             "maxSize": self.max_size,
             "location": self.location,
             "description": self.message,
+            "send_notifications": self.send_notifications,
         }
+
+        user_group_ids = []
+        if for_user:
+            user_group_ids = [ug.id for ug in for_user.groups]
+            e = (
+                db.session.query(EventGroup.extra)
+                .filter(
+                    (EventGroup.event_id == self.event_id)
+                    & (EventGroup.usergroup_id.in_(user_group_ids))
+                    & (EventGroup.extra.is_(True))
+                )
+                .first()
+            )
+            meta |= {
+                "isExtra": e is not None,
+            }
 
         if with_users:
             meta |= {
@@ -226,7 +306,6 @@ class Event(db.Model):
                 ]
             }
         elif for_user:
-            user_group_ids = [ug.id for ug in for_user.groups]
             meta |= {
                 "booker_groups": [
                     {

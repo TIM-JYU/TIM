@@ -60,12 +60,20 @@ import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
                                    [disabled]="!isEditEnabled()"/>
                         </div>
                         <label i18n for="maxSize" class="col-sm-3 control-label">Capacity</label>
-                        <div class="col-sm-3">
+                        <div class="col-sm-8">
                             <input type="number"
                                    min="0" max="2000" [(ngModel)]="maxSize"
                                    #ngModelMaxSize="ngModel"
                                    (ngModelChange)="setMessage()"
                                    id="maxSize" name="maxSize" class="form-control"
+                                   [disabled]="!isEditEnabled()">
+                        </div>
+                        <label i18n for="sendNotifications" class="col-sm-3 control-label">Notifications</label>
+                        <div class="col-sm-8">
+                            <input type="checkbox"
+                                   [(ngModel)]="sendNotifications"
+                                   (ngModelChange)="setMessage()"
+                                   id="sendNotifications" name="sendNotifications" class="form-control checkbox"
                                    [disabled]="!isEditEnabled()">
                         </div>
                     </div>
@@ -241,7 +249,8 @@ import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
             <ng-container class="col-sm-12" footer>
                 <div class="col-sm-12 row">
                 <span [hidden]="hideEventFulLSpan()" style="float: left; margin-left: 10px">
-                    <b i18n>The event is full.</b>
+                    <span i18n>The event is full</span>
+                    <span *ngIf="data.meta?.isExtra" i18n> (you can still book as extra)</span>
                 </span>
                     <span [hidden]="!userHasBooked()" style="float: left">
                     <b i18n>You have booked this event.</b>
@@ -288,6 +297,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     title = "";
     location = "";
     maxSize = 0;
+    sendNotifications = true;
     message?: string;
     bookingStopTime = "";
     bookingStopDate = "";
@@ -342,6 +352,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             signup_before: new Date(
                 `${this.bookingStopDate}T${this.bookingStopTime}`
             ),
+            send_notifications: this.sendNotifications,
         };
 
         const result = await toPromise(
@@ -357,6 +368,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.data.start = eventToEdit.start;
             this.data.end = eventToEdit.end;
             this.data.meta!.signup_before = eventToEdit.signup_before;
+            this.data.meta!.send_notifications = eventToEdit.send_notifications;
             this.close(this.data);
         } else {
             if (result.result.error.error) {
@@ -421,6 +433,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         this.title = this.data.title;
         this.location = this.data.meta!.location;
         this.description = this.data.meta!.description;
+        this.sendNotifications = this.data.meta!.send_notifications;
         const startOffset = this.data.start.getTimezoneOffset();
         const startDate = new Date(
             this.data.start.getTime() - startOffset * 60 * 1000
@@ -677,6 +690,10 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     }
 
     initEventBookState() {
+        if (this.data.meta?.isExtra) {
+            this.eventBookState = {canBook: true, reason: undefined};
+            return;
+        }
         if (this.eventIsFull()) {
             this.eventBookState = {
                 canBook: false,
@@ -699,6 +716,13 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (this.data.meta!.maxSize != 1) {
             return true;
             // TODO: Only supports use of booker message in events for one attendee
+        }
+        if (
+            this.data.meta?.extraEnrollments !== undefined &&
+            this.data.meta?.extraEnrollments !== null
+        ) {
+            // TODO: Extras should not affect booker messages either
+            return true;
         }
         if (this.isEditEnabled() || !this.eventHasBookings()) {
             return true;
@@ -732,7 +756,12 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      */
     multipleBookers() {
         if (this.data.meta) {
-            return this.data.meta.maxSize > 1;
+            return (
+                this.data.meta.maxSize > 1 ||
+                this.data.meta.enrollments +
+                    (this.data.meta.extraEnrollments ?? 0) >
+                    1
+            );
         }
         return false; // Events should always have their meta field
     }
