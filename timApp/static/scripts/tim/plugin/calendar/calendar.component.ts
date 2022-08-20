@@ -955,7 +955,7 @@ export class CalendarComponent
             if (copyResult.ok) {
                 this.exportDone = $localize`ICS-url copied to clipboard.`;
             } else {
-                this.exportDone = $localize`Error occurred when creating ICS-url.`;
+                this.exportDone = $localize`Could not copy ICS-url to clipboard, check page permissions. Copy URL manually: ${this.icsURL}`;
             }
             this.refresh();
         } else {

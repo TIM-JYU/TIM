@@ -6160,14 +6160,6 @@
           <context context-type="linenumber">846</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="7354137443452135620" datatype="html">
-        <source>Error occurred when creating ICS-url.</source>
-        <target state="translated">Virhe luotaessa kalenterin ICS-osoite.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
-          <context context-type="linenumber">848</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="7897580452702919280" datatype="html">
         <source>Could not reset lock: <x id="PH" equiv-text="r.result.error.error"/></source>
         <target state="translated">Lukitusta ei voitu tyhjentää: <x id="PH" equiv-text="r.result.error.error"/></target>
@@ -6812,6 +6804,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/edit-json-event-dialog.component.ts</context>
           <context context-type="linenumber">110</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7992007533396390309" datatype="html">
+        <source>Could not copy ICS-url to clipboard, check page permissions. Copy URL manually: <x id="PH" equiv-text="this.icsURL"/></source>
+        <target state="translated">ICS-linkkiä ei voitu kopioida leikepöydälle, tarkista sivulle myönnetyt oikeudet. Kopioi linkki käsin: <x id="PH" equiv-text="this.icsURL"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
+          <context context-type="linenumber">958</context>
         </context-group>
       </trans-unit>
     </body>
