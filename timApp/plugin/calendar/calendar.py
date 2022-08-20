@@ -34,7 +34,7 @@ from timApp.plugin.calendar.models import Event, EventGroup, Enrollment, EventTa
 from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_access
-from timApp.user.user import User, edit_access_set
+from timApp.user.user import User, edit_access_set, manage_access_set
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
@@ -495,7 +495,7 @@ def add_events(events: list[CalendarEvent]) -> Response:
                 raise NotExist(f"Group '{ug_name}' not found")
             manager = ug_name in setters
             extra = ug_name in extra_bookers
-            require_access = edit_access_set if manager else edit_access_set
+            require_access = edit_access_set if manager else manage_access_set
             verify_group_access(ug, require_access)
             event_groups.append(
                 EventGroup(
