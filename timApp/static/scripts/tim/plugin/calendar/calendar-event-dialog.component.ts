@@ -717,6 +717,13 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             return true;
             // TODO: Only supports use of booker message in events for one attendee
         }
+        if (
+            this.data.meta?.extraEnrollments !== undefined &&
+            this.data.meta?.extraEnrollments !== null
+        ) {
+            // TODO: Extras should not affect booker messages either
+            return true;
+        }
         if (this.isEditEnabled() || !this.eventHasBookings()) {
             return true;
         } else if (this.userIsManager() || this.userHasBooked()) {
