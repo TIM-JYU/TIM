@@ -7,15 +7,14 @@ from timApp.user.usergroup import UserGroup
 
 
 class CalendarTest(TimRouteTest):
-    def post_event(self, event_id: int, user: User):
+    def post_event(self, user: User):
         """Helper function to post a basic event"""
 
-        self.json_post(
+        r = self.json_post(
             f"/calendar/events",
             {
                 "events": [
                     {
-                        "id": event_id,
                         "title": "Otsake",
                         "location": "sijainti",
                         "description": "kuvaus",
@@ -31,6 +30,7 @@ class CalendarTest(TimRouteTest):
             },
             False,
         )
+        return r[0]
 
     def test_event_add_and_delete(self):
         """Events are queried, an event is created by Test user 1 and then deleted"""
@@ -42,14 +42,13 @@ class CalendarTest(TimRouteTest):
             expect_content=[],
         )
 
-        event_id = 1
-        self.post_event(event_id, self.test_user_1)
+        event = self.post_event(self.test_user_1)
         self.get(
             f"calendar/events",
             expect_status=200,
             expect_content=[
                 {
-                    "id": event_id,
+                    "id": event["id"],
                     "title": "Otsake",
                     "start": "2022-05-18T07:20:00+00:00",
                     "end": "2022-05-18T07:40:00+00:00",
@@ -69,7 +68,7 @@ class CalendarTest(TimRouteTest):
         )
 
         self.delete(
-            f"calendar/events/{event_id}",
+            f"calendar/events/{event['id']}",
             expect_status=200,
         )
         self.get(f"/calendar/events", expect_status=200, expect_content=[])
@@ -80,10 +79,9 @@ class CalendarTest(TimRouteTest):
 
         self.login_test1()
         self.get(f"/calendar/events", expect_status=200, expect_content=[])
-        event_id = 2
-        self.post_event(event_id, self.test_user_1)
+        event = self.post_event(self.test_user_1)
         self.json_put(
-            f"/calendar/events/{event_id}",
+            f"/calendar/events/{event['id']}",
             {
                 "event": {
                     "title": "ihauus Otsake",
@@ -103,7 +101,7 @@ class CalendarTest(TimRouteTest):
             expect_status=200,
             expect_content=[
                 {
-                    "id": event_id,
+                    "id": event["id"],
                     "title": "ihauus Otsake",
                     "start": "2022-05-18T07:20:00+00:00",
                     "end": "2022-05-18T07:40:00+00:00",
@@ -122,7 +120,7 @@ class CalendarTest(TimRouteTest):
             ],
         )
         self.delete(
-            f"calendar/events/{event_id}",
+            f"calendar/events/{event['id']}",
             expect_status=200,
         )
         self.logout()
@@ -138,15 +136,14 @@ class CalendarBookTest(TimRouteTest):
         db.session.commit()
         self.login_test2()
 
-        event_id = 1
-        self.post_event_to_book(event_id, ug)
+        event = self.post_event_to_book(ug)
 
         self.get(
             f"/calendar/events?includeOwned=true",
             expect_status=200,
             expect_content=[
                 {
-                    "id": event_id,
+                    "id": event["id"],
                     "title": "Bookattava",
                     "start": "2023-05-18T07:20:00+00:00",
                     "end": "2023-05-18T07:40:00+00:00",
@@ -167,35 +164,34 @@ class CalendarBookTest(TimRouteTest):
         self.logout()
         self.login_test1()
         self.get(
-            f"/calendar/events/{event_id}/bookers",
+            f"/calendar/events/{event['id']}/bookers",
             expect_status=403,
             expect_content={"error": "No permission to see event bookers"},
         )
         self.json_post(
             f"/calendar/bookings",
-            {"event_id": event_id, "booker_msg": ""},
+            {"event_id": event["id"], "booker_msg": ""},
             expect_status=200,
         )
 
         self.logout()
         self.login_test2()
 
-        self.get(f"/calendar/events/{event_id}/bookers", expect_status=200)
+        self.get(f"/calendar/events/{event['id']}/bookers", expect_status=200)
 
         self.delete(
-            f"calendar/events/{event_id}",
+            f"calendar/events/{event['id']}",
             expect_status=200,
         )
         self.logout()
 
-    def post_event_to_book(self, event_id, user):
+    def post_event_to_book(self, user):
         """Helper function to post a basic event to book"""
-        self.json_post(
+        r = self.json_post(
             f"/calendar/events",
             {
                 "events": [
                     {
-                        "id": event_id,
                         "title": "Bookattava",
                         "location": "kerhohuone",
                         "description": "kerhon kokous",
@@ -211,3 +207,4 @@ class CalendarBookTest(TimRouteTest):
             },
             False,
         )
+        return r[0]

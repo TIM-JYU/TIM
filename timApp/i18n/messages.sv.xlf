@@ -6034,14 +6034,6 @@
           <context context-type="linenumber">31</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6328943491200318160" datatype="html">
-        <source>Export calendar</source>
-        <target state="translated">Exportera kalender</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
-          <context context-type="linenumber">278</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="1521925891097959460" datatype="html">
         <source>Export calendar information in ics-format?</source>
         <target state="translated">Exportera kalenderinformation i ics-format?</target>
@@ -6622,6 +6614,94 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
           <context context-type="linenumber">253</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7155374606190083950" datatype="html">
+        <source>Export calendar (ICS)</source>
+        <target state="translated">Exportera kalender (ICS)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
+          <context context-type="linenumber">321</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7702706614417117704" datatype="html">
+        <source>Mass edit (JSON)</source>
+        <target state="translated">Massredigering (JSON)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
+          <context context-type="linenumber">322</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5417693128998500220" datatype="html">
+        <source> Edit event JSON </source>
+        <target state="translated"> Redigera händelsens JSON </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/edit-json-event-dialog.component.ts</context>
+          <context context-type="linenumber">20,22</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4639688582102685996" datatype="html">
+        <source>Below are all events visible in this calendar in JSON format. You can add or edit events en masse.</source>
+        <target state="translated">Nedan visas alla händelser som är synliga i den här kalendern i JSON-format. Du kan lägga till eller redigera händelser i en massa.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/edit-json-event-dialog.component.ts</context>
+          <context context-type="linenumber">24</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6774950862300413361" datatype="html">
+        <source>Adding <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>"delete": true<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> to an event will delete it.</source>
+        <target state="translated">Om du lägger till <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>"delete": true<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> till en händelse raderas den.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/edit-json-event-dialog.component.ts</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3768927257183755959" datatype="html">
+        <source>Save</source>
+        <target state="translated">Spara</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/edit-json-event-dialog.component.ts</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1114053555099864231" datatype="html">
+        <source>Close without saving</source>
+        <target state="translated">Stäng utan att spara</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/edit-json-event-dialog.component.ts</context>
+          <context context-type="linenumber">36</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="77403962170767516" datatype="html">
+        <source>Could not load events. More info: <x id="PH" equiv-text="res.result.error.error"/></source>
+        <target state="translated">Kunde inte läsa in händelser. Mer information: <x id="PH" equiv-text="res.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/edit-json-event-dialog.component.ts</context>
+          <context context-type="linenumber">75</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="537772008731260124" datatype="html">
+        <source>Could not parse JSON. Error info: <x id="PH" equiv-text="e"/></source>
+        <target state="translated">Kunde inte analysera JSON. Felinformation: <x id="PH" equiv-text="e"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/edit-json-event-dialog.component.ts</context>
+          <context context-type="linenumber">91</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6652424493490915459" datatype="html">
+        <source>Error: <x id="PH" equiv-text="res.result.web.error"/></source>
+        <target state="translated">Fel: <x id="PH" equiv-text="res.result.web.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/edit-json-event-dialog.component.ts</context>
+          <context context-type="linenumber">105</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2778484883809271924" datatype="html">
+        <source>Could not save events. More info: <x id="PH" equiv-text="res.result.error.error"/></source>
+        <target state="translated">Kunde inte spara händelser. Mer information: <x id="PH" equiv-text="res.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/edit-json-event-dialog.component.ts</context>
+          <context context-type="linenumber">110</context>
         </context-group>
       </trans-unit>
     </body>

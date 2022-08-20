@@ -121,6 +121,7 @@ class EventTag(db.Model):
         :return: List of already existing or new event tags that match
         """
         result = []
+        # noinspection PyUnresolvedReferences
         existing_tags = EventTag.query.filter(EventTag.tag.in_(tags)).all()
         existing_tags_dict = {tag.tag: tag for tag in existing_tags}
         for tag in tags:
@@ -144,6 +145,11 @@ class EnrollmentRight:
     can_enroll: bool
     extra: bool
     manager: bool
+    creator: bool
+
+    @property
+    def can_manage_event(self) -> bool:
+        return self.manager or self.creator
 
 
 class Event(db.Model):
@@ -218,6 +224,7 @@ class Event(db.Model):
     @property
     def enrollments_count(self) -> EnrollmentCounts:
         """Returns the number of enrollments in the event"""
+        # noinspection PyUnresolvedReferences
         has_extras = (
             EventGroup.query.filter(
                 (EventGroup.event_id == self.event_id) & EventGroup.extra.is_(True)
@@ -248,11 +255,12 @@ class Event(db.Model):
         :return: Information about the user's rights for enrolling in the event
         """
         ug_ids = [ug.id for ug in user.groups]
+        # noinspection PyUnresolvedReferences
         event_groups = EventGroup.query.filter(
             (EventGroup.event_id == self.event_id) & EventGroup.usergroup_id.in_(ug_ids)
         ).all()
         if not event_groups:
-            return EnrollmentRight(False, False, False)
+            return EnrollmentRight(False, False, False, self.creator_user_id == user.id)
         extra = False
         manager = False
         for event_group in event_groups:
@@ -260,7 +268,7 @@ class Event(db.Model):
                 extra = True
             if event_group.manager:
                 manager = True
-        return EnrollmentRight(True, extra, manager)
+        return EnrollmentRight(True, extra, manager, self.creator_user_id == user.id)
 
     @staticmethod
     def get_by_id(event_id: int) -> Optional["Event"]:
@@ -281,6 +289,7 @@ class Event(db.Model):
         user_group_ids = []
         if for_user:
             user_group_ids = [ug.id for ug in for_user.groups]
+            # noinspection PyUnresolvedReferences
             e = (
                 db.session.query(EventGroup.extra)
                 .filter(

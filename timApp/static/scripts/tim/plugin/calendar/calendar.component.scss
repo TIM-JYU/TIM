@@ -9,8 +9,15 @@ The style sheet for the calendar plugin
  * @date 24.5.2022
  */
 
+.button-panel {
+  display: flex;
+  column-gap: 0.5em;
+  align-items: center;
+  margin-top: 0.5em;
+}
+
 .cal-week-view .cal-day-headers .cal-header {
-  padding: 5px 0px;
+  padding: 5px 0;
 }
 
 .cal-event {

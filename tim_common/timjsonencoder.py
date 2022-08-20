@@ -6,6 +6,7 @@ from enum import Enum
 from isodate import duration_isoformat
 from isodate.duration import Duration
 from jinja2 import Undefined
+from marshmallow import missing
 
 try:
     from sqlalchemy.ext.declarative import DeclarativeMeta
@@ -58,5 +59,9 @@ class TimJsonEncoder(json.JSONEncoder):
         if isinstance(o, Enum):
             return o.value
         if is_dataclass(o):
-            return {f.name: getattr(o, f.name) for f in fields(o)}
+            return {
+                f.name: val
+                for f in fields(o)
+                if (val := getattr(o, f.name)) is not missing
+            }
         return None

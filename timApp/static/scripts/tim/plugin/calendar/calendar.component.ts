@@ -73,6 +73,7 @@ import {showCalendarEventDialog} from "./showCalendarEventDialog";
 import {DateTimeValidatorDirective} from "./datetimevalidator.directive";
 import {CalendarHeaderComponent} from "./calendar-header.component";
 import {ShowWeekComponent} from "./show-week.component";
+import {showEditJsonEventDialog} from "./showEditJsonEventDialog";
 
 /**
  * Helps calculate the size of a horizontally dragged event on the calendar view.
@@ -316,9 +317,10 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                                 [(startHour)]="dayStartHour"
                                 [(endHour)]="dayEndHour">
         </tim-time-view-selector>
-        <div>
-            <button i18n class="btn timButton" (click)="export()">Export calendar</button>
-            <span class="exportDone"><b>{{exportDone}}</b></span>
+        <div class="button-panel">
+            <button i18n class="btn timButton" (click)="export()">Export calendar (ICS)</button>
+            <button i18n class="btn timButton" *ngIf="editEnabled" (click)="openEventEditor()">Mass edit (JSON)</button>
+            <span class="exportDone">{{exportDone}}</span>
         </div>
     `,
     encapsulation: ViewEncapsulation.None,
@@ -709,7 +711,7 @@ export class CalendarComponent
     }
 
     private get filterParams() {
-        const res: Record<string, string | string[]> = {};
+        const res: Record<string, string> = {};
         if (!this.markup.filter) {
             return res;
         }
@@ -812,7 +814,6 @@ export class CalendarComponent
         const result = await toPromise(
             this.http.post<TIMCalendarEvent[]>("/calendar/events", {
                 events: eventsToAdd.map((event) => ({
-                    id: event.id,
                     title: event.title,
                     location: event.meta!.location,
                     description: event.meta!.description,
@@ -1034,6 +1035,15 @@ export class CalendarComponent
         }
         if (this.eventTypes.length > 0) {
             this.selectedEvent = this.eventTypes[0];
+        }
+    }
+
+    async openEventEditor() {
+        const res = await showEditJsonEventDialog({
+            filterParams: this.filterParams,
+        });
+        if (res.ok && res.result) {
+            await this.loadEvents();
         }
     }
 }
