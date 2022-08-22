@@ -280,12 +280,6 @@ def add_permission_basic(
 
     i = get_item_or_abort(doc_id)
 
-    # edit_vg_perms = None
-    # # Currently only document velp group permissions are supported
-    # if isinstance(i, DocInfo | DocEntry):
-    #     # Check for velp group perms flag silently
-    #     edit_vg_perms = request.get_json(silent=True).get("edit_velp_group_perms")
-
     settings = i.document.get_settings()
     if not settings.allow_url_permission_edits():
         raise AccessDenied(
@@ -302,7 +296,6 @@ def add_permission_basic(
             duration=Duration(hours=duration),
         ),
         confirm=False,
-        # edit_velp_group_perms=edit_vg_perms,
     )
 
     accs = add_perm(
@@ -325,13 +318,6 @@ def add_permission_basic(
                 f"skipped {a.info_str} for {username} in {i.path} because an active right already exists"
             )
             res_message = "Skipped, because an active right already exists. Expire the active right first."
-
-        # # copy permissions to document's velp groups
-        # if p_model.edit_velp_group_perms:
-        #     ap = add_velp_group_permissions(p_model, i, replace_active_duration=False)
-        #     if ap:
-        #         log_right(f"added {ap[0].info_str} for {username} in {i.path}")
-
         db.session.commit()
     return json_response({"message": res_message})
 
@@ -348,14 +334,7 @@ def add_permission(m: PermissionSingleEditModel):
 
         # copy permissions to document's velp groups
         if m.edit_velp_group_perms:
-            # Currently only document velp group permissions are supported
-            if isinstance(i, DocInfo | DocEntry):
-                ag = add_velp_group_permissions(m, i)
-                for a in ag:
-                    gr_path = get_item_or_abort(a.block_id).path
-                    log_right(
-                        f"added {a.info_str} for {seq_to_str(m.groups)} in {gr_path}"
-                    )
+            add_doc_velp_group_permissions(i, m)
 
         db.session.commit()
     return permission_response(m)
@@ -501,7 +480,6 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
         if m.action == EditOption.Add:
             accs = add_perm(m, i)
             if accs:
-                log_info(f"FOUND _added_ accesses: {accs}")
                 a = accs[0]
             # copy permissions to item's/document's velp groups, if any
             if m.edit_velp_group_perms:
@@ -596,6 +574,25 @@ def add_velp_group_permissions(
                 )
                 accs.append(a)
     return accs
+
+
+def add_doc_velp_group_permissions(
+    i: Item, m: PermissionEditModel
+) -> list[BlockAccess]:
+    """Add access permissions to a document's VelpGroups
+
+    :param i: Document
+    :param m: PermissionEditModel detailing the access permissions to be added
+    :return: Added permissions as a list of BlockAccess objects
+    """
+
+    # Currently only document velp group permissions are supported
+    if isinstance(i, DocInfo | DocEntry):
+        acc = add_velp_group_permissions(m, i)
+        for a in acc:
+            gr_path = get_item_or_abort(a.block_id).path
+            log_right(f"added {a.info_str} for {seq_to_str(m.groups)} in {gr_path}")
+        return acc
 
 
 def copy_doc_perms_to_velp_groups(i: ItemOrBlock) -> list[BlockAccess]:
