@@ -191,12 +191,11 @@ class EditOption(Enum):
 
 
 @dataclass
-class PermissionEditModel:
+class PermissionEditModelBase:
     type: AccessType = field(metadata={"by_value": True})
     time: TimeOpt
     groups: list[str]
     confirm: bool | None
-    edit_velp_group_perms: bool = field(init=True)
 
     def __post_init__(self):
         if self.confirm and self.time.type == TimeType.range and self.time.ffrom:
@@ -212,8 +211,14 @@ class PermissionEditModel:
 
 
 @dataclass
-class PermissionSingleEditModel(PermissionEditModel):
+class PermissionEditModel(PermissionEditModelBase):
+    edit_velp_group_perms: bool = True
+
+
+@dataclass
+class PermissionSingleEditModel(PermissionEditModelBase):
     id: int
+    edit_velp_group_perms: bool = True
 
 
 class DefaultItemType(Enum):
@@ -222,27 +227,48 @@ class DefaultItemType(Enum):
 
 
 @dataclass
-class DefaultPermissionModel(PermissionSingleEditModel):
+class DefaultPermissionModelBase:
     item_type: DefaultItemType
 
 
 @dataclass
-class PermissionRemoveModel:
+class DefaultPermissionModel(PermissionSingleEditModel, DefaultPermissionModelBase):
+    pass
+
+
+@dataclass
+class PermissionRemoveModelBase:
     id: int
     type: AccessType = field(metadata={"by_value": True})
     group: int
-    edit_velp_group_perms: bool = field(init=True)
 
 
 @dataclass
-class DefaultPermissionRemoveModel(PermissionRemoveModel):
+class PermissionRemoveModel(PermissionRemoveModelBase):
+    edit_velp_group_perms: bool = True
+
+
+@dataclass
+class DefaultPermissionRemoveModelBase:
     item_type: DefaultItemType
 
 
 @dataclass
-class PermissionMassEditModel(PermissionEditModel):
+class DefaultPermissionRemoveModel(
+    PermissionRemoveModel, DefaultPermissionRemoveModelBase
+):
+    pass
+
+
+@dataclass
+class PermissionMassEditModelBase:
     ids: list[int]
     action: EditOption = field(metadata={"by_value": True})
+
+
+@dataclass
+class PermissionMassEditModel(PermissionEditModel, PermissionMassEditModelBase):
+    pass
 
 
 @manage_page.get("/permissions/add/<int:doc_id>/<username>")
@@ -254,11 +280,11 @@ def add_permission_basic(
 
     i = get_item_or_abort(doc_id)
 
-    edit_vg_perms = None
-    # Currently only document velp group permissions are supported
-    if isinstance(i, DocInfo | DocEntry):
-        # Check for velp group perms flag silently
-        edit_vg_perms = request.get_json(silent=True).get("edit_velp_group_perms")
+    # edit_vg_perms = None
+    # # Currently only document velp group permissions are supported
+    # if isinstance(i, DocInfo | DocEntry):
+    #     # Check for velp group perms flag silently
+    #     edit_vg_perms = request.get_json(silent=True).get("edit_velp_group_perms")
 
     settings = i.document.get_settings()
     if not settings.allow_url_permission_edits():
@@ -276,7 +302,7 @@ def add_permission_basic(
             duration=Duration(hours=duration),
         ),
         confirm=False,
-        edit_velp_group_perms=edit_vg_perms,
+        # edit_velp_group_perms=edit_vg_perms,
     )
 
     accs = add_perm(
@@ -300,11 +326,11 @@ def add_permission_basic(
             )
             res_message = "Skipped, because an active right already exists. Expire the active right first."
 
-        # copy permissions to document's velp groups
-        if p_model.edit_velp_group_perms:
-            ap = add_velp_group_permissions(p_model, i, replace_active_duration=False)
-            if ap:
-                log_right(f"added {ap[0].info_str} for {username} in {i.path}")
+        # # copy permissions to document's velp groups
+        # if p_model.edit_velp_group_perms:
+        #     ap = add_velp_group_permissions(p_model, i, replace_active_duration=False)
+        #     if ap:
+        #         log_right(f"added {ap[0].info_str} for {username} in {i.path}")
 
         db.session.commit()
     return json_response({"message": res_message})
