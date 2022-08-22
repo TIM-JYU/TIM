@@ -54,7 +54,6 @@ class DefaultRightTest(TimRouteTest):
                     "id": folder.id,
                     "groups": ["Anonymous users", "testuser2"],
                     "confirm": None,
-                    "edit_velp_group_perms": False,
                 },
                 expect_content={"not_exist": []},
             )
@@ -150,7 +149,6 @@ class DefaultRightTest(TimRouteTest):
                     "type": AccessType.view.value,
                     "group": get_anonymous_group_id(),
                     "item_type": obj_type_str,
-                    "edit_velp_group_perms": False,
                 },
                 expect_content=self.ok_resp,
             )

@@ -31,7 +31,6 @@ class PermissionTest(TimRouteTest):
                 "type": AccessType.owner.value,
                 "groups": ["testuser1"],
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
             expect_status=403,
             expect_content={"error": "You cannot remove ownership from yourself."},
@@ -45,7 +44,6 @@ class PermissionTest(TimRouteTest):
                 "id": d.id,
                 "type": AccessType.owner.value,
                 "group": self.get_test_user_1_group_id(),
-                "edit_velp_group_perms": True,
             },
             expect_status=403,
         )
@@ -71,7 +69,6 @@ class PermissionTest(TimRouteTest):
                 "type": AccessType.owner.value,
                 "groups": ["testuser2"],
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
             expect_status=403,
         )
@@ -89,7 +86,6 @@ class PermissionTest(TimRouteTest):
                     "type": "always",
                 },
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
             expect_status=403,
             expect_content={"error": "You cannot add owners to your personal folder."},
@@ -109,7 +105,6 @@ class PermissionTest(TimRouteTest):
                 "type": AccessType.view.value,
                 "groups": ["testuser2", "testuser3"],
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
         )
         f = self.current_user.get_personal_folder()
@@ -130,7 +125,6 @@ class PermissionTest(TimRouteTest):
                 "type": AccessType.view.value,
                 "groups": ["testuser2", "testuserx"],
                 "confirm": False,
-                "edit_velp_group_perms": False,
             },
             expect_content={"not_exist": ["testuserx"]},
         )
@@ -145,7 +139,6 @@ class PermissionTest(TimRouteTest):
                 "type": AccessType.view.value,
                 "groups": ["testuserx"],
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
             expect_content={"not_exist": ["testuserx"]},
         )
@@ -164,7 +157,6 @@ class PermissionTest(TimRouteTest):
                     "type": AccessType.view.value,
                     "groups": ["testuser2"],
                     "confirm": False,
-                    "edit_velp_group_perms": False,
                 },
             )
             rights = self.get(f"/permissions/get/{i.id}")
@@ -231,7 +223,6 @@ class PermissionTest(TimRouteTest):
                 "type": AccessType.view.value,
                 "groups": ["Logged-in users"],
                 "confirm": False,
-                "edit_velp_group_perms": False,
             },
         )
         self.login_test2()
@@ -243,7 +234,6 @@ class PermissionTest(TimRouteTest):
                 "id": d.id,
                 "type": AccessType.view.value,
                 "group": get_logged_in_group_id(),
-                "edit_velp_group_perms": True,
             },
         )
         self.login_test2()
@@ -283,7 +273,6 @@ class PermissionTest(TimRouteTest):
                     "type": "always",
                 },
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
             expect_status=403,
         )
@@ -299,7 +288,6 @@ class PermissionTest(TimRouteTest):
                     "type": "always",
                 },
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
         )
         t1_f = self.test_user_1.get_personal_folder()
@@ -321,7 +309,6 @@ class PermissionTest(TimRouteTest):
                     "type": "always",
                 },
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
         )
         t1_f = self.test_user_1.get_personal_folder()
@@ -344,7 +331,6 @@ class PermissionTest(TimRouteTest):
                     "type": "always",
                 },
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
         )
         t1_f = self.test_user_1.get_personal_folder()
@@ -375,7 +361,6 @@ class PermissionTest(TimRouteTest):
                     "type": "always",
                 },
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
             expect_status=403,
         )
@@ -390,7 +375,6 @@ class PermissionTest(TimRouteTest):
                     "type": "always",
                 },
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
             expect_status=422,
         )
@@ -405,7 +389,6 @@ class PermissionTest(TimRouteTest):
                     "type": "always",
                 },
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
             expect_status=400,
         )
@@ -426,7 +409,6 @@ class PermissionTest(TimRouteTest):
                     "type": "always",
                 },
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
             expect_status=403,
         )
@@ -441,7 +423,6 @@ class PermissionTest(TimRouteTest):
                     "type": "always",
                 },
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
             expect_status=403,
         )
@@ -567,7 +548,6 @@ class PermissionTest(TimRouteTest):
                 "type": AccessType.view.value,
                 "groups": ["testuser2"],
                 "confirm": True,
-                "edit_velp_group_perms": False,
             },
             expect_content={"not_exist": []},
         )
@@ -580,7 +560,6 @@ class PermissionTest(TimRouteTest):
                 "id": d.id,
                 "type": AccessType.view.value,
                 "group": self.get_test_user_2_group_id(),
-                "edit_velp_group_perms": False,
             },
         )
         self.login_test2()
@@ -593,7 +572,6 @@ class PermissionTest(TimRouteTest):
                 "id": d.id,
                 "type": AccessType.view.value,
                 "group": self.get_test_user_2_group_id(),
-                "edit_velp_group_perms": False,
             },
             expect_status=400,
             expect_content="view right for testuser2 does not require confirmation or it was already confirmed.",
@@ -743,7 +721,6 @@ class PermissionTest(TimRouteTest):
                 "type": AccessType.view.value,
                 "groups": ["testuser2"],
                 "confirm": False,
-                "edit_velp_group_perms": False,
             },
         )
 
@@ -765,7 +742,6 @@ class PermissionTest(TimRouteTest):
                     "type": "always",
                 },
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
         )
         # The original bug was that db.session.commit() was not getting called when it should have,
@@ -837,7 +813,6 @@ class PermissionTest(TimRouteTest):
             {
                 "paths": [d.path],
                 "type": AccessType.edit.value,
-                "edit_velp_group_perms": False,
             },
         )
         d = DocEntry.find_by_id(d.id)
@@ -848,7 +823,6 @@ class PermissionTest(TimRouteTest):
             {
                 "paths": [d.path],
                 "type": AccessType.view.value,
-                "edit_velp_group_perms": False,
             },
         )
         d = DocEntry.find_by_id(d.id)

@@ -169,7 +169,6 @@ class ClipboardTest(TimRouteTest):
                 "type": AccessType.copy.value,
                 "groups": ["testuser3"],
                 "confirm": False,
-                "edit_velp_group_perms": False,
             },
         )
 

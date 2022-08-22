@@ -420,18 +420,34 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         return d, g_doc
 
     def test_velp_group_permissions_view(self):
-        d, g_doc = self.setup_velp_group_test()
+        # set up docs and velp groups
+        self.login_test1()
+        d = self.create_doc(title="test velp group permissions")
+
+        g = self.json_post(
+            f"/{d.document.id}/create_velp_group",
+            {"name": "test-group1", "target_type": 1},
+        )
+        # get velp group document
+        g_doc = get_doc_or_abort(g["id"])
+
+        # d, g_doc = self.setup_velp_group_test()
 
         # Document and velp group permissions should be the same
         d_perms = get_user_rights_for_item(d, get_current_user_object())
         g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
         self.assertEqual(d_perms, g_perms)
+        self.logout()
 
         # Case 1:
         # Test user 2 should initially not be able to access velp group
         self.login_test2()
+        log_info(
+            f"Rights to {g_doc.short_name} for user {get_current_user_object().name}: {get_user_rights_for_item(g_doc, get_current_user_object())}"
+        )
         self.get(g_doc.url, expect_status=403)
         # Should be able to access velp group with view permissions
+
         self.login_test1()
         self.json_put(
             f"/permissions/add",
@@ -443,7 +459,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
                 "type": AccessType.view.value,
                 "groups": ["testuser2"],
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
         )
         self.login_test2()
@@ -457,7 +472,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
                 "id": d.id,
                 "type": AccessType.view.value,
                 "group": usergroup.id,
-                "edit_velp_group_perms": True,
             },
             expect_status=200,
         )
@@ -489,7 +503,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
                 "type": AccessType.edit.value,
                 "groups": ["testuser2"],
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
         )
         self.login_test2()
@@ -504,7 +517,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
                 "id": d.id,
                 "type": AccessType.edit.value,
                 "group": usergroup.id,
-                "edit_velp_group_perms": True,
             },
         )
         # Should no longer be able to access velp group
@@ -536,7 +548,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
                 "type": AccessType.teacher.value,
                 "groups": ["testuser2"],
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
         )
         self.login_test2()
@@ -551,7 +562,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
                 "id": d.id,
                 "type": AccessType.teacher.value,
                 "group": usergroup.id,
-                "edit_velp_group_perms": True,
             },
         )
         # Should no longer be able to access velp group
@@ -584,7 +594,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
                 "type": AccessType.manage.value,
                 "groups": ["testuser2"],
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
         )
         self.login_test2()
@@ -599,7 +608,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
                 "id": d.id,
                 "type": AccessType.manage.value,
                 "group": usergroup.id,
-                "edit_velp_group_perms": True,
             },
         )
         # Should no longer be able to access velp group
@@ -631,7 +639,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
                 "type": AccessType.owner.value,
                 "groups": ["testuser2"],
                 "confirm": False,
-                "edit_velp_group_perms": True,
             },
         )
         self.login_test2()
@@ -646,7 +653,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
                 "id": d.id,
                 "type": AccessType.owner.value,
                 "group": usergroup.id,
-                "edit_velp_group_perms": True,
             },
         )
         # Should no longer be able to access velp group
