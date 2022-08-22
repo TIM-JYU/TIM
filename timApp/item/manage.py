@@ -399,7 +399,7 @@ def expire_doc_velp_groups_perms(doc_id: int, ug: UserGroup) -> None:
     :param ug: UserGroup whose permissions will be expired
     """
     vgs = get_groups_from_document_table(doc_id, ug.id)
-    accs = [BlockAccess]
+    accs: list[BlockAccess] = []
     for vg in vgs:
         # TODO Should this apply to ALL permissions, instead of just 'view'?
         acc: BlockAccess | None = BlockAccess.query.filter_by(
@@ -547,7 +547,7 @@ def add_velp_group_permissions(
 
     opt = p.time.effective_opt
     accs = []
-    vgs: [VelpGroup] = get_groups_from_document_table(doc.id, None)
+    vgs: list[VelpGroup] = get_groups_from_document_table(doc.id, None)
     if not vgs:
         return []
     for vg in vgs:
@@ -908,7 +908,7 @@ def del_document(doc_id: int) -> Response:
     soft_delete_document(d)
 
     # remove attached velp groups
-    vgs: [VelpGroup] = get_groups_from_document_table(d.id, None)
+    vgs: list[VelpGroup] = get_groups_from_document_table(d.id, None)
     if vgs:
         for vg in vgs:
             delete_velp_group_from_database(vg)
