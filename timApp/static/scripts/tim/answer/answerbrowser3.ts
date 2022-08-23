@@ -1489,6 +1489,9 @@ export class AnswerBrowserController
         ) {
             return this.modelAnswer.lockedLinkText;
         }
+        if (this.modelAnswerVisible) {
+            return this.modelAnswer?.hideText ?? $localize`Hide model answer`;
+        }
         return this.modelAnswer?.linkText ?? $localize`Show model answer`;
     }
 
