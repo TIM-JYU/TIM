@@ -78,6 +78,7 @@ class AccessField:
 class ModelAnswerInfo:
     answer: str | None | Missing = missing
     count: int | None | Missing = 1
+    hideText: str | None | Missing = missing
     linkText: str | None | Missing = missing
     linkTextCount: int | None | Missing = missing
     linkTextBeforeCount: str | None | Missing = missing

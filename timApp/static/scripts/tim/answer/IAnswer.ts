@@ -17,6 +17,7 @@ export type IModelAnswerSettings = {
     lock: boolean;
     count: number;
     revealDate?: string;
+    hideText?: string;
     linkText?: string;
     linkTextCount?: number;
     linkTextBeforeCount?: string;
