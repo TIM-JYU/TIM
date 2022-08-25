@@ -689,7 +689,7 @@ def clear_permissions(m: PermissionClearModel) -> Response:
 
         # Clear permissions from document's velp groups
         if m.edit_velp_group_perms and isinstance(i, DocInfo | DocEntry):
-            vgs = get_groups_from_document_table(i)
+            vgs = get_groups_from_document_table(i, None)
             for vg in vgs:
                 clear_doc_permissions(vg, m.type)
 
