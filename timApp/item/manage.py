@@ -933,9 +933,10 @@ def del_document(doc_id: int) -> Response:
 
     # remove attached velp groups
     vgs: list[VelpGroup] = get_groups_from_document_table(d.id, None)
-    if vgs:
-        for vg in vgs:
-            delete_velp_group_from_database(vg)
+    for vg in vgs:
+        # remove all permissions from attached velp groups
+        vg.block.accesses.clear()
+        delete_velp_group_from_database(vg)
 
     db.session.commit()
     return ok_response()
