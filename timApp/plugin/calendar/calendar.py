@@ -117,6 +117,7 @@ class ViewOptions:
     date: dtdate | None = None
     week: int | None = None
     mode: Literal["day", "week", "month"] = "week"
+    advancedUI: bool | None = None
 
 
 @dataclass
@@ -188,6 +189,7 @@ viewOptions:               # Default view options for the calendar
     week: null             # Week number to show (if not specified, show current week)
     date: null             # Date to show (if not specified, show current date). Has higher priority than week.
     mode: week             # Calendar mode to show (day, week, month)
+    # advancedUI: false    # Show large UI (default) or minimal
 eventTemplates:            # Event templates for the calendar. Used to create new events.
     Event:                 # Name of the template. Can contain spaces.
         title: Event name  # Name of the event.

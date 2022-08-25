@@ -72,6 +72,7 @@ import {
 import {showCalendarEventDialog} from "./showCalendarEventDialog";
 import {DateTimeValidatorDirective} from "./datetimevalidator.directive";
 import {CalendarHeaderComponent} from "./calendar-header.component";
+import {CalendarHeaderMinimalComponent} from "./calendar-header-minimal.component";
 import {ShowWeekComponent} from "./show-week.component";
 import {showEditJsonEventDialog} from "./showEditJsonEventDialog";
 
@@ -133,6 +134,7 @@ const ViewOptions = t.type({
     date: nullable(DateFromString),
     week: nullable(t.number),
     mode: CalendarViewMode,
+    advancedUI: nullable(t.boolean),
 });
 
 const CalendarMarkup = t.intersection([
@@ -212,9 +214,13 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
         },
     ],
     template: `
-        <tim-calendar-header [locale]="locale" [(view)]="viewMode" [(viewDate)]="viewDate">
+        <tim-calendar-header 
+                [locale]="locale" 
+                [(view)]="viewMode" 
+                [(viewDate)]="viewDate" 
+                *ngIf="advancedUI">
         </tim-calendar-header>
-        <div class="row text-center">
+        <div class="row text-center" *ngIf="advancedUI">
             <div class="col-md-4">
                 <div class="btn-group edit-btn" [hidden]="!userIsManager() || this.eventTypes.length == 0">
                     <button i18n (click)="enableEditing(false)" [class.active]="!editEnabled" class="btn timButton">View</button>
@@ -263,7 +269,15 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                 </div>
             </div>
         </ng-template>
-
+        <div class="cal-ui-swicth">
+            <input type="checkbox" [(ngModel)]="advancedUI" />Advanced
+            <tim-calendar-minimal-header 
+                    [locale]="locale" 
+                    [(view)]="viewMode" 
+                    [(viewDate)]="viewDate" 
+                    *ngIf="!advancedUI">
+            </tim-calendar-minimal-header>
+        </div>
         <div [ngSwitch]="viewMode">
             <mwl-calendar-month-view
                     *ngSwitchCase="'month'"
@@ -315,9 +329,10 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
         <tim-time-view-selector [style.visibility]="viewMode == 'month' ? 'hidden' : 'visible'"
                                 [(segmentDuration)]="segmentDuration"
                                 [(startHour)]="dayStartHour"
-                                [(endHour)]="dayEndHour">
+                                [(endHour)]="dayEndHour"
+                                *ngIf="advancedUI">
         </tim-time-view-selector>
-        <div class="button-panel">
+        <div class="button-panel" *ngIf="advancedUI">
             <button i18n class="btn timButton" (click)="export()">Export calendar (ICS)</button>
             <button i18n class="btn timButton" *ngIf="editEnabled" (click)="openEventEditor()">Mass edit (JSON)</button>
             <span class="exportDone">{{exportDone}}</span>
@@ -352,6 +367,7 @@ export class CalendarComponent
 
     editEnabled: boolean = false;
     dialogOpen: boolean = false;
+    advancedUI: boolean = true;
 
     eventTypes: string[] = [];
     selectedEvent: string = "";
@@ -708,6 +724,7 @@ export class CalendarComponent
         if (!this.isPreview()) {
             void this.loadEvents();
         }
+        this.advancedUI = this.viewOptions.advancedUI ?? true;
     }
 
     private get filterParams() {
@@ -1065,6 +1082,7 @@ export class CalendarComponent
         TimeViewSelectorComponent,
         DateTimeValidatorDirective,
         CalendarHeaderComponent,
+        CalendarHeaderMinimalComponent,
         ShowWeekComponent,
     ],
     exports: [CalendarComponent, DateTimeValidatorDirective],

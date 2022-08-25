@@ -103,3 +103,16 @@ The style sheet for the calendar plugin
 input[type="checkbox"] {
   margin-right: 4px;
 }
+
+.tim-calendar-arrow {
+    font-size: x-large;
+    cursor: pointer;
+}
+
+.tim-calendar-minimal-display {
+    cursor: pointer;
+}
+
+.tim-calendar-minimal-display-week {
+    float: right;
+}

@@ -23,6 +23,10 @@ export class CustomDateFormatter extends CalendarDateFormatter {
         return formatDate(date, "EEE", locale!);
     }
 
+    public viewYear({date, locale}: DateFormatterParams): string {
+        return formatDate(date, "y", locale!);
+    }
+
     /**
      *  Custom formatter that takes into special account finnish language. Returns a formatted
      *  title with the name of the month and the year.

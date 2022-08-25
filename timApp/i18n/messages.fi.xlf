@@ -6720,7 +6720,7 @@
       </trans-unit>
       <trans-unit id="7155374606190083950" datatype="html">
         <source>Export calendar (ICS)</source>
-        <target state="translated">Vie kalenter (ICS)</target>
+        <target state="translated">Vie kalenteri (ICS)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar.component.ts</context>
           <context context-type="linenumber">321</context>
