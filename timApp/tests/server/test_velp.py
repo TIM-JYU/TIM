@@ -13,12 +13,13 @@ Tested routes from velp.py:
 """
 import json
 
-from timApp.user.usergroup import UserGroup, get_logged_in_group_id
+from timApp.util.utils import get_current_time
+from timApp.user.usergroup import UserGroup
 
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.accesstype import AccessType
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
-from timApp.auth.sessioninfo import get_current_user, get_current_user_object
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
@@ -33,7 +34,6 @@ from timApp.velp.velp_models import (
     VelpGroupDefaults,
     VelpGroupsInDocument,
 )
-from cli.util.logging import log_info, log_debug
 
 
 class VelpTest(TimRouteTest):
@@ -415,44 +415,32 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
             f"/{d.document.id}/create_velp_group",
             {"name": "test-group1", "target_type": 1},
         )
+        db.session.commit()
         # get velp group document
         g_doc = get_doc_or_abort(g["id"])
+
         return d, g_doc
 
     def test_velp_group_permissions_view(self):
-        # set up docs and velp groups
-        self.login_test1()
-        d = self.create_doc(title="test velp group permissions")
-
-        g = self.json_post(
-            f"/{d.document.id}/create_velp_group",
-            {"name": "test-group1", "target_type": 1},
-        )
-        # get velp group document
-        g_doc = get_doc_or_abort(g["id"])
-
-        # d, g_doc = self.setup_velp_group_test()
+        d, g_doc = self.setup_velp_group_test()
 
         # Document and velp group permissions should be the same
         d_perms = get_user_rights_for_item(d, get_current_user_object())
         g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
         self.assertEqual(d_perms, g_perms)
-        self.logout()
 
         # Case 1:
         # Test user 2 should initially not be able to access velp group
         self.login_test2()
-        log_info(
-            f"Rights to {g_doc.short_name} for user {get_current_user_object().name}: {get_user_rights_for_item(g_doc, get_current_user_object())}"
-        )
-        self.get(g_doc.url, expect_status=403)
-        # Should be able to access velp group with view permissions
+        res = self.get(g_doc.url, expect_status=403)
 
+        # Should be able to access velp group with view permissions
         self.login_test1()
         self.json_put(
             f"/permissions/add",
             {
                 "time": {
+                    "from": get_current_time(),
                     "type": "always",
                 },
                 "id": d.id,
@@ -462,7 +450,7 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
             },
         )
         self.login_test2()
-        self.get(g_doc.url, expect_status=200)
+        res = self.get(g_doc.url, expect_status=200)
 
         usergroup = UserGroup.query.filter_by(name="testuser2").first()
         self.login_test1()
@@ -477,7 +465,7 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         )
         # Should no longer be able to access velp group
         self.login_test2()
-        self.get(g_doc.url, expect_status=403)
+        res = self.get(g_doc.url, expect_status=403)
 
     def test_velp_group_permissions_edit(self):
         d, g_doc = self.setup_velp_group_test()
@@ -673,7 +661,6 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
             f"/{d.document.id}/create_velp_group",
             {"name": "test-group2", "target_type": 1},
         )
-
         g2_doc = get_doc_or_abort(g2["id"])
         self.login_test2()
         self.get(g2_doc.url, expect_status=200)
@@ -695,3 +682,13 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         test_user_2 = get_current_user_object()
         self.make_admin(test_user_2)
         self.get(deleted.url, expect_status=200)
+        # remove testuser2 from admin group to prevent it from affecting other tests
+        self.json_post(
+            f"/groups/removemember/{UserGroup.get_admin_group().name}",
+            {"names": [test_user_2.name]},
+            expect_content={
+                "removed": [test_user_2.name],
+                "does_not_belong": [],
+                "not_exist": [],
+            },
+        )
