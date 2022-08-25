@@ -47,7 +47,7 @@ import {Users} from "../../user/userService";
           </a>
           -->
          &nbsp;&nbsp;&nbsp;
-          <a i18n class="tim-calendar-minimal-display-week"
+          <a class="tim-calendar-minimal-display-week"
             (click)="viewChange.emit(CalendarView.Week)"
             [hidden]="view === CalendarView.Week">
             <tim-show-week  [(view)]="view" [(viewDate)]="viewDate"></tim-show-week>
