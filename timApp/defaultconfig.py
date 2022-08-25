@@ -360,6 +360,9 @@ QUICKLOGIN_ALLOWED_MODEL_ANSWER_GROUPS = {
     TEACHERS_GROUPNAME,
 }
 
+# Default name for users' personal default velp group folder
+DEFAULT_PERSONAL_VELP_GROUP_NAME = "Personal-default"
+
 # How long unreacted verifications should be persisted for in seconds
 # Default: 1 hour
 VERIFICATION_UNREACTED_CLEANUP_INTERVAL = 10 * 60

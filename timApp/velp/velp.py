@@ -12,6 +12,7 @@ the document.
 from flask import Blueprint, Response
 from flask import request
 from timApp.auth.auth_models import BlockAccess
+from timApp.defaultconfig import DEFAULT_PERSONAL_VELP_GROUP_NAME
 
 from timApp.user.usergroup import UserGroup
 
@@ -205,7 +206,7 @@ def get_default_personal_velp_group() -> Response:
     ).first()
     if default_group is not None:
         return no_cache_json_response(default_group)
-    group_name = "Personal-default"
+    group_name = DEFAULT_PERSONAL_VELP_GROUP_NAME
     new_group_path = personal_velp_group_path + "/" + group_name
     group = DocEntry.find_by_path(new_group_path)
     if group:

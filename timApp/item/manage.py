@@ -14,6 +14,7 @@ from isodate import Duration
 from sqlalchemy import inspect
 from sqlalchemy.orm.state import InstanceState
 
+from timApp.defaultconfig import DEFAULT_PERSONAL_VELP_GROUP_NAME
 from timApp.velp.velp_models import VelpGroupsInDocument, VelpGroup
 
 from timApp.auth.accesshelper import (
@@ -556,7 +557,7 @@ def add_velp_group_permissions(
 
     for vg in vgs:
         # don't add permissions to users' personal velp groups
-        if not vg.name == "Personal-default":
+        if not vg.name == DEFAULT_PERSONAL_VELP_GROUP_NAME:
             # TODO only add perms to document velp groups,
             #  ie. in the path: [doc_folder]/velp-groups/velp_group
             for group in p.group_objects:
@@ -614,7 +615,7 @@ def copy_doc_perms_to_velp_groups(i: ItemOrBlock) -> list[BlockAccess]:
     ap_groups = []
     doc_rights = get_rights_holders(i.id)
     for vg in vgs:
-        if vg.name == "Personal-default":
+        if vg.name == DEFAULT_PERSONAL_VELP_GROUP_NAME:
             pass  # don't add permissions to users' personal velp groups
         else:
             for right in doc_rights:

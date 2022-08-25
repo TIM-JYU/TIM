@@ -13,6 +13,7 @@ Tested routes from velp.py:
 """
 import json
 
+from timApp.defaultconfig import DEFAULT_PERSONAL_VELP_GROUP_NAME
 from timApp.util.utils import get_current_time
 from timApp.user.usergroup import UserGroup
 
@@ -201,8 +202,8 @@ class VelpTest(TimRouteTest):
                 "default_group": True,
                 "edit_access": True,
                 "id": 18,
-                "location": "users/test-user-1/velp-groups/Personal-default",
-                "name": "Personal-default",
+                "location": f"users/test-user-1/velp-groups/{DEFAULT_PERSONAL_VELP_GROUP_NAME}",
+                "name": f"{DEFAULT_PERSONAL_VELP_GROUP_NAME}",
                 "selected": True,
                 "show": True,
                 "target_id": "0",
