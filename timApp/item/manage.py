@@ -552,8 +552,7 @@ def add_velp_group_permissions(
     opt = p.time.effective_opt
     accs = []
     vgs: list[VelpGroup] = get_groups_from_document_table(doc.id, None)
-    if not vgs:
-        return []
+
     for vg in vgs:
         # don't add permissions to users' personal velp groups
         if not vg.name == "Personal-default":
@@ -651,10 +650,8 @@ def remove_permission(m: PermissionRemoveModel) -> Response:
 
     # Also remove permissions to item's/document's velp groups, if any
     if m.edit_velp_group_perms and isinstance(i, DocInfo | DocEntry):
-        log_info(f"Edit velp group perms == {m.edit_velp_group_perms}")
         # TODO only remove document velp group perms, ie. from path [doc_folder]/velp-groups/velp_group
         rm_groups = remove_velp_group_perms(i, ug, m.type)
-        log_info(f"rm_groups == {rm_groups}")
         if rm_groups:
             for rm in rm_groups:
                 if rm:
@@ -738,7 +735,6 @@ def remove_velp_group_perms(
     :param acc: AccessType of the permissions that will be removed
     """
     vgs = get_groups_from_document_table(i.id, None)
-    log_info(f"Remove_perms: found groups: {vgs}")
     rm_groups = []
     for vg in vgs:
         a = remove_perm(ug, vg.block, acc)
