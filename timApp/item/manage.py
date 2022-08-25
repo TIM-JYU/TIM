@@ -462,7 +462,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
     nonexistent = set(m.groups) - {g.name for g in groups}
     if nonexistent:
         raise RouteException(f"Non-existent groups: {nonexistent}")
-    items = (
+    items: list[ItemOrBlock] = (
         Block.query.filter(
             Block.id.in_(m.ids)
             & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])
@@ -483,8 +483,9 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
                 a = accs[0]
             # copy permissions to item's/document's velp groups, if any
             if m.edit_velp_group_perms:
+                # TODO Check that permissions are only added to document velp groups in correct paths
                 # Currently only document velp group permissions are supported
-                if isinstance(i, DocInfo | DocEntry):
+                if i.type_id == BlockType.Document.value:
                     velp_groups = add_velp_group_permissions(m, i)
         else:
             for g in groups:
