@@ -403,7 +403,7 @@ def expire_doc_velp_groups_perms(doc_id: int, ug: UserGroup) -> None:
     :param doc_id: ID for the document
     :param ug: UserGroup whose permissions will be expired
     """
-    vgs = get_groups_from_document_table(doc_id, ug.id)
+    vgs = get_groups_from_document_table(doc_id, None)
     accs: list[BlockAccess] = []
     for vg in vgs:
         # TODO Should this apply to ALL permissions, instead of just 'view'?
