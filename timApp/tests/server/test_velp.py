@@ -670,9 +670,9 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
 
         # Case 7:
         # Deleted velp groups should have their permissions cleared
-        self.login_test2()
         self.test_user_2.grant_access(g_doc, AccessType.manage)
         db.session.commit()
+        self.login_test2()
         self.get(g_doc.url, expect_status=200)
         self.json_delete(f"/velp/group/{g_doc.id}", expect_status=200)
         deleted = get_doc_or_abort(g_doc.id)
@@ -692,3 +692,38 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
                 "not_exist": [],
             },
         )
+
+    def test_velp_group_expire_permissions(self):
+        d, g_doc = self.setup_velp_group_test()
+
+        # Case 8:
+        # Permissions expiry for document should also affect document's VelpGroups
+
+        # Give testuser2 access to document (and it's VelpGroups by extension)
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.view.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+            },
+        )
+
+        self.login_test2()
+        testuser2 = get_current_user_object()
+        # testuser2 should have access
+        self.get(d.url, expect_status=200)
+        self.get(g_doc.url, expect_status=200)
+
+        self.login_test1()
+        # Expire document permissions for testuser2
+        self.get(f"/permissions/expire/{d.id}/{testuser2.name}")
+
+        self.login_test2()
+        # testuser2 should no longer have access
+        self.get(d.url, expect_status=403)
+        self.get(g_doc.url, expect_status=403)
