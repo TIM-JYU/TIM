@@ -666,10 +666,14 @@ def remove_permission(m: PermissionRemoveModel) -> Response:
 
 
 @dataclass
-class PermissionClearModel:
+class PermissionClearModelBase:
     paths: list[str]
     type: AccessType = field(metadata={"by_value": True})
-    edit_velp_group_perms: bool | None
+
+
+@dataclass
+class PermissionClearModel(PermissionClearModelBase):
+    edit_velp_group_perms: bool = True
 
 
 @manage_page.put("/permissions/clear", model=PermissionClearModel)
