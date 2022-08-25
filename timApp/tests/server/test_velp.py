@@ -759,3 +759,43 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         # testuser2 should no longer have access
         self.get(d.url, expect_status=403)
         self.get(g_doc.url, expect_status=403)
+
+    def test_velp_group_clear_permissions(self):
+        d, g_doc = self.setup_velp_group_test()
+
+        # Case 9:
+        # Permissions self-expiry for document should also affect document's VelpGroups
+
+        # Give testuser2 access to document (and it's VelpGroups by extension)
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.edit.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+            },
+        )
+
+        self.login_test2()
+        # testuser2 should have access
+        self.get(d.url, expect_status=200)
+        self.get(g_doc.url, expect_status=200)
+
+        self.login_test1()
+        # Clear document (and doc velp group) permissions
+        self.json_put(
+            "/permissions/clear",
+            {
+                "paths": [d.path],
+                "type": AccessType.edit.value,
+            },
+        )
+
+        self.login_test2()
+        # testuser2 should no longer have access
+        self.get(d.url, expect_status=403)
+        self.get(g_doc.url, expect_status=403)
