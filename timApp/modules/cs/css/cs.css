@@ -143,6 +143,7 @@ color:#69d2e7;
 color:#e0e4cc;
 /* width:9ex; */
 display: inline-block;
+margin-right: 0.5em;
 }
 
 .csRunDiv .error {

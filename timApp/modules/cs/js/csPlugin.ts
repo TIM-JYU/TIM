@@ -134,9 +134,13 @@ class CWPD {
 
     getPWD(scope: IPwd) {
         if (scope.savestate) {
-            return this.currentPWD[scope.savestate];
+            const pwd = this.currentPWD[scope.savestate];
+            if (pwd) {
+                return pwd;
+            }
         }
-        return "/home/agent";
+        // return "/home/agent";
+        return "";
     }
 }
 

@@ -102,9 +102,26 @@ export class CsConsoleComponent extends CsBase implements IController {
         return this.markup.savestate;
     }
 
+    setLanguage() {
+        // First find out what language we are using
+        const type = this.markup.type.split(/[/,; ]/)[0];
+
+        this.languageType = this.markup.type; // user may change
+        this.origLanguageType = this.markup.type;
+        this.rtype = languageTypes.getPureRunType(type);
+
+        this.isRun = true;
+        if (!this.rtype) {
+            this.rtype = "cs";
+        }
+
+        this.languageType = this.rtype;
+    }
+
     ngOnInit() {
         super.ngOnInit();
 
+        this.setLanguage();
         // This block could be re-used
 
         // End of generally re-usable TIM stuff
@@ -193,7 +210,7 @@ export class CsConsoleComponent extends CsBase implements IController {
     async submit(result: string) {
         this.history.push({
             istem: this.isShell
-                ? this.history.length + " " + this.oldpwd + "$"
+                ? this.history.length + " " + this.oldpwd + "$ "
                 : "in_" + this.history.length + ": ",
             ostem: this.isShell ? "" : "out_" + this.history.length + ": ",
             input: this.currentInput,
