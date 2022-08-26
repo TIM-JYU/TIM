@@ -374,6 +374,17 @@ def raise_or_redirect(message: str, redir: str | None = None) -> Response:
     return safe_redirect(urlunparse(url))
 
 
+def is_velp_group_in_document(vg: VelpGroup, d: ItemOrBlock) -> bool:
+    """Check that the velp group is in the correct path in relation to the parent document"""
+    res = False
+    vg_path = get_doc_or_abort(vg.id).path
+    doc_name = d.short_name
+    doc_folder = d.path_without_lang.rsplit("/", maxsplit=1)[0]
+    if vg_path == f"{doc_folder}/velp-groups/{doc_name}/{vg.name}":
+        res = True
+    return res
+
+
 @manage_page.get("/permissions/expire/<int:doc_id>/<username>")
 def expire_permission_url(doc_id: int, username: str, redir: str | None = None):
     g, i = get_group_and_doc(doc_id, username)
@@ -405,16 +416,19 @@ def expire_doc_velp_groups_perms(doc_id: int, ug: UserGroup) -> None:
     :param ug: UserGroup whose permissions will be expired
     """
     vgs = get_groups_from_document_table(doc_id, None)
+    doc = get_doc_or_abort(doc_id)
     accs: list[BlockAccess] = []
     for vg in vgs:
-        # TODO Should this apply to ALL permissions, instead of just 'view'?
-        acc: BlockAccess | None = BlockAccess.query.filter_by(
-            type=AccessType.view.value,
-            block_id=vg.id,
-            usergroup_id=ug.id,
-        ).first()
-        if acc:
-            accs.append(acc)
+        # Only expire permissions from velp groups attached to the document
+        if is_velp_group_in_document(vg, doc):
+            # TODO Should this apply to ALL permissions, instead of just 'view'?
+            acc: BlockAccess | None = BlockAccess.query.filter_by(
+                type=AccessType.view.value,
+                block_id=vg.id,
+                usergroup_id=ug.id,
+            ).first()
+            if acc:
+                accs.append(acc)
     for a in accs:
         a.accessible_to = get_current_time()
         if a.duration:
@@ -484,16 +498,18 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
                 a = accs[0]
             # copy permissions to item's/document's velp groups, if any
             if m.edit_velp_group_perms:
-                # TODO Check that permissions are only added to document velp groups in correct paths
                 # Currently only document velp group permissions are supported
                 if i.type_id == BlockType.Document.value:
-                    velp_groups = add_velp_group_permissions(m, i)
+                    doc = get_doc_or_abort(i.id)
+                    velp_groups = add_velp_group_permissions(m, doc)
         else:
             for g in groups:
                 a = remove_perm(g, i, m.type) or a
                 # Also remove permissions to item's/document's velp groups, if any
                 if m.edit_velp_group_perms:
-                    velp_groups = remove_velp_group_perms(i, g, m.type)
+                    if i.type_id == BlockType.Document.value:
+                        doc = get_doc_or_abort(i.id)
+                        velp_groups = remove_velp_group_perms(doc, g, m.type)
 
     if m.type == AccessType.owner:
         owned_items_after = set()
@@ -556,10 +572,13 @@ def add_velp_group_permissions(
     vgs: list[VelpGroup] = get_groups_from_document_table(doc.id, None)
 
     for vg in vgs:
-        # don't add permissions to users' personal velp groups
-        if not vg.name == DEFAULT_PERSONAL_VELP_GROUP_NAME:
-            # TODO only add perms to document velp groups,
-            #  ie. in the path: [doc_folder]/velp-groups/velp_group
+        # Don't add permissions to users' personal velp groups,
+        # only add perms to document velp groups in the path:
+        # [doc_folder]/velp-groups/[doc-name]/[velp_group]
+        if (
+            not vg.name == DEFAULT_PERSONAL_VELP_GROUP_NAME
+            and is_velp_group_in_document(vg, doc)
+        ):
             for group in p.group_objects:
                 a = grant_access(
                     group,
@@ -615,7 +634,9 @@ def copy_doc_perms_to_velp_groups(i: ItemOrBlock) -> list[BlockAccess]:
     ap_groups = []
     doc_rights = get_rights_holders(i.id)
     for vg in vgs:
-        if vg.name == DEFAULT_PERSONAL_VELP_GROUP_NAME:
+        if vg.name == DEFAULT_PERSONAL_VELP_GROUP_NAME and is_velp_group_in_document(
+            vg, i
+        ):
             pass  # don't add permissions to users' personal velp groups
         else:
             for right in doc_rights:
@@ -640,7 +661,7 @@ def copy_doc_perms_to_velp_groups(i: ItemOrBlock) -> list[BlockAccess]:
 def remove_permission(m: PermissionRemoveModel) -> Response:
     i = get_item_or_abort(m.id)
     had_ownership = verify_permission_edit_access(i, m.type)
-    # ug: UserGroup = UserGroup.query.get(m.group) # query.get() is deprecated
+    # ug: UserGroup = UserGroup.query.get(m.group)  # query.get() is deprecated
     ug: UserGroup = UserGroup.query.filter_by(id=m.group).first()
     if not ug:
         raise RouteException("User group not found")
@@ -652,13 +673,10 @@ def remove_permission(m: PermissionRemoveModel) -> Response:
 
     # Also remove permissions to item's/document's velp groups, if any
     if m.edit_velp_group_perms and isinstance(i, DocInfo | DocEntry):
-        # TODO only remove document velp group perms, ie. from path [doc_folder]/velp-groups/velp_group
         rm_groups = remove_velp_group_perms(i, ug, m.type)
-        if rm_groups:
-            for rm in rm_groups:
-                if rm:
-                    rm_path = get_doc_or_abort(rm.block_id).path
-                    log_right(f"removed {rm.info_str} for {ug.name} in {rm_path}")
+        for rm in rm_groups:
+            rm_path = get_doc_or_abort(rm.block_id).path
+            log_right(f"removed {rm.info_str} for {ug.name} in {rm_path}")
 
     db.session.commit()
     return ok_response()
@@ -690,7 +708,9 @@ def clear_permissions(m: PermissionClearModel) -> Response:
         if m.edit_velp_group_perms and isinstance(i, DocInfo | DocEntry):
             vgs = get_groups_from_document_table(i.id, None)
             for vg in vgs:
-                clear_doc_permissions(vg, m.type)
+                # Only clear perms from velp groups attached to the document
+                if is_velp_group_in_document(vg, i):
+                    clear_doc_permissions(vg, m.type)
 
     db.session.commit()
     return ok_response()
@@ -739,8 +759,10 @@ def remove_velp_group_perms(
     vgs = get_groups_from_document_table(i.id, None)
     rm_groups = []
     for vg in vgs:
-        a = remove_perm(ug, vg.block, acc)
-        rm_groups.append(a)
+        # Remove perms only from velp groups attached to the document
+        if is_velp_group_in_document(vg, i):
+            a = remove_perm(ug, vg.block, acc)
+            rm_groups.append(a)
     return rm_groups
 
 
@@ -935,8 +957,9 @@ def del_document(doc_id: int) -> Response:
     # remove attached velp groups
     vgs: list[VelpGroup] = get_groups_from_document_table(d.id, None)
     for vg in vgs:
-        # remove all permissions from attached velp groups
-        vg.block.accesses.clear()
+        # remove all permissions from velp groups attached to the document
+        if is_velp_group_in_document(vg, d):
+            vg.block.accesses.clear()
         delete_velp_group_from_database(vg)
 
     db.session.commit()
