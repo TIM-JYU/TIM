@@ -2362,7 +2362,10 @@ def get_model_answer(task_id: str) -> Response:
             log_task_block(
                 f"set task {tid.doc_task} accessible_to at {current_time} via modelAnswer"
             )
-    answer_html = md_to_html(model_answer_info.answer)
+    dumbo_opts = plug.par.get_dumbo_options(
+        base_opts=doc.get_settings().get_dumbo_options()
+    )
+    answer_html = md_to_html(model_answer_info.answer, dumbo_options=dumbo_opts)
     return json_response({"answer": answer_html})
 
 
