@@ -17,7 +17,7 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document, DocInfo
 from timApp.document.viewcontext import default_view_ctx
 from timApp.folder.folder import Folder
-from timApp.item.manage import get_trash_folder
+from timApp.item.deleting import get_trash_folder
 from timApp.messaging.messagelist.emaillist import (
     create_new_email_list,
     delete_email_list,

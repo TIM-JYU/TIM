@@ -9,11 +9,13 @@ the document.
 :version: 1.0.0
 
 """
+from timApp.item.deleting import (
+    soft_delete_document,
+)
 from flask import Blueprint, Response
-from flask import request
-from timApp.auth.auth_models import BlockAccess
-from timApp.defaultconfig import DEFAULT_PERSONAL_VELP_GROUP_NAME
 
+from flask import request
+from timApp.defaultconfig import DEFAULT_PERSONAL_VELP_GROUP_NAME
 from timApp.user.usergroup import UserGroup
 
 from timApp.auth.accesshelper import (
@@ -23,30 +25,33 @@ from timApp.auth.accesshelper import (
     get_doc_or_abort,
     verify_edit_access,
     AccessDenied,
-    verify_ownership,
     verify_manage_access,
 )
+
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import (
     get_current_user_object,
     get_current_user_id,
     get_current_user_group_object,
 )
-from timApp.document.docentry import DocEntry, get_documents_in_folder, get_documents
+from timApp.document.docentry import (
+    DocEntry,
+    get_documents_in_folder,
+    get_documents,
+)
+
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
-from timApp.item.manage import soft_delete_document
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.users import get_rights_holders, remove_access
-from timApp.user.userutils import grant_access, get_usergroup_by_name
+from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import (
     json_response,
     no_cache_json_response,
     ok_response,
 )
-from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_warning
 from timApp.util.utils import split_location
 from timApp.velp.velp_folders import (
@@ -62,8 +67,6 @@ from timApp.velp.velp_models import (
     VelpGroupsInDocument,
     VelpGroupDefaults,
     VelpInGroup,
-    VelpVersion,
-    VelpContent,
 )
 from timApp.velp.velpgroups import (
     create_default_velp_group,

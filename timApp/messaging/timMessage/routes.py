@@ -29,7 +29,7 @@ from timApp.document.viewcontext import default_view_ctx
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder
 from timApp.item.item import Item
-from timApp.item.manage import TRASH_FOLDER_PATH
+from timApp.item.deleting import TRASH_FOLDER_PATH
 from timApp.messaging.messagelist.messagelist_models import (
     MessageListModel,
     MessageListTimMember,
