@@ -1,5 +1,6 @@
 """Functions related to deleting items"""
 
+from flask import Response
 from timApp.util.flask.responsehelper import ok_response
 from timApp.user.usergroup import UserGroup
 from timApp.folder.folder import Folder
@@ -22,7 +23,7 @@ def get_trash_folder() -> Folder:
     return f
 
 
-def soft_delete_document(d: DocInfo) -> None:
+def soft_delete_document(d: DocInfo) -> Response:
     """Performs a 'soft delete' on the specified document by moving it to the trash folder.
 
     :param d: The document to be deleted.
