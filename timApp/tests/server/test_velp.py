@@ -13,8 +13,6 @@ Tested routes from velp.py:
 """
 import json
 
-from timApp.user.users import remove_access
-
 from timApp.defaultconfig import DEFAULT_PERSONAL_VELP_GROUP_NAME
 from timApp.util.utils import get_current_time
 from timApp.user.usergroup import UserGroup

@@ -89,7 +89,6 @@ from timApp.util.utils import (
 )
 from timApp.velp.velpgroups import (
     get_groups_from_document_table,
-    delete_velp_group_from_database,
 )
 
 manage_page = TypedBlueprint(
