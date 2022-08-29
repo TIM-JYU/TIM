@@ -756,13 +756,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def get_personal_folder(self) -> Folder:
         return self.personal_folder_prop
 
-    @cached_property
-    def personal_folder_prop(self) -> Folder:
+    def _get_personal_folders(self) -> list[Folder]:
         if self.logged_in:
             group_condition = UserGroup.name == self.name
         else:
             group_condition = UserGroup.name == ANONYMOUS_GROUPNAME
-        folders: list[Folder] = (
+        return (
             Folder.query.join(BlockAccess, BlockAccess.block_id == Folder.id)
             .join(UserGroup, UserGroup.id == BlockAccess.usergroup_id)
             .filter(
@@ -778,12 +777,21 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             )
             .all()
         )
+
+    @cached_property
+    def personal_folder_prop(self) -> Folder:
+        folders = self._get_personal_folders()
         if len(folders) >= 2:
             raise TimDbException(
                 f"Found multiple personal folders for user {self.name}: {[f.name for f in folders]}"
             )
         if not folders:
             with filelock.FileLock(f"/tmp/tim_personal_folder_create_{self.id}.lock"):
+                # It could be that the folder already exists because another call already created it
+                # So, retry the query (recursive call might cause overflow, so we do a manual query
+                folders = self._get_personal_folders()
+                if folders:
+                    return folders[0]
                 f = Folder.create(
                     f"users/{self.derive_personal_folder_name()}",
                     self.get_personal_group(),
