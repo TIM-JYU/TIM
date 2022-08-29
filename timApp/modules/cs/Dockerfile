@@ -213,6 +213,12 @@ RUN python3.10 -m pip install sympy opencv-contrib-python-headless && bash -c "$
 RUN bash -c "${APT_INSTALL} epstool transfig && ${APT_CLEANUP}"
 RUN python3.10 -m pip install numpy scipy matplotlib pandas statsmodels control scikit-learn networkx && bash -c "${APT_CLEANUP}"
 
+# pyod
+RUN python3.10 -m pip install pyod && bash -c "${APT_CLEANUP}"
+
+# pyqula
+RUN python3.10 -m pip install pyqula && bash -c "${APT_CLEANUP}"
+
 # R packages
 RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-base libopenblas-dev gfortran && ${APT_CLEANUP}"
 
@@ -318,7 +324,7 @@ RUN wget -q https://dl.google.com/go/go${GOLANG_VERSION}.linux-amd64.tar.gz && t
 ENV PATH=$PATH:/usr/local/go/bin
 
 # NodeJS and TypeScript
-RUN (curl -sL https://deb.nodesource.com/setup_14.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
+RUN (curl -sL https://deb.nodesource.com/setup_16.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
 RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
 RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 
