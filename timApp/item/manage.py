@@ -13,6 +13,7 @@ from flask import request
 from isodate import Duration
 from sqlalchemy import inspect
 from sqlalchemy.orm.state import InstanceState
+from timApp.velp.velp import delete_velp_group
 
 from timApp.defaultconfig import DEFAULT_PERSONAL_VELP_GROUP_NAME
 from timApp.velp.velp_models import VelpGroupsInDocument, VelpGroup
@@ -50,6 +51,7 @@ from timApp.item.validation import (
     validate_item_and_create_intermediate_folders,
     has_special_chars,
 )
+from timApp.item.deleting import soft_delete_document, get_trash_folder
 from timApp.timdb.sqa import db
 from timApp.user.user import User, ItemOrBlock
 from timApp.user.usergroup import UserGroup
@@ -960,45 +962,11 @@ def del_document(doc_id: int) -> Response:
         # remove all permissions from velp groups attached to the document
         if is_velp_group_in_document(vg, d):
             vg.block.accesses.clear()
-        delete_velp_group_from_database(vg)
+            # delete velp group and db references
+            delete_velp_group(vg)
 
     db.session.commit()
     return ok_response()
-
-
-def soft_delete_document(d: DocInfo) -> None:
-    """Performs a 'soft delete' on the specified document by moving it to the trash folder.
-
-    :param d: The document to be deleted.
-    """
-    f = get_trash_folder()
-    if d.path.startswith(f.path):
-        # Document is already in the trash folder
-        return ok_response()
-
-    if isinstance(d, Translation):
-        deleted_doc = DocEntry.create(
-            f"{f.path}/tl_{d.id}_{d.src_docid}_{d.lang_id}_deleted",
-            title=f"Deleted translation (src_docid: {d.src_docid}, lang_id: {d.lang_id})",
-        )
-        d.docentry = deleted_doc
-    else:
-        move_document(d, f)
-    return ok_response()
-
-
-TRASH_FOLDER_PATH = f"roskis"
-
-
-def get_trash_folder() -> Folder:
-    f = Folder.find_by_path(TRASH_FOLDER_PATH)
-    if not f:
-        f = Folder.create(
-            TRASH_FOLDER_PATH,
-            owner_groups=UserGroup.get_admin_group(),
-            title="Roskakori",
-        )
-    return f
 
 
 @manage_page.delete("/folders/<int:folder_id>")
