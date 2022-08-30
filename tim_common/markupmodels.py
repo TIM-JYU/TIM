@@ -1,7 +1,7 @@
 from copy import copy
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime, timezone
-from typing import Any, Mapping, NewType, Literal
+from typing import Any, Mapping, NewType
 
 import marshmallow
 from marshmallow import missing, pre_load, EXCLUDE
@@ -142,6 +142,7 @@ class KnownMarkupFields(HiddenFieldsMixin):
     texafterprint: str | None | Missing = missing
     texbeforeprint: str | None | Missing = missing
     texprint: str | None | Missing = missing
+    readonly: bool | Missing | None = missing
 
     def show_points(self) -> bool:
         if isinstance(self.showPoints, bool):
@@ -213,7 +214,6 @@ class GenericMarkupModel(KnownMarkupFields):
     footer: str | Missing = missing
     forceBrowser: bool | Missing | None = missing
     globalField: bool | Missing | None = missing
-    readonly: bool | Missing | None = missing
     lang: str | None | Missing = missing
     resetText: str | Missing | None = missing
     connectionErrorMessage: str | Missing = missing

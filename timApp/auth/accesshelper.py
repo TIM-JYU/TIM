@@ -6,6 +6,7 @@ from pathlib import Path
 
 from flask import flash, current_app
 from flask import request, g
+from marshmallow import missing
 from sqlalchemy import inspect
 
 from timApp.auth.accesstype import AccessType
@@ -574,8 +575,14 @@ def verify_task_access(
     ctx_user_teacher_access = context_user.logged_user.has_teacher_access(
         doc.get_docinfo()
     )
+
+    def is_readonly() -> bool:
+        if found_plugin.known.readonly not in (missing, None):
+            return found_plugin.known.readonly
+        return found_plugin.task_id.access_specifier == TaskIdAccess.ReadOnly
+
     if (
-        found_plugin.task_id.access_specifier == TaskIdAccess.ReadOnly
+        is_readonly()
         and required_task_access_level == TaskIdAccess.ReadWrite
         and not ctx_user_teacher_access
     ):
