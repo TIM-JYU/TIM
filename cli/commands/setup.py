@@ -1,6 +1,7 @@
 import json
 import os
 import platform
+import re
 import secrets
 import subprocess
 from argparse import ArgumentParser
@@ -19,7 +20,7 @@ from cli.docker.run import (
 )
 from cli.npm.run import verify_npm, run_npm, reset_npm_version
 from cli.util.errors import CLIError
-from cli.util.logging import log_info, log_warning
+from cli.util.logging import log_info, log_warning, log_debug
 from cli.util.proc import run_cmd
 
 info = {
@@ -225,6 +226,7 @@ def verify_dev_python() -> List[str]:
         ["python3"],
         ["py", "-3"],
     ]
+    python_version_pattern = re.compile(r"^Python (?P<version>(\d\.?)+)")
     for python_location in python_locations:
         try:
             res = run_cmd(
@@ -236,7 +238,11 @@ def verify_dev_python() -> List[str]:
             stdout = res.stdout.strip()
             if stdout.startswith("Python was not found"):
                 raise CLIError(stdout)
-            version = stdout.split(" ")[-1].split(".")
+            match = python_version_pattern.match(stdout)
+            if not match:
+                log_debug(f"Could not parse python version from {stdout}")
+                continue
+            version = match.group("version").split(".")
             for i, part in enumerate(PYTHON_MIN_DEV_VERSION):
                 if int(version[i]) < part:
                     raise CLIError("Not supported")
