@@ -9,9 +9,13 @@ the document.
 :version: 1.0.0
 
 """
-
+from timApp.item.deleting import (
+    soft_delete_document,
+)
 from flask import Blueprint, Response
+
 from flask import request
+from timApp.user.usergroup import UserGroup
 
 from timApp.auth.accesshelper import (
     verify_logged_in,
@@ -20,22 +24,26 @@ from timApp.auth.accesshelper import (
     get_doc_or_abort,
     verify_edit_access,
     AccessDenied,
-    verify_ownership,
     verify_manage_access,
 )
+
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import (
     get_current_user_object,
     get_current_user_id,
     get_current_user_group_object,
 )
-from timApp.document.docentry import DocEntry, get_documents_in_folder, get_documents
+from timApp.document.docentry import (
+    DocEntry,
+    get_documents_in_folder,
+    get_documents,
+)
+
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
-from timApp.item.manage import del_document, soft_delete_document
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.user.users import get_rights_holders
+from timApp.user.users import get_rights_holders, remove_access
 from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import (
@@ -43,7 +51,6 @@ from timApp.util.flask.responsehelper import (
     no_cache_json_response,
     ok_response,
 )
-from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_warning
 from timApp.util.utils import split_location
 from timApp.velp.velp_folders import (
@@ -59,8 +66,6 @@ from timApp.velp.velp_models import (
     VelpGroupsInDocument,
     VelpGroupDefaults,
     VelpInGroup,
-    VelpVersion,
-    VelpContent,
 )
 from timApp.velp.velpgroups import (
     create_default_velp_group,
@@ -93,6 +98,10 @@ from timApp.velp.velps import (
 )
 
 velps = Blueprint("velps", __name__, url_prefix="")
+
+# Default name for users' personal default velp group folder.
+# Do not modify.
+DEFAULT_PERSONAL_VELP_GROUP_NAME = "Personal-default"
 
 
 # TODO: Add document handling for all velp group related stuff
@@ -203,7 +212,7 @@ def get_default_personal_velp_group() -> Response:
     ).first()
     if default_group is not None:
         return no_cache_json_response(default_group)
-    group_name = "Personal-default"
+    group_name = DEFAULT_PERSONAL_VELP_GROUP_NAME
     new_group_path = personal_velp_group_path + "/" + group_name
     group = DocEntry.find_by_path(new_group_path)
     if group:
@@ -766,12 +775,18 @@ def create_velp_group_route(doc_id: int) -> Response:
                     velp_group_name, original_owner, new_group_path
                 )
                 rights = get_rights_holders(target.id)
-                # Copy all rights but view
-                for right in rights:
-                    if not right.atype.name == "view":
-                        grant_access(
-                            right.usergroup, velp_group.block, right.atype.to_enum()
-                        )
+                # Don't copy view rights for Folder velp groups
+                if target_type == 2:
+                    # Copy all rights but view
+                    for right in rights:
+                        if not right.atype.name == "view":
+                            grant_access(
+                                right.usergroup, velp_group.block, right.access_type
+                            )
+                else:
+                    # Copy all document rights to document velp group
+                    if target_type == 1:
+                        add_velp_group_perms(target.document.id, velp_group)
             else:
                 raise RouteException(f"Could not find document or folder.")
         else:
@@ -861,6 +876,9 @@ def delete_velp_group(group_id: int) -> Response:
     d = get_doc_or_abort(group_id)
     verify_manage_access(d)
     soft_delete_document(d)
+    # Velp group permissions should be removed after deletion to prevent
+    # potential misuse, since the file can still be found in the trash folder
+    remove_velp_group_perms(group_id)
 
     # Delete associated entries/rows from database
     VelpInGroup.query.filter_by(velp_group_id=group_id).delete(
@@ -954,3 +972,55 @@ def get_folder_velp_groups(folder: str, u: User) -> list[DocEntry]:
         search_recursively=False,
         filter_user=u,
     )
+
+
+def add_velp_group_perms(doc_id: int, vg: VelpGroup) -> None:
+    """Add document's permissions to document velp group"""
+    rights = get_rights_holders(doc_id)
+    for right in rights:
+        grant_access(right.usergroup, vg.block, right.access_type)
+
+
+def remove_velp_group_perms(group_id: int) -> None:
+    """Remove all permissions from velp group"""
+    vg = get_doc_or_abort(group_id)
+    rights = get_rights_holders(vg.id)
+    for right in rights:
+        remove_access(right.usergroup, vg.block, right.access_type)
+
+
+def remove_user_velp_group_perms(
+    ug: UserGroup, vg: VelpGroup, access_type: AccessType | None = None
+) -> None:
+    """Remove a specific user's permissions to the specified Velp Group
+
+    :param ug: UserGroup whose permissions should be revoked.
+    :param vg: Velp Group from which the permissions should be removed.
+    :param access_type: AccessType to be removed, if None remove all AccessTypes.
+    """
+    rights = get_rights_holders(vg.id)
+    if access_type:
+        rights = list(filter(lambda r: r.access_type == access_type, rights))
+    for right in rights:
+        if ug.id == right.usergroup.id:
+            remove_access(right.usergroup, vg.block, right.access_type)
+
+
+def remove_document_velp_group_perms_for_user(
+    doc_id: int, ug: UserGroup, access_type: AccessType | None = None
+) -> str | None:
+    """Remove a specific user's permissions to all document velp groups for a specific document
+
+    :param doc_id: ID of the document from which the permissions should be removed.
+    :param ug: UserGroup whose permissions should be revoked.
+    :param access_type: AccessType to be removed, if None remove all AccessTypes.
+    :return: Error message, or None if the operation was successful.
+    """
+    velp_groups = get_groups_from_document_table(doc_id, ug.id)
+    err = None
+    if velp_groups:
+        for vg in velp_groups:
+            remove_user_velp_group_perms(ug, vg, access_type)
+    else:
+        err = f"Document does not have any velp groups."
+    return err

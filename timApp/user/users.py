@@ -26,7 +26,7 @@ from timApp.user.userutils import (
 )
 
 
-def remove_access(group, i: ItemOrBlock, access_type: AccessType):
+def remove_access(group: UserGroup, i: ItemOrBlock, access_type: AccessType):
     b = i if isinstance(i, Block) else i.block
     return b.accesses.pop((group.id, access_type.value), None)
 

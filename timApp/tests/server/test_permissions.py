@@ -809,13 +809,21 @@ class PermissionTest(TimRouteTest):
         self.assertTrue(self.test_user_2.has_edit_access(d))
         self.assertTrue(self.test_user_2.has_view_access(d))
         self.json_put(
-            "/permissions/clear", {"paths": [d.path], "type": AccessType.edit.value}
+            "/permissions/clear",
+            {
+                "paths": [d.path],
+                "type": AccessType.edit.value,
+            },
         )
         d = DocEntry.find_by_id(d.id)
         self.assertFalse(self.test_user_2.has_edit_access(d))
         self.assertTrue(self.test_user_2.has_view_access(d))
         self.json_put(
-            "/permissions/clear", {"paths": [d.path], "type": AccessType.view.value}
+            "/permissions/clear",
+            {
+                "paths": [d.path],
+                "type": AccessType.view.value,
+            },
         )
         d = DocEntry.find_by_id(d.id)
         self.assertFalse(self.test_user_2.has_edit_access(d))

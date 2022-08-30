@@ -13,14 +13,24 @@ Tested routes from velp.py:
 """
 import json
 
+from timApp.user.users import remove_access
+
+from timApp.item.manage import remove_velp_group_perms
+
+from timApp.util.utils import get_current_time
+from timApp.user.usergroup import UserGroup
+
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.accesstype import AccessType
+from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.velp.annotation import Annotation
-from timApp.velp.velp import create_new_velp
+from timApp.velp.velp import create_new_velp, DEFAULT_PERSONAL_VELP_GROUP_NAME
 from timApp.velp.velp_models import (
     VelpGroup,
     VelpInGroup,
@@ -195,8 +205,8 @@ class VelpTest(TimRouteTest):
                 "default_group": True,
                 "edit_access": True,
                 "id": 18,
-                "location": "users/test-user-1/velp-groups/Personal-default",
-                "name": "Personal-default",
+                "location": f"users/test-user-1/velp-groups/{DEFAULT_PERSONAL_VELP_GROUP_NAME}",
+                "name": f"{DEFAULT_PERSONAL_VELP_GROUP_NAME}",
                 "selected": True,
                 "show": True,
                 "target_id": "0",
@@ -392,3 +402,847 @@ class VelpGroupDeletionTest(TimRouteTest):
         self.assertEqual(0, len(vg_sel2))
         self.assertEqual(0, len(vg_def2))
         self.assertEqual(0, len(vg_in_doc2))
+
+
+class VelpGroupPermissionsPropagationTest(TimRouteTest):
+    """Tests propagation of document permissions to the document's velp groups.
+    The document's velp groups' permissions should be updated as users gain
+    or lose permissions to the document.
+    """
+
+    def setup_velp_group_test(self) -> tuple[DocInfo, DocInfo]:
+        # set up docs and velp groups
+        self.login_test1()
+        d = self.create_doc(title="test velp group permissions")
+
+        g = self.json_post(
+            f"/{d.document.id}/create_velp_group",
+            {"name": "test-group1", "target_type": 1},
+        )
+        db.session.commit()
+        # get velp group document
+        g_doc = get_doc_or_abort(g["id"])
+
+        return d, g_doc
+
+    def test_velp_group_permissions_view(self):
+        d, g_doc = self.setup_velp_group_test()
+
+        # Document and velp group permissions should be the same
+        d_perms = get_user_rights_for_item(d, get_current_user_object())
+        g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
+        self.assertEqual(d_perms, g_perms)
+
+        # Case 1:
+        # Test user 2 should initially not be able to access velp group
+        self.login_test2()
+        res = self.get(g_doc.url, expect_status=403)
+
+        # Should be able to access velp group with view permissions
+        self.login_test1()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "from": get_current_time(),
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.view.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+            },
+        )
+        self.login_test2()
+        res = self.get(g_doc.url, expect_status=200)
+
+        usergroup = UserGroup.query.filter_by(name="testuser2").first()
+        self.login_test1()
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.view.value,
+                "group": usergroup.id,
+            },
+            expect_status=200,
+        )
+        # Should no longer be able to access velp group
+        self.login_test2()
+        res = self.get(g_doc.url, expect_status=403)
+
+    def test_velp_group_permissions_edit(self):
+        d, g_doc = self.setup_velp_group_test()
+
+        # Document and velp group permissions should be the same
+        d_perms = get_user_rights_for_item(d, get_current_user_object())
+        g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
+        self.assertEqual(d_perms, g_perms)
+
+        # Initially not able to access
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+        # Case 2:
+        # Should be able to access velp group with edit permissions
+        self.login_test1()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.edit.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+            },
+        )
+        self.login_test2()
+        self.get(g_doc.url, expect_status=200)
+
+        usergroup = UserGroup.query.filter_by(name="testuser2").first()
+
+        self.login_test1()
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.edit.value,
+                "group": usergroup.id,
+            },
+        )
+        # Should no longer be able to access velp group
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+
+    def test_velp_group_permissions_teacher(self):
+        d, g_doc = self.setup_velp_group_test()
+
+        # Document and velp group permissions should be the same
+        d_perms = get_user_rights_for_item(d, get_current_user_object())
+        g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
+        self.assertEqual(d_perms, g_perms)
+
+        # Initially not able to access
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+
+        # Case 3:
+        # Should be able to access velp group with teacher permissions
+        self.login_test1()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.teacher.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+            },
+        )
+        self.login_test2()
+        self.get(g_doc.url, expect_status=200)
+
+        usergroup = UserGroup.query.filter_by(name="testuser2").first()
+
+        self.login_test1()
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.teacher.value,
+                "group": usergroup.id,
+            },
+        )
+        # Should no longer be able to access velp group
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+
+    def test_velp_group_permissions_manage(self):
+        d, g_doc = self.setup_velp_group_test()
+
+        # Document and velp group permissions should be the same
+        d_perms = get_user_rights_for_item(d, get_current_user_object())
+        g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
+        self.assertEqual(d_perms, g_perms)
+
+        # Initially not able to access
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+
+        # Case 4:
+        # Should be able to access velp group with manage permissions
+        usergroup = UserGroup.query.filter_by(name="testuser2").first()
+        self.login_test1()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.manage.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+            },
+        )
+        self.login_test2()
+        self.get(g_doc.url, expect_status=200)
+
+        usergroup = UserGroup.query.filter_by(name="testuser2").first()
+
+        self.login_test1()
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.manage.value,
+                "group": usergroup.id,
+            },
+        )
+        # Should no longer be able to access velp group
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+
+    def test_velp_group_permissions_owner(self):
+        d, g_doc = self.setup_velp_group_test()
+
+        # Document and velp group permissions should be the same
+        d_perms = get_user_rights_for_item(d, get_current_user_object())
+        g_perms = get_user_rights_for_item(g_doc, get_current_user_object())
+        self.assertEqual(d_perms, g_perms)
+
+        # Initially not able to access
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+
+        # Case 5:
+        # Should be able to access velp group with owner permissions
+        self.login_test1()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.owner.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+            },
+        )
+        self.login_test2()
+        self.get(g_doc.url, expect_status=200)
+
+        usergroup = UserGroup.query.filter_by(name="testuser2").first()
+
+        self.login_test1()
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.owner.value,
+                "group": usergroup.id,
+            },
+        )
+        # Should no longer be able to access velp group
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+
+    def test_velp_group_permissions_new_group(self):
+        d, g_doc = self.setup_velp_group_test()
+
+        # Case 6:
+        # New velp groups for the document should set permissions for
+        # all users with access to the document
+        self.login_test2()
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        self.login_test1()
+        g2 = self.json_post(
+            f"/{d.document.id}/create_velp_group",
+            {"name": "test-group2", "target_type": 1},
+        )
+        g2_doc = get_doc_or_abort(g2["id"])
+        self.login_test2()
+        self.get(g2_doc.url, expect_status=200)
+
+    def test_deleted_velp_group_permissions(self):
+        d, g_doc = self.setup_velp_group_test()
+
+        # Case 7:
+        # Deleted velp groups should have their permissions cleared
+        self.test_user_2.grant_access(g_doc, AccessType.manage)
+        db.session.commit()
+        self.login_test2()
+        self.get(g_doc.url, expect_status=200)
+        self.json_delete(f"/velp/group/{g_doc.id}", expect_status=200)
+        deleted = get_doc_or_abort(g_doc.id)
+        # test user 2 should not have access anymore
+        self.get(deleted.url, expect_status=403)
+        # admin should still be able to access
+        test_user_2 = get_current_user_object()
+        self.make_admin(test_user_2)
+        self.get(deleted.url, expect_status=200)
+        # remove testuser2 from admin group to prevent it from affecting other tests
+        self.json_post(
+            f"/groups/removemember/{UserGroup.get_admin_group().name}",
+            {"names": [test_user_2.name]},
+            expect_content={
+                "removed": [test_user_2.name],
+                "does_not_belong": [],
+                "not_exist": [],
+            },
+        )
+
+    def test_velp_group_expire_permissions(self):
+        d, g_doc = self.setup_velp_group_test()
+
+        # Case 8:
+        # Permissions expiry for document should also affect document's VelpGroups
+
+        # Give testuser2 access to document (and it's VelpGroups by extension)
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.view.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+            },
+        )
+
+        self.login_test2()
+        testuser2 = get_current_user_object()
+        # testuser2 should have access
+        self.get(d.url, expect_status=200)
+        self.get(g_doc.url, expect_status=200)
+
+        self.login_test1()
+        # Expire document permissions for testuser2
+        self.get(f"/permissions/expire/{d.id}/{testuser2.name}")
+
+        self.login_test2()
+        # testuser2 should no longer have access
+        self.get(d.url, expect_status=403)
+        self.get(g_doc.url, expect_status=403)
+
+    def test_velp_group_self_expire_permissions(self):
+        d, g_doc = self.setup_velp_group_test()
+
+        # Case 9:
+        # Permissions self-expiry for document should also affect document's VelpGroups
+
+        # Give testuser2 access to document (and it's VelpGroups by extension)
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.view.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+            },
+        )
+
+        self.login_test2()
+        # testuser2 should have access
+        self.get(d.url, expect_status=200)
+        self.get(g_doc.url, expect_status=200)
+
+        # Self-expire document permissions
+        self.json_post("/permissions/selfExpire", {"id": d.id})
+
+        # testuser2 should no longer have access
+        self.get(d.url, expect_status=403)
+        self.get(g_doc.url, expect_status=403)
+
+    def test_velp_group_clear_permissions(self):
+        d, g_doc = self.setup_velp_group_test()
+
+        # Case 10:
+        # Permissions self-expiry for document should also affect document's VelpGroups
+
+        # Give testuser2 access to document (and it's VelpGroups by extension)
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.edit.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+            },
+        )
+
+        self.login_test2()
+        # testuser2 should have access
+        self.get(d.url, expect_status=200)
+        self.get(g_doc.url, expect_status=200)
+
+        self.login_test1()
+        # Clear document (and doc velp group) permissions
+        self.json_put(
+            "/permissions/clear",
+            {
+                "paths": [d.path],
+                "type": AccessType.edit.value,
+            },
+        )
+
+        self.login_test2()
+        # testuser2 should no longer have access
+        self.get(d.url, expect_status=403)
+        self.get(g_doc.url, expect_status=403)
+
+    def test_velp_group_mass_edit_permissions(self):
+
+        self.login_test1()
+        d1 = self.create_doc(title="test velp group permissions")
+        d2 = self.create_doc(title="test velp group permissions 2")
+        d3 = self.create_doc(title="test velp group permissions 3")
+
+        g1 = self.json_post(
+            f"/{d1.document.id}/create_velp_group",
+            {"name": "test-group1", "target_type": 1},
+        )
+        g2 = self.json_post(
+            f"/{d1.document.id}/create_velp_group",
+            {"name": "test-group2", "target_type": 1},
+        )
+        g3 = self.json_post(
+            f"/{d2.document.id}/create_velp_group",
+            {"name": "test-group3", "target_type": 1},
+        )
+        g4 = self.json_post(
+            f"/{d2.document.id}/create_velp_group",
+            {"name": "test-group4", "target_type": 1},
+        )
+        g5 = self.json_post(
+            f"/{d3.document.id}/create_velp_group",
+            {"name": "test-group5", "target_type": 1},
+        )
+        g6 = self.json_post(
+            f"/{d3.document.id}/create_velp_group",
+            {"name": "test-group6", "target_type": 1},
+        )
+        db.session.commit()
+
+        g_doc1 = get_doc_or_abort(g1["id"])
+        g_doc2 = get_doc_or_abort(g2["id"])
+        g_doc3 = get_doc_or_abort(g3["id"])
+        g_doc4 = get_doc_or_abort(g4["id"])
+        g_doc5 = get_doc_or_abort(g5["id"])
+        g_doc6 = get_doc_or_abort(g6["id"])
+
+        # Initially not able to access
+        self.login_test2()
+        self.get(g_doc1.url, expect_status=403)
+        self.get(g_doc2.url, expect_status=403)
+        self.get(g_doc3.url, expect_status=403)
+        self.get(g_doc4.url, expect_status=403)
+        self.get(g_doc5.url, expect_status=403)
+        self.get(g_doc6.url, expect_status=403)
+        self.login_test3()
+        self.get(g_doc1.url, expect_status=403)
+        self.get(g_doc2.url, expect_status=403)
+        self.get(g_doc3.url, expect_status=403)
+        self.get(g_doc4.url, expect_status=403)
+        self.get(g_doc5.url, expect_status=403)
+        self.get(g_doc6.url, expect_status=403)
+
+        # Case 11:
+        # Should be able to access velp group with edit permissions
+        self.login_test1()
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2", "testuser3"],
+                "type": AccessType.edit.value,
+                "action": "add",
+                "ids": [d1.document.id, d2.document.id, d3.document.id],
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+        )
+        self.login_test2()
+        self.get(g_doc1.url, expect_status=200)
+        self.get(g_doc2.url, expect_status=200)
+        self.get(g_doc3.url, expect_status=200)
+        self.get(g_doc4.url, expect_status=200)
+        self.get(g_doc5.url, expect_status=200)
+        self.get(g_doc6.url, expect_status=200)
+        self.login_test3()
+        self.get(g_doc1.url, expect_status=200)
+        self.get(g_doc2.url, expect_status=200)
+        self.get(g_doc3.url, expect_status=200)
+        self.get(g_doc4.url, expect_status=200)
+        self.get(g_doc5.url, expect_status=200)
+        self.get(g_doc6.url, expect_status=200)
+
+        self.login_test1()
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2", "testuser3"],
+                "type": AccessType.edit.value,
+                "action": "remove",
+                "ids": [d1.document.id, d2.document.id, d3.document.id],
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+        )
+        # Should no longer be able to access velp group
+        self.login_test2()
+        self.get(g_doc1.url, expect_status=403)
+        self.get(g_doc2.url, expect_status=403)
+        self.get(g_doc3.url, expect_status=403)
+        self.get(g_doc4.url, expect_status=403)
+        self.get(g_doc5.url, expect_status=403)
+        self.get(g_doc6.url, expect_status=403)
+        self.login_test3()
+        self.get(g_doc1.url, expect_status=403)
+        self.get(g_doc2.url, expect_status=403)
+        self.get(g_doc3.url, expect_status=403)
+        self.get(g_doc4.url, expect_status=403)
+        self.get(g_doc5.url, expect_status=403)
+        self.get(g_doc6.url, expect_status=403)
+
+    def test_velp_group_permissions_path(self):
+        self.login_test1()
+
+        d = self.create_doc(title="test velp group permissions")
+        g_persnl = self.json_post(
+            f"/{d.document.id}/create_velp_group",
+            {"name": "personal-group", "target_type": 0},
+        )
+        g_docmnt = self.json_post(
+            f"/{d.document.id}/create_velp_group",
+            {"name": "document-group", "target_type": 1},
+        )
+        g_folder = self.json_post(
+            f"/{d.document.id}/create_velp_group",
+            {"name": "folder-group", "target_type": 2},
+        )
+        db.session.commit()
+
+        g_persnl_doc = get_doc_or_abort(g_persnl["id"])
+        g_docmnt_doc = get_doc_or_abort(g_docmnt["id"])
+        g_folder_doc = get_doc_or_abort(g_folder["id"])
+
+        # Initially not able to access
+        self.assertFalse(self.test_user_2.has_view_access(g_persnl_doc))
+        self.assertFalse(self.test_user_2.has_view_access(g_docmnt_doc))
+        self.assertFalse(self.test_user_2.has_view_access(g_folder_doc))
+
+        # Case 11:
+        # Permissions should propagate for document velp group ONLY
+        self.login_test1()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "from": get_current_time(),
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.view.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+            },
+        )
+        # Should only have access to doc velp group
+        self.login_test2()
+        self.get(g_persnl_doc.url, expect_status=403)
+        self.get(g_docmnt_doc.url, expect_status=200)
+        self.get(g_folder_doc.url, expect_status=403)
+
+        # Case 12:
+        # Should remove permissions only from document velp group
+        self.login_test1()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "from": get_current_time(),
+                    "type": "always",
+                },
+                "id": g_persnl_doc.id,
+                "type": AccessType.view.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+            },
+        )
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "from": get_current_time(),
+                    "type": "always",
+                },
+                "id": g_folder_doc.id,
+                "type": AccessType.view.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+            },
+        )
+        self.login_test2()
+        self.get(g_persnl_doc.url, expect_status=200)
+        self.get(g_docmnt_doc.url, expect_status=200)
+        self.get(g_folder_doc.url, expect_status=200)
+
+        self.login_test1()
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.view.value,
+                "group": self.get_test_user_2_group_id(),
+            },
+        )
+        self.login_test2()
+        self.get(g_persnl_doc.url, expect_status=200)
+        self.get(g_docmnt_doc.url, expect_status=403)
+        self.get(g_folder_doc.url, expect_status=200)
+
+        self.login_test1()
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": g_persnl_doc.id,
+                "type": AccessType.view.value,
+                "group": self.get_test_user_2_group_id(),
+                "edit_velp_group_perms": False,
+            },
+        )
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": g_folder_doc.id,
+                "type": AccessType.view.value,
+                "group": self.get_test_user_2_group_id(),
+                "edit_velp_group_perms": False,
+            },
+        )
+        self.login_test2()
+        self.get(g_persnl_doc.url, expect_status=403)
+        self.get(g_docmnt_doc.url, expect_status=403)
+        self.get(g_folder_doc.url, expect_status=403)
+
+        # Case 13:
+        # Should edit permissions only for document velp group
+        self.login_test1()
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2"],
+                "type": AccessType.view.value,
+                "action": "add",
+                "ids": [d.document.id],
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+        )
+        self.login_test2()
+        self.get(g_persnl_doc.url, expect_status=403)
+        self.get(g_docmnt_doc.url, expect_status=200)
+        self.get(g_folder_doc.url, expect_status=403)
+
+        self.login_test1()
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2"],
+                "type": AccessType.view.value,
+                "action": "add",
+                "ids": [g_folder_doc.id, g_persnl_doc.id],
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+        )
+        self.login_test2()
+        self.get(g_persnl_doc.url, expect_status=200)
+        self.get(g_docmnt_doc.url, expect_status=200)
+        self.get(g_folder_doc.url, expect_status=200)
+
+        self.login_test1()
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2"],
+                "type": AccessType.view.value,
+                "action": "remove",
+                "ids": [d.document.id],
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+        )
+        self.login_test2()
+        self.get(g_persnl_doc.url, expect_status=200)
+        self.get(g_docmnt_doc.url, expect_status=403)
+        self.get(g_folder_doc.url, expect_status=200)
+
+        self.login_test1()
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2"],
+                "type": AccessType.view.value,
+                "action": "remove",
+                "ids": [g_persnl_doc.id, g_folder_doc.id],
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+        )
+        self.login_test2()
+        self.get(g_persnl_doc.url, expect_status=403)
+        self.get(g_docmnt_doc.url, expect_status=403)
+        self.get(g_folder_doc.url, expect_status=403)
+
+    def test_modify_perms_for_no_vg_perms_user(self):
+        """Test modifying document permissions (remove, edit, expire, clear)
+        for user who has no permissions to document's velp groups
+        """
+        d, g_doc = self.setup_velp_group_test()
+
+        self.test_user_2.grant_access(d, access_type=AccessType.view)
+        db.session.commit()
+
+        # Testuser2 should now have view access to the document,
+        # but not to the document's velp groups
+        self.login_test2()
+        self.get(d.url, expect_status=200)
+        self.get(g_doc.url, expect_status=403)
+
+        self.login_test1()
+        # Case 14:
+        # Should be able to remove testuser2's permissions to the parent document
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.view.value,
+                "group": self.get_test_user_2_group_id(),
+            },
+            expect_status=200,
+        )
+
+        self.test_user_2.grant_access(d, access_type=AccessType.view)
+        db.session.commit()
+        # Case 15:
+        # Should be able to edit/remove testuser2's permissions to the parent document
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2"],
+                "type": AccessType.view.value,
+                "action": "remove",
+                "ids": [d.id],
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+            expect_status=200,
+        )
+
+        self.test_user_2.grant_access(d, access_type=AccessType.view)
+        db.session.commit()
+        # Case 16:
+        # Should be able to expire testuser2's permissions to the parent document
+        self.get(
+            f"/permissions/expire/{d.id}/{self.test_user_2.name}", expect_status=200
+        )
+
+        self.test_user_2.grant_access(d, access_type=AccessType.view)
+        db.session.commit()
+        # Case 17:
+        # Should be able to self-expire testuser2's permissions to the parent document
+        self.login_test2()
+        self.json_post("/permissions/selfExpire", {"id": d.id}, expect_status=200)
+
+        self.login_test1()
+        self.test_user_2.grant_access(d, access_type=AccessType.view)
+        db.session.commit()
+        # Case 18:
+        # Should be able to clear testuser2's permissions to the parent document
+        self.json_put(
+            "/permissions/clear",
+            {
+                "paths": [d.path],
+                "type": AccessType.edit.value,
+            },
+            expect_status=200,
+        )
+
+    def test_velp_group_permissions_parameter(self):
+        """Test that velp group perms are not set if edit_velp_group_perms flag is false"""
+        d, g_doc = self.setup_velp_group_test()
+
+        # Initially not able to access
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+
+        # Case 19:
+        # Should not set perms for velp groups if edit_velp_group_perms is false
+        self.login_test1()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.view.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+                "edit_velp_group_perms": False,
+            },
+            expect_status=200,
+        )
+
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+
+        # Case 20:
+        # Should not set perms for velp groups if edit_velp_group_perms is false
+        self.login_test1()
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2"],
+                "type": AccessType.view.value,
+                "action": "add",
+                "ids": [d.id],
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+                "edit_velp_group_perms": False,
+            },
+            expect_status=200,
+        )
+
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)

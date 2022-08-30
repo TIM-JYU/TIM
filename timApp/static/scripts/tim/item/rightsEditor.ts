@@ -58,6 +58,7 @@ class RightsEditorController implements IController {
     };
     private grouprights?: IRight[];
     private showActiveOnly: boolean;
+    private editVelpGroupPermissions: boolean;
     private selectedRight: IRight | null;
     private datePickerOptionsFrom: EonasdanBootstrapDatetimepicker.SetOptions;
     private datePickerOptionsTo: EonasdanBootstrapDatetimepicker.SetOptions;
@@ -108,6 +109,7 @@ class RightsEditorController implements IController {
         this.durOpt = {durationType: "hours", durationAmount: 4};
         this.selectedRight = null;
         this.showActiveOnly = true;
+        this.editVelpGroupPermissions = true;
         this.datePickerOptionsFrom = {
             format: dateFormat,
             defaultDate: moment(),
@@ -329,6 +331,7 @@ class RightsEditorController implements IController {
                 id: this.itemId,
                 item_type: this.defaultItem,
                 type: right.type,
+                edit_velp_group_perms: this.editVelpGroupPermissions,
             })
         );
         return await this.handleResult(r, refresh);
@@ -427,6 +430,7 @@ class RightsEditorController implements IController {
                     action: this.actionOption,
                     groups: groupname.split(/[;\n]/),
                     confirm: this.getEffectiveConfirm(),
+                    edit_velp_group_perms: this.editVelpGroupPermissions,
                 })
             );
             if (r.ok) {
@@ -459,6 +463,8 @@ class RightsEditorController implements IController {
                             type: type.id,
                             confirm: this.getEffectiveConfirm(),
                             item_type: this.defaultItem,
+                            edit_velp_group_perms:
+                                this.editVelpGroupPermissions,
                         }
                     )
                 );
@@ -689,6 +695,7 @@ class RightsEditorController implements IController {
                 type: group.type,
                 confirm: false,
                 item_type: this.defaultItem,
+                edit_velp_group_perms: this.editVelpGroupPermissions,
             })
         );
         this.loading = false;

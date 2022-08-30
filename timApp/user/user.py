@@ -1292,7 +1292,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             require_confirm=require_confirm,
         )
 
-    def remove_access(self, block_id: int, access_type: str):
+    def remove_access(self, block_id: int, access_type: str | AccessType) -> None:
+        """Remove user's permissions to the specified item (block)"""
+        if isinstance(access_type, AccessType):
+            access_type = access_type.value
         BlockAccess.query.filter_by(
             block_id=block_id,
             usergroup_id=self.get_personal_group().id,

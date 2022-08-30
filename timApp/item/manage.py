@@ -13,6 +13,9 @@ from flask import request
 from isodate import Duration
 from sqlalchemy import inspect
 from sqlalchemy.orm.state import InstanceState
+from timApp.velp.velp import delete_velp_group, DEFAULT_PERSONAL_VELP_GROUP_NAME
+
+from timApp.velp.velp_models import VelpGroupsInDocument, VelpGroup
 
 from timApp.auth.accesshelper import (
     verify_manage_access,
@@ -47,6 +50,7 @@ from timApp.item.validation import (
     validate_item_and_create_intermediate_folders,
     has_special_chars,
 )
+from timApp.item.deleting import soft_delete_document, get_trash_folder
 from timApp.timdb.sqa import db
 from timApp.user.user import User, ItemOrBlock
 from timApp.user.usergroup import UserGroup
@@ -81,6 +85,9 @@ from timApp.util.utils import (
     get_current_time,
     cached_property,
     seq_to_str,
+)
+from timApp.velp.velpgroups import (
+    get_groups_from_document_table,
 )
 
 manage_page = TypedBlueprint(
@@ -185,7 +192,7 @@ class EditOption(Enum):
 
 
 @dataclass
-class PermissionEditModel:
+class PermissionEditModelBase:
     type: AccessType = field(metadata={"by_value": True})
     time: TimeOpt
     groups: list[str]
@@ -205,8 +212,14 @@ class PermissionEditModel:
 
 
 @dataclass
-class PermissionSingleEditModel(PermissionEditModel):
+class PermissionEditModel(PermissionEditModelBase):
+    edit_velp_group_perms: bool = True
+
+
+@dataclass
+class PermissionSingleEditModel(PermissionEditModelBase):
     id: int
+    edit_velp_group_perms: bool = True
 
 
 class DefaultItemType(Enum):
@@ -215,26 +228,48 @@ class DefaultItemType(Enum):
 
 
 @dataclass
-class DefaultPermissionModel(PermissionSingleEditModel):
+class DefaultPermissionModelBase:
     item_type: DefaultItemType
 
 
 @dataclass
-class PermissionRemoveModel:
+class DefaultPermissionModel(PermissionSingleEditModel, DefaultPermissionModelBase):
+    pass
+
+
+@dataclass
+class PermissionRemoveModelBase:
     id: int
     type: AccessType = field(metadata={"by_value": True})
     group: int
 
 
 @dataclass
-class DefaultPermissionRemoveModel(PermissionRemoveModel):
+class PermissionRemoveModel(PermissionRemoveModelBase):
+    edit_velp_group_perms: bool = True
+
+
+@dataclass
+class DefaultPermissionRemoveModelBase:
     item_type: DefaultItemType
 
 
 @dataclass
-class PermissionMassEditModel(PermissionEditModel):
+class DefaultPermissionRemoveModel(
+    PermissionRemoveModel, DefaultPermissionRemoveModelBase
+):
+    pass
+
+
+@dataclass
+class PermissionMassEditModelBase:
     ids: list[int]
     action: EditOption = field(metadata={"by_value": True})
+
+
+@dataclass
+class PermissionMassEditModel(PermissionEditModel, PermissionMassEditModelBase):
+    pass
 
 
 @manage_page.get("/permissions/add/<int:doc_id>/<username>")
@@ -245,6 +280,7 @@ def add_permission_basic(
         raise RouteException("Only 'view' is allowed to prevent misuse")
 
     i = get_item_or_abort(doc_id)
+
     settings = i.document.get_settings()
     if not settings.allow_url_permission_edits():
         raise AccessDenied(
@@ -252,16 +288,19 @@ def add_permission_basic(
         )
 
     verify_permission_edit_access(i, AccessType.view)
-    accs = add_perm(
-        PermissionEditModel(
-            type=AccessType.view,
-            groups=[username],
-            time=TimeOpt(
-                type=TimeType.duration,
-                duration=Duration(hours=duration),
-            ),
-            confirm=False,
+
+    p_model = PermissionEditModel(
+        type=AccessType.view,
+        groups=[username],
+        time=TimeOpt(
+            type=TimeType.duration,
+            duration=Duration(hours=duration),
         ),
+        confirm=False,
+    )
+
+    accs = add_perm(
+        p_model,
         i,
         replace_active_duration=False,
     )
@@ -293,6 +332,11 @@ def add_permission(m: PermissionSingleEditModel):
         a = accs[0]
         check_ownership_loss(is_owner, i)
         log_right(f"added {a.info_str} for {seq_to_str(m.groups)} in {i.path}")
+
+        # copy permissions to document's velp groups
+        if m.edit_velp_group_perms:
+            add_doc_velp_group_permissions(i, m)
+
         db.session.commit()
     return permission_response(m)
 
@@ -330,6 +374,17 @@ def raise_or_redirect(message: str, redir: str | None = None) -> Response:
     return safe_redirect(urlunparse(url))
 
 
+def is_velp_group_in_document(vg: VelpGroup, d: ItemOrBlock) -> bool:
+    """Check that the velp group is in the correct path in relation to the parent document"""
+    res = False
+    vg_path = get_doc_or_abort(vg.id).path
+    doc_name = d.short_name
+    doc_folder = d.path_without_lang.rsplit("/", maxsplit=1)[0]
+    if vg_path == f"{doc_folder}/velp-groups/{doc_name}/{vg.name}":
+        res = True
+    return res
+
+
 @manage_page.get("/permissions/expire/<int:doc_id>/<username>")
 def expire_permission_url(doc_id: int, username: str, redir: str | None = None):
     g, i = get_group_and_doc(doc_id, username)
@@ -347,8 +402,37 @@ def expire_permission_url(doc_id: int, username: str, redir: str | None = None):
         ba.duration = None
         ba.duration_from = None
         ba.duration_to = None
+    # also expire permissions for document's velp groups
+    expire_doc_velp_groups_perms(i.id, g)
+
     db.session.commit()
     return ok_response() if not redir else safe_redirect(redir)
+
+
+def expire_doc_velp_groups_perms(doc_id: int, ug: UserGroup) -> None:
+    """Expire view permissions for a document's VelpGroups for a specific UserGroup
+
+    :param doc_id: ID for the document
+    :param ug: UserGroup whose permissions will be expired
+    """
+    vgs = get_groups_from_document_table(doc_id, None)
+    doc = get_doc_or_abort(doc_id)
+    accs: list[BlockAccess] = []
+    for vg in vgs:
+        # Only expire permissions from velp groups attached to the document
+        if is_velp_group_in_document(vg, doc):
+            # TODO Should this apply to ALL permissions, instead of just 'view'?
+            acc: BlockAccess | None = BlockAccess.query.filter_by(
+                type=AccessType.view.value,
+                block_id=vg.id,
+                usergroup_id=ug.id,
+            ).first()
+            if acc:
+                accs.append(acc)
+    for a in accs:
+        a.accessible_to = get_current_time()
+        if a.duration:
+            a.duration, a.duration_from, a.duration_to = None, None, None
 
 
 @manage_page.get("/permissions/confirm/<int:doc_id>/<username>")
@@ -393,7 +477,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
     nonexistent = set(m.groups) - {g.name for g in groups}
     if nonexistent:
         raise RouteException(f"Non-existent groups: {nonexistent}")
-    items = (
+    items: list[ItemOrBlock] = (
         Block.query.filter(
             Block.id.in_(m.ids)
             & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])
@@ -402,6 +486,7 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
         .all()
     )
     a = None
+    velp_groups = None
     owned_items_before = set()
     for i in items:
         checked_owner = verify_permission_edit_access(i, m.type)
@@ -411,9 +496,20 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
             accs = add_perm(m, i)
             if accs:
                 a = accs[0]
+            # copy permissions to item's/document's velp groups, if any
+            if m.edit_velp_group_perms:
+                # Currently only document velp group permissions are supported
+                if i.type_id == BlockType.Document.value:
+                    doc = get_doc_or_abort(i.id)
+                    velp_groups = add_velp_group_permissions(m, doc)
         else:
             for g in groups:
                 a = remove_perm(g, i, m.type) or a
+                # Also remove permissions to item's/document's velp groups, if any
+                if m.edit_velp_group_perms:
+                    if i.type_id == BlockType.Document.value:
+                        doc = get_doc_or_abort(i.id)
+                        velp_groups = remove_velp_group_perms(doc, g, m.type)
 
     if m.type == AccessType.owner:
         owned_items_after = set()
@@ -428,6 +524,12 @@ def edit_permissions(m: PermissionMassEditModel) -> Response:
         log_right(
             f"{action} {a.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}"
         )
+        if velp_groups:
+            for vg in velp_groups:
+                log_right(
+                    f"{action} {vg.info_str} for {seq_to_str(m.groups)} in blocks: "
+                    + f"{seq_to_str(list(str(x) for x in m.ids))}"
+                )
         db.session.commit()
     return permission_response(m)
 
@@ -459,25 +561,136 @@ def add_perm(
     return accs
 
 
+def add_velp_group_permissions(
+    p: PermissionEditModel,
+    doc: DocInfo | DocEntry,
+    replace_active_duration: bool = True,
+) -> list[BlockAccess]:
+
+    opt = p.time.effective_opt
+    accs = []
+    vgs: list[VelpGroup] = get_groups_from_document_table(doc.id, None)
+
+    for vg in vgs:
+        # Don't add permissions to users' personal velp groups,
+        # only add perms to document velp groups in the path:
+        # [doc_folder]/velp-groups/[doc-name]/[velp_group]
+        if (
+            not vg.name == DEFAULT_PERSONAL_VELP_GROUP_NAME
+            and is_velp_group_in_document(vg, doc)
+        ):
+            for group in p.group_objects:
+                a = grant_access(
+                    group,
+                    vg.block,
+                    p.type,
+                    accessible_from=opt.ffrom,
+                    accessible_to=opt.to,
+                    duration_from=opt.durationFrom,
+                    duration_to=opt.durationTo,
+                    duration=opt.duration,
+                    require_confirm=False,  # Parent doc has been confirmed, no need to confirm VelpGroups
+                    replace_active_duration=replace_active_duration,
+                )
+                accs.append(a)
+    return accs
+
+
+def add_doc_velp_group_permissions(
+    i: Item, m: PermissionEditModel
+) -> list[BlockAccess]:
+    """Add access permissions to a document's VelpGroups
+
+    :param i: Document
+    :param m: PermissionEditModel detailing the access permissions to be added
+    :return: Added permissions as a list of BlockAccess objects
+    """
+
+    # Currently only document velp group permissions are supported
+    if isinstance(i, DocInfo | DocEntry):
+        acc = add_velp_group_permissions(m, i)
+        for a in acc:
+            gr_path = get_item_or_abort(a.block_id).path
+            log_right(f"added {a.info_str} for {seq_to_str(m.groups)} in {gr_path}")
+        return acc
+
+
+def copy_doc_perms_to_velp_groups(i: ItemOrBlock) -> list[BlockAccess]:
+    """Copy permissions from document to its attached VelpGroups
+
+    NOTE: Any changes to the document's permissions should be committed
+    to the database before calling this function, otherwise the returned
+    list of BlockAccesses may contain outdated permissions for VelpGroups.
+
+    :param i: Document that the VelpGroups are attached to
+    :return: List of BlockAccess objects for the document's VelpGroups
+    """
+    vgs = (
+        VelpGroupsInDocument.query.filter_by(doc_id=i.id)
+        .join(VelpGroup)
+        .with_entities(VelpGroup)
+        .all()
+    )
+    ap_groups = []
+    doc_rights = get_rights_holders(i.id)
+    for vg in vgs:
+        if vg.name == DEFAULT_PERSONAL_VELP_GROUP_NAME and is_velp_group_in_document(
+            vg, i
+        ):
+            pass  # don't add permissions to users' personal velp groups
+        else:
+            for right in doc_rights:
+                a = grant_access(
+                    right.usergroup,
+                    vg.block,
+                    access_type=right.access_type,
+                    accessible_from=right.accessible_from,
+                    accessible_to=right.accessible_to,
+                    duration_from=right.duration_from,
+                    duration_to=right.duration_to,
+                    duration=right.duration,
+                    # 'parent' document access is confirmed already, no need for it here
+                    require_confirm=False,
+                    replace_active_duration=True,
+                )
+                ap_groups.append(a)
+    return ap_groups
+
+
 @manage_page.put("/permissions/remove", model=PermissionRemoveModel)
 def remove_permission(m: PermissionRemoveModel) -> Response:
     i = get_item_or_abort(m.id)
     had_ownership = verify_permission_edit_access(i, m.type)
-    ug: UserGroup = UserGroup.query.get(m.group)
+    # ug: UserGroup = UserGroup.query.get(m.group)  # query.get() is deprecated
+    ug: UserGroup = UserGroup.query.filter_by(id=m.group).first()
     if not ug:
         raise RouteException("User group not found")
     a = remove_perm(ug, i.block, m.type)
     check_ownership_loss(had_ownership, i)
 
-    log_right(f"removed {a.info_str} for {ug.name} in {i.path}")
+    if a:
+        log_right(f"removed {a.info_str} for {ug.name} in {i.path}")
+
+    # Also remove permissions to item's/document's velp groups, if any
+    if m.edit_velp_group_perms and isinstance(i, DocInfo | DocEntry):
+        rm_groups = remove_velp_group_perms(i, ug, m.type)
+        for rm in rm_groups:
+            rm_path = get_doc_or_abort(rm.block_id).path
+            log_right(f"removed {rm.info_str} for {ug.name} in {rm_path}")
+
     db.session.commit()
     return ok_response()
 
 
 @dataclass
-class PermissionClearModel:
+class PermissionClearModelBase:
     paths: list[str]
     type: AccessType = field(metadata={"by_value": True})
+
+
+@dataclass
+class PermissionClearModel(PermissionClearModelBase):
+    edit_velp_group_perms: bool = True
 
 
 @manage_page.put("/permissions/clear", model=PermissionClearModel)
@@ -489,13 +702,26 @@ def clear_permissions(m: PermissionClearModel) -> Response:
         if not i:
             raise RouteException(f"Item not found: {p}")
         verify_ownership(i)
-        i.block.accesses = {
-            (ugid, permtype): v
-            for (ugid, permtype), v in i.block.accesses.items()
-            if permtype != m.type.value
-        }
+        clear_doc_permissions(i, m.type)
+
+        # Clear permissions from document's velp groups
+        if m.edit_velp_group_perms and isinstance(i, DocInfo | DocEntry):
+            vgs = get_groups_from_document_table(i.id, None)
+            for vg in vgs:
+                # Only clear perms from velp groups attached to the document
+                if is_velp_group_in_document(vg, i):
+                    clear_doc_permissions(vg, m.type)
+
     db.session.commit()
     return ok_response()
+
+
+def clear_doc_permissions(doc: DocInfo | DocEntry, a: AccessType) -> None:
+    doc.block.accesses = {
+        (ugid, permtype): v
+        for (ugid, permtype), v in doc.block.accesses.items()
+        if permtype != a.value
+    }
 
 
 # noinspection PyShadowingBuiltins
@@ -507,6 +733,11 @@ def self_expire_permission(id: int) -> Response:
         return ok_response()
     acc = get_single_view_access(i)
     acc.accessible_to = get_current_time()
+
+    # Expire perms for document's velp groups as well
+    if isinstance(i, DocInfo | DocEntry):
+        expire_doc_velp_groups_perms(i.id, acc.usergroup)
+
     log_right(f"self-expired view access in {i.path}")
     db.session.commit()
     return ok_response()
@@ -514,6 +745,26 @@ def self_expire_permission(id: int) -> Response:
 
 def remove_perm(group: UserGroup, b: Block, t: AccessType):
     return remove_access(group, b, t)
+
+
+def remove_velp_group_perms(
+    i: DocInfo | DocEntry, ug: UserGroup, acc: AccessType
+) -> list[BlockAccess]:
+    """Remove a UserGroup's permissions to Velp Groups that are attached to a specific document
+
+    :param i: Document that the Velp Groups are attached to
+    :param ug: UserGroup whose permissions will be removed
+    :param acc: AccessType of the permissions that will be removed
+    """
+    vgs = get_groups_from_document_table(i.id, None)
+    rm_groups = []
+    for vg in vgs:
+        # Remove perms only from velp groups attached to the document
+        if is_velp_group_in_document(vg, i):
+            a = remove_perm(ug, vg.block, acc)
+            if a:
+                rm_groups.append(a)
+    return rm_groups
 
 
 def check_ownership_loss(had_ownership, item):
@@ -665,6 +916,7 @@ def add_default_doc_permission(m: DefaultPermissionModel) -> Response:
         duration_to=opt.durationTo,
         duration=opt.duration,
     )
+
     db.session.commit()
     return permission_response(m)
 
@@ -702,47 +954,18 @@ def del_document(doc_id: int) -> Response:
     d = get_doc_or_abort(doc_id)
     verify_ownership(d)
     soft_delete_document(d)
+
+    # remove attached velp groups
+    vgs: list[VelpGroup] = get_groups_from_document_table(d.id, None)
+    for vg in vgs:
+        # remove all permissions from velp groups attached to the document
+        if is_velp_group_in_document(vg, d):
+            vg.block.accesses.clear()
+            # delete velp group and db references
+            delete_velp_group(vg)
+
     db.session.commit()
     return ok_response()
-
-
-def soft_delete_document(d: DocInfo) -> None:
-    """Performs a 'soft delete' on the specified document by moving it to the trash folder.
-
-    When calling this function, a valid AccessType of either
-    AccessType.owner or AccessType.manage must be given as parameter.
-    Other AccessTypes are rejected.
-
-    :param d: The document to be deleted.
-    """
-    f = get_trash_folder()
-    if d.path.startswith(f.path):
-        # Document is already in the trash folder
-        return ok_response()
-
-    if isinstance(d, Translation):
-        deleted_doc = DocEntry.create(
-            f"{f.path}/tl_{d.id}_{d.src_docid}_{d.lang_id}_deleted",
-            title=f"Deleted translation (src_docid: {d.src_docid}, lang_id: {d.lang_id})",
-        )
-        d.docentry = deleted_doc
-    else:
-        move_document(d, f)
-    return ok_response()
-
-
-TRASH_FOLDER_PATH = f"roskis"
-
-
-def get_trash_folder() -> Folder:
-    f = Folder.find_by_path(TRASH_FOLDER_PATH)
-    if not f:
-        f = Folder.create(
-            TRASH_FOLDER_PATH,
-            owner_groups=UserGroup.get_admin_group(),
-            title="Roskakori",
-        )
-    return f
 
 
 @manage_page.delete("/folders/<int:folder_id>")
