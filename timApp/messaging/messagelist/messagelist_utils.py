@@ -581,18 +581,20 @@ def get_message_list_owners(mlist: MessageListModel) -> list[UserGroup]:
 
 
 def create_management_doc(
-    msg_list_model: MessageListModel, list_options: ListInfo
+    msg_list_model: MessageListModel, list_options: ListInfo, owner: User
 ) -> DocInfo:
     """Create management doc for a new message list.
 
     :param msg_list_model: The message list the management document is created for.
     :param list_options: Options for creating the management document.
+    :param owner: Owner of the list
     :return: Newly created management document.
     """
 
     doc = create_document(
         f"/{MESSAGE_LIST_DOC_PREFIX}/{remove_path_special_chars(list_options.name)}",
         list_options.name,
+        doc_owner=owner.get_personal_group(),
         validation_rule=ItemValidationRule(check_write_perm=False),
         parent_owner=UserGroup.get_admin_group(),
     )
@@ -608,17 +610,18 @@ def create_management_doc(
     return doc
 
 
-def new_list(list_options: ListInfo) -> tuple[DocInfo, MessageListModel]:
+def new_list(list_options: ListInfo, owner: User) -> tuple[DocInfo, MessageListModel]:
     """Adds a new message list into the database and creates the list's management doc.
 
     :param list_options: The list information for creating a new message list. Used to carry list's name and archive
     policy.
     :return: The management document of the message list.
+    :param owner: Owner of the message list.
     :return: The message list db model.
     """
     msg_list = MessageListModel(name=list_options.name, archive=list_options.archive)
     db.session.add(msg_list)
-    doc_info = create_management_doc(msg_list, list_options)
+    doc_info = create_management_doc(msg_list, list_options, owner)
     check_archives_folder_exists(msg_list)
     return doc_info, msg_list
 

@@ -102,7 +102,7 @@ def create_list(options: ListInfo) -> Response:
 
 
 def do_create_list(owner: User, options: ListInfo) -> tuple[DocInfo, MessageListModel]:
-    manage_doc, message_list = new_list(options)
+    manage_doc, message_list = new_list(options, owner)
 
     if options.domain:
         verify_mailman_connection()
