@@ -762,7 +762,8 @@ def remove_velp_group_perms(
         # Remove perms only from velp groups attached to the document
         if is_velp_group_in_document(vg, i):
             a = remove_perm(ug, vg.block, acc)
-            rm_groups.append(a)
+            if a:
+                rm_groups.append(a)
     return rm_groups
 
 
