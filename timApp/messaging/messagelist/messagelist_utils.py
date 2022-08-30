@@ -413,7 +413,9 @@ def check_archives_folder_exists(message_list: MessageListModel) -> Folder | Non
     if archive_folder is None:
         owners = get_message_list_owners(message_list)
         archive_folder = Folder.create(
-            archive_folder_path, owner_groups=owners, title=f"{message_list.name}"
+            archive_folder_path,
+            owner_groups=owners,
+            title=f"{message_list.name}",
         )
     return archive_folder
 
@@ -595,7 +597,7 @@ def create_management_doc(
         f"/{MESSAGE_LIST_DOC_PREFIX}/{remove_path_special_chars(list_options.name)}",
         list_options.name,
         doc_owner=owner.get_personal_group(),
-        validation_rule=ItemValidationRule(check_write_perm=False),
+        validation_rule=ItemValidationRule(check_write_perm=False, require_login=False),
         parent_owner=UserGroup.get_admin_group(),
     )
 
