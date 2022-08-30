@@ -57,6 +57,7 @@ from timApp.messaging.messagelist.messagelist_utils import (
     MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX,
 )
 from timApp.timdb.sqa import db
+from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -90,11 +91,17 @@ def create_list(options: ListInfo) -> Response:
 
     # Current user is set as the default owner.
     owner = get_current_user_object()
-
     # Options object is given directly to new_list, so we don't want to use temporary variable for stripped name.
     options.name = options.name.strip()
 
     test_name(options.name)
+    manage_doc, message_list = do_create_list(owner, options)
+
+    db.session.commit()
+    return json_response(manage_doc)
+
+
+def do_create_list(owner: User, options: ListInfo) -> tuple[DocInfo, MessageListModel]:
     manage_doc, message_list = new_list(options)
 
     if options.domain:
@@ -106,8 +113,7 @@ def create_list(options: ListInfo) -> Response:
 
     set_message_list_subject_prefix(message_list, f"[{message_list.name}]")
 
-    db.session.commit()
-    return json_response(manage_doc)
+    return manage_doc, message_list
 
 
 def test_name(name_candidate: str) -> None:
