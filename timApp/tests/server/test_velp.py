@@ -323,13 +323,13 @@ class VelpGroupDeletionTest(TimRouteTest):
             f"/{d.document.id}/create_velp_group",
             {"name": "test-group1", "target_type": 1},
         )
-        g = self.json_post(
+        g2 = self.json_post(
             f"/{d.document.id}/create_velp_group",
             {"name": "test-group2", "target_type": 1},
         )
         # get velp group document
         g_doc = get_doc_or_abort(g["id"])
-        g_doc2 = get_doc_or_abort(g["id"])
+        g_doc2 = get_doc_or_abort(g2["id"])
         self.test_user_2.grant_access(g_doc, AccessType.view)
         self.test_user_2.grant_access(g_doc2, AccessType.view)
         db.session.commit()
@@ -382,20 +382,20 @@ class VelpGroupDeletionTest(TimRouteTest):
         self.test_user_2.grant_access(g_doc2, AccessType.owner)
         db.session.commit()
         # try to delete the document
-        self.delete(url=f"/velp/group/{g['id']}", expect_status=200)
+        self.delete(url=f"/velp/group/{g2['id']}", expect_status=200)
         # velp group document should now be placed in the TIM 'trash bin' (/roskis)
-        deleted = get_doc_or_abort(g["id"])
-        self.assertEqual(f"roskis/{g['name']}", deleted.path)
+        deleted = get_doc_or_abort(g2["id"])
+        self.assertEqual(f"roskis/{g2['name']}", deleted.path)
 
         # database should not contain any references to the velp group
-        vg = VelpGroup.query.filter_by(id=g["id"]).first()
-        v_in_g = VelpInGroup.query.filter_by(velp_group_id=g["id"]).all()
-        vg_sel2 = VelpGroupSelection.query.filter_by(velp_group_id=g["id"]).all()
-        vg_def2 = VelpGroupDefaults.query.filter_by(velp_group_id=g["id"]).all()
-        vg_in_doc2 = VelpGroupsInDocument.query.filter_by(velp_group_id=g["id"]).all()
+        vg2 = VelpGroup.query.filter_by(id=g2["id"]).first()
+        v_in_g2 = VelpInGroup.query.filter_by(velp_group_id=g2["id"]).all()
+        vg_sel2 = VelpGroupSelection.query.filter_by(velp_group_id=g2["id"]).all()
+        vg_def2 = VelpGroupDefaults.query.filter_by(velp_group_id=g2["id"]).all()
+        vg_in_doc2 = VelpGroupsInDocument.query.filter_by(velp_group_id=g2["id"]).all()
 
-        self.assertEqual(None, vg)
-        self.assertEqual(0, len(v_in_g))
+        self.assertEqual(None, vg2)
+        self.assertEqual(0, len(v_in_g2))
         self.assertEqual(0, len(vg_sel2))
         self.assertEqual(0, len(vg_def2))
         self.assertEqual(0, len(vg_in_doc2))
