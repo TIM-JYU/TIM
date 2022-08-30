@@ -13,6 +13,10 @@ Tested routes from velp.py:
 """
 import json
 
+from timApp.user.users import remove_access
+
+from timApp.item.manage import remove_velp_group_perms
+
 from timApp.util.utils import get_current_time
 from timApp.user.usergroup import UserGroup
 
@@ -1115,3 +1119,130 @@ class VelpGroupPermissionsPropagationTest(TimRouteTest):
         self.get(g_persnl_doc.url, expect_status=403)
         self.get(g_docmnt_doc.url, expect_status=403)
         self.get(g_folder_doc.url, expect_status=403)
+
+    def test_modify_perms_for_no_vg_perms_user(self):
+        """Test modifying document permissions (remove, edit, expire, clear)
+        for user who has no permissions to document's velp groups
+        """
+        d, g_doc = self.setup_velp_group_test()
+
+        self.test_user_2.grant_access(d, access_type=AccessType.view)
+        db.session.commit()
+
+        # Testuser2 should now have view access to the document,
+        # but not to the document's velp groups
+        self.login_test2()
+        self.get(d.url, expect_status=200)
+        self.get(g_doc.url, expect_status=403)
+
+        self.login_test1()
+        # Case 14:
+        # Should be able to remove testuser2's permissions to the parent document
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.view.value,
+                "group": self.get_test_user_2_group_id(),
+            },
+            expect_status=200,
+        )
+
+        self.test_user_2.grant_access(d, access_type=AccessType.view)
+        db.session.commit()
+        # Case 15:
+        # Should be able to edit/remove testuser2's permissions to the parent document
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2"],
+                "type": AccessType.view.value,
+                "action": "remove",
+                "ids": [d.id],
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+            },
+            expect_status=200,
+        )
+
+        self.test_user_2.grant_access(d, access_type=AccessType.view)
+        db.session.commit()
+        # Case 16:
+        # Should be able to expire testuser2's permissions to the parent document
+        self.get(
+            f"/permissions/expire/{d.id}/{self.test_user_2.name}", expect_status=200
+        )
+
+        self.test_user_2.grant_access(d, access_type=AccessType.view)
+        db.session.commit()
+        # Case 17:
+        # Should be able to self-expire testuser2's permissions to the parent document
+        self.login_test2()
+        self.json_post("/permissions/selfExpire", {"id": d.id}, expect_status=200)
+
+        self.login_test1()
+        self.test_user_2.grant_access(d, access_type=AccessType.view)
+        db.session.commit()
+        # Case 18:
+        # Should be able to clear testuser2's permissions to the parent document
+        self.json_put(
+            "/permissions/clear",
+            {
+                "paths": [d.path],
+                "type": AccessType.edit.value,
+            },
+            expect_status=200,
+        )
+
+    def test_velp_group_permissions_parameter(self):
+        """Test that velp group perms are not set if edit_velp_group_perms flag is false"""
+        d, g_doc = self.setup_velp_group_test()
+
+        # Initially not able to access
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+
+        # Case 19:
+        # Should not set perms for velp groups if edit_velp_group_perms is false
+        self.login_test1()
+        self.json_put(
+            f"/permissions/add",
+            {
+                "time": {
+                    "type": "always",
+                },
+                "id": d.id,
+                "type": AccessType.view.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+                "edit_velp_group_perms": False,
+            },
+            expect_status=200,
+        )
+
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
+
+        # Case 20:
+        # Should not set perms for velp groups if edit_velp_group_perms is false
+        self.login_test1()
+        self.json_put(
+            f"/permissions/edit",
+            {
+                "groups": ["testuser2"],
+                "type": AccessType.view.value,
+                "action": "add",
+                "ids": [d.id],
+                "time": {
+                    "type": "always",
+                },
+                "confirm": False,
+                "edit_velp_group_perms": False,
+            },
+            expect_status=200,
+        )
+
+        self.login_test2()
+        self.get(g_doc.url, expect_status=403)
