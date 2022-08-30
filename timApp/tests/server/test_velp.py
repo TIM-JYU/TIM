@@ -13,7 +13,6 @@ Tested routes from velp.py:
 """
 import json
 
-from timApp.defaultconfig import DEFAULT_PERSONAL_VELP_GROUP_NAME
 from timApp.util.utils import get_current_time
 from timApp.user.usergroup import UserGroup
 
@@ -27,7 +26,7 @@ from timApp.folder.folder import Folder
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.velp.annotation import Annotation
-from timApp.velp.velp import create_new_velp
+from timApp.velp.velp import create_new_velp, DEFAULT_PERSONAL_VELP_GROUP_NAME
 from timApp.velp.velp_models import (
     VelpGroup,
     VelpInGroup,

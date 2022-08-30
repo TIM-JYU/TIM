@@ -13,9 +13,8 @@ from flask import request
 from isodate import Duration
 from sqlalchemy import inspect
 from sqlalchemy.orm.state import InstanceState
-from timApp.velp.velp import delete_velp_group
+from timApp.velp.velp import delete_velp_group, DEFAULT_PERSONAL_VELP_GROUP_NAME
 
-from timApp.defaultconfig import DEFAULT_PERSONAL_VELP_GROUP_NAME
 from timApp.velp.velp_models import VelpGroupsInDocument, VelpGroup
 
 from timApp.auth.accesshelper import (

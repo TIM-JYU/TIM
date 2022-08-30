@@ -15,7 +15,6 @@ from timApp.item.deleting import (
 from flask import Blueprint, Response
 
 from flask import request
-from timApp.defaultconfig import DEFAULT_PERSONAL_VELP_GROUP_NAME
 from timApp.user.usergroup import UserGroup
 
 from timApp.auth.accesshelper import (
@@ -99,6 +98,10 @@ from timApp.velp.velps import (
 )
 
 velps = Blueprint("velps", __name__, url_prefix="")
+
+# Default name for users' personal default velp group folder.
+# Do not modify.
+DEFAULT_PERSONAL_VELP_GROUP_NAME = "Personal-default"
 
 
 # TODO: Add document handling for all velp group related stuff

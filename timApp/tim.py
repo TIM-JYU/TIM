@@ -234,11 +234,6 @@ KNOWN_LANGUAGES = [
 ]
 
 
-# Default name for users' personal default velp group folder.
-# Do not modify.
-DEFAULT_PERSONAL_VELP_GROUP_NAME = "Personal-default"
-
-
 def get_locale():
     header_lang = request.accept_languages.best_match(KNOWN_LANGUAGES, default="en-US")
     lng = request.cookies.get("lang")
