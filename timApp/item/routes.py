@@ -121,7 +121,7 @@ from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
 from timApp.velp.velpgroups import set_default_velp_group_selected_and_visible
-from tim_common.html_sanitize import sanitize_html
+from tim_common.html_sanitize import sanitize_css
 
 DEFAULT_RELEVANCE = 10
 
@@ -771,10 +771,8 @@ def render_doc_view(
                 )
             )
         else:
-            doc_css = sanitize_html(
-                '<style type="text/css">' + compiled_sass + "</style>",
-                allow_styles=True,
-            )
+            # Document styles are visible to anyone but they cannot be moderated easily, we allow only minimal css
+            doc_css = sanitize_css(compiled_sass)
     else:
         doc_css = None
 

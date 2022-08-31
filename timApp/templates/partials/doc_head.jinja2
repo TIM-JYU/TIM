@@ -22,7 +22,11 @@
     <link rel="stylesheet" href="/static/stylesheets/viewhide.css">
 {% endif %}
 
-{{ (doc_css | safe ) if doc_css }}
+{% if doc_css %}
+    <style data-style-origin="document-settings">
+        {{ doc_css | safe }}
+    </style>
+{% endif %}
 
 <script class="global-vars">
     ANGULARMODULES.push(...{{ (jsMods or [])|tojson }});

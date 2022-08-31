@@ -2,12 +2,12 @@ import re
 import sre_constants
 from functools import cached_property
 from re import Pattern
-from typing import Optional
 
 import attr
 
 from timApp.document.docentry import DocEntry
 from timApp.item.item import Item
+from tim_common.html_sanitize import sanitize_css
 
 BookmarkEntry = dict[str, str]
 BookmarkEntryList = list[BookmarkEntry]
@@ -66,6 +66,9 @@ class Preferences:
 
     def to_json(self, with_style: bool = False) -> dict:
         result = self.__dict__
+        if self.custom_css:
+            # Personal CSS is only applied to yourself, they can import whatever
+            result["custom_css"] = sanitize_css(self.custom_css, allow_imports=True)
         if with_style:
             result |= {"style_path": self.style_path}
         return result
