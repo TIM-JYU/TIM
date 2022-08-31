@@ -282,10 +282,37 @@ def sanitize_html(html_string: str, allow_styles: bool = False) -> str:
     return sanitize_with_cleaner(html_string, cleaner)
 
 
+# Copied from LXML to match the same pattern
+_replace_css_import = re.compile(r"@\s*import", re.I).sub
+_css_style_prefix = "<style type='text/css'>"
+_css_style_suffix = "</style>"
+_css_style_prefix_len = len(_css_style_prefix)
+_css_style_suffix_len = len(_css_style_suffix)
+
+
+def sanitize_css(css_string: str, allow_imports: bool = False) -> str:
+    """
+    Sanitizes the given CSS style string.
+    :param css_string: Style string to sanitize.
+    :param allow_imports: Whether to allow @import statements.
+                          Note that this means that users can try to import something nasty!
+    :return: Sanitized CSS
+    """
+    if allow_imports:
+        css_string = _replace_css_import("#import", css_string)
+    css_string = sanitize_html(
+        f"{_css_style_prefix}{css_string}{_css_style_suffix}", allow_styles=True
+    )
+    css_string = css_string[_css_style_prefix_len:-_css_style_suffix_len]
+    if allow_imports:
+        css_string = css_string.replace("#import", "@import")
+    return css_string
+
+
 # Taken from LXML
 looks_like_full_html = re.compile(r"^\s*<(?:html|!doctype)", re.I).match
 
-# NOTE: lxml now always removed data:image/svg+xml because of possible XSS:
+# NOTE: lxml now removes data:image/svg+xml because of possible XSS:
 # See: https://github.com/lxml/lxml/commit/f2330237440df7e8f39c3ad1b1aa8852be3b27c0
 # However, in TIM, data URLs are used for plugins and Tex2SVG math content
 # In our case, we can generally be pretty sure that the data URL contains only SVG

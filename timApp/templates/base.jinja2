@@ -103,7 +103,7 @@
         <title>{% block title %}{% endblock %} - TIM</title>
     {% endblock %}
     <style data-style-origin="user-prefs-custom">
-        {{ prefs.custom_css }}
+        {{ prefs.custom_css | safe }}
     </style>
 </head>
 <body>
