@@ -88,15 +88,7 @@
 	import tim_server
 }
 
-# For running tests (from IDE).
-http://caddy:81 {
-	import common
-	handle {
-		reverse_proxy * http://tim:5001
-	}
-}
-
-# For running tests (from command line).
+# For running tests
 http://caddy:82 {
 	import common
 	handle {
