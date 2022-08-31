@@ -6,7 +6,7 @@
     <envs>
       <env name="TIM_SETTINGS" value="testconfig.py" />
     </envs>
-    <option name="SDK_HOME" value="docker-compose://[$TIM_DOCKER_COMPOSE$]:tim/python3" />
+    <option name="SDK_HOME" value="docker-compose://[$TIM_DOCKER_COMPOSE$]:tests/python3" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/timApp" />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
