@@ -3,6 +3,7 @@ from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime, timezone
 from typing import Any, Mapping, NewType
 
+import dateutil.parser
 import marshmallow
 from marshmallow import missing, pre_load, EXCLUDE
 
@@ -39,7 +40,7 @@ class PluginDateTimeField(marshmallow.fields.Field):
             d = value
         elif isinstance(value, str):
             try:
-                d = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+                d = dateutil.parser.parse(value)
             except ValueError:
                 raise self.make_error("validator_failed")
         if d:
