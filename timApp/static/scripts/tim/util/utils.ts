@@ -991,6 +991,21 @@ export const MomentFromString = new t.Type<moment.Moment, string, unknown>(
     (a) => a.toISOString()
 );
 
+export const MomentDurationFromString = new t.Type<
+    moment.Duration,
+    string,
+    unknown
+>(
+    "DateFromString",
+    (u): u is moment.Duration => moment.isDuration(u),
+    (u, c) =>
+        either.chain(t.string.validate(u, c), (s) => {
+            const d = moment.duration(s);
+            return d.isValid() ? t.success(d) : t.failure(u, c);
+        }),
+    (a) => a.toISOString()
+);
+
 /**
  * Given the list of strings, shorten them to the shortest unique prefix.
  *

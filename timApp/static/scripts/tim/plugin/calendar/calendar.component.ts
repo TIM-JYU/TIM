@@ -42,6 +42,7 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek, setISOWeek} from "date-fns";
+import moment from "moment";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {
@@ -54,6 +55,8 @@ import {
     capitalizeFirstLetter,
     closest,
     DateFromString,
+    MomentDurationFromString,
+    MomentFromString,
     to2,
     toPromise,
 } from "../../util/utils";
@@ -109,6 +112,7 @@ const EventTemplate = t.type({
     setters: t.array(t.string),
     extraBookers: t.array(t.string),
     tags: t.array(t.string),
+    signupBefore: t.union([MomentFromString, MomentDurationFromString, t.null]),
     capacity: t.number,
     sendNotifications: t.boolean,
 });
@@ -522,11 +526,23 @@ export class CalendarComponent
         let title: string | null = "";
         let location: string | null = "";
         let description: string = "";
+        const signupBefore = new Date(segment.date);
         if (this.markup.eventTemplates) {
             const template = this.markup.eventTemplates[this.selectedEvent];
             title = template.title;
             location = template.location ?? "";
             description = template.description ?? "";
+            if (template.signupBefore) {
+                if (moment.isMoment(template.signupBefore)) {
+                    signupBefore.setTime(template.signupBefore.valueOf());
+                } else if (moment.isDuration(template.signupBefore)) {
+                    signupBefore.setTime(
+                        moment(signupBefore)
+                            .subtract(template.signupBefore)
+                            .valueOf()
+                    );
+                }
+            }
         }
         if (!title) {
             title = this.selectedEvent;
@@ -539,7 +555,7 @@ export class CalendarComponent
             end: addMinutes(segment.date, this.segmentMinutes),
             meta: {
                 tmpEvent: true,
-                signup_before: new Date(segment.date),
+                signup_before: signupBefore,
                 description: description,
                 enrollments: 0,
                 location: location,
@@ -653,11 +669,18 @@ export class CalendarComponent
      */
     private refresh() {
         this.events = [...this.events]; // TODO: Find out what is the purpose of this line
+        const now = Date.now();
         this.events.forEach((event) => {
             if (event.meta!.enrollments >= event.meta!.maxSize) {
                 event.color = colors.red;
             } else {
                 event.color = colors.blue;
+            }
+            if (
+                event.meta?.signup_before &&
+                now > event.meta.signup_before.getTime()
+            ) {
+                event.color = colors.gray;
             }
             if (event.meta!.booker_groups) {
                 event.meta!.booker_groups.forEach((group) => {
@@ -668,7 +691,7 @@ export class CalendarComponent
                     });
                 });
             }
-            if (Date.now() > event.start.getTime()) {
+            if (now > event.start.getTime()) {
                 event.color = colors.gray;
             }
         });

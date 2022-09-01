@@ -102,6 +102,7 @@ class EventTemplate:
     bookers: list[str] = field(default_factory=list)
     setters: list[str] = field(default_factory=list)
     extraBookers: list[str] = field(default_factory=list)
+    signupBefore: str | None = None
     sendNotifications: bool = True
     capacity: int = 0
     tags: list[str] = field(default_factory=list)
@@ -196,6 +197,7 @@ eventTemplates:            # Event templates for the calendar. Used to create ne
         title: Event name  # Name of the event.
         location:          # Location of the event
         description:       # Description of the event
+        signupBefore:      # How long before the event start the user can sign up. Either ISO date or ISO duration.
         bookers:           # List of groups that can see the event in their calendars and book it.
           - bookersgroup
         setters:           # List of groups that can edit the event details.
