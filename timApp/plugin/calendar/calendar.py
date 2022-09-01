@@ -98,6 +98,7 @@ class EventTemplate:
 
     title: str | None = None
     location: str | None = None
+    description: str | None = None
     bookers: list[str] = field(default_factory=list)
     setters: list[str] = field(default_factory=list)
     extraBookers: list[str] = field(default_factory=list)
@@ -194,6 +195,7 @@ eventTemplates:            # Event templates for the calendar. Used to create ne
     Event:                 # Name of the template. Can contain spaces.
         title: Event name  # Name of the event.
         location:          # Location of the event
+        description:       # Description of the event
         bookers:           # List of groups that can see the event in their calendars and book it.
           - bookersgroup
         setters:           # List of groups that can edit the event details.

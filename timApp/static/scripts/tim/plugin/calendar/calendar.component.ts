@@ -104,6 +104,7 @@ function ceilToNearest(
 const EventTemplate = t.type({
     title: nullable(t.string),
     location: nullable(t.string),
+    description: nullable(t.string),
     bookers: t.array(t.string),
     setters: t.array(t.string),
     extraBookers: t.array(t.string),
@@ -520,10 +521,12 @@ export class CalendarComponent
     ) {
         let title: string | null = "";
         let location: string | null = "";
+        let description: string = "";
         if (this.markup.eventTemplates) {
-            title = this.markup.eventTemplates[this.selectedEvent].title;
-            location =
-                this.markup.eventTemplates[this.selectedEvent].location ?? "";
+            const template = this.markup.eventTemplates[this.selectedEvent];
+            title = template.title;
+            location = template.location ?? "";
+            description = template.description ?? "";
         }
         if (!title) {
             title = this.selectedEvent;
@@ -537,7 +540,7 @@ export class CalendarComponent
             meta: {
                 tmpEvent: true,
                 signup_before: new Date(segment.date),
-                description: "",
+                description: description,
                 enrollments: 0,
                 location: location,
                 isExtra: false,
