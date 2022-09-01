@@ -39,7 +39,7 @@ The style sheet for the calendar plugin
 }
 
 @media (max-width: 991px) {
-    .cal-events-container {
+  .cal-events-container {
     width: calc(69% - 2px);
   }
 }
@@ -63,10 +63,6 @@ The style sheet for the calendar plugin
 
 .event-btn {
   margin-bottom: 20px;
-}
-
-.event-btn button {
-  padding: 6px 5px;
 }
 
 @media (min-width: 768px) {
@@ -95,7 +91,7 @@ The style sheet for the calendar plugin
   //margin-top: 26px;
 }
 
-.checkbox-group{
+.checkbox-group {
   text-align: left;
   float: right;
 }
@@ -104,15 +100,24 @@ input[type="checkbox"] {
   margin-right: 4px;
 }
 
-.tim-calendar-arrow {
-    font-size: x-large;
-    cursor: pointer;
+.cal-ui-swicth {
+  display: flex;
+  align-items: center;
+  column-gap: 0.5em;
+}
+
+.tim-calendar-minimal-header {
+  margin-bottom: 0.5em;
+  display: flex;
+  align-items: center;
+  column-gap: 0.25em;
 }
 
 .tim-calendar-minimal-display {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .tim-calendar-minimal-display-week {
-    float: right;
+  margin-left: 1em;
 }
+

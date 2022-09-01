@@ -14,21 +14,21 @@ import {Users} from "../../user/userService";
 @Component({
     selector: "tim-calendar-minimal-header",
     template: `
-     <span class="tim-calendar-minimal-header">
-          <span class="tim-calendar-arrow"
+     <div class="tim-calendar-minimal-header">
+          <button class="btn btn-default btn-sm"
             mwlCalendarPreviousView
             [view]="view"
             [(viewDate)]="viewDate"
             (viewDateChange)="viewDateChange.next(viewDate)">
-              ⇦
-          </span>
-          <span class="tim-calendar-arrow"
+              <i class="glyphicon glyphicon-arrow-left"></i>
+          </button>
+          <button class="btn btn-default btn-sm"
             mwlCalendarNextView
             [view]="view"
             [(viewDate)]="viewDate"
             (viewDateChange)="viewDateChange.next(viewDate)">
-              ⇨
-          </span>
+              <i class="glyphicon glyphicon-arrow-right"></i>
+          </button>
           <span class="tim-calendar-minimal-display"
             mwlCalendarToday
             [(viewDate)]="viewDate"
@@ -39,27 +39,12 @@ import {Users} from "../../user/userService";
               <span  [hidden]="(view !== CalendarView.Month)">{{viewDate | calendarDate :'viewMonth':locale}}</span>
               <span [hidden]="(view !== CalendarView.Month)"> / {{viewDate | calendarDate :'viewYear':locale}}</span>
           </span>
-         <!--
-          <a i18n
-            (click)="viewChange.emit(CalendarView.Month)"
-            [class.active]="view === CalendarView.Month">
-            Month
-          </a>
-          -->
-         &nbsp;&nbsp;&nbsp;
           <a class="tim-calendar-minimal-display-week"
             (click)="viewChange.emit(CalendarView.Week)"
             [hidden]="view === CalendarView.Week">
             <tim-show-week  [(view)]="view" [(viewDate)]="viewDate"></tim-show-week>
           </a>
-         <!--
-          <a i18n
-            (click)="viewChange.emit(CalendarView.Day)"
-            [class.active]="view === CalendarView.Day">
-            Day
-          </a>
-          -->
-        </span>
+        </div>
   `,
     styleUrls: ["calendar.component.scss"],
 })

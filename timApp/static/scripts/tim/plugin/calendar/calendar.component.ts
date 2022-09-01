@@ -233,11 +233,10 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
                 </div>
             </div>
             <div class="col-md-4">
-                <div [style.visibility]="editEnabled ? 'visible' : 'hidden'" class="btn-group event-btn">
-                    <button (click)="setEventType(button)" *ngFor="let button of eventTypes"
-                            [class.active]="selectedEvent === button"
-                            class="btn timButton"
-                            id="{{button.valueOf() + eventTypes.indexOf(button) }}">{{button}}</button>
+                <div [style.visibility]="editEnabled ? 'visible' : 'hidden'" class="event-btn">
+                    <select [(ngModel)]="selectedEvent" class="form-control">
+                        <option *ngFor="let button of eventTypes" [value]="button">{{button}}</option>
+                    </select>
                 </div>
             </div>
             <div class="col-md-4">
@@ -275,7 +274,7 @@ export type TIMCalendarEvent = CalendarEvent<TIMEventMeta>;
             </div>
         </ng-template>
         <div class="cal-ui-swicth">
-            <input type="checkbox" [(ngModel)]="advancedUI" />Advanced
+            <label><input type="checkbox" [(ngModel)]="advancedUI" /><ng-container i18n>Advanced</ng-container></label>
             <tim-calendar-minimal-header 
                     [locale]="locale" 
                     [(view)]="viewMode" 
