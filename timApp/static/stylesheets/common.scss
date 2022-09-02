@@ -169,3 +169,10 @@ tim-view > div {
         border-radius: unset;
     }
 }
+
+.list-unstyled {
+    ul, ol {
+        list-style: none;
+        padding-left: 0;
+    }
+}
