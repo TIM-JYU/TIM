@@ -34,6 +34,7 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {showConfirm} from "../../../static/scripts/tim/ui/showConfirmDialog";
+import {slugify} from "../../../static/scripts/tim/util/slugify";
 import {
     GroupType,
     SisuAssessmentExportModule,
@@ -370,9 +371,11 @@ export class MultisaveComponent
 
             let link = this.markup.jumplink;
             for (let i = 0; i < values.length; i++) {
+                const val = values[i] ?? "";
+                link = link.replace(`{${i}}`, encodeURIComponent(val));
                 link = link.replace(
-                    "{" + i + "}",
-                    encodeURIComponent(values[i] ?? "")
+                    `{${i}:slug}`,
+                    encodeURIComponent(slugify(val))
                 );
             }
             const target = this.markup.jumptarget ?? "_self";
