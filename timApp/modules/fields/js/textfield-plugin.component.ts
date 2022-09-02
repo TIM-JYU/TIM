@@ -93,7 +93,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
 <div class="textfieldNoSaveDiv inline-form">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
     <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
-    <p class="stem" *ngIf="stem">{{stem}}</p>
+    <p class="stem" *ngIf="stem" [innerHTML]="stem | purify"></p>
     <form #f class="form-inline">
      <label><span>
       <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
