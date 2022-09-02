@@ -2365,7 +2365,9 @@ def get_model_answer(task_id: str) -> Response:
     dumbo_opts = plug.par.get_dumbo_options(
         base_opts=doc.get_settings().get_dumbo_options()
     )
-    answer_html = md_to_html(model_answer_info.answer, dumbo_options=dumbo_opts)
+    answer_html = md_to_html(
+        model_answer_info.answer, dumbo_options=dumbo_opts, ignore_errors=True
+    )
     return json_response({"answer": answer_html})
 
 
