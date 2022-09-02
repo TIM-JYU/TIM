@@ -173,6 +173,9 @@ tim-view > div {
 .list-unstyled {
     ul, ol {
         list-style: none;
-        padding-left: 0;
+
+        .inlineplugin {
+            margin-left: -1.2em;
+        }
     }
 }
