@@ -504,6 +504,7 @@ def md_to_html(
         env=create_environment(
             "%%", user_ctx=None, view_ctx=default_view_ctx, macros=macros
         ),
+        ignore_errors=True,
     )
     raw = call_dumbo([text], options=dumbo_options)
     if sanitize:
