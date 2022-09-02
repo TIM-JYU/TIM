@@ -486,9 +486,11 @@ def md_to_html(
     sanitize: bool = True,
     macros: dict[str, object] | None = None,
     dumbo_options: DumboOptions = DumboOptions.default(),
+    ignore_errors=False,
 ) -> str:
     """Converts the specified markdown text to HTML.
 
+    :param ignore_errors: Whether to ignore errors expanding macros
     :param dumbo_options: Options for Dumbo.
     :param macros: The macros to use.
     :param sanitize: Whether the HTML should be sanitized. Default is True.
@@ -504,6 +506,7 @@ def md_to_html(
         env=create_environment(
             "%%", user_ctx=None, view_ctx=default_view_ctx, macros=macros
         ),
+        ignore_errors=ignore_errors,
     )
     raw = call_dumbo([text], options=dumbo_options)
     if sanitize:
