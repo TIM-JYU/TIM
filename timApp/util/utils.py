@@ -184,6 +184,25 @@ def remove_path_special_chars(item_path: str) -> str:
     )
 
 
+accent_map = str.maketrans(
+    "ãàáäâåẽèéëêìíïîõòóöôùúüûñç·/,:;", "aaaaaaeeeeeiiiiooooouuuunc-----"
+)
+
+
+def slugify(s: str) -> str:
+    """
+    Slugify a string into a URL-friendly string.
+    :param s: The string to slugify.
+    :return: Slugified string.
+    """
+    s = s.strip().lower()
+    s = s.translate(accent_map)
+    s = re.sub(r"[^a-z0-9 _.-]", "", s)
+    s = re.sub(r"\s+", "-", s)
+    s = re.sub(r"-+", "-", s)
+    return s
+
+
 def title_to_id(s: str) -> str:
     """Converts an HTML heading to id attribute. Tries to be equivalent to what Pandoc does."""
     if s is None:

@@ -21,7 +21,7 @@ from timApp.markdown.autocounters import (
     check_autonumber_error,
 )
 from timApp.markdown.dumboclient import call_dumbo, DumboOptions
-from timApp.util.utils import get_error_html, title_to_id
+from timApp.util.utils import get_error_html, title_to_id, slugify
 from timApp.util.utils import widen_fields
 from tim_common.html_sanitize import sanitize_html, presanitize_html_body
 
@@ -433,6 +433,12 @@ def end_value(s: Any, defvalue: Any = "") -> str:
     return ret
 
 
+def slugify_str(s: Any) -> str:
+    if isinstance(s, str):
+        return slugify(s)
+    return s
+
+
 tim_filters = {
     "Pz": Pz,
     "gfields": genfields,
@@ -442,6 +448,7 @@ tim_filters = {
     "w2date": week_to_date,
     "m2w": month_to_week,
     "w2text": week_to_text,
+    "slugify": slugify_str,
     "fmtdate": fmt_date,
     "preinc": preinc,
     "postinc": postinc,
