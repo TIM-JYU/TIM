@@ -458,9 +458,12 @@ def save_file_and_grant_access(
     return f
 
 
-@upload.get("/files/<int:file_id>/<file_filename>")
-def get_file(file_id, file_filename):
-    f = UploadedFile.get_by_id_and_filename(file_id, file_filename)
+@upload.get("/files/<path:file_id>/<file_filename>")
+def get_file(file_id: str, file_filename: str) -> Response:
+    if file_id.isdigit():
+        f = UploadedFile.get_by_id_and_filename(int(file_id), file_filename)
+    else:
+        f = UploadedFile.get_by_doc_and_filename(file_id, file_filename)
     if not f:
         raise NotExist("File not found")
     verify_view_access(f, check_parents=True)
@@ -475,9 +478,12 @@ def get_file(file_id, file_filename):
     return send_file(file_path, mimetype=mime_type, conditional=conditional)
 
 
-@upload.get("/images/<int:image_id>/<image_filename>")
-def get_image(image_id, image_filename):
-    f = UploadedFile.find_by_id(image_id)
+@upload.get("/images/<path:image_id>/<image_filename>")
+def get_image(image_id: str, image_filename: str) -> Response:
+    if image_id.isdigit():
+        f = UploadedFile.get_by_id_and_filename(int(image_id), image_filename)
+    else:
+        f = UploadedFile.get_by_doc_and_filename(image_id, image_filename)
     if not f:
         raise NotExist("Image not found")
     verify_view_access(f, check_parents=True)

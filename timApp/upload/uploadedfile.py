@@ -7,8 +7,10 @@ import magic
 from werkzeug.utils import secure_filename
 
 from timApp.answer.answer_models import AnswerUpload
+from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.item.block import insert_block, Block, BlockType
+from timApp.item.blockassociation import BlockAssociation
 from timApp.item.item import ItemBase
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.exceptions import TimDbException
@@ -48,6 +50,20 @@ class UploadedFile(ItemBase):
     @staticmethod
     def find_by_id(block_id: int) -> Optional["UploadedFile"]:
         b: Block | None = Block.query.get(block_id)
+        return UploadedFile._wrap(b)
+
+    @staticmethod
+    def find_first_child(block: Block, name: str) -> Optional["UploadedFile"]:
+        b = (
+            Block.query.join(BlockAssociation, BlockAssociation.child == Block.id)
+            .filter((BlockAssociation.parent == block.id) & (Block.description == name))
+            .order_by(Block.id.desc())
+            .first()
+        )
+        return UploadedFile._wrap(b)
+
+    @staticmethod
+    def _wrap(b: Block | None) -> Optional["UploadedFile"]:
         if not b:
             return None
         klass = CLASS_MAPPING.get(BlockType(b.type_id))
@@ -84,6 +100,13 @@ class UploadedFile(ItemBase):
         f = UploadedFile.find_by_id(file_id)
         if not f:
             return None
+        f = UploadedFile._find_stamped_pdf(f, filename)
+        return f
+
+    @staticmethod
+    def _find_stamped_pdf(
+        f: "UploadedFile", filename: str
+    ) -> Union["UploadedFile", "StampedPDF"] | None:
         if filename != f.filename:
             # Try to find stamped PDF file.
             s = StampedPDF(f.block)
@@ -91,7 +114,27 @@ class UploadedFile(ItemBase):
                 return None
             if not s.filesystem_path.exists():
                 return None
-            f = s
+            return s
+        return f
+
+    @staticmethod
+    def get_by_doc_and_filename(
+        doc_path: str, filename: str
+    ) -> Union["UploadedFile", "StampedPDF"] | None:
+        """
+        Get uploaded file or its stamped version in case file name differs (i.e. it has "_stamped" in it).
+
+        :param doc_path: Document path.
+        :param filename: File name, which may contain "_stamped".
+        :return: UploadedFile, StampedPDF, or None, if neither was found.
+        """
+        d = DocEntry.find_by_path(doc_path)
+        if not d:
+            return None
+        f = UploadedFile.find_first_child(d.block, filename)
+        if not f:
+            return None
+        f = UploadedFile._find_stamped_pdf(f, filename)
         return f
 
     @property
