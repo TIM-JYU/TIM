@@ -2361,11 +2361,8 @@ def get_model_answer(task_id: str) -> Response:
             if not has_access:
                 raise RouteException("You cannot view this model answer")
         if model_answer_info.count:
-            answer_count = (
-                answer_count
-                if answer_count is not None
-                else current_user.get_answers_for_task(tid.doc_task).count()
-            )
+            if answer_count is None:
+                answer_count = current_user.get_answers_for_task(tid.doc_task).count()
             if answer_count < model_answer_info.count:
                 raise RouteException(
                     f"You need to attempt at least {model_answer_info.count} times before viewing the model answer"
