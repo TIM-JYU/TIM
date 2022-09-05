@@ -258,6 +258,8 @@ WHITELIST_MIMETYPES = {
     "image/jpg",
     "image/png",
     "image/svg+xml",
+    "video/mp4",
+    "video/webm",
     "text/plain",
     "text/xml",
     "application/octet-stream",
