@@ -583,9 +583,9 @@ def get_read_receipts(
         count_data = [
             ["seen", "read", "all"],
             [
-                len(last_seen_user_map),
-                len(read_user_map),
-                len(all_recipients),
+                str(len(last_seen_user_map)),
+                str(len(read_user_map)),
+                str(len(all_recipients)),
             ],
         ]
         return text_response(csv_string(count_data, "excel", separator))
