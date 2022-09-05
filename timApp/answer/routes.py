@@ -2337,7 +2337,7 @@ def get_model_answer(task_id: str) -> Response:
     if not model_answer_info or not model_answer_info.answer:
         raise RouteException(f"No model answer for task {task_id}")
     if not has_teacher_access(d):
-        answer_count: Union[int | None] = None
+        answer_count: int | None = None
         if model_answer_info.disabled:
             raise RouteException("This model answer has been disabled")
         if model_answer_info.endDate:
@@ -2346,7 +2346,7 @@ def get_model_answer(task_id: str) -> Response:
         if model_answer_info.revealDate:
             if model_answer_info.revealDate > get_current_time():
                 raise RouteException("The model answer cannot be viewed yet")
-        if model_answer_info.groups and len(model_answer_info.groups) > 0:
+        if model_answer_info.groups:
             requested_groups = RequestedGroups.from_name_list(model_answer_info.groups)
             user_groups = [group.id for group in current_user.groups]
             has_access = False
