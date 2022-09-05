@@ -74,6 +74,9 @@ class FilterOptions:
     showBooked: bool = True
     """Whether to always show events that the user is already booked in"""
 
+    showImportant: bool = False
+    """Whether to show events marked as important"""
+
     includeOwned: bool = False
     """Whether to include events that the user owns"""
 
@@ -104,6 +107,7 @@ class EventTemplate:
     extraBookers: list[str] = field(default_factory=list)
     signupBefore: str | None = None
     sendNotifications: bool = True
+    important: bool = False
     capacity: int = 0
     tags: list[str] = field(default_factory=list)
 
@@ -167,6 +171,7 @@ class CalendarEvent:
     setter_groups: list[str] | None = None
     extra_booker_groups: list[str] | None = None
     send_notifications: bool = True
+    important: bool = False
     tags: list[str] | None = None
     id: int | Missing = missing
     delete: bool | Missing = missing
@@ -183,6 +188,7 @@ def reqs_handle() -> PluginReqs:
 #    fromDate: 2022-08-16 20:00:00  # Only show events starting from this date
 #    toDate: 2022-08-16 20:00:00    # Only show events ending before this date
 #    showBooked: true      # Whether to *always* show events that the user has already booked
+#    showImportant: false  # Whether to *always* show events marked as important
 #    includeOwned: false   # Whether to include events that the user has created (i.e. "owns")
 viewOptions:               # Default view options for the calendar
     dayStartHour: 8        # Time at which the day starts (0-24)
@@ -207,6 +213,7 @@ eventTemplates:            # Event templates for the calendar. Used to create ne
         tags:              # List of tags that can be used to filter events.
           - tag1
         sendNotifications: true # Whether to send a notification to the bookers and setters when the event is booked.
+        important: false        # Is this event important? Important events are always exported to ICS by default.
 ```
 """
 
@@ -298,6 +305,7 @@ def export_template_json(user: User, opts: CalendarExportOptions) -> Response:
             description=event.message,
             tags=[tag.tag for tag in event.tags],
             send_notifications=event.send_notifications,
+            important=event.important,
             id=event.event_id,
         )
 
@@ -369,7 +377,14 @@ def get_ical(key: str) -> Response:
 
     user_obj = user_data.user
     # TODO: Add proper per-ICS URL filtering (e.g. save FilterOptions to the database)
-    events = events_of_user(user_obj, FilterOptions(tags=[], groups=[]))
+    events = events_of_user(
+        user_obj,
+        FilterOptions(
+            tags=[],
+            groups=[],
+            showImportant=True,
+        ),
+    )
 
     buf = StringIO()
     buf.write("BEGIN:VCALENDAR\r\n")
@@ -416,6 +431,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
     filter_opts = filter_opts or FilterOptions()
 
     q = Event.query
+    event_queries = []
     event_filter = false()
 
     # Events come from different places:
@@ -445,6 +461,15 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
         # noinspection PyUnresolvedReferences
         event_filter &= UserGroup.name.in_(filter_opts.groups)
 
+    q = q.filter(event_filter)
+
+    if filter_opts.showImportant:
+        # noinspection PyUnresolvedReferences
+        important_q = Event.query.filter(
+            Event.event_id.in_(subquery_event_groups) & Event.important.is_(True)
+        )
+        event_queries.append(important_q)
+
     # Add in all bookend events if asked
     if filter_opts.showBooked:
         enrolled_subquery = (
@@ -453,20 +478,20 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
             .with_entities(Enrollment.event_id)
             .subquery()
         )
-        # We have to do this via union so that earlier filters are not applied
-        q = q.filter(event_filter)
         # noinspection PyUnresolvedReferences
-        q2 = Event.query.filter(Event.event_id.in_(enrolled_subquery))
-        q = q.union(q2)
-        event_filter = true()
+        booked_query = Event.query.filter(Event.event_id.in_(enrolled_subquery))
+        event_queries.append(booked_query)
 
+    timing_filter = true()
     # Apply date filter to all events
     if filter_opts.fromDate:
-        event_filter &= Event.start_time >= filter_opts.fromDate
+        timing_filter &= Event.start_time >= filter_opts.fromDate
     if filter_opts.toDate:
-        event_filter &= Event.end_time <= filter_opts.toDate
+        timing_filter &= Event.end_time <= filter_opts.toDate
 
-    q = q.filter(event_filter)
+    if event_queries:
+        q = q.union(*event_queries)
+    q = q.filter(timing_filter)
 
     return q.all()
 
@@ -611,6 +636,7 @@ def save_events(
             max_size=cal_event.max_size,
             signup_before=cal_event.signup_before,
             send_notifications=cal_event.send_notifications,
+            important=cal_event.important,
             tags=[event_tags_dict[tag] for tag in cal_event.tags]
             if cal_event.tags is not None
             else [],
@@ -630,6 +656,7 @@ def save_events(
         event.location = cal_event.location
         event.message = cal_event.description
         event.send_notifications = cal_event.send_notifications
+        event.important = cal_event.important
         event.tags = (
             [event_tags_dict[tag] for tag in cal_event.tags] if cal_event.tags else []
         )
@@ -697,6 +724,7 @@ def edit_event(event_id: int, event: CalendarEvent) -> Response:
     old_event.max_size = event.max_size
     old_event.signup_before = event.signup_before
     old_event.send_notifications = event.send_notifications
+    old_event.important = event.important
     db.session.commit()
     return ok_response()
 

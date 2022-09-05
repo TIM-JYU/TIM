@@ -76,6 +76,14 @@ import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
                                    id="sendNotifications" name="sendNotifications" class="form-control checkbox"
                                    [disabled]="!isEditEnabled()">
                         </div>
+                        <label i18n for="important" class="col-sm-3 control-label">Important</label>
+                        <div class="col-sm-8">
+                            <input type="checkbox"
+                                   [(ngModel)]="important"
+                                   (ngModelChange)="setMessage()"
+                                   id="important" name="important" class="form-control checkbox"
+                                   [disabled]="!isEditEnabled()">
+                        </div>
                     </div>
                     <div class="form-group" [hidden]="isPersonalEvent()">
                         <label i18n for="capacity" class="col-sm-3 control-label">Capacity</label>
@@ -298,6 +306,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
     location = "";
     maxSize = 0;
     sendNotifications = true;
+    important = false;
     message?: string;
     bookingStopTime = "";
     bookingStopDate = "";
@@ -353,6 +362,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 `${this.bookingStopDate}T${this.bookingStopTime}`
             ),
             send_notifications: this.sendNotifications,
+            important: this.important,
         };
 
         const result = await toPromise(
@@ -434,6 +444,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         this.location = this.data.meta!.location;
         this.description = this.data.meta!.description;
         this.sendNotifications = this.data.meta!.send_notifications;
+        this.important = this.data.meta!.important;
         const startOffset = this.data.start.getTimezoneOffset();
         const startDate = new Date(
             this.data.start.getTime() - startOffset * 60 * 1000
