@@ -40,7 +40,7 @@ class PluginDateTimeField(marshmallow.fields.Field):
             d = value
         elif isinstance(value, str):
             try:
-                d = dateutil.parser.parse(value)
+                d = dateutil.parser.isoparse(value)
             except ValueError:
                 raise self.make_error("validator_failed")
         if d:
