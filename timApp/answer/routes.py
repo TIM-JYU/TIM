@@ -2337,12 +2337,36 @@ def get_model_answer(task_id: str) -> Response:
     if not model_answer_info or not model_answer_info.answer:
         raise RouteException(f"No model answer for task {task_id}")
     if not has_teacher_access(d):
+        answer_count: Union[int | None] = None
+        if model_answer_info.disabled:
+            raise RouteException("This model answer has been disabled")
+        if model_answer_info.endDate:
+            if model_answer_info.endDate < get_current_time():
+                raise RouteException("This model answer is no longer accessible")
         if model_answer_info.revealDate:
             if model_answer_info.revealDate > get_current_time():
                 raise RouteException("The model answer cannot be viewed yet")
+        if model_answer_info.groups and len(model_answer_info.groups) > 0:
+            requested_groups = RequestedGroups.from_name_list(model_answer_info.groups)
+            user_groups = [group.id for group in current_user.groups]
+            has_access = False
+            for g in requested_groups.groups:
+                if g.id in user_groups:
+                    has_access = True
+                    break
+            if not has_access and requested_groups.include_all_answered:
+                answer_count = current_user.get_answers_for_task(tid.doc_task).count()
+                if answer_count > 0:
+                    has_access = True
+            if not has_access:
+                raise RouteException("You cannot view this model answer")
         if model_answer_info.count:
-            current_count = current_user.get_answers_for_task(tid.doc_task).count()
-            if current_count < model_answer_info.count:
+            answer_count = (
+                answer_count
+                if answer_count is not None
+                else current_user.get_answers_for_task(tid.doc_task).count()
+            )
+            if answer_count < model_answer_info.count:
                 raise RouteException(
                     f"You need to attempt at least {model_answer_info.count} times before viewing the model answer"
                 )
