@@ -142,6 +142,34 @@ export class EditingHandler {
                 );
             });
 
+            onClick(".addTemplateAbove", ($this, e) => {
+                this.viewctrl.closePopupIfOpen();
+                const [par, options] = prepareOptions(
+                    $this[0],
+                    "addTemplateAbove"
+                );
+                return this.addParagraph(
+                    e.originalEvent,
+                    EditType.AddAbove,
+                    par,
+                    options
+                );
+            });
+
+            onClick(".addTemplateBelow", ($this, e) => {
+                this.viewctrl.closePopupIfOpen();
+                const [par, options] = prepareOptions(
+                    $this[0],
+                    "addTemplateBelow"
+                );
+                return this.addParagraph(
+                    e.originalEvent,
+                    EditType.AddBelow,
+                    par,
+                    options
+                );
+            });
+
             onClick(".addBelow", ($this, e) => {
                 this.viewctrl.closePopupIfOpen();
                 const [par, options] = prepareOptions($this[0], "addBelow");
@@ -484,6 +512,43 @@ auto_number_headings: 0${CURSOR}
             }
             this.viewctrl.areaHandler.cancelSelection();
         });
+    }
+
+    async addParagraph(
+        e: MouseEvent,
+        type: EditType.AddAbove | EditType.AddBelow,
+        par: ParContext,
+        options: IParEditorOptions = {}
+    ) {
+        const text = await replaceTemplateValues(
+            options.initialText ?? "New paragraph"
+        );
+        const params: EditPosition = {
+            type,
+            par: par,
+        };
+        const next = getNextId(params);
+        const data: IExtraData = {
+            docId: this.viewctrl.docId,
+            par_next: next,
+            tags: {
+                markread: true,
+            },
+        };
+        const r = await to(
+            $http.post<IParResponse>("/newParagraph/", {
+                text,
+                ...extraDataForServer(data),
+                view: getViewName(),
+            })
+        );
+        if (r.ok) {
+            this.addSavedParToDom(r.result.data, params);
+        } else {
+            await showMessageDialog(
+                $localize`Could not add paragraph: ${r.result.data}`
+            );
+        }
     }
 
     showAddParagraphAbove(

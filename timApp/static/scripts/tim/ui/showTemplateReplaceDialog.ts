@@ -57,12 +57,14 @@ export async function showTemplateReplaceDialog(
 export async function replaceTemplateValues(data: string): Promise<string> {
     const replaceList: ITemplateParam[] = [];
     const rows = data.split("\n");
-    while (rows?.[0].startsWith('- {"what"')) {
+    while (rows?.[0].startsWith("- {")) {
         const s = rows[0].substring(2);
         try {
             const jso = JSON.parse(s);
-            replaceList.push(jso);
-            rows.shift();
+            if (TemplateParam.is(jso)) {
+                replaceList.push(jso);
+                rows.shift();
+            }
         } catch (e) {
             return "" + e + "\n" + s;
         }
