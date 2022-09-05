@@ -28,8 +28,8 @@ from timApp.document.translation.translation import Translation
 from timApp.document.viewcontext import default_view_ctx
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder
-from timApp.item.item import Item
 from timApp.item.deleting import TRASH_FOLDER_PATH
+from timApp.item.item import Item
 from timApp.messaging.messagelist.messagelist_models import (
     MessageListModel,
     MessageListTimMember,
@@ -524,6 +524,7 @@ def cancel_read_receipt(message_id: int) -> Response:
 
 
 class ReadReceiptFormat(Enum):
+    Count = "count"
     CSV = "csv"
     TableFormQuery = "tableform-query"
 
@@ -577,6 +578,17 @@ def get_read_receipts(
                 "For performance reasons, only read users can be shown for global messages"
             )
         all_recipients = User.query.filter(User.id.in_(read_user_map.keys())).all()
+
+    if receipt_format == ReadReceiptFormat.Count:
+        count_data = [
+            ["seen", "read", "all"],
+            [
+                len(last_seen_user_map),
+                len(read_user_map),
+                len(all_recipients),
+            ],
+        ]
+        return text_response(csv_string(count_data, "excel", separator))
 
     data = [["id", "email", "user_name", "real_name", "read_on", "last_seen"]]
 
