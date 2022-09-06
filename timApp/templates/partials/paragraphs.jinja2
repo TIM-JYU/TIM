@@ -5,9 +5,21 @@
 
 {%- macro start_area(t) -%}
     {% set area_name = t.areainfo.name %}
-    <div class="{{ t.areainfo.area_class_str }} area_{{area_name}}"
-         data-doc-id="{{ t.doc_id }}">
-        <div class="areaContent {{ t.class_str }}" data-area="{{area_name}}">
+    {% set attrs = t.target.attrs or t.attrs %}
+    <div class="{{ t.areainfo.area_class_str }} area_{{area_name}} {% if attrs.float %}draggable-area{% endif %}"
+         data-doc-id="{{ t.doc_id }}"
+         {% if attrs.float %}
+             tim-draggable-fixed
+             anchor="fixed"
+             click="true"
+             detachable="true"
+             save="%%PAGEID%%DraggableBlockArea{{ area_name }}"
+             {% if attrs.float_caption %}
+             caption="{{ attrs.float_caption }}"
+             {% endif %}
+         {% endif %}
+    >
+        <div class="areaContent {{ t.class_str }} {% if attrs.float %}draggable-content{% endif %}" data-area="{{area_name}}">
 {%- endmacro -%}
 
 {%- macro notes(t) -%}
@@ -38,16 +50,27 @@
 
 {%- for t in text -%}
     {% set ai = t.areainfo %}
+    {% set attrs = t.target.attrs or t.attrs %}
     {%- if not ai or ai.is_collapsed is not boolean -%}
         {%- if ai and ai.is_collapsed is none -%}
             {{ start_area(t) }}
         {%- endif -%}
-        <div class="{{ t.html_class }}"
+        <div class="{{ t.html_class }} {% if attrs.float %}draggable-block{% endif %}"
              id="{{ t.id }}"
              t="{{ t.hash }}"
              attrs='{{ t.attrs_str }}'
          {% if t.from_preamble %}
              data-from-preamble="{{ t.from_preamble|safe }}"
+         {% endif %}
+         {% if attrs.float and not ai %}
+             tim-draggable-fixed
+             anchor="fixed"
+             click="true"
+             detachable="true"
+             save="%%PAGEID%%DraggableBlock{{ t.id }}"
+             {% if attrs.float_caption %}
+             caption="{{ attrs.float_caption }}"
+             {% endif %}
          {% endif %}
          {% if t.target %}
              ref-id="{{ t.target.id }}"
@@ -55,7 +78,9 @@
              ref-attrs="{{ t.target.attrs_str }}"
              ref-doc-id="{{ t.target.doc_id }}"
          {% endif %}>
-        {% set attrs = t.target.attrs or t.attrs %}
+        {% if attrs.float and not ai %}
+            <div class="draggable-content">
+        {% endif %}
         {% set task_id = attrs['taskId'] %}
         {%- if task_id and not preview and not exam_mode -%}
             <span  class="headerlink">
@@ -95,6 +120,9 @@
         {%- endif -%}
 
         {{ notes(t) }}
+        {% if attrs.float and not ai %}
+            </div>
+        {% endif %}
         </div>
         {% if ai and ai.is_collapsed is undefined %}
             </div></div>
