@@ -379,6 +379,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.data.end = eventToEdit.end;
             this.data.meta!.signup_before = eventToEdit.signup_before;
             this.data.meta!.send_notifications = eventToEdit.send_notifications;
+            this.data.meta!.important = eventToEdit.important;
             this.close(this.data);
         } else {
             if (result.result.error.error) {
