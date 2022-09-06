@@ -79,6 +79,9 @@ class AccessField:
 class ModelAnswerInfo:
     answer: str | None | Missing = missing
     count: int | None | Missing = 1
+    disabled: bool | None | Missing = missing
+    endDate: PluginDateTime | datetime | None | Missing = missing
+    groups: list[str] | None | Missing = missing
     hideText: str | None | Missing = missing
     linkText: str | None | Missing = missing
     linkTextCount: int | None | Missing = missing
