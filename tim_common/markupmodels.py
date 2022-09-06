@@ -42,7 +42,11 @@ class PluginDateTimeField(marshmallow.fields.Field):
             try:
                 d = dateutil.parser.isoparse(value)
             except ValueError:
-                raise self.make_error("validator_failed")
+                # TODO: Remove once all dates use proper ISO format
+                try:
+                    d = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    raise self.make_error("validator_failed")
         if d:
             if d.tzinfo is None:
                 d = d.replace(tzinfo=timezone.utc)
