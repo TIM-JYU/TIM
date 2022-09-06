@@ -5,8 +5,6 @@ from typing import TypedDict
 
 from celery.schedules import crontab
 
-from timApp.util.utils import pycharm_running
-
 DEBUG = True
 PROFILE = False
 TIM_NAME = "tim-test"
@@ -30,9 +28,7 @@ SQLALCHEMY_MAX_OVERFLOW = 100
 LAST_EDITED_BOOKMARK_LIMIT = 3
 TRAP_HTTP_EXCEPTIONS = True
 PROPAGATE_EXCEPTIONS = True
-SELENIUM_BROWSER_URL = os.environ.get(
-    "SELENIUM_BROWSER_URL", "http://caddy:" + ("81" if pycharm_running() else "82")
-)
+SELENIUM_BROWSER_URL = os.environ.get("SELENIUM_BROWSER_URL", "http://caddy:82")
 LIVESERVER_PORT = 5001
 QST_PLUGIN_PORT = LIVESERVER_PORT
 PERMANENT_SESSION_LIFETIME = timedelta(weeks=9999)

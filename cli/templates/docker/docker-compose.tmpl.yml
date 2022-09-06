@@ -384,29 +384,31 @@ ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled
  tests:
   profiles:
    - test
+   - dev
   image: timimages/tim:${tim.image_tag}
-  command: "${TEST_COMMAND:-python3 -m unittest discover tests/ 'test_*.py' .}"
+  command: ${ f'''${{TEST_COMMAND:-{"python3 -m unittest discover tests/ 'test_*.py' ." if not tim.is_dev else "sleep infinity"}}}''' }
   volumes:
    - .:/service:rw
   environment:
    TIM_SETTINGS: testconfig.py
    PYTHONPATH: /service
    CI: ${CI:-false}
-  depends_on:
-   - csplugin
-   - pali
-   - fields
-   - showfile
-   - haskellplugins
-   - imagex
-   - jsrunner
-   - dumbo
-   - feedback
-   - redis
-   - oiko
-   - caddy
-   - postgresql-test
-   - mailman-test
+  depends_on: ${"""
+    - csplugin
+    - pali
+    - fields
+    - showfile
+    - haskellplugins
+    - imagex
+    - jsrunner
+    - dumbo
+    - feedback
+    - redis
+    - oiko
+    - caddy
+    - postgresql-test
+    - mailman-test
+   """ if not tim.is_dev else "[]"}
   tmpfs:
    - /tmp
    - /tim_files

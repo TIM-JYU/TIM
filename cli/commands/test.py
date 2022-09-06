@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from time import sleep
 
-from cli.commands.up import up
+from cli.config import get_config
 from cli.docker.run import run_compose
 from cli.util.logging import log_debug
 from cli.util.proc import sh_join
@@ -57,8 +57,9 @@ for test_file in test_files:
 
 
 def run(args: Arguments) -> None:
-    if args.up:
-        up()
+    config = get_config()
+    if args.up or config.profile != "test":
+        run_compose(["up", "-d", "--quiet-pull"], "test")
         # Wait for the containers to be up for a small moment
         sleep(5)
 
