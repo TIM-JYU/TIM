@@ -115,6 +115,7 @@ const EventTemplate = t.type({
     signupBefore: t.union([MomentFromString, MomentDurationFromString, t.null]),
     capacity: t.number,
     sendNotifications: t.boolean,
+    important: t.boolean,
 });
 
 const FilterOptions = t.type({
@@ -123,6 +124,7 @@ const FilterOptions = t.type({
     fromDate: nullable(DateFromString),
     toDate: nullable(DateFromString),
     showBooked: withDefault(t.boolean, true),
+    showImportant: withDefault(t.boolean, false),
     includeOwned: withDefault(t.boolean, false),
 });
 
@@ -196,6 +198,7 @@ export type TIMEventMeta = {
     maxSize: number;
     isExtra: boolean;
     send_notifications: boolean;
+    important: boolean;
     booker_groups: {
         name: string;
         message: string;
@@ -563,6 +566,7 @@ export class CalendarComponent
                 booker_groups: [],
                 editEnabled: this.editEnabled,
                 send_notifications: true,
+                important: false,
             },
         };
         if (Date.now() > dragToSelectEvent.start.getTime()) {
@@ -777,6 +781,7 @@ export class CalendarComponent
         }
         res.showBooked = this.markup.filter.showBooked.toString();
         res.includeOwned = this.markup.filter.includeOwned.toString();
+        res.showImportant = this.markup.filter.showImportant.toString();
         return res;
     }
 
@@ -807,6 +812,7 @@ export class CalendarComponent
                     isExtra: event.meta!.isExtra,
                     editEnabled: this.editEnabled,
                     send_notifications: event.meta!.send_notifications,
+                    important: event.meta!.important,
                     signup_before: new Date(event.meta!.signup_before),
                 };
                 event.resizable = {
@@ -841,6 +847,7 @@ export class CalendarComponent
         let setterGroups: string[] = [];
         let extraBookersGroups: string[] = [];
         let sendNotifications = true;
+        let isImportant = false;
         let capacity: number = 0;
         let tags: string[] = [];
         if (this.markup.eventTemplates) {
@@ -851,6 +858,7 @@ export class CalendarComponent
             capacity = template.capacity;
             tags = template.tags;
             sendNotifications = template.sendNotifications;
+            isImportant = template.important;
         }
 
         const result = await toPromise(
@@ -866,6 +874,7 @@ export class CalendarComponent
                     setter_groups: setterGroups,
                     extra_booker_groups: extraBookersGroups,
                     send_notifications: sendNotifications,
+                    important: isImportant,
                     max_size: capacity,
                     tags: tags,
                 })),
@@ -894,6 +903,7 @@ export class CalendarComponent
                         location: event.meta!.location,
                         isExtra: event.meta!.isExtra,
                         send_notifications: event.meta!.send_notifications,
+                        important: event.meta!.important,
                         booker_groups: [],
                         signup_before: new Date(event.meta!.signup_before),
                     },

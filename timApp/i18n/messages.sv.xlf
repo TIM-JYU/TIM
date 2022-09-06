@@ -6712,6 +6712,14 @@
           <context context-type="linenumber">1493</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6914364962936278074" datatype="html">
+        <source>Important</source>
+        <target state="translated">Viktigt</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">79</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="2447385110832649758" datatype="html">
         <source>Could not add paragraph: <x id="PH" equiv-text="r.result.data"/></source>
         <target state="translated">Kunde inte lägga till ett stycke: <x id="PH" equiv-text="r.result.data"/></target>

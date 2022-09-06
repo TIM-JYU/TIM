@@ -207,6 +207,9 @@ class Event(db.Model):
     send_notifications = db.Column(db.Boolean, nullable=False, default=True)
     """Whether to send notifications related to enrollment to the event"""
 
+    important = db.Column(db.Boolean, nullable=False, default=False)
+    """Whether the event is important (i.e. should be show as special in calendar)"""
+
     event_groups: list[EventGroup] = db.relationship(
         EventGroup,
         foreign_keys="EventGroup.event_id",
@@ -286,6 +289,7 @@ class Event(db.Model):
             "location": self.location,
             "description": self.message,
             "send_notifications": self.send_notifications,
+            "important": self.important,
         }
 
         user_group_ids = []
