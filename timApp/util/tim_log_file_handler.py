@@ -27,24 +27,29 @@ class TIMRotatingLogFileHandler(TimedRotatingFileHandler):
     def _get_log_time(self) -> int:
         assert self.log_timestamp_file is not None
         if self.log_timestamp_file.exists():
-            # noinspection PyBroadException
-            try:
-                return int(
-                    isodate.parse_datetime(
-                        self.log_timestamp_file.read_text().strip()
-                    ).timestamp()
-                )
-            except Exception:
-                pass
+            with filelock.FileLock("/tmp/tim_log_rotate.lock"):
+                # noinspection PyBroadException
+                try:
+                    return int(
+                        isodate.parse_datetime(
+                            self.log_timestamp_file.read_text().strip()
+                        ).timestamp()
+                    )
+                except Exception as e:
+                    pass
         return int(time.time())
+
+    def _update_log_time(self, currentTime: int) -> None:
+        if self.log_timestamp_file:
+            with filelock.FileLock("/tmp/tim_log_rotate.lock"):
+                self.log_timestamp_file.write_text(
+                    isodate.datetime_isoformat(datetime.fromtimestamp(currentTime))
+                )
 
     # noinspection PyPep8Naming
     def computeRollover(self, currentTime: int) -> int:
         result = super().computeRollover(currentTime)
-        if self.log_timestamp_file:
-            self.log_timestamp_file.write_text(
-                isodate.datetime_isoformat(datetime.fromtimestamp(currentTime))
-            )
+        self._update_log_time(currentTime)
         return result
 
     # noinspection PyPep8Naming
