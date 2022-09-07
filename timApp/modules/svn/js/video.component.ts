@@ -123,6 +123,7 @@ const ShowFileMarkup = t.intersection([
         start: t.union([t.number, t.string]),
         videoname: nullable(t.string),
         width: t.number,
+        defaultSubtitles: t.string,
     }),
     GenericPluginMarkup,
     t.type({
@@ -656,11 +657,23 @@ export class VideoComponent extends AngularPluginBase<
     }
 
     metadataloaded() {
-        this.video!.nativeElement.currentTime = this.start ?? 0;
+        if (!this.video) {
+            return;
+        }
+        const v = this.video.nativeElement;
+        if (this.markup.defaultSubtitles) {
+            const track = [...v.textTracks].find(
+                (vt) => vt.label === this.markup.defaultSubtitles
+            );
+            if (track) {
+                track.mode = "showing";
+            }
+        }
+        this.video.nativeElement.currentTime = this.start ?? 0;
         if (this.markup.followid && this.vctrl) {
             this.vctrl.registerVideo(
                 this.markup.followid,
-                this.video!.nativeElement
+                this.video.nativeElement
             );
         }
     }
