@@ -6,9 +6,9 @@
 {%- macro start_area(t) -%}
     {% set area_name = t.areainfo.name %}
     {% set attrs = t.target.attrs or t.attrs %}
-    <div class="{{ t.areainfo.area_class_str }} area_{{area_name}} {% if attrs.float %}draggable-area{% endif %}"
+    <div class="{{ t.areainfo.area_class_str }} area_{{area_name}} {% if attrs.float and not preview %}draggable-area{% endif %}"
          data-doc-id="{{ t.doc_id }}"
-         {% if attrs.float %}
+         {% if attrs.float and not preview %}
              tim-draggable-fixed
              anchor="fixed"
              click="true"
@@ -19,7 +19,7 @@
              {% endif %}
          {% endif %}
     >
-        <div class="areaContent {{ t.class_str }} {% if attrs.float %}draggable-content{% endif %}" data-area="{{area_name}}">
+        <div class="areaContent {{ t.class_str }} {% if attrs.float and not preview %}draggable-content{% endif %}" data-area="{{area_name}}">
 {%- endmacro -%}
 
 {%- macro notes(t) -%}
@@ -55,14 +55,14 @@
         {%- if ai and ai.is_collapsed is none -%}
             {{ start_area(t) }}
         {%- endif -%}
-        <div class="{{ t.html_class }} {% if attrs.float %}draggable-block{% endif %}"
+        <div class="{{ t.html_class }} {% if attrs.float and not preview %}draggable-block{% endif %}"
              id="{{ t.id }}"
              t="{{ t.hash }}"
              attrs='{{ t.attrs_str }}'
          {% if t.from_preamble %}
              data-from-preamble="{{ t.from_preamble|safe }}"
          {% endif %}
-         {% if attrs.float and not ai %}
+         {% if attrs.float and not ai and not preview %}
              tim-draggable-fixed
              anchor="fixed"
              click="true"
@@ -78,7 +78,7 @@
              ref-attrs="{{ t.target.attrs_str }}"
              ref-doc-id="{{ t.target.doc_id }}"
          {% endif %}>
-        {% if attrs.float and not ai %}
+        {% if attrs.float and not ai and not preview %}
             <div class="draggable-content">
         {% endif %}
         {% set task_id = attrs['taskId'] %}
@@ -120,7 +120,7 @@
         {%- endif -%}
 
         {{ notes(t) }}
-        {% if attrs.float and not ai %}
+        {% if attrs.float and not ai and not preview %}
             </div>
         {% endif %}
         </div>
