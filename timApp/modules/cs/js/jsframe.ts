@@ -30,13 +30,11 @@ import {
     DomSanitizer,
     SafeResourceUrl,
 } from "@angular/platform-browser";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {AnswerBrowserController} from "tim/answer/answerbrowser3";
+import {AnswerBrowserComponent} from "tim/answer/answerbrowser3";
 import {TimDefer} from "tim/util/timdefer";
 import {PurifyModule} from "tim/util/purify.module";
 import {
@@ -48,6 +46,7 @@ import {
     fullscreenSupported,
     toggleFullScreen,
 } from "../../../static/scripts/tim/util/fullscreen";
+import {pluginMap} from "../../../static/scripts/tim/main";
 import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([
@@ -238,7 +237,7 @@ export class JsframeComponent
     implements ITimComponent, IUserChanged, ICtrlWithMenuFunctionEntry
 {
     iframesettings?: Iframesettings;
-    private ab?: AnswerBrowserController;
+    private ab?: AnswerBrowserComponent;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -799,15 +798,4 @@ export class JsframeComponent
 export class JsframeModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                JsframeModule
-            )
-        ),
-        "jsframeRunner",
-        JsframeComponent
-    ),
-];
+pluginMap.set("jsframe-runner", JsframeComponent);

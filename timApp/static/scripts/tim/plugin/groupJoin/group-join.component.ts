@@ -1,11 +1,9 @@
 import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import * as t from "io-ts";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
@@ -17,6 +15,7 @@ import {getViewName, toPromise} from "../../util/utils";
 import {documentglobals} from "../../util/globals";
 import {Users} from "../../user/userService";
 import {showConfirm} from "../../ui/showConfirmDialog";
+import {pluginMap} from "../../main";
 
 const PluginMarkup = t.intersection([
     GenericPluginMarkup,
@@ -218,14 +217,4 @@ export class GroupJoinModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                GroupJoinModule
-            )
-        ),
-        "groupJoin",
-        GroupJoinComponent
-    ),
-];
+pluginMap.set("group-join", GroupJoinComponent);

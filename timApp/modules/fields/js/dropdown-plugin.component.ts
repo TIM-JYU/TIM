@@ -29,15 +29,11 @@ import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
 import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {
-    createDowngradedModule,
-    doDowngrade,
-} from "../../../static/scripts/tim/downgrade";
 import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
+import {pluginMap} from "../../../static/scripts/tim/main";
 
 const DropdownMarkup = t.intersection([
     t.partial({
@@ -345,14 +341,4 @@ export class DropdownModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                DropdownModule
-            )
-        ),
-        "dropdownRunner",
-        DropdownPluginComponent
-    ),
-];
+pluginMap.set("dropdown-runner", DropdownPluginComponent);

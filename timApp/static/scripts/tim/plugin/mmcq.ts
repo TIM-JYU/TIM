@@ -4,18 +4,17 @@ import {
     Directive,
     DoBootstrap,
     ElementRef,
+    Input,
     NgModule,
 } from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {showMessageDialog} from "../ui/showMessageDialog";
 import {toPromise} from "../util/utils";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {AnswerSheetModule} from "../document/question/answer-sheet.component";
 import {PurifyModule} from "../util/purify.module";
-import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {handleAnswerResponse} from "../document/interceptor";
 import {IAnswerSaveEvent} from "../answer/answerbrowser3";
 import {TaskId} from "./taskid";
@@ -44,6 +43,7 @@ export class MCQBase<State> {
     public buttonText: string = "Submit";
     public content!: MMCQContent<State>;
     protected element: JQuery<HTMLElement>;
+    @Input() dataContent?: string;
 
     constructor(
         protected hostElement: ElementRef<HTMLElement>,
@@ -53,9 +53,13 @@ export class MCQBase<State> {
     }
 
     ngOnInit() {
-        this.content = JSON.parse(
-            this.element.attr("data-content")!
-        ) as MMCQContent<State>;
+        if (!this.dataContent) {
+            this.content = JSON.parse(
+                this.element.attr("data-content")!
+            ) as MMCQContent<State>;
+        } else {
+            this.content = JSON.parse(this.dataContent) as MMCQContent<State>;
+        }
     }
 
     protected getId() {
@@ -291,12 +295,3 @@ export class MCQ extends MCQBase<number | null> {
 export class MCQModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-
-const mcqMod = createDowngradedModule((extraProviders) =>
-    platformBrowserDynamic(extraProviders).bootstrapModule(MCQModule)
-);
-
-doDowngrade(mcqMod, "mmcq", MMCQ);
-doDowngrade(mcqMod, "mcq", MCQ);
-
-export const moduleDefs = [mcqMod];

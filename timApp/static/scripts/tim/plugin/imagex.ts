@@ -10,11 +10,9 @@ import {
     OnInit,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {
     DrawToolbarModule,
     DrawType,
@@ -40,6 +38,7 @@ import {
     ViewCtrl,
 } from "../document/viewctrl";
 import {vctrlInstance} from "../document/viewctrlinstance";
+import {pluginMap} from "../main";
 import {
     CommonPropsT,
     DefaultPropsT,
@@ -1970,12 +1969,4 @@ export class ImagexModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(ImagexModule)
-        ),
-        "imagexRunner",
-        ImageXComponent
-    ),
-];
+pluginMap.set("imagex-runner", ImageXComponent);

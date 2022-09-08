@@ -217,7 +217,7 @@ saveButton: Tallenna
         self.wait_until_present(".canvasObjectContainer annotation")
         self.find_element_avoid_staleness("draw-toolbar button").click()
         velper_selector_element = self.find_element_avoid_staleness(
-            "select[ng-model='$ctrl.reviewerUser']"
+            "select[title='List of reviewers']"
         )
         velper_selector_dropdown = Select(velper_selector_element)
         canvas = self.find_element_avoid_staleness(".drawbase")

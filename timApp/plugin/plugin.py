@@ -53,6 +53,9 @@ PLG_RTEMPLATE = JINJAENV.from_string(
 {{unlock_info or ''}}
 answer-id="{{aid or ''}}"
 class="{{plgclass}}"
+tag="{{tag}}"
+id="{{id}}"
+dataplugin="/{{data_plugin}}"
 task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>
 """.replace(
         "\n", " "
@@ -677,7 +680,10 @@ class Plugin:
         tag = self.get_wrapper_tag()
         if self.options.wraptype != PluginWrap.Nothing:
             abtype = self.get_answerbrowser_type()
-            cont = f"""<{tag} id='{html_task_id}' data-plugin='/{self.type}' {style}>{out}</{tag}>""".strip()
+            if abtype is None:
+                cont = f"""<{tag} id='{html_task_id}' data-plugin='/{self.type}' {style}>{out}</{tag}>""".strip()
+            else:
+                cont = out.strip()
             unlock_info = None
             if self.is_timed():
                 self.set_access_end_for_user()
@@ -691,7 +697,7 @@ class Plugin:
             if abtype and self.options.wraptype == PluginWrap.Full and False:
                 return self.wrap_draggable(
                     f"""
-<tim-plugin-loader type="{abtype}" answer-id="{self.answer.id if self.answer else None or ''}"
+<tim-plugin-loader type="{abtype}" tag="{tag}" id="{html_task_id}" dataplugin="/{self.type}" answer-id="{self.answer.id if self.answer else None or ''}"
                    class="{self.get_container_class()}"
                    task-id="{doc_task_id or ''}">""".replace(
                         "\n", ""
@@ -710,6 +716,9 @@ class Plugin:
                         cont=cont,
                         aid=self.answer.id if self.answer else None,
                         unlock_info=unlock_info,
+                        tag=tag,
+                        id=html_task_id,
+                        data_plugin=self.type,
                     ),
                     html_task_id or "",
                 )
@@ -721,6 +730,9 @@ class Plugin:
                         """
 <tim-plugin-loader type="{{abtype}}"
                    answer-id="{{aid or ''}}"
+                   tag="{{tag}}"
+                   id="{{id}}"
+                   dataplugin="/{{data_plugin}}"
                    class="{{plgclass}}"
                    task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>""",
                         abtype=abtype,
@@ -730,6 +742,8 @@ class Plugin:
                         plgclass=self.get_container_class(),
                         style=style,
                         tag=tag,
+                        id=html_task_id,
+                        data_plugin=self.type,
                         type=self.type,
                         doc_task_id=doc_task_id,
                         cont=cont,

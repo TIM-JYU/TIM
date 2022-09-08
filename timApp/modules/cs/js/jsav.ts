@@ -17,15 +17,11 @@ import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {timeout} from "tim/util/utils";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
-import {
-    createDowngradedModule,
-    doDowngrade,
-} from "../../../static/scripts/tim/downgrade";
 import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
 import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
+import {pluginMap} from "../../../static/scripts/tim/main";
 import {Iframesettings} from "./jsframe";
 
 /**
@@ -329,12 +325,4 @@ export class JsavModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(JsavModule)
-        ),
-        "csJsavRunner",
-        JsavPluginComponent
-    ),
-];
+pluginMap.set("cs-jsav-runner", JsavPluginComponent);

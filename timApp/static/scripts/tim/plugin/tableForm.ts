@@ -24,17 +24,17 @@ import {
 
 import {TimMessageSendModule} from "tim/messaging/tim-message-send.component";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {documentglobals} from "tim/util/globals";
 import {PurifyModule} from "tim/util/purify.module";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {ViewCtrl} from "../document/viewctrl";
 import {widenFields} from "../util/common";
 import {

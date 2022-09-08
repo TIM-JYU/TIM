@@ -32,7 +32,6 @@
 
 import * as t from "io-ts";
 import {
-    AfterViewChecked,
     AfterViewInit,
     ApplicationRef,
     ChangeDetectionStrategy,
@@ -52,11 +51,9 @@ import {
     ViewChildren,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {Subscription} from "rxjs";
 import {openEditorSimple} from "tim/editor/pareditorOpen";
@@ -728,7 +725,6 @@ export class TimTableComponent
         OnInit,
         OnDestroy,
         DoCheck,
-        AfterViewChecked,
         AfterViewInit,
         DataModelProvider,
         ICtrlWithMenuFunctionEntry
@@ -889,6 +885,7 @@ export class TimTableComponent
      * Force change detection.
      */
     c() {
+        this.doCustomDomUpdates();
         this.cdr.detectChanges();
     }
 
@@ -1034,6 +1031,7 @@ export class TimTableComponent
                 }
             }
         );
+        this.doCustomDomUpdates();
     }
 
     /**
@@ -1041,9 +1039,9 @@ export class TimTableComponent
      * so here we can perform our own DOM updates. We must call runOutsideAngular because otherwise
      * ngAfterViewChecked would be called endlessly.
      */
-    ngAfterViewChecked() {
-        this.doCustomDomUpdates();
-    }
+    // ngAfterViewChecked() {
+    //     this.doCustomDomUpdates();
+    // }
 
     private doCustomDomUpdates() {
         if (this.customDomUpdateInProgress) {
@@ -1846,6 +1844,7 @@ export class TimTableComponent
         this.dataViewComponent?.updateCellsContents(
             cellHtmls.map((c) => ({row: c.row, col: c.col}))
         );
+        this.c();
     }
 
     /**
@@ -4822,15 +4821,3 @@ export class TimTableComponent
 export class TimTableModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                TimTableModule
-            )
-        ),
-        "timTable",
-        TimTableComponent
-    ),
-];

@@ -33,7 +33,6 @@ import {
 } from "angular-calendar";
 import {WeekViewHourSegment} from "calendar-utils";
 import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {CommonModule, registerLocaleData} from "@angular/common";
 import localeFi from "@angular/common/locales/fi";
 import localeSv from "@angular/common/locales/sv";
@@ -43,7 +42,7 @@ import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek, setISOWeek} from "date-fns";
 import moment from "moment";
-import {createDowngradedModule, doDowngrade} from "../../downgrade";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
@@ -65,6 +64,7 @@ import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
 import {showMessageDialog} from "../../ui/showMessageDialog";
+import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {CustomDateFormatter} from "./custom-date-formatter.service";
 import {CustomEventTitleFormatter} from "./custom-event-title-formatter.service";
 import {
@@ -1130,6 +1130,7 @@ export class TimCalendarModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
+// pluginMap.set("tim-calendar", CalendarComponent);
 const angularJsModule = createDowngradedModule((extraProviders) =>
     platformBrowserDynamic(extraProviders).bootstrapModule(TimCalendarModule)
 );

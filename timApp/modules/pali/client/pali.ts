@@ -20,13 +20,12 @@ import {
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {Subject, Subscription} from "rxjs";
 import {debounceTime, distinctUntilChanged} from "rxjs/operators";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {PurifyModule} from "tim/util/purify.module";
+import {pluginMap} from "../../../static/scripts/tim/main";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -224,12 +223,4 @@ export class PaliModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(PaliModule)
-        ),
-        "paliRunner",
-        PaliComponent
-    ),
-];
+pluginMap.set("pali-runner", PaliComponent);

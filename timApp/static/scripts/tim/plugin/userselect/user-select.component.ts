@@ -7,7 +7,6 @@ import {
     ViewChild,
 } from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import * as t from "io-ts";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule, NgForm} from "@angular/forms";
@@ -22,7 +21,7 @@ import {
 import {Result} from "@zxing/library";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {createDowngradedModule, doDowngrade} from "../../downgrade";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
 import {
@@ -35,6 +34,7 @@ import {
     toPromise,
 } from "../../util/utils";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
+import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {CodeScannerComponent} from "./code-scanner.component";
 import {MediaDevicesSupported} from "./util";
 import {

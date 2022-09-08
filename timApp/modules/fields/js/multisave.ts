@@ -27,12 +27,12 @@ import {escapeRegExp, scrollToElement} from "tim/util/utils";
 import {TaskId} from "tim/plugin/taskid";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {showConfirm} from "../../../static/scripts/tim/ui/showConfirmDialog";
 import {slugify} from "../../../static/scripts/tim/util/slugify";
 import {

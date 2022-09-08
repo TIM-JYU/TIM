@@ -1,19 +1,13 @@
-import {
-    ApplicationRef,
-    DoBootstrap,
-    NgModule,
-    StaticProvider,
-} from "@angular/core";
+import {ApplicationRef, DoBootstrap, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {GraphVizComponent} from "tim/plugin/graph-viz/graph-viz.component";
 import {VariablesComponent} from "tim/plugin/variables/variables.component";
+import {pluginMap} from "../../../static/scripts/tim/main";
 import {CsRunnerComponent} from "./csPlugin";
 import {CsTextComponent} from "./text";
 import {CsConsoleComponent} from "./console";
@@ -63,16 +57,9 @@ export class CsPluginModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(CsPluginModule);
-};
-
-export const angularJsModule = createDowngradedModule(bootstrapFn);
-doDowngrade(angularJsModule, "csRunner", CsRunnerComponent);
-doDowngrade(angularJsModule, "csError", CsErrorComponent);
-doDowngrade(angularJsModule, "csTextRunner", CsTextComponent);
-doDowngrade(angularJsModule, "csConsole", CsConsoleComponent);
-doDowngrade(angularJsModule, "csExtcheckRunner", ExtcheckComponent);
-doDowngrade(angularJsModule, "csGitRegRunner", GitRegComponent);
-export const moduleDefs = [angularJsModule];
+pluginMap.set("cs-runner", CsRunnerComponent);
+pluginMap.set("cs-error", CsErrorComponent);
+pluginMap.set("cs-text-runner", CsTextComponent);
+pluginMap.set("cs-console", CsConsoleComponent);
+pluginMap.set("cs-extcheck-runner", ExtcheckComponent);
+pluginMap.set("cs-git-reg-runner", GitRegComponent);

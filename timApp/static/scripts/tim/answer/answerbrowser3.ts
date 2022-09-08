@@ -1,39 +1,52 @@
-import {IController, IScope, ITranscludeFunction} from "angular";
-import {timApp} from "tim/app";
+import {
+    AfterViewInit,
+    ApplicationRef,
+    ChangeDetectorRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    Inject,
+    Input,
+    NgModule,
+    OnDestroy,
+    OnInit,
+    SimpleChanges,
+    ViewChild,
+} from "@angular/core";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {IController, IScope} from "angular";
 import {timLogTime} from "tim/util/timTiming";
-import {TimDefer} from "tim/util/timdefer";
-import {TaskId, TaskIdWithDefaultDocId} from "tim/plugin/taskid";
-import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
+import {TaskId} from "tim/plugin/taskid";
+import {DrawCanvasComponent, DrawCanvasModule} from "tim/plugin/drawCanvas";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAllAnswersDialog} from "tim/answer/showAllAnswersDialog";
 import {tryCreateParContextOrHelp} from "tim/document/structure/create";
 import {ParContext} from "tim/document/structure/parContext";
-import {ReadonlyMoment} from "tim/util/readonlymoment";
-import moment from "moment";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {showResetTaskLock} from "tim/answer/showResetTaskLock";
-import {isVelpable, ITimComponent, ViewCtrl} from "../document/viewctrl";
-import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
+import {loadPlugin, PluginLoaderComponent} from "tim/answer/pluginLoader";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {FormsModule} from "@angular/forms";
+import {CommonModule} from "@angular/common";
+import {PurifyModule} from "tim/util/purify.module";
+import {isVelpable, ViewCtrl} from "../document/viewctrl";
+import {ParCompiler} from "../editor/parCompiler";
 import {
     IAnswerBrowserSettings,
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
 } from "../plugin/attributes";
-import {DestroyScope} from "../ui/destroyScope";
 import {IUser, sortByRealName} from "../user/IUser";
 import {isAdmin, Users} from "../user/userService";
 import {documentglobals} from "../util/globals";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
 import {$filter, $http, $httpParamSerializer, $timeout} from "../util/ngimport";
 import {
-    Binding,
     getURLParameter,
     getUrlParams,
     getUrlParamsJSON,
     getViewName,
-    isInViewport,
     Require,
-    scrollToElement,
     to,
     to2,
 } from "../util/utils";
@@ -62,15 +75,6 @@ import {IAnswer, IAnswerWithUsers, IModelAnswerSettings} from "./IAnswer";
 
 timLogTime("answerbrowser3 load", "answ");
 
-const LAZY_MARKER = "lazy";
-const LAZY_MARKER_LENGTH = LAZY_MARKER.length;
-
-function isElement(n: Node): n is Element {
-    return n.nodeType === Node.ELEMENT_NODE;
-}
-
-const angularPlugins = new Set(["timTable", "tableForm", "pali"]);
-
 // TODO: make PluginLoaderCtrl and AnswerBrowserController to implement this so
 //    many this.showFeedback(txt) implementations could be replaced just on one call:
 //    showFeedback(this: IFeedback, txt:string = '', scrollToView: boolean=false);
@@ -82,516 +86,6 @@ export interface IFeedback {
 }
  */
 
-async function loadPlugin(
-    html: string,
-    plugin: JQuery,
-    scope: IScope,
-    viewctrl: ViewCtrl
-) {
-    const elementToCompile = $(html);
-    const plugintype = plugin.attr("data-plugin");
-    elementToCompile.attr("plugintype", plugintype ?? null);
-    const taskidstr = plugin.attr("id");
-    const sc = scope.$new(true) as {taskid: TaskId} & IScope;
-    if (taskidstr) {
-        if (plugintype && angularPlugins.has(plugintype.slice(1))) {
-            // For Angular plugins (e.g. timTable and tableForm), we must pass the parsed TaskId.
-            const p = TaskId.tryParse(taskidstr);
-            if (p.ok) {
-                sc.taskid = p.result;
-                elementToCompile.attr("bind-taskid", "taskid");
-                scope = sc;
-            }
-        } else {
-            elementToCompile.attr("taskid", taskidstr);
-        }
-    }
-    const compiled = await compileWithViewctrl(
-        elementToCompile,
-        scope,
-        viewctrl
-    );
-    await ParCompiler.processAllMath(compiled);
-    plugin.empty().append(compiled);
-    plugin.css("opacity", "1.0");
-}
-
-export class PluginLoaderCtrl extends DestroyScope implements IController {
-    static $inject = ["$element", "$scope", "$transclude"];
-    private compiled = false;
-    private viewctrl?: Require<ViewCtrl>;
-    public taskId!: Binding<string, "@">;
-    private answerId?: Binding<number, "@">;
-    public parsedTaskId?: TaskId;
-    private type!: Binding<string, "@">;
-    private showBrowser: boolean = false;
-    public hideBrowser: boolean = false;
-    private forceBrowser: boolean = false;
-    private pluginElement?: JQuery;
-    public showPlaceholder = true;
-    public feedback?: string = "";
-    public abLoad = new TimDefer<AnswerBrowserController | null>();
-    private accessDuration?: Binding<number, "<">;
-    private accessEnd?: Binding<string, "@">;
-    private accessEndText?: Binding<string, "@">;
-    private accessHeader?: Binding<string, "@">;
-    private lockableByPrerequisite?: Binding<boolean, "<">;
-    private lockedByPrerequisite?: Binding<boolean, "<">;
-    private lockedText?: string;
-    private lockedButtonText?: string;
-    private lockedError?: string;
-
-    private timed = false;
-    private expired = false;
-    private unlockable = false;
-    private running = false;
-    private endTime?: ReadonlyMoment;
-    private taskHidden = false;
-
-    constructor(
-        private element: JQLite,
-        private scope: IScope,
-        private transclude: ITranscludeFunction
-    ) {
-        super(scope, element);
-        transclude((clone, _) => {
-            const c = clone!.filter("[data-plugin]");
-            this.pluginElement = c;
-            element.append(c);
-            // element.find(".pluginPlaceholder").before(c);
-        });
-        timLogTime("timPluginLoader constructor", "answ", 1);
-    }
-
-    $onInit() {
-        if (this.viewctrl) {
-            this.viewctrl.registerPluginLoader(this);
-        }
-        const r = TaskId.tryParse(this.taskId);
-        if (r.ok) {
-            this.parsedTaskId = r.result;
-            if (getURLParameter("task") === this.parsedTaskId.name) {
-                this.loadPlugin();
-            }
-        }
-        if (this.lockedByPrerequisite) {
-            this.hidePlugin();
-        }
-        $timeout(() => {
-            const m = this.pluginMarkup();
-            if (
-                m?.hideBrowser ||
-                this.viewctrl?.docSettings.hideBrowser ||
-                this.isUseCurrentUser() ||
-                this.isGlobal() ||
-                this.isInFormMode()
-            ) {
-                this.hideBrowser = true;
-                this.showPlaceholder = false;
-            }
-            if (m?.forceBrowser) {
-                this.forceBrowser = true;
-            }
-
-            this.showPlaceholder = !this.isInFormMode() && !this.hideBrowser;
-
-            if (this.accessDuration && !this.viewctrl?.item.rights.teacher) {
-                this.timed = true;
-                if (!this.accessEnd) {
-                    this.unlockable = true;
-                    this.hidePlugin();
-                } else {
-                    this.endTime = moment(this.accessEnd);
-                    if (this.endTime.isBefore(moment.now())) {
-                        this.expireTask();
-                    } else {
-                        this.startTask();
-                    }
-                }
-            }
-            if (this.lockableByPrerequisite) {
-                if (!m?.previousTask) {
-                    return;
-                }
-                if (this.lockedByPrerequisite) {
-                    this.viewctrl?.addLockListener(this);
-                    this.lockedText = m.previousTask.hideText;
-                    this.lockedButtonText = m.previousTask.unlockText;
-                }
-                this.toggleLockedAreas();
-            }
-        });
-    }
-
-    $postLink() {
-        this.element.on("mouseenter touchstart", this.loadPlugin);
-    }
-
-    $onDestroy() {
-        this.removeActivationHandler();
-    }
-
-    private removeActivationHandler() {
-        this.element.off("mouseenter touchstart", this.loadPlugin);
-    }
-
-    private feedbackElement?: JQuery = undefined;
-
-    async showFeedback(txt?: string) {
-        if (!this.feedbackElement) {
-            if (!txt) {
-                return;
-            } // no need to create element
-            const compiled = await compileWithViewctrl(
-                $(feedbackHtml),
-                this.scope,
-                this.viewctrl
-            );
-            this.feedbackElement = this.element.append(compiled);
-            // await $timeout(0);
-        }
-        this.feedback = txt;
-        this.scope.$evalAsync(); // required because this method may be called from Angular context
-        ParCompiler.processAllMathDelayed(this.feedbackElement);
-        if (!isInViewport(this.feedbackElement[0])) {
-            scrollToElement(this.feedbackElement[0]);
-        }
-    }
-
-    public pluginObject(): ITimComponent | undefined {
-        if (!this.viewctrl || !this.taskId) {
-            return undefined;
-        }
-        return this.viewctrl.getTimComponentByName(this.taskId);
-    }
-
-    public pluginMarkup(): IGenericPluginMarkup | undefined {
-        const c = this.pluginObject();
-        if (!c) {
-            return undefined;
-        }
-        const a = c.attrsall;
-        return a?.markup;
-    }
-
-    public isUseCurrentUser() {
-        const m = this.pluginMarkup();
-        return m?.useCurrentUser ?? false;
-    }
-
-    public isGlobal(): boolean {
-        return this.taskId.includes("GLO_");
-        // return this.pluginMarkup().globalField;
-    }
-
-    loadPlugin = () => {
-        if (this.compiled) {
-            return;
-        }
-        if (this.viewctrl) {
-            const ab = this.viewctrl.getAnswerBrowser(this.taskId);
-            if (ab) {
-                this.compiled = true;
-                this.abLoad.resolve(ab);
-            }
-        }
-
-        this.scope.$evalAsync(async () => {
-            const plugin = this.getPluginElement();
-
-            this.compiled = true;
-            if (
-                this.viewctrl &&
-                (!this.viewctrl.noBrowser || this.forceBrowser) &&
-                this.parsedTaskId &&
-                this.type !== "lazyonly" &&
-                Users.isLoggedIn()
-            ) {
-                this.showBrowser = true;
-            } else {
-                this.abLoad.resolve(null); // this plugin instance doesn't have answer browser
-            }
-            const h = this.getNonLazyHtml();
-            if (h && this.viewctrl) {
-                await loadPlugin(h, plugin, this.viewctrl.scope, this.viewctrl);
-            }
-            this.removeActivationHandler();
-        });
-    };
-
-    /**
-     * Returns the non-lazy HTML for the plugin if the plugin is lazy.
-     * If the plugin is not lazy, returns nothing.
-     */
-    getNonLazyHtml() {
-        const pe = this.getPluginElement();
-        const cns = pe[0].childNodes;
-        let nonLazyHtml;
-        for (const n of cns) {
-            if (
-                n.nodeType === Node.COMMENT_NODE &&
-                n.nodeValue &&
-                n.nodeValue.startsWith(LAZY_MARKER) &&
-                n.nodeValue.endsWith(LAZY_MARKER)
-            ) {
-                nonLazyHtml = n.nodeValue.slice(
-                    LAZY_MARKER_LENGTH,
-                    n.nodeValue.length - LAZY_MARKER_LENGTH
-                );
-                break;
-            } else if (
-                isElement(n) &&
-                n.tagName === "DIV" &&
-                n.className === LAZY_MARKER
-            ) {
-                nonLazyHtml = n.getAttribute("data-html");
-                break;
-            }
-        }
-        return nonLazyHtml;
-    }
-
-    getPluginElement(): JQuery {
-        return this.element.find("[data-plugin]");
-    }
-
-    unDimPlugin() {
-        const e = this.getPluginElement();
-        e.css("opacity", "1");
-        e.removeClass("hidden-print");
-    }
-
-    dimPlugin() {
-        if (!this.isInFormMode()) {
-            const e = this.getPluginElement();
-            e.css("opacity", "0.3");
-            e.addClass("hidden-print");
-        }
-    }
-
-    hidePlugin() {
-        this.taskHidden = true;
-        const e = this.getPluginElement();
-        e.css("visibility", "hidden");
-    }
-
-    unHidePlugin() {
-        this.taskHidden = false;
-
-        const e = this.getPluginElement();
-        e.css("visibility", "visible");
-    }
-
-    async unlockTimedTask() {
-        const r = await to(
-            $http.get<{end_time: string; expired?: boolean}>(
-                "/unlockTimedTask",
-                {
-                    params: {
-                        task_id: this.taskId,
-                    },
-                }
-            )
-        );
-        if (r.ok) {
-            this.unlockable = false;
-            this.endTime = moment(r.result.data.end_time);
-            if (this.endTime.isBefore(moment.now())) {
-                this.expireTask();
-            } else {
-                this.startTask();
-            }
-        }
-    }
-
-    informAboutLock(sourceTask: TaskId) {
-        const prevInfo = this.pluginMarkup()?.previousTask;
-        if (!prevInfo || !this.viewctrl?.docId || !prevInfo.requireLock) {
-            return;
-        }
-        const tid = TaskIdWithDefaultDocId(
-            prevInfo.taskid,
-            this.viewctrl.docId
-        );
-        if (tid?.docTask() == sourceTask.docTask()) {
-            if (prevInfo.count) {
-                // todo
-                return;
-            }
-            this.unlockHiddenTask();
-        }
-    }
-
-    async unlockHiddenTask() {
-        const r = await to(
-            $http.get<{unlocked: boolean; error?: string}>(
-                "/unlockHiddenTask",
-                {
-                    params: {
-                        task_id: this.taskId,
-                    },
-                }
-            )
-        );
-        if (r.ok) {
-            if (r.result.data.unlocked) {
-                this.lockedByPrerequisite = false;
-                this.unHidePlugin();
-                this.toggleLockedAreas();
-            } else {
-                this.lockedError =
-                    r.result.data.error ??
-                    $localize`You haven't unlocked this task yet`;
-            }
-        } else {
-            this.lockedError = r.result.data.error;
-        }
-    }
-
-    /**
-     * Hide areas where hide-with attribute matches current taskid
-     * TODO:
-     *  This should be handled by the actual plugin containing the modelAnswer and the locks (and later
-     *  be handled server-side), but the current implementation of modelAnswer lock query is expensive and unoptimized
-     */
-    toggleLockedAreas() {
-        if (!this.parsedTaskId) {
-            return;
-        }
-        const dataAreas = document.querySelectorAll(
-            `[attrs*='"area"'][attrs*='"hide-with": "${this.parsedTaskId.name}"']`
-        );
-        for (const da of dataAreas) {
-            const attrs = da.getAttribute("attrs");
-            if (attrs) {
-                try {
-                    const attrObj = JSON.parse(attrs) as {
-                        area: string;
-                    };
-                    const areaName = attrObj.area;
-                    if (areaName) {
-                        const area = document.querySelector(
-                            `div.area.area_${areaName} > .areaContent`
-                        );
-                        if (area && area instanceof HTMLElement) {
-                            area.style.setProperty(
-                                "display",
-                                this.lockedByPrerequisite ? "none" : "block",
-                                "important"
-                            );
-                        }
-                    }
-                } catch {}
-            }
-        }
-    }
-
-    expireTask() {
-        this.expired = true;
-        this.running = false;
-        if (this.accessEndText) {
-            this.hidePlugin();
-        }
-    }
-
-    startTask() {
-        this.unHidePlugin();
-        this.running = true;
-    }
-
-    isPreview() {
-        return (
-            this.element.parents(".previewcontent").length > 0 ||
-            this.element.parents(".previeworiginalcontent").length > 0
-        );
-    }
-
-    isInFormMode() {
-        if (this.viewctrl) {
-            const timComp = this.viewctrl.getTimComponentByName(this.taskId);
-            if (timComp) {
-                return this.viewctrl.isTimComponentInFormMode(timComp);
-            }
-        }
-        return false;
-    }
-
-    getPrerequisiteLockedText() {
-        return this.lockedText ?? $localize`You haven't unlocked this task yet`;
-    }
-
-    getPrerequisiteUnlockText() {
-        return this.lockedButtonText ?? $localize`Open task`;
-    }
-
-    getAnswerId() {
-        return this.answerId;
-    }
-}
-
-// noinspection HtmlUnknownAttribute
-timApp.component("timPluginLoader", {
-    bindings: {
-        answerId: "<?",
-        taskId: "@",
-        type: "@",
-        accessDuration: "<",
-        accessEnd: "@",
-        accessHeader: "@",
-        accessEndText: "@",
-        lockableByPrerequisite: "<",
-        lockedByPrerequisite: "<",
-        lockedText: "@",
-    },
-    controller: PluginLoaderCtrl,
-    require: {
-        viewctrl: "?^timView",
-    },
-    template: `
-<div ng-focus="$ctrl.loadPlugin()"
-     ng-if="!$ctrl.compiled"
-     title="This loads the plugin if it's not loaded"
-     tabindex="0"></div>
-<div class="answerBrowserPlaceholder"
-     ng-if="$ctrl.answerId && $ctrl.showPlaceholder && !$ctrl.isPreview()"
-     style="width: 1px; height: 23px;"></div>
-<answerbrowser ng-class="{'has-answers': ($ctrl.answerId && !$ctrl.hideBrowser)}"
-               ng-if="$ctrl.showBrowser && !$ctrl.isPreview() && !$ctrl.unlockable && !$ctrl.lockedByPrerequisite"
-               task-id="$ctrl.parsedTaskId"
-               answer-id="$ctrl.answerId">
-</answerbrowser>
-<div ng-if="$ctrl.timed">
-    <div ng-if="$ctrl.running">
-    Time left: <tim-countdown [end-time]="$ctrl.endTime" (on-finish)="$ctrl.expireTask()"></tim-countdown>
-    </div>
-    <div ng-if="$ctrl.expired">
-    Your access to this task has expired
-    </div>
-    <h4 ng-if="$ctrl.accessHeader && $ctrl.taskHidden">{{::$ctrl.accessHeader}}</h4>
-    <div ng-if="$ctrl.unlockable">
-    Unlock task. You will have {{$ctrl.accessDuration}} seconds to answer to this task.
-    <button class="btn btn-primary" ng-click="$ctrl.unlockTimedTask()" title="Unlock task">Unlock task</button>
-    </div>
-    <div ng-if="$ctrl.expired && $ctrl.accessEndText">{{::$ctrl.accessEndText}}</div>
-</div>
-<div ng-if="$ctrl.lockedByPrerequisite">
-    <div>
-    {{$ctrl.getPrerequisiteLockedText()}}
-    </div>
-    <button class="btn btn-primary" ng-click="$ctrl.unlockHiddenTask()" title="{{$ctrl.getPrerequisiteUnlockText()}}">{{$ctrl.getPrerequisiteUnlockText()}}</button>
-    <div ng-if="$ctrl.lockedError">{{$ctrl.lockedError}}</div>
-</div>
-    `,
-    transclude: true,
-});
-
-const feedbackHtml = `
-    <div uib-alert class="alert-warning text-color-normal" ng-if="$ctrl.feedback"
-         data-close="$ctrl.showFeedback('')">
-        <div ng-bind-html="$ctrl.feedback"></div>
-    </div>
-    `;
-
 export interface ITaskInfo {
     userMin: number;
     userMax: number;
@@ -600,6 +94,11 @@ export interface ITaskInfo {
     newtask?: boolean;
     buttonNewTask: string;
     modelAnswer?: IModelAnswerSettings;
+    starttime?: string;
+    deadline?: string;
+    triesText?: string;
+    maxPoints?: string | number;
+    pointsText?: string;
 }
 
 export interface IAnswerSaveEvent {
@@ -630,65 +129,74 @@ const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     validOnlyText: "Show valid only",
 };
 
-export class AnswerBrowserController
-    extends DestroyScope
-    implements IController
+@Component({
+    selector: "answerbrowser",
+    templateUrl: "../../../templates/answerBrowser.html",
+    styles: [],
+})
+export class AnswerBrowserComponent
+    implements AfterViewInit, IController, OnDestroy, OnInit
 {
-    static $inject = ["$scope", "$element"];
-    public taskId!: Binding<TaskId, "<">;
-    private loading: number;
-    private viewctrl!: Require<ViewCtrl>;
-    private user: IUser | undefined;
+    @Input() public taskId!: TaskId;
+    @ViewChild("modelAnswerDiv") modelAnswerRef?: ElementRef<HTMLDivElement>;
+    loading: number;
+    viewctrl!: Require<ViewCtrl>;
+    user: IUser | undefined;
     private fetchedUser: IUser | undefined;
-    private reviewerUser: IUser | undefined;
-    private saveTeacher: boolean = false;
-    private users: IUser[] | undefined;
-    private reviewerUsers: IUser[] = [];
-    private answers: IAnswer[] = [];
-    private filteredAnswers: IAnswer[] = [];
-    private onlyValid: boolean = true;
+    reviewerUser: IUser | undefined;
+    saveTeacher: boolean = false;
+    users: IUser[] | undefined;
+    reviewerUsers: IUser[] = [];
+    answers: IAnswer[] = [];
+    filteredAnswers: IAnswer[] = [];
+    onlyValid: boolean = true;
     public selectedAnswer: IAnswer | undefined;
     private selectedAnswerCanvas?: DrawCanvasComponent;
-    private anyInvalid: boolean = false;
-    private giveCustomPoints: boolean = false;
+    anyInvalid: boolean = false;
+    giveCustomPoints: boolean = false;
     public review: boolean = false;
-    private imageReview: boolean = false;
+    imageReview: boolean = false;
     private imageReviewUrls: string[] = [];
-    private imageReviewDatas: string[] = [];
+    imageReviewDatas: string[] = [];
     private imageReviewUrlIndex = 0;
     public oldreview: boolean = false;
     private shouldFocus: boolean = false;
-    // noinspection JSMismatchedCollectionQueryUpdate
-    private alerts: Array<unknown> = [];
+    alerts: Array<{msg: string; type: "warning" | "danger"}> = [];
     private feedback?: string;
-    private taskInfo: ITaskInfo | undefined;
-    private points: number | undefined;
+    taskInfo: ITaskInfo | undefined;
+    points: number | undefined;
     private loadedAnswer: {
         id: number | undefined;
         valid: boolean | undefined;
     } = {id: undefined, valid: undefined};
-    private answerId?: Binding<number, "<?">;
-    private loader!: PluginLoaderCtrl;
-    private reviewHtml?: string;
-    private answerLoader?: AnswerLoadCallback;
-    private pointsStep: number = 0.01;
-    private markupSettings: IAnswerBrowserSettings = DEFAULT_MARKUP_CONFIG;
-    private modelAnswer?: IModelAnswerSettings;
-    private modelAnswerFetched = false;
-    private modelAnswerHtml?: string;
-    private modelAnswerVisible = false;
-    private isValidAnswer = false;
-    private hidden: boolean = false;
-    private showDelete = false;
-    private formMode = false;
-    private showBrowseAnswers = true;
-    private isPeerReview = false;
-    private peerReviewEnabled = false;
-    private showNewTask = false;
-    private buttonNewTask = "New task";
+    // private answerId?: Binding<number, "<?">;
+    @Input() public answerId?: number;
+    // @Input() public loader!: PluginLoaderComponent;
+    public loader!: PluginLoaderComponent;
 
-    constructor(private scope: IScope, private element: JQLite) {
-        super(scope, element);
+    reviewHtml?: string;
+    private answerLoader?: AnswerLoadCallback;
+    pointsStep: number = 0.01;
+    markupSettings: IAnswerBrowserSettings = DEFAULT_MARKUP_CONFIG;
+    modelAnswer?: IModelAnswerSettings;
+    private modelAnswerFetched = false;
+    modelAnswerHtml?: string;
+    modelAnswerVisible = false;
+    isValidAnswer = false;
+    hidden: boolean = false;
+    showDelete = false;
+    formMode = false;
+    showBrowseAnswers = true;
+    isPeerReview = false;
+    peerReviewEnabled = false;
+    showNewTask = false;
+    buttonNewTask = "New task";
+
+    constructor(
+        private element: ElementRef<HTMLElement>,
+        @Inject("$scope") private scope: IScope,
+        public cdr: ChangeDetectorRef
+    ) {
         this.loading = 0;
     }
 
@@ -718,12 +226,17 @@ export class AnswerBrowserController
                 this.alerts.push({msg: args.error, type: "warning"});
             }
         }
-        this.showFeedback(args.topfeedback);
         this.loader.showFeedback(args.feedback);
+        this.cdr.detectChanges();
+        // TODO Check if redundant
         this.scope.$evalAsync(); // required because this method may be called from Angular context
     }
 
-    async $onInit() {
+    async ngOnInit() {
+        this.viewctrl = vctrlInstance!;
+        this.loader = this.viewctrl.getPluginLoader(
+            this.taskId.docTask().toString()
+        )!;
         this.formMode = this.loader.isInFormMode() && !this.forceBrowser();
         if (this.loader.hideBrowser || this.formMode) {
             this.hidden = true;
@@ -737,19 +250,6 @@ export class AnswerBrowserController
         }
 
         this.viewctrl.registerAnswerBrowser(this);
-        this.scope.$watch(
-            () => this.taskId,
-            (newValue, oldValue) => {
-                if (newValue === oldValue) {
-                    return;
-                }
-                if (this.viewctrl.teacherMode) {
-                    this.getAvailableUsers();
-                }
-                this.getAnswersAndUpdate();
-            }
-        );
-
         if (this.isUseCurrentUser() || this.isGlobal()) {
             this.user = Users.getCurrent();
         } else if (this.viewctrl.selectedUser) {
@@ -808,17 +308,6 @@ export class AnswerBrowserController
             this.onlyValid = this.markupSettings.showValidOnly;
         }
 
-        // noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
-        this.scope.$watch(
-            () => this.onlyValid,
-            (newValue, oldValue, scope) => {
-                if (newValue == oldValue) {
-                    return;
-                }
-                this.updateFilteredAndSetNewest();
-            }
-        );
-
         // If task is in form_mode, only last (already loaded) answer should matter.
         // Answer changes are handled by viewctrl, so don't bother querying them here
         // TODO: Make a route to handle getAnswers on global task. Currently global task has its' answerBrowser
@@ -837,6 +326,9 @@ export class AnswerBrowserController
             this.loader.getPluginElement().on("mouseenter touchstart", () => {
                 void this.checkUsers();
             });
+        }
+        if (this.viewctrl?.teacherMode) {
+            this.getAvailableUsers();
         }
         if (!this.formMode) {
             await this.loadInfo();
@@ -909,11 +401,11 @@ export class AnswerBrowserController
         return getURLParameter("task") === this.getTaskName();
     }
 
-    async $postLink() {
+    async ngAfterViewInit() {
         this.loader.showPlaceholder = false;
         if (this.urlParamMatchesThisTask()) {
             await $timeout(0);
-            this.element[0].scrollIntoView();
+            this.element.nativeElement.scrollIntoView();
         }
     }
 
@@ -935,7 +427,8 @@ export class AnswerBrowserController
             return true;
         }
 
-        const formEl = this.element.find(".point-form");
+        const formEl =
+            this.element.nativeElement.querySelectorAll(".point-form");
         if (!formEl.length) {
             return true;
         }
@@ -995,7 +488,7 @@ export class AnswerBrowserController
     }
 
     setFocus() {
-        this.element.focus();
+        this.element.nativeElement.focus();
     }
 
     setAnswerLoader(ac: AnswerLoadCallback) {
@@ -1088,7 +581,6 @@ export class AnswerBrowserController
                     this.loadedAnswer.id != this.selectedAnswer?.id &&
                     this.loadedAnswer.valid
                 ) {
-                    this.showFeedback("");
                     this.loader.showFeedback("");
                 }
                 this.loadedAnswer.id = this.selectedAnswer?.id;
@@ -1098,12 +590,7 @@ export class AnswerBrowserController
                 if (this.answerLoader && this.selectedAnswer) {
                     // Do nothing; the answerLoader gets called earlier in this method.
                 } else {
-                    await loadPlugin(
-                        r.result.data.html,
-                        this.loader.getPluginElement(),
-                        this.scope,
-                        this.viewctrl
-                    );
+                    await loadPlugin(r.result.data.html, this.loader);
                 }
             }
             if (this.review) {
@@ -1258,6 +745,7 @@ export class AnswerBrowserController
         this.selectedAnswer = undefined;
         this.showNewTask = false;
         await this.changeAnswer(false, true);
+        this.cdr.detectChanges();
     }
 
     findSelectedUserIndex() {
@@ -1456,6 +944,13 @@ export class AnswerBrowserController
         }
         this.users = r.result.data;
         this.users.sort(sortByRealName);
+        // force ui to show selected
+        if (this.user) {
+            const found = this.users?.find((u) => u.id == this.user?.id);
+            if (found) {
+                this.user = found;
+            }
+        }
     }
 
     showError(response: {data: {error: string}}) {
@@ -1557,9 +1052,9 @@ export class AnswerBrowserController
     async showModelAnswer() {
         if (this.modelAnswerFetched) {
             this.modelAnswerVisible = !this.modelAnswerVisible;
-            if (this.modelAnswerVisible) {
+            if (this.modelAnswerVisible && this.modelAnswerRef) {
                 ParCompiler.processAllMathDelayed(
-                    this.element.find(".modelAnswer")
+                    $(this.modelAnswerRef.nativeElement)
                 );
             }
             return;
@@ -1603,7 +1098,11 @@ export class AnswerBrowserController
         this.modelAnswerFetched = true;
         this.modelAnswerVisible = true;
         this.modelAnswerHtml = r.result.data.answer;
-        ParCompiler.processAllMathDelayed(this.element.find(".modelAnswer"));
+        if (this.modelAnswerRef) {
+            ParCompiler.processAllMathDelayed(
+                $(this.modelAnswerRef.nativeElement)
+            );
+        }
     }
 
     updateAnswerFromURL() {
@@ -1692,6 +1191,7 @@ export class AnswerBrowserController
             }
             await this.updateFilteredAndSetNewest();
         }
+        this.cdr.detectChanges();
     }
 
     // noinspection JSUnusedLocalSymbols,JSUnusedLocalSymbols
@@ -2007,31 +1507,41 @@ export class AnswerBrowserController
         this.alerts.splice(index, 1);
     }
 
-    private feedbackElement?: JQuery = undefined;
+    // TODO: showFeedback had double implementation (similar logic on answerbrowser and pluginloader) - check for deletion
+    // async showFeedback(txt?: string) {
+    //     if (!this.feedbackElement) {
+    //         if (!txt) {
+    //             return;
+    //         } // no need to create element
+    //         const compiled = await compileWithViewctrl(
+    //             $(feedbackHtml),
+    //             this.scope,
+    //             this.viewctrl
+    //         );
+    //         this.element.nativeElement.append(angular.element(compiled)[0]);
+    //         this.feedbackElement = compiled;
+    //         // await $timeout(0);
+    //     }
+    //     this.feedback = txt;
+    //     this.cdr.detectChanges();
+    //     this.scope.$evalAsync(); // required because this method may be called from Angular context
+    //     ParCompiler.processAllMathDelayed(this.feedbackElement);
+    // }
 
-    async showFeedback(txt?: string) {
-        if (!this.feedbackElement) {
-            if (!txt) {
-                return;
-            } // no need to create element
-            const compiled = await compileWithViewctrl(
-                $(feedbackHtml),
-                this.scope,
-                this.viewctrl
-            );
-            this.feedbackElement = this.element.append(compiled);
-            // await $timeout(0);
+    onOnlyValidChanged() {
+        this.updateFilteredAndSetNewest();
+    }
+
+    ngOnChanges(changes: SimpleChanges) {
+        if (changes.taskId && !changes.taskId.firstChange) {
+            if (this.viewctrl?.teacherMode) {
+                this.getAvailableUsers();
+            }
+            this.getAnswersAndUpdate();
         }
-        this.feedback = txt;
-        this.scope.$evalAsync(); // required because this method may be called from Angular context
-        ParCompiler.processAllMathDelayed(this.feedbackElement);
     }
 
-    closeFeedback() {
-        this.showFeedback("");
-    }
-
-    $onDestroy() {
+    ngOnDestroy() {
         this.viewctrl.unregisterAnswerBrowser(this);
     }
 
@@ -2040,7 +1550,7 @@ export class AnswerBrowserController
     }
 
     // noinspection JSUnusedLocalSymbols
-    private toggleInput() {
+    toggleInput() {
         if (this.saveTeacher) {
             this.unDimPlugin();
         } else if (!this.selectedAnswer) {
@@ -2108,31 +1618,30 @@ export class AnswerBrowserController
     }
 
     getPar() {
-        const parEl = this.element.parents(".par")[0];
+        const parEl = this.element.nativeElement.closest(".par")!;
         const ctx = tryCreateParContextOrHelp(parEl);
         if (ctx instanceof ParContext) {
             return ctx;
         }
         return undefined;
     }
+
+    get selectedAnswerWithUsers(): IAnswerWithUsers | undefined {
+        const ret = this.selectedAnswer as IAnswerWithUsers;
+        return ret;
+    }
 }
-
-timApp.component("answerbrowser", {
-    bindings: {
-        answerId: "<?",
-        taskId: "<",
-    },
-    controller: AnswerBrowserController,
-    require: {
-        loader: "^timPluginLoader",
-
-        // This is not a real component but a workaround for getting reference to the correct paragraph.
-        // Answerbrowser gets compiled before being attached to DOM to avoid too early rendering,
-        // so we can't use "this.element.parents()" to look for parent elements, so instead, we pass
-        // the paragraph to the compile call.
-        // par: "^timPar",
-
-        viewctrl: "^timView",
-    },
-    templateUrl: "/static/templates/answerBrowser.html",
-});
+@NgModule({
+    declarations: [AnswerBrowserComponent],
+    imports: [
+        CommonModule,
+        FormsModule,
+        TimUtilityModule,
+        DrawCanvasModule,
+        PurifyModule,
+    ],
+    exports: [AnswerBrowserComponent],
+})
+export class AnswerBrowserModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
