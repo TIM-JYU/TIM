@@ -95,7 +95,11 @@ export class ParContext {
         if (n.length === 0) {
             const newContainer = document.createElement("div");
             newContainer.classList.add("notes");
-            this.par.htmlElement.appendChild(newContainer);
+            const target =
+                this.par.htmlElement.querySelector(
+                    ".parContent"
+                )?.parentElement;
+            target?.appendChild(newContainer);
             return newContainer;
         }
         return n[0];

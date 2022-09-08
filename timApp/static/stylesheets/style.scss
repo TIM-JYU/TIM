@@ -48,6 +48,21 @@ tim-dialog-frame {
     }
 }
 
+.draggable-block, .draggable-area {
+    z-index: 1200 !important;
+    position: static;
+    background-color: var(--bg-color);
+
+    &.draggable-attached {
+        width: initial !important;
+        height: auto !important;
+    }
+
+    .draggable-content {
+        position: relative;
+    }
+}
+
 .draggable-plugin {
     z-index: 1200;
     background-color: $material-bg;
