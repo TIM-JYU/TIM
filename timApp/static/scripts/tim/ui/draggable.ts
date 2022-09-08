@@ -187,11 +187,6 @@ export class DraggableController implements IController {
         });
         // User may have refreshed the document after resizing the window.
         void this.restoreSizeAndPosition(VisibilityFix.Full);
-        if (this.canDrag()) {
-            this.element.addClass("draggable-detached");
-        } else {
-            this.element.addClass("draggable-attached");
-        }
     }
 
     private setVisibility(v: "visible" | "hidden" | "inherit") {
@@ -220,7 +215,8 @@ export class DraggableController implements IController {
     }
 
     private toggleDetach() {
-        if (this.canDrag()) {
+        const canDrag = this.canDrag();
+        if (canDrag) {
             if (this.areaMinimized) {
                 this.toggleMinimize();
             }
@@ -240,7 +236,7 @@ export class DraggableController implements IController {
         }
         this.element.css("z-index", this.getVisibleLayer());
 
-        this.detachStorage.set(this.canDrag());
+        this.detachStorage.set(!canDrag);
     }
 
     /**
@@ -341,6 +337,13 @@ export class DraggableController implements IController {
         // DialogController will call setInitialLayout in case draggable is inside modal
         if (!this.isModal()) {
             await this.setInitialLayout(VisibilityFix.Partial);
+        }
+
+        const canDrag = this.detachStorage.get();
+        if (canDrag) {
+            this.element.addClass("draggable-detached");
+        } else {
+            this.element.addClass("draggable-attached");
         }
     }
 
