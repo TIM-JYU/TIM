@@ -76,7 +76,7 @@ function tryParseCollapsibleArea(
     if (!x) {
         return {ok: false, result: "area container missing"};
     }
-    const content = x.firstElementChild;
+    const content = x.querySelector(".areaContent");
     if (!content || !(content instanceof HTMLElement)) {
         return {ok: false, result: "area container content missing"};
     }
@@ -239,7 +239,7 @@ function tryParseUncollapsibleArea(
     if (!areaname) {
         return {ok: false, result: "area name missing"};
     }
-    const areacontent = el.firstElementChild;
+    const areacontent = el.querySelector(".areaContent");
     if (!areacontent || !(areacontent instanceof HTMLElement)) {
         return {ok: false, result: "areacontent missing"};
     }
