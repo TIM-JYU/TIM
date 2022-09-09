@@ -126,7 +126,7 @@ export type AnswerBrowserData =
 
 const DEFAULT_MARKUP_CONFIG: IAnswerBrowserSettings = {
     pointsStep: 0,
-    validOnlyText: "Show valid only",
+    validOnlyText: $localize`Show valid only`,
 };
 
 @Component({
@@ -190,7 +190,7 @@ export class AnswerBrowserComponent
     isPeerReview = false;
     peerReviewEnabled = false;
     showNewTask = false;
-    buttonNewTask = "New task";
+    buttonNewTask = $localize`New task`;
 
     constructor(
         private element: ElementRef<HTMLElement>,
@@ -1129,7 +1129,7 @@ export class AnswerBrowserComponent
                 return true;
             } else {
                 void showMessageDialog(
-                    `Answer number ${answerNumber} is out of range for this task and user.`
+                    $localize`Answer number ${answerNumber} is out of range for this task and user.`
                 );
             }
         }
@@ -1562,7 +1562,7 @@ export class AnswerBrowserComponent
         if (!this.selectedAnswer) {
             return;
         }
-        if (!window.confirm("Delete this answer?")) {
+        if (!window.confirm($localize`Delete this answer?`)) {
             return;
         }
         const aid = this.selectedAnswer.id;
@@ -1591,7 +1591,9 @@ export class AnswerBrowserComponent
         }
         const sa = this.selectedAnswer as IAnswerWithUsers; // TODO fix selectedAnswer type
         if (sa.users.length === 1) {
-            await showMessageDialog("Cannot delete the only collaborator.");
+            await showMessageDialog(
+                $localize`Cannot delete the only collaborator.`
+            );
             return;
         }
         const index = sa.users.findIndex((u) => u.id === userId);

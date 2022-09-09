@@ -10,8 +10,8 @@
             <div>
                 <div class="input-group input-group-xs">
             <span class="input-group-btn">
-               <button class="btn btn-primary" (click)="randomStudent()" title="Choose random student">R</button>
-               <button title="Previous user" class="btn btn-primary" (click)="changeStudent(-1)">&uarr;</button>
+               <button i18n-title class="btn btn-primary" (click)="randomStudent()" title="Choose random student">R</button>
+               <button i18n-title title="Previous user" class="btn btn-primary" (click)="changeStudent(-1)">&uarr;</button>
              </span>
                     <select class="form-control"
                             focus-me="!selectedAnswer && shouldFocus #blurWhenFalse"
@@ -21,7 +21,7 @@
 
                     </select>
                     <span class="input-group-btn">
-             <button title="Next user" class="btn btn-primary" (click)="changeStudent(+1)">&darr;</button>
+             <button i18n-title title="Next user" class="btn btn-primary" (click)="changeStudent(+1)">&darr;</button>
             </span>
                 </div>
             </div>
@@ -39,52 +39,52 @@
                     <div>
                         <div class="input-group input-group-xs">
                 <span class="input-group-btn">
-                    <button title="Previous answer" class="btn btn-primary prevAnswer"
+                    <button i18n-title title="Previous answer" class="btn btn-primary prevAnswer"
                             (click)="changeAnswerTo(-1)">&larr;</button>
                 </span>
-                            <select class="form-control"
+                            <select i18n-title class="form-control"
                                     title="List of answers"
                                     [(ngModel)]="selectedAnswer"
                                     (ngModelChange)="changeAnswer()">
                                  <option *ngFor="let answer of filteredAnswers; let idx = index" [ngValue]="answer">{{((filteredAnswers.length - idx) + '. ' + (answer.answered_on |  date:'dd.MM.YYYY HH:mm:ss' ))}}</option>
                             </select>
                             <span class="input-group-btn">
-                    <button title="Next answer" class="btn btn-primary nextAnswer" (click)="changeAnswerTo(1)">&rarr;</button>
+                    <button i18n-title title="Next answer" class="btn btn-primary nextAnswer" (click)="changeAnswerTo(1)">&rarr;</button>
                 </span>
                         </div>
                     </div>
                     <div class="no-shrink">
-                    <span class="answer-index-count">{{ filteredAnswers.length - findSelectedAnswerIndex() }}/<a tabindex="0"
+                    <span class="answer-index-count">{{ filteredAnswers.length - findSelectedAnswerIndex() }}/<a i18n-title tabindex="0"
                                                                                                   title="Newest answer"
                                                                                                   (click)="setNewest()">{{ filteredAnswers.length }}</a></span>
                         <label class="checkbox-inline" *ngIf="anyInvalid">
                             <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
-                        <span *ngIf="showTeacher()"> | <a (click)="getAllAnswers()">All answers</a>
+                        <span *ngIf="showTeacher()"> | <a i18n (click)="getAllAnswers()">All answers</a>
                     </span>
-                        <button class="timButton" *ngIf="showNewTask" title="Change to new task" (click)="newTask()">{{ buttonNewTask }}</button>
+                        <button i18n-title class="timButton" *ngIf="showNewTask" title="Change to new task" (click)="newTask()">{{ buttonNewTask }}</button>
                         <span *ngIf="selectedAnswer">
-                        | <a title="Link to currently selected answer"
+                        | <a i18n-title title="Link to currently selected answer"
                              (click)="$event.preventDefault()"
                              href="{{ getAnswerLink() }}">Link</a>
-                        (<a title="Link to currently selected answer without other document content"
+                        (<a i18n-title title="Link to currently selected answer without other document content"
                             target="_blank"
                             href="{{ getAnswerLink(true) }}">only</a>)&nbsp;
                         </span>
                     </div>
                 </div>
                 </div>
-                <a *ngIf="peerReviewEnabled && !isPeerReview"
+                <a i18n-title *ngIf="peerReviewEnabled && !isPeerReview"
                     title="Link to peer review"
                 href="{{ getReviewLink() }}">Review</a>
                 </span>
              <div *ngIf="answers.length == 0 && viewctrl.teacherMode">
-                <span *ngIf="!hasUserChanged()">(no answers from the selected user)</span>
+                <span i18n *ngIf="!hasUserChanged()">(no answers from the selected user)</span>
                  <span *ngIf="hasUserChanged()"> <tim-loading></tim-loading> </span>
              </div>
                  <div class="flex ab-option-row">
                             <form ng-submit="savePoints()" class="point-form form-inline">
                                 <label class="inline" *ngIf="showTeacher() || (giveCustomPoints && allowCustomPoints())">
-                                    Points:<input class="form-control input-xs"
+                                    <ng-container i18n>Points:</ng-container><input class="form-control input-xs"
                                                   [ngClass]="{ unsaved: points != selectedAnswer?.points,
                                                   'no-step': !markupSettings.pointsStep }"
                                                   focus-me="shouldFocus #blurWhenFalse"
@@ -100,7 +100,7 @@
                                                   size="2">
                                 </label>
 
-                                <button title="Save points"
+                                <button i18n-title title="Save points"
                                         class="timButton btn-xs"
                                         *ngIf="selectedAnswer && points != selectedAnswer.points">
                                     <i class="glyphicon glyphicon-ok"></i>
@@ -110,20 +110,20 @@
                             <div *ngIf="selectedAnswer">
 
                             <span class="inline" *ngIf="points !== null && !(showTeacher() || (giveCustomPoints && allowCustomPoints())) && taskInfo?.pointsText">
-                        {{ taskInfo?.pointsText }} {{ points }} <span *ngIf="!taskInfo?.showPoints">(only visible to teachers)</span>
+                        {{ taskInfo?.pointsText }} {{ points }} <span i18n *ngIf="!taskInfo?.showPoints">(only visible to teachers)</span>
                     </span>
                             <span *ngIf="taskInfo?.maxPoints && points !== null">/ {{ taskInfo?.maxPoints }}</span>
                             <span *ngIf="!selectedAnswer.valid && points !== null">(invalid)</span>
                             <span *ngIf="!viewctrl.teacherMode && allowCustomPoints()">
                         <label class="checkbox-inline">
-                            <input type="checkbox"
+                            <input i18n type="checkbox"
                                    [(ngModel)]="giveCustomPoints">Set custom points</label>
                     </span>
                             <span *ngIf="showTeacher()">
                         <label class="checkbox-inline">
-                            <input type="checkbox" [(ngModel)]="isValidAnswer">Valid
+                            <input i18n type="checkbox" [(ngModel)]="isValidAnswer">Valid
                         </label>
-                        <button title="Save validity"
+                        <button i18n-title title="Save validity"
                                 (click)="saveValidity()"
                                 class="timButton btn-xs"
                                 *ngIf="isValidAnswer != selectedAnswer.valid">
@@ -138,25 +138,25 @@
                             </div>
                             <span *ngIf="showTeacher()">
                                 <label class="checkbox-inline">
-                                    <input type="checkbox" (ngModelChange)="toggleInput()" [(ngModel)]="saveTeacher">Save teacher's fix
+                                    <input i18n type="checkbox" (ngModelChange)="toggleInput()" [(ngModel)]="saveTeacher">Save teacher's fix
                                 </label>
                             </span>
                             <div class="flex" *ngIf="selectedAnswer">
                             <span *ngIf="showVelpsCheckBox()">
                             <label class="checkbox-inline" >
-                                <input type="checkbox" [(ngModel)]="review" (ngModelChange)="reviewToggled()">Velps
+                                <input i18n type="checkbox" [(ngModel)]="review" (ngModelChange)="reviewToggled()">Velps
                             </label>
                             </span>
                             <div class="input-group input-group-xs" *ngIf="review && reviewerUsers.length > 1">
-                                    <select class="form-control"
+                                    <select i18n-title class="form-control"
                                             title="List of reviewers"
                                             [(ngModel)]="reviewerUser"
                                             (ngModelChange)="changeReviewerUser()">
-                                         <option [ngValue]="undefined">All velpers</option>
+                                         <option i18n [ngValue]="undefined">All velpers</option>
                                          <option *ngFor="let user of reviewerUsers" [ngValue]="user">{{(user.real_name + ' (' + user.name + ')')}}</option>
                                     </select>
                            </div>
-                            <button *ngIf="showDelete"
+                            <button i18n-title *ngIf="showDelete"
                                     title="Delete answer"
                                     (click)="deleteAnswer()"
                                     class="timButton btn-xs btn-danger">
@@ -166,11 +166,11 @@
                         <span *ngIf="selectedAnswerWithUsers">
                         <div class="flex" *ngIf="selectedAnswerWithUsers.users.length > 1">
                             <div>
-                                Collaborators:
+                                <ng-container i18n>Collaborators</ng-container>:
                                 <ul>
                                     <li *ngFor="let c of selectedAnswerWithUsers.users"><a
                                             href="mailto:{{c.email}}">{{ c.real_name }}</a>
-                                        <button *ngIf="showDelete"
+                                        <button i18n-title *ngIf="showDelete"
                                                 title="Delete collaborator"
                                                 (click)="deleteCollab(c.id)"
                                                 class="timButton btn-xs btn-danger">
@@ -198,12 +198,12 @@
                       *ngIf="taskInfo.answerLimit && taskInfo.triesText">{{ taskInfo.triesText }} {{ getTriesLeft() }}</span>
 
             <span *ngIf="taskInfo.starttime || taskInfo.deadline">
-        Answering time:
+        <ng-container i18n>Answering time:</ng-container>
         <span *ngIf="taskInfo.starttime && !taskInfo.deadline">
-            Since {{ taskInfo.starttime | date:'dd.MM.YYYY HH:mm:ss' }}
+            <ng-container i18n>Since</ng-container> {{ taskInfo.starttime | date:'dd.MM.YYYY HH:mm:ss' }}
         </span>
         <span *ngIf="!taskInfo.starttime && taskInfo.deadline">
-            Until {{ taskInfo.deadline | date:'dd.MM.YYYY HH:mm:ss' }}
+            <ng-container i18n>Until</ng-container> {{ taskInfo.deadline | date:'dd.MM.YYYY HH:mm:ss' }}
         </span>
         <span *ngIf="taskInfo.starttime && taskInfo.deadline">
             {{ taskInfo.starttime | date:'dd.MM.YYYY HH:mm:ss' }} - {{ taskInfo.deadline | date:'dd.MM.YYYY HH:mm:ss' }}
@@ -211,15 +211,15 @@
     </span>
     </ng-container>
         </div>
-        <span *ngIf="viewctrl.teacherMode && hasUserChanged() && !loading">(hover/click to update)</span>
+        <span i18n *ngIf="viewctrl.teacherMode && hasUserChanged() && !loading">(hover/click to update)</span>
         <!-- <img style="display: inline" src="/static/images/loading.gif" *ngIf="loading"> -->
     </div>
     <div class="modelAnswer" #modelAnswerDiv *ngIf="modelAnswer">
-        <a *ngIf="showModelAnswerLink()"
+        <a i18n-title *ngIf="showModelAnswerLink()"
            title="Show model answer"
            (click)="showModelAnswer()">{{getModelAnswerLinkText()}}</a>
         <div *ngIf="!showModelAnswerLink() && modelAnswer.linkTextBeforeCount">{{modelAnswer.linkTextBeforeCount}}</div>
-        <span *ngIf="showClearModelAnswerLockLink()"> | <a (click)="clearModelAnswerLock()" title="Manage model answer locks">Manage task locks</a>
+        <span *ngIf="showClearModelAnswerLockLink()"> | <a i18n i18n-title (click)="clearModelAnswerLock()" title="Manage model answer locks">Manage model answer locks</a>
         </span>
         <div *ngIf="modelAnswerVisible" [innerHtml]="modelAnswerHtml | purify">
 
