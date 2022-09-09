@@ -885,7 +885,6 @@ export class TimTableComponent
      * Force change detection.
      */
     c() {
-        this.doCustomDomUpdates();
         this.cdr.detectChanges();
     }
 
@@ -1031,7 +1030,10 @@ export class TimTableComponent
                 }
             }
         );
-        this.doCustomDomUpdates();
+        if (this.task && !this.getTaskId()) {
+            this.error = "Task-mode on but TaskId is missing!";
+            this.c();
+        }
     }
 
     /**
@@ -1039,9 +1041,9 @@ export class TimTableComponent
      * so here we can perform our own DOM updates. We must call runOutsideAngular because otherwise
      * ngAfterViewChecked would be called endlessly.
      */
-    // ngAfterViewChecked() {
-    //     this.doCustomDomUpdates();
-    // }
+    ngAfterViewChecked() {
+        this.doCustomDomUpdates();
+    }
 
     private doCustomDomUpdates() {
         if (this.customDomUpdateInProgress) {
@@ -1557,6 +1559,10 @@ export class TimTableComponent
 
     async sendDataBlockAsync() {
         if (!this.task) {
+            return;
+        }
+        if (!this.getTaskId()) {
+            this.error = "Task-mode on but TaskId is missing!";
             return;
         }
         this.connectionErrorMessage = undefined;
