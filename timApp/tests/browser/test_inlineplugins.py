@@ -39,7 +39,7 @@ class InlinePluginTest(BrowserTest):
         self.wait_until_hidden(
             f"tim-plugin-loader[task-id='{d.id}.t5'] input.warnFrame"
         )
-        self.goto_document(d)
+        self.refresh()
         for i in range(1, 6):
             inputfield = self.find_element_avoid_staleness(
                 f"tim-plugin-loader[task-id='{d.id}.t{i}'] input"
