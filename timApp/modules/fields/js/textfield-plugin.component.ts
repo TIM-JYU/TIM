@@ -415,7 +415,7 @@ export class TextfieldPluginComponent
      */
     changeFocus() {
         const inputfields = document.querySelectorAll(
-            "textfield-runner input, numericfield-runner input"
+            "tim-textfield-runner input, tim-numericfield-runner input"
         );
         for (let i = 0; i < inputfields.length; ++i) {
             const selectedfield = inputfields[i] as HTMLInputElement;

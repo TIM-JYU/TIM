@@ -454,7 +454,7 @@ export class NumericfieldPluginComponent
      */
     changeFocus() {
         const inputfields = document.querySelectorAll(
-            "numericfield-runner input, textfield-runner input"
+            "tim-numericfield-runner input, tim-textfield-runner input"
         );
         for (let i = 0; i < inputfields.length; ++i) {
             const selectedfield = inputfields[i] as HTMLInputElement;
@@ -463,6 +463,7 @@ export class NumericfieldPluginComponent
                 inputfields[i + 1]
             ) {
                 const nextfield = inputfields[i + 1] as HTMLInputElement;
+                this.preventedAutosave = true;
                 return nextfield.focus();
             }
         }
