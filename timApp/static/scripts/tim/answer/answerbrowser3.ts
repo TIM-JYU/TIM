@@ -643,6 +643,7 @@ export class AnswerBrowserController
     private filteredAnswers: IAnswer[] = [];
     private onlyValid: boolean = true;
     public selectedAnswer: IAnswer | undefined;
+    private selectedAnswerCanvas?: DrawCanvasComponent;
     private anyInvalid: boolean = false;
     private giveCustomPoints: boolean = false;
     public review: boolean = false;
@@ -1205,12 +1206,15 @@ export class AnswerBrowserController
             if (!par) {
                 return;
             }
+            this.selectedAnswerCanvas = canvas;
             this.viewctrl.reviewCtrl.setCanvas(this.selectedAnswer.id, canvas);
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(
                 this.selectedAnswer.id,
                 par,
                 this.reviewerUser
             );
+        } else {
+            this.selectedAnswerCanvas = undefined;
         }
     };
 
@@ -1221,6 +1225,9 @@ export class AnswerBrowserController
      */
     async changeAnswerTo(dir: -1 | 1) {
         if (!this.trySavePoints(true)) {
+            return;
+        }
+        if (!(await this.checkUnsavedAnnotations())) {
             return;
         }
 
@@ -1302,6 +1309,9 @@ export class AnswerBrowserController
     }
 
     async changeStudentToIndex(newIndex: number) {
+        if (!(await this.checkUnsavedAnnotations())) {
+            return;
+        }
         if (this.isGlobal() || this.isUseCurrentUser()) {
             return;
         }
@@ -1353,6 +1363,16 @@ export class AnswerBrowserController
         }
         const newIndex = Math.floor(Math.random() * this.users.length);
         await this.changeStudentToIndex(newIndex);
+    }
+
+    private async checkUnsavedAnnotations() {
+        if (this.selectedAnswerCanvas?.isUnSaved()) {
+            return await showConfirm(
+                $localize`Unsaved velps`,
+                $localize`You have unsaved velps. Changing the answer will discard them. Continue?`
+            );
+        }
+        return true;
     }
 
     async setNewest() {

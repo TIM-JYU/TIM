@@ -6728,6 +6728,22 @@
           <context context-type="linenumber">549</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1126853536751307834" datatype="html">
+        <source>Unsaved velps</source>
+        <target state="translated">Osparade velper</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="linenumber">1371</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6588774960803677312" datatype="html">
+        <source>You have unsaved velps. Changing the answer will discard them. Continue?</source>
+        <target state="translated">Du har inte räddade velper. Om du ändrar svaret kommer de att förkastas. Fortsätt?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="linenumber">1372</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
