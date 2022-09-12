@@ -674,29 +674,34 @@ export class CalendarComponent
         this.events = [...this.events]; // TODO: Find out what is the purpose of this line
         const now = Date.now();
         this.events.forEach((event) => {
+            if (now > event.start.getTime()) {
+                event.color = colors.gray;
+                return;
+            }
+            if (event.meta!.booker_groups) {
+                const isCurrentUserBooker = event.meta!.booker_groups.some(
+                    (group) =>
+                        group.users.some(
+                            (user) => user.id === Users.getCurrent().id
+                        )
+                );
+                if (isCurrentUserBooker) {
+                    event.color = colors.green;
+                    return;
+                }
+            }
             if (event.meta!.enrollments >= event.meta!.maxSize) {
                 event.color = colors.red;
-            } else {
-                event.color = colors.blue;
+                return;
             }
             if (
                 event.meta?.signup_before &&
                 now > event.meta.signup_before.getTime()
             ) {
                 event.color = colors.gray;
+                return;
             }
-            if (event.meta!.booker_groups) {
-                event.meta!.booker_groups.forEach((group) => {
-                    group.users.forEach((user) => {
-                        if (user.id === Users.getCurrent().id) {
-                            event.color = colors.green;
-                        }
-                    });
-                });
-            }
-            if (now > event.start.getTime()) {
-                event.color = colors.gray;
-            }
+            event.color = colors.blue;
         });
         this.cdr.detectChanges();
     }
