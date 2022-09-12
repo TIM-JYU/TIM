@@ -210,13 +210,14 @@ def get_urlmacros_from_request() -> tuple[tuple[str, str], ...]:
 
 
 def view_ctx_with_urlmacros(
-    route: ViewRoute, hide_names_requested: bool = False
+    route: ViewRoute, hide_names_requested: bool = False, **kwargs: Any
 ) -> ViewContext:
     return ViewContext(
         route,
         False,
         hide_names_requested=hide_names_requested,
         urlmacros=get_urlmacros_from_request(),
+        **kwargs,
     )
 
 

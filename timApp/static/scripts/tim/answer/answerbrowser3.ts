@@ -29,6 +29,7 @@ import {
     Binding,
     getURLParameter,
     getUrlParams,
+    getUrlParamsJSON,
     getViewName,
     isInViewport,
     Require,
@@ -1064,6 +1065,7 @@ export class AnswerBrowserController
                     params: {
                         ...preParams,
                         ...taskOrAnswer,
+                        ...getUrlParamsJSON(),
                     },
                 })
             );
@@ -1451,8 +1453,6 @@ export class AnswerBrowserController
             return;
         }
         const parId = par.originalPar.id;
-        const params = getUrlParams();
-        const group = params.get("group"); // TODO: should we save other params also?
         const rangeParams = single
             ? {
                   b: parId,
@@ -1465,7 +1465,7 @@ export class AnswerBrowserController
                 this.findSelectedAnswerIndexFromUnFiltered(),
             task: this.getTaskName(),
             user: this.user.name,
-            group: group,
+            ...getUrlParamsJSON(),
             ...rangeParams,
         })}`;
     }
@@ -1870,7 +1870,10 @@ export class AnswerBrowserController
         this.loading++;
         const r = await to(
             $http.get<ITaskInfo>(
-                `/taskinfo/${this.taskId.docTask().toString()}`
+                `/taskinfo/${this.taskId.docTask().toString()}`,
+                {
+                    params: getUrlParamsJSON(),
+                }
             )
         );
         this.loading--;

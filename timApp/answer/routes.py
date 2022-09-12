@@ -128,6 +128,7 @@ from timApp.util.flask.requesthelper import (
     get_urlmacros_from_request,
     NotExist,
     get_from_url,
+    view_ctx_with_urlmacros,
 )
 from timApp.util.flask.responsehelper import json_response, ok_response, to_dict
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -1935,12 +1936,11 @@ def set_model_answer_info(tim_vars: dict, context_user: UserContext, plugin: Plu
 
 
 @answers.get("/taskinfo/<task_id>")
-def get_task_info(task_id) -> Response:
+def get_task_info(task_id: str) -> Response:
     try:
         user_ctx = user_context_with_logged_in(None)
-        plugin, d = Plugin.from_task_id(
-            task_id, user_ctx=user_ctx, view_ctx=default_view_ctx
-        )
+        view_ctx = view_ctx_with_urlmacros(ViewRoute.View)
+        plugin, d = Plugin.from_task_id(task_id, user_ctx=user_ctx, view_ctx=view_ctx)
         verify_task_access(
             d,
             plugin.task_id,
@@ -1948,7 +1948,7 @@ def get_task_info(task_id) -> Response:
             TaskIdAccess.ReadOnly,
             allow_grace_period=True,
             context_user=user_ctx,
-            view_ctx=default_view_ctx,
+            view_ctx=view_ctx,
         )
         tim_vars = find_tim_vars(plugin)
         model_answer = tim_vars.get("modelAnswer")
@@ -2407,7 +2407,7 @@ def get_state(
     user = User.get_by_id(user_id)
     if user is None:
         raise RouteException("Non-existent user")
-    view_ctx = ViewContext(ViewRoute.View, False, origin=get_origin_from_request())
+    view_ctx = view_ctx_with_urlmacros(ViewRoute.View, origin=get_origin_from_request())
     if answer_id:
         answer = Answer.query.get(answer_id)
         if not answer:

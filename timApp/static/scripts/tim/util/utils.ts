@@ -299,6 +299,11 @@ export function getUrlParams() {
     return new URLSearchParams(document.location.search);
 }
 
+export function getUrlParamsJSON() {
+    const params = getUrlParams();
+    return Object.fromEntries(params.entries());
+}
+
 export function getURLParameter(sParam: string): string | undefined {
     const params = getUrlParams();
     return params.get(sParam) ?? undefined;
