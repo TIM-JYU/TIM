@@ -110,6 +110,7 @@ export class PluginLoaderComponent
     @ViewChild("wrapper") pluginWrapper?: ElementRef<HTMLElement>;
     @ContentChild("contenthtml") contenthtml?: ElementRef<HTMLElement>;
     public defaultload = true;
+    loadPluginAfterInit = false;
     public showBrowser: boolean = false;
     public hideBrowser: boolean = false;
     private forceBrowser: boolean = false;
@@ -150,7 +151,7 @@ export class PluginLoaderComponent
         if (r.ok) {
             this.parsedTaskId = r.result;
             if (getURLParameter("task") === this.parsedTaskId.name) {
-                this.loadPlugin();
+                this.loadPluginAfterInit = true;
             }
         }
         if (this.lockedByPrerequisite) {
@@ -206,17 +207,20 @@ export class PluginLoaderComponent
         if (!this.pluginWrapper) {
             return;
         }
+
         this.elementRef.nativeElement.addEventListener(
             "mouseenter",
             this.loadPlugin
         );
         const pluginhtml = this.pluginWrapper.nativeElement.innerHTML;
-        if (pluginhtml.startsWith(LAZY_COMMENT_MARKER)) {
-            return;
+        if (!pluginhtml.startsWith(LAZY_COMMENT_MARKER)) {
+            const component = this.pluginWrapper.nativeElement
+                .childNodes[0] as HTMLElement;
+            this.determineAndSetComponent(component);
         }
-        const component = this.pluginWrapper.nativeElement
-            .childNodes[0] as HTMLElement;
-        this.determineAndSetComponent(component);
+        if (this.loadPluginAfterInit) {
+            this.loadPlugin();
+        }
     }
 
     ngOnDestroy() {
