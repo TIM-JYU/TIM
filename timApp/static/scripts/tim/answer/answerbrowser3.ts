@@ -139,6 +139,7 @@ export class AnswerBrowserComponent
 {
     @Input() public taskId!: TaskId;
     @ViewChild("modelAnswerDiv") modelAnswerRef?: ElementRef<HTMLDivElement>;
+    @ViewChild("feedback") feedBackElement?: ElementRef<HTMLDivElement>;
     loading: number;
     viewctrl!: Require<ViewCtrl>;
     user: IUser | undefined;
@@ -162,7 +163,7 @@ export class AnswerBrowserComponent
     public oldreview: boolean = false;
     private shouldFocus: boolean = false;
     alerts: Array<{msg: string; type: "warning" | "danger"}> = [];
-    private feedback?: string;
+    feedback?: string;
     taskInfo: ITaskInfo | undefined;
     points: number | undefined;
     private loadedAnswer: {
@@ -226,6 +227,7 @@ export class AnswerBrowserComponent
                 this.alerts.push({msg: args.error, type: "warning"});
             }
         }
+        this.showFeedback(args.topfeedback);
         this.loader.showFeedback(args.feedback);
         this.cdr.detectChanges();
         // TODO Check if redundant
@@ -581,6 +583,7 @@ export class AnswerBrowserComponent
                     this.loadedAnswer.id != this.selectedAnswer?.id &&
                     this.loadedAnswer.valid
                 ) {
+                    this.showFeedback("");
                     this.loader.showFeedback("");
                 }
                 this.loadedAnswer.id = this.selectedAnswer?.id;
@@ -1507,26 +1510,14 @@ export class AnswerBrowserComponent
         this.alerts.splice(index, 1);
     }
 
-    // TODO: showFeedback had double implementation (similar logic on answerbrowser and pluginloader) - check for deletion
-    // async showFeedback(txt?: string) {
-    //     if (!this.feedbackElement) {
-    //         if (!txt) {
-    //             return;
-    //         } // no need to create element
-    //         const compiled = await compileWithViewctrl(
-    //             $(feedbackHtml),
-    //             this.scope,
-    //             this.viewctrl
-    //         );
-    //         this.element.nativeElement.append(angular.element(compiled)[0]);
-    //         this.feedbackElement = compiled;
-    //         // await $timeout(0);
-    //     }
-    //     this.feedback = txt;
-    //     this.cdr.detectChanges();
-    //     this.scope.$evalAsync(); // required because this method may be called from Angular context
-    //     ParCompiler.processAllMathDelayed(this.feedbackElement);
-    // }
+    showFeedback(txt?: string) {
+        this.feedback = txt;
+        if (this.feedBackElement) {
+            ParCompiler.processAllMathDelayed(
+                $(this.feedBackElement.nativeElement)
+            );
+        }
+    }
 
     onOnlyValidChanged() {
         this.updateFilteredAndSetNewest();
