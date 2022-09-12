@@ -206,21 +206,19 @@ export class PluginLoaderComponent
         if (!this.pluginWrapper) {
             return;
         }
+        this.elementRef.nativeElement.addEventListener(
+            "mouseenter",
+            this.loadPlugin
+        );
         const pluginhtml = this.pluginWrapper.nativeElement.innerHTML;
         if (pluginhtml.startsWith(LAZY_COMMENT_MARKER)) {
-            this.elementRef.nativeElement.addEventListener(
-                "mouseenter",
-                this.loadPlugin
-            );
             return;
         }
         const component = this.pluginWrapper.nativeElement
             .childNodes[0] as HTMLElement;
         this.determineAndSetComponent(component);
-        this.elementRef.nativeElement.addEventListener("mouseenter", () =>
-            this.loadAnswerBrowser()
-        );
     }
+
     ngOnDestroy() {
         this.removeActivationHandlers();
     }
@@ -230,9 +228,6 @@ export class PluginLoaderComponent
         this.elementRef.nativeElement.removeEventListener(
             "mouseenter",
             this.loadPlugin
-        );
-        this.elementRef.nativeElement.removeEventListener("mouseenter", () =>
-            this.loadAnswerBrowser()
         );
     }
 
@@ -296,12 +291,12 @@ export class PluginLoaderComponent
         if (this.compiled) {
             return;
         }
-        this.loadAnswerBrowser();
         const h = this.getNonLazyHtml();
         if (h && this.viewctrl) {
             this.defaultload = false;
             await loadPlugin(h, this);
         }
+        this.loadAnswerBrowser();
         this.removeActivationHandlers();
     };
 
