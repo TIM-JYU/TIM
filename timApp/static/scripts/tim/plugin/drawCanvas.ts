@@ -1044,7 +1044,8 @@ const MIN_IMAGE_WIDTH = 700;
 @Component({
     selector: "draw-canvas",
     template: `
-
+        <draw-toolbar *ngIf="toolBar" [(drawSettings)]="drawOptions"
+              [undo]="undo" optionsStorage="drawCanvasOptions"></draw-toolbar>
         <div style="position: relative;">
             <div style="position: absolute; top: 50%; left:-5%; display: flex; flex-flow: column; gap: 1em;
                          -ms-transform: translateY(-50%); transform: translateY(-50%); z-index: 4;">
@@ -1092,9 +1093,8 @@ const MIN_IMAGE_WIDTH = 700;
                 </div>
             </div>
         </div>
-        <draw-toolbar *ngIf="toolBar" [(drawSettings)]="drawOptions"
-                      [undo]="undo" optionsStorage="drawCanvasOptions"></draw-toolbar>
     `,
+    styleUrls: ["./draw-canvas.component.scss"],
 })
 export class DrawCanvasComponent
     implements OnInit, OnChanges, OnDestroy, IUnsavedComponent
