@@ -19,7 +19,6 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {SafeHtml} from "@angular/platform-browser";
 import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
@@ -54,12 +53,16 @@ function getTypeFor(name: string): Type<PluginJson> | undefined {
 
 export async function loadPlugin(html: string, loader: PluginLoaderComponent) {
     const elementToCompile = $(html)[0];
+    loader.defaultload = false;
     await loader.determineAndSetComponent(elementToCompile);
 }
 
 @Component({
     selector: "tim-plugin-loader",
     template: `
+        <tim-alert *ngIf="error" severity="danger">
+            {{ error }}
+        </tim-alert>
         <answerbrowser *ngIf="parsedTaskId && showBrowser"
                        [taskId]="parsedTaskId"
                        [answerId]="answerId">
@@ -67,10 +70,12 @@ export async function loadPlugin(html: string, loader: PluginLoaderComponent) {
         <div *ngIf="tag=='div'" #wrapper [attr.id]="id" [attr.data-plugin]="dataplugin">
             <ng-container *ngTemplateOutlet="tempOutlet"></ng-container>
             <ng-container #pluginPlacement></ng-container>
+            <div *ngIf="nonPluginHtml" [innerHTML]="nonPluginHtml | purify"></div>
         </div>
         <span *ngIf="tag=='span'" #wrapper [attr.id]="id" [attr.data-plugin]="dataplugin">
             <ng-container *ngTemplateOutlet="tempOutlet"></ng-container>
             <ng-container #pluginPlacement></ng-container>
+            <div *ngIf="nonPluginHtml" [innerHTML]="nonPluginHtml | purify"></div>
         </span>
         <ng-template #tempOutlet>
             <ng-content #contenthtml *ngIf="defaultload"></ng-content>
@@ -94,7 +99,7 @@ export class PluginLoaderComponent
     private viewctrl?: Require<ViewCtrl>;
     asd = this;
     @Input() public taskId!: string;
-    public safehtml?: SafeHtml;
+    public nonPluginHtml?: string;
     public parsedTaskId?: TaskId;
     @Input() public type!: string;
     @Input() public answerId?: number;
@@ -120,6 +125,7 @@ export class PluginLoaderComponent
     @Input() public lockedText?: string;
     @Input() public lockedButtonText?: string;
     @Input() public lockedError?: string;
+    error = "";
 
     private timed = false;
     private expired = false;
@@ -293,6 +299,7 @@ export class PluginLoaderComponent
         this.loadAnswerBrowser();
         const h = this.getNonLazyHtml();
         if (h && this.viewctrl) {
+            this.defaultload = false;
             await loadPlugin(h, this);
         }
         this.removeActivationHandlers();
@@ -300,9 +307,17 @@ export class PluginLoaderComponent
 
     async determineAndSetComponent(component: HTMLElement) {
         const runnername = component.tagName.toLowerCase();
+        if (runnername == "div") {
+            // For now assume every non-component plugin html (e.g plugins in error state) is wrapped in div, so we
+            // can catch plugins that are not properly handled yet
+            this.setInnerHtml(component);
+            return;
+        }
+        this.nonPluginHtml = undefined;
         if (runnername == "tim-table") {
             const data = component.getAttribute("bind-data");
             if (!data) {
+                this.error = `Component ${runnername} is missing attribute bind-data`;
                 return;
             }
             await this.setNonJsonComponent(runnername, data);
@@ -310,32 +325,47 @@ export class PluginLoaderComponent
         } else if (runnername == "tim-tape") {
             const data = component.getAttribute("data");
             if (!data) {
-                throw Error("Missing plugin data");
+                this.error = `Component ${runnername} is missing attribute data`;
+                return;
             }
             await this.setNonJsonComponent(runnername, data);
             return;
         } else if (runnername == "mcq" || runnername == "mmcq") {
             const data = component.getAttribute("data-content");
             if (!data) {
-                throw Error("Missing plugin data");
+                this.error = `Component ${runnername} is missing attribute data-content`;
+                return;
             }
             await this.setNonJsonComponent(runnername, data);
             return;
         } else {
             const json = component.getAttribute("json");
             const type = getTypeFor(runnername);
-            if (!type || !json) {
+            if (!type) {
+                this.error = `Unknown component: ${runnername}`;
+                return;
+            }
+            if (!json) {
+                this.error = `Component ${runnername} is missing attribute json`;
                 return;
             }
             await this.setComponent(type, json);
         }
     }
 
+    setInnerHtml(element: HTMLElement) {
+        if (this.defaultload) {
+            return;
+        }
+        const viewContainerRef = this.pluginPlacement;
+        viewContainerRef.clear();
+        this.nonPluginHtml = element.outerHTML;
+    }
+
     async setNonJsonComponent(
         type: "tim-table" | "tim-tape" | "mcq" | "mmcq",
         data: string
     ) {
-        this.defaultload = false;
         const viewContainerRef = this.pluginPlacement;
         viewContainerRef.clear();
 
@@ -376,7 +406,6 @@ export class PluginLoaderComponent
     }
 
     async setComponent(component: Type<PluginJson>, json: string) {
-        this.defaultload = false;
         const viewContainerRef = this.pluginPlacement;
         viewContainerRef.clear();
 
