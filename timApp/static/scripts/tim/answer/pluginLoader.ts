@@ -63,7 +63,7 @@ export async function loadPlugin(html: string, loader: PluginLoaderComponent) {
         <tim-alert *ngIf="error" severity="danger">
             {{ error }}
         </tim-alert>
-        <answerbrowser *ngIf="parsedTaskId && showBrowser"
+        <answerbrowser *ngIf="parsedTaskId && showBrowser && !preview && !unlockable && !lockedByPrerequisite"
                        [taskId]="parsedTaskId"
                        [answerId]="answerId">
         </answerbrowser>
@@ -107,6 +107,7 @@ export class PluginLoaderComponent
     @Input() public tag!: "div" | "span";
     @Input() public id!: string;
     @Input() public dataplugin!: string;
+    @Input() public preview?: boolean;
     @ViewChild("wrapper") pluginWrapper?: ElementRef<HTMLElement>;
     @ContentChild("contenthtml") contenthtml?: ElementRef<HTMLElement>;
     public defaultload = true;
@@ -130,7 +131,7 @@ export class PluginLoaderComponent
 
     private timed = false;
     private expired = false;
-    private unlockable = false;
+    unlockable = false;
     private running = false;
     private endTime?: ReadonlyMoment;
     private taskHidden = false;
@@ -144,13 +145,16 @@ export class PluginLoaderComponent
 
     ngOnInit() {
         this.viewctrl = vctrlInstance;
-        if (this.viewctrl) {
+        if (this.viewctrl && !this.preview) {
             this.viewctrl.registerPluginLoader(this);
         }
         const r = TaskId.tryParse(this.taskId);
         if (r.ok) {
             this.parsedTaskId = r.result;
-            if (getURLParameter("task") === this.parsedTaskId.name) {
+            if (
+                getURLParameter("task") === this.parsedTaskId.name &&
+                !this.preview
+            ) {
                 this.loadPluginAfterInit = true;
             }
         }
@@ -597,14 +601,6 @@ export class PluginLoaderComponent
     startTask() {
         this.unHidePlugin();
         this.running = true;
-    }
-
-    isPreview() {
-        return (
-            this.elementRef.nativeElement.closest(".previewcontent") != null ||
-            this.elementRef.nativeElement.closest(".previeworiginalcontent") !=
-                null
-        );
     }
 
     isInFormMode() {

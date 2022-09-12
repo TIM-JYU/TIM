@@ -56,7 +56,8 @@ class="{{plgclass}}"
 tag="{{tag}}"
 id="{{id}}"
 dataplugin="/{{data_plugin}}"
-task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>
+task-id="{{doc_task_id or ''}}"
+{{'preview="true"' if preview}}>{{cont|safe}}</tim-plugin-loader>
 """.replace(
         "\n", " "
     )
@@ -719,6 +720,7 @@ class Plugin:
                         tag=tag,
                         id=html_task_id,
                         data_plugin=self.type,
+                        preview=self.options.preview,
                     ),
                     html_task_id or "",
                 )
