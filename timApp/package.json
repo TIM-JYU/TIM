@@ -66,6 +66,7 @@
     "humanize-duration": "^3.27.0",
     "ifvisible.js": "^1.0.6",
     "io-ts": "^2.2.16",
+    "jspdf": "^2.5.1",
     "katex": "^0.15.1",
     "mathjax-full": "3.2.0",
     "mathjs": "^10.0.0",

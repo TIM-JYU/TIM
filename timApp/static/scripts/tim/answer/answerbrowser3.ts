@@ -1783,6 +1783,10 @@ export class AnswerBrowserController
         return this.answerId;
     }
 
+    getUser(): IUser | undefined {
+        return this.user;
+    }
+
     hasUserChanged() {
         return (
             (this.user ?? {id: null}).id !== (this.fetchedUser ?? {id: null}).id
