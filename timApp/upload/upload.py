@@ -214,13 +214,27 @@ def pluginupload_file(doc_id: int, task_id: str):
     return json_response(returninfo)
 
 
+def _downsample_image_canvas(img_path: Path) -> None:
+    """
+    Downsamples an image to fit into JS canvas area.
+
+    ..note:: Different browsers have different limits for max canvas size, see
+        https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas#maximum_canvas_size
+
+    ..note:: This method overwrites the original file.
+
+    :param img: Path to image file
+    """
+    with Image(filename=img_path) as img:
+        img.transform(resize="2048x2048>")  # TODO: max dimensions from markup
+        img.save(filename=img_path)
+
+
 def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id: str):
     p = f.filesystem_path
     returninfo = []
     if f.content_mimetype.startswith("image/"):
-        with Image(filename=p) as img:
-            img.transform(resize="2048x2048>")  # TODO: max dimensions from markup
-            img.save(filename=p)
+        _downsample_image_canvas(p)
         returninfo.append(
             {
                 "file": (Path("/uploads") / f.relative_filesystem_path).as_posix(),
@@ -245,6 +259,7 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
         )
         for imagepath in os.listdir(tempfolder):
             file = tempfolder / imagepath
+            _downsample_image_canvas(file)
             uf = UploadedFile.save_new(
                 imagepath,
                 BlockType.Upload,
