@@ -98,8 +98,10 @@ RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 2
 # lxml dependencies
 # C-parser for PyYAML
 # python-magic dependency
+# img2pdf w/ python lib
 RUN bash -c "${APT_INSTALL} \
  git-core \
+ img2pdf \
  libffi-dev \
  libmagic1 \
  libmagickwand-dev \
