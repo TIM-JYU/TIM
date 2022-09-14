@@ -6898,7 +6898,7 @@
       </trans-unit>
       <trans-unit id="876092695213423150" datatype="html">
         <source>Delete collaborator</source>
-        <target state="translated">Ta bor författaren</target>
+        <target state="translated">Ta bort författaren</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/templates/answerBrowser.html</context>
           <context context-type="linenumber">174</context>
