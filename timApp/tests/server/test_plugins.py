@@ -450,7 +450,6 @@ class PluginTest(TimRouteTest):
         ]
 
     def test_idless_plugin(self):
-        # TODO ab-angular
         self.login_test1()
         doc = self.create_doc(from_file=static_tim_doc("idless_plugin.md")).document
         resp = self.get(f"/view/{doc.doc_id}", as_tree=True)
@@ -1889,7 +1888,7 @@ needed_len: 6
             r.cssselect(".parContent")[1],
             f"""
 <div tabindex="0" class="parContent" id="t.points">
-    <tim-plugin-loader type="full" answer-id="{aid}" class="pluginpali" tag="div" id="{d.id}.t.points" dataplugin="/pali" task-id="{d.id}.t.points">
+    <tim-plugin-loader type="full" answer-id="{aid}" class="pluginpali" wrapper="div" id="{d.id}.t.points" dataplugin="/pali" task-id="{d.id}.t.points">
     <pali-runner json="{self.make_base64(expected_json)}"></pali-runner>
     </tim-plugin-loader>
 </div>""",

@@ -257,7 +257,7 @@ TIM_SAFE_ATTRS = frozenset(
         # tim-search-button
         "folder",
         "button-text",
-        "tag",
+        "wrapper",
     ]
 )
 
