@@ -1,6 +1,7 @@
 """
 Functions for calling pandoc and constructing the calls
 """
+import json
 import os
 import re
 import subprocess
@@ -28,7 +29,10 @@ from timApp.document.preloadoption import PreloadOption
 from timApp.document.randutils import hashfunc
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import default_view_ctx, copy_of_default_view_ctx
+from timApp.document.viewcontext import (
+    default_view_ctx,
+    ViewContext,
+)
 from timApp.document.yamlblock import strip_code_block
 from timApp.folder.folder import Folder
 from timApp.markdown.autocounters import AutoCounters
@@ -96,15 +100,21 @@ def add_nonumber(md: str) -> str:
     return result
 
 
+TexSettingsAndMacros = tuple[
+    DocSettings, dict[str, str], TimSandboxedEnvironment, dict[str, object], str
+]
+
+
 def get_tex_settings_and_macros(
     d: Document,
+    view_ctx: ViewContext,
     user_ctx: UserContext,
     template_doc: DocEntry | None = None,
     tformat: PrintFormat = PrintFormat.PLAIN,
-):
+) -> TexSettingsAndMacros:
     settings = d.get_settings()
     pdoc_plugin_attrs = settings.global_plugin_attrs()
-    pdoc_macroinfo = settings.get_macroinfo(default_view_ctx, user_ctx)
+    pdoc_macroinfo = settings.get_macroinfo(view_ctx, user_ctx)
     pdoc_macro_delimiter = pdoc_macroinfo.get_macro_delimiter()
     pdoc_macros = pdoc_macroinfo.get_macros()
     if tformat == PrintFormat.LATEX:
@@ -112,18 +122,16 @@ def get_tex_settings_and_macros(
     pdoc_macro_env = create_environment(
         pdoc_macro_delimiter,
         user_ctx,
-        default_view_ctx,
+        view_ctx,
         pdoc_macros,
         d,
     )
 
     if template_doc:
         template_settings = template_doc.document.get_settings()
-        pdoc_macros.update(
-            template_settings.get_texmacroinfo(default_view_ctx).get_macros()
-        )
+        pdoc_macros.update(template_settings.get_texmacroinfo(view_ctx).get_macros())
 
-    pdoc_macros.update(settings.get_texmacroinfo(default_view_ctx).get_macros())
+    pdoc_macros.update(settings.get_texmacroinfo(view_ctx).get_macros())
 
     return (
         settings,
@@ -167,6 +175,7 @@ class DocumentPrinter:
     def get_content(
         self,
         user_ctx: UserContext,
+        view_ctx: ViewContext,
         plugins_user_print: bool = False,
         target_format: PrintFormat = PrintFormat.PLAIN,
     ) -> str:
@@ -197,7 +206,7 @@ class DocumentPrinter:
             pdoc_macros,
             pdoc_macro_delimiter,
         ) = get_tex_settings_and_macros(
-            self._doc_entry.document, user_ctx, self._template_to_use, tformat
+            self._doc_entry.document, view_ctx, user_ctx, self._template_to_use, tformat
         )
 
         self._macros = pdoc_macros
@@ -216,25 +225,22 @@ class DocumentPrinter:
         pars = self._doc_entry.document.get_paragraphs(include_preamble=True)
         self._doc_entry.document.preload_option = PreloadOption.all
         pars = dereference_pars(
-            pars, context_doc=self._doc_entry.document, view_ctx=default_view_ctx
+            pars, context_doc=self._doc_entry.document, view_ctx=view_ctx
         )
         pars_to_print = []
         self.texplain = settings.is_texplain()
         self.textplain = settings.is_textplain()
 
-        self.texfiles = (
-            settings.get_texmacroinfo(default_view_ctx).get_macros().get("texfiles")
-        )
+        self.texfiles = settings.get_texmacroinfo(view_ctx).get_macros().get("texfiles")
         if self.texfiles and self.texfiles is str:
             self.texfiles = [self.texfiles]
 
         texmacros = get_tex_macros(self._doc_entry.document)
 
-        view_ctx = default_view_ctx
         if texmacros:
-            view_ctx = copy_of_default_view_ctx(texmacros)
+            view_ctx = view_ctx.copy(extramacros=json.dumps(texmacros))
         if tformat == PrintFormat.LATEX:  # ensure tex macro is set
-            view_ctx = copy_of_default_view_ctx({"tex": True})
+            view_ctx = view_ctx.copy(extramacros=json.dumps({"tex": True}))
 
         # Process areas to determine what is visible to the user who is printing
         # TODO: We don't need to process all the areas, just need to find the IDs of the visible items
@@ -271,10 +277,11 @@ class DocumentPrinter:
             if par.id not in processed_par_ids:
                 continue
 
-            p_info = par, *get_tex_settings_and_macros(
-                par.doc, user_ctx, self._template_to_use, tformat
+            tex_settings = get_tex_settings_and_macros(
+                par.doc, view_ctx, user_ctx, self._template_to_use, tformat
             )
-            _, _, pdoc_plugin_attrs, env, pdoc_macros, pdoc_macro_delimiter = p_info
+            p_info = par, *tex_settings
+            _, pdoc_plugin_attrs, env, pdoc_macros, pdoc_macro_delimiter = tex_settings
 
             if self.texplain or self.textplain:
                 if par.get_markdown().find("#") == 0:
@@ -334,6 +341,7 @@ class DocumentPrinter:
             output_format=PluginOutputFormat.MD,
             user_print=plugins_user_print,
             target_format=tformat,
+            protect_raw_inline_plugins=True,
         )
         pars_to_print = presult.pars
 
@@ -438,6 +446,7 @@ class DocumentPrinter:
     def get_autocounters(
         self,
         user_ctx: UserContext,
+        view_ctx: ViewContext,
     ) -> AutoCounters:
         """
         Gets the content of the DocEntry assigned for this
@@ -454,7 +463,7 @@ class DocumentPrinter:
             pdoc_macros,
             pdoc_macro_delimiter,
         ) = get_tex_settings_and_macros(
-            self._doc_entry.document, user_ctx, self._template_to_use
+            self._doc_entry.document, view_ctx, user_ctx, self._template_to_use
         )
 
         self._macros = pdoc_macros
@@ -470,10 +479,8 @@ class DocumentPrinter:
         pars = self._doc_entry.document.get_paragraphs(include_preamble=True)
         self._doc_entry.document.preload_option = PreloadOption.all
         pars = dereference_pars(
-            pars, context_doc=self._doc_entry.document, view_ctx=default_view_ctx
+            pars, context_doc=self._doc_entry.document, view_ctx=view_ctx
         )
-
-        view_ctx = default_view_ctx
 
         for par in pars:
             counters.task_id = par.get_auto_id()
@@ -481,10 +488,11 @@ class DocumentPrinter:
             if par.is_setting():
                 continue
 
-            p_info = par, *get_tex_settings_and_macros(
-                par.doc, user_ctx, self._template_to_use
+            tex_settings = get_tex_settings_and_macros(
+                par.doc, view_ctx, user_ctx, self._template_to_use
             )
-            _, _, pdoc_plugin_attrs, env, pdoc_macros, pdoc_macro_delimiter = p_info
+            p_info = par, *tex_settings
+            _, pdoc_plugin_attrs, env, pdoc_macros, pdoc_macro_delimiter = tex_settings
             env.set_counters(counters)
             counters.par = par
 
@@ -550,6 +558,7 @@ class DocumentPrinter:
     def write_to_format(
         self,
         user_ctx: UserContext,
+        view_ctx: ViewContext,
         target_format: PrintFormat,
         path: Path,
         plugins_user_print: bool = False,
@@ -559,6 +568,7 @@ class DocumentPrinter:
         Converts the document to latex and returns the converted document as a bytearray
 
         :param user_ctx: The user context.
+        :param view_ctx: The view context.
         :param target_format: The target file format
         :param plugins_user_print: Whether or not to print user input from plugins (instead of default values)
         :param path:  filepath to write
@@ -582,7 +592,7 @@ class DocumentPrinter:
 
             top_level = "section"
             if re.search(
-                "^\\\\documentclass\\[[^\n]*(book|report)\\}",
+                "^\\\\documentclass\\[[^\n]*(book|report)}",
                 template_content,
                 flags=re.S,
             ):
@@ -590,6 +600,7 @@ class DocumentPrinter:
 
             src = self.get_content(
                 user_ctx,
+                view_ctx,
                 plugins_user_print=plugins_user_print,
                 target_format=target_format,
             )
@@ -640,10 +651,11 @@ class DocumentPrinter:
 
             # TODO: add also variables from texpandocvariables document setting, but this may lead to security hole?
             try:
+
                 tim_convert_text(
                     source=src,
                     from_format=from_format,
-                    to=target_format.value,
+                    to=str(target_format.value),
                     outputfile=path.absolute().as_posix(),  # output_file.name,
                     extra_args=[
                         "--template=" + template_file.name,
@@ -665,29 +677,35 @@ class DocumentPrinter:
                 raise PrintingError(f"<pre>{sanitize_html(str(ex))}</pre>")
 
     def get_print_path(
-        self, file_type: PrintFormat, plugins_user_print: bool = False
+        self,
+        view_ctx: ViewContext,
+        file_type: PrintFormat,
+        plugins_user_print: bool = False,
     ) -> Path:
         """
         Formulates the printing path for the given document
 
+        :param view_ctx: The view context.
         :param file_type: File format for the output
         :param plugins_user_print: should print user answers
         :return:
         """
 
-        print_hash = self.hash_doc_print(plugins_user_print=plugins_user_print)
+        print_hash = self.hash_doc_print(
+            plugins_user_print=plugins_user_print, url_macros=view_ctx.url_macros_dict
+        )
 
         path = (
             DEFAULT_PRINTING_FOLDER
             / str(self._doc_entry.id)
             / str(self.get_template_id())
-            / str(print_hash + "." + file_type.value)
+            / str(print_hash + "." + str(file_type.value))
         )
 
         return path
 
     @staticmethod
-    def get_user_templates(doc_entry: DocEntry, current_user: User) -> list[DocEntry]:
+    def get_user_templates(doc_entry: DocEntry, current_user: User) -> list[DocInfo]:
         templates = []
 
         if doc_entry is None or current_user is None:
@@ -706,14 +724,14 @@ class DocumentPrinter:
             if docs is not None:
                 for d in docs:
                     if has_view_access(d) and not re.search(
-                        f"/{PRINT_FOLDER_NAME}/.*{TEMPLATE_FOLDER_NAME}/", d.name
+                        f"/{PRINT_FOLDER_NAME}/.*{TEMPLATE_FOLDER_NAME}/", d.path
                     ):
                         templates.append(d)
 
         return templates
 
     @staticmethod
-    def get_all_templates(doc_entry: DocEntry, current_user: User) -> list[DocEntry]:
+    def get_all_templates(doc_entry: DocEntry, current_user: User) -> list[DocInfo]:
         templates = []
 
         if doc_entry is None or current_user is None:
@@ -736,7 +754,7 @@ class DocumentPrinter:
 
                 for d in docs:
                     if has_view_access(d) and not re.search(
-                        f"/{PRINT_FOLDER_NAME}/.*{TEMPLATE_FOLDER_NAME}/", d.name
+                        f"/{PRINT_FOLDER_NAME}/.*{TEMPLATE_FOLDER_NAME}/", d.path
                     ):
                         templates.append(d)
 
@@ -778,7 +796,7 @@ class DocumentPrinter:
         return templates_list
 
     @staticmethod
-    def parse_template_content(template_doc: DocInfo, doc_to_print: DocEntry) -> str:
+    def parse_template_content(template_doc: DocInfo, doc_to_print: DocInfo) -> str:
         pars = template_doc.document.get_paragraphs()
 
         pars = dereference_pars(
@@ -819,7 +837,9 @@ class DocumentPrinter:
         doc_v_fst, doc_v_snd = doc_v[0], doc_v[1]
         return doc_v_fst + doc_v_snd / 10
 
-    def hash_doc_print(self, plugins_user_print: bool = False) -> str:
+    def hash_doc_print(
+        self, plugins_user_print: bool = False, url_macros: dict[str, str] | None = None
+    ) -> str:
         thash = ""
         if self._template_to_use:
             thash = self._template_to_use.last_modified
@@ -831,20 +851,29 @@ class DocumentPrinter:
             + " "
             + str(thash)
         )
+        if url_macros:
+            # dict key ordering is stable in starting from python 3.7
+            content += str(url_macros)
         if plugins_user_print:
             content += str(plugins_user_print) + str(get_current_user_object().id)
 
         return hashfunc(content)
 
     def get_printed_document_path_from_db(
-        self, file_type: PrintFormat, plugins_user_print: bool = False
+        self,
+        file_type: PrintFormat,
+        plugins_user_print: bool = False,
+        url_macros: dict[str, str] | None = None,
     ) -> str | None:
+        # noinspection PyUnresolvedReferences
         existing_print: PrintedDoc | None = (
             PrintedDoc.query.filter_by(
                 doc_id=self._doc_entry.id,
                 template_doc_id=self.get_template_id(),
                 file_type=file_type.value,
-                version=self.hash_doc_print(plugins_user_print=plugins_user_print),
+                version=self.hash_doc_print(
+                    plugins_user_print=plugins_user_print, url_macros=url_macros
+                ),
             )
             .order_by(PrintedDoc.id.desc())
             .first()
@@ -870,16 +899,16 @@ def number_lines(s: str, start: int = 1):
 
 
 def tim_convert_text(
-    source,
-    to,
-    from_format,
-    extra_args=(),
-    encoding="utf-8",
-    outputfile=None,
-    filters=None,
-    removethis=None,
-    texfiles=None,
-    eol_type="native",
+    source: str,
+    to: str,
+    from_format: str,
+    extra_args: list[str] = (),
+    encoding: str = "utf-8",
+    outputfile: str | None = None,
+    filters: list[str] | None = None,
+    removethis: list[str] | None = None,
+    texfiles: list[str] | None = None,
+    eol_type: str = "native",
 ):
     """Converts given `source` from `format` to `to`.
 

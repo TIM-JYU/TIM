@@ -7,6 +7,7 @@ import shutil
 import tempfile
 from dataclasses import field
 from pathlib import Path
+from urllib.parse import urlencode
 
 from flask import current_app, render_template
 from flask import g
@@ -24,7 +25,7 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import default_view_ctx
+from timApp.document.viewcontext import default_view_ctx, ViewRoute, ViewContext
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.autocounters import (
     REMOTE_REFS_KEY,
@@ -40,6 +41,7 @@ from timApp.upload.upload import add_csp_if_not_pdf
 from timApp.util.flask.requesthelper import (
     RouteException,
     NotExist,
+    view_ctx_with_urlmacros,
 )
 from timApp.util.flask.responsehelper import (
     json_response,
@@ -132,6 +134,8 @@ def print_document(
         metadata={"data_key": "removeOldImages"}, default=False
     ),
     force: bool = False,
+    url_macros: dict[str, str]
+    | None = field(metadata={"data_key": "urlMacros"}, default=None),
 ) -> Response:
     if not file_type:
         file_type = "pdf"
@@ -140,6 +144,7 @@ def print_document(
         raise RouteException("The supplied parameter 'fileType' is invalid.")
 
     doc: DocInfo = g.doc_entry
+    doc_settings = doc.document.get_settings()
     template_doc, template_doc_id, template_error, template_doc_def = get_template_doc(
         doc, template_doc_id
     )
@@ -151,11 +156,18 @@ def print_document(
     if remove_old_images:
         remove_images(doc.id)
 
+    if doc_settings.urlmacros():
+        view_ctx = view_ctx_with_urlmacros(ViewRoute.View, urlmacros=url_macros)
+    else:
+        view_ctx = default_view_ctx
+        url_macros = None
+
     existing_doc = check_print_cache(
         doc_entry=doc,
         template=template_doc,
         file_type=print_type,
         plugins_user_print=plugins_user_print,
+        url_macros=url_macros,
     )
 
     #  print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
@@ -169,6 +181,10 @@ def print_document(
         sep = "&"
     if plugins_user_print:
         print_access_url += f"{sep}plugins_user_code={plugins_user_print}"
+        sep = "&"
+    if url_macros:
+        print_access_url += f"{sep}{urlencode(url_macros)}"
+        sep = "&"
 
     if force:
         existing_doc = None
@@ -188,6 +204,7 @@ def print_document(
             file_type=print_type,
             temp=True,
             user_ctx=UserContext.from_one_user(g.user),
+            view_ctx=view_ctx,
             plugins_user_print=plugins_user_print,
             urlroot="http://localhost:5000/print/",
         )  # request.url_root + 'print/')
@@ -196,6 +213,8 @@ def print_document(
             print("Error occurred: " + str(err))
             e = err.value
             latex_access_url = f"{request.url}?file_type=latex&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}"
+            if url_macros:
+                latex_access_url += f"&{urlencode(url_macros)}"
             line = e.get("line", "")
             return json_response(
                 {
@@ -232,10 +251,10 @@ def get_printed_document(
     force: bool = False,
     showerror: bool = False,
 ) -> Response:
-    doc = g.doc_entry
-
+    doc: DocInfo = g.doc_entry
+    doc_settings = doc.document.get_settings()
     def_file_type = "pdf"
-    if doc.document.get_settings().is_textplain():
+    if doc_settings.is_textplain():
         def_file_type = "plain"
 
     file_type = file_type or def_file_type
@@ -265,11 +284,25 @@ def get_printed_document(
         if template_error:
             raise RouteException(template_error)
 
+    if doc_settings.urlmacros():
+        url_macros = dict(request.args)
+        # Remove any possibly colliding names from args
+        url_macros.pop("file_type", None)
+        url_macros.pop("plugins_user_code", None)
+        url_macros.pop("template_doc_id", None)
+        url_macros.pop("force", None)
+        url_macros.pop("showerror", None)
+        view_ctx = view_ctx_with_urlmacros(ViewRoute.View, urlmacros=url_macros)
+    else:
+        view_ctx = default_view_ctx
+        url_macros = None
+
     cached = check_print_cache(
         doc_entry=doc,
         template=template_doc,
         file_type=print_type,
         plugins_user_print=plugins_user_code,
+        url_macros=url_macros,
     )
 
     if force or showerror:
@@ -285,6 +318,7 @@ def get_printed_document(
                 file_type=print_type,
                 temp=True,
                 user_ctx=UserContext.from_one_user(g.user),
+                view_ctx=view_ctx,
                 plugins_user_print=plugins_user_code,
                 urlroot="http://localhost:5000/print/",
                 eol_type=eol_type,
@@ -301,6 +335,7 @@ def get_printed_document(
         template=template_doc,
         file_type=print_type,
         plugins_user_print=plugins_user_code,
+        url_macros=url_macros,
     )
     if (pdferror and showerror) or not cached:
         if not pdferror:
@@ -312,6 +347,9 @@ def get_printed_document(
         rurl = rurl[:i]
         latex_access_url = f"{rurl}?file_type=latex&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_code}"
         pdf_access_url = f"{rurl}?file_type=pdf&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_code}"
+        if url_macros:
+            latex_access_url += f"&{urlencode(url_macros)}"
+            pdf_access_url += f"&{urlencode(url_macros)}"
         line = pdferror.get("line", "")
         result = (
             "<!DOCTYPE html>\n"
@@ -360,7 +398,7 @@ def get_printed_document(
             #       Those should be added back by rendering plugins as HTML.
             result = sanitize_html(result, allow_styles=True)
             response = make_response(
-                render_template("html_print.jinja2", content=result, title=doc.name)
+                render_template("html_print.jinja2", content=result, title=doc.path)
             )
         else:
             response = make_response(send_file(path_or_file=cached, mimetype=mime))
@@ -445,10 +483,13 @@ def add_counters_par(
     )
 
 
-def handle_doc_numbering(doc_info: DocInfo, used_names: list[str] | None) -> str:
+def handle_doc_numbering(
+    view_ctx: ViewContext, doc_info: DocInfo, used_names: list[str] | None
+) -> str:
     """
     Create automatic counters for document and all referenced documents.
 
+    :param view_ctx: View context to use for rendering.
     :param doc_info: document to handle
     :param used_names: list of already used names to avoid endless recursion
     :return: Possible error string
@@ -481,7 +522,7 @@ def handle_doc_numbering(doc_info: DocInfo, used_names: list[str] | None) -> str
             if not has_edit_access(doc_info):
                 errors += f"\n No edit access to {doc_info.location}<br>\n"
             else:
-                error = handle_doc_numbering(remote_doc_entry, used_names)
+                error = handle_doc_numbering(view_ctx, remote_doc_entry, used_names)
                 if error:
                     errors += error + "<br>\n"
 
@@ -500,7 +541,7 @@ def handle_doc_numbering(doc_info: DocInfo, used_names: list[str] | None) -> str
     fullname = f"Error in {doc_info.location}/{doc_info.short_name}:<br>\n"
 
     try:
-        counters = printer.get_autocounters(UserContext.from_one_user(g.user))
+        counters = printer.get_autocounters(UserContext.from_one_user(g.user), view_ctx)
     except PrintingError as err:
         return f"{fullname}{errors}<br>\n{err}<br>\n"
 
@@ -527,7 +568,8 @@ def get_numbering(doc_path: str, recurse: bool = False) -> Response:
     used_names = None
     if recurse:
         used_names = [doc_path]
-    errors = handle_doc_numbering(doc_entry, used_names)
+    view_ctx = view_ctx_with_urlmacros(ViewRoute.View)
+    errors = handle_doc_numbering(view_ctx, doc_entry, used_names)
 
     if errors:
         raise RouteException(errors)
@@ -565,10 +607,12 @@ def check_print_cache(
     template: DocInfo | None,
     file_type: PrintFormat,
     plugins_user_print: bool = False,
+    url_macros: dict[str, str] | None = None,
 ) -> str | None:
     """
     Fetches the given document from the database.
 
+    :param url_macros:
     :param doc_entry:
     :param template:
     :param file_type:
@@ -585,7 +629,9 @@ def check_print_cache(
     #     return None
 
     path = printer.get_printed_document_path_from_db(
-        file_type=file_type, plugins_user_print=plugins_user_print
+        file_type=file_type,
+        plugins_user_print=plugins_user_print,
+        url_macros=url_macros,
     )
     if path is not None and os.path.exists(path):
         return path
@@ -604,6 +650,7 @@ def create_printed_doc(
     file_type: PrintFormat,
     temp: bool,
     user_ctx: UserContext,
+    view_ctx: ViewContext,
     plugins_user_print: bool = False,
     urlroot: str = "",
     eol_type: str = "native",
@@ -612,6 +659,7 @@ def create_printed_doc(
     Adds a marking for a printed document to the db
 
     :param user_ctx: The user context.
+    :param view_ctx: The view context.
     :param doc_entry: Document that is being printed
     :param template_doc: printing template used
     :param file_type: File type for the document
@@ -626,7 +674,7 @@ def create_printed_doc(
         doc_entry=doc_entry, template_to_use=template_doc, urlroot=urlroot
     )
     path = printer.get_print_path(
-        file_type=file_type, plugins_user_print=plugins_user_print
+        view_ctx, file_type=file_type, plugins_user_print=plugins_user_print
     )
     if path.exists():
         path.unlink()
@@ -636,6 +684,7 @@ def create_printed_doc(
     try:
         printer.write_to_format(
             user_ctx,
+            view_ctx,
             target_format=file_type,
             path=path,
             plugins_user_print=plugins_user_print,
@@ -650,7 +699,9 @@ def create_printed_doc(
     p_doc = PrintedDoc(
         doc_id=doc_entry.id,
         template_doc_id=printer.get_template_id(),
-        version=printer.hash_doc_print(plugins_user_print=plugins_user_print),
+        version=printer.hash_doc_print(
+            plugins_user_print=plugins_user_print, url_macros=view_ctx.url_macros_dict
+        ),
         path_to_file=path.as_posix(),
         file_type=file_type.value,
         temp=temp,

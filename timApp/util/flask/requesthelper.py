@@ -203,20 +203,33 @@ never_urlmacros = {"unlock", "nocache"}
 
 
 def get_urlmacros_from_request() -> tuple[tuple[str, str], ...]:
+    return get_urlmacros_from_dict(request.args)
+
+
+def get_urlmacros_from_dict(d: dict[str, str]) -> tuple[tuple[str, str], ...]:
     urlmacros = tuple(
-        (key, val) for key, val in request.args.items() if key not in never_urlmacros
+        (key, val) for key, val in d.items() if key not in never_urlmacros
     )
     return urlmacros
 
 
+def get_urlmacros_from_request_dict() -> dict[str, str]:
+    return {key: val for key, val in request.args.items() if key not in never_urlmacros}
+
+
 def view_ctx_with_urlmacros(
-    route: ViewRoute, hide_names_requested: bool = False, **kwargs: Any
+    route: ViewRoute,
+    hide_names_requested: bool = False,
+    urlmacros: dict[str, str] | None = None,
+    **kwargs: Any,
 ) -> ViewContext:
     return ViewContext(
         route,
         False,
         hide_names_requested=hide_names_requested,
-        urlmacros=get_urlmacros_from_request(),
+        urlmacros=get_urlmacros_from_dict(urlmacros)
+        if urlmacros
+        else get_urlmacros_from_request(),
         **kwargs,
     )
 

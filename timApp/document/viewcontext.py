@@ -1,6 +1,6 @@
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Any
 
@@ -81,6 +81,10 @@ class ViewContext:
         em = json.loads(self.extramacros)
         return em  # TODO same tape for url and extra macros
 
+    @property
+    def url_macros_dict(self) -> dict[str, str]:
+        return dict(self.urlmacros)
+
     def get_url_param(self, key: str) -> str | None:
         for k, v in self.url_params:
             if k == key:
@@ -101,6 +105,9 @@ class ViewContext:
         if re.match(mode, self.route.value):
             return ret_val
         return not ret_val
+
+    def copy(self, **changes: Any) -> "ViewContext":
+        return replace(self, **changes)
 
 
 default_view_ctx = ViewContext(ViewRoute.View, False)

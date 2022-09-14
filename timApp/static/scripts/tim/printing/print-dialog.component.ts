@@ -6,7 +6,7 @@ import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import * as t from "io-ts";
 import {FormsModule} from "@angular/forms";
-import {TimStorage, toPromise} from "../util/utils";
+import {getUrlParamsJSON, TimStorage, toPromise} from "../util/utils";
 import {IItem} from "../item/IItem";
 
 export interface ITemplate extends IItem {}
@@ -256,6 +256,7 @@ export class PrintDialogComponent extends AngularDialogComponent<
                     printPluginsUserCode: pluginsUserCode,
                     removeOldImages,
                     force,
+                    urlMacros: getUrlParamsJSON(),
                 })
             );
             if (r.ok) {

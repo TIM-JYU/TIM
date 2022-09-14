@@ -1,7 +1,6 @@
 """A test for markdownconverter module."""
 import yaml
 
-from timApp.document.document import Document
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
 from timApp.markdown.autocounters import AutoCounters
@@ -90,7 +89,7 @@ auto_number_headings: 0
 
         printer = DocumentPrinter(d, template_to_use=None, urlroot="")
         counters = printer.get_autocounters(
-            UserContext.from_one_user(User.query.get(TEST_USER_1_ID))
+            UserContext.from_one_user(User.query.get(TEST_USER_1_ID)), default_view_ctx
         )
         new_counter_macro_values = (
             f'``` {{settings="counters"}}\n{counters.get_counter_macros()}```\n'
