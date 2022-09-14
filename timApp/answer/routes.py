@@ -757,6 +757,7 @@ def post_answer_impl(
                 raise PluginException(f"User {user_id} not found")
             users = [ctx_user]  # TODO: Vesa's hack to save answer to student
 
+    view_ctx = ViewContext(ViewRoute.View, False, urlmacros=urlmacros, origin=origin)
     (
         vr,
         answerinfo,
@@ -839,7 +840,7 @@ def post_answer_impl(
 
     preprocessor = answer_call_preprocessors.get(plugin.type)
     if preprocessor:
-        preprocessor(answerdata, curr_user, d, plugin)
+        preprocessor(answerdata, curr_user, d, plugin, view_ctx)
 
     # uncomment this to follow what answers are used in browser tests
     # print(json.dumps(answerdata))
@@ -930,6 +931,7 @@ def post_answer_impl(
             add_users_to_group=add_group,
             pr_data=pr_data,
             overwrite_previous_points=overwrite_points,
+            view_ctx=view_ctx,
         )
 
         # TODO: Could report the result to other plugins too.
@@ -1077,7 +1079,7 @@ def post_answer_impl(
                         RequestedGroups(groups=[curr_user.get_personal_group()]),
                         d,
                         curr_user,
-                        default_view_ctx,
+                        view_ctx,
                         access_option=GetFieldsAccess.from_bool(True),
                     )
                     # We only obtain current user's fields
@@ -1254,7 +1256,11 @@ def check_answerupload_file_accesses(
 
 
 def preprocess_jsrunner_answer(
-    answerdata: AnswerData, curr_user: User, d: DocInfo, plugin: Plugin
+    answerdata: AnswerData,
+    curr_user: User,
+    d: DocInfo,
+    plugin: Plugin,
+    view_ctx: ViewContext,
 ) -> None:
     """Executed before the actual jsrunner answer route is called.
     This is required to fetch the requested data from the database."""
@@ -1302,7 +1308,7 @@ def preprocess_jsrunner_answer(
         requested_groups,
         d,
         curr_user,
-        default_view_ctx,
+        view_ctx,
         access_option=GetFieldsAccess.from_bool(siw),
         member_filter_type=value_or_default(
             runner_req.input.includeUsers, markup_include_opt
@@ -1353,7 +1359,7 @@ def ensure_grade_and_credit(prg: str, flds: list[str]) -> None:
 
 
 answer_call_preprocessors: dict[
-    str, Callable[[AnswerData, User, DocInfo, Plugin], None]
+    str, Callable[[AnswerData, User, DocInfo, Plugin, ViewContext], None]
 ] = {
     "jsrunner": preprocess_jsrunner_answer,
 }
@@ -1602,12 +1608,14 @@ def save_fields(
     add_users_to_group: str | None = None,
     overwrite_previous_points: bool = False,
     pr_data: str | None = None,
+    view_ctx: ViewContext | None = None,
 ) -> FieldSaveResult:
     save_obj = jsonresp.get("savedata")
     ignore_missing = jsonresp.get("ignoreMissing", False)
     allow_missing = jsonresp.get("allowMissing", False)
     ignore_fields = {}
     groups = jsonresp.get("groups")
+    view_ctx = view_ctx or default_view_ctx
 
     new_users_json: dict | None = jsonresp.get("newUsers")
     if new_users_json:
@@ -1707,7 +1715,7 @@ def save_fields(
                 AccessType.view,
                 TaskIdAccess.ReadWrite,
                 UserContext.from_one_user(curr_user),
-                default_view_ctx,
+                view_ctx,
             )
             plugin = vr.plugin
         except TaskNotFoundException as e:
@@ -1774,7 +1782,7 @@ def save_fields(
     cpf = CachedPluginFinder(
         doc_map=doc_map,
         curr_user=UserContext.from_one_user(curr_user),
-        view_ctx=default_view_ctx,
+        view_ctx=view_ctx,
     )
     for user in save_obj:
         u_id = user["user"]
