@@ -323,6 +323,7 @@ export class PluginLoaderComponent
             this.setInnerHtml(component);
             return;
         }
+        this.defaultload = false;
         this.nonPluginHtml = undefined;
         if (runnername == "tim-table") {
             const data = component.getAttribute("bind-data");
