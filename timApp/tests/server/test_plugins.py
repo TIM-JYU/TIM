@@ -1369,7 +1369,7 @@ lazy: true
                 "class": "plugingraphviz",
                 "tag": "div",
                 "id": f"{d.id}..{par_id}",
-                "dataplugin": "/graphviz",
+                "plugin-type": "/graphviz",
                 "answer-id": "",
             },
             ablazy[0].attrib,
@@ -1888,7 +1888,7 @@ needed_len: 6
             r.cssselect(".parContent")[1],
             f"""
 <div tabindex="0" class="parContent" id="t.points">
-    <tim-plugin-loader type="full" answer-id="{aid}" class="pluginpali" wrapper="div" id="{d.id}.t.points" dataplugin="/pali" task-id="{d.id}.t.points">
+    <tim-plugin-loader type="full" answer-id="{aid}" class="pluginpali" wrapper="div" id="{d.id}.t.points" plugin-type="/pali" task-id="{d.id}.t.points">
     <pali-runner json="{self.make_base64(expected_json)}"></pali-runner>
     </tim-plugin-loader>
 </div>""",

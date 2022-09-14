@@ -67,12 +67,12 @@ export async function loadPlugin(html: string, loader: PluginLoaderComponent) {
                        [taskId]="parsedTaskId"
                        [answerId]="answerId">
         </answerbrowser>
-        <div *ngIf="tag=='div'" #wrapper [attr.id]="id" [attr.data-plugin]="dataplugin">
+        <div *ngIf="wrapper=='div'" #wrapper [attr.id]="id" [attr.plugin-type]="pluginType">
             <ng-container *ngTemplateOutlet="tempOutlet"></ng-container>
             <ng-container #pluginPlacement></ng-container>
             <div *ngIf="nonPluginHtml" [innerHTML]="nonPluginHtml | purify"></div>
         </div>
-        <span *ngIf="tag=='span'" #wrapper [attr.id]="id" [attr.data-plugin]="dataplugin">
+        <span *ngIf="wrapper=='span'" #wrapper [attr.id]="id" [attr.plugin-type]="pluginType">
             <ng-container *ngTemplateOutlet="tempOutlet"></ng-container>
             <ng-container #pluginPlacement></ng-container>
             <div *ngIf="nonPluginHtml" [innerHTML]="nonPluginHtml | purify"></div>
@@ -104,9 +104,9 @@ export class PluginLoaderComponent
     @Input() public type!: string;
     @Input() public answerId?: number;
     @Input() public template?: string;
-    @Input() public tag!: "div" | "span";
+    @Input() public wrapper!: "div" | "span";
     @Input() public id!: string;
-    @Input() public dataplugin!: string;
+    @Input() public pluginType!: string;
     @Input() public preview?: boolean;
     @ViewChild("wrapper") pluginWrapper?: ElementRef<HTMLElement>;
     @ContentChild("contenthtml") contenthtml?: ElementRef<HTMLElement>;
@@ -454,7 +454,7 @@ export class PluginLoaderComponent
     getPluginElement(): JQuery {
         return $(
             this.elementRef.nativeElement.querySelectorAll(
-                "[data-plugin]"
+                "[plugin-type]"
             )[0] as HTMLElement
         );
     }

@@ -15,7 +15,7 @@ class InlinePluginTest(BrowserTest):
         )
         self.goto_document(d)
         self.find_element_avoid_staleness(
-            "tim-plugin-loader span[data-plugin='/textfield']"
+            "tim-plugin-loader span[plugin-type='/textfield']"
         )
 
     def test_multiple_inputs(self):
