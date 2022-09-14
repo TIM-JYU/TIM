@@ -1367,7 +1367,7 @@ lazy: true
                 "type": "full",
                 "task-id": "",
                 "class": "plugingraphviz",
-                "tag": "div",
+                "wrapper": "div",
                 "id": f"{d.id}..{par_id}",
                 "plugin-type": "/graphviz",
                 "answer-id": "",
