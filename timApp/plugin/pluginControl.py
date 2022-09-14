@@ -429,6 +429,7 @@ def pluginify(
     output_format: PluginOutputFormat = PluginOutputFormat.HTML,
     user_print: bool = False,
     target_format: PrintFormat = PrintFormat.LATEX,
+    protect_raw_inline_plugins: bool = False,
 ) -> PluginifyResult:
     """
     "Pluginifies" the specified DocParagraphs by calling the corresponding plugin route for each plugin
@@ -446,6 +447,8 @@ def pluginify(
     :param output_format: Desired output format (html/md) for plugins
     :param user_print: Whether the plugins should output the original values or user's input (when exporting markdown).
     :param target_format: for MD-print what exact format to use
+    :param protect_raw_inline_plugins: If true, protect inline plugins from being processed by macros
+                                       by wrapping them into a raw block.
     :return: Processed HTML blocks along with JavaScript and CSS stylesheet dependencies.
     """
 
@@ -760,6 +763,8 @@ def pluginify(
         for par in html_pars:
             if par.plugin_htmls:
                 for plugin_key, plugin_html in par.plugin_htmls.items():
+                    if protect_raw_inline_plugins:
+                        plugin_html = f"{{% raw %}}{plugin_html}{{% endraw %}}"
                     par.output = par.output.replace(plugin_key, plugin_html)
 
     taketime("phtml done")
