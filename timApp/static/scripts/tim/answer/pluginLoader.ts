@@ -216,6 +216,10 @@ export class PluginLoaderComponent
             "mouseenter",
             this.loadPlugin
         );
+        this.elementRef.nativeElement.addEventListener(
+            "touchstart",
+            this.loadPlugin
+        );
         const pluginhtml = this.pluginWrapper.nativeElement.innerHTML;
         if (!pluginhtml.startsWith(LAZY_COMMENT_MARKER)) {
             const component = this.pluginWrapper.nativeElement
@@ -232,9 +236,12 @@ export class PluginLoaderComponent
     }
 
     private removeActivationHandlers() {
-        // TODO touch
         this.elementRef.nativeElement.removeEventListener(
             "mouseenter",
+            this.loadPlugin
+        );
+        this.elementRef.nativeElement.removeEventListener(
+            "touchstart",
             this.loadPlugin
         );
     }
