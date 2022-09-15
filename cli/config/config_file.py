@@ -85,8 +85,8 @@ class TIMConfig(ConfigParser):
 
         if var_dict["mailman"].get("is_dev"):
             var_dict["caddy"].set(
-                "extra_config",
-                f"{var_dict['caddy'].get('extra_config')}\nimport mailman_dev",
+                "extra_tim_config",
+                f"{var_dict['caddy'].get('extra_tim_config')}\nimport mailman_dev",
             )
 
         return var_dict
