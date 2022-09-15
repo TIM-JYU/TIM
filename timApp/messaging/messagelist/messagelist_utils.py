@@ -9,6 +9,7 @@ from typing import Iterator
 from urllib.error import HTTPError
 from urllib.parse import SplitResult, parse_qs, urlsplit
 
+from isodate import datetime_isoformat
 from mailmanclient import MailingList
 from sqlalchemy.orm import load_only
 
@@ -57,7 +58,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.logger import log_warning
-from timApp.util.utils import remove_path_special_chars, get_current_time
+from timApp.util.utils import remove_path_special_chars, get_current_time, slugify
 
 
 def verify_can_create_lists() -> None:
@@ -203,7 +204,10 @@ class BaseMessage:
     # Timestamp for the message is a mandatory value. If the message comes from an outside source, it should already
     # have a time stamp. The default value is mostly for messages that would be generated inside TIM. It can also be
     # set for messages which for some reason don't already have any form of timestamp present.
-    timestamp: datetime = get_current_time()
+    timestamp: datetime = field(default_factory=get_current_time)
+
+    # Mailman may append a message hash which can be used for file names
+    message_id: str | None = None
 
 
 # Path prefixes for documents and folders.
@@ -228,6 +232,10 @@ def create_archive_doc_with_permission(
     # Gather owners of the archive document.
     message_owners: list[UserGroup] = []
     message_sender = User.get_by_email(message.sender.email)
+
+    # Some lists may use DMARC protection, which means that the sender may be in Reply-To
+    if not message_sender and message.reply_to:
+        message_sender = User.get_by_email(message.reply_to.email)
 
     # List owners get a default ownership for the messages on a list. This covers the archive policy of SECRET.
     message_owners.extend(get_message_list_owners(message_list))
@@ -442,11 +450,12 @@ def archive_message(message_list: MessageListModel, message: BaseMessage) -> Non
             message_list.subject_prefix
         )
 
-    message_doc_name = message_doc_subject.replace("/", "-")
-    archive_doc_path = remove_path_special_chars(
-        f"{archive_folder.path}/{message_doc_name}-"
-        f"{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}"
+    message_doc_name = slugify(
+        f"{message_doc_subject}-{datetime_isoformat(message.timestamp).replace('T', '_')}"
     )
+    if message.message_id:
+        message_doc_name = f"{message_doc_name}-{message.message_id}"
+    archive_doc_path = f"{archive_folder.path}/{message_doc_name}"
 
     archive_doc = create_archive_doc_with_permission(
         message.subject, archive_doc_path, message_list, message
@@ -509,6 +518,7 @@ def parse_mailman_message(original: dict, msg_list: MessageListModel) -> BaseMes
 
     message_subject = original.get("subject", "No subject")
     message_body = original.get("body", "")
+    message_id = original.get("message-id-hash")
 
     message = BaseMessage(
         message_list_name=msg_list.name,
@@ -520,6 +530,7 @@ def parse_mailman_message(original: dict, msg_list: MessageListModel) -> BaseMes
         subject=message_subject,
         # Message body
         message_body=message_body,
+        message_id=message_id,
     )
 
     # Try parsing the rest of email specific fields.
