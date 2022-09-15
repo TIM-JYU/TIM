@@ -4,9 +4,11 @@ from functools import cached_property
 from re import Pattern
 
 import attr
+from flask import has_request_context, request
 
 from timApp.document.docentry import DocEntry
 from timApp.item.item import Item
+from timApp.user.settings.style_utils import resolve_themes
 from tim_common.html_sanitize import sanitize_css
 
 BookmarkEntry = dict[str, str]
@@ -49,7 +51,25 @@ class Preferences:
     def style_path(self) -> str:
         from timApp.user.settings.styles import generate_style
 
-        style_path, style_hash = generate_style(self.theme_docs())
+        themes = self.theme_docs()
+
+        # TODO: We might not want to cache property with this enabled
+        if has_request_context():
+            request_themes = [
+                ts
+                for t in request.args.get("themes", "").split(",")
+                if (ts := t.strip())
+            ]
+            if request_themes:
+                resolved_request_themes = resolve_themes(request_themes)
+                themes = list(
+                    (
+                        {d.id: d for d in resolved_request_themes}
+                        | {d.id: d for d in themes}
+                    ).values()
+                )
+
+        style_path, style_hash = generate_style(themes)
         return f"{style_path}?{style_hash}"
 
     @cached_property
