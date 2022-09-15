@@ -457,6 +457,14 @@ def archive_message(message_list: MessageListModel, message: BaseMessage) -> Non
         message_doc_name = f"{message_doc_name}-{message.message_id}"
     archive_doc_path = f"{archive_folder.path}/{message_doc_name}"
 
+    archive = DocEntry.find_by_path(archive_doc_path)
+    if archive is not None:
+        log_warning(
+            f"Tried to archive message for list {message_list.name} (msg id: {message.message_id}) but a similar "
+            f"message is already archived to {archive_doc_path}"
+        )
+        return
+
     archive_doc = create_archive_doc_with_permission(
         message.subject, archive_doc_path, message_list, message
     )
