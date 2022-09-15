@@ -297,12 +297,12 @@ class MessageListTest(TimMessageListTest):
             (
                 d
                 for d in folder.get_all_documents()
-                if d.short_name.startswith("Test-message")
+                if d.short_name.startswith("test-message")
             ),
             None,
         )
         self.assertIsNotNone(
-            doc, f"Archived document named 'Test-message' must be created"
+            doc, f"Archived document named 'test-message' must be created"
         )
 
         doc_count = len(folder.get_all_documents())
@@ -342,12 +342,12 @@ class MessageListTest(TimMessageListTest):
             (
                 d
                 for d in folder.get_all_documents()
-                if d.short_name.startswith("Test-message-2")
+                if d.short_name.startswith("test-message-2")
             ),
             None,
         )
         self.assertIsNotNone(
-            doc, f"Archived document named 'Test-message-2' must be created"
+            doc, f"Archived document named 'test-message-2' must be created"
         )
 
         self.trigger_message_send(message_list, self.test_user_1)
@@ -356,13 +356,13 @@ class MessageListTest(TimMessageListTest):
             (
                 d
                 for d in folder.get_all_documents()
-                if d.short_name.startswith("No-subject")
+                if d.short_name.startswith("no-subject")
             ),
             None,
         )
 
         self.assertIsNotNone(
-            doc, f"Archived document named 'No-subject' must be created"
+            doc, f"Archived document named 'no-subject' must be created"
         )
 
     def test_mail_archive_access(self):
