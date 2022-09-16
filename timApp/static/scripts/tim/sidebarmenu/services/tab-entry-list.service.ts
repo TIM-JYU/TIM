@@ -10,6 +10,7 @@ import {ScoreInfoTabComponent} from "tim/sidebarmenu/tabs/score-info-tab.compone
 import {LectureInfoTabComponent} from "tim/sidebarmenu/tabs/lecture-info-tab.component";
 import {LoadQuestionsTabComponent} from "tim/sidebarmenu/tabs/load-questions-tab.component";
 import {LoggedUsersTabComponent} from "tim/sidebarmenu/tabs/logged-users-tab.component";
+import {ToolsTabComponent} from "tim/sidebarmenu/tabs/tools-tab.component";
 import {TabEntry} from "../menu-tab.directive";
 import {HeaderIndexerService} from "./header-indexer.service";
 
@@ -52,6 +53,14 @@ export class TabEntryListService {
                 visible: () =>
                     !hide.index && this.headerIndexer.headers.length > 0,
                 component: IndexTabComponent,
+            },
+            {
+                id: "tab-tools",
+                icon: "wrench",
+                title: $localize`Tools`,
+                // TODO: additional visibility restrictions
+                visible: () => Users.isLoggedIn(),
+                component: ToolsTabComponent,
             },
             {
                 id: "tab-score-info",

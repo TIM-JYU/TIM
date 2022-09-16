@@ -7,6 +7,7 @@ import {CollapseModule} from "ngx-bootstrap/collapse";
 import {SidebarMenuComponent} from "tim/sidebarmenu/sidebar-menu.component";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {ToolsTabComponent} from "tim/sidebarmenu/tabs/tools-tab.component";
 import {BookmarksTabComponent} from "./tabs/bookmarks-tab.component";
 import {MenuTabDirective} from "./menu-tab.directive";
 import {TabContainerComponent} from "./tab-container.component";
@@ -33,6 +34,7 @@ import {ScoreInfoTabComponent} from "./tabs/score-info-tab.component";
         BookmarksComponent,
         TimeSincePipe,
         ScoreInfoTabComponent,
+        ToolsTabComponent,
     ],
     imports: [
         CommonModule,
@@ -55,6 +57,7 @@ import {ScoreInfoTabComponent} from "./tabs/score-info-tab.component";
         LectureInfoTabComponent,
         LoadQuestionsTabComponent,
         LoggedUsersTabComponent,
+        ToolsTabComponent,
     ],
 })
 export class SideBarMenuModule {}
