@@ -50,7 +50,8 @@ annotation .fulldiv {
 
 .velpFixed {
     position: fixed;
-    min-width: fit-content;
+    /* disable fit-content for now, since it prevents drag handle size change when minimized */
+    /* min-width: fit-content; */
     max-width: 23em;
     min-height: 24em;
     height: fit-content;
