@@ -23,7 +23,6 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {Subject, Subscription} from "rxjs";
 import {debounceTime, distinctUntilChanged} from "rxjs/operators";
 import {PurifyModule} from "tim/util/purify.module";
-import {jsPDF} from "jspdf";
 import {defaultErrorMessage, defaultTimeout} from "../util/utils";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
@@ -39,7 +38,6 @@ import {
     ViewCtrl,
 } from "../document/viewctrl";
 import {vctrlInstance} from "../document/viewctrlinstance";
-import {$timeout} from "../util/ngimport";
 import {AngularPluginBase} from "./angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
@@ -123,7 +121,7 @@ const PluginFields = t.intersection([
         <tim-plugin-header *ngIf="header" header>
             <span [innerHTML]="header | purify"></span>
         </tim-plugin-header>
-        <a *ngIf="uploadedFiles.length > 0" (click)="downloadCanvas()" i18n>Download images as PDF</a> <span *ngIf="savingPDF" i18n> | Creating PDF, please wait... </span>
+        <a *ngIf="uploadedFiles.length > 0 && !isUnSaved() && downloadPDFUrl" [href]="downloadPDFUrl" target="_blank" i18n>Download images as PDF</a>
         <p stem *ngIf="stem" [innerHTML]="stem | purify"></p>
         <div *ngIf="!inReviewView()">
             <ng-container body>
@@ -194,11 +192,10 @@ export class ReviewCanvasComponent
     changes = false;
     private loadedImages = 0;
     private vctrl!: ViewCtrl;
-    savingPDF = false;
 
     fileSelect?: FileSelectManagerComponent;
     uploadUrl?: string;
-    saveFileName?: string;
+    downloadPDFUrl?: string;
     dragAndDrop: boolean = true;
     uploadstem?: string;
     uploadedFiles: IUploadedFile[] = [];
@@ -254,46 +251,27 @@ export class ReviewCanvasComponent
         }
     }
 
-    async ngAfterViewInit() {
+    ngAfterViewInit() {
+        this.updatePDFDownloadUrl();
+    }
+
+    async updatePDFDownloadUrl(answerId?: number) {
         const taskId = this.pluginMeta.getTaskId();
-        if (taskId?.docId) {
+        this.downloadPDFUrl = undefined;
+        if (taskId?.docId && taskId.docTask()) {
             const ab = await this.vctrl.getAnswerBrowserAsync(taskId.docTask());
             const user = ab?.getUser();
             if (user) {
-                this.saveFileName = `${user.name}_${taskId.docId}_${taskId.name}.pdf`;
+                const aid =
+                    answerId ??
+                    ab.selectedAnswer?.id ??
+                    ab.getPluginHtmlAnswerId();
+                if (user && aid) {
+                    this.downloadPDFUrl = `/reviewcanvaspdf/${user.name}_${taskId.docId}_${taskId.name}_${aid}.pdf`;
+                }
             }
         }
     }
-
-    async downloadCanvas() {
-        this.savingPDF = true;
-        await $timeout();
-        const strs = await this.getVelpImages(true);
-        if (!strs) {
-            return;
-        }
-        const pdf = new jsPDF();
-        let firstpage = true;
-        for (const s of strs) {
-            if (!firstpage) {
-                pdf.addPage();
-            }
-            firstpage = false;
-            const imgProperties = pdf.getImageProperties(s);
-            const h = Math.min(
-                pdf.internal.pageSize.getHeight(),
-                imgProperties.height
-            );
-            const w = Math.min(
-                pdf.internal.pageSize.getWidth(),
-                imgProperties.width
-            );
-            pdf.addImage(s, "BMP", 0, 0, w, h);
-        }
-        pdf.save(this.saveFileName);
-        this.savingPDF = false;
-    }
-
     ngOnDestroy() {
         if (!this.attrsall.preview) {
             this.vctrl.removeTimComponent(this, this.markup.tag);
@@ -490,6 +468,9 @@ export class ReviewCanvasComponent
             const data = r.result;
             this.error = data.error;
             this.changes = false;
+            if (r.result.savedNew) {
+                this.updatePDFDownloadUrl(r.result.savedNew);
+            }
         } else {
             const data = r.result.error;
             if (data?.error) {
@@ -519,21 +500,14 @@ export class ReviewCanvasComponent
         return JSON.stringify(this.uploadedFiles);
     }
 
-    async getVelpImages(forceRedraw: true): Promise<HTMLCanvasElement[]>;
-    async getVelpImages(): Promise<string[]>;
     /**
      * Return promise of images' dataUrl presentation or their original source
      * The returned images are fully rotated to their current rotation value (90deg per one rotation)
-     * @param forceRedraw if true, force drawing all images on canvases and return array of HTMLCanvasElement
      */
-    async getVelpImages(
-        forceRedraw?: boolean
-    ): Promise<string[] | HTMLCanvasElement[]> {
-        const rotatedimgsrcs = forceRedraw
-            ? this.uploadedFiles
-            : this.uploadedFiles.filter(
-                  (file) => file.rotation != undefined && file.rotation !== 0
-              );
+    async getVelpImages(): Promise<string[]> {
+        const rotatedimgsrcs = this.uploadedFiles.filter(
+            (file) => file.rotation != undefined && file.rotation !== 0
+        );
         const rotatedimgs = rotatedimgsrcs.map((file) => {
             const newImg = new Image();
             newImg.src = file.path;
@@ -541,13 +515,11 @@ export class ReviewCanvasComponent
         });
         await Promise.all(rotatedimgs.map((img) => img.decode()));
         const stringRet: string[] = [];
-        const canvasRet: HTMLCanvasElement[] = [];
         for (const file of this.uploadedFiles) {
             const uploadedFile = file;
             if (
-                (uploadedFile.rotation == undefined ||
-                    uploadedFile.rotation == 0) &&
-                !forceRedraw
+                uploadedFile.rotation == undefined ||
+                uploadedFile.rotation == 0
             ) {
                 stringRet.push(uploadedFile.path);
             } else {
@@ -559,9 +531,7 @@ export class ReviewCanvasComponent
                 const ctx = canvas.getContext("2d")!;
                 let dx = 0;
                 let dy = 0;
-                const rotation = uploadedFile.rotation
-                    ? uploadedFile.rotation
-                    : 0;
+                const rotation = uploadedFile.rotation;
                 if (rotation == 1) {
                     dy = -img.height;
                 }
@@ -576,14 +546,10 @@ export class ReviewCanvasComponent
                 canvas.width = rotation % 2 == 0 ? img.width : img.height;
                 ctx.rotate((Math.PI / 2) * rotation);
                 ctx.drawImage(img, dx, dy);
-                if (forceRedraw) {
-                    canvasRet.push(canvas);
-                } else {
-                    stringRet.push(canvas.toDataURL());
-                }
+                stringRet.push(canvas.toDataURL());
             }
         }
-        return forceRedraw ? canvasRet : stringRet;
+        return stringRet;
     }
 }
 

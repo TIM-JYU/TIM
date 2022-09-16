@@ -8,7 +8,10 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlparse
 
+import wand.exceptions
 from flask import Blueprint, request, send_file, Response, url_for
+from img2pdf import convert
+from sqlalchemy import case
 from wand.image import Image
 from werkzeug.utils import secure_filename
 
@@ -20,6 +23,7 @@ from timApp.auth.accesshelper import (
     get_doc_or_abort,
     verify_edit_access,
     AccessDenied,
+    verify_answer_access,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object, user_context_with_logged_in
@@ -105,9 +109,7 @@ def get_upload(relfilename: str):
     return send_file(up.filesystem_path.as_posix(), mimetype=mt, etag=False)
 
 
-def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
-    from timApp.peerreview.peerreview_utils import is_peerreview_enabled
-
+def check_and_format_filename(relfilename: str) -> str:
     slashes = relfilename.count("/")
     if slashes < 2:
         raise RouteException()
@@ -115,6 +117,13 @@ def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
         relfilename += "/"
     if slashes == 3 and not relfilename.endswith("/"):
         raise RouteException("Incorrect filename specification.")
+    return relfilename
+
+
+def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
+    from timApp.peerreview.peerreview_utils import is_peerreview_enabled
+
+    relfilename = check_and_format_filename(relfilename)
     block = (
         Block.query.filter(
             (Block.description.startswith(relfilename))
@@ -154,6 +163,59 @@ def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
     p = up.filesystem_path.as_posix()
     mt = get_mimetype(p)
     return mt, up
+
+
+def get_multiple_pluginuploads(relfilenames: [str]) -> list[PluginUpload]:
+    filenames = [check_and_format_filename(r) for r in relfilenames]
+    ordering = case(
+        {description: index for index, description in enumerate(filenames)},
+        value=Block.description,
+    )
+    blocks: list[Block] = (
+        Block.query.filter(
+            (Block.description.in_(filenames))
+            & (Block.type_id == BlockType.Upload.value)
+        )
+        .order_by(ordering)
+        .all()
+    )
+    if len(blocks) < len(
+        relfilenames
+    ):  # TODO: Check if block can have multiple rows with equal desc
+        for filename in filenames:
+            found = False
+            for b in blocks:
+                if b.description.startswith(filename):
+                    found = True
+                    break
+            if not found:
+                raise RouteException(f"Requested upload {filename} could not be found")
+    blocks_without_view_access = [
+        b for b in blocks if not verify_view_access(b, require=False)
+    ]
+    doc_set = set()
+    for block in blocks_without_view_access:
+        answerupload = block.answerupload.first()
+        if answerupload is None:
+            raise AccessDenied()
+        answer = answerupload.answer
+        if not answer:
+            raise RouteException(
+                f"Upload {block.description} has not been associated with any answer; it should be re-uploaded"
+            )
+        tid = TaskId.parse(answer.task_id)
+        if tid.doc_id not in doc_set:
+            d = get_doc_or_abort(tid.doc_id)
+            if (
+                not verify_seeanswers_access(d, require=False)
+                and get_current_user_object() not in answer.users_all
+            ):
+                raise AccessDenied(
+                    "Sorry, you don't have permission to access this upload."
+                )
+            doc_set.add(tid.doc_id)
+    ups = [PluginUpload(block) for block in blocks]
+    return ups
 
 
 # noinspection PyUnusedLocal
@@ -491,6 +553,52 @@ def get_file(file_id: str, file_filename: str) -> Response:
         mime_type = get_mimetype(file_path)
         conditional = True
     return send_file(file_path, mimetype=mime_type, conditional=conditional)
+
+
+@upload.get("/reviewcanvaspdf/<user_name>_<doc_id>_<task_id>_<int:answer_id>.pdf")
+def get_reviewcanvas_pdf(user_name: str, doc_id: int, task_id: str, answer_id: int):
+    answer, _ = verify_answer_access(
+        answer_id,
+        get_current_user_object().id,
+        default_view_ctx,
+        require_teacher_if_not_own=True,
+    )
+    if not answer:
+        raise RouteException("Invalid answer id")
+    try:
+        files = json.loads(answer.content)["uploadedFiles"]
+        paths = [f["path"].removeprefix("/uploads/") for f in files]
+    except (json.JSONDecodeError, KeyError):
+        raise RouteException("Invalid answer format")
+    blocks = get_multiple_pluginuploads(paths)
+    if len(blocks) != len(files):
+        raise RouteException(
+            "Some images could no longer be found, please delete the broken images first"
+        )
+    wand_images = []
+    for (block, file) in zip(blocks, files):
+        try:
+            img = Image(blob=block.data)
+        except wand.exceptions.WandException:
+            raise RouteException(
+                f"File {block.description} could not be loaded as image"
+            )
+        try:
+            rotation = file["rotation"]
+        except KeyError:
+            raise RouteException("Invalid answer format")
+        if not img.alpha_channel and not rotation:
+            wand_images.append(block.data)
+        else:
+            if img.alpha_channel:
+                img.alpha_channel = False
+            if rotation:
+                img.rotate(rotation * 90)
+            wand_images.append(img.make_blob())
+    pdf = convert([w for w in wand_images])
+    return send_file(
+        io.BytesIO(pdf), download_name=f"{user_name}_{doc_id}_{task_id}_{answer_id}.pdf"
+    )
 
 
 @upload.get("/images/<path:image_id>/<image_filename>")
