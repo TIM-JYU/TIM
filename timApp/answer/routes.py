@@ -40,6 +40,7 @@ from timApp.auth.accesshelper import (
     get_origin_from_request,
     verify_ip_ok,
     TaskAccessVerification,
+    verify_answer_access,
 )
 from timApp.auth.accesshelper import (
     verify_task_access,
@@ -55,7 +56,6 @@ from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.login import create_or_update_user
 from timApp.auth.sessioninfo import (
     get_current_user_id,
-    logged_in,
     user_context_with_logged_in,
     get_other_session_users_objs,
     clear_session,
@@ -2496,64 +2496,6 @@ def get_state(
         return json_response({"html": html, "reviewHtml": rhtml})
     else:
         return json_response({"html": html, "reviewHtml": None})
-
-
-def verify_answer_access(
-    answer_id: int,
-    user_id: int,
-    view_ctx: ViewContext,
-    require_teacher_if_not_own: bool = False,
-    required_task_access_level: TaskIdAccess = TaskIdAccess.ReadOnly,
-    allow_grace_period: bool = False,
-) -> tuple[Answer, int]:
-    answer: Answer = Answer.query.get(answer_id)
-    if answer is None:
-        raise RouteException("Non-existent answer")
-    tid = TaskId.parse(answer.task_id)
-    assert tid.doc_id is not None
-
-    if tid.is_global:
-        return answer, tid.doc_id
-
-    d = get_doc_or_abort(tid.doc_id)
-    d.document.insert_preamble_pars()
-
-    if verify_teacher_access(d, require=False):
-        return answer, tid.doc_id
-
-    user_ctx = user_context_with_logged_in(None)
-    if user_id != get_current_user_id() or not logged_in():
-        if require_teacher_if_not_own:
-            verify_task_access(
-                d,
-                tid,
-                AccessType.teacher,
-                required_task_access_level,
-                user_ctx,
-                view_ctx,
-            )
-        else:
-            verify_task_access(
-                d,
-                tid,
-                AccessType.see_answers,
-                required_task_access_level,
-                user_ctx,
-                view_ctx,
-            )
-    else:
-        verify_task_access(
-            d,
-            tid,
-            AccessType.view,
-            required_task_access_level,
-            allow_grace_period=allow_grace_period,
-            context_user=user_ctx,
-            view_ctx=view_ctx,
-        )
-        if not any(a.id == user_id for a in answer.users_all):
-            raise AccessDenied("You don't have access to this answer.")
-    return answer, tid.doc_id
 
 
 @answers.get("/getTaskUsers/<task_id>")

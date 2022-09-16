@@ -9,6 +9,7 @@ from flask import request, g
 from marshmallow import missing
 from sqlalchemy import inspect
 
+from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.session.util import (
@@ -20,6 +21,8 @@ from timApp.auth.sessioninfo import (
     get_other_users_as_list,
     get_current_user_group,
     get_current_user_object,
+    get_current_user_id,
+    user_context_with_logged_in,
 )
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -650,6 +653,64 @@ def verify_task_access(
         is_invalid=is_invalid,
         invalidate_reason=invalidate_reason,
     )
+
+
+def verify_answer_access(
+    answer_id: int,
+    user_id: int,
+    view_ctx: ViewContext,
+    require_teacher_if_not_own: bool = False,
+    required_task_access_level: TaskIdAccess = TaskIdAccess.ReadOnly,
+    allow_grace_period: bool = False,
+) -> tuple[Answer, int]:
+    answer: Answer = Answer.query.get(answer_id)
+    if answer is None:
+        raise RouteException("Non-existent answer")
+    tid = TaskId.parse(answer.task_id)
+    assert tid.doc_id is not None
+
+    if tid.is_global:
+        return answer, tid.doc_id
+
+    d = get_doc_or_abort(tid.doc_id)
+    d.document.insert_preamble_pars()
+
+    if verify_teacher_access(d, require=False):
+        return answer, tid.doc_id
+
+    user_ctx = user_context_with_logged_in(None)
+    if user_id != get_current_user_id() or not logged_in():
+        if require_teacher_if_not_own:
+            verify_task_access(
+                d,
+                tid,
+                AccessType.teacher,
+                required_task_access_level,
+                user_ctx,
+                view_ctx,
+            )
+        else:
+            verify_task_access(
+                d,
+                tid,
+                AccessType.see_answers,
+                required_task_access_level,
+                user_ctx,
+                view_ctx,
+            )
+    else:
+        verify_task_access(
+            d,
+            tid,
+            AccessType.view,
+            required_task_access_level,
+            allow_grace_period=allow_grace_period,
+            context_user=user_ctx,
+            view_ctx=view_ctx,
+        )
+        if not any(a.id == user_id for a in answer.users_all):
+            raise AccessDenied("You don't have access to this answer.")
+    return answer, tid.doc_id
 
 
 def check_access_from_field(

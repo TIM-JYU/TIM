@@ -12,7 +12,6 @@ from dataclasses import field
 from flask import Response
 
 from timApp.answer.answer import Answer
-from timApp.answer.routes import verify_answer_access
 from timApp.auth.accesshelper import (
     verify_logged_in,
     has_teacher_access,
@@ -21,6 +20,7 @@ from timApp.auth.accesshelper import (
     AccessDenied,
     verify_teacher_access,
     has_seeanswers_access,
+    verify_answer_access,
 )
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object
