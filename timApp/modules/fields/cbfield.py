@@ -79,7 +79,7 @@ def cb_reqs() -> PluginReqs:
                                 "expl": "Attribuutit kappaleelle jossa inline ruksi-kenttä (cbfield)",
                             },
                             {
-                                "data": "cbfiled",
+                                "data": "cbfield",
                                 "text": "teksti: cbfield",
                                 "expl": "Pelkkä kentän tyyppi: cbfield",
                             },
