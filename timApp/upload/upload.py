@@ -296,7 +296,12 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
     p = f.filesystem_path
     returninfo = []
     if f.content_mimetype.startswith("image/"):
-        _downsample_image_canvas(p)
+        try:
+            _downsample_image_canvas(p)
+        except wand.exceptions.WandException:
+            raise RouteException(
+                f"Unable to process image {f.filename}, image may be corrupt"
+            )
         returninfo.append(
             {
                 "file": (Path("/uploads") / f.relative_filesystem_path).as_posix(),
@@ -321,7 +326,12 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
         )
         for imagepath in os.listdir(tempfolder):
             file = tempfolder / imagepath
-            _downsample_image_canvas(file)
+            try:
+                _downsample_image_canvas(file)
+            except wand.exceptions.WandException:
+                raise RouteException(
+                    f"Unable to process pdf {f.filename}, some pages may be corrupt"
+                )
             uf = UploadedFile.save_new(
                 imagepath,
                 BlockType.Upload,

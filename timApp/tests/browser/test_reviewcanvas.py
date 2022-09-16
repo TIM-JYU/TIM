@@ -67,3 +67,17 @@ class ReviewcanvasTest(BrowserTest):
         db.session.commit()
         db.session.refresh(Block.query.get(d.block.id))
         self.get(pdfurl, expect_status=200)
+
+    def test_corrupt_image(self):
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+``` {#rc plugin="reviewcanvas"}
+```
+                            """
+        )
+        ur = self.post(
+            f"/pluginUpload/{d.id}/rc/",
+            data={"file": (io.BytesIO(b"GIF87a"), "a.jpeg")},
+            expect_status=400,
+        )
