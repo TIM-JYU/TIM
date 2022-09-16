@@ -6862,14 +6862,6 @@
           <context context-type="linenumber">126</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3770548957996037972" datatype="html">
-        <source> | Creating PDF, please wait... </source>
-        <target state="translated">| Luodaan PDF-tiedostoa, odota... </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
-          <context context-type="linenumber">126</context>
-        </context-group>
-      </trans-unit>
     </body>
   </file>
 </xliff>
