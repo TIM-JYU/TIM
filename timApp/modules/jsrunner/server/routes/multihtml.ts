@@ -8,9 +8,10 @@ router.post("/", (req, res, next) => {
     const htmls = [];
     for (const j of req.body) {
         // TODO: Lift this up to pluginify / render_plugin
+        const siw = j.markup.showInView || false;
+        const fieldHelper = j.markup.fieldhelper || false;
         if (j.viewmode) {
-            const siw = j.markup.showInView || false;
-            if (!siw) {
+            if (!fieldHelper && !siw) {
                 htmls.push(``);
                 continue;
             }

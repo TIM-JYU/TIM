@@ -299,6 +299,10 @@ export class JsRunnerPluginComponent
             return this.visible == 1;
         }
         this.visible = 0;
+        if (this.markup.fieldhelper && this.isPreview()) {
+            this.visible = 1;
+            return true;
+        }
         if (this.markup.showInView) {
             this.visible = 1;
             return true;
