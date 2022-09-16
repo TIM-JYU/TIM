@@ -8,11 +8,11 @@ from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlparse
 
-import wand.exceptions
+import PIL.ImageOps
+from PIL import Image
 from flask import Blueprint, request, send_file, Response, url_for
 from img2pdf import convert
 from sqlalchemy import case
-from wand.image import Image
 from werkzeug.utils import secure_filename
 
 from timApp.auth.accesshelper import (
@@ -287,9 +287,9 @@ def _downsample_image_canvas(img_path: Path) -> None:
 
     :param img: Path to image file
     """
-    with Image(filename=img_path) as img:
-        img.transform(resize="2048x2048>")  # TODO: max dimensions from markup
-        img.save(filename=img_path)
+    with Image.open(img_path) as img:
+        img.thumbnail((2048, 2048))  # TODO: max dimensions from markup
+        img.save(img_path)
 
 
 def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id: str):
@@ -298,7 +298,7 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
     if f.content_mimetype.startswith("image/"):
         try:
             _downsample_image_canvas(p)
-        except wand.exceptions.WandException:
+        except PIL.UnidentifiedImageError:
             raise RouteException(
                 f"Unable to process image {f.filename}, image may be corrupt"
             )
@@ -328,7 +328,7 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
             file = tempfolder / imagepath
             try:
                 _downsample_image_canvas(file)
-            except wand.exceptions.WandException:
+            except PIL.UnidentifiedImageError:
                 raise RouteException(
                     f"Unable to process pdf {f.filename}, some pages may be corrupt"
                 )
@@ -585,27 +585,30 @@ def get_reviewcanvas_pdf(user_name: str, doc_id: int, task_id: str, answer_id: i
         raise RouteException(
             "Some images could no longer be found, please delete the broken images first"
         )
-    wand_images = []
+    byte_images = []
     for (block, file) in zip(blocks, files):
-        try:
-            img = Image(blob=block.data)
-        except wand.exceptions.WandException:
-            raise RouteException(
-                f"File {block.description} could not be loaded as image"
-            )
+        img = Image.open(io.BytesIO(block.data))
         try:
             rotation = file["rotation"]
         except KeyError:
             raise RouteException("Invalid answer format")
-        if not img.alpha_channel and not rotation:
-            wand_images.append(block.data)
+        use_raw = True
+        filetype = img.format  # lost at rotate
+        if img.mode == "RGBA":
+            use_raw = False
+            img = PIL.ImageOps.exif_transpose(img)
+            img = img.convert("RGB")
+        if rotation:
+            use_raw = False
+            img = PIL.ImageOps.exif_transpose(img)
+            img = img.rotate(rotation * (-90), expand=True)
+        if use_raw:
+            byte_images.append(block.data)
         else:
-            if img.alpha_channel:
-                img.alpha_channel = False
-            if rotation:
-                img.rotate(rotation * 90)
-            wand_images.append(img.make_blob())
-    pdf = convert([w for w in wand_images])
+            img_byte_arr = io.BytesIO()
+            img.save(img_byte_arr, format=filetype)
+            byte_images.append(img_byte_arr.getvalue())
+    pdf = convert([w for w in byte_images])
     return send_file(
         io.BytesIO(pdf), download_name=f"{user_name}_{doc_id}_{task_id}_{answer_id}.pdf"
     )
