@@ -121,6 +121,7 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
     private compiled = false;
     private viewctrl?: Require<ViewCtrl>;
     public taskId!: Binding<string, "@">;
+    private answerId?: Binding<number, "@">;
     public parsedTaskId?: TaskId;
     private type!: Binding<string, "@">;
     private showBrowser: boolean = false;
@@ -521,6 +522,10 @@ export class PluginLoaderCtrl extends DestroyScope implements IController {
 
     getPrerequisiteUnlockText() {
         return this.lockedButtonText ?? $localize`Open task`;
+    }
+
+    getAnswerId() {
+        return this.answerId;
     }
 }
 
