@@ -38,6 +38,7 @@ import {
     ViewCtrl,
 } from "../document/viewctrl";
 import {vctrlInstance} from "../document/viewctrlinstance";
+import {IUser} from "../user/IUser";
 import {AngularPluginBase} from "./angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
@@ -255,23 +256,34 @@ export class ReviewCanvasComponent
         this.updatePDFDownloadUrl();
     }
 
-    async updatePDFDownloadUrl(answerId?: number) {
+    updatePDFDownloadUrl(answerId?: number) {
         const taskId = this.pluginMeta.getTaskId();
         this.downloadPDFUrl = undefined;
+        let user: IUser | undefined;
+        let aid: number | undefined;
         if (taskId?.docId && taskId.docTask()) {
-            const ab = await this.vctrl.getAnswerBrowserAsync(taskId.docTask());
-            const user = ab?.getUser();
-            if (user) {
-                const aid =
-                    answerId ??
-                    ab.selectedAnswer?.id ??
-                    ab.getPluginHtmlAnswerId();
-                if (user && aid) {
-                    this.downloadPDFUrl = `/reviewcanvaspdf/${user.name}_${taskId.docId}_${taskId.name}_${aid}.pdf`;
+            const ab = this.vctrl.getAnswerBrowser(taskId.docTask().toString());
+            if (ab) {
+                user = ab?.getUser();
+                if (user) {
+                    aid =
+                        answerId ??
+                        ab.selectedAnswer?.id ??
+                        ab.getPluginHtmlAnswerId();
                 }
+            } else {
+                const pl = this.vctrl.getPluginLoader(
+                    taskId.docTask().toString()
+                );
+                aid = answerId ?? pl?.getAnswerId();
+                user = this.vctrl.selectedUser;
+            }
+            if (user && aid) {
+                this.downloadPDFUrl = `/reviewcanvaspdf/${user.name}_${taskId.docId}_${taskId.name}_${aid}.pdf`;
             }
         }
     }
+
     ngOnDestroy() {
         if (!this.attrsall.preview) {
             this.vctrl.removeTimComponent(this, this.markup.tag);
