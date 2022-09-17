@@ -289,6 +289,7 @@ def _downsample_image_canvas(img_path: Path) -> None:
     """
     with Image.open(img_path) as img:
         img.thumbnail((2048, 2048))  # TODO: max dimensions from markup
+        img = PIL.ImageOps.exif_transpose(img)
         img.save(img_path)
 
 
