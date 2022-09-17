@@ -15,6 +15,7 @@ import {
     HttpErrorResponse,
     HttpEventType,
 } from "@angular/common/http";
+import {defaultWuffMessage} from "../../../../static/scripts/tim/util/utils";
 import {NotificationComponent} from "./notification";
 import {sizeString, timeString} from "./util";
 import {Set} from "./set";
@@ -276,9 +277,14 @@ export class FileSelectComponent {
                             }
                         },
                         (error: HttpErrorResponse) => {
-                            const err = error as {error: {error: string}};
-                            this.addError(err.error.error);
-                            this.progress = undefined;
+                            if (error.status == 500) {
+                                this.addError(defaultWuffMessage);
+                                this.progress = undefined;
+                            } else {
+                                const err = error as {error: {error: string}};
+                                this.addError(err.error.error);
+                                this.progress = undefined;
+                            }
                         }
                     );
             } else {

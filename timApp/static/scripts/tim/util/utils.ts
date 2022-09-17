@@ -23,6 +23,7 @@ export const UnknownRecord = t.record(t.string, t.unknown);
 const UnknownRecordOrArray = t.union([UnknownRecord, t.array(t.unknown)]);
 
 export const defaultErrorMessage = "Syntax error or no reply from server?";
+export const defaultWuffMessage = $localize`Something went wrong. TIM admins have been notified about the issue.`;
 export const defaultTimeout = 20000;
 
 const timestampFormats = [
