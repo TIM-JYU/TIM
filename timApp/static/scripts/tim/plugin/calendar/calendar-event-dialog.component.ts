@@ -17,7 +17,7 @@ import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {DialogModule} from "../../ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {AngularDialogComponent} from "../../ui/angulardialog/angular-dialog-component.directive";
-import {toPromise} from "../../util/utils";
+import {defaultWuffMessage, toPromise} from "../../util/utils";
 import {Users} from "../../user/userService";
 import {itemglobals} from "../../util/globals";
 import {showConfirm} from "../../ui/showConfirmDialog";
@@ -385,9 +385,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             if (result.result.error.error) {
                 this.setMessage(result.result.error.error);
             } else {
-                this.setMessage(
-                    "Something went wrong. TIM admins have been notified about the issue."
-                );
+                this.setMessage(defaultWuffMessage);
             }
         }
     }
@@ -418,9 +416,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
                 if (result.result.error.error) {
                     this.setMessage(result.result.error.error);
                 } else {
-                    this.setMessage(
-                        "Something went wrong. TIM admins have been notified about the issue."
-                    );
+                    this.setMessage(defaultWuffMessage);
                 }
             }
         } else {
@@ -607,9 +603,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             if (result.result.error.error) {
                 this.setMessage(result.result.error.error);
             } else {
-                this.setMessage(
-                    "Something went wrong. TIM admins have been notified about the issue."
-                );
+                this.setMessage(defaultWuffMessage);
             }
         }
     }
@@ -653,9 +647,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             if (result.result.error.error) {
                 this.setMessage(result.result.error.error);
             } else {
-                this.setMessage(
-                    "Something went wrong. TIM admins have been notified about the issue."
-                );
+                this.setMessage(defaultWuffMessage);
             }
         }
     }

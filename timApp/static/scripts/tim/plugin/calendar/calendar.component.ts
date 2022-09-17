@@ -55,6 +55,7 @@ import {
     capitalizeFirstLetter,
     closest,
     DateFromString,
+    defaultWuffMessage,
     MomentDurationFromString,
     MomentFromString,
     to2,
@@ -831,9 +832,7 @@ export class CalendarComponent
             if (result.result.error.error) {
                 await showMessageDialog(result.result.error.error);
             } else {
-                await showMessageDialog(
-                    `Something went wrong. TIM admins have been notified about the issue.`
-                );
+                await showMessageDialog(defaultWuffMessage);
             }
         }
     }
@@ -925,9 +924,7 @@ export class CalendarComponent
                     $localize`Sorry, you do not have a permission to add events for given group(s): ${result.result.error.error}`
                 );
             } else {
-                await showMessageDialog(
-                    $localize`Something went wrong. TIM admins have been notified about the issue.`
-                );
+                await showMessageDialog(defaultWuffMessage);
             }
             this.events.forEach((event) => {
                 if (this.isTempEvent(event)) {
@@ -976,9 +973,7 @@ export class CalendarComponent
             if (result.result.error.error) {
                 await showMessageDialog(result.result.error.error);
             } else {
-                await showMessageDialog(
-                    $localize`Something went wrong. TIM admins have been notified about the issue.`
-                );
+                await showMessageDialog(defaultWuffMessage);
             }
             event.start = oldStart;
             event.end = oldEnd;
@@ -1019,9 +1014,7 @@ export class CalendarComponent
             if (result.result.error.error) {
                 await showMessageDialog(result.result.error.error);
             } else {
-                await showMessageDialog(
-                    $localize`Something went wrong. TIM admins have been notified about the issue.`
-                );
+                await showMessageDialog(defaultWuffMessage);
             }
         }
     }
