@@ -361,6 +361,8 @@ RUN bash -c "${APT_INSTALL} gnupg" && \
     bash -c "${APT_INSTALL} esl-erlang elixir && apt-get purge --auto-remove -y gnupg && ${APT_CLEANUP}" && \
     elixir --version
 
+RUN python3.10 -m pip install coverage && bash -c "${APT_CLEANUP}"
+
 USER agent
 
 FROM complete as sudo
