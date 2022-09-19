@@ -10,6 +10,8 @@ import {
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
+import {pluginMap} from "tim/main";
+import {TapePluginContent} from "tim/plugin/tape-plugin.component";
 import {showMessageDialog} from "../ui/showMessageDialog";
 import {toPromise} from "../util/utils";
 import {TimUtilityModule} from "../ui/tim-utility.module";
@@ -295,3 +297,6 @@ export class MCQ extends MCQBase<number | null> {
 export class MCQModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
+
+pluginMap.set("mcq", MCQ as never);
+pluginMap.set("mmcq", MMCQ as never);

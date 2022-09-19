@@ -4,6 +4,7 @@ import {
     AfterViewInit,
     ApplicationRef,
     Component,
+    ComponentRef,
     ContentChild,
     DoBootstrap,
     ElementRef,
@@ -25,9 +26,12 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {pluginMap} from "tim/main";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {PurifyModule} from "tim/util/purify.module";
-import {TimTable, TimTableComponent} from "tim/plugin/timTable";
-import {MCQ, MMCQ} from "tim/plugin/mmcq";
-import {TapeAttrs, TapePluginContent} from "tim/plugin/tape-plugin.component";
+import type {TimTable, TimTableComponent} from "tim/plugin/timTable";
+import type {MCQ, MMCQ} from "tim/plugin/mmcq";
+import type {
+    TapeAttrs,
+    TapePluginContent,
+} from "tim/plugin/tape-plugin.component";
 import {getURLParameter, Require, to} from "../util/utils";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {TaskId, TaskIdWithDefaultDocId} from "../plugin/taskid";
@@ -382,33 +386,33 @@ export class PluginLoaderComponent
 
         switch (type) {
             case "tim-table": {
-                const componentRef =
-                    await viewContainerRef.createComponent<TimTableComponent>(
-                        TimTableComponent
-                    );
+                const componentRef = (await viewContainerRef.createComponent(
+                    getTypeFor("tim-table")!
+                )) as unknown as ComponentRef<TimTableComponent>;
                 componentRef.instance.data = JSON.parse(data) as TimTable;
                 componentRef.changeDetectorRef.detectChanges();
                 break;
             }
             case "tim-tape": {
-                const componentRef =
-                    await viewContainerRef.createComponent<TapePluginContent>(
-                        TapePluginContent
-                    );
+                const componentRef = (await viewContainerRef.createComponent(
+                    getTypeFor("tim-tape")!
+                )) as unknown as ComponentRef<TapePluginContent>;
                 componentRef.instance.inputdata = JSON.parse(data) as TapeAttrs;
                 componentRef.changeDetectorRef.detectChanges();
                 break;
             }
             case "mcq": {
-                const componentRef =
-                    await viewContainerRef.createComponent<MCQ>(MCQ);
+                const componentRef = (await viewContainerRef.createComponent(
+                    getTypeFor("mcq")!
+                )) as unknown as ComponentRef<MCQ>;
                 componentRef.instance.dataContent = data;
                 componentRef.changeDetectorRef.detectChanges();
                 break;
             }
             case "mmcq": {
-                const componentRef =
-                    await viewContainerRef.createComponent<MMCQ>(MMCQ);
+                const componentRef = (await viewContainerRef.createComponent(
+                    getTypeFor("mmcq")!
+                )) as unknown as ComponentRef<MMCQ>;
                 componentRef.instance.dataContent = data;
                 componentRef.changeDetectorRef.detectChanges();
                 break;

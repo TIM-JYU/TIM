@@ -80,6 +80,7 @@ import {
     ICtrlWithMenuFunctionEntry,
     IMenuFunctionEntry,
 } from "tim/document/viewutils";
+import {pluginMap} from "tim/main";
 import {onClick, OnClickArg} from "../document/eventhandlers";
 import {
     ChangeType,
@@ -4827,3 +4828,4 @@ export class TimTableComponent
 export class TimTableModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
+pluginMap.set("tim-table", TimTableComponent as never);
