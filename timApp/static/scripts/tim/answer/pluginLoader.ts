@@ -384,10 +384,15 @@ export class PluginLoaderComponent
         const viewContainerRef = this.pluginPlacement;
         viewContainerRef.clear();
 
+        const compType = getTypeFor(type);
+        if (!compType) {
+            this.error = `Unable to import component ${type}`;
+            return;
+        }
         switch (type) {
             case "tim-table": {
                 const componentRef = (await viewContainerRef.createComponent(
-                    getTypeFor("tim-table")!
+                    compType
                 )) as unknown as ComponentRef<TimTableComponent>;
                 componentRef.instance.data = JSON.parse(data) as TimTable;
                 componentRef.changeDetectorRef.detectChanges();
@@ -395,7 +400,7 @@ export class PluginLoaderComponent
             }
             case "tim-tape": {
                 const componentRef = (await viewContainerRef.createComponent(
-                    getTypeFor("tim-tape")!
+                    compType
                 )) as unknown as ComponentRef<TapePluginContent>;
                 componentRef.instance.inputdata = JSON.parse(data) as TapeAttrs;
                 componentRef.changeDetectorRef.detectChanges();
@@ -403,7 +408,7 @@ export class PluginLoaderComponent
             }
             case "mcq": {
                 const componentRef = (await viewContainerRef.createComponent(
-                    getTypeFor("mcq")!
+                    compType
                 )) as unknown as ComponentRef<MCQ>;
                 componentRef.instance.dataContent = data;
                 componentRef.changeDetectorRef.detectChanges();
@@ -411,7 +416,7 @@ export class PluginLoaderComponent
             }
             case "mmcq": {
                 const componentRef = (await viewContainerRef.createComponent(
-                    getTypeFor("mmcq")!
+                    compType
                 )) as unknown as ComponentRef<MMCQ>;
                 componentRef.instance.dataContent = data;
                 componentRef.changeDetectorRef.detectChanges();
