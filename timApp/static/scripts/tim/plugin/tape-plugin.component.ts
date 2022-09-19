@@ -11,7 +11,6 @@ import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {pluginMap} from "tim/main";
-import {TimTableComponent} from "tim/plugin/timTable";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {AnswerSheetModule} from "../document/question/answer-sheet.component";
 import {PurifyModule} from "../util/purify.module";
