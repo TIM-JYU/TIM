@@ -328,6 +328,8 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
         for imagepath in os.listdir(tempfolder):
             file = tempfolder / imagepath
             try:
+                # TODO: Some pdfs have only one, very large page. Downsampling them to 2048px can make
+                #   them unreadable, and should in some cases be split into smaller images instead
                 _downsample_image_canvas(file)
             except PIL.UnidentifiedImageError:
                 raise RouteException(
