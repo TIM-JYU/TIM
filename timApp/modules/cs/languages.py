@@ -1220,9 +1220,12 @@ class PY3(Language):
         super().__init__(query, sourcecode)
         self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.py"
         self.exename = self.sourcefilename
-        self.pure_exename = "./%s.py" % self.filename
+        self.pure_exename = f"./{self.filename}.py"
         self.fileext = "py"
-        self.imgdest = "/csgenerated/%s.png" % self.rndname
+        self.imgdest = f"/csgenerated/{self.rndname}.png"
+        self.wavsource = get_param(query, "wavsource", "")
+        self.wavdest = f"/csgenerated/{self.rndname}{self.wavsource}"
+        self.wavname = f"{self.rndname}{self.wavsource}"
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["python3", self.pure_exename])
@@ -1235,6 +1238,23 @@ class PY3(Language):
                 flags=re.M,
             )
         err = err.strip()
+
+        # TODO: Maybe export as genral copy_wav function
+        if self.wavsource and self.wavdest:
+            rm_safe(self.wavdest)
+            wav_ok, e = copy_file(
+                f"{self.filepath}/{self.wavsource}",
+                self.wavdest,
+                True,
+                self.is_optional_image,
+            )
+            if e:
+                err = f"{str(err)}\n{str(e)}\n{str(out)}"
+            rm_safe(self.wavsource)
+            web = result["web"]
+            if wav_ok:
+                web["wav"] = f"/csgenerated/{self.wavname}"
+
         return code, out, err, pwddir
 
 
