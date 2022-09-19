@@ -165,7 +165,7 @@ def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
     return mt, up
 
 
-def get_multiple_pluginuploads(relfilenames: [str]) -> list[PluginUpload]:
+def get_multiple_pluginuploads(relfilenames: list[str]) -> list[PluginUpload]:
     filenames = [check_and_format_filename(r) for r in relfilenames]
     ordering = case(
         {description: index for index, description in enumerate(filenames)},
