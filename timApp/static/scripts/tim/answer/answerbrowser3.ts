@@ -362,7 +362,12 @@ export class AnswerBrowserComponent
         if (this.isGlobal() || this.isUseCurrentUser()) {
             return;
         }
-        this.user = user;
+        const found = this.users?.find((u) => u.id == user.id);
+        if (found) {
+            this.user = found;
+        } else {
+            this.user = user;
+        }
         if (updateAll) {
             await this.loadUserAnswersIfChanged();
         } else if (this.hasUserChanged()) {
