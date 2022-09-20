@@ -55,6 +55,7 @@ from timApp.messaging.messagelist.messagelist_utils import (
     check_name_rules,
     verify_can_create_lists,
     MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX,
+    set_message_list_verification_mode,
 )
 from timApp.timdb.sqa import db
 from timApp.user.user import User
@@ -112,6 +113,7 @@ def do_create_list(owner: User, options: ListInfo) -> tuple[DocInfo, MessageList
         message_list.email_list_domain = options.domain
 
     set_message_list_subject_prefix(message_list, f"[{message_list.name}]")
+    set_message_list_verification_mode(message_list, message_list.message_verification)
 
     return manage_doc, message_list
 
@@ -218,10 +220,10 @@ def save_list_options(options: ListInfo) -> Response:
     # Check access rights.
     verify_logged_in()
     message_list = MessageListModel.from_name(options.name)
-    if not has_manage_access(message_list.block):
-        raise RouteException(
-            "You need at least a manange access to the list in order to do this action."
-        )
+    verify_manage_access(
+        message_list.block,
+        message="You need at least a manage access to the list in order to do this action.",
+    )
 
     if message_list.archive_policy != options.archive:
         # TODO: If message list changes its archive policy, the members on the list need to be notified. Insert
@@ -248,6 +250,9 @@ def save_list_options(options: ListInfo) -> Response:
         message_list, options.default_delivery_right
     )
     set_message_list_default_reply_type(message_list, options.default_reply_type)
+
+    if options.verification_type:
+        set_message_list_verification_mode(message_list, options.verification_type)
 
     db.session.commit()
     return ok_response()

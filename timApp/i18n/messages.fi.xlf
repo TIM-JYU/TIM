@@ -7154,6 +7154,62 @@
           <context context-type="linenumber">133</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="7332531561516196488" datatype="html">
+        <source>Message delivery verification</source>
+        <target state="translated">Viestien toimituksen varmistaminen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
+          <context context-type="linenumber">130</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1652875504454893776" datatype="html">
+        <source>Don't verify</source>
+        <target state="translated">Älä varmista</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
+          <context context-type="linenumber">133</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2744647035425411049" datatype="html">
+        <source>Use sender's verification</source>
+        <target state="translated">Käytä lähettäjän todennusta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
+          <context context-type="linenumber">134</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3183583530976580675" datatype="html">
+        <source>Use list's verification</source>
+        <target state="translated">Käytä listan todennusta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
+          <context context-type="linenumber">135</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5546447057806901596" datatype="html">
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Message verification is disabled by the mailing list. All message lists options can be used, but some of them can cause messages being marked as spam. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>This option is not recommended!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Messages sent through the list will most likely be marked as spam by most mail providers. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Viestien toimituksen varmistaminen on pois käytöstä. Kaikki listan asetukset voi vaihtaa, mutta jotkut niistä voivat auheuttaa viestien merkitsemisen roskapostiksi. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Tätä vaihtoehtoa ei suositella käytettäväksi!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Useimmat sähköpostipalveluntarjoajat merkitsevät listan kautta lähetetyt viestit todennäköisesti roskapostiksi. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
+          <context context-type="linenumber">139,146</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5842455841662368559" datatype="html">
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The message list forwards messages to the receiver without modifications. <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>This verification method disables some message list options.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/><x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> This option relies on the verification information provided by the sender's mail provider. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Viestilista välittää viestit vastaanottajalle ilman muutoksia.<x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Tämä varmistustapa poistaa käytöstä joitakin viestilistan asetuksia.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/><x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Tämä vaihtoehto perustuu lähettäjän sähköpostipalveluntarjoajan antamiin tarkistustietoihin.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
+          <context context-type="linenumber">149,155</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6122818737080834499" datatype="html">
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> The message list verifies all messages before sending them to the receiver. All message lists options can be used and the messages will pass spam filters of most mail providers. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Note: this modifies the sender information!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Messages sent through the list will have the list's address as the sender. However, the receiver will see the name of the sender and will be able to reply directly to them. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Viestilista lisää todennustiedot kaikkiin sen kautta lähetettäviin viesteihin. Kaikkia asetuksia voidaan käyttää, ja viestit läpäisevät useimpien sähköpostipalvelujen tarjoajien roskapostisuodattimet. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Huom: tämä muuttaa viestin lähettäjätiedot!<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Viestilistan kautta lähetettyjen viestien lähettäjäksi asetetaan listan osoite. Vastaanottaja näkee kuitenkin alkuperäisen lähettäjän nimen ja voi vastata hänelle suoraan.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
+          <context context-type="linenumber">158,166</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

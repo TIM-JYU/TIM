@@ -11,6 +11,7 @@ export interface ListOptions {
     list_info?: string;
     only_text?: boolean;
     default_reply_type?: ReplyToListChanges;
+    verification_type?: MessageVerificationType;
     email_admin_url?: string;
     tim_users_can_join?: boolean;
     members_can_unsubscribe?: boolean;
@@ -41,6 +42,12 @@ export enum Channel {
 export enum ReplyToListChanges {
     NOCHANGES = "no_munging",
     ADDLIST = "point_to_list",
+}
+
+export enum MessageVerificationType {
+    NONE = "none",
+    FORWARD = "forward",
+    MUNGE_FROM = "munge_from",
 }
 
 // See ArchiveType class on Python side of things for explanations.
