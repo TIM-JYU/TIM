@@ -36,6 +36,7 @@ import {
     KEY_LEFT,
     KEY_RIGHT,
 } from "../../../static/scripts/tim/util/keycodes";
+import {pluginMap} from "../../../static/scripts/tim/main";
 import {VideoLinkComponent} from "./video-link.component";
 
 function toSeconds(value: string | number | undefined): number | undefined {
@@ -712,8 +713,8 @@ export class VideoModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-// show* plugins don't use plugin loader yet
-// pluginMap.set("tim-video", VideoComponent);
+pluginMap.set("tim-video", VideoComponent);
+// show* plugins don't use plugin loader yet unless they're lazy
 export const moduleDefs = [
     doDowngrade(
         createDowngradedModule((extraProviders) =>

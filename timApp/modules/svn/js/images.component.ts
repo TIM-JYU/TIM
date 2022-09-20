@@ -26,6 +26,7 @@ import {HttpClientModule} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {pluginMap} from "../../../static/scripts/tim/main";
 
 const ShowFileMarkup = t.intersection([
     t.partial({
@@ -312,8 +313,8 @@ export class ImagesModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-// show* plugins don't use plugin loader yet
-// pluginMap.set("tim-images", ImagesComponent);
+pluginMap.set("tim-images", ImagesComponent);
+// show* plugins don't use plugin loader yet unless they're lazy
 export const moduleDefs = [
     doDowngrade(
         createDowngradedModule((extraProviders) =>

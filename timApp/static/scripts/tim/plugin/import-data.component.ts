@@ -11,6 +11,7 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {IUser} from "../user/IUser";
 import {TimStorage} from "../util/utils";
+import {pluginMap} from "../main";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 import {AngularPluginBase} from "./angular-plugin-base.directive";
 
@@ -345,7 +346,7 @@ export class ImportDataModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-// pluginMap.set("importdata-runner", ImportDataComponent);
+pluginMap.set("importdata-runner", ImportDataComponent);
 export const moduleDefs = [
     doDowngrade(
         createDowngradedModule((extraProviders) =>
