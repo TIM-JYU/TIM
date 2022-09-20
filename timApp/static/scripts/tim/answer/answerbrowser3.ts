@@ -169,9 +169,7 @@ export class AnswerBrowserComponent
         id: number | undefined;
         valid: boolean | undefined;
     } = {id: undefined, valid: undefined};
-    // private answerId?: Binding<number, "<?">;
     @Input() public answerId?: number;
-    // @Input() public loader!: PluginLoaderComponent;
     public loader!: PluginLoaderComponent;
 
     reviewHtml?: string;
