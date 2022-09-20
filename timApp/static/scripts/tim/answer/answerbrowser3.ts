@@ -160,7 +160,7 @@ export class AnswerBrowserComponent
     imageReviewDatas: string[] = [];
     private imageReviewUrlIndex = 0;
     public oldreview: boolean = false;
-    private shouldFocus: boolean = false;
+    public shouldFocus: boolean = false;
     alerts: Array<{msg: string; type: "warning" | "danger"}> = [];
     feedback?: string;
     taskInfo: ITaskInfo | undefined;

@@ -86,9 +86,8 @@
                                     <ng-container i18n>Points:</ng-container><input class="form-control input-xs"
                                                   [ngClass]="{ unsaved: points != selectedAnswer?.points,
                                                   'no-step': !markupSettings.pointsStep }"
-                                                  focus-me="shouldFocus #blurWhenFalse"
-                                                  ng-focus="shouldFocusIfSelectedAnswer()"
-                                                  ng-blur="shouldFocus = false"
+                                                  (focus)="shouldFocusIfSelectedAnswer()"
+                                                  (blur)="shouldFocus = false"
                                                   [(ngModel)]="points"
                                                   (keydown)="handlePointScroll($event)"
                                                   name="points"
