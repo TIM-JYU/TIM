@@ -712,6 +712,8 @@ export class VideoModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
+// show* plugins don't use plugin loader yet
+// pluginMap.set("tim-video", VideoComponent);
 export const moduleDefs = [
     doDowngrade(
         createDowngradedModule((extraProviders) =>
