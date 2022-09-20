@@ -205,6 +205,9 @@ import {angularDialog} from "tim/ui/angulardialog/dialog.service";"""
     s.regex_replace(r'ng-hide="!(\w+)"', r'*ngIf="\1"')
     s.regex_replace(r'focus-me="\w+"', "focusMe")
     s.regex_replace(r'<form name="(\w+)"', r"<form #\1")
+    s.replace("ng-focus", "(focus)")
+    s.replace("ng-blur", "(blur)")
+    s.replace("ng-submit", "(ngSubmit)")
 
     for var in controller_vars:
         s.regex_replace(f"(private|protected) (async )?({var})", r"\2\3")
