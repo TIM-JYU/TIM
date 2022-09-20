@@ -153,3 +153,44 @@ Test
         self.refresh()
         wait_refresh_done()
         screenshot("no_click_refresh")
+
+    def test_update_fields(self):
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+#- {defaultplugin="textfield"}
+{#t1#}
+
+``` {#t_non_form plugin="textfield"}
+form: false
+```
+
+``` {#runner plugin="jsrunner"}
+showInView: true
+groups: []
+updateFields:
+ - t1
+ - t_non_form
+fields:
+ - t1
+ - t_non_form
+program: |!!
+tools.setString("t1", "Hello (form update)")
+tools.setString("t_non_form", "Hello (regular update)")
+!!
+```
+"""
+        )
+        self.goto_document(d)
+        runner = self.find_element_avoid_staleness("js-runner .timButton")
+        runner.click()
+        self.wait_until_hidden("js-runner tim-loading")
+        input = self.find_element(
+            "tim-plugin-loader[task-id$='t1'] tim-textfield-runner input"
+        )
+        self.assertEqual("Hello (form update)", input.get_attribute("value"))
+        input = self.find_element(
+            "tim-plugin-loader[task-id$='t_non_form'] tim-textfield-runner input"
+        )
+        self.assertEqual("Hello (regular update)", input.get_attribute("value"))
