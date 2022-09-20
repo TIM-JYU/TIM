@@ -266,6 +266,7 @@ export class AnswerBrowserComponent
             !this.isGlobal()
         ) {
             this.dimPlugin();
+            // TODO: implement secure initial user check (including user via urlParam), change answer here if needed
         }
         this.saveTeacher =
             (this.viewctrl.docSettings.save_teacher &&
