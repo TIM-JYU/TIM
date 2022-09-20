@@ -325,9 +325,6 @@ export class AnswerBrowserComponent
                 void this.checkUsers();
             });
         }
-        if (this.viewctrl?.teacherMode) {
-            this.getAvailableUsers();
-        }
         if (!this.formMode) {
             await this.loadInfo();
         }
