@@ -631,17 +631,11 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         if (result.ok) {
             this.data.meta!.enrollments--;
 
-            this.data.meta!.booker_groups.forEach((group) => {
-                if (group.name == Users.getCurrent().name) {
-                    group.name = "";
-                    group.message = "";
-                    group.users.forEach((user) => {
-                        user.id = -1;
-                        user.email = "";
-                        user.name = "";
-                    });
-                }
-            });
+            const currentUserName = Users.getCurrent().name;
+            this.data.meta!.booker_groups =
+                this.data.meta!.booker_groups.filter(
+                    (g) => g.name != currentUserName
+                );
             this.close(openEvent);
         } else {
             if (result.result.error.error) {
