@@ -1,8 +1,7 @@
 <div>
-    <div uib-alert *ngFor="let alert of alerts" [ngClass]="'alert-' + (alert.type || 'warning')"
-         data-close="closeAlert($index)">
-        <div [innerHtml]="alert.msg"></div>
-    </div>
+    <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="closeAlert(i)">
+        <div [innerHTML]="alert.msg | purify"></div>
+    </tim-alert>
     <label *ngIf="hidden && anyInvalid && !formMode" class="checkbox-inline">
         <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
     <div *ngIf="!hidden">
