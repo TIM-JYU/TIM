@@ -392,10 +392,8 @@ stackversion: 0
         self.assertEqual("Wrong! 4553", feedback_text())
 
         # Answer to new task 2
-        print(stem_text())
         button_new.click()
         sleep(0.3)
-        print(stem_text())
         self.assertEqual("2/1", count.text)
         self.assertEqual("11370:1+5", stem_text())
         input_and_send("6")

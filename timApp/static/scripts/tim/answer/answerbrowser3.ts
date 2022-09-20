@@ -5,7 +5,6 @@ import {
     Component,
     DoBootstrap,
     ElementRef,
-    Inject,
     Input,
     NgModule,
     OnDestroy,
@@ -14,7 +13,7 @@ import {
     ViewChild,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {IController, IScope} from "angular";
+import {IController} from "angular";
 import {timLogTime} from "tim/util/timTiming";
 import {TaskId} from "tim/plugin/taskid";
 import {DrawCanvasComponent, DrawCanvasModule} from "tim/plugin/drawCanvas";
@@ -195,7 +194,6 @@ export class AnswerBrowserComponent
 
     constructor(
         private element: ElementRef<HTMLElement>,
-        @Inject("$scope") private scope: IScope,
         public cdr: ChangeDetectorRef
     ) {
         this.loading = 0;
@@ -230,8 +228,6 @@ export class AnswerBrowserComponent
         this.showFeedback(args.topfeedback);
         this.loader.showFeedback(args.feedback);
         this.cdr.detectChanges();
-        // TODO Check if redundant
-        this.scope.$evalAsync(); // required because this method may be called from Angular context
     }
 
     async ngOnInit() {
