@@ -10,6 +10,7 @@ import {
     ElementRef,
     Input,
     NgModule,
+    NgZone,
     OnDestroy,
     OnInit,
     Type,
@@ -142,6 +143,7 @@ export class PluginLoaderComponent
 
     constructor(
         private elementRef: ElementRef<HTMLElement>,
+        private zone: NgZone,
         public vcr: ViewContainerRef
     ) {
         timLogTime("timPluginLoader constructor", "answ", 1);
@@ -307,16 +309,20 @@ export class PluginLoaderComponent
     }
 
     loadPlugin = async () => {
-        if (this.compiled) {
-            return;
-        }
-        const h = this.getNonLazyHtml();
-        if (h && this.viewctrl) {
-            this.defaultload = false;
-            await loadPlugin(h, this);
-        }
-        this.loadAnswerBrowser();
-        this.removeActivationHandlers();
+        // PluginLoader is wrapped in AngularJS, so outside calls (e.g. via viewctrl) may not be properly tracked
+        // Therefore, ensure the call is run inside the Angular zone to ensure change detection is triggered
+        await this.zone.run(async () => {
+            if (this.compiled) {
+                return;
+            }
+            this.loadAnswerBrowser();
+            const h = this.getNonLazyHtml();
+            if (h && this.viewctrl) {
+                this.defaultload = false;
+                await loadPlugin(h, this);
+            }
+            this.removeActivationHandlers();
+        });
     };
 
     async determineAndSetComponent(component: HTMLElement) {
