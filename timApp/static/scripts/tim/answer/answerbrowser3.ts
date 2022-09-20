@@ -1188,6 +1188,7 @@ export class AnswerBrowserComponent
         } else {
             this.answers = data;
             if (this.answers.length === 0 && this.viewctrl.teacherMode) {
+                this.selectedAnswer = undefined;
                 this.dimPlugin();
             }
             await this.updateFilteredAndSetNewest();
