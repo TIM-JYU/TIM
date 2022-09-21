@@ -4458,7 +4458,7 @@
       </trans-unit>
       <trans-unit id="7489402800174786548" datatype="html">
         <source>Show/hide view menu</source>
-        <target state="translated">Näytä tai piilota näkymavalikko</target>
+        <target state="translated">Näytä tai piilota näkymävalikko</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/header/site-header.component.ts</context>
           <context context-type="linenumber">18</context>
