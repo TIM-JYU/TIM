@@ -71,15 +71,20 @@ tim-dialog-frame {
         background-color: $material-bg;
     }
 
+    &.draggable-detached {
+        max-width: $paragraph-preferred-width !important;
+        min-height: fit-content !important;
+    }
+
     &.draggable-detached .csRunDiv {
         max-width: $paragraph-preferred-width;
         background-color: $material-bg;
     }
 
     &.draggable-detached .draggable-content {
-        height: inherit;
+        /* height: inherit; */
         overflow-y: auto;
-        max-height: 90vh;
+        min-height: fit-content !important;
     }
 }
 
