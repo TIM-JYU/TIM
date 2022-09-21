@@ -112,6 +112,11 @@ def do_create_list(owner: User, options: ListInfo) -> tuple[DocInfo, MessageList
         # fails, we have indication that the list does not have an email list attached to it.
         message_list.email_list_domain = options.domain
 
+    # Workaround for all user emails not being passed to mailman
+    # This should be safe as no list names are advertised unless you have permissions to view them
+    # TODO: Remove once all user emails are passed to the list
+    set_message_list_non_member_message_pass(message_list, True)
+
     set_message_list_subject_prefix(message_list, f"[{message_list.name}]")
     set_message_list_verification_mode(message_list, message_list.message_verification)
 
