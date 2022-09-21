@@ -6742,7 +6742,7 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
           <context context-type="linenumber">1372</context>
-         </context-group>
+        </context-group>
       </trans-unit>
       <trans-unit id="2732899147423332022" datatype="html">
         <source>Choose random student</source>
@@ -7010,6 +7010,38 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
           <context context-type="linenumber">126</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2981219928115418649" datatype="html">
+        <source>Link</source>
+        <target state="translated">Länk</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">67</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4095231593425125264" datatype="html">
+        <source>(invalid)</source>
+        <target state="translated">(ej giltig)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">114</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="902558965274048751" datatype="html">
+        <source>Set custom points</source>
+        <target state="translated">Ställ in anpassade poäng</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">118</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1504030943277246745" datatype="html">
+        <source>cp</source>
+        <target state="translated">anpassade poäng</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">133</context>
         </context-group>
       </trans-unit>
     </body>

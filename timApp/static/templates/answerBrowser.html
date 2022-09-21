@@ -62,7 +62,7 @@
                     </span>
                         <button i18n-title class="timButton" *ngIf="showNewTask" title="Change to new task" (click)="newTask()">{{ buttonNewTask }}</button>
                         <span *ngIf="selectedAnswer">
-                        | <a i18n-title title="Link to currently selected answer"
+                        | <a i18n i18n-title title="Link to currently selected answer"
                              (click)="$event.preventDefault()"
                              href="{{ getAnswerLink() }}">Link</a>
                         (<a i18n-title title="Link to currently selected answer without other document content"
@@ -72,7 +72,7 @@
                     </div>
                 </div>
                 </div>
-                <a i18n-title *ngIf="peerReviewEnabled && !isPeerReview"
+                <a i18n i18n-title *ngIf="peerReviewEnabled && !isPeerReview"
                     title="Link to peer review"
                 href="{{ getReviewLink() }}">Review</a>
                 </span>
@@ -111,11 +111,11 @@
                         {{ taskInfo?.pointsText }} {{ points }} <span i18n *ngIf="!taskInfo?.showPoints">(only visible to teachers)</span>
                     </span>
                             <span *ngIf="taskInfo?.maxPoints && points !== null">/ {{ taskInfo?.maxPoints }}</span>
-                            <span *ngIf="!selectedAnswer.valid && points !== null">(invalid)</span>
+                            <span i18n *ngIf="!selectedAnswer.valid && points !== null">(invalid)</span>
                             <span *ngIf="!viewctrl.teacherMode && allowCustomPoints()">
                         <label class="checkbox-inline">
-                            <input i18n type="checkbox"
-                                   [(ngModel)]="giveCustomPoints">Set custom points</label>
+                            <input type="checkbox"
+                                   [(ngModel)]="giveCustomPoints"><ng-container i18n>Set custom points</ng-container></label>
                     </span>
                             <span *ngIf="showTeacher()">
                         <label class="checkbox-inline">
@@ -130,7 +130,7 @@
                     </span>
                                 <span *ngIf="viewctrl.teacherMode && allowCustomPoints()">
                                     <label class="checkbox-inline">
-                                        <input type="checkbox" [(ngModel)]="giveCustomPoints">cp
+                                        <input type="checkbox" [(ngModel)]="giveCustomPoints"><ng-container i18n>cp</ng-container>
                                     </label>
                                 </span>
                             </div>

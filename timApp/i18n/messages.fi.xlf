@@ -6862,14 +6862,6 @@
           <context context-type="linenumber">126</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3770548957996037972" datatype="html">
-        <source> | Creating PDF, please wait... </source>
-        <target state="translated">| Luodaan PDF-tiedostoa, odota... </target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
-          <context context-type="linenumber">126</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="2732899147423332022" datatype="html">
         <source>Choose random student</source>
         <target state="translated">Valitse satunnainen opiskelija</target>
@@ -6992,7 +6984,7 @@
       </trans-unit>
       <trans-unit id="2383554167335861101" datatype="html">
         <source>Save validity</source>
-        <target state="translated">Tallenna hyväksymistila</target>
+        <target state="translated">Tallenna validiteetti</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/templates/answerBrowser.html</context>
           <context context-type="linenumber">126</context>
@@ -7092,7 +7084,7 @@
       </trans-unit>
       <trans-unit id="242186607743993042" datatype="html">
         <source>Show valid only</source>
-        <target state="translated">Näytä vain hyväksytyt vastaukset</target>
+        <target state="translated">Näytä vain validit vastaukset</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
           <context context-type="linenumber">128</context>
@@ -7128,6 +7120,38 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
           <context context-type="linenumber">1568</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2981219928115418649" datatype="html">
+        <source>Link</source>
+        <target state="translated">Linkki</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">67</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4095231593425125264" datatype="html">
+        <source>(invalid)</source>
+        <target state="translated">(epävalidi)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">114</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="902558965274048751" datatype="html">
+        <source>Set custom points</source>
+        <target state="translated">Aseta mukautetut pisteet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">118</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1504030943277246745" datatype="html">
+        <source>cp</source>
+        <target state="translated">mukautetut pisteet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">133</context>
         </context-group>
       </trans-unit>
     </body>
