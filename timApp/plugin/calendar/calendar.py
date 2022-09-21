@@ -444,22 +444,21 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
         u.get_groups(include_expired=False)
         .join(EventGroup, EventGroup.usergroup_id == UserGroup.id)
         .with_entities(EventGroup.event_id)
-        .subquery()
     )
+    # Apply group filter if there is one
+    if filter_opts.groups is not None:
+        # noinspection PyUnresolvedReferences
+        subquery_event_groups = subquery_event_groups.filter(
+            UserGroup.name.in_(filter_opts.groups)
+        )
     # noinspection PyUnresolvedReferences
-    event_filter |= Event.event_id.in_(subquery_event_groups)
+    event_filter |= Event.event_id.in_(subquery_event_groups.subquery())
 
     # Filter out any tags and groups
     if filter_opts.tags is not None:
         q = q.join(EventTag, Event.tags)
         # noinspection PyUnresolvedReferences
         event_filter &= EventTag.tag.in_(filter_opts.tags)
-    if filter_opts.groups is not None:
-        q = q.join(EventGroup, Event.event_groups).join(
-            UserGroup, EventGroup.usergroup_id == UserGroup.id
-        )
-        # noinspection PyUnresolvedReferences
-        event_filter &= UserGroup.name.in_(filter_opts.groups)
 
     q = q.filter(event_filter)
 
