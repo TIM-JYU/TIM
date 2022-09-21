@@ -1,8 +1,8 @@
-.fieldCell textfield-runner h4,
-.fieldCell numericfield-runner h4,
-.fieldCell cbfield-runner .h4,
-.fieldCell rbfield-runner .h4,
-.fieldCell dropdown-runner .h4 {
+.fieldCell tim-textfield-runner h4,
+.fieldCell tim-numericfield-runner h4,
+.fieldCell tim-cbfield-runner .h4,
+.fieldCell tim-rbfield-runner .h4,
+.fieldCell tim-dropdown-runner .h4 {
     font-size: small;
     background-color: lightgrey;
     border-bottom-style: solid;
@@ -12,11 +12,11 @@
     margin: 0;
 }
 
-.fieldCell textfield-runner .stem,
-.fieldCell numericfield-runner .stem,
-.fieldCell cbfield-runner .stem,
-.fieldCell rbfield-runner .stem,
-.fieldCell dropdown-runner .stem {
+.fieldCell tim-textfield-runner .stem,
+.fieldCell tim-numericfield-runner .stem,
+.fieldCell tim-cbfield-runner .stem,
+.fieldCell tim-rbfield-runner .stem,
+.fieldCell tim-dropdown-runner .stem {
     font-size: 0.7em;
     background-color: lightgrey;
     border-bottom-style: solid;
@@ -34,8 +34,8 @@
     text-align:center;
 }
 
-.fieldCell textfield-runner input,
-.fieldCell numericfield-runner input {
+.fieldCell tim-textfield-runner input,
+.fieldCell tim-numericfield-runner input {
     margin-left: 2px;
     margin-right: 2px;
     margin-top: 2px;
