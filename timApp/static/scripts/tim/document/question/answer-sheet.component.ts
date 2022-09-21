@@ -305,15 +305,8 @@ export class AnswerSheetComponent implements OnChanges {
         }
     }
 
-    ngAfterViewChecked() {
-        if (this.customDomUpdateInProgress) {
-            return;
-        }
-        this.customDomUpdateInProgress = true;
-        void this.zone.runOutsideAngular(async () => {
-            await ParCompiler.processAllMath(this.element);
-            this.customDomUpdateInProgress = false;
-        });
+    async ngAfterViewInit() {
+        await ParCompiler.processAllMath(this.element);
     }
 
     getHeader() {

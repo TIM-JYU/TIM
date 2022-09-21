@@ -19,13 +19,11 @@ import {
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule, HttpHeaders} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {Subject, Subscription} from "rxjs";
 import {debounceTime, distinctUntilChanged} from "rxjs/operators";
 import {PurifyModule} from "tim/util/purify.module";
 import {defaultErrorMessage, defaultTimeout} from "../util/utils";
 import {TimUtilityModule} from "../ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {CsUtilityModule} from "../../../../modules/cs/js/util/module";
 import {
     FileSelectManagerComponent,
@@ -39,6 +37,7 @@ import {
 } from "../document/viewctrl";
 import {vctrlInstance} from "../document/viewctrlinstance";
 import {IUser} from "../user/IUser";
+import {pluginMap} from "../main";
 import {AngularPluginBase} from "./angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
@@ -580,14 +579,4 @@ export class ReviewCanvasModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                ReviewCanvasModule
-            )
-        ),
-        "reviewcanvasRunner",
-        ReviewCanvasComponent
-    ),
-];
+pluginMap.set("reviewcanvas-runner", ReviewCanvasComponent);

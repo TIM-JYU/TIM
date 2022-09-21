@@ -1,12 +1,11 @@
 import "./loadJQueryAndMomentGlobals";
 import "reflect-metadata";
 
-import {enableProdMode} from "@angular/core";
+import {enableProdMode, Type} from "@angular/core";
 import angular from "angular";
 import bootstrap from "bootstrap";
 import "eonasdan-bootstrap-datetimepicker";
 import $ from "jquery";
-import * as answerbrowser from "tim/answer/answerbrowser3";
 import * as userlistController from "tim/answer/userlistController";
 import {timApp} from "tim/app";
 import * as viewctrl from "tim/document/viewctrl";
@@ -69,9 +68,13 @@ import {
     SESSION_VERIFICATION_NEEDED_CODE,
 } from "tim/util/session-verify.interceptor";
 import {RoleInfoComponent} from "tim/header/role-info.component";
+import {PluginLoaderComponent} from "tim/answer/pluginLoader";
+import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals, isErrorGlobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
+
+export const pluginMap = new Map<string, Type<PluginJson>>();
 
 BackspaceDisabler.disable();
 
@@ -80,7 +83,6 @@ if (environment.production) {
 }
 
 markAsUsed(
-    answerbrowser,
     bootstrap,
     loadMap,
     manageCtrl,
@@ -124,6 +126,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timCountdown", CountdownComponent);
     doDowngrade(dg, "timSidebarMenu", SidebarMenuComponent);
     doDowngrade(dg, "timDrawToolbar", DrawToolbarComponent);
+    doDowngrade(dg, "timPluginLoader", PluginLoaderComponent);
     doDowngrade(dg, "timDrawCanvas", DrawCanvasComponent);
     doDowngrade(dg, "timIndex", DirectoryListComponent);
     doDowngrade(dg, "timTemplateList", TemplateListComponent);

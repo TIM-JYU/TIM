@@ -1,4 +1,5 @@
 from selenium.common.exceptions import StaleElementReferenceException
+from selenium.webdriver import ActionChains
 
 from timApp.tests.browser.browsertest import BrowserTest
 
@@ -839,3 +840,38 @@ table:
         )
         self.goto_document(d)
         self.find_and_save_timtable("timTableSvgMath")
+
+    def test_task_answer_switch(self):
+        # TimTable loads differently than most of the plugins, ensure answer browsing works
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+``` {plugin="timTable" #tabletask}
+task: true
+table:
+    countRow: 1
+    countCol: 1
+    rows:
+      - row:
+        - cell: ''
+```
+"""
+        )
+        self.goto_document(d)
+        td = self.find_element_avoid_staleness("#tabletask td")
+        td.click()
+        td.click()
+        ActionChains(self.drv).send_keys("Hello").perform()
+        self.find_element("tim-table-editor-toolbar-dialog .glyphicon-minus").click()
+        self.find_element("#tabletask .buttonAcceptEdit").click()
+        self.find_element("#tabletask .csRunMenu button").click()
+        td.click()
+        ActionChains(self.drv).send_keys("Bye").perform()
+        self.find_element("#tabletask .buttonAcceptEdit").click()
+        self.find_element("#tabletask .csRunMenu button").click()
+        self.wait_until_present_and_vis("answerbrowser .prevAnswer")
+        self.find_element("answerbrowser .prevAnswer").click()
+        self.wait_until_hidden("#tabletask .csRunMenu span")
+        td = self.find_element_avoid_staleness("#tabletask td")
+        self.assertEqual("Hello", td.text)

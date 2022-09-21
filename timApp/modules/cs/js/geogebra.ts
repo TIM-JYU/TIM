@@ -10,16 +10,15 @@ import {
 import {IAnswer} from "tim/answer/IAnswer";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
-import {AnswerBrowserController} from "tim/answer/answerbrowser3";
+import {AnswerBrowserComponent} from "tim/answer/answerbrowser3";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {pluginMap} from "../../../static/scripts/tim/main";
 import {Iframesettings} from "./jsframe";
 
 const GeogebraMarkup = t.intersection([
@@ -117,7 +116,7 @@ export class GeogebraComponent extends AngularPluginBase<
     t.TypeOf<typeof GeogebraAll>,
     typeof GeogebraAll
 > {
-    private ab?: AnswerBrowserController;
+    private ab?: AnswerBrowserComponent;
 
     get english() {
         return this.markup.lang === "en";
@@ -285,15 +284,4 @@ export class GeogebraComponent extends AngularPluginBase<
 export class GeogebraModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                GeogebraModule
-            )
-        ),
-        "timGeogebra",
-        GeogebraComponent
-    ),
-];
+pluginMap.set("tim-geogebra", GeogebraComponent);

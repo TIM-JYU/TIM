@@ -10,11 +10,10 @@ import {
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {pluginMap} from "tim/main";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {AnswerSheetModule} from "../document/question/answer-sheet.component";
 import {PurifyModule} from "../util/purify.module";
-import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {copyToClipboard, isIOS} from "../util/utils";
 
 export enum ParameterType {
@@ -472,6 +471,7 @@ function scrollElementVisibleInParent(
 })
 export class TapePluginContent {
     @Input() data!: TapeAttrs;
+    @Input() inputdata?: TapeAttrs;
     @ViewChild("textAreaRobotProgram")
     textAreaRobotProgram?: ElementRef<HTMLTextAreaElement>;
     private element: JQuery<HTMLElement>;
@@ -495,7 +495,11 @@ export class TapePluginContent {
 
     ngOnInit() {
         // TODO: Convert to proper Angular plugin and use base64 encoding
-        this.data = JSON.parse(this.data as unknown as string);
+        if (!this.inputdata) {
+            this.data = JSON.parse(this.data as unknown as string);
+        } else {
+            this.data = this.inputdata;
+        }
         this.iOS = isIOS();
         if (this.data.useJumpIfEmpty) {
             this.possibleCommandList.push(new JumpIfEmpty());
@@ -1013,14 +1017,4 @@ export class TapePluginModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                TapePluginModule
-            )
-        ),
-        "timTape",
-        TapePluginContent
-    ),
-];
+pluginMap.set("tim-tape", TapePluginContent as never);

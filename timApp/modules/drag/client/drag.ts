@@ -3,7 +3,6 @@
  */
 import * as t from "io-ts";
 import {polyfill} from "mobile-drag-drop";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -17,6 +16,7 @@ import {
 } from "@angular/core";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
+import {pluginMap} from "tim/main";
 import {ITimComponent} from "../../../static/scripts/tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -25,10 +25,6 @@ import {
     withDefault,
 } from "../../../static/scripts/tim/plugin/attributes";
 import {shuffleStrings} from "../../../static/scripts/tim/plugin/util";
-import {
-    createDowngradedModule,
-    doDowngrade,
-} from "../../../static/scripts/tim/downgrade";
 import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
@@ -335,13 +331,4 @@ export class DragComponent
 export class DragModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
-
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(DragModule)
-        ),
-        "dragRunner",
-        DragComponent
-    ),
-];
+pluginMap.set("drag-runner", DragComponent);

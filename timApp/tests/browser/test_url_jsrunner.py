@@ -31,8 +31,9 @@ program: |!!
 
         # Try adding answer manually
         grade_input = self.find_element_avoid_staleness(
-            "numericfield-runner input[type='number']"
+            "tim-numericfield-runner input[type='number']"
         )
+        self.save_element_screenshot(grade_input, "gradeinput")
         grade_input.send_keys("1")
         grade_input.send_keys(Keys.RETURN)
 

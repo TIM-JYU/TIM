@@ -37,10 +37,8 @@ import {DerefOption} from "tim/document/structure/derefOption";
 import {enumPars} from "tim/document/structure/iteration";
 import {getParContainerElem} from "tim/document/structure/create";
 import {UserListController} from "tim/answer/userlistController";
-import {
-    AnswerBrowserController,
-    PluginLoaderCtrl,
-} from "../answer/answerbrowser3";
+import {AnswerBrowserComponent} from "../answer/answerbrowser3";
+import {PluginLoaderComponent} from "../answer/pluginLoader";
 import {IAnswer} from "../answer/IAnswer";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument} from "../item/IItem";
@@ -226,7 +224,7 @@ export class ViewCtrl implements IController {
     private startIndex: number;
     public users: IUserListEntry[];
     public teacherMode: boolean;
-    private velpMode: boolean;
+    public velpMode: boolean;
     private editMenuOnLeftStorage = new TimStorage(
         "editMenu_openOnLeft",
         t.boolean
@@ -248,7 +246,7 @@ export class ViewCtrl implements IController {
     private userChangeListeners: Map<string, IUserChanged> = new Map();
 
     private inputChangeListeners = new Set<IChangeListener>();
-    private lockListeners = new Set<PluginLoaderCtrl>();
+    private lockListeners = new Set<PluginLoaderComponent>();
 
     private pendingUpdates: PendingCollection = new Map<string, string>();
     private document?: TimDocument;
@@ -791,7 +789,7 @@ export class ViewCtrl implements IController {
         return this.tableForms.get(taskId);
     }
 
-    public addLockListener(listener: PluginLoaderCtrl) {
+    public addLockListener(listener: PluginLoaderComponent) {
         this.lockListeners.add(listener);
     }
 
@@ -1089,7 +1087,7 @@ export class ViewCtrl implements IController {
             // TODO: Refactor: repeated lines from loader promise loop above
             // TODO: Keep track of formAb loders? Finding them here at every user change may be unnecessary
             // TODO: Or flag "loaded" and skip this part
-            const loders: PluginLoaderCtrl[] = [];
+            const loders: PluginLoaderComponent[] = [];
             for (const loader of this.ldrs.values()) {
                 if (loader.isInFormMode()) {
                     loders.push(loader);
@@ -1107,7 +1105,7 @@ export class ViewCtrl implements IController {
         if (this.formAbs.getSize() > 0) {
             const fieldsToChange = new Map<
                 DocIdDotName,
-                AnswerBrowserController
+                AnswerBrowserComponent
             >();
             for (const fab of this.formAbs.entities.values()) {
                 if (!fab.isUseCurrentUser() && triggerer_id != fab.taskId) {
@@ -1129,7 +1127,7 @@ export class ViewCtrl implements IController {
 
     private handleAnswerSet(
         ans: IAnswer | undefined,
-        fab: AnswerBrowserController,
+        fab: AnswerBrowserComponent,
         user: IUser,
         force: boolean
     ) {
@@ -1178,11 +1176,11 @@ export class ViewCtrl implements IController {
         // TODO: Change regular answerBrowser's user and force update
         // TODO: Refactor (repeated lines from changeUser)
         taskids = widenFields(taskids);
-        const formAbMap = new Map<DocIdDotName, AnswerBrowserController>();
-        const regularAbMap = new Map<string, AnswerBrowserController>();
+        const formAbMap = new Map<DocIdDotName, AnswerBrowserComponent>();
+        const regularAbMap = new Map<string, AnswerBrowserComponent>();
         const currentUserFormAbs = new Map<
             DocIdDotName,
-            AnswerBrowserController
+            AnswerBrowserComponent
         >();
         for (const tid of taskids) {
             const loader = this.getPluginLoader(tid);
@@ -1223,7 +1221,7 @@ export class ViewCtrl implements IController {
     }
 
     async getFormAnswersAndUpdate(
-        formAnswerBrowsers: Map<DocIdDotName, AnswerBrowserController>,
+        formAnswerBrowsers: Map<DocIdDotName, AnswerBrowserComponent>,
         user: IUser
     ) {
         const r = await to(
@@ -1469,8 +1467,8 @@ export class ViewCtrl implements IController {
         }
     }
 
-    private abs = new EntityRegistry<string, AnswerBrowserController>();
-    private formAbs = new EntityRegistry<string, AnswerBrowserController>();
+    private abs = new EntityRegistry<string, AnswerBrowserComponent>();
+    private formAbs = new EntityRegistry<string, AnswerBrowserComponent>();
 
     /**
      * Returns true if ITimComponent wants to be a form, or is in undecided state and document is in form mode
@@ -1491,7 +1489,7 @@ export class ViewCtrl implements IController {
      * else add it to regular ab map
      * @param ab AnswerBrowserController to be registered
      */
-    registerAnswerBrowser(ab: AnswerBrowserController) {
+    registerAnswerBrowser(ab: AnswerBrowserComponent) {
         const dtf = ab.taskId.docTaskField();
         const timComp = this.getTimComponentByName(dtf);
         if (timComp) {
@@ -1515,7 +1513,7 @@ export class ViewCtrl implements IController {
         this.abs.set(dtf, ab);
     }
 
-    unregisterAnswerBrowser(ab: AnswerBrowserController) {
+    unregisterAnswerBrowser(ab: AnswerBrowserComponent) {
         const dtf = ab.taskId.docTaskField();
         this.abs.delete(dtf);
         this.formAbs.delete(dtf);
@@ -1547,9 +1545,9 @@ export class ViewCtrl implements IController {
         return this.formAbs.get(taskId);
     }
 
-    private ldrs = new Map<string, PluginLoaderCtrl>();
+    private ldrs = new Map<string, PluginLoaderComponent>();
 
-    registerPluginLoader(loader: PluginLoaderCtrl) {
+    registerPluginLoader(loader: PluginLoaderComponent) {
         // // TODO: see todos at registerAnswerBrowser
         // if (this.ldrs.has((loader.taskId))) {
         //     let index = 1;

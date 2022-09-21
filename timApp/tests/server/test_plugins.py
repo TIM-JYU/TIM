@@ -58,7 +58,7 @@ class PluginTest(TimRouteTest):
         doc = self.create_doc(from_file=static_tim_doc("mmcq_example.md"))
         resp = self.get(f"/view/{doc.id}")
         tree = html.fromstring(resp)
-        mmcq_xpath = rf'.par.mmcq > .parContent > tim-plugin-loader > div[id="{doc.id}.mmcqexample.{doc.document.get_paragraphs()[0].get_id()}"]'
+        mmcq_xpath = rf'.par.mmcq > .parContent > tim-plugin-loader[id="{doc.id}.mmcqexample.{doc.document.get_paragraphs()[0].get_id()}"]'
         plugs = tree.cssselect(mmcq_xpath)
         self.assertEqual(1, len(plugs))
         task_name = "mmcqexample"
@@ -454,9 +454,11 @@ class PluginTest(TimRouteTest):
         doc = self.create_doc(from_file=static_tim_doc("idless_plugin.md")).document
         resp = self.get(f"/view/{doc.doc_id}", as_tree=True)
         tree = resp.cssselect(
-            f'.parContent > tim-plugin-loader > div[id="{doc.doc_id}..{doc.get_paragraphs()[0].get_id()}"]'
+            f'.parContent > tim-plugin-loader[id="{doc.doc_id}..{doc.get_paragraphs()[0].get_id()}"]'
         )[0]
         self.assertEqual(1, len(tree))
+        plug = tree.cssselect("cs-runner")
+        self.assertEqual(1, len(plug))
 
     def test_upload(self):
         self.login_test1()
@@ -1358,9 +1360,18 @@ lazy: true
         """
         )
         e = self.get(d.url, as_tree=True)
+        par_id = d.document.get_paragraphs()[0].get_id()
         ablazy = e.cssselect("tim-plugin-loader")
         self.assertEqual(
-            {"type": "full", "task-id": "", "class": "plugingraphviz", "answer-id": ""},
+            {
+                "type": "full",
+                "task-id": "",
+                "class": "plugingraphviz",
+                "wrapper": "div",
+                "id": f"{d.id}..{par_id}",
+                "plugin-type": "/graphviz",
+                "answer-id": "",
+            },
             ablazy[0].attrib,
         )
 
@@ -1877,8 +1888,8 @@ needed_len: 6
             r.cssselect(".parContent")[1],
             f"""
 <div tabindex="0" class="parContent" id="t.points">
-    <tim-plugin-loader type="full" answer-id="{aid}" class="pluginpali" task-id="{d.id}.t.points">
-    <div id="{d.id}.t.points" data-plugin="/pali"><pali-runner json="{self.make_base64(expected_json)}"></pali-runner></div>
+    <tim-plugin-loader type="full" answer-id="{aid}" class="pluginpali" wrapper="div" id="{d.id}.t.points" plugin-type="/pali" task-id="{d.id}.t.points">
+    <pali-runner json="{self.make_base64(expected_json)}"></pali-runner>
     </tim-plugin-loader>
 </div>""",
         )

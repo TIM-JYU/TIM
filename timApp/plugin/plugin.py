@@ -53,7 +53,11 @@ PLG_RTEMPLATE = JINJAENV.from_string(
 {{unlock_info or ''}}
 answer-id="{{aid or ''}}"
 class="{{plgclass}}"
-task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>
+wrapper="{{wrapper}}"
+id="{{id}}"
+plugin-type="/{{plugin_type}}"
+task-id="{{doc_task_id or ''}}"
+{{'preview="true"' if preview}}>{{cont|safe}}</tim-plugin-loader>
 """.replace(
         "\n", " "
     )
@@ -674,10 +678,13 @@ class Plugin:
             self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id
         )
         doc_task_id = self.task_id.doc_task_with_field if self.task_id else None
-        tag = self.get_wrapper_tag()
+        wrapper = self.get_wrapper_tag()
         if self.options.wraptype != PluginWrap.Nothing:
             abtype = self.get_answerbrowser_type()
-            cont = f"""<{tag} id='{html_task_id}' data-plugin='/{self.type}' {style}>{out}</{tag}>""".strip()
+            if abtype is None:
+                cont = f"""<{wrapper} id='{html_task_id}' plugin-type='/{self.type}' {style}>{out}</{wrapper}>""".strip()
+            else:
+                cont = out.strip()
             unlock_info = None
             if self.is_timed():
                 self.set_access_end_for_user()
@@ -691,7 +698,7 @@ class Plugin:
             if abtype and self.options.wraptype == PluginWrap.Full and False:
                 return self.wrap_draggable(
                     f"""
-<tim-plugin-loader type="{abtype}" answer-id="{self.answer.id if self.answer else None or ''}"
+<tim-plugin-loader type="{abtype}" wrapper="{wrapper}" id="{html_task_id}" plugin-type="/{self.type}" answer-id="{self.answer.id if self.answer else None or ''}"
                    class="{self.get_container_class()}"
                    task-id="{doc_task_id or ''}">""".replace(
                         "\n", ""
@@ -710,6 +717,10 @@ class Plugin:
                         cont=cont,
                         aid=self.answer.id if self.answer else None,
                         unlock_info=unlock_info,
+                        wrapper=wrapper,
+                        id=html_task_id,
+                        plugin_type=self.type,
+                        preview=self.options.preview,
                     ),
                     html_task_id or "",
                 )
@@ -721,6 +732,9 @@ class Plugin:
                         """
 <tim-plugin-loader type="{{abtype}}"
                    answer-id="{{aid or ''}}"
+                   wrapper="{{wrapper}}"
+                   id="{{id}}"
+                   plugin-type="/{{plugin_type}}"
                    class="{{plgclass}}"
                    task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>""",
                         abtype=abtype,
@@ -729,7 +743,9 @@ class Plugin:
                         out=out,
                         plgclass=self.get_container_class(),
                         style=style,
-                        tag=tag,
+                        wrapper=wrapper,
+                        id=html_task_id,
+                        plugin_type=self.type,
                         type=self.type,
                         doc_task_id=doc_task_id,
                         cont=cont,

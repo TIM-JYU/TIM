@@ -20,7 +20,7 @@ import {
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ParContext} from "tim/document/structure/parContext";
 import {createParContext} from "tim/document/structure/create";
-import {AnswerBrowserController} from "tim/answer/answerbrowser3";
+import {AnswerBrowserComponent} from "tim/answer/answerbrowser3";
 import {IUser} from "../user/IUser";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
@@ -1137,11 +1137,11 @@ export class ReviewController {
     /**
      * Gets the answerbrowser of the element. Returns null if no answerbrowser found.
      * @param start - Paragraph where the answerbrowser element is searched for.
-     * @returns {AnswerBrowserController|null} answerbrowser element or null.
+     * @returns {AnswerBrowserComponent|null} answerbrowser element or null.
      */
     getAnswerBrowserFromElement(
         start: ParContext | Element
-    ): AnswerBrowserController | undefined {
+    ): AnswerBrowserComponent | undefined {
         if (start instanceof ParContext) {
             const answ =
                 start.par.htmlElement.getElementsByTagName("tim-plugin-loader");

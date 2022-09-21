@@ -22,6 +22,10 @@ import {
 } from "../document/interceptor";
 import {IAnswerSaveEvent} from "../answer/answerbrowser3";
 
+export interface PluginJson {
+    json: string;
+}
+
 @Directive()
 export abstract class AngularPluginBase<
         MarkupType extends IGenericPluginMarkup,
@@ -29,7 +33,7 @@ export abstract class AngularPluginBase<
         T extends Type<A, unknown>
     >
     extends PluginBaseCommon
-    implements OnInit
+    implements OnInit, PluginJson
 {
     attrsall: Readonly<A>;
     @Input() readonly json!: string;

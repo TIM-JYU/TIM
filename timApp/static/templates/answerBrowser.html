@@ -1,175 +1,176 @@
 <div>
-    <div uib-alert ng-repeat="alert in $ctrl.alerts" ng-class="'alert-' + (alert.type || 'warning')"
-         data-close="$ctrl.closeAlert($index)">
-        <div ng-bind-html="alert.msg"></div>
-    </div>
-    <label ng-show="$ctrl.hidden && $ctrl.anyInvalid && !$ctrl.formMode" class="checkbox-inline">
-        <input type="checkbox" ng-model="$ctrl.onlyValid">{{::$ctrl.markupSettings.validOnlyText}}</label>
-    <div ng-show="!$ctrl.hidden">
-        <div ng-show="$ctrl.viewctrl.teacherMode && $ctrl.users.length > 0" class="flex">
+    <tim-alert *ngFor="let alert of alerts; let i = index" [severity]="alert.type" [closeable]="true" (closing)="closeAlert(i)">
+        <div [innerHTML]="alert.msg | purify"></div>
+    </tim-alert>
+    <label *ngIf="hidden && anyInvalid && !formMode" class="checkbox-inline">
+        <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
+    <div *ngIf="!hidden">
+        <div *ngIf="viewctrl.teacherMode && users && users.length > 0" class="flex">
             <div>
                 <div class="input-group input-group-xs">
             <span class="input-group-btn">
-               <button class="btn btn-primary" ng-click="$ctrl.randomStudent()" title="Choose random student">R</button>
-               <button title="Previous user" class="btn btn-primary" ng-click="$ctrl.changeStudent(-1)">&uarr;</button>
+               <button i18n-title class="btn btn-primary" (click)="randomStudent()" title="Choose random student">R</button>
+               <button i18n-title title="Previous user" class="btn btn-primary" (click)="changeStudent(-1)">&uarr;</button>
              </span>
                     <select class="form-control"
-                            focus-me="!$ctrl.selectedAnswer && $ctrl.shouldFocus #blurWhenFalse"
-                            ng-model="$ctrl.user"
-                            ng-options="(user.real_name + ' (' + user.name + ')') for user in $ctrl.users track by user.id"
-                            ng-change="$ctrl.userSelected()"></select>
+                            focus-me="!selectedAnswer && shouldFocus #blurWhenFalse"
+                            [(ngModel)]="user"
+                            (ngModelChange)="userSelected()">
+                             <option *ngFor="let user of users" [ngValue]="user">{{(user.real_name + ' (' + user.name + ')')}}</option>
+
+                    </select>
                     <span class="input-group-btn">
-             <button title="Next user" class="btn btn-primary" ng-click="$ctrl.changeStudent(+1)">&darr;</button>
+             <button i18n-title title="Next user" class="btn btn-primary" (click)="changeStudent(+1)">&darr;</button>
             </span>
                 </div>
             </div>
             <div class="no-shrink">
             <span class="user-index-count">
-                {{ $ctrl.findSelectedUserIndex() + 1 }}/{{ $ctrl.users.length }}
+                {{ findSelectedUserIndex() + 1 }}/{{ users?.length }}
             </span>
-                <a ng-href="mailto:{{$ctrl.user.email}}">email</a>
+                <a href="mailto:{{user?.email}}">email</a>
             </div>
         </div>
-        <div ng-show="!$ctrl.hasUserChanged() || $ctrl.loading">
+        <div *ngIf="!hasUserChanged() || loading">
                         <span class="flex align-center">
-            <div ng-show="$ctrl.answers.length > 0">
-                <div ng-if="$ctrl.showBrowseAnswers" class="flex align-center">
+            <div *ngIf="answers.length > 0">
+                <div *ngIf="showBrowseAnswers" class="flex align-center">
                     <div>
                         <div class="input-group input-group-xs">
                 <span class="input-group-btn">
-                    <button title="Previous answer" class="btn btn-primary prevAnswer"
-                            ng-click="$ctrl.changeAnswerTo(-1)">&larr;</button>
+                    <button i18n-title title="Previous answer" class="btn btn-primary prevAnswer"
+                            (click)="changeAnswerTo(-1)">&larr;</button>
                 </span>
-                            <select class="form-control"
+                            <select i18n-title class="form-control"
                                     title="List of answers"
-                                    ng-model="$ctrl.selectedAnswer"
-                                    ng-options="(($ctrl.filteredAnswers.length - idx) + '. ' + (answer.answered_on | timdate )) for (idx, answer) in $ctrl.filteredAnswers | orderBy:'answer.id' track by answer.id"
-                                    ng-change="$ctrl.changeAnswer()"></select>
+                                    [(ngModel)]="selectedAnswer"
+                                    (ngModelChange)="changeAnswer()">
+                                 <option *ngFor="let answer of filteredAnswers; let idx = index" [ngValue]="answer">{{((filteredAnswers.length - idx) + '. ' + (answer.answered_on |  date:'dd.MM.YYYY HH:mm:ss' ))}}</option>
+                            </select>
                             <span class="input-group-btn">
-                    <button title="Next answer" class="btn btn-primary nextAnswer" ng-click="$ctrl.changeAnswerTo(1)">&rarr;</button>
+                    <button i18n-title title="Next answer" class="btn btn-primary nextAnswer" (click)="changeAnswerTo(1)">&rarr;</button>
                 </span>
                         </div>
                     </div>
                     <div class="no-shrink">
-                    <span class="answer-index-count">{{ $ctrl.filteredAnswers.length - $ctrl.findSelectedAnswerIndex() }}/<a tabindex="0"
+                    <span class="answer-index-count">{{ filteredAnswers.length - findSelectedAnswerIndex() }}/<a i18n-title tabindex="0"
                                                                                                   title="Newest answer"
-                                                                                                  ng-click="$ctrl.setNewest()">{{ $ctrl.filteredAnswers.length }}</a></span>
-                        <label class="checkbox-inline" ng-show="$ctrl.anyInvalid">
-                            <input type="checkbox" ng-model="$ctrl.onlyValid">{{::$ctrl.markupSettings.validOnlyText}}</label>
-                        <span ng-show="$ctrl.showTeacher()"> | <a ng-click="$ctrl.getAllAnswers()">All answers</a>
+                                                                                                  (click)="setNewest()">{{ filteredAnswers.length }}</a></span>
+                        <label class="checkbox-inline" *ngIf="anyInvalid">
+                            <input type="checkbox" [(ngModel)]="onlyValid" (ngModelChange)="onOnlyValidChanged()">{{markupSettings.validOnlyText}}</label>
+                        <span *ngIf="showTeacher()"> | <a i18n (click)="getAllAnswers()">All answers</a>
                     </span>
-                        <button class="timButton" ng-if="$ctrl.showNewTask" title="Change to new task" ng-click="$ctrl.newTask()">{{ $ctrl.buttonNewTask }}</button>
-                        <span ng-if="$ctrl.selectedAnswer">
-                        | <a title="Link to currently selected answer"
-                             ng-click="$event.preventDefault()"
-                             ng-href="{{ $ctrl.getAnswerLink() }}">Link</a>
-                        (<a title="Link to currently selected answer without other document content"
+                        <button i18n-title class="timButton" *ngIf="showNewTask" title="Change to new task" (click)="newTask()">{{ buttonNewTask }}</button>
+                        <span *ngIf="selectedAnswer">
+                        | <a i18n i18n-title title="Link to currently selected answer"
+                             (click)="$event.preventDefault()"
+                             href="{{ getAnswerLink() }}">Link</a>
+                        (<a i18n-title title="Link to currently selected answer without other document content"
                             target="_blank"
-                            ng-href="{{ $ctrl.getAnswerLink(true) }}">only</a>)&nbsp;
+                            href="{{ getAnswerLink(true) }}">only</a>)&nbsp;
                         </span>
                     </div>
                 </div>
                 </div>
-                <a ng-if="$ctrl.peerReviewEnabled && !$ctrl.isPeerReview"
+                <a i18n i18n-title *ngIf="peerReviewEnabled && !isPeerReview"
                     title="Link to peer review"
-                ng-href="{{ $ctrl.getReviewLink() }}">Review</a>
+                href="{{ getReviewLink() }}">Review</a>
                 </span>
-             <div ng-show="$ctrl.answers.length == 0 && $ctrl.viewctrl.teacherMode">
-                <span ng-if="!$ctrl.hasUserChanged()">(no answers from the selected user)</span>
-                 <span ng-if="$ctrl.hasUserChanged()"> <tim-loading></tim-loading> </span>
+             <div *ngIf="answers.length == 0 && viewctrl.teacherMode">
+                <span i18n *ngIf="!hasUserChanged()">(no answers from the selected user)</span>
+                 <span *ngIf="hasUserChanged()"> <tim-loading></tim-loading> </span>
              </div>
                  <div class="flex ab-option-row">
-                            <form ng-submit="$ctrl.savePoints()" class="point-form form-inline">
-                                <label class="inline" ng-show="$ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())">
-                                    Points:<input class="form-control input-xs"
-                                                  ng-class="{ unsaved: $ctrl.points != $ctrl.selectedAnswer.points,
-                                                  'no-step': !$ctrl.markupSettings.pointsStep }"
-                                                  focus-me="$ctrl.shouldFocus #blurWhenFalse"
-                                                  ng-focus="$ctrl.shouldFocusIfSelectedAnswer()"
-                                                  ng-blur="$ctrl.shouldFocus = false"
-                                                  ng-model="$ctrl.points"
-                                                  ng-keydown="$ctrl.handlePointScroll($event)"
+                            <form (ngSubmit)="savePoints()" class="point-form form-inline">
+                                <label class="inline" *ngIf="showTeacher() || (giveCustomPoints && allowCustomPoints())">
+                                    <ng-container i18n>Points:</ng-container><input class="form-control input-xs"
+                                                  [ngClass]="{ unsaved: points != selectedAnswer?.points,
+                                                  'no-step': !markupSettings.pointsStep }"
+                                                  (focus)="shouldFocusIfSelectedAnswer()"
+                                                  (blur)="shouldFocus = false"
+                                                  [(ngModel)]="points"
+                                                  (keydown)="handlePointScroll($event)"
                                                   name="points"
                                                   type="number"
-                                                  step="{{ $ctrl.pointsStep }}"
+                                                  step="{{ pointsStep }}"
                                                   style="max-width: 5em"
                                                   autocomplete="off"
                                                   size="2">
                                 </label>
 
-                                <button title="Save points"
+                                <button i18n-title title="Save points"
                                         class="timButton btn-xs"
-                                        ng-show="$ctrl.selectedAnswer && $ctrl.points != $ctrl.selectedAnswer.points">
+                                        *ngIf="selectedAnswer && points != selectedAnswer.points">
                                     <i class="glyphicon glyphicon-ok"></i>
                                 </button>
                             </form>
-<!--in ab-option-row span elements have right margin, use div if selecting multiple elements for ng-show -->
-                            <div ng-show="$ctrl.selectedAnswer">
+<!--in ab-option-row span elements have right margin, use div if selecting multiple elements for *ngIf -->
+                            <div *ngIf="selectedAnswer">
 
-                            <span class="inline" ng-show="$ctrl.points !== null && !($ctrl.showTeacher() || ($ctrl.giveCustomPoints && $ctrl.allowCustomPoints())) && $ctrl.taskInfo.pointsText">
-                        {{ $ctrl.taskInfo.pointsText }} {{ $ctrl.points }} <span ng-if="!$ctrl.taskInfo.showPoints">(only visible to teachers)</span>
+                            <span class="inline" *ngIf="points !== null && !(showTeacher() || (giveCustomPoints && allowCustomPoints())) && taskInfo?.pointsText">
+                        {{ taskInfo?.pointsText }} {{ points }} <span i18n *ngIf="!taskInfo?.showPoints">(only visible to teachers)</span>
                     </span>
-                            <span ng-show="$ctrl.taskInfo.maxPoints && $ctrl.points !== null">/ {{ $ctrl.taskInfo.maxPoints }}</span>
-                            <span ng-show="!$ctrl.selectedAnswer.valid && $ctrl.points !== null">(invalid)</span>
-                            <span ng-show="!$ctrl.viewctrl.teacherMode && $ctrl.allowCustomPoints()">
+                            <span *ngIf="taskInfo?.maxPoints && points !== null">/ {{ taskInfo?.maxPoints }}</span>
+                            <span i18n *ngIf="!selectedAnswer.valid && points !== null">(invalid)</span>
+                            <span *ngIf="!viewctrl.teacherMode && allowCustomPoints()">
                         <label class="checkbox-inline">
                             <input type="checkbox"
-                                   ng-model="$ctrl.giveCustomPoints">Set custom points</label>
+                                   [(ngModel)]="giveCustomPoints"><ng-container i18n>Set custom points</ng-container></label>
                     </span>
-                            <span ng-if="$ctrl.showTeacher()">
+                            <span *ngIf="showTeacher()">
                         <label class="checkbox-inline">
-                            <input type="checkbox" ng-model="$ctrl.isValidAnswer">Valid
+                            <input i18n type="checkbox" [(ngModel)]="isValidAnswer">Valid
                         </label>
-                        <button title="Save validity"
-                                ng-click="$ctrl.saveValidity()"
+                        <button i18n-title title="Save validity"
+                                (click)="saveValidity()"
                                 class="timButton btn-xs"
-                                ng-if="$ctrl.isValidAnswer != $ctrl.selectedAnswer.valid">
+                                *ngIf="isValidAnswer != selectedAnswer.valid">
                             <i class="glyphicon glyphicon-ok"></i>
                         </button>
                     </span>
-                                <span ng-show="$ctrl.viewctrl.teacherMode && $ctrl.allowCustomPoints()">
+                                <span *ngIf="viewctrl.teacherMode && allowCustomPoints()">
                                     <label class="checkbox-inline">
-                                        <input type="checkbox" ng-model="$ctrl.giveCustomPoints">cp
+                                        <input type="checkbox" [(ngModel)]="giveCustomPoints"><ng-container i18n>cp</ng-container>
                                     </label>
                                 </span>
                             </div>
-                            <span ng-show="$ctrl.showTeacher()">
+                            <span *ngIf="showTeacher()">
                                 <label class="checkbox-inline">
-                                    <input type="checkbox" ng-change="$ctrl.toggleInput()" ng-model="$ctrl.saveTeacher">Save teacher's fix
+                                    <input i18n type="checkbox" (ngModelChange)="toggleInput()" [(ngModel)]="saveTeacher">Save teacher's fix
                                 </label>
                             </span>
-                            <div class="flex" ng-show="$ctrl.selectedAnswer">
-                            <span ng-show="$ctrl.showVelpsCheckBox()">
+                            <div class="flex" *ngIf="selectedAnswer">
+                            <span *ngIf="showVelpsCheckBox()">
                             <label class="checkbox-inline" >
-                                <input type="checkbox" ng-model="$ctrl.review" ng-change="$ctrl.reviewToggled()">Velps
+                                <input i18n type="checkbox" [(ngModel)]="review" (ngModelChange)="reviewToggled()">Velps
                             </label>
                             </span>
-                            <div class="input-group input-group-xs" ng-show="$ctrl.review && $ctrl.reviewerUsers.length > 1">
-                                    <select class="form-control"
+                            <div class="input-group input-group-xs" *ngIf="review && reviewerUsers.length > 1">
+                                    <select i18n-title class="form-control"
                                             title="List of reviewers"
-                                            ng-change="$ctrl.changeReviewerUser()"
-                                            ng-model="$ctrl.reviewerUser">
-                                         <option ng-value="undefined">All velpers</option>
-                                         <option ng-repeat="user in $ctrl.reviewerUsers track by user.id" ng-value="{{user}}">{{(user.real_name + ' (' + user.name + ')')}}</option>
+                                            [(ngModel)]="reviewerUser"
+                                            (ngModelChange)="changeReviewerUser()">
+                                         <option i18n [ngValue]="undefined">All velpers</option>
+                                         <option *ngFor="let user of reviewerUsers" [ngValue]="user">{{(user.real_name + ' (' + user.name + ')')}}</option>
                                     </select>
                            </div>
-                            <button ng-if="$ctrl.showDelete"
+                            <button i18n-title *ngIf="showDelete"
                                     title="Delete answer"
-                                    ng-click="$ctrl.deleteAnswer()"
+                                    (click)="deleteAnswer()"
                                     class="timButton btn-xs btn-danger">
                                 <i class="glyphicon glyphicon-trash"></i>
                             </button>
                             </div>
-                        <span ng-show="$ctrl.selectedAnswer">
-                        <div class="flex" ng-show="$ctrl.selectedAnswer.users.length > 1">
+                        <span *ngIf="selectedAnswerWithUsers">
+                        <div class="flex" *ngIf="selectedAnswerWithUsers.users.length > 1">
                             <div>
-                                Collaborators:
+                                <ng-container i18n>Collaborators</ng-container>:
                                 <ul>
-                                    <li ng-repeat="c in $ctrl.selectedAnswer.users"><a
-                                            ng-href="mailto:{{c.email}}">{{ c.real_name }}</a>
-                                        <button ng-if="$ctrl.showDelete"
+                                    <li *ngFor="let c of selectedAnswerWithUsers.users"><a
+                                            href="mailto:{{c.email}}">{{ c.real_name }}</a>
+                                        <button i18n-title *ngIf="showDelete"
                                                 title="Delete collaborator"
-                                                ng-click="$ctrl.deleteCollab(c.id)"
+                                                (click)="deleteCollab(c.id)"
                                                 class="timButton btn-xs btn-danger">
                                             <i class="glyphicon glyphicon-trash"></i>
                                         </button>
@@ -179,46 +180,52 @@
                         </div>
                         </span>
                     </div><!-- end flex-->
-            <div class="reviewcontainer" ng-if="$ctrl.review">
-                <div ng-if="$ctrl.imageReview">
-                    <tim-draw-canvas
+            <div class="reviewcontainer" *ngIf="review">
+                <div *ngIf="imageReview">
+                    <draw-canvas
                             [options]="{enabled: false, color: 'red', drawType: 2, opacity: 1.0, fill: false, w: 2}"
-                            [tool-bar]="$ctrl.viewctrl.velpMode" [bg-sources]="$ctrl.imageReviewDatas"
-                            [img-load-callback]="$ctrl.setImageReview"></tim-draw-canvas>
+                            [toolBar]="viewctrl.velpMode" [bgSources]="imageReviewDatas"
+                            [imgLoadCallback]="setImageReview"></draw-canvas>
                 </div>
-                <div ng-if="!$ctrl.imageReview" class="review" ng-bind-html="$ctrl.reviewHtml">
+                <div *ngIf="!imageReview" class="review" [innerHtml]="reviewHtml">
 
                 </div>
             </div>
+    <ng-container *ngIf="taskInfo">
                 <span class="triesLeft"
-                      ng-show="$ctrl.taskInfo.answerLimit && $ctrl.taskInfo.triesText">{{ $ctrl.taskInfo.triesText }} {{ $ctrl.getTriesLeft() }}</span>
+                      *ngIf="taskInfo.answerLimit && taskInfo.triesText">{{ taskInfo.triesText }} {{ getTriesLeft() }}</span>
 
-
-            <span ng-show="$ctrl.taskInfo.starttime || $ctrl.taskInfo.deadline">
-        Answering time:
-        <span ng-show="$ctrl.taskInfo.starttime && !$ctrl.taskInfo.deadline">
-            Since {{ $ctrl.taskInfo.starttime | timdate }}
+            <span *ngIf="taskInfo.starttime || taskInfo.deadline">
+        <ng-container i18n>Answering time:</ng-container>
+        <span *ngIf="taskInfo.starttime && !taskInfo.deadline">
+            <ng-container i18n>Since</ng-container> {{ taskInfo.starttime | date:'dd.MM.YYYY HH:mm:ss' }}
         </span>
-        <span ng-show="!$ctrl.taskInfo.starttime && $ctrl.taskInfo.deadline">
-            Until {{ $ctrl.taskInfo.deadline | timdate }}
+        <span *ngIf="!taskInfo.starttime && taskInfo.deadline">
+            <ng-container i18n>Until</ng-container> {{ taskInfo.deadline | date:'dd.MM.YYYY HH:mm:ss' }}
         </span>
-        <span ng-show="$ctrl.taskInfo.starttime && $ctrl.taskInfo.deadline">
-            {{ $ctrl.taskInfo.starttime | timdate }} - {{ $ctrl.taskInfo.deadline | timdate }}
+        <span *ngIf="taskInfo.starttime && taskInfo.deadline">
+            {{ taskInfo.starttime | date:'dd.MM.YYYY HH:mm:ss' }} - {{ taskInfo.deadline | date:'dd.MM.YYYY HH:mm:ss' }}
         </span>
     </span>
+    </ng-container>
         </div>
-        <span ng-show="$ctrl.viewctrl.teacherMode && $ctrl.hasUserChanged() && !$ctrl.loading">(hover/click to update)</span>
-        <!-- <img style="display: inline" src="/static/images/loading.gif" ng-show="$ctrl.loading"> -->
+        <span i18n *ngIf="viewctrl.teacherMode && hasUserChanged() && !loading">(hover/click to update)</span>
+        <!-- <img style="display: inline" src="/static/images/loading.gif" *ngIf="loading"> -->
     </div>
-    <div class="modelAnswer" ng-if="$ctrl.modelAnswer">
-        <a ng-if="$ctrl.showModelAnswerLink()"
+    <div class="modelAnswer" #modelAnswerDiv *ngIf="modelAnswer">
+        <a i18n-title *ngIf="showModelAnswerLink()"
            title="Show model answer"
-           ng-click="$ctrl.showModelAnswer()">{{$ctrl.getModelAnswerLinkText()}}</a>
-        <div ng-if="!$ctrl.showModelAnswerLink() && $ctrl.modelAnswer.linkTextBeforeCount">{{$ctrl.modelAnswer.linkTextBeforeCount}}</div>
-        <span ng-if="$ctrl.showClearModelAnswerLockLink()"> | <a ng-click="$ctrl.clearModelAnswerLock()" title="Manage model answer locks">Manage task locks</a>
+           (click)="showModelAnswer()">{{getModelAnswerLinkText()}}</a>
+        <div *ngIf="!showModelAnswerLink() && modelAnswer.linkTextBeforeCount">{{modelAnswer.linkTextBeforeCount}}</div>
+        <span *ngIf="showClearModelAnswerLockLink()"> | <a i18n i18n-title (click)="clearModelAnswerLock()" title="Manage model answer locks">Manage model answer locks</a>
         </span>
-        <div ng-if="$ctrl.modelAnswerVisible" ng-bind-html="$ctrl.modelAnswerHtml">
+        <div *ngIf="modelAnswerVisible" [innerHtml]="modelAnswerHtml | purify">
 
         </div>
+    </div>
+    <div *ngIf="feedback">
+        <tim-alert [severity]="'warning'" [closeable]="true" (closing)="showFeedback('')">
+            <div #feedBack [innerHTML]="feedback | purify"></div>
+        </tim-alert>
     </div>
 </div>

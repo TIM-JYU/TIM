@@ -10,7 +10,6 @@ import {
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import * as t from "io-ts";
 import {defaultErrorMessage, to2} from "tim/util/utils";
 import {
@@ -25,10 +24,10 @@ import {
     IQuestionMarkup,
 } from "../lecture/lecturetypes";
 import {TimUtilityModule} from "../ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {vctrlInstance} from "../document/viewctrlinstance";
 import {PurifyModule} from "../util/purify.module";
 import {showQuestionAskDialog} from "../lecture/showLectureDialogs";
+import {pluginMap} from "../main";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "./attributes";
 import {AngularPluginBase} from "./angular-plugin-base.directive";
 
@@ -387,12 +386,4 @@ export class QstModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(QstModule)
-        ),
-        "timQst",
-        QstComponent
-    ),
-];
+pluginMap.set("tim-qst", QstComponent);

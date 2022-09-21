@@ -7,6 +7,7 @@ export interface IAnswer {
     points?: number;
     last_points_modifier: number | null;
     valid: boolean;
+    answered_on: string;
 }
 
 export interface IAnswerWithUsers extends IAnswer {

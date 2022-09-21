@@ -182,7 +182,6 @@ choices:
             .getparent()
             .getparent()
             .getparent()
-            .getparent()
         )
         # print(html.tostring(par, pretty_print=True).decode())
         if preamble_doc:

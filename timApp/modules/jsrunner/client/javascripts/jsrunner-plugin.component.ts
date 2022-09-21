@@ -29,11 +29,11 @@ import {
 import {AngularPluginBase} from "../../../../static/scripts/tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "../../../../static/scripts/tim/ui/tim-utility.module";
 import {PurifyModule} from "../../../../static/scripts/tim/util/purify.module";
+import {vctrlInstance} from "../../../../static/scripts/tim/document/viewctrlinstance";
 import {
     createDowngradedModule,
     doDowngrade,
 } from "../../../../static/scripts/tim/downgrade";
-import {vctrlInstance} from "../../../../static/scripts/tim/document/viewctrlinstance";
 
 @Component({
     selector: "tim-js-runner",

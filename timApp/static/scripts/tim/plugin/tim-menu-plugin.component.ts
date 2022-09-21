@@ -7,7 +7,6 @@ import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {onClick, OnClickArg} from "../document/eventhandlers";
 import {ViewCtrl} from "../document/viewctrl";
 import {IRights} from "../user/IRights";
@@ -16,7 +15,7 @@ import {vctrlInstance} from "../document/viewctrlinstance";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {AnswerSheetModule} from "../document/question/answer-sheet.component";
 import {PurifyModule} from "../util/purify.module";
-import {createDowngradedModule, doDowngrade} from "../downgrade";
+import {pluginMap} from "../main";
 import {AngularPluginBase} from "./angular-plugin-base.directive";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 
@@ -513,14 +512,4 @@ export class TimMenuPluginModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                TimMenuPluginModule
-            )
-        ),
-        "timmenuRunner",
-        TimMenuPluginComponent
-    ),
-];
+pluginMap.set("timmenu-runner", TimMenuPluginComponent);

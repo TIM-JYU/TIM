@@ -30,13 +30,9 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {pluginMap} from "tim/main";
 import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
 import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {
-    createDowngradedModule,
-    doDowngrade,
-} from "../../../static/scripts/tim/downgrade";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
 import {FieldBasicData} from "./textfield-plugin.component";
 
@@ -475,14 +471,4 @@ export class CbcountfieldModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                CbcountfieldModule
-            )
-        ),
-        "cbcountfieldRunner",
-        CbcountfieldPluginComponent
-    ),
-];
+pluginMap.set("cbcountfield-runner", CbcountfieldPluginComponent);

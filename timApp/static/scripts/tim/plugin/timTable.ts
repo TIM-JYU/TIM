@@ -32,7 +32,6 @@
 
 import * as t from "io-ts";
 import {
-    AfterViewChecked,
     AfterViewInit,
     ApplicationRef,
     ChangeDetectionStrategy,
@@ -52,11 +51,9 @@ import {
     ViewChildren,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {Subscription} from "rxjs";
 import {openEditorSimple} from "tim/editor/pareditorOpen";
@@ -83,6 +80,7 @@ import {
     ICtrlWithMenuFunctionEntry,
     IMenuFunctionEntry,
 } from "tim/document/viewutils";
+import {pluginMap} from "tim/main";
 import {onClick, OnClickArg} from "../document/eventhandlers";
 import {
     ChangeType,
@@ -728,7 +726,6 @@ export class TimTableComponent
         OnInit,
         OnDestroy,
         DoCheck,
-        AfterViewChecked,
         AfterViewInit,
         DataModelProvider,
         ICtrlWithMenuFunctionEntry
@@ -1034,6 +1031,10 @@ export class TimTableComponent
                 }
             }
         );
+        if (this.task && !this.getTaskId()) {
+            this.error = "Task-mode on but TaskId is missing!";
+            this.c();
+        }
     }
 
     /**
@@ -1561,6 +1562,10 @@ export class TimTableComponent
         if (!this.task) {
             return;
         }
+        if (!this.getTaskId()) {
+            this.error = "Task-mode on but TaskId is missing!";
+            return;
+        }
         this.connectionErrorMessage = undefined;
         this.error = "";
         this.isRunning = true;
@@ -1846,6 +1851,7 @@ export class TimTableComponent
         this.dataViewComponent?.updateCellsContents(
             cellHtmls.map((c) => ({row: c.row, col: c.col}))
         );
+        this.c();
     }
 
     /**
@@ -4822,15 +4828,4 @@ export class TimTableComponent
 export class TimTableModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                TimTableModule
-            )
-        ),
-        "timTable",
-        TimTableComponent
-    ),
-];
+pluginMap.set("tim-table", TimTableComponent as never);

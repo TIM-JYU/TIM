@@ -199,7 +199,7 @@ TIM_SAFE_ATTRS = frozenset(
         "controls",
         "plugin",
         "json",
-        "data-plugin",
+        "plugin-type",
         "data-answer-id",
         "answer-id",
         "task-id",
@@ -256,6 +256,7 @@ TIM_SAFE_ATTRS = frozenset(
         # tim-search-button
         "folder",
         "button-text",
+        "wrapper",
     ]
 )
 

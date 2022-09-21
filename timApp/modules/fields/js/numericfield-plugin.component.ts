@@ -28,16 +28,12 @@ import {defaultErrorMessage, valueOr} from "tim/util/utils";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
 import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {
-    createDowngradedModule,
-    doDowngrade,
-} from "../../../static/scripts/tim/downgrade";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
 import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
+import {pluginMap} from "../../../static/scripts/tim/main";
 import {FieldDataWithStyles, TFieldContent} from "./textfield-plugin.component";
 
 const REDOUBLE = /[^0-9,.e\-+]+/g;
@@ -458,7 +454,7 @@ export class NumericfieldPluginComponent
      */
     changeFocus() {
         const inputfields = document.querySelectorAll(
-            "numericfield-runner input, textfield-runner input"
+            "tim-numericfield-runner input, tim-textfield-runner input"
         );
         for (let i = 0; i < inputfields.length; ++i) {
             const selectedfield = inputfields[i] as HTMLInputElement;
@@ -467,6 +463,7 @@ export class NumericfieldPluginComponent
                 inputfields[i + 1]
             ) {
                 const nextfield = inputfields[i + 1] as HTMLInputElement;
+                this.preventedAutosave = true;
                 return nextfield.focus();
             }
         }
@@ -617,14 +614,4 @@ export class NumericfieldModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                NumericfieldModule
-            )
-        ),
-        "numericfieldRunner",
-        NumericfieldPluginComponent
-    ),
-];
+pluginMap.set("numericfield-runner", NumericfieldPluginComponent);

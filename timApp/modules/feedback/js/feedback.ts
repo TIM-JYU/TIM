@@ -23,15 +23,11 @@ import {injectStyle, log} from "tim/util/utils";
 import {EditMode} from "tim/document/popup-menu-dialog.component";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
 import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {
-    createDowngradedModule,
-    doDowngrade,
-} from "../../../static/scripts/tim/downgrade";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
+import {pluginMap} from "../../../static/scripts/tim/main";
 
 const answerPlaceHolder = "|answer|";
 const correctPlaceHolder = "|correct|";
@@ -1338,14 +1334,4 @@ export class FeedbackModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                FeedbackModule
-            )
-        ),
-        "feedbackRunner",
-        FeedbackPluginComponent
-    ),
-];
+pluginMap.set("feedback-runner", FeedbackPluginComponent);

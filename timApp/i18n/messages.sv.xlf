@@ -6744,12 +6744,304 @@
           <context context-type="linenumber">1372</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="2732899147423332022" datatype="html">
+        <source>Choose random student</source>
+        <target state="translated">Välja en slumpmässig student</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">13</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2417526066578219387" datatype="html">
+        <source>Previous user</source>
+        <target state="translated">Föregående användare</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">14</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3436455903086077840" datatype="html">
+        <source>Next user</source>
+        <target state="translated">Nästa användare</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">24</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3050078246206478847" datatype="html">
+        <source>Previous answer</source>
+        <target state="translated">Föregående svar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">42</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5550515581233167509" datatype="html">
+        <source>List of answers</source>
+        <target state="translated">Lista över svar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">46</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8960501490607387748" datatype="html">
+        <source>Next answer</source>
+        <target state="translated">Nästa svar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">52</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="515154422750758613" datatype="html">
+        <source>Newest answer</source>
+        <target state="translated">Senaste svaret</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">58</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8619243278865003732" datatype="html">
+        <source>Change to new task</source>
+        <target state="translated">Byt till ny uppgift</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">64</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8865252112768673991" datatype="html">
+        <source>Link to currently selected answer</source>
+        <target state="translated">Länk till det valda svaret</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">66</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3840890945241899402" datatype="html">
+        <source>Link to currently selected answer without other document content</source>
+        <target state="translated">Länk till det valda svaret utan annat dokumentinnehåll</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4401010303359409325" datatype="html">
+        <source>Link to peer review</source>
+        <target state="translated">Länk till peer review</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">77</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2849517927373693141" datatype="html">
+        <source>(no answers from the selected user)</source>
+        <target state="translated">(inga svar från den valda användaren)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">81</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4159797487492582314" datatype="html">
+        <source>Points:</source>
+        <target state="translated">Poäng:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">87</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="199733120943741290" datatype="html">
+        <source>Save points</source>
+        <target state="translated">Spara poäng</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">103</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4220222853967283705" datatype="html">
+        <source>(only visible to teachers)</source>
+        <target state="translated">(endast synlig för lärare)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">113</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2383554167335861101" datatype="html">
+        <source>Save validity</source>
+        <target state="translated">Spara giltighet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">126</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4386668104020982072" datatype="html">
+        <source>List of reviewers</source>
+        <target state="translated">Lista över granskare</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">152</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5782726226503330179" datatype="html">
+        <source>All velpers</source>
+        <target state="translated">Alla velpare</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">155</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8903612093856047007" datatype="html">
+        <source>Collaborators</source>
+        <target state="translated">Författare</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">169</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="876092695213423150" datatype="html">
+        <source>Delete collaborator</source>
+        <target state="translated">Ta bort författaren</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">174</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8765990270999966004" datatype="html">
+        <source>Answering time:</source>
+        <target state="translated">Svarstid:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">201</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1329113316830473063" datatype="html">
+        <source>(hover/click to update)</source>
+        <target state="translated">(focus/klicka för att uppdatera)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">214</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2410212134505431667" datatype="html">
+        <source>All answers</source>
+        <target state="translated">Alla svar</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">62</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8089648133456197279" datatype="html">
+        <source>Delete answer</source>
+        <target state="translated">Ta bort svaret</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">160</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5011332515616772202" datatype="html">
+        <source>Manage model answer locks</source>
+        <target state="translated">Hantera modelsvar lås</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">222</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">222</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7627583106648525877" datatype="html">
+        <source>Since</source>
+        <target state="translated">Från</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">203</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="706270083777559326" datatype="html">
+        <source>Until</source>
+        <target state="translated">Till</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">206</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="242186607743993042" datatype="html">
+        <source>Show valid only</source>
+        <target state="translated">Visa endast giltiga</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="linenumber">128</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1315476018548197144" datatype="html">
+        <source>New task</source>
+        <target state="translated">Ny uppgift</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="linenumber">191</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8839747277544341839" datatype="html">
+        <source>Answer number <x id="PH" equiv-text="answerNumber"/> is out of range for this task and user.</source>
+        <target state="translated">Svaret nummer <x id="PH" equiv-text="answerNumber"/> är utom räckhåll för denna uppgift och användare.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="linenumber">1112</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6024069868401376720" datatype="html">
+        <source>Delete this answer?</source>
+        <target state="translated">Ta bort det här svaret?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="linenumber">1538</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7247590623129931610" datatype="html">
+        <source>Cannot delete the only collaborator.</source>
+        <target state="translated">Kan inte ta bort den enda författaren.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="linenumber">1568</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="3700056939449591480" datatype="html">
         <source>Download images as PDF</source>
         <target state="translated">Ladda ner bilder som PDF</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
           <context context-type="linenumber">126</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2981219928115418649" datatype="html">
+        <source>Link</source>
+        <target state="translated">Länk</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">67</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4095231593425125264" datatype="html">
+        <source>(invalid)</source>
+        <target state="translated">(ej giltig)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">114</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="902558965274048751" datatype="html">
+        <source>Set custom points</source>
+        <target state="translated">Ställ in anpassade poäng</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">118</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1504030943277246745" datatype="html">
+        <source>cp</source>
+        <target state="translated">anpassade poäng</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">133</context>
         </context-group>
       </trans-unit>
     </body>

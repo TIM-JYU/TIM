@@ -70,7 +70,7 @@ export class PluginMeta {
     }
 
     protected getPlugin() {
-        let p = this.plugintype ?? this.getParentAttr("data-plugin");
+        let p = this.plugintype ?? this.getParentAttr("plugin-type");
         if (!p) {
             const message = "Could not find plugin type from HTML";
             alert(message);
