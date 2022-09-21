@@ -158,6 +158,7 @@ export class DraggableController implements IController {
     private sizeStorage!: TimStorage<t.TypeOf<typeof SizeType>>;
     private minStorage!: TimStorage<boolean>;
     private detachStorage!: TimStorage<boolean>;
+    // private detachedSize?: TimStorage<t.TypeOf<typeof SizeType>>;
     private canMinimize?: Binding<boolean, "<">;
 
     constructor(private scope: IScope, private element: JQLite) {}
@@ -214,6 +215,11 @@ export class DraggableController implements IController {
 
     private toggleDetach() {
         const canDrag = this.canDrag();
+        // Find relevant content elements
+        const divs = this.element.children();
+        const contentDiv = divs[divs.length - 1];
+        const dragHandle = divs[0];
+
         if (canDrag) {
             if (this.areaMinimized) {
                 this.toggleMinimize();
@@ -228,9 +234,34 @@ export class DraggableController implements IController {
         } else {
             this.element.css("position", this.anchor);
             this.element.css("visibility", "visible");
-            void this.restoreSizeAndPosition(VisibilityFix.Full);
+            if (this.prevSize.width > 0 && this.prevSize.height > 0) {
+                // Use previous size instead of css fit-content (which doesn't work for width)
+                this.element.css("width", this.prevSize.width);
+                this.element.css("height", this.prevSize.height);
+            } else {
+                // this seems to give wrong size
+                void this.restoreSizeAndPosition(VisibilityFix.Full);
+            }
             this.element.removeClass("draggable-attached");
             this.element.addClass("draggable-detached");
+            // Force parent element to be the same size as its content element, limited to 70% of viewport height
+            // This should give draggable elements a more sane size
+            // TODO Fix draggable getting wrong height information when page is refreshed
+            //  while draggable is in detached mode. Might need to use localStorage to hold
+            //  width and height separately for the detached element.
+            // TODO Fix draggable detach opening in arbitrary locations.
+            const contentHeight =
+                dragHandle.offsetHeight + contentDiv.offsetHeight;
+            const contentWidth = contentDiv.offsetWidth;
+            const vph = getViewPortSize().height;
+            const vpw = getViewPortSize().width;
+            const preferredHeight = Math.min(
+                contentHeight,
+                Math.ceil(vph * 0.7)
+            );
+            const preferredWidth = Math.min(contentWidth, Math.ceil(vpw * 0.8));
+            this.element.css("max-height", preferredHeight);
+            this.element.css("width", preferredWidth);
         }
         this.element.css("z-index", this.getVisibleLayer());
 
