@@ -286,11 +286,11 @@ def get_boolean(s: bool | int | str, default: bool) -> bool:
     lresult = result.lower().strip()
     if len(lresult) == 0:
         return default
-    if "f0y".find(lresult[0]) >= 0:
+    if "f0n".find(lresult[0]) >= 0:
         return False
-    if "t1n".find(lresult[0]) >= 0:
+    if "t1y".find(lresult[0]) >= 0:
         return True
-    return True
+    return default
 
 
 def get_static_tim_doc_path() -> Path:
