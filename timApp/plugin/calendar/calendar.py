@@ -440,11 +440,12 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
         event_filter |= Event.creator == u
 
     # 2. Events that the user is either a booker or setter for
-    subquery_event_groups = (
+    subquery_event_groups_all = (
         u.get_groups(include_expired=False)
         .join(EventGroup, EventGroup.usergroup_id == UserGroup.id)
         .with_entities(EventGroup.event_id)
     )
+    subquery_event_groups = subquery_event_groups_all
     # Apply group filter if there is one
     if filter_opts.groups is not None:
         # noinspection PyUnresolvedReferences
@@ -465,7 +466,7 @@ def events_of_user(u: User, filter_opts: FilterOptions | None = None) -> list[Ev
     if filter_opts.showImportant:
         # noinspection PyUnresolvedReferences
         important_q = Event.query.filter(
-            Event.event_id.in_(subquery_event_groups) & Event.important.is_(True)
+            Event.event_id.in_(subquery_event_groups_all) & Event.important.is_(True)
         )
         event_queries.append(important_q)
 
