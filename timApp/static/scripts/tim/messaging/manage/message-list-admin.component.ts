@@ -148,8 +148,12 @@ import {Users} from "../../user/userService";
                                         <div *ngSwitchCase="'forward'" i18n>
                                             <p>
                                                 The message list forwards messages to the receiver without modifications.
-                                                <strong>This verification method disables some message list options.</strong>
+                                                <strong>This verification method disables the following list options:</strong>
                                             </p>
+                                            <ul>
+                                                <li>Subject prefix</li>
+                                                <li>Automatic message headers and footers are reset to empty</li>
+                                            </ul>
                                             <p>
                                                 This option relies on the verification information provided by the sender's mail provider. 
                                             </p>
