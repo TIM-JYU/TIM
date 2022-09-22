@@ -11,6 +11,7 @@ from timApp.messaging.messagelist.listinfo import (
     ReplyToListChanges,
     ListInfo,
     Distribution,
+    MessageVerificationType,
 )
 from timApp.timdb.sqa import db
 from timApp.util.utils import get_current_time
@@ -88,6 +89,13 @@ class MessageListModel(db.Model):
     allow_attachments = db.Column(db.Boolean)
     """Flag if attachments are allowed on the list. The list of allowed attachment file extensions are stored at 
     listoptions.py """
+
+    message_verification = db.Column(
+        db.Enum(MessageVerificationType),
+        nullable=False,
+        default=MessageVerificationType.MUNGE_FROM,
+    )
+    """How to verify messages sent to the list."""
 
     block = db.relationship(
         "Block", back_populates="managed_messagelist", lazy="select"
@@ -221,6 +229,7 @@ class MessageListModel(db.Model):
             domain=self.email_list_domain,
             archive=self.archive,
             default_reply_type=self.default_reply_type,
+            verification_type=self.message_verification,
             tim_users_can_join=self.tim_user_can_join,
             list_subject_prefix=self.subject_prefix,
             members_can_unsubscribe=self.can_unsubscribe,

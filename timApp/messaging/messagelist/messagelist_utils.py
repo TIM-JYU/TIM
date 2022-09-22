@@ -39,11 +39,13 @@ from timApp.messaging.messagelist.emaillist import (
     set_email_list_description,
     set_email_list_info,
     log_mailman,
+    set_email_list_verification_mode,
 )
 from timApp.messaging.messagelist.listinfo import (
     ArchiveType,
     ListInfo,
     ReplyToListChanges,
+    MessageVerificationType,
 )
 from timApp.messaging.messagelist.messagelist_models import (
     MessageListModel,
@@ -728,6 +730,25 @@ def set_message_list_subject_prefix(
             message_list.name, message_list.email_list_domain
         )
         set_email_list_subject_prefix(email_list, subject_prefix)
+
+
+def set_message_list_verification_mode(
+    message_list: MessageListModel, mode: MessageVerificationType
+) -> None:
+    """Set the message list's verification mode.
+
+    If the message list has an email list as a message list, then set the verification mode there also.
+
+    :param message_list: The message list where the verification mode is being set.
+    :param mode: The verification mode set for messages that go through the list.
+    """
+    message_list.message_verification = mode
+
+    if message_list.email_list_domain:
+        email_list = get_email_list_by_name(
+            message_list.name, message_list.email_list_domain
+        )
+        set_email_list_verification_mode(email_list, message_list.subject_prefix, mode)
 
 
 def set_message_list_tim_users_can_join(

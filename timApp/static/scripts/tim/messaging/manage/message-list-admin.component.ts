@@ -9,6 +9,7 @@ import {
     GroupAndMembers,
     ListOptions,
     MemberInfo,
+    MessageVerificationType,
     ReplyToListChanges,
 } from "../listOptionTypes";
 import {documentglobals} from "../../util/globals";
@@ -124,7 +125,52 @@ import {Users} from "../../user/userService";
                                 <label for="list-subject-prefix" i18n>Subject prefix</label>
                                 <input type="text" id="list-subject-prefix" name="list-subject-prefix"
                                        class="form-control"
+                                       [disabled]="verificationType === 'forward'"
                                        [(ngModel)]="listSubjectPrefix">
+                                <label for="list-verification-type" i18n>Message delivery verification</label>
+                                <div>
+                                    <select [(ngModel)]="verificationType" id="list-verification-type" name="list-verification-type" class="form-control">
+                                        <option [ngValue]="'none'" i18n>Don't verify</option>
+                                        <option [ngValue]="'forward'" i18n>Use sender's verification</option>
+                                        <option [ngValue]="'munge_from'" i18n>Use list's verification</option>
+                                    </select>
+                                    <div class="info-text" [ngSwitch]="verificationType">
+                                        <div *ngSwitchCase="'none'" i18n>
+                                            <p>
+                                                Message verification is disabled by the mailing list. 
+                                                All message lists options can be used, but some of them can cause messages being marked as spam.
+                                            </p>
+                                            <p>
+                                                <strong>This option is not recommended!</strong>
+                                                Messages sent through the list will most likely be marked as spam by most mail providers.
+                                            </p>
+                                        </div>
+                                        <div *ngSwitchCase="'forward'" i18n>
+                                            <p>
+                                                The message list forwards messages to the receiver without modifications.
+                                                <strong>This verification method disables the following list options:</strong>
+                                            </p>
+                                            <ul>
+                                                <li>Subject prefix</li>
+                                                <li>Automatic message headers and footers are reset to empty</li>
+                                            </ul>
+                                            <p>
+                                                This option relies on the verification information provided by the sender's mail provider. 
+                                            </p>
+                                        </div>
+                                        <div *ngSwitchCase="'munge_from'" i18n>
+                                            <p>
+                                                The message list verifies all messages before sending them to the receiver.
+                                                All message lists options can be used and the messages will pass spam filters of most mail providers.
+                                            </p>
+                                            <p>
+                                                <strong>Note: this modifies the sender information!</strong>
+                                                Messages sent through the list will have the list's address as the sender.
+                                                However, the receiver will see the name of the sender and will be able to reply directly to them.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                                 <h4 i18n>List options</h4>
                                 <div>
                                     <ul role="radiogroup" aria-labelledby="email-options-label">
@@ -344,6 +390,7 @@ export class MessageListAdminComponent implements OnInit {
     allowAttachments?: boolean;
     distribution?: Distribution;
     listReplyToChange?: ReplyToListChanges;
+    verificationType?: MessageVerificationType;
     listAnswerGuidance?: boolean; // Track above enum value in a checkbox.
 
     // Flags for new members' rights on the list.
@@ -602,6 +649,8 @@ export class MessageListAdminComponent implements OnInit {
                 listOptions.default_reply_type !== ReplyToListChanges.NOCHANGES;
             this.listReplyToChange = listOptions.default_reply_type;
         }
+        this.verificationType = listOptions.verification_type;
+        console.log(this.verificationType);
         this.removed = listOptions.removed;
         if (this.removed) {
             this.permanentErrorMessage = $localize`This message list has been deleted and thus is not in use.`;
@@ -636,6 +685,7 @@ export class MessageListAdminComponent implements OnInit {
             default_send_right: this.defaultSendRight,
             non_member_message_pass: this.nonMemberMessagePass,
             allow_attachments: this.allowAttachments,
+            verification_type: this.verificationType,
         });
         this.savingSettings = false;
         if (result.ok) {

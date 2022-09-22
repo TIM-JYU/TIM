@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 
 class Channel(Enum):
@@ -39,6 +38,39 @@ class ArchiveType(Enum):
     PUBLIC = 4
 
 
+class MessageVerificationType(Enum):
+    """
+    Options for verifying messages in mailing lists.
+    """
+
+    NONE = "none"
+    """
+    No verification is done.
+    
+    .. note:: With no verification, there is no assurance that messages will be delivered to the users.
+              The message might get stuck in a spam filter or get rejected by the mail server. 
+    """
+
+    FORWARD = "forward"
+    """
+    Message list operates in a forward mode. All options that modify message title or contents are ignored.
+    
+    .. note:: In this mode, messages will be delivered based on authentication of the sender.
+              If the sender's message does not include needed verification information (e.g. DKIM signature),
+              the message is still rejected.
+    """
+
+    MUNGE_FROM = "munge_from"
+    """
+    Message list munges (i.e. modifies) the From header of the message to that of the list and signs the messages.
+    This is the default mode for message lists.
+    
+    .. note:: In this mode, messages will be delivered using the list's signature.
+              With this option, messages are unlikely to be rejected by the mail server.
+              However, the sender will be changed to the list's address.
+    """
+
+
 class ReplyToListChanges(Enum):
     """Options for email list's own address to be added to the Reply-To header for emails that are sent through the
     list. See reply_to_munging for mapping to Mailman's options."""
@@ -63,6 +95,11 @@ class ListInfo:
         metadata={"by_value": True}, default=None
     )
     """The default reply type of the list."""
+
+    verification_type: MessageVerificationType | None = field(
+        metadata={"by_value": True}, default=None
+    )
+    """The message verification type of the list."""
 
     notify_owners_on_list_change: bool | None = None
     """A flag that determines if owners of the message list are notified of certain changes regarding the list, 

@@ -11,6 +11,7 @@ from timApp.messaging.messagelist.listinfo import (
     mailman_archive_policy_correlate,
     ArchiveType,
     ReplyToListChanges,
+    MessageVerificationType,
 )
 from timApp.messaging.messagelist.messagelist_models import (
     MessageListModel,
@@ -241,7 +242,7 @@ def create_new_email_list(list_options: ListInfo, owner: User) -> None:
         # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
         # advertising on if they so choose.
         mlist_settings["advertised"] = False
-        # Ownerss / moderators don't get automatic notifications from changes on their message list. Owner switches
+        # Owners / moderators don't get automatic notifications from changes on their message list. Owner switches
         # this on if necessary.
         mlist_settings["admin_notify_mchanges"] = False
         # Turn off automatic welcome and goodbye messages.
@@ -634,6 +635,43 @@ def set_email_list_default_reply_type(
         email_list.settings.save()
     except HTTPError as e:
         log_mailman(e, "In set_email_list_default_reply_type()")
+        raise
+
+
+def set_email_list_verification_mode(
+    email_list: MailingList,
+    subject_prefix: str | None,
+    verification_mode: MessageVerificationType,
+) -> None:
+    """Set the email list's verification mode.
+
+    :param email_list: The email list where the verification mode is set.
+    :param subject_prefix: Subject prefix to use for the list
+    :param verification_mode: See MailingListMessageVerificationType and verification_mode variable.
+    """
+
+    def update_subject() -> None:
+        nonlocal subject_prefix
+        if subject_prefix:
+            if not subject_prefix.endswith(" "):
+                subject_prefix = f"{subject_prefix} "
+            email_list.settings["subject_prefix"] = subject_prefix
+
+    try:
+        if verification_mode == MessageVerificationType.MUNGE_FROM:
+            email_list.settings["dmarc_mitigate_action"] = "munge_from"
+            email_list.settings["dmarc_mitigate_unconditionally"] = True
+            update_subject()
+        elif verification_mode == MessageVerificationType.FORWARD:
+            set_default_templates(email_list)
+            email_list.settings["dmarc_mitigate_action"] = "no_mitigation"
+            email_list.settings["subject_prefix"] = ""
+        else:
+            email_list.settings["dmarc_mitigate_action"] = "no_mitigation"
+            update_subject()
+        email_list.settings.save()
+    except HTTPError as e:
+        log_mailman(e, "In set_email_list_verification_mode()")
         raise
 
 
