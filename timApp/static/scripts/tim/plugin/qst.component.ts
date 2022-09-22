@@ -12,6 +12,8 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import * as t from "io-ts";
 import {defaultErrorMessage, to2} from "tim/util/utils";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {
     AnswerSheetModule,
     IPreviewParams,
@@ -387,3 +389,13 @@ export class QstModule implements DoBootstrap {
 }
 
 pluginMap.set("tim-qst", QstComponent);
+// The question="true" causes to use the "mini" version
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(QstModule)
+        ),
+        "timQst",
+        QstComponent
+    ),
+];
