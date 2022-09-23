@@ -572,12 +572,13 @@ export class Drawing {
         this.canvases = canvases;
         this.ctxs = this.canvases.map((c) => {
             const context = c.getContext("2d")!;
-            context.lineCap = "round";
+            // setting lineCap or calling setOffset seems to fail in constructor,
+            // init dummy values here and set these externally later
             return {
                 ctx: context,
                 height: c.height,
                 width: c.width,
-                yOffset: 0, // setOffset seems to fail in constructor, so we set this extrnally later
+                yOffset: 0,
             };
         });
         this.activeContexts = this.ctxs;
@@ -639,6 +640,7 @@ export class Drawing {
         if (!context) {
             return;
         }
+        context.ctx.lineCap = "round";
         context.ctx.translate(0, offset);
         context.yOffset = offset;
         context.width = dimensions.w;
@@ -1040,6 +1042,8 @@ export class Drawing {
 const SCROLLBAR_APPROX_WIDTH = 17;
 const MIN_IMAGE_HEIGHT = 300;
 const MIN_IMAGE_WIDTH = 700;
+// some tests report failure on > 4096x4096 px canvases. Leave some leeway for math.ceils
+const MAX_CANVAS_AREA = 16000000;
 
 @Component({
     selector: "draw-canvas",
@@ -1087,8 +1091,8 @@ const MIN_IMAGE_WIDTH = 700;
                 </div>
                 <div class="zoomer" #canvasWrapper style="-webkit-transform-origin: 0 0;"
                      [style.transform]="getZoomLevel()">
-                    <canvas #drawbases *ngFor="let item of bgImages; let i = index" class="drawbase"
-                            style="border:1px solid #000000; margin:-1px; position: absolute;">
+                    <canvas #drawbases *ngFor="let item of canvasHeights; let i = index" class="drawbase"
+                            style="border-left:1px solid #000000; margin:-1px; border-right:1px solid #000000; margin:-1px; position: absolute;">
                     </canvas>
                 </div>
             </div>
@@ -1118,7 +1122,7 @@ export class DrawCanvasComponent
     defaultZoomLevel = 1; // adjusted to show full image width after images are loaded
     eventsAdded = false;
     loading = false;
-
+    canvasHeights: {h: number; top: boolean; bottom: boolean}[] = [];
     drawHandler?: Drawing;
     // track DrawItem arrays to enable deleting a piece of drawing
     drawItems: Map<number, DrawItem[]> = new Map();
@@ -1287,39 +1291,64 @@ export class DrawCanvasComponent
     allImagesLoaded(): void {
         // TODO: Show clear error if any image fails loading
         this.loading = false;
-        this.prepareDrawing();
-        let offset = 0;
-        this.bgOffsets = [offset];
+        let bgOffset = 0;
+        this.bgOffsets = [bgOffset];
         this.imgHeight = this.bgElement.nativeElement.clientHeight;
         this.imgWidth = this.bgElement.nativeElement.clientWidth;
         // width will be same for all images/canvases
         const newWidth = Math.max(this.imgWidth, MIN_IMAGE_WIDTH);
-        for (let i = 0; i < this.bgSourceSizes.length; i++) {
-            const canvas = this.canvases.get(i)?.nativeElement;
-            if (!canvas) {
-                throw Error(`Missing canvas ${i}`);
+        this.canvasHeights = [];
+        const maxCanvasHeight = Math.ceil(MAX_CANVAS_AREA / newWidth);
+        for (const size of this.bgSourceSizes) {
+            let canvasesForImage = 1;
+            if (size.height > maxCanvasHeight) {
+                canvasesForImage = Math.ceil(size.height / maxCanvasHeight);
             }
-            let newHeight: number;
-            if (i < this.bgSourceSizes.length - 1) {
-                newHeight = this.bgSourceSizes[i].height;
-                this.bgOffsets.push(newHeight + offset);
-            } else {
-                // if total image size is less than minimum, stretch last canvas
-                newHeight = Math.max(
-                    this.bgSourceSizes[i].height,
-                    MIN_IMAGE_HEIGHT - offset
-                );
+            const canvasHeight = Math.ceil(size.height / canvasesForImage);
+            for (let j = 0; j < canvasesForImage; j++) {
+                this.canvasHeights.push({
+                    h: canvasHeight,
+                    top: j == 0,
+                    bottom: j == canvasesForImage - 1,
+                });
             }
-            canvas.height = newHeight;
-            canvas.width = newWidth;
-            canvas.style.top = offset + "px";
-            this.drawHandler!.setOffSet(
-                i,
-                {w: canvas.width, h: newHeight},
-                -offset
-            );
-            offset += newHeight;
+            this.bgOffsets.push(size.height + bgOffset);
+            bgOffset += size.height;
         }
+        setTimeout(() => {
+            this.prepareDrawing();
+            let canvasOffset = 0;
+            for (let i = 0; i < this.canvasHeights.length; i++) {
+                const canvas = this.canvases.get(i)?.nativeElement;
+                if (!canvas) {
+                    throw Error(`Missing canvas ${i}`);
+                }
+                const canvasInfo = this.canvasHeights[i];
+                let newHeight = canvasInfo.h;
+                if (i == this.canvasHeights.length - 1) {
+                    // if total canvas size is less than minimum, stretch last canvas
+                    newHeight = Math.max(
+                        newHeight,
+                        MIN_IMAGE_HEIGHT - canvasOffset
+                    );
+                }
+                canvas.height = newHeight;
+                canvas.width = newWidth;
+                canvas.style.top = canvasOffset + "px";
+                if (canvasInfo.top) {
+                    canvas.style.borderTop = "1px solid #000000";
+                }
+                if (canvasInfo.bottom) {
+                    canvas.style.borderBottom = "1px solid #000000";
+                }
+                this.drawHandler!.setOffSet(
+                    i,
+                    {w: canvas.width, h: newHeight},
+                    -canvasOffset
+                );
+                canvasOffset += newHeight;
+            }
+        }, 0);
         if (this.imgWidth > this.wrapper.nativeElement.clientWidth) {
             this.defaultZoomLevel =
                 (this.wrapper.nativeElement.clientWidth -
