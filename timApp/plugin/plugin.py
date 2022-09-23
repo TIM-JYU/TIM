@@ -882,7 +882,10 @@ def maybe_get_plugin_from_par(
             block=p,
             macroinfo=settings.get_macroinfo(view_ctx, user_ctx=u),
         ):
-            p_task_id = p_task_id.validate()
+            try:
+                p_task_id = p_task_id.validate()
+            except PluginException:
+                continue
             if p_task_id.task_name != task_id.task_name:
                 continue
             plugin_type = p_task_id.plugin_type or def_plug

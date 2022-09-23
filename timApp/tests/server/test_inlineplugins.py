@@ -308,3 +308,33 @@ a {#x initword: #} b
         self.logout()
         r = self.get(u, as_tree=True).cssselect(".parContent tim-login-menu")
         self.assertTrue(r)
+
+    def test_taskinfo_invalid_inline_plugin(self):
+        """Check that invalid inline plugin doesn't affect task info of other plugins"""
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+#- {defaultplugin="pali"}
+{#.invalid#}
+
+``` {#pali1 plugin="pali"}
+```
+        """
+        )
+
+        self.json_req(
+            f"/taskinfo/{d.id}.pali1",
+            json_data={
+                "maxPoints": None,
+                "userMin": None,
+                "userMax": None,
+                "showPoints": {},
+                "deadline": None,
+                "starttime": None,
+                "answerLimit": None,
+                "triesText": "Tries left:",
+                "pointsText": "Points:",
+                "buttonNewTask": None,
+                "modelAnswer": None,
+            },
+        )
