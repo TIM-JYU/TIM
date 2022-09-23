@@ -7100,6 +7100,14 @@
           <context context-type="linenumber">149,159</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="3939279582355407207" datatype="html">
+        <source>Could not post message: <x id="PH" equiv-text="result.result.error.error"/></source>
+        <target state="translated">Kunde inte skicka meddelandet: <x id="PH" equiv-text="result.result.error.error"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/calendar/calendar-event-dialog.component.ts</context>
+          <context context-type="linenumber">548</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

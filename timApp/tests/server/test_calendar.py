@@ -1,5 +1,7 @@
 """Server tests for TIM-calendar"""
+from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
+from timApp.notification.send_email import sent_mails_in_testing
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.user import User
@@ -7,7 +9,7 @@ from timApp.user.usergroup import UserGroup
 
 
 class CalendarTest(TimRouteTest):
-    def post_event(self, user: User):
+    def post_event(self, user: User, booker_group: str | None = None):
         """Helper function to post a basic event"""
 
         r = self.json_post(
@@ -21,7 +23,7 @@ class CalendarTest(TimRouteTest):
                         "start": "2022-05-18T07:20:00+00:00",
                         "end": "2022-05-18T07:40:00+00:00",
                         "signup_before": "2022-05-18T07:20:00+00:00",
-                        "booker_groups": [user.name],
+                        "booker_groups": [booker_group or user.name],
                         "setter_groups": [user.name],
                         "tags": [],
                         "max_size": 1,
@@ -32,6 +34,8 @@ class CalendarTest(TimRouteTest):
         )
         return r[0]
 
+
+class CalendarModificationTest(CalendarTest):
     def test_event_add_and_delete(self):
         """Events are queried, an event is created by Test user 1 and then deleted"""
 
@@ -128,7 +132,44 @@ class CalendarTest(TimRouteTest):
         self.logout()
 
 
-class CalendarBookTest(TimRouteTest):
+class CalendarBookMessageTest(CalendarTest):
+    def test_event_message_send(self):
+        d = DocEntry.create("event_message_send_test1")
+        db.session.flush()
+        ug = UserGroup.create("event_message_send_test1")
+        self.test_user_2.add_to_group(ug, None)
+        ug.admin_doc = d.block
+        self.test_user_1.grant_access(d.block, AccessType.manage)
+        db.session.commit()
+
+        self.login_test1()
+        event = self.post_event(self.test_user_1, "event_message_send_test1")
+        event_id = event["id"]
+
+        self.login_test2()
+        self.json_post(
+            "/calendar/bookings", json_data={"event_id": event_id, "booker_msg": ""}
+        )
+        self.json_put(
+            "/calendar/bookings",
+            json_data={
+                "event_id": event_id,
+                "booker_msg": "test",
+                "booker_group": self.test_user_2.name,
+            },
+        )
+        self.assertEqual(
+            len(sent_mails_in_testing),
+            3,
+            "Booking notification and two message notifications should be sent",
+        )
+        self.assertEqual(
+            sent_mails_in_testing[-1]["msg"],
+            f"{self.test_user_2.real_name} ({self.test_user_2.name}) posted a message to TIM calendar event Otsake 18.05.2022 10:20-10:40 (UTC +0300):\n\ntest",
+        )
+
+
+class CalendarBookTest(CalendarTest):
     def test_booking(self):
         """Event is created by Test user 2 and booked by Test user 1."""
         ug = UserGroup.get_or_create_group("testbooking1")

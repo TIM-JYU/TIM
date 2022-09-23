@@ -32,7 +32,13 @@ from timApp.auth.sessioninfo import (
     get_current_user_object,
 )
 from timApp.notification.send_email import send_email
-from timApp.plugin.calendar.models import Event, EventGroup, Enrollment, EventTag
+from timApp.plugin.calendar.models import (
+    Event,
+    EventGroup,
+    Enrollment,
+    EventTag,
+    EnrollmentRight,
+)
 from timApp.plugin.calendar.models import ExportedCalendar
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_access
@@ -41,7 +47,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.utils import fin_timezone
+from timApp.util.utils import fin_timezone, get_current_time
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import (
@@ -773,17 +779,23 @@ def delete_event(event_id: int) -> Response:
         raise NotExist()
 
     enrolled_users = event.enrolled_users
-    if len(enrolled_users) > 0:
-        send_email_to_enrolled_users(event, user_obj)
+    if enrolled_users:
+        send_email_to_enrolled_users(
+            event,
+            "{event_title} {event_time} has been cancelled.",
+            f"TIM-Calendar event {{event_title}} {{event_time}} has been cancelled by {user_obj.real_name} ({user_obj.name}).",
+        )
 
     db.session.delete(event)
     db.session.commit()
     return ok_response()
 
 
-def send_email_to_enrolled_users(event: Event, user_obj: User) -> None:
+def send_email_to_enrolled_users(
+    event: Event, subject: str, message: str, include_creator: bool = False
+) -> None:
     """
-    Sends email to enrolled users when event is deleted
+    Sends email to enrolled users
 
     :param: event that is about be deleted
     :param: user_obj user who deletes the event
@@ -798,25 +810,26 @@ def send_email_to_enrolled_users(event: Event, user_obj: User) -> None:
         if user_account is None:
             raise NotExist()
         user_accounts.append(user_account)
+    if include_creator:
+        user_accounts.append(event.creator)
     # TODO Should use users own timezone
     start_time = event.start_time.astimezone(fin_timezone).strftime("%d.%m.%Y %H:%M")
     end_time = event.end_time.astimezone(fin_timezone).strftime("%H:%M (UTC %z)")
     event_time = f"{start_time}-{end_time}"
-    name = user_obj.name
-    msg = f"TIM-Calendar event {event.title} {event_time} has been cancelled by {name}."
-    subject = msg
+    subject = subject.format(subject, event_title=event.title, event_time=event_time)
+    message = message.format(message, event_title=event.title, event_time=event_time)
     # TODO: This is very inefficient, send instead one mail using BCC
     for user in user_accounts:
-        rcpt = user.email
-        send_email(rcpt, subject, msg)
+        send_email(user.email, subject, message)
 
 
+# TODO: No need to pass booker group, deduce it from the caller
 @calendar_plugin.put("/bookings")
 def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Response:
     """Updates the booker message in the specific booking
 
     :param event_id: the id of the event that has the enrollment
-    :param booker_msg: Updated message chain to the enrollment
+    :param booker_msg: New message to add to the enrollment
     :param booker_group: the involved booker group of the enrollment
     :return: HTTP 200 if succeeded, otherwise 404
     """
@@ -825,16 +838,37 @@ def update_book_message(event_id: int, booker_msg: str, booker_group: str) -> Re
     if event is None:
         raise NotExist()
 
+    user = get_current_user_object()
+    # TODO: Don't save as fixed timezone, save as UTC instead
+    now = get_current_time().astimezone(fin_timezone)
+    new_message = f"{user.name} {now.strftime('%d.%m.%Y %H:%M')}: {booker_msg}"
+
+    right: EnrollmentRight = event.get_enrollment_right(user)
+    if not right.is_valid:
+        raise AccessDenied("You are not allowed to post messages to this event")
+
     user_group = UserGroup.get_by_name(booker_group)
     enrollment = Enrollment.get_by_event_and_user(event_id, user_group.id)
-
-    if enrollment is not None:
-        enrollment.booker_message = booker_msg
-        db.session.commit()
-    else:
+    if not enrollment:
         raise NotExist()
 
-    return ok_response()
+    Enrollment.query.filter_by(event_id=enrollment.event_id).update(
+        {"booker_message": Enrollment.booker_message + f"\n{new_message}"},
+        synchronize_session="fetch",
+    )
+    db.session.commit()
+
+    enrolled_users = event.enrolled_users
+    if enrolled_users:
+        send_email_to_enrolled_users(
+            event,
+            f"{user.real_name} posted a message to event {{event_title}} {{event_time}}",
+            f"{user.real_name} ({user.name}) posted a message to TIM calendar event "
+            f"{{event_title}} {{event_time}}:\n\n{booker_msg}",
+            include_creator=True,
+        )
+
+    return json_response({"bookMessage": enrollment.booker_message})
 
 
 @calendar_plugin.post("/bookings")

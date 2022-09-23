@@ -151,6 +151,10 @@ class EnrollmentRight:
     def can_manage_event(self) -> bool:
         return self.manager or self.creator
 
+    @property
+    def is_valid(self) -> bool:
+        return self.can_enroll or self.can_manage_event
+
 
 class Event(db.Model):
     """A calendar event. Event has metadata (title, time, location) and various participating user groups."""

@@ -12,7 +12,7 @@
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {CommonModule, formatDate} from "@angular/common";
+import {CommonModule} from "@angular/common";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {DialogModule} from "../../ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
@@ -506,6 +506,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
      *  TODO: Currently works only with events that has maximum capacity of 1
      */
     async updateBookMessage() {
+        this.setMessage();
         if (!this.messageText) {
             this.messageText = "";
         }
@@ -513,17 +514,10 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             this.bookerMessage = "";
         }
         const eventToBook = this.data;
-        const dateNow = new Date();
         let bookerGroup = "";
         if (this.data.meta!.booker_groups.length > 0) {
             bookerGroup = this.data.meta!.booker_groups[0].name;
         }
-        const bookMessage = `${this.bookerMessage}
-        ${Users.getCurrent().name} ${formatDate(
-            dateNow,
-            "d.M.yy HH:mm",
-            "fi-FI"
-        )}: ${this.messageText}`;
 
         if (
             !(await showConfirm(
@@ -534,20 +528,25 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
             return;
         }
         const result = await toPromise(
-            this.http.put("/calendar/bookings", {
+            this.http.put<{bookMessage: string}>("/calendar/bookings", {
                 event_id: eventToBook.id,
-                booker_msg: bookMessage,
+                booker_msg: this.messageText,
                 booker_group: bookerGroup,
             })
         );
         if (result.ok) {
-            this.bookerMessage = bookMessage;
+            this.bookerMessage = result.result.bookMessage;
             this.messageText = "";
             if (this.data.meta) {
                 if (this.data.meta.booker_groups.length > 0) {
-                    this.data.meta.booker_groups[0].message = bookMessage;
+                    this.data.meta.booker_groups[0].message =
+                        result.result.bookMessage;
                 }
             }
+        } else {
+            this.setMessage(
+                $localize`Could not post message: ${result.result.error.error}`
+            );
         }
     }
 
