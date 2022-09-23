@@ -3839,7 +3839,7 @@ ${fhtml}
                     <a href="#" *ngIf="toggleEditor"
                        (click)="hideShowEditor(); $event.preventDefault()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
                     <a href="#" *ngIf="!noeditor && editor && editor.nextModeText"
-                       (click)="editor?.showOtherEditor(); $event.preventDefault()">
+                       (click)="editor.showOtherEditor(); $event.preventDefault()">
                         {{editor.nextModeText}}
                     </a>&nbsp;&nbsp;
                     <a href="#" *ngIf="copyLink"

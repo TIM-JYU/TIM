@@ -391,7 +391,7 @@ export class CalendarComponent
 
     locale: string = Users.getCurrentLocale();
 
-    weekStartsOn: 1 = 1;
+    weekStartsOn = 1 as const;
 
     /* The default values of calendar view that can be adjusted with the time view selector -component. */
     dayStartHour!: number;

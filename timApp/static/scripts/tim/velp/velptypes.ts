@@ -2,8 +2,14 @@ import {Overwrite} from "type-zoo";
 import {IAnswerWithUsers} from "tim/answer/IAnswer";
 import {IUser} from "tim/user/IUser";
 import {Moment} from "moment";
-import {JsonProperty, Serializable} from "typescript-json-serializer";
+import {
+    JsonObject,
+    JsonProperty,
+    JsonSerializer,
+} from "typescript-json-serializer";
 import {DrawItem} from "tim/plugin/drawCanvas";
+
+export const jsonSerializer = new JsonSerializer();
 
 export type VelpGroupSelectionType = "show" | "default";
 
@@ -47,7 +53,7 @@ export interface IAnnotationComment {
     commenter: IUser;
 }
 
-@Serializable()
+@JsonObject()
 export class Annotation implements IAnnotation {
     @JsonProperty() public id!: number;
     @JsonProperty() public annotator!: IUser;

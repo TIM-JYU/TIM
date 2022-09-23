@@ -48,13 +48,5 @@ import {ScoreInfoTabComponent} from "./tabs/score-info-tab.component";
         TimUtilityModule,
         TabsModule,
     ],
-    entryComponents: [
-        BookmarksTabComponent,
-        SettingsTabComponent,
-        IndexTabComponent,
-        LectureInfoTabComponent,
-        LoadQuestionsTabComponent,
-        LoggedUsersTabComponent,
-    ],
 })
 export class SideBarMenuModule {}

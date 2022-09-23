@@ -15,7 +15,7 @@ import {BsDropdownDirective} from "ngx-bootstrap/dropdown";
 @Component({
     selector: "datetime-popup",
     templateUrl: "./ngx-bootstrap-datetime-popup.component.html",
-    styles: [],
+    styleUrls: ["./ngx-bootstrap-datetime-popup.component.scss"],
 })
 export class DatetimePopupComponent implements OnChanges {
     @ViewChild("dropdown", {static: true})
@@ -52,7 +52,7 @@ export class DatetimePopupComponent implements OnChanges {
     public showSeconds = false;
 
     @Input()
-    public datepickerMode = "day";
+    public datepickerMode: "day" | "month" | "year" = "day";
 
     @Input()
     public initDate: Date = null!;

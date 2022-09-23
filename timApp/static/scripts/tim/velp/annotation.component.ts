@@ -21,7 +21,6 @@ import {
     ViewChild,
 } from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {deserialize} from "typescript-json-serializer";
 import {DrawItem} from "tim/plugin/drawCanvas";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ParCompiler} from "tim/editor/parCompiler";
@@ -34,6 +33,7 @@ import {
     Annotation,
     IAnnotationEditableValues,
     IAnnotationInterval,
+    jsonSerializer,
 } from "./velptypes";
 
 /**
@@ -73,7 +73,11 @@ export async function updateAnnotationServer(
     if (!r2.ok) {
         return {ok: false, result: r2.result.data.error};
     }
-    return {ok: true, result: deserialize(r2.result.data, Annotation)};
+    const annotation = jsonSerializer.deserialize(r2.result.data, Annotation);
+    if (!annotation || Array.isArray(annotation)) {
+        return {ok: false, result: "Invalid annotation data"};
+    }
+    return {ok: true, result: annotation};
 }
 
 @Component({
@@ -589,7 +593,14 @@ export class AnnotationComponent
             if (!r.ok) {
                 return;
             }
-            ann = deserialize(r.result.data, Annotation);
+            const annotation = jsonSerializer.deserializeObject(
+                r.result.data,
+                Annotation
+            );
+            if (!annotation) {
+                return;
+            }
+            ann = annotation;
             this.newcomment = "";
         }
         if (this.valuesChanged()) {

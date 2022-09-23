@@ -8,7 +8,6 @@ import {
     IAnnotationBindings,
     updateAnnotationServer,
 } from "tim/velp/annotation.component";
-import {deserialize} from "typescript-json-serializer";
 import {TaskId} from "tim/plugin/taskid";
 import {
     DrawCanvasComponent,
@@ -45,6 +44,7 @@ import {
     isFullCoord,
     IVelp,
     IVelpUI,
+    jsonSerializer,
     NewAnnotation,
 } from "./velptypes";
 
@@ -154,10 +154,17 @@ export class ReviewController {
         if (!response.ok) {
             return;
         }
-        this.annotations = response.result.data.map((o) => {
-            const ann = deserialize(o, Annotation);
-            return ann;
-        });
+        const deserialize = (a: Record<string, unknown>[]) =>
+            jsonSerializer.deserializeObjectArray(a, Annotation);
+        const annotations = deserialize(response.result.data);
+        const isValidAnnotation = (
+            res: ReturnType<typeof deserialize>
+        ): res is Annotation[] =>
+            !!annotations && annotations.every((a) => !!a);
+        if (!isValidAnnotation(annotations)) {
+            return;
+        }
+        this.annotations = annotations;
         const annotationsToRemove = [];
 
         for (const a of this.annotations) {
@@ -1634,7 +1641,13 @@ export class ReviewController {
         if (!json.ok) {
             throw Error(json.result.data.error);
         }
-        const ann = deserialize(json.result.data, Annotation);
+        const ann = jsonSerializer.deserializeObject(
+            json.result.data,
+            Annotation
+        );
+        if (!ann) {
+            throw Error("Failed to deserialize annotation");
+        }
         this.annotations.push(ann);
         return ann;
     }

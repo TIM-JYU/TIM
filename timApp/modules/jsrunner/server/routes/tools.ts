@@ -1205,7 +1205,8 @@ export class Tools extends ToolsBase {
         if (s === null || s === undefined) {
             return def;
         }
-        const st = ("" + s).replace(REDOUBLE, "");
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string,@typescript-eslint/restrict-template-expressions
+        const st = `${s}`.replace(REDOUBLE, "");
         if (st == "") {
             return def;
         }

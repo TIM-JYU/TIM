@@ -261,10 +261,10 @@ index 109f615..0000000
 -})));
 diff --git a/node_modules/moment/locale/ar-kw.js b/node_modules/moment/locale/ar-kw.js
 deleted file mode 100644
-index fcca10c..0000000
+index c6ecef8..0000000
 --- a/node_modules/moment/locale/ar-kw.js
 +++ /dev/null
-@@ -1,65 +0,0 @@
+@@ -1,66 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Arabic (Kuwait) [ar-kw]
 -//! author : Nusret Parlak: https://github.com/nusretparlak
@@ -282,9 +282,10 @@ index fcca10c..0000000
 -        months: 'يناير_فبراير_مارس_أبريل_ماي_يونيو_يوليوز_غشت_شتنبر_أكتوبر_نونبر_دجنبر'.split(
 -            '_'
 -        ),
--        monthsShort: 'يناير_فبراير_مارس_أبريل_ماي_يونيو_يوليوز_غشت_شتنبر_أكتوبر_نونبر_دجنبر'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'يناير_فبراير_مارس_أبريل_ماي_يونيو_يوليوز_غشت_شتنبر_أكتوبر_نونبر_دجنبر'.split(
+-                '_'
+-            ),
 -        weekdays: 'الأحد_الإتنين_الثلاثاء_الأربعاء_الخميس_الجمعة_السبت'.split('_'),
 -        weekdaysShort: 'احد_اتنين_ثلاثاء_اربعاء_خميس_جمعة_سبت'.split('_'),
 -        weekdaysMin: 'ح_ن_ث_ر_خ_ج_س'.split('_'),
@@ -332,12 +333,12 @@ index fcca10c..0000000
 -})));
 diff --git a/node_modules/moment/locale/ar-ly.js b/node_modules/moment/locale/ar-ly.js
 deleted file mode 100644
-index 276a02e..0000000
+index 436b8f3..0000000
 --- a/node_modules/moment/locale/ar-ly.js
 +++ /dev/null
 @@ -1,182 +0,0 @@
 -//! moment.js locale configuration
--//! locale : Arabic (Lybia) [ar-ly]
+-//! locale : Arabic (Libya) [ar-ly]
 -//! author : Ali Hmer: https://github.com/kikoanis
 -
 -;(function (global, factory) {
@@ -350,16 +351,16 @@ index 276a02e..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '1',
--            '2': '2',
--            '3': '3',
--            '4': '4',
--            '5': '5',
--            '6': '6',
--            '7': '7',
--            '8': '8',
--            '9': '9',
--            '0': '0',
+-            1: '1',
+-            2: '2',
+-            3: '3',
+-            4: '4',
+-            5: '5',
+-            6: '6',
+-            7: '7',
+-            8: '8',
+-            9: '9',
+-            0: '0',
 -        },
 -        pluralForm = function (n) {
 -            return n === 0
@@ -520,10 +521,10 @@ index 276a02e..0000000
 -})));
 diff --git a/node_modules/moment/locale/ar-ma.js b/node_modules/moment/locale/ar-ma.js
 deleted file mode 100644
-index c21e1f6..0000000
+index 11f061a..0000000
 --- a/node_modules/moment/locale/ar-ma.js
 +++ /dev/null
-@@ -1,66 +0,0 @@
+@@ -1,67 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Arabic (Morocco) [ar-ma]
 -//! author : ElFadili Yassine : https://github.com/ElFadiliY
@@ -542,9 +543,10 @@ index c21e1f6..0000000
 -        months: 'يناير_فبراير_مارس_أبريل_ماي_يونيو_يوليوز_غشت_شتنبر_أكتوبر_نونبر_دجنبر'.split(
 -            '_'
 -        ),
--        monthsShort: 'يناير_فبراير_مارس_أبريل_ماي_يونيو_يوليوز_غشت_شتنبر_أكتوبر_نونبر_دجنبر'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'يناير_فبراير_مارس_أبريل_ماي_يونيو_يوليوز_غشت_شتنبر_أكتوبر_نونبر_دجنبر'.split(
+-                '_'
+-            ),
 -        weekdays: 'الأحد_الإثنين_الثلاثاء_الأربعاء_الخميس_الجمعة_السبت'.split('_'),
 -        weekdaysShort: 'احد_اثنين_ثلاثاء_اربعاء_خميس_جمعة_سبت'.split('_'),
 -        weekdaysMin: 'ح_ن_ث_ر_خ_ج_س'.split('_'),
@@ -582,8 +584,8 @@ index c21e1f6..0000000
 -            yy: '%d سنوات',
 -        },
 -        week: {
--            dow: 6, // Saturday is the first day of the week.
--            doy: 12, // The week that contains Jan 12th is the first week of the year.
+-            dow: 1, // Monday is the first day of the week.
+-            doy: 4, // The week that contains Jan 4th is the first week of the year.
 -        },
 -    });
 -
@@ -592,10 +594,10 @@ index c21e1f6..0000000
 -})));
 diff --git a/node_modules/moment/locale/ar-sa.js b/node_modules/moment/locale/ar-sa.js
 deleted file mode 100644
-index 44f9ff9..0000000
+index e329df0..0000000
 --- a/node_modules/moment/locale/ar-sa.js
 +++ /dev/null
-@@ -1,115 +0,0 @@
+@@ -1,116 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Arabic (Saudi Arabia) [ar-sa]
 -//! author : Suhail Alkowaileet : https://github.com/xsoh
@@ -610,16 +612,16 @@ index 44f9ff9..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '١',
--            '2': '٢',
--            '3': '٣',
--            '4': '٤',
--            '5': '٥',
--            '6': '٦',
--            '7': '٧',
--            '8': '٨',
--            '9': '٩',
--            '0': '٠',
+-            1: '١',
+-            2: '٢',
+-            3: '٣',
+-            4: '٤',
+-            5: '٥',
+-            6: '٦',
+-            7: '٧',
+-            8: '٨',
+-            9: '٩',
+-            0: '٠',
 -        },
 -        numberMap = {
 -            '١': '1',
@@ -638,9 +640,10 @@ index 44f9ff9..0000000
 -        months: 'يناير_فبراير_مارس_أبريل_مايو_يونيو_يوليو_أغسطس_سبتمبر_أكتوبر_نوفمبر_ديسمبر'.split(
 -            '_'
 -        ),
--        monthsShort: 'يناير_فبراير_مارس_أبريل_مايو_يونيو_يوليو_أغسطس_سبتمبر_أكتوبر_نوفمبر_ديسمبر'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'يناير_فبراير_مارس_أبريل_مايو_يونيو_يوليو_أغسطس_سبتمبر_أكتوبر_نوفمبر_ديسمبر'.split(
+-                '_'
+-            ),
 -        weekdays: 'الأحد_الإثنين_الثلاثاء_الأربعاء_الخميس_الجمعة_السبت'.split('_'),
 -        weekdaysShort: 'أحد_إثنين_ثلاثاء_أربعاء_خميس_جمعة_سبت'.split('_'),
 -        weekdaysMin: 'ح_ن_ث_ر_خ_ج_س'.split('_'),
@@ -713,10 +716,10 @@ index 44f9ff9..0000000
 -})));
 diff --git a/node_modules/moment/locale/ar-tn.js b/node_modules/moment/locale/ar-tn.js
 deleted file mode 100644
-index a32af75..0000000
+index a390ed2..0000000
 --- a/node_modules/moment/locale/ar-tn.js
 +++ /dev/null
-@@ -1,65 +0,0 @@
+@@ -1,66 +0,0 @@
 -//! moment.js locale configuration
 -//! locale  :  Arabic (Tunisia) [ar-tn]
 -//! author : Nader Toukabri : https://github.com/naderio
@@ -734,9 +737,10 @@ index a32af75..0000000
 -        months: 'جانفي_فيفري_مارس_أفريل_ماي_جوان_جويلية_أوت_سبتمبر_أكتوبر_نوفمبر_ديسمبر'.split(
 -            '_'
 -        ),
--        monthsShort: 'جانفي_فيفري_مارس_أفريل_ماي_جوان_جويلية_أوت_سبتمبر_أكتوبر_نوفمبر_ديسمبر'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'جانفي_فيفري_مارس_أفريل_ماي_جوان_جويلية_أوت_سبتمبر_أكتوبر_نوفمبر_ديسمبر'.split(
+-                '_'
+-            ),
 -        weekdays: 'الأحد_الإثنين_الثلاثاء_الأربعاء_الخميس_الجمعة_السبت'.split('_'),
 -        weekdaysShort: 'أحد_إثنين_ثلاثاء_أربعاء_خميس_جمعة_سبت'.split('_'),
 -        weekdaysMin: 'ح_ن_ث_ر_خ_ج_س'.split('_'),
@@ -784,7 +788,7 @@ index a32af75..0000000
 -})));
 diff --git a/node_modules/moment/locale/ar.js b/node_modules/moment/locale/ar.js
 deleted file mode 100644
-index 4c3e041..0000000
+index 7394244..0000000
 --- a/node_modules/moment/locale/ar.js
 +++ /dev/null
 @@ -1,200 +0,0 @@
@@ -804,16 +808,16 @@ index 4c3e041..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '١',
--            '2': '٢',
--            '3': '٣',
--            '4': '٤',
--            '5': '٥',
--            '6': '٦',
--            '7': '٧',
--            '8': '٨',
--            '9': '٩',
--            '0': '٠',
+-            1: '١',
+-            2: '٢',
+-            3: '٣',
+-            4: '٤',
+-            5: '٥',
+-            6: '٦',
+-            7: '٧',
+-            8: '٨',
+-            9: '٩',
+-            0: '٠',
 -        },
 -        numberMap = {
 -            '١': '1',
@@ -990,10 +994,10 @@ index 4c3e041..0000000
 -})));
 diff --git a/node_modules/moment/locale/az.js b/node_modules/moment/locale/az.js
 deleted file mode 100644
-index f68ad17..0000000
+index 472bee1..0000000
 --- a/node_modules/moment/locale/az.js
 +++ /dev/null
-@@ -1,112 +0,0 @@
+@@ -1,113 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Azerbaijani [az]
 -//! author : topchiyev : https://github.com/topchiyev
@@ -1033,9 +1037,10 @@ index f68ad17..0000000
 -            '_'
 -        ),
 -        monthsShort: 'yan_fev_mar_apr_may_iyn_iyl_avq_sen_okt_noy_dek'.split('_'),
--        weekdays: 'Bazar_Bazar ertəsi_Çərşənbə axşamı_Çərşənbə_Cümə axşamı_Cümə_Şənbə'.split(
--            '_'
--        ),
+-        weekdays:
+-            'Bazar_Bazar ertəsi_Çərşənbə axşamı_Çərşənbə_Cümə axşamı_Cümə_Şənbə'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'Baz_BzE_ÇAx_Çər_CAx_Cüm_Şən'.split('_'),
 -        weekdaysMin: 'Bz_BE_ÇA_Çə_CA_Cü_Şə'.split('_'),
 -        weekdaysParseExact: true,
@@ -1058,7 +1063,7 @@ index f68ad17..0000000
 -        relativeTime: {
 -            future: '%s sonra',
 -            past: '%s əvvəl',
--            s: 'birneçə saniyə',
+-            s: 'bir neçə saniyə',
 -            ss: '%d saniyə',
 -            m: 'bir dəqiqə',
 -            mm: '%d dəqiqə',
@@ -1108,10 +1113,10 @@ index f68ad17..0000000
 -})));
 diff --git a/node_modules/moment/locale/be.js b/node_modules/moment/locale/be.js
 deleted file mode 100644
-index 0768acb..0000000
+index 3631912..0000000
 --- a/node_modules/moment/locale/be.js
 +++ /dev/null
-@@ -1,152 +0,0 @@
+@@ -1,153 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Belarusian [be]
 -//! author : Dmitry Demidov : https://github.com/demidov91
@@ -1158,20 +1163,21 @@ index 0768acb..0000000
 -            format: 'студзеня_лютага_сакавіка_красавіка_траўня_чэрвеня_ліпеня_жніўня_верасня_кастрычніка_лістапада_снежня'.split(
 -                '_'
 -            ),
--            standalone: 'студзень_люты_сакавік_красавік_травень_чэрвень_ліпень_жнівень_верасень_кастрычнік_лістапад_снежань'.split(
--                '_'
--            ),
+-            standalone:
+-                'студзень_люты_сакавік_красавік_травень_чэрвень_ліпень_жнівень_верасень_кастрычнік_лістапад_снежань'.split(
+-                    '_'
+-                ),
 -        },
--        monthsShort: 'студ_лют_сак_крас_трав_чэрв_ліп_жнів_вер_каст_ліст_снеж'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'студ_лют_сак_крас_трав_чэрв_ліп_жнів_вер_каст_ліст_снеж'.split('_'),
 -        weekdays: {
 -            format: 'нядзелю_панядзелак_аўторак_сераду_чацвер_пятніцу_суботу'.split(
 -                '_'
 -            ),
--            standalone: 'нядзеля_панядзелак_аўторак_серада_чацвер_пятніца_субота'.split(
--                '_'
--            ),
+-            standalone:
+-                'нядзеля_панядзелак_аўторак_серада_чацвер_пятніца_субота'.split(
+-                    '_'
+-                ),
 -            isFormat: /\[ ?[Ууў] ?(?:мінулую|наступную)? ?\] ?dddd/,
 -        },
 -        weekdaysShort: 'нд_пн_ат_ср_чц_пт_сб'.split('_'),
@@ -1266,10 +1272,10 @@ index 0768acb..0000000
 -})));
 diff --git a/node_modules/moment/locale/bg.js b/node_modules/moment/locale/bg.js
 deleted file mode 100644
-index 05b6cf8..0000000
+index 5a1bda8..0000000
 --- a/node_modules/moment/locale/bg.js
 +++ /dev/null
-@@ -1,96 +0,0 @@
+@@ -1,98 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Bulgarian [bg]
 -//! author : Krasen Borisov : https://github.com/kraz
@@ -1332,6 +1338,8 @@ index 05b6cf8..0000000
 -            hh: '%d часа',
 -            d: 'ден',
 -            dd: '%d дена',
+-            w: 'седмица',
+-            ww: '%d седмици',
 -            M: 'месец',
 -            MM: '%d месеца',
 -            y: 'година',
@@ -1436,10 +1444,10 @@ index 302410c..0000000
 -})));
 diff --git a/node_modules/moment/locale/bn.js b/node_modules/moment/locale/bn.js
 deleted file mode 100644
-index e97f0f6..0000000
+index e5e3e5f..0000000
 --- a/node_modules/moment/locale/bn.js
 +++ /dev/null
-@@ -1,129 +0,0 @@
+@@ -1,130 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Bengali [bn]
 -//! author : Kaushik Gandhi : https://github.com/kaushikgandhi
@@ -1454,16 +1462,16 @@ index e97f0f6..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '১',
--            '2': '২',
--            '3': '৩',
--            '4': '৪',
--            '5': '৫',
--            '6': '৬',
--            '7': '৭',
--            '8': '৮',
--            '9': '৯',
--            '0': '০',
+-            1: '১',
+-            2: '২',
+-            3: '৩',
+-            4: '৪',
+-            5: '৫',
+-            6: '৬',
+-            7: '৭',
+-            8: '৮',
+-            9: '৯',
+-            0: '০',
 -        },
 -        numberMap = {
 -            '১': '1',
@@ -1482,9 +1490,10 @@ index e97f0f6..0000000
 -        months: 'জানুয়ারি_ফেব্রুয়ারি_মার্চ_এপ্রিল_মে_জুন_জুলাই_আগস্ট_সেপ্টেম্বর_অক্টোবর_নভেম্বর_ডিসেম্বর'.split(
 -            '_'
 -        ),
--        monthsShort: 'জানু_ফেব্রু_মার্চ_এপ্রিল_মে_জুন_জুলাই_আগস্ট_সেপ্ট_অক্টো_নভে_ডিসে'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'জানু_ফেব্রু_মার্চ_এপ্রিল_মে_জুন_জুলাই_আগস্ট_সেপ্ট_অক্টো_নভে_ডিসে'.split(
+-                '_'
+-            ),
 -        weekdays: 'রবিবার_সোমবার_মঙ্গলবার_বুধবার_বৃহস্পতিবার_শুক্রবার_শনিবার'.split(
 -            '_'
 -        ),
@@ -1571,10 +1580,10 @@ index e97f0f6..0000000
 -})));
 diff --git a/node_modules/moment/locale/bo.js b/node_modules/moment/locale/bo.js
 deleted file mode 100644
-index 1b514e4..0000000
+index c4a7c52..0000000
 --- a/node_modules/moment/locale/bo.js
 +++ /dev/null
-@@ -1,133 +0,0 @@
+@@ -1,135 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Tibetan [bo]
 -//! author : Thupten N. Chakrishar : https://github.com/vajradog
@@ -1589,16 +1598,16 @@ index 1b514e4..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '༡',
--            '2': '༢',
--            '3': '༣',
--            '4': '༤',
--            '5': '༥',
--            '6': '༦',
--            '7': '༧',
--            '8': '༨',
--            '9': '༩',
--            '0': '༠',
+-            1: '༡',
+-            2: '༢',
+-            3: '༣',
+-            4: '༤',
+-            5: '༥',
+-            6: '༦',
+-            7: '༧',
+-            8: '༨',
+-            9: '༩',
+-            0: '༠',
 -        },
 -        numberMap = {
 -            '༡': '1',
@@ -1617,14 +1626,16 @@ index 1b514e4..0000000
 -        months: 'ཟླ་བ་དང་པོ_ཟླ་བ་གཉིས་པ_ཟླ་བ་གསུམ་པ_ཟླ་བ་བཞི་པ_ཟླ་བ་ལྔ་པ_ཟླ་བ་དྲུག་པ_ཟླ་བ་བདུན་པ_ཟླ་བ་བརྒྱད་པ_ཟླ་བ་དགུ་པ_ཟླ་བ་བཅུ་པ_ཟླ་བ་བཅུ་གཅིག་པ_ཟླ་བ་བཅུ་གཉིས་པ'.split(
 -            '_'
 -        ),
--        monthsShort: 'ཟླ་1_ཟླ་2_ཟླ་3_ཟླ་4_ཟླ་5_ཟླ་6_ཟླ་7_ཟླ་8_ཟླ་9_ཟླ་10_ཟླ་11_ཟླ་12'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'ཟླ་1_ཟླ་2_ཟླ་3_ཟླ་4_ཟླ་5_ཟླ་6_ཟླ་7_ཟླ་8_ཟླ་9_ཟླ་10_ཟླ་11_ཟླ་12'.split(
+-                '_'
+-            ),
 -        monthsShortRegex: /^(ཟླ་\d{1,2})/,
 -        monthsParseExact: true,
--        weekdays: 'གཟའ་ཉི་མ་_གཟའ་ཟླ་བ་_གཟའ་མིག་དམར་_གཟའ་ལྷག་པ་_གཟའ་ཕུར་བུ_གཟའ་པ་སངས་_གཟའ་སྤེན་པ་'.split(
--            '_'
--        ),
+-        weekdays:
+-            'གཟའ་ཉི་མ་_གཟའ་ཟླ་བ་_གཟའ་མིག་དམར་_གཟའ་ལྷག་པ་_གཟའ་ཕུར་བུ_གཟའ་པ་སངས་_གཟའ་སྤེན་པ་'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'ཉི་མ་_ཟླ་བ་_མིག་དམར་_ལྷག་པ་_ཕུར་བུ_པ་སངས་_སྤེན་པ་'.split(
 -            '_'
 -        ),
@@ -1710,10 +1721,10 @@ index 1b514e4..0000000
 -})));
 diff --git a/node_modules/moment/locale/br.js b/node_modules/moment/locale/br.js
 deleted file mode 100644
-index 7962577..0000000
+index bd047fe..0000000
 --- a/node_modules/moment/locale/br.js
 +++ /dev/null
-@@ -1,176 +0,0 @@
+@@ -1,179 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Breton [br]
 -//! author : Jean-Baptiste Le Duigou : https://github.com/jbleduigou
@@ -1785,9 +1796,12 @@ index 7962577..0000000
 -            /^du/i,
 -            /^ker/i,
 -        ],
--        monthsRegex = /^(genver|c[ʼ\']hwevrer|meurzh|ebrel|mae|mezheven|gouere|eost|gwengolo|here|du|kerzu|gen|c[ʼ\']hwe|meu|ebr|mae|eve|gou|eos|gwe|her|du|ker)/i,
--        monthsStrictRegex = /^(genver|c[ʼ\']hwevrer|meurzh|ebrel|mae|mezheven|gouere|eost|gwengolo|here|du|kerzu)/i,
--        monthsShortStrictRegex = /^(gen|c[ʼ\']hwe|meu|ebr|mae|eve|gou|eos|gwe|her|du|ker)/i,
+-        monthsRegex =
+-            /^(genver|c[ʼ\']hwevrer|meurzh|ebrel|mae|mezheven|gouere|eost|gwengolo|here|du|kerzu|gen|c[ʼ\']hwe|meu|ebr|mae|eve|gou|eos|gwe|her|du|ker)/i,
+-        monthsStrictRegex =
+-            /^(genver|c[ʼ\']hwevrer|meurzh|ebrel|mae|mezheven|gouere|eost|gwengolo|here|du|kerzu)/i,
+-        monthsShortStrictRegex =
+-            /^(gen|c[ʼ\']hwe|meu|ebr|mae|eve|gou|eos|gwe|her|du|ker)/i,
 -        fullWeekdaysParse = [
 -            /^sul/i,
 -            /^lun/i,
@@ -1892,10 +1906,10 @@ index 7962577..0000000
 -})));
 diff --git a/node_modules/moment/locale/bs.js b/node_modules/moment/locale/bs.js
 deleted file mode 100644
-index 6086f0a..0000000
+index e0d6c85..0000000
 --- a/node_modules/moment/locale/bs.js
 +++ /dev/null
-@@ -1,160 +0,0 @@
+@@ -1,161 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Bosnian [bs]
 -//! author : Nedim Cholich : https://github.com/frontyard
@@ -1976,9 +1990,10 @@ index 6086f0a..0000000
 -        months: 'januar_februar_mart_april_maj_juni_juli_august_septembar_oktobar_novembar_decembar'.split(
 -            '_'
 -        ),
--        monthsShort: 'jan._feb._mar._apr._maj._jun._jul._aug._sep._okt._nov._dec.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'jan._feb._mar._apr._maj._jun._jul._aug._sep._okt._nov._dec.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'nedjelja_ponedjeljak_utorak_srijeda_četvrtak_petak_subota'.split(
 -            '_'
@@ -2058,10 +2073,10 @@ index 6086f0a..0000000
 -})));
 diff --git a/node_modules/moment/locale/ca.js b/node_modules/moment/locale/ca.js
 deleted file mode 100644
-index c603b97..0000000
+index 133071f..0000000
 --- a/node_modules/moment/locale/ca.js
 +++ /dev/null
-@@ -1,108 +0,0 @@
+@@ -1,111 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Catalan [ca]
 -//! author : Juan G. Hurtado : https://github.com/juanghurtado
@@ -2077,21 +2092,24 @@ index c603b97..0000000
 -
 -    var ca = moment.defineLocale('ca', {
 -        months: {
--            standalone: 'gener_febrer_març_abril_maig_juny_juliol_agost_setembre_octubre_novembre_desembre'.split(
--                '_'
--            ),
+-            standalone:
+-                'gener_febrer_març_abril_maig_juny_juliol_agost_setembre_octubre_novembre_desembre'.split(
+-                    '_'
+-                ),
 -            format: "de gener_de febrer_de març_d'abril_de maig_de juny_de juliol_d'agost_de setembre_d'octubre_de novembre_de desembre".split(
 -                '_'
 -            ),
 -            isFormat: /D[oD]?(\s)+MMMM/,
 -        },
--        monthsShort: 'gen._febr._març_abr._maig_juny_jul._ag._set._oct._nov._des.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'gen._febr._març_abr._maig_juny_jul._ag._set._oct._nov._des.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
--        weekdays: 'diumenge_dilluns_dimarts_dimecres_dijous_divendres_dissabte'.split(
--            '_'
--        ),
+-        weekdays:
+-            'diumenge_dilluns_dimarts_dimecres_dijous_divendres_dissabte'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'dg._dl._dt._dc._dj._dv._ds.'.split('_'),
 -        weekdaysMin: 'dg_dl_dt_dc_dj_dv_ds'.split('_'),
 -        weekdaysParseExact: true,
@@ -2172,10 +2190,10 @@ index c603b97..0000000
 -})));
 diff --git a/node_modules/moment/locale/cs.js b/node_modules/moment/locale/cs.js
 deleted file mode 100644
-index ec25c41..0000000
+index 43d0ebd..0000000
 --- a/node_modules/moment/locale/cs.js
 +++ /dev/null
-@@ -1,182 +0,0 @@
+@@ -1,191 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Czech [cs]
 -//! author : petrbela : https://github.com/petrbela
@@ -2189,9 +2207,15 @@ index ec25c41..0000000
 -
 -    //! moment.js locale configuration
 -
--    var months = 'leden_únor_březen_duben_květen_červen_červenec_srpen_září_říjen_listopad_prosinec'.split(
--            '_'
--        ),
+-    var months = {
+-            format: 'leden_únor_březen_duben_květen_červen_červenec_srpen_září_říjen_listopad_prosinec'.split(
+-                '_'
+-            ),
+-            standalone:
+-                'ledna_února_března_dubna_května_června_července_srpna_září_října_listopadu_prosince'.split(
+-                    '_'
+-                ),
+-        },
 -        monthsShort = 'led_úno_bře_dub_kvě_čvn_čvc_srp_zář_říj_lis_pro'.split('_'),
 -        monthsParse = [
 -            /^led/i,
@@ -2209,7 +2233,8 @@ index ec25c41..0000000
 -        ],
 -        // NOTE: 'červen' is substring of 'červenec'; therefore 'červenec' must precede 'červen' in the regex to be fully matched.
 -        // Otherwise parser matches '1. červenec' as '1. červen' + 'ec'.
--        monthsRegex = /^(leden|únor|březen|duben|květen|červenec|července|červen|června|srpen|září|říjen|listopad|prosinec|led|úno|bře|dub|kvě|čvn|čvc|srp|zář|říj|lis|pro)/i;
+-        monthsRegex =
+-            /^(leden|únor|březen|duben|květen|červenec|července|červen|června|srpen|září|říjen|listopad|prosinec|led|úno|bře|dub|kvě|čvn|čvc|srp|zář|říj|lis|pro)/i;
 -
 -    function plural(n) {
 -        return n > 1 && n < 5 && ~~(n / 10) !== 1;
@@ -2275,8 +2300,10 @@ index ec25c41..0000000
 -        monthsShortRegex: monthsRegex,
 -        // NOTE: 'červen' is substring of 'červenec'; therefore 'červenec' must precede 'červen' in the regex to be fully matched.
 -        // Otherwise parser matches '1. červenec' as '1. červen' + 'ec'.
--        monthsStrictRegex: /^(leden|ledna|února|únor|březen|března|duben|dubna|květen|května|červenec|července|červen|června|srpen|srpna|září|říjen|října|listopadu|listopad|prosinec|prosince)/i,
--        monthsShortStrictRegex: /^(led|úno|bře|dub|kvě|čvn|čvc|srp|zář|říj|lis|pro)/i,
+-        monthsStrictRegex:
+-            /^(leden|ledna|února|únor|březen|března|duben|dubna|květen|května|červenec|července|červen|června|srpen|srpna|září|říjen|října|listopadu|listopad|prosinec|prosince)/i,
+-        monthsShortStrictRegex:
+-            /^(led|úno|bře|dub|kvě|čvn|čvc|srp|zář|říj|lis|pro)/i,
 -        monthsParse: monthsParse,
 -        longMonthsParse: monthsParse,
 -        shortMonthsParse: monthsParse,
@@ -2360,10 +2387,10 @@ index ec25c41..0000000
 -})));
 diff --git a/node_modules/moment/locale/cv.js b/node_modules/moment/locale/cv.js
 deleted file mode 100644
-index 891eb00..0000000
+index abb1d4f..0000000
 --- a/node_modules/moment/locale/cv.js
 +++ /dev/null
-@@ -1,73 +0,0 @@
+@@ -1,74 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Chuvash [cv]
 -//! author : Anatoly Mironov : https://github.com/mirontoli
@@ -2382,9 +2409,10 @@ index 891eb00..0000000
 -            '_'
 -        ),
 -        monthsShort: 'кӑр_нар_пуш_ака_май_ҫӗр_утӑ_ҫур_авн_юпа_чӳк_раш'.split('_'),
--        weekdays: 'вырсарникун_тунтикун_ытларикун_юнкун_кӗҫнерникун_эрнекун_шӑматкун'.split(
--            '_'
--        ),
+-        weekdays:
+-            'вырсарникун_тунтикун_ытларикун_юнкун_кӗҫнерникун_эрнекун_шӑматкун'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'выр_тун_ытл_юн_кӗҫ_эрн_шӑм'.split('_'),
 -        weekdaysMin: 'вр_тн_ыт_юн_кҫ_эр_шм'.split('_'),
 -        longDateFormat: {
@@ -2439,10 +2467,10 @@ index 891eb00..0000000
 -})));
 diff --git a/node_modules/moment/locale/cy.js b/node_modules/moment/locale/cy.js
 deleted file mode 100644
-index 1bcd649..0000000
+index 3b987f2..0000000
 --- a/node_modules/moment/locale/cy.js
 +++ /dev/null
-@@ -1,108 +0,0 @@
+@@ -1,109 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Welsh [cy]
 -//! author : Robert Allen : https://github.com/robgallen
@@ -2464,9 +2492,10 @@ index 1bcd649..0000000
 -        monthsShort: 'Ion_Chwe_Maw_Ebr_Mai_Meh_Gor_Aws_Med_Hyd_Tach_Rhag'.split(
 -            '_'
 -        ),
--        weekdays: 'Dydd Sul_Dydd Llun_Dydd Mawrth_Dydd Mercher_Dydd Iau_Dydd Gwener_Dydd Sadwrn'.split(
--            '_'
--        ),
+-        weekdays:
+-            'Dydd Sul_Dydd Llun_Dydd Mawrth_Dydd Mercher_Dydd Iau_Dydd Gwener_Dydd Sadwrn'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'Sul_Llun_Maw_Mer_Iau_Gwe_Sad'.split('_'),
 -        weekdaysMin: 'Su_Ll_Ma_Me_Ia_Gw_Sa'.split('_'),
 -        weekdaysParseExact: true,
@@ -2623,7 +2652,7 @@ index 2ed0583..0000000
 -})));
 diff --git a/node_modules/moment/locale/de-at.js b/node_modules/moment/locale/de-at.js
 deleted file mode 100644
-index d807815..0000000
+index 7c31302..0000000
 --- a/node_modules/moment/locale/de-at.js
 +++ /dev/null
 @@ -1,90 +0,0 @@
@@ -2662,13 +2691,13 @@ index d807815..0000000
 -        months: 'Jänner_Februar_März_April_Mai_Juni_Juli_August_September_Oktober_November_Dezember'.split(
 -            '_'
 -        ),
--        monthsShort: 'Jän._Feb._März_Apr._Mai_Juni_Juli_Aug._Sep._Okt._Nov._Dez.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'Jän._Feb._März_Apr._Mai_Juni_Juli_Aug._Sep._Okt._Nov._Dez.'.split('_'),
 -        monthsParseExact: true,
--        weekdays: 'Sonntag_Montag_Dienstag_Mittwoch_Donnerstag_Freitag_Samstag'.split(
--            '_'
--        ),
+-        weekdays:
+-            'Sonntag_Montag_Dienstag_Mittwoch_Donnerstag_Freitag_Samstag'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'So._Mo._Di._Mi._Do._Fr._Sa.'.split('_'),
 -        weekdaysMin: 'So_Mo_Di_Mi_Do_Fr_Sa'.split('_'),
 -        weekdaysParseExact: true,
@@ -2719,7 +2748,7 @@ index d807815..0000000
 -})));
 diff --git a/node_modules/moment/locale/de-ch.js b/node_modules/moment/locale/de-ch.js
 deleted file mode 100644
-index da91366..0000000
+index 10fed17..0000000
 --- a/node_modules/moment/locale/de-ch.js
 +++ /dev/null
 @@ -1,87 +0,0 @@
@@ -2755,13 +2784,13 @@ index da91366..0000000
 -        months: 'Januar_Februar_März_April_Mai_Juni_Juli_August_September_Oktober_November_Dezember'.split(
 -            '_'
 -        ),
--        monthsShort: 'Jan._Feb._März_Apr._Mai_Juni_Juli_Aug._Sep._Okt._Nov._Dez.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'Jan._Feb._März_Apr._Mai_Juni_Juli_Aug._Sep._Okt._Nov._Dez.'.split('_'),
 -        monthsParseExact: true,
--        weekdays: 'Sonntag_Montag_Dienstag_Mittwoch_Donnerstag_Freitag_Samstag'.split(
--            '_'
--        ),
+-        weekdays:
+-            'Sonntag_Montag_Dienstag_Mittwoch_Donnerstag_Freitag_Samstag'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'So_Mo_Di_Mi_Do_Fr_Sa'.split('_'),
 -        weekdaysMin: 'So_Mo_Di_Mi_Do_Fr_Sa'.split('_'),
 -        weekdaysParseExact: true,
@@ -2812,7 +2841,7 @@ index da91366..0000000
 -})));
 diff --git a/node_modules/moment/locale/de.js b/node_modules/moment/locale/de.js
 deleted file mode 100644
-index b25c561..0000000
+index cc061eb..0000000
 --- a/node_modules/moment/locale/de.js
 +++ /dev/null
 @@ -1,89 +0,0 @@
@@ -2850,13 +2879,13 @@ index b25c561..0000000
 -        months: 'Januar_Februar_März_April_Mai_Juni_Juli_August_September_Oktober_November_Dezember'.split(
 -            '_'
 -        ),
--        monthsShort: 'Jan._Feb._März_Apr._Mai_Juni_Juli_Aug._Sep._Okt._Nov._Dez.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'Jan._Feb._März_Apr._Mai_Juni_Juli_Aug._Sep._Okt._Nov._Dez.'.split('_'),
 -        monthsParseExact: true,
--        weekdays: 'Sonntag_Montag_Dienstag_Mittwoch_Donnerstag_Freitag_Samstag'.split(
--            '_'
--        ),
+-        weekdays:
+-            'Sonntag_Montag_Dienstag_Mittwoch_Donnerstag_Freitag_Samstag'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'So._Mo._Di._Mi._Do._Fr._Sa.'.split('_'),
 -        weekdaysMin: 'So_Mo_Di_Mi_Do_Fr_Sa'.split('_'),
 -        weekdaysParseExact: true,
@@ -3014,10 +3043,10 @@ index e6cc8f6..0000000
 -})));
 diff --git a/node_modules/moment/locale/el.js b/node_modules/moment/locale/el.js
 deleted file mode 100644
-index 5ffc0fb..0000000
+index a147859..0000000
 --- a/node_modules/moment/locale/el.js
 +++ /dev/null
-@@ -1,115 +0,0 @@
+@@ -1,117 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Greek [el]
 -//! author : Aggelos Karalias : https://github.com/mehiel
@@ -3039,12 +3068,14 @@ index 5ffc0fb..0000000
 -    }
 -
 -    var el = moment.defineLocale('el', {
--        monthsNominativeEl: 'Ιανουάριος_Φεβρουάριος_Μάρτιος_Απρίλιος_Μάιος_Ιούνιος_Ιούλιος_Αύγουστος_Σεπτέμβριος_Οκτώβριος_Νοέμβριος_Δεκέμβριος'.split(
--            '_'
--        ),
--        monthsGenitiveEl: 'Ιανουαρίου_Φεβρουαρίου_Μαρτίου_Απριλίου_Μαΐου_Ιουνίου_Ιουλίου_Αυγούστου_Σεπτεμβρίου_Οκτωβρίου_Νοεμβρίου_Δεκεμβρίου'.split(
--            '_'
--        ),
+-        monthsNominativeEl:
+-            'Ιανουάριος_Φεβρουάριος_Μάρτιος_Απρίλιος_Μάιος_Ιούνιος_Ιούλιος_Αύγουστος_Σεπτέμβριος_Οκτώβριος_Νοέμβριος_Δεκέμβριος'.split(
+-                '_'
+-            ),
+-        monthsGenitiveEl:
+-            'Ιανουαρίου_Φεβρουαρίου_Μαρτίου_Απριλίου_Μαΐου_Ιουνίου_Ιουλίου_Αυγούστου_Σεπτεμβρίου_Οκτωβρίου_Νοεμβρίου_Δεκεμβρίου'.split(
+-                '_'
+-            ),
 -        months: function (momentToFormat, format) {
 -            if (!momentToFormat) {
 -                return this._monthsNominativeEl;
@@ -3892,10 +3923,10 @@ index 799dad0..0000000
 -})));
 diff --git a/node_modules/moment/locale/es-do.js b/node_modules/moment/locale/es-do.js
 deleted file mode 100644
-index d550f11..0000000
+index 8a557c3..0000000
 --- a/node_modules/moment/locale/es-do.js
 +++ /dev/null
-@@ -1,113 +0,0 @@
+@@ -1,119 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Spanish (Dominican Republic) [es-do]
 -
@@ -3908,9 +3939,10 @@ index d550f11..0000000
 -
 -    //! moment.js locale configuration
 -
--    var monthsShortDot = 'ene._feb._mar._abr._may._jun._jul._ago._sep._oct._nov._dic.'.split(
--            '_'
--        ),
+-    var monthsShortDot =
+-            'ene._feb._mar._abr._may._jun._jul._ago._sep._oct._nov._dic.'.split(
+-                '_'
+-            ),
 -        monthsShort = 'ene_feb_mar_abr_may_jun_jul_ago_sep_oct_nov_dic'.split('_'),
 -        monthsParse = [
 -            /^ene/i,
@@ -3926,7 +3958,8 @@ index d550f11..0000000
 -            /^nov/i,
 -            /^dic/i,
 -        ],
--        monthsRegex = /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|ene\.?|feb\.?|mar\.?|abr\.?|may\.?|jun\.?|jul\.?|ago\.?|sep\.?|oct\.?|nov\.?|dic\.?)/i;
+-        monthsRegex =
+-            /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|ene\.?|feb\.?|mar\.?|abr\.?|may\.?|jun\.?|jul\.?|ago\.?|sep\.?|oct\.?|nov\.?|dic\.?)/i;
 -
 -    var esDo = moment.defineLocale('es-do', {
 -        months: 'enero_febrero_marzo_abril_mayo_junio_julio_agosto_septiembre_octubre_noviembre_diciembre'.split(
@@ -3943,8 +3976,10 @@ index d550f11..0000000
 -        },
 -        monthsRegex: monthsRegex,
 -        monthsShortRegex: monthsRegex,
--        monthsStrictRegex: /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/i,
--        monthsShortStrictRegex: /^(ene\.?|feb\.?|mar\.?|abr\.?|may\.?|jun\.?|jul\.?|ago\.?|sep\.?|oct\.?|nov\.?|dic\.?)/i,
+-        monthsStrictRegex:
+-            /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/i,
+-        monthsShortStrictRegex:
+-            /^(ene\.?|feb\.?|mar\.?|abr\.?|may\.?|jun\.?|jul\.?|ago\.?|sep\.?|oct\.?|nov\.?|dic\.?)/i,
 -        monthsParse: monthsParse,
 -        longMonthsParse: monthsParse,
 -        shortMonthsParse: monthsParse,
@@ -3993,6 +4028,8 @@ index d550f11..0000000
 -            hh: '%d horas',
 -            d: 'un día',
 -            dd: '%d días',
+-            w: 'una semana',
+-            ww: '%d semanas',
 -            M: 'un mes',
 -            MM: '%d meses',
 -            y: 'un año',
@@ -4011,10 +4048,10 @@ index d550f11..0000000
 -})));
 diff --git a/node_modules/moment/locale/es-us.js b/node_modules/moment/locale/es-us.js
 deleted file mode 100644
-index c0207eb..0000000
+index 2c52254..0000000
 --- a/node_modules/moment/locale/es-us.js
 +++ /dev/null
-@@ -1,115 +0,0 @@
+@@ -1,121 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Spanish (United States) [es-us]
 -//! author : bustta : https://github.com/bustta
@@ -4029,9 +4066,10 @@ index c0207eb..0000000
 -
 -    //! moment.js locale configuration
 -
--    var monthsShortDot = 'ene._feb._mar._abr._may._jun._jul._ago._sep._oct._nov._dic.'.split(
--            '_'
--        ),
+-    var monthsShortDot =
+-            'ene._feb._mar._abr._may._jun._jul._ago._sep._oct._nov._dic.'.split(
+-                '_'
+-            ),
 -        monthsShort = 'ene_feb_mar_abr_may_jun_jul_ago_sep_oct_nov_dic'.split('_'),
 -        monthsParse = [
 -            /^ene/i,
@@ -4047,7 +4085,8 @@ index c0207eb..0000000
 -            /^nov/i,
 -            /^dic/i,
 -        ],
--        monthsRegex = /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|ene\.?|feb\.?|mar\.?|abr\.?|may\.?|jun\.?|jul\.?|ago\.?|sep\.?|oct\.?|nov\.?|dic\.?)/i;
+-        monthsRegex =
+-            /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|ene\.?|feb\.?|mar\.?|abr\.?|may\.?|jun\.?|jul\.?|ago\.?|sep\.?|oct\.?|nov\.?|dic\.?)/i;
 -
 -    var esUs = moment.defineLocale('es-us', {
 -        months: 'enero_febrero_marzo_abril_mayo_junio_julio_agosto_septiembre_octubre_noviembre_diciembre'.split(
@@ -4064,8 +4103,10 @@ index c0207eb..0000000
 -        },
 -        monthsRegex: monthsRegex,
 -        monthsShortRegex: monthsRegex,
--        monthsStrictRegex: /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/i,
--        monthsShortStrictRegex: /^(ene\.?|feb\.?|mar\.?|abr\.?|may\.?|jun\.?|jul\.?|ago\.?|sep\.?|oct\.?|nov\.?|dic\.?)/i,
+-        monthsStrictRegex:
+-            /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/i,
+-        monthsShortStrictRegex:
+-            /^(ene\.?|feb\.?|mar\.?|abr\.?|may\.?|jun\.?|jul\.?|ago\.?|sep\.?|oct\.?|nov\.?|dic\.?)/i,
 -        monthsParse: monthsParse,
 -        longMonthsParse: monthsParse,
 -        shortMonthsParse: monthsParse,
@@ -4114,6 +4155,8 @@ index c0207eb..0000000
 -            hh: '%d horas',
 -            d: 'un día',
 -            dd: '%d días',
+-            w: 'una semana',
+-            ww: '%d semanas',
 -            M: 'un mes',
 -            MM: '%d meses',
 -            y: 'un año',
@@ -4132,10 +4175,10 @@ index c0207eb..0000000
 -})));
 diff --git a/node_modules/moment/locale/es.js b/node_modules/moment/locale/es.js
 deleted file mode 100644
-index e4e6d41..0000000
+index 7fc4628..0000000
 --- a/node_modules/moment/locale/es.js
 +++ /dev/null
-@@ -1,115 +0,0 @@
+@@ -1,121 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Spanish [es]
 -//! author : Julio Napurí : https://github.com/julionc
@@ -4149,9 +4192,10 @@ index e4e6d41..0000000
 -
 -    //! moment.js locale configuration
 -
--    var monthsShortDot = 'ene._feb._mar._abr._may._jun._jul._ago._sep._oct._nov._dic.'.split(
--            '_'
--        ),
+-    var monthsShortDot =
+-            'ene._feb._mar._abr._may._jun._jul._ago._sep._oct._nov._dic.'.split(
+-                '_'
+-            ),
 -        monthsShort = 'ene_feb_mar_abr_may_jun_jul_ago_sep_oct_nov_dic'.split('_'),
 -        monthsParse = [
 -            /^ene/i,
@@ -4167,7 +4211,8 @@ index e4e6d41..0000000
 -            /^nov/i,
 -            /^dic/i,
 -        ],
--        monthsRegex = /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|ene\.?|feb\.?|mar\.?|abr\.?|may\.?|jun\.?|jul\.?|ago\.?|sep\.?|oct\.?|nov\.?|dic\.?)/i;
+-        monthsRegex =
+-            /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|ene\.?|feb\.?|mar\.?|abr\.?|may\.?|jun\.?|jul\.?|ago\.?|sep\.?|oct\.?|nov\.?|dic\.?)/i;
 -
 -    var es = moment.defineLocale('es', {
 -        months: 'enero_febrero_marzo_abril_mayo_junio_julio_agosto_septiembre_octubre_noviembre_diciembre'.split(
@@ -4184,8 +4229,10 @@ index e4e6d41..0000000
 -        },
 -        monthsRegex: monthsRegex,
 -        monthsShortRegex: monthsRegex,
--        monthsStrictRegex: /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/i,
--        monthsShortStrictRegex: /^(ene\.?|feb\.?|mar\.?|abr\.?|may\.?|jun\.?|jul\.?|ago\.?|sep\.?|oct\.?|nov\.?|dic\.?)/i,
+-        monthsStrictRegex:
+-            /^(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)/i,
+-        monthsShortStrictRegex:
+-            /^(ene\.?|feb\.?|mar\.?|abr\.?|may\.?|jun\.?|jul\.?|ago\.?|sep\.?|oct\.?|nov\.?|dic\.?)/i,
 -        monthsParse: monthsParse,
 -        longMonthsParse: monthsParse,
 -        shortMonthsParse: monthsParse,
@@ -4234,6 +4281,8 @@ index e4e6d41..0000000
 -            hh: '%d horas',
 -            d: 'un día',
 -            dd: '%d días',
+-            w: 'una semana',
+-            ww: '%d semanas',
 -            M: 'un mes',
 -            MM: '%d meses',
 -            y: 'un año',
@@ -4245,7 +4294,7 @@ index e4e6d41..0000000
 -            dow: 1, // Monday is the first day of the week.
 -            doy: 4, // The week that contains Jan 4th is the first week of the year.
 -        },
--        invalidDate: 'Fecha invalida',
+-        invalidDate: 'Fecha inválida',
 -    });
 -
 -    return es;
@@ -4253,7 +4302,7 @@ index e4e6d41..0000000
 -})));
 diff --git a/node_modules/moment/locale/et.js b/node_modules/moment/locale/et.js
 deleted file mode 100644
-index d5ec94e..0000000
+index 7c8760d..0000000
 --- a/node_modules/moment/locale/et.js
 +++ /dev/null
 @@ -1,89 +0,0 @@
@@ -4295,12 +4344,12 @@ index d5ec94e..0000000
 -        months: 'jaanuar_veebruar_märts_aprill_mai_juuni_juuli_august_september_oktoober_november_detsember'.split(
 -            '_'
 -        ),
--        monthsShort: 'jaan_veebr_märts_apr_mai_juuni_juuli_aug_sept_okt_nov_dets'.split(
--            '_'
--        ),
--        weekdays: 'pühapäev_esmaspäev_teisipäev_kolmapäev_neljapäev_reede_laupäev'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'jaan_veebr_märts_apr_mai_juuni_juuli_aug_sept_okt_nov_dets'.split('_'),
+-        weekdays:
+-            'pühapäev_esmaspäev_teisipäev_kolmapäev_neljapäev_reede_laupäev'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'P_E_T_K_N_R_L'.split('_'),
 -        weekdaysMin: 'P_E_T_K_N_R_L'.split('_'),
 -        longDateFormat: {
@@ -4348,10 +4397,10 @@ index d5ec94e..0000000
 -})));
 diff --git a/node_modules/moment/locale/eu.js b/node_modules/moment/locale/eu.js
 deleted file mode 100644
-index b9843a4..0000000
+index ca2e547..0000000
 --- a/node_modules/moment/locale/eu.js
 +++ /dev/null
-@@ -1,74 +0,0 @@
+@@ -1,76 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Basque [eu]
 -//! author : Eneko Illarramendi : https://github.com/eillarra
@@ -4369,13 +4418,15 @@ index b9843a4..0000000
 -        months: 'urtarrila_otsaila_martxoa_apirila_maiatza_ekaina_uztaila_abuztua_iraila_urria_azaroa_abendua'.split(
 -            '_'
 -        ),
--        monthsShort: 'urt._ots._mar._api._mai._eka._uzt._abu._ira._urr._aza._abe.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'urt._ots._mar._api._mai._eka._uzt._abu._ira._urr._aza._abe.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
--        weekdays: 'igandea_astelehena_asteartea_asteazkena_osteguna_ostirala_larunbata'.split(
--            '_'
--        ),
+-        weekdays:
+-            'igandea_astelehena_asteartea_asteazkena_osteguna_ostirala_larunbata'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'ig._al._ar._az._og._ol._lr.'.split('_'),
 -        weekdaysMin: 'ig_al_ar_az_og_ol_lr'.split('_'),
 -        weekdaysParseExact: true,
@@ -4428,10 +4479,10 @@ index b9843a4..0000000
 -})));
 diff --git a/node_modules/moment/locale/fa.js b/node_modules/moment/locale/fa.js
 deleted file mode 100644
-index fff48cf..0000000
+index 845757b..0000000
 --- a/node_modules/moment/locale/fa.js
 +++ /dev/null
-@@ -1,121 +0,0 @@
+@@ -1,124 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Persian [fa]
 -//! author : Ebrahim Byagowi : https://github.com/ebraminio
@@ -4446,16 +4497,16 @@ index fff48cf..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '۱',
--            '2': '۲',
--            '3': '۳',
--            '4': '۴',
--            '5': '۵',
--            '6': '۶',
--            '7': '۷',
--            '8': '۸',
--            '9': '۹',
--            '0': '۰',
+-            1: '۱',
+-            2: '۲',
+-            3: '۳',
+-            4: '۴',
+-            5: '۵',
+-            6: '۶',
+-            7: '۷',
+-            8: '۸',
+-            9: '۹',
+-            0: '۰',
 -        },
 -        numberMap = {
 -            '۱': '1',
@@ -4474,15 +4525,18 @@ index fff48cf..0000000
 -        months: 'ژانویه_فوریه_مارس_آوریل_مه_ژوئن_ژوئیه_اوت_سپتامبر_اکتبر_نوامبر_دسامبر'.split(
 -            '_'
 -        ),
--        monthsShort: 'ژانویه_فوریه_مارس_آوریل_مه_ژوئن_ژوئیه_اوت_سپتامبر_اکتبر_نوامبر_دسامبر'.split(
--            '_'
--        ),
--        weekdays: 'یک\u200cشنبه_دوشنبه_سه\u200cشنبه_چهارشنبه_پنج\u200cشنبه_جمعه_شنبه'.split(
--            '_'
--        ),
--        weekdaysShort: 'یک\u200cشنبه_دوشنبه_سه\u200cشنبه_چهارشنبه_پنج\u200cشنبه_جمعه_شنبه'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'ژانویه_فوریه_مارس_آوریل_مه_ژوئن_ژوئیه_اوت_سپتامبر_اکتبر_نوامبر_دسامبر'.split(
+-                '_'
+-            ),
+-        weekdays:
+-            'یک\u200cشنبه_دوشنبه_سه\u200cشنبه_چهارشنبه_پنج\u200cشنبه_جمعه_شنبه'.split(
+-                '_'
+-            ),
+-        weekdaysShort:
+-            'یک\u200cشنبه_دوشنبه_سه\u200cشنبه_چهارشنبه_پنج\u200cشنبه_جمعه_شنبه'.split(
+-                '_'
+-            ),
 -        weekdaysMin: 'ی_د_س_چ_پ_ج_ش'.split('_'),
 -        weekdaysParseExact: true,
 -        longDateFormat: {
@@ -4555,10 +4609,10 @@ index fff48cf..0000000
 -})));
 diff --git a/node_modules/moment/locale/fi.js b/node_modules/moment/locale/fi.js
 deleted file mode 100644
-index 7627162..0000000
+index 07e57cf..0000000
 --- a/node_modules/moment/locale/fi.js
 +++ /dev/null
-@@ -1,132 +0,0 @@
+@@ -1,135 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Finnish [fi]
 -//! author : Tarmo Aidantausta : https://github.com/bleadof
@@ -4572,9 +4626,10 @@ index 7627162..0000000
 -
 -    //! moment.js locale configuration
 -
--    var numbersPast = 'nolla yksi kaksi kolme neljä viisi kuusi seitsemän kahdeksan yhdeksän'.split(
--            ' '
--        ),
+-    var numbersPast =
+-            'nolla yksi kaksi kolme neljä viisi kuusi seitsemän kahdeksan yhdeksän'.split(
+-                ' '
+-            ),
 -        numbersFuture = [
 -            'nolla',
 -            'yhden',
@@ -4636,12 +4691,14 @@ index 7627162..0000000
 -        months: 'tammikuu_helmikuu_maaliskuu_huhtikuu_toukokuu_kesäkuu_heinäkuu_elokuu_syyskuu_lokakuu_marraskuu_joulukuu'.split(
 -            '_'
 -        ),
--        monthsShort: 'tammi_helmi_maalis_huhti_touko_kesä_heinä_elo_syys_loka_marras_joulu'.split(
--            '_'
--        ),
--        weekdays: 'sunnuntai_maanantai_tiistai_keskiviikko_torstai_perjantai_lauantai'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'tammi_helmi_maalis_huhti_touko_kesä_heinä_elo_syys_loka_marras_joulu'.split(
+-                '_'
+-            ),
+-        weekdays:
+-            'sunnuntai_maanantai_tiistai_keskiviikko_torstai_perjantai_lauantai'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'su_ma_ti_ke_to_pe_la'.split('_'),
 -        weekdaysMin: 'su_ma_ti_ke_to_pe_la'.split('_'),
 -        longDateFormat: {
@@ -4768,10 +4825,10 @@ index 13103e8..0000000
 -})));
 diff --git a/node_modules/moment/locale/fo.js b/node_modules/moment/locale/fo.js
 deleted file mode 100644
-index 94c4f35..0000000
+index 217fcfb..0000000
 --- a/node_modules/moment/locale/fo.js
 +++ /dev/null
-@@ -1,67 +0,0 @@
+@@ -1,68 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Faroese [fo]
 -//! author : Ragnar Johannesen : https://github.com/ragnar123
@@ -4791,9 +4848,10 @@ index 94c4f35..0000000
 -            '_'
 -        ),
 -        monthsShort: 'jan_feb_mar_apr_mai_jun_jul_aug_sep_okt_nov_des'.split('_'),
--        weekdays: 'sunnudagur_mánadagur_týsdagur_mikudagur_hósdagur_fríggjadagur_leygardagur'.split(
--            '_'
--        ),
+-        weekdays:
+-            'sunnudagur_mánadagur_týsdagur_mikudagur_hósdagur_fríggjadagur_leygardagur'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'sun_mán_týs_mik_hós_frí_ley'.split('_'),
 -        weekdaysMin: 'su_má_tý_mi_hó_fr_le'.split('_'),
 -        longDateFormat: {
@@ -4841,10 +4899,10 @@ index 94c4f35..0000000
 -})));
 diff --git a/node_modules/moment/locale/fr-ca.js b/node_modules/moment/locale/fr-ca.js
 deleted file mode 100644
-index a170e97..0000000
+index 7d48fd7..0000000
 --- a/node_modules/moment/locale/fr-ca.js
 +++ /dev/null
-@@ -1,80 +0,0 @@
+@@ -1,81 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : French (Canada) [fr-ca]
 -//! author : Jonathan Abourbih : https://github.com/jonbca
@@ -4862,9 +4920,10 @@ index a170e97..0000000
 -        months: 'janvier_février_mars_avril_mai_juin_juillet_août_septembre_octobre_novembre_décembre'.split(
 -            '_'
 -        ),
--        monthsShort: 'janv._févr._mars_avr._mai_juin_juil._août_sept._oct._nov._déc.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'janv._févr._mars_avr._mai_juin_juil._août_sept._oct._nov._déc.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'dimanche_lundi_mardi_mercredi_jeudi_vendredi_samedi'.split('_'),
 -        weekdaysShort: 'dim._lun._mar._mer._jeu._ven._sam.'.split('_'),
@@ -4927,10 +4986,10 @@ index a170e97..0000000
 -})));
 diff --git a/node_modules/moment/locale/fr-ch.js b/node_modules/moment/locale/fr-ch.js
 deleted file mode 100644
-index d371fa7..0000000
+index c28d81c..0000000
 --- a/node_modules/moment/locale/fr-ch.js
 +++ /dev/null
-@@ -1,84 +0,0 @@
+@@ -1,85 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : French (Switzerland) [fr-ch]
 -//! author : Gaspard Bucher : https://github.com/gaspard
@@ -4948,9 +5007,10 @@ index d371fa7..0000000
 -        months: 'janvier_février_mars_avril_mai_juin_juillet_août_septembre_octobre_novembre_décembre'.split(
 -            '_'
 -        ),
--        monthsShort: 'janv._févr._mars_avr._mai_juin_juil._août_sept._oct._nov._déc.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'janv._févr._mars_avr._mai_juin_juil._août_sept._oct._nov._déc.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'dimanche_lundi_mardi_mercredi_jeudi_vendredi_samedi'.split('_'),
 -        weekdaysShort: 'dim._lun._mar._mer._jeu._ven._sam.'.split('_'),
@@ -5017,10 +5077,10 @@ index d371fa7..0000000
 -})));
 diff --git a/node_modules/moment/locale/fr.js b/node_modules/moment/locale/fr.js
 deleted file mode 100644
-index e55d831..0000000
+index 4e5536b..0000000
 --- a/node_modules/moment/locale/fr.js
 +++ /dev/null
-@@ -1,113 +0,0 @@
+@@ -1,119 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : French [fr]
 -//! author : John Fischer : https://github.com/jfroffice
@@ -5034,9 +5094,12 @@ index e55d831..0000000
 -
 -    //! moment.js locale configuration
 -
--    var monthsStrictRegex = /^(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)/i,
--        monthsShortStrictRegex = /(janv\.?|févr\.?|mars|avr\.?|mai|juin|juil\.?|août|sept\.?|oct\.?|nov\.?|déc\.?)/i,
--        monthsRegex = /(janv\.?|févr\.?|mars|avr\.?|mai|juin|juil\.?|août|sept\.?|oct\.?|nov\.?|déc\.?|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)/i,
+-    var monthsStrictRegex =
+-            /^(janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)/i,
+-        monthsShortStrictRegex =
+-            /(janv\.?|févr\.?|mars|avr\.?|mai|juin|juil\.?|août|sept\.?|oct\.?|nov\.?|déc\.?)/i,
+-        monthsRegex =
+-            /(janv\.?|févr\.?|mars|avr\.?|mai|juin|juil\.?|août|sept\.?|oct\.?|nov\.?|déc\.?|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre)/i,
 -        monthsParse = [
 -            /^janv/i,
 -            /^févr/i,
@@ -5056,9 +5119,10 @@ index e55d831..0000000
 -        months: 'janvier_février_mars_avril_mai_juin_juillet_août_septembre_octobre_novembre_décembre'.split(
 -            '_'
 -        ),
--        monthsShort: 'janv._févr._mars_avr._mai_juin_juil._août_sept._oct._nov._déc.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'janv._févr._mars_avr._mai_juin_juil._août_sept._oct._nov._déc.'.split(
+-                '_'
+-            ),
 -        monthsRegex: monthsRegex,
 -        monthsShortRegex: monthsRegex,
 -        monthsStrictRegex: monthsStrictRegex,
@@ -5097,6 +5161,8 @@ index e55d831..0000000
 -            hh: '%d heures',
 -            d: 'un jour',
 -            dd: '%d jours',
+-            w: 'une semaine',
+-            ww: '%d semaines',
 -            M: 'un mois',
 -            MM: '%d mois',
 -            y: 'un an',
@@ -5136,10 +5202,10 @@ index e55d831..0000000
 -})));
 diff --git a/node_modules/moment/locale/fy.js b/node_modules/moment/locale/fy.js
 deleted file mode 100644
-index ed5da08..0000000
+index 46cac08..0000000
 --- a/node_modules/moment/locale/fy.js
 +++ /dev/null
-@@ -1,88 +0,0 @@
+@@ -1,86 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Frisian [fy]
 -//! author : Robin van der Vliet : https://github.com/robin0van0der0v
@@ -5153,12 +5219,10 @@ index ed5da08..0000000
 -
 -    //! moment.js locale configuration
 -
--    var monthsShortWithDots = 'jan._feb._mrt._apr._mai_jun._jul._aug._sep._okt._nov._des.'.split(
--            '_'
--        ),
--        monthsShortWithoutDots = 'jan_feb_mrt_apr_mai_jun_jul_aug_sep_okt_nov_des'.split(
--            '_'
--        );
+-    var monthsShortWithDots =
+-            'jan._feb._mrt._apr._mai_jun._jul._aug._sep._okt._nov._des.'.split('_'),
+-        monthsShortWithoutDots =
+-            'jan_feb_mrt_apr_mai_jun_jul_aug_sep_okt_nov_des'.split('_');
 -
 -    var fy = moment.defineLocale('fy', {
 -        months: 'jannewaris_febrewaris_maart_april_maaie_juny_july_augustus_septimber_oktober_novimber_desimber'.split(
@@ -5454,10 +5518,10 @@ index b053838..0000000
 -})));
 diff --git a/node_modules/moment/locale/gl.js b/node_modules/moment/locale/gl.js
 deleted file mode 100644
-index a663e20..0000000
+index 16dcb5a..0000000
 --- a/node_modules/moment/locale/gl.js
 +++ /dev/null
-@@ -1,85 +0,0 @@
+@@ -1,86 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Galician [gl]
 -//! author : Juan G. Hurtado : https://github.com/juanghurtado
@@ -5475,9 +5539,10 @@ index a663e20..0000000
 -        months: 'xaneiro_febreiro_marzo_abril_maio_xuño_xullo_agosto_setembro_outubro_novembro_decembro'.split(
 -            '_'
 -        ),
--        monthsShort: 'xan._feb._mar._abr._mai._xuñ._xul._ago._set._out._nov._dec.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'xan._feb._mar._abr._mai._xuñ._xul._ago._set._out._nov._dec.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'domingo_luns_martes_mércores_xoves_venres_sábado'.split('_'),
 -        weekdaysShort: 'dom._lun._mar._mér._xov._ven._sáb.'.split('_'),
@@ -5545,10 +5610,10 @@ index a663e20..0000000
 -})));
 diff --git a/node_modules/moment/locale/gom-deva.js b/node_modules/moment/locale/gom-deva.js
 deleted file mode 100644
-index eae9364..0000000
+index ae93d0d..0000000
 --- a/node_modules/moment/locale/gom-deva.js
 +++ /dev/null
-@@ -1,135 +0,0 @@
+@@ -1,137 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Konkani Devanagari script [gom-deva]
 -//! author : The Discoverer : https://github.com/WikiDiscoverer
@@ -5582,17 +5647,19 @@ index eae9364..0000000
 -
 -    var gomDeva = moment.defineLocale('gom-deva', {
 -        months: {
--            standalone: 'जानेवारी_फेब्रुवारी_मार्च_एप्रील_मे_जून_जुलय_ऑगस्ट_सप्टेंबर_ऑक्टोबर_नोव्हेंबर_डिसेंबर'.split(
--                '_'
--            ),
+-            standalone:
+-                'जानेवारी_फेब्रुवारी_मार्च_एप्रील_मे_जून_जुलय_ऑगस्ट_सप्टेंबर_ऑक्टोबर_नोव्हेंबर_डिसेंबर'.split(
+-                    '_'
+-                ),
 -            format: 'जानेवारीच्या_फेब्रुवारीच्या_मार्चाच्या_एप्रीलाच्या_मेयाच्या_जूनाच्या_जुलयाच्या_ऑगस्टाच्या_सप्टेंबराच्या_ऑक्टोबराच्या_नोव्हेंबराच्या_डिसेंबराच्या'.split(
 -                '_'
 -            ),
 -            isFormat: /MMMM(\s)+D[oD]?/,
 -        },
--        monthsShort: 'जाने._फेब्रु._मार्च_एप्री._मे_जून_जुल._ऑग._सप्टें._ऑक्टो._नोव्हें._डिसें.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'जाने._फेब्रु._मार्च_एप्री._मे_जून_जुल._ऑग._सप्टें._ऑक्टो._नोव्हें._डिसें.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'आयतार_सोमार_मंगळार_बुधवार_बिरेस्तार_सुक्रार_शेनवार'.split('_'),
 -        weekdaysShort: 'आयत._सोम._मंगळ._बुध._ब्रेस्त._सुक्र._शेन.'.split('_'),
@@ -5648,8 +5715,8 @@ index eae9364..0000000
 -            }
 -        },
 -        week: {
--            dow: 1, // Monday is the first day of the week.
--            doy: 4, // The week that contains Jan 4th is the first week of the year.
+-            dow: 0, // Sunday is the first day of the week
+-            doy: 3, // The week that contains Jan 4th is the first week of the year (7 + 0 - 4)
 -        },
 -        meridiemParse: /राती|सकाळीं|दनपारां|सांजे/,
 -        meridiemHour: function (hour, meridiem) {
@@ -5686,7 +5753,7 @@ index eae9364..0000000
 -})));
 diff --git a/node_modules/moment/locale/gom-latn.js b/node_modules/moment/locale/gom-latn.js
 deleted file mode 100644
-index 8be90c2..0000000
+index 93cbe15..0000000
 --- a/node_modules/moment/locale/gom-latn.js
 +++ /dev/null
 @@ -1,135 +0,0 @@
@@ -5723,17 +5790,17 @@ index 8be90c2..0000000
 -
 -    var gomLatn = moment.defineLocale('gom-latn', {
 -        months: {
--            standalone: 'Janer_Febrer_Mars_Abril_Mai_Jun_Julai_Agost_Setembr_Otubr_Novembr_Dezembr'.split(
--                '_'
--            ),
+-            standalone:
+-                'Janer_Febrer_Mars_Abril_Mai_Jun_Julai_Agost_Setembr_Otubr_Novembr_Dezembr'.split(
+-                    '_'
+-                ),
 -            format: 'Janerachea_Febrerachea_Marsachea_Abrilachea_Maiachea_Junachea_Julaiachea_Agostachea_Setembrachea_Otubrachea_Novembrachea_Dezembrachea'.split(
 -                '_'
 -            ),
 -            isFormat: /MMMM(\s)+D[oD]?/,
 -        },
--        monthsShort: 'Jan._Feb._Mars_Abr._Mai_Jun_Jul._Ago._Set._Otu._Nov._Dez.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'Jan._Feb._Mars_Abr._Mai_Jun_Jul._Ago._Set._Otu._Nov._Dez.'.split('_'),
 -        monthsParseExact: true,
 -        weekdays: "Aitar_Somar_Mongllar_Budhvar_Birestar_Sukrar_Son'var".split('_'),
 -        weekdaysShort: 'Ait._Som._Mon._Bud._Bre._Suk._Son.'.split('_'),
@@ -5789,8 +5856,8 @@ index 8be90c2..0000000
 -            }
 -        },
 -        week: {
--            dow: 1, // Monday is the first day of the week.
--            doy: 4, // The week that contains Jan 4th is the first week of the year.
+-            dow: 0, // Sunday is the first day of the week
+-            doy: 3, // The week that contains Jan 4th is the first week of the year (7 + 0 - 4)
 -        },
 -        meridiemParse: /rati|sokallim|donparam|sanje/,
 -        meridiemHour: function (hour, meridiem) {
@@ -5827,10 +5894,10 @@ index 8be90c2..0000000
 -})));
 diff --git a/node_modules/moment/locale/gu.js b/node_modules/moment/locale/gu.js
 deleted file mode 100644
-index cf7389b..0000000
+index 6583f77..0000000
 --- a/node_modules/moment/locale/gu.js
 +++ /dev/null
-@@ -1,132 +0,0 @@
+@@ -1,133 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Gujarati [gu]
 -//! author : Kaushik Thanki : https://github.com/Kaushik1987
@@ -5845,16 +5912,16 @@ index cf7389b..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '૧',
--            '2': '૨',
--            '3': '૩',
--            '4': '૪',
--            '5': '૫',
--            '6': '૬',
--            '7': '૭',
--            '8': '૮',
--            '9': '૯',
--            '0': '૦',
+-            1: '૧',
+-            2: '૨',
+-            3: '૩',
+-            4: '૪',
+-            5: '૫',
+-            6: '૬',
+-            7: '૭',
+-            8: '૮',
+-            9: '૯',
+-            0: '૦',
 -        },
 -        numberMap = {
 -            '૧': '1',
@@ -5873,9 +5940,10 @@ index cf7389b..0000000
 -        months: 'જાન્યુઆરી_ફેબ્રુઆરી_માર્ચ_એપ્રિલ_મે_જૂન_જુલાઈ_ઑગસ્ટ_સપ્ટેમ્બર_ઑક્ટ્બર_નવેમ્બર_ડિસેમ્બર'.split(
 -            '_'
 -        ),
--        monthsShort: 'જાન્યુ._ફેબ્રુ._માર્ચ_એપ્રિ._મે_જૂન_જુલા._ઑગ._સપ્ટે._ઑક્ટ્._નવે._ડિસે.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'જાન્યુ._ફેબ્રુ._માર્ચ_એપ્રિ._મે_જૂન_જુલા._ઑગ._સપ્ટે._ઑક્ટ્._નવે._ડિસે.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'રવિવાર_સોમવાર_મંગળવાર_બુધ્વાર_ગુરુવાર_શુક્રવાર_શનિવાર'.split(
 -            '_'
@@ -5965,7 +6033,7 @@ index cf7389b..0000000
 -})));
 diff --git a/node_modules/moment/locale/he.js b/node_modules/moment/locale/he.js
 deleted file mode 100644
-index 00fc431..0000000
+index e19a0f9..0000000
 --- a/node_modules/moment/locale/he.js
 +++ /dev/null
 @@ -1,105 +0,0 @@
@@ -5988,9 +6056,8 @@ index 00fc431..0000000
 -        months: 'ינואר_פברואר_מרץ_אפריל_מאי_יוני_יולי_אוגוסט_ספטמבר_אוקטובר_נובמבר_דצמבר'.split(
 -            '_'
 -        ),
--        monthsShort: 'ינו׳_פבר׳_מרץ_אפר׳_מאי_יוני_יולי_אוג׳_ספט׳_אוק׳_נוב׳_דצמ׳'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'ינו׳_פבר׳_מרץ_אפר׳_מאי_יוני_יולי_אוג׳_ספט׳_אוק׳_נוב׳_דצמ׳'.split('_'),
 -        weekdays: 'ראשון_שני_שלישי_רביעי_חמישי_שישי_שבת'.split('_'),
 -        weekdaysShort: 'א׳_ב׳_ג׳_ד׳_ה׳_ו׳_ש׳'.split('_'),
 -        weekdaysMin: 'א_ב_ג_ד_ה_ו_ש'.split('_'),
@@ -6052,7 +6119,8 @@ index 00fc431..0000000
 -                return number + ' שנים';
 -            },
 -        },
--        meridiemParse: /אחה"צ|לפנה"צ|אחרי הצהריים|לפני הצהריים|לפנות בוקר|בבוקר|בערב/i,
+-        meridiemParse:
+-            /אחה"צ|לפנה"צ|אחרי הצהריים|לפני הצהריים|לפנות בוקר|בבוקר|בערב/i,
 -        isPM: function (input) {
 -            return /^(אחה"צ|אחרי הצהריים|בערב)$/.test(input);
 -        },
@@ -6076,10 +6144,10 @@ index 00fc431..0000000
 -})));
 diff --git a/node_modules/moment/locale/hi.js b/node_modules/moment/locale/hi.js
 deleted file mode 100644
-index 3615f4d..0000000
+index 56515bd..0000000
 --- a/node_modules/moment/locale/hi.js
 +++ /dev/null
-@@ -1,130 +0,0 @@
+@@ -1,179 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Hindi [hi]
 -//! author : Mayank Singhal : https://github.com/mayanksinghal
@@ -6094,16 +6162,16 @@ index 3615f4d..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '१',
--            '2': '२',
--            '3': '३',
--            '4': '४',
--            '5': '५',
--            '6': '६',
--            '7': '७',
--            '8': '८',
--            '9': '९',
--            '0': '०',
+-            1: '१',
+-            2: '२',
+-            3: '३',
+-            4: '४',
+-            5: '५',
+-            6: '६',
+-            7: '७',
+-            8: '८',
+-            9: '९',
+-            0: '०',
 -        },
 -        numberMap = {
 -            '१': '1',
@@ -6116,16 +6184,48 @@ index 3615f4d..0000000
 -            '८': '8',
 -            '९': '9',
 -            '०': '0',
--        };
+-        },
+-        monthsParse = [
+-            /^जन/i,
+-            /^फ़र|फर/i,
+-            /^मार्च/i,
+-            /^अप्रै/i,
+-            /^मई/i,
+-            /^जून/i,
+-            /^जुल/i,
+-            /^अग/i,
+-            /^सितं|सित/i,
+-            /^अक्टू/i,
+-            /^नव|नवं/i,
+-            /^दिसं|दिस/i,
+-        ],
+-        shortMonthsParse = [
+-            /^जन/i,
+-            /^फ़र/i,
+-            /^मार्च/i,
+-            /^अप्रै/i,
+-            /^मई/i,
+-            /^जून/i,
+-            /^जुल/i,
+-            /^अग/i,
+-            /^सित/i,
+-            /^अक्टू/i,
+-            /^नव/i,
+-            /^दिस/i,
+-        ];
 -
 -    var hi = moment.defineLocale('hi', {
--        months: 'जनवरी_फ़रवरी_मार्च_अप्रैल_मई_जून_जुलाई_अगस्त_सितम्बर_अक्टूबर_नवम्बर_दिसम्बर'.split(
--            '_'
--        ),
--        monthsShort: 'जन._फ़र._मार्च_अप्रै._मई_जून_जुल._अग._सित._अक्टू._नव._दिस.'.split(
--            '_'
--        ),
--        monthsParseExact: true,
+-        months: {
+-            format: 'जनवरी_फ़रवरी_मार्च_अप्रैल_मई_जून_जुलाई_अगस्त_सितम्बर_अक्टूबर_नवम्बर_दिसम्बर'.split(
+-                '_'
+-            ),
+-            standalone:
+-                'जनवरी_फरवरी_मार्च_अप्रैल_मई_जून_जुलाई_अगस्त_सितंबर_अक्टूबर_नवंबर_दिसंबर'.split(
+-                    '_'
+-                ),
+-        },
+-        monthsShort:
+-            'जन._फ़र._मार्च_अप्रै._मई_जून_जुल._अग._सित._अक्टू._नव._दिस.'.split('_'),
 -        weekdays: 'रविवार_सोमवार_मंगलवार_बुधवार_गुरूवार_शुक्रवार_शनिवार'.split('_'),
 -        weekdaysShort: 'रवि_सोम_मंगल_बुध_गुरू_शुक्र_शनि'.split('_'),
 -        weekdaysMin: 'र_सो_मं_बु_गु_शु_श'.split('_'),
@@ -6137,6 +6237,23 @@ index 3615f4d..0000000
 -            LLL: 'D MMMM YYYY, A h:mm बजे',
 -            LLLL: 'dddd, D MMMM YYYY, A h:mm बजे',
 -        },
+-
+-        monthsParse: monthsParse,
+-        longMonthsParse: monthsParse,
+-        shortMonthsParse: shortMonthsParse,
+-
+-        monthsRegex:
+-            /^(जनवरी|जन\.?|फ़रवरी|फरवरी|फ़र\.?|मार्च?|अप्रैल|अप्रै\.?|मई?|जून?|जुलाई|जुल\.?|अगस्त|अग\.?|सितम्बर|सितंबर|सित\.?|अक्टूबर|अक्टू\.?|नवम्बर|नवंबर|नव\.?|दिसम्बर|दिसंबर|दिस\.?)/i,
+-
+-        monthsShortRegex:
+-            /^(जनवरी|जन\.?|फ़रवरी|फरवरी|फ़र\.?|मार्च?|अप्रैल|अप्रै\.?|मई?|जून?|जुलाई|जुल\.?|अगस्त|अग\.?|सितम्बर|सितंबर|सित\.?|अक्टूबर|अक्टू\.?|नवम्बर|नवंबर|नव\.?|दिसम्बर|दिसंबर|दिस\.?)/i,
+-
+-        monthsStrictRegex:
+-            /^(जनवरी?|फ़रवरी|फरवरी?|मार्च?|अप्रैल?|मई?|जून?|जुलाई?|अगस्त?|सितम्बर|सितंबर|सित?\.?|अक्टूबर|अक्टू\.?|नवम्बर|नवंबर?|दिसम्बर|दिसंबर?)/i,
+-
+-        monthsShortStrictRegex:
+-            /^(जन\.?|फ़र\.?|मार्च?|अप्रै\.?|मई?|जून?|जुल\.?|अग\.?|सित\.?|अक्टू\.?|नव\.?|दिस\.?)/i,
+-
 -        calendar: {
 -            sameDay: '[आज] LT',
 -            nextDay: '[कल] LT',
@@ -6212,10 +6329,10 @@ index 3615f4d..0000000
 -})));
 diff --git a/node_modules/moment/locale/hr.js b/node_modules/moment/locale/hr.js
 deleted file mode 100644
-index 6184618..0000000
+index f41cce0..0000000
 --- a/node_modules/moment/locale/hr.js
 +++ /dev/null
-@@ -1,165 +0,0 @@
+@@ -1,167 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Croatian [hr]
 -//! author : Bojan Marković : https://github.com/bmarkovic
@@ -6296,13 +6413,15 @@ index 6184618..0000000
 -            format: 'siječnja_veljače_ožujka_travnja_svibnja_lipnja_srpnja_kolovoza_rujna_listopada_studenoga_prosinca'.split(
 -                '_'
 -            ),
--            standalone: 'siječanj_veljača_ožujak_travanj_svibanj_lipanj_srpanj_kolovoz_rujan_listopad_studeni_prosinac'.split(
+-            standalone:
+-                'siječanj_veljača_ožujak_travanj_svibanj_lipanj_srpanj_kolovoz_rujan_listopad_studeni_prosinac'.split(
+-                    '_'
+-                ),
+-        },
+-        monthsShort:
+-            'sij._velj._ožu._tra._svi._lip._srp._kol._ruj._lis._stu._pro.'.split(
 -                '_'
 -            ),
--        },
--        monthsShort: 'sij._velj._ožu._tra._svi._lip._srp._kol._ruj._lis._stu._pro.'.split(
--            '_'
--        ),
 -        monthsParseExact: true,
 -        weekdays: 'nedjelja_ponedjeljak_utorak_srijeda_četvrtak_petak_subota'.split(
 -            '_'
@@ -6383,13 +6502,14 @@ index 6184618..0000000
 -})));
 diff --git a/node_modules/moment/locale/hu.js b/node_modules/moment/locale/hu.js
 deleted file mode 100644
-index 3a6685c..0000000
+index 162959d..0000000
 --- a/node_modules/moment/locale/hu.js
 +++ /dev/null
-@@ -1,127 +0,0 @@
+@@ -1,129 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Hungarian [hu]
 -//! author : Adam Brunner : https://github.com/adambrunner
+-//! author : Peter Viszt  : https://github.com/passatgt
 -
 -;(function (global, factory) {
 -   typeof exports === 'object' && typeof module !== 'undefined'
@@ -6400,9 +6520,8 @@ index 3a6685c..0000000
 -
 -    //! moment.js locale configuration
 -
--    var weekEndings = 'vasárnap hétfőn kedden szerdán csütörtökön pénteken szombaton'.split(
--        ' '
--    );
+-    var weekEndings =
+-        'vasárnap hétfőn kedden szerdán csütörtökön pénteken szombaton'.split(' ');
 -    function translate(number, withoutSuffix, key, isFuture) {
 -        var num = number;
 -        switch (key) {
@@ -6450,9 +6569,11 @@ index 3a6685c..0000000
 -        months: 'január_február_március_április_május_június_július_augusztus_szeptember_október_november_december'.split(
 -            '_'
 -        ),
--        monthsShort: 'jan_feb_márc_ápr_máj_jún_júl_aug_szept_okt_nov_dec'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'jan._feb._márc._ápr._máj._jún._júl._aug._szept._okt._nov._dec.'.split(
+-                '_'
+-            ),
+-        monthsParseExact: true,
 -        weekdays: 'vasárnap_hétfő_kedd_szerda_csütörtök_péntek_szombat'.split('_'),
 -        weekdaysShort: 'vas_hét_kedd_sze_csüt_pén_szo'.split('_'),
 -        weekdaysMin: 'v_h_k_sze_cs_p_szo'.split('_'),
@@ -6516,10 +6637,10 @@ index 3a6685c..0000000
 -})));
 diff --git a/node_modules/moment/locale/hy-am.js b/node_modules/moment/locale/hy-am.js
 deleted file mode 100644
-index e495232..0000000
+index 9c65b1e..0000000
 --- a/node_modules/moment/locale/hy-am.js
 +++ /dev/null
-@@ -1,103 +0,0 @@
+@@ -1,105 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Armenian [hy-am]
 -//! author : Armendarabyan : https://github.com/armendarabyan
@@ -6538,14 +6659,16 @@ index e495232..0000000
 -            format: 'հունվարի_փետրվարի_մարտի_ապրիլի_մայիսի_հունիսի_հուլիսի_օգոստոսի_սեպտեմբերի_հոկտեմբերի_նոյեմբերի_դեկտեմբերի'.split(
 -                '_'
 -            ),
--            standalone: 'հունվար_փետրվար_մարտ_ապրիլ_մայիս_հունիս_հուլիս_օգոստոս_սեպտեմբեր_հոկտեմբեր_նոյեմբեր_դեկտեմբեր'.split(
--                '_'
--            ),
+-            standalone:
+-                'հունվար_փետրվար_մարտ_ապրիլ_մայիս_հունիս_հուլիս_օգոստոս_սեպտեմբեր_հոկտեմբեր_նոյեմբեր_դեկտեմբեր'.split(
+-                    '_'
+-                ),
 -        },
 -        monthsShort: 'հնվ_փտր_մրտ_ապր_մյս_հնս_հլս_օգս_սպտ_հկտ_նմբ_դկտ'.split('_'),
--        weekdays: 'կիրակի_երկուշաբթի_երեքշաբթի_չորեքշաբթի_հինգշաբթի_ուրբաթ_շաբաթ'.split(
--            '_'
--        ),
+-        weekdays:
+-            'կիրակի_երկուշաբթի_երեքշաբթի_չորեքշաբթի_հինգշաբթի_ուրբաթ_շաբաթ'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'կրկ_երկ_երք_չրք_հնգ_ուրբ_շբթ'.split('_'),
 -        weekdaysMin: 'կրկ_երկ_երք_չրք_հնգ_ուրբ_շբթ'.split('_'),
 -        longDateFormat: {
@@ -6718,10 +6841,10 @@ index 9f8ff0a..0000000
 -})));
 diff --git a/node_modules/moment/locale/is.js b/node_modules/moment/locale/is.js
 deleted file mode 100644
-index 480fa56..0000000
+index 0252006..0000000
 --- a/node_modules/moment/locale/is.js
 +++ /dev/null
-@@ -1,150 +0,0 @@
+@@ -1,151 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Icelandic [is]
 -//! author : Hinrik Örn Sigurðsson : https://github.com/hinrik
@@ -6824,9 +6947,10 @@ index 480fa56..0000000
 -            '_'
 -        ),
 -        monthsShort: 'jan_feb_mar_apr_maí_jún_júl_ágú_sep_okt_nóv_des'.split('_'),
--        weekdays: 'sunnudagur_mánudagur_þriðjudagur_miðvikudagur_fimmtudagur_föstudagur_laugardagur'.split(
--            '_'
--        ),
+-        weekdays:
+-            'sunnudagur_mánudagur_þriðjudagur_miðvikudagur_fimmtudagur_föstudagur_laugardagur'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'sun_mán_þri_mið_fim_fös_lau'.split('_'),
 -        weekdaysMin: 'Su_Má_Þr_Mi_Fi_Fö_La'.split('_'),
 -        longDateFormat: {
@@ -6955,10 +7079,10 @@ index 8042827..0000000
 -})));
 diff --git a/node_modules/moment/locale/it.js b/node_modules/moment/locale/it.js
 deleted file mode 100644
-index 7ec9737..0000000
+index 2ac9037..0000000
 --- a/node_modules/moment/locale/it.js
 +++ /dev/null
-@@ -1,115 +0,0 @@
+@@ -1,117 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Italian [it]
 -//! author : Lorenzo : https://github.com/aliem
@@ -7058,6 +7182,8 @@ index 7ec9737..0000000
 -            hh: '%d ore',
 -            d: 'un giorno',
 -            dd: '%d giorni',
+-            w: 'una settimana',
+-            ww: '%d settimane',
 -            M: 'un mese',
 -            MM: '%d mesi',
 -            y: 'un anno',
@@ -7334,7 +7460,7 @@ index ab6655f..0000000
 -})));
 diff --git a/node_modules/moment/locale/ka.js b/node_modules/moment/locale/ka.js
 deleted file mode 100644
-index 5bb33b0..0000000
+index 6357669..0000000
 --- a/node_modules/moment/locale/ka.js
 +++ /dev/null
 @@ -1,103 +0,0 @@
@@ -7357,9 +7483,10 @@ index 5bb33b0..0000000
 -        ),
 -        monthsShort: 'იან_თებ_მარ_აპრ_მაი_ივნ_ივლ_აგვ_სექ_ოქტ_ნოე_დეკ'.split('_'),
 -        weekdays: {
--            standalone: 'კვირა_ორშაბათი_სამშაბათი_ოთხშაბათი_ხუთშაბათი_პარასკევი_შაბათი'.split(
--                '_'
--            ),
+-            standalone:
+-                'კვირა_ორშაბათი_სამშაბათი_ოთხშაბათი_ხუთშაბათი_პარასკევი_შაბათი'.split(
+-                    '_'
+-                ),
 -            format: 'კვირას_ორშაბათს_სამშაბათს_ოთხშაბათს_ხუთშაბათს_პარასკევს_შაბათს'.split(
 -                '_'
 -            ),
@@ -7385,13 +7512,12 @@ index 5bb33b0..0000000
 -        },
 -        relativeTime: {
 -            future: function (s) {
--                return s.replace(/(წამ|წუთ|საათ|წელ|დღ|თვ)(ი|ე)/, function (
--                    $0,
--                    $1,
--                    $2
--                ) {
--                    return $2 === 'ი' ? $1 + 'ში' : $1 + $2 + 'ში';
--                });
+-                return s.replace(
+-                    /(წამ|წუთ|საათ|წელ|დღ|თვ)(ი|ე)/,
+-                    function ($0, $1, $2) {
+-                        return $2 === 'ი' ? $1 + 'ში' : $1 + $2 + 'ში';
+-                    }
+-                );
 -            },
 -            past: function (s) {
 -                if (/(წამი|წუთი|საათი|დღე|თვე)/.test(s)) {
@@ -7542,10 +7668,10 @@ index 38f2e8c..0000000
 -})));
 diff --git a/node_modules/moment/locale/km.js b/node_modules/moment/locale/km.js
 deleted file mode 100644
-index a445788..0000000
+index 5306436..0000000
 --- a/node_modules/moment/locale/km.js
 +++ /dev/null
-@@ -1,113 +0,0 @@
+@@ -1,114 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Cambodian [km]
 -//! author : Kruy Vanna : https://github.com/kruyvanna
@@ -7560,16 +7686,16 @@ index a445788..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '១',
--            '2': '២',
--            '3': '៣',
--            '4': '៤',
--            '5': '៥',
--            '6': '៦',
--            '7': '៧',
--            '8': '៨',
--            '9': '៩',
--            '0': '០',
+-            1: '១',
+-            2: '២',
+-            3: '៣',
+-            4: '៤',
+-            5: '៥',
+-            6: '៦',
+-            7: '៧',
+-            8: '៨',
+-            9: '៩',
+-            0: '០',
 -        },
 -        numberMap = {
 -            '១': '1',
@@ -7588,9 +7714,10 @@ index a445788..0000000
 -        months: 'មករា_កុម្ភៈ_មីនា_មេសា_ឧសភា_មិថុនា_កក្កដា_សីហា_កញ្ញា_តុលា_វិច្ឆិកា_ធ្នូ'.split(
 -            '_'
 -        ),
--        monthsShort: 'មករា_កុម្ភៈ_មីនា_មេសា_ឧសភា_មិថុនា_កក្កដា_សីហា_កញ្ញា_តុលា_វិច្ឆិកា_ធ្នូ'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'មករា_កុម្ភៈ_មីនា_មេសា_ឧសភា_មិថុនា_កក្កដា_សីហា_កញ្ញា_តុលា_វិច្ឆិកា_ធ្នូ'.split(
+-                '_'
+-            ),
 -        weekdays: 'អាទិត្យ_ច័ន្ទ_អង្គារ_ពុធ_ព្រហស្បតិ៍_សុក្រ_សៅរ៍'.split('_'),
 -        weekdaysShort: 'អា_ច_អ_ព_ព្រ_សុ_ស'.split('_'),
 -        weekdaysMin: 'អា_ច_អ_ព_ព្រ_សុ_ស'.split('_'),
@@ -7661,10 +7788,10 @@ index a445788..0000000
 -})));
 diff --git a/node_modules/moment/locale/kn.js b/node_modules/moment/locale/kn.js
 deleted file mode 100644
-index 84ff9b8..0000000
+index 5fe70b0..0000000
 --- a/node_modules/moment/locale/kn.js
 +++ /dev/null
-@@ -1,134 +0,0 @@
+@@ -1,135 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Kannada [kn]
 -//! author : Rajeev Naik : https://github.com/rajeevnaikte
@@ -7679,16 +7806,16 @@ index 84ff9b8..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '೧',
--            '2': '೨',
--            '3': '೩',
--            '4': '೪',
--            '5': '೫',
--            '6': '೬',
--            '7': '೭',
--            '8': '೮',
--            '9': '೯',
--            '0': '೦',
+-            1: '೧',
+-            2: '೨',
+-            3: '೩',
+-            4: '೪',
+-            5: '೫',
+-            6: '೬',
+-            7: '೭',
+-            8: '೮',
+-            9: '೯',
+-            0: '೦',
 -        },
 -        numberMap = {
 -            '೧': '1',
@@ -7707,9 +7834,10 @@ index 84ff9b8..0000000
 -        months: 'ಜನವರಿ_ಫೆಬ್ರವರಿ_ಮಾರ್ಚ್_ಏಪ್ರಿಲ್_ಮೇ_ಜೂನ್_ಜುಲೈ_ಆಗಸ್ಟ್_ಸೆಪ್ಟೆಂಬರ್_ಅಕ್ಟೋಬರ್_ನವೆಂಬರ್_ಡಿಸೆಂಬರ್'.split(
 -            '_'
 -        ),
--        monthsShort: 'ಜನ_ಫೆಬ್ರ_ಮಾರ್ಚ್_ಏಪ್ರಿಲ್_ಮೇ_ಜೂನ್_ಜುಲೈ_ಆಗಸ್ಟ್_ಸೆಪ್ಟೆಂ_ಅಕ್ಟೋ_ನವೆಂ_ಡಿಸೆಂ'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'ಜನ_ಫೆಬ್ರ_ಮಾರ್ಚ್_ಏಪ್ರಿಲ್_ಮೇ_ಜೂನ್_ಜುಲೈ_ಆಗಸ್ಟ್_ಸೆಪ್ಟೆಂ_ಅಕ್ಟೋ_ನವೆಂ_ಡಿಸೆಂ'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'ಭಾನುವಾರ_ಸೋಮವಾರ_ಮಂಗಳವಾರ_ಬುಧವಾರ_ಗುರುವಾರ_ಶುಕ್ರವಾರ_ಶನಿವಾರ'.split(
 -            '_'
@@ -7893,7 +8021,7 @@ index c81c13e..0000000
 -})));
 diff --git a/node_modules/moment/locale/ku.js b/node_modules/moment/locale/ku.js
 deleted file mode 100644
-index 2c4f7e2..0000000
+index 71c56a1..0000000
 --- a/node_modules/moment/locale/ku.js
 +++ /dev/null
 @@ -1,129 +0,0 @@
@@ -7911,16 +8039,16 @@ index 2c4f7e2..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '١',
--            '2': '٢',
--            '3': '٣',
--            '4': '٤',
--            '5': '٥',
--            '6': '٦',
--            '7': '٧',
--            '8': '٨',
--            '9': '٩',
--            '0': '٠',
+-            1: '١',
+-            2: '٢',
+-            3: '٣',
+-            4: '٤',
+-            5: '٥',
+-            6: '٦',
+-            7: '٧',
+-            8: '٨',
+-            9: '٩',
+-            0: '٠',
 -        },
 -        numberMap = {
 -            '١': '1',
@@ -7952,12 +8080,12 @@ index 2c4f7e2..0000000
 -    var ku = moment.defineLocale('ku', {
 -        months: months,
 -        monthsShort: months,
--        weekdays: 'یه‌كشه‌ممه‌_دووشه‌ممه‌_سێشه‌ممه‌_چوارشه‌ممه‌_پێنجشه‌ممه‌_هه‌ینی_شه‌ممه‌'.split(
--            '_'
--        ),
--        weekdaysShort: 'یه‌كشه‌م_دووشه‌م_سێشه‌م_چوارشه‌م_پێنجشه‌م_هه‌ینی_شه‌ممه‌'.split(
--            '_'
--        ),
+-        weekdays:
+-            'یه‌كشه‌ممه‌_دووشه‌ممه‌_سێشه‌ممه‌_چوارشه‌ممه‌_پێنجشه‌ممه‌_هه‌ینی_شه‌ممه‌'.split(
+-                '_'
+-            ),
+-        weekdaysShort:
+-            'یه‌كشه‌م_دووشه‌م_سێشه‌م_چوارشه‌م_پێنجشه‌م_هه‌ینی_شه‌ممه‌'.split('_'),
 -        weekdaysMin: 'ی_د_س_چ_پ_ه_ش'.split('_'),
 -        weekdaysParseExact: true,
 -        longDateFormat: {
@@ -8129,10 +8257,10 @@ index 6dce606..0000000
 -})));
 diff --git a/node_modules/moment/locale/lb.js b/node_modules/moment/locale/lb.js
 deleted file mode 100644
-index 72a975e..0000000
+index ffcb758..0000000
 --- a/node_modules/moment/locale/lb.js
 +++ /dev/null
-@@ -1,146 +0,0 @@
+@@ -1,148 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Luxembourgish [lb]
 -//! author : mweimerskirch : https://github.com/mweimerskirch
@@ -8217,13 +8345,15 @@ index 72a975e..0000000
 -        months: 'Januar_Februar_Mäerz_Abrëll_Mee_Juni_Juli_August_September_Oktober_November_Dezember'.split(
 -            '_'
 -        ),
--        monthsShort: 'Jan._Febr._Mrz._Abr._Mee_Jun._Jul._Aug._Sept._Okt._Nov._Dez.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'Jan._Febr._Mrz._Abr._Mee_Jun._Jul._Aug._Sept._Okt._Nov._Dez.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
--        weekdays: 'Sonndeg_Méindeg_Dënschdeg_Mëttwoch_Donneschdeg_Freideg_Samschdeg'.split(
--            '_'
--        ),
+-        weekdays:
+-            'Sonndeg_Méindeg_Dënschdeg_Mëttwoch_Donneschdeg_Freideg_Samschdeg'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'So._Mé._Dë._Më._Do._Fr._Sa.'.split('_'),
 -        weekdaysMin: 'So_Mé_Dë_Më_Do_Fr_Sa'.split('_'),
 -        weekdaysParseExact: true,
@@ -8281,10 +8411,10 @@ index 72a975e..0000000
 -})));
 diff --git a/node_modules/moment/locale/lo.js b/node_modules/moment/locale/lo.js
 deleted file mode 100644
-index 29aab3c..0000000
+index 18fc666..0000000
 --- a/node_modules/moment/locale/lo.js
 +++ /dev/null
-@@ -1,76 +0,0 @@
+@@ -1,77 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Lao [lo]
 -//! author : Ryan Hart : https://github.com/ryanhart2
@@ -8302,9 +8432,10 @@ index 29aab3c..0000000
 -        months: 'ມັງກອນ_ກຸມພາ_ມີນາ_ເມສາ_ພຶດສະພາ_ມິຖຸນາ_ກໍລະກົດ_ສິງຫາ_ກັນຍາ_ຕຸລາ_ພະຈິກ_ທັນວາ'.split(
 -            '_'
 -        ),
--        monthsShort: 'ມັງກອນ_ກຸມພາ_ມີນາ_ເມສາ_ພຶດສະພາ_ມິຖຸນາ_ກໍລະກົດ_ສິງຫາ_ກັນຍາ_ຕຸລາ_ພະຈິກ_ທັນວາ'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'ມັງກອນ_ກຸມພາ_ມີນາ_ເມສາ_ພຶດສະພາ_ມິຖຸນາ_ກໍລະກົດ_ສິງຫາ_ກັນຍາ_ຕຸລາ_ພະຈິກ_ທັນວາ'.split(
+-                '_'
+-            ),
 -        weekdays: 'ອາທິດ_ຈັນ_ອັງຄານ_ພຸດ_ພະຫັດ_ສຸກ_ເສົາ'.split('_'),
 -        weekdaysShort: 'ທິດ_ຈັນ_ອັງຄານ_ພຸດ_ພະຫັດ_ສຸກ_ເສົາ'.split('_'),
 -        weekdaysMin: 'ທ_ຈ_ອຄ_ພ_ພຫ_ສກ_ສ'.split('_'),
@@ -8363,10 +8494,10 @@ index 29aab3c..0000000
 -})));
 diff --git a/node_modules/moment/locale/lt.js b/node_modules/moment/locale/lt.js
 deleted file mode 100644
-index c076a13..0000000
+index e20d208..0000000
 --- a/node_modules/moment/locale/lt.js
 +++ /dev/null
-@@ -1,134 +0,0 @@
+@@ -1,136 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Lithuanian [lt]
 -//! author : Mindaugas Mozūras : https://github.com/mmozuras
@@ -8434,9 +8565,10 @@ index c076a13..0000000
 -            format: 'sausio_vasario_kovo_balandžio_gegužės_birželio_liepos_rugpjūčio_rugsėjo_spalio_lapkričio_gruodžio'.split(
 -                '_'
 -            ),
--            standalone: 'sausis_vasaris_kovas_balandis_gegužė_birželis_liepa_rugpjūtis_rugsėjis_spalis_lapkritis_gruodis'.split(
--                '_'
--            ),
+-            standalone:
+-                'sausis_vasaris_kovas_balandis_gegužė_birželis_liepa_rugpjūtis_rugsėjis_spalis_lapkritis_gruodis'.split(
+-                    '_'
+-                ),
 -            isFormat: /D[oD]?(\[[^\[\]]*\]|\s)+MMMM?|MMMM?(\[[^\[\]]*\]|\s)+D[oD]?/,
 -        },
 -        monthsShort: 'sau_vas_kov_bal_geg_bir_lie_rgp_rgs_spa_lap_grd'.split('_'),
@@ -8444,9 +8576,10 @@ index c076a13..0000000
 -            format: 'sekmadienį_pirmadienį_antradienį_trečiadienį_ketvirtadienį_penktadienį_šeštadienį'.split(
 -                '_'
 -            ),
--            standalone: 'sekmadienis_pirmadienis_antradienis_trečiadienis_ketvirtadienis_penktadienis_šeštadienis'.split(
--                '_'
--            ),
+-            standalone:
+-                'sekmadienis_pirmadienis_antradienis_trečiadienis_ketvirtadienis_penktadienis_šeštadienis'.split(
+-                    '_'
+-                ),
 -            isFormat: /dddd HH:mm/,
 -        },
 -        weekdaysShort: 'Sek_Pir_Ant_Tre_Ket_Pen_Šeš'.split('_'),
@@ -8503,10 +8636,10 @@ index c076a13..0000000
 -})));
 diff --git a/node_modules/moment/locale/lv.js b/node_modules/moment/locale/lv.js
 deleted file mode 100644
-index e9a7448..0000000
+index 109fdfe..0000000
 --- a/node_modules/moment/locale/lv.js
 +++ /dev/null
-@@ -1,104 +0,0 @@
+@@ -1,105 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Latvian [lv]
 -//! author : Kristaps Karlsons : https://github.com/skakri
@@ -8562,9 +8695,10 @@ index e9a7448..0000000
 -            '_'
 -        ),
 -        monthsShort: 'jan_feb_mar_apr_mai_jūn_jūl_aug_sep_okt_nov_dec'.split('_'),
--        weekdays: 'svētdiena_pirmdiena_otrdiena_trešdiena_ceturtdiena_piektdiena_sestdiena'.split(
--            '_'
--        ),
+-        weekdays:
+-            'svētdiena_pirmdiena_otrdiena_trešdiena_ceturtdiena_piektdiena_sestdiena'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'Sv_P_O_T_C_Pk_S'.split('_'),
 -        weekdaysMin: 'Sv_P_O_T_C_Pk_S'.split('_'),
 -        weekdaysParseExact: true,
@@ -8613,10 +8747,10 @@ index e9a7448..0000000
 -})));
 diff --git a/node_modules/moment/locale/me.js b/node_modules/moment/locale/me.js
 deleted file mode 100644
-index bd78eb0..0000000
+index 21b6826..0000000
 --- a/node_modules/moment/locale/me.js
 +++ /dev/null
-@@ -1,129 +0,0 @@
+@@ -1,128 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Montenegrin [me]
 -//! author : Miodrag Nikač <miodrag@restartit.me> : https://github.com/miodragnikac
@@ -8667,9 +8801,8 @@ index bd78eb0..0000000
 -        months: 'januar_februar_mart_april_maj_jun_jul_avgust_septembar_oktobar_novembar_decembar'.split(
 -            '_'
 -        ),
--        monthsShort: 'jan._feb._mar._apr._maj_jun_jul_avg._sep._okt._nov._dec.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'jan._feb._mar._apr._maj_jun_jul_avg._sep._okt._nov._dec.'.split('_'),
 -        monthsParseExact: true,
 -        weekdays: 'nedjelja_ponedjeljak_utorak_srijeda_četvrtak_petak_subota'.split(
 -            '_'
@@ -8748,10 +8881,10 @@ index bd78eb0..0000000
 -})));
 diff --git a/node_modules/moment/locale/mi.js b/node_modules/moment/locale/mi.js
 deleted file mode 100644
-index 747bf25..0000000
+index f95f9cb..0000000
 --- a/node_modules/moment/locale/mi.js
 +++ /dev/null
-@@ -1,70 +0,0 @@
+@@ -1,71 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Maori [mi]
 -//! author : John Corrigan <robbiecloset@gmail.com> : https://github.com/johnideal
@@ -8769,9 +8902,10 @@ index 747bf25..0000000
 -        months: 'Kohi-tāte_Hui-tanguru_Poutū-te-rangi_Paenga-whāwhā_Haratua_Pipiri_Hōngoingoi_Here-turi-kōkā_Mahuru_Whiringa-ā-nuku_Whiringa-ā-rangi_Hakihea'.split(
 -            '_'
 -        ),
--        monthsShort: 'Kohi_Hui_Pou_Pae_Hara_Pipi_Hōngoi_Here_Mahu_Whi-nu_Whi-ra_Haki'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'Kohi_Hui_Pou_Pae_Hara_Pipi_Hōngoi_Here_Mahu_Whi-nu_Whi-ra_Haki'.split(
+-                '_'
+-            ),
 -        monthsRegex: /(?:['a-z\u0101\u014D\u016B]+\-?){1,3}/i,
 -        monthsStrictRegex: /(?:['a-z\u0101\u014D\u016B]+\-?){1,3}/i,
 -        monthsShortRegex: /(?:['a-z\u0101\u014D\u016B]+\-?){1,3}/i,
@@ -8927,10 +9061,10 @@ index c66500d..0000000
 -})));
 diff --git a/node_modules/moment/locale/ml.js b/node_modules/moment/locale/ml.js
 deleted file mode 100644
-index 552f61f..0000000
+index 6a7298c..0000000
 --- a/node_modules/moment/locale/ml.js
 +++ /dev/null
-@@ -1,91 +0,0 @@
+@@ -1,93 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Malayalam [ml]
 -//! author : Floyd Pink : https://github.com/floydpink
@@ -8948,13 +9082,15 @@ index 552f61f..0000000
 -        months: 'ജനുവരി_ഫെബ്രുവരി_മാർച്ച്_ഏപ്രിൽ_മേയ്_ജൂൺ_ജൂലൈ_ഓഗസ്റ്റ്_സെപ്റ്റംബർ_ഒക്ടോബർ_നവംബർ_ഡിസംബർ'.split(
 -            '_'
 -        ),
--        monthsShort: 'ജനു._ഫെബ്രു._മാർ._ഏപ്രി._മേയ്_ജൂൺ_ജൂലൈ._ഓഗ._സെപ്റ്റ._ഒക്ടോ._നവം._ഡിസം.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'ജനു._ഫെബ്രു._മാർ._ഏപ്രി._മേയ്_ജൂൺ_ജൂലൈ._ഓഗ._സെപ്റ്റ._ഒക്ടോ._നവം._ഡിസം.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
--        weekdays: 'ഞായറാഴ്ച_തിങ്കളാഴ്ച_ചൊവ്വാഴ്ച_ബുധനാഴ്ച_വ്യാഴാഴ്ച_വെള്ളിയാഴ്ച_ശനിയാഴ്ച'.split(
--            '_'
--        ),
+-        weekdays:
+-            'ഞായറാഴ്ച_തിങ്കളാഴ്ച_ചൊവ്വാഴ്ച_ബുധനാഴ്ച_വ്യാഴാഴ്ച_വെള്ളിയാഴ്ച_ശനിയാഴ്ച'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'ഞായർ_തിങ്കൾ_ചൊവ്വ_ബുധൻ_വ്യാഴം_വെള്ളി_ശനി'.split('_'),
 -        weekdaysMin: 'ഞാ_തി_ചൊ_ബു_വ്യാ_വെ_ശ'.split('_'),
 -        longDateFormat: {
@@ -9024,10 +9160,10 @@ index 552f61f..0000000
 -})));
 diff --git a/node_modules/moment/locale/mn.js b/node_modules/moment/locale/mn.js
 deleted file mode 100644
-index fc3d027..0000000
+index a37b792..0000000
 --- a/node_modules/moment/locale/mn.js
 +++ /dev/null
-@@ -1,110 +0,0 @@
+@@ -1,111 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Mongolian [mn]
 -//! author : Javkhlantugs Nyamdorj : https://github.com/javkhaanj7
@@ -9071,9 +9207,10 @@ index fc3d027..0000000
 -        months: 'Нэгдүгээр сар_Хоёрдугаар сар_Гуравдугаар сар_Дөрөвдүгээр сар_Тавдугаар сар_Зургадугаар сар_Долдугаар сар_Наймдугаар сар_Есдүгээр сар_Аравдугаар сар_Арван нэгдүгээр сар_Арван хоёрдугаар сар'.split(
 -            '_'
 -        ),
--        monthsShort: '1 сар_2 сар_3 сар_4 сар_5 сар_6 сар_7 сар_8 сар_9 сар_10 сар_11 сар_12 сар'.split(
--            '_'
--        ),
+-        monthsShort:
+-            '1 сар_2 сар_3 сар_4 сар_5 сар_6 сар_7 сар_8 сар_9 сар_10 сар_11 сар_12 сар'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'Ням_Даваа_Мягмар_Лхагва_Пүрэв_Баасан_Бямба'.split('_'),
 -        weekdaysShort: 'Ням_Дав_Мяг_Лха_Пүр_Баа_Бям'.split('_'),
@@ -9140,10 +9277,10 @@ index fc3d027..0000000
 -})));
 diff --git a/node_modules/moment/locale/mr.js b/node_modules/moment/locale/mr.js
 deleted file mode 100644
-index 84f4e64..0000000
+index 73d5762..0000000
 --- a/node_modules/moment/locale/mr.js
 +++ /dev/null
-@@ -1,213 +0,0 @@
+@@ -1,214 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Marathi [mr]
 -//! author : Harshad Kale : https://github.com/kalehv
@@ -9159,16 +9296,16 @@ index 84f4e64..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '१',
--            '2': '२',
--            '3': '३',
--            '4': '४',
--            '5': '५',
--            '6': '६',
--            '7': '७',
--            '8': '८',
--            '9': '९',
--            '0': '०',
+-            1: '१',
+-            2: '२',
+-            3: '३',
+-            4: '४',
+-            5: '५',
+-            6: '६',
+-            7: '७',
+-            8: '८',
+-            9: '९',
+-            0: '०',
 -        },
 -        numberMap = {
 -            '१': '1',
@@ -9271,9 +9408,10 @@ index 84f4e64..0000000
 -        months: 'जानेवारी_फेब्रुवारी_मार्च_एप्रिल_मे_जून_जुलै_ऑगस्ट_सप्टेंबर_ऑक्टोबर_नोव्हेंबर_डिसेंबर'.split(
 -            '_'
 -        ),
--        monthsShort: 'जाने._फेब्रु._मार्च._एप्रि._मे._जून._जुलै._ऑग._सप्टें._ऑक्टो._नोव्हें._डिसें.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'जाने._फेब्रु._मार्च._एप्रि._मे._जून._जुलै._ऑग._सप्टें._ऑक्टो._नोव्हें._डिसें.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'रविवार_सोमवार_मंगळवार_बुधवार_गुरूवार_शुक्रवार_शनिवार'.split('_'),
 -        weekdaysShort: 'रवि_सोम_मंगळ_बुध_गुरू_शुक्र_शनि'.split('_'),
@@ -9544,10 +9682,10 @@ index 37782fb..0000000
 -})));
 diff --git a/node_modules/moment/locale/mt.js b/node_modules/moment/locale/mt.js
 deleted file mode 100644
-index 5a61655..0000000
+index 94b2559..0000000
 --- a/node_modules/moment/locale/mt.js
 +++ /dev/null
-@@ -1,66 +0,0 @@
+@@ -1,67 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Maltese (Malta) [mt]
 -//! author : Alessandro Maruccia : https://github.com/alesma
@@ -9566,9 +9704,10 @@ index 5a61655..0000000
 -            '_'
 -        ),
 -        monthsShort: 'Jan_Fra_Mar_Apr_Mej_Ġun_Lul_Aww_Set_Ott_Nov_Diċ'.split('_'),
--        weekdays: 'Il-Ħadd_It-Tnejn_It-Tlieta_L-Erbgħa_Il-Ħamis_Il-Ġimgħa_Is-Sibt'.split(
--            '_'
--        ),
+-        weekdays:
+-            'Il-Ħadd_It-Tnejn_It-Tlieta_L-Erbgħa_Il-Ħamis_Il-Ġimgħa_Is-Sibt'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'Ħad_Tne_Tli_Erb_Ħam_Ġim_Sib'.split('_'),
 -        weekdaysMin: 'Ħa_Tn_Tl_Er_Ħa_Ġi_Si'.split('_'),
 -        longDateFormat: {
@@ -9616,7 +9755,7 @@ index 5a61655..0000000
 -})));
 diff --git a/node_modules/moment/locale/my.js b/node_modules/moment/locale/my.js
 deleted file mode 100644
-index 77be4fe..0000000
+index c1ef2df..0000000
 --- a/node_modules/moment/locale/my.js
 +++ /dev/null
 @@ -1,102 +0,0 @@
@@ -9636,16 +9775,16 @@ index 77be4fe..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '၁',
--            '2': '၂',
--            '3': '၃',
--            '4': '၄',
--            '5': '၅',
--            '6': '၆',
--            '7': '၇',
--            '8': '၈',
--            '9': '၉',
--            '0': '၀',
+-            1: '၁',
+-            2: '၂',
+-            3: '၃',
+-            4: '၄',
+-            5: '၅',
+-            6: '၆',
+-            7: '၇',
+-            8: '၈',
+-            9: '၉',
+-            0: '၀',
 -        },
 -        numberMap = {
 -            '၁': '1',
@@ -9724,10 +9863,10 @@ index 77be4fe..0000000
 -})));
 diff --git a/node_modules/moment/locale/nb.js b/node_modules/moment/locale/nb.js
 deleted file mode 100644
-index 0138f09..0000000
+index 74da7af..0000000
 --- a/node_modules/moment/locale/nb.js
 +++ /dev/null
-@@ -1,70 +0,0 @@
+@@ -1,71 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Norwegian Bokmål [nb]
 -//! authors : Espen Hovlandsdal : https://github.com/rexxars
@@ -9747,9 +9886,8 @@ index 0138f09..0000000
 -        months: 'januar_februar_mars_april_mai_juni_juli_august_september_oktober_november_desember'.split(
 -            '_'
 -        ),
--        monthsShort: 'jan._feb._mars_apr._mai_juni_juli_aug._sep._okt._nov._des.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'jan._feb._mars_apr._mai_juni_juli_aug._sep._okt._nov._des.'.split('_'),
 -        monthsParseExact: true,
 -        weekdays: 'søndag_mandag_tirsdag_onsdag_torsdag_fredag_lørdag'.split('_'),
 -        weekdaysShort: 'sø._ma._ti._on._to._fr._lø.'.split('_'),
@@ -9782,6 +9920,8 @@ index 0138f09..0000000
 -            hh: '%d timer',
 -            d: 'en dag',
 -            dd: '%d dager',
+-            w: 'en uke',
+-            ww: '%d uker',
 -            M: 'en måned',
 -            MM: '%d måneder',
 -            y: 'ett år',
@@ -9800,10 +9940,10 @@ index 0138f09..0000000
 -})));
 diff --git a/node_modules/moment/locale/ne.js b/node_modules/moment/locale/ne.js
 deleted file mode 100644
-index e2c737e..0000000
+index d455e00..0000000
 --- a/node_modules/moment/locale/ne.js
 +++ /dev/null
-@@ -1,131 +0,0 @@
+@@ -1,132 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Nepalese [ne]
 -//! author : suvash : https://github.com/suvash
@@ -9818,16 +9958,16 @@ index e2c737e..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '१',
--            '2': '२',
--            '3': '३',
--            '4': '४',
--            '5': '५',
--            '6': '६',
--            '7': '७',
--            '8': '८',
--            '9': '९',
--            '0': '०',
+-            1: '१',
+-            2: '२',
+-            3: '३',
+-            4: '४',
+-            5: '५',
+-            6: '६',
+-            7: '७',
+-            8: '८',
+-            9: '९',
+-            0: '०',
 -        },
 -        numberMap = {
 -            '१': '1',
@@ -9846,9 +9986,10 @@ index e2c737e..0000000
 -        months: 'जनवरी_फेब्रुवरी_मार्च_अप्रिल_मई_जुन_जुलाई_अगष्ट_सेप्टेम्बर_अक्टोबर_नोभेम्बर_डिसेम्बर'.split(
 -            '_'
 -        ),
--        monthsShort: 'जन._फेब्रु._मार्च_अप्रि._मई_जुन_जुलाई._अग._सेप्ट._अक्टो._नोभे._डिसे.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'जन._फेब्रु._मार्च_अप्रि._मई_जुन_जुलाई._अग._सेप्ट._अक्टो._नोभे._डिसे.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'आइतबार_सोमबार_मङ्गलबार_बुधबार_बिहिबार_शुक्रबार_शनिबार'.split(
 -            '_'
@@ -9937,7 +10078,7 @@ index e2c737e..0000000
 -})));
 diff --git a/node_modules/moment/locale/nl-be.js b/node_modules/moment/locale/nl-be.js
 deleted file mode 100644
-index 8d1dec9..0000000
+index 2079383..0000000
 --- a/node_modules/moment/locale/nl-be.js
 +++ /dev/null
 @@ -1,113 +0,0 @@
@@ -9955,12 +10096,10 @@ index 8d1dec9..0000000
 -
 -    //! moment.js locale configuration
 -
--    var monthsShortWithDots = 'jan._feb._mrt._apr._mei_jun._jul._aug._sep._okt._nov._dec.'.split(
--            '_'
--        ),
--        monthsShortWithoutDots = 'jan_feb_mrt_apr_mei_jun_jul_aug_sep_okt_nov_dec'.split(
--            '_'
--        ),
+-    var monthsShortWithDots =
+-            'jan._feb._mrt._apr._mei_jun._jul._aug._sep._okt._nov._dec.'.split('_'),
+-        monthsShortWithoutDots =
+-            'jan_feb_mrt_apr_mei_jun_jul_aug_sep_okt_nov_dec'.split('_'),
 -        monthsParse = [
 -            /^jan/i,
 -            /^feb/i,
@@ -9975,7 +10114,8 @@ index 8d1dec9..0000000
 -            /^nov/i,
 -            /^dec/i,
 -        ],
--        monthsRegex = /^(januari|februari|maart|april|mei|ju[nl]i|augustus|september|oktober|november|december|jan\.?|feb\.?|mrt\.?|apr\.?|ju[nl]\.?|aug\.?|sep\.?|okt\.?|nov\.?|dec\.?)/i;
+-        monthsRegex =
+-            /^(januari|februari|maart|april|mei|ju[nl]i|augustus|september|oktober|november|december|jan\.?|feb\.?|mrt\.?|apr\.?|ju[nl]\.?|aug\.?|sep\.?|okt\.?|nov\.?|dec\.?)/i;
 -
 -    var nlBe = moment.defineLocale('nl-be', {
 -        months: 'januari_februari_maart_april_mei_juni_juli_augustus_september_oktober_november_december'.split(
@@ -9993,16 +10133,17 @@ index 8d1dec9..0000000
 -
 -        monthsRegex: monthsRegex,
 -        monthsShortRegex: monthsRegex,
--        monthsStrictRegex: /^(januari|februari|maart|april|mei|ju[nl]i|augustus|september|oktober|november|december)/i,
--        monthsShortStrictRegex: /^(jan\.?|feb\.?|mrt\.?|apr\.?|mei|ju[nl]\.?|aug\.?|sep\.?|okt\.?|nov\.?|dec\.?)/i,
+-        monthsStrictRegex:
+-            /^(januari|februari|maart|april|mei|ju[nl]i|augustus|september|oktober|november|december)/i,
+-        monthsShortStrictRegex:
+-            /^(jan\.?|feb\.?|mrt\.?|apr\.?|mei|ju[nl]\.?|aug\.?|sep\.?|okt\.?|nov\.?|dec\.?)/i,
 -
 -        monthsParse: monthsParse,
 -        longMonthsParse: monthsParse,
 -        shortMonthsParse: monthsParse,
 -
--        weekdays: 'zondag_maandag_dinsdag_woensdag_donderdag_vrijdag_zaterdag'.split(
--            '_'
--        ),
+-        weekdays:
+-            'zondag_maandag_dinsdag_woensdag_donderdag_vrijdag_zaterdag'.split('_'),
 -        weekdaysShort: 'zo._ma._di._wo._do._vr._za.'.split('_'),
 -        weekdaysMin: 'zo_ma_di_wo_do_vr_za'.split('_'),
 -        weekdaysParseExact: true,
@@ -10056,10 +10197,10 @@ index 8d1dec9..0000000
 -})));
 diff --git a/node_modules/moment/locale/nl.js b/node_modules/moment/locale/nl.js
 deleted file mode 100644
-index bc6dac7..0000000
+index 770e90f..0000000
 --- a/node_modules/moment/locale/nl.js
 +++ /dev/null
-@@ -1,113 +0,0 @@
+@@ -1,115 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Dutch [nl]
 -//! author : Joris Röling : https://github.com/jorisroling
@@ -10074,12 +10215,10 @@ index bc6dac7..0000000
 -
 -    //! moment.js locale configuration
 -
--    var monthsShortWithDots = 'jan._feb._mrt._apr._mei_jun._jul._aug._sep._okt._nov._dec.'.split(
--            '_'
--        ),
--        monthsShortWithoutDots = 'jan_feb_mrt_apr_mei_jun_jul_aug_sep_okt_nov_dec'.split(
--            '_'
--        ),
+-    var monthsShortWithDots =
+-            'jan._feb._mrt._apr._mei_jun._jul._aug._sep._okt._nov._dec.'.split('_'),
+-        monthsShortWithoutDots =
+-            'jan_feb_mrt_apr_mei_jun_jul_aug_sep_okt_nov_dec'.split('_'),
 -        monthsParse = [
 -            /^jan/i,
 -            /^feb/i,
@@ -10094,7 +10233,8 @@ index bc6dac7..0000000
 -            /^nov/i,
 -            /^dec/i,
 -        ],
--        monthsRegex = /^(januari|februari|maart|april|mei|ju[nl]i|augustus|september|oktober|november|december|jan\.?|feb\.?|mrt\.?|apr\.?|ju[nl]\.?|aug\.?|sep\.?|okt\.?|nov\.?|dec\.?)/i;
+-        monthsRegex =
+-            /^(januari|februari|maart|april|mei|ju[nl]i|augustus|september|oktober|november|december|jan\.?|feb\.?|mrt\.?|apr\.?|ju[nl]\.?|aug\.?|sep\.?|okt\.?|nov\.?|dec\.?)/i;
 -
 -    var nl = moment.defineLocale('nl', {
 -        months: 'januari_februari_maart_april_mei_juni_juli_augustus_september_oktober_november_december'.split(
@@ -10112,16 +10252,17 @@ index bc6dac7..0000000
 -
 -        monthsRegex: monthsRegex,
 -        monthsShortRegex: monthsRegex,
--        monthsStrictRegex: /^(januari|februari|maart|april|mei|ju[nl]i|augustus|september|oktober|november|december)/i,
--        monthsShortStrictRegex: /^(jan\.?|feb\.?|mrt\.?|apr\.?|mei|ju[nl]\.?|aug\.?|sep\.?|okt\.?|nov\.?|dec\.?)/i,
+-        monthsStrictRegex:
+-            /^(januari|februari|maart|april|mei|ju[nl]i|augustus|september|oktober|november|december)/i,
+-        monthsShortStrictRegex:
+-            /^(jan\.?|feb\.?|mrt\.?|apr\.?|mei|ju[nl]\.?|aug\.?|sep\.?|okt\.?|nov\.?|dec\.?)/i,
 -
 -        monthsParse: monthsParse,
 -        longMonthsParse: monthsParse,
 -        shortMonthsParse: monthsParse,
 -
--        weekdays: 'zondag_maandag_dinsdag_woensdag_donderdag_vrijdag_zaterdag'.split(
--            '_'
--        ),
+-        weekdays:
+-            'zondag_maandag_dinsdag_woensdag_donderdag_vrijdag_zaterdag'.split('_'),
 -        weekdaysShort: 'zo._ma._di._wo._do._vr._za.'.split('_'),
 -        weekdaysMin: 'zo_ma_di_wo_do_vr_za'.split('_'),
 -        weekdaysParseExact: true,
@@ -10152,6 +10293,8 @@ index bc6dac7..0000000
 -            hh: '%d uur',
 -            d: 'één dag',
 -            dd: '%d dagen',
+-            w: 'één week',
+-            ww: '%d weken',
 -            M: 'één maand',
 -            MM: '%d maanden',
 -            y: 'één jaar',
@@ -10175,10 +10318,10 @@ index bc6dac7..0000000
 -})));
 diff --git a/node_modules/moment/locale/nn.js b/node_modules/moment/locale/nn.js
 deleted file mode 100644
-index 638cefb..0000000
+index c65268e..0000000
 --- a/node_modules/moment/locale/nn.js
 +++ /dev/null
-@@ -1,69 +0,0 @@
+@@ -1,70 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Nynorsk [nn]
 -//! authors : https://github.com/mechuwind
@@ -10197,9 +10340,8 @@ index 638cefb..0000000
 -        months: 'januar_februar_mars_april_mai_juni_juli_august_september_oktober_november_desember'.split(
 -            '_'
 -        ),
--        monthsShort: 'jan._feb._mars_apr._mai_juni_juli_aug._sep._okt._nov._des.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'jan._feb._mars_apr._mai_juni_juli_aug._sep._okt._nov._des.'.split('_'),
 -        monthsParseExact: true,
 -        weekdays: 'sundag_måndag_tysdag_onsdag_torsdag_fredag_laurdag'.split('_'),
 -        weekdaysShort: 'su._må._ty._on._to._fr._lau.'.split('_'),
@@ -10232,6 +10374,8 @@ index 638cefb..0000000
 -            hh: '%d timar',
 -            d: 'ein dag',
 -            dd: '%d dagar',
+-            w: 'ei veke',
+-            ww: '%d veker',
 -            M: 'ein månad',
 -            MM: '%d månader',
 -            y: 'eit år',
@@ -10250,10 +10394,10 @@ index 638cefb..0000000
 -})));
 diff --git a/node_modules/moment/locale/oc-lnc.js b/node_modules/moment/locale/oc-lnc.js
 deleted file mode 100644
-index 7301280..0000000
+index ba8f433..0000000
 --- a/node_modules/moment/locale/oc-lnc.js
 +++ /dev/null
-@@ -1,94 +0,0 @@
+@@ -1,96 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Occitan, lengadocian dialecte [oc-lnc]
 -//! author : Quentin PAGÈS : https://github.com/Quenty31
@@ -10269,17 +10413,19 @@ index 7301280..0000000
 -
 -    var ocLnc = moment.defineLocale('oc-lnc', {
 -        months: {
--            standalone: 'genièr_febrièr_març_abril_mai_junh_julhet_agost_setembre_octòbre_novembre_decembre'.split(
--                '_'
--            ),
+-            standalone:
+-                'genièr_febrièr_març_abril_mai_junh_julhet_agost_setembre_octòbre_novembre_decembre'.split(
+-                    '_'
+-                ),
 -            format: "de genièr_de febrièr_de març_d'abril_de mai_de junh_de julhet_d'agost_de setembre_d'octòbre_de novembre_de decembre".split(
 -                '_'
 -            ),
 -            isFormat: /D[oD]?(\s)+MMMM/,
 -        },
--        monthsShort: 'gen._febr._març_abr._mai_junh_julh._ago._set._oct._nov._dec.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'gen._febr._març_abr._mai_junh_julh._ago._set._oct._nov._dec.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'dimenge_diluns_dimars_dimècres_dijòus_divendres_dissabte'.split(
 -            '_'
@@ -10350,10 +10496,10 @@ index 7301280..0000000
 -})));
 diff --git a/node_modules/moment/locale/pa-in.js b/node_modules/moment/locale/pa-in.js
 deleted file mode 100644
-index ff01b87..0000000
+index d57eb75..0000000
 --- a/node_modules/moment/locale/pa-in.js
 +++ /dev/null
-@@ -1,132 +0,0 @@
+@@ -1,133 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Punjabi (India) [pa-in]
 -//! author : Harpreet Singh : https://github.com/harpreetkhalsagtbit
@@ -10368,16 +10514,16 @@ index ff01b87..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '੧',
--            '2': '੨',
--            '3': '੩',
--            '4': '੪',
--            '5': '੫',
--            '6': '੬',
--            '7': '੭',
--            '8': '੮',
--            '9': '੯',
--            '0': '੦',
+-            1: '੧',
+-            2: '੨',
+-            3: '੩',
+-            4: '੪',
+-            5: '੫',
+-            6: '੬',
+-            7: '੭',
+-            8: '੮',
+-            9: '੯',
+-            0: '੦',
 -        },
 -        numberMap = {
 -            '੧': '1',
@@ -10397,9 +10543,10 @@ index ff01b87..0000000
 -        months: 'ਜਨਵਰੀ_ਫ਼ਰਵਰੀ_ਮਾਰਚ_ਅਪ੍ਰੈਲ_ਮਈ_ਜੂਨ_ਜੁਲਾਈ_ਅਗਸਤ_ਸਤੰਬਰ_ਅਕਤੂਬਰ_ਨਵੰਬਰ_ਦਸੰਬਰ'.split(
 -            '_'
 -        ),
--        monthsShort: 'ਜਨਵਰੀ_ਫ਼ਰਵਰੀ_ਮਾਰਚ_ਅਪ੍ਰੈਲ_ਮਈ_ਜੂਨ_ਜੁਲਾਈ_ਅਗਸਤ_ਸਤੰਬਰ_ਅਕਤੂਬਰ_ਨਵੰਬਰ_ਦਸੰਬਰ'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'ਜਨਵਰੀ_ਫ਼ਰਵਰੀ_ਮਾਰਚ_ਅਪ੍ਰੈਲ_ਮਈ_ਜੂਨ_ਜੁਲਾਈ_ਅਗਸਤ_ਸਤੰਬਰ_ਅਕਤੂਬਰ_ਨਵੰਬਰ_ਦਸੰਬਰ'.split(
+-                '_'
+-            ),
 -        weekdays: 'ਐਤਵਾਰ_ਸੋਮਵਾਰ_ਮੰਗਲਵਾਰ_ਬੁਧਵਾਰ_ਵੀਰਵਾਰ_ਸ਼ੁੱਕਰਵਾਰ_ਸ਼ਨੀਚਰਵਾਰ'.split(
 -            '_'
 -        ),
@@ -10488,10 +10635,10 @@ index ff01b87..0000000
 -})));
 diff --git a/node_modules/moment/locale/pl.js b/node_modules/moment/locale/pl.js
 deleted file mode 100644
-index 1d2b5f2..0000000
+index 0750bb3..0000000
 --- a/node_modules/moment/locale/pl.js
 +++ /dev/null
-@@ -1,140 +0,0 @@
+@@ -1,151 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Polish [pl]
 -//! author : Rafal Hirsz : https://github.com/evoL
@@ -10505,12 +10652,28 @@ index 1d2b5f2..0000000
 -
 -    //! moment.js locale configuration
 -
--    var monthsNominative = 'styczeń_luty_marzec_kwiecień_maj_czerwiec_lipiec_sierpień_wrzesień_październik_listopad_grudzień'.split(
--            '_'
--        ),
--        monthsSubjective = 'stycznia_lutego_marca_kwietnia_maja_czerwca_lipca_sierpnia_września_października_listopada_grudnia'.split(
--            '_'
--        );
+-    var monthsNominative =
+-            'styczeń_luty_marzec_kwiecień_maj_czerwiec_lipiec_sierpień_wrzesień_październik_listopad_grudzień'.split(
+-                '_'
+-            ),
+-        monthsSubjective =
+-            'stycznia_lutego_marca_kwietnia_maja_czerwca_lipca_sierpnia_września_października_listopada_grudnia'.split(
+-                '_'
+-            ),
+-        monthsParse = [
+-            /^sty/i,
+-            /^lut/i,
+-            /^mar/i,
+-            /^kwi/i,
+-            /^maj/i,
+-            /^cze/i,
+-            /^lip/i,
+-            /^sie/i,
+-            /^wrz/i,
+-            /^paź/i,
+-            /^lis/i,
+-            /^gru/i,
+-        ];
 -    function plural(n) {
 -        return n % 10 < 5 && n % 10 > 1 && ~~(n / 10) % 10 !== 1;
 -    }
@@ -10527,6 +10690,8 @@ index 1d2b5f2..0000000
 -                return withoutSuffix ? 'godzina' : 'godzinę';
 -            case 'hh':
 -                return result + (plural(number) ? 'godziny' : 'godzin');
+-            case 'ww':
+-                return result + (plural(number) ? 'tygodnie' : 'tygodni');
 -            case 'MM':
 -                return result + (plural(number) ? 'miesiące' : 'miesięcy');
 -            case 'yy':
@@ -10538,17 +10703,6 @@ index 1d2b5f2..0000000
 -        months: function (momentToFormat, format) {
 -            if (!momentToFormat) {
 -                return monthsNominative;
--            } else if (format === '') {
--                // Hack: if format empty we know this is used to generate
--                // RegExp by moment. Give then back both valid forms of months
--                // in RegExp ready format.
--                return (
--                    '(' +
--                    monthsSubjective[momentToFormat.month()] +
--                    '|' +
--                    monthsNominative[momentToFormat.month()] +
--                    ')'
--                );
 -            } else if (/D MMMM/.test(format)) {
 -                return monthsSubjective[momentToFormat.month()];
 -            } else {
@@ -10556,9 +10710,11 @@ index 1d2b5f2..0000000
 -            }
 -        },
 -        monthsShort: 'sty_lut_mar_kwi_maj_cze_lip_sie_wrz_paź_lis_gru'.split('_'),
--        weekdays: 'niedziela_poniedziałek_wtorek_środa_czwartek_piątek_sobota'.split(
--            '_'
--        ),
+-        monthsParse: monthsParse,
+-        longMonthsParse: monthsParse,
+-        shortMonthsParse: monthsParse,
+-        weekdays:
+-            'niedziela_poniedziałek_wtorek_środa_czwartek_piątek_sobota'.split('_'),
 -        weekdaysShort: 'ndz_pon_wt_śr_czw_pt_sob'.split('_'),
 -        weekdaysMin: 'Nd_Pn_Wt_Śr_Cz_Pt_So'.split('_'),
 -        longDateFormat: {
@@ -10616,6 +10772,8 @@ index 1d2b5f2..0000000
 -            hh: translate,
 -            d: '1 dzień',
 -            dd: '%d dni',
+-            w: 'tydzień',
+-            ww: translate,
 -            M: 'miesiąc',
 -            MM: translate,
 -            y: 'rok',
@@ -10634,10 +10792,10 @@ index 1d2b5f2..0000000
 -})));
 diff --git a/node_modules/moment/locale/pt-br.js b/node_modules/moment/locale/pt-br.js
 deleted file mode 100644
-index d903b72..0000000
+index ee123bd..0000000
 --- a/node_modules/moment/locale/pt-br.js
 +++ /dev/null
-@@ -1,67 +0,0 @@
+@@ -1,69 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Portuguese (Brazil) [pt-br]
 -//! author : Caio Ribeiro Pereira : https://github.com/caio-ribeiro-pereira
@@ -10656,9 +10814,10 @@ index d903b72..0000000
 -            '_'
 -        ),
 -        monthsShort: 'jan_fev_mar_abr_mai_jun_jul_ago_set_out_nov_dez'.split('_'),
--        weekdays: 'domingo_segunda-feira_terça-feira_quarta-feira_quinta-feira_sexta-feira_sábado'.split(
--            '_'
--        ),
+-        weekdays:
+-            'domingo_segunda-feira_terça-feira_quarta-feira_quinta-feira_sexta-feira_sábado'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'dom_seg_ter_qua_qui_sex_sáb'.split('_'),
 -        weekdaysMin: 'do_2ª_3ª_4ª_5ª_6ª_sá'.split('_'),
 -        weekdaysParseExact: true,
@@ -10700,6 +10859,7 @@ index d903b72..0000000
 -        },
 -        dayOfMonthOrdinalParse: /\d{1,2}º/,
 -        ordinal: '%dº',
+-        invalidDate: 'Data inválida',
 -    });
 -
 -    return ptBr;
@@ -10707,10 +10867,10 @@ index d903b72..0000000
 -})));
 diff --git a/node_modules/moment/locale/pt.js b/node_modules/moment/locale/pt.js
 deleted file mode 100644
-index 6d6bd86..0000000
+index a113ed7..0000000
 --- a/node_modules/moment/locale/pt.js
 +++ /dev/null
-@@ -1,71 +0,0 @@
+@@ -1,74 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Portuguese [pt]
 -//! author : Jefferson : https://github.com/jalex79
@@ -10729,9 +10889,10 @@ index 6d6bd86..0000000
 -            '_'
 -        ),
 -        monthsShort: 'jan_fev_mar_abr_mai_jun_jul_ago_set_out_nov_dez'.split('_'),
--        weekdays: 'Domingo_Segunda-feira_Terça-feira_Quarta-feira_Quinta-feira_Sexta-feira_Sábado'.split(
--            '_'
--        ),
+-        weekdays:
+-            'Domingo_Segunda-feira_Terça-feira_Quarta-feira_Quinta-feira_Sexta-feira_Sábado'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'Dom_Seg_Ter_Qua_Qui_Sex_Sáb'.split('_'),
 -        weekdaysMin: 'Do_2ª_3ª_4ª_5ª_6ª_Sá'.split('_'),
 -        weekdaysParseExact: true,
@@ -10766,6 +10927,8 @@ index 6d6bd86..0000000
 -            hh: '%d horas',
 -            d: 'um dia',
 -            dd: '%d dias',
+-            w: 'uma semana',
+-            ww: '%d semanas',
 -            M: 'um mês',
 -            MM: '%d meses',
 -            y: 'um ano',
@@ -10784,10 +10947,10 @@ index 6d6bd86..0000000
 -})));
 diff --git a/node_modules/moment/locale/ro.js b/node_modules/moment/locale/ro.js
 deleted file mode 100644
-index ae846ef..0000000
+index c2a9dd8..0000000
 --- a/node_modules/moment/locale/ro.js
 +++ /dev/null
-@@ -1,83 +0,0 @@
+@@ -1,87 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Romanian [ro]
 -//! author : Vlad Gurdiga : https://github.com/gurdiga
@@ -10809,6 +10972,7 @@ index ae846ef..0000000
 -                mm: 'minute',
 -                hh: 'ore',
 -                dd: 'zile',
+-                ww: 'săptămâni',
 -                MM: 'luni',
 -                yy: 'ani',
 -            },
@@ -10823,9 +10987,10 @@ index ae846ef..0000000
 -        months: 'ianuarie_februarie_martie_aprilie_mai_iunie_iulie_august_septembrie_octombrie_noiembrie_decembrie'.split(
 -            '_'
 -        ),
--        monthsShort: 'ian._feb._mart._apr._mai_iun._iul._aug._sept._oct._nov._dec.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'ian._feb._mart._apr._mai_iun._iul._aug._sept._oct._nov._dec.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'duminică_luni_marți_miercuri_joi_vineri_sâmbătă'.split('_'),
 -        weekdaysShort: 'Dum_Lun_Mar_Mie_Joi_Vin_Sâm'.split('_'),
@@ -10857,6 +11022,8 @@ index ae846ef..0000000
 -            hh: relativeTimeWithPlural,
 -            d: 'o zi',
 -            dd: relativeTimeWithPlural,
+-            w: 'o săptămână',
+-            ww: relativeTimeWithPlural,
 -            M: 'o lună',
 -            MM: relativeTimeWithPlural,
 -            y: 'un an',
@@ -10873,10 +11040,10 @@ index ae846ef..0000000
 -})));
 diff --git a/node_modules/moment/locale/ru.js b/node_modules/moment/locale/ru.js
 deleted file mode 100644
-index 4613986..0000000
+index 918e9d5..0000000
 --- a/node_modules/moment/locale/ru.js
 +++ /dev/null
-@@ -1,214 +0,0 @@
+@@ -1,224 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Russian [ru]
 -//! author : Viktorminator : https://github.com/Viktorminator
@@ -10906,6 +11073,7 @@ index 4613986..0000000
 -            mm: withoutSuffix ? 'минута_минуты_минут' : 'минуту_минуты_минут',
 -            hh: 'час_часа_часов',
 -            dd: 'день_дня_дней',
+-            ww: 'неделя_недели_недель',
 -            MM: 'месяц_месяца_месяцев',
 -            yy: 'год_года_лет',
 -        };
@@ -10938,23 +11106,26 @@ index 4613986..0000000
 -            format: 'января_февраля_марта_апреля_мая_июня_июля_августа_сентября_октября_ноября_декабря'.split(
 -                '_'
 -            ),
--            standalone: 'январь_февраль_март_апрель_май_июнь_июль_август_сентябрь_октябрь_ноябрь_декабрь'.split(
--                '_'
--            ),
+-            standalone:
+-                'январь_февраль_март_апрель_май_июнь_июль_август_сентябрь_октябрь_ноябрь_декабрь'.split(
+-                    '_'
+-                ),
 -        },
 -        monthsShort: {
 -            // по CLDR именно "июл." и "июн.", но какой смысл менять букву на точку?
 -            format: 'янв._февр._мар._апр._мая_июня_июля_авг._сент._окт._нояб._дек.'.split(
 -                '_'
 -            ),
--            standalone: 'янв._февр._март_апр._май_июнь_июль_авг._сент._окт._нояб._дек.'.split(
--                '_'
--            ),
+-            standalone:
+-                'янв._февр._март_апр._май_июнь_июль_авг._сент._окт._нояб._дек.'.split(
+-                    '_'
+-                ),
 -        },
 -        weekdays: {
--            standalone: 'воскресенье_понедельник_вторник_среда_четверг_пятница_суббота'.split(
--                '_'
--            ),
+-            standalone:
+-                'воскресенье_понедельник_вторник_среда_четверг_пятница_суббота'.split(
+-                    '_'
+-                ),
 -            format: 'воскресенье_понедельник_вторник_среду_четверг_пятницу_субботу'.split(
 -                '_'
 -            ),
@@ -10967,16 +11138,20 @@ index 4613986..0000000
 -        shortMonthsParse: monthsParse,
 -
 -        // полные названия с падежами, по три буквы, для некоторых, по 4 буквы, сокращения с точкой и без точки
--        monthsRegex: /^(январ[ья]|янв\.?|феврал[ья]|февр?\.?|марта?|мар\.?|апрел[ья]|апр\.?|ма[йя]|июн[ья]|июн\.?|июл[ья]|июл\.?|августа?|авг\.?|сентябр[ья]|сент?\.?|октябр[ья]|окт\.?|ноябр[ья]|нояб?\.?|декабр[ья]|дек\.?)/i,
+-        monthsRegex:
+-            /^(январ[ья]|янв\.?|феврал[ья]|февр?\.?|марта?|мар\.?|апрел[ья]|апр\.?|ма[йя]|июн[ья]|июн\.?|июл[ья]|июл\.?|августа?|авг\.?|сентябр[ья]|сент?\.?|октябр[ья]|окт\.?|ноябр[ья]|нояб?\.?|декабр[ья]|дек\.?)/i,
 -
 -        // копия предыдущего
--        monthsShortRegex: /^(январ[ья]|янв\.?|феврал[ья]|февр?\.?|марта?|мар\.?|апрел[ья]|апр\.?|ма[йя]|июн[ья]|июн\.?|июл[ья]|июл\.?|августа?|авг\.?|сентябр[ья]|сент?\.?|октябр[ья]|окт\.?|ноябр[ья]|нояб?\.?|декабр[ья]|дек\.?)/i,
+-        monthsShortRegex:
+-            /^(январ[ья]|янв\.?|феврал[ья]|февр?\.?|марта?|мар\.?|апрел[ья]|апр\.?|ма[йя]|июн[ья]|июн\.?|июл[ья]|июл\.?|августа?|авг\.?|сентябр[ья]|сент?\.?|октябр[ья]|окт\.?|ноябр[ья]|нояб?\.?|декабр[ья]|дек\.?)/i,
 -
 -        // полные названия с падежами
--        monthsStrictRegex: /^(январ[яь]|феврал[яь]|марта?|апрел[яь]|ма[яй]|июн[яь]|июл[яь]|августа?|сентябр[яь]|октябр[яь]|ноябр[яь]|декабр[яь])/i,
+-        monthsStrictRegex:
+-            /^(январ[яь]|феврал[яь]|марта?|апрел[яь]|ма[яй]|июн[яь]|июл[яь]|августа?|сентябр[яь]|октябр[яь]|ноябр[яь]|декабр[яь])/i,
 -
 -        // Выражение, которое соответствует только сокращённым формам
--        monthsShortStrictRegex: /^(янв\.|февр?\.|мар[т.]|апр\.|ма[яй]|июн[ья.]|июл[ья.]|авг\.|сент?\.|окт\.|нояб?\.|дек\.)/i,
+-        monthsShortStrictRegex:
+-            /^(янв\.|февр?\.|мар[т.]|апр\.|ма[яй]|июн[ья.]|июл[ья.]|авг\.|сент?\.|окт\.|нояб?\.|дек\.)/i,
 -        longDateFormat: {
 -            LT: 'H:mm',
 -            LTS: 'H:mm:ss',
@@ -11046,6 +11221,8 @@ index 4613986..0000000
 -            hh: relativeTimeWithPlural,
 -            d: 'день',
 -            dd: relativeTimeWithPlural,
+-            w: 'неделя',
+-            ww: relativeTimeWithPlural,
 -            M: 'месяц',
 -            MM: relativeTimeWithPlural,
 -            y: 'год',
@@ -11191,7 +11368,7 @@ index 56ff8c7..0000000
 -})));
 diff --git a/node_modules/moment/locale/se.js b/node_modules/moment/locale/se.js
 deleted file mode 100644
-index 65e2f12..0000000
+index 289929a..0000000
 --- a/node_modules/moment/locale/se.js
 +++ /dev/null
 @@ -1,68 +0,0 @@
@@ -11212,12 +11389,12 @@ index 65e2f12..0000000
 -        months: 'ođđajagemánnu_guovvamánnu_njukčamánnu_cuoŋománnu_miessemánnu_geassemánnu_suoidnemánnu_borgemánnu_čakčamánnu_golggotmánnu_skábmamánnu_juovlamánnu'.split(
 -            '_'
 -        ),
--        monthsShort: 'ođđj_guov_njuk_cuo_mies_geas_suoi_borg_čakč_golg_skáb_juov'.split(
--            '_'
--        ),
--        weekdays: 'sotnabeaivi_vuossárga_maŋŋebárga_gaskavahkku_duorastat_bearjadat_lávvardat'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'ođđj_guov_njuk_cuo_mies_geas_suoi_borg_čakč_golg_skáb_juov'.split('_'),
+-        weekdays:
+-            'sotnabeaivi_vuossárga_maŋŋebárga_gaskavahkku_duorastat_bearjadat_lávvardat'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'sotn_vuos_maŋ_gask_duor_bear_láv'.split('_'),
 -        weekdaysMin: 's_v_m_g_d_b_L'.split('_'),
 -        longDateFormat: {
@@ -11265,10 +11442,10 @@ index 65e2f12..0000000
 -})));
 diff --git a/node_modules/moment/locale/si.js b/node_modules/moment/locale/si.js
 deleted file mode 100644
-index 8cc6ac6..0000000
+index 4421d04..0000000
 --- a/node_modules/moment/locale/si.js
 +++ /dev/null
-@@ -1,79 +0,0 @@
+@@ -1,80 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Sinhalese [si]
 -//! author : Sampath Sitinamaluwa : https://github.com/sampathsris
@@ -11290,9 +11467,10 @@ index 8cc6ac6..0000000
 -        monthsShort: 'ජන_පෙබ_මාර්_අප්_මැයි_ජූනි_ජූලි_අගෝ_සැප්_ඔක්_නොවැ_දෙසැ'.split(
 -            '_'
 -        ),
--        weekdays: 'ඉරිදා_සඳුදා_අඟහරුවාදා_බදාදා_බ්‍රහස්පතින්දා_සිකුරාදා_සෙනසුරාදා'.split(
--            '_'
--        ),
+-        weekdays:
+-            'ඉරිදා_සඳුදා_අඟහරුවාදා_බදාදා_බ්‍රහස්පතින්දා_සිකුරාදා_සෙනසුරාදා'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'ඉරි_සඳු_අඟ_බදා_බ්‍රහ_සිකු_සෙන'.split('_'),
 -        weekdaysMin: 'ඉ_ස_අ_බ_බ්‍ර_සි_සෙ'.split('_'),
 -        weekdaysParseExact: true,
@@ -11350,10 +11528,10 @@ index 8cc6ac6..0000000
 -})));
 diff --git a/node_modules/moment/locale/sk.js b/node_modules/moment/locale/sk.js
 deleted file mode 100644
-index bd60f7b..0000000
+index 99edae7..0000000
 --- a/node_modules/moment/locale/sk.js
 +++ /dev/null
-@@ -1,155 +0,0 @@
+@@ -1,156 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Slovak [sk]
 -//! author : Martin Minka : https://github.com/k2s
@@ -11368,9 +11546,10 @@ index bd60f7b..0000000
 -
 -    //! moment.js locale configuration
 -
--    var months = 'január_február_marec_apríl_máj_jún_júl_august_september_október_november_december'.split(
--            '_'
--        ),
+-    var months =
+-            'január_február_marec_apríl_máj_jún_júl_august_september_október_november_december'.split(
+-                '_'
+-            ),
 -        monthsShort = 'jan_feb_mar_apr_máj_jún_júl_aug_sep_okt_nov_dec'.split('_');
 -    function plural(n) {
 -        return n > 1 && n < 5;
@@ -11511,10 +11690,10 @@ index bd60f7b..0000000
 -})));
 diff --git a/node_modules/moment/locale/sl.js b/node_modules/moment/locale/sl.js
 deleted file mode 100644
-index 73f1b17..0000000
+index 38f1210..0000000
 --- a/node_modules/moment/locale/sl.js
 +++ /dev/null
-@@ -1,181 +0,0 @@
+@@ -1,182 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Slovenian [sl]
 -//! author : Robert Sedovšek : https://github.com/sedovsek
@@ -11616,9 +11795,10 @@ index 73f1b17..0000000
 -        months: 'januar_februar_marec_april_maj_junij_julij_avgust_september_oktober_november_december'.split(
 -            '_'
 -        ),
--        monthsShort: 'jan._feb._mar._apr._maj._jun._jul._avg._sep._okt._nov._dec.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'jan._feb._mar._apr._maj._jun._jul._avg._sep._okt._nov._dec.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'nedelja_ponedeljek_torek_sreda_četrtek_petek_sobota'.split('_'),
 -        weekdaysShort: 'ned._pon._tor._sre._čet._pet._sob.'.split('_'),
@@ -11780,13 +11960,14 @@ index 154e3d6..0000000
 -})));
 diff --git a/node_modules/moment/locale/sr-cyrl.js b/node_modules/moment/locale/sr-cyrl.js
 deleted file mode 100644
-index 14d47b2..0000000
+index 9da10fa..0000000
 --- a/node_modules/moment/locale/sr-cyrl.js
 +++ /dev/null
-@@ -1,126 +0,0 @@
+@@ -1,138 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Serbian Cyrillic [sr-cyrl]
 -//! author : Milan Janačković<milanjanackovic@gmail.com> : https://github.com/milan-j
+-//! author : Stefan Crnjaković <stefan@hotmail.rs> : https://github.com/crnjakovic
 -
 -;(function (global, factory) {
 -   typeof exports === 'object' && typeof module !== 'undefined'
@@ -11801,32 +11982,44 @@ index 14d47b2..0000000
 -        words: {
 -            //Different grammatical cases
 -            ss: ['секунда', 'секунде', 'секунди'],
--            m: ['један минут', 'једне минуте'],
--            mm: ['минут', 'минуте', 'минута'],
+-            m: ['један минут', 'једног минута'],
+-            mm: ['минут', 'минута', 'минута'],
 -            h: ['један сат', 'једног сата'],
 -            hh: ['сат', 'сата', 'сати'],
+-            d: ['један дан', 'једног дана'],
 -            dd: ['дан', 'дана', 'дана'],
+-            M: ['један месец', 'једног месеца'],
 -            MM: ['месец', 'месеца', 'месеци'],
--            yy: ['година', 'године', 'година'],
+-            y: ['једну годину', 'једне године'],
+-            yy: ['годину', 'године', 'година'],
 -        },
 -        correctGrammaticalCase: function (number, wordKey) {
--            return number === 1
--                ? wordKey[0]
--                : number >= 2 && number <= 4
--                ? wordKey[1]
--                : wordKey[2];
--        },
--        translate: function (number, withoutSuffix, key) {
--            var wordKey = translator.words[key];
--            if (key.length === 1) {
--                return withoutSuffix ? wordKey[0] : wordKey[1];
--            } else {
--                return (
--                    number +
--                    ' ' +
--                    translator.correctGrammaticalCase(number, wordKey)
--                );
+-            if (
+-                number % 10 >= 1 &&
+-                number % 10 <= 4 &&
+-                (number % 100 < 10 || number % 100 >= 20)
+-            ) {
+-                return number % 10 === 1 ? wordKey[0] : wordKey[1];
 -            }
+-            return wordKey[2];
+-        },
+-        translate: function (number, withoutSuffix, key, isFuture) {
+-            var wordKey = translator.words[key],
+-                word;
+-
+-            if (key.length === 1) {
+-                // Nominativ
+-                if (key === 'y' && withoutSuffix) return 'једна година';
+-                return isFuture || withoutSuffix ? wordKey[0] : wordKey[1];
+-            }
+-
+-            word = translator.correctGrammaticalCase(number, wordKey);
+-            // Nominativ
+-            if (key === 'yy' && withoutSuffix && word === 'годину') {
+-                return number + ' година';
+-            }
+-
+-            return number + ' ' + word;
 -        },
 -    };
 -
@@ -11834,9 +12027,8 @@ index 14d47b2..0000000
 -        months: 'јануар_фебруар_март_април_мај_јун_јул_август_септембар_октобар_новембар_децембар'.split(
 -            '_'
 -        ),
--        monthsShort: 'јан._феб._мар._апр._мај_јун_јул_авг._сеп._окт._нов._дец.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'јан._феб._мар._апр._мај_јун_јул_авг._сеп._окт._нов._дец.'.split('_'),
 -        monthsParseExact: true,
 -        weekdays: 'недеља_понедељак_уторак_среда_четвртак_петак_субота'.split('_'),
 -        weekdaysShort: 'нед._пон._уто._сре._чет._пет._суб.'.split('_'),
@@ -11845,10 +12037,10 @@ index 14d47b2..0000000
 -        longDateFormat: {
 -            LT: 'H:mm',
 -            LTS: 'H:mm:ss',
--            L: 'DD.MM.YYYY',
--            LL: 'D. MMMM YYYY',
--            LLL: 'D. MMMM YYYY H:mm',
--            LLLL: 'dddd, D. MMMM YYYY H:mm',
+-            L: 'D. M. YYYY.',
+-            LL: 'D. MMMM YYYY.',
+-            LLL: 'D. MMMM YYYY. H:mm',
+-            LLLL: 'dddd, D. MMMM YYYY. H:mm',
 -        },
 -        calendar: {
 -            sameDay: '[данас у] LT',
@@ -11892,18 +12084,18 @@ index 14d47b2..0000000
 -            mm: translator.translate,
 -            h: translator.translate,
 -            hh: translator.translate,
--            d: 'дан',
+-            d: translator.translate,
 -            dd: translator.translate,
--            M: 'месец',
+-            M: translator.translate,
 -            MM: translator.translate,
--            y: 'годину',
+-            y: translator.translate,
 -            yy: translator.translate,
 -        },
 -        dayOfMonthOrdinalParse: /\d{1,2}\./,
 -        ordinal: '%d.',
 -        week: {
 -            dow: 1, // Monday is the first day of the week.
--            doy: 7, // The week that contains Jan 7th is the first week of the year.
+-            doy: 7, // The week that contains Jan 1st is the first week of the year.
 -        },
 -    });
 -
@@ -11912,13 +12104,14 @@ index 14d47b2..0000000
 -})));
 diff --git a/node_modules/moment/locale/sr.js b/node_modules/moment/locale/sr.js
 deleted file mode 100644
-index 8cf996e..0000000
+index 8f53e7c..0000000
 --- a/node_modules/moment/locale/sr.js
 +++ /dev/null
-@@ -1,128 +0,0 @@
+@@ -1,140 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Serbian [sr]
 -//! author : Milan Janačković<milanjanackovic@gmail.com> : https://github.com/milan-j
+-//! author : Stefan Crnjaković <stefan@hotmail.rs> : https://github.com/crnjakovic
 -
 -;(function (global, factory) {
 -   typeof exports === 'object' && typeof module !== 'undefined'
@@ -11933,32 +12126,44 @@ index 8cf996e..0000000
 -        words: {
 -            //Different grammatical cases
 -            ss: ['sekunda', 'sekunde', 'sekundi'],
--            m: ['jedan minut', 'jedne minute'],
--            mm: ['minut', 'minute', 'minuta'],
+-            m: ['jedan minut', 'jednog minuta'],
+-            mm: ['minut', 'minuta', 'minuta'],
 -            h: ['jedan sat', 'jednog sata'],
 -            hh: ['sat', 'sata', 'sati'],
+-            d: ['jedan dan', 'jednog dana'],
 -            dd: ['dan', 'dana', 'dana'],
+-            M: ['jedan mesec', 'jednog meseca'],
 -            MM: ['mesec', 'meseca', 'meseci'],
--            yy: ['godina', 'godine', 'godina'],
+-            y: ['jednu godinu', 'jedne godine'],
+-            yy: ['godinu', 'godine', 'godina'],
 -        },
 -        correctGrammaticalCase: function (number, wordKey) {
--            return number === 1
--                ? wordKey[0]
--                : number >= 2 && number <= 4
--                ? wordKey[1]
--                : wordKey[2];
--        },
--        translate: function (number, withoutSuffix, key) {
--            var wordKey = translator.words[key];
--            if (key.length === 1) {
--                return withoutSuffix ? wordKey[0] : wordKey[1];
--            } else {
--                return (
--                    number +
--                    ' ' +
--                    translator.correctGrammaticalCase(number, wordKey)
--                );
+-            if (
+-                number % 10 >= 1 &&
+-                number % 10 <= 4 &&
+-                (number % 100 < 10 || number % 100 >= 20)
+-            ) {
+-                return number % 10 === 1 ? wordKey[0] : wordKey[1];
 -            }
+-            return wordKey[2];
+-        },
+-        translate: function (number, withoutSuffix, key, isFuture) {
+-            var wordKey = translator.words[key],
+-                word;
+-
+-            if (key.length === 1) {
+-                // Nominativ
+-                if (key === 'y' && withoutSuffix) return 'jedna godina';
+-                return isFuture || withoutSuffix ? wordKey[0] : wordKey[1];
+-            }
+-
+-            word = translator.correctGrammaticalCase(number, wordKey);
+-            // Nominativ
+-            if (key === 'yy' && withoutSuffix && word === 'godinu') {
+-                return number + ' godina';
+-            }
+-
+-            return number + ' ' + word;
 -        },
 -    };
 -
@@ -11966,9 +12171,8 @@ index 8cf996e..0000000
 -        months: 'januar_februar_mart_april_maj_jun_jul_avgust_septembar_oktobar_novembar_decembar'.split(
 -            '_'
 -        ),
--        monthsShort: 'jan._feb._mar._apr._maj_jun_jul_avg._sep._okt._nov._dec.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'jan._feb._mar._apr._maj_jun_jul_avg._sep._okt._nov._dec.'.split('_'),
 -        monthsParseExact: true,
 -        weekdays: 'nedelja_ponedeljak_utorak_sreda_četvrtak_petak_subota'.split(
 -            '_'
@@ -11979,10 +12183,10 @@ index 8cf996e..0000000
 -        longDateFormat: {
 -            LT: 'H:mm',
 -            LTS: 'H:mm:ss',
--            L: 'DD.MM.YYYY',
--            LL: 'D. MMMM YYYY',
--            LLL: 'D. MMMM YYYY H:mm',
--            LLLL: 'dddd, D. MMMM YYYY H:mm',
+-            L: 'D. M. YYYY.',
+-            LL: 'D. MMMM YYYY.',
+-            LLL: 'D. MMMM YYYY. H:mm',
+-            LLLL: 'dddd, D. MMMM YYYY. H:mm',
 -        },
 -        calendar: {
 -            sameDay: '[danas u] LT',
@@ -12026,11 +12230,11 @@ index 8cf996e..0000000
 -            mm: translator.translate,
 -            h: translator.translate,
 -            hh: translator.translate,
--            d: 'dan',
+-            d: translator.translate,
 -            dd: translator.translate,
--            M: 'mesec',
+-            M: translator.translate,
 -            MM: translator.translate,
--            y: 'godinu',
+-            y: translator.translate,
 -            yy: translator.translate,
 -        },
 -        dayOfMonthOrdinalParse: /\d{1,2}\./,
@@ -12046,10 +12250,10 @@ index 8cf996e..0000000
 -})));
 diff --git a/node_modules/moment/locale/ss.js b/node_modules/moment/locale/ss.js
 deleted file mode 100644
-index 1bcf4ef..0000000
+index ce8a657..0000000
 --- a/node_modules/moment/locale/ss.js
 +++ /dev/null
-@@ -1,94 +0,0 @@
+@@ -1,95 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : siSwati [ss]
 -//! author : Nicolai Davies<mail@nicolai.io> : https://github.com/nicolaidavies
@@ -12068,9 +12272,10 @@ index 1bcf4ef..0000000
 -            '_'
 -        ),
 -        monthsShort: 'Bhi_Ina_Inu_Mab_Ink_Inh_Kho_Igc_Iny_Imp_Lwe_Igo'.split('_'),
--        weekdays: 'Lisontfo_Umsombuluko_Lesibili_Lesitsatfu_Lesine_Lesihlanu_Umgcibelo'.split(
--            '_'
--        ),
+-        weekdays:
+-            'Lisontfo_Umsombuluko_Lesibili_Lesitsatfu_Lesine_Lesihlanu_Umgcibelo'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'Lis_Umb_Lsb_Les_Lsi_Lsh_Umg'.split('_'),
 -        weekdaysMin: 'Li_Us_Lb_Lt_Ls_Lh_Ug'.split('_'),
 -        weekdaysParseExact: true,
@@ -12231,10 +12436,10 @@ index 90fe441..0000000
 -})));
 diff --git a/node_modules/moment/locale/sw.js b/node_modules/moment/locale/sw.js
 deleted file mode 100644
-index 8f3c02a..0000000
+index 1a5ac64..0000000
 --- a/node_modules/moment/locale/sw.js
 +++ /dev/null
-@@ -1,65 +0,0 @@
+@@ -1,66 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Swahili [sw]
 -//! author : Fahad Kassim : https://github.com/fadsel
@@ -12253,9 +12458,10 @@ index 8f3c02a..0000000
 -            '_'
 -        ),
 -        monthsShort: 'Jan_Feb_Mac_Apr_Mei_Jun_Jul_Ago_Sep_Okt_Nov_Des'.split('_'),
--        weekdays: 'Jumapili_Jumatatu_Jumanne_Jumatano_Alhamisi_Ijumaa_Jumamosi'.split(
--            '_'
--        ),
+-        weekdays:
+-            'Jumapili_Jumatatu_Jumanne_Jumatano_Alhamisi_Ijumaa_Jumamosi'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'Jpl_Jtat_Jnne_Jtan_Alh_Ijm_Jmos'.split('_'),
 -        weekdaysMin: 'J2_J3_J4_J5_Al_Ij_J1'.split('_'),
 -        weekdaysParseExact: true,
@@ -12302,10 +12508,10 @@ index 8f3c02a..0000000
 -})));
 diff --git a/node_modules/moment/locale/ta.js b/node_modules/moment/locale/ta.js
 deleted file mode 100644
-index 139f1ec..0000000
+index 0f28832..0000000
 --- a/node_modules/moment/locale/ta.js
 +++ /dev/null
-@@ -1,140 +0,0 @@
+@@ -1,142 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Tamil [ta]
 -//! author : Arjunkumar Krishnamoorthy : https://github.com/tk120404
@@ -12320,16 +12526,16 @@ index 139f1ec..0000000
 -    //! moment.js locale configuration
 -
 -    var symbolMap = {
--            '1': '௧',
--            '2': '௨',
--            '3': '௩',
--            '4': '௪',
--            '5': '௫',
--            '6': '௬',
--            '7': '௭',
--            '8': '௮',
--            '9': '௯',
--            '0': '௦',
+-            1: '௧',
+-            2: '௨',
+-            3: '௩',
+-            4: '௪',
+-            5: '௫',
+-            6: '௬',
+-            7: '௭',
+-            8: '௮',
+-            9: '௯',
+-            0: '௦',
 -        },
 -        numberMap = {
 -            '௧': '1',
@@ -12348,12 +12554,14 @@ index 139f1ec..0000000
 -        months: 'ஜனவரி_பிப்ரவரி_மார்ச்_ஏப்ரல்_மே_ஜூன்_ஜூலை_ஆகஸ்ட்_செப்டெம்பர்_அக்டோபர்_நவம்பர்_டிசம்பர்'.split(
 -            '_'
 -        ),
--        monthsShort: 'ஜனவரி_பிப்ரவரி_மார்ச்_ஏப்ரல்_மே_ஜூன்_ஜூலை_ஆகஸ்ட்_செப்டெம்பர்_அக்டோபர்_நவம்பர்_டிசம்பர்'.split(
--            '_'
--        ),
--        weekdays: 'ஞாயிற்றுக்கிழமை_திங்கட்கிழமை_செவ்வாய்கிழமை_புதன்கிழமை_வியாழக்கிழமை_வெள்ளிக்கிழமை_சனிக்கிழமை'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'ஜனவரி_பிப்ரவரி_மார்ச்_ஏப்ரல்_மே_ஜூன்_ஜூலை_ஆகஸ்ட்_செப்டெம்பர்_அக்டோபர்_நவம்பர்_டிசம்பர்'.split(
+-                '_'
+-            ),
+-        weekdays:
+-            'ஞாயிற்றுக்கிழமை_திங்கட்கிழமை_செவ்வாய்கிழமை_புதன்கிழமை_வியாழக்கிழமை_வெள்ளிக்கிழமை_சனிக்கிழமை'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'ஞாயிறு_திங்கள்_செவ்வாய்_புதன்_வியாழன்_வெள்ளி_சனி'.split(
 -            '_'
 -        ),
@@ -12448,10 +12656,10 @@ index 139f1ec..0000000
 -})));
 diff --git a/node_modules/moment/locale/te.js b/node_modules/moment/locale/te.js
 deleted file mode 100644
-index e1d69bd..0000000
+index 85bab7e..0000000
 --- a/node_modules/moment/locale/te.js
 +++ /dev/null
-@@ -1,97 +0,0 @@
+@@ -1,99 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Telugu [te]
 -//! author : Krishna Chaitanya Thota : https://github.com/kcthota
@@ -12469,13 +12677,15 @@ index e1d69bd..0000000
 -        months: 'జనవరి_ఫిబ్రవరి_మార్చి_ఏప్రిల్_మే_జూన్_జులై_ఆగస్టు_సెప్టెంబర్_అక్టోబర్_నవంబర్_డిసెంబర్'.split(
 -            '_'
 -        ),
--        monthsShort: 'జన._ఫిబ్ర._మార్చి_ఏప్రి._మే_జూన్_జులై_ఆగ._సెప్._అక్టో._నవ._డిసె.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'జన._ఫిబ్ర._మార్చి_ఏప్రి._మే_జూన్_జులై_ఆగ._సెప్._అక్టో._నవ._డిసె.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
--        weekdays: 'ఆదివారం_సోమవారం_మంగళవారం_బుధవారం_గురువారం_శుక్రవారం_శనివారం'.split(
--            '_'
--        ),
+-        weekdays:
+-            'ఆదివారం_సోమవారం_మంగళవారం_బుధవారం_గురువారం_శుక్రవారం_శనివారం'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'ఆది_సోమ_మంగళ_బుధ_గురు_శుక్ర_శని'.split('_'),
 -        weekdaysMin: 'ఆ_సో_మం_బు_గు_శు_శ'.split('_'),
 -        longDateFormat: {
@@ -12636,10 +12846,10 @@ index 931384a..0000000
 -})));
 diff --git a/node_modules/moment/locale/tg.js b/node_modules/moment/locale/tg.js
 deleted file mode 100644
-index a8ae777..0000000
+index bde72ad..0000000
 --- a/node_modules/moment/locale/tg.js
 +++ /dev/null
-@@ -1,122 +0,0 @@
+@@ -1,128 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Tajik [tg]
 -//! author : Orif N. Jr. : https://github.com/orif-jr
@@ -12679,9 +12889,15 @@ index a8ae777..0000000
 -    };
 -
 -    var tg = moment.defineLocale('tg', {
--        months: 'январ_феврал_март_апрел_май_июн_июл_август_сентябр_октябр_ноябр_декабр'.split(
--            '_'
--        ),
+-        months: {
+-            format: 'январи_феврали_марти_апрели_майи_июни_июли_августи_сентябри_октябри_ноябри_декабри'.split(
+-                '_'
+-            ),
+-            standalone:
+-                'январ_феврал_март_апрел_май_июн_июл_август_сентябр_октябр_ноябр_декабр'.split(
+-                    '_'
+-                ),
+-        },
 -        monthsShort: 'янв_фев_мар_апр_май_июн_июл_авг_сен_окт_ноя_дек'.split('_'),
 -        weekdays: 'якшанбе_душанбе_сешанбе_чоршанбе_панҷшанбе_ҷумъа_шанбе'.split(
 -            '_'
@@ -12691,14 +12907,14 @@ index a8ae777..0000000
 -        longDateFormat: {
 -            LT: 'HH:mm',
 -            LTS: 'HH:mm:ss',
--            L: 'DD/MM/YYYY',
+-            L: 'DD.MM.YYYY',
 -            LL: 'D MMMM YYYY',
 -            LLL: 'D MMMM YYYY HH:mm',
 -            LLLL: 'dddd, D MMMM YYYY HH:mm',
 -        },
 -        calendar: {
 -            sameDay: '[Имрӯз соати] LT',
--            nextDay: '[Пагоҳ соати] LT',
+-            nextDay: '[Фардо соати] LT',
 -            lastDay: '[Дирӯз соати] LT',
 -            nextWeek: 'dddd[и] [ҳафтаи оянда соати] LT',
 -            lastWeek: 'dddd[и] [ҳафтаи гузашта соати] LT',
@@ -12764,10 +12980,10 @@ index a8ae777..0000000
 -})));
 diff --git a/node_modules/moment/locale/th.js b/node_modules/moment/locale/th.js
 deleted file mode 100644
-index 4e82f1b..0000000
+index f83bad9..0000000
 --- a/node_modules/moment/locale/th.js
 +++ /dev/null
-@@ -1,73 +0,0 @@
+@@ -1,76 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Thai [th]
 -//! author : Kridsada Thanabulpong : https://github.com/sirn
@@ -12785,9 +13001,10 @@ index 4e82f1b..0000000
 -        months: 'มกราคม_กุมภาพันธ์_มีนาคม_เมษายน_พฤษภาคม_มิถุนายน_กรกฎาคม_สิงหาคม_กันยายน_ตุลาคม_พฤศจิกายน_ธันวาคม'.split(
 -            '_'
 -        ),
--        monthsShort: 'ม.ค._ก.พ._มี.ค._เม.ย._พ.ค._มิ.ย._ก.ค._ส.ค._ก.ย._ต.ค._พ.ย._ธ.ค.'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'ม.ค._ก.พ._มี.ค._เม.ย._พ.ค._มิ.ย._ก.ค._ส.ค._ก.ย._ต.ค._พ.ย._ธ.ค.'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'อาทิตย์_จันทร์_อังคาร_พุธ_พฤหัสบดี_ศุกร์_เสาร์'.split('_'),
 -        weekdaysShort: 'อาทิตย์_จันทร์_อังคาร_พุธ_พฤหัส_ศุกร์_เสาร์'.split('_'), // yes, three characters difference
@@ -12831,6 +13048,8 @@ index 4e82f1b..0000000
 -            hh: '%d ชั่วโมง',
 -            d: '1 วัน',
 -            dd: '%d วัน',
+-            w: '1 สัปดาห์',
+-            ww: '%d สัปดาห์',
 -            M: '1 เดือน',
 -            MM: '%d เดือน',
 -            y: '1 ปี',
@@ -12843,12 +13062,12 @@ index 4e82f1b..0000000
 -})));
 diff --git a/node_modules/moment/locale/tk.js b/node_modules/moment/locale/tk.js
 deleted file mode 100644
-index 125502b..0000000
+index 24d4ede..0000000
 --- a/node_modules/moment/locale/tk.js
 +++ /dev/null
 @@ -1,102 +0,0 @@
 -//! moment.js locale configuration
--//! locale : Turkmen [trk]
+-//! locale : Turkmen [tk]
 -//! author : Atamyrat Abdyrahmanov : https://github.com/atamyratabdy
 -
 -;(function (global, factory) {
@@ -13025,10 +13244,10 @@ index 871b078..0000000
 -})));
 diff --git a/node_modules/moment/locale/tlh.js b/node_modules/moment/locale/tlh.js
 deleted file mode 100644
-index 22c1fc3..0000000
+index ee39f1e..0000000
 --- a/node_modules/moment/locale/tlh.js
 +++ /dev/null
-@@ -1,136 +0,0 @@
+@@ -1,135 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Klingon [tlh]
 -//! author : Dominika Kruk : https://github.com/amaranthrose
@@ -13109,19 +13328,18 @@ index 22c1fc3..0000000
 -        months: 'tera’ jar wa’_tera’ jar cha’_tera’ jar wej_tera’ jar loS_tera’ jar vagh_tera’ jar jav_tera’ jar Soch_tera’ jar chorgh_tera’ jar Hut_tera’ jar wa’maH_tera’ jar wa’maH wa’_tera’ jar wa’maH cha’'.split(
 -            '_'
 -        ),
--        monthsShort: 'jar wa’_jar cha’_jar wej_jar loS_jar vagh_jar jav_jar Soch_jar chorgh_jar Hut_jar wa’maH_jar wa’maH wa’_jar wa’maH cha’'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'jar wa’_jar cha’_jar wej_jar loS_jar vagh_jar jav_jar Soch_jar chorgh_jar Hut_jar wa’maH_jar wa’maH wa’_jar wa’maH cha’'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'lojmItjaj_DaSjaj_povjaj_ghItlhjaj_loghjaj_buqjaj_ghInjaj'.split(
 -            '_'
 -        ),
--        weekdaysShort: 'lojmItjaj_DaSjaj_povjaj_ghItlhjaj_loghjaj_buqjaj_ghInjaj'.split(
--            '_'
--        ),
--        weekdaysMin: 'lojmItjaj_DaSjaj_povjaj_ghItlhjaj_loghjaj_buqjaj_ghInjaj'.split(
--            '_'
--        ),
+-        weekdaysShort:
+-            'lojmItjaj_DaSjaj_povjaj_ghItlhjaj_loghjaj_buqjaj_ghInjaj'.split('_'),
+-        weekdaysMin:
+-            'lojmItjaj_DaSjaj_povjaj_ghItlhjaj_loghjaj_buqjaj_ghInjaj'.split('_'),
 -        longDateFormat: {
 -            LT: 'HH:mm',
 -            LTS: 'HH:mm:ss',
@@ -13167,10 +13385,10 @@ index 22c1fc3..0000000
 -})));
 diff --git a/node_modules/moment/locale/tr.js b/node_modules/moment/locale/tr.js
 deleted file mode 100644
-index a0c5d4c..0000000
+index 663778e..0000000
 --- a/node_modules/moment/locale/tr.js
 +++ /dev/null
-@@ -1,115 +0,0 @@
+@@ -1,117 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Turkish [tr]
 -//! authors : Erhan Gundogan : https://github.com/erhangundogan,
@@ -13214,7 +13432,7 @@ index a0c5d4c..0000000
 -        weekdays: 'Pazar_Pazartesi_Salı_Çarşamba_Perşembe_Cuma_Cumartesi'.split(
 -            '_'
 -        ),
--        weekdaysShort: 'Paz_Pts_Sal_Çar_Per_Cum_Cts'.split('_'),
+-        weekdaysShort: 'Paz_Pzt_Sal_Çar_Per_Cum_Cmt'.split('_'),
 -        weekdaysMin: 'Pz_Pt_Sa_Ça_Pe_Cu_Ct'.split('_'),
 -        meridiem: function (hours, minutes, isLower) {
 -            if (hours < 12) {
@@ -13254,6 +13472,8 @@ index a0c5d4c..0000000
 -            hh: '%d saat',
 -            d: 'bir gün',
 -            dd: '%d gün',
+-            w: 'bir hafta',
+-            ww: '%d hafta',
 -            M: 'bir ay',
 -            MM: '%d ay',
 -            y: 'bir yıl',
@@ -13394,10 +13614,10 @@ index 5eb1c06..0000000
 -})));
 diff --git a/node_modules/moment/locale/tzm-latn.js b/node_modules/moment/locale/tzm-latn.js
 deleted file mode 100644
-index d362c28..0000000
+index 34425a7..0000000
 --- a/node_modules/moment/locale/tzm-latn.js
 +++ /dev/null
-@@ -1,64 +0,0 @@
+@@ -1,65 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Central Atlas Tamazight Latin [tzm-latn]
 -//! author : Abdel Said : https://github.com/abdelsaid
@@ -13415,9 +13635,10 @@ index d362c28..0000000
 -        months: 'innayr_brˤayrˤ_marˤsˤ_ibrir_mayyw_ywnyw_ywlywz_ɣwšt_šwtanbir_ktˤwbrˤ_nwwanbir_dwjnbir'.split(
 -            '_'
 -        ),
--        monthsShort: 'innayr_brˤayrˤ_marˤsˤ_ibrir_mayyw_ywnyw_ywlywz_ɣwšt_šwtanbir_ktˤwbrˤ_nwwanbir_dwjnbir'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'innayr_brˤayrˤ_marˤsˤ_ibrir_mayyw_ywnyw_ywlywz_ɣwšt_šwtanbir_ktˤwbrˤ_nwwanbir_dwjnbir'.split(
+-                '_'
+-            ),
 -        weekdays: 'asamas_aynas_asinas_akras_akwas_asimwas_asiḍyas'.split('_'),
 -        weekdaysShort: 'asamas_aynas_asinas_akras_akwas_asimwas_asiḍyas'.split('_'),
 -        weekdaysMin: 'asamas_aynas_asinas_akras_akwas_asimwas_asiḍyas'.split('_'),
@@ -13464,10 +13685,10 @@ index d362c28..0000000
 -})));
 diff --git a/node_modules/moment/locale/tzm.js b/node_modules/moment/locale/tzm.js
 deleted file mode 100644
-index 0427f4c..0000000
+index 5db61f9..0000000
 --- a/node_modules/moment/locale/tzm.js
 +++ /dev/null
-@@ -1,64 +0,0 @@
+@@ -1,65 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Central Atlas Tamazight [tzm]
 -//! author : Abdel Said : https://github.com/abdelsaid
@@ -13485,9 +13706,10 @@ index 0427f4c..0000000
 -        months: 'ⵉⵏⵏⴰⵢⵔ_ⴱⵕⴰⵢⵕ_ⵎⴰⵕⵚ_ⵉⴱⵔⵉⵔ_ⵎⴰⵢⵢⵓ_ⵢⵓⵏⵢⵓ_ⵢⵓⵍⵢⵓⵣ_ⵖⵓⵛⵜ_ⵛⵓⵜⴰⵏⴱⵉⵔ_ⴽⵟⵓⴱⵕ_ⵏⵓⵡⴰⵏⴱⵉⵔ_ⴷⵓⵊⵏⴱⵉⵔ'.split(
 -            '_'
 -        ),
--        monthsShort: 'ⵉⵏⵏⴰⵢⵔ_ⴱⵕⴰⵢⵕ_ⵎⴰⵕⵚ_ⵉⴱⵔⵉⵔ_ⵎⴰⵢⵢⵓ_ⵢⵓⵏⵢⵓ_ⵢⵓⵍⵢⵓⵣ_ⵖⵓⵛⵜ_ⵛⵓⵜⴰⵏⴱⵉⵔ_ⴽⵟⵓⴱⵕ_ⵏⵓⵡⴰⵏⴱⵉⵔ_ⴷⵓⵊⵏⴱⵉⵔ'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'ⵉⵏⵏⴰⵢⵔ_ⴱⵕⴰⵢⵕ_ⵎⴰⵕⵚ_ⵉⴱⵔⵉⵔ_ⵎⴰⵢⵢⵓ_ⵢⵓⵏⵢⵓ_ⵢⵓⵍⵢⵓⵣ_ⵖⵓⵛⵜ_ⵛⵓⵜⴰⵏⴱⵉⵔ_ⴽⵟⵓⴱⵕ_ⵏⵓⵡⴰⵏⴱⵉⵔ_ⴷⵓⵊⵏⴱⵉⵔ'.split(
+-                '_'
+-            ),
 -        weekdays: 'ⴰⵙⴰⵎⴰⵙ_ⴰⵢⵏⴰⵙ_ⴰⵙⵉⵏⴰⵙ_ⴰⴽⵔⴰⵙ_ⴰⴽⵡⴰⵙ_ⴰⵙⵉⵎⵡⴰⵙ_ⴰⵙⵉⴹⵢⴰⵙ'.split('_'),
 -        weekdaysShort: 'ⴰⵙⴰⵎⴰⵙ_ⴰⵢⵏⴰⵙ_ⴰⵙⵉⵏⴰⵙ_ⴰⴽⵔⴰⵙ_ⴰⴽⵡⴰⵙ_ⴰⵙⵉⵎⵡⴰⵙ_ⴰⵙⵉⴹⵢⴰⵙ'.split('_'),
 -        weekdaysMin: 'ⴰⵙⴰⵎⴰⵙ_ⴰⵢⵏⴰⵙ_ⴰⵙⵉⵏⴰⵙ_ⴰⴽⵔⴰⵙ_ⴰⴽⵡⴰⵙ_ⴰⵙⵉⵎⵡⴰⵙ_ⴰⵙⵉⴹⵢⴰⵙ'.split('_'),
@@ -13534,11 +13756,11 @@ index 0427f4c..0000000
 -})));
 diff --git a/node_modules/moment/locale/ug-cn.js b/node_modules/moment/locale/ug-cn.js
 deleted file mode 100644
-index 09cea40..0000000
+index 5efffdd..0000000
 --- a/node_modules/moment/locale/ug-cn.js
 +++ /dev/null
-@@ -1,121 +0,0 @@
--//! moment.js language configuration
+@@ -1,122 +0,0 @@
+-//! moment.js locale configuration
 -//! locale : Uyghur (China) [ug-cn]
 -//! author: boyaq : https://github.com/boyaq
 -
@@ -13549,15 +13771,16 @@ index 09cea40..0000000
 -   factory(global.moment)
 -}(this, (function (moment) { 'use strict';
 -
--    //! moment.js language configuration
+-    //! moment.js locale configuration
 -
 -    var ugCn = moment.defineLocale('ug-cn', {
 -        months: 'يانۋار_فېۋرال_مارت_ئاپرېل_ماي_ئىيۇن_ئىيۇل_ئاۋغۇست_سېنتەبىر_ئۆكتەبىر_نويابىر_دېكابىر'.split(
 -            '_'
 -        ),
--        monthsShort: 'يانۋار_فېۋرال_مارت_ئاپرېل_ماي_ئىيۇن_ئىيۇل_ئاۋغۇست_سېنتەبىر_ئۆكتەبىر_نويابىر_دېكابىر'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'يانۋار_فېۋرال_مارت_ئاپرېل_ماي_ئىيۇن_ئىيۇل_ئاۋغۇست_سېنتەبىر_ئۆكتەبىر_نويابىر_دېكابىر'.split(
+-                '_'
+-            ),
 -        weekdays: 'يەكشەنبە_دۈشەنبە_سەيشەنبە_چارشەنبە_پەيشەنبە_جۈمە_شەنبە'.split(
 -            '_'
 -        ),
@@ -13661,10 +13884,10 @@ index 09cea40..0000000
 -})));
 diff --git a/node_modules/moment/locale/uk.js b/node_modules/moment/locale/uk.js
 deleted file mode 100644
-index d2a80e5..0000000
+index 89e0431..0000000
 --- a/node_modules/moment/locale/uk.js
 +++ /dev/null
-@@ -1,174 +0,0 @@
+@@ -1,178 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Ukrainian [uk]
 -//! author : zemlanin : https://github.com/zemlanin
@@ -13706,15 +13929,18 @@ index d2a80e5..0000000
 -    }
 -    function weekdaysCaseReplace(m, format) {
 -        var weekdays = {
--                nominative: 'неділя_понеділок_вівторок_середа_четвер_п’ятниця_субота'.split(
--                    '_'
--                ),
--                accusative: 'неділю_понеділок_вівторок_середу_четвер_п’ятницю_суботу'.split(
--                    '_'
--                ),
--                genitive: 'неділі_понеділка_вівторка_середи_четверга_п’ятниці_суботи'.split(
--                    '_'
--                ),
+-                nominative:
+-                    'неділя_понеділок_вівторок_середа_четвер_п’ятниця_субота'.split(
+-                        '_'
+-                    ),
+-                accusative:
+-                    'неділю_понеділок_вівторок_середу_четвер_п’ятницю_суботу'.split(
+-                        '_'
+-                    ),
+-                genitive:
+-                    'неділі_понеділка_вівторка_середи_четверга_п’ятниці_суботи'.split(
+-                        '_'
+-                    ),
 -            },
 -            nounCase;
 -
@@ -13745,9 +13971,10 @@ index d2a80e5..0000000
 -            format: 'січня_лютого_березня_квітня_травня_червня_липня_серпня_вересня_жовтня_листопада_грудня'.split(
 -                '_'
 -            ),
--            standalone: 'січень_лютий_березень_квітень_травень_червень_липень_серпень_вересень_жовтень_листопад_грудень'.split(
--                '_'
--            ),
+-            standalone:
+-                'січень_лютий_березень_квітень_травень_червень_липень_серпень_вересень_жовтень_листопад_грудень'.split(
+-                    '_'
+-                ),
 -        },
 -        monthsShort: 'січ_лют_бер_квіт_трав_черв_лип_серп_вер_жовт_лист_груд'.split(
 -            '_'
@@ -13940,10 +14167,10 @@ index 9720dcf..0000000
 -})));
 diff --git a/node_modules/moment/locale/uz-latn.js b/node_modules/moment/locale/uz-latn.js
 deleted file mode 100644
-index 93403ec..0000000
+index af08e60..0000000
 --- a/node_modules/moment/locale/uz-latn.js
 +++ /dev/null
-@@ -1,64 +0,0 @@
+@@ -1,65 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Uzbek Latin [uz-latn]
 -//! author : Rasulbek Mirzayev : github.com/Rasulbeeek
@@ -13962,9 +14189,10 @@ index 93403ec..0000000
 -            '_'
 -        ),
 -        monthsShort: 'Yan_Fev_Mar_Apr_May_Iyun_Iyul_Avg_Sen_Okt_Noy_Dek'.split('_'),
--        weekdays: 'Yakshanba_Dushanba_Seshanba_Chorshanba_Payshanba_Juma_Shanba'.split(
--            '_'
--        ),
+-        weekdays:
+-            'Yakshanba_Dushanba_Seshanba_Chorshanba_Payshanba_Juma_Shanba'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'Yak_Dush_Sesh_Chor_Pay_Jum_Shan'.split('_'),
 -        weekdaysMin: 'Ya_Du_Se_Cho_Pa_Ju_Sha'.split('_'),
 -        longDateFormat: {
@@ -14078,10 +14306,10 @@ index a8a87fc..0000000
 -})));
 diff --git a/node_modules/moment/locale/vi.js b/node_modules/moment/locale/vi.js
 deleted file mode 100644
-index 73cc083..0000000
+index fb6b4b4..0000000
 --- a/node_modules/moment/locale/vi.js
 +++ /dev/null
-@@ -1,88 +0,0 @@
+@@ -1,91 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Vietnamese [vi]
 -//! author : Bang Nguyen : https://github.com/bangnk
@@ -14100,9 +14328,10 @@ index 73cc083..0000000
 -        months: 'tháng 1_tháng 2_tháng 3_tháng 4_tháng 5_tháng 6_tháng 7_tháng 8_tháng 9_tháng 10_tháng 11_tháng 12'.split(
 -            '_'
 -        ),
--        monthsShort: 'Thg 01_Thg 02_Thg 03_Thg 04_Thg 05_Thg 06_Thg 07_Thg 08_Thg 09_Thg 10_Thg 11_Thg 12'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'Thg 01_Thg 02_Thg 03_Thg 04_Thg 05_Thg 06_Thg 07_Thg 08_Thg 09_Thg 10_Thg 11_Thg 12'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
 -        weekdays: 'chủ nhật_thứ hai_thứ ba_thứ tư_thứ năm_thứ sáu_thứ bảy'.split(
 -            '_'
@@ -14152,6 +14381,8 @@ index 73cc083..0000000
 -            hh: '%d giờ',
 -            d: 'một ngày',
 -            dd: '%d ngày',
+-            w: 'một tuần',
+-            ww: '%d tuần',
 -            M: 'một tháng',
 -            MM: '%d tháng',
 -            y: 'một năm',
@@ -14172,10 +14403,10 @@ index 73cc083..0000000
 -})));
 diff --git a/node_modules/moment/locale/x-pseudo.js b/node_modules/moment/locale/x-pseudo.js
 deleted file mode 100644
-index e688a94..0000000
+index f67a2bf..0000000
 --- a/node_modules/moment/locale/x-pseudo.js
 +++ /dev/null
-@@ -1,82 +0,0 @@
+@@ -1,84 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Pseudo [x-pseudo]
 -//! author : Andrew Hood : https://github.com/andrewhood125
@@ -14193,13 +14424,15 @@ index e688a94..0000000
 -        months: 'J~áñúá~rý_F~ébrú~árý_~Márc~h_Áp~ríl_~Máý_~Júñé~_Júl~ý_Áú~gúst~_Sép~témb~ér_Ó~ctób~ér_Ñ~óvém~bér_~Décé~mbér'.split(
 -            '_'
 -        ),
--        monthsShort: 'J~áñ_~Féb_~Már_~Ápr_~Máý_~Júñ_~Júl_~Áúg_~Sép_~Óct_~Ñóv_~Déc'.split(
--            '_'
--        ),
+-        monthsShort:
+-            'J~áñ_~Féb_~Már_~Ápr_~Máý_~Júñ_~Júl_~Áúg_~Sép_~Óct_~Ñóv_~Déc'.split(
+-                '_'
+-            ),
 -        monthsParseExact: true,
--        weekdays: 'S~úñdá~ý_Mó~ñdáý~_Túé~sdáý~_Wéd~ñésd~áý_T~húrs~dáý_~Fríd~áý_S~átúr~dáý'.split(
--            '_'
--        ),
+-        weekdays:
+-            'S~úñdá~ý_Mó~ñdáý~_Túé~sdáý~_Wéd~ñésd~áý_T~húrs~dáý_~Fríd~áý_S~átúr~dáý'.split(
+-                '_'
+-            ),
 -        weekdaysShort: 'S~úñ_~Móñ_~Túé_~Wéd_~Thú_~Frí_~Sát'.split('_'),
 -        weekdaysMin: 'S~ú_Mó~_Tú_~Wé_T~h_Fr~_Sá'.split('_'),
 -        weekdaysParseExact: true,
@@ -14330,10 +14563,10 @@ index 9fe818b..0000000
 -})));
 diff --git a/node_modules/moment/locale/zh-cn.js b/node_modules/moment/locale/zh-cn.js
 deleted file mode 100644
-index ffbef76..0000000
+index c14ca47..0000000
 --- a/node_modules/moment/locale/zh-cn.js
 +++ /dev/null
-@@ -1,129 +0,0 @@
+@@ -1,131 +0,0 @@
 -//! moment.js locale configuration
 -//! locale : Chinese (China) [zh-cn]
 -//! author : suupic : https://github.com/suupic
@@ -14448,6 +14681,8 @@ index ffbef76..0000000
 -            hh: '%d 小时',
 -            d: '1 天',
 -            dd: '%d 天',
+-            w: '1 周',
+-            ww: '%d 周',
 -            M: '1 个月',
 -            MM: '%d 个月',
 -            y: '1 年',

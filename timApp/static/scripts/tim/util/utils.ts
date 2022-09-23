@@ -438,7 +438,7 @@ interface ExtendedWindow extends Window {
     TouchEvent?: unknown;
 }
 
-function getVisualViewport(): VisualViewport | undefined {
+function getVisualViewport(): VisualViewport | null {
     return window.visualViewport;
 }
 

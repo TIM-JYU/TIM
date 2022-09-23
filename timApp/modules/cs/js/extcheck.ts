@@ -1,17 +1,17 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["hide_"] }] */
 import {
-    Input,
-    Component,
-    NgModule,
-    ViewChild,
     ChangeDetectorRef,
-    ElementRef,
-    Directive,
-    Type,
-    ViewContainerRef,
-    Injector,
     Compiler,
+    Component,
     ComponentRef,
+    Directive,
+    ElementRef,
+    Injector,
+    Input,
+    NgModule,
+    Type,
+    ViewChild,
+    ViewContainerRef,
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
@@ -149,11 +149,11 @@ interface IRunResult {
                     <a href="#" *ngIf="!nocode && (file || program)"
                             (click)="showCode(); $event.preventDefault()">{{showCodeLink}}</a>&nbsp;&nbsp;
                     <a href="#" *ngIf="editor && editor.modified"
-                            (click)="editor?.reset(); $event.preventDefault()">{{resetText}}</a>
+                            (click)="editor.reset(); $event.preventDefault()">{{resetText}}</a>
                     <a href="#" *ngIf="toggleEditor"
                             (click)="hideShowEditor(); $event.preventDefault()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
                     <a href="#" *ngIf="!noeditor && editor && editor.nextModeText"
-                            (click)="editor?.showOtherEditor(); $event.preventDefault()">
+                            (click)="editor.showOtherEditor(); $event.preventDefault()">
                         {{editor.nextModeText}}
                     </a>&nbsp;&nbsp;
                     <a href="#" *ngIf="markup.copyLink"
