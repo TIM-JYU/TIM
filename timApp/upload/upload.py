@@ -286,7 +286,9 @@ def _downsample_image_canvas(img_path: Path) -> None:
     :param img: Path to image file
     """
     with Image.open(img_path) as img:
-        img.thumbnail((2048, 2048))  # TODO: max dimensions from markup
+        # currently some common inputs are around 8000x18000 pixels, which should still be readable after resize
+        # TODO: Split overly large images if necessary, warn users about large downsampling after upload
+        img.thumbnail((2048, 8192))
         img = PIL.ImageOps.exif_transpose(img)
         img.save(img_path)
 
