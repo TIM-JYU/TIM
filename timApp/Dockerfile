@@ -119,7 +119,7 @@ RUN bash -c "${APT_INSTALL} \
 RUN wget -q https://bootstrap.pypa.io/get-pip.py && python3.10 get-pip.py && rm get-pip.py
 
 ENV PIP_INSTALL="python3.10 -m pip install"
-RUN bash -c "${PIP_INSTALL} --upgrade poetry==1.2.0b3 requests && ${APT_CLEANUP}"
+RUN bash -c "${PIP_INSTALL} --upgrade poetry==1.2.1 requests && ${APT_CLEANUP}"
 
 COPY pyproject.toml poetry.lock ./
 RUN bash -c " \

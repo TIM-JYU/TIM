@@ -84,6 +84,7 @@ from timApp.plugin.userselect.userselect import user_select_plugin
 from timApp.printing.print import print_blueprint
 from timApp.readmark.routes import readings
 from timApp.scheduling.scheduling_routes import scheduling
+from timApp.securitytxt.routes import securitytxt
 from timApp.sisu.scim import scim
 from timApp.sisu.sisu import sisu
 from timApp.tim_app import app
@@ -140,6 +141,7 @@ blueprints = [
     print_blueprint,
     readings,
     scim,
+    securitytxt,
     search_routes,
     settings_page,
     sisu,
