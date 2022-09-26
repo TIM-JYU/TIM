@@ -1348,17 +1348,17 @@ export class DrawCanvasComponent
                 );
                 canvasOffset += newHeight;
             }
+            if (this.imgWidth > this.wrapper.nativeElement.clientWidth) {
+                this.defaultZoomLevel =
+                    (this.wrapper.nativeElement.clientWidth -
+                        SCROLLBAR_APPROX_WIDTH) /
+                    this.imgWidth;
+                this.zoomLevel = this.defaultZoomLevel;
+            }
+            if (this.imgLoadCallback) {
+                this.imgLoadCallback(this);
+            }
         }, 0);
-        if (this.imgWidth > this.wrapper.nativeElement.clientWidth) {
-            this.defaultZoomLevel =
-                (this.wrapper.nativeElement.clientWidth -
-                    SCROLLBAR_APPROX_WIDTH) /
-                this.imgWidth;
-            this.zoomLevel = this.defaultZoomLevel;
-        }
-        if (this.imgLoadCallback) {
-            this.imgLoadCallback(this);
-        }
     }
 
     /**
