@@ -11,7 +11,7 @@ table: 55, 44, 33, 2
 placeholder: Näytä ensin Tauno, tee tehtävä ja kopioi sitten Taunon koodi tähän
 stem: "Tee Taunolla alkioita raahaamalla ohjelma, jolla käännetään 4-paikkainen 
 taulukko t päinvastaiseen järjestykseen.  Lisää tarvittaessa apumuistipaikkoja."
-file: https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Tauno/Kasittele.cs
+file: https://gitlab.jyu.fi/tie/ohj1/luentomonistecs/-/raw/master/esimerkit/Pohja/Tauno/Kasittele.cs
 replace: "TODO: Kopioi"
 byCode: ""
 replace1: "TODO: TESTIT TAHAN"

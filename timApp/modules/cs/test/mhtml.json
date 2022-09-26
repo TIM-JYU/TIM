@@ -1,7 +1,7 @@
 [{"markup": {
   "rows": 2, 
   "type": "console", 
-  "file": "https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Pohja/Pohja.cs", 
+  "file": "https://gitlab.jyu.fi/tie/ohj1/luentomonistecs/-/raw/master/esimerkit/Pohja/Pohja/Pohja.cs",
   "byCode": "//\n       System.Console.WriteLine(\"Moi 1\");\n       System.Console.WriteLine(\"Moi 2\");", 
   "stem": "Muuta koodia niin, ett\u00e4 se tulostaa nimesi:", 
   "replace": "Console", 

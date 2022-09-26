@@ -388,7 +388,7 @@ byCode: |
 header: C# / JyPeli
 type: jypeli 
 maxrows: 20
-file: https://svn.cc.jyu.fi/srv/svn/ohj1/luentomonistecs/esimerkit/Pohja/Jypeli/Jypeli.cs
+file: https://gitlab.jyu.fi/tie/ohj1/luentomonistecs/-/raw/master/esimerkit/Pohja/Jypeli/Jypeli.cs
 replace: INSERT YOUR CODE HERE
 byCode: |1
          Level.Background.Color = Color.Black;

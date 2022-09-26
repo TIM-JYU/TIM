@@ -4,7 +4,7 @@
    "type": "java", 
    "header": "Java", 
    "user_id": "vesal",
-   "file": "https://svn.cc.jyu.fi/srv/svn/ohj2/esimerkit/k2015/demot/tehtavat/src/demo/d2/Etusuku.java",
+   "file": "https://gitlab.jyu.fi/tie/ohj2/esimerkit/k2020/-/raw/master/demot/tehtavat/src/demo/d2/Etusuku.java",
    "browse_answers":"False",
    "breakCount":"4",
    "break0":"String vaihdaEtuSuku",

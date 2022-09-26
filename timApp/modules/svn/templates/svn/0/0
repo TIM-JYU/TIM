@@ -1,7 +1,7 @@
 Show code
 Show selected part of program code 
 ``` {plugin="showCode"}
-file: https://svn.cc.jyu.fi/srv/svn/ohj2ht/k2015/vesal/branches/tietokantaVaihe6/src/kerho/Jasen.java
+file: https://gitlab.jyu.fi/tie/ohj2/kerhoja/tietokantavaihe6/-/raw/main/src/kerho/Jasen.java
 start: public String annaLuontilauseke()
 startscan: "-/\\*\\*"
 end: "/\\*"

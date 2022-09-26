@@ -60,12 +60,12 @@ fi
 
 mkdir -p "$DATA_PATH/java/cs"
 cd "$DATA_PATH/java"
-wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar --no-check-certificate -O comtest.jar.tmp -nv && mv comtest.jar.tmp comtest.jar
-wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtestcpp.jar --no-check-certificate -O comtestcpp.jar.tmp -nv && mv comtestcpp.jar.tmp comtestcpp.jar
-wget https://svn.cc.jyu.fi/srv/svn/ohj1/graphics/trunk/Graphics.jar --no-check-certificate -O Graphics.jar.tmp -nv && mv Graphics.jar.tmp Graphics.jar
-wget https://svn.cc.jyu.fi/srv/svn/ohj2/Ali/trunk/Ali.jar --no-check-certificate -O Ali.jar.tmp -nv && mv Ali.jar.tmp Ali.jar
-wget https://svn.cc.jyu.fi/srv/svn/ohj2/FXExamples/trunk/FXGui/fxgui.jar --no-check-certificate -O fxgui.jar.tmp -nv && mv fxgui.jar.tmp fxgui.jar
-wget https://svn.cc.jyu.fi/srv/svn/ohj2/gui/gui.jar --no-check-certificate -O gui.jar.tmp -nv && mv gui.jar.tmp gui.jar
+wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/comtest/-/raw/main/comtest.jar -O comtest.jar.tmp -nv && mv comtest.jar.tmp comtest.jar
+wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/comtest/-/raw/main/comtestcpp.jar -O comtestcpp.jar.tmp -nv && mv comtestcpp.jar.tmp comtestcpp.jar
+wget https://gitlab.jyu.fi/tie/ohj1/graphics/-/raw/main/Graphics.jar -O Graphics.jar.tmp -nv && mv Graphics.jar.tmp Graphics.jar
+wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/ali/-/raw/main/Ali.jar -O Ali.jar.tmp -nv && mv Ali.jar.tmp Ali.jar
+wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/fxexamples/-/raw/master/FXGui/fxgui.jar --no-check-certificate -O fxgui.jar.tmp -nv && mv fxgui.jar.tmp fxgui.jar
+wget https://gitlab.jyu.fi/tie/ohj2/esimerkit/gui/-/raw/main/gui.jar -O gui.jar.tmp -nv && mv gui.jar.tmp gui.jar
 
 cd cs
 wget https://kurssit.it.jyu.fi/npo/ComTest/ComTest.jar -O ComTest.jar.tmp -nv && mv ComTest.jar.tmp ComTest.jar
