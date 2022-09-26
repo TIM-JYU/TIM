@@ -572,8 +572,10 @@ export class Drawing {
         this.canvases = canvases;
         this.ctxs = this.canvases.map((c) => {
             const context = c.getContext("2d")!;
-            // setting lineCap or calling setOffset seems to fail in constructor,
-            // init dummy values here and set these externally later
+            // When using multiple, dynamic canvases,
+            // then setting lineCap or calling setOffset seems to fail in constructor.
+            // In that case init dummy values here and set these externally later
+            context.lineCap = "round";
             return {
                 ctx: context,
                 height: c.height,
