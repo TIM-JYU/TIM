@@ -20117,14 +20117,18 @@ define('base/js/utils',[
         }
         $el.map(function(){
             // MathJax takes a DOM node: $.map makes `this` the context
-            MathJax.Hub.Queue(["Typeset", MathJax.Hub, this]);
-            try {
-                MathJax.Hub.Queue(
-                    ["Require", MathJax.Ajax, "[MathJax]/extensions/TeX/AMSmath.js"],
-                    function() { MathJax.InputJax.TeX.resetEquationNumbers(); }
-                );
-            } catch (e) {
-                console.error("Error queueing resetEquationNumbers:", e);
+            if (sagecell.mathRender) {
+                sagecell.mathRender(this);
+            } else {
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, this]);
+                try {
+                    MathJax.Hub.Queue(
+                        ["Require", MathJax.Ajax, "[MathJax]/extensions/TeX/AMSmath.js"],
+                        function() { MathJax.InputJax.TeX.resetEquationNumbers(); }
+                    );
+                } catch (e) {
+                    console.error("Error queueing resetEquationNumbers:", e);
+                }
             }
         });
     };
@@ -29507,8 +29511,14 @@ Session.prototype.handle_output = function(msg, default_block_id) {
     this.appendMsg(content, "Accepted: ");
     // need to mathjax the entire output, since output_block could just be part of the output
     var output = this.outputDiv.find(".sagecell_output").get(0);
-    MathJax.Hub.Queue(["Typeset",MathJax.Hub, output]);
-    MathJax.Hub.Queue([function() {$(output).find(".math").removeClass('math');}]);
+    if (sagecell.mathRender) {
+        sagecell.mathRender(output, function() {
+            $(output).find(".math").removeClass('math');
+        });
+    } else {
+        MathJax.Hub.Queue(["Typeset",MathJax.Hub, output]);
+        MathJax.Hub.Queue([function() {$(output).find(".math").removeClass('math');}]);
+    }
 };
 
 // dispatch table on mime type
@@ -31772,6 +31782,7 @@ sagecell.templates = {
 };
 
 sagecell.allLanguages = ["sage", "gap", "gp", "html", "macaulay2", "maxima", "octave", "python", "r", "singular"];
+sagecell.mathRender = undefined;
 
 // Deal with IE's lack of Promise
 require(['es6-promise'], function(es6p) {

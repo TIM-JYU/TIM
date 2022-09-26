@@ -19,6 +19,7 @@ export interface CellInfo {
 interface Sage {
     allLanguages: string[];
     templates: Record<string, {editor: string; hide: string[]}>;
+    mathRender: (el: HTMLElement, cb?: () => void) => void;
 
     makeSagecell(args: unknown): CellInfo;
 
