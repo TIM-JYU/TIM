@@ -47,6 +47,7 @@ from timApp.upload.uploadedfile import (
     PluginUploadInfo,
     UploadedFile,
     get_mimetype,
+    is_script_safe_mimetype,
 )
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import (
@@ -79,15 +80,12 @@ upload = Blueprint("upload", __name__, url_prefix="")
 @upload.after_request
 def set_csp(resp: Response):
     mime = resp.mimetype
-    add_csp_if_not_pdf(resp, mime)
+    add_csp_if_not_script_safe(resp, mime)
     return resp
 
 
-def add_csp_if_not_pdf(resp: Response, mime: str, value: str = "sandbox"):
-    # The following platforms refuse to display PDFs in sandbox:
-    # * Mac Safari
-    # * Windows Chrome since January 2021
-    if mime != "application/pdf":
+def add_csp_if_not_script_safe(resp: Response, mime: str, value: str = "sandbox"):
+    if not is_script_safe_mimetype(mime):
         add_csp_header(resp, value)
 
 

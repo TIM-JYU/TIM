@@ -37,7 +37,7 @@ from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTe
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.sqa import db
-from timApp.upload.upload import add_csp_if_not_pdf
+from timApp.upload.upload import add_csp_if_not_script_safe
 from timApp.util.flask.requesthelper import (
     RouteException,
     NotExist,
@@ -402,7 +402,7 @@ def get_printed_document(
             )
         else:
             response = make_response(send_file(path_or_file=cached, mimetype=mime))
-        add_csp_if_not_pdf(response, mime, "sandbox allow-scripts")
+        add_csp_if_not_script_safe(response, mime, "sandbox allow-scripts")
     else:  # show LaTeX with line numbers
         styles = "p.red { color: red; }\n"
         styles += (

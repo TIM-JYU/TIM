@@ -251,44 +251,54 @@ CLASS_MAPPING = {
     BlockType.Upload: PluginUpload,
 }
 
-WHITELIST_MIMETYPES = {
+# Mimetypes that can be displayed safely without an explicit Content-Security-Policy
+SCRIPT_SAFE_MIMETYPES = {
+    # The following platforms refuse to display PDFs in sandbox:
+    # * Mac Safari
+    # * Windows Chrome since January 2021
     "application/pdf",
     "image/gif",
     "image/jpeg",
     "image/jpg",
     "image/png",
-    "image/svg+xml",
     "video/mp4",
     "video/webm",
-    "text/plain",
-    "text/xml",
-    "application/octet-stream",
     "application/msword",
+    "text/plain",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
-    "application/vnd.ms-word.document.macroEnabled.12",
-    "application/vnd.ms-word.template.macroEnabled.12",
-    "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
-    "application/vnd.ms-excel.sheet.macroEnabled.12",
-    "application/vnd.ms-excel.template.macroEnabled.12",
-    "application/vnd.ms-excel.addin.macroEnabled.12",
-    "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
+    "application/vnd.ms-access",
     "application/vnd.ms-powerpoint",
     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "application/vnd.openxmlformats-officedocument.presentationml.template",
     "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+}
+
+WHITELIST_MIMETYPES = SCRIPT_SAFE_MIMETYPES | {
+    "text/xml",
+    "application/octet-stream",
+    "application/vnd.ms-word.document.macroEnabled.12",
+    "application/vnd.ms-word.template.macroEnabled.12",
+    "application/vnd.ms-excel.sheet.macroEnabled.12",
+    "application/vnd.ms-excel.template.macroEnabled.12",
+    "application/vnd.ms-excel.addin.macroEnabled.12",
+    "application/vnd.ms-excel.sheet.binary.macroEnabled.12",
     "application/vnd.ms-powerpoint.addin.macroEnabled.12",
     "application/vnd.ms-powerpoint.presentation.macroEnabled.12",
     "application/vnd.ms-powerpoint.template.macroEnabled.12",
     "application/vnd.ms-powerpoint.slideshow.macroEnabled.12",
-    "application/vnd.ms-access",
 }
 
 REMAP_MIMETYPES = {
     "application/csv": "text/csv",
 }
+
+
+def is_script_safe_mimetype(mimetype: str) -> bool:
+    return mimetype in SCRIPT_SAFE_MIMETYPES
 
 
 def get_mimetype(p):
