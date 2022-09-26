@@ -278,6 +278,7 @@ SCRIPT_SAFE_MIMETYPES = {
 }
 
 WHITELIST_MIMETYPES = SCRIPT_SAFE_MIMETYPES | {
+    "image/svg+xml",
     "text/xml",
     "application/octet-stream",
     "application/vnd.ms-word.document.macroEnabled.12",
