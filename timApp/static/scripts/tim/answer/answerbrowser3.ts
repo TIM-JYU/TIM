@@ -319,10 +319,11 @@ export class AnswerBrowserComponent
                 }
             }
             await this.checkUsers(); // load users, answers have already been loaded for the currently selected user
-
-            this.loader.getPluginElement().on("mouseenter touchstart", () => {
-                void this.checkUsers();
-            });
+            const el = this.loader.loaderElement;
+            // Lazily wait before loading users. Allow tapping on plugin or the loader
+            // (in case the plugin has iframes that capture events)
+            el.addEventListener("mouseenter", () => this.checkUsers());
+            el.addEventListener("touchstart", () => this.checkUsers());
         }
         if (!this.formMode) {
             await this.loadInfo();
@@ -1425,6 +1426,7 @@ export class AnswerBrowserComponent
     async checkUsers() {
         // TODO: Changing user from sidebar could change to user's answer on global field
         // for now just skip the fetches (firefox throws error in their current state)
+        console.log(this.loading, this.isGlobal(), this.isUseCurrentUser());
         if (this.loading > 0 || this.isGlobal() || this.isUseCurrentUser()) {
             return;
         }

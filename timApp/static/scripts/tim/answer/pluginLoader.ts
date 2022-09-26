@@ -149,6 +149,10 @@ export class PluginLoaderComponent
         timLogTime("timPluginLoader constructor", "answ", 1);
     }
 
+    get loaderElement(): HTMLElement {
+        return this.elementRef.nativeElement;
+    }
+
     ngOnInit() {
         this.viewctrl = vctrlInstance;
         if (this.viewctrl && !this.preview) {
