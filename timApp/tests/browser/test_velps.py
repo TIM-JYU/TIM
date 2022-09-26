@@ -231,12 +231,14 @@ saveButton: Tallenna
         )
         velpbox.click()
         self.wait_until_present(".canvasObjectContainer annotation")
+        canvas = self.find_element_avoid_staleness(".drawbase")
+        # initial velp drawings load correctly
+        self.assert_same_screenshot(canvas, "velps/unfiltered_canvas")
         self.find_element_avoid_staleness("draw-toolbar button").click()
         velper_selector_element = self.find_element_avoid_staleness(
             "select[title='List of reviewers']"
         )
         velper_selector_dropdown = Select(velper_selector_element)
-        canvas = self.find_element_avoid_staleness(".drawbase")
         velper_selector_dropdown.select_by_index(1)
         velp_to_use = self.find_element_avoid_staleness(
             # Original: "velp-window:nth-child(2) .velp"
