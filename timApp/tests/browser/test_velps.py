@@ -143,19 +143,23 @@ saveButton: Tallenna
         t = par.get_attribute("t")
         dd = [
             {
-                "type": "rectangle",
+                "type": "freehand",
                 "drawData": {
-                    "x": 33.20001220703125,
-                    "y": 127.16667175292969,
-                    "w": 52,
-                    "h": 60,
-                    "opacity": 1,
-                    "color": "red",
-                    "lineWidth": 11,
+                    "lines": [[45, 183], [70, 168]],
+                    "color": "#0000ff",
+                    "w": 10,
                 },
-            }
+            },
+            {
+                "type": "freehand",
+                "drawData": {
+                    "lines": [[70, 168], [59, 239]],
+                    "color": "#0000ff",
+                    "w": 10,
+                },
+            },
         ]
-        # ann 1
+        # ann 1 (blue, bottom left)
         ann = Annotation(
             velp_version_id=1,
             visible_to=4,
@@ -175,19 +179,31 @@ saveButton: Tallenna
         )
         dd = [
             {
+                "type": "freehand",
                 "drawData": {
-                    "color": "red",
-                    "h": 40,
-                    "lineWidth": 11,
-                    "opacity": 1,
-                    "w": 38,
-                    "x": 523.2000122070312,
-                    "y": 24.800003051757812,
+                    "lines": [[555, 9], [585, 41]],
+                    "color": "#00ff00",
+                    "w": 15,
                 },
-                "type": "rectangle",
-            }
+            },
+            {
+                "type": "freehand",
+                "drawData": {
+                    "lines": [[585, 41], [549, 81]],
+                    "color": "#00ff00",
+                    "w": 15,
+                },
+            },
+            {
+                "type": "freehand",
+                "drawData": {
+                    "lines": [[549, 81], [601, 81]],
+                    "color": "#00ff00",
+                    "w": 15,
+                },
+            },
         ]
-        # ann 2
+        # ann 2 (green, top right)
         ann = Annotation(
             velp_version_id=1,
             visible_to=4,
@@ -228,15 +244,31 @@ saveButton: Tallenna
             # must specify the correct container and take the first child
             ".velp-stack velp-window:nth-child(1) .velp"
         )
-        # ann 3
+        # ann 3 (red, top)
         ActionChains(self.drv).move_to_element(canvas).move_by_offset(
-            0, -150
-        ).click_and_hold().move_by_offset(20, 20).release().perform()
+            0, -130
+        ).click_and_hold().move_by_offset(
+            30, 10
+        ).release().click_and_hold().move_by_offset(
+            -10, 50
+        ).release().click_and_hold().move_by_offset(
+            -20, -10
+        ).release().move_by_offset(
+            0, -15
+        ).click_and_hold().move_by_offset(
+            20, -10
+        ).release().perform()
         velp_to_use.click()
-        # ann 4
+        # ann 4 (red, bottom)
         ActionChains(self.drv).move_to_element(canvas).move_by_offset(
-            -50, 100
-        ).click_and_hold().move_by_offset(20, 20).release().perform()
+            -50, 50
+        ).click_and_hold().move_by_offset(-20, 80).release().move_by_offset(
+            0, -60
+        ).click_and_hold().move_by_offset(
+            -20, 20
+        ).release().click_and_hold().move_by_offset(
+            -20, -40
+        ).release().perform()
         velp_to_use.click()
         self.wait_until_hidden("span[ng-if='$ctrl.rctrl.selectedElement']")
         self.find_element_avoid_staleness(
