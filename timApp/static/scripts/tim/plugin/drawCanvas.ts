@@ -1044,8 +1044,8 @@ export class Drawing {
 const SCROLLBAR_APPROX_WIDTH = 17;
 const MIN_IMAGE_HEIGHT = 300;
 const MIN_IMAGE_WIDTH = 700;
-// some tests report failure on > 4096x4096 px canvases. Leave some leeway for math.ceils
-const MAX_CANVAS_AREA = 16000000;
+// some devices have hard limit of 4096x4096 canvas, however in practice smaller canvases seem to perform slightly faster
+const MAX_CANVAS_AREA = 8000000;
 
 @Component({
     selector: "draw-canvas",
