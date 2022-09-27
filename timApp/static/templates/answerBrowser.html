@@ -219,7 +219,7 @@
         <div *ngIf="!showModelAnswerLink() && modelAnswer.linkTextBeforeCount">{{modelAnswer.linkTextBeforeCount}}</div>
         <span *ngIf="showClearModelAnswerLockLink()"> | <a i18n i18n-title (click)="clearModelAnswerLock()" title="Manage model answer locks">Manage model answer locks</a>
         </span>
-        <div *ngIf="modelAnswerVisible" [innerHtml]="modelAnswerHtml | purify">
+        <div class="modelAnswerContent" *ngIf="modelAnswerVisible" [innerHtml]="modelAnswerHtml | purify">
 
         </div>
     </div>
