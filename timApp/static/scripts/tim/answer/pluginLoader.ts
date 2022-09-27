@@ -72,12 +72,35 @@ export async function loadPlugin(html: string, loader: PluginLoaderComponent) {
                        [taskId]="parsedTaskId"
                        [answerId]="answerId">
         </answerbrowser>
-        <div *ngIf="wrapper=='div'" #wrapper [attr.id]="id" [attr.plugin-type]="pluginType">
+        <div *ngIf="timed">
+            <div *ngIf="running">
+                Time left:
+                <tim-countdown [endTime]="endTime" (onFinish)="expireTask()"></tim-countdown>
+            </div>
+            <div *ngIf="expired">
+                Your access to this task has expired
+            </div>
+            <h4 *ngIf="accessHeader && taskHidden">{{accessHeader}}</h4>
+            <div *ngIf="unlockable">
+                Unlock task. You will have {{accessDuration}} seconds to answer to this task.
+                <button class="btn btn-primary" (click)="unlockTimedTask()" title="Unlock task">Unlock task</button>
+            </div>
+            <div *ngIf="expired && accessEndText">{{accessEndText}}</div>
+        </div>
+        <div *ngIf="lockedByPrerequisite">
+            <div>
+                {{getPrerequisiteLockedText()}}
+            </div>
+            <button class="btn btn-primary" (click)="unlockHiddenTask()"
+                    title="{{getPrerequisiteUnlockText()}}">{{getPrerequisiteUnlockText()}}</button>
+            <div *ngIf="lockedError">{{lockedError}}</div>
+        </div>
+        <div *ngIf="wrapper=='div'" [style.visibility]="taskHidden ? 'hidden' : 'visible'" #wrapper [attr.id]="id" [attr.plugin-type]="pluginType">
             <ng-container *ngTemplateOutlet="tempOutlet"></ng-container>
             <ng-container #pluginPlacement></ng-container>
             <div *ngIf="nonPluginHtml" [innerHTML]="nonPluginHtml | purify"></div>
         </div>
-        <span *ngIf="wrapper=='span'" #wrapper [attr.id]="id" [attr.plugin-type]="pluginType">
+        <span *ngIf="wrapper=='span'" [style.visibility]="taskHidden ? 'hidden' : 'visible'" #wrapper [attr.id]="id" [attr.plugin-type]="pluginType">
             <ng-container *ngTemplateOutlet="tempOutlet"></ng-container>
             <ng-container #pluginPlacement></ng-container>
             <div *ngIf="nonPluginHtml" [innerHTML]="nonPluginHtml | purify"></div>
@@ -134,12 +157,12 @@ export class PluginLoaderComponent
     @Input() public lockedError?: string;
     error = "";
 
-    private timed = false;
-    private expired = false;
+    timed = false;
+    expired = false;
     unlockable = false;
-    private running = false;
-    private endTime?: ReadonlyMoment;
-    private taskHidden = false;
+    running = false;
+    endTime?: ReadonlyMoment;
+    taskHidden = false;
 
     constructor(
         private elementRef: ElementRef<HTMLElement>,
@@ -502,15 +525,10 @@ export class PluginLoaderComponent
 
     hidePlugin() {
         this.taskHidden = true;
-        const e = this.getPluginElement();
-        e.css("visibility", "hidden");
     }
 
     unHidePlugin() {
         this.taskHidden = false;
-
-        const e = this.getPluginElement();
-        e.css("visibility", "visible");
     }
 
     async unlockTimedTask() {
