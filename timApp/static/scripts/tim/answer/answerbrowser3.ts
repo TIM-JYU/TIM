@@ -322,8 +322,9 @@ export class AnswerBrowserComponent
             const el = this.loader.loaderElement;
             // Lazily wait before loading users. Allow tapping on plugin or the loader
             // (in case the plugin has iframes that capture events)
-            el.addEventListener("mouseenter", () => this.checkUsers());
-            el.addEventListener("touchstart", () => this.checkUsers());
+            for (const e of ["mouseenter", "touchstart", "click", "focus"]) {
+                el.addEventListener(e, () => this.checkUsers());
+            }
         }
         if (!this.formMode) {
             await this.loadInfo();
