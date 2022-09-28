@@ -10,6 +10,7 @@ from urllib.parse import unquote, urlparse
 
 import PIL.ImageOps
 from PIL import Image
+from PIL.Image import registered_extensions
 from flask import Blueprint, request, send_file, Response, url_for
 from img2pdf import convert
 from sqlalchemy import case
@@ -285,12 +286,19 @@ def _downsample_image_canvas(img_path: Path) -> None:
 
     :param img: Path to image file
     """
+    ext_mapping = registered_extensions()
+    ext = img_path.suffix
+
     with Image.open(img_path) as img:
         # currently some common inputs are around 8000x18000 pixels, which should still be readable after resize
         # TODO: Split overly large images if necessary, warn users about large downsampling after upload
+        img_format = ext_mapping.get(ext) or img.format
         img.thumbnail((2048, 8192))
         img = PIL.ImageOps.exif_transpose(img)
-        img.save(img_path)
+        # Ensure that JPEG does not have alpha channel
+        if img_format == "JPEG" and img.mode != "RGB":
+            img = img.convert("RGB")
+        img.save(img_path, format=img_format)
 
 
 def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id: str):
