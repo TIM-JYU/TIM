@@ -6,6 +6,7 @@ import {showKorppiExportDialog} from "tim/answer/showKorppiExportDialog";
 import {showFeedbackAnswers} from "tim/answer/showFeedbackAnswers";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAllAnswersDialog} from "tim/answer/showAllAnswersDialog";
+import {showImportAnswersDialog} from "tim/answer/showImportAnswersDialog";
 import {ViewCtrl} from "../document/viewctrl";
 import {IUser, IUserListEntry, sortByRealName, sortLang} from "../user/IUser";
 import {withComparatorFilters} from "../util/comparatorfilter";
@@ -325,6 +326,16 @@ export class UserListController implements IController {
                     order: 60,
                 },
                 {
+                    title: "Import answers as JSON",
+                    action: async ($event: IAngularEvent) => {
+                        const r = await showImportAnswersDialog();
+                        if (r.ok && r.result) {
+                            window.location.reload();
+                        }
+                    },
+                    order: 70,
+                },
+                {
                     title: "Create Feedback Report",
                     action: ($event: IAngularEvent) => {
                         let iusers: IUser[];
@@ -357,7 +368,7 @@ export class UserListController implements IController {
                             })
                         );
                     },
-                    order: 70,
+                    order: 80,
                 },
             ],
             rowTemplate: `

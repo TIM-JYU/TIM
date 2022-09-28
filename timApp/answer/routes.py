@@ -14,6 +14,7 @@ from marshmallow import validates_schema, ValidationError
 from marshmallow.utils import missing
 from sqlalchemy import func
 from sqlalchemy.orm import lazyload
+from werkzeug.exceptions import NotFound
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
@@ -114,7 +115,11 @@ from timApp.plugin.plugintype import PluginType, PluginTypeBase
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
-from timApp.user.groups import do_create_group, verify_group_edit_access
+from timApp.user.groups import (
+    do_create_group,
+    verify_group_edit_access,
+    verify_group_view_access,
+)
 from timApp.user.user import User, UserInfo, has_no_higher_right
 from timApp.user.user import maxdate
 from timApp.user.usergroup import UserGroup
@@ -2045,8 +2050,16 @@ def import_answers(
     allow_missing_users: bool = False,
     match_email_case: bool = True,
     doc_map: dict[str, str] = field(default_factory=dict),
+    group: str | None = None,
 ) -> Response:
-    verify_admin()
+    ug: UserGroup | None = None
+    if not group:
+        verify_admin()
+    else:
+        ug = UserGroup.get_by_name(group)
+        if not ug:
+            raise NotFound(f"No group with name '{group}'")
+        verify_group_view_access(ug)
     doc_paths = {doc_map.get(a.doc, a.doc) for a in exported_answers}
     docs = DocEntry.query.filter(DocEntry.name.in_(doc_paths)).all()
     doc_path_map = {d.path: d for d in docs}
@@ -2105,6 +2118,19 @@ def import_answers(
     missing_users = requested_users - set(users.keys())
     if missing_users and not allow_missing_users:
         raise RouteException(f"Email(s) not found: {seq_to_str(list(missing_users))}")
+    if ug:
+        member_emails = {
+            convert_email_case(e)
+            for e, in ug.memberships.join(User, UserGroupMember.user)
+            .with_entities(User.email)
+            .all()
+        }
+        missing_users = requested_users - member_emails
+        if missing_users:
+            raise RouteException(
+                f"Email(s) not in group: {seq_to_str(list(missing_users))}"
+            )
+
     exported_answers.sort(key=lambda a: a.time)
     all_imported = []
     for a in exported_answers:
