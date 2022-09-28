@@ -60,21 +60,8 @@ index 903ede2..55c71cd 100644
      for (var id in CALLBACK.prototype) {
        if (CALLBACK.prototype.hasOwnProperty(id)) {
          if (typeof(data[id]) !== 'undefined') {cb[id] = data[id]}
-diff --git a/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/element/MmlNode.js b/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/element/MmlNode.js
-index 8f3b4cb..cab6e13 100644
---- a/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/element/MmlNode.js
-+++ b/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/element/MmlNode.js
-@@ -56,7 +56,7 @@
-       }
-       for (var i = 0, m = names.length; i < m; i++) {
-         if (copy[names[i]] === 1 && !defaults.hasOwnProperty(names[i])) continue;
--        value = (this.attr||{})[names[i]];
-+        var value = (this.attr||{})[names[i]];
-         if (value == null) value = this[names[i]];
-         if (value === 'true' || value === 'false') value = (value === 'true');
-         if (value != null) node.attributes.set(names[i],value);
 diff --git a/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/input/AsciiMath/jax.js b/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/input/AsciiMath/jax.js
-index 7556ee1..193c49e 100644
+index 05981f7..bf1be55 100644
 --- a/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/input/AsciiMath/jax.js
 +++ b/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/input/AsciiMath/jax.js
 @@ -230,8 +230,8 @@ THE SOFTWARE.
@@ -84,7 +71,7 @@ index 7556ee1..193c49e 100644
 -//var mathfontsize = "1em";      // change to e.g. 1.2em for larger math
 -//var mathfontfamily = "serif";  // change to "" to inherit (works in IE) 
 +var mathfontsize = "";      // change to e.g. 1.2em for larger math
-+var mathfontfamily = "";  // change to "" to inherit (works in IE) 
++var mathfontfamily = "";  // change to "" to inherit (works in IE)
                                 // or another family (e.g. "arial")
  //var automathrecognize = false; // writing "amath" on page makes this true
  //var checkForMathML = true;     // check if browser can display MathML

@@ -3063,6 +3063,12 @@ ${fhtml}
         // TODO: kielien valinta kunnolla float.
         // ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.rst
         const sagecell = (await import("./embedded_sagecell")).default;
+        sagecell.mathRender = async (e, cb) => {
+            await ParCompiler.processMathJaxTeX(e);
+            if (cb) {
+                cb();
+            }
+        };
         if (this.sagecellInfo) {
             this.sagecellInfo.editor = "textarea";
             // cs.sagecellInfo.inputLocation = null;
@@ -3489,7 +3495,7 @@ ${fhtml}
             // create an iframe on first time
             let html = "";
             let scripts = "";
-            if (this.type.includes("/vis")) {
+            if (this.origLanguageType.includes("/vis")) {
                 html =
                     '<div id="myDiv" class="mydiv" width="800" height="400" ></div>';
                 scripts =
@@ -3839,7 +3845,7 @@ ${fhtml}
                     <a href="#" *ngIf="toggleEditor"
                        (click)="hideShowEditor(); $event.preventDefault()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
                     <a href="#" *ngIf="!noeditor && editor && editor.nextModeText"
-                       (click)="editor?.showOtherEditor(); $event.preventDefault()">
+                       (click)="editor.showOtherEditor(); $event.preventDefault()">
                         {{editor.nextModeText}}
                     </a>&nbsp;&nbsp;
                     <a href="#" *ngIf="copyLink"

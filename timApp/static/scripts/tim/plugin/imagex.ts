@@ -792,7 +792,7 @@ function textboxFromProps(
 class DragObject extends ObjBase<
     RequireExcept<DragObjectPropsT, OptionalDragObjectPropNames>
 > {
-    public name: "dragobject" = "dragobject";
+    public name = "dragobject" as const;
     private pin: Pin;
 
     get lock() {
@@ -845,7 +845,7 @@ class DragObject extends ObjBase<
 class Target extends ObjBase<
     RequireExcept<TargetPropsT, OptionalTargetPropNames>
 > {
-    public name: "target" = "target";
+    public name = "target" as const;
     objectCount = 0;
     maxObjects = 1000;
     state = TargetState.Normal;
@@ -881,7 +881,7 @@ class Target extends ObjBase<
 class FixedObject extends ObjBase<
     RequireExcept<FixedObjectPropsT, OptionalFixedObjPropNames>
 > {
-    public name: "fixedobject" = "fixedobject";
+    public name = "fixedobject" as const;
 
     constructor(
         ctx: CanvasRenderingContext2D,

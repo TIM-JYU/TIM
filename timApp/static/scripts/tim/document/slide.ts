@@ -89,9 +89,20 @@ async function updateSlideStatus(h: number, v: number, f: number) {
     receiving = true;
 }
 
+function getTransition(transitionName?: string): RevealOptions["transition"] {
+    if (!transitionName) {
+        return "slide";
+    }
+    const ts = ["none", "fade", "slide", "convex", "concave", "zoom"];
+    if (ts.includes(transitionName)) {
+        return transitionName as RevealOptions["transition"];
+    }
+    return "slide";
+}
+
 async function initReveal(rv: IFixedReveal, s: ISlideGlobals) {
     // Full list of configuration options available here:
-    // https://github.com/hakimel/reveal.js#configuration
+    // https://revealjs.com/config/#reconfiguring
 
     const zoom = (await import("reveal.js/plugin/zoom/zoom.esm")).default;
     const notes = (await import("reveal.js/plugin/notes/notes.esm")).default;
@@ -107,7 +118,7 @@ async function initReveal(rv: IFixedReveal, s: ISlideGlobals) {
         showNotes: false,
         viewDistance: 10,
         theme: getURLParameter("theme"), // available themes are in /css/theme
-        transition: getURLParameter("transition") ?? "linear", // default/cube/page/concave/zoom/linear/fade/none
+        transition: getTransition(getURLParameter("transition")), // default/cube/page/concave/zoom/linear/fade/none
         plugins: [zoom, notes],
         maxScale: 1, // csplugins become too wide in fullscreen view without this
         ...(s.docSettings.slide_revealjs_options ?? {}),

@@ -1,7 +1,7 @@
 abstract class SetBase<T> implements Iterable<T> {
     constructor(
-        protected getKey: (obj: T) => string = (o: {toString: () => string}) =>
-            o.toString()
+        protected getKey: (obj: T) => string = (o: unknown) =>
+            Object.toString.apply(o)
     ) {}
 
     abstract getByKey(key: string): T | undefined;

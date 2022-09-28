@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/consistent-indexed-object-style */
 import {ReadonlyMoment} from "tim/util/readonlymoment";
 
 export type JsonValue =

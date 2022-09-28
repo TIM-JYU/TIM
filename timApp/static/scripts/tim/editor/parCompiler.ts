@@ -145,9 +145,12 @@ export class ParagraphCompiler {
         await this.processAllMath($elem);
     }
 
-    public async processAllMath($elem: JQuery) {
+    public async processAllMath(
+        $elem: JQuery,
+        selector: string | undefined = ".math"
+    ) {
         const katexFailures: Element[] = [];
-        const mathelems = $elem.find(".math");
+        const mathelems = selector ? $elem.find(".math") : $elem;
         if (mathelems.length === 0) {
             return;
         }
