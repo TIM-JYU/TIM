@@ -88,7 +88,7 @@ interface WordObject {
                     [dndDropzone]="[type]"
                     [dndHorizontal]="true"
                     [dndDraggable]="wordObjs"
-                    [dndDisableDragIf]="wordObjs.length >= max"
+                    [dndDisableIf]="wordObjs.length >= max"
                     [dndEffectAllowed]="effectAllowed"
                     (dndDrop)="handleDrop($event)"
                 >
