@@ -1,12 +1,7 @@
 import time
 import traceback
-from dataclasses import dataclass
-from io import BytesIO
-from os.path import basename
-from urllib.parse import urlparse
 
 import bs4
-import requests
 from bs4 import BeautifulSoup
 from flask import Response, send_file
 from flask import g
@@ -16,7 +11,6 @@ from flask import request
 from flask import session
 from flask_assets import Environment
 from flask_wtf.csrf import generate_csrf
-from requests.exceptions import MissingSchema, InvalidURL
 from sqlalchemy import event
 from werkzeug.middleware.profiler import ProfilerMiddleware
 
@@ -26,7 +20,6 @@ from timApp.admin.routes import admin_bp
 from timApp.answer.feedbackanswer import feedback
 from timApp.answer.routes import answers
 from timApp.auth.access.routes import access
-from timApp.auth.accesshelper import verify_edit_access, verify_logged_in
 from timApp.auth.login import login_page
 from timApp.auth.oauth2.oauth2 import init_oauth
 from timApp.auth.saml import saml
@@ -37,14 +30,10 @@ from timApp.auth.sessioninfo import (
     logged_in,
 )
 from timApp.backup.backup_routes import backup
-from timApp.bookmark.bookmarks import Bookmarks
 from timApp.bookmark.course import update_user_course_bookmarks
-from timApp.bookmark.routes import bookmarks, add_to_course_bookmark
+from timApp.bookmark.routes import bookmarks
 from timApp.defaultconfig import SECRET_KEY
 from timApp.document.course.routes import course_blueprint
-from timApp.document.course.validate import is_course
-from timApp.document.create_item import get_templates_for_folder
-from timApp.document.docentry import DocEntry
 from timApp.document.editing.routes import edit_page
 from timApp.document.editing.routes_clipboard import clipboard
 from timApp.document.minutes.routes import minutes_blueprint
@@ -52,12 +41,10 @@ from timApp.document.routes import doc_bp
 from timApp.document.translation.routes import tr_bp
 from timApp.errorhandlers import register_errorhandlers
 from timApp.gamification.generateMap import generateMap
-from timApp.item.block import Block
 from timApp.item.distribute_rights import dist_bp
 from timApp.item.manage import manage_page
 from timApp.item.routes import view_page
 from timApp.item.routes_tags import tags_blueprint
-from timApp.item.tag import Tag, GROUP_TAG_PREFIX
 from timApp.lecture.lectureutils import get_current_lecture_info
 from timApp.lecture.routes import lecture_routes
 from timApp.messaging.messagelist.emaillist import check_mailman_connection
@@ -82,6 +69,7 @@ from timApp.plugin.timmenu.timMenu import timMenu_plugin
 from timApp.plugin.timtable.timTable import timTable_plugin
 from timApp.plugin.userselect.userselect import user_select_plugin
 from timApp.printing.print import print_blueprint
+from timApp.proxy.routes import proxy
 from timApp.readmark.routes import readings
 from timApp.scheduling.scheduling_routes import scheduling
 from timApp.securitytxt.routes import securitytxt
@@ -94,16 +82,13 @@ from timApp.user.contacts import contacts
 from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
 from timApp.user.settings.styles import styles
-from timApp.user.usergroup import UserGroup
 from timApp.user.verification.routes import verify
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import (
     get_request_message,
-    use_model,
-    RouteException,
     NotExist,
 )
-from timApp.util.flask.responsehelper import json_response, ok_response, add_csp_header
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.search import search_routes
 from timApp.util.logger import log_info, log_debug
 from timApp.util.testing import register_testing_routes
@@ -139,6 +124,7 @@ blueprints = [
     notify,
     plugin_bp,
     print_blueprint,
+    proxy,
     readings,
     scim,
     securitytxt,
@@ -288,71 +274,9 @@ def ping():
     return ok_response()
 
 
-@dataclass
-class GetProxyModel:
-    url: str
-    auth_token: str | None = None
-    raw: bool = False
-    mimetype: str | None = None
-    file: bool = False
-
-
-@app.get("/getproxy")
-@use_model(GetProxyModel)
-def getproxy(m: GetProxyModel):
-    parsed = urlparse(m.url)
-    if not parsed.scheme:
-        raise RouteException("Unknown URL scheme")
-    if parsed.scheme not in ("http", "https"):
-        raise RouteException(f"URL scheme not allowed: {parsed.scheme}")
-    if parsed.netloc not in app.config["PROXY_WHITELIST"]:
-        raise RouteException(f"URL domain not whitelisted: {parsed.netloc}")
-    if parsed.netloc not in app.config["PROXY_WHITELIST_NO_LOGIN"]:
-        verify_logged_in()
-    headers = {}
-    if m.auth_token:
-        headers["Authorization"] = f"Token {m.auth_token}"
-    try:
-        r = requests.get(m.url, headers=headers)
-    except (MissingSchema, InvalidURL):
-        raise RouteException("Invalid URL")
-    if m.raw:
-        mimetype = r.headers.get("Content-Type", None)
-        if m.mimetype:
-            mimetype = m.mimetype
-        resp = Response(
-            r.content,
-            status=r.status_code,
-            mimetype=mimetype,
-        )
-        add_csp_header(resp, "sandbox allow-scripts")
-        return resp
-    if m.file and r.status_code == 200:
-        filename = basename(parsed.path) or "download"
-        mimetype = r.headers.get("Content-Type", "application/octet-stream")
-        return send_file(
-            BytesIO(r.content),
-            as_attachment=True,
-            download_name=filename,
-            mimetype=mimetype,
-        )
-
-    return json_response({"data": r.text, "status_code": r.status_code})
-
-
 @app.get("/time")
 def get_time():
     return json_response({"time": get_current_time()}, date_conversion=True)
-
-
-@app.get("/getTemplates/<path:item_path>")
-def get_templates(item_path: str) -> Response:
-    d = DocEntry.find_by_path(item_path)
-    if not d:
-        raise NotExist()
-    verify_edit_access(d)
-    templates = get_templates_for_folder(d.parent)
-    return json_response(templates, date_conversion=True)
 
 
 @app.get("/en")
