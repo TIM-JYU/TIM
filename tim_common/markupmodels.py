@@ -24,7 +24,7 @@ class PointsRule:
 
 class PluginDateTimeField(marshmallow.fields.Field):
     def _serialize(
-        self, value: Any, attr: str, obj: Any, **kwargs: dict[str, Any]
+        self, value: Any, attr: str | None, obj: Any, **kwargs: dict[str, Any]
     ) -> Any:
         raise NotImplementedError
 
