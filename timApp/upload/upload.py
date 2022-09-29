@@ -333,7 +333,11 @@ def convert_pdf_or_compress_image(f: UploadedFile, u: User, d: DocInfo, task_id:
             ],
             capture_output=True,
         )
-        for imagepath in os.listdir(tempfolder):
+        pdf_image_pages = os.listdir(tempfolder)
+        pdf_image_pages.sort(
+            key=lambda x: int(x[len(p.stem) + 7 : -4])  # filename_image-KEY.png
+        )
+        for imagepath in pdf_image_pages:
             file = tempfolder / imagepath
             try:
                 # TODO: Some pdfs have only one, very large page. Downsampling them to 2048px can make
