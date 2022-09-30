@@ -176,7 +176,7 @@ class BlockAccess(db.Model):
 
 
 def get_duration_now(a: BlockAccess | Right, curr_time: datetime):
-    if a.duration_from and a.accessible_to:
+    if a.duration and a.accessible_to:
         return min(a.duration, a.accessible_to - curr_time)
     return a.duration
 
