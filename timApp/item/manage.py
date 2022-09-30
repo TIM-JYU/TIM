@@ -13,10 +13,12 @@ from flask import request
 from isodate import Duration
 from sqlalchemy import inspect
 from sqlalchemy.orm.state import InstanceState
-from timApp.velp.velp import delete_velp_group, DEFAULT_PERSONAL_VELP_GROUP_NAME
 
-from timApp.velp.velp_models import VelpGroupsInDocument, VelpGroup
-
+from timApp.answer.jsrunner_util import (
+    save_fields,
+    FieldSaveRequest,
+    FieldSaveUserEntry,
+)
 from timApp.auth.accesshelper import (
     verify_manage_access,
     verify_ownership,
@@ -37,20 +39,19 @@ from timApp.auth.sessioninfo import get_current_user_group_object
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
-from timApp.document.docinfo import move_document, find_free_name, DocInfo
+from timApp.document.docinfo import find_free_name, DocInfo
 from timApp.document.exceptions import ValidationException
-from timApp.document.translation.translation import Translation
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType, Block, copy_default_rights
 from timApp.item.copy_rights import copy_rights
+from timApp.item.deleting import soft_delete_document, get_trash_folder
 from timApp.item.item import Item
 from timApp.item.validation import (
     validate_item,
     validate_item_and_create_intermediate_folders,
     has_special_chars,
 )
-from timApp.item.deleting import soft_delete_document, get_trash_folder
 from timApp.timdb.sqa import db
 from timApp.user.user import User, ItemOrBlock
 from timApp.user.usergroup import UserGroup
@@ -86,6 +87,8 @@ from timApp.util.utils import (
     cached_property,
     seq_to_str,
 )
+from timApp.velp.velp import delete_velp_group, DEFAULT_PERSONAL_VELP_GROUP_NAME
+from timApp.velp.velp_models import VelpGroupsInDocument, VelpGroup
 from timApp.velp.velpgroups import (
     get_groups_from_document_table,
 )
@@ -726,20 +729,37 @@ def clear_doc_permissions(doc: DocInfo | DocEntry, a: AccessType) -> None:
 
 # noinspection PyShadowingBuiltins
 @manage_page.post("/permissions/selfExpire")
-def self_expire_permission(id: int) -> Response:
+def self_expire_permission(id: int, set_field: str | None = None) -> Response:
     i = get_item_or_abort(id)
     acc = verify_view_access(i, require=False)
     if not acc:
         return ok_response()
     acc = get_single_view_access(i)
+
+    if set_field:
+        cur_user = get_current_user_object()
+        save_fields(
+            FieldSaveRequest(
+                savedata=[
+                    FieldSaveUserEntry(
+                        user=cur_user.id,
+                        fields={set_field: "1"},
+                    ),
+                ]
+            ),
+            curr_user=cur_user,
+            allow_non_teacher=True,
+            current_doc=i,
+        )
+
     acc.accessible_to = get_current_time()
 
     # Expire perms for document's velp groups as well
     if isinstance(i, DocInfo | DocEntry):
         expire_doc_velp_groups_perms(i.id, acc.usergroup)
 
-    log_right(f"self-expired view access in {i.path}")
     db.session.commit()
+    log_right(f"self-expired view access in {i.path}")
     return ok_response()
 
 
