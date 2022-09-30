@@ -179,7 +179,7 @@ def post_process_pars(
     # taketime("pars done")
 
     group = curr_user.get_personal_group().id
-    if curr_user.logged_in and not settings.hide_readmarks():
+    if not should_hide_readmarks(curr_user, settings):
         # taketime("readings begin")
 
         # TODO: UserContext should support multiple users like in group login.
@@ -440,3 +440,7 @@ def should_auto_read(
         )
         and not has_anything_read(usergroup_ids, doc)
     )
+
+
+def should_hide_readmarks(curr_user: User, settings: DocSettings) -> bool:
+    return not curr_user.logged_in or settings.hide_readmarks()

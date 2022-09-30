@@ -45,7 +45,11 @@ from timApp.document.document import (
 )
 from timApp.document.docviewparams import DocViewParams, ViewModelSchema
 from timApp.document.hide_names import is_hide_names, force_hide_names
-from timApp.document.post_process import post_process_pars, should_auto_read
+from timApp.document.post_process import (
+    post_process_pars,
+    should_auto_read,
+    should_hide_readmarks,
+)
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import (
@@ -972,7 +976,7 @@ def render_doc_view(
         theme_style, theme_hash = generate_style(document_theme_docs)
         override_theme = f"{theme_style}?{theme_hash}"
 
-    hide_readmarks = doc_settings.hide_readmarks()
+    hide_readmarks = should_hide_readmarks(current_user, doc_settings)
 
     templates_to_render = (
         ["slide_head.jinja2", "slide_content.jinja2"]
@@ -1044,7 +1048,7 @@ def render_doc_view(
         allowed_to_cache=doc_settings.is_cached()
         and not post_process_result.has_plugin_errors,
         override_theme=override_theme,
-        hide_readmarks=doc_settings.hide_readmarks(),
+        hide_readmarks=hide_readmarks,
     )
 
 
@@ -1162,7 +1166,7 @@ def check_updated_pars(doc_id, major, minor):
                     text=post_process_result.texts,
                     rights=rights,
                     preview=False,
-                    hide_readmarks=settings.hide_readmarks(),
+                    hide_readmarks=should_hide_readmarks(curr_user, settings),
                 ),
                 "js": post_process_result.js_paths,
                 "css": post_process_result.css_paths,

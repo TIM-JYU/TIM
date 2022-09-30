@@ -37,7 +37,7 @@ from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.editing.proofread import proofread_pars, process_spelling_errors
 from timApp.document.exceptions import ValidationException, ValidationWarning
 from timApp.document.hide_names import is_hide_names
-from timApp.document.post_process import post_process_pars
+from timApp.document.post_process import post_process_pars, should_hide_readmarks
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.prepared_par import PreparedPar
 from timApp.document.translation.synchronize_translations import (
@@ -594,7 +594,7 @@ def par_response(
                     doc.get_docinfo(), user_ctx.logged_user
                 ),
                 preview=preview,
-                hide_readmarks=settings.hide_readmarks(),
+                hide_readmarks=should_hide_readmarks(user_ctx.logged_user, settings),
             ),
             "js": post_process_result.js_paths,
             "css": post_process_result.css_paths,
@@ -606,7 +606,9 @@ def par_response(
                     rights=get_user_rights_for_item(
                         doc.get_docinfo(), user_ctx.logged_user
                     ),
-                    hide_readmarks=settings.hide_readmarks(),
+                    hide_readmarks=should_hide_readmarks(
+                        user_ctx.logged_user, settings
+                    ),
                 )
                 for p in changed_post_process_result.texts
                 if not is_area_start_or_end(p)
