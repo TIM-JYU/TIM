@@ -1011,3 +1011,20 @@ def add_missing_users_from_group(result: list, usergroup: UserGroup) -> list:
     # 'user': <User 6>, 'id': 6, 'name': 'testiuser@testi.fi', 'real_name': 'Testi User', 'email': 'testiuser@testi.fi'}
 
     return result
+
+
+def get_global_answers(parsed_task_ids: dict[str, TaskId]) -> list[Answer]:
+    sq2 = (
+        Answer.query.filter(
+            Answer.task_id.in_(
+                [tid.doc_task for tid in parsed_task_ids.values() if tid.is_global]
+            )
+        )
+        .group_by(Answer.task_id)
+        .with_entities(func.max(Answer.id).label("aid"))
+        .subquery()
+    )
+    global_datas = (
+        Answer.query.join(sq2, Answer.id == sq2.c.aid).with_entities(Answer).all()
+    )
+    return global_datas

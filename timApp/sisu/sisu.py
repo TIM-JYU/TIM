@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
 
-from timApp.answer.routes import save_fields
+from timApp.answer.jsrunner_util import save_fields
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
