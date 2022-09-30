@@ -15,8 +15,9 @@ for creating interactive learning documents such as:
 
 * lecture notes
 * eBooks
-* weekly exercises
+* exercises
 * exams
+* learning analytics dashboards
 * manuals
 * workbooks
 * discussions
@@ -27,13 +28,19 @@ TIM can be used for:
     * normal lectures
     * peer instruction
     * self studying
+    * group work
     * MOOC
     * Flipped Classroom
 * documentation
-* anything else you can imagine!
 
-For more information about TIM, please
-see [the introduction](https://tim.jyu.fi/view/tim/in-English/intro).
+For more information about TIM, please see [our "About TIM" page](https://tim.jyu.fi/view/about/en-US).
+
+## Installing and running TIM
+
+TIM can be run on systems that support Docker. To install and run TIM, refer to the following guides:
+
+* [Installing TIM](https://tim.jyu.fi/view/tim/TIMin-kehitys/TIMin-kaantaminen/en-US)
+* [TIM quick install scripts](https://github.com/TIM-JYU/tim-installscripts#tim-quick-install-scripts)
 
 ## Building and development
 
@@ -41,8 +48,6 @@ see [the introduction](https://tim.jyu.fi/view/tim/in-English/intro).
 
 The most important documents are the following:
 
-* [Building TIM](https://tim.jyu.fi/view/tim/TIMin-kehitys/TIMin-kaantaminen):
-How to build TIM and run it on a local machine
 * [Introduction to TIM development](https://tim.jyu.fi/view/tim/TIMin-kehitys/Johdatus-TIMin-kehitykseen):
 Getting familiar with the basics of TIM
 * [Coding conventions](https://tim.jyu.fi/view/tim/TIMin-kehitys/Koodikaytanteet):
