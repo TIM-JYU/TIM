@@ -694,7 +694,7 @@ class Plugin:
                 unlock_info = f"""access-duration='{self.known.accessDuration}' access-end="{access_end or ""}" 
                 access-header='{self.known.header or ""}' access-end-text='{self.known.accessEndText or ''}'"""
             elif self.can_be_hidden_by_prerequisite():
-                unlock_info = f"""lockable-by-prerequisite='true' locked-by-prerequisite='{'true' if self.hidden_by_prerequisite() else 'false'}'"""
+                unlock_info = f"""[lockable-by-prerequisite]='true' [locked-by-prerequisite]='{'true' if self.hidden_by_prerequisite() else 'false'}'"""
             if abtype and self.options.wraptype == PluginWrap.Full and False:
                 return self.wrap_draggable(
                     f"""

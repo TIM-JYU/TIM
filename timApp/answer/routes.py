@@ -2373,13 +2373,13 @@ def get_model_answer(task_id: str) -> Response:
     if not has_teacher_access(d):
         answer_count: int | None = None
         if model_answer_info.disabled:
-            raise RouteException("This model answer has been disabled")
+            raise AccessDenied("This model answer has been disabled")
         if model_answer_info.endDate:
             if model_answer_info.endDate < get_current_time():
-                raise RouteException("This model answer is no longer accessible")
+                raise AccessDenied("This model answer is no longer accessible")
         if model_answer_info.revealDate:
             if model_answer_info.revealDate > get_current_time():
-                raise RouteException("The model answer cannot be viewed yet")
+                raise AccessDenied("The model answer cannot be viewed yet")
         if model_answer_info.groups:
             requested_groups = RequestedGroups.from_name_list(model_answer_info.groups)
             user_groups = [group.id for group in current_user.groups]
@@ -2393,12 +2393,12 @@ def get_model_answer(task_id: str) -> Response:
                 if answer_count > 0:
                     has_access = True
             if not has_access:
-                raise RouteException("You cannot view this model answer")
+                raise AccessDenied("You cannot view this model answer")
         if model_answer_info.count:
             if answer_count is None:
                 answer_count = current_user.get_answers_for_task(tid.doc_task).count()
             if answer_count < model_answer_info.count:
-                raise RouteException(
+                raise AccessDenied(
                     f"You need to attempt at least {model_answer_info.count} times before viewing the model answer"
                 )
 

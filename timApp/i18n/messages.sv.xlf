@@ -7188,6 +7188,34 @@
           <context context-type="linenumber">136</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="245497374771834182" datatype="html">
+        <source> Your access to this task has expired </source>
+        <target state="translated"> Din åtkomst till den här uppgiften har upphört </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/pluginLoader.ts</context>
+          <context context-type="linenumber">81</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3548964054422536140" datatype="html">
+        <source>Unlock task. You will have <x id="INTERPOLATION" equiv-text="{{accessDuration}}"/> seconds to answer to this task.</source>
+        <target state="translated"> Lås upp uppgift. Du kommer att ha <x id="INTERPOLATION" equiv-text="{{accessDuration}}"/> sekunder på dig att svara på denna uppgift.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/pluginLoader.ts</context>
+          <context context-type="linenumber">85,86</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7716919100863031420" datatype="html">
+        <source>Unlock task</source>
+        <target state="translated">Lås upp uppgift.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/pluginLoader.ts</context>
+          <context context-type="linenumber">86</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/answer/pluginLoader.ts</context>
+          <context context-type="linenumber">86,87</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
