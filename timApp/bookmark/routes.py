@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 from flask import current_app, Response
 
@@ -11,7 +10,6 @@ from timApp.auth.accesshelper import (
 )
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.bookmark.bookmarks import (
-    Bookmarks,
     MY_COURSES_GROUP,
     BookmarkDictGroup,
     HIDDEN_COURSES_GROUP,
@@ -20,7 +18,6 @@ from timApp.bookmark.bookmarks import (
 from timApp.bookmark.course import add_to_course_bookmark
 from timApp.document.course.validate import CourseException, verify_valid_course
 from timApp.document.docentry import DocEntry
-from timApp.document.docinfo import DocInfo
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException, NotExist
@@ -66,7 +63,7 @@ def add_course_bookmark(path: str, require_group: bool = False) -> Response:
     else:
         u.add_to_group(ug, added_by=u)
         added_to_group = True
-    add_to_course_bookmark(u.bookmarks, d)
+    add_to_course_bookmark(u.bookmarks, d, skip_if_hidden=False)
     db.session.commit()
     return json_response(
         {

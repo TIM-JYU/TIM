@@ -37,9 +37,13 @@ def update_user_course_bookmarks() -> None:
             add_to_course_bookmark(b, d)
 
 
-def add_to_course_bookmark(b: Bookmarks, d: DocInfo) -> None:
+def add_to_course_bookmark(
+    b: Bookmarks, d: DocInfo, skip_if_hidden: bool = True
+) -> None:
     if b.has_bookmark(HIDDEN_COURSES_GROUP, d.title):
-        return
+        if skip_if_hidden:
+            return
+        b.delete_bookmark(HIDDEN_COURSES_GROUP, d.title)
     b.add_bookmark(
         MY_COURSES_GROUP, d.title, d.url_relative, move_to_top=False
     ).save_bookmarks()
