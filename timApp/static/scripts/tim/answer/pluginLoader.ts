@@ -74,16 +74,16 @@ export async function loadPlugin(html: string, loader: PluginLoaderComponent) {
         </answerbrowser>
         <div *ngIf="timed">
             <div *ngIf="running">
-                Time left:
+                <ng-container i18n>Time left:</ng-container>
                 <tim-countdown [endTime]="endTime" (onFinish)="expireTask()"></tim-countdown>
             </div>
-            <div *ngIf="expired">
+            <div i18n *ngIf="expired">
                 Your access to this task has expired
             </div>
             <h4 *ngIf="accessHeader && taskHidden">{{accessHeader}}</h4>
             <div *ngIf="unlockable">
-                Unlock task. You will have {{accessDuration}} seconds to answer to this task.
-                <button class="btn btn-primary" (click)="unlockTimedTask()" title="Unlock task">Unlock task</button>
+                <ng-container i18n>Unlock task. You will have {{accessDuration}} seconds to answer to this task.</ng-container>
+                <button i18n i18n-title class="btn btn-primary" (click)="unlockTimedTask()" title="Unlock task">Unlock task</button>
             </div>
             <div *ngIf="expired && accessEndText">{{accessEndText}}</div>
         </div>
