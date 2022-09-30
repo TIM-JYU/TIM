@@ -7308,7 +7308,7 @@
       </trans-unit>
       <trans-unit id="3548964054422536140" datatype="html">
         <source>Unlock task. You will have <x id="INTERPOLATION" equiv-text="{{accessDuration}}"/> seconds to answer to this task.</source>
-        <target state="translated">Ava tehtävä. Sinulla tulee olemaan <x id="INTERPOLATION" equiv-text="{{accessDuration}}"/> sekuntia vastata tähän tehtävään.</target>
+        <target state="translated">Avaa tehtävä. Sinulla tulee olemaan <x id="INTERPOLATION" equiv-text="{{accessDuration}}"/> sekuntia vastata tähän tehtävään.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/answer/pluginLoader.ts</context>
           <context context-type="linenumber">85,86</context>
