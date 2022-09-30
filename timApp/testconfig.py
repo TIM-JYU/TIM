@@ -77,3 +77,11 @@ OAUTH2_CLIENTS = [
         "grant_types": ["authorization_code"],
     }
 ]
+
+SECURITY_INFO = {
+    "extra_contacts": ["https://tim/contact"],
+    "acknowledgements_url": "https://tim/acknowledgements",
+    "preferred_languages": ["en", "fi"],
+    "extra_canonical_hosts": ["https://tim"],
+    "security_policy_url": "https://tim/security_policy",
+}

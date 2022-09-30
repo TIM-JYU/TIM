@@ -460,3 +460,24 @@ SESSION_BLOCK_IGNORE_DOCUMENTS = {}
 Paths of documents that should be ignored when blocking sessions.
 All users will be able to access the document regardless of the session blocking.
 """
+
+SECURITY_INFO = {
+    "extra_contacts": [],
+    "acknowledgements_url": None,
+    "preferred_languages": [],
+    "extra_canonical_hosts": [],
+    "security_policy_url": None,
+}
+"""
+Information about security and privacy of the instance.
+See https://securitytxt.org/ for more information.
+
+Note: The encryption and decryption keys will be stored in a keyring located at <tim root>/certs/tim/gpg
+
+extra_contacts: List of email addresses or URLs that should be contacted in case of security issues.
+encryption_key: URL to the PGP encryption key used for encrypting any security-related messages.
+acknowledgements_url: URL to the acknowledgements page.
+preferred_languages: List of languages in order of preference for contacting.
+extra_canonical_hosts: List of extra canonical hosts for the instance. Used to specify canonical URLs for security.txt
+security_policy_url: URL to the security policy page.
+"""

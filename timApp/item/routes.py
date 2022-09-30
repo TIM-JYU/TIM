@@ -27,12 +27,17 @@ from timApp.auth.accesshelper import (
     verify_manage_access,
     AccessDenied,
     ItemLockedException,
+    verify_edit_access,
 )
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, save_last_page
 from timApp.document.caching import check_doc_cache, set_doc_cache, refresh_doc_expire
-from timApp.document.create_item import create_or_copy_item, create_citation_doc
+from timApp.document.create_item import (
+    create_or_copy_item,
+    create_citation_doc,
+    get_templates_for_folder,
+)
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
@@ -1456,3 +1461,13 @@ def get_viewrange_with_header_id(doc_id: int, header_id: str):
         )
     view_range = decide_view_range(doc_info, current_set_size, index, forwards=True)
     return json_response(view_range)
+
+
+@view_page.get("/getTemplates/<path:item_path>")
+def get_templates(item_path: str) -> Response:
+    d = DocEntry.find_by_path(item_path)
+    if not d:
+        raise NotExist()
+    verify_edit_access(d)
+    templates = get_templates_for_folder(d.parent)
+    return json_response(templates, date_conversion=True)
