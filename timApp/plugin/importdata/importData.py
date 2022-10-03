@@ -18,6 +18,7 @@ from timApp.user.personaluniquecode import PersonalUniqueCode, SchacPersonalUniq
 from timApp.user.user import User, UserInfo
 from timApp.util.utils import widen_fields
 from tim_common.markupmodels import GenericMarkupModel
+from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import (
     GenericHtmlModel,
     GenericAnswerModel,
@@ -547,3 +548,4 @@ importData_plugin = create_blueprint(
     reqs,
     csrf,
 )
+MissingUserSchema = class_schema(MissingUser)

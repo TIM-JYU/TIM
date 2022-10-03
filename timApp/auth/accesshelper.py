@@ -898,3 +898,11 @@ User: {username}
             )
         if should_block:
             raise AccessDenied(msg)
+
+
+def verify_user_create_right(curr_user: User) -> None:
+    if curr_user.is_admin:
+        return
+    user_creators = UserGroup.get_user_creator_group()
+    if user_creators not in curr_user.groups:
+        raise AccessDenied("You do not have permission to create users.")

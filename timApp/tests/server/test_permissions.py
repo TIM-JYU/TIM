@@ -684,27 +684,6 @@ class PermissionTest(TimRouteTest):
         self.assertIn("Go to the next document", r)
         self.get(d2tr.url)
 
-    def test_self_expire(self):
-        self.login_test1()
-        d = self.create_doc()
-        self.test_user_2.grant_access(
-            access_type=AccessType.view,
-            accessible_from=get_current_time(),
-            accessible_to=get_current_time(),
-            block=d,
-        )
-        db.session.commit()
-        self.login_test2()
-        self.json_post("/permissions/selfExpire", {"id": d.id})
-
-        self.test_user_2.grant_access(
-            access_type=AccessType.view,
-            accessible_from=get_current_time(),
-            block=d,
-        )
-        db.session.commit()
-        self.json_post("/permissions/selfExpire", {"id": d.id})
-
     def test_duration_right(self):
         self.login_test1()
         d = self.create_doc()

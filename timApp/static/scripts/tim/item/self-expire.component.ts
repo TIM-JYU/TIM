@@ -14,6 +14,8 @@ export class SelfExpireComponent {
     @Input() confirm?: string;
     @Input() buttonText?: string;
     @Input() itemId?: number;
+    @Input() redirectHref?: string;
+    @Input() setField?: string;
 
     constructor(private http: HttpClient) {}
 
@@ -33,10 +35,15 @@ export class SelfExpireComponent {
             const r = await toPromise(
                 this.http.post("/permissions/selfExpire", {
                     id: this.itemId,
+                    set_field: this.setField,
                 })
             );
             if (r.ok) {
-                location.reload();
+                if (this.redirectHref) {
+                    window.location.href = this.redirectHref;
+                } else {
+                    location.reload();
+                }
             } else {
                 await showMessageDialog(
                     `Error expiring right: ${r.result.error.error}`

@@ -221,6 +221,8 @@ TIM_SAFE_ATTRS = frozenset(
         # tim-self-expire
         "button-text",
         "confirm",
+        "redirect-href",
+        "set-field",
         # tim-table
         "bind-data",
         # tim-add-member
