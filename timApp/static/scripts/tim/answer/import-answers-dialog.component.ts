@@ -36,7 +36,7 @@ interface IImportResults {
 [
     {{'{'}}
         "content": "Content of the answer. Export answers as JSON to see the content format.",
-        "email": "User's email address to use for importing. Export answers as JSON to see the email format.",
+        "username": "User's username to use for importing. Export answers as JSON to see the username.",
         "points": 0,
         "task": "task1",
         "time": "2020-01-01T00:00:00Z",

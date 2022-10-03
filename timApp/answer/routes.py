@@ -2071,14 +2071,31 @@ def import_answers(
     filter_cond = Answer.task_id.startswith(f"{docs[0].id}.")
     for d in docs[1:]:
         filter_cond |= Answer.task_id.startswith(f"{d.id}.")
+
+    no_identifier_answers = {
+        a for a in exported_answers if not a.email and not a.username
+    }
+    if no_identifier_answers:
+        raise RouteException(
+            f"Some answer don't have email nor username specified, cannot import."
+        )
+    mixed_answers = {a for a in exported_answers if a.email and a.username}
+    if mixed_answers:
+        raise RouteException(
+            "Answers with both email and username are not allowed. "
+            f"Found: {seq_to_str([str((a.email, a.username)) for a in mixed_answers])}"
+        )
+
     existing_answers: list[tuple[Answer, str]] = (
         Answer.query.filter(filter_cond)
         .join(User, Answer.users)
-        .with_entities(Answer, User.email)
+        .with_entities(Answer, User.name)
         .all()
     )
 
-    def convert_email_case(email: str) -> str:
+    def convert_email_case(email: str | None) -> str | None:
+        if email is None:
+            return None
         return email if match_email_case else convert_email_to_lower(email)
 
     existing_set = {
@@ -2088,15 +2105,18 @@ def import_answers(
             a.answered_on,
             a.valid,
             a.points,
-            convert_email_case(email),
+            name,
         )
-        for a, email in existing_answers
+        for a, name in existing_answers
     }
     email_field = User.email if match_email_case else func.lower(User.email)
+    name_field = User.name
 
     dupes = 0
+    # noinspection PyUnresolvedReferences
     all_users = User.query.filter(
-        email_field.in_([a.email for a in exported_answers])
+        email_field.in_([a.email for a in exported_answers if a.email])
+        | name_field.in_([a.username for a in exported_answers if a.username])
     ).all()
 
     if not match_email_case:
@@ -2113,30 +2133,55 @@ def import_answers(
                 f"cannot import with match_email_case = False: {all_duplicates}"
             )
 
-    users = {convert_email_case(u.email): u for u in all_users}
-    requested_users = {convert_email_case(a.email) for a in exported_answers}
-    missing_users = requested_users - set(users.keys())
-    if missing_users and not allow_missing_users:
-        raise RouteException(f"Email(s) not found: {seq_to_str(list(missing_users))}")
+    # Remap emails to usernames now that we ensured there are no duplicates
+    missing_emails: set[str] = set()
+    email_map = {convert_email_case(u.email): u.name for u in all_users}
+    for a in exported_answers:
+        e = convert_email_case(a.email)
+        if e:
+            assert a.email is not None
+            a.username = email_map.get(e, None)
+            if a.username is None:
+                missing_emails.add(a.email)
+            a.email = None
+
+    if missing_emails and not allow_missing_users:
+        raise RouteException(f"Email(s) not found: {seq_to_str(list(missing_emails))}")
+
+    users_by_name = {u.name: u for u in all_users}
+    requested_users_by_name = {a.username for a in exported_answers if a.username}
+    missing_users_by_name = requested_users_by_name - set(users_by_name.keys())
+    if missing_users_by_name and not allow_missing_users:
+        raise RouteException(
+            f"Username(s) not found: {seq_to_str(list(missing_users_by_name))}"
+        )
+
     if ug:
-        member_emails = {
-            convert_email_case(e)
-            for e, in ug.memberships.join(User, UserGroupMember.user)
-            .with_entities(User.email)
+        member_names = {
+            n
+            for n, in ug.memberships.join(User, UserGroupMember.user)
+            .with_entities(User.name)
             .all()
         }
-        missing_users = requested_users - member_emails
+        missing_users = requested_users_by_name - member_names
         if missing_users:
             raise RouteException(
-                f"Email(s) not in group: {seq_to_str(list(missing_users))}"
+                f"User(s) not in group: {seq_to_str(list(missing_users))}"
             )
 
     exported_answers.sort(key=lambda a: a.time)
     all_imported = []
     for a in exported_answers:
         doc_id = doc_path_map[doc_map.get(a.doc, a.doc)].id
-        if (doc_id, a.task, a.time, a.valid, a.points, a.email) not in existing_set:
-            u = users.get(a.email)
+        if (
+            doc_id,
+            a.task,
+            a.time,
+            a.valid,
+            a.points,
+            a.username,
+        ) not in existing_set:
+            u = users_by_name.get(a.username)
             if not u:
                 if not allow_missing_users:
                     raise Exception("Missing user should have been reported earlier")
@@ -2169,7 +2214,7 @@ def import_answers(
         {
             "imported": len(all_imported),
             "skipped_duplicates": dupes,
-            "missing_users": list(missing_users),
+            "missing_users": list(missing_users_by_name | missing_emails),
         }
     )
 

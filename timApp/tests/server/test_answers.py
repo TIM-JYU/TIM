@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import patch
 
 from timApp import tim_celery
@@ -16,7 +16,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.util.utils import read_json_lines, get_current_time
+from timApp.util.utils import read_json_lines
 
 
 class AnswerTest(TimRouteTest):
@@ -271,6 +271,7 @@ class AnswerTest(TimRouteTest):
                     "time": a.answered_on.isoformat(),
                     "valid": True,
                     "doc": d.path,
+                    "username": None,
                     "host": "http://localhost",
                 },
                 backup,
