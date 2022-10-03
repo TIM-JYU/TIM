@@ -32,6 +32,7 @@ from timApp.auth.accesshelper import (
     AccessDenied,
     get_single_view_access,
     has_edit_access,
+    verify_admin,
 )
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel, BlockAccess
@@ -731,6 +732,9 @@ def clear_doc_permissions(doc: DocInfo | DocEntry, a: AccessType) -> None:
 @manage_page.post("/permissions/selfExpire")
 def self_expire_permission(id: int, set_field: str | None = None) -> Response:
     i = get_item_or_abort(id)
+    if verify_admin(require=False):
+        raise RouteException("Admins cannot expire their own permissions.")
+
     acc = verify_view_access(i, require=False)
     if not acc:
         return ok_response()
