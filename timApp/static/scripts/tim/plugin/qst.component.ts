@@ -395,7 +395,7 @@ export const moduleDefs = [
         createDowngradedModule((extraProviders) =>
             platformBrowserDynamic(extraProviders).bootstrapModule(QstModule)
         ),
-        "timQst",
+        "timLectureQst",
         QstComponent
     ),
 ];
