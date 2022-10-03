@@ -38,7 +38,6 @@ from timApp.util.answerutil import (
     task_ids_to_strlist,
     AnswerPeriodOptions,
 )
-from timApp.util.flask.requesthelper import is_testing
 from timApp.util.logger import log_warning
 from timApp.velp.annotation_model import Annotation
 
@@ -251,6 +250,9 @@ class AllAnswersOptions(AnswerPeriodOptions):
     )
     salt: str | None = None
     salt_len: int = field(default=32, metadata={"data_key": "saltLen"})
+    include_inactive_memberships: bool = field(
+        default=False, metadata={"data_key": "includeInactiveMemberships"}
+    )
 
 
 def get_all_answers(
@@ -279,6 +281,7 @@ def get_all_answers(
         task_ids,
         options.valid,
         options.group,
+        options.include_inactive_memberships,
     )
 
     q = q.options(defaultload(Answer.users).lazyload(User.groups))
@@ -455,6 +458,7 @@ def get_all_answer_initial_query(
     task_ids: list[TaskId],
     valid: ValidityOptions,
     group: str | None = None,
+    include_expired_members: bool = False,
 ) -> Query:
     q = Answer.query.filter(
         (period_from <= Answer.answered_on) & (Answer.answered_on < period_to)
@@ -468,7 +472,9 @@ def get_all_answer_initial_query(
             q = q.filter_by(valid=True)
     q = q.join(User, Answer.users)
     if group:
-        q = q.join(UserGroup, User.groups).filter(UserGroup.name == group)
+        q = q.join(
+            UserGroup, User.groups_dyn if include_expired_members else User.groups
+        ).filter(UserGroup.name == group)
     return q
 
 
