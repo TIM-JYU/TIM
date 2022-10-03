@@ -697,8 +697,8 @@ def qst_get_html(jso, review):
             + "</div>"
         )
         return result
-
-    runner = "tim-qst"
+    is_task = markup.get("isTask", False)
+    runner = "tim-qst" if is_task else "tim-lecture-qst"
     s = f'<{runner} json="{make_base64(jso, TimJsonEncoder)}"></{runner}>'
     return s
 
