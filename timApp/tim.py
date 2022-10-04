@@ -90,6 +90,7 @@ from timApp.util.flask.requesthelper import (
 )
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.search import search_routes
+from timApp.util.locale import get_locale
 from timApp.util.logger import log_info, log_debug
 from timApp.util.testing import register_testing_routes
 from timApp.util.utils import get_current_time
@@ -213,26 +214,6 @@ def get_angularscripts(index_file: str, locale: str | None = None):
         if style:
             n.append(style)
         return dict(angularscripts=str(n))
-
-
-KNOWN_LANGUAGES = [
-    "fi",
-    "sv",
-    "en-US",
-]
-
-
-def get_locale():
-    header_lang = request.accept_languages.best_match(KNOWN_LANGUAGES, default="en-US")
-    lng = request.cookies.get("lang")
-    if not lng:
-        if not logged_in():
-            return header_lang
-        u = get_current_user_object()
-        lng = u.get_prefs().language
-    if lng in KNOWN_LANGUAGES:
-        return lng
-    return header_lang
 
 
 @app.context_processor

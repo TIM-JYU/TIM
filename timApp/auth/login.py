@@ -38,6 +38,7 @@ from timApp.user.userutils import create_password_hash, check_password_hash
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.locale import update_locale_lang
 from timApp.util.logger import log_error, log_warning, log_info
 from timApp.util.utils import is_valid_email, get_current_time, convert_email_to_lower
 
@@ -399,7 +400,7 @@ def email_signup_finish(
     db.session.flush()
     set_user_to_session(user)
     db.session.commit()
-    return json_response({"status": success_status})
+    return update_locale_lang(json_response({"status": success_status}))
 
 
 def is_possibly_home_org_account(email_or_username: str) -> bool:
@@ -433,7 +434,10 @@ def email_login(
     """
     save_came_from()
     session["adding_user"] = add_user
-    return json_response(do_email_login(email, password))
+    res = json_response(do_email_login(email, password))
+    if not add_user:
+        res = update_locale_lang(res)
+    return res
 
 
 def do_email_login(
@@ -579,7 +583,7 @@ def quick_login(username: str) -> Response:
     set_single_user_to_session(user)
     db.session.commit()
     flash(f"Logged in as: {username}")
-    return safe_redirect(url_for("view_page.index_page"))
+    return update_locale_lang(safe_redirect(url_for("view_page.index_page")))
 
 
 def log_in_as_anonymous(sess: SecureCookieSession) -> User:
