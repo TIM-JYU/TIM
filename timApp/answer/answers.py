@@ -355,7 +355,10 @@ def get_all_answers(
             if not name:
                 name = f"user_{hasher(u.id)}"
                 hidden_user_names[u.name] = name
-        line = json.loads(a.content)
+        try:
+            line = json.loads(a.content)
+        except json.JSONDecodeError:
+            line = a.content
         header = "; ".join(
             [
                 name,
