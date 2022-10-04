@@ -380,7 +380,7 @@ def save_fields(
                         points_changed = True
                     points = c_value
                 elif c_field == "styles":
-                    if isinstance(c_field, str):
+                    if isinstance(c_value, str):
                         try:
                             c_value = json.loads(c_value or "null")
                         except json.decoder.JSONDecodeError:
