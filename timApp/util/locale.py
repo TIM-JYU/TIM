@@ -3,12 +3,12 @@ from flask import request, Response
 from timApp.auth.sessioninfo import logged_in, get_current_user_object
 
 
-def get_locale() -> str:
+def get_locale(force_refresh: bool = False) -> str:
     header_lang: str = request.accept_languages.best_match(
         KNOWN_LANGUAGES, default="en-US"
     )  # type: ignore
     lng = request.cookies.get("lang")
-    if not lng:
+    if not lng or force_refresh:
         if not logged_in():
             return header_lang
         u = get_current_user_object()
@@ -19,7 +19,7 @@ def get_locale() -> str:
 
 
 def update_locale_lang(resp: Response) -> Response:
-    resp.set_cookie("lang", get_locale())
+    resp.set_cookie("lang", get_locale(force_refresh=True))
     return resp
 
 
