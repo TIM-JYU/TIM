@@ -353,6 +353,14 @@ export class PluginLoaderComponent
     };
 
     async determineAndSetComponent(component: HTMLElement) {
+        if (component.nodeType === Node.COMMENT_NODE) {
+            // empty loader, do nothing
+            return;
+        }
+        if (component.tagName == undefined) {
+            this.error = `Unknown component ${this.taskId}`;
+            return;
+        }
         const runnername = component.tagName.toLowerCase();
         if (runnername == "div") {
             // For now assume every non-component plugin html (e.g plugins in error state) is wrapped in div, so we
