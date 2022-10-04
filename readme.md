@@ -67,7 +67,7 @@ TIM is a diverse platform with support for learning analytics, general education
 @inproceedings{TIMLessIsMore2019,
   title={Less is More! Preliminary Evaluation of Multi-Functional Document-Based Online Learning Environment},
   author={Isom{\"o}tt{\"o}nen, Ville and Lakanen, Antti-Jussi and Lappalainen, Vesa},
-  booktitle={2019 IEEE frontiers in education conference (FIE)},
+  booktitle={2019 IEEE Frontiers in Education Conference (FIE)},
   pages={1--5},
   year={2019},
   doi={10.1109/FIE43999.2019.9028353}
