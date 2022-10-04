@@ -58,3 +58,18 @@ How to set up PyCharm for TIM development
 
 More documentation can be found in the
 [TIM development](https://tim.jyu.fi/view/tim/TIMin-kehitys) folder.
+
+## TIM and research
+
+TIM is a diverse platform with support for learning analytics, general educational research and practice. If you use TIM as a part of your work, please consider adding the following citation:
+
+```bibtex
+@inproceedings{TIMLessIsMore2019,
+  title={Less is More! Preliminary Evaluation of Multi-Functional Document-Based Online Learning Environment},
+  author={Isom{\"o}tt{\"o}nen, Ville and Lakanen, Antti-Jussi and Lappalainen, Vesa},
+  booktitle={2019 IEEE frontiers in education conference (FIE)},
+  pages={1--5},
+  year={2019},
+  doi={10.1109/FIE43999.2019.9028353}
+}
+```
