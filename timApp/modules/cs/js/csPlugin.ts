@@ -3668,6 +3668,10 @@ ${fhtml}
         return this.markup.inputrows;
     }
 
+    get spellcheck() {
+        return this.markup.spellcheck;
+    }
+
     async setData(data: unknown, save: boolean = false) {
         if (SetData.is(data)) {
             for (const name of ["usercode", "userargs", "userinput"] as const) {
@@ -3767,7 +3771,8 @@ ${fhtml}
                                [parsonsStyleWords]="markup['style-words']"
                                [parsonsWords]="words"
                                (close)="onFileClose($event)"
-                               (content)="onContentChange($event)">
+                               (content)="onContentChange($event)"
+                               [spellcheck]="spellcheck">
                     </cs-editor>
                     <div class="csRunChanged" *ngIf="runChanged && !hide.changed"></div>
                     <div class="csRunNotSaved" *ngIf="isUnSaved()"></div>

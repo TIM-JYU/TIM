@@ -19,7 +19,8 @@ import {CURSOR, IEditor} from "./editor";
                 [rows]="rows"
                 [(ngModel)]="content"
                 [placeholder]="placeholder"
-                [disabled]="disabled">
+                [disabled]="disabled"
+                [attr.spellcheck]="spellcheck">
         </textarea>`,
 })
 export class NormalEditorComponent implements IEditor {
@@ -29,6 +30,7 @@ export class NormalEditorComponent implements IEditor {
     @Input() maxRows: number = 100;
     @Input() placeholder: string = "";
     @Input() disabled: boolean = false;
+    @Input() spellcheck?: boolean;
     @ViewChild("area") private area!: ElementRef;
     private editorreadonly: boolean = false;
 
