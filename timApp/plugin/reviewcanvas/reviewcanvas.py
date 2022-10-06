@@ -36,7 +36,7 @@ class UploadedFile:
 class ReviewCanvasStateModel:
     """Model for the information that is stored in TIM database for each answer."""
 
-    uploadedFiles: list[UploadedFile]
+    uploadedFiles: list[UploadedFile] | None
 
 
 @dataclass

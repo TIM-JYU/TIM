@@ -12,6 +12,7 @@ CONTENT_FIELD_NAME_MAP = {
     "pali": "userword",
     "numericfield": "c",
     "textfield": "c",
+    "reviewcanvas": "uploadedFiles",
 }
 
 
