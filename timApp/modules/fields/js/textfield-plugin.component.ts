@@ -254,7 +254,7 @@ export class TextfieldPluginComponent
             this.initCode();
         }
         if (this.attrsall.state?.styles && !this.markup.ignorestyles) {
-            this.applyStyling(this.attrsall.state.styles);
+            this.styles = parseStyles(this.attrsall.state.styles);
         }
         if (this.markup.textarea && this.markup.autogrow) {
             this.autoGrow();
@@ -292,7 +292,7 @@ export class TextfieldPluginComponent
     resetField(): undefined {
         return this.zone.run(() => {
             this.initCode();
-            this.applyStyling({});
+            this.styles = {};
             this.errormessage = undefined;
             return undefined;
         });
@@ -329,7 +329,7 @@ export class TextfieldPluginComponent
                     this.errormessage = message;
                 }
                 if (!this.markup.ignorestyles) {
-                    this.applyStyling(content.styles);
+                    this.styles = parseStyles(content.styles);
                 }
             }
             this.changes = false;
@@ -462,10 +462,6 @@ export class TextfieldPluginComponent
         return false;
     }
 
-    applyStyling(styles: Record<string, string>) {
-        this.styles = parseStyles(styles);
-    }
-
     /**
      * Method to check grading input type for textfield.
      * Used as e.g. grading checker for hyv | hyl | 1 | 2 | 3 | 4 | 5.
@@ -555,7 +551,7 @@ export class TextfieldPluginComponent
             this.saveResponse.saved = true;
             this.saveResponse.message = this.errormessage;
             if (this.markup.clearstyles) {
-                this.applyStyling({});
+                this.styles = {};
             }
 
             if (this.vctrl && !this.saveCalledExternally) {

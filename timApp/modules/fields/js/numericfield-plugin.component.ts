@@ -258,7 +258,7 @@ export class NumericfieldPluginComponent
         }
         this.initialValue = this.numericvalue;
         if (this.attrsall.state?.styles && !this.markup.ignorestyles) {
-            this.applyStyling(this.attrsall.state.styles);
+            this.styles = parseStyles(this.attrsall.state.styles);
         }
     }
 
@@ -289,7 +289,7 @@ export class NumericfieldPluginComponent
     resetField(): undefined {
         return this.zone.run(() => {
             this.initCode();
-            this.applyStyling({});
+            this.styles = {};
             this.errormessage = undefined;
             this.redAlert = false;
             return undefined;
@@ -319,7 +319,7 @@ export class NumericfieldPluginComponent
                 }
 
                 if (!this.markup.ignorestyles && content.styles) {
-                    this.applyStyling(content.styles);
+                    this.styles = parseStyles(content.styles);
                 }
             }
             this.initialValue = this.numericvalue;
@@ -417,10 +417,6 @@ export class NumericfieldPluginComponent
         return (
             ros === "plaintext" && window.location.pathname.startsWith("/view/")
         );
-    }
-
-    applyStyling(styles: Record<string, string>) {
-        this.styles = parseStyles(styles);
     }
 
     /**
@@ -524,7 +520,7 @@ export class NumericfieldPluginComponent
                 this.saveResponse.saved = true;
             }
             if (this.markup.clearstyles) {
-                this.applyStyling({});
+                this.styles = {};
             }
             this.saveResponse.message = this.errormessage;
             if (this.vctrl && !this.saveCalledExternally) {
