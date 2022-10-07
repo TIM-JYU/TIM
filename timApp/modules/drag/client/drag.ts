@@ -112,6 +112,7 @@ interface WordObject {
                         (dndMoved)="handleMove(i)"
                         (dndCanceled)="(copy !== 'target') || wordObjs.splice(i, 1)"
                         [dndEffectAllowed]="item.effectAllowed"
+                        [ngStyle]="styles"
                     ></li>
                 </ul>
             </div>
