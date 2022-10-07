@@ -24,7 +24,10 @@ import {
     nullable,
     withDefault,
 } from "../../../static/scripts/tim/plugin/attributes";
-import {shuffleStrings} from "../../../static/scripts/tim/plugin/util";
+import {
+    parseStyles,
+    shuffleStrings,
+} from "../../../static/scripts/tim/plugin/util";
 import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
@@ -58,7 +61,14 @@ const DragAll = t.intersection([
         info: Info,
         markup: DragMarkup,
         preview: t.boolean,
-        state: nullable(t.type({c: t.array(t.string)})),
+        state: nullable(
+            t.intersection([
+                t.type({c: t.array(t.string)}),
+                t.partial({
+                    styles: nullable(t.record(t.string, t.string)),
+                }),
+            ])
+        ),
     }),
 ]);
 
@@ -91,6 +101,7 @@ interface WordObject {
                     [dndDisableIf]="wordObjs.length >= max"
                     [dndEffectAllowed]="effectAllowed"
                     (dndDrop)="handleDrop($event)"
+                    [ngStyle]="styles"
                 >
                     <li class="dndPlaceholder" dndPlaceholderRef></li>
                     <li *ngFor="let item of wordObjs; let i = index"
@@ -134,6 +145,7 @@ export class DragComponent
     private forceSave = false;
     private shuffle?: boolean;
     private vctrl = vctrlInstance;
+    styles: Record<string, string> = {};
 
     getAttributeType(): typeof DragAll {
         return DragAll;
@@ -173,6 +185,9 @@ export class DragComponent
 
         if (!this.attrsall.preview) {
             this.vctrl?.addTimComponent(this);
+        }
+        if (this.attrsall.state?.styles) {
+            this.styles = parseStyles(this.attrsall.state.styles);
         }
     }
 

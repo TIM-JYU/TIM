@@ -23,6 +23,7 @@ from tim_common.utils import Missing
 @dataclass
 class DragStateModel:
     c: list[str]
+    styles: dict[str, str] | Missing = missing
 
 
 @dataclass

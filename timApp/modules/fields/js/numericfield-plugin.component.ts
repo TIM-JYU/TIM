@@ -23,7 +23,7 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {getFormBehavior} from "tim/plugin/util";
+import {getFormBehavior, parseStyles} from "tim/plugin/util";
 import {defaultErrorMessage, valueOr} from "tim/util/utils";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -419,19 +419,8 @@ export class NumericfieldPluginComponent
         );
     }
 
-    /**
-     * Parses "styles" from the plugin answer that were saved by tableForm
-     * For now only backgroundColor is supported
-     * See TODOs at textfield
-     */
     applyStyling(styles: Record<string, string>) {
-        if (Object.keys(styles).length == 0) {
-            this.styles = {};
-            return;
-        }
-        if (styles.backgroundColor) {
-            this.styles.backgroundColor = styles.backgroundColor;
-        }
+        this.styles = parseStyles(styles);
     }
 
     /**

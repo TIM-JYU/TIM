@@ -23,7 +23,7 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {getFormBehavior} from "tim/plugin/util";
+import {getFormBehavior, parseStyles} from "tim/plugin/util";
 import {defaultErrorMessage, timeout, valueOr} from "tim/util/utils";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -462,22 +462,8 @@ export class TextfieldPluginComponent
         return false;
     }
 
-    /**
-     * Parses "styles" from the plugin answer that were saved by tableForm
-     * For now only backgroundColor is supported
-     * TODO: Extend styling for all attributes in timTable's cellStyles?
-     *  For now tableForm is only able to define backgroundColor or textAlign
-     *  Could also define (and import) generic tim-wide inputstyles
-     * TODO: Could also just apply given styles as they are
-     */
     applyStyling(styles: Record<string, string>) {
-        if (!styles || Object.keys(styles).length == 0) {
-            this.styles = {};
-            return;
-        }
-        if (styles.backgroundColor) {
-            this.styles.backgroundColor = styles.backgroundColor;
-        }
+        this.styles = parseStyles(styles);
     }
 
     /**
