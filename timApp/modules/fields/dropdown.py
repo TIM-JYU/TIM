@@ -2,10 +2,11 @@
 Module for serving dropdown item-plugin.
 """
 from dataclasses import dataclass, asdict
+from typing import Union
 
 from flask import render_template_string
 from marshmallow import validates
-from marshmallow.utils import missing
+from marshmallow.utils import missing, _Missing
 
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.pluginserver_flask import (
@@ -22,7 +23,7 @@ from tim_common.utils import Missing
 @dataclass
 class DropdownStateModel:
     c: str | None
-    styles: dict[str, str] | Missing = missing
+    styles: dict[str, str] | _Missing = missing
 
 
 @dataclass
@@ -98,9 +99,9 @@ def answer(args: DropdownAnswerModel) -> PluginAnswerResp:
     # plugin can ask not to save the word
     nosave = args.input.nosave
     if not nosave:
-        save = {"c": selectedword}
+        save: dict[str, str | dict[str, str]] = {"c": selectedword}
         if not args.markup.clearstyles and args.state is not None:
-            if args.state.styles:
+            if args.state.styles and type(args.state.styles) is dict:
                 save["styles"] = args.state.styles
         result["save"] = save
         web["result"] = "saved"

@@ -103,9 +103,9 @@ def answer(args: DragAnswerModel) -> PluginAnswerResp:
 
     nosave = args.input.nosave
     if not nosave:
-        save = {"c": words}
+        save: dict[str, list[str] | dict[str, str]] = {"c": words}
         if not args.markup.clearstyles and args.state is not None:
-            if args.state.styles:
+            if args.state.styles and type(args.state.styles) is dict:
                 save["styles"] = args.state.styles
         result["save"] = save
         web["result"] = "saved"
