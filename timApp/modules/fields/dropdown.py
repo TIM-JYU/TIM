@@ -35,6 +35,8 @@ class DropdownMarkupModel(GenericMarkupModel):
     autosave: bool | Missing = missing
     answers: bool | Missing = missing
     tag: str | Missing | None = missing
+    clearstyles: bool | Missing = missing
+    ignorestyles: bool | Missing = missing
 
 
 @dataclass
@@ -97,10 +99,13 @@ def answer(args: DropdownAnswerModel) -> PluginAnswerResp:
     nosave = args.input.nosave
     if not nosave:
         save = {"c": selectedword}
-        if args.state is not None and args.state.styles:
-            save["styles"] = args.state.styles
+        if not args.markup.clearstyles and args.state is not None:
+            if args.state.styles:
+                save["styles"] = args.state.styles
         result["save"] = save
         web["result"] = "saved"
+        if args.markup.clearstyles:
+            web["clear"] = True
     else:
         save = {"c": ""}
         result["save"] = save

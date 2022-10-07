@@ -40,6 +40,8 @@ const DropdownMarkup = t.intersection([
         tag: t.string,
         words: t.array(t.string),
         wordAliases: t.record(t.string, t.string),
+        ignorestyles: t.boolean,
+        clearstyles: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -156,7 +158,7 @@ export class DropdownPluginComponent
         if (this.markup.answers) {
             // TODO: Implement showing and hiding the answer browser if it is deemed useful.
         }
-        if (this.attrsall.state?.styles) {
+        if (this.attrsall.state?.styles && !this.markup.ignorestyles) {
             this.styles = parseStyles(this.attrsall.state.styles);
         }
     }
@@ -210,7 +212,7 @@ export class DropdownPluginComponent
         }
 
         const r = await this.postAnswer<{
-            web: {result: string; error?: string};
+            web: {result: string; error?: string; clear?: boolean};
         }>(params);
 
         if (r.ok) {
@@ -218,6 +220,9 @@ export class DropdownPluginComponent
             this.updateListeners(ChangeType.Saved);
             const data = r.result;
             this.error = data.web.error;
+            if (data.web.clear) {
+                this.styles = {};
+            }
         } else {
             this.error = r.result.error.error;
             this.connectionErrorMessage =
@@ -310,7 +315,9 @@ export class DropdownPluginComponent
                     )}`;
                     this.error = message;
                 }
-                this.styles = parseStyles(content.styles);
+                if (!this.markup.ignorestyles) {
+                    this.styles = parseStyles(content.styles);
+                }
             }
             this.changes = false;
             this.updateListeners(ChangeType.Saved);

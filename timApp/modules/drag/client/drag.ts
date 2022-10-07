@@ -47,6 +47,8 @@ const DragMarkup = t.intersection([
         shuffle: t.boolean,
         followid: t.string,
         autoSave: withDefault(t.boolean, false),
+        ignorestyles: t.boolean,
+        clearstyles: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -187,7 +189,7 @@ export class DragComponent
         if (!this.attrsall.preview) {
             this.vctrl?.addTimComponent(this);
         }
-        if (this.attrsall.state?.styles) {
+        if (this.attrsall.state?.styles && !this.markup.ignorestyles) {
             this.styles = parseStyles(this.attrsall.state.styles);
         }
     }
@@ -315,12 +317,15 @@ export class DragComponent
         };
 
         const r = await this.postAnswer<{
-            web: {result: string; error?: string};
+            web: {result: string; error?: string; clear?: boolean};
         }>(params);
 
         if (r.ok) {
             const data = r.result;
             this.error = data.web.error;
+            if (data.web.clear) {
+                this.styles = {};
+            }
         } else {
             this.error = r.result.error.error;
         }
