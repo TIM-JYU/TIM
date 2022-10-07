@@ -503,7 +503,6 @@ export class NumericfieldPluginComponent
             web: {
                 result: string;
                 error?: string;
-                clear?: boolean;
                 value: TFieldContent;
             };
         }>(params);
@@ -524,7 +523,7 @@ export class NumericfieldPluginComponent
                 this.redAlert = false;
                 this.saveResponse.saved = true;
             }
-            if (data.web.clear) {
+            if (this.markup.clearstyles) {
                 this.applyStyling({});
             }
             this.saveResponse.message = this.errormessage;

@@ -540,7 +540,7 @@ export class TextfieldPluginComponent
             params.input.nosave = true;
         }
         const r = await this.postAnswer<{
-            web: {result: string; error?: string; clear?: boolean};
+            web: {result: string; error?: string};
         }>(params);
         this.isRunning = false;
         if (r.ok) {
@@ -554,7 +554,7 @@ export class TextfieldPluginComponent
             this.redAlert = false;
             this.saveResponse.saved = true;
             this.saveResponse.message = this.errormessage;
-            if (data.web.clear) {
+            if (this.markup.clearstyles) {
                 this.applyStyling({});
             }
 

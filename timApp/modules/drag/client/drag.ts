@@ -317,13 +317,13 @@ export class DragComponent
         };
 
         const r = await this.postAnswer<{
-            web: {result: string; error?: string; clear?: boolean};
+            web: {result: string; error?: string};
         }>(params);
 
         if (r.ok) {
             const data = r.result;
             this.error = data.web.error;
-            if (data.web.clear) {
+            if (this.markup.clearstyles) {
                 this.styles = {};
             }
         } else {
