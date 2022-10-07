@@ -63,7 +63,7 @@ const DragAll = t.intersection([
         preview: t.boolean,
         state: nullable(
             t.intersection([
-                t.type({c: t.array(t.string)}),
+                t.type({c: nullable(t.array(t.string))}),
                 t.partial({
                     styles: nullable(t.record(t.string, t.string)),
                 }),

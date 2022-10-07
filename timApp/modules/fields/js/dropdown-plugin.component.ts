@@ -59,7 +59,7 @@ const DropdownAll = t.intersection([
         preview: t.boolean,
         state: nullable(
             t.intersection([
-                t.type({c: t.string}),
+                t.type({c: nullable(t.string)}),
                 t.partial({
                     styles: nullable(t.record(t.string, t.string)),
                 }),
