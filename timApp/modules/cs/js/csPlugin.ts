@@ -259,6 +259,7 @@ class LanguageTypes {
         java: "jcomtest",
         scala: "scomtest",
         "c++": "ccomtest",
+        jypeli: "comtest",
     };
     // If test type is unit, how to change it for specific languages
     impUnitTestTypes: Record<string, string> = {
@@ -268,6 +269,7 @@ class LanguageTypes {
         java: "junit",
         scala: "junit",
         "c++": "cunit",
+        jypeli: "nunit",
     };
 
     getCommentMarkers(type: string) {
