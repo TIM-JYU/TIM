@@ -1477,8 +1477,9 @@ tim-rights-editor {
 }
 
 // Global access from switch-button.component.ts
+// !important needed here to prevent document style from overriding with margin: auto
 .toggle-margin-left {
-    margin-left: 0;
+    margin-left: 0 !important;
 }
 
 // Style for translation-tab in parEditor
