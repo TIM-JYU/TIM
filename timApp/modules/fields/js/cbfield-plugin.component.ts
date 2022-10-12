@@ -82,6 +82,12 @@ const CbfieldAll = t.intersection([
          </span>
          <span *ngIf="isPlainText()" style="">{{userword}}</span>
          </span>
+        <button class="timButton"
+            *ngIf="(!isPlainText() && hasButton()) || saveFailed"
+            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
+            (click)="saveText()">
+        {{buttonText()}}
+        </button>
     <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
 </div>
 `,
@@ -96,7 +102,7 @@ export class CbfieldPluginComponent
     implements ITimComponent
 {
     private result?: string;
-    private isRunning = false;
+    isRunning = false;
     userword: boolean = false;
     private vctrl!: ViewCtrl;
     private initialValue: boolean = false;
@@ -107,6 +113,7 @@ export class CbfieldPluginComponent
         message: undefined,
     };
     private preventedAutosave = false;
+    saveFailed = false;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -121,11 +128,16 @@ export class CbfieldPluginComponent
         return {};
     }
 
+    hasButton() {
+        const buttonText = super.buttonText();
+        return buttonText != "" && buttonText != null;
+    }
+
     /**
      * Returns (user) defined text for the button.
      */
     buttonText() {
-        return super.buttonText() ?? null;
+        return super.buttonText() ?? $localize`Save`;
     }
 
     static makeBoolean(s: string): boolean {
@@ -206,6 +218,7 @@ export class CbfieldPluginComponent
     resetChanges(): void {
         this.zone.run(() => {
             this.userword = this.initialValue;
+            this.saveFailed = false;
             this.updateListeners(ChangeType.Saved);
         });
     }
@@ -233,6 +246,7 @@ export class CbfieldPluginComponent
                 }
             }
             this.initialValue = this.userword;
+            this.saveFailed = false;
             return {ok: ok, message: message};
         });
     }
@@ -273,6 +287,7 @@ export class CbfieldPluginComponent
         );
         this.initialValue = this.userword;
         this.result = undefined;
+        this.saveFailed = false;
         this.updateListeners(ChangeType.Saved);
     }
 
@@ -374,6 +389,7 @@ export class CbfieldPluginComponent
         }>(params);
         this.isRunning = false;
         if (r.ok) {
+            this.saveFailed = false;
             const data = r.result;
             // TODO: Make angular to show tooltip even without user having to move cursor out and back into the input
             // (Use premade bootstrap method / add listener for enter?)
@@ -388,6 +404,7 @@ export class CbfieldPluginComponent
             this.errormessage =
                 r.result.error.error ||
                 "Syntax error, infinite loop or some other error?";
+            this.saveFailed = true;
         }
         return this.saveResponse;
     }

@@ -132,14 +132,14 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
     </form>
     <div *ngIf="errormessage" class="error" style="font-size: 12px" [innerHtml]="errormessage | purify"></div>
     <button class="timButton"
-            *ngIf="!isPlainText() && buttonText()"
+            *ngIf="(!isPlainText() && hasButton()) || saveFailed"
             [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
             (click)="saveText()">
         {{buttonText()}}
     </button>
     <a href="" *ngIf="undoButton && isUnSaved() && undoButton" title="{{undoTitle}}"
             (click)="tryResetChanges($event);">{{undoButton}}</a>    
-    <p class="savedtext" *ngIf="!hideSavedText && buttonText()">Saved!</p>
+    <p class="savedtext" *ngIf="!hideSavedText && hasButton()">Saved!</p>
     <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
 </div>
 `,
@@ -170,6 +170,7 @@ export class TextfieldPluginComponent
     private preventedAutosave = false;
     styles: Record<string, string> = {};
     private saveCalledExternally = false;
+    saveFailed = false;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -226,11 +227,16 @@ export class TextfieldPluginComponent
         }
     }
 
+    hasButton() {
+        const buttonText = super.buttonText();
+        return buttonText != "" && buttonText != null;
+    }
+
     /**
      * Returns (user) defined text for the button.
      */
     buttonText() {
-        return super.buttonText() ?? null;
+        return super.buttonText() ?? $localize`Save`;
     }
 
     ngOnInit() {
@@ -296,6 +302,7 @@ export class TextfieldPluginComponent
         this.zone.run(() => {
             this.userword = this.initialValue;
             this.changes = false;
+            this.saveFailed = false;
             this.updateListeners(ChangeType.Saved);
         });
     }
@@ -327,6 +334,7 @@ export class TextfieldPluginComponent
                 }
             }
             this.changes = false;
+            this.saveFailed = false;
             this.updateListeners(ChangeType.Saved);
             return {ok: ok, message: message};
         });
@@ -375,6 +383,7 @@ export class TextfieldPluginComponent
         this.initialValue = this.userword;
         this.result = undefined;
         this.changes = false;
+        this.saveFailed = false;
         this.updateListeners(ChangeType.Saved);
     }
 
@@ -539,6 +548,7 @@ export class TextfieldPluginComponent
             this.result = data.web.result;
             this.initialValue = this.userword;
             this.changes = false;
+            this.saveFailed = false;
             this.updateListeners(ChangeType.Saved);
             this.hideSavedText = false;
             this.redAlert = false;
@@ -571,6 +581,7 @@ export class TextfieldPluginComponent
                 r.result.error.error ??
                 this.markup.connectionErrorMessage ??
                 defaultErrorMessage;
+            this.saveFailed = true;
         }
         return this.saveResponse;
     }

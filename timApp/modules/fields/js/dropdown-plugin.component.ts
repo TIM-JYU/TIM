@@ -94,6 +94,12 @@ const DropdownAll = t.intersection([
     </div>
     <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
     <div class="error" *ngIf="error" [innerHtml]="error"></div>
+        <button class="timButton"
+            *ngIf="hasButton() || saveFailed"
+            [disabled]="(disableUnchanged && !isUnSaved()) || readonly || attrsall['preview']"
+            (click)="save()">
+        {{buttonText()}}
+    </button>
     <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
 </div>`,
     styleUrls: ["./dropdown-plugin.component.scss"],
@@ -117,6 +123,7 @@ export class DropdownPluginComponent
     private changes = false;
     connectionErrorMessage?: string;
     styles: Record<string, string> = {};
+    saveFailed = false;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -133,6 +140,18 @@ export class DropdownPluginComponent
 
     getDefaultMarkup() {
         return {};
+    }
+
+    hasButton() {
+        const buttonText = super.buttonText();
+        return buttonText != "" && buttonText != null;
+    }
+
+    /**
+     * Returns (user) defined text for the button.
+     */
+    buttonText() {
+        return super.buttonText() ?? $localize`Save`;
     }
 
     ngOnInit() {
@@ -211,6 +230,7 @@ export class DropdownPluginComponent
 
         if (r.ok) {
             this.changes = false;
+            this.saveFailed = false;
             this.updateListeners(ChangeType.Saved);
             const data = r.result;
             this.error = data.web.error;
@@ -223,6 +243,7 @@ export class DropdownPluginComponent
                 this.error ??
                 this.markup.connectionErrorMessage ??
                 defaultErrorMessage;
+            this.saveFailed = true;
         }
         this.initialWord = this.selectedWord;
         return {saved: r.ok, message: this.error};
@@ -314,6 +335,7 @@ export class DropdownPluginComponent
                 }
             }
             this.changes = false;
+            this.saveFailed = false;
             this.updateListeners(ChangeType.Saved);
             this.initialWord = this.selectedWord;
             return {ok: ok, message: message};
@@ -325,6 +347,7 @@ export class DropdownPluginComponent
             this.selectedWord = "";
             this.initialWord = this.selectedWord;
             this.changes = false;
+            this.saveFailed = false;
             this.error = undefined;
             this.updateListeners(ChangeType.Saved);
             return undefined;
@@ -335,6 +358,7 @@ export class DropdownPluginComponent
         this.zone.run(() => {
             this.selectedWord = this.initialWord;
             this.changes = false;
+            this.saveFailed = false;
             this.updateListeners(ChangeType.Saved);
         });
     }

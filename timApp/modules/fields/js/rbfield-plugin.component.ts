@@ -86,6 +86,12 @@ const RbfieldAll = t.intersection([
          </span>
          <span *ngIf="isPlainText()" style="">{{userword}}</span>
       </span>
+        <button class="timButton"
+            *ngIf="(!isPlainText() && hasButton()) || saveFailed"
+            [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
+            (click)="autoSave()">
+        {{buttonText()}}
+        </button>
     <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
 </div>
 `,
@@ -100,7 +106,7 @@ export class RbfieldPluginComponent
     implements ITimComponent, OnDestroy
 {
     private result?: string;
-    private isRunning = false;
+    isRunning = false;
     userword: string = "0";
     private vctrl!: ViewCtrl;
     private initialValue: string = "0";
@@ -113,6 +119,7 @@ export class RbfieldPluginComponent
     };
     private preventedAutosave = false; // looks depracated???
     private rbName: string = "";
+    saveFailed = false;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -127,12 +134,18 @@ export class RbfieldPluginComponent
         return {};
     }
 
+    hasButton() {
+        const buttonText = super.buttonText();
+        return buttonText != "" && buttonText != null;
+    }
+
     /**
      * Returns (user) defined text for the button.
      */
     buttonText() {
-        return super.buttonText() ?? null;
+        return super.buttonText() ?? $localize`Save`;
     }
+
     /*
     makeBoolean(s: string): boolean {
         if ( s == "" ) { return false; }
@@ -208,6 +221,7 @@ export class RbfieldPluginComponent
     resetChanges() {
         this.zone.run(() => {
             this.userword = this.initialValue;
+            this.saveFailed = false;
             this.updateListeners(ChangeType.Saved);
         });
     }
@@ -232,6 +246,7 @@ export class RbfieldPluginComponent
                     this.errormessage = message;
                 }
             }
+            this.saveFailed = false;
             this.initialValue = this.userword;
             return {ok: ok, message: message};
         });
@@ -271,6 +286,7 @@ export class RbfieldPluginComponent
         this.userword = this.markup.initword ?? "";
         this.initialValue = this.userword;
         this.result = undefined;
+        this.saveFailed = false;
         this.updateListeners(ChangeType.Saved);
     }
 
@@ -393,6 +409,7 @@ export class RbfieldPluginComponent
         }>(params);
         this.isRunning = false;
         if (r.ok) {
+            this.saveFailed = false;
             const data = r.result;
             this.errormessage = data.web.error;
             this.result = data.web.result;
@@ -405,6 +422,7 @@ export class RbfieldPluginComponent
             this.errormessage =
                 r.result.error.error ||
                 "Syntax error, infinite loop or some other error?";
+            this.saveFailed = true;
         }
         return this.saveResponse;
     }

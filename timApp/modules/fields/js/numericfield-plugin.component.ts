@@ -103,13 +103,13 @@ const NumericfieldAll = t.intersection([
      </span></label>
     </div>
     <button class="timButton"
-            *ngIf="!isPlainText() && buttonText()"
+            *ngIf="(!isPlainText() && hasButton()) || saveFailed"
             [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
             (click)="saveText()">
         {{buttonText()}}
     </button>
     <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event);">{{undoButton}}</a>
-    <p class="savedtext" *ngIf="!hideSavedText && buttonText()">Saved!</p>
+    <p class="savedtext" *ngIf="!hideSavedText && hasButton()">Saved!</p>
     <p *ngIf="footer" [innerText]="footer | purify" class="plgfooter"></p>
 </div> `,
     styleUrls: ["./numericfield-plugin.component.scss"],
@@ -138,6 +138,7 @@ export class NumericfieldPluginComponent
     private preventedAutosave = false;
     styles: Record<string, string> = {};
     private saveCalledExternally = false;
+    saveFailed = false;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -188,11 +189,16 @@ export class NumericfieldPluginComponent
         return {};
     }
 
+    hasButton() {
+        const buttonText = super.buttonText();
+        return buttonText != "" && buttonText != null;
+    }
+
     /**
      * Returns (user) defined text for the button.
      */
     buttonText() {
-        return super.buttonText() ?? null;
+        return super.buttonText() ?? $localize`Save`;
     }
 
     get valueOrEmpty(): string {
@@ -295,6 +301,7 @@ export class NumericfieldPluginComponent
         this.zone.run(() => {
             this.numericvalue = this.initialValue;
             this.changes = false;
+            this.saveFailed = false;
             this.updateListeners(ChangeType.Saved);
         });
     }
@@ -319,6 +326,7 @@ export class NumericfieldPluginComponent
             }
             this.initialValue = this.numericvalue;
             this.changes = false;
+            this.saveFailed = false;
             this.updateListeners(ChangeType.Saved);
             return {ok: ok, message: message};
         });
@@ -357,6 +365,7 @@ export class NumericfieldPluginComponent
         this.initialValue = this.numericvalue;
         this.result = undefined;
         this.changes = false;
+        this.saveFailed = false;
         this.updateListeners(ChangeType.Saved);
     }
 
@@ -509,6 +518,7 @@ export class NumericfieldPluginComponent
                 this.updateFieldValue(data.web.value);
                 this.initialValue = this.numericvalue;
                 this.changes = false;
+                this.saveFailed = false;
                 this.updateListeners(ChangeType.Saved);
                 this.hideSavedText = false;
                 this.redAlert = false;
@@ -542,6 +552,7 @@ export class NumericfieldPluginComponent
                 this.markup.connectionErrorMessage ??
                 defaultErrorMessage;
             this.redAlert = true;
+            this.saveFailed = true;
         }
         return this.saveResponse;
     }
