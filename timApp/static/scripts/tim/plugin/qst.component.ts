@@ -6,6 +6,7 @@ import {
     DoBootstrap,
     ElementRef,
     NgModule,
+    NgZone,
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -30,6 +31,7 @@ import {vctrlInstance} from "../document/viewctrlinstance";
 import {PurifyModule} from "../util/purify.module";
 import {showQuestionAskDialog} from "../lecture/showLectureDialogs";
 import {pluginMap} from "../main";
+import {ParContext} from "../document/structure/parContext";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "./attributes";
 import {AngularPluginBase} from "./angular-plugin-base.directive";
 
@@ -119,6 +121,7 @@ export class QstComponent
         el: ElementRef<HTMLElement>,
         http: HttpClient,
         domSanitizer: DomSanitizer,
+        private zone: NgZone,
         private cdr: ChangeDetectorRef
     ) {
         super(el, http, domSanitizer);
@@ -250,19 +253,29 @@ export class QstComponent
     }
 
     questionClicked() {
-        this.showQuestionNew(this.getPar()!.originalPar.id);
+        this.showQuestionNew(this.getPar()!);
     }
 
-    private async showQuestionNew(parId: string) {
+    private async showQuestionNew(par: ParContext) {
         const result = await to2(
             showQuestionAskDialog({
                 docId: this.vctrl.docId,
-                parId: parId,
+                parId: par.originalPar.id,
                 showAsk: this.vctrl.lectureCtrl.lectureSettings.inLecture,
             })
         );
         if (result.ok) {
-            this.vctrl.lectureCtrl.lastQuestion = result.result;
+            if (result.result.question) {
+                this.vctrl.lectureCtrl.lastQuestion = result.result.question;
+            }
+            if (result.result.editResult) {
+                this.zone.runOutsideAngular(() => {
+                    this.vctrl.questionHandler.handleQstEditResult(
+                        result.result.editResult!,
+                        par
+                    );
+                });
+            }
         }
     }
 
