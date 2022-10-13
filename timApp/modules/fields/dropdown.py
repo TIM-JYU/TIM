@@ -23,7 +23,7 @@ from tim_common.utils import Missing
 @dataclass
 class DropdownStateModel:
     c: str | None
-    styles: dict[str, str] | _Missing = missing
+    styles: dict[str, str] | Missing = missing
 
 
 @dataclass
