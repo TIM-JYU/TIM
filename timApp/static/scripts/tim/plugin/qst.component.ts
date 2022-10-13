@@ -6,6 +6,7 @@ import {
     DoBootstrap,
     ElementRef,
     NgModule,
+    NgZone,
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -120,6 +121,7 @@ export class QstComponent
         el: ElementRef<HTMLElement>,
         http: HttpClient,
         domSanitizer: DomSanitizer,
+        private zone: NgZone,
         private cdr: ChangeDetectorRef
     ) {
         super(el, http, domSanitizer);
@@ -267,10 +269,12 @@ export class QstComponent
                 this.vctrl.lectureCtrl.lastQuestion = result.result.question;
             }
             if (result.result.editResult) {
-                this.vctrl.questionHandler.handleQstEditResult(
-                    result.result.editResult,
-                    par
-                );
+                this.zone.runOutsideAngular(() => {
+                    this.vctrl.questionHandler.handleQstEditResult(
+                        result.result.editResult!,
+                        par
+                    );
+                });
             }
         }
     }
