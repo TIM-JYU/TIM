@@ -18,6 +18,7 @@ import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDial
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {to2} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {IQuestionDialogResult} from "tim/document/question/question-edit-dialog.component";
 import {
     AnswerSheetModule,
     IPreviewParams,
@@ -26,6 +27,11 @@ import {
 import {IAskedQuestion} from "./lecturetypes";
 
 export type QuestionPreviewParams = AskParams & IShowAsk;
+
+export interface IQuestionPreviewDialogResult {
+    question?: IAskedQuestion;
+    editResult?: IQuestionDialogResult;
+}
 
 @Component({
     selector: "tim-ask-question-dialog",
@@ -57,7 +63,7 @@ export type QuestionPreviewParams = AskParams & IShowAsk;
 })
 export class QuestionPreviewDialogComponent extends AngularDialogComponent<
     QuestionPreviewParams,
-    IAskedQuestion
+    IQuestionPreviewDialogResult
 > {
     protected dialogName = "askQuestion";
     questiondata?: IPreviewParams;
@@ -95,16 +101,24 @@ export class QuestionPreviewDialogComponent extends AngularDialogComponent<
     }
 
     async editQuestion() {
+        let res;
         if (!isReasking(this.data)) {
-            await to2(fetchAndEditQuestion(this.data.docId, this.data.parId));
+            res = await to2(
+                fetchAndEditQuestion(this.data.docId, this.data.parId)
+            );
         } else {
-            await to2(
+            res = await to2(
                 showQuestionEditDialog(
                     await fetchAskedQuestion(this.data.askedId)
                 )
             );
         }
-        this.dismiss();
+        await res;
+        if (res.ok) {
+            this.close({editResult: res.result});
+        } else {
+            this.dismiss();
+        }
     }
 
     async ask() {
@@ -114,7 +128,7 @@ export class QuestionPreviewDialogComponent extends AngularDialogComponent<
         }
         const p = this.data;
         const question = await askQuestion(p);
-        this.close(question);
+        this.close({question});
     }
 
     private async deleteQuestion() {

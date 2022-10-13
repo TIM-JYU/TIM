@@ -9,6 +9,7 @@ import {getMinimalUnbrokenSelection} from "tim/document/editing/unbrokenSelectio
 import {to2} from "tim/util/utils";
 import {documentglobals} from "tim/util/globals";
 import {$timeout} from "tim/util/ngimport";
+import {IQuestionDialogResult} from "tim/document/question/question-edit-dialog.component";
 import {ViewCtrl} from "../viewctrl";
 
 export class QuestionHandler {
@@ -54,18 +55,22 @@ export class QuestionHandler {
         if (!result.ok || !result.result) {
             return;
         }
-        if (result.result.type === "points") {
+        await this.handleQstEditResult(result.result, par);
+    }
+
+    async handleQstEditResult(result: IQuestionDialogResult, par: ParContext) {
+        if (result.type === "points") {
             throw new Error("unexpected result type from dialog");
         }
         const position: EditPosition = {
             type: EditType.Edit,
             pars: getMinimalUnbrokenSelection(par, par),
         };
-        if (result.result.deleted) {
+        if (result.deleted) {
             this.viewctrl.editingHandler.handleDelete(position);
         } else {
             await this.viewctrl.editingHandler.addSavedParToDom(
-                result.result.data,
+                result.data,
                 position
             );
         }
