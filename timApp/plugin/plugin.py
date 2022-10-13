@@ -122,10 +122,7 @@ NO_ANSWERBROWSER_PLUGINS = {
     "calendar",
 }
 
-ALLOW_STYLES_PLUGINS = {
-    "textfield",
-    "numericfield",
-}
+ALLOW_STYLES_PLUGINS = {"textfield", "numericfield", "drag", "dropdown"}
 
 WANT_FIELDS = {"csPlugin"}
 

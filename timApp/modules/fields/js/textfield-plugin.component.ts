@@ -23,7 +23,7 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {getFormBehavior} from "tim/plugin/util";
+import {getFormBehavior, parseStyles} from "tim/plugin/util";
 import {defaultErrorMessage, timeout, valueOr} from "tim/util/utils";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -254,7 +254,7 @@ export class TextfieldPluginComponent
             this.initCode();
         }
         if (this.attrsall.state?.styles && !this.markup.ignorestyles) {
-            this.applyStyling(this.attrsall.state.styles);
+            this.styles = parseStyles(this.attrsall.state.styles);
         }
         if (this.markup.textarea && this.markup.autogrow) {
             this.autoGrow();
@@ -292,7 +292,7 @@ export class TextfieldPluginComponent
     resetField(): undefined {
         return this.zone.run(() => {
             this.initCode();
-            this.applyStyling({});
+            this.styles = {};
             this.errormessage = undefined;
             return undefined;
         });
@@ -329,7 +329,7 @@ export class TextfieldPluginComponent
                     this.errormessage = message;
                 }
                 if (!this.markup.ignorestyles) {
-                    this.applyStyling(content.styles);
+                    this.styles = parseStyles(content.styles);
                 }
             }
             this.changes = false;
@@ -463,24 +463,6 @@ export class TextfieldPluginComponent
     }
 
     /**
-     * Parses "styles" from the plugin answer that were saved by tableForm
-     * For now only backgroundColor is supported
-     * TODO: Extend styling for all attributes in timTable's cellStyles?
-     *  For now tableForm is only able to define backgroundColor or textAlign
-     *  Could also define (and import) generic tim-wide inputstyles
-     * TODO: Could also just apply given styles as they are
-     */
-    applyStyling(styles: Record<string, string>) {
-        if (!styles || Object.keys(styles).length == 0) {
-            this.styles = {};
-            return;
-        }
-        if (styles.backgroundColor) {
-            this.styles.backgroundColor = styles.backgroundColor;
-        }
-    }
-
-    /**
      * Method to check grading input type for textfield.
      * Used as e.g. grading checker for hyv | hyl | 1 | 2 | 3 | 4 | 5.
      * @param re validinput defined by given attribute.
@@ -554,7 +536,7 @@ export class TextfieldPluginComponent
             params.input.nosave = true;
         }
         const r = await this.postAnswer<{
-            web: {result: string; error?: string; clear?: boolean};
+            web: {result: string; error?: string};
         }>(params);
         this.isRunning = false;
         if (r.ok) {
@@ -568,8 +550,8 @@ export class TextfieldPluginComponent
             this.redAlert = false;
             this.saveResponse.saved = true;
             this.saveResponse.message = this.errormessage;
-            if (data.web.clear) {
-                this.applyStyling({});
+            if (this.markup.clearstyles) {
+                this.styles = {};
             }
 
             if (this.vctrl && !this.saveCalledExternally) {

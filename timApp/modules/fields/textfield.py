@@ -121,8 +121,6 @@ def answer(args: TextfieldAnswerModel) -> PluginAnswerResp:
                 save = {"c": c, "styles": args.state.styles}
         result["save"] = save
         web["result"] = "saved"
-        if args.markup.clearstyles:
-            web["clear"] = True
 
     return result
 

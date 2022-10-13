@@ -165,8 +165,6 @@ def answer(args: NumericfieldAnswerModel) -> PluginAnswerResp:
         result["save"] = save
         web["result"] = "saved"
         web["value"] = c
-        if args.markup.clearstyles:
-            web["clear"] = True
 
     return result
 

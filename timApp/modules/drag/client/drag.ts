@@ -24,7 +24,10 @@ import {
     nullable,
     withDefault,
 } from "../../../static/scripts/tim/plugin/attributes";
-import {shuffleStrings} from "../../../static/scripts/tim/plugin/util";
+import {
+    parseStyles,
+    shuffleStrings,
+} from "../../../static/scripts/tim/plugin/util";
 import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
@@ -44,6 +47,8 @@ const DragMarkup = t.intersection([
         shuffle: t.boolean,
         followid: t.string,
         autoSave: withDefault(t.boolean, false),
+        ignorestyles: t.boolean,
+        clearstyles: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -58,7 +63,14 @@ const DragAll = t.intersection([
         info: Info,
         markup: DragMarkup,
         preview: t.boolean,
-        state: nullable(t.type({c: t.array(t.string)})),
+        state: nullable(
+            t.intersection([
+                t.type({c: nullable(t.array(t.string))}),
+                t.partial({
+                    styles: nullable(t.record(t.string, t.string)),
+                }),
+            ])
+        ),
     }),
 ]);
 
@@ -91,6 +103,7 @@ interface WordObject {
                     [dndDisableIf]="wordObjs.length >= max"
                     [dndEffectAllowed]="effectAllowed"
                     (dndDrop)="handleDrop($event)"
+                    [ngStyle]="styles"
                 >
                     <li class="dndPlaceholder" dndPlaceholderRef></li>
                     <li *ngFor="let item of wordObjs; let i = index"
@@ -101,6 +114,7 @@ interface WordObject {
                         (dndMoved)="handleMove(i)"
                         (dndCanceled)="(copy !== 'target') || wordObjs.splice(i, 1)"
                         [dndEffectAllowed]="item.effectAllowed"
+                        [ngStyle]="styles"
                     ></li>
                 </ul>
             </div>
@@ -134,6 +148,7 @@ export class DragComponent
     private forceSave = false;
     private shuffle?: boolean;
     private vctrl = vctrlInstance;
+    styles: Record<string, string> = {};
 
     getAttributeType(): typeof DragAll {
         return DragAll;
@@ -173,6 +188,9 @@ export class DragComponent
 
         if (!this.attrsall.preview) {
             this.vctrl?.addTimComponent(this);
+        }
+        if (this.attrsall.state?.styles && !this.markup.ignorestyles) {
+            this.styles = parseStyles(this.attrsall.state.styles);
         }
     }
 
@@ -305,6 +323,9 @@ export class DragComponent
         if (r.ok) {
             const data = r.result;
             this.error = data.web.error;
+            if (this.markup.clearstyles) {
+                this.styles = {};
+            }
         } else {
             this.error = r.result.error.error;
         }

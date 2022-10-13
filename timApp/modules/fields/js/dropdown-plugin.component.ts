@@ -23,7 +23,7 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {getFormBehavior, shuffleStrings} from "tim/plugin/util";
+import {getFormBehavior, parseStyles, shuffleStrings} from "tim/plugin/util";
 import {defaultErrorMessage} from "tim/util/utils";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -40,6 +40,8 @@ const DropdownMarkup = t.intersection([
         tag: t.string,
         words: t.array(t.string),
         wordAliases: t.record(t.string, t.string),
+        ignorestyles: t.boolean,
+        clearstyles: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
@@ -57,7 +59,14 @@ const DropdownAll = t.intersection([
         info: Info,
         markup: DropdownMarkup,
         preview: t.boolean,
-        state: nullable(t.type({c: t.string})),
+        state: nullable(
+            t.intersection([
+                t.type({c: nullable(t.string)}),
+                t.partial({
+                    styles: nullable(t.record(t.string, t.string)),
+                }),
+            ])
+        ),
     }),
 ]);
 
@@ -84,7 +93,8 @@ const DropdownAll = t.intersection([
                 [(ngModel)]="selectedWord"
                 (ngModelChange)="updateSelection()"
                 [ngClass]="{warnFrame: isUnSaved()}"
-                [disabled]="attrsall['preview']">
+                [disabled]="attrsall['preview']"
+                [ngStyle]="styles">
             <option *ngFor="let item of wordList" [value]="item">{{getItemText(item)}}</option>
         </select>
     </div>
@@ -112,6 +122,7 @@ export class DropdownPluginComponent
     private shuffle?: boolean;
     private changes = false;
     connectionErrorMessage?: string;
+    styles: Record<string, string> = {};
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -146,6 +157,9 @@ export class DropdownPluginComponent
         this.radio = this.markup.radio;
         if (this.markup.answers) {
             // TODO: Implement showing and hiding the answer browser if it is deemed useful.
+        }
+        if (this.attrsall.state?.styles && !this.markup.ignorestyles) {
+            this.styles = parseStyles(this.attrsall.state.styles);
         }
     }
 
@@ -206,6 +220,9 @@ export class DropdownPluginComponent
             this.updateListeners(ChangeType.Saved);
             const data = r.result;
             this.error = data.web.error;
+            if (this.markup.clearstyles) {
+                this.styles = {};
+            }
         } else {
             this.error = r.result.error.error;
             this.connectionErrorMessage =
@@ -297,6 +314,9 @@ export class DropdownPluginComponent
                         content
                     )}`;
                     this.error = message;
+                }
+                if (!this.markup.ignorestyles) {
+                    this.styles = parseStyles(content.styles);
                 }
             }
             this.changes = false;

@@ -23,7 +23,7 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {getFormBehavior} from "tim/plugin/util";
+import {getFormBehavior, parseStyles} from "tim/plugin/util";
 import {defaultErrorMessage, valueOr} from "tim/util/utils";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -258,7 +258,7 @@ export class NumericfieldPluginComponent
         }
         this.initialValue = this.numericvalue;
         if (this.attrsall.state?.styles && !this.markup.ignorestyles) {
-            this.applyStyling(this.attrsall.state.styles);
+            this.styles = parseStyles(this.attrsall.state.styles);
         }
     }
 
@@ -289,7 +289,7 @@ export class NumericfieldPluginComponent
     resetField(): undefined {
         return this.zone.run(() => {
             this.initCode();
-            this.applyStyling({});
+            this.styles = {};
             this.errormessage = undefined;
             this.redAlert = false;
             return undefined;
@@ -319,7 +319,7 @@ export class NumericfieldPluginComponent
                 }
 
                 if (!this.markup.ignorestyles && content.styles) {
-                    this.applyStyling(content.styles);
+                    this.styles = parseStyles(content.styles);
                 }
             }
             this.initialValue = this.numericvalue;
@@ -420,21 +420,6 @@ export class NumericfieldPluginComponent
     }
 
     /**
-     * Parses "styles" from the plugin answer that were saved by tableForm
-     * For now only backgroundColor is supported
-     * See TODOs at textfield
-     */
-    applyStyling(styles: Record<string, string>) {
-        if (Object.keys(styles).length == 0) {
-            this.styles = {};
-            return;
-        }
-        if (styles.backgroundColor) {
-            this.styles.backgroundColor = styles.backgroundColor;
-        }
-    }
-
-    /**
      * Method to check numeric input type for stringified numericfield.
      * Used as e.g. to define negative or positive numeric input [0-9]+.
      * @param re validinput defined by given attribute.
@@ -514,7 +499,6 @@ export class NumericfieldPluginComponent
             web: {
                 result: string;
                 error?: string;
-                clear?: boolean;
                 value: TFieldContent;
             };
         }>(params);
@@ -535,8 +519,8 @@ export class NumericfieldPluginComponent
                 this.redAlert = false;
                 this.saveResponse.saved = true;
             }
-            if (data.web.clear) {
-                this.applyStyling({});
+            if (this.markup.clearstyles) {
+                this.styles = {};
             }
             this.saveResponse.message = this.errormessage;
             if (this.vctrl && !this.saveCalledExternally) {

@@ -374,3 +374,19 @@ export function inIframe() {
         return true;
     }
 }
+
+/**
+ * Parses "styles" from the plugin answer that were saved by tableForm
+ * For now only backgroundColor is supported
+ * @param styles style object to parse. If not supported, return empty object
+ */
+export function parseStyles(styles: Record<string, string>) {
+    const output: Record<string, string> = {};
+    if (!styles || Object.keys(styles).length == 0) {
+        return output;
+    }
+    if (styles.backgroundColor) {
+        output.backgroundColor = styles.backgroundColor;
+    }
+    return output;
+}
