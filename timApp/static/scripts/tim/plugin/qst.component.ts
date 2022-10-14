@@ -10,11 +10,9 @@ import {
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import * as t from "io-ts";
 import {defaultErrorMessage, to2} from "tim/util/utils";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {
     AnswerSheetModule,
     IPreviewParams,
@@ -30,7 +28,6 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {PurifyModule} from "tim/util/purify.module";
 import {showQuestionAskDialog} from "tim/lecture/showLectureDialogs";
-import {pluginMap} from "tim/main";
 import {ParContext} from "tim/document/structure/parContext";
 import {
     GenericPluginMarkup,
@@ -38,6 +35,8 @@ import {
     nullable,
 } from "tim/plugin/attributes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {CommonModule} from "@angular/common";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 
 const PluginMarkupFields = t.intersection([
     GenericPluginMarkup,
@@ -393,7 +392,7 @@ export class QstComponent
 @NgModule({
     declarations: [QstComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
@@ -405,14 +404,4 @@ export class QstModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("tim-qst", QstComponent);
-// The question="true" causes to use the "mini" version
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(QstModule)
-        ),
-        "timLectureQst",
-        QstComponent
-    ),
-];
+registerPlugin("tim-qst", QstModule, QstComponent);

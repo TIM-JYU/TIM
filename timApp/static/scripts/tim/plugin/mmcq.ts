@@ -8,9 +8,7 @@ import {
     NgModule,
 } from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
-import {pluginMap} from "tim/main";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -20,6 +18,8 @@ import {handleAnswerResponse} from "tim/document/interceptor";
 import {IAnswerSaveEvent} from "tim/answer/answerbrowser3";
 import {TaskId} from "tim/plugin/taskid";
 import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
 
 interface MMCQContent<State> {
     state?: State;
@@ -286,7 +286,7 @@ export class MCQ extends MCQBase<number | null> {
 @NgModule({
     declarations: [MCQ, MMCQ],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
@@ -298,5 +298,5 @@ export class MCQModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("mcq", MCQ);
-pluginMap.set("mmcq", MMCQ);
+registerPlugin("mcq", MCQModule, MCQ);
+registerPlugin("mmcq", MCQModule, MMCQ);

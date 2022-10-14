@@ -1,5 +1,4 @@
 import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BrowserQRCodeSvgWriter} from "@zxing/browser";
 import {
@@ -12,6 +11,7 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {toPromise} from "tim/util/utils";
 import {Users} from "tim/user/userService";
 import {IFullUser} from "tim/user/IUser";
+import {CommonModule} from "@angular/common";
 
 interface ISessionStatus {
     sessionId: string;
@@ -121,6 +121,6 @@ export class SessionCheckDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [SessionCheckDialogComponent],
-    imports: [BrowserModule, TimUtilityModule, DialogModule, HttpClientModule],
+    imports: [CommonModule, TimUtilityModule, DialogModule, HttpClientModule],
 })
 export class SessionCheckDialogModule {}

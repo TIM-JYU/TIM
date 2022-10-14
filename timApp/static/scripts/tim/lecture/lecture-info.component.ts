@@ -12,7 +12,6 @@ import {
 } from "@angular/core";
 import moment from "moment";
 import {to2, toPromise} from "tim/util/utils";
-import {BrowserModule} from "@angular/platform-browser";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AnswerChartModule} from "tim/lecture/answer-chart.component";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
@@ -32,6 +31,7 @@ import {
     IQuestionAnswerPlain,
 } from "tim/lecture/lecturetypes";
 import {LectureWallContentModule} from "tim/lecture/lecture-wall-content.component";
+import {CommonModule} from "@angular/common";
 
 /**
  * Created by hajoviin on 11.5.2015.
@@ -279,7 +279,7 @@ export class LectureInfoComponent {
 @NgModule({
     declarations: [LectureInfoComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         FormsModule,
         HttpClientModule,
         TimUtilityModule,

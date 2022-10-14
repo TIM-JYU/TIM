@@ -12,7 +12,6 @@ import {
 import moment from "moment";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
 import {
@@ -21,9 +20,9 @@ import {
 } from "tim/plugin/dataview/data-view.component";
 import {computeHiddenRowsFromFilters} from "tim/plugin/filtering";
 import {BsDatepickerModule, BsLocaleService} from "ngx-bootstrap/datepicker";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {defineLocale} from "ngx-bootstrap/chronos";
 import {fiLocale} from "ngx-bootstrap/locale";
+import {CommonModule} from "@angular/common";
 
 export const GroupType = t.union([t.string, t.array(t.string)]);
 
@@ -624,10 +623,9 @@ export class SisuAssessmentExportComponent {
 @NgModule({
     declarations: [SisuAssessmentExportComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         TimUtilityModule,
         HttpClientModule,
-        NoopAnimationsModule,
         BsDatepickerModule.forRoot(),
         DataViewModule,
     ],

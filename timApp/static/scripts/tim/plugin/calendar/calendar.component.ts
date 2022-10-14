@@ -20,7 +20,6 @@ import {
     OnInit,
     ViewEncapsulation,
 } from "@angular/core";
-import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import * as t from "io-ts";
 import {
     CalendarDateFormatter,
@@ -38,11 +37,10 @@ import localeFi from "@angular/common/locales/fi";
 import localeSv from "@angular/common/locales/sv";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek, setISOWeek} from "date-fns";
 import moment from "moment";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
@@ -64,7 +62,6 @@ import {Users} from "tim/user/userService";
 import {itemglobals} from "tim/util/globals";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {CustomDateFormatter} from "tim/plugin/calendar/custom-date-formatter.service";
 import {CustomEventTitleFormatter} from "tim/plugin/calendar/custom-event-title-formatter.service";
 import {
@@ -79,6 +76,7 @@ import {CalendarHeaderComponent} from "tim/plugin/calendar/calendar-header.compo
 import {CalendarHeaderMinimalComponent} from "tim/plugin/calendar/calendar-header-minimal.component";
 import {ShowWeekComponent} from "tim/plugin/calendar/show-week.component";
 import {showEditJsonEventDialog} from "tim/plugin/calendar/showEditJsonEventDialog";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 
 /**
  * Helps calculate the size of a horizontally dragged event on the calendar view.
@@ -1100,9 +1098,7 @@ export class CalendarComponent
 
 @NgModule({
     imports: [
-        BrowserAnimationsModule,
         CommonModule,
-        BrowserModule,
         HttpClientModule,
         FormsModule,
         CalendarModule.forRoot({
@@ -1130,11 +1126,4 @@ export class TimCalendarModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
-// pluginMap.set("tim-calendar", CalendarComponent);
-const angularJsModule = createDowngradedModule((extraProviders) =>
-    platformBrowserDynamic(extraProviders).bootstrapModule(TimCalendarModule)
-);
-
-doDowngrade(angularJsModule, "timCalendar", CalendarComponent);
-
-export const moduleDefs = [angularJsModule];
+registerPlugin("tim-calendar", TimCalendarModule, CalendarComponent);

@@ -18,15 +18,13 @@ import {
 
 import {valueDefu} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {HttpClientModule} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {pluginMap} from "tim/main";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
 
 const ShowFileMarkup = t.intersection([
     t.partial({
@@ -302,7 +300,7 @@ export class ImagesComponent extends AngularPluginBase<
 @NgModule({
     declarations: [ImagesComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         TimUtilityModule,
         HttpClientModule,
         FormsModule,
@@ -313,14 +311,4 @@ export class ImagesModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("tim-images", ImagesComponent);
-// show* plugins don't use plugin loader yet unless they're lazy
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(ImagesModule)
-        ),
-        "timImages",
-        ImagesComponent
-    ),
-];
+registerPlugin("tim-images", ImagesModule, ImagesComponent);

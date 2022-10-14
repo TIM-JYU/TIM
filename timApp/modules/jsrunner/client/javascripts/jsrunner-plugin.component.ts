@@ -11,16 +11,15 @@ import {
 } from "@angular/core";
 import {IJsRunner, RegexOption, ViewCtrl} from "tim/document/viewctrl";
 import {copyToClipboard} from "tim/util/utils";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {CommonModule} from "@angular/common";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {
     AnswerReturnBrowser,
     ErrorEntry,
@@ -345,7 +344,7 @@ export class JsRunnerErrorComponent {
 @NgModule({
     declarations: [JsRunnerPluginComponent, JsRunnerErrorComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         TimUtilityModule,
         FormsModule,
@@ -357,14 +356,4 @@ export class JsRunnerModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                JsRunnerModule
-            )
-        ),
-        "jsRunner",
-        JsRunnerPluginComponent
-    ),
-];
+registerPlugin("js-runner", JsRunnerModule, JsRunnerPluginComponent);

@@ -1,11 +1,11 @@
 import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {toPromise} from "tim/util/utils";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {CommonModule} from "@angular/common";
 
 @Component({
     selector: "tim-style-preview",
@@ -102,7 +102,7 @@ export class StylePreviewComponent {
 @NgModule({
     declarations: [StylePreviewComponent],
     exports: [StylePreviewComponent],
-    imports: [BrowserModule, TimUtilityModule, HttpClientModule],
+    imports: [CommonModule, TimUtilityModule, HttpClientModule],
 })
 export class StylePreviewModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

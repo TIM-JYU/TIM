@@ -7326,6 +7326,22 @@
           <context context-type="linenumber">86,87</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1342986286320876152" datatype="html">
+        <source>Unknown component: <x id="PH" equiv-text="runnername"/></source>
+        <target state="new">Unknown component: <x id="PH" equiv-text="runnername"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/plugin-loader.component.ts</context>
+          <context context-type="linenumber">363</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="478693209538768272" datatype="html">
+        <source>Component <x id="PH" equiv-text="runnername"/> is missing attribute json</source>
+        <target state="new">Component <x id="PH" equiv-text="runnername"/> is missing attribute json</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/plugin-loader.component.ts</context>
+          <context context-type="linenumber">367</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

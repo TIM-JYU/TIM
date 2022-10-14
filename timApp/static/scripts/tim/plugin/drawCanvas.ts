@@ -13,11 +13,7 @@ import {
     ViewChild,
     ViewChildren,
 } from "@angular/core";
-import {
-    BrowserModule,
-    DomSanitizer,
-    SafeResourceUrl,
-} from "@angular/platform-browser";
+import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 import {
     DrawToolbarModule,
     DrawType,
@@ -1609,13 +1605,7 @@ export class DrawCanvasComponent
 
 @NgModule({
     declarations: [DrawCanvasComponent],
-    imports: [
-        BrowserModule,
-        CommonModule,
-        DrawToolbarModule,
-        FormsModule,
-        TimUtilityModule,
-    ],
+    imports: [CommonModule, DrawToolbarModule, FormsModule, TimUtilityModule],
     exports: [DrawCanvasComponent],
 })
 export class DrawCanvasModule implements DoBootstrap {

@@ -29,12 +29,12 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {slugify} from "tim/util/slugify";
+import {CommonModule} from "@angular/common";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {
     GroupType,
     SisuAssessmentExportModule,
@@ -471,7 +471,7 @@ export class MultisaveComponent
 @NgModule({
     declarations: [MultisaveComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
@@ -482,14 +482,4 @@ export class MultisaveModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                MultisaveModule
-            )
-        ),
-        "timMultisave",
-        MultisaveComponent
-    ),
-];
+registerPlugin("tim-multisave", MultisaveModule, MultisaveComponent);

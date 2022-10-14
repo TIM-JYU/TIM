@@ -3,7 +3,6 @@
  */
 import * as t from "io-ts";
 import {polyfill} from "mobile-drag-drop";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {DndDropEvent, DndModule, EffectAllowed} from "ngx-drag-drop";
@@ -16,7 +15,6 @@ import {
 } from "@angular/core";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
-import {pluginMap} from "tim/main";
 import {ITimComponent} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -31,6 +29,8 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {PurifyModule} from "tim/util/purify.module";
 import {DocIdDotName} from "tim/plugin/taskid";
 import {isIOS} from "tim/util/utils";
+import {CommonModule} from "@angular/common";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 
 const DragMarkup = t.intersection([
     t.partial({
@@ -338,7 +338,7 @@ export class DragComponent
     providers: [SessionVerify],
     declarations: [DragComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         DndModule,
         TimUtilityModule,
@@ -349,4 +349,5 @@ export class DragComponent
 export class DragModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
-pluginMap.set("drag-runner", DragComponent);
+
+registerPlugin("drag-runner", DragModule, DragComponent);

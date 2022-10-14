@@ -19,13 +19,13 @@ import {
 } from "tim/util/globals";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {BrowserModule} from "@angular/platform-browser";
 import * as t from "io-ts";
 import {isRight} from "fp-ts/Either";
 import {AlertSeverity} from "tim/ui/formErrorMessage";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {Channel} from "tim/messaging/listOptionTypes";
 import {toPromise} from "tim/util/utils";
+import {CommonModule} from "@angular/common";
 
 const GeneralInfoMarkup = t.type({
     type: t.string,
@@ -251,7 +251,7 @@ export class UserActionVerifyComponent implements AfterViewInit {
         SetPrimaryContactInfoComponent,
     ],
     exports: [UserActionVerifyComponent],
-    imports: [BrowserModule, TimUtilityModule, HttpClientModule],
+    imports: [CommonModule, TimUtilityModule, HttpClientModule],
 })
 export class UserActionVerifyModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

@@ -10,7 +10,7 @@ import {
     OnInit,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {
@@ -38,7 +38,6 @@ import {
     ViewCtrl,
 } from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {pluginMap} from "tim/main";
 import {
     CommonPropsT,
     DefaultPropsT,
@@ -70,6 +69,8 @@ import {
 } from "tim/plugin/imagextypes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {Drawing, DrawItem} from "tim/plugin/drawCanvas";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
 
 let globalPreviewColor = "#fff";
 
@@ -1958,7 +1959,7 @@ export class ImageXComponent
 @NgModule({
     declarations: [ImageXComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         DrawToolbarModule,
         HttpClientModule,
         FormsModule,
@@ -1968,5 +1969,4 @@ export class ImageXComponent
 export class ImagexModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-
-pluginMap.set("imagex-runner", ImageXComponent);
+registerPlugin("imagex-runner", ImagexModule, ImageXComponent);

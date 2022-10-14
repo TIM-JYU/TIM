@@ -2,12 +2,12 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import * as t from "io-ts";
 import {FormsModule} from "@angular/forms";
 import {getUrlParamsJSON, TimStorage, toPromise} from "tim/util/utils";
 import {IItem} from "tim/item/IItem";
+import {CommonModule} from "@angular/common";
 
 export interface ITemplate extends IItem {}
 
@@ -286,7 +286,7 @@ export class PrintDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [PrintDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         DialogModule,
         TimUtilityModule,
         HttpClientModule,

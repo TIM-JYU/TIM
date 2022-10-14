@@ -4,7 +4,6 @@
 import * as t from "io-ts";
 import $ from "jquery";
 import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {onClick, OnClickArg} from "tim/document/eventhandlers";
@@ -15,7 +14,6 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AnswerSheetModule} from "tim/document/question/answer-sheet.component";
 import {PurifyModule} from "tim/util/purify.module";
-import {pluginMap} from "tim/main";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
@@ -23,6 +21,8 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
 
 const TimMenuMarkup = t.intersection([
     t.partial({
@@ -505,7 +505,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
 @NgModule({
     declarations: [TimMenuPluginComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
@@ -517,4 +517,4 @@ export class TimMenuPluginModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("timmenu-runner", TimMenuPluginComponent);
+registerPlugin("timmenu-runner", TimMenuPluginModule, TimMenuPluginComponent);

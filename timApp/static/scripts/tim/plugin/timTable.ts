@@ -51,7 +51,6 @@ import {
     ViewChildren,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
@@ -80,7 +79,6 @@ import {
     ICtrlWithMenuFunctionEntry,
     IMenuFunctionEntry,
 } from "tim/document/viewutils";
-import {pluginMap} from "tim/main";
 import {onClick, OnClickArg} from "tim/document/eventhandlers";
 import {
     ChangeType,
@@ -118,6 +116,8 @@ import {
 import {TaskId} from "tim/plugin/taskid";
 import {PluginMeta} from "tim/plugin/util";
 import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
 
 const timDateRegex = /^\d{4}-\d{2}-\d{2}[ T]?\d{2}:\d{2}(:\d{2})?$/;
 
@@ -4823,7 +4823,7 @@ export class TimTableComponent
 @NgModule({
     declarations: [TimTableComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
@@ -4835,4 +4835,5 @@ export class TimTableComponent
 export class TimTableModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-pluginMap.set("tim-table", TimTableComponent);
+
+registerPlugin("tim-table", TimTableModule, TimTableComponent);

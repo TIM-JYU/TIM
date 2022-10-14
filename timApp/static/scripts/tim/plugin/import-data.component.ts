@@ -3,15 +3,11 @@
  */
 import * as t from "io-ts";
 import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {IUser} from "tim/user/IUser";
 import {TimStorage} from "tim/util/utils";
-import {pluginMap} from "tim/main";
 import {
     GenericPluginMarkup,
     Info,
@@ -19,6 +15,8 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {CommonModule} from "@angular/common";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 
 const ImportDataMarkup = t.intersection([
     t.partial({
@@ -345,21 +343,10 @@ export class ImportDataComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [ImportDataComponent],
-    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
+    imports: [CommonModule, HttpClientModule, FormsModule, TimUtilityModule],
 })
 export class ImportDataModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("importdata-runner", ImportDataComponent);
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                ImportDataModule
-            )
-        ),
-        "importdataRunner",
-        ImportDataComponent
-    ),
-];
+registerPlugin("importdata-runner", ImportDataModule, ImportDataComponent);

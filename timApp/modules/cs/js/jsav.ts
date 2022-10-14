@@ -15,13 +15,13 @@ import {
 import {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {timeout} from "tim/util/utils";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {PurifyModule} from "tim/util/purify.module";
-import {pluginMap} from "tim/main";
+import {CommonModule} from "@angular/common";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {Iframesettings} from "./jsframe";
 
 /**
@@ -319,10 +319,10 @@ export class JsavPluginComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [JsavPluginComponent],
-    imports: [BrowserModule, HttpClientModule, TimUtilityModule, PurifyModule],
+    imports: [CommonModule, HttpClientModule, TimUtilityModule, PurifyModule],
 })
 export class JsavModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("cs-jsav-runner", JsavPluginComponent);
+registerPlugin("cs-jsav-runner", JsavModule, JsavPluginComponent);

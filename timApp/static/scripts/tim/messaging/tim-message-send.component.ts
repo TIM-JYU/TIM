@@ -8,7 +8,6 @@ import {
     Output,
 } from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
@@ -19,6 +18,7 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {isAdmin, Users} from "tim/user/userService";
 import {toPromise} from "tim/util/utils";
+import {CommonModule} from "@angular/common";
 
 interface TimMessageOptions {
     archive: boolean;
@@ -412,7 +412,7 @@ export class TimMessageSendComponent {
 @NgModule({
     declarations: [TimMessageSendComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

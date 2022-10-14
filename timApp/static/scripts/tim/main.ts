@@ -1,7 +1,7 @@
 import "tim/loadJQueryAndMomentGlobals";
 import "reflect-metadata";
 
-import {enableProdMode, Type} from "@angular/core";
+import {enableProdMode} from "@angular/core";
 import angular from "angular";
 import bootstrap from "bootstrap";
 import "eonasdan-bootstrap-datetimepicker";
@@ -69,7 +69,6 @@ import {
 } from "tim/util/session-verify.interceptor";
 import {RoleInfoComponent} from "tim/header/role-info.component";
 import {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
-import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {
     insertLogDivIfEnabled,
     timLogInit,
@@ -77,8 +76,6 @@ import {
 } from "tim/util/timTiming";
 import {genericglobals, isErrorGlobals} from "tim/util/globals";
 import {ParCompiler} from "tim/editor/parCompiler";
-
-export const pluginMap = new Map<string, Type<PluginJson>>();
 
 BackspaceDisabler.disable();
 

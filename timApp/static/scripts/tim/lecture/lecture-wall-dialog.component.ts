@@ -3,13 +3,13 @@ import {Component, NgModule, NgZone} from "@angular/core";
 import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {LectureWallContentModule} from "tim/lecture/lecture-wall-content.component";
 import {DropdownCheckboxComponent} from "tim/lecture/dropdown-checkbox.component";
 import {FormsModule} from "@angular/forms";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {ILectureMessage} from "tim/lecture/lecturetypes";
+import {CommonModule} from "@angular/common";
 
 @Component({
     selector: "tim-lecture-wall-dialog",
@@ -118,7 +118,7 @@ export class LectureWallDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [LectureWallDialogComponent, DropdownCheckboxComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         FormsModule,
         TimUtilityModule,
         DialogModule,

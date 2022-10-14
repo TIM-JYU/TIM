@@ -10,14 +10,14 @@ import {
 import {windowAsAny} from "tim/util/utils";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {ScriptedInnerHTMLModule} from "tim/util/scripted-inner-html.module";
-import {pluginMap} from "tim/main";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
 
 const STACK_VARIABLE_PREFIX = "stackapi_";
 
@@ -546,7 +546,7 @@ export class StackPluginComponent
 @NgModule({
     declarations: [StackPluginComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         TimUtilityModule,
         PurifyModule,
@@ -558,4 +558,4 @@ export class StackModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("stack-runner", StackPluginComponent);
+registerPlugin("stack-runner", StackModule, StackPluginComponent);

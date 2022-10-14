@@ -16,7 +16,6 @@ import {
     ViewChild,
     ViewChildren,
 } from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule, HttpHeaders} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {Subject, Subscription} from "rxjs";
@@ -31,7 +30,6 @@ import {
 } from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {IUser} from "tim/user/IUser";
-import {pluginMap} from "tim/main";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
@@ -39,6 +37,8 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
 import {
     FileSelectManagerComponent,
     IFile,
@@ -567,7 +567,7 @@ export class ReviewCanvasComponent
 @NgModule({
     declarations: [ReviewCanvasComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
@@ -578,5 +578,8 @@ export class ReviewCanvasComponent
 export class ReviewCanvasModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-
-pluginMap.set("reviewcanvas-runner", ReviewCanvasComponent);
+registerPlugin(
+    "reviewcanvas-runner",
+    ReviewCanvasModule,
+    ReviewCanvasComponent
+);

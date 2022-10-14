@@ -21,9 +21,9 @@ import {
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import {TimeStampToMomentConverter} from "tim/util/time-stamp-to-moment-converter.service";
 import * as t from "io-ts";
+import {CommonModule} from "@angular/common";
 
 export interface ICourseListParams {
     settings: ICourseSettings;
@@ -310,7 +310,7 @@ export class CourseListDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [CourseListDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

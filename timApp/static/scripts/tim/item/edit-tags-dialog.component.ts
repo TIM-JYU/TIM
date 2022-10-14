@@ -4,7 +4,6 @@ import moment from "moment";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule, NgForm} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -14,6 +13,7 @@ import {userBelongsToGroupOrIsAdmin} from "tim/user/userService";
 import {toPromise} from "tim/util/utils";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import {IItem, ITag, tagStyleClass, TagType} from "tim/item/IItem";
+import {CommonModule} from "@angular/common";
 
 const tagParsingSeparator = ",";
 
@@ -332,7 +332,7 @@ export class EditTagsDialogComponent extends AngularDialogComponent<
     providers: [SessionVerify],
     declarations: [EditTagsDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         FormsModule,
         HttpClientModule,
         TimUtilityModule,

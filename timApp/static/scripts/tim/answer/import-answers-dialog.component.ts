@@ -1,4 +1,3 @@
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {Component, NgModule, ViewChild} from "@angular/core";
 import {FormsModule} from "@angular/forms";
@@ -10,6 +9,7 @@ import {documentglobals} from "tim/util/globals";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {toPromise} from "tim/util/utils";
+import {CommonModule} from "@angular/common";
 import {AceEditorComponent} from "../../../../modules/cs/js/editor/ace";
 import {EditorModule} from "../../../../modules/cs/js/editor/module";
 
@@ -143,7 +143,7 @@ export class ImportAnswersDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [ImportAnswersDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         DialogModule,
         TimUtilityModule,
         EditorModule,

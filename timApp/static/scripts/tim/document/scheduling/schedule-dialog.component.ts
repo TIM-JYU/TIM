@@ -1,7 +1,6 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule, Pipe} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import moment from "moment";
@@ -16,6 +15,7 @@ import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {IGroup} from "tim/user/IUser";
 import {isAdmin} from "tim/user/userService";
 import {ReadonlyMoment} from "tim/util/readonlymoment";
+import {CommonModule} from "@angular/common";
 
 interface IInterval {
     every: number;
@@ -231,7 +231,7 @@ export class ScheduleDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [ScheduleDialogComponent, IntervalPipe, OwnerPipe],
     imports: [
-        BrowserModule,
+        CommonModule,
         DialogModule,
         TimUtilityModule,
         FormsModule,

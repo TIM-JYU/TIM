@@ -6,7 +6,6 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {ITag, TagType} from "tim/item/IItem";
 import {
@@ -14,6 +13,7 @@ import {
     ITagSearchResult,
     SearchBoxComponent,
 } from "tim/search/search-box.component";
+import {CommonModule} from "@angular/common";
 
 export interface ISearchResultDisplay {
     result: IDocSearchResult;
@@ -406,6 +406,6 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [SearchResultsDialogComponent],
-    imports: [BrowserModule, FormsModule, TimUtilityModule, DialogModule],
+    imports: [CommonModule, FormsModule, TimUtilityModule, DialogModule],
 })
 export class SearchResultsDialogModule {}

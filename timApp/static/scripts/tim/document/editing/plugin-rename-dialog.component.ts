@@ -4,7 +4,6 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {KEY_S} from "tim/util/keycodes";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {FormsModule} from "@angular/forms";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
@@ -15,6 +14,7 @@ import {
     IManageResponse,
     IParResponse,
 } from "tim/document/editing/edittypes";
+import {CommonModule} from "@angular/common";
 
 export interface IManageRenameParams {
     duplicates: Duplicate[];
@@ -194,7 +194,7 @@ export class PluginRenameDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [PluginRenameDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         DialogModule,
         TimUtilityModule,
         HttpClientModule,

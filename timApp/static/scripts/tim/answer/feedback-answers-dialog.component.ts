@@ -3,12 +3,12 @@ import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import {CommonDialogOptions} from "tim/answer/commondialogoptions";
 import * as t from "io-ts";
 import {TimStorage} from "tim/util/utils";
 import {$httpParamSerializer} from "tim/util/ngimport";
 import {IUser} from "tim/user/IUser";
+import {CommonModule} from "@angular/common";
 
 const AnswersDialogOptions = t.intersection([
     t.type({
@@ -272,6 +272,6 @@ export class FeedbackAnswersDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [FeedbackAnswersDialogComponent],
-    imports: [BrowserModule, DialogModule, TimUtilityModule, FormsModule],
+    imports: [CommonModule, DialogModule, TimUtilityModule, FormsModule],
 })
 export class FeedbackAnswersDialogModule {}

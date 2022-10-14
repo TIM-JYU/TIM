@@ -8,11 +8,11 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
 import {HttpClientModule} from "@angular/common/http";
-import {BrowserModule} from "@angular/platform-browser";
 import {TaggedDocumentListComponent} from "tim/item/tagged-document-list.component";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 import * as t from "io-ts";
 import {TimStorage} from "tim/util/utils";
+import {CommonModule} from "@angular/common";
 
 @Component({
     selector: "tim-search-tags-dialog",
@@ -91,7 +91,7 @@ export class SearchTagsDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [SearchTagsDialogComponent, TaggedDocumentListComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

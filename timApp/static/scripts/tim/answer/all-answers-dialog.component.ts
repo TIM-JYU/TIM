@@ -1,7 +1,6 @@
 import moment from "moment";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -14,6 +13,7 @@ import {maybeUndefined} from "tim/plugin/attributes";
 import {documentglobals} from "tim/util/globals";
 import {$httpParamSerializer} from "tim/util/ngimport";
 import {TimStorage, toPromise} from "tim/util/utils";
+import {CommonModule} from "@angular/common";
 
 const AnswersDialogOptions = t.intersection([
     t.type({
@@ -382,7 +382,7 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [AllAnswersDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         DialogModule,
         FormsModule,
         HttpClientModule,

@@ -6,7 +6,6 @@ import {
     NgModule,
     ViewChild,
 } from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
 import * as t from "io-ts";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule, NgForm} from "@angular/forms";
@@ -20,8 +19,6 @@ import {
 } from "rxjs/operators";
 import {Result} from "@zxing/library";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
@@ -38,7 +35,6 @@ import {
     toPromise,
 } from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {CodeScannerComponent} from "tim/plugin/userselect/code-scanner.component";
 import {MediaDevicesSupported} from "tim/plugin/userselect/util";
 import {
@@ -49,6 +45,8 @@ import {
     UserResult,
 } from "tim/plugin/userselect/searchQueryHandlers";
 import {T9KeyboardComponent} from "tim/plugin/userselect/t9-keyboard.component";
+import {CommonModule} from "@angular/common";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 
 const NeedsVerifyReasons = t.type({
     changeGroupBelongs: t.string,
@@ -933,11 +931,10 @@ export class UserSelectComponent extends AngularPluginBase<
         T9KeyboardComponent,
     ],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
-        NoopAnimationsModule,
         BsDropdownModule.forRoot(),
     ],
 })
@@ -945,14 +942,4 @@ export class UserSelectModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                UserSelectModule
-            )
-        ),
-        "userSelector",
-        UserSelectComponent
-    ),
-];
+registerPlugin("user-selector", UserSelectModule, UserSelectComponent);

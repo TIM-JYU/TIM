@@ -3,7 +3,6 @@ import {Component, NgModule, NgZone, OnDestroy} from "@angular/core";
 import deepEqual from "deep-equal";
 import {HttpClient} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {ProgressbarModule} from "ngx-bootstrap/progressbar";
 import {
@@ -32,6 +31,7 @@ import {
     QuestionOrAnswer,
 } from "tim/lecture/lecturetypes";
 import {showStatisticsDialog} from "tim/lecture/showLectureDialogs";
+import {CommonModule} from "@angular/common";
 
 /**
  * Created by hajoviin on 22.4.2015
@@ -390,7 +390,7 @@ export class AnswerToQuestionDialogComponent
 @NgModule({
     declarations: [AnswerToQuestionDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         TimUtilityModule,
         DialogModule,
         AnswerSheetModule,

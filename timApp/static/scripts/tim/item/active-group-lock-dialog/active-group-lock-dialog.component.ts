@@ -8,7 +8,6 @@ import {
     Output,
     SimpleChanges,
 } from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
@@ -18,6 +17,7 @@ import {to2, toPromise} from "tim/util/utils";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {Users} from "tim/user/userService";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {CommonModule} from "@angular/common";
 
 const ANONYMOUS_GROUPNAME = "Anonymous users";
 
@@ -353,7 +353,7 @@ export class ActiveGroupLockDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [ActiveGroupLockDialogComponent, GroupSelectListComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         DialogModule,
         FormsModule,
         HttpClientModule,

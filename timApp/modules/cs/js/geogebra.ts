@@ -15,10 +15,10 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {pluginMap} from "tim/main";
+import {CommonModule} from "@angular/common";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {Iframesettings} from "./jsframe";
 
 const GeogebraMarkup = t.intersection([
@@ -274,7 +274,7 @@ export class GeogebraComponent extends AngularPluginBase<
 @NgModule({
     declarations: [GeogebraComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
@@ -284,4 +284,5 @@ export class GeogebraComponent extends AngularPluginBase<
 export class GeogebraModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-pluginMap.set("tim-geogebra", GeogebraComponent);
+
+registerPlugin("tim-geogebra", GeogebraModule, GeogebraComponent);

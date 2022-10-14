@@ -679,9 +679,8 @@ class Plugin:
         if self.options.wraptype != PluginWrap.Nothing:
             abtype = self.get_answerbrowser_type()
             if abtype is None:
-                cont = f"""<{wrapper} id='{html_task_id}' plugin-type='/{self.type}' {style}>{out}</{wrapper}>""".strip()
-            else:
-                cont = out.strip()
+                abtype = "none"
+            cont = out.strip()
             unlock_info = None
             if self.is_timed():
                 self.set_access_end_for_user()
@@ -704,7 +703,7 @@ class Plugin:
                     + "</tim-plugin-loader>",
                     html_task_id or "",
                 )  # 0.001 sec
-            if abtype and self.options.wraptype == PluginWrap.Full:  # and False
+            if self.options.wraptype == PluginWrap.Full:  # and False
                 ret = self.wrap_draggable(
                     render_template_string3(  # TODO: 0.05 sec
                         PLG_RTEMPLATE,

@@ -21,13 +21,13 @@ import {
 import {documentglobals} from "tim/util/globals";
 import {injectStyle, log} from "tim/util/utils";
 import {EditMode} from "tim/document/popup-menu-dialog.component";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {pluginMap} from "tim/main";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
 
 const answerPlaceHolder = "|answer|";
 const correctPlaceHolder = "|correct|";
@@ -1328,10 +1328,10 @@ export class FeedbackPluginComponent
 
 @NgModule({
     declarations: [FeedbackPluginComponent],
-    imports: [BrowserModule, HttpClientModule, TimUtilityModule, PurifyModule],
+    imports: [CommonModule, HttpClientModule, TimUtilityModule, PurifyModule],
 })
 export class FeedbackModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("feedback-runner", FeedbackPluginComponent);
+registerPlugin("feedback-runner", FeedbackModule, FeedbackPluginComponent);

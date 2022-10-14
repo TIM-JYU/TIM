@@ -1,5 +1,4 @@
 import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import * as t from "io-ts";
@@ -15,7 +14,8 @@ import {getViewName, toPromise} from "tim/util/utils";
 import {documentglobals} from "tim/util/globals";
 import {Users} from "tim/user/userService";
 import {showConfirm} from "tim/ui/showConfirmDialog";
-import {pluginMap} from "tim/main";
+import {CommonModule} from "@angular/common";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 
 const PluginMarkup = t.intersection([
     GenericPluginMarkup,
@@ -211,10 +211,10 @@ export class GroupJoinComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [GroupJoinComponent],
-    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
+    imports: [CommonModule, HttpClientModule, FormsModule, TimUtilityModule],
 })
 export class GroupJoinModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
-pluginMap.set("group-join", GroupJoinComponent);
+registerPlugin("group-join", GroupJoinModule, GroupJoinComponent);

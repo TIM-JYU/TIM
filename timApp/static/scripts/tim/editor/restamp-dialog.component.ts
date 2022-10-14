@@ -1,11 +1,11 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {toPromise} from "tim/util/utils";
 import {IStampingData} from "tim/editor/pareditor";
+import {CommonModule} from "@angular/common";
 
 export enum RestampDialogClose {
     RestampedReturnToEditor,
@@ -136,6 +136,6 @@ export class RestampDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [RestampDialogComponent],
-    imports: [BrowserModule, DialogModule, HttpClientModule, TimUtilityModule],
+    imports: [CommonModule, DialogModule, HttpClientModule, TimUtilityModule],
 })
 export class RestampDialogModule {}

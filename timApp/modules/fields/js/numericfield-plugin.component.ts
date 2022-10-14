@@ -25,7 +25,7 @@ import {
 } from "tim/plugin/attributes";
 import {getFormBehavior, parseStyles} from "tim/plugin/util";
 import {defaultErrorMessage, valueOr} from "tim/util/utils";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -33,7 +33,8 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {pluginMap} from "tim/main";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
 import {FieldDataWithStyles, TFieldContent} from "./textfield-plugin.component";
 
 const REDOUBLE = /[^0-9,.e\-+]+/g;
@@ -586,7 +587,7 @@ export class NumericfieldPluginComponent
 @NgModule({
     declarations: [NumericfieldPluginComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         TimUtilityModule,
         FormsModule,
@@ -598,4 +599,8 @@ export class NumericfieldModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("numericfield-runner", NumericfieldPluginComponent);
+registerPlugin(
+    "numericfield-runner",
+    NumericfieldModule,
+    NumericfieldPluginComponent
+);

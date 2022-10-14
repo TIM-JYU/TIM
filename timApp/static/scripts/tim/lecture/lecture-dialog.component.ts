@@ -5,7 +5,6 @@ import {KEY_S} from "tim/util/keycodes";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {AccordionModule} from "ngx-bootstrap/accordion";
 import {getItem, IItem} from "tim/item/IItem";
@@ -18,6 +17,7 @@ import {
     ILectureFormParams,
     ILectureOptions,
 } from "tim/lecture/lecturetypes";
+import {CommonModule} from "@angular/common";
 
 /**
  * Lecture creation controller which is used to handle and validate the form data.
@@ -377,7 +377,7 @@ export class LectureDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [LectureDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

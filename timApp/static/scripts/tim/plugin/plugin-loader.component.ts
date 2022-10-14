@@ -4,14 +4,15 @@ import {
     ApplicationRef,
     Component,
     ContentChild,
+    createNgModule,
     DoBootstrap,
     ElementRef,
+    Injector,
     Input,
     NgModule,
     NgZone,
     OnDestroy,
     OnInit,
-    Type,
     ViewChild,
     ViewContainerRef,
 } from "@angular/core";
@@ -21,10 +22,9 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {pluginMap} from "tim/main";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {PurifyModule} from "tim/util/purify.module";
-import {getURLParameter, Require, timeout, toPromise} from "tim/util/utils";
+import {getURLParameter, timeout, toPromise} from "tim/util/utils";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {TimDefer} from "tim/util/timdefer";
 import {ReadonlyMoment} from "tim/util/readonlymoment";
@@ -38,6 +38,7 @@ import {IGenericPluginMarkup} from "tim/plugin/attributes";
 import {TaskId, TaskIdWithDefaultDocId} from "tim/plugin/taskid";
 import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {getPlugin, IRegisteredPlugin} from "tim/plugin/pluginRegistry";
 
 const LAZY_MARKER = "lazy";
 const LAZY_MARKER_LENGTH = LAZY_MARKER.length;
@@ -47,17 +48,13 @@ function isElement(n: Node): n is Element {
     return n.nodeType === Node.ELEMENT_NODE;
 }
 
-function getTypeFor(name: string): Type<PluginJson> | undefined {
-    return pluginMap.get(name);
-}
-
 @Component({
     selector: "tim-plugin-loader",
     template: `
         <tim-alert *ngIf="error" severity="danger">
             {{ error }}
         </tim-alert>
-        <answerbrowser *ngIf="parsedTaskId && showBrowser && !preview && !unlockable && !lockedByPrerequisite"
+        <answerbrowser *ngIf="type != 'none' && parsedTaskId && showBrowser && !preview && !unlockable && !lockedByPrerequisite"
                        [taskId]="parsedTaskId"
                        [answerId]="answerId">
         </answerbrowser>
@@ -111,11 +108,11 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     pluginPlacement!: ViewContainerRef;
     @ViewChild("feedback") feedBackElement?: ElementRef<HTMLDivElement>;
     private compiled = false;
-    private viewctrl?: Require<ViewCtrl>;
+    private viewctrl?: ViewCtrl;
     @Input() public taskId!: string;
     public nonPluginHtml?: string;
     public parsedTaskId?: TaskId;
-    @Input() public type!: string;
+    @Input() public type!: "full" | "lazyonly" | "none";
     @Input() public answerId?: number;
     @Input() public template?: string;
     @Input() public wrapper!: "div" | "span";
@@ -154,6 +151,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         private elementRef: ElementRef<HTMLElement>,
         private http: HttpClient,
         private zone: NgZone,
+        private injector: Injector,
         public vcr: ViewContainerRef
     ) {
         timLogTime("timPluginLoader constructor", "answ", 1);
@@ -360,16 +358,16 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         this.defaultload = false;
         this.nonPluginHtml = undefined;
         const json = component.getAttribute("json");
-        const type = getTypeFor(runnername);
-        if (!type) {
-            this.error = `Unknown component: ${runnername}`;
+        const registeredPlugin = getPlugin(runnername);
+        if (!registeredPlugin) {
+            this.error = $localize`Unknown component: ${runnername}`;
             return;
         }
         if (!json) {
-            this.error = `Component ${runnername} is missing attribute json`;
+            this.error = $localize`Component ${runnername} is missing attribute json`;
             return;
         }
-        await this.setComponent(type, json);
+        await this.setComponent(registeredPlugin, json);
     }
 
     setInnerHtml(element: HTMLElement) {
@@ -381,12 +379,14 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         this.nonPluginHtml = element.outerHTML;
     }
 
-    async setComponent(component: Type<PluginJson>, json: string) {
+    async setComponent(registeredPlugin: IRegisteredPlugin, json: string) {
         const viewContainerRef = this.pluginPlacement;
         viewContainerRef.clear();
 
+        const modRef = createNgModule(registeredPlugin.module, this.injector);
         const componentRef = await viewContainerRef.createComponent<PluginJson>(
-            component
+            registeredPlugin.component,
+            {ngModuleRef: modRef}
         );
         componentRef.instance.json = json;
         componentRef.changeDetectorRef.detectChanges();

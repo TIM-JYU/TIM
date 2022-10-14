@@ -3,7 +3,6 @@ import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {
     HideValues,
@@ -11,6 +10,7 @@ import {
     TimTableComponent,
 } from "tim/plugin/timTable";
 import {setToolbarInstance} from "tim/plugin/toolbarUtils";
+import {CommonModule} from "@angular/common";
 
 export interface ITimTableToolbarCallbacks {
     setCell: (value: IToolbarTemplate) => void;
@@ -503,7 +503,7 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
 @NgModule({
     declarations: [TimTableEditorToolbarDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         FormsModule,
         TimUtilityModule,
         DialogModule,

@@ -7,7 +7,6 @@ import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {JsonValue} from "tim/util/jsonvalue";
 import {saveCurrentScreenPar} from "tim/document/parhelpers";
@@ -27,6 +26,7 @@ import {
     loadIdPs,
 } from "tim/user/haka-login.component";
 import {ILoginResponse, Users} from "tim/user/userService";
+import {CommonModule} from "@angular/common";
 
 interface INameResponse {
     status: "name";
@@ -584,6 +584,6 @@ export class LoginDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [LoginDialogComponent, HakaLoginComponent],
-    imports: [BrowserModule, DialogModule, FormsModule, TimUtilityModule],
+    imports: [CommonModule, DialogModule, FormsModule, TimUtilityModule],
 })
 export class LoginDialogModule {}

@@ -25,11 +25,7 @@ import {
     NgModule,
     ViewChild,
 } from "@angular/core";
-import {
-    BrowserModule,
-    DomSanitizer,
-    SafeResourceUrl,
-} from "@angular/platform-browser";
+import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -46,7 +42,8 @@ import {
     fullscreenSupported,
     toggleFullScreen,
 } from "tim/util/fullscreen";
-import {pluginMap} from "tim/main";
+import {CommonModule} from "@angular/common";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([
@@ -788,7 +785,7 @@ export class JsframeComponent
 @NgModule({
     declarations: [JsframeComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
@@ -798,4 +795,5 @@ export class JsframeComponent
 export class JsframeModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-pluginMap.set("jsframe-runner", JsframeComponent);
+
+registerPlugin("jsframe-runner", JsframeModule, JsframeComponent);

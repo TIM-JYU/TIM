@@ -7,11 +7,11 @@ import {
 } from "@angular/core";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {BrowserModule} from "@angular/platform-browser";
 import {IOAuthGlobals, oauthglobals} from "tim/util/globals";
 import {getCookie} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {Users} from "tim/user/userService";
+import {CommonModule} from "@angular/common";
 
 const OAUTH_SCOPES: Record<string, string> = {
     profile: $localize`Read basic profile information (username, full name, email address)`,
@@ -68,7 +68,7 @@ export class OAuthAuthorizeComponent {
 @NgModule({
     declarations: [OAuthAuthorizeComponent, OAuthButtonComponent],
     exports: [OAuthAuthorizeComponent],
-    imports: [BrowserModule, TimUtilityModule],
+    imports: [CommonModule, TimUtilityModule],
 })
 export class OAuthAuthorizeModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

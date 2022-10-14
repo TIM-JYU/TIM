@@ -17,7 +17,6 @@ import {
     OnDestroy,
     OnInit,
 } from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {Subject, Subscription} from "rxjs";
@@ -25,7 +24,8 @@ import {debounceTime, distinctUntilChanged} from "rxjs/operators";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {PurifyModule} from "tim/util/purify.module";
-import {pluginMap} from "tim/main";
+import {CommonModule} from "@angular/common";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -212,7 +212,7 @@ export class PaliComponent
 @NgModule({
     declarations: [PaliComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
@@ -223,4 +223,4 @@ export class PaliModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("pali-runner", PaliComponent);
+registerPlugin("pali-runner", PaliModule, PaliComponent);

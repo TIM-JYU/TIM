@@ -21,10 +21,8 @@ import {
     OnInit,
     ViewChild,
 } from "@angular/core";
-
-import {TimMessageSendModule} from "tim/messaging/tim-message-send.component";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -33,8 +31,6 @@ import {showInputDialog} from "tim/ui/showInputDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {documentglobals} from "tim/util/globals";
 import {PurifyModule} from "tim/util/purify.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {widenFields} from "tim/util/common";
 import {
@@ -56,6 +52,9 @@ import {
     TimTableComponent,
     TimTableModule,
 } from "tim/plugin/timTable";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
+import {TimMessageSendModule} from "tim/messaging/tim-message-send.component";
 
 const RunScriptModel = t.type({
     script: nullable(t.string),
@@ -1538,7 +1537,7 @@ export class TableFormComponent
 @NgModule({
     declarations: [TableFormComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
@@ -1551,14 +1550,4 @@ export class TableFormModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                TableFormModule
-            )
-        ),
-        "tableformRunner",
-        TableFormComponent
-    ),
-];
+registerPlugin("tableform-runner", TableFormModule, TableFormComponent);

@@ -4,7 +4,6 @@ import {Component, NgModule, NgZone} from "@angular/core";
 import {watchEditMode} from "tim/document/editing/editmode";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {$rootScope} from "tim/util/ngimport";
 import {PurifyModule} from "tim/util/purify.module";
@@ -14,6 +13,7 @@ import {documentglobals} from "tim/util/globals";
 import {copyToClipboard, toPromise} from "tim/util/utils";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {IMenuFunctionEntry, MenuFunctionList} from "tim/document/viewutils";
+import {CommonModule} from "@angular/common";
 import ClickEvent = JQuery.ClickEvent;
 import TriggeredEvent = JQuery.TriggeredEvent;
 
@@ -265,7 +265,7 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [PopupMenuDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         DialogModule,
         TimUtilityModule,
         HttpClientModule,
