@@ -112,7 +112,7 @@ interface WordObject {
                 </ul>
             </div>
             <button class="timButton"
-                    *ngIf="saveButton"
+                    *ngIf="saveButton || saveFailed"
                     (click)="save()">
                 Save
             </button>
@@ -142,6 +142,7 @@ export class DragComponent
     private shuffle?: boolean;
     private vctrl = vctrlInstance;
     styles: Record<string, string> = {};
+    saveFailed = false;
 
     getAttributeType(): typeof DragAll {
         return DragAll;
@@ -315,12 +316,14 @@ export class DragComponent
 
         if (r.ok) {
             const data = r.result;
+            this.saveFailed = false;
             this.error = data.web.error;
             if (this.markup.clearstyles) {
                 this.styles = {};
             }
         } else {
             this.error = r.result.error.error;
+            this.saveFailed = true;
         }
         return {saved: r.ok, message: this.error};
     }
