@@ -24,7 +24,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {PurifyModule} from "tim/util/purify.module";
 import type {DocIdDotName} from "tim/plugin/taskid";
-import {isIOS} from "tim/util/utils";
+import {defaultErrorMessage, isIOS} from "tim/util/utils";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 
@@ -117,7 +117,7 @@ interface WordObject {
                 Save
             </button>
         </div>
-        <div *ngIf="error" [innerHTML]="error | purify"></div>
+        <div *ngIf="error" class="error" style="font-size: 12px" [innerHtml]="error | purify"></div>
         <div *ngIf="footer" class="plgfooter" [textContent]="footer"></div>
     `,
     styleUrls: ["./drag.scss"],
@@ -322,7 +322,10 @@ export class DragComponent
                 this.styles = {};
             }
         } else {
-            this.error = r.result.error.error;
+            this.error =
+                r.result.error.error ??
+                this.attrsall.markup.connectionErrorMessage ??
+                defaultErrorMessage;
             this.saveFailed = true;
         }
         return {saved: r.ok, message: this.error};
