@@ -7,7 +7,6 @@ import {Type} from "io-ts";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
 import {
-    baseOnInit,
     getDefaults,
     PluginBaseCommon,
     PluginMarkupErrors,
@@ -21,6 +20,8 @@ import {
     prepareAnswerRequest,
 } from "tim/document/interceptor";
 import {IAnswerSaveEvent} from "tim/answer/answerbrowser3";
+import {isLeft} from "fp-ts/Either";
+import {getErrors} from "tim/plugin/errors";
 
 export interface PluginJson {
     json: string;
@@ -115,11 +116,19 @@ export abstract class AngularPluginBase<
     }
 
     ngOnInit() {
-        const result = baseOnInit(this);
-        if (result) {
+        const parsed = JSON.parse(atob(this.json)) as unknown;
+        const validated = this.getAttributeType().decode(parsed);
+
+        if (isLeft(validated)) {
+            this.markupError = getErrors(validated);
+        } else {
+            this.attrsall = validated.right;
+        }
+
+        if (this.attrsall) {
             this.pluginMeta = new PluginMeta(
                 this.element,
-                result.preview,
+                this.attrsall.preview,
                 this.plugintype,
                 this.taskid
             );

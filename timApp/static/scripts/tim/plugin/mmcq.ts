@@ -19,6 +19,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import {handleAnswerResponse} from "tim/document/interceptor";
 import {IAnswerSaveEvent} from "tim/answer/answerbrowser3";
 import {TaskId} from "tim/plugin/taskid";
+import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 
 interface MMCQContent<State> {
     state?: State;
@@ -39,12 +40,12 @@ interface MMCQContent<State> {
 }
 
 @Directive()
-export class MCQBase<State> {
+export class MCQBase<State> implements PluginJson {
     public headerText: string = "Check your understanding";
     public buttonText: string = "Submit";
     public content!: MMCQContent<State>;
     protected element: JQuery<HTMLElement>;
-    @Input() dataContent?: string;
+    @Input() json!: string;
 
     constructor(
         protected hostElement: ElementRef<HTMLElement>,
@@ -54,12 +55,12 @@ export class MCQBase<State> {
     }
 
     ngOnInit() {
-        if (!this.dataContent) {
+        if (!this.json) {
             this.content = JSON.parse(
                 this.element.attr("data-content")!
             ) as MMCQContent<State>;
         } else {
-            this.content = JSON.parse(this.dataContent) as MMCQContent<State>;
+            this.content = JSON.parse(this.json) as MMCQContent<State>;
         }
     }
 
@@ -297,5 +298,5 @@ export class MCQModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("mcq", MCQ as never);
-pluginMap.set("mmcq", MMCQ as never);
+pluginMap.set("mcq", MCQ);
+pluginMap.set("mmcq", MMCQ);

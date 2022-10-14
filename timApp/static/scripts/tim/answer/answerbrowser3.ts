@@ -23,10 +23,7 @@ import {tryCreateParContextOrHelp} from "tim/document/structure/create";
 import {ParContext} from "tim/document/structure/parContext";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {showResetTaskLock} from "tim/answer/showResetTaskLock";
-import {
-    loadPlugin,
-    PluginLoaderComponent,
-} from "tim/plugin/plugin-loader.component";
+import {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
@@ -604,7 +601,7 @@ export class AnswerBrowserComponent
                 if (this.answerLoader && this.selectedAnswer) {
                     // Do nothing; the answerLoader gets called earlier in this method.
                 } else {
-                    await loadPlugin(r.result.data.html, this.loader);
+                    await this.loader.loadFromHtml(r.result.data.html);
                 }
             }
             if (this.review) {

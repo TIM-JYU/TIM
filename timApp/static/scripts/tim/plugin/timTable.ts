@@ -117,6 +117,7 @@ import {
 } from "tim/util/utils";
 import {TaskId} from "tim/plugin/taskid";
 import {PluginMeta} from "tim/plugin/util";
+import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 
 const timDateRegex = /^\d{4}-\d{2}-\d{2}[ T]?\d{2}:\d{2}(:\d{2})?$/;
 
@@ -728,7 +729,8 @@ export class TimTableComponent
         DoCheck,
         AfterViewInit,
         DataModelProvider,
-        ICtrlWithMenuFunctionEntry
+        ICtrlWithMenuFunctionEntry,
+        PluginJson
 {
     error: string = "";
     public viewctrl?: ViewCtrl;
@@ -736,6 +738,7 @@ export class TimTableComponent
     private prevCellDataMatrix: ICell[][] = [];
     public columns: IColumn[] = [];
     @Input() public data!: TimTable;
+    @Input() public json!: string;
     private prevData!: TimTable;
     private editRight = false;
     private userdata?: DataEntity = undefined;
@@ -893,6 +896,10 @@ export class TimTableComponent
      * Set listener and initializes tabledatablock
      */
     async ngOnInit() {
+        if (this.json) {
+            this.data = JSON.parse(this.json);
+        }
+
         if (this.data.hide) {
             this.hide = {...this.hide, ...this.data.hide};
         }
@@ -4828,4 +4835,4 @@ export class TimTableComponent
 export class TimTableModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-pluginMap.set("tim-table", TimTableComponent as never);
+pluginMap.set("tim-table", TimTableComponent);

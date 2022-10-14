@@ -15,6 +15,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AnswerSheetModule} from "tim/document/question/answer-sheet.component";
 import {PurifyModule} from "tim/util/purify.module";
 import {copyToClipboard, isIOS} from "tim/util/utils";
+import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 
 export enum ParameterType {
     NUMBER,
@@ -469,9 +470,10 @@ function scrollElementVisibleInParent(
     `,
     styleUrls: ["tape-plugin.component.scss"],
 })
-export class TapePluginContent {
+export class TapePluginContent implements PluginJson {
     @Input() data!: TapeAttrs;
     @Input() inputdata?: TapeAttrs;
+    @Input() json!: string;
     @ViewChild("textAreaRobotProgram")
     textAreaRobotProgram?: ElementRef<HTMLTextAreaElement>;
     private element: JQuery<HTMLElement>;
@@ -495,7 +497,9 @@ export class TapePluginContent {
 
     ngOnInit() {
         // TODO: Convert to proper Angular plugin and use base64 encoding
-        if (!this.inputdata) {
+        if (this.json) {
+            this.data = JSON.parse(this.json);
+        } else if (!this.inputdata) {
             this.data = JSON.parse(this.data as unknown as string);
         } else {
             this.data = this.inputdata;
@@ -1017,4 +1021,4 @@ export class TapePluginModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("tim-tape", TapePluginContent as never);
+pluginMap.set("tim-tape", TapePluginContent);

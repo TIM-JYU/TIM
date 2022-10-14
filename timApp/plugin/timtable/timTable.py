@@ -236,7 +236,7 @@ def tim_table_get_html(jso, review):
     attrs = json.dumps(values)
     # attrs = attrs.replace('"cell": "None"', '"cell": ""')
     runner = "tim-table"
-    s = f"<{runner} bind-data={quoteattr(attrs)}></{runner}>"
+    s = f"<{runner} json={quoteattr(attrs)}></{runner}>"
     return s
 
 

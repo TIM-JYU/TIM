@@ -1,10 +1,8 @@
-import {IController} from "angular";
 import moment from "moment";
 import {
     AfterViewInit,
     ApplicationRef,
     Component,
-    ComponentRef,
     ContentChild,
     DoBootstrap,
     ElementRef,
@@ -26,12 +24,11 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {pluginMap} from "tim/main";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {PurifyModule} from "tim/util/purify.module";
-import {getURLParameter, Require, to} from "tim/util/utils";
+import {getURLParameter, Require, timeout, toPromise} from "tim/util/utils";
 import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {TimDefer} from "tim/util/timdefer";
 import {ReadonlyMoment} from "tim/util/readonlymoment";
 import {timLogTime} from "tim/util/timTiming";
-import {$http, $timeout} from "tim/util/ngimport";
 import {Users} from "tim/user/userService";
 import {
     AnswerBrowserComponent,
@@ -39,17 +36,12 @@ import {
 } from "tim/answer/answerbrowser3";
 import {IGenericPluginMarkup} from "tim/plugin/attributes";
 import {TaskId, TaskIdWithDefaultDocId} from "tim/plugin/taskid";
-import type {
-    TapeAttrs,
-    TapePluginContent,
-} from "tim/plugin/tape-plugin.component";
-import type {MCQ, MMCQ} from "tim/plugin/mmcq";
 import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
-import type {TimTable, TimTableComponent} from "tim/plugin/timTable";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 
 const LAZY_MARKER = "lazy";
 const LAZY_MARKER_LENGTH = LAZY_MARKER.length;
-const LAZY_COMMENT_MARKER = "<!--" + LAZY_MARKER;
+const LAZY_COMMENT_MARKER = `<!--${LAZY_MARKER}`;
 
 function isElement(n: Node): n is Element {
     return n.nodeType === Node.ELEMENT_NODE;
@@ -57,12 +49,6 @@ function isElement(n: Node): n is Element {
 
 function getTypeFor(name: string): Type<PluginJson> | undefined {
     return pluginMap.get(name);
-}
-
-export async function loadPlugin(html: string, loader: PluginLoaderComponent) {
-    const elementToCompile = $(html)[0];
-    loader.defaultload = false;
-    await loader.determineAndSetComponent(elementToCompile);
 }
 
 @Component({
@@ -120,15 +106,12 @@ export async function loadPlugin(html: string, loader: PluginLoaderComponent) {
     `,
     styles: [],
 })
-export class PluginLoaderComponent
-    implements AfterViewInit, IController, OnDestroy, OnInit
-{
+export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     @ViewChild("pluginPlacement", {read: ViewContainerRef, static: false})
     pluginPlacement!: ViewContainerRef;
     @ViewChild("feedback") feedBackElement?: ElementRef<HTMLDivElement>;
     private compiled = false;
     private viewctrl?: Require<ViewCtrl>;
-    asd = this;
     @Input() public taskId!: string;
     public nonPluginHtml?: string;
     public parsedTaskId?: TaskId;
@@ -169,6 +152,7 @@ export class PluginLoaderComponent
 
     constructor(
         private elementRef: ElementRef<HTMLElement>,
+        private http: HttpClient,
         private zone: NgZone,
         public vcr: ViewContainerRef
     ) {
@@ -179,7 +163,7 @@ export class PluginLoaderComponent
         return this.elementRef.nativeElement;
     }
 
-    ngOnInit() {
+    async ngOnInit() {
         this.viewctrl = vctrlInstance;
         if (this.viewctrl && !this.preview) {
             this.viewctrl.registerPluginLoader(this);
@@ -197,50 +181,50 @@ export class PluginLoaderComponent
         if (this.lockedByPrerequisite) {
             this.hidePlugin();
         }
-        $timeout(() => {
-            const m = this.pluginMarkup();
-            if (
-                m?.hideBrowser ||
-                this.viewctrl?.docSettings.hideBrowser ||
-                this.isUseCurrentUser() ||
-                this.isGlobal() ||
-                this.isInFormMode()
-            ) {
-                this.hideBrowser = true;
-                this.showPlaceholder = false;
-            }
-            if (m?.forceBrowser) {
-                this.forceBrowser = true;
-            }
 
-            this.showPlaceholder = !this.isInFormMode() && !this.hideBrowser;
+        await timeout();
+        const m = this.pluginMarkup();
+        if (
+            m?.hideBrowser ||
+            this.viewctrl?.docSettings.hideBrowser ||
+            this.isUseCurrentUser() ||
+            this.isGlobal() ||
+            this.isInFormMode()
+        ) {
+            this.hideBrowser = true;
+            this.showPlaceholder = false;
+        }
+        if (m?.forceBrowser) {
+            this.forceBrowser = true;
+        }
 
-            if (this.accessDuration && !this.viewctrl?.item.rights.teacher) {
-                this.timed = true;
-                if (!this.accessEnd) {
-                    this.unlockable = true;
-                    this.hidePlugin();
+        this.showPlaceholder = !this.isInFormMode() && !this.hideBrowser;
+
+        if (this.accessDuration && !this.viewctrl?.item.rights.teacher) {
+            this.timed = true;
+            if (!this.accessEnd) {
+                this.unlockable = true;
+                this.hidePlugin();
+            } else {
+                this.endTime = moment(this.accessEnd);
+                if (this.endTime.isBefore(moment.now())) {
+                    this.expireTask();
                 } else {
-                    this.endTime = moment(this.accessEnd);
-                    if (this.endTime.isBefore(moment.now())) {
-                        this.expireTask();
-                    } else {
-                        this.startTask();
-                    }
+                    this.startTask();
                 }
             }
-            if (this.lockableByPrerequisite) {
-                if (!m?.previousTask) {
-                    return;
-                }
-                if (this.lockedByPrerequisite) {
-                    this.viewctrl?.addLockListener(this);
-                    this.lockedText = m.previousTask.hideText;
-                    this.lockedButtonText = m.previousTask.unlockText;
-                }
-                this.toggleLockedAreas();
+        }
+        if (this.lockableByPrerequisite) {
+            if (!m?.previousTask) {
+                return;
             }
-        });
+            if (this.lockedByPrerequisite) {
+                this.viewctrl?.addLockListener(this);
+                this.lockedText = m.previousTask.hideText;
+                this.lockedButtonText = m.previousTask.unlockText;
+            }
+            this.toggleLockedAreas();
+        }
     }
 
     ngAfterViewInit() {
@@ -248,13 +232,11 @@ export class PluginLoaderComponent
             return;
         }
 
-        this.elementRef.nativeElement.addEventListener(
-            "mouseenter",
-            this.loadPlugin
+        this.elementRef.nativeElement.addEventListener("mouseenter", () =>
+            this.loadPlugin()
         );
-        this.elementRef.nativeElement.addEventListener(
-            "touchstart",
-            this.loadPlugin
+        this.elementRef.nativeElement.addEventListener("touchstart", () =>
+            this.loadPlugin()
         );
         const pluginhtml = this.pluginWrapper.nativeElement.innerHTML;
         if (!pluginhtml.startsWith(LAZY_COMMENT_MARKER)) {
@@ -272,13 +254,11 @@ export class PluginLoaderComponent
     }
 
     private removeActivationHandlers() {
-        this.elementRef.nativeElement.removeEventListener(
-            "mouseenter",
-            this.loadPlugin
+        this.elementRef.nativeElement.removeEventListener("mouseenter", () =>
+            this.loadPlugin()
         );
-        this.elementRef.nativeElement.removeEventListener(
-            "touchstart",
-            this.loadPlugin
+        this.elementRef.nativeElement.removeEventListener("touchstart", () =>
+            this.loadPlugin()
         );
     }
 
@@ -338,22 +318,28 @@ export class PluginLoaderComponent
         }
     }
 
-    loadPlugin = async () => {
+    async loadPlugin() {
+        if (this.compiled) {
+            return;
+        }
         // PluginLoader is wrapped in AngularJS, so outside calls (e.g. via viewctrl) may not be properly tracked
         // Therefore, ensure the call is run inside the Angular zone to ensure change detection is triggered
         await this.zone.run(async () => {
-            if (this.compiled) {
-                return;
-            }
             this.loadAnswerBrowser();
             const h = this.getNonLazyHtml();
             if (h && this.viewctrl) {
                 this.defaultload = false;
-                await loadPlugin(h, this);
+                await this.loadFromHtml(h);
             }
             this.removeActivationHandlers();
         });
-    };
+    }
+
+    async loadFromHtml(html: string) {
+        const elementToCompile = $(html)[0];
+        this.defaultload = false;
+        await this.determineAndSetComponent(elementToCompile);
+    }
 
     async determineAndSetComponent(component: HTMLElement) {
         if (component.nodeType === Node.COMMENT_NODE) {
@@ -373,43 +359,17 @@ export class PluginLoaderComponent
         }
         this.defaultload = false;
         this.nonPluginHtml = undefined;
-        if (runnername == "tim-table") {
-            const data = component.getAttribute("bind-data");
-            if (!data) {
-                this.error = `Component ${runnername} is missing attribute bind-data`;
-                return;
-            }
-            await this.setNonJsonComponent(runnername, data);
+        const json = component.getAttribute("json");
+        const type = getTypeFor(runnername);
+        if (!type) {
+            this.error = `Unknown component: ${runnername}`;
             return;
-        } else if (runnername == "tim-tape") {
-            const data = component.getAttribute("data");
-            if (!data) {
-                this.error = `Component ${runnername} is missing attribute data`;
-                return;
-            }
-            await this.setNonJsonComponent(runnername, data);
-            return;
-        } else if (runnername == "mcq" || runnername == "mmcq") {
-            const data = component.getAttribute("data-content");
-            if (!data) {
-                this.error = `Component ${runnername} is missing attribute data-content`;
-                return;
-            }
-            await this.setNonJsonComponent(runnername, data);
-            return;
-        } else {
-            const json = component.getAttribute("json");
-            const type = getTypeFor(runnername);
-            if (!type) {
-                this.error = `Unknown component: ${runnername}`;
-                return;
-            }
-            if (!json) {
-                this.error = `Component ${runnername} is missing attribute json`;
-                return;
-            }
-            await this.setComponent(type, json);
         }
+        if (!json) {
+            this.error = `Component ${runnername} is missing attribute json`;
+            return;
+        }
+        await this.setComponent(type, json);
     }
 
     setInnerHtml(element: HTMLElement) {
@@ -419,54 +379,6 @@ export class PluginLoaderComponent
         const viewContainerRef = this.pluginPlacement;
         viewContainerRef.clear();
         this.nonPluginHtml = element.outerHTML;
-    }
-
-    async setNonJsonComponent(
-        type: "tim-table" | "tim-tape" | "mcq" | "mmcq",
-        data: string
-    ) {
-        const viewContainerRef = this.pluginPlacement;
-        viewContainerRef.clear();
-
-        const compType = getTypeFor(type);
-        if (!compType) {
-            this.error = `Unable to import component ${type}`;
-            return;
-        }
-        switch (type) {
-            case "tim-table": {
-                const componentRef = (await viewContainerRef.createComponent(
-                    compType
-                )) as unknown as ComponentRef<TimTableComponent>;
-                componentRef.instance.data = JSON.parse(data) as TimTable;
-                componentRef.changeDetectorRef.detectChanges();
-                break;
-            }
-            case "tim-tape": {
-                const componentRef = (await viewContainerRef.createComponent(
-                    compType
-                )) as unknown as ComponentRef<TapePluginContent>;
-                componentRef.instance.inputdata = JSON.parse(data) as TapeAttrs;
-                componentRef.changeDetectorRef.detectChanges();
-                break;
-            }
-            case "mcq": {
-                const componentRef = (await viewContainerRef.createComponent(
-                    compType
-                )) as unknown as ComponentRef<MCQ>;
-                componentRef.instance.dataContent = data;
-                componentRef.changeDetectorRef.detectChanges();
-                break;
-            }
-            case "mmcq": {
-                const componentRef = (await viewContainerRef.createComponent(
-                    compType
-                )) as unknown as ComponentRef<MMCQ>;
-                componentRef.instance.dataContent = data;
-                componentRef.changeDetectorRef.detectChanges();
-                break;
-            }
-        }
     }
 
     async setComponent(component: Type<PluginJson>, json: string) {
@@ -543,8 +455,8 @@ export class PluginLoaderComponent
     }
 
     async unlockTimedTask() {
-        const r = await to(
-            $http.get<{end_time: string; expired?: boolean}>(
+        const r = await toPromise(
+            this.http.get<{end_time: string; expired?: boolean}>(
                 "/unlockTimedTask",
                 {
                     params: {
@@ -555,7 +467,7 @@ export class PluginLoaderComponent
         );
         if (r.ok) {
             this.unlockable = false;
-            this.endTime = moment(r.result.data.end_time);
+            this.endTime = moment(r.result.end_time);
             if (this.endTime.isBefore(moment.now())) {
                 this.expireTask();
             } else {
@@ -583,8 +495,8 @@ export class PluginLoaderComponent
     }
 
     async unlockHiddenTask() {
-        const r = await to(
-            $http.get<{unlocked: boolean; error?: string}>(
+        const r = await toPromise(
+            this.http.get<{unlocked: boolean; error?: string}>(
                 "/unlockHiddenTask",
                 {
                     params: {
@@ -594,17 +506,17 @@ export class PluginLoaderComponent
             )
         );
         if (r.ok) {
-            if (r.result.data.unlocked) {
+            if (r.result.unlocked) {
                 this.lockedByPrerequisite = false;
                 this.unHidePlugin();
                 this.toggleLockedAreas();
             } else {
                 this.lockedError =
-                    r.result.data.error ??
+                    r.result.error ??
                     $localize`You haven't unlocked this task yet`;
             }
         } else {
-            this.lockedError = r.result.data.error;
+            this.lockedError = r.result.error.error;
         }
     }
 
@@ -689,6 +601,7 @@ export class PluginLoaderComponent
         FormsModule,
         PurifyModule,
         TimUtilityModule,
+        HttpClientModule,
     ],
     exports: [PluginLoaderComponent],
 })
