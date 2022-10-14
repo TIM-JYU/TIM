@@ -38,7 +38,7 @@ import {enumPars} from "tim/document/structure/iteration";
 import {getParContainerElem} from "tim/document/structure/create";
 import {UserListController} from "tim/answer/userlistController";
 import {AnswerBrowserComponent} from "../answer/answerbrowser3";
-import {PluginLoaderComponent} from "../answer/pluginLoader";
+import {PluginLoaderComponent} from "../plugin/plugin-loader.component";
 import {IAnswer} from "../answer/IAnswer";
 import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
 import {IDocument} from "../item/IItem";

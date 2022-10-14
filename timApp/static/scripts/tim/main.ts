@@ -68,7 +68,7 @@ import {
     SESSION_VERIFICATION_NEEDED_CODE,
 } from "tim/util/session-verify.interceptor";
 import {RoleInfoComponent} from "tim/header/role-info.component";
-import {PluginLoaderComponent} from "tim/answer/pluginLoader";
+import {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
 import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals, isErrorGlobals} from "./util/globals";

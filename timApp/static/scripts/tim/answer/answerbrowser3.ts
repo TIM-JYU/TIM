@@ -23,7 +23,10 @@ import {tryCreateParContextOrHelp} from "tim/document/structure/create";
 import {ParContext} from "tim/document/structure/parContext";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {showResetTaskLock} from "tim/answer/showResetTaskLock";
-import {loadPlugin, PluginLoaderComponent} from "tim/answer/pluginLoader";
+import {
+    loadPlugin,
+    PluginLoaderComponent,
+} from "tim/plugin/plugin-loader.component";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
