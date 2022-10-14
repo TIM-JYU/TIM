@@ -1,4 +1,4 @@
-import {RootCtrl} from "./timRoot";
+import {RootCtrl} from "tim/timRoot";
 
 export let rootInstance: RootCtrl | undefined;
 

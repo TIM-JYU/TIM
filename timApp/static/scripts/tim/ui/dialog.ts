@@ -2,9 +2,9 @@ import {IController, IModule, IScope} from "angular";
 import "angular-ui-bootstrap";
 import {TimDefer} from "tim/util/timdefer";
 import {DialogController} from "tim/ui/dialogController";
-import {$templateCache, $uibModal} from "../util/ngimport";
-import {markAsUsed} from "../util/utils";
-import * as dg from "./draggable";
+import {$templateCache, $uibModal} from "tim/util/ngimport";
+import {markAsUsed} from "tim/util/utils";
+import * as dg from "tim/ui/draggable";
 
 type IModalInstanceService = angular.ui.bootstrap.IModalInstanceService;
 

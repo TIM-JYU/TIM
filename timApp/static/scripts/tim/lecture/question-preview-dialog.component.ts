@@ -23,8 +23,8 @@ import {
     AnswerSheetModule,
     IPreviewParams,
     makePreview,
-} from "../document/question/answer-sheet.component";
-import {IAskedQuestion} from "./lecturetypes";
+} from "tim/document/question/answer-sheet.component";
+import {IAskedQuestion} from "tim/lecture/lecturetypes";
 
 export type QuestionPreviewParams = AskParams & IShowAsk;
 

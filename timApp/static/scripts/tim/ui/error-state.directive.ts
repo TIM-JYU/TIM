@@ -7,7 +7,7 @@ import {
 } from "@angular/core";
 import {NgModel} from "@angular/forms";
 import {Subscription} from "rxjs";
-import {InputService} from "./input.service";
+import {InputService} from "tim/ui/input.service";
 
 @Directive({
     selector: "[timErrorState]",

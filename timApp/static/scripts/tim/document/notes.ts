@@ -10,23 +10,23 @@ import {ParContext} from "tim/document/structure/parContext";
 import {fromParents} from "tim/document/structure/create";
 import type {IGroup} from "tim/user/IUser";
 import {Users} from "tim/user/userService";
-import {IPluginInfoResponse} from "../editor/parCompiler";
-import {PareditorController} from "../editor/pareditor";
-import {IModalInstance} from "../ui/dialog";
-import {documentglobals} from "../util/globals";
-import {$compile, $http} from "../util/ngimport";
-import {isMobileDevice, TimStorage, to} from "../util/utils";
+import {IPluginInfoResponse} from "tim/editor/parCompiler";
+import {PareditorController} from "tim/editor/pareditor";
+import {IModalInstance} from "tim/ui/dialog";
+import {documentglobals} from "tim/util/globals";
+import {$compile, $http} from "tim/util/ngimport";
+import {isMobileDevice, TimStorage, to} from "tim/util/utils";
 import {
     EditPosition,
     EditType,
     extraDataForServer,
     IExtraData,
     IParResponse,
-} from "./editing/edittypes";
-import {onClick} from "./eventhandlers";
-import {addElementToParagraphMargin} from "./parhelpers";
-import {handleUnread, markParRead, ReadingType} from "./readings";
-import {ViewCtrl} from "./viewctrl";
+} from "tim/document/editing/edittypes";
+import {onClick} from "tim/document/eventhandlers";
+import {addElementToParagraphMargin} from "tim/document/parhelpers";
+import {handleUnread, markParRead, ReadingType} from "tim/document/readings";
+import {ViewCtrl} from "tim/document/viewctrl";
 
 export interface INoteEditorOptions {
     noteData?: {id: string};

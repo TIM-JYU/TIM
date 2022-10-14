@@ -12,8 +12,8 @@ import {CommonDialogOptions} from "tim/answer/commondialogoptions";
 import {ReadonlyMoment} from "tim/util/readonlymoment";
 import {maybeUndefined} from "tim/plugin/attributes";
 import {documentglobals} from "tim/util/globals";
-import {$httpParamSerializer} from "../util/ngimport";
-import {TimStorage, toPromise} from "../util/utils";
+import {$httpParamSerializer} from "tim/util/ngimport";
+import {TimStorage, toPromise} from "tim/util/utils";
 
 const AnswersDialogOptions = t.intersection([
     t.type({

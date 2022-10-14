@@ -18,7 +18,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {pluginMap} from "../../../static/scripts/tim/main";
+import {pluginMap} from "tim/main";
 import {Iframesettings} from "./jsframe";
 
 const GeogebraMarkup = t.intersection([

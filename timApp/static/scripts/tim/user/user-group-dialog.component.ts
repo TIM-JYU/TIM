@@ -2,11 +2,11 @@ import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
-import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
-import {IDocument} from "../item/IItem";
-import {toPromise} from "../util/utils";
-import {DialogModule} from "../ui/angulardialog/dialog.module";
-import {TimUtilityModule} from "../ui/tim-utility.module";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {IDocument} from "tim/item/IItem";
+import {toPromise} from "tim/util/utils";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 @Component({
     selector: "tim-user-group-dialog",

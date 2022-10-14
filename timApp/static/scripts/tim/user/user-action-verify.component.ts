@@ -23,9 +23,9 @@ import {BrowserModule} from "@angular/platform-browser";
 import * as t from "io-ts";
 import {isRight} from "fp-ts/Either";
 import {AlertSeverity} from "tim/ui/formErrorMessage";
-import {createDowngradedModule, doDowngrade} from "../downgrade";
-import {Channel} from "../messaging/listOptionTypes";
-import {toPromise} from "../util/utils";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {Channel} from "tim/messaging/listOptionTypes";
+import {toPromise} from "tim/util/utils";
 
 const GeneralInfoMarkup = t.type({
     type: t.string,

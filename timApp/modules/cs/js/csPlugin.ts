@@ -40,12 +40,12 @@ import {
 import {TimDefer} from "tim/util/timdefer";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import deepEqual from "deep-equal";
-import {SimcirConnectorDef, SimcirDeviceInstance} from "../simcir/simcir-all";
 import {
     ITemplateParam,
     showTemplateReplaceDialog,
     TemplateParam,
-} from "../../../static/scripts/tim/ui/showTemplateReplaceDialog";
+} from "tim/ui/showTemplateReplaceDialog";
+import {SimcirConnectorDef, SimcirDeviceInstance} from "../simcir/simcir-all";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
 import {CURSOR, EditorComponent, EditorFile, Mode} from "./editor/editor";

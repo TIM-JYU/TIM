@@ -4,11 +4,11 @@ import {IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {showLoginDialog} from "tim/user/showLoginDialog";
 import {showCourseListDialog} from "tim/document/course/showCourseDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {ICourseSettings} from "../item/IItem";
-import {Users} from "../user/userService";
-import {genericglobals} from "../util/globals";
-import {$http} from "../util/ngimport";
-import {to, to2} from "../util/utils";
+import {ICourseSettings} from "tim/item/IItem";
+import {Users} from "tim/user/userService";
+import {genericglobals} from "tim/util/globals";
+import {$http} from "tim/util/ngimport";
+import {to, to2} from "tim/util/utils";
 
 @Component({
     selector: "tim-start",

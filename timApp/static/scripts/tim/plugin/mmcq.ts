@@ -11,14 +11,14 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {pluginMap} from "tim/main";
-import {showMessageDialog} from "../ui/showMessageDialog";
-import {toPromise} from "../util/utils";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {AnswerSheetModule} from "../document/question/answer-sheet.component";
-import {PurifyModule} from "../util/purify.module";
-import {handleAnswerResponse} from "../document/interceptor";
-import {IAnswerSaveEvent} from "../answer/answerbrowser3";
-import {TaskId} from "./taskid";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {toPromise} from "tim/util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {AnswerSheetModule} from "tim/document/question/answer-sheet.component";
+import {PurifyModule} from "tim/util/purify.module";
+import {handleAnswerResponse} from "tim/document/interceptor";
+import {IAnswerSaveEvent} from "tim/answer/answerbrowser3";
+import {TaskId} from "tim/plugin/taskid";
 
 interface MMCQContent<State> {
     state?: State;

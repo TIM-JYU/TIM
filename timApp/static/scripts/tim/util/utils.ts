@@ -9,8 +9,8 @@ import {Pos} from "tim/ui/pos";
 import {either} from "fp-ts/Either";
 import {lastValueFrom, Observable} from "rxjs";
 import {HttpParams} from "@angular/common/http";
-import {IGroup} from "../user/IUser";
-import {$rootScope, $timeout} from "./ngimport";
+import {IGroup} from "tim/user/IUser";
+import {$rootScope, $timeout} from "tim/util/ngimport";
 
 const blacklist = new Set([
     "name",

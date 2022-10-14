@@ -7,10 +7,10 @@ import {showFeedbackAnswers} from "tim/answer/showFeedbackAnswers";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAllAnswersDialog} from "tim/answer/showAllAnswersDialog";
 import {showImportAnswersDialog} from "tim/answer/showImportAnswersDialog";
-import {ViewCtrl} from "../document/viewctrl";
-import {IUser, IUserListEntry, sortByRealName, sortLang} from "../user/IUser";
-import {withComparatorFilters} from "../util/comparatorfilter";
-import {$timeout} from "../util/ngimport";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {IUser, IUserListEntry, sortByRealName, sortLang} from "tim/user/IUser";
+import {withComparatorFilters} from "tim/util/comparatorfilter";
+import {$timeout} from "tim/util/ngimport";
 import {
     Binding,
     copyToClipboard,
@@ -18,7 +18,7 @@ import {
     getViewName,
     Require,
     to2,
-} from "../util/utils";
+} from "tim/util/utils";
 
 export interface IExportOptions {
     totalPointField: string;

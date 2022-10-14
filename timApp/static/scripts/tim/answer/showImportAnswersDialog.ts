@@ -1,5 +1,5 @@
-import {angularDialog} from "../ui/angulardialog/dialog.service";
-import {to2} from "../util/utils";
+import {angularDialog} from "tim/ui/angulardialog/dialog.service";
+import {to2} from "tim/util/utils";
 
 export async function showImportAnswersDialog() {
     const {ImportAnswersDialogComponent} = await import(

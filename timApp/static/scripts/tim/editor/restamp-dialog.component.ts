@@ -4,8 +4,8 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {toPromise} from "../util/utils";
-import {IStampingData} from "./pareditor";
+import {toPromise} from "tim/util/utils";
+import {IStampingData} from "tim/editor/pareditor";
 
 export enum RestampDialogClose {
     RestampedReturnToEditor,

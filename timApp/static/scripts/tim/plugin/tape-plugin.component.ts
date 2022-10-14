@@ -11,10 +11,10 @@ import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {pluginMap} from "tim/main";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {AnswerSheetModule} from "../document/question/answer-sheet.component";
-import {PurifyModule} from "../util/purify.module";
-import {copyToClipboard, isIOS} from "../util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {AnswerSheetModule} from "tim/document/question/answer-sheet.component";
+import {PurifyModule} from "tim/util/purify.module";
+import {copyToClipboard, isIOS} from "tim/util/utils";
 
 export enum ParameterType {
     NUMBER,

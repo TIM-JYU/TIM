@@ -7,17 +7,17 @@ import {rootInstance} from "tim/rootinstance";
 import {HttpClient} from "@angular/common/http";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {getAvailableViews, IItemLink} from "tim/header/utils";
-import {IDocSettings} from "../document/IDocSettings";
+import {IDocSettings} from "tim/document/IDocSettings";
 import {
     DocumentOrFolder,
     IFolder,
     ITag,
     ITranslation,
     TagType,
-} from "../item/IItem";
-import {Users} from "../user/userService";
-import {genericglobals, someglobals} from "../util/globals";
-import {getViewName, to} from "../util/utils";
+} from "tim/item/IItem";
+import {Users} from "tim/user/userService";
+import {genericglobals, someglobals} from "tim/util/globals";
+import {getViewName, to} from "tim/util/utils";
 
 /**
  * Checks if the tag type is course code.

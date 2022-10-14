@@ -19,8 +19,8 @@ import {
     IDrawOptions,
     IDrawVisibleOptions,
 } from "tim/plugin/drawToolbar";
-import {$http, $sce} from "../util/ngimport";
-import {TimDefer} from "../util/timdefer";
+import {$http, $sce} from "tim/util/ngimport";
+import {TimDefer} from "tim/util/timdefer";
 import {
     defaultTimeout,
     MouseOrTouch,
@@ -29,16 +29,16 @@ import {
     to,
     touchEventToTouch,
     valueOr,
-} from "../util/utils";
-import {editorChangeValue} from "../editor/editorScope";
+} from "tim/util/utils";
+import {editorChangeValue} from "tim/editor/editorScope";
 import {
     ChangeType,
     ITimComponent,
     IVelpableComponent,
     ViewCtrl,
-} from "../document/viewctrl";
-import {vctrlInstance} from "../document/viewctrlinstance";
-import {pluginMap} from "../main";
+} from "tim/document/viewctrl";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {pluginMap} from "tim/main";
 import {
     CommonPropsT,
     DefaultPropsT,
@@ -67,9 +67,9 @@ import {
     TextboxPropsT,
     TuplePoint,
     ValidCoord,
-} from "./imagextypes";
-import {AngularPluginBase} from "./angular-plugin-base.directive";
-import {Drawing, DrawItem} from "./drawCanvas";
+} from "tim/plugin/imagextypes";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {Drawing, DrawItem} from "tim/plugin/drawCanvas";
 
 let globalPreviewColor = "#fff";
 

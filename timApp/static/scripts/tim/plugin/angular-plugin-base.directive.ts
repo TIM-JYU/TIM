@@ -19,8 +19,8 @@ import {showConfirm} from "tim/ui/showConfirmDialog";
 import {
     handleAnswerResponse,
     prepareAnswerRequest,
-} from "../document/interceptor";
-import {IAnswerSaveEvent} from "../answer/answerbrowser3";
+} from "tim/document/interceptor";
+import {IAnswerSaveEvent} from "tim/answer/answerbrowser3";
 
 export interface PluginJson {
     json: string;

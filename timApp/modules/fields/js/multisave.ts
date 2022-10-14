@@ -33,8 +33,8 @@ import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {showConfirm} from "../../../static/scripts/tim/ui/showConfirmDialog";
-import {slugify} from "../../../static/scripts/tim/util/slugify";
+import {showConfirm} from "tim/ui/showConfirmDialog";
+import {slugify} from "tim/util/slugify";
 import {
     GroupType,
     SisuAssessmentExportModule,

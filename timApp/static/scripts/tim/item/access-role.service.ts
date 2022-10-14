@@ -2,8 +2,8 @@ import {Injectable} from "@angular/core";
 import {Duration, Moment} from "moment";
 import {shortestUniquePrefixes, toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
-import {IGroup} from "../user/IUser";
-import {IItem} from "./IItem";
+import {IGroup} from "tim/user/IUser";
+import {IItem} from "tim/item/IItem";
 
 export interface IGroupWithAdminDocPath extends IGroup {
     admin_doc_path: string | null;

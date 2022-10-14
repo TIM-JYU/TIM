@@ -18,20 +18,20 @@ import {AnswerChartModule} from "tim/lecture/answer-chart.component";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {FormsModule} from "@angular/forms";
 import {AngularDraggableModule} from "angular2-draggable";
-import {IUser} from "../user/IUser";
-import {isAdmin, Users} from "../user/userService";
-import {lectureinfoglobals} from "../util/globals";
-import {createDowngradedModule, doDowngrade} from "../downgrade";
-import {TimeStampToMomentConverter} from "../util/time-stamp-to-moment-converter.service";
-import {showQuestionEditDialog} from "../document/question/showQuestionEditDialog";
-import {showLectureDialog} from "./showLectureDialogs";
+import {IUser} from "tim/user/IUser";
+import {isAdmin, Users} from "tim/user/userService";
+import {lectureinfoglobals} from "tim/util/globals";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {TimeStampToMomentConverter} from "tim/util/time-stamp-to-moment-converter.service";
+import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
+import {showLectureDialog} from "tim/lecture/showLectureDialogs";
 import {
     IAskedQuestion,
     ILecture,
     ILectureMessage,
     IQuestionAnswerPlain,
-} from "./lecturetypes";
-import {LectureWallContentModule} from "./lecture-wall-content.component";
+} from "tim/lecture/lecturetypes";
+import {LectureWallContentModule} from "tim/lecture/lecture-wall-content.component";
 
 /**
  * Created by hajoviin on 11.5.2015.

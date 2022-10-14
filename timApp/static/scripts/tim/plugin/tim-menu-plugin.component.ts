@@ -7,17 +7,22 @@ import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {onClick, OnClickArg} from "../document/eventhandlers";
-import {ViewCtrl} from "../document/viewctrl";
-import {IRights} from "../user/IRights";
-import {genericglobals} from "../util/globals";
-import {vctrlInstance} from "../document/viewctrlinstance";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {AnswerSheetModule} from "../document/question/answer-sheet.component";
-import {PurifyModule} from "../util/purify.module";
-import {pluginMap} from "../main";
-import {AngularPluginBase} from "./angular-plugin-base.directive";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
+import {onClick, OnClickArg} from "tim/document/eventhandlers";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {IRights} from "tim/user/IRights";
+import {genericglobals} from "tim/util/globals";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {AnswerSheetModule} from "tim/document/question/answer-sheet.component";
+import {PurifyModule} from "tim/util/purify.module";
+import {pluginMap} from "tim/main";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
 
 const TimMenuMarkup = t.intersection([
     t.partial({

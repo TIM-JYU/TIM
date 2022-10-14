@@ -1,5 +1,5 @@
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {IRestTaskLockDialogParams} from "./reset-task-lock-dialog-component";
+import {IRestTaskLockDialogParams} from "tim/answer/reset-task-lock-dialog-component";
 
 export async function showResetTaskLock(p: IRestTaskLockDialogParams) {
     const {ResetTaskLockDialogComponent} = await import(

@@ -30,13 +30,9 @@ import {HttpClientModule} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {getKeyCode, KEY_LEFT, KEY_RIGHT} from "tim/util/keycodes";
+import {pluginMap} from "tim/main";
 import {Iframesettings} from "../../cs/js/jsframe";
-import {
-    getKeyCode,
-    KEY_LEFT,
-    KEY_RIGHT,
-} from "../../../static/scripts/tim/util/keycodes";
-import {pluginMap} from "../../../static/scripts/tim/main";
 import {VideoLinkComponent} from "./video-link.component";
 
 function toSeconds(value: string | number | undefined): number | undefined {

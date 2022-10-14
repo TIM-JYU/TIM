@@ -4,7 +4,7 @@ import {IMapResponse} from "tim/gamification/IMapResponse";
 import {ITileSet} from "tim/gamification/ITileSet";
 import {HttpClient} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
-import {Tile} from "./tile";
+import {Tile} from "tim/gamification/tile";
 
 export interface ITile {
     frame: boolean;

@@ -25,16 +25,16 @@ import {DrawItem} from "tim/plugin/drawCanvas";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {parseHexColor, shouldUseDarkText} from "tim/util/colorUtils";
-import {ViewCtrl} from "../document/viewctrl";
-import {KEY_CTRL, KEY_ENTER, KEY_S} from "../util/keycodes";
-import {$http} from "../util/ngimport";
-import {clone, isInViewport, Result, scrollToElement, to} from "../util/utils";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {KEY_CTRL, KEY_ENTER, KEY_S} from "tim/util/keycodes";
+import {$http} from "tim/util/ngimport";
+import {clone, isInViewport, Result, scrollToElement, to} from "tim/util/utils";
 import {
     Annotation,
     IAnnotationEditableValues,
     IAnnotationInterval,
     jsonSerializer,
-} from "./velptypes";
+} from "tim/velp/velptypes";
 
 /**
  * Lists the possible reasons why an annotation is added to the document.

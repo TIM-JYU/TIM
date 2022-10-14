@@ -22,8 +22,12 @@ import {Result} from "@zxing/library";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {AngularPluginBase} from "../angular-plugin-base.directive";
-import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {
+    GenericPluginMarkup,
+    getTopLevelFields,
+    nullable,
+} from "tim/plugin/attributes";
 import {
     getUrlHttpParams,
     isMobileDevice,
@@ -32,19 +36,19 @@ import {
     TimStorage,
     to2,
     toPromise,
-} from "../../util/utils";
-import {TimUtilityModule} from "../../ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "../../downgrade";
-import {CodeScannerComponent} from "./code-scanner.component";
-import {MediaDevicesSupported} from "./util";
+} from "tim/util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {CodeScannerComponent} from "tim/plugin/userselect/code-scanner.component";
+import {MediaDevicesSupported} from "tim/plugin/userselect/util";
 import {
     IQueryHandler,
     PrefetchedQueryHandler,
     SearchResult,
     ServerQueryHandler,
     UserResult,
-} from "./searchQueryHandlers";
-import {T9KeyboardComponent} from "./t9-keyboard.component";
+} from "tim/plugin/userselect/searchQueryHandlers";
+import {T9KeyboardComponent} from "tim/plugin/userselect/t9-keyboard.component";
 
 const NeedsVerifyReasons = t.type({
     changeGroupBelongs: t.string,

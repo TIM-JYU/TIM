@@ -9,9 +9,9 @@
  * @copyright 2022 TIMTra project authors
  */
 
-import {ILanguage, ITranslator} from "../item/IItem";
-import {Result, to} from "../util/utils";
-import {$http} from "../util/ngimport";
+import {ILanguage, ITranslator} from "tim/item/IItem";
+import {Result, to} from "tim/util/utils";
+import {$http} from "tim/util/ngimport";
 
 type SupportedLanguagesAndTranslators = {
     source: ILanguage[];

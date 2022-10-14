@@ -5,7 +5,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {to} from "tim/util/utils";
-import {$http} from "../util/ngimport";
+import {$http} from "tim/util/ngimport";
 
 export interface IRestTaskLockDialogParams {
     currentUser: string;

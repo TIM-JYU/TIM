@@ -25,10 +25,10 @@ import {BookmarkNamePipe} from "tim/bookmark/bookmark-name.pipe";
 import {MarkAllAsReadComponent} from "tim/ui/mark-all-as-read.component";
 import {SwitchButtonComponent} from "tim/sidebarmenu/util/switch-button.component";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
-import {PluginFrameComponent} from "./plugin-frame.component";
-import {LoadingComponent} from "./loading.component";
-import {MarkupErrorComponent} from "./markup-error.component";
-import {CloseButtonComponent} from "./close-button.component";
+import {PluginFrameComponent} from "tim/ui/plugin-frame.component";
+import {LoadingComponent} from "tim/ui/loading.component";
+import {MarkupErrorComponent} from "tim/ui/markup-error.component";
+import {CloseButtonComponent} from "tim/ui/close-button.component";
 
 @NgModule({
     providers: [SessionVerify],

@@ -9,8 +9,8 @@ import {showBookmarkDialog} from "tim/bookmark/showBookmarkDialog";
 import {HttpClient} from "@angular/common/http";
 import {RootCtrl} from "tim/timRoot";
 import {rootInstance} from "tim/rootinstance";
-import {getCourseCode, ITaggedItem} from "../item/IItem";
-import {to2, toPromise} from "../util/utils";
+import {getCourseCode, ITaggedItem} from "tim/item/IItem";
+import {to2, toPromise} from "tim/util/utils";
 
 export interface ITaggedBookmarkedItem {
     doc: ITaggedItem;

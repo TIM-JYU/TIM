@@ -27,17 +27,22 @@ import {DndDropEvent, DndModule} from "ngx-drag-drop";
 import {polyfill} from "mobile-drag-drop";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {ProgressbarModule} from "ngx-bootstrap/progressbar";
-import {ConsentType} from "../ui/consent";
+import {ConsentType} from "tim/ui/consent";
 import {
     INotification,
     ISettings,
     NotificationType,
     settingsglobals,
-} from "../util/globals";
-import {IOkResponse, isIOS, timeout, to2, toPromise} from "../util/utils";
-import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
-import {DocumentOrFolder, ITranslatorUsage} from "../item/IItem";
-import {ContactOrigin, IFullUser, IUserApiKey, IUserContact} from "./IUser";
+} from "tim/util/globals";
+import {IOkResponse, isIOS, timeout, to2, toPromise} from "tim/util/utils";
+import {TimTable, TimTableComponent, TimTableModule} from "tim/plugin/timTable";
+import {DocumentOrFolder, ITranslatorUsage} from "tim/item/IItem";
+import {
+    ContactOrigin,
+    IFullUser,
+    IUserApiKey,
+    IUserContact,
+} from "tim/user/IUser";
 
 @Component({
     selector: "settings-button-panel",

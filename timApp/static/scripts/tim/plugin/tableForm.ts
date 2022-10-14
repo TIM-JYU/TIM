@@ -35,15 +35,15 @@ import {documentglobals} from "tim/util/globals";
 import {PurifyModule} from "tim/util/purify.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {ViewCtrl} from "../document/viewctrl";
-import {widenFields} from "../util/common";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {widenFields} from "tim/util/common";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
     IncludeUsersOption,
     nullable,
     withDefault,
-} from "./attributes";
+} from "tim/plugin/attributes";
 import {
     CellAttrToSave,
     CellToSave,
@@ -55,7 +55,7 @@ import {
     TimTable,
     TimTableComponent,
     TimTableModule,
-} from "./timTable";
+} from "tim/plugin/timTable";
 
 const RunScriptModel = t.type({
     script: nullable(t.string),

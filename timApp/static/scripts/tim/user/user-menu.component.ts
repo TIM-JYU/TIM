@@ -10,8 +10,8 @@ import {
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showGroupLockDialog} from "tim/item/active-group-lock-dialog/showGroupLockDialog";
 import {to2} from "tim/util/utils";
-import {IUser} from "./IUser";
-import {Users} from "./userService";
+import {IUser} from "tim/user/IUser";
+import {Users} from "tim/user/userService";
 
 /**
  * Displays the current user name and the number of additional

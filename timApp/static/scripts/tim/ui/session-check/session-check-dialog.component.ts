@@ -6,12 +6,12 @@ import {
     EncodeHintType,
     QRCodeDecoderErrorCorrectionLevel,
 } from "@zxing/library";
-import {TimUtilityModule} from "../tim-utility.module";
-import {AngularDialogComponent} from "../angulardialog/angular-dialog-component.directive";
-import {DialogModule} from "../angulardialog/dialog.module";
-import {toPromise} from "../../util/utils";
-import {Users} from "../../user/userService";
-import {IFullUser} from "../../user/IUser";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {toPromise} from "tim/util/utils";
+import {Users} from "tim/user/userService";
+import {IFullUser} from "tim/user/IUser";
 
 interface ISessionStatus {
     sessionId: string;

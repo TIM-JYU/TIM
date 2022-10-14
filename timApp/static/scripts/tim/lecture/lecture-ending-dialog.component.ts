@@ -4,7 +4,7 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
-import {hasLectureEnded, ILecture} from "./lecturetypes";
+import {hasLectureEnded, ILecture} from "tim/lecture/lecturetypes";
 
 export interface ILectureEndingDialogResult {
     extendTime: number;

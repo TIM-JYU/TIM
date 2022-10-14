@@ -1,6 +1,6 @@
 import {HttpClient} from "@angular/common/http";
-import {getUrlHttpParams, Result, toPromise} from "../../util/utils";
-import {IUser} from "../../user/IUser";
+import {getUrlHttpParams, Result, toPromise} from "tim/util/utils";
+import {IUser} from "tim/user/IUser";
 
 export interface UserResult {
     user: IUser;

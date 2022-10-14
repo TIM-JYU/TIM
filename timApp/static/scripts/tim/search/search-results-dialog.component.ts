@@ -8,12 +8,12 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
-import {ITag, TagType} from "../item/IItem";
+import {ITag, TagType} from "tim/item/IItem";
 import {
     IDocSearchResult,
     ITagSearchResult,
     SearchBoxComponent,
-} from "./search-box.component";
+} from "tim/search/search-box.component";
 
 export interface ISearchResultDisplay {
     result: IDocSearchResult;

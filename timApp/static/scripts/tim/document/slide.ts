@@ -1,9 +1,9 @@
 import $ from "jquery";
 import {getURLParameter, injectStyle, IOkResponse, to} from "tim/util/utils";
 import {environment} from "tim/environments/environment";
-import {IDocument, IItem} from "../item/IItem";
-import {documentglobals, ISlideGlobals, slideglobals} from "../util/globals";
-import {$http, $log, $timeout} from "../util/ngimport";
+import {IDocument, IItem} from "tim/item/IItem";
+import {documentglobals, ISlideGlobals, slideglobals} from "tim/util/globals";
+import {$http, $log, $timeout} from "tim/util/ngimport";
 
 const pollInterval = 500;
 let receiving = true;

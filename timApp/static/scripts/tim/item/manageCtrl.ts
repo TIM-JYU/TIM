@@ -12,12 +12,18 @@ import {
     updateTranslationData,
     updateTranslatorLanguages,
 } from "tim/document/languages";
-import {IManageResponse} from "../document/editing/edittypes";
-import {IGroup} from "../user/IUser";
-import {Users} from "../user/userService";
-import {manageglobals} from "../util/globals";
-import {$http} from "../util/ngimport";
-import {capitalizeFirstLetter, clone, markAsUsed, to, to2} from "../util/utils";
+import {IManageResponse} from "tim/document/editing/edittypes";
+import {IGroup} from "tim/user/IUser";
+import {Users} from "tim/user/userService";
+import {manageglobals} from "tim/util/globals";
+import {$http} from "tim/util/ngimport";
+import {
+    capitalizeFirstLetter,
+    clone,
+    markAsUsed,
+    to,
+    to2,
+} from "tim/util/utils";
 import {
     IDocument,
     IFolder,
@@ -28,7 +34,7 @@ import {
     redirectToItem,
     getItemTypeName,
     ITranslator,
-} from "./IItem";
+} from "tim/item/IItem";
 
 markAsUsed(snv, tem);
 

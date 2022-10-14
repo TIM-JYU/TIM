@@ -26,7 +26,7 @@ import {HttpClientModule} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {pluginMap} from "../../../static/scripts/tim/main";
+import {pluginMap} from "tim/main";
 
 const ShowFileMarkup = t.intersection([
     t.partial({

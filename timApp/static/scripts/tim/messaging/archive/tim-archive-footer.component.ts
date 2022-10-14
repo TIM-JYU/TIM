@@ -1,9 +1,9 @@
 import {Component, Input, OnInit, ViewEncapsulation} from "@angular/core";
-import {getViewName} from "../../util/utils";
+import {getViewName} from "tim/util/utils";
 import {
     ArchivedMessageStateService,
     SiblingMessages,
-} from "./archived-message-state.service";
+} from "tim/messaging/archive/archived-message-state.service";
 
 @Component({
     selector: "tim-archive-footer",

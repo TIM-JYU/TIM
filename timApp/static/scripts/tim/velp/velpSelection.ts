@@ -13,8 +13,8 @@ import * as velpSummary from "tim/velp/velp-summary.component";
 import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showConfirm} from "tim/ui/showConfirmDialog";
-import {ViewCtrl} from "../document/viewctrl";
-import {$http} from "../util/ngimport";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {$http} from "tim/util/ngimport";
 import {
     ILabel,
     ILabelUI,
@@ -26,7 +26,7 @@ import {
     IVelpGroupCollection,
     IVelpGroupUI,
     VelpGroupSelectionType,
-} from "./velptypes";
+} from "tim/velp/velptypes";
 
 markAsUsed(velpSummary);
 

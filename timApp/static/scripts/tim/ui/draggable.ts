@@ -5,7 +5,7 @@ import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
 import {Pos} from "tim/ui/pos";
 import {nullable} from "tim/plugin/attributes";
-import {$compile} from "../util/ngimport";
+import {$compile} from "tim/util/ngimport";
 import {
     Binding,
     getOutOffsetFully,
@@ -16,7 +16,7 @@ import {
     ISize,
     isMobileDevice,
     TimStorage,
-} from "../util/utils";
+} from "tim/util/utils";
 
 function getPixels(s: string) {
     const s2 = s.replace(/px$/, "");

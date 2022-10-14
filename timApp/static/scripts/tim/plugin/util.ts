@@ -5,10 +5,13 @@ import {isLeft} from "fp-ts/lib/Either";
 import {IAnswer} from "tim/answer/IAnswer";
 import {IUser} from "tim/user/IUser";
 import {createParContext} from "tim/document/structure/create";
-import {Binding} from "../util/utils";
-import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "./attributes";
-import {getErrors} from "./errors";
-import {TaskId} from "./taskid";
+import {Binding} from "tim/util/utils";
+import {
+    IGenericPluginMarkup,
+    IGenericPluginTopLevelFields,
+} from "tim/plugin/attributes";
+import {getErrors} from "tim/plugin/errors";
+import {TaskId} from "tim/plugin/taskid";
 
 export function getDefaults<
     MarkupType extends IGenericPluginMarkup,

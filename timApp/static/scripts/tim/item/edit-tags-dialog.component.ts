@@ -9,11 +9,11 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
-import {TEACHERS_GROUPNAME} from "../user/IUser";
-import {userBelongsToGroupOrIsAdmin} from "../user/userService";
-import {toPromise} from "../util/utils";
-import {DatetimePickerModule} from "../ui/datetime-picker/datetime-picker.component";
-import {IItem, ITag, tagStyleClass, TagType} from "./IItem";
+import {TEACHERS_GROUPNAME} from "tim/user/IUser";
+import {userBelongsToGroupOrIsAdmin} from "tim/user/userService";
+import {toPromise} from "tim/util/utils";
+import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
+import {IItem, ITag, tagStyleClass, TagType} from "tim/item/IItem";
 
 const tagParsingSeparator = ",";
 

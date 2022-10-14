@@ -11,11 +11,11 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {ViewCtrl} from "../document/viewctrl";
-import {getItem, IItem} from "../item/IItem";
-import {isScreenSizeOrLower} from "../util/utils";
-import {createDowngradedModule, Digest, doDowngrade} from "../downgrade";
-import {LectureController} from "./lectureController";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {getItem, IItem} from "tim/item/IItem";
+import {isScreenSizeOrLower} from "tim/util/utils";
+import {createDowngradedModule, Digest, doDowngrade} from "tim/downgrade";
+import {LectureController} from "tim/lecture/lectureController";
 
 @Component({
     selector: "tim-lecture-menu",

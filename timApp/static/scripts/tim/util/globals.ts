@@ -5,9 +5,9 @@ import {
     IDocSettings,
     ISlideDocSettings,
     MeetingDateEntry,
-} from "../document/IDocSettings";
-import {EditMode} from "../document/popup-menu-dialog.component";
-import {IViewRange, IViewRangeUnnamed} from "../document/viewRangeInfo";
+} from "tim/document/IDocSettings";
+import {EditMode} from "tim/document/popup-menu-dialog.component";
+import {IViewRange, IViewRangeUnnamed} from "tim/document/viewRangeInfo";
 import {
     DocumentOrFolder,
     IDocument,
@@ -15,8 +15,8 @@ import {
     IFullDocument,
     IItem,
     ITranslation,
-} from "../item/IItem";
-import {ILecture} from "../lecture/lecturetypes";
+} from "tim/item/IItem";
+import {ILecture} from "tim/lecture/lecturetypes";
 import {
     ICurrentUser,
     IGroup,
@@ -24,7 +24,7 @@ import {
     IUser,
     IUserContact,
     IUserListEntry,
-} from "../user/IUser";
+} from "tim/user/IUser";
 
 interface ILayout {
     col_1_lg: number;

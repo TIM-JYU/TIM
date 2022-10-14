@@ -81,15 +81,15 @@ import {
     IMenuFunctionEntry,
 } from "tim/document/viewutils";
 import {pluginMap} from "tim/main";
-import {onClick, OnClickArg} from "../document/eventhandlers";
+import {onClick, OnClickArg} from "tim/document/eventhandlers";
 import {
     ChangeType,
     FormModeOption,
     ISetAnswerResult,
     ITimComponent,
     ViewCtrl,
-} from "../document/viewctrl";
-import {ParCompiler} from "../editor/parCompiler";
+} from "tim/document/viewctrl";
+import {ParCompiler} from "tim/editor/parCompiler";
 import {
     getKeyCode,
     isArrowKey,
@@ -102,8 +102,8 @@ import {
     KEY_RIGHT,
     KEY_TAB,
     KEY_UP,
-} from "../util/keycodes";
-import {$http} from "../util/ngimport";
+} from "tim/util/keycodes";
+import {$http} from "tim/util/ngimport";
 import {
     clone,
     copyToClipboard,
@@ -114,9 +114,9 @@ import {
     StringOrNumber,
     timeout,
     to,
-} from "../util/utils";
-import {TaskId} from "./taskid";
-import {PluginMeta} from "./util";
+} from "tim/util/utils";
+import {TaskId} from "tim/plugin/taskid";
+import {PluginMeta} from "tim/plugin/util";
 
 const timDateRegex = /^\d{4}-\d{2}-\d{2}[ T]?\d{2}:\d{2}(:\d{2})?$/;
 

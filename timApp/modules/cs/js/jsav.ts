@@ -17,11 +17,11 @@ import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {timeout} from "tim/util/utils";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
-import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
-import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
-import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
-import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {pluginMap} from "../../../static/scripts/tim/main";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {PurifyModule} from "tim/util/purify.module";
+import {pluginMap} from "tim/main";
 import {Iframesettings} from "./jsframe";
 
 /**

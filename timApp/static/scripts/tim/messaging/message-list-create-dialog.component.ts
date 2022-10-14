@@ -11,13 +11,17 @@ import {
     switchMap,
     tap,
 } from "rxjs/operators";
-import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
-import {DialogModule} from "../ui/angulardialog/dialog.module";
-import {toPromise} from "../util/utils";
-import {Users} from "../user/userService";
-import {IDocument, redirectToItem} from "../item/IItem";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {toPromise} from "tim/util/utils";
+import {Users} from "tim/user/userService";
+import {IDocument, redirectToItem} from "tim/item/IItem";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {
+    archivePolicyNames,
+    ArchiveType,
+    ListOptions,
+} from "tim/messaging/listOptionTypes";
 
 enum NameRequirements {
     ERROR = -1,

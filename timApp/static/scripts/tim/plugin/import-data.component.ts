@@ -8,12 +8,17 @@ import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {IUser} from "../user/IUser";
-import {TimStorage} from "../util/utils";
-import {pluginMap} from "../main";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
-import {AngularPluginBase} from "./angular-plugin-base.directive";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {IUser} from "tim/user/IUser";
+import {TimStorage} from "tim/util/utils";
+import {pluginMap} from "tim/main";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 
 const ImportDataMarkup = t.intersection([
     t.partial({

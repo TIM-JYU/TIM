@@ -19,8 +19,8 @@ import {
     AnswerSheetModule,
     IPreviewParams,
     makePreview,
-} from "../document/question/answer-sheet.component";
-import {setStorage, to2, toPromise} from "../util/utils";
+} from "tim/document/question/answer-sheet.component";
+import {setStorage, to2, toPromise} from "tim/util/utils";
 import {
     AnswerTable,
     IAskedQuestion,
@@ -30,8 +30,8 @@ import {
     questionAnswerReceived,
     questionAsked,
     QuestionOrAnswer,
-} from "./lecturetypes";
-import {showStatisticsDialog} from "./showLectureDialogs";
+} from "tim/lecture/lecturetypes";
+import {showStatisticsDialog} from "tim/lecture/showLectureDialogs";
 
 /**
  * Created by hajoviin on 22.4.2015

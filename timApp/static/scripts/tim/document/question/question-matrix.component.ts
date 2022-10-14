@@ -5,7 +5,7 @@ import {
     QueryList,
     ViewChildren,
 } from "@angular/core";
-import type {QuestionEditDialogComponent} from "./question-edit-dialog.component";
+import type {QuestionEditDialogComponent} from "tim/document/question/question-edit-dialog.component";
 
 // noinspection JSConstantReassignment
 @Component({

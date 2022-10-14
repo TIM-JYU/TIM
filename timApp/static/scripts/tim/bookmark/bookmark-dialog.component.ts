@@ -4,7 +4,7 @@ import {IBookmark} from "tim/bookmark/bookmark.service";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
-import {TimUtilityModule} from "../ui/tim-utility.module";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 @Component({
     selector: "tim-bookmark-dialog",

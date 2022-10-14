@@ -7,7 +7,7 @@
 
 import {NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
-import {HTMLSanitizePipe} from "./htmlsanitize.pipe";
+import {HTMLSanitizePipe} from "tim/util/htmlsanitize.pipe";
 
 @NgModule({
     declarations: [HTMLSanitizePipe],

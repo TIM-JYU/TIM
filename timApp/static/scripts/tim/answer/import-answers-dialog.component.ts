@@ -2,16 +2,16 @@ import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {Component, NgModule, ViewChild} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {PurifyModule} from "../util/purify.module";
-import {EditorModule} from "../../../../modules/cs/js/editor/module";
-import {DialogModule} from "../ui/angulardialog/dialog.module";
-import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "tim/util/purify.module";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {documentglobals} from "tim/util/globals";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {toPromise} from "tim/util/utils";
 import {AceEditorComponent} from "../../../../modules/cs/js/editor/ace";
-import {documentglobals} from "../util/globals";
-import {ViewCtrl} from "../document/viewctrl";
-import {vctrlInstance} from "../document/viewctrlinstance";
-import {toPromise} from "../util/utils";
+import {EditorModule} from "../../../../modules/cs/js/editor/module";
 
 export interface IEditJsonEventOptions {
     filterParams: Record<string, string>;

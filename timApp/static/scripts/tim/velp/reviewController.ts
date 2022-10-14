@@ -20,13 +20,13 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ParContext} from "tim/document/structure/parContext";
 import {createParContext} from "tim/document/structure/create";
 import {AnswerBrowserComponent} from "tim/answer/answerbrowser3";
-import {IUser} from "../user/IUser";
-import {IAnswer} from "../answer/IAnswer";
-import {addElementToParagraphMargin} from "../document/parhelpers";
-import {ViewCtrl} from "../document/viewctrl";
-import {IItem} from "../item/IItem";
-import {documentglobals} from "../util/globals";
-import {$compile, $http, $rootScope} from "../util/ngimport";
+import {IUser} from "tim/user/IUser";
+import {IAnswer} from "tim/answer/IAnswer";
+import {addElementToParagraphMargin} from "tim/document/parhelpers";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {IItem} from "tim/item/IItem";
+import {documentglobals} from "tim/util/globals";
+import {$compile, $http, $rootScope} from "tim/util/ngimport";
 import {
     angularWait,
     checkIfElement,
@@ -35,8 +35,8 @@ import {
     log,
     to,
     truncate,
-} from "../util/utils";
-import {VelpSelectionController} from "./velpSelection";
+} from "tim/util/utils";
+import {VelpSelectionController} from "tim/velp/velpSelection";
 import {
     Annotation,
     IAnnotationCoordinate,
@@ -46,7 +46,7 @@ import {
     IVelpUI,
     jsonSerializer,
     NewAnnotation,
-} from "./velptypes";
+} from "tim/velp/velptypes";
 
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how

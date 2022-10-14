@@ -56,11 +56,15 @@ import {
     ParAreaInclusionKind,
 } from "tim/document/structure/areaContext";
 import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
-import {IMenuFunctionEntry, MenuFunctionList} from "../viewutils";
-import {ViewCtrl} from "../viewctrl";
-import {handleUnread} from "../readings";
-import {canEditPar, canSeeSource, getElementByParId} from "../parhelpers";
-import {onClick} from "../eventhandlers";
+import {IMenuFunctionEntry, MenuFunctionList} from "tim/document/viewutils";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {handleUnread} from "tim/document/readings";
+import {
+    canEditPar,
+    canSeeSource,
+    getElementByParId,
+} from "tim/document/parhelpers";
+import {onClick} from "tim/document/eventhandlers";
 import {
     EditPosition,
     EditType,
@@ -68,7 +72,7 @@ import {
     IExtraData,
     IParResponse,
     ITags,
-} from "./edittypes";
+} from "tim/document/editing/edittypes";
 
 export interface IParEditorOptions {
     forcedClasses?: string[];

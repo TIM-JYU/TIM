@@ -19,21 +19,25 @@ import {
     AnswerSheetModule,
     IPreviewParams,
     makePreview,
-} from "../document/question/answer-sheet.component";
-import {ChangeType, ITimComponent, ViewCtrl} from "../document/viewctrl";
+} from "tim/document/question/answer-sheet.component";
+import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {
     AnswerTable,
     AskedJsonJsonCodec,
     IQuestionMarkup,
-} from "../lecture/lecturetypes";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {vctrlInstance} from "../document/viewctrlinstance";
-import {PurifyModule} from "../util/purify.module";
-import {showQuestionAskDialog} from "../lecture/showLectureDialogs";
-import {pluginMap} from "../main";
-import {ParContext} from "../document/structure/parContext";
-import {GenericPluginMarkup, getTopLevelFields, nullable} from "./attributes";
-import {AngularPluginBase} from "./angular-plugin-base.directive";
+} from "tim/lecture/lecturetypes";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {PurifyModule} from "tim/util/purify.module";
+import {showQuestionAskDialog} from "tim/lecture/showLectureDialogs";
+import {pluginMap} from "tim/main";
+import {ParContext} from "tim/document/structure/parContext";
+import {
+    GenericPluginMarkup,
+    getTopLevelFields,
+    nullable,
+} from "tim/plugin/attributes";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 
 const PluginMarkupFields = t.intersection([
     GenericPluginMarkup,

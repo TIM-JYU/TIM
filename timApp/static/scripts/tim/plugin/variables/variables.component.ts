@@ -8,8 +8,8 @@ import {
     AfterViewInit,
 } from "@angular/core";
 import DOMPurify from "dompurify";
-import {Changes} from "../../util/angularchanges";
-import {TimDefer} from "../../util/timdefer";
+import {Changes} from "tim/util/angularchanges";
+import {TimDefer} from "tim/util/timdefer";
 
 @Component({
     selector: "tim-variables",

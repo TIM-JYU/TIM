@@ -3,9 +3,9 @@ import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {toPromise} from "tim/util/utils";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {createDowngradedModule, doDowngrade} from "../downgrade";
-import {documentglobals} from "../util/globals";
-import {TimUtilityModule} from "./tim-utility.module";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {documentglobals} from "tim/util/globals";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 @Component({
     selector: "tim-style-preview",

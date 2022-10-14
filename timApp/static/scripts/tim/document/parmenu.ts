@@ -11,11 +11,11 @@ import {
     tryCreateParContextOrHelp,
 } from "tim/document/structure/create";
 import {Coords, dist, getPageXY, to2} from "tim/util/utils";
-import {onClick, OnClickArg} from "./eventhandlers";
-import {getCitePar} from "./parhelpers";
-import {EditMode} from "./popup-menu-dialog.component";
-import {ViewCtrl} from "./viewctrl";
-import {getEmptyCoords, MenuFunctionList} from "./viewutils";
+import {onClick, OnClickArg} from "tim/document/eventhandlers";
+import {getCitePar} from "tim/document/parhelpers";
+import {EditMode} from "tim/document/popup-menu-dialog.component";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {getEmptyCoords, MenuFunctionList} from "tim/document/viewutils";
 
 function checkIfIgnored(
     ignoredTags: string[],

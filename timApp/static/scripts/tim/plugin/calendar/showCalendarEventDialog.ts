@@ -9,8 +9,8 @@
  * @license MIT
  * @date 24.5.2022
  */
-import {angularDialog} from "../../ui/angulardialog/dialog.service";
-import {TIMCalendarEvent} from "./calendar.component";
+import {angularDialog} from "tim/ui/angulardialog/dialog.service";
+import {TIMCalendarEvent} from "tim/plugin/calendar/calendar.component";
 
 export async function showCalendarEventDialog(
     event: TIMCalendarEvent

@@ -2,12 +2,12 @@ import {Component, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
-import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
-import {DialogModule} from "../ui/angulardialog/dialog.module";
-import {toPromise} from "../util/utils";
-import {Channel} from "../messaging/listOptionTypes";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {ContactOrigin, IUserContact} from "./IUser";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {toPromise} from "tim/util/utils";
+import {Channel} from "tim/messaging/listOptionTypes";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {ContactOrigin, IUserContact} from "tim/user/IUser";
 
 /**
  * User can add additional contact information to be stored in TIM.

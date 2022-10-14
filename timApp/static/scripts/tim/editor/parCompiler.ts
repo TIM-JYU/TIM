@@ -3,8 +3,8 @@ import {staticDynamicImport} from "tim/staticDynamicImport";
 import {$compile, $injector, $log, $timeout} from "tim/util/ngimport";
 import {timLogTime} from "tim/util/timTiming";
 import {MathDocument} from "mathjax-full/js/core/MathDocument";
-import {ViewCtrl} from "../document/viewctrl";
-import {injectStyle, ModuleArray, timeout} from "../util/utils";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {injectStyle, ModuleArray, timeout} from "tim/util/utils";
 
 export interface IPluginInfoResponse {
     js: string[];

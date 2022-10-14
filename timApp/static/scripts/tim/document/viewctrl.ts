@@ -37,39 +37,42 @@ import {DerefOption} from "tim/document/structure/derefOption";
 import {enumPars} from "tim/document/structure/iteration";
 import {getParContainerElem} from "tim/document/structure/create";
 import {UserListController} from "tim/answer/userlistController";
-import {AnswerBrowserComponent} from "../answer/answerbrowser3";
-import {PluginLoaderComponent} from "../plugin/plugin-loader.component";
-import {IAnswer} from "../answer/IAnswer";
-import {IPluginInfoResponse, ParCompiler} from "../editor/parCompiler";
-import {IDocument} from "../item/IItem";
-import {LectureController} from "../lecture/lectureController";
+import {AnswerBrowserComponent} from "tim/answer/answerbrowser3";
+import {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
+import {IAnswer} from "tim/answer/IAnswer";
+import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
+import {IDocument} from "tim/item/IItem";
+import {LectureController} from "tim/lecture/lectureController";
 import {
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
     nullable,
-} from "../plugin/attributes";
-import {TableFormComponent} from "../plugin/tableForm";
-import {DocIdDotName, TaskId} from "../plugin/taskid";
-import {TimTableComponent} from "../plugin/timTable";
-import {initCssPrint} from "../printing/cssPrint";
-import {IUser, IUserListEntry} from "../user/IUser";
-import {Users} from "../user/userService";
-import {widenFields} from "../util/common";
-import {documentglobals} from "../util/globals";
-import {$compile, $http, $interval, $timeout} from "../util/ngimport";
-import {AnnotationComponent} from "../velp/annotation.component";
-import {ReviewController} from "../velp/reviewController";
-import {EditingHandler} from "./editing/editing";
-import {PendingCollection} from "./editing/edittypes";
-import {onClick} from "./eventhandlers";
-import {IDocSettings} from "./IDocSettings";
+} from "tim/plugin/attributes";
+import {TableFormComponent} from "tim/plugin/tableForm";
+import {DocIdDotName, TaskId} from "tim/plugin/taskid";
+import {TimTableComponent} from "tim/plugin/timTable";
+import {initCssPrint} from "tim/printing/cssPrint";
+import {IUser, IUserListEntry} from "tim/user/IUser";
+import {Users} from "tim/user/userService";
+import {widenFields} from "tim/util/common";
+import {documentglobals} from "tim/util/globals";
+import {$compile, $http, $interval, $timeout} from "tim/util/ngimport";
+import {AnnotationComponent} from "tim/velp/annotation.component";
+import {ReviewController} from "tim/velp/reviewController";
+import {EditingHandler} from "tim/document/editing/editing";
+import {PendingCollection} from "tim/document/editing/edittypes";
+import {onClick} from "tim/document/eventhandlers";
+import {IDocSettings} from "tim/document/IDocSettings";
 import {
     EditMode,
     PopupMenuDialogComponent,
-} from "./popup-menu-dialog.component";
-import {initSlideView} from "./slide";
-import {ViewRangeInfo} from "./viewRangeInfo";
-import {ICtrlWithMenuFunctionEntry, IMenuFunctionEntry} from "./viewutils";
+} from "tim/document/popup-menu-dialog.component";
+import {initSlideView} from "tim/document/slide";
+import {ViewRangeInfo} from "tim/document/viewRangeInfo";
+import {
+    ICtrlWithMenuFunctionEntry,
+    IMenuFunctionEntry,
+} from "tim/document/viewutils";
 
 markAsUsed(interceptor);
 

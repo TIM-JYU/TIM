@@ -12,7 +12,7 @@ import {BrowserModule} from "@angular/platform-browser";
 import {TaggedDocumentListComponent} from "tim/item/tagged-document-list.component";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 import * as t from "io-ts";
-import {TimStorage} from "../util/utils";
+import {TimStorage} from "tim/util/utils";
 
 @Component({
     selector: "tim-search-tags-dialog",

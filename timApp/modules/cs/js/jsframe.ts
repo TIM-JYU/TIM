@@ -40,13 +40,13 @@ import {PurifyModule} from "tim/util/purify.module";
 import {
     ICtrlWithMenuFunctionEntry,
     IMenuFunctionEntry,
-} from "../../../static/scripts/tim/document/viewutils";
+} from "tim/document/viewutils";
 import {
     exitFullScreen,
     fullscreenSupported,
     toggleFullScreen,
-} from "../../../static/scripts/tim/util/fullscreen";
-import {pluginMap} from "../../../static/scripts/tim/main";
+} from "tim/util/fullscreen";
+import {pluginMap} from "tim/main";
 import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([

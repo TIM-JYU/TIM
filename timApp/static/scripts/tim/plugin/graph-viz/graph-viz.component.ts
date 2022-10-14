@@ -1,6 +1,6 @@
 import {Component, Input, OnInit} from "@angular/core";
-import {Changes} from "../../util/angularchanges";
-import {to2} from "../../util/utils";
+import {Changes} from "tim/util/angularchanges";
+import {to2} from "tim/util/utils";
 
 @Component({
     selector: "tim-graph-viz",

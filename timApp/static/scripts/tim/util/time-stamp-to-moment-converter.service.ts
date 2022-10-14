@@ -8,7 +8,7 @@ import {
 import {Observable} from "rxjs/internal/Observable";
 import {Injectable} from "@angular/core";
 import {map} from "rxjs/operators";
-import {convertDateStringsToMoments} from "./utils";
+import {convertDateStringsToMoments} from "tim/util/utils";
 
 @Injectable()
 export class TimeStampToMomentConverter implements HttpInterceptor {

@@ -8,7 +8,7 @@ import {maybeDeref} from "tim/document/structure/maybeDeref";
 import {enumDocParts, PreambleIteration} from "tim/document/structure/parsing";
 import {ReadonlyWeakMap} from "tim/util/types/readonlyWeakMap";
 import {NotRemovableHTMLElement} from "tim/document/structure/notRemovableElement";
-import {documentglobals} from "../util/globals";
+import {documentglobals} from "tim/util/globals";
 
 type ParMapValue = [
     prev: Paragraph | undefined,

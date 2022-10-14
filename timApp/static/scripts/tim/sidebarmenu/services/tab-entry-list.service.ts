@@ -10,8 +10,8 @@ import {ScoreInfoTabComponent} from "tim/sidebarmenu/tabs/score-info-tab.compone
 import {LectureInfoTabComponent} from "tim/sidebarmenu/tabs/lecture-info-tab.component";
 import {LoadQuestionsTabComponent} from "tim/sidebarmenu/tabs/load-questions-tab.component";
 import {LoggedUsersTabComponent} from "tim/sidebarmenu/tabs/logged-users-tab.component";
-import {TabEntry} from "../menu-tab.directive";
-import {HeaderIndexerService} from "./header-indexer.service";
+import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
+import {HeaderIndexerService} from "tim/sidebarmenu/services/header-indexer.service";
 
 @Injectable({
     providedIn: "root",

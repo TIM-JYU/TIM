@@ -15,7 +15,7 @@ import {
     HttpErrorResponse,
     HttpEventType,
 } from "@angular/common/http";
-import {defaultWuffMessage} from "../../../../static/scripts/tim/util/utils";
+import {defaultWuffMessage} from "tim/util/utils";
 import {NotificationComponent} from "./notification";
 import {sizeString, timeString} from "./util";
 import {Set} from "./set";

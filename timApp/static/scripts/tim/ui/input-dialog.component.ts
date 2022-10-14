@@ -5,7 +5,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
-import {Result} from "../util/utils";
+import {Result} from "tim/util/utils";
 
 export type InputDialogParams<T> = {
     title: string;

@@ -1,10 +1,10 @@
 import {AlertSeverity} from "tim/ui/formErrorMessage";
 import {getURLParameter} from "tim/util/utils";
 import {Component, Input, OnInit} from "@angular/core";
-import {$http} from "../util/ngimport";
-import {slugify} from "../util/slugify";
-import {to} from "../util/utils";
-import {ITaggedItem, TagType} from "./IItem";
+import {$http} from "tim/util/ngimport";
+import {slugify} from "tim/util/slugify";
+import {to} from "tim/util/utils";
+import {ITaggedItem, TagType} from "tim/item/IItem";
 
 @Component({
     selector: "create-item",

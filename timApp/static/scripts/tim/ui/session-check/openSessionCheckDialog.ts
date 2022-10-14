@@ -1,5 +1,5 @@
 import {to2} from "tim/util/utils";
-import {angularDialog} from "../angulardialog/dialog.service";
+import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 
 export async function openSessionCheckDialog() {
     const {SessionCheckDialogComponent} = await import(

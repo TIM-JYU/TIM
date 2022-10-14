@@ -4,7 +4,7 @@ import {
     ArchivedMessageStateService,
     MessageData,
     SiblingMessages,
-} from "./archived-message-state.service";
+} from "tim/messaging/archive/archived-message-state.service";
 
 @Component({
     selector: "tim-archive-header",

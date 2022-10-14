@@ -1,7 +1,7 @@
 import {Component, Input, NgModule} from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {ILectureMessage} from "./lecturetypes";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {ILectureMessage} from "tim/lecture/lecturetypes";
 
 @Component({
     selector: "tim-lecture-wall-content",

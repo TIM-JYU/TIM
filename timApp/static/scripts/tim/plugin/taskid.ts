@@ -1,5 +1,5 @@
 import {iso, Newtype} from "newtype-ts";
-import {Result} from "../util/utils";
+import {Result} from "tim/util/utils";
 
 // Note: this regex allows empty task name because we want to detect that case when parsing.
 // It enables giving a more accurate error message.

@@ -4,7 +4,7 @@ import {Users} from "tim/user/userService";
 import {BookmarksComponent} from "tim/sidebarmenu/util/bookmarks.component";
 import {setRoot} from "tim/rootinstance";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {timApp} from "./app";
+import {timApp} from "tim/app";
 
 export interface IVisibilityVars {
     footer?: boolean;

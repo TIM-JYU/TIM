@@ -1,7 +1,7 @@
 import {Component} from "@angular/core";
-import {DocumentOrFolder, IFolder, IItem} from "../item/IItem";
-import {Users} from "../user/userService";
-import {folderglobals} from "../util/globals";
+import {DocumentOrFolder, IFolder, IItem} from "tim/item/IItem";
+import {Users} from "tim/user/userService";
+import {folderglobals} from "tim/util/globals";
 
 const MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives/";
 const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";

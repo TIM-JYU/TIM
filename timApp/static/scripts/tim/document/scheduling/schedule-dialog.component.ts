@@ -6,16 +6,16 @@ import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import moment from "moment";
 import humanizeDuration from "humanize-duration";
-import {IItem} from "../../item/IItem";
-import {to2, toPromise} from "../../util/utils";
-import {TimUtilityModule} from "../../ui/tim-utility.module";
-import {DatetimePickerModule} from "../../ui/datetime-picker/datetime-picker.component";
-import {DurationChoice} from "../../ui/duration-picker.component";
-import {showInputDialog} from "../../ui/showInputDialog";
-import {InputDialogKind} from "../../ui/input-dialog.kind";
-import {IGroup} from "../../user/IUser";
-import {isAdmin} from "../../user/userService";
-import {ReadonlyMoment} from "../../util/readonlymoment";
+import {IItem} from "tim/item/IItem";
+import {to2, toPromise} from "tim/util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
+import {DurationChoice} from "tim/ui/duration-picker.component";
+import {showInputDialog} from "tim/ui/showInputDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {IGroup} from "tim/user/IUser";
+import {isAdmin} from "tim/user/userService";
+import {ReadonlyMoment} from "tim/util/readonlymoment";
 
 interface IInterval {
     every: number;

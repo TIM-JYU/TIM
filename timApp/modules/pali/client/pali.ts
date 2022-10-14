@@ -25,7 +25,7 @@ import {debounceTime, distinctUntilChanged} from "rxjs/operators";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {PurifyModule} from "tim/util/purify.module";
-import {pluginMap} from "../../../static/scripts/tim/main";
+import {pluginMap} from "tim/main";
 
 const PluginMarkupFields = t.intersection([
     t.partial({

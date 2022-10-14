@@ -7,8 +7,8 @@ import {BrowserModule} from "@angular/platform-browser";
 import {CommonDialogOptions} from "tim/answer/commondialogoptions";
 import * as t from "io-ts";
 import {TimStorage} from "tim/util/utils";
-import {$httpParamSerializer} from "../util/ngimport";
-import {IUser} from "../user/IUser";
+import {$httpParamSerializer} from "tim/util/ngimport";
+import {IUser} from "tim/user/IUser";
 
 const AnswersDialogOptions = t.intersection([
     t.type({

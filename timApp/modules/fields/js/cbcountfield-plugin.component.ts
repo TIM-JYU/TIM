@@ -31,9 +31,9 @@ import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {pluginMap} from "tim/main";
-import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
-import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "tim/util/purify.module";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {FieldBasicData} from "./textfield-plugin.component";
 
 const CbcountfieldMarkup = t.intersection([

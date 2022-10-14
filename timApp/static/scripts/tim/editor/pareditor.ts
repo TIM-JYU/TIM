@@ -18,22 +18,22 @@ import {
     updateTranslationData,
     updateTranslatorLanguages,
 } from "tim/document/languages";
-import {IExtraData, ITags} from "../document/editing/edittypes";
-import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
-import {getCitePar} from "../document/parhelpers";
-import {ViewCtrl} from "../document/viewctrl";
-import {registerDialogComponentForModule} from "../ui/dialog";
+import {IExtraData, ITags} from "tim/document/editing/edittypes";
+import {IDocSettings, MeetingDateEntry} from "tim/document/IDocSettings";
+import {getCitePar} from "tim/document/parhelpers";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {registerDialogComponentForModule} from "tim/ui/dialog";
 import {
     documentglobals,
     genericglobals,
     IMeetingMemoSettings,
-} from "../util/globals";
-import {$compile, $http, $injector, $timeout, $upload} from "../util/ngimport";
-import {AceParEditor} from "./AceParEditor";
-import {EditorType, SelectionRange} from "./BaseParEditor";
-import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
-import {RestampDialogClose} from "./restamp-dialog.component";
-import {TextAreaParEditor} from "./TextAreaParEditor";
+} from "tim/util/globals";
+import {$compile, $http, $injector, $timeout, $upload} from "tim/util/ngimport";
+import {AceParEditor} from "tim/editor/AceParEditor";
+import {EditorType, SelectionRange} from "tim/editor/BaseParEditor";
+import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
+import {RestampDialogClose} from "tim/editor/restamp-dialog.component";
+import {TextAreaParEditor} from "tim/editor/TextAreaParEditor";
 
 markAsUsed(rangyinputs);
 

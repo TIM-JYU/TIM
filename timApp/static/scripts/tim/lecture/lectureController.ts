@@ -37,11 +37,11 @@ import {
 } from "tim/lecture/currentQuestion";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
-import {ViewCtrl} from "../document/viewctrl";
-import {Users} from "../user/userService";
-import {someglobals} from "../util/globals";
-import {$http, $log, $rootScope, $timeout} from "../util/ngimport";
-import {IAnswerQuestionResult} from "./answer-to-question-dialog.component";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {Users} from "tim/user/userService";
+import {someglobals} from "tim/util/globals";
+import {$http, $log, $rootScope, $timeout} from "tim/util/ngimport";
+import {IAnswerQuestionResult} from "tim/lecture/answer-to-question-dialog.component";
 import {
     alreadyAnswered,
     hasLectureEnded,
@@ -68,8 +68,8 @@ import {
     questionAnswerReceived,
     questionAsked,
     questionHasAnswer,
-} from "./lecturetypes";
-import {LectureWallDialogComponent} from "./lecture-wall-dialog.component";
+} from "tim/lecture/lecturetypes";
+import {LectureWallDialogComponent} from "tim/lecture/lecture-wall-dialog.component";
 
 enum LectureEndingDialogState {
     NotAnswered,

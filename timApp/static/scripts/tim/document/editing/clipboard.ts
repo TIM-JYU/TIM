@@ -12,12 +12,12 @@ import {
     ParAreaInclusionKind,
 } from "tim/document/structure/areaContext";
 import {Area} from "tim/document/structure/area";
-import {Users} from "../../user/userService";
-import {$http} from "../../util/ngimport";
-import {empty, to} from "../../util/utils";
-import {getElementByParId} from "../parhelpers";
-import {ViewCtrl} from "../viewctrl";
-import {EditType, IParResponse} from "./edittypes";
+import {Users} from "tim/user/userService";
+import {$http} from "tim/util/ngimport";
+import {empty, to} from "tim/util/utils";
+import {getElementByParId} from "tim/document/parhelpers";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {EditType, IParResponse} from "tim/document/editing/edittypes";
 
 export type ClipboardMetaResponse =
     | {

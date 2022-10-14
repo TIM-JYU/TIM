@@ -17,7 +17,7 @@ import {
     SimpleChanges,
 } from "@angular/core";
 import {IUser} from "tim/user/IUser";
-import {Annotation} from "./velptypes";
+import {Annotation} from "tim/velp/velptypes";
 
 @Component({
     selector: "velp-summary",

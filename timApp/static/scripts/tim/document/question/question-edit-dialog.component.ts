@@ -43,7 +43,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {deleteQuestionWithConfirm} from "tim/document/question/fetchQuestion";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {IParResponse} from "../editing/edittypes";
+import {IParResponse} from "tim/document/editing/edittypes";
 
 /**
  * Controller for creating and editing questions

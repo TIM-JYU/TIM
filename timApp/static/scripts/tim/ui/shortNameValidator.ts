@@ -1,6 +1,6 @@
 import {IAttributes, IController, INgModelController, IScope} from "angular";
 import {timApp} from "tim/app";
-import {slugify} from "../util/slugify";
+import {slugify} from "tim/util/slugify";
 
 timApp.directive("timShortName", [
     () => {

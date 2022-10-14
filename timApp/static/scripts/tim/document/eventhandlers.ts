@@ -1,8 +1,8 @@
 import $ from "jquery";
-import {KEY_ENTER} from "../util/keycodes";
-import {$document, $log} from "../util/ngimport";
-import {Coords, dist, isIOS, isTouchEvent} from "../util/utils";
-import {EDITOR_CLASS_DOT} from "./parhelpers";
+import {KEY_ENTER} from "tim/util/keycodes";
+import {$document, $log} from "tim/util/ngimport";
+import {Coords, dist, isIOS, isTouchEvent} from "tim/util/utils";
+import {EDITOR_CLASS_DOT} from "tim/document/parhelpers";
 
 function fixPageCoords(
     e: JQuery.MouseEventBase | JQuery.TouchEventBase

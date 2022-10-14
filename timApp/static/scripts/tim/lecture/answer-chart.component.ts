@@ -13,12 +13,12 @@ import {BrowserModule} from "@angular/platform-browser";
 import {NgChartsModule} from "ng2-charts";
 import * as t from "io-ts";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {clone, TimStorage, truncate} from "../util/utils";
+import {clone, TimStorage, truncate} from "tim/util/utils";
 import {
     IAskedQuestion,
     IQuestionAnswer,
     IQuestionAnswerPlain,
-} from "./lecturetypes";
+} from "tim/lecture/lecturetypes";
 
 /**
  * Created by hajoviin on 13.5.2015.

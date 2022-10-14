@@ -7,7 +7,7 @@ import {HttpClient} from "@angular/common/http";
 import {Component, Input} from "@angular/core";
 import {TimStorage, toPromise} from "tim/util/utils";
 import * as t from "io-ts";
-import {ITag, ITaggedItem, tagStyleClass} from "./IItem";
+import {ITag, ITaggedItem, tagStyleClass} from "tim/item/IItem";
 
 @Component({
     selector: "tim-tagged-document-list",

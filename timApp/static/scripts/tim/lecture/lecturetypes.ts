@@ -2,10 +2,10 @@ import moment, {Moment} from "moment";
 import {mandatoryAndOptional} from "tim/util/utils";
 import * as t from "io-ts";
 import {ReadonlyMoment} from "tim/util/readonlymoment";
-import {IItem} from "../item/IItem";
-import {IGenericPluginMarkup, nullable} from "../plugin/attributes";
-import {DurationChoice} from "../ui/duration-picker.component";
-import {IUser} from "../user/IUser";
+import {IItem} from "tim/item/IItem";
+import {IGenericPluginMarkup, nullable} from "tim/plugin/attributes";
+import {DurationChoice} from "tim/ui/duration-picker.component";
+import {IUser} from "tim/user/IUser";
 
 export type IExplCollection = Record<string, string>;
 

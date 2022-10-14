@@ -12,16 +12,16 @@ import {
     to,
 } from "tim/util/utils";
 
-import {durationTypes} from "../ui/duration-picker.component";
-import {IGroup} from "../user/IUser";
-import {genericglobals, itemglobals} from "../util/globals";
-import {$http, $timeout} from "../util/ngimport";
+import {durationTypes} from "tim/ui/duration-picker.component";
+import {IGroup} from "tim/user/IUser";
+import {genericglobals, itemglobals} from "tim/util/globals";
+import {$http, $timeout} from "tim/util/ngimport";
 import {
     accessOrder,
     IAccessType,
     IItemWithRights,
     IRight,
-} from "./access-role.service";
+} from "tim/item/access-role.service";
 
 markAsUsed(focusMe);
 

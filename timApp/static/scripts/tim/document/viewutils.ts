@@ -1,4 +1,4 @@
-import {Coords} from "../util/utils";
+import {Coords} from "tim/util/utils";
 
 export type MenuFunction = (e: MouseEvent, coords?: Coords) => unknown;
 

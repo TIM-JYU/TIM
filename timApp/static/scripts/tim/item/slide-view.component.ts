@@ -11,9 +11,9 @@ import {
     SafeResourceUrl,
 } from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {createDowngradedModule, doDowngrade} from "../downgrade";
-import {documentglobals} from "../util/globals";
-import {TimUtilityModule} from "../ui/tim-utility.module";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {documentglobals} from "tim/util/globals";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 @Component({
     selector: "tim-slide-view",

@@ -16,9 +16,9 @@ import {
     tryCreateParContextOrHelp,
 } from "tim/document/structure/create";
 import {HelpPar} from "tim/document/structure/helpPar";
-import {IItem} from "../item/IItem";
-import {Users} from "../user/userService";
-import {$http, $log, $timeout} from "../util/ngimport";
+import {IItem} from "tim/item/IItem";
+import {Users} from "tim/user/userService";
+import {$http, $log, $timeout} from "tim/util/ngimport";
 import {
     getViewName,
     IOkResponse,
@@ -28,15 +28,15 @@ import {
     posToRelative,
     to,
     to2,
-} from "../util/utils";
-import {EditPosition, EditType} from "./editing/edittypes";
+} from "tim/util/utils";
+import {EditPosition, EditType} from "tim/document/editing/edittypes";
 import {
     onClick,
     OnClickArg,
     onMouseOver,
     onMouseOverOut,
-} from "./eventhandlers";
-import {canSeeSource} from "./parhelpers";
+} from "tim/document/eventhandlers";
+import {canSeeSource} from "tim/document/parhelpers";
 
 export const readClasses = {
     1: "screen",

@@ -10,10 +10,10 @@ import {$rootScope} from "tim/util/ngimport";
 import {PurifyModule} from "tim/util/purify.module";
 import {HelpPar} from "tim/document/structure/helpPar";
 import {ParContext} from "tim/document/structure/parContext";
-import {documentglobals} from "../util/globals";
-import {copyToClipboard, toPromise} from "../util/utils";
-import {ViewCtrl} from "./viewctrl";
-import {IMenuFunctionEntry, MenuFunctionList} from "./viewutils";
+import {documentglobals} from "tim/util/globals";
+import {copyToClipboard, toPromise} from "tim/util/utils";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {IMenuFunctionEntry, MenuFunctionList} from "tim/document/viewutils";
 import ClickEvent = JQuery.ClickEvent;
 import TriggeredEvent = JQuery.TriggeredEvent;
 

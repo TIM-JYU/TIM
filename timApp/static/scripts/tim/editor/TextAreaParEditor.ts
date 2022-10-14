@@ -12,8 +12,8 @@ import {
     KEY_S,
     KEY_TAB,
     KEY_Y,
-} from "../util/keycodes";
-import {$log} from "../util/ngimport";
+} from "tim/util/keycodes";
+import {$log} from "tim/util/ngimport";
 import {
     BaseParEditor,
     CURSOR,
@@ -21,7 +21,7 @@ import {
     focusAfter,
     IEditorCallbacks,
     SelectionRange,
-} from "./BaseParEditor";
+} from "tim/editor/BaseParEditor";
 
 export class TextAreaParEditor extends BaseParEditor {
     public editor: JQuery;

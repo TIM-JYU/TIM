@@ -23,11 +23,11 @@ import {injectStyle, log} from "tim/util/utils";
 import {EditMode} from "tim/document/popup-menu-dialog.component";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
-import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
-import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
-import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
-import {pluginMap} from "../../../static/scripts/tim/main";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "tim/util/purify.module";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {pluginMap} from "tim/main";
 
 const answerPlaceHolder = "|answer|";
 const correctPlaceHolder = "|correct|";

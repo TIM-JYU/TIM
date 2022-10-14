@@ -71,7 +71,7 @@ import {
     Viewport,
     viewportsEqual,
     VisibleItems,
-} from "./util";
+} from "tim/plugin/dataview/util";
 
 /**
  * General interface for an object that provides the data model for DataViewComponent.

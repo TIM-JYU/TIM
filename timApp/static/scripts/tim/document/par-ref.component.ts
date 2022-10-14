@@ -1,7 +1,7 @@
 import {Component, Input} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
-import {IDocument} from "../item/IItem";
-import {getGroupDesc, toPromise} from "../util/utils";
+import {IDocument} from "tim/item/IItem";
+import {getGroupDesc, toPromise} from "tim/util/utils";
 
 interface IParInfo {
     item: IDocument;

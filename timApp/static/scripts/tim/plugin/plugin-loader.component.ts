@@ -20,29 +20,32 @@ import {
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {createDowngradedModule, doDowngrade} from "../downgrade";
-import {vctrlInstance} from "../document/viewctrlinstance";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {pluginMap} from "../main";
-import {ParCompiler} from "../editor/parCompiler";
-import {PurifyModule} from "../util/purify.module";
-import {getURLParameter, Require, to} from "../util/utils";
-import {ITimComponent, ViewCtrl} from "../document/viewctrl";
-import {TimDefer} from "../util/timdefer";
-import {ReadonlyMoment} from "../util/readonlymoment";
-import {timLogTime} from "../util/timTiming";
-import {$http, $timeout} from "../util/ngimport";
-import {Users} from "../user/userService";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {pluginMap} from "tim/main";
+import {ParCompiler} from "tim/editor/parCompiler";
+import {PurifyModule} from "tim/util/purify.module";
+import {getURLParameter, Require, to} from "tim/util/utils";
+import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {TimDefer} from "tim/util/timdefer";
+import {ReadonlyMoment} from "tim/util/readonlymoment";
+import {timLogTime} from "tim/util/timTiming";
+import {$http, $timeout} from "tim/util/ngimport";
+import {Users} from "tim/user/userService";
 import {
     AnswerBrowserComponent,
     AnswerBrowserModule,
-} from "../answer/answerbrowser3";
-import {IGenericPluginMarkup} from "./attributes";
-import {TaskId, TaskIdWithDefaultDocId} from "./taskid";
-import type {TapeAttrs, TapePluginContent} from "./tape-plugin.component";
-import type {MCQ, MMCQ} from "./mmcq";
-import {PluginJson} from "./angular-plugin-base.directive";
-import type {TimTable, TimTableComponent} from "./timTable";
+} from "tim/answer/answerbrowser3";
+import {IGenericPluginMarkup} from "tim/plugin/attributes";
+import {TaskId, TaskIdWithDefaultDocId} from "tim/plugin/taskid";
+import type {
+    TapeAttrs,
+    TapePluginContent,
+} from "tim/plugin/tape-plugin.component";
+import type {MCQ, MMCQ} from "tim/plugin/mmcq";
+import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
+import type {TimTable, TimTableComponent} from "tim/plugin/timTable";
 
 const LAZY_MARKER = "lazy";
 const LAZY_MARKER_LENGTH = LAZY_MARKER.length;

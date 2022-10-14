@@ -1,5 +1,5 @@
 import {NgModule} from "@angular/core";
-import {PurifyPipe} from "./purify.pipe";
+import {PurifyPipe} from "tim/util/purify.pipe";
 
 @NgModule({
     declarations: [PurifyPipe],

@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {NgModel} from "@angular/forms";
-import {TimDefer} from "../util/timdefer";
+import {TimDefer} from "tim/util/timdefer";
 
 @Injectable()
 export class InputService {

@@ -7,7 +7,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {GraphVizComponent} from "tim/plugin/graph-viz/graph-viz.component";
 import {VariablesComponent} from "tim/plugin/variables/variables.component";
-import {pluginMap} from "../../../static/scripts/tim/main";
+import {pluginMap} from "tim/main";
 import {CsRunnerComponent} from "./csPlugin";
 import {CsTextComponent} from "./text";
 import {CsConsoleComponent} from "./console";

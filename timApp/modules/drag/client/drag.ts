@@ -17,23 +17,20 @@ import {
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
 import {pluginMap} from "tim/main";
-import {ITimComponent} from "../../../static/scripts/tim/document/viewctrl";
+import {ITimComponent} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
     nullable,
     withDefault,
-} from "../../../static/scripts/tim/plugin/attributes";
-import {
-    parseStyles,
-    shuffleStrings,
-} from "../../../static/scripts/tim/plugin/util";
-import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
-import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
-import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
-import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {DocIdDotName} from "../../../static/scripts/tim/plugin/taskid";
-import {isIOS} from "../../../static/scripts/tim/util/utils";
+} from "tim/plugin/attributes";
+import {parseStyles, shuffleStrings} from "tim/plugin/util";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {PurifyModule} from "tim/util/purify.module";
+import {DocIdDotName} from "tim/plugin/taskid";
+import {isIOS} from "tim/util/utils";
 
 const DragMarkup = t.intersection([
     t.partial({

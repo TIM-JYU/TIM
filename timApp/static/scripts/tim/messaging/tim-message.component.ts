@@ -5,7 +5,7 @@ import {markAsRead} from "tim/messaging/messagingUtils";
 import {FormsModule} from "@angular/forms";
 import {toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {TimMessageData} from "./tim-message-view.component";
+import {TimMessageData} from "tim/messaging/tim-message-view.component";
 
 interface ReplyOptions {
     archive: boolean;

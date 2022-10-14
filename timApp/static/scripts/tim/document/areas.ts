@@ -10,10 +10,10 @@ import {ParContext} from "tim/document/structure/parContext";
 import {ParSelection} from "tim/document/editing/parSelection";
 import {createParContext} from "tim/document/structure/create";
 import {getContextualAreaInfo} from "tim/document/structure/areaContext";
-import {$http} from "../util/ngimport";
-import {ViewCtrl} from "./viewctrl";
-import {onClick} from "./eventhandlers";
-import {INameAreaOptions} from "./editing/name-area-dialog.component";
+import {$http} from "tim/util/ngimport";
+import {ViewCtrl} from "tim/document/viewctrl";
+import {onClick} from "tim/document/eventhandlers";
+import {INameAreaOptions} from "tim/document/editing/name-area-dialog.component";
 
 export class AreaHandler {
     public selectedAreaName: string | undefined;

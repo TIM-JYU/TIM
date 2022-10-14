@@ -41,7 +41,7 @@ import {GamificationMapComponent} from "tim/gamification/gamification-map.compon
 import {SelfExpireComponent} from "tim/item/self-expire.component";
 import {SearchButtonComponent} from "tim/search/search-button.component";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
-import {RoleInfoComponent} from "./header/role-info.component";
+import {RoleInfoComponent} from "tim/header/role-info.component";
 
 @NgModule({
     declarations: [

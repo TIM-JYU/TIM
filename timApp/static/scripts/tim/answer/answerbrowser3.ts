@@ -31,18 +31,23 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
 import {PurifyModule} from "tim/util/purify.module";
-import {isVelpable, ViewCtrl} from "../document/viewctrl";
-import {ParCompiler} from "../editor/parCompiler";
+import {isVelpable, ViewCtrl} from "tim/document/viewctrl";
+import {ParCompiler} from "tim/editor/parCompiler";
 import {
     IAnswerBrowserSettings,
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
-} from "../plugin/attributes";
-import {IUser, sortByRealName} from "../user/IUser";
-import {isAdmin, Users} from "../user/userService";
-import {documentglobals} from "../util/globals";
-import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "../util/keycodes";
-import {$filter, $http, $httpParamSerializer, $timeout} from "../util/ngimport";
+} from "tim/plugin/attributes";
+import {IUser, sortByRealName} from "tim/user/IUser";
+import {isAdmin, Users} from "tim/user/userService";
+import {documentglobals} from "tim/util/globals";
+import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "tim/util/keycodes";
+import {
+    $filter,
+    $http,
+    $httpParamSerializer,
+    $timeout,
+} from "tim/util/ngimport";
 import {
     getURLParameter,
     getUrlParams,
@@ -51,8 +56,12 @@ import {
     Require,
     to,
     to2,
-} from "../util/utils";
-import {IAnswer, IAnswerWithUsers, IModelAnswerSettings} from "./IAnswer";
+} from "tim/util/utils";
+import {
+    IAnswer,
+    IAnswerWithUsers,
+    IModelAnswerSettings,
+} from "tim/answer/IAnswer";
 
 /*
  * TODO: if forceBrowser and formMode, now does not show the browser after refresh in view-mode.

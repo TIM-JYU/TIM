@@ -14,7 +14,7 @@ import {
     IExtraData,
     IManageResponse,
     IParResponse,
-} from "./edittypes";
+} from "tim/document/editing/edittypes";
 
 export interface IManageRenameParams {
     duplicates: Duplicate[];

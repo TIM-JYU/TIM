@@ -22,29 +22,29 @@ import {FormsModule} from "@angular/forms";
 import {Subject, Subscription} from "rxjs";
 import {debounceTime, distinctUntilChanged} from "rxjs/operators";
 import {PurifyModule} from "tim/util/purify.module";
-import {defaultErrorMessage, defaultTimeout} from "../util/utils";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {CsUtilityModule} from "../../../../modules/cs/js/util/module";
-import {
-    FileSelectManagerComponent,
-    IFile,
-    IFileSpecification,
-} from "../../../../modules/cs/js/util/file-select";
+import {defaultErrorMessage, defaultTimeout} from "tim/util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {
     ITimComponent,
     IVelpableComponent,
     ViewCtrl,
-} from "../document/viewctrl";
-import {vctrlInstance} from "../document/viewctrlinstance";
-import {IUser} from "../user/IUser";
-import {pluginMap} from "../main";
-import {AngularPluginBase} from "./angular-plugin-base.directive";
+} from "tim/document/viewctrl";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {IUser} from "tim/user/IUser";
+import {pluginMap} from "tim/main";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
     nullable,
     withDefault,
-} from "./attributes";
+} from "tim/plugin/attributes";
+import {
+    FileSelectManagerComponent,
+    IFile,
+    IFileSpecification,
+} from "../../../../modules/cs/js/util/file-select";
+import {CsUtilityModule} from "../../../../modules/cs/js/util/module";
 
 const FileSubmission = t.intersection([
     t.type({

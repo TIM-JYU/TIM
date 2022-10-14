@@ -3,7 +3,7 @@ import {inIframe} from "tim/plugin/util";
 import {$httpParamSerializer} from "tim/util/ngimport";
 import {Component, OnInit} from "@angular/core";
 import {showLoginDialog} from "tim/user/showLoginDialog";
-import {Users} from "./userService";
+import {Users} from "tim/user/userService";
 
 /**
  * Displays either a button for opening the login dialog or the user menu component

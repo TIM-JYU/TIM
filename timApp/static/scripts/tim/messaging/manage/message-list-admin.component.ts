@@ -1,7 +1,7 @@
 import {HttpClient} from "@angular/common/http";
 import {Component, Input, OnInit} from "@angular/core";
 import moment, {Moment} from "moment";
-import {to, to2, toPromise} from "../../util/utils";
+import {to, to2, toPromise} from "tim/util/utils";
 import {
     archivePolicyNames,
     ArchiveType,
@@ -11,12 +11,12 @@ import {
     MemberInfo,
     MessageVerificationType,
     ReplyToListChanges,
-} from "../listOptionTypes";
-import {documentglobals} from "../../util/globals";
-import {showInputDialog} from "../../ui/showInputDialog";
-import {InputDialogKind} from "../../ui/input-dialog.kind";
-import {$http} from "../../util/ngimport";
-import {Users} from "../../user/userService";
+} from "tim/messaging/listOptionTypes";
+import {documentglobals} from "tim/util/globals";
+import {showInputDialog} from "tim/ui/showInputDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {$http} from "tim/util/ngimport";
+import {Users} from "tim/user/userService";
 
 @Component({
     selector: "tim-message-list-admin",

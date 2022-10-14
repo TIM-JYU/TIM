@@ -10,9 +10,9 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {JsonValue} from "tim/util/jsonvalue";
-import {saveCurrentScreenPar} from "../document/parhelpers";
-import {genericglobals} from "../util/globals";
-import {$http} from "../util/ngimport";
+import {saveCurrentScreenPar} from "tim/document/parhelpers";
+import {genericglobals} from "tim/util/globals";
+import {$http} from "tim/util/ngimport";
 import {
     capitalizeFirstLetter,
     IOkResponse,
@@ -20,13 +20,13 @@ import {
     Result,
     to,
     ToReturn,
-} from "../util/utils";
+} from "tim/util/utils";
 import {
     HakaLoginComponent,
     IDiscoveryFeedEntry,
     loadIdPs,
-} from "./haka-login.component";
-import {ILoginResponse, Users} from "./userService";
+} from "tim/user/haka-login.component";
+import {ILoginResponse, Users} from "tim/user/userService";
 
 interface INameResponse {
     status: "name";

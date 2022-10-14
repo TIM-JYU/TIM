@@ -17,8 +17,8 @@ import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.compo
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {isAdmin, Users} from "../user/userService";
-import {toPromise} from "../util/utils";
+import {isAdmin, Users} from "tim/user/userService";
+import {toPromise} from "tim/util/utils";
 
 interface TimMessageOptions {
     archive: boolean;

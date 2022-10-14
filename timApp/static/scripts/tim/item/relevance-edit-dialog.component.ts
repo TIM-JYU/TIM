@@ -9,8 +9,8 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {IItem} from "./IItem";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {IItem} from "tim/item/IItem";
 
 @Component({
     selector: "tim-relevance-edit-dialog",

@@ -1,8 +1,8 @@
 import {Component, Input, OnChanges, SimpleChanges} from "@angular/core";
 import {Users} from "tim/user/userService";
 import * as t from "io-ts";
-import {$http, $httpParamSerializer} from "../util/ngimport";
-import {TimStorage, to} from "../util/utils";
+import {$http, $httpParamSerializer} from "tim/util/ngimport";
+import {TimStorage, to} from "tim/util/utils";
 
 function redirectTo(url: string) {
     window.location.href = url;

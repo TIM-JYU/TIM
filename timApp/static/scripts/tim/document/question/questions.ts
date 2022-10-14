@@ -10,7 +10,7 @@ import {to2} from "tim/util/utils";
 import {documentglobals} from "tim/util/globals";
 import {$timeout} from "tim/util/ngimport";
 import {IQuestionDialogResult} from "tim/document/question/question-edit-dialog.component";
-import {ViewCtrl} from "../viewctrl";
+import {ViewCtrl} from "tim/document/viewctrl";
 
 export class QuestionHandler {
     public sc: IScope;

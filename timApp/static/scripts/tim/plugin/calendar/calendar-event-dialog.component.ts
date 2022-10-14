@@ -14,14 +14,17 @@ import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {CommonModule} from "@angular/common";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {DialogModule} from "../../ui/angulardialog/dialog.module";
-import {TimUtilityModule} from "../../ui/tim-utility.module";
-import {AngularDialogComponent} from "../../ui/angulardialog/angular-dialog-component.directive";
-import {defaultWuffMessage, toPromise} from "../../util/utils";
-import {Users} from "../../user/userService";
-import {itemglobals} from "../../util/globals";
-import {showConfirm} from "../../ui/showConfirmDialog";
-import {TIMCalendarEvent, TimCalendarModule} from "./calendar.component";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {defaultWuffMessage, toPromise} from "tim/util/utils";
+import {Users} from "tim/user/userService";
+import {itemglobals} from "tim/util/globals";
+import {showConfirm} from "tim/ui/showConfirmDialog";
+import {
+    TIMCalendarEvent,
+    TimCalendarModule,
+} from "tim/plugin/calendar/calendar.component";
 
 @Component({
     selector: "tim-calendar-event-dialog",
