@@ -1,12 +1,5 @@
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    Input,
-    NgModule,
-    ViewChild,
-} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, ElementRef, Input, NgModule, ViewChild} from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
@@ -14,7 +7,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AnswerSheetModule} from "tim/document/question/answer-sheet.component";
 import {PurifyModule} from "tim/util/purify.module";
 import {copyToClipboard, isIOS} from "tim/util/utils";
-import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
+import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 
 export enum ParameterType {

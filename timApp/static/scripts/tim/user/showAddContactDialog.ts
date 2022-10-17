@@ -1,5 +1,5 @@
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {IUserContact} from "tim/user/IUser";
+import type {IUserContact} from "tim/user/IUser";
 
 export async function showAddContactDialog(
     onAdd: (contact: IUserContact) => void

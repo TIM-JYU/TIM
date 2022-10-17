@@ -4,28 +4,21 @@
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
-import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
+import type {IVisibilityVars} from "tim/timRoot";
+import {getVisibilityVars} from "tim/timRoot";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {JsonValue} from "tim/util/jsonvalue";
+import type {JsonValue} from "tim/util/jsonvalue";
 import {saveCurrentScreenPar} from "tim/document/parhelpers";
 import {genericglobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
-import {
-    capitalizeFirstLetter,
-    IOkResponse,
-    mapSuccess,
-    Result,
-    to,
-    ToReturn,
-} from "tim/util/utils";
-import {
-    HakaLoginComponent,
-    IDiscoveryFeedEntry,
-    loadIdPs,
-} from "tim/user/haka-login.component";
-import {ILoginResponse, Users} from "tim/user/userService";
+import type {IOkResponse, Result, ToReturn} from "tim/util/utils";
+import {capitalizeFirstLetter, mapSuccess, to} from "tim/util/utils";
+import type {IDiscoveryFeedEntry} from "tim/user/haka-login.component";
+import {HakaLoginComponent, loadIdPs} from "tim/user/haka-login.component";
+import type {ILoginResponse} from "tim/user/userService";
+import {Users} from "tim/user/userService";
 import {CommonModule} from "@angular/common";
 
 interface INameResponse {

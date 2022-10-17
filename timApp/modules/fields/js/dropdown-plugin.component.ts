@@ -2,21 +2,14 @@
  * Defines the client-side implementation of a dropdown plugin.
  */
 import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    NgModule,
-    NgZone,
-} from "@angular/core";
-import {
-    ChangeType,
-    FormModeOption,
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
+import type {
     ISetAnswerResult,
     ITimComponent,
     ViewCtrl,
 } from "tim/document/viewctrl";
+import {ChangeType, FormModeOption} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,

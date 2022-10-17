@@ -1,7 +1,7 @@
 import {documentglobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
 import {getCookie, getUrlParams, to} from "tim/util/utils";
-import {ViewCtrl} from "tim/document/viewctrl";
+import type {ViewCtrl} from "tim/document/viewctrl";
 
 export interface IViewRangeUnnamed {
     b: number;

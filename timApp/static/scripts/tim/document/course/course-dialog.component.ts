@@ -4,13 +4,8 @@
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule, ViewChild} from "@angular/core";
-import {
-    ICourseSettings,
-    IItem,
-    ISubjectList,
-    ITag,
-    TagType,
-} from "tim/item/IItem";
+import type {ICourseSettings, IItem, ISubjectList, ITag} from "tim/item/IItem";
+import {TagType} from "tim/item/IItem";
 import {toPromise} from "tim/util/utils";
 import {FormsModule, NgForm} from "@angular/forms";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";

@@ -3,13 +3,8 @@ import {
     HttpClient,
     HttpClientModule,
 } from "@angular/common/http";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    NgModule,
-    NgZone,
-} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, NgModule, NgZone} from "@angular/core";
 import moment from "moment";
 import {to2, toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -17,14 +12,14 @@ import {AnswerChartModule} from "tim/lecture/answer-chart.component";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {FormsModule} from "@angular/forms";
 import {AngularDraggableModule} from "angular2-draggable";
-import {IUser} from "tim/user/IUser";
+import type {IUser} from "tim/user/IUser";
 import {isAdmin, Users} from "tim/user/userService";
 import {lectureinfoglobals} from "tim/util/globals";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {TimeStampToMomentConverter} from "tim/util/time-stamp-to-moment-converter.service";
 import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
 import {showLectureDialog} from "tim/lecture/showLectureDialogs";
-import {
+import type {
     IAskedQuestion,
     ILecture,
     ILectureMessage,

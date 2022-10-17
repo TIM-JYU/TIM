@@ -1,13 +1,14 @@
 import {Injectable} from "@angular/core";
-import {
-    HTTP_INTERCEPTORS,
+import type {
     HttpErrorResponse,
     HttpEvent,
     HttpHandler,
     HttpInterceptor,
     HttpRequest,
 } from "@angular/common/http";
-import {Observable, retry} from "rxjs";
+import {HTTP_INTERCEPTORS} from "@angular/common/http";
+import type {Observable} from "rxjs";
+import {retry} from "rxjs";
 import {openSessionCheckDialog} from "tim/ui/session-check/openSessionCheckDialog";
 
 export const SESSION_VERIFICATION_NEEDED_CODE = 490;

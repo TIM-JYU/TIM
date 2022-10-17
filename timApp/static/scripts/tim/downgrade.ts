@@ -1,6 +1,7 @@
-import {NgModuleRef, StaticProvider, Type} from "@angular/core";
+import type {NgModuleRef, StaticProvider, Type} from "@angular/core";
 import {downgradeComponent, downgradeModule} from "@angular/upgrade/static";
-import angular, {IDirectiveFactory, IModule, Injectable} from "angular";
+import type {IDirectiveFactory, IModule, Injectable} from "angular";
+import angular from "angular";
 
 export enum Digest {
     Propagate,

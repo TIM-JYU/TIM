@@ -1,39 +1,44 @@
-import {
+import type {
     ApplicationRef,
-    Component,
     DoBootstrap,
-    ElementRef,
-    Input,
-    NgModule,
     OnChanges,
     OnDestroy,
     OnInit,
-    QueryList,
     SimpleChanges,
+} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    Input,
+    NgModule,
+    QueryList,
     ViewChild,
     ViewChildren,
 } from "@angular/core";
-import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
+import type {SafeResourceUrl} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
-import {IUnsavedComponent} from "tim/document/viewctrl";
+import type {IUnsavedComponent} from "tim/document/viewctrl";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {
-    DrawToolbarModule,
-    DrawType,
+import type {
     IDrawOptions,
     IFillAndWidth,
 } from "tim/plugin/draw-canvas/draw-toolbar.component";
 import {
+    DrawToolbarModule,
+    DrawType,
+} from "tim/plugin/draw-canvas/draw-toolbar.component";
+import type {
     ILine,
     ILineSegment,
     IPoint,
     IRectangleOrEllipse,
     TuplePoint,
 } from "tim/plugin/imagex/imagextypes";
+import type {MouseOrTouch} from "tim/util/utils";
 import {
     isTouchEvent,
-    MouseOrTouch,
     numOrStringToNumber,
     posToRelative,
     touchEventToTouch,

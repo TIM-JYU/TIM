@@ -8,7 +8,7 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import * as t from "io-ts";
-import {IItem} from "tim/item/IItem";
+import type {IItem} from "tim/item/IItem";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TimStorage} from "tim/util/utils";
 import {

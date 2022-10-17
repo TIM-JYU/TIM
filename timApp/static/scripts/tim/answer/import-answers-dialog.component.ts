@@ -6,7 +6,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {documentglobals} from "tim/util/globals";
-import {ViewCtrl} from "tim/document/viewctrl";
+import type {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {toPromise} from "tim/util/utils";
 import {CommonModule} from "@angular/common";

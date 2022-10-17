@@ -1,44 +1,46 @@
-import {
+import type {
     AfterViewInit,
     ApplicationRef,
-    ChangeDetectorRef,
-    Component,
     DoBootstrap,
-    ElementRef,
-    Input,
-    NgModule,
     OnDestroy,
     OnInit,
     SimpleChanges,
+} from "@angular/core";
+import {
+    ChangeDetectorRef,
+    Component,
+    ElementRef,
+    Input,
+    NgModule,
     ViewChild,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {IController} from "angular";
+import type {IController} from "angular";
 import {timLogTime} from "tim/util/timTiming";
 import {TaskId} from "tim/plugin/taskid";
-import {
-    DrawCanvasComponent,
-    DrawCanvasModule,
-} from "tim/plugin/draw-canvas/draw-canvas.components";
+import type {DrawCanvasComponent} from "tim/plugin/draw-canvas/draw-canvas.components";
+import {DrawCanvasModule} from "tim/plugin/draw-canvas/draw-canvas.components";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAllAnswersDialog} from "tim/answer/showAllAnswersDialog";
 import {tryCreateParContextOrHelp} from "tim/document/structure/create";
 import {ParContext} from "tim/document/structure/parContext";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {showResetTaskLock} from "tim/answer/showResetTaskLock";
-import {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
+import type {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
 import {PurifyModule} from "tim/util/purify.module";
-import {isVelpable, ViewCtrl} from "tim/document/viewctrl";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import {isVelpable} from "tim/document/viewctrl";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {
+import type {
     IAnswerBrowserSettings,
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
 } from "tim/plugin/attributes";
-import {IUser, sortByRealName} from "tim/user/IUser";
+import type {IUser} from "tim/user/IUser";
+import {sortByRealName} from "tim/user/IUser";
 import {isAdmin, Users} from "tim/user/userService";
 import {documentglobals} from "tim/util/globals";
 import {KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_UP} from "tim/util/keycodes";
@@ -48,16 +50,16 @@ import {
     $httpParamSerializer,
     $timeout,
 } from "tim/util/ngimport";
+import type {Require} from "tim/util/utils";
 import {
     getURLParameter,
     getUrlParams,
     getUrlParamsJSON,
     getViewName,
-    Require,
     to,
     to2,
 } from "tim/util/utils";
-import {
+import type {
     IAnswer,
     IAnswerWithUsers,
     IModelAnswerSettings,

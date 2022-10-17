@@ -8,7 +8,7 @@ import {LectureWallContentModule} from "tim/lecture/lecture-wall-content.compone
 import {DropdownCheckboxComponent} from "tim/lecture/dropdown-checkbox.component";
 import {FormsModule} from "@angular/forms";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
-import {ILectureMessage} from "tim/lecture/lecturetypes";
+import type {ILectureMessage} from "tim/lecture/lecturetypes";
 import {CommonModule} from "@angular/common";
 
 @Component({

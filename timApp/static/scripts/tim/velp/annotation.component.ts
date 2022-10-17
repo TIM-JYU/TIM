@@ -10,31 +10,28 @@
 
 import {Users} from "tim/user/userService";
 import deepEqual from "deep-equal";
-import {
+import type {
     AfterViewInit,
-    Component,
-    ElementRef,
-    Input,
     OnDestroy,
     OnInit,
     SimpleChanges,
-    ViewChild,
 } from "@angular/core";
+import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {DrawItem} from "tim/plugin/draw-canvas/draw-canvas.components";
+import type {DrawItem} from "tim/plugin/draw-canvas/draw-canvas.components";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {parseHexColor, shouldUseDarkText} from "tim/util/colorUtils";
-import {ViewCtrl} from "tim/document/viewctrl";
+import type {ViewCtrl} from "tim/document/viewctrl";
 import {KEY_CTRL, KEY_ENTER, KEY_S} from "tim/util/keycodes";
 import {$http} from "tim/util/ngimport";
-import {clone, isInViewport, Result, scrollToElement, to} from "tim/util/utils";
-import {
-    Annotation,
+import type {Result} from "tim/util/utils";
+import {clone, isInViewport, scrollToElement, to} from "tim/util/utils";
+import type {
     IAnnotationEditableValues,
     IAnnotationInterval,
-    jsonSerializer,
 } from "tim/velp/velptypes";
+import {Annotation, jsonSerializer} from "tim/velp/velptypes";
 
 /**
  * Lists the possible reasons why an annotation is added to the document.

@@ -1,23 +1,18 @@
-import {
-    ChangeDetectorRef,
-    Component,
-    Input,
-    NgModule,
-    OnChanges,
-} from "@angular/core";
-import {ChartData, ChartDataset, ChartOptions, ChartType} from "chart.js";
+import type {OnChanges} from "@angular/core";
+import {ChangeDetectorRef, Component, Input, NgModule} from "@angular/core";
+import type {ChartData, ChartDataset, ChartOptions, ChartType} from "chart.js";
 import {fixQuestionJson} from "tim/document/question/answer-sheet.component";
-import {Overwrite} from "type-zoo";
-import {Changes} from "tim/util/angularchanges";
+import type {Overwrite} from "type-zoo";
+import type {Changes} from "tim/util/angularchanges";
 import {NgChartsModule} from "ng2-charts";
 import * as t from "io-ts";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {clone, TimStorage, truncate} from "tim/util/utils";
-import {
-    IAskedQuestion,
+import type {
     IQuestionAnswer,
     IQuestionAnswerPlain,
 } from "tim/lecture/lecturetypes";
+import {IAskedQuestion} from "tim/lecture/lecturetypes";
 import {CommonModule} from "@angular/common";
 
 /**

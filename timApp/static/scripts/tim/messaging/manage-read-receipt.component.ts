@@ -1,4 +1,5 @@
-import {Component, NgModule, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {itemglobals} from "tim/util/globals";
 import {timeout, toPromise} from "tim/util/utils";

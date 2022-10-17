@@ -1,22 +1,20 @@
 import deepmerge from "deepmerge";
-import * as t from "io-ts";
+import type * as t from "io-ts";
+import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
 import {
-    ApplicationRef,
     ChangeDetectorRef,
     Component,
-    DoBootstrap,
     ElementRef,
     NgModule,
-    OnInit,
 } from "@angular/core";
 import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {$http, $sce} from "tim/util/ngimport";
 import {TimDefer} from "tim/util/timdefer";
+import type {MouseOrTouch} from "tim/util/utils";
 import {
     defaultTimeout,
-    MouseOrTouch,
     posToRelative,
     timeout,
     to,
@@ -24,29 +22,31 @@ import {
     valueOr,
 } from "tim/util/utils";
 import {editorChangeValue} from "tim/editor/editorScope";
-import {
-    ChangeType,
+import type {
     ITimComponent,
     IVelpableComponent,
     ViewCtrl,
 } from "tim/document/viewctrl";
+import {ChangeType} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
-import {
-    DrawToolbarModule,
-    DrawType,
+import type {
     IDrawOptions,
     IDrawVisibleOptions,
 } from "tim/plugin/draw-canvas/draw-toolbar.component";
-import {Drawing, DrawItem} from "tim/plugin/draw-canvas/draw-canvas.components";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {
+    DrawToolbarModule,
+    DrawType,
+} from "tim/plugin/draw-canvas/draw-toolbar.component";
+import type {DrawItem} from "tim/plugin/draw-canvas/draw-canvas.components";
+import {Drawing} from "tim/plugin/draw-canvas/draw-canvas.components";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import type {
     CommonPropsT,
     DefaultPropsT,
     DragObjectPropsT,
     FixedObjectPropsT,
-    ImageXAll,
     ImageXMarkup,
     IPinPosition,
     IPoint,
@@ -63,13 +63,12 @@ import {
     RequiredNonNull,
     RequireExcept,
     RightAnswerT,
-    SingleSize,
     SizeT,
     TargetPropsT,
     TextboxPropsT,
     TuplePoint,
-    ValidCoord,
 } from "tim/plugin/imagex/imagextypes";
+import {ImageXAll, SingleSize, ValidCoord} from "tim/plugin/imagex/imagextypes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 
 let globalPreviewColor = "#fff";

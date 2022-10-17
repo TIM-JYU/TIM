@@ -1,8 +1,9 @@
-import moment, {Moment} from "moment";
+import type {Moment} from "moment";
+import moment from "moment";
 import {to} from "tim/util/utils";
-import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
-import {IRights} from "tim/user/IRights";
-import {IGroup} from "tim/user/IUser";
+import type {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
+import type {IRights} from "tim/user/IRights";
+import type {IGroup} from "tim/user/IUser";
 import {$http} from "tim/util/ngimport";
 
 export interface IDocument extends IItem {

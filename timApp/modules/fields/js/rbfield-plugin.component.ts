@@ -2,23 +2,14 @@
  * Defines the client-side implementation of rbfield/label plugin.
  */
 import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    NgModule,
-    NgZone,
-    OnDestroy,
-} from "@angular/core";
-import {
-    ChangeType,
-    FormModeOption,
+import type {ApplicationRef, DoBootstrap, OnDestroy} from "@angular/core";
+import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
+import type {
     ISetAnswerResult,
     ITimComponent,
-    RegexOption,
     ViewCtrl,
 } from "tim/document/viewctrl";
+import {ChangeType, FormModeOption, RegexOption} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,

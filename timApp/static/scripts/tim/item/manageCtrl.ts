@@ -1,4 +1,4 @@
-import {IController, IFormController, IHttpResponse} from "angular";
+import type {IController, IFormController, IHttpResponse} from "angular";
 import {timApp} from "tim/app";
 import {
     isManageResponse,
@@ -7,13 +7,13 @@ import {
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as snv from "tim/ui/shortNameValidator";
 import * as tem from "tim/ui/formErrorMessage";
-import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
+import type {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
 import {
     updateTranslationData,
     updateTranslatorLanguages,
 } from "tim/document/languages";
-import {IManageResponse} from "tim/document/editing/edittypes";
-import {IGroup} from "tim/user/IUser";
+import type {IManageResponse} from "tim/document/editing/edittypes";
+import type {IGroup} from "tim/user/IUser";
 import {Users} from "tim/user/userService";
 import {manageglobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
@@ -24,17 +24,16 @@ import {
     to,
     to2,
 } from "tim/util/utils";
-import {
+import type {
     IDocument,
     IFolder,
     IFullDocument,
     IItem,
     IEditableTranslation,
     ILanguage,
-    redirectToItem,
-    getItemTypeName,
     ITranslator,
 } from "tim/item/IItem";
+import {redirectToItem, getItemTypeName} from "tim/item/IItem";
 
 markAsUsed(snv, tem);
 

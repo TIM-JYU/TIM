@@ -1,6 +1,6 @@
-import {IItem} from "tim/item/IItem";
+import type {IItem} from "tim/item/IItem";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {ICourseListParams} from "tim/document/course/course-list-dialog.component";
+import type {ICourseListParams} from "tim/document/course/course-list-dialog.component";
 
 export async function showCourseDialog(d: IItem) {
     const {CourseDialogComponent} = await import("./course-dialog.component");

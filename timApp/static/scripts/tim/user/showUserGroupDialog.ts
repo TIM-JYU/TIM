@@ -1,4 +1,4 @@
-import {IDocument} from "tim/item/IItem";
+import type {IDocument} from "tim/item/IItem";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 
 export async function showUserGroupDialog(): Promise<IDocument> {

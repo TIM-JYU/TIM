@@ -1,7 +1,8 @@
 import * as t from "io-ts";
 import {Component, Input, NgModule, ViewChild} from "@angular/core";
-import {IncludeUsersOption} from "tim/plugin/attributes";
-import {IUser, sortLang} from "tim/user/IUser";
+import type {IncludeUsersOption} from "tim/plugin/attributes";
+import type {IUser} from "tim/user/IUser";
+import {sortLang} from "tim/user/IUser";
 import {
     copyToClipboard,
     StringOrNumber,
@@ -14,10 +15,8 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
-import {
-    DataModelProvider,
-    DataViewComponent,
-} from "tim/plugin/dataview/data-view.component";
+import type {DataModelProvider} from "tim/plugin/dataview/data-view.component";
+import {DataViewComponent} from "tim/plugin/dataview/data-view.component";
 import {BsDatepickerModule, BsLocaleService} from "ngx-bootstrap/datepicker";
 import {defineLocale} from "ngx-bootstrap/chronos";
 import {fiLocale} from "ngx-bootstrap/locale";

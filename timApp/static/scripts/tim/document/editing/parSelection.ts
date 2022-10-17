@@ -1,4 +1,4 @@
-import {ParContext} from "tim/document/structure/parContext";
+import type {ParContext} from "tim/document/structure/parContext";
 import {nextParContext} from "tim/document/structure/iteration";
 
 const maxIterations = 20000;

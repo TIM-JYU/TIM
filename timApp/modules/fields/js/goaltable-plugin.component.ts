@@ -2,15 +2,9 @@
  * Defines the client-side implementation of JavaScript runner plugin.
  */
 import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    NgModule,
-    NgZone,
-} from "@angular/core";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
+import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,

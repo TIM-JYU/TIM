@@ -31,21 +31,23 @@
 // TODO: Use Angular's HTTP service instead of AngularJS $http
 
 import * as t from "io-ts";
-import {
+import type {
     AfterViewInit,
     ApplicationRef,
+    DoBootstrap,
+    DoCheck,
+    OnDestroy,
+    OnInit,
+} from "@angular/core";
+import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    DoBootstrap,
-    DoCheck,
     ElementRef,
     HostListener,
     Input,
     NgModule,
     NgZone,
-    OnDestroy,
-    OnInit,
     QueryList,
     ViewChild,
     ViewChildren,
@@ -53,30 +55,30 @@ import {
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {Subscription} from "rxjs";
+import type {Subscription} from "rxjs";
 import {openEditorSimple} from "tim/editor/pareditorOpen";
 import angular from "angular";
 import {PurifyModule} from "tim/util/purify.module";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
-import {
+import type {
     DataModelProvider,
-    DataViewComponent,
     VirtualScrollingOptions,
 } from "tim/plugin/dataview/data-view.component";
+import {DataViewComponent} from "tim/plugin/dataview/data-view.component";
 import {nullable, withDefault} from "tim/plugin/attributes";
 import {showConfirm} from "tim/ui/showConfirmDialog";
-import {
+import type {
     ICtrlWithMenuFunctionEntry,
     IMenuFunctionEntry,
 } from "tim/document/viewutils";
-import {onClick, OnClickArg} from "tim/document/eventhandlers";
-import {
-    ChangeType,
-    FormModeOption,
+import type {OnClickArg} from "tim/document/eventhandlers";
+import {onClick} from "tim/document/eventhandlers";
+import type {
     ISetAnswerResult,
     ITimComponent,
     ViewCtrl,
 } from "tim/document/viewctrl";
+import {ChangeType, FormModeOption} from "tim/document/viewctrl";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {
     getKeyCode,
@@ -105,7 +107,7 @@ import {
 } from "tim/util/utils";
 import {TaskId} from "tim/plugin/taskid";
 import {PluginMeta} from "tim/plugin/util";
-import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
+import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";

@@ -1,4 +1,5 @@
-import {Component, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component} from "@angular/core";
 import {getVisibilityVars} from "tim/timRoot";
 import {getViewName, TimStorage} from "tim/util/utils";
 import {getAvailableViews} from "tim/header/utils";

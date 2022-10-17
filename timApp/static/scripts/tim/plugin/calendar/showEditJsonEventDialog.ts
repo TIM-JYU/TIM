@@ -1,6 +1,6 @@
 import {to2} from "tim/util/utils";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {IEditJsonEventOptions} from "tim/plugin/calendar/edit-json-event-dialog.component";
+import type {IEditJsonEventOptions} from "tim/plugin/calendar/edit-json-event-dialog.component";
 
 export async function showEditJsonEventDialog(opts: IEditJsonEventOptions) {
     const {EditJsonEventDialogComponent} = await import(

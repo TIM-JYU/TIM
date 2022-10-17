@@ -1,4 +1,4 @@
-import {ReadonlyMoment} from "tim/util/readonlymoment";
+import type {ReadonlyMoment} from "tim/util/readonlymoment";
 
 export type JsonValue =
     | number

@@ -7,7 +7,8 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {toPromise} from "tim/util/utils";
 import {Channel} from "tim/messaging/listOptionTypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {ContactOrigin, IUserContact} from "tim/user/IUser";
+import type {IUserContact} from "tim/user/IUser";
+import {ContactOrigin} from "tim/user/IUser";
 
 /**
  * User can add additional contact information to be stored in TIM.

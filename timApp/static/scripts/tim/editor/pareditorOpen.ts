@@ -1,8 +1,8 @@
 import {showDialog} from "tim/ui/dialog";
 import {to} from "tim/util/utils";
 import {$http, $injector} from "tim/util/ngimport";
-import {IPluginInfoResponse} from "tim/editor/parCompiler";
-import {IEditorParams} from "tim/editor/pareditor";
+import type {IPluginInfoResponse} from "tim/editor/parCompiler";
+import type {IEditorParams} from "tim/editor/pareditor";
 
 export async function openEditor(p: IEditorParams) {
     const parEd = await import("tim/editor/pareditor");

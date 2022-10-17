@@ -1,15 +1,14 @@
+import type {OnDestroy, OnInit} from "@angular/core";
 import {
     Component,
     ElementRef,
     EventEmitter,
     Input,
-    OnDestroy,
-    OnInit,
     Output,
     ViewChild,
 } from "@angular/core";
 import * as t from "io-ts";
-import {Exception, Result} from "@zxing/library";
+import type {Exception, Result} from "@zxing/library";
 import {BrowserMultiFormatReader} from "@zxing/browser";
 import {TimStorage} from "tim/util/utils";
 import {

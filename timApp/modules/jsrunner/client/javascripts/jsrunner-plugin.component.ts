@@ -1,15 +1,11 @@
 /**
  * Defines the client-side implementation of JavaScript runner plugin.
  */
-import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    Input,
-    NgModule,
-} from "@angular/core";
-import {IJsRunner, RegexOption, ViewCtrl} from "tim/document/viewctrl";
+import type * as t from "io-ts";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, Input, NgModule} from "@angular/core";
+import type {IJsRunner, ViewCtrl} from "tim/document/viewctrl";
+import {RegexOption} from "tim/document/viewctrl";
 import {copyToClipboard} from "tim/util/utils";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -20,15 +16,17 @@ import {PurifyModule} from "tim/util/purify.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {
+import type {
     AnswerReturnBrowser,
-    ErrorEntry,
     ErrorList,
     ExportData,
     IError,
+    JsrunnerMarkup,
+} from "../../shared/jsrunnertypes";
+import {
+    ErrorEntry,
     IncludeUsersOption,
     JsrunnerAll,
-    JsrunnerMarkup,
 } from "../../shared/jsrunnertypes";
 
 @Component({

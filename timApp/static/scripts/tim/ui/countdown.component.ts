@@ -1,17 +1,11 @@
-import {
-    Component,
-    EventEmitter,
-    Input,
-    OnChanges,
-    OnInit,
-    Output,
-} from "@angular/core";
-import humanizeDuration from "humanize-duration";
+import type {OnChanges, OnInit} from "@angular/core";
+import {Component, EventEmitter, Input, Output} from "@angular/core";
+import type humanizeDuration from "humanize-duration";
 import {formatString, secondsToShortTime, toPromise} from "tim/util/utils";
 import {Users} from "tim/user/userService";
 import moment from "moment";
 import {HttpClient} from "@angular/common/http";
-import {Changes} from "tim/util/angularchanges";
+import type {Changes} from "tim/util/angularchanges";
 import {ReadonlyMoment} from "tim/util/readonlymoment";
 
 // Most browsers don't report precise time to mitigate potential time-based attacks/tracking:

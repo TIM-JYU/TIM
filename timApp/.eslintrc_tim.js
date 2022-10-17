@@ -35,6 +35,7 @@ module.exports = {
         "@typescript-eslint/consistent-type-assertions": "error",
         // This is intentionally off. See https://github.com/Microsoft/TypeScript/issues/15300
         "@typescript-eslint/consistent-type-definitions": "off",
+        "@typescript-eslint/consistent-type-imports": "error",
         "@typescript-eslint/explicit-member-accessibility": [
             "off",
             {

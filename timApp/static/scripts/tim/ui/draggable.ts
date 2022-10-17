@@ -1,19 +1,17 @@
-import {IController, IScope} from "angular";
+import type {IController, IScope} from "angular";
 import * as t from "io-ts";
 import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
-import {Pos} from "tim/ui/pos";
+import type {Pos} from "tim/ui/pos";
 import {nullable} from "tim/plugin/attributes";
 import {$compile} from "tim/util/ngimport";
+import type {Binding, IBounds, ISize} from "tim/util/utils";
 import {
-    Binding,
     getOutOffsetFully,
     getOutOffsetVisible,
     getPageXY,
     getViewPortSize,
-    IBounds,
-    ISize,
     isMobileDevice,
     TimStorage,
 } from "tim/util/utils";

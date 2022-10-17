@@ -1,5 +1,5 @@
 import {Component} from "@angular/core";
-import {DocumentOrFolder, IFolder, IItem} from "tim/item/IItem";
+import type {DocumentOrFolder, IFolder, IItem} from "tim/item/IItem";
 import {Users} from "tim/user/userService";
 import {folderglobals} from "tim/util/globals";
 

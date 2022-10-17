@@ -1,4 +1,4 @@
-import {IItem} from "tim/item/IItem";
+import type {IItem} from "tim/item/IItem";
 import {to2} from "tim/util/utils";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 

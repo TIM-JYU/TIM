@@ -1,7 +1,8 @@
 import $ from "jquery";
 import {KEY_ENTER} from "tim/util/keycodes";
 import {$document, $log} from "tim/util/ngimport";
-import {Coords, dist, isIOS, isTouchEvent} from "tim/util/utils";
+import type {Coords} from "tim/util/utils";
+import {dist, isIOS, isTouchEvent} from "tim/util/utils";
 import {EDITOR_CLASS_DOT} from "tim/document/parhelpers";
 
 function fixPageCoords(

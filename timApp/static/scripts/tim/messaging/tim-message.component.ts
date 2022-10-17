@@ -1,4 +1,5 @@
-import {Component, HostBinding, Input, NgModule, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component, HostBinding, Input, NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
 import {markAsRead} from "tim/messaging/messagingUtils";

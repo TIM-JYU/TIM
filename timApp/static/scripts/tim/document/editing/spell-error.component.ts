@@ -1,13 +1,10 @@
-import {
+import type {
     ApplicationRef,
-    Component,
     DoBootstrap,
-    ElementRef,
-    Input,
-    NgModule,
     OnDestroy,
     OnInit,
 } from "@angular/core";
+import {Component, ElementRef, Input, NgModule} from "@angular/core";
 import {to2} from "tim/util/utils";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";

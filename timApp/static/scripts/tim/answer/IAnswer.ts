@@ -1,4 +1,4 @@
-import {IUser} from "tim/user/IUser";
+import type {IUser} from "tim/user/IUser";
 
 export interface IAnswer {
     content: string;

@@ -11,7 +11,7 @@ import {
 
 import {TimStorage} from "tim/util/utils";
 import * as t from "io-ts";
-import {IFile} from "../util/file-select";
+import type {IFile} from "../util/file-select";
 import {getInt} from "../util/util";
 import {NormalEditorComponent} from "./normal";
 import {AceEditorComponent} from "./ace";

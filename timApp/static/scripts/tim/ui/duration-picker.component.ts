@@ -1,4 +1,4 @@
-import moment from "moment";
+import type moment from "moment";
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 
 @Component({

@@ -1,4 +1,5 @@
-import {Pipe, PipeTransform} from "@angular/core";
+import type {PipeTransform} from "@angular/core";
+import {Pipe} from "@angular/core";
 import {capitalizeFirstLetter} from "tim/util/utils";
 
 @Pipe({name: "capitalize"})

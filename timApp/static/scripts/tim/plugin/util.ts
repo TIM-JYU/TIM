@@ -1,10 +1,11 @@
-import {Type} from "io-ts/lib";
-import {FormModeOption, ISetAnswerResult} from "tim/document/viewctrl";
+import type {Type} from "io-ts/lib";
+import type {ISetAnswerResult} from "tim/document/viewctrl";
+import {FormModeOption} from "tim/document/viewctrl";
 import {isLeft} from "fp-ts/lib/Either";
-import {IAnswer} from "tim/answer/IAnswer";
-import {IUser} from "tim/user/IUser";
+import type {IAnswer} from "tim/answer/IAnswer";
+import type {IUser} from "tim/user/IUser";
 import {createParContext} from "tim/document/structure/create";
-import {
+import type {
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
 } from "tim/plugin/attributes";

@@ -1,5 +1,5 @@
 // from https://stackoverflow.com/a/14837021
-import {IAttributes, IScope} from "angular";
+import type {IAttributes, IScope} from "angular";
 import {timApp} from "tim/app";
 import {$parse, $timeout} from "tim/util/ngimport";
 

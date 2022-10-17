@@ -1,7 +1,8 @@
 import {getURLParameter} from "tim/util/utils";
 import {inIframe} from "tim/plugin/util";
 import {$httpParamSerializer} from "tim/util/ngimport";
-import {Component, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component} from "@angular/core";
 import {showLoginDialog} from "tim/user/showLoginDialog";
 import {Users} from "tim/user/userService";
 

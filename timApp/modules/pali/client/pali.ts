@@ -9,17 +9,17 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {valueDefu} from "tim/util/utils";
-import {
+import type {
     ApplicationRef,
-    Component,
     DoBootstrap,
-    NgModule,
     OnDestroy,
     OnInit,
 } from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {Subject, Subscription} from "rxjs";
+import type {Subscription} from "rxjs";
+import {Subject} from "rxjs";
 import {debounceTime, distinctUntilChanged} from "rxjs/operators";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";

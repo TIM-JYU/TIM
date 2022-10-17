@@ -1,8 +1,8 @@
+import type {OnInit} from "@angular/core";
 import {
     Component,
     ComponentFactoryResolver,
     NgModule,
-    OnInit,
     ViewChild,
     ViewContainerRef,
 } from "@angular/core";

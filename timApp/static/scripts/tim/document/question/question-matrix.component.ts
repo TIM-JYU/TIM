@@ -1,11 +1,6 @@
-import {
-    Component,
-    ElementRef,
-    Input,
-    QueryList,
-    ViewChildren,
-} from "@angular/core";
-import type {QuestionEditDialogComponent} from "tim/document/question/question-edit-dialog.component";
+import type {ElementRef} from "@angular/core";
+import {Component, Input, QueryList, ViewChildren} from "@angular/core";
+import {QuestionEditDialogComponent} from "tim/document/question/question-edit-dialog.component";
 
 // noinspection JSConstantReassignment
 @Component({

@@ -14,13 +14,12 @@ import {
     KEY_Y,
 } from "tim/util/keycodes";
 import {$log} from "tim/util/ngimport";
+import type {IEditorCallbacks, SelectionRange} from "tim/editor/BaseParEditor";
 import {
     BaseParEditor,
     CURSOR,
     EditorType,
     focusAfter,
-    IEditorCallbacks,
-    SelectionRange,
 } from "tim/editor/BaseParEditor";
 
 export class TextAreaParEditor extends BaseParEditor {

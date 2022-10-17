@@ -9,28 +9,28 @@
  * @license MIT
  * @date 24.5.2022
  */
+import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
 import {
-    ApplicationRef,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    DoBootstrap,
     ElementRef,
     NgModule,
-    OnInit,
     ViewEncapsulation,
 } from "@angular/core";
 import * as t from "io-ts";
-import {
-    CalendarDateFormatter,
+import type {
     CalendarEvent,
     CalendarEventTimesChangedEvent,
+} from "angular-calendar";
+import {
+    CalendarDateFormatter,
     CalendarEventTitleFormatter,
     CalendarModule,
     CalendarView,
     DateAdapter,
 } from "angular-calendar";
-import {WeekViewHourSegment} from "calendar-utils";
+import type {WeekViewHourSegment} from "calendar-utils";
 import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
 import {CommonModule, registerLocaleData} from "@angular/common";
 import localeFi from "@angular/common/locales/fi";

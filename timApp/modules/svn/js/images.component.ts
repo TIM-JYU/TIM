@@ -1,14 +1,13 @@
 ﻿import * as t from "io-ts";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {
-    ApplicationRef,
     Component,
-    DoBootstrap,
     ElementRef,
     NgModule,
     ViewChild,
     ViewEncapsulation,
 } from "@angular/core";
-import {ViewCtrl} from "tim/document/viewctrl";
+import type {ViewCtrl} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,

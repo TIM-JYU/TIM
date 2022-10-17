@@ -2,7 +2,7 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {NgxTextDiffModule} from "ngx-text-diff";
-import {Pos} from "tim/ui/pos";
+import type {Pos} from "tim/ui/pos";
 import {copyToClipboard, timeout} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {CommonModule} from "@angular/common";

@@ -1,18 +1,16 @@
+import type {OnInit} from "@angular/core";
 import {
     ChangeDetectorRef,
     ComponentFactoryResolver,
     Directive,
     EventEmitter,
     Input,
-    OnInit,
     Output,
     ViewContainerRef,
 } from "@angular/core";
 import {to2} from "tim/util/utils";
-import {
-    AngularDialogComponent,
-    IDialogOptions,
-} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import type {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {IDialogOptions} from "tim/ui/angulardialog/angular-dialog-component.directive";
 
 export type DialogConstructor = new (
     ...args: unknown[]

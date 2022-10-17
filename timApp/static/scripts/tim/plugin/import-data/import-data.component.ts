@@ -2,13 +2,14 @@
  * Defines the client-side implementation of data import plugin.
  */
 import * as t from "io-ts";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {IUser} from "tim/user/IUser";
+import type {IUser} from "tim/user/IUser";
 import {TimStorage} from "tim/util/utils";
 import {
     GenericPluginMarkup,

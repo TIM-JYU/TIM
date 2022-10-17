@@ -1,23 +1,18 @@
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    NgModule,
-    ViewChild,
-} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
 import * as t from "io-ts";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule, NgForm} from "@angular/forms";
-import {race, Subject, Subscription} from "rxjs";
-import {Observable} from "rxjs/internal/Observable";
+import type {Subscription} from "rxjs";
+import {race, Subject} from "rxjs";
+import type {Observable} from "rxjs/internal/Observable";
 import {
     debounceTime,
     distinctUntilChanged,
     filter,
     first,
 } from "rxjs/operators";
-import {Result} from "@zxing/library";
+import type {Result} from "@zxing/library";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
@@ -37,12 +32,14 @@ import {
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {CodeScannerComponent} from "tim/plugin/userselect/code-scanner.component";
 import {MediaDevicesSupported} from "tim/plugin/userselect/util";
-import {
+import type {
     IQueryHandler,
-    PrefetchedQueryHandler,
     SearchResult,
-    ServerQueryHandler,
     UserResult,
+} from "tim/plugin/userselect/searchQueryHandlers";
+import {
+    PrefetchedQueryHandler,
+    ServerQueryHandler,
 } from "tim/plugin/userselect/searchQueryHandlers";
 import {T9KeyboardComponent} from "tim/plugin/userselect/t9-keyboard.component";
 import {CommonModule} from "@angular/common";

@@ -1,4 +1,5 @@
-import {ApplicationRef, DoBootstrap, NgModule} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {NgModule} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";

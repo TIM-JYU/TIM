@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
-import {DialogContainerComponent} from "tim/ui/angulardialog/dialog-container.component";
-import {
+import type {DialogContainerComponent} from "tim/ui/angulardialog/dialog-container.component";
+import type {
     AngularDialogComponent,
     IDialogOptions,
 } from "tim/ui/angulardialog/angular-dialog-component.directive";

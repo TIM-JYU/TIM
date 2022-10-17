@@ -1,9 +1,12 @@
-import {Paragraph} from "tim/document/structure/paragraph";
+import type {Paragraph} from "tim/document/structure/paragraph";
 import $ from "jquery";
-import {CollapseControls} from "tim/document/structure/collapseControls";
-import {DocumentPart, IDocumentPart} from "tim/document/structure/documentPart";
-import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
-import {DerefOption} from "tim/document/structure/derefOption";
+import type {CollapseControls} from "tim/document/structure/collapseControls";
+import type {
+    DocumentPart,
+    IDocumentPart,
+} from "tim/document/structure/documentPart";
+import type {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
+import type {DerefOption} from "tim/document/structure/derefOption";
 import {enumAreaPars} from "tim/document/structure/enumAreaPars";
 
 enum AreaBoundary {

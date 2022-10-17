@@ -1,9 +1,9 @@
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {
+import type {
     IRenameParams,
     RenameResult,
 } from "tim/document/editing/plugin-rename-dialog.component";
-import {IManageResponse} from "tim/document/editing/edittypes";
+import type {IManageResponse} from "tim/document/editing/edittypes";
 
 export async function showRenameDialog(p: IRenameParams) {
     const {PluginRenameDialogComponent} = await import(

@@ -1,5 +1,6 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule, NgZone, OnDestroy} from "@angular/core";
+import type {OnDestroy} from "@angular/core";
+import {Component, NgModule, NgZone} from "@angular/core";
 import deepEqual from "deep-equal";
 import {HttpClient} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -13,22 +14,24 @@ import {
 import {fetchAskedQuestion} from "tim/document/question/fetchQuestion";
 import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {ReadonlyMoment} from "tim/util/readonlymoment";
+import type {ReadonlyMoment} from "tim/util/readonlymoment";
+import type {IPreviewParams} from "tim/document/question/answer-sheet.component";
 import {
     AnswerSheetModule,
-    IPreviewParams,
     makePreview,
 } from "tim/document/question/answer-sheet.component";
 import {setStorage, to2, toPromise} from "tim/util/utils";
-import {
+import type {
     AnswerTable,
     IAskedQuestion,
     IGetNewQuestionResponse,
     IQuestionAnswer,
+    QuestionOrAnswer,
+} from "tim/lecture/lecturetypes";
+import {
     isAskedQuestion,
     questionAnswerReceived,
     questionAsked,
-    QuestionOrAnswer,
 } from "tim/lecture/lecturetypes";
 import {showStatisticsDialog} from "tim/lecture/showLectureDialogs";
 import {CommonModule} from "@angular/common";

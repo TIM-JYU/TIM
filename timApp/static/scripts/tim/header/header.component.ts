@@ -1,20 +1,24 @@
 import moment from "moment";
-import {Component, OnInit} from "@angular/core";
-import {BookmarkService, IBookmarkGroup} from "tim/bookmark/bookmark.service";
+import type {OnInit} from "@angular/core";
+import {Component} from "@angular/core";
+import type {IBookmarkGroup} from "tim/bookmark/bookmark.service";
+import {BookmarkService} from "tim/bookmark/bookmark.service";
 import {TagService} from "tim/item/tag.service";
-import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
+import type {IVisibilityVars} from "tim/timRoot";
+import {getVisibilityVars} from "tim/timRoot";
 import {rootInstance} from "tim/rootinstance";
 import {HttpClient} from "@angular/common/http";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {getAvailableViews, IItemLink} from "tim/header/utils";
-import {IDocSettings} from "tim/document/IDocSettings";
-import {
+import type {IItemLink} from "tim/header/utils";
+import {getAvailableViews} from "tim/header/utils";
+import type {IDocSettings} from "tim/document/IDocSettings";
+import type {
     DocumentOrFolder,
     IFolder,
     ITag,
     ITranslation,
-    TagType,
 } from "tim/item/IItem";
+import {TagType} from "tim/item/IItem";
 import {Users} from "tim/user/userService";
 import {genericglobals, someglobals} from "tim/util/globals";
 import {getViewName, to} from "tim/util/utils";

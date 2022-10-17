@@ -1,13 +1,15 @@
-import {
+import type {
     AfterViewInit,
     ApplicationRef,
+    DoBootstrap,
+    OnInit,
+    Type,
+} from "@angular/core";
+import {
     Component,
     ComponentFactoryResolver,
     Directive,
-    DoBootstrap,
     NgModule,
-    OnInit,
-    Type,
     ViewChild,
     ViewContainerRef,
 } from "@angular/core";
@@ -21,7 +23,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import * as t from "io-ts";
 import {isRight} from "fp-ts/Either";
-import {AlertSeverity} from "tim/ui/formErrorMessage";
+import type {AlertSeverity} from "tim/ui/formErrorMessage";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {Channel} from "tim/messaging/listOptionTypes";
 import {toPromise} from "tim/util/utils";

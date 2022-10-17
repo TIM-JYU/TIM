@@ -1,10 +1,11 @@
-import {IController, IPromise, IScope} from "angular";
+import type {IController, IPromise, IScope} from "angular";
 import $ from "jquery";
 import {timApp} from "tim/app";
 import {setActiveDocument} from "tim/document/activedocument";
 import {AreaHandler} from "tim/document/areas";
 import {TimDocument} from "tim/document/timDocument";
-import {ClipboardHandler, IClipboardMeta} from "tim/document/editing/clipboard";
+import type {IClipboardMeta} from "tim/document/editing/clipboard";
+import {ClipboardHandler} from "tim/document/editing/clipboard";
 import * as interceptor from "tim/document/interceptor";
 import {NotesHandler} from "tim/document/notes";
 import {getElementByParId, saveCurrentScreenPar} from "tim/document/parhelpers";
@@ -26,50 +27,53 @@ import {
     UnknownRecord,
 } from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
-import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
-import {DrawCanvasComponent} from "tim/plugin/draw-canvas/draw-canvas.components";
+import type {IVisibilityVars} from "tim/timRoot";
+import {getVisibilityVars} from "tim/timRoot";
+import type {DrawCanvasComponent} from "tim/plugin/draw-canvas/draw-canvas.components";
 import {diffDialog} from "tim/document/showDiffDialog";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import * as t from "io-ts";
-import {ParContext} from "tim/document/structure/parContext";
+import type {ParContext} from "tim/document/structure/parContext";
 import {DerefOption} from "tim/document/structure/derefOption";
 import {enumPars} from "tim/document/structure/iteration";
 import {getParContainerElem} from "tim/document/structure/create";
-import {UserListController} from "tim/answer/userlistController";
-import {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
-import {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
-import {IAnswer} from "tim/answer/IAnswer";
-import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
-import {IDocument} from "tim/item/IItem";
+import type {UserListController} from "tim/answer/userlistController";
+import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
+import type {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
+import type {IAnswer} from "tim/answer/IAnswer";
+import type {IPluginInfoResponse} from "tim/editor/parCompiler";
+import {ParCompiler} from "tim/editor/parCompiler";
+import type {IDocument} from "tim/item/IItem";
 import {LectureController} from "tim/lecture/lectureController";
-import {
+import type {
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
-    nullable,
 } from "tim/plugin/attributes";
-import {TableFormComponent} from "tim/plugin/tableForm/table-form.component";
-import {DocIdDotName, TaskId} from "tim/plugin/taskid";
-import {TimTableComponent} from "tim/plugin/timTable/tim-table.component";
+import {nullable} from "tim/plugin/attributes";
+import type {TableFormComponent} from "tim/plugin/tableForm/table-form.component";
+import type {DocIdDotName} from "tim/plugin/taskid";
+import {TaskId} from "tim/plugin/taskid";
+import type {TimTableComponent} from "tim/plugin/timTable/tim-table.component";
 import {initCssPrint} from "tim/printing/cssPrint";
-import {IUser, IUserListEntry} from "tim/user/IUser";
+import type {IUser, IUserListEntry} from "tim/user/IUser";
 import {Users} from "tim/user/userService";
 import {widenFields} from "tim/util/common";
 import {documentglobals} from "tim/util/globals";
 import {$compile, $http, $interval, $timeout} from "tim/util/ngimport";
-import {AnnotationComponent} from "tim/velp/annotation.component";
+import type {AnnotationComponent} from "tim/velp/annotation.component";
 import {ReviewController} from "tim/velp/reviewController";
 import {EditingHandler} from "tim/document/editing/editing";
-import {PendingCollection} from "tim/document/editing/edittypes";
+import type {PendingCollection} from "tim/document/editing/edittypes";
 import {onClick} from "tim/document/eventhandlers";
-import {IDocSettings} from "tim/document/IDocSettings";
-import {
+import type {IDocSettings} from "tim/document/IDocSettings";
+import type {
     EditMode,
     PopupMenuDialogComponent,
 } from "tim/document/popup-menu-dialog.component";
 import {initSlideView} from "tim/document/slide";
 import {ViewRangeInfo} from "tim/document/viewRangeInfo";
-import {
+import type {
     ICtrlWithMenuFunctionEntry,
     IMenuFunctionEntry,
 } from "tim/document/viewutils";

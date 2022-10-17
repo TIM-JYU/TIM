@@ -6,8 +6,9 @@
 import {Component} from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {showViewRangeEditDialog} from "tim/document/showViewRangeEditDialog";
-import {ViewCtrl} from "tim/document/viewctrl";
-import {IViewRange, partitionDocument} from "tim/document/viewRangeInfo";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import type {IViewRange} from "tim/document/viewRangeInfo";
+import {partitionDocument} from "tim/document/viewRangeInfo";
 
 @Component({
     selector: "tim-view-range-navigation",

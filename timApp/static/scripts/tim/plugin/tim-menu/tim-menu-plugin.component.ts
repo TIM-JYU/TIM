@@ -3,13 +3,15 @@
  */
 import * as t from "io-ts";
 import $ from "jquery";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
-import {onClick, OnClickArg} from "tim/document/eventhandlers";
-import {ViewCtrl} from "tim/document/viewctrl";
-import {IRights} from "tim/user/IRights";
+import type {OnClickArg} from "tim/document/eventhandlers";
+import {onClick} from "tim/document/eventhandlers";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import type {IRights} from "tim/user/IRights";
 import {genericglobals} from "tim/util/globals";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";

@@ -1,7 +1,10 @@
-import {IParResponse} from "tim/document/editing/edittypes";
+import type {IParResponse} from "tim/document/editing/edittypes";
 import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
-import {IAskedQuestion, IQuestionParagraph} from "tim/lecture/lecturetypes";
+import type {
+    IAskedQuestion,
+    IQuestionParagraph,
+} from "tim/lecture/lecturetypes";
 import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 

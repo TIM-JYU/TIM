@@ -5,17 +5,13 @@ import * as t from "io-ts";
 import {polyfill} from "mobile-drag-drop";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {DndDropEvent, DndModule, EffectAllowed} from "ngx-drag-drop";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    NgModule,
-    OnInit,
-} from "@angular/core";
+import type {DndDropEvent, EffectAllowed} from "ngx-drag-drop";
+import {DndModule} from "ngx-drag-drop";
+import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
-import {ITimComponent} from "tim/document/viewctrl";
+import type {ITimComponent} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
@@ -27,7 +23,7 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {PurifyModule} from "tim/util/purify.module";
-import {DocIdDotName} from "tim/plugin/taskid";
+import type {DocIdDotName} from "tim/plugin/taskid";
 import {isIOS} from "tim/util/utils";
 import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";

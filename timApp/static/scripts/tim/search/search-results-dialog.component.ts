@@ -7,8 +7,9 @@ import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
-import {ITag, TagType} from "tim/item/IItem";
-import {
+import type {ITag} from "tim/item/IItem";
+import {TagType} from "tim/item/IItem";
+import type {
     IDocSearchResult,
     ITagSearchResult,
     SearchBoxComponent,

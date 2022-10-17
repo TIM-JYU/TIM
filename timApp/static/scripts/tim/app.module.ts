@@ -1,5 +1,6 @@
 import {BrowserModule} from "@angular/platform-browser";
-import {ApplicationRef, DoBootstrap, NgModule} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HeaderComponent} from "tim/header/header.component";
 import {HTTP_INTERCEPTORS, HttpClientModule} from "@angular/common/http";

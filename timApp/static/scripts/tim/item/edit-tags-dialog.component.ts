@@ -12,7 +12,8 @@ import {TEACHERS_GROUPNAME} from "tim/user/IUser";
 import {userBelongsToGroupOrIsAdmin} from "tim/user/userService";
 import {toPromise} from "tim/util/utils";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
-import {IItem, ITag, tagStyleClass, TagType} from "tim/item/IItem";
+import type {IItem, ITag} from "tim/item/IItem";
+import {tagStyleClass, TagType} from "tim/item/IItem";
 import {CommonModule} from "@angular/common";
 
 const tagParsingSeparator = ",";

@@ -1,7 +1,7 @@
-import {Channel} from "tim/messaging/listOptionTypes";
-import {AccessType} from "tim/item/access-role.service";
-import {IDocument, IFolder} from "tim/item/IItem";
-import {ConsentType} from "tim/ui/consent";
+import type {Channel} from "tim/messaging/listOptionTypes";
+import type {AccessType} from "tim/item/access-role.service";
+import type {IDocument, IFolder} from "tim/item/IItem";
+import type {ConsentType} from "tim/ui/consent";
 
 export const TEACHERS_GROUPNAME = "teachers";
 export const ADMIN_GROUPNAME = "Administrators";

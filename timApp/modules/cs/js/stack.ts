@@ -1,5 +1,6 @@
 ﻿import * as t from "io-ts";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {
     GenericPluginMarkup,
@@ -8,7 +9,7 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {windowAsAny} from "tim/util/utils";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";

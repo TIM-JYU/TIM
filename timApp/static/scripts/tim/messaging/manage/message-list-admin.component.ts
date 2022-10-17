@@ -1,15 +1,19 @@
 import {HttpClient} from "@angular/common/http";
-import {Component, Input, OnInit} from "@angular/core";
-import moment, {Moment} from "moment";
+import type {OnInit} from "@angular/core";
+import {Component, Input} from "@angular/core";
+import type {Moment} from "moment";
+import moment from "moment";
 import {to, to2, toPromise} from "tim/util/utils";
-import {
-    archivePolicyNames,
-    ArchiveType,
+import type {
     Distribution,
     GroupAndMembers,
     ListOptions,
     MemberInfo,
     MessageVerificationType,
+} from "tim/messaging/listOptionTypes";
+import {
+    archivePolicyNames,
+    ArchiveType,
     ReplyToListChanges,
 } from "tim/messaging/listOptionTypes";
 import {documentglobals} from "tim/util/globals";

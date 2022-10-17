@@ -1,6 +1,6 @@
-import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
-import {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
-import {ParContext} from "tim/document/structure/parContext";
+import type {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
+import type {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
+import type {ParContext} from "tim/document/structure/parContext";
 
 export type PendingCollection = Map<string, string>;
 

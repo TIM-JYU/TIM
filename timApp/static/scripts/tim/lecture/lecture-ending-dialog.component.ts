@@ -3,7 +3,8 @@ import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
-import {hasLectureEnded, ILecture} from "tim/lecture/lecturetypes";
+import type {ILecture} from "tim/lecture/lecturetypes";
+import {hasLectureEnded} from "tim/lecture/lecturetypes";
 import {CommonModule} from "@angular/common";
 
 export interface ILectureEndingDialogResult {

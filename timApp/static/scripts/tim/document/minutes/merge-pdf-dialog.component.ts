@@ -9,7 +9,7 @@ import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {toPromise} from "tim/util/utils";
-import {IItem} from "tim/item/IItem";
+import type {IItem} from "tim/item/IItem";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {CommonModule} from "@angular/common";
 

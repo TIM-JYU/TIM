@@ -1,11 +1,11 @@
-import {
+import type {
     HttpEvent,
     HttpHandler,
     HttpInterceptor,
     HttpRequest,
-    HttpResponse,
 } from "@angular/common/http";
-import {Observable} from "rxjs/internal/Observable";
+import {HttpResponse} from "@angular/common/http";
+import type {Observable} from "rxjs/internal/Observable";
 import {Injectable} from "@angular/core";
 import {map} from "rxjs/operators";
 import {convertDateStringsToMoments} from "tim/util/utils";

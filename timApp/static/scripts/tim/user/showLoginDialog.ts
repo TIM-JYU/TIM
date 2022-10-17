@@ -1,7 +1,7 @@
-import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import type {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 import {to2} from "tim/util/utils";
-import {ILoginParams} from "tim/user/login-dialog.component";
+import type {ILoginParams} from "tim/user/login-dialog.component";
 
 let instance: AngularDialogComponent<ILoginParams, void> | undefined;
 

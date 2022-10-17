@@ -21,10 +21,8 @@ import {defaultWuffMessage, toPromise} from "tim/util/utils";
 import {Users} from "tim/user/userService";
 import {itemglobals} from "tim/util/globals";
 import {showConfirm} from "tim/ui/showConfirmDialog";
-import {
-    TIMCalendarEvent,
-    TimCalendarModule,
-} from "tim/plugin/calendar/calendar.component";
+import type {TIMCalendarEvent} from "tim/plugin/calendar/calendar.component";
+import {TimCalendarModule} from "tim/plugin/calendar/calendar.component";
 
 @Component({
     selector: "tim-calendar-event-dialog",

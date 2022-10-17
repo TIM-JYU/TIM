@@ -1,13 +1,9 @@
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    Input,
-    NgModule,
-} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, Input, NgModule} from "@angular/core";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {IOAuthGlobals, oauthglobals} from "tim/util/globals";
+import type {IOAuthGlobals} from "tim/util/globals";
+import {oauthglobals} from "tim/util/globals";
 import {getCookie} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {Users} from "tim/user/userService";

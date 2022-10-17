@@ -1,5 +1,5 @@
 import {Component} from "@angular/core";
-import {OnTabSelect} from "tim/sidebarmenu/menu-tab.directive";
+import type {OnTabSelect} from "tim/sidebarmenu/menu-tab.directive";
 import {LectureController} from "tim/lecture/lectureController";
 
 @Component({

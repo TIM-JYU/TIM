@@ -4,7 +4,7 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
-import {Result} from "tim/util/utils";
+import type {Result} from "tim/util/utils";
 import {CommonModule} from "@angular/common";
 
 export type InputDialogParams<T> = {

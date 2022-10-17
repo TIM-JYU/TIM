@@ -1,7 +1,9 @@
-import {Component, Input, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component, Input} from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {HttpClient} from "@angular/common/http";
-import {IFolder, IItem} from "tim/item/IItem";
+import type {IFolder} from "tim/item/IItem";
+import {IItem} from "tim/item/IItem";
 import {toPromise} from "tim/util/utils";
 
 type PreviewList = {from: string; to: string}[];

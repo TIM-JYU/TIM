@@ -10,8 +10,9 @@
  * @date 24.5.2022
  */
 import {Injectable} from "@angular/core";
-import {CalendarEvent, CalendarEventTitleFormatter} from "angular-calendar";
-import {TIMEventMeta} from "tim/plugin/calendar/calendar.component";
+import type {CalendarEvent} from "angular-calendar";
+import {CalendarEventTitleFormatter} from "angular-calendar";
+import type {TIMEventMeta} from "tim/plugin/calendar/calendar.component";
 
 /**
  *  This CustomEventTitleFormatter makes it possible to customize the Tooltips and Event titles that are shown in

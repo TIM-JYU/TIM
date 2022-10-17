@@ -1,5 +1,5 @@
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {
+import type {
     IQuestionDialogParams,
     IQuestionDialogResult,
 } from "tim/document/question/question-edit-dialog.component";

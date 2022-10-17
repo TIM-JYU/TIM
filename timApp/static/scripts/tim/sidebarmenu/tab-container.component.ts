@@ -1,15 +1,12 @@
+import type {ComponentRef} from "@angular/core";
 import {
     Component,
     ComponentFactoryResolver,
-    ComponentRef,
     Input,
     ViewChild,
 } from "@angular/core";
-import {
-    TabEntry,
-    MenuTabDirective,
-    OnTabSelect,
-} from "tim/sidebarmenu/menu-tab.directive";
+import type {OnTabSelect} from "tim/sidebarmenu/menu-tab.directive";
+import {TabEntry, MenuTabDirective} from "tim/sidebarmenu/menu-tab.directive";
 
 @Component({
     selector: "tab-container",

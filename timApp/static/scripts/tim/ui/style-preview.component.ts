@@ -1,4 +1,5 @@
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {toPromise} from "tim/util/utils";
 import {HttpClient, HttpClientModule} from "@angular/common/http";

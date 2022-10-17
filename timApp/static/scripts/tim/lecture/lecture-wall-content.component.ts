@@ -1,6 +1,6 @@
 import {Component, Input, NgModule} from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {ILectureMessage} from "tim/lecture/lecturetypes";
+import type {ILectureMessage} from "tim/lecture/lecturetypes";
 import {CommonModule} from "@angular/common";
 
 @Component({

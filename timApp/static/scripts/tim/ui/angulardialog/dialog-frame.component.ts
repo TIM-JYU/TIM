@@ -1,11 +1,11 @@
 /* eslint-disable no-underscore-dangle */
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
-import {ISize} from "tim/util/utils";
-import {Size} from "angular2-draggable/lib/models/size";
-import {IPosition, Position} from "angular2-draggable/lib/models/position";
+import type {ISize} from "tim/util/utils";
+import type {Size} from "angular2-draggable/lib/models/size";
+import type {IPosition, Position} from "angular2-draggable/lib/models/position";
 import {AngularDraggableDirective} from "angular2-draggable";
 import {Subject} from "rxjs";
-import {IResizeEvent} from "angular2-draggable/lib/models/resize-event";
+import type {IResizeEvent} from "angular2-draggable/lib/models/resize-event";
 
 export interface IAngularResizableDirectivePublic {
     _currSize: Size;

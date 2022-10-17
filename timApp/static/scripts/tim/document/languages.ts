@@ -9,8 +9,9 @@
  * @copyright 2022 TIMTra project authors
  */
 
-import {ILanguage, ITranslator} from "tim/item/IItem";
-import {Result, to} from "tim/util/utils";
+import type {ILanguage, ITranslator} from "tim/item/IItem";
+import type {Result} from "tim/util/utils";
+import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
 
 type SupportedLanguagesAndTranslators = {

@@ -12,13 +12,13 @@
 
 import * as t from "io-ts";
 import {widenFields} from "tim/util/common";
-import {
+import type {
     IError,
     IGroupData,
     IJsRunnerMarkup,
     INumbersObject,
 } from "../../shared/jsrunnertypes";
-import {
+import type {
     AliasDataT,
     PeerReviewDataT,
     UserFieldDataT,

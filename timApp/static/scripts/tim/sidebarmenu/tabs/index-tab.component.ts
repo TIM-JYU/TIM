@@ -1,9 +1,8 @@
-import {Component, Input, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component, Input} from "@angular/core";
 import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
-import {
-    HeaderIndexerService,
-    IHeaderDisplayIndexItem,
-} from "tim/sidebarmenu/services/header-indexer.service";
+import type {IHeaderDisplayIndexItem} from "tim/sidebarmenu/services/header-indexer.service";
+import {HeaderIndexerService} from "tim/sidebarmenu/services/header-indexer.service";
 import {
     getViewRangeWithHeaderId,
     partitionDocument,

@@ -1,4 +1,4 @@
-import {SearchBoxComponent} from "tim/search/search-box.component";
+import type {SearchBoxComponent} from "tim/search/search-box.component";
 import {to2} from "tim/util/utils";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 

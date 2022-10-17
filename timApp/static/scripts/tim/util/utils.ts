@@ -1,15 +1,17 @@
-import angular, {IHttpResponse, IPromise} from "angular";
+import type {IHttpResponse, IPromise} from "angular";
+import angular from "angular";
 import * as t from "io-ts";
-import {Props} from "io-ts";
+import type {Props} from "io-ts";
 import moment from "moment";
-import {AbstractControl, ValidatorFn} from "@angular/forms";
+import type {AbstractControl, ValidatorFn} from "@angular/forms";
 import humanizeDuration from "humanize-duration";
 import {isLeft} from "fp-ts/lib/Either";
-import {Pos} from "tim/ui/pos";
+import type {Pos} from "tim/ui/pos";
 import {either} from "fp-ts/Either";
-import {lastValueFrom, Observable} from "rxjs";
+import type {Observable} from "rxjs";
+import {lastValueFrom} from "rxjs";
 import {HttpParams} from "@angular/common/http";
-import {IGroup} from "tim/user/IUser";
+import type {IGroup} from "tim/user/IUser";
 import {$rootScope, $timeout} from "tim/util/ngimport";
 
 const blacklist = new Set([

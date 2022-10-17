@@ -1,7 +1,7 @@
-import {Ace as Ace_} from "ace-builds/src-noconflict/ace";
+import type {Ace as Ace_} from "ace-builds/src-noconflict/ace";
 import {$timeout} from "tim/util/ngimport";
-import {AceParEditor} from "tim/editor/AceParEditor";
-import {TextAreaParEditor} from "tim/editor/TextAreaParEditor";
+import type {AceParEditor} from "tim/editor/AceParEditor";
+import type {TextAreaParEditor} from "tim/editor/TextAreaParEditor";
 type IAceEditor = Ace_.Editor;
 
 export function focusAfter(

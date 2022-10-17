@@ -8,7 +8,7 @@ import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {FormsModule} from "@angular/forms";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {toPromise} from "tim/util/utils";
-import {
+import type {
     Duplicate,
     IExtraData,
     IManageResponse,

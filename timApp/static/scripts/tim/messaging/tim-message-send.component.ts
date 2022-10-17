@@ -1,12 +1,5 @@
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    EventEmitter,
-    Input,
-    NgModule,
-    Output,
-} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";

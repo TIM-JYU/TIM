@@ -1,8 +1,6 @@
+import type {AfterViewInit, ApplicationRef, DoBootstrap} from "@angular/core";
 import {
-    AfterViewInit,
-    ApplicationRef,
     Component,
-    DoBootstrap,
     ElementRef,
     EventEmitter,
     Input,
@@ -19,9 +17,9 @@ import {
     DOCUMENT_BG,
     parseRGBAColor,
     shouldUseDarkText,
-} from "../../util/colorUtils";
-import {TimUtilityModule} from "../../ui/tim-utility.module";
-import {TimStorage} from "../../util/utils";
+} from "tim/util/colorUtils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {TimStorage} from "tim/util/utils";
 
 export interface IDrawVisibleOptions {
     // Interface to define which options should be visible in the drawing toolbar

@@ -4,7 +4,7 @@
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
-import {ISpellWordInfo, PareditorController} from "tim/editor/pareditor";
+import type {ISpellWordInfo, PareditorController} from "tim/editor/pareditor";
 import {copyToClipboard} from "tim/util/utils";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {$rootScope} from "tim/util/ngimport";

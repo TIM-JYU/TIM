@@ -1,4 +1,5 @@
-import {ApplicationRef, DoBootstrap, NgModule} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {NgModule} from "@angular/core";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {HttpClientModule} from "@angular/common/http";
 import {TooltipModule} from "ngx-bootstrap/tooltip";

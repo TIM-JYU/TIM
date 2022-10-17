@@ -1,25 +1,22 @@
-import {Directive, ElementRef, Input, OnInit} from "@angular/core";
-import {
+import type {OnInit} from "@angular/core";
+import {Directive, ElementRef, Input} from "@angular/core";
+import type {
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
 } from "tim/plugin/attributes";
-import {Type} from "io-ts";
+import type {Type} from "io-ts";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
-import {
-    getDefaults,
-    PluginBaseCommon,
-    PluginMarkupErrors,
-    PluginMeta,
-} from "tim/plugin/util";
+import type {PluginMarkupErrors} from "tim/plugin/util";
+import {getDefaults, PluginBaseCommon, PluginMeta} from "tim/plugin/util";
 import {DomSanitizer} from "@angular/platform-browser";
-import {JsonValue} from "tim/util/jsonvalue";
+import type {JsonValue} from "tim/util/jsonvalue";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {
     handleAnswerResponse,
     prepareAnswerRequest,
 } from "tim/document/interceptor";
-import {IAnswerSaveEvent} from "tim/answer/answer-browser.component";
+import type {IAnswerSaveEvent} from "tim/answer/answer-browser.component";
 import {isLeft} from "fp-ts/Either";
 import {getErrors} from "tim/plugin/errors";
 

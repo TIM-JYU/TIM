@@ -1,4 +1,4 @@
-import {IBookmark} from "tim/bookmark/bookmark.service";
+import type {IBookmark} from "tim/bookmark/bookmark.service";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 
 export async function showBookmarkDialog(bookmark: IBookmark) {

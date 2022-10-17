@@ -7,12 +7,13 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {AccordionModule} from "ngx-bootstrap/accordion";
-import {getItem, IItem} from "tim/item/IItem";
-import {DurationChoice} from "tim/ui/duration-picker.component";
+import type {IItem} from "tim/item/IItem";
+import {getItem} from "tim/item/IItem";
+import type {DurationChoice} from "tim/ui/duration-picker.component";
 import {toPromise} from "tim/util/utils";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {
+import type {
     ILecture,
     ILectureFormParams,
     ILectureOptions,

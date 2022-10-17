@@ -1,11 +1,7 @@
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    NgModule,
-    OnInit,
-} from "@angular/core";
-import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
+import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
+import type {SafeResourceUrl} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {documentglobals} from "tim/util/globals";

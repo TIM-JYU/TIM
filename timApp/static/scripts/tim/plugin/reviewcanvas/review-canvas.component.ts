@@ -3,47 +3,50 @@
  */
 
 import * as t from "io-ts";
-import {
+import type {
     AfterViewInit,
     ApplicationRef,
-    Component,
     DoBootstrap,
     ElementRef,
-    NgModule,
     OnDestroy,
     OnInit,
+} from "@angular/core";
+import {
+    Component,
+    NgModule,
     QueryList,
     ViewChild,
     ViewChildren,
 } from "@angular/core";
 import {HttpClientModule, HttpHeaders} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {Subject, Subscription} from "rxjs";
+import type {Subscription} from "rxjs";
+import {Subject} from "rxjs";
 import {debounceTime, distinctUntilChanged} from "rxjs/operators";
-import {PurifyModule} from "../../util/purify.module";
-import {defaultErrorMessage, defaultTimeout} from "../../util/utils";
-import {TimUtilityModule} from "../../ui/tim-utility.module";
-import {
+import {CommonModule} from "@angular/common";
+import {PurifyModule} from "tim/util/purify.module";
+import {defaultErrorMessage, defaultTimeout} from "tim/util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import type {
     ITimComponent,
     IVelpableComponent,
     ViewCtrl,
-} from "../../document/viewctrl";
-import {vctrlInstance} from "../../document/viewctrlinstance";
-import {IUser} from "../../user/IUser";
-import {AngularPluginBase} from "../angular-plugin-base.directive";
+} from "tim/document/viewctrl";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import type {IUser} from "tim/user/IUser";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
     nullable,
     withDefault,
-} from "../attributes";
-import {registerPlugin} from "../pluginRegistry";
-import {CommonModule} from "@angular/common";
-import {
-    FileSelectManagerComponent,
+} from "tim/plugin/attributes";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import type {
     IFile,
     IFileSpecification,
 } from "../../../../../modules/cs/js/util/file-select";
+import {FileSelectManagerComponent} from "../../../../../modules/cs/js/util/file-select";
 import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
 
 const FileSubmission = t.intersection([

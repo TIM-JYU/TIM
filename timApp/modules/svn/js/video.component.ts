@@ -1,13 +1,7 @@
 ﻿import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    NgModule,
-    ViewChild,
-} from "@angular/core";
-import {ViewCtrl} from "tim/document/viewctrl";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
+import type {ViewCtrl} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
@@ -30,7 +24,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import {getKeyCode, KEY_LEFT, KEY_RIGHT} from "tim/util/keycodes";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
-import {Iframesettings} from "../../cs/js/jsframe";
+import type {Iframesettings} from "../../cs/js/jsframe";
 import {VideoLinkComponent} from "./video-link.component";
 
 function toSeconds(value: string | number | undefined): number | undefined {

@@ -1,13 +1,5 @@
-import {
-    Component,
-    EventEmitter,
-    Input,
-    NgModule,
-    OnChanges,
-    OnInit,
-    Output,
-    SimpleChanges,
-} from "@angular/core";
+import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
+import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";

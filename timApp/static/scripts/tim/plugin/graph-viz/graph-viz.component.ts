@@ -1,5 +1,6 @@
-import {Component, Input, OnInit} from "@angular/core";
-import {Changes} from "tim/util/angularchanges";
+import type {OnInit} from "@angular/core";
+import {Component, Input} from "@angular/core";
+import type {Changes} from "tim/util/angularchanges";
 import {to2} from "tim/util/utils";
 
 @Component({

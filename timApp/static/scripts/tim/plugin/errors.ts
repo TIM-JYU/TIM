@@ -1,6 +1,6 @@
-import {Left} from "fp-ts/lib/Either";
-import * as t from "io-ts";
-import {Context} from "io-ts";
+import type {Left} from "fp-ts/lib/Either";
+import type * as t from "io-ts";
+import type {Context} from "io-ts";
 
 function getEssentialContext(c: t.Context) {
     for (let i = c.length - 1; i >= 0; i--) {

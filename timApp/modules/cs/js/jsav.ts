@@ -4,15 +4,9 @@
  * Originally programmed by Mikko Merikivi with help from the GeoGebra plugin by Vesa Lappalainen
  */
 import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    NgModule,
-    ViewChild,
-} from "@angular/core";
-import {ViewCtrl} from "tim/document/viewctrl";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
+import type {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {timeout} from "tim/util/utils";
 import {HttpClientModule} from "@angular/common/http";
@@ -22,7 +16,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {PurifyModule} from "tim/util/purify.module";
 import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {Iframesettings} from "./jsframe";
+import type {Iframesettings} from "./jsframe";
 
 /**
  * This is the "state" of the plugin, used through this.attrs.

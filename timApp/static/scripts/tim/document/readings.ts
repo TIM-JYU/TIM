@@ -1,4 +1,4 @@
-import {IPromise} from "angular";
+import type {IPromise} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import {getActiveDocument} from "tim/document/activedocument";
@@ -8,20 +8,20 @@ import {
     setDiffDialog,
     showDiffDialog,
 } from "tim/document/showDiffDialog";
-import {ParContext} from "tim/document/structure/parContext";
+import type {ParContext} from "tim/document/structure/parContext";
 import {
     createParContextOrHelp,
     findParentPar,
     fromParents,
     tryCreateParContextOrHelp,
 } from "tim/document/structure/create";
-import {HelpPar} from "tim/document/structure/helpPar";
-import {IItem} from "tim/item/IItem";
+import type {HelpPar} from "tim/document/structure/helpPar";
+import type {IItem} from "tim/item/IItem";
 import {Users} from "tim/user/userService";
 import {$http, $log, $timeout} from "tim/util/ngimport";
+import type {IOkResponse} from "tim/util/utils";
 import {
     getViewName,
-    IOkResponse,
     isInViewport,
     isIOS,
     markPageDirty,
@@ -29,13 +29,10 @@ import {
     to,
     to2,
 } from "tim/util/utils";
-import {EditPosition, EditType} from "tim/document/editing/edittypes";
-import {
-    onClick,
-    OnClickArg,
-    onMouseOver,
-    onMouseOverOut,
-} from "tim/document/eventhandlers";
+import type {EditPosition} from "tim/document/editing/edittypes";
+import {EditType} from "tim/document/editing/edittypes";
+import type {OnClickArg} from "tim/document/eventhandlers";
+import {onClick, onMouseOver, onMouseOverOut} from "tim/document/eventhandlers";
 import {canSeeSource} from "tim/document/parhelpers";
 
 export const readClasses = {

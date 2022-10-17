@@ -10,7 +10,7 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {toPromise} from "tim/util/utils";
 import {Users} from "tim/user/userService";
-import {IFullUser} from "tim/user/IUser";
+import type {IFullUser} from "tim/user/IUser";
 import {CommonModule} from "@angular/common";
 
 interface ISessionStatus {

@@ -1,18 +1,20 @@
 import moment from "moment";
-import {
+import type {
     AfterViewInit,
     ApplicationRef,
+    DoBootstrap,
+    OnDestroy,
+    OnInit,
+} from "@angular/core";
+import {
     Component,
     ContentChild,
     createNgModule,
-    DoBootstrap,
     ElementRef,
     Injector,
     Input,
     NgModule,
     NgZone,
-    OnDestroy,
-    OnInit,
     ViewChild,
     ViewContainerRef,
 } from "@angular/core";
@@ -25,20 +27,19 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {PurifyModule} from "tim/util/purify.module";
 import {getURLParameter, timeout, toPromise} from "tim/util/utils";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {TimDefer} from "tim/util/timdefer";
-import {ReadonlyMoment} from "tim/util/readonlymoment";
+import type {ReadonlyMoment} from "tim/util/readonlymoment";
 import {timLogTime} from "tim/util/timTiming";
 import {Users} from "tim/user/userService";
-import {
-    AnswerBrowserComponent,
-    AnswerBrowserModule,
-} from "tim/answer/answer-browser.component";
-import {IGenericPluginMarkup} from "tim/plugin/attributes";
+import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
+import {AnswerBrowserModule} from "tim/answer/answer-browser.component";
+import type {IGenericPluginMarkup} from "tim/plugin/attributes";
 import {TaskId, TaskIdWithDefaultDocId} from "tim/plugin/taskid";
-import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
+import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {getPlugin, IRegisteredPlugin} from "tim/plugin/pluginRegistry";
+import type {IRegisteredPlugin} from "tim/plugin/pluginRegistry";
+import {getPlugin} from "tim/plugin/pluginRegistry";
 
 const LAZY_MARKER = "lazy";
 const LAZY_MARKER_LENGTH = LAZY_MARKER.length;

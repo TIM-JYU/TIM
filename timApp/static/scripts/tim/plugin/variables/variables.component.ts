@@ -1,15 +1,9 @@
-import {
-    Component,
-    Input,
-    OnInit,
-    ElementRef,
-    // ChangeDetectorRef,
-    ViewChild,
-    AfterViewInit,
-} from "@angular/core";
+import type {AfterViewInit, OnInit} from "@angular/core";
+import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import DOMPurify from "dompurify";
-import {Changes} from "tim/util/angularchanges";
+import type {Changes} from "tim/util/angularchanges";
 import {TimDefer} from "tim/util/timdefer";
+import type setData from "../../../../../modules/cs/static/dfa/vars.js";
 
 @Component({
     selector: "tim-variables",
@@ -27,7 +21,7 @@ export class VariablesComponent implements OnInit, AfterViewInit {
     @Input() code!: string;
     @Input() height?: string | number;
     @Input() jsparams?: Record<string, unknown>;
-    varfunctions?: typeof import("../../../../../modules/cs/static/dfa/vars.js");
+    varfunctions?: typeof setData;
     @ViewChild("variablesDiv") private variablesDiv!: ElementRef<HTMLElement>;
 
     constructor() {
@@ -48,9 +42,9 @@ export class VariablesComponent implements OnInit, AfterViewInit {
             return this.varfunctions;
         }
         // https://coryrylan.com/blog/javascript-module-pattern-basics
-        this.varfunctions = await import(
-            "../../../../../modules/cs/static/dfa/vars.js"
-        );
+        this.varfunctions = (
+            await import("../../../../../modules/cs/static/dfa/vars.js")
+        ).default;
     }
 
     setSVG(svg: string, svgdiv: HTMLElement, _height: number) {
@@ -80,7 +74,7 @@ export class VariablesComponent implements OnInit, AfterViewInit {
         if (this.height) {
             this.variablesDiv.nativeElement.style.height = this.height + "px";
         }
-        const setData = this.varfunctions!.setData;
+        const setData = this.varfunctions!;
         const data = {
             code: changedObject.code!.currentValue,
             params: params,

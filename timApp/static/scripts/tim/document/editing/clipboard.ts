@@ -1,11 +1,9 @@
-import {IScope} from "angular";
-import {MenuFunctionList} from "tim/document/viewutils";
+import type {IScope} from "angular";
+import type {MenuFunctionList} from "tim/document/viewutils";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {
-    getMinimalUnbrokenSelection,
-    UnbrokenSelection,
-} from "tim/document/editing/unbrokenSelection";
-import {ParContext} from "tim/document/structure/parContext";
+import type {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
+import {getMinimalUnbrokenSelection} from "tim/document/editing/unbrokenSelection";
+import type {ParContext} from "tim/document/structure/parContext";
 import {createParContext} from "tim/document/structure/create";
 import {
     getContextualAreaInfo,
@@ -16,8 +14,9 @@ import {Users} from "tim/user/userService";
 import {$http} from "tim/util/ngimport";
 import {empty, to} from "tim/util/utils";
 import {getElementByParId} from "tim/document/parhelpers";
-import {ViewCtrl} from "tim/document/viewctrl";
-import {EditType, IParResponse} from "tim/document/editing/edittypes";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import type {IParResponse} from "tim/document/editing/edittypes";
+import {EditType} from "tim/document/editing/edittypes";
 
 export type ClipboardMetaResponse =
     | {

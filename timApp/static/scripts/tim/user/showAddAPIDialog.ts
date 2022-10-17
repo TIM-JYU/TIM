@@ -7,7 +7,7 @@
  */
 
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {IUserApiKey} from "tim/user/IUser";
+import type {IUserApiKey} from "tim/user/IUser";
 
 /*
 Code source: showAddContactDialog.ts

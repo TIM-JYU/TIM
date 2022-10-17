@@ -1,27 +1,26 @@
-import {IController, IHttpResponse, IScope} from "angular";
+import type {IController, IHttpResponse, IScope} from "angular";
 import moment from "moment";
 import {timApp} from "tim/app";
 import * as focusMe from "tim/ui/focusMe";
+import type {Binding, Result} from "tim/util/utils";
 import {
-    Binding,
     capitalizeFirstLetter,
     dateFormat,
     getGroupDesc,
     markAsUsed,
-    Result,
     to,
 } from "tim/util/utils";
 
 import {durationTypes} from "tim/ui/duration-picker.component";
-import {IGroup} from "tim/user/IUser";
+import type {IGroup} from "tim/user/IUser";
 import {genericglobals, itemglobals} from "tim/util/globals";
 import {$http, $timeout} from "tim/util/ngimport";
-import {
-    accessOrder,
+import type {
     IAccessType,
     IItemWithRights,
     IRight,
 } from "tim/item/access-role.service";
+import {accessOrder} from "tim/item/access-role.service";
 
 markAsUsed(focusMe);
 

@@ -1,5 +1,5 @@
-import {ILayerData} from "tim/gamification/ILayerData";
-import {ITileSet} from "tim/gamification/ITileSet";
+import type {ILayerData} from "tim/gamification/ILayerData";
+import type {ITileSet} from "tim/gamification/ITileSet";
 
 export interface IMapResponse {
     width: number;

@@ -1,21 +1,24 @@
-import {IScope} from "angular";
+import type {IScope} from "angular";
 import $ from "jquery";
 import {showPopupMenu} from "tim/document/showPopupMenu";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {SelectionUpdateType} from "tim/document/editing/editing";
-import {HelpPar} from "tim/document/structure/helpPar";
+import type {HelpPar} from "tim/document/structure/helpPar";
 import {ParContext} from "tim/document/structure/parContext";
 import {
     createParContextOrHelp,
     findParentPar,
     tryCreateParContextOrHelp,
 } from "tim/document/structure/create";
-import {Coords, dist, getPageXY, to2} from "tim/util/utils";
-import {onClick, OnClickArg} from "tim/document/eventhandlers";
+import type {Coords} from "tim/util/utils";
+import {dist, getPageXY, to2} from "tim/util/utils";
+import type {OnClickArg} from "tim/document/eventhandlers";
+import {onClick} from "tim/document/eventhandlers";
 import {getCitePar} from "tim/document/parhelpers";
-import {EditMode} from "tim/document/popup-menu-dialog.component";
-import {ViewCtrl} from "tim/document/viewctrl";
-import {getEmptyCoords, MenuFunctionList} from "tim/document/viewutils";
+import type {EditMode} from "tim/document/popup-menu-dialog.component";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import type {MenuFunctionList} from "tim/document/viewutils";
+import {getEmptyCoords} from "tim/document/viewutils";
 
 function checkIfIgnored(
     ignoredTags: string[],

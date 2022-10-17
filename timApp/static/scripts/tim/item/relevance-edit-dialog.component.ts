@@ -9,7 +9,7 @@ import {FormsModule} from "@angular/forms";
 import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {IItem} from "tim/item/IItem";
+import type {IItem} from "tim/item/IItem";
 import {CommonModule} from "@angular/common";
 
 @Component({

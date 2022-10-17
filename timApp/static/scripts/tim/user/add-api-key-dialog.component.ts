@@ -15,9 +15,9 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {ITranslator, ITranslatorUsage} from "tim/item/IItem";
+import type {ITranslator, ITranslatorUsage} from "tim/item/IItem";
 import {listTranslators} from "tim/document/languages";
-import {IUserApiKey} from "tim/user/IUser";
+import type {IUserApiKey} from "tim/user/IUser";
 
 /**
  * User can add translator API keys to be stored in TIM. (code source: add-contact-dialog.component.ts)

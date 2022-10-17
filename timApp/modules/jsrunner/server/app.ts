@@ -1,6 +1,7 @@
 import path from "path";
 import cookieParser from "cookie-parser";
-import express, {ErrorRequestHandler} from "express";
+import type {ErrorRequestHandler} from "express";
+import express from "express";
 import createError from "http-errors";
 import logger from "morgan";
 import answerRouter from "./routes/answer";

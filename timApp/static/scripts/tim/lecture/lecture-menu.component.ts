@@ -1,18 +1,14 @@
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    NgModule,
-    NgZone,
-} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, NgModule, NgZone} from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
 import {AccordionModule} from "ngx-bootstrap/accordion";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {ViewCtrl} from "tim/document/viewctrl";
-import {getItem, IItem} from "tim/item/IItem";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import type {IItem} from "tim/item/IItem";
+import {getItem} from "tim/item/IItem";
 import {isScreenSizeOrLower} from "tim/util/utils";
 import {createDowngradedModule, Digest, doDowngrade} from "tim/downgrade";
 import {LectureController} from "tim/lecture/lectureController";

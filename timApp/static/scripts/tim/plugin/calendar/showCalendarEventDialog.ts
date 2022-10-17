@@ -10,7 +10,7 @@
  * @date 24.5.2022
  */
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {TIMCalendarEvent} from "tim/plugin/calendar/calendar.component";
+import type {TIMCalendarEvent} from "tim/plugin/calendar/calendar.component";
 
 export async function showCalendarEventDialog(
     event: TIMCalendarEvent

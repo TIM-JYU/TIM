@@ -1,5 +1,5 @@
-import {IMapResponse} from "tim/gamification/IMapResponse";
-import {ITileSet} from "tim/gamification/ITileSet";
+import type {IMapResponse} from "tim/gamification/IMapResponse";
+import type {ITileSet} from "tim/gamification/ITileSet";
 
 export class Tile {
     public imageIndex: number;

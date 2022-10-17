@@ -1,32 +1,32 @@
-import {IScope} from "angular";
+import type {IScope} from "angular";
 import $ from "jquery";
-import {Moment} from "moment";
+import type {Moment} from "moment";
 import {openEditor} from "tim/editor/pareditorOpen";
 import {getCurrentEditor} from "tim/editor/editorScope";
-import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
+import type {IVisibilityVars} from "tim/timRoot";
+import {getVisibilityVars} from "tim/timRoot";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
-import {ParContext} from "tim/document/structure/parContext";
+import type {ParContext} from "tim/document/structure/parContext";
 import {fromParents} from "tim/document/structure/create";
 import type {IGroup} from "tim/user/IUser";
 import {Users} from "tim/user/userService";
-import {IPluginInfoResponse} from "tim/editor/parCompiler";
-import {PareditorController} from "tim/editor/pareditor";
-import {IModalInstance} from "tim/ui/dialog";
+import type {IPluginInfoResponse} from "tim/editor/parCompiler";
+import type {PareditorController} from "tim/editor/pareditor";
+import type {IModalInstance} from "tim/ui/dialog";
 import {documentglobals} from "tim/util/globals";
 import {$compile, $http} from "tim/util/ngimport";
 import {isMobileDevice, TimStorage, to} from "tim/util/utils";
-import {
+import type {
     EditPosition,
-    EditType,
-    extraDataForServer,
     IExtraData,
     IParResponse,
 } from "tim/document/editing/edittypes";
+import {EditType, extraDataForServer} from "tim/document/editing/edittypes";
 import {onClick} from "tim/document/eventhandlers";
 import {addElementToParagraphMargin} from "tim/document/parhelpers";
 import {handleUnread, markParRead, ReadingType} from "tim/document/readings";
-import {ViewCtrl} from "tim/document/viewctrl";
+import type {ViewCtrl} from "tim/document/viewctrl";
 
 export interface INoteEditorOptions {
     noteData?: {id: string};

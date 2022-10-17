@@ -2,15 +2,16 @@
  * A search box component.
  */
 
-import {Component, Input, OnDestroy, OnInit} from "@angular/core";
+import type {OnDestroy, OnInit} from "@angular/core";
+import {Component, Input} from "@angular/core";
 import {showSearchResultDialog} from "tim/search/showSearchResultDialog";
 import * as t from "io-ts";
-import {DocumentOrFolder, IItem, ITag, ITaggedItem} from "tim/item/IItem";
+import type {DocumentOrFolder, IItem, ITag, ITaggedItem} from "tim/item/IItem";
 import {relevanceSuggestions} from "tim/item/relevance-edit.component";
 import {someglobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
 import {TimStorage, to} from "tim/util/utils";
-import {SearchResultsDialogComponent} from "tim/search/search-results-dialog.component";
+import type {SearchResultsDialogComponent} from "tim/search/search-results-dialog.component";
 
 /**
  * All data title/word search route returns.

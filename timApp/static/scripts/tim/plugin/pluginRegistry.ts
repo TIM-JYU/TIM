@@ -1,5 +1,5 @@
-import {Type} from "@angular/core";
-import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
+import type {Type} from "@angular/core";
+import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 
 /**
  * Information about a registered plugin.

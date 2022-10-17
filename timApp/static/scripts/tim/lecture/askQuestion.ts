@@ -1,4 +1,4 @@
-import {IAskedQuestion, IUniqueParId} from "tim/lecture/lecturetypes";
+import type {IAskedQuestion, IUniqueParId} from "tim/lecture/lecturetypes";
 import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
 

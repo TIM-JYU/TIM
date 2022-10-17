@@ -7,7 +7,7 @@ import {CommonDialogOptions} from "tim/answer/commondialogoptions";
 import * as t from "io-ts";
 import {TimStorage} from "tim/util/utils";
 import {$httpParamSerializer} from "tim/util/ngimport";
-import {IUser} from "tim/user/IUser";
+import type {IUser} from "tim/user/IUser";
 import {CommonModule} from "@angular/common";
 
 const AnswersDialogOptions = t.intersection([

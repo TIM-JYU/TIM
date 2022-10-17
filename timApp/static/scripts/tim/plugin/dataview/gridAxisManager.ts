@@ -1,4 +1,5 @@
-import {clamp, VisibleItems} from "tim/plugin/dataview/util";
+import type {VisibleItems} from "tim/plugin/dataview/util";
+import {clamp} from "tim/plugin/dataview/util";
 
 /**
  * A single axis manager for rows or columns. Handles caching visible items, item positions and order.

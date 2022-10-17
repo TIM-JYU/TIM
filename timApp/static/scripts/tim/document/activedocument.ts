@@ -1,4 +1,4 @@
-import {TimDocument} from "tim/document/timDocument";
+import type {TimDocument} from "tim/document/timDocument";
 
 let activeDocument: TimDocument | null = null;
 

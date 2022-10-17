@@ -2,21 +2,14 @@
  * Defines the client-side implementation of a plugin that calls other plugins' save methods.
  */
 import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    NgModule,
-    NgZone,
-} from "@angular/core";
-import {
-    ChangeType,
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
+import type {
     IChangeListener,
     ITimComponent,
-    RegexOption,
     ViewCtrl,
 } from "tim/document/viewctrl";
+import {ChangeType, RegexOption} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     IncludeUsersOption,
@@ -24,7 +17,7 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {escapeRegExp, scrollToElement} from "tim/util/utils";
-import {TaskId} from "tim/plugin/taskid";
+import type {TaskId} from "tim/plugin/taskid";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClient, HttpClientModule} from "@angular/common/http";

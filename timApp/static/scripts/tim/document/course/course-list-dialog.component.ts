@@ -5,14 +5,8 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
 import {TimStorage, toPromise} from "tim/util/utils";
-import {
-    getCourseCode,
-    ICourseSettings,
-    ISubjectList,
-    ITaggedItem,
-    tagIsExpired,
-    TagType,
-} from "tim/item/IItem";
+import type {ICourseSettings, ISubjectList, ITaggedItem} from "tim/item/IItem";
+import {getCourseCode, tagIsExpired, TagType} from "tim/item/IItem";
 import {
     HTTP_INTERCEPTORS,
     HttpClient,

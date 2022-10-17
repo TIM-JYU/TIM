@@ -1,7 +1,7 @@
-import {ParContext} from "tim/document/structure/parContext";
+import type {ParContext} from "tim/document/structure/parContext";
 import {Area} from "tim/document/structure/area";
 import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
-import {Paragraph} from "tim/document/structure/paragraph";
+import type {Paragraph} from "tim/document/structure/paragraph";
 
 /**
  * Possible cases of how a {@link Paragraph} may relate to an {@link Area}.

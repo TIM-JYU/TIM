@@ -7,12 +7,15 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {$rootScope} from "tim/util/ngimport";
 import {PurifyModule} from "tim/util/purify.module";
-import {HelpPar} from "tim/document/structure/helpPar";
-import {ParContext} from "tim/document/structure/parContext";
+import type {HelpPar} from "tim/document/structure/helpPar";
+import type {ParContext} from "tim/document/structure/parContext";
 import {documentglobals} from "tim/util/globals";
 import {copyToClipboard, toPromise} from "tim/util/utils";
-import {ViewCtrl} from "tim/document/viewctrl";
-import {IMenuFunctionEntry, MenuFunctionList} from "tim/document/viewutils";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import type {
+    IMenuFunctionEntry,
+    MenuFunctionList,
+} from "tim/document/viewutils";
 import {CommonModule} from "@angular/common";
 import ClickEvent = JQuery.ClickEvent;
 import TriggeredEvent = JQuery.TriggeredEvent;

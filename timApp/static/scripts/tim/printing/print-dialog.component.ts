@@ -6,7 +6,7 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import * as t from "io-ts";
 import {FormsModule} from "@angular/forms";
 import {getUrlParamsJSON, TimStorage, toPromise} from "tim/util/utils";
-import {IItem} from "tim/item/IItem";
+import type {IItem} from "tim/item/IItem";
 import {CommonModule} from "@angular/common";
 
 export interface ITemplate extends IItem {}

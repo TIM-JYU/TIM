@@ -3,15 +3,14 @@
  *
  */
 import * as t from "io-ts";
-import {
+import type {
     ApplicationRef,
-    Component,
     DoBootstrap,
-    NgModule,
     OnDestroy,
     OnInit,
 } from "@angular/core";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {Component, NgModule} from "@angular/core";
+import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
@@ -20,7 +19,7 @@ import {
 } from "tim/plugin/attributes";
 import {documentglobals} from "tim/util/globals";
 import {injectStyle, log} from "tim/util/utils";
-import {EditMode} from "tim/document/popup-menu-dialog.component";
+import type {EditMode} from "tim/document/popup-menu-dialog.component";
 import {HttpClientModule} from "@angular/common/http";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";

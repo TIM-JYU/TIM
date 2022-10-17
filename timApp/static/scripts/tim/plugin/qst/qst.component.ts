@@ -1,9 +1,8 @@
 import deepEqual from "deep-equal";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {
-    ApplicationRef,
     ChangeDetectorRef,
     Component,
-    DoBootstrap,
     ElementRef,
     NgModule,
     NgZone,
@@ -15,22 +14,20 @@ import * as t from "io-ts";
 import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {defaultErrorMessage, to2} from "tim/util/utils";
+import type {IPreviewParams} from "tim/document/question/answer-sheet.component";
 import {
     AnswerSheetModule,
-    IPreviewParams,
     makePreview,
 } from "tim/document/question/answer-sheet.component";
-import {ChangeType, ITimComponent, ViewCtrl} from "tim/document/viewctrl";
-import {
-    AnswerTable,
-    AskedJsonJsonCodec,
-    IQuestionMarkup,
-} from "tim/lecture/lecturetypes";
+import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType} from "tim/document/viewctrl";
+import type {AnswerTable, IQuestionMarkup} from "tim/lecture/lecturetypes";
+import {AskedJsonJsonCodec} from "tim/lecture/lecturetypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {PurifyModule} from "tim/util/purify.module";
 import {showQuestionAskDialog} from "tim/lecture/showLectureDialogs";
-import {ParContext} from "tim/document/structure/parContext";
+import type {ParContext} from "tim/document/structure/parContext";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
