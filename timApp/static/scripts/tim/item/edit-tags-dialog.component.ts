@@ -14,7 +14,7 @@ import {toPromise} from "tim/util/utils";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import type {IItem, ITag} from "tim/item/IItem";
 import {tagStyleClass, TagType} from "tim/item/IItem";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 const tagParsingSeparator = ",";
 
@@ -333,7 +333,7 @@ export class EditTagsDialogComponent extends AngularDialogComponent<
     providers: [SessionVerify],
     declarations: [EditTagsDialogComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         FormsModule,
         HttpClientModule,
         TimUtilityModule,

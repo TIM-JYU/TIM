@@ -2,13 +2,13 @@ import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, ElementRef, Input, NgModule, ViewChild} from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {CommonModule} from "@angular/common";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AnswerSheetModule} from "tim/document/question/answer-sheet.component";
 import {PurifyModule} from "tim/util/purify.module";
 import {copyToClipboard, isIOS} from "tim/util/utils";
 import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 export enum ParameterType {
     NUMBER,
@@ -368,7 +368,7 @@ function scrollElementVisibleInParent(
                             <div *ngFor="let n of state.output" class="tapeItem">{{n}}</div>
                         </div>
                     </div>
-                    <img alt="output" src="/images/tape/output.png"/>
+                    <img alt="output" src="/static/images/tape/output.png"/>
                     <span>Output</span>
                 </div>
                 <div class="robotDiv">
@@ -376,7 +376,7 @@ function scrollElementVisibleInParent(
                         <div class="tapeItem" [innerText]="getHand()"></div>
                     </div>
                     <div class="robotImage">
-                        <img alt="robot" src="/images/tape/robot.png"/>
+                        <img alt="robot" src="/static/images/tape/robot.png"/>
                         <div class="robotRunButtons">
                             <button class="timButton" (click)="step()"><span>Step</span></button>
                             <button class="timButton" (click)="run()"><span [innerText]="getRunButtonText()"></span>
@@ -391,7 +391,7 @@ function scrollElementVisibleInParent(
                         <div *ngFor="let n of state.input" class="tapeItem">{{n}}</div>
                     </span>
                     </div>
-                    <img alt="input" src="/images/tape/input.png"/>
+                    <img alt="input" src="/static/images/tape/input.png"/>
                     <span>Input</span>
                 </div>
             </div>
@@ -1008,7 +1008,7 @@ export class TapePluginContent implements PluginJson {
 @NgModule({
     declarations: [TapePluginContent],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

@@ -9,7 +9,7 @@ import {DropdownCheckboxComponent} from "tim/lecture/dropdown-checkbox.component
 import {FormsModule} from "@angular/forms";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import type {ILectureMessage} from "tim/lecture/lecturetypes";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 @Component({
     selector: "tim-lecture-wall-dialog",
@@ -118,7 +118,7 @@ export class LectureWallDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [LectureWallDialogComponent, DropdownCheckboxComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         FormsModule,
         TimUtilityModule,
         DialogModule,

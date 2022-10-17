@@ -16,7 +16,7 @@ import type {
     IMenuFunctionEntry,
     MenuFunctionList,
 } from "tim/document/viewutils";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 import ClickEvent = JQuery.ClickEvent;
 import TriggeredEvent = JQuery.TriggeredEvent;
 
@@ -268,7 +268,7 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [PopupMenuDialogComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         DialogModule,
         TimUtilityModule,
         HttpClientModule,

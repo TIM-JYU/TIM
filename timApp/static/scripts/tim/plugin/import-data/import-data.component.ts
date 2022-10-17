@@ -6,7 +6,6 @@ import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import type {IUser} from "tim/user/IUser";
@@ -18,6 +17,7 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {BrowserModule} from "@angular/platform-browser";
 
 const ImportDataMarkup = t.intersection([
     t.partial({
@@ -344,7 +344,7 @@ export class ImportDataComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [ImportDataComponent],
-    imports: [CommonModule, HttpClientModule, FormsModule, TimUtilityModule],
+    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
 })
 export class ImportDataModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

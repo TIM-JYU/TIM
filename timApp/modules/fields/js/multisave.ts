@@ -22,11 +22,10 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {DomSanitizer} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {slugify} from "tim/util/slugify";
-import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {
     GroupType,
@@ -464,7 +463,7 @@ export class MultisaveComponent
 @NgModule({
     declarations: [MultisaveComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

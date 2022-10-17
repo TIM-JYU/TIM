@@ -14,8 +14,8 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 import type {
     AnswerReturnBrowser,
     ErrorList,
@@ -30,7 +30,7 @@ import {
 } from "../../shared/jsrunnertypes";
 
 @Component({
-    selector: "tim-js-runner",
+    selector: "js-runner",
     template: `
 <div *ngIf="isVisible()" style="display: inline-block" class="jsrunner">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
@@ -342,7 +342,7 @@ export class JsRunnerErrorComponent {
 @NgModule({
     declarations: [JsRunnerPluginComponent, JsRunnerErrorComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         TimUtilityModule,
         FormsModule,

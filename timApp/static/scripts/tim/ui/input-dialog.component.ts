@@ -5,7 +5,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import type {Result} from "tim/util/utils";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 export type InputDialogParams<T> = {
     title: string;
@@ -119,6 +119,6 @@ export class InputDialogComponent<T> extends AngularDialogComponent<
 
 @NgModule({
     declarations: [InputDialogComponent],
-    imports: [CommonModule, DialogModule, TimUtilityModule, FormsModule],
+    imports: [BrowserModule, DialogModule, TimUtilityModule, FormsModule],
 })
 export class InputDialogModule {}

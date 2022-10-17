@@ -1,11 +1,11 @@
 import {NgModule} from "@angular/core";
-import {CommonModule} from "@angular/common";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {ScriptedInnerHTMLDirective} from "tim/util/scripted-inner-html.directive";
+import {BrowserModule} from "@angular/platform-browser";
 
 @NgModule({
     declarations: [ScriptedInnerHTMLDirective],
-    imports: [CommonModule, TimUtilityModule],
+    imports: [BrowserModule, TimUtilityModule],
     exports: [ScriptedInnerHTMLDirective],
 })
 export class ScriptedInnerHTMLModule {}

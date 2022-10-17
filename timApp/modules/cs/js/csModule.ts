@@ -1,6 +1,5 @@
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {NgModule} from "@angular/core";
-import {CommonModule} from "@angular/common";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -8,6 +7,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import {GraphVizComponent} from "tim/plugin/graph-viz/graph-viz.component";
 import {VariablesComponent} from "tim/plugin/variables/variables.component";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 import {CsRunnerComponent} from "./csPlugin";
 import {CsTextComponent} from "./text";
 import {CsConsoleComponent} from "./console";
@@ -44,12 +44,11 @@ import {EditorModule} from "./editor/module";
     ],
     imports: [
         EditorModule,
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
         CsUtilityModule,
-        CommonModule,
         PurifyModule,
     ],
 })

@@ -2,7 +2,6 @@ import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, Directive, ElementRef, Input, NgModule} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {CommonModule} from "@angular/common";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -13,6 +12,7 @@ import type {IAnswerSaveEvent} from "tim/answer/answer-browser.component";
 import {TaskId} from "tim/plugin/taskid";
 import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 interface MMCQContent<State> {
     state?: State;
@@ -279,7 +279,7 @@ export class MCQ extends MCQBase<number | null> {
 @NgModule({
     declarations: [MCQ, MMCQ],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

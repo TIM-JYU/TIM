@@ -7,7 +7,7 @@ import {
     ElementRef,
     NgModule,
 } from "@angular/core";
-import {DomSanitizer} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {$http, $sce} from "tim/util/ngimport";
@@ -30,7 +30,6 @@ import type {
 import {ChangeType} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {CommonModule} from "@angular/common";
 import type {
     IDrawOptions,
     IDrawVisibleOptions,
@@ -1958,7 +1957,7 @@ export class ImageXComponent
 @NgModule({
     declarations: [ImageXComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         DrawToolbarModule,
         HttpClientModule,
         FormsModule,

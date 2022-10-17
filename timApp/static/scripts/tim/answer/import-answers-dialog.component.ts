@@ -9,7 +9,7 @@ import {documentglobals} from "tim/util/globals";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {toPromise} from "tim/util/utils";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 import {AceEditorComponent} from "../../../../modules/cs/js/editor/ace";
 import {EditorModule} from "../../../../modules/cs/js/editor/module";
 
@@ -143,7 +143,7 @@ export class ImportAnswersDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [ImportAnswersDialogComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         DialogModule,
         TimUtilityModule,
         EditorModule,

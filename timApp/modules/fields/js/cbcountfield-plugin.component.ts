@@ -20,14 +20,13 @@ import {getFormBehavior} from "tim/plugin/util";
 import {valueOr} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {DomSanitizer} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {CommonModule} from "@angular/common";
 import {FieldBasicData} from "./textfield-plugin.component";
 
 const CbcountfieldMarkup = t.intersection([
@@ -453,7 +452,7 @@ export class CbcountfieldPluginComponent
 @NgModule({
     declarations: [CbcountfieldPluginComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         TimUtilityModule,
         FormsModule,

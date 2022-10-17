@@ -32,12 +32,12 @@ import {
 } from "angular-calendar";
 import type {WeekViewHourSegment} from "calendar-utils";
 import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
-import {CommonModule, registerLocaleData} from "@angular/common";
+import {registerLocaleData} from "@angular/common";
 import localeFi from "@angular/common/locales/fi";
 import localeSv from "@angular/common/locales/sv";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {DomSanitizer} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek, setISOWeek} from "date-fns";
 import moment from "moment";
@@ -1098,7 +1098,7 @@ export class CalendarComponent
 
 @NgModule({
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         FormsModule,
         CalendarModule.forRoot({

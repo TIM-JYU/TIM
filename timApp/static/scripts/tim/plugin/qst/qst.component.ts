@@ -9,9 +9,8 @@ import {
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {DomSanitizer} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import * as t from "io-ts";
-import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {defaultErrorMessage, to2} from "tim/util/utils";
 import type {IPreviewParams} from "tim/document/question/answer-sheet.component";
@@ -389,7 +388,7 @@ export class QstComponent
 @NgModule({
     declarations: [QstComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
@@ -402,3 +401,4 @@ export class QstModule implements DoBootstrap {
 }
 
 registerPlugin("tim-qst", QstModule, QstComponent);
+registerPlugin("tim-lecture-qst", QstModule, QstComponent);

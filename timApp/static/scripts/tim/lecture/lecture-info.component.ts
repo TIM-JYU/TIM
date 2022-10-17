@@ -26,7 +26,7 @@ import type {
     IQuestionAnswerPlain,
 } from "tim/lecture/lecturetypes";
 import {LectureWallContentModule} from "tim/lecture/lecture-wall-content.component";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 /**
  * Created by hajoviin on 11.5.2015.
@@ -274,7 +274,7 @@ export class LectureInfoComponent {
 @NgModule({
     declarations: [LectureInfoComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         FormsModule,
         HttpClientModule,
         TimUtilityModule,

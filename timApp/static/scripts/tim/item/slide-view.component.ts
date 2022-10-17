@@ -1,12 +1,11 @@
 import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import type {SafeResourceUrl} from "@angular/platform-browser";
-import {DomSanitizer} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {CommonModule} from "@angular/common";
 
 @Component({
     selector: "tim-slide-view",
@@ -33,7 +32,7 @@ export class SlideViewComponent implements OnInit {
 
 @NgModule({
     declarations: [SlideViewComponent],
-    imports: [CommonModule, TimUtilityModule],
+    imports: [BrowserModule, TimUtilityModule],
 })
 export class SlideViewModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

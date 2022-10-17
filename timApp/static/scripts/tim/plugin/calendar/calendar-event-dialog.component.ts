@@ -12,7 +12,6 @@
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {CommonModule} from "@angular/common";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -23,6 +22,7 @@ import {itemglobals} from "tim/util/globals";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {TIMCalendarEvent} from "tim/plugin/calendar/calendar.component";
 import {TimCalendarModule} from "tim/plugin/calendar/calendar.component";
+import {BrowserModule} from "@angular/platform-browser";
 
 @Component({
     selector: "tim-calendar-event-dialog",
@@ -834,7 +834,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         DialogModule,
         FormsModule,
         TimUtilityModule,
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         TimCalendarModule,
         TooltipModule.forRoot(),

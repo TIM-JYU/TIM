@@ -20,8 +20,8 @@ import {DataViewComponent} from "tim/plugin/dataview/data-view.component";
 import {BsDatepickerModule, BsLocaleService} from "ngx-bootstrap/datepicker";
 import {defineLocale} from "ngx-bootstrap/chronos";
 import {fiLocale} from "ngx-bootstrap/locale";
-import {CommonModule} from "@angular/common";
 import {computeHiddenRowsFromFilters} from "tim/plugin/timTable/filtering";
+import {BrowserModule} from "@angular/platform-browser";
 
 export const GroupType = t.union([t.string, t.array(t.string)]);
 
@@ -622,7 +622,7 @@ export class SisuAssessmentExportComponent {
 @NgModule({
     declarations: [SisuAssessmentExportComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         TimUtilityModule,
         HttpClientModule,
         BsDatepickerModule.forRoot(),

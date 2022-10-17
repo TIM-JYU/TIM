@@ -25,7 +25,7 @@ import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {PurifyModule} from "tim/util/purify.module";
 import {HTMLSanitizeModule} from "tim/util/htmlsanitize.module";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 /**
  * Directive for dynamic answer sheet. Sheet to answer lecture questions.
@@ -594,7 +594,7 @@ export class AnswerSheetComponent implements OnChanges {
 @NgModule({
     declarations: [AnswerSheetComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

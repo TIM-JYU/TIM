@@ -23,7 +23,7 @@ import {HttpClientModule} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {getKeyCode, KEY_LEFT, KEY_RIGHT} from "tim/util/keycodes";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 import type {Iframesettings} from "../../cs/js/jsframe";
 import {VideoLinkComponent} from "./video-link.component";
 
@@ -690,7 +690,7 @@ export class VideoComponent extends AngularPluginBase<
 @NgModule({
     declarations: [VideoComponent, VideoLinkComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         TimUtilityModule,
         HttpClientModule,
         FormsModule,

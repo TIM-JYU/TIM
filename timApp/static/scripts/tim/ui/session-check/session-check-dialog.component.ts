@@ -11,7 +11,7 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {toPromise} from "tim/util/utils";
 import {Users} from "tim/user/userService";
 import type {IFullUser} from "tim/user/IUser";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 interface ISessionStatus {
     sessionId: string;
@@ -121,6 +121,6 @@ export class SessionCheckDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [SessionCheckDialogComponent],
-    imports: [CommonModule, TimUtilityModule, DialogModule, HttpClientModule],
+    imports: [BrowserModule, TimUtilityModule, DialogModule, HttpClientModule],
 })
 export class SessionCheckDialogModule {}

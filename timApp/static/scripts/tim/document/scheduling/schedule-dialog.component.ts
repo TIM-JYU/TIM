@@ -15,7 +15,7 @@ import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import type {IGroup} from "tim/user/IUser";
 import {isAdmin} from "tim/user/userService";
 import type {ReadonlyMoment} from "tim/util/readonlymoment";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 interface IInterval {
     every: number;
@@ -231,7 +231,7 @@ export class ScheduleDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [ScheduleDialogComponent, IntervalPipe, OwnerPipe],
     imports: [
-        CommonModule,
+        BrowserModule,
         DialogModule,
         TimUtilityModule,
         FormsModule,

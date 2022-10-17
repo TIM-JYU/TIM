@@ -1,12 +1,12 @@
 import type {OnInit} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
-import {CommonModule} from "@angular/common";
 import {itemglobals} from "tim/util/globals";
 import {timeout, toPromise} from "tim/util/utils";
 import {HttpClient, HttpParams} from "@angular/common/http";
 import {markAsRead} from "tim/messaging/messagingUtils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import moment from "moment";
+import {BrowserModule} from "@angular/platform-browser";
 
 @Component({
     selector: "manage-read-receipt",
@@ -191,6 +191,6 @@ interface TimMessageReadReceipt {
 @NgModule({
     declarations: [ManageReadReceiptComponent],
     exports: [ManageReadReceiptComponent],
-    imports: [CommonModule, TimUtilityModule],
+    imports: [BrowserModule, TimUtilityModule],
 })
 export class ManageReadReceiptModule {}

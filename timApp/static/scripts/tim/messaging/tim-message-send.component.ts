@@ -11,7 +11,7 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {isAdmin, Users} from "tim/user/userService";
 import {toPromise} from "tim/util/utils";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 interface TimMessageOptions {
     archive: boolean;
@@ -405,7 +405,7 @@ export class TimMessageSendComponent {
 @NgModule({
     declarations: [TimMessageSendComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

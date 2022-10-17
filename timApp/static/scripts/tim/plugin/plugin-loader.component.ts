@@ -9,16 +9,15 @@ import type {
 import {
     Component,
     ContentChild,
-    createNgModule,
     ElementRef,
     Injector,
     Input,
     NgModule,
     NgZone,
+    PlatformRef,
     ViewChild,
     ViewContainerRef,
 } from "@angular/core";
-import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
@@ -40,6 +39,7 @@ import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import type {IRegisteredPlugin} from "tim/plugin/pluginRegistry";
 import {getPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 const LAZY_MARKER = "lazy";
 const LAZY_MARKER_LENGTH = LAZY_MARKER.length;
@@ -153,6 +153,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         private http: HttpClient,
         private zone: NgZone,
         private injector: Injector,
+        private platformRef: PlatformRef,
         public vcr: ViewContainerRef
     ) {
         timLogTime("timPluginLoader constructor", "answ", 1);
@@ -384,7 +385,19 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         const viewContainerRef = this.pluginPlacement;
         viewContainerRef.clear();
 
-        const modRef = createNgModule(registeredPlugin.module, this.injector);
+        // Note: there are multiple ways to bootstrap a module with the components
+        // 1. createNgModule - creates a new module with no platform -> mainly for child modules, prevents multiple platform instances
+        //   * Seems to be fast and easy to bootstrap, but doesn't allow referencing e.g. BrowserModule
+        // 2. PlatformRef.bootstrapModule - bootstraps a module as if it's an application module
+        //   * Angular allows multiple bootstraps for the same platform
+        //   * Generally doesn't seem to be intended for bootstrapping plugins => needs further testing
+        // For now we'll use bootstrapModule since eventually we'll likely move to use Angular Elements that seem to do the same thing
+        const modRef = await this.platformRef.bootstrapModule(
+            registeredPlugin.module,
+            {
+                ngZone: this.zone,
+            }
+        );
         const componentRef = await viewContainerRef.createComponent<PluginJson>(
             registeredPlugin.component,
             {ngModuleRef: modRef}
@@ -598,7 +611,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     declarations: [PluginLoaderComponent],
     imports: [
         AnswerBrowserModule,
-        CommonModule,
+        BrowserModule,
         FormsModule,
         PurifyModule,
         TimUtilityModule,

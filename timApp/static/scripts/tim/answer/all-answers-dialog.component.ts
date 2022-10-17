@@ -13,7 +13,7 @@ import {maybeUndefined} from "tim/plugin/attributes";
 import {documentglobals} from "tim/util/globals";
 import {$httpParamSerializer} from "tim/util/ngimport";
 import {TimStorage, toPromise} from "tim/util/utils";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 const AnswersDialogOptions = t.intersection([
     t.type({
@@ -382,7 +382,7 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [AllAnswersDialogComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         DialogModule,
         FormsModule,
         HttpClientModule,

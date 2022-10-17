@@ -27,7 +27,7 @@ import type {AlertSeverity} from "tim/ui/formErrorMessage";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {Channel} from "tim/messaging/listOptionTypes";
 import {toPromise} from "tim/util/utils";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 const GeneralInfoMarkup = t.type({
     type: t.string,
@@ -253,7 +253,7 @@ export class UserActionVerifyComponent implements AfterViewInit {
         SetPrimaryContactInfoComponent,
     ],
     exports: [UserActionVerifyComponent],
-    imports: [CommonModule, TimUtilityModule, HttpClientModule],
+    imports: [BrowserModule, TimUtilityModule, HttpClientModule],
 })
 export class UserActionVerifyModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

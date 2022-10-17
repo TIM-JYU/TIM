@@ -11,7 +11,7 @@ import {$rootScope} from "tim/util/ngimport";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {getCurrentEditor} from "tim/editor/editorScope";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 export interface ISpellErrorParams {
     info: ISpellWordInfo;
@@ -186,6 +186,6 @@ export class SpellErrorDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [SpellErrorDialogComponent],
-    imports: [CommonModule, DialogModule, TimUtilityModule],
+    imports: [BrowserModule, DialogModule, TimUtilityModule],
 })
 export class SpellErrorDialogModule {}

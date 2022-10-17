@@ -23,7 +23,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {HttpClientModule} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 const ShowFileMarkup = t.intersection([
     t.partial({
@@ -299,7 +299,7 @@ export class ImagesComponent extends AngularPluginBase<
 @NgModule({
     declarations: [ImagesComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         TimUtilityModule,
         HttpClientModule,
         FormsModule,

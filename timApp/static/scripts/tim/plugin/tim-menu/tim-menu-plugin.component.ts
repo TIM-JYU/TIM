@@ -7,7 +7,6 @@ import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {CommonModule} from "@angular/common";
 import type {OnClickArg} from "tim/document/eventhandlers";
 import {onClick} from "tim/document/eventhandlers";
 import type {ViewCtrl} from "tim/document/viewctrl";
@@ -25,6 +24,7 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 const TimMenuMarkup = t.intersection([
     t.partial({
@@ -507,7 +507,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
 @NgModule({
     declarations: [TimMenuPluginComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

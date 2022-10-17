@@ -8,7 +8,7 @@ import * as t from "io-ts";
 import {TimStorage} from "tim/util/utils";
 import {$httpParamSerializer} from "tim/util/ngimport";
 import type {IUser} from "tim/user/IUser";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 const AnswersDialogOptions = t.intersection([
     t.type({
@@ -272,6 +272,6 @@ export class FeedbackAnswersDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [FeedbackAnswersDialogComponent],
-    imports: [CommonModule, DialogModule, TimUtilityModule, FormsModule],
+    imports: [BrowserModule, DialogModule, TimUtilityModule, FormsModule],
 })
 export class FeedbackAnswersDialogModule {}

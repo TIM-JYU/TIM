@@ -1,6 +1,5 @@
 import type {ModuleWithProviders} from "@angular/core";
 import {NgModule} from "@angular/core";
-import {CommonModule} from "@angular/common";
 import {TabsModule} from "ngx-bootstrap/tabs";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {FormsModule} from "@angular/forms";
@@ -19,6 +18,7 @@ import {LoggedUsersTabComponent} from "tim/sidebarmenu/tabs/logged-users-tab.com
 import {BookmarksComponent} from "tim/sidebarmenu/util/bookmarks.component";
 import {TimeSincePipe} from "tim/sidebarmenu/util/time-since.pipe";
 import {ScoreInfoTabComponent} from "tim/sidebarmenu/tabs/score-info-tab.component";
+import {BrowserModule} from "@angular/platform-browser";
 
 @NgModule({
     declarations: [
@@ -36,7 +36,7 @@ import {ScoreInfoTabComponent} from "tim/sidebarmenu/tabs/score-info-tab.compone
         ScoreInfoTabComponent,
     ],
     imports: [
-        CommonModule,
+        BrowserModule,
         FormsModule,
         TabsModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
         TooltipModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,

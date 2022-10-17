@@ -109,7 +109,6 @@ import {TaskId} from "tim/plugin/taskid";
 import {PluginMeta} from "tim/plugin/util";
 import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {CommonModule} from "@angular/common";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {computeHiddenRowsFromFilters} from "tim/plugin/timTable/filtering";
 import {
@@ -120,6 +119,7 @@ import {
     showTableEditorToolbar,
 } from "tim/plugin/timTable/toolbarUtils";
 import {createParContext} from "tim/document/structure/create";
+import {BrowserModule} from "@angular/platform-browser";
 
 const timDateRegex = /^\d{4}-\d{2}-\d{2}[ T]?\d{2}:\d{2}(:\d{2})?$/;
 
@@ -4825,7 +4825,7 @@ export class TimTableComponent
 @NgModule({
     declarations: [TimTableComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

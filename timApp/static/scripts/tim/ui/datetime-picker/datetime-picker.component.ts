@@ -4,7 +4,7 @@ import {FormsModule} from "@angular/forms";
 import moment from "moment";
 import {DatetimePopupModule} from "vendor/ngx-bootstrap-datetime-popup/ngx-bootstrap-datetime-popup.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
 
@@ -72,7 +72,12 @@ export class DatetimePickerComponent implements OnInit, OnChanges {
 
 @NgModule({
     declarations: [DatetimePickerComponent],
-    imports: [CommonModule, DatetimePopupModule, FormsModule, TimUtilityModule],
+    imports: [
+        BrowserModule,
+        DatetimePopupModule,
+        FormsModule,
+        TimUtilityModule,
+    ],
     exports: [DatetimePickerComponent],
 })
 export class DatetimePickerModule {}

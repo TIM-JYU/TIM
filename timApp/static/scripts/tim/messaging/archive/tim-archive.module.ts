@@ -8,12 +8,12 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TimArchiveHeaderComponent} from "tim/messaging/archive/tim-archive-header.component";
 import {TimArchiveFooterComponent} from "tim/messaging/archive/tim-archive-footer.component";
 import {ArchivedMessageStateService} from "tim/messaging/archive/archived-message-state.service";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 @NgModule({
     declarations: [TimArchiveHeaderComponent, TimArchiveFooterComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         TooltipModule.forRoot(),
         TimUtilityModule,

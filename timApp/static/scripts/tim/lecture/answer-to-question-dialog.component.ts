@@ -34,7 +34,7 @@ import {
     questionAsked,
 } from "tim/lecture/lecturetypes";
 import {showStatisticsDialog} from "tim/lecture/showLectureDialogs";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 /**
  * Created by hajoviin on 22.4.2015
@@ -393,7 +393,7 @@ export class AnswerToQuestionDialogComponent
 @NgModule({
     declarations: [AnswerToQuestionDialogComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         TimUtilityModule,
         DialogModule,
         AnswerSheetModule,

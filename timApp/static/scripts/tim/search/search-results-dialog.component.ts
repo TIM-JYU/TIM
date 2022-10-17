@@ -14,7 +14,7 @@ import type {
     ITagSearchResult,
     SearchBoxComponent,
 } from "tim/search/search-box.component";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 export interface ISearchResultDisplay {
     result: IDocSearchResult;
@@ -407,6 +407,6 @@ export class SearchResultsDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [SearchResultsDialogComponent],
-    imports: [CommonModule, FormsModule, TimUtilityModule, DialogModule],
+    imports: [BrowserModule, FormsModule, TimUtilityModule, DialogModule],
 })
 export class SearchResultsDialogModule {}

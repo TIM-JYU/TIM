@@ -11,7 +11,7 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {DomSanitizer} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -20,7 +20,6 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {CommonModule} from "@angular/common";
 
 const GoalTableMarkup = t.intersection([
     t.partial({
@@ -399,7 +398,7 @@ export class GoalTablePluginComponent
 @NgModule({
     declarations: [GoalTablePluginComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         TimUtilityModule,
         FormsModule,

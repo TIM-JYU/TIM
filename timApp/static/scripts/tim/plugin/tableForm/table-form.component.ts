@@ -12,7 +12,7 @@ import {
     ViewChild,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {DomSanitizer} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -30,6 +30,12 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
+import type {
+    CellAttrToSave,
+    CellToSave,
+    DataEntity,
+    TimTable,
+} from "tim/plugin/timTable/tim-table.component";
 import {
     ClearSort,
     colnumToLetters,
@@ -39,15 +45,8 @@ import {
     TimTableModule,
 } from "tim/plugin/timTable/tim-table.component";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {CommonModule} from "@angular/common";
 import {TimMessageSendModule} from "tim/messaging/tim-message-send.component";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
-import type {
-    CellAttrToSave,
-    CellToSave,
-    DataEntity,
-    TimTable,
-} from "tim/plugin/timTable/tim-table.component";
 import {
     clone,
     defaultErrorMessage,
@@ -1537,7 +1536,7 @@ export class TableFormComponent
 @NgModule({
     declarations: [TableFormComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

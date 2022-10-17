@@ -9,7 +9,6 @@ import {
     ViewChild,
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {CommonModule} from "@angular/common";
 import * as t from "io-ts";
 import {ButtonsModule} from "ngx-bootstrap/buttons";
 import {
@@ -20,6 +19,7 @@ import {
 } from "tim/util/colorUtils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TimStorage} from "tim/util/utils";
+import {BrowserModule} from "@angular/platform-browser";
 
 export interface IDrawVisibleOptions {
     // Interface to define which options should be visible in the drawing toolbar
@@ -372,7 +372,7 @@ export class DrawToolbarComponent implements AfterViewInit {
 @NgModule({
     declarations: [DrawToolbarComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         FormsModule,
         ButtonsModule.forRoot(),
         TimUtilityModule,

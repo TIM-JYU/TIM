@@ -42,8 +42,8 @@ import {
     ServerQueryHandler,
 } from "tim/plugin/userselect/searchQueryHandlers";
 import {T9KeyboardComponent} from "tim/plugin/userselect/t9-keyboard.component";
-import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 const NeedsVerifyReasons = t.type({
     changeGroupBelongs: t.string,
@@ -928,7 +928,7 @@ export class UserSelectComponent extends AngularPluginBase<
         T9KeyboardComponent,
     ],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

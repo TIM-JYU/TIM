@@ -29,7 +29,6 @@ import {showResetTaskLock} from "tim/answer/showResetTaskLock";
 import type {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {FormsModule} from "@angular/forms";
-import {CommonModule} from "@angular/common";
 import {PurifyModule} from "tim/util/purify.module";
 import type {ViewCtrl} from "tim/document/viewctrl";
 import {isVelpable} from "tim/document/viewctrl";
@@ -64,6 +63,7 @@ import type {
     IAnswerWithUsers,
     IModelAnswerSettings,
 } from "tim/answer/IAnswer";
+import {BrowserModule} from "@angular/platform-browser";
 
 /*
  * TODO: if forceBrowser and formMode, now does not show the browser after refresh in view-mode.
@@ -1641,7 +1641,7 @@ export class AnswerBrowserComponent
 @NgModule({
     declarations: [AnswerBrowserComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         FormsModule,
         TimUtilityModule,
         DrawCanvasModule,

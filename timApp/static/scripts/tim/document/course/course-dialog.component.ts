@@ -13,7 +13,7 @@ import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import {HttpClient} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 const groupTagPrefix = "group:";
 
@@ -273,7 +273,7 @@ export class CourseDialogComponent extends AngularDialogComponent<IItem, void> {
 @NgModule({
     declarations: [CourseDialogComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         DialogModule,
         FormsModule,
         TooltipModule.forRoot(),

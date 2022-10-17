@@ -1,17 +1,17 @@
 import {NgModule} from "@angular/core";
-import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
 import {TimepickerModule} from "ngx-bootstrap/timepicker";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BsDatepickerModule} from "ngx-bootstrap/datepicker";
-import {DatetimePopupComponent} from "./ngx-bootstrap-datetime-popup.component";
-import {OffClickDirective} from "./offclick.directive";
+import {BrowserModule} from "@angular/platform-browser";
+import {DatetimePopupComponent} from "vendor/ngx-bootstrap-datetime-popup/ngx-bootstrap-datetime-popup.component";
+import {OffClickDirective} from "vendor/ngx-bootstrap-datetime-popup/offclick.directive";
 
 @NgModule({
     declarations: [DatetimePopupComponent, OffClickDirective],
     imports: [
-        CommonModule,
+        BrowserModule,
         FormsModule,
         BsDatepickerModule,
         TimepickerModule,

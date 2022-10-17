@@ -25,7 +25,7 @@ import {
     ViewChild,
 } from "@angular/core";
 import type {SafeResourceUrl} from "@angular/platform-browser";
-import {DomSanitizer} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -41,7 +41,6 @@ import {
     fullscreenSupported,
     toggleFullScreen,
 } from "tim/util/fullscreen";
-import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
 import {communicationJS} from "./iframeutils";
@@ -785,7 +784,7 @@ export class JsframeComponent
 @NgModule({
     declarations: [JsframeComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

@@ -15,7 +15,7 @@ import type {
     ISpellErrorParams,
     SpellErrorDialogComponent as SpellErrorDialogComponentType,
 } from "tim/document/editing/spell-error-dialog.component";
-import {CommonModule} from "@angular/common";
+import {BrowserModule} from "@angular/platform-browser";
 
 @Component({
     selector: "tim-spell-error",
@@ -61,7 +61,7 @@ export class SpellErrorComponent implements OnInit, OnDestroy {
 
 @NgModule({
     declarations: [SpellErrorComponent],
-    imports: [CommonModule, TimUtilityModule],
+    imports: [BrowserModule, TimUtilityModule],
 })
 export class SpellModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

@@ -23,7 +23,6 @@ import {FormsModule} from "@angular/forms";
 import type {Subscription} from "rxjs";
 import {Subject} from "rxjs";
 import {debounceTime, distinctUntilChanged} from "rxjs/operators";
-import {CommonModule} from "@angular/common";
 import {PurifyModule} from "tim/util/purify.module";
 import {defaultErrorMessage, defaultTimeout} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -42,6 +41,7 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 import type {
     IFile,
     IFileSpecification,
@@ -570,7 +570,7 @@ export class ReviewCanvasComponent
 @NgModule({
     declarations: [ReviewCanvasComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
