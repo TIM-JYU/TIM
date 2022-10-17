@@ -24,6 +24,6 @@ class LectureTest(BrowserTest):
         )
         self.login_browser_quick_test1()
         self.goto_document(doc, view="lecture")
-        self.wait_until_present_and_vis("tim-lecture-qst")
-        qst_text = self.find_element_avoid_staleness("tim-lecture-qst p")
+        self.wait_until_present_and_vis("tim-qst")
+        qst_text = self.find_element_avoid_staleness("tim-qst p")
         self.assertEqual("1) Today", qst_text.text)

@@ -658,7 +658,7 @@ class Plugin:
                     f'id="{html_task_id}" '
                     f'plugin-type="/{self.type}" '
                     f'task-id="{doc_task_id or ""}" '
-                    f'preview="{"true" if self.options.preview else "false"}">'
+                    f"""{'preview="true"' if self.options.preview else ""}>"""
                     f"{cont}"
                     "</tim-plugin-loader>",
                     html_task_id or "",
