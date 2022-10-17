@@ -140,7 +140,7 @@ services:
 ${ partial("docker", "csplugin_cassandra.tmpl.yml") if csplugin.is_cassandra_enabled else "" }
 ${ partial("docker", "csplugin_mongodb.tmpl.yml") if csplugin.is_mongodb_enabled else "" }
  haskellplugins:
-  image: timimages/haskellplugins:2022-10-14_b1
+  image: timimages/haskellplugins:2022-10-14-ecb29513e0759a32a49ce5efb4373794f073190e
   restart: unless-stopped
   logging:
    driver: none
