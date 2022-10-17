@@ -14,19 +14,23 @@ import {
     ViewChildren,
 } from "@angular/core";
 import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
+import {FormsModule} from "@angular/forms";
+import {CommonModule} from "@angular/common";
+import {IUnsavedComponent} from "tim/document/viewctrl";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {
     DrawToolbarModule,
     DrawType,
     IDrawOptions,
     IFillAndWidth,
-} from "tim/plugin/drawToolbar";
+} from "tim/plugin/draw-canvas/draw-toolbar.component";
 import {
     ILine,
     ILineSegment,
     IPoint,
     IRectangleOrEllipse,
     TuplePoint,
-} from "tim/plugin/imagextypes";
+} from "tim/plugin/imagex/imagextypes";
 import {
     isTouchEvent,
     MouseOrTouch,
@@ -34,10 +38,6 @@ import {
     posToRelative,
     touchEventToTouch,
 } from "tim/util/utils";
-import {FormsModule} from "@angular/forms";
-import {CommonModule} from "@angular/common";
-import {IUnsavedComponent} from "tim/document/viewctrl";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 export type IRectangle = {
     type: "rectangle";

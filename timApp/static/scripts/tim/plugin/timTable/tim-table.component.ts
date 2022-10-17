@@ -50,7 +50,6 @@ import {
     ViewChild,
     ViewChildren,
 } from "@angular/core";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
@@ -65,15 +64,6 @@ import {
     VirtualScrollingOptions,
 } from "tim/plugin/dataview/data-view.component";
 import {nullable, withDefault} from "tim/plugin/attributes";
-import {
-    handleToolbarKey,
-    hideToolbar,
-    isToolbarEnabled,
-    isToolbarOpen,
-    showTableEditorToolbar,
-} from "tim/plugin/toolbarUtils";
-import {computeHiddenRowsFromFilters} from "tim/plugin/filtering";
-import {createParContext} from "tim/document/structure/create";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {
     ICtrlWithMenuFunctionEntry,
@@ -118,6 +108,16 @@ import {PluginMeta} from "tim/plugin/util";
 import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {computeHiddenRowsFromFilters} from "tim/plugin/timTable/filtering";
+import {
+    handleToolbarKey,
+    hideToolbar,
+    isToolbarEnabled,
+    isToolbarOpen,
+    showTableEditorToolbar,
+} from "tim/plugin/timTable/toolbarUtils";
+import {createParContext} from "tim/document/structure/create";
 
 const timDateRegex = /^\d{4}-\d{2}-\d{2}[ T]?\d{2}:\d{2}(:\d{2})?$/;
 
@@ -719,7 +719,7 @@ export enum ClearSort {
             <pre class="error" *ngIf="error" [innerText]="error"></pre>
         </div>
     `,
-    styleUrls: ["./timTable.scss", "./table-common.scss"],
+    styleUrls: ["./tim-table.component.scss", "./table-common.scss"],
 })
 export class TimTableComponent
     implements

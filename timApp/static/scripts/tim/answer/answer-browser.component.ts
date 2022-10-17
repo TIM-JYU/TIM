@@ -16,7 +16,10 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {IController} from "angular";
 import {timLogTime} from "tim/util/timTiming";
 import {TaskId} from "tim/plugin/taskid";
-import {DrawCanvasComponent, DrawCanvasModule} from "tim/plugin/drawCanvas";
+import {
+    DrawCanvasComponent,
+    DrawCanvasModule,
+} from "tim/plugin/draw-canvas/draw-canvas.components";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAllAnswersDialog} from "tim/answer/showAllAnswersDialog";
 import {tryCreateParContextOrHelp} from "tim/document/structure/create";

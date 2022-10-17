@@ -1,4 +1,3 @@
-import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -8,9 +7,10 @@ import {
     HideValues,
     IToolbarTemplate,
     TimTableComponent,
-} from "tim/plugin/timTable";
-import {setToolbarInstance} from "tim/plugin/toolbarUtils";
+} from "tim/plugin/timTable/tim-table.component";
+import {setToolbarInstance} from "tim/plugin/timTable/toolbarUtils";
 import {CommonModule} from "@angular/common";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 
 export interface ITimTableToolbarCallbacks {
     setCell: (value: IToolbarTemplate) => void;

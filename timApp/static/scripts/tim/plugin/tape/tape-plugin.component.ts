@@ -9,13 +9,13 @@ import {
 } from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
+import {CommonModule} from "@angular/common";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AnswerSheetModule} from "tim/document/question/answer-sheet.component";
 import {PurifyModule} from "tim/util/purify.module";
 import {copyToClipboard, isIOS} from "tim/util/utils";
 import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {CommonModule} from "@angular/common";
 
 export enum ParameterType {
     NUMBER,
@@ -367,106 +367,112 @@ function scrollElementVisibleInParent(
 @Component({
     selector: "tim-tape",
     template: `
-    <div class="no-highlight robotMainDiv fullinv">
-        <div class="tapeAndRobotDiv">
-            <div class="outputbelt" >
-                <div class="outputvalues">
-                    <div class="output">
-                    <div *ngFor="let n of state.output" class="tapeItem">{{n}}</div>
+        <div class="no-highlight robotMainDiv fullinv">
+            <div class="tapeAndRobotDiv">
+                <div class="outputbelt">
+                    <div class="outputvalues">
+                        <div class="output">
+                            <div *ngFor="let n of state.output" class="tapeItem">{{n}}</div>
+                        </div>
                     </div>
-               </div>
-                <img alt="output" src="/static/images/tape/output.png" />
-                <span>Output</span>
-            </div>
-            <div class="robotDiv" >
-                <div class="handItem">
-                    <div class="tapeItem"  [innerText]="getHand()"></div>
+                    <img alt="output" src="/images/tape/output.png"/>
+                    <span>Output</span>
                 </div>
-                <div class="robotImage">
-                    <img alt="robot" src="/static/images/tape/robot.png" />
-                    <div class="robotRunButtons">
-                         <button class="timButton" (click)="step()"><span>Step</span></button>
-                         <button class="timButton" (click)="run()"><span [innerText]="getRunButtonText()"></span></button>
-                         <button class="timButton" (click)="reset()"><span>Reset</span></button>
+                <div class="robotDiv">
+                    <div class="handItem">
+                        <div class="tapeItem" [innerText]="getHand()"></div>
+                    </div>
+                    <div class="robotImage">
+                        <img alt="robot" src="/images/tape/robot.png"/>
+                        <div class="robotRunButtons">
+                            <button class="timButton" (click)="step()"><span>Step</span></button>
+                            <button class="timButton" (click)="run()"><span [innerText]="getRunButtonText()"></span>
+                            </button>
+                            <button class="timButton" (click)="reset()"><span>Reset</span></button>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="inputbelt">
-                <div class="inputvalues">
+                <div class="inputbelt">
+                    <div class="inputvalues">
                     <span class="input">
                         <div *ngFor="let n of state.input" class="tapeItem">{{n}}</div>
                     </span>
+                    </div>
+                    <img alt="input" src="/images/tape/input.png"/>
+                    <span>Input</span>
                 </div>
-                <img alt="input" src="/static/images/tape/input.png" />
-                <span>Input</span>
             </div>
-        </div>
-        <div class="memoryArea">
-            <div>Memory:</div>
-            <div *ngFor="let n of state.memory; let i = index" class="memoryContainer">
-                <div [innerText]="n" class="memoryValue"></div>
-                <div [innerText]="getMemoryText(i)" class="memoryIndex"></div>
+            <div class="memoryArea">
+                <div>Memory:</div>
+                <div *ngFor="let n of state.memory; let i = index" class="memoryContainer">
+                    <div [innerText]="n" class="memoryValue"></div>
+                    <div [innerText]="getMemoryText(i)" class="memoryIndex"></div>
+                </div>
             </div>
-        </div>
-        <div class="programArea">
+            <div class="programArea">
             <span class="commandListContainer newCommandList" *ngIf="!data.hideCommands">
                 Commands:
                 <ul class="list-unstyled listBox">
-                <li *ngFor="let c of possibleCommandList; let i = index" class="command" [ngStyle]="{'color': getNewCommandColor(i)}"
+                <li *ngFor="let c of possibleCommandList; let i = index" class="command"
+                    [ngStyle]="{'color': getNewCommandColor(i)}"
                     (click)="onCommandClick(i)">{{c.name}}</li>
                 </ul>
             </span>
-            <div class="commandAddArea" *ngIf="!data.hideCommands" >
-                 <div class="commandParamArea">
+                <div class="commandAddArea" *ngIf="!data.hideCommands">
+                    <div class="commandParamArea">
                      <span class="commandParameterArea" *ngIf="showNewCommandParameter">
                         <span>{{newCommandParameterText}}</span>
                         <input size="5em" [(ngModel)]="newCommandParameter">
                      </span>
-                 </div>
-                 <div class="commandButtons">
-                     <button class="timButton" (click)="insertCommandButtonClick()"><span>Insert -&gt;</span></button>
-                     <button class="timButton" (click)="removeCommand()"><span>&lt;- Remove</span></button>
-                     <button class="timButton" (click)="copyAll()" *ngIf="!data.hideCopyAll"><span>Copy all</span></button>
-                     <!-- <button class="timButton" (click)="paste()"><span>Paste</span></button> -->
-                 </div>
-            </div>
-            <span class="commandListContainer">
+                    </div>
+                    <div class="commandButtons">
+                        <button class="timButton" (click)="insertCommandButtonClick()"><span>Insert -&gt;</span>
+                        </button>
+                        <button class="timButton" (click)="removeCommand()"><span>&lt;- Remove</span></button>
+                        <button class="timButton" (click)="copyAll()" *ngIf="!data.hideCopyAll"><span>Copy all</span>
+                        </button>
+                        <!-- <button class="timButton" (click)="paste()"><span>Paste</span></button> -->
+                    </div>
+                </div>
+                <span class="commandListContainer">
                 Program:
-                <textarea #textAreaRobotProgram class="robotEditArea textAreaRobotProgram" [(ngModel)]="programAsText" *ngIf="textmode"></textarea>
+                <textarea #textAreaRobotProgram class="robotEditArea textAreaRobotProgram" [(ngModel)]="programAsText"
+                          *ngIf="textmode"></textarea>
                 <ul class="cmditems list-unstyled listBox programCommandList" *ngIf="!textmode">
-                <li  *ngFor="let c of commandList; let i = index" class="command" (click)="selectedCommandIndex = i"
-                [ngStyle]="{'color': getCommandColor(i), 'background-color': getCommandBackgroundColor(i)}">{{c.getName()}}</li>
+                <li *ngFor="let c of commandList; let i = index" class="command" (click)="selectedCommandIndex = i"
+                    [ngStyle]="{'color': getCommandColor(i), 'background-color': getCommandBackgroundColor(i)}">{{c.getName()}}</li>
                 <li class="command" [ngStyle]="{'color': getCommandColor(commandList.length + 1)}"
                     (click)="selectedCommandIndex = (commandList.length + 1)">-</li>
                 </ul>
-                <!--- <select [(ngModel)]="selected" size="10">
-                <option *ngFor="let c of commandList" [ngStyle]="{'color': getCommandColor($index)}">{{c.getName()}}</option>
-                </select> --->
+                    <!--- <select [(ngModel)]="selected" size="10">
+                    <option *ngFor="let c of commandList" [ngStyle]="{'color': getCommandColor($index)}">{{c.getName()}}</option>
+                    </select> --->
             </span>
-            <div class="robotPresets">
-                <div class="presetInput" *ngIf="!data.hidePresetInput" >
-                     <div class="commandParamArea">
+                <div class="robotPresets">
+                    <div class="presetInput" *ngIf="!data.hidePresetInput">
+                        <div class="commandParamArea">
                          <span>
                             <span>Preset input:</span>
                             <input size="15em" [(ngModel)]="inputString">
                          </span>
-                     </div>
-                </div>
-                <div class="presetInput" *ngIf="!data.hidePresetMem" >
-                     <div class="commandParamArea">
+                        </div>
+                    </div>
+                    <div class="presetInput" *ngIf="!data.hidePresetMem">
+                        <div class="commandParamArea">
                          <span>
                             <span>Preset memory:</span>
                             <input size="15em" [(ngModel)]="memString">
                          </span>
-                     </div>
-                </div>
-                <span *ngIf="!data.hideTextMode">
-                    <input type="checkbox" [(ngModel)]="textmodeCB" class="belttextbox" name="textmode" value="textmode"  (click)="changeMode()" />
+                        </div>
+                    </div>
+                    <span *ngIf="!data.hideTextMode">
+                    <input type="checkbox" [(ngModel)]="textmodeCB" class="belttextbox" name="textmode" value="textmode"
+                           (click)="changeMode()"/>
                     <label for="belttextbox">&nbsp;Text&nbsp;mode</label>
                 </span>
+                </div>
             </div>
-            </div>
-    </div>
+        </div>
     `,
     styleUrls: ["tape-plugin.component.scss"],
 })

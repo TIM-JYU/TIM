@@ -4696,7 +4696,7 @@
         <source>Move up</source>
         <target state="translated">Siirrä ylöspäin</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas/review-canvas.component.ts</context>
           <context context-type="linenumber">109</context>
         </context-group>
       </trans-unit>
@@ -4704,7 +4704,7 @@
         <source>Move down</source>
         <target state="translated">Siirrä alaspäin</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas/review-canvas.component.ts</context>
           <context context-type="linenumber">110</context>
         </context-group>
       </trans-unit>
@@ -4712,7 +4712,7 @@
         <source>Delete picture</source>
         <target state="translated">Poista kuva</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas/review-canvas.component.ts</context>
           <context context-type="linenumber">112</context>
         </context-group>
       </trans-unit>
@@ -4720,7 +4720,7 @@
         <source>Save answer</source>
         <target state="translated">Tallenna vastaus</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas/review-canvas.component.ts</context>
           <context context-type="linenumber">134</context>
         </context-group>
       </trans-unit>
@@ -4728,7 +4728,7 @@
         <source>Free hand drawing</source>
         <target state="translated">Vapaapiirto</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">94</context>
         </context-group>
       </trans-unit>
@@ -4736,7 +4736,7 @@
         <source>Line</source>
         <target state="translated">Viiva</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">101</context>
         </context-group>
       </trans-unit>
@@ -4744,7 +4744,7 @@
         <source>Rectangle</source>
         <target state="translated">Suorakulmio</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">107</context>
         </context-group>
       </trans-unit>
@@ -4752,7 +4752,7 @@
         <source>Ellipse</source>
         <target state="translated">Ellipsi</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">113</context>
         </context-group>
       </trans-unit>
@@ -4760,7 +4760,7 @@
         <source>Arrow</source>
         <target state="translated">Nuoli</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">119</context>
         </context-group>
       </trans-unit>
@@ -4768,7 +4768,7 @@
         <source>Fill object</source>
         <target state="translated">Täytä kohde</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">129</context>
         </context-group>
       </trans-unit>
@@ -4776,7 +4776,7 @@
         <source>Line width</source>
         <target state="translated">Viivan leveys</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">136</context>
         </context-group>
       </trans-unit>
@@ -4784,7 +4784,7 @@
         <source>Opacity</source>
         <target state="translated">Läpinäkyvyys</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">149</context>
         </context-group>
       </trans-unit>
@@ -4792,7 +4792,7 @@
         <source>Color picker</source>
         <target state="translated">Värivalitsin</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">164</context>
         </context-group>
       </trans-unit>
@@ -4800,7 +4800,7 @@
         <source>Select red</source>
         <target state="translated">Valitse punainen</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">174</context>
         </context-group>
       </trans-unit>
@@ -4808,7 +4808,7 @@
         <source>Select blue</source>
         <target state="translated">Valitse sininen</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">180</context>
         </context-group>
       </trans-unit>
@@ -4816,7 +4816,7 @@
         <source>Select yellow</source>
         <target state="translated">Valitse keltainen</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">186</context>
         </context-group>
       </trans-unit>
@@ -4824,7 +4824,7 @@
         <source>Select green</source>
         <target state="translated">Valitse vihreä</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">192</context>
         </context-group>
       </trans-unit>
@@ -4848,7 +4848,7 @@
         <source>Previous image</source>
         <target state="translated">Edellinen kuva</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-canvas.components.ts</context>
           <context context-type="linenumber">766</context>
         </context-group>
       </trans-unit>
@@ -4856,7 +4856,7 @@
         <source>Next image</source>
         <target state="translated">Seuraava kuva</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-canvas.components.ts</context>
           <context context-type="linenumber">768</context>
         </context-group>
       </trans-unit>
@@ -4864,7 +4864,7 @@
         <source>Zoom in</source>
         <target state="translated">Suurenna</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-canvas.components.ts</context>
           <context context-type="linenumber">772</context>
         </context-group>
       </trans-unit>
@@ -4872,7 +4872,7 @@
         <source>Reset zoom</source>
         <target state="translated">Palauta oletuskoko</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-canvas.components.ts</context>
           <context context-type="linenumber">776</context>
         </context-group>
       </trans-unit>
@@ -4880,7 +4880,7 @@
         <source>Zoom out</source>
         <target state="translated">Pienennä</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-canvas.components.ts</context>
           <context context-type="linenumber">778</context>
         </context-group>
       </trans-unit>
@@ -4888,7 +4888,7 @@
         <source>Rotate clockwise</source>
         <target state="translated">Käännä myötäpäivään</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas/review-canvas.component.ts</context>
           <context context-type="linenumber">133</context>
         </context-group>
       </trans-unit>
@@ -5104,7 +5104,7 @@
         <source>Sisu name</source>
         <target state="translated">Sisu-nimi</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">878</context>
         </context-group>
       </trans-unit>
@@ -5112,7 +5112,7 @@
         <source>User's name</source>
         <target state="translated">Käyttäjän nimi</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">884</context>
         </context-group>
       </trans-unit>
@@ -5120,7 +5120,7 @@
         <source>E-mail</source>
         <target state="translated">Sähköposti</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">886</context>
         </context-group>
       </trans-unit>
@@ -5128,7 +5128,7 @@
         <source>Added</source>
         <target state="translated">Lisätty</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">887</context>
         </context-group>
       </trans-unit>
@@ -5136,7 +5136,7 @@
         <source>Removed</source>
         <target state="translated">Poistunut</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/tableForm/table-form.component.ts</context>
           <context context-type="linenumber">888</context>
         </context-group>
       </trans-unit>
@@ -5472,7 +5472,7 @@
         <source>Centered ellipse</source>
         <target state="translated">Keskitetty ellipsi</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">109</context>
         </context-group>
       </trans-unit>
@@ -6396,7 +6396,7 @@
         <source>Loading images (<x id="INTERPOLATION" equiv-text="{{loadedImages}}"/> /<x id="INTERPOLATION_1" equiv-text="{{bgSources.length}}"/>) <x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;tim-loading>"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;/tim-loading>"/></source>
         <target state="translated">Ladataan kuvia (<x id="INTERPOLATION" equiv-text="{{loadedImages}}"/> /<x id="INTERPOLATION_1" equiv-text="{{bgSources.length}}"/>) <x id="START_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;tim-loading>"/><x id="CLOSE_TAG_TIM_LOADING" ctype="x-tim_loading" equiv-text="&lt;/tim-loading>"/></target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawCanvas.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-canvas.components.ts</context>
           <context context-type="linenumber">1070,1072</context>
         </context-group>
       </trans-unit>
@@ -6404,7 +6404,7 @@
         <source>Eraser</source>
         <target state="translated">Pyyhekumi</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/drawToolbar.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/draw-canvas/draw-toolbar.component.ts</context>
           <context context-type="linenumber">155</context>
         </context-group>
       </trans-unit>
@@ -6412,7 +6412,7 @@
         <source>You need to attempt at least <x id="PH" equiv-text="this.modelAnswer.count"/> times before viewing the model answer</source>
         <target state="translated">Sinun täytyy yrittää ainakin <x id="PH" equiv-text="this.modelAnswer.count"/> kertaa ennen mallivastauksen katsomista</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1358</context>
         </context-group>
       </trans-unit>
@@ -6420,7 +6420,7 @@
         <source>Lock the task and view the model answer?</source>
         <target state="translated">Lukitse tehtävä ja näytä mallivastaus?</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1364</context>
         </context-group>
       </trans-unit>
@@ -6428,7 +6428,7 @@
         <source>Show model answer</source>
         <target state="translated">Näytä mallivastaus</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1354</context>
         </context-group>
       </trans-unit>
@@ -6646,7 +6646,7 @@
         <source>You haven't unlocked this task yet</source>
         <target state="translated">Et ole vielä avannut tätä tehtävää</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">431</context>
         </context-group>
       </trans-unit>
@@ -6654,7 +6654,7 @@
         <source>Open task</source>
         <target state="translated">Avaa tehtävä</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">475</context>
         </context-group>
       </trans-unit>
@@ -6818,7 +6818,7 @@
         <source>Hide model answer</source>
         <target state="translated">Piilota mallivastaus</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1493</context>
         </context-group>
       </trans-unit>
@@ -6842,7 +6842,7 @@
         <source>Unsaved velps</source>
         <target state="translated">Tallentamattomat velpit</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1371</context>
         </context-group>
       </trans-unit>
@@ -6850,7 +6850,7 @@
         <source>You have unsaved velps. Changing the answer will discard them. Continue?</source>
         <target state="translated">Sinulla on tallentamattomia velppeja. Vastauksen muuttaminen hävittää ne. Jatka?</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1372</context>
         </context-group>
       </trans-unit>
@@ -6858,7 +6858,7 @@
         <source>Download images as PDF</source>
         <target state="translated">Lataa kaikki kuvat PDF-tiedostona</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas/review-canvas.component.ts</context>
           <context context-type="linenumber">126</context>
         </context-group>
       </trans-unit>
@@ -7086,7 +7086,7 @@
         <source>Show valid only</source>
         <target state="translated">Näytä vain validit vastaukset</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">128</context>
         </context-group>
       </trans-unit>
@@ -7094,7 +7094,7 @@
         <source>New task</source>
         <target state="translated">Uusi tehtävä</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">191</context>
         </context-group>
       </trans-unit>
@@ -7102,7 +7102,7 @@
         <source>Answer number <x id="PH" equiv-text="answerNumber"/> is out of range for this task and user.</source>
         <target state="translated">Vastausta numero <x id="PH" equiv-text="answerNumber"/> ei löydy tälle tehtävälle ja käyttäjälle.</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1112</context>
         </context-group>
       </trans-unit>
@@ -7110,7 +7110,7 @@
         <source>Delete this answer?</source>
         <target state="translated">Poista tämä vastaus?</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1538</context>
         </context-group>
       </trans-unit>
@@ -7118,7 +7118,7 @@
         <source>Cannot delete the only collaborator.</source>
         <target state="translated">Ainoata tekijää ei voi poistaa.</target>
         <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/answer/answerbrowser3.ts</context>
+          <context context-type="sourcefile">static/scripts/tim/answer/answer-browser.component.ts</context>
           <context context-type="linenumber">1568</context>
         </context-group>
       </trans-unit>

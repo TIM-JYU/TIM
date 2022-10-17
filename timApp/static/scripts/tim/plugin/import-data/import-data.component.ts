@@ -5,6 +5,8 @@ import * as t from "io-ts";
 import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
+import {CommonModule} from "@angular/common";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {IUser} from "tim/user/IUser";
 import {TimStorage} from "tim/util/utils";
@@ -15,8 +17,6 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {CommonModule} from "@angular/common";
-import {registerPlugin} from "tim/plugin/pluginRegistry";
 
 const ImportDataMarkup = t.intersection([
     t.partial({

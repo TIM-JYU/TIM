@@ -35,7 +35,6 @@ import {
     settingsglobals,
 } from "tim/util/globals";
 import {IOkResponse, isIOS, timeout, to2, toPromise} from "tim/util/utils";
-import {TimTable, TimTableComponent, TimTableModule} from "tim/plugin/timTable";
 import {DocumentOrFolder, ITranslatorUsage} from "tim/item/IItem";
 import {
     ContactOrigin,
@@ -43,6 +42,11 @@ import {
     IUserApiKey,
     IUserContact,
 } from "tim/user/IUser";
+import {
+    TimTable,
+    TimTableComponent,
+    TimTableModule,
+} from "tim/plugin/timTable/tim-table.component";
 
 @Component({
     selector: "settings-button-panel",

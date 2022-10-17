@@ -30,7 +30,6 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {AnswerBrowserComponent} from "tim/answer/answerbrowser3";
 import {TimDefer} from "tim/util/timdefer";
 import {PurifyModule} from "tim/util/purify.module";
 import {
@@ -44,6 +43,7 @@ import {
 } from "tim/util/fullscreen";
 import {CommonModule} from "@angular/common";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
 import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([

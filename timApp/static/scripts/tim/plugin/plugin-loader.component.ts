@@ -33,7 +33,7 @@ import {Users} from "tim/user/userService";
 import {
     AnswerBrowserComponent,
     AnswerBrowserModule,
-} from "tim/answer/answerbrowser3";
+} from "tim/answer/answer-browser.component";
 import {IGenericPluginMarkup} from "tim/plugin/attributes";
 import {TaskId, TaskIdWithDefaultDocId} from "tim/plugin/taskid";
 import {PluginJson} from "tim/plugin/angular-plugin-base.directive";

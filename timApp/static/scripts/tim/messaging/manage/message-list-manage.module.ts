@@ -6,8 +6,8 @@ import {TabsModule} from "ngx-bootstrap/tabs";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {TimMessageSendModule} from "tim/messaging/tim-message-send.component";
-import {TimTableModule} from "tim/plugin/timTable";
 import {MessageListAdminComponent} from "tim/messaging/manage/message-list-admin.component";
+import {TimTableModule} from "tim/plugin/timTable/tim-table.component";
 
 @NgModule({
     declarations: [MessageListAdminComponent],

@@ -3,14 +3,14 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {$http, $httpParamSerializer} from "tim/util/ngimport";
+import {$http, $httpParamSerializer} from "../../util/ngimport";
 import {
     clone,
     defaultErrorMessage,
     maxContentOrFitContent,
     to,
     to2,
-} from "tim/util/utils";
+} from "../../util/utils";
 import {
     ApplicationRef,
     ChangeDetectorRef,
@@ -21,25 +21,25 @@ import {
     OnInit,
     ViewChild,
 } from "@angular/core";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {showInputDialog} from "tim/ui/showInputDialog";
-import {InputDialogKind} from "tim/ui/input-dialog.kind";
-import {documentglobals} from "tim/util/globals";
-import {PurifyModule} from "tim/util/purify.module";
-import {ViewCtrl} from "tim/document/viewctrl";
-import {widenFields} from "tim/util/common";
+import {AngularPluginBase} from "../angular-plugin-base.directive";
+import {vctrlInstance} from "../../document/viewctrlinstance";
+import {showInputDialog} from "../../ui/showInputDialog";
+import {InputDialogKind} from "../../ui/input-dialog.kind";
+import {documentglobals} from "../../util/globals";
+import {PurifyModule} from "../../util/purify.module";
+import {ViewCtrl} from "../../document/viewctrl";
+import {widenFields} from "../../util/common";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
     IncludeUsersOption,
     nullable,
     withDefault,
-} from "tim/plugin/attributes";
+} from "../attributes";
 import {
     CellAttrToSave,
     CellToSave,
@@ -51,10 +51,10 @@ import {
     TimTable,
     TimTableComponent,
     TimTableModule,
-} from "tim/plugin/timTable";
-import {registerPlugin} from "tim/plugin/pluginRegistry";
+} from "../timTable/tim-table.component";
+import {registerPlugin} from "../pluginRegistry";
 import {CommonModule} from "@angular/common";
-import {TimMessageSendModule} from "tim/messaging/tim-message-send.component";
+import {TimMessageSendModule} from "../../messaging/tim-message-send.component";
 
 const RunScriptModel = t.type({
     script: nullable(t.string),
@@ -290,7 +290,7 @@ const sortLang = "fi";
             <tim-loading *ngIf="loading"></tim-loading>
         </div>
     `,
-    styleUrls: ["./tableForm.scss"],
+    styleUrls: ["./table-form.component.scss"],
 })
 export class TableFormComponent
     extends AngularPluginBase<

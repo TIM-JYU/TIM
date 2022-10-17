@@ -12,6 +12,8 @@ import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import * as t from "io-ts";
+import {CommonModule} from "@angular/common";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {defaultErrorMessage, to2} from "tim/util/utils";
 import {
     AnswerSheetModule,
@@ -35,8 +37,6 @@ import {
     nullable,
 } from "tim/plugin/attributes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {CommonModule} from "@angular/common";
-import {registerPlugin} from "tim/plugin/pluginRegistry";
 
 const PluginMarkupFields = t.intersection([
     GenericPluginMarkup,

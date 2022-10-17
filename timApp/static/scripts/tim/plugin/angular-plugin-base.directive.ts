@@ -19,14 +19,23 @@ import {
     handleAnswerResponse,
     prepareAnswerRequest,
 } from "tim/document/interceptor";
-import {IAnswerSaveEvent} from "tim/answer/answerbrowser3";
+import {IAnswerSaveEvent} from "tim/answer/answer-browser.component";
 import {isLeft} from "fp-ts/Either";
 import {getErrors} from "tim/plugin/errors";
 
+/**
+ * Plugin with initialization data passed from the server via JSON.
+ */
 export interface PluginJson {
+    /**
+     * The plugin's initialization data as JSON.
+     */
     json: string;
 }
 
+/**
+ * Base class for all Angular plugin components.
+ */
 @Directive()
 export abstract class AngularPluginBase<
         MarkupType extends IGenericPluginMarkup,

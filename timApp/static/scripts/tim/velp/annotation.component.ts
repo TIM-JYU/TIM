@@ -21,7 +21,7 @@ import {
     ViewChild,
 } from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {DrawItem} from "tim/plugin/drawCanvas";
+import {DrawItem} from "tim/plugin/draw-canvas/draw-canvas.components";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {parseHexColor, shouldUseDarkText} from "tim/util/colorUtils";

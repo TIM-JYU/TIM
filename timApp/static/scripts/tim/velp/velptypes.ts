@@ -7,7 +7,7 @@ import {
     JsonProperty,
     JsonSerializer,
 } from "typescript-json-serializer";
-import {DrawItem} from "tim/plugin/drawCanvas";
+import {DrawItem} from "tim/plugin/draw-canvas/draw-canvas.components";
 
 export const jsonSerializer = new JsonSerializer();
 

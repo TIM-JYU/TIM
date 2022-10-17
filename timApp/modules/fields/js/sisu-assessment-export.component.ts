@@ -18,11 +18,11 @@ import {
     DataModelProvider,
     DataViewComponent,
 } from "tim/plugin/dataview/data-view.component";
-import {computeHiddenRowsFromFilters} from "tim/plugin/filtering";
 import {BsDatepickerModule, BsLocaleService} from "ngx-bootstrap/datepicker";
 import {defineLocale} from "ngx-bootstrap/chronos";
 import {fiLocale} from "ngx-bootstrap/locale";
 import {CommonModule} from "@angular/common";
+import {computeHiddenRowsFromFilters} from "tim/plugin/timTable/filtering";
 
 export const GroupType = t.union([t.string, t.array(t.string)]);
 

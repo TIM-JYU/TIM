@@ -9,16 +9,9 @@ import {
     NgModule,
     OnInit,
 } from "@angular/core";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {
-    DrawToolbarModule,
-    DrawType,
-    IDrawOptions,
-    IDrawVisibleOptions,
-} from "tim/plugin/drawToolbar";
 import {$http, $sce} from "tim/util/ngimport";
 import {TimDefer} from "tim/util/timdefer";
 import {
@@ -38,6 +31,16 @@ import {
     ViewCtrl,
 } from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
+import {
+    DrawToolbarModule,
+    DrawType,
+    IDrawOptions,
+    IDrawVisibleOptions,
+} from "tim/plugin/draw-canvas/draw-toolbar.component";
+import {Drawing, DrawItem} from "tim/plugin/draw-canvas/draw-canvas.components";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {
     CommonPropsT,
     DefaultPropsT,
@@ -66,11 +69,8 @@ import {
     TextboxPropsT,
     TuplePoint,
     ValidCoord,
-} from "tim/plugin/imagextypes";
+} from "tim/plugin/imagex/imagextypes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {Drawing, DrawItem} from "tim/plugin/drawCanvas";
-import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {CommonModule} from "@angular/common";
 
 let globalPreviewColor = "#fff";
 
@@ -1324,7 +1324,7 @@ interface IAnswerResponse {
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
         </div>
     `,
-    styleUrls: ["./imagex.scss"],
+    styleUrls: ["./imagex.component.scss"],
 })
 export class ImageXComponent
     extends AngularPluginBase<

@@ -9,17 +9,17 @@ import {
 } from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
+import {CommonModule} from "@angular/common";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AnswerSheetModule} from "tim/document/question/answer-sheet.component";
 import {PurifyModule} from "tim/util/purify.module";
 import {handleAnswerResponse} from "tim/document/interceptor";
-import {IAnswerSaveEvent} from "tim/answer/answerbrowser3";
+import {IAnswerSaveEvent} from "tim/answer/answer-browser.component";
 import {TaskId} from "tim/plugin/taskid";
 import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {CommonModule} from "@angular/common";
 
 interface MMCQContent<State> {
     state?: State;

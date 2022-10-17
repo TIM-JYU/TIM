@@ -15,11 +15,11 @@ import {
     IDrawingWithID,
     IDrawUpdate,
     isCoordWithinDrawing,
-} from "tim/plugin/drawCanvas";
+} from "tim/plugin/draw-canvas/draw-canvas.components";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ParContext} from "tim/document/structure/parContext";
 import {createParContext} from "tim/document/structure/create";
-import {AnswerBrowserComponent} from "tim/answer/answerbrowser3";
+import {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
 import {IUser} from "tim/user/IUser";
 import {IAnswer} from "tim/answer/IAnswer";
 import {addElementToParagraphMargin} from "tim/document/parhelpers";

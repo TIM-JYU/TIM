@@ -1,9 +1,12 @@
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {IToolbarTemplate, TimTableComponent} from "tim/plugin/timTable";
+import {
+    IToolbarTemplate,
+    TimTableComponent,
+} from "tim/plugin/timTable/tim-table.component";
 import type {
     ITimTableEditorToolbarParams,
     TimTableEditorToolbarDialogComponent as TimTableEditorToolbarDialogComponentType,
-} from "tim/plugin/tim-table-editor-toolbar-dialog.component";
+} from "tim/plugin/timTable/tim-table-editor-toolbar-dialog.component";
 
 export let instance: TimTableEditorToolbarDialogComponentType | undefined;
 

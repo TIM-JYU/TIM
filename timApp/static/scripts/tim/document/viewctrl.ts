@@ -27,7 +27,7 @@ import {
 } from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
-import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
+import {DrawCanvasComponent} from "tim/plugin/draw-canvas/draw-canvas.components";
 import {diffDialog} from "tim/document/showDiffDialog";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
@@ -37,7 +37,7 @@ import {DerefOption} from "tim/document/structure/derefOption";
 import {enumPars} from "tim/document/structure/iteration";
 import {getParContainerElem} from "tim/document/structure/create";
 import {UserListController} from "tim/answer/userlistController";
-import {AnswerBrowserComponent} from "tim/answer/answerbrowser3";
+import {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
 import {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
 import {IAnswer} from "tim/answer/IAnswer";
 import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
@@ -48,9 +48,9 @@ import {
     IGenericPluginTopLevelFields,
     nullable,
 } from "tim/plugin/attributes";
-import {TableFormComponent} from "tim/plugin/tableForm";
+import {TableFormComponent} from "tim/plugin/tableForm/table-form.component";
 import {DocIdDotName, TaskId} from "tim/plugin/taskid";
-import {TimTableComponent} from "tim/plugin/timTable";
+import {TimTableComponent} from "tim/plugin/timTable/tim-table.component";
 import {initCssPrint} from "tim/printing/cssPrint";
 import {IUser, IUserListEntry} from "tim/user/IUser";
 import {Users} from "tim/user/userService";

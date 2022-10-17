@@ -1,5 +1,5 @@
-import {ComparatorFilter} from "tim/util/comparatorfilter";
-import {CellType} from "tim/plugin/timTable";
+import {ComparatorFilter} from "../../util/comparatorfilter";
+import {CellType} from "./tim-table.component";
 
 /**
  * Check if all filter expressions match to row values. It's kind of "and operation"

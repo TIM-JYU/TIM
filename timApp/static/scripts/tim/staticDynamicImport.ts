@@ -13,25 +13,25 @@ export function staticDynamicImport(s: string) {
         case "/pali/js/build/pali.js":
             return import("modules/pali/client/pali");
         case "reviewcanvas":
-            return import("tim/plugin/reviewcanvas");
+            return import("tim/plugin/reviewcanvas/review-canvas.component");
         case "tableForm":
-            return import("tim/plugin/tableForm");
+            return import("tim/plugin/tableForm/table-form.component");
         case "tim/plugin/imagex":
-            return import("tim/plugin/imagex");
+            return import("tim/plugin/imagex/imagex.component");
         case "tim/document/slide":
             return import("tim/document/slide");
         case "qst":
-            return import("tim/plugin/qst.component");
+            return import("tim/plugin/qst/qst.component");
         case "tape":
-            return import("tim/plugin/tape-plugin.component");
+            return import("tim/plugin/tape/tape-plugin.component");
         case "importData":
-            return import("tim/plugin/import-data.component");
+            return import("tim/plugin/import-data/import-data.component");
         case "timTable":
-            return import("tim/plugin/timTable");
+            return import("tim/plugin/timTable/tim-table.component");
         case "cbcountfield":
             return import("modules/fields/js/cbcountfield-plugin.component");
         case "timMenu":
-            return import("tim/plugin/tim-menu-plugin.component");
+            return import("tim/plugin/tim-menu/tim-menu-plugin.component");
         case "/cs/js/build/csModule.js":
             return import("modules/cs/js/csModule");
         case "/cs/js/build/stack.js":
@@ -65,7 +65,7 @@ export function staticDynamicImport(s: string) {
         case "/mmcq/SimpleDirective.js":
         case "/mcq/script2.js":
         case "/mcq/SimpleDirective.js":
-            return import("tim/plugin/mmcq");
+            return import("tim/plugin/mmcq/mmcq");
         case "lectureMenu":
             return import("tim/lecture/lecture-menu.component");
         case "lectureInfo":

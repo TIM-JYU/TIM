@@ -20,31 +20,31 @@ import {HttpClientModule, HttpHeaders} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {Subject, Subscription} from "rxjs";
 import {debounceTime, distinctUntilChanged} from "rxjs/operators";
-import {PurifyModule} from "tim/util/purify.module";
-import {defaultErrorMessage, defaultTimeout} from "tim/util/utils";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "../../util/purify.module";
+import {defaultErrorMessage, defaultTimeout} from "../../util/utils";
+import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {
     ITimComponent,
     IVelpableComponent,
     ViewCtrl,
-} from "tim/document/viewctrl";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {IUser} from "tim/user/IUser";
-import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+} from "../../document/viewctrl";
+import {vctrlInstance} from "../../document/viewctrlinstance";
+import {IUser} from "../../user/IUser";
+import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
     nullable,
     withDefault,
-} from "tim/plugin/attributes";
-import {registerPlugin} from "tim/plugin/pluginRegistry";
+} from "../attributes";
+import {registerPlugin} from "../pluginRegistry";
 import {CommonModule} from "@angular/common";
 import {
     FileSelectManagerComponent,
     IFile,
     IFileSpecification,
-} from "../../../../modules/cs/js/util/file-select";
-import {CsUtilityModule} from "../../../../modules/cs/js/util/module";
+} from "../../../../../modules/cs/js/util/file-select";
+import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
 
 const FileSubmission = t.intersection([
     t.type({
@@ -165,7 +165,7 @@ const PluginFields = t.intersection([
         </div>
         <p footer *ngIf="footer" [textContent]="footer"></p>
     `,
-    styleUrls: ["./reviewcanvas.scss"],
+    styleUrls: ["./review-canvas.component.scss"],
 })
 export class ReviewCanvasComponent
     extends AngularPluginBase<

@@ -10,7 +10,10 @@ import {
     handleExpiredSession,
     SESSION_VERIFICATION_NEEDED_CODE,
 } from "tim/util/session-verify.interceptor";
-import {AnswerBrowserData, IAnswerSaveEvent} from "tim/answer/answerbrowser3";
+import {
+    AnswerBrowserData,
+    IAnswerSaveEvent,
+} from "tim/answer/answer-browser.component";
 import {$http, $httpProvider, $q} from "tim/util/ngimport";
 
 export function handleAnswerResponse(

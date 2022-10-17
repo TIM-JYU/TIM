@@ -255,7 +255,7 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
             </ng-template>
         </div>
     `,
-    styleUrls: ["./data-view.component.scss", "../table-common.scss"],
+    styleUrls: ["./data-view.component.scss", "../timTable/table-common.scss"],
 })
 export class DataViewComponent implements AfterViewInit, OnInit {
     // region Fields
