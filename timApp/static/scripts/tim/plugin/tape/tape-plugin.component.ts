@@ -470,8 +470,7 @@ function scrollElementVisibleInParent(
     styleUrls: ["tape-plugin.component.scss"],
 })
 export class TapePluginContent implements PluginJson {
-    @Input() data!: TapeAttrs;
-    @Input() inputdata?: TapeAttrs;
+    public data!: TapeAttrs;
     @Input() json!: string;
     @ViewChild("textAreaRobotProgram")
     textAreaRobotProgram?: ElementRef<HTMLTextAreaElement>;
@@ -498,11 +497,8 @@ export class TapePluginContent implements PluginJson {
         // TODO: Convert to proper Angular plugin and use base64 encoding
         if (this.json) {
             this.data = JSON.parse(this.json);
-        } else if (!this.inputdata) {
-            this.data = JSON.parse(this.data as unknown as string);
-        } else {
-            this.data = this.inputdata;
         }
+
         this.iOS = isIOS();
         if (this.data.useJumpIfEmpty) {
             this.possibleCommandList.push(new JumpIfEmpty());
