@@ -1,10 +1,10 @@
-from typing import Generator, Union, Optional
+from typing import Generator
 
 from timApp.auth.accesshelper import (
     grant_access_to_session_users,
     reset_request_access_cache,
     get_doc_or_abort,
-    verify_edit_access,
+    verify_copy_access,
 )
 from timApp.auth.sessioninfo import (
     get_current_user_object,
@@ -193,7 +193,7 @@ def create_or_copy_item(
     d = None
     if copy_id:
         d = get_doc_or_abort(copy_id)
-        verify_edit_access(d)
+        verify_copy_access(d)
         d = d.src_doc
         vr = d.document.validate()
         if vr.issues:
@@ -214,7 +214,7 @@ def create_or_copy_item(
 
 def create_citation_doc(doc_id: int, doc_path: str, doc_title: str):
     d = get_doc_or_abort(doc_id)
-    verify_edit_access(d)
+    verify_copy_access(d)
     src_doc = d.document
     item = create_document(doc_path, doc_title)
     apply_citation(item, src_doc)
