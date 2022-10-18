@@ -7218,7 +7218,7 @@
       </trans-unit>
       <trans-unit id="1342986286320876152" datatype="html">
         <source>Unknown component: <x id="PH" equiv-text="runnername"/></source>
-        <target state="new">Unknown component: <x id="PH" equiv-text="runnername"/></target>
+        <target state="translated">Okänd komponent: <x id="PH" equiv-text="runnername"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/plugin-loader.component.ts</context>
           <context context-type="linenumber">363</context>
@@ -7226,7 +7226,7 @@
       </trans-unit>
       <trans-unit id="478693209538768272" datatype="html">
         <source>Component <x id="PH" equiv-text="runnername"/> is missing attribute json</source>
-        <target state="new">Component <x id="PH" equiv-text="runnername"/> is missing attribute json</target>
+        <target state="translated">Komponent <x id="PH" equiv-text="runnername"/> saknar attributet json</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/plugin-loader.component.ts</context>
           <context context-type="linenumber">367</context>
