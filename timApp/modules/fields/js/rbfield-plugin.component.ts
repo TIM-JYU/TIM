@@ -422,7 +422,7 @@ export class RbfieldPluginComponent
             this.errormessage =
                 r.result.error.error ||
                 "Syntax error, infinite loop or some other error?";
-            this.saveFailed = true;
+            this.saveFailed = this.userword == "1";
         }
         return this.saveResponse;
     }
