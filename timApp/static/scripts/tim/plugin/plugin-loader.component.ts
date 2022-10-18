@@ -3,8 +3,10 @@ import type {
     AfterViewInit,
     ApplicationRef,
     DoBootstrap,
+    NgModuleRef,
     OnDestroy,
     OnInit,
+    Type,
 } from "@angular/core";
 import {
     Component,
@@ -47,6 +49,30 @@ const LAZY_COMMENT_MARKER = `<!--${LAZY_MARKER}`;
 
 function isElement(n: Node): n is Element {
     return n.nodeType === Node.ELEMENT_NODE;
+}
+
+const loadedModules: Map<string, NgModuleRef<unknown>> = new Map();
+
+async function getModule(
+    moduleType: Type<unknown>,
+    platformRef: PlatformRef,
+    zone: NgZone
+) {
+    if (loadedModules.get(moduleType.name)) {
+        return loadedModules.get(moduleType.name);
+    }
+    // Note: there are multiple ways to bootstrap a module with the components
+    // 1. createNgModule - creates a new module with no platform -> mainly for child modules, prevents multiple platform instances
+    //   * Seems to be fast and easy to bootstrap, but doesn't allow referencing e.g. BrowserModule
+    // 2. PlatformRef.bootstrapModule - bootstraps a module as if it's an application module
+    //   * Angular allows multiple bootstraps for the same platform
+    //   * Generally doesn't seem to be intended for bootstrapping plugins => needs further testing
+    // For now we'll use bootstrapModule since eventually we'll likely move to use Angular Elements that seem to do the same thing
+    const modRef = await platformRef.bootstrapModule(moduleType, {
+        ngZone: zone,
+    });
+    loadedModules.set(moduleType.name, modRef);
+    return modRef;
 }
 
 @Component({
@@ -385,18 +411,10 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         const viewContainerRef = this.pluginPlacement;
         viewContainerRef.clear();
 
-        // Note: there are multiple ways to bootstrap a module with the components
-        // 1. createNgModule - creates a new module with no platform -> mainly for child modules, prevents multiple platform instances
-        //   * Seems to be fast and easy to bootstrap, but doesn't allow referencing e.g. BrowserModule
-        // 2. PlatformRef.bootstrapModule - bootstraps a module as if it's an application module
-        //   * Angular allows multiple bootstraps for the same platform
-        //   * Generally doesn't seem to be intended for bootstrapping plugins => needs further testing
-        // For now we'll use bootstrapModule since eventually we'll likely move to use Angular Elements that seem to do the same thing
-        const modRef = await this.platformRef.bootstrapModule(
+        const modRef = await getModule(
             registeredPlugin.module,
-            {
-                ngZone: this.zone,
-            }
+            this.platformRef,
+            this.zone
         );
         const componentRef = await viewContainerRef.createComponent<PluginJson>(
             registeredPlugin.component,
