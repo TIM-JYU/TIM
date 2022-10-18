@@ -5,10 +5,22 @@ import {DialogFrame} from "tim/ui/angulardialog/dialog-frame.component";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AngularDraggableModule} from "angular2-draggable";
 import {BrowserModule} from "@angular/platform-browser";
+import {WinBoxDialogComponent} from "tim/ui/angulardialog/win-box-dialog.component";
+import {FormsModule} from "@angular/forms";
 
 @NgModule({
-    declarations: [DialogContainerComponent, DialogHostDirective, DialogFrame],
-    imports: [TimUtilityModule, BrowserModule, AngularDraggableModule],
+    declarations: [
+        DialogContainerComponent,
+        DialogHostDirective,
+        DialogFrame,
+        WinBoxDialogComponent,
+    ],
+    imports: [
+        TimUtilityModule,
+        BrowserModule,
+        AngularDraggableModule,
+        FormsModule,
+    ],
     exports: [DialogFrame, DialogContainerComponent],
 })
 export class DialogModule {}

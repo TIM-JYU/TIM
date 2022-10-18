@@ -76,6 +76,7 @@ import {
 } from "tim/util/timTiming";
 import {genericglobals, isErrorGlobals} from "tim/util/globals";
 import {ParCompiler} from "tim/editor/parCompiler";
+import {WinBoxDialogComponent} from "tim/ui/angulardialog/win-box-dialog.component";
 
 BackspaceDisabler.disable();
 
@@ -144,6 +145,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timSelfExpire", SelfExpireComponent);
     doDowngrade(dg, "timSearchButton", SearchButtonComponent);
     doDowngrade(dg, "timRoleInfo", RoleInfoComponent);
+    doDowngrade(dg, "timWinBox", WinBoxDialogComponent);
     return dg;
 }
 

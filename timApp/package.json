@@ -89,6 +89,7 @@
     "type-zoo": "^3.4.1",
     "typescript-json-serializer": "^4.3.0",
     "viz.js": "^2.1.2",
+    "winbox": "^0.2.6",
     "zone.js": "^0.11.8"
   },
   "devDependencies": {
