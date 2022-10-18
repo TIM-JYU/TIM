@@ -207,6 +207,10 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         if (this.lockedByPrerequisite) {
             this.hidePlugin();
         }
+        if (this.type == "none") {
+            // Light plugin loader doesn't have AB => mark as resolved
+            this.abLoad.resolve(null);
+        }
 
         await timeout();
         const m = this.pluginMarkup();
