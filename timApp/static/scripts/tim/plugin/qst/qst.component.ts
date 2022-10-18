@@ -401,4 +401,3 @@ export class QstModule implements DoBootstrap {
 }
 
 registerPlugin("tim-qst", QstModule, QstComponent);
-registerPlugin("tim-lecture-qst", QstModule, QstComponent);
