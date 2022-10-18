@@ -1,8 +1,8 @@
-import {Paragraph} from "tim/document/structure/paragraph";
-import {Area} from "tim/document/structure/area";
-import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
-import {NotRemovableElement} from "tim/document/structure/notRemovableElement";
-import {DerefOption} from "tim/document/structure/derefOption";
+import type {Paragraph} from "tim/document/structure/paragraph";
+import type {Area} from "tim/document/structure/area";
+import type {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
+import type {NotRemovableElement} from "tim/document/structure/notRemovableElement";
+import type {DerefOption} from "tim/document/structure/derefOption";
 
 /**
  * Represents the various possible parts of a document.

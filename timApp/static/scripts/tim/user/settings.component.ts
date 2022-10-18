@@ -1,11 +1,13 @@
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {
+import type {
     AfterViewInit,
     ApplicationRef,
-    ChangeDetectorRef,
-    Component,
     DoBootstrap,
     DoCheck,
+} from "@angular/core";
+import {
+    ChangeDetectorRef,
+    Component,
     Input,
     NgModule,
     QueryList,
@@ -23,21 +25,24 @@ import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TabsetComponent, TabsModule} from "ngx-bootstrap/tabs";
-import {DndDropEvent, DndModule} from "ngx-drag-drop";
+import type {DndDropEvent} from "ngx-drag-drop";
+import {DndModule} from "ngx-drag-drop";
 import {polyfill} from "mobile-drag-drop";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {ProgressbarModule} from "ngx-bootstrap/progressbar";
-import {ConsentType} from "../ui/consent";
+import type {ConsentType} from "tim/ui/consent";
+import type {INotification, ISettings} from "tim/util/globals";
+import {NotificationType, settingsglobals} from "tim/util/globals";
+import type {IOkResponse} from "tim/util/utils";
+import {isIOS, timeout, to2, toPromise} from "tim/util/utils";
+import type {DocumentOrFolder, ITranslatorUsage} from "tim/item/IItem";
+import type {IFullUser, IUserApiKey, IUserContact} from "tim/user/IUser";
+import {ContactOrigin} from "tim/user/IUser";
+import type {TimTable} from "tim/plugin/timTable/tim-table.component";
 import {
-    INotification,
-    ISettings,
-    NotificationType,
-    settingsglobals,
-} from "../util/globals";
-import {IOkResponse, isIOS, timeout, to2, toPromise} from "../util/utils";
-import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
-import {DocumentOrFolder, ITranslatorUsage} from "../item/IItem";
-import {ContactOrigin, IFullUser, IUserApiKey, IUserContact} from "./IUser";
+    TimTableComponent,
+    TimTableModule,
+} from "tim/plugin/timTable/tim-table.component";
 
 @Component({
     selector: "settings-button-panel",

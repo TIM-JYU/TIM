@@ -1,24 +1,24 @@
-import {IAngularEvent, IController, IScope} from "angular";
+import type {IAngularEvent, IController, IScope} from "angular";
 import {timApp} from "tim/app";
-import uiGrid from "ui-grid";
+import type uiGrid from "ui-grid";
 import {documentglobals} from "tim/util/globals";
 import {showKorppiExportDialog} from "tim/answer/showKorppiExportDialog";
 import {showFeedbackAnswers} from "tim/answer/showFeedbackAnswers";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAllAnswersDialog} from "tim/answer/showAllAnswersDialog";
 import {showImportAnswersDialog} from "tim/answer/showImportAnswersDialog";
-import {ViewCtrl} from "../document/viewctrl";
-import {IUser, IUserListEntry, sortByRealName, sortLang} from "../user/IUser";
-import {withComparatorFilters} from "../util/comparatorfilter";
-import {$timeout} from "../util/ngimport";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import type {IUser, IUserListEntry} from "tim/user/IUser";
+import {sortByRealName, sortLang} from "tim/user/IUser";
+import {withComparatorFilters} from "tim/util/comparatorfilter";
+import {$timeout} from "tim/util/ngimport";
+import type {Binding, Require} from "tim/util/utils";
 import {
-    Binding,
     copyToClipboard,
     getURLParameter,
     getViewName,
-    Require,
     to2,
-} from "../util/utils";
+} from "tim/util/utils";
 
 export interface IExportOptions {
     totalPointField: string;

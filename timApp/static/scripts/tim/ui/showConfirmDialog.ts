@@ -1,6 +1,6 @@
-import {to2} from "../util/utils";
-import {showInputDialog} from "./showInputDialog";
-import {InputDialogKind} from "./input-dialog.kind";
+import {to2} from "tim/util/utils";
+import {showInputDialog} from "tim/ui/showInputDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
 
 export async function showConfirm(
     title: string,

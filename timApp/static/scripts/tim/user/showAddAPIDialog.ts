@@ -6,8 +6,8 @@
  * @copyright 2022 TIMTra project authors
  */
 
-import {angularDialog} from "../ui/angulardialog/dialog.service";
-import {IUserApiKey} from "./IUser";
+import {angularDialog} from "tim/ui/angulardialog/dialog.service";
+import type {IUserApiKey} from "tim/user/IUser";
 
 /*
 Code source: showAddContactDialog.ts

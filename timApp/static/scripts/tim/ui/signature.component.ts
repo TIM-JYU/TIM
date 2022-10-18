@@ -1,6 +1,6 @@
 import {Component, Input} from "@angular/core";
 import {Moment} from "moment";
-import {IUser} from "../user/IUser";
+import {IUser} from "tim/user/IUser";
 
 @Component({
     selector: "tim-signature",

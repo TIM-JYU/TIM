@@ -1,35 +1,25 @@
-import {Component, OnInit} from "@angular/core";
-import {Users, UserService} from "tim/user/userService";
-import {ViewCtrl} from "tim/document/viewctrl";
+import type {OnInit} from "@angular/core";
+import {Component} from "@angular/core";
+import type {UserService} from "tim/user/userService";
+import {Users} from "tim/user/userService";
+import type {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {LectureController} from "tim/lecture/lectureController";
-import {
-    DocumentOrFolder,
-    IDocument,
-    isRootFolder,
-    redirectToItem,
-} from "tim/item/IItem";
-import {
-    IMeetingMemoSettings,
-    isDocumentGlobals,
-    someglobals,
-} from "tim/util/globals";
-import {
-    getCurrentViewRange,
-    IViewRange,
-    toggleViewRange,
-} from "tim/document/viewRangeInfo";
-import {getTypedStorage, IOkResponse, to2, toPromise} from "tim/util/utils";
+import type {DocumentOrFolder, IDocument} from "tim/item/IItem";
+import {isRootFolder, redirectToItem} from "tim/item/IItem";
+import type {IMeetingMemoSettings} from "tim/util/globals";
+import {isDocumentGlobals, someglobals} from "tim/util/globals";
+import type {IViewRange} from "tim/document/viewRangeInfo";
+import {getCurrentViewRange, toggleViewRange} from "tim/document/viewRangeInfo";
+import type {IOkResponse} from "tim/util/utils";
+import {getTypedStorage, to2, toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {getActiveDocument} from "tim/document/activedocument";
-import {ITemplateParams} from "tim/printing/print-dialog.component";
-import {
-    ADMIN_GROUPNAME,
-    IGroupWithSisuPath,
-    TEACHERS_GROUPNAME,
-} from "tim/user/IUser";
-import {IDocSettings} from "tim/document/IDocSettings";
-import {IRelevanceResponse} from "tim/item/relevance-edit.component";
+import type {ITemplateParams} from "tim/printing/print-dialog.component";
+import type {IGroupWithSisuPath} from "tim/user/IUser";
+import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "tim/user/IUser";
+import type {IDocSettings} from "tim/document/IDocSettings";
+import type {IRelevanceResponse} from "tim/item/relevance-edit.component";
 import {showViewRangeEditDialog} from "tim/document/showViewRangeEditDialog";
 import {showRelevanceEditDialog} from "tim/item/showRelevanceEditDialog";
 import {showTagSearchDialog} from "tim/item/showTagSearchDialog";
@@ -41,7 +31,8 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
 import {openScheduleDialog} from "tim/document/scheduling/openScheduleDialog";
 import {showMessageListCreation} from "tim/messaging/showMessageListCreation";
-import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
+import type {IVisibilityVars} from "tim/timRoot";
+import {getVisibilityVars} from "tim/timRoot";
 import {showUserGroupDialog} from "tim/user/showUserGroupDialog";
 
 const DEFAULT_PIECE_SIZE = 20;

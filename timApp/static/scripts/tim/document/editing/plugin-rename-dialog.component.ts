@@ -4,17 +4,17 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {KEY_S} from "tim/util/keycodes";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {FormsModule} from "@angular/forms";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {toPromise} from "tim/util/utils";
-import {
+import type {
     Duplicate,
     IExtraData,
     IManageResponse,
     IParResponse,
-} from "./edittypes";
+} from "tim/document/editing/edittypes";
+import {BrowserModule} from "@angular/platform-browser";
 
 export interface IManageRenameParams {
     duplicates: Duplicate[];

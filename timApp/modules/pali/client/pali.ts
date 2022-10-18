@@ -9,23 +9,23 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {valueDefu} from "tim/util/utils";
-import {
+import type {
     ApplicationRef,
-    Component,
     DoBootstrap,
-    NgModule,
     OnDestroy,
     OnInit,
 } from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
+import {Component, NgModule} from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {Subject, Subscription} from "rxjs";
+import type {Subscription} from "rxjs";
+import {Subject} from "rxjs";
 import {debounceTime, distinctUntilChanged} from "rxjs/operators";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {PurifyModule} from "tim/util/purify.module";
-import {pluginMap} from "../../../static/scripts/tim/main";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -223,4 +223,4 @@ export class PaliModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("pali-runner", PaliComponent);
+registerPlugin("pali-runner", PaliModule, PaliComponent);

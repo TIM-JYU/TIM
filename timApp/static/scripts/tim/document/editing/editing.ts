@@ -1,17 +1,17 @@
 /* eslint-disable no-bitwise */
-import {IScope} from "angular";
+import type {IScope} from "angular";
 import $ from "jquery";
 import {CURSOR} from "tim/editor/BaseParEditor";
+import type {IPluginInfoResponse} from "tim/editor/parCompiler";
 import {
     afterAction,
     beforeAction,
     compileWithViewctrl,
-    IPluginInfoResponse,
     ParCompiler,
     replaceAction,
 } from "tim/editor/parCompiler";
-import {PareditorController} from "tim/editor/pareditor";
-import {IModalInstance} from "tim/ui/dialog";
+import type {PareditorController} from "tim/editor/pareditor";
+import type {IModalInstance} from "tim/ui/dialog";
 import {documentglobals} from "tim/util/globals";
 import {$http, $timeout} from "tim/util/ngimport";
 import {
@@ -35,12 +35,12 @@ import * as t from "io-ts";
 import {UserSelection} from "tim/document/editing/userSelection";
 import {Paragraph} from "tim/document/structure/paragraph";
 import {Area} from "tim/document/structure/area";
-import {HelpPar} from "tim/document/structure/helpPar";
+import type {HelpPar} from "tim/document/structure/helpPar";
 import {ParSelection} from "tim/document/editing/parSelection";
+import type {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
 import {
     getExplicitSelection,
     getMinimalUnbrokenSelection,
-    UnbrokenSelection,
 } from "tim/document/editing/unbrokenSelection";
 import {ParContext} from "tim/document/structure/parContext";
 import {DerefOption} from "tim/document/structure/derefOption";
@@ -56,19 +56,25 @@ import {
     ParAreaInclusionKind,
 } from "tim/document/structure/areaContext";
 import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
-import {IMenuFunctionEntry, MenuFunctionList} from "../viewutils";
-import {ViewCtrl} from "../viewctrl";
-import {handleUnread} from "../readings";
-import {canEditPar, canSeeSource, getElementByParId} from "../parhelpers";
-import {onClick} from "../eventhandlers";
+import type {
+    IMenuFunctionEntry,
+    MenuFunctionList,
+} from "tim/document/viewutils";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import {handleUnread} from "tim/document/readings";
 import {
+    canEditPar,
+    canSeeSource,
+    getElementByParId,
+} from "tim/document/parhelpers";
+import {onClick} from "tim/document/eventhandlers";
+import type {
     EditPosition,
-    EditType,
-    extraDataForServer,
     IExtraData,
     IParResponse,
     ITags,
-} from "./edittypes";
+} from "tim/document/editing/edittypes";
+import {EditType, extraDataForServer} from "tim/document/editing/edittypes";
 
 export interface IParEditorOptions {
     forcedClasses?: string[];

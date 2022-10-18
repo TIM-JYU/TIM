@@ -1,10 +1,11 @@
-import {IController} from "angular";
+import type {IController} from "angular";
 import {Component, ChangeDetectorRef, ElementRef} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
-import * as t from "io-ts";
+import type * as t from "io-ts";
 import {timeout} from "tim/util/utils";
-import {CsBase, Example, ConsolePWD, languageTypes} from "./csPlugin";
+import type {Example} from "./csPlugin";
+import {CsBase, ConsolePWD, languageTypes} from "./csPlugin";
 
 function trackByIndex(index: number, o: unknown) {
     return index;

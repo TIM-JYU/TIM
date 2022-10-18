@@ -1,5 +1,4 @@
 import {NgModule} from "@angular/core";
-import {CommonModule} from "@angular/common";
 import {PluginHeaderComponent} from "tim/ui/plugin-header.component";
 import {FocusMeDirective} from "tim/ui/focus-me.directive";
 import {DialogComponent} from "tim/ui/dialog.component";
@@ -25,10 +24,11 @@ import {BookmarkNamePipe} from "tim/bookmark/bookmark-name.pipe";
 import {MarkAllAsReadComponent} from "tim/ui/mark-all-as-read.component";
 import {SwitchButtonComponent} from "tim/sidebarmenu/util/switch-button.component";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
-import {PluginFrameComponent} from "./plugin-frame.component";
-import {LoadingComponent} from "./loading.component";
-import {MarkupErrorComponent} from "./markup-error.component";
-import {CloseButtonComponent} from "./close-button.component";
+import {PluginFrameComponent} from "tim/ui/plugin-frame.component";
+import {LoadingComponent} from "tim/ui/loading.component";
+import {MarkupErrorComponent} from "tim/ui/markup-error.component";
+import {CloseButtonComponent} from "tim/ui/close-button.component";
+import {BrowserModule} from "@angular/platform-browser";
 
 @NgModule({
     providers: [SessionVerify],
@@ -85,6 +85,6 @@ import {CloseButtonComponent} from "./close-button.component";
         BookmarkNamePipe,
         SwitchButtonComponent,
     ],
-    imports: [CommonModule, FormsModule],
+    imports: [BrowserModule, FormsModule],
 })
 export class TimUtilityModule {}

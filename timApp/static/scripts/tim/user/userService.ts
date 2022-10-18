@@ -1,13 +1,11 @@
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {genericglobals, Locale} from "../util/globals";
-import {$http} from "../util/ngimport";
-import {to, ToReturn} from "../util/utils";
-import {
-    ADMIN_GROUPNAME,
-    ICurrentUser,
-    IUser,
-    TEACHERS_GROUPNAME,
-} from "./IUser";
+import type {Locale} from "tim/util/globals";
+import {genericglobals} from "tim/util/globals";
+import {$http} from "tim/util/ngimport";
+import type {ToReturn} from "tim/util/utils";
+import {to} from "tim/util/utils";
+import type {ICurrentUser, IUser} from "tim/user/IUser";
+import {ADMIN_GROUPNAME, TEACHERS_GROUPNAME} from "tim/user/IUser";
 
 export interface ILoginResponse {
     other_users: IUser[];

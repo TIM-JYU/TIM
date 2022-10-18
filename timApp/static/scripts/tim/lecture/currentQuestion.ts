@@ -1,10 +1,7 @@
-import {
-    IAskedQuestion,
-    isAskedQuestion,
-    QuestionOrAnswer,
-} from "tim/lecture/lecturetypes";
+import type {IAskedQuestion, QuestionOrAnswer} from "tim/lecture/lecturetypes";
+import {isAskedQuestion} from "tim/lecture/lecturetypes";
 import {getStorage} from "tim/util/utils";
-import {AnswerToQuestionDialogComponent} from "tim/lecture/answer-to-question-dialog.component";
+import type {AnswerToQuestionDialogComponent} from "tim/lecture/answer-to-question-dialog.component";
 
 export function getAskedQuestionFromQA(qa: QuestionOrAnswer): IAskedQuestion {
     if (isAskedQuestion(qa)) {

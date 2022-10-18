@@ -1,6 +1,6 @@
 import {Component} from "@angular/core";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {ViewCtrl} from "../viewctrl";
+import type {ViewCtrl} from "tim/document/viewctrl";
 
 @Component({
     selector: "tim-help-par-content",

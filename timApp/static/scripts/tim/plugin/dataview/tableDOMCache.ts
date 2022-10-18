@@ -1,4 +1,5 @@
-import {el, TableArea} from "tim/plugin/dataview/util";
+import type {TableArea} from "tim/plugin/dataview/util";
+import {el} from "tim/plugin/dataview/util";
 
 /**
  * A cache that contains all references to DOM elements in a table.

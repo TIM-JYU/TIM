@@ -1,4 +1,4 @@
-import {escapeRegExp} from "./utils";
+import {escapeRegExp} from "tim/util/utils";
 
 // from https://stackoverflow.com/a/5782563
 export function slugify(str: string) {

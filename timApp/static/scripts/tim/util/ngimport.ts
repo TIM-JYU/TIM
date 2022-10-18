@@ -1,7 +1,7 @@
 // idea from https://github.com/bcherny/ngimport
-import * as angular from "angular";
-import {IHttpPromise, IRequestShortcutConfig} from "angular";
-import {JsonValue} from "tim/util/jsonvalue";
+import type * as angular from "angular";
+import type {IHttpPromise, IRequestShortcutConfig} from "angular";
+import type {JsonValue} from "tim/util/jsonvalue";
 
 /**
  * Restricts AngularJS HTTP POST data to contain only JSON serializable types.

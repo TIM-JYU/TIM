@@ -1,3 +1,4 @@
+import type {OnChanges, SimpleChanges} from "@angular/core";
 import {
     Component,
     ElementRef,
@@ -5,12 +6,10 @@ import {
     Input,
     NgModule,
     NgZone,
-    OnChanges,
     Output,
-    SimpleChanges,
 } from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {
+import type {
     AnswerFieldType,
     AnswerTable,
     IAskedJsonJson,
@@ -19,14 +18,14 @@ import {
     IProcessedHeaders,
     IRow,
     IUnprocessedHeaders,
-    RowCodec,
 } from "tim/lecture/lecturetypes";
+import {RowCodec} from "tim/lecture/lecturetypes";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import {PurifyModule} from "tim/util/purify.module";
 import {HTMLSanitizeModule} from "tim/util/htmlsanitize.module";
+import {BrowserModule} from "@angular/platform-browser";
 
 /**
  * Directive for dynamic answer sheet. Sheet to answer lecture questions.

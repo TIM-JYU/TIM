@@ -1,65 +1,78 @@
-import {IController} from "angular";
 import moment from "moment";
-import {
+import type {
     AfterViewInit,
     ApplicationRef,
-    Component,
-    ComponentRef,
-    ContentChild,
     DoBootstrap,
-    ElementRef,
-    Input,
-    NgModule,
-    NgZone,
+    NgModuleRef,
     OnDestroy,
     OnInit,
     Type,
+} from "@angular/core";
+import {
+    Component,
+    ContentChild,
+    ElementRef,
+    Injector,
+    Input,
+    NgModule,
+    NgZone,
+    PlatformRef,
     ViewChild,
     ViewContainerRef,
 } from "@angular/core";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {CommonModule} from "@angular/common";
 import {FormsModule} from "@angular/forms";
-import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {pluginMap} from "tim/main";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {PurifyModule} from "tim/util/purify.module";
-import type {TimTable, TimTableComponent} from "tim/plugin/timTable";
-import type {MCQ, MMCQ} from "tim/plugin/mmcq";
-import type {
-    TapeAttrs,
-    TapePluginContent,
-} from "tim/plugin/tape-plugin.component";
-import {getURLParameter, Require, to} from "../util/utils";
-import {ITimComponent, ViewCtrl} from "../document/viewctrl";
-import {TaskId, TaskIdWithDefaultDocId} from "../plugin/taskid";
-import {TimDefer} from "../util/timdefer";
-import {ReadonlyMoment} from "../util/readonlymoment";
-import {timLogTime} from "../util/timTiming";
-import {$http, $timeout} from "../util/ngimport";
-import {IGenericPluginMarkup} from "../plugin/attributes";
-import {Users} from "../user/userService";
-import {AnswerBrowserComponent, AnswerBrowserModule} from "./answerbrowser3";
+import {getURLParameter, timeout, toPromise} from "tim/util/utils";
+import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {TimDefer} from "tim/util/timdefer";
+import type {ReadonlyMoment} from "tim/util/readonlymoment";
+import {timLogTime} from "tim/util/timTiming";
+import {Users} from "tim/user/userService";
+import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
+import {AnswerBrowserModule} from "tim/answer/answer-browser.component";
+import type {IGenericPluginMarkup} from "tim/plugin/attributes";
+import {TaskId, TaskIdWithDefaultDocId} from "tim/plugin/taskid";
+import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import type {IRegisteredPlugin} from "tim/plugin/pluginRegistry";
+import {getPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 const LAZY_MARKER = "lazy";
 const LAZY_MARKER_LENGTH = LAZY_MARKER.length;
-const LAZY_COMMENT_MARKER = "<!--" + LAZY_MARKER;
+const LAZY_COMMENT_MARKER = `<!--${LAZY_MARKER}`;
 
 function isElement(n: Node): n is Element {
     return n.nodeType === Node.ELEMENT_NODE;
 }
 
-function getTypeFor(name: string): Type<PluginJson> | undefined {
-    return pluginMap.get(name);
-}
+const loadedModules: Map<string, NgModuleRef<unknown>> = new Map();
 
-export async function loadPlugin(html: string, loader: PluginLoaderComponent) {
-    const elementToCompile = $(html)[0];
-    loader.defaultload = false;
-    await loader.determineAndSetComponent(elementToCompile);
+async function getModule(
+    moduleType: Type<unknown>,
+    platformRef: PlatformRef,
+    zone: NgZone
+) {
+    if (loadedModules.get(moduleType.name)) {
+        return loadedModules.get(moduleType.name);
+    }
+    // Note: there are multiple ways to bootstrap a module with the components
+    // 1. createNgModule - creates a new module with no platform -> mainly for child modules, prevents multiple platform instances
+    //   * Seems to be fast and easy to bootstrap, but doesn't allow referencing e.g. BrowserModule
+    // 2. PlatformRef.bootstrapModule - bootstraps a module as if it's an application module
+    //   * Angular allows multiple bootstraps for the same platform
+    //   * Generally doesn't seem to be intended for bootstrapping plugins => needs further testing
+    // For now we'll use bootstrapModule since eventually we'll likely move to use Angular Elements that seem to do the same thing
+    const modRef = await platformRef.bootstrapModule(moduleType, {
+        ngZone: zone,
+    });
+    loadedModules.set(moduleType.name, modRef);
+    return modRef;
 }
 
 @Component({
@@ -68,7 +81,7 @@ export async function loadPlugin(html: string, loader: PluginLoaderComponent) {
         <tim-alert *ngIf="error" severity="danger">
             {{ error }}
         </tim-alert>
-        <answerbrowser *ngIf="parsedTaskId && showBrowser && !preview && !unlockable && !lockedByPrerequisite"
+        <answerbrowser *ngIf="type != 'none' && parsedTaskId && showBrowser && !preview && !unlockable && !lockedByPrerequisite"
                        [taskId]="parsedTaskId"
                        [answerId]="answerId">
         </answerbrowser>
@@ -117,19 +130,16 @@ export async function loadPlugin(html: string, loader: PluginLoaderComponent) {
     `,
     styles: [],
 })
-export class PluginLoaderComponent
-    implements AfterViewInit, IController, OnDestroy, OnInit
-{
+export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
     @ViewChild("pluginPlacement", {read: ViewContainerRef, static: false})
     pluginPlacement!: ViewContainerRef;
     @ViewChild("feedback") feedBackElement?: ElementRef<HTMLDivElement>;
     private compiled = false;
-    private viewctrl?: Require<ViewCtrl>;
-    asd = this;
+    private viewctrl?: ViewCtrl;
     @Input() public taskId!: string;
     public nonPluginHtml?: string;
     public parsedTaskId?: TaskId;
-    @Input() public type!: string;
+    @Input() public type!: "full" | "lazyonly" | "none";
     @Input() public answerId?: number;
     @Input() public template?: string;
     @Input() public wrapper!: "div" | "span";
@@ -166,7 +176,10 @@ export class PluginLoaderComponent
 
     constructor(
         private elementRef: ElementRef<HTMLElement>,
+        private http: HttpClient,
         private zone: NgZone,
+        private injector: Injector,
+        private platformRef: PlatformRef,
         public vcr: ViewContainerRef
     ) {
         timLogTime("timPluginLoader constructor", "answ", 1);
@@ -176,7 +189,7 @@ export class PluginLoaderComponent
         return this.elementRef.nativeElement;
     }
 
-    ngOnInit() {
+    async ngOnInit() {
         this.viewctrl = vctrlInstance;
         if (this.viewctrl && !this.preview) {
             this.viewctrl.registerPluginLoader(this);
@@ -194,50 +207,50 @@ export class PluginLoaderComponent
         if (this.lockedByPrerequisite) {
             this.hidePlugin();
         }
-        $timeout(() => {
-            const m = this.pluginMarkup();
-            if (
-                m?.hideBrowser ||
-                this.viewctrl?.docSettings.hideBrowser ||
-                this.isUseCurrentUser() ||
-                this.isGlobal() ||
-                this.isInFormMode()
-            ) {
-                this.hideBrowser = true;
-                this.showPlaceholder = false;
-            }
-            if (m?.forceBrowser) {
-                this.forceBrowser = true;
-            }
 
-            this.showPlaceholder = !this.isInFormMode() && !this.hideBrowser;
+        await timeout();
+        const m = this.pluginMarkup();
+        if (
+            m?.hideBrowser ||
+            this.viewctrl?.docSettings.hideBrowser ||
+            this.isUseCurrentUser() ||
+            this.isGlobal() ||
+            this.isInFormMode()
+        ) {
+            this.hideBrowser = true;
+            this.showPlaceholder = false;
+        }
+        if (m?.forceBrowser) {
+            this.forceBrowser = true;
+        }
 
-            if (this.accessDuration && !this.viewctrl?.item.rights.teacher) {
-                this.timed = true;
-                if (!this.accessEnd) {
-                    this.unlockable = true;
-                    this.hidePlugin();
+        this.showPlaceholder = !this.isInFormMode() && !this.hideBrowser;
+
+        if (this.accessDuration && !this.viewctrl?.item.rights.teacher) {
+            this.timed = true;
+            if (!this.accessEnd) {
+                this.unlockable = true;
+                this.hidePlugin();
+            } else {
+                this.endTime = moment(this.accessEnd);
+                if (this.endTime.isBefore(moment.now())) {
+                    this.expireTask();
                 } else {
-                    this.endTime = moment(this.accessEnd);
-                    if (this.endTime.isBefore(moment.now())) {
-                        this.expireTask();
-                    } else {
-                        this.startTask();
-                    }
+                    this.startTask();
                 }
             }
-            if (this.lockableByPrerequisite) {
-                if (!m?.previousTask) {
-                    return;
-                }
-                if (this.lockedByPrerequisite) {
-                    this.viewctrl?.addLockListener(this);
-                    this.lockedText = m.previousTask.hideText;
-                    this.lockedButtonText = m.previousTask.unlockText;
-                }
-                this.toggleLockedAreas();
+        }
+        if (this.lockableByPrerequisite) {
+            if (!m?.previousTask) {
+                return;
             }
-        });
+            if (this.lockedByPrerequisite) {
+                this.viewctrl?.addLockListener(this);
+                this.lockedText = m.previousTask.hideText;
+                this.lockedButtonText = m.previousTask.unlockText;
+            }
+            this.toggleLockedAreas();
+        }
     }
 
     ngAfterViewInit() {
@@ -245,13 +258,11 @@ export class PluginLoaderComponent
             return;
         }
 
-        this.elementRef.nativeElement.addEventListener(
-            "mouseenter",
-            this.loadPlugin
+        this.elementRef.nativeElement.addEventListener("mouseenter", () =>
+            this.loadPlugin()
         );
-        this.elementRef.nativeElement.addEventListener(
-            "touchstart",
-            this.loadPlugin
+        this.elementRef.nativeElement.addEventListener("touchstart", () =>
+            this.loadPlugin()
         );
         const pluginhtml = this.pluginWrapper.nativeElement.innerHTML;
         if (!pluginhtml.startsWith(LAZY_COMMENT_MARKER)) {
@@ -269,13 +280,11 @@ export class PluginLoaderComponent
     }
 
     private removeActivationHandlers() {
-        this.elementRef.nativeElement.removeEventListener(
-            "mouseenter",
-            this.loadPlugin
+        this.elementRef.nativeElement.removeEventListener("mouseenter", () =>
+            this.loadPlugin()
         );
-        this.elementRef.nativeElement.removeEventListener(
-            "touchstart",
-            this.loadPlugin
+        this.elementRef.nativeElement.removeEventListener("touchstart", () =>
+            this.loadPlugin()
         );
     }
 
@@ -335,22 +344,28 @@ export class PluginLoaderComponent
         }
     }
 
-    loadPlugin = async () => {
+    async loadPlugin() {
+        if (this.compiled) {
+            return;
+        }
         // PluginLoader is wrapped in AngularJS, so outside calls (e.g. via viewctrl) may not be properly tracked
         // Therefore, ensure the call is run inside the Angular zone to ensure change detection is triggered
         await this.zone.run(async () => {
-            if (this.compiled) {
-                return;
-            }
             this.loadAnswerBrowser();
             const h = this.getNonLazyHtml();
             if (h && this.viewctrl) {
                 this.defaultload = false;
-                await loadPlugin(h, this);
+                await this.loadFromHtml(h);
             }
             this.removeActivationHandlers();
         });
-    };
+    }
+
+    async loadFromHtml(html: string) {
+        const elementToCompile = $(html)[0];
+        this.defaultload = false;
+        await this.determineAndSetComponent(elementToCompile);
+    }
 
     async determineAndSetComponent(component: HTMLElement) {
         if (component.nodeType === Node.COMMENT_NODE) {
@@ -370,43 +385,17 @@ export class PluginLoaderComponent
         }
         this.defaultload = false;
         this.nonPluginHtml = undefined;
-        if (runnername == "tim-table") {
-            const data = component.getAttribute("bind-data");
-            if (!data) {
-                this.error = `Component ${runnername} is missing attribute bind-data`;
-                return;
-            }
-            await this.setNonJsonComponent(runnername, data);
+        const json = component.getAttribute("json");
+        const registeredPlugin = getPlugin(runnername);
+        if (!registeredPlugin) {
+            this.error = $localize`Unknown component: ${runnername}`;
             return;
-        } else if (runnername == "tim-tape") {
-            const data = component.getAttribute("data");
-            if (!data) {
-                this.error = `Component ${runnername} is missing attribute data`;
-                return;
-            }
-            await this.setNonJsonComponent(runnername, data);
-            return;
-        } else if (runnername == "mcq" || runnername == "mmcq") {
-            const data = component.getAttribute("data-content");
-            if (!data) {
-                this.error = `Component ${runnername} is missing attribute data-content`;
-                return;
-            }
-            await this.setNonJsonComponent(runnername, data);
-            return;
-        } else {
-            const json = component.getAttribute("json");
-            const type = getTypeFor(runnername);
-            if (!type) {
-                this.error = `Unknown component: ${runnername}`;
-                return;
-            }
-            if (!json) {
-                this.error = `Component ${runnername} is missing attribute json`;
-                return;
-            }
-            await this.setComponent(type, json);
         }
+        if (!json) {
+            this.error = $localize`Component ${runnername} is missing attribute json`;
+            return;
+        }
+        await this.setComponent(registeredPlugin, json);
     }
 
     setInnerHtml(element: HTMLElement) {
@@ -418,60 +407,18 @@ export class PluginLoaderComponent
         this.nonPluginHtml = element.outerHTML;
     }
 
-    async setNonJsonComponent(
-        type: "tim-table" | "tim-tape" | "mcq" | "mmcq",
-        data: string
-    ) {
+    async setComponent(registeredPlugin: IRegisteredPlugin, json: string) {
         const viewContainerRef = this.pluginPlacement;
         viewContainerRef.clear();
 
-        const compType = getTypeFor(type);
-        if (!compType) {
-            this.error = `Unable to import component ${type}`;
-            return;
-        }
-        switch (type) {
-            case "tim-table": {
-                const componentRef = (await viewContainerRef.createComponent(
-                    compType
-                )) as unknown as ComponentRef<TimTableComponent>;
-                componentRef.instance.data = JSON.parse(data) as TimTable;
-                componentRef.changeDetectorRef.detectChanges();
-                break;
-            }
-            case "tim-tape": {
-                const componentRef = (await viewContainerRef.createComponent(
-                    compType
-                )) as unknown as ComponentRef<TapePluginContent>;
-                componentRef.instance.inputdata = JSON.parse(data) as TapeAttrs;
-                componentRef.changeDetectorRef.detectChanges();
-                break;
-            }
-            case "mcq": {
-                const componentRef = (await viewContainerRef.createComponent(
-                    compType
-                )) as unknown as ComponentRef<MCQ>;
-                componentRef.instance.dataContent = data;
-                componentRef.changeDetectorRef.detectChanges();
-                break;
-            }
-            case "mmcq": {
-                const componentRef = (await viewContainerRef.createComponent(
-                    compType
-                )) as unknown as ComponentRef<MMCQ>;
-                componentRef.instance.dataContent = data;
-                componentRef.changeDetectorRef.detectChanges();
-                break;
-            }
-        }
-    }
-
-    async setComponent(component: Type<PluginJson>, json: string) {
-        const viewContainerRef = this.pluginPlacement;
-        viewContainerRef.clear();
-
+        const modRef = await getModule(
+            registeredPlugin.module,
+            this.platformRef,
+            this.zone
+        );
         const componentRef = await viewContainerRef.createComponent<PluginJson>(
-            component
+            registeredPlugin.component,
+            {ngModuleRef: modRef}
         );
         componentRef.instance.json = json;
         componentRef.changeDetectorRef.detectChanges();
@@ -540,8 +487,8 @@ export class PluginLoaderComponent
     }
 
     async unlockTimedTask() {
-        const r = await to(
-            $http.get<{end_time: string; expired?: boolean}>(
+        const r = await toPromise(
+            this.http.get<{end_time: string; expired?: boolean}>(
                 "/unlockTimedTask",
                 {
                     params: {
@@ -552,7 +499,7 @@ export class PluginLoaderComponent
         );
         if (r.ok) {
             this.unlockable = false;
-            this.endTime = moment(r.result.data.end_time);
+            this.endTime = moment(r.result.end_time);
             if (this.endTime.isBefore(moment.now())) {
                 this.expireTask();
             } else {
@@ -580,8 +527,8 @@ export class PluginLoaderComponent
     }
 
     async unlockHiddenTask() {
-        const r = await to(
-            $http.get<{unlocked: boolean; error?: string}>(
+        const r = await toPromise(
+            this.http.get<{unlocked: boolean; error?: string}>(
                 "/unlockHiddenTask",
                 {
                     params: {
@@ -591,17 +538,17 @@ export class PluginLoaderComponent
             )
         );
         if (r.ok) {
-            if (r.result.data.unlocked) {
+            if (r.result.unlocked) {
                 this.lockedByPrerequisite = false;
                 this.unHidePlugin();
                 this.toggleLockedAreas();
             } else {
                 this.lockedError =
-                    r.result.data.error ??
+                    r.result.error ??
                     $localize`You haven't unlocked this task yet`;
             }
         } else {
-            this.lockedError = r.result.data.error;
+            this.lockedError = r.result.error.error;
         }
     }
 
@@ -682,10 +629,11 @@ export class PluginLoaderComponent
     declarations: [PluginLoaderComponent],
     imports: [
         AnswerBrowserModule,
-        CommonModule,
+        BrowserModule,
         FormsModule,
         PurifyModule,
         TimUtilityModule,
+        HttpClientModule,
     ],
     exports: [PluginLoaderComponent],
 })

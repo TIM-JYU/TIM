@@ -2,15 +2,9 @@
  * Defines the client-side implementation of JavaScript runner plugin.
  */
 import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    NgModule,
-    NgZone,
-} from "@angular/core";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
+import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
@@ -21,11 +15,11 @@ import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
-import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
-import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
-import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {pluginMap} from "../../../static/scripts/tim/main";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "tim/util/purify.module";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 
 const GoalTableMarkup = t.intersection([
     t.partial({
@@ -416,4 +410,4 @@ export class GoalTableModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("goaltable-runner", GoalTablePluginComponent);
+registerPlugin("goaltable-runner", GoalTableModule, GoalTablePluginComponent);

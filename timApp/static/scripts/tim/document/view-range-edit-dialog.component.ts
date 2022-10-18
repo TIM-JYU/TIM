@@ -8,9 +8,9 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import * as t from "io-ts";
-import {IItem} from "../item/IItem";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {TimStorage} from "../util/utils";
+import type {IItem} from "tim/item/IItem";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {TimStorage} from "tim/util/utils";
 import {
     getCurrentPartitionURLParams,
     getPieceSize,
@@ -18,7 +18,7 @@ import {
     partitionDocument,
     setPieceSize,
     unpartitionDocument,
-} from "./viewRangeInfo";
+} from "tim/document/viewRangeInfo";
 
 @Component({
     selector: "tim-view-range-edit-dialog",

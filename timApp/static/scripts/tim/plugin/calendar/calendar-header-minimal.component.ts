@@ -9,7 +9,7 @@
 
 import {Component, EventEmitter, Input, Output} from "@angular/core";
 import {CalendarView} from "angular-calendar";
-import {Users} from "../../user/userService";
+import {Users} from "tim/user/userService";
 
 @Component({
     selector: "tim-calendar-minimal-header",

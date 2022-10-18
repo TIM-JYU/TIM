@@ -5,14 +5,8 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
 import {TimStorage, toPromise} from "tim/util/utils";
-import {
-    getCourseCode,
-    ICourseSettings,
-    ISubjectList,
-    ITaggedItem,
-    tagIsExpired,
-    TagType,
-} from "tim/item/IItem";
+import type {ICourseSettings, ISubjectList, ITaggedItem} from "tim/item/IItem";
+import {getCourseCode, tagIsExpired, TagType} from "tim/item/IItem";
 import {
     HTTP_INTERCEPTORS,
     HttpClient,
@@ -21,9 +15,9 @@ import {
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import {TimeStampToMomentConverter} from "tim/util/time-stamp-to-moment-converter.service";
 import * as t from "io-ts";
+import {BrowserModule} from "@angular/platform-browser";
 
 export interface ICourseListParams {
     settings: ICourseSettings;

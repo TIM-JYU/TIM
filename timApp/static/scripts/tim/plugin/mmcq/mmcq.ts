@@ -1,24 +1,18 @@
-import {
-    ApplicationRef,
-    Component,
-    Directive,
-    DoBootstrap,
-    ElementRef,
-    Input,
-    NgModule,
-} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, Directive, ElementRef, Input, NgModule} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
-import {pluginMap} from "tim/main";
-import {showMessageDialog} from "../ui/showMessageDialog";
-import {toPromise} from "../util/utils";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {AnswerSheetModule} from "../document/question/answer-sheet.component";
-import {PurifyModule} from "../util/purify.module";
-import {handleAnswerResponse} from "../document/interceptor";
-import {IAnswerSaveEvent} from "../answer/answerbrowser3";
-import {TaskId} from "./taskid";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {toPromise} from "tim/util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {AnswerSheetModule} from "tim/document/question/answer-sheet.component";
+import {PurifyModule} from "tim/util/purify.module";
+import {handleAnswerResponse} from "tim/document/interceptor";
+import type {IAnswerSaveEvent} from "tim/answer/answer-browser.component";
+import {TaskId} from "tim/plugin/taskid";
+import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 interface MMCQContent<State> {
     state?: State;
@@ -39,12 +33,12 @@ interface MMCQContent<State> {
 }
 
 @Directive()
-export class MCQBase<State> {
+export class MCQBase<State> implements PluginJson {
     public headerText: string = "Check your understanding";
     public buttonText: string = "Submit";
     public content!: MMCQContent<State>;
     protected element: JQuery<HTMLElement>;
-    @Input() dataContent?: string;
+    @Input() json!: string;
 
     constructor(
         protected hostElement: ElementRef<HTMLElement>,
@@ -54,12 +48,12 @@ export class MCQBase<State> {
     }
 
     ngOnInit() {
-        if (!this.dataContent) {
+        if (!this.json) {
             this.content = JSON.parse(
                 this.element.attr("data-content")!
             ) as MMCQContent<State>;
         } else {
-            this.content = JSON.parse(this.dataContent) as MMCQContent<State>;
+            this.content = JSON.parse(this.json) as MMCQContent<State>;
         }
     }
 
@@ -297,5 +291,5 @@ export class MCQModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("mcq", MCQ as never);
-pluginMap.set("mmcq", MMCQ as never);
+registerPlugin("mcq", MCQModule, MCQ);
+registerPlugin("mmcq", MCQModule, MMCQ);

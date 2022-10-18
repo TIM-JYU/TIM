@@ -1,6 +1,7 @@
-import {HttpClient} from "@angular/common/http";
-import {getUrlHttpParams, Result, toPromise} from "../../util/utils";
-import {IUser} from "../../user/IUser";
+import type {HttpClient} from "@angular/common/http";
+import type {Result} from "tim/util/utils";
+import {getUrlHttpParams, toPromise} from "tim/util/utils";
+import type {IUser} from "tim/user/IUser";
 
 export interface UserResult {
     user: IUser;

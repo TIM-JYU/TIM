@@ -1,17 +1,17 @@
 import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BrowserQRCodeSvgWriter} from "@zxing/browser";
 import {
     EncodeHintType,
     QRCodeDecoderErrorCorrectionLevel,
 } from "@zxing/library";
-import {TimUtilityModule} from "../tim-utility.module";
-import {AngularDialogComponent} from "../angulardialog/angular-dialog-component.directive";
-import {DialogModule} from "../angulardialog/dialog.module";
-import {toPromise} from "../../util/utils";
-import {Users} from "../../user/userService";
-import {IFullUser} from "../../user/IUser";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {toPromise} from "tim/util/utils";
+import {Users} from "tim/user/userService";
+import type {IFullUser} from "tim/user/IUser";
+import {BrowserModule} from "@angular/platform-browser";
 
 interface ISessionStatus {
     sessionId: string;

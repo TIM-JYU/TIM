@@ -1,5 +1,6 @@
-import {Directive, ElementRef, Input, OnChanges, OnInit} from "@angular/core";
-import {Changes} from "tim/util/angularchanges";
+import type {OnChanges, OnInit} from "@angular/core";
+import {Directive, ElementRef, Input} from "@angular/core";
+import type {Changes} from "tim/util/angularchanges";
 
 @Directive({
     selector: "[focusMe]",

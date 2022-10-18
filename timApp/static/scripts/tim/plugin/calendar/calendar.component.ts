@@ -9,31 +9,30 @@
  * @license MIT
  * @date 24.5.2022
  */
+import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
 import {
-    ApplicationRef,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    DoBootstrap,
     ElementRef,
     NgModule,
-    OnInit,
     ViewEncapsulation,
 } from "@angular/core";
-import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import * as t from "io-ts";
-import {
-    CalendarDateFormatter,
+import type {
     CalendarEvent,
     CalendarEventTimesChangedEvent,
+} from "angular-calendar";
+import {
+    CalendarDateFormatter,
     CalendarEventTitleFormatter,
     CalendarModule,
     CalendarView,
     DateAdapter,
 } from "angular-calendar";
-import {WeekViewHourSegment} from "calendar-utils";
+import type {WeekViewHourSegment} from "calendar-utils";
 import {adapterFactory} from "angular-calendar/date-adapters/date-fns";
-import {CommonModule, registerLocaleData} from "@angular/common";
+import {registerLocaleData} from "@angular/common";
 import localeFi from "@angular/common/locales/fi";
 import localeSv from "@angular/common/locales/sv";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -42,14 +41,13 @@ import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {finalize, fromEvent, takeUntil} from "rxjs";
 import {addDays, addMinutes, endOfWeek, setISOWeek} from "date-fns";
 import moment from "moment";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {AngularPluginBase} from "../angular-plugin-base.directive";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
     nullable,
     withDefault,
-} from "../attributes";
+} from "tim/plugin/attributes";
 import {
     capitalizeFirstLetter,
     closest,
@@ -59,26 +57,26 @@ import {
     MomentFromString,
     to2,
     toPromise,
-} from "../../util/utils";
-import {Users} from "../../user/userService";
-import {itemglobals} from "../../util/globals";
-import {showConfirm} from "../../ui/showConfirmDialog";
-import {showMessageDialog} from "../../ui/showMessageDialog";
-import {createDowngradedModule, doDowngrade} from "../../downgrade";
-import {CustomDateFormatter} from "./custom-date-formatter.service";
-import {CustomEventTitleFormatter} from "./custom-event-title-formatter.service";
+} from "tim/util/utils";
+import {Users} from "tim/user/userService";
+import {itemglobals} from "tim/util/globals";
+import {showConfirm} from "tim/ui/showConfirmDialog";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {CustomDateFormatter} from "tim/plugin/calendar/custom-date-formatter.service";
+import {CustomEventTitleFormatter} from "tim/plugin/calendar/custom-event-title-formatter.service";
 import {
     TIME_VIEW_EVENING_HOURS,
     TIME_VIEW_MORNING_HOURS,
     TIME_VIEW_SLOT_SIZES,
     TimeViewSelectorComponent,
-} from "./timeviewselector.component";
-import {showCalendarEventDialog} from "./showCalendarEventDialog";
-import {DateTimeValidatorDirective} from "./datetimevalidator.directive";
-import {CalendarHeaderComponent} from "./calendar-header.component";
-import {CalendarHeaderMinimalComponent} from "./calendar-header-minimal.component";
-import {ShowWeekComponent} from "./show-week.component";
-import {showEditJsonEventDialog} from "./showEditJsonEventDialog";
+} from "tim/plugin/calendar/timeviewselector.component";
+import {showCalendarEventDialog} from "tim/plugin/calendar/showCalendarEventDialog";
+import {DateTimeValidatorDirective} from "tim/plugin/calendar/datetimevalidator.directive";
+import {CalendarHeaderComponent} from "tim/plugin/calendar/calendar-header.component";
+import {CalendarHeaderMinimalComponent} from "tim/plugin/calendar/calendar-header-minimal.component";
+import {ShowWeekComponent} from "tim/plugin/calendar/show-week.component";
+import {showEditJsonEventDialog} from "tim/plugin/calendar/showEditJsonEventDialog";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 
 /**
  * Helps calculate the size of a horizontally dragged event on the calendar view.
@@ -1100,8 +1098,6 @@ export class CalendarComponent
 
 @NgModule({
     imports: [
-        BrowserAnimationsModule,
-        CommonModule,
         BrowserModule,
         HttpClientModule,
         FormsModule,
@@ -1130,11 +1126,4 @@ export class TimCalendarModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
-// pluginMap.set("tim-calendar", CalendarComponent);
-const angularJsModule = createDowngradedModule((extraProviders) =>
-    platformBrowserDynamic(extraProviders).bootstrapModule(TimCalendarModule)
-);
-
-doDowngrade(angularJsModule, "timCalendar", CalendarComponent);
-
-export const moduleDefs = [angularJsModule];
+registerPlugin("tim-calendar", TimCalendarModule, CalendarComponent);

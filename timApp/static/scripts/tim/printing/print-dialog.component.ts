@@ -2,12 +2,12 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import * as t from "io-ts";
 import {FormsModule} from "@angular/forms";
-import {getUrlParamsJSON, TimStorage, toPromise} from "../util/utils";
-import {IItem} from "../item/IItem";
+import {getUrlParamsJSON, TimStorage, toPromise} from "tim/util/utils";
+import type {IItem} from "tim/item/IItem";
+import {BrowserModule} from "@angular/platform-browser";
 
 export interface ITemplate extends IItem {}
 

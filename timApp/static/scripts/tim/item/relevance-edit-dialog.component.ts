@@ -6,11 +6,11 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {IItem} from "./IItem";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import type {IItem} from "tim/item/IItem";
+import {BrowserModule} from "@angular/platform-browser";
 
 @Component({
     selector: "tim-relevance-edit-dialog",

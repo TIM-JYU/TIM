@@ -1,11 +1,12 @@
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {toPromise} from "tim/util/utils";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {createDowngradedModule, doDowngrade} from "../downgrade";
-import {documentglobals} from "../util/globals";
-import {TimUtilityModule} from "./tim-utility.module";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {documentglobals} from "tim/util/globals";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {BrowserModule} from "@angular/platform-browser";
 
 @Component({
     selector: "tim-style-preview",

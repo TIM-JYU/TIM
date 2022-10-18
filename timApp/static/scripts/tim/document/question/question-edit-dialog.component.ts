@@ -3,11 +3,11 @@ import {Component, NgModule, ViewChild} from "@angular/core";
 import * as t from "io-ts";
 import $ from "jquery";
 import moment from "moment";
+import type {IPreviewParams} from "tim/document/question/answer-sheet.component";
 import {
     AnswerSheetModule,
     fixQuestionJson,
     getPointsTable,
-    IPreviewParams,
     makePreview,
     minimizeJson,
 } from "tim/document/question/answer-sheet.component";
@@ -21,7 +21,7 @@ import {
     KEY_S,
     KEY_UP,
 } from "tim/util/keycodes";
-import {
+import type {
     IAskedJsonJson,
     IAskedQuestion,
     IColumn,
@@ -33,7 +33,7 @@ import {
     MatrixType,
     QuestionType,
 } from "tim/lecture/lecturetypes";
-import {IGenericPluginMarkup} from "tim/plugin/attributes";
+import type {IGenericPluginMarkup} from "tim/plugin/attributes";
 import {$http} from "tim/util/ngimport";
 import {FormsModule, NgForm} from "@angular/forms";
 import {QuestionMatrixComponent} from "tim/document/question/question-matrix.component";
@@ -43,7 +43,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {deleteQuestionWithConfirm} from "tim/document/question/fetchQuestion";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {IParResponse} from "../editing/edittypes";
+import type {IParResponse} from "tim/document/editing/edittypes";
 
 /**
  * Controller for creating and editing questions

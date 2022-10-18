@@ -1,7 +1,6 @@
 import moment from "moment";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -9,11 +8,12 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import * as t from "io-ts";
 import {CommonDialogOptions} from "tim/answer/commondialogoptions";
-import {ReadonlyMoment} from "tim/util/readonlymoment";
+import type {ReadonlyMoment} from "tim/util/readonlymoment";
 import {maybeUndefined} from "tim/plugin/attributes";
 import {documentglobals} from "tim/util/globals";
-import {$httpParamSerializer} from "../util/ngimport";
-import {TimStorage, toPromise} from "../util/utils";
+import {$httpParamSerializer} from "tim/util/ngimport";
+import {TimStorage, toPromise} from "tim/util/utils";
+import {BrowserModule} from "@angular/platform-browser";
 
 const AnswersDialogOptions = t.intersection([
     t.type({

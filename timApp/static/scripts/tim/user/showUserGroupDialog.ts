@@ -1,5 +1,5 @@
-import {IDocument} from "../item/IItem";
-import {angularDialog} from "../ui/angulardialog/dialog.service";
+import type {IDocument} from "tim/item/IItem";
+import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 
 export async function showUserGroupDialog(): Promise<IDocument> {
     const {UserGroupDialogComponent} = await import(

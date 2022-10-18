@@ -4,14 +4,14 @@
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
-import {ISpellWordInfo, PareditorController} from "tim/editor/pareditor";
+import type {ISpellWordInfo, PareditorController} from "tim/editor/pareditor";
 import {copyToClipboard} from "tim/util/utils";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {$rootScope} from "tim/util/ngimport";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {getCurrentEditor} from "tim/editor/editorScope";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {BrowserModule} from "@angular/platform-browser";
 
 export interface ISpellErrorParams {
     info: ISpellWordInfo;

@@ -8,7 +8,10 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {AnswerChartModule} from "tim/lecture/answer-chart.component";
-import {IAskedQuestion, IQuestionAnswerPlain} from "./lecturetypes";
+import type {
+    IAskedQuestion,
+    IQuestionAnswerPlain,
+} from "tim/lecture/lecturetypes";
 
 export type IStatisticsParams = IAskedQuestion;
 

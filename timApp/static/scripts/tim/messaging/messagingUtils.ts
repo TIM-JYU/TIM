@@ -1,5 +1,5 @@
-import {HttpClient} from "@angular/common/http";
-import {toPromise} from "../util/utils";
+import type {HttpClient} from "@angular/common/http";
+import {toPromise} from "tim/util/utils";
 
 export function markAsRead(http: HttpClient, message_id: number) {
     return toPromise(

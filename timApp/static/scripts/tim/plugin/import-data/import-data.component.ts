@@ -2,18 +2,22 @@
  * Defines the client-side implementation of data import plugin.
  */
 import * as t from "io-ts";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {IUser} from "../user/IUser";
-import {TimStorage} from "../util/utils";
-import {pluginMap} from "../main";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
-import {AngularPluginBase} from "./angular-plugin-base.directive";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import type {IUser} from "tim/user/IUser";
+import {TimStorage} from "tim/util/utils";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {BrowserModule} from "@angular/platform-browser";
 
 const ImportDataMarkup = t.intersection([
     t.partial({
@@ -346,15 +350,4 @@ export class ImportDataModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("importdata-runner", ImportDataComponent);
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                ImportDataModule
-            )
-        ),
-        "importdataRunner",
-        ImportDataComponent
-    ),
-];
+registerPlugin("importdata-runner", ImportDataModule, ImportDataComponent);

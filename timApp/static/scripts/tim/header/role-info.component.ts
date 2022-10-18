@@ -1,8 +1,9 @@
-import {Component, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component} from "@angular/core";
 import {Users} from "tim/user/userService";
+import type {AccessType} from "tim/item/access-role.service";
 import {
     AccessRoleService,
-    AccessType,
     accessTypeDisplayNames,
 } from "tim/item/access-role.service";
 import {showMessageDialog} from "tim/ui/showMessageDialog";

@@ -1,14 +1,6 @@
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    EventEmitter,
-    Input,
-    NgModule,
-    Output,
-} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
@@ -17,8 +9,9 @@ import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.compo
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {isAdmin, Users} from "../user/userService";
-import {toPromise} from "../util/utils";
+import {isAdmin, Users} from "tim/user/userService";
+import {toPromise} from "tim/util/utils";
+import {BrowserModule} from "@angular/platform-browser";
 
 interface TimMessageOptions {
     archive: boolean;

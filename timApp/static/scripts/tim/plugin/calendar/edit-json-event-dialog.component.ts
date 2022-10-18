@@ -4,10 +4,10 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {toPromise} from "tim/util/utils";
+import {PurifyModule} from "tim/util/purify.module";
 import {EditorModule} from "../../../../../modules/cs/js/editor/module";
 import {AceEditorComponent} from "../../../../../modules/cs/js/editor/ace";
-import {toPromise} from "../../util/utils";
-import {PurifyModule} from "../../util/purify.module";
 
 export interface IEditJsonEventOptions {
     filterParams: Record<string, string>;

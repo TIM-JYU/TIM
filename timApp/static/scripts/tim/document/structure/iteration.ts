@@ -1,6 +1,6 @@
 import {ParContext} from "tim/document/structure/parContext";
 import {enumDocParts, PreambleIteration} from "tim/document/structure/parsing";
-import {DerefOption} from "tim/document/structure/derefOption";
+import type {DerefOption} from "tim/document/structure/derefOption";
 import {getActiveDocument} from "tim/document/activedocument";
 import {getParContainerElem} from "tim/document/structure/create";
 

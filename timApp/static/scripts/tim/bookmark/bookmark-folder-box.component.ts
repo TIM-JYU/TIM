@@ -3,14 +3,16 @@
  * and allows editing the bookmarks.
  */
 
-import {Component, Input, OnInit} from "@angular/core";
-import {IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
+import type {OnInit} from "@angular/core";
+import {Component, Input} from "@angular/core";
+import type {IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {showBookmarkDialog} from "tim/bookmark/showBookmarkDialog";
 import {HttpClient} from "@angular/common/http";
-import {RootCtrl} from "tim/timRoot";
+import type {RootCtrl} from "tim/timRoot";
 import {rootInstance} from "tim/rootinstance";
-import {getCourseCode, ITaggedItem} from "../item/IItem";
-import {to2, toPromise} from "../util/utils";
+import type {ITaggedItem} from "tim/item/IItem";
+import {getCourseCode} from "tim/item/IItem";
+import {to2, toPromise} from "tim/util/utils";
 
 export interface ITaggedBookmarkedItem {
     doc: ITaggedItem;

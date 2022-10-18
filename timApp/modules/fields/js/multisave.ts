@@ -2,21 +2,14 @@
  * Defines the client-side implementation of a plugin that calls other plugins' save methods.
  */
 import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    NgModule,
-    NgZone,
-} from "@angular/core";
-import {
-    ChangeType,
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
+import type {
     IChangeListener,
     ITimComponent,
-    RegexOption,
     ViewCtrl,
 } from "tim/document/viewctrl";
+import {ChangeType, RegexOption} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     IncludeUsersOption,
@@ -24,17 +17,16 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {escapeRegExp, scrollToElement} from "tim/util/utils";
-import {TaskId} from "tim/plugin/taskid";
+import type {TaskId} from "tim/plugin/taskid";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {showConfirm} from "../../../static/scripts/tim/ui/showConfirmDialog";
-import {slugify} from "../../../static/scripts/tim/util/slugify";
+import {showConfirm} from "tim/ui/showConfirmDialog";
+import {slugify} from "tim/util/slugify";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {
     GroupType,
     SisuAssessmentExportModule,
@@ -482,14 +474,4 @@ export class MultisaveModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                MultisaveModule
-            )
-        ),
-        "timMultisave",
-        MultisaveComponent
-    ),
-];
+registerPlugin("tim-multisave", MultisaveModule, MultisaveComponent);

@@ -1,4 +1,4 @@
-import {IItem} from "tim/item/IItem";
+import type {IItem} from "tim/item/IItem";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 
 export async function openScheduleDialog(d: IItem) {

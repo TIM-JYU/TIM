@@ -1,12 +1,12 @@
 import {maybeDeref} from "tim/document/structure/maybeDeref";
 import {Area, AreaEndPar, AreaStartPar} from "tim/document/structure/area";
-import {Result} from "tim/util/utils";
+import type {Result} from "tim/util/utils";
 import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
 import {CollapseControls} from "tim/document/structure/collapseControls";
 import * as t from "io-ts";
 import {Paragraph} from "tim/document/structure/paragraph";
 import {documentglobals} from "tim/util/globals";
-import {DocumentPart} from "tim/document/structure/documentPart";
+import type {DocumentPart} from "tim/document/structure/documentPart";
 
 function getAttr(el: Element, attrName: string) {
     const attr = el.getAttribute(attrName);

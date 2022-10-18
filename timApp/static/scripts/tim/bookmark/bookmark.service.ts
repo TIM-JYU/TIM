@@ -1,5 +1,5 @@
 import {Injectable} from "@angular/core";
-import {HttpClient} from "@angular/common/http";
+import type {HttpClient} from "@angular/common/http";
 import {clone, toPromise} from "tim/util/utils";
 import {genericglobals} from "tim/util/globals";
 

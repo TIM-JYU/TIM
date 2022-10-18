@@ -1,4 +1,4 @@
-import {IAnswerBrowserSettings} from "tim/plugin/attributes";
+import type {IAnswerBrowserSettings} from "tim/plugin/attributes";
 
 export type MeetingDateEntry = [string, string, string];
 

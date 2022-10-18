@@ -12,16 +12,15 @@ import {
     KEY_S,
     KEY_TAB,
     KEY_Y,
-} from "../util/keycodes";
-import {$log} from "../util/ngimport";
+} from "tim/util/keycodes";
+import {$log} from "tim/util/ngimport";
+import type {IEditorCallbacks, SelectionRange} from "tim/editor/BaseParEditor";
 import {
     BaseParEditor,
     CURSOR,
     EditorType,
     focusAfter,
-    IEditorCallbacks,
-    SelectionRange,
-} from "./BaseParEditor";
+} from "tim/editor/BaseParEditor";
 
 export class TextAreaParEditor extends BaseParEditor {
     public editor: JQuery;

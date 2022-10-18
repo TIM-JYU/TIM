@@ -1,24 +1,21 @@
-import {
+import type {
     ApplicationRef,
-    Component,
     DoBootstrap,
-    ElementRef,
-    Input,
-    NgModule,
     OnDestroy,
     OnInit,
 } from "@angular/core";
+import {Component, ElementRef, Input, NgModule} from "@angular/core";
 import {to2} from "tim/util/utils";
-import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import $ from "jquery";
-import {angularDialog} from "../../ui/angulardialog/dialog.service";
-import {TimUtilityModule} from "../../ui/tim-utility.module";
+import {angularDialog} from "tim/ui/angulardialog/dialog.service";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import type {
     ISpellErrorParams,
     SpellErrorDialogComponent as SpellErrorDialogComponentType,
-} from "./spell-error-dialog.component";
+} from "tim/document/editing/spell-error-dialog.component";
+import {BrowserModule} from "@angular/platform-browser";
 
 @Component({
     selector: "tim-spell-error",

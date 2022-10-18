@@ -1,9 +1,9 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule, NgZone, OnDestroy} from "@angular/core";
+import type {OnDestroy} from "@angular/core";
+import {Component, NgModule, NgZone} from "@angular/core";
 import deepEqual from "deep-equal";
 import {HttpClient} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {ProgressbarModule} from "ngx-bootstrap/progressbar";
 import {
@@ -14,24 +14,27 @@ import {
 import {fetchAskedQuestion} from "tim/document/question/fetchQuestion";
 import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {ReadonlyMoment} from "tim/util/readonlymoment";
+import type {ReadonlyMoment} from "tim/util/readonlymoment";
+import type {IPreviewParams} from "tim/document/question/answer-sheet.component";
 import {
     AnswerSheetModule,
-    IPreviewParams,
     makePreview,
-} from "../document/question/answer-sheet.component";
-import {setStorage, to2, toPromise} from "../util/utils";
-import {
+} from "tim/document/question/answer-sheet.component";
+import {setStorage, to2, toPromise} from "tim/util/utils";
+import type {
     AnswerTable,
     IAskedQuestion,
     IGetNewQuestionResponse,
     IQuestionAnswer,
+    QuestionOrAnswer,
+} from "tim/lecture/lecturetypes";
+import {
     isAskedQuestion,
     questionAnswerReceived,
     questionAsked,
-    QuestionOrAnswer,
-} from "./lecturetypes";
-import {showStatisticsDialog} from "./showLectureDialogs";
+} from "tim/lecture/lecturetypes";
+import {showStatisticsDialog} from "tim/lecture/showLectureDialogs";
+import {BrowserModule} from "@angular/platform-browser";
 
 /**
  * Created by hajoviin on 22.4.2015

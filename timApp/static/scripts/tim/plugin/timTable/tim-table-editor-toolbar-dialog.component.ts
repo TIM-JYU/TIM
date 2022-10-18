@@ -1,12 +1,16 @@
-import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
-import {HideValues, IToolbarTemplate, TimTableComponent} from "./timTable";
-import {setToolbarInstance} from "./toolbarUtils";
+import type {
+    HideValues,
+    IToolbarTemplate,
+    TimTableComponent,
+} from "tim/plugin/timTable/tim-table.component";
+import {setToolbarInstance} from "tim/plugin/timTable/toolbarUtils";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {BrowserModule} from "@angular/platform-browser";
 
 export interface ITimTableToolbarCallbacks {
     setCell: (value: IToolbarTemplate) => void;

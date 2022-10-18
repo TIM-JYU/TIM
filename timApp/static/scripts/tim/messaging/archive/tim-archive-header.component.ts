@@ -1,10 +1,11 @@
-import {Component, Input, OnInit, ViewEncapsulation} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component, Input, ViewEncapsulation} from "@angular/core";
 import {getViewName} from "tim/util/utils";
-import {
-    ArchivedMessageStateService,
+import type {
     MessageData,
     SiblingMessages,
-} from "./archived-message-state.service";
+} from "tim/messaging/archive/archived-message-state.service";
+import {ArchivedMessageStateService} from "tim/messaging/archive/archived-message-state.service";
 
 @Component({
     selector: "tim-archive-header",

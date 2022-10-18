@@ -2,23 +2,14 @@
  * Defines the client-side implementation of rbfield/label plugin.
  */
 import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    NgModule,
-    NgZone,
-    OnDestroy,
-} from "@angular/core";
-import {
-    ChangeType,
-    FormModeOption,
+import type {ApplicationRef, DoBootstrap, OnDestroy} from "@angular/core";
+import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
+import type {
     ISetAnswerResult,
     ITimComponent,
-    RegexOption,
     ViewCtrl,
 } from "tim/document/viewctrl";
+import {ChangeType, FormModeOption, RegexOption} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
@@ -31,11 +22,11 @@ import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
-import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
-import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
-import {pluginMap} from "../../../static/scripts/tim/main";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "tim/util/purify.module";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {FieldBasicData} from "./textfield-plugin.component";
 
 const RbfieldMarkup = t.intersection([
@@ -462,4 +453,4 @@ export class RbfieldModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("rbfield-runner", RbfieldPluginComponent);
+registerPlugin("rbfield-runner", RbfieldModule, RbfieldPluginComponent);

@@ -3,21 +3,28 @@
  */
 import * as t from "io-ts";
 import $ from "jquery";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {onClick, OnClickArg} from "../document/eventhandlers";
-import {ViewCtrl} from "../document/viewctrl";
-import {IRights} from "../user/IRights";
-import {genericglobals} from "../util/globals";
-import {vctrlInstance} from "../document/viewctrlinstance";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {AnswerSheetModule} from "../document/question/answer-sheet.component";
-import {PurifyModule} from "../util/purify.module";
-import {pluginMap} from "../main";
-import {AngularPluginBase} from "./angular-plugin-base.directive";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
+import type {OnClickArg} from "tim/document/eventhandlers";
+import {onClick} from "tim/document/eventhandlers";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import type {IRights} from "tim/user/IRights";
+import {genericglobals} from "tim/util/globals";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {AnswerSheetModule} from "tim/document/question/answer-sheet.component";
+import {PurifyModule} from "tim/util/purify.module";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 const TimMenuMarkup = t.intersection([
     t.partial({
@@ -512,4 +519,4 @@ export class TimMenuPluginModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("timmenu-runner", TimMenuPluginComponent);
+registerPlugin("timmenu-runner", TimMenuPluginModule, TimMenuPluginComponent);

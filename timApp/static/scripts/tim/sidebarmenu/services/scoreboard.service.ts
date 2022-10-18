@@ -1,5 +1,5 @@
 import {Injectable} from "@angular/core";
-import {IDocument} from "tim/item/IItem";
+import type {IDocument} from "tim/item/IItem";
 import {isDocumentGlobals, someglobals} from "tim/util/globals";
 
 export interface ITaskScoreInfo {

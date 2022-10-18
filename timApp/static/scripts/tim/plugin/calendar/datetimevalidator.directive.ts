@@ -9,14 +9,15 @@
  * @license MIT
  * @date 24.5.2022
  */
-import {Directive, OnInit} from "@angular/core";
-import {
-    NG_VALIDATORS,
+import type {OnInit} from "@angular/core";
+import {Directive} from "@angular/core";
+import type {
     Validator,
     AbstractControl,
     ValidatorFn,
     ValidationErrors,
 } from "@angular/forms";
+import {NG_VALIDATORS} from "@angular/forms";
 
 @Directive({
     selector: "[timCalDateTimeValidator]",

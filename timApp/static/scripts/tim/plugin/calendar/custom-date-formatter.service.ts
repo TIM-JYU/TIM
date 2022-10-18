@@ -9,11 +9,8 @@
  * @license MIT
  * @date 24.5.2022
  */
-import {
-    CalendarDateFormatter,
-    DateFormatterParams,
-    getWeekViewPeriod,
-} from "angular-calendar";
+import type {DateFormatterParams} from "angular-calendar";
+import {CalendarDateFormatter, getWeekViewPeriod} from "angular-calendar";
 import {formatDate} from "@angular/common";
 import {Injectable} from "@angular/core";
 

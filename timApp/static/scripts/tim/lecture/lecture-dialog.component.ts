@@ -5,15 +5,20 @@ import {KEY_S} from "tim/util/keycodes";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {AccordionModule} from "ngx-bootstrap/accordion";
-import {getItem, IItem} from "../item/IItem";
-import {DurationChoice} from "../ui/duration-picker.component";
-import {toPromise} from "../util/utils";
-import {DatetimePickerModule} from "../ui/datetime-picker/datetime-picker.component";
-import {showMessageDialog} from "../ui/showMessageDialog";
-import {ILecture, ILectureFormParams, ILectureOptions} from "./lecturetypes";
+import type {IItem} from "tim/item/IItem";
+import {getItem} from "tim/item/IItem";
+import type {DurationChoice} from "tim/ui/duration-picker.component";
+import {toPromise} from "tim/util/utils";
+import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
+import type {
+    ILecture,
+    ILectureFormParams,
+    ILectureOptions,
+} from "tim/lecture/lecturetypes";
+import {BrowserModule} from "@angular/platform-browser";
 
 /**
  * Lecture creation controller which is used to handle and validate the form data.

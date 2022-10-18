@@ -1,8 +1,9 @@
-import angular, {
+import type {
     IHttpInterceptorFactory,
     IHttpResponse,
     IRequestConfig,
 } from "angular";
+import angular from "angular";
 import {timApp} from "tim/app";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
@@ -10,8 +11,11 @@ import {
     handleExpiredSession,
     SESSION_VERIFICATION_NEEDED_CODE,
 } from "tim/util/session-verify.interceptor";
-import {AnswerBrowserData, IAnswerSaveEvent} from "../answer/answerbrowser3";
-import {$http, $httpProvider, $q} from "../util/ngimport";
+import type {
+    AnswerBrowserData,
+    IAnswerSaveEvent,
+} from "tim/answer/answer-browser.component";
+import {$http, $httpProvider, $q} from "tim/util/ngimport";
 
 export function handleAnswerResponse(
     taskIdFull: string,

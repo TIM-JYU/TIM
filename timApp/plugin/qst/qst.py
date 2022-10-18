@@ -688,17 +688,9 @@ def qst_get_html(jso, review):
     if review:
         usercode = qst_str(jso.get("state", "-"))
         s = ""
-        result = (
-            NOLAZY
-            + '<div class="review" ng-non-bindable><pre>'
-            + usercode
-            + "</pre>"
-            + s
-            + "</div>"
-        )
+        result = f'{NOLAZY}<div class="review" ng-non-bindable><pre>{usercode}</pre>{s}</div>'
         return result
-    is_task = markup.get("isTask", False)
-    runner = "tim-qst" if is_task else "tim-lecture-qst"
+    runner = "tim-qst"
     s = f'<{runner} json="{make_base64(jso, TimJsonEncoder)}"></{runner}>'
     return s
 

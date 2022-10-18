@@ -2,12 +2,8 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {BrowserModule} from "@angular/platform-browser";
-import {
-    AskParams,
-    askQuestion,
-    IShowAsk,
-    isReasking,
-} from "tim/lecture/askQuestion";
+import type {AskParams, IShowAsk} from "tim/lecture/askQuestion";
+import {askQuestion, isReasking} from "tim/lecture/askQuestion";
 import {
     deleteQuestionWithConfirm,
     fetchAndEditQuestion,
@@ -18,13 +14,13 @@ import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDial
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {to2} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {IQuestionDialogResult} from "tim/document/question/question-edit-dialog.component";
+import type {IQuestionDialogResult} from "tim/document/question/question-edit-dialog.component";
+import type {IPreviewParams} from "tim/document/question/answer-sheet.component";
 import {
     AnswerSheetModule,
-    IPreviewParams,
     makePreview,
-} from "../document/question/answer-sheet.component";
-import {IAskedQuestion} from "./lecturetypes";
+} from "tim/document/question/answer-sheet.component";
+import type {IAskedQuestion} from "tim/lecture/lecturetypes";
 
 export type QuestionPreviewParams = AskParams & IShowAsk;
 

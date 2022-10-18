@@ -1,7 +1,8 @@
 import * as t from "io-ts";
 import {Component, Input, NgModule, ViewChild} from "@angular/core";
-import {IncludeUsersOption} from "tim/plugin/attributes";
-import {IUser, sortLang} from "tim/user/IUser";
+import type {IncludeUsersOption} from "tim/plugin/attributes";
+import type {IUser} from "tim/user/IUser";
+import {sortLang} from "tim/user/IUser";
 import {
     copyToClipboard,
     StringOrNumber,
@@ -12,18 +13,15 @@ import {
 import moment from "moment";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
-import {
-    DataModelProvider,
-    DataViewComponent,
-} from "tim/plugin/dataview/data-view.component";
-import {computeHiddenRowsFromFilters} from "tim/plugin/filtering";
+import type {DataModelProvider} from "tim/plugin/dataview/data-view.component";
+import {DataViewComponent} from "tim/plugin/dataview/data-view.component";
 import {BsDatepickerModule, BsLocaleService} from "ngx-bootstrap/datepicker";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {defineLocale} from "ngx-bootstrap/chronos";
 import {fiLocale} from "ngx-bootstrap/locale";
+import {computeHiddenRowsFromFilters} from "tim/plugin/timTable/filtering";
+import {BrowserModule} from "@angular/platform-browser";
 
 export const GroupType = t.union([t.string, t.array(t.string)]);
 
@@ -627,7 +625,6 @@ export class SisuAssessmentExportComponent {
         BrowserModule,
         TimUtilityModule,
         HttpClientModule,
-        NoopAnimationsModule,
         BsDatepickerModule.forRoot(),
         DataViewModule,
     ],

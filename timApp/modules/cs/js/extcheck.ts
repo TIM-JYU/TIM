@@ -1,15 +1,14 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["hide_"] }] */
+import type {ComponentRef, Type} from "@angular/core";
 import {
     ChangeDetectorRef,
     Compiler,
     Component,
-    ComponentRef,
     Directive,
     ElementRef,
     Injector,
     Input,
     NgModule,
-    Type,
     ViewChild,
     ViewContainerRef,
 } from "@angular/core";

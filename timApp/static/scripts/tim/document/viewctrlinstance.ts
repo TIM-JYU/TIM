@@ -1,4 +1,4 @@
-import {ViewCtrl} from "tim/document/viewctrl";
+import type {ViewCtrl} from "tim/document/viewctrl";
 
 export let vctrlInstance: ViewCtrl | undefined;
 

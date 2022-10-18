@@ -1,17 +1,13 @@
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    Input,
-    NgModule,
-} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, Input, NgModule} from "@angular/core";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import type {IOAuthGlobals} from "tim/util/globals";
+import {oauthglobals} from "tim/util/globals";
+import {getCookie} from "tim/util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {Users} from "tim/user/userService";
 import {BrowserModule} from "@angular/platform-browser";
-import {IOAuthGlobals, oauthglobals} from "../util/globals";
-import {getCookie} from "../util/utils";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {Users} from "./userService";
 
 const OAUTH_SCOPES: Record<string, string> = {
     profile: $localize`Read basic profile information (username, full name, email address)`,

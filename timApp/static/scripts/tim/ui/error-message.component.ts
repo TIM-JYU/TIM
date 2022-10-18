@@ -1,7 +1,7 @@
 import {Component, Input, Optional} from "@angular/core";
 import {NgModel} from "@angular/forms";
-import {InputService} from "./input.service";
-import {formErrorMessages} from "./formErrorMessages";
+import {InputService} from "tim/ui/input.service";
+import {formErrorMessages} from "tim/ui/formErrorMessages";
 
 @Component({
     selector: "tim-error-message",

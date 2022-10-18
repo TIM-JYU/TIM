@@ -1,13 +1,13 @@
 ﻿import * as t from "io-ts";
-import {IAnswer} from "tim/answer/IAnswer";
-import {
-    ChangeType,
+import type {IAnswer} from "tim/answer/IAnswer";
+import type {
     ITimComponent,
     IUserChanged,
     ViewCtrl,
 } from "tim/document/viewctrl";
+import {ChangeType} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
-import {IUser} from "tim/user/IUser";
+import type {IUser} from "tim/user/IUser";
 import {$http} from "tim/util/ngimport";
 import {
     defaultErrorMessage,
@@ -16,37 +16,33 @@ import {
     to,
 } from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {
-    ApplicationRef,
     ChangeDetectorRef,
     Component,
-    DoBootstrap,
     ElementRef,
     NgModule,
     ViewChild,
 } from "@angular/core";
-import {
-    BrowserModule,
-    DomSanitizer,
-    SafeResourceUrl,
-} from "@angular/platform-browser";
+import type {SafeResourceUrl} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {AnswerBrowserComponent} from "tim/answer/answerbrowser3";
 import {TimDefer} from "tim/util/timdefer";
 import {PurifyModule} from "tim/util/purify.module";
-import {
+import type {
     ICtrlWithMenuFunctionEntry,
     IMenuFunctionEntry,
-} from "../../../static/scripts/tim/document/viewutils";
+} from "tim/document/viewutils";
 import {
     exitFullScreen,
     fullscreenSupported,
     toggleFullScreen,
-} from "../../../static/scripts/tim/util/fullscreen";
-import {pluginMap} from "../../../static/scripts/tim/main";
+} from "tim/util/fullscreen";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
 import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([
@@ -798,4 +794,5 @@ export class JsframeComponent
 export class JsframeModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-pluginMap.set("jsframe-runner", JsframeComponent);
+
+registerPlugin("jsframe-runner", JsframeModule, JsframeComponent);

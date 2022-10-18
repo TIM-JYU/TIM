@@ -1,11 +1,11 @@
 import {Component, NgZone} from "@angular/core";
 import {TimDefer} from "tim/util/timdefer";
 import {DialogService} from "tim/ui/angulardialog/dialog.service";
-import {
+import type {
     DialogConstructor,
     IDialogInstanceEvent,
 } from "tim/ui/angulardialog/dialog-host.directive";
-import {
+import type {
     AngularDialogComponent,
     IDialogOptions,
 } from "tim/ui/angulardialog/angular-dialog-component.directive";

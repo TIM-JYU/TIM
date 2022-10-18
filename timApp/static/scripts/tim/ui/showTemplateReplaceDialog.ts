@@ -1,7 +1,8 @@
 import * as t from "io-ts";
-import {Result, to2} from "../util/utils";
-import {InputDialogKind} from "./input-dialog.kind";
-import {showInputDialog} from "./showInputDialog";
+import type {Result} from "tim/util/utils";
+import {to2} from "tim/util/utils";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {showInputDialog} from "tim/ui/showInputDialog";
 
 export const TemplateParam = t.intersection([
     t.type({

@@ -1,5 +1,5 @@
-import {Overwrite} from "type-zoo";
-import {IAnswerWithUsers} from "tim/answer/IAnswer";
+import type {Overwrite} from "type-zoo";
+import type {IAnswerWithUsers} from "tim/answer/IAnswer";
 import {IUser} from "tim/user/IUser";
 import {Moment} from "moment";
 import {
@@ -7,7 +7,7 @@ import {
     JsonProperty,
     JsonSerializer,
 } from "typescript-json-serializer";
-import {DrawItem} from "tim/plugin/drawCanvas";
+import type {DrawItem} from "tim/plugin/draw-canvas/draw-canvas.components";
 
 export const jsonSerializer = new JsonSerializer();
 

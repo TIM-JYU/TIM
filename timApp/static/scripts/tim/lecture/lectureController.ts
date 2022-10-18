@@ -27,7 +27,7 @@ import {
     showLectureWall,
     showQuestionAnswerDialog,
 } from "tim/lecture/showLectureDialogs";
-import {LectureMenuComponent} from "tim/lecture/lecture-menu.component";
+import type {LectureMenuComponent} from "tim/lecture/lecture-menu.component";
 import {askQuestion} from "tim/lecture/askQuestion";
 import {
     currentQuestion,
@@ -37,15 +37,12 @@ import {
 } from "tim/lecture/currentQuestion";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
-import {ViewCtrl} from "../document/viewctrl";
-import {Users} from "../user/userService";
-import {someglobals} from "../util/globals";
-import {$http, $log, $rootScope, $timeout} from "../util/ngimport";
-import {IAnswerQuestionResult} from "./answer-to-question-dialog.component";
-import {
-    alreadyAnswered,
-    hasLectureEnded,
-    hasUpdates,
+import type {ViewCtrl} from "tim/document/viewctrl";
+import {Users} from "tim/user/userService";
+import {someglobals} from "tim/util/globals";
+import {$http, $log, $rootScope, $timeout} from "tim/util/ngimport";
+import type {IAnswerQuestionResult} from "tim/lecture/answer-to-question-dialog.component";
+import type {
     IAlreadyAnswered,
     IAskedQuestion,
     IEmptyResponse,
@@ -59,17 +56,22 @@ import {
     IQuestionAsked,
     IQuestionHasAnswer,
     IQuestionResult,
+    IUpdateResponse,
+} from "tim/lecture/lecturetypes";
+import {
+    alreadyAnswered,
+    hasLectureEnded,
+    hasUpdates,
     isAskedQuestion,
     isEmptyResponse,
     isLectureListResponse,
     isNoUpdatesResponse,
-    IUpdateResponse,
     pointsClosed,
     questionAnswerReceived,
     questionAsked,
     questionHasAnswer,
-} from "./lecturetypes";
-import {LectureWallDialogComponent} from "./lecture-wall-dialog.component";
+} from "tim/lecture/lecturetypes";
+import type {LectureWallDialogComponent} from "tim/lecture/lecture-wall-dialog.component";
 
 enum LectureEndingDialogState {
     NotAnswered,

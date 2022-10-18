@@ -1,30 +1,30 @@
-import {IBookmarkGroup} from "tim/bookmark/bookmark.service";
-import {HeaderIndexItem} from "tim/sidebarmenu/services/header-indexer.service";
-import {IDocScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
-import {
+import type {IBookmarkGroup} from "tim/bookmark/bookmark.service";
+import type {HeaderIndexItem} from "tim/sidebarmenu/services/header-indexer.service";
+import type {IDocScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
+import type {
     IDocSettings,
     ISlideDocSettings,
     MeetingDateEntry,
-} from "../document/IDocSettings";
-import {EditMode} from "../document/popup-menu-dialog.component";
-import {IViewRange, IViewRangeUnnamed} from "../document/viewRangeInfo";
-import {
+} from "tim/document/IDocSettings";
+import type {EditMode} from "tim/document/popup-menu-dialog.component";
+import type {IViewRange, IViewRangeUnnamed} from "tim/document/viewRangeInfo";
+import type {
     DocumentOrFolder,
     IDocument,
     IFolder,
     IFullDocument,
     IItem,
     ITranslation,
-} from "../item/IItem";
-import {ILecture} from "../lecture/lecturetypes";
-import {
+} from "tim/item/IItem";
+import type {ILecture} from "tim/lecture/lecturetypes";
+import type {
     ICurrentUser,
     IGroup,
     IGroupWithSisuPath,
     IUser,
     IUserContact,
     IUserListEntry,
-} from "../user/IUser";
+} from "tim/user/IUser";
 
 interface ILayout {
     col_1_lg: number;

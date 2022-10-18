@@ -1,10 +1,10 @@
-import {IItem} from "tim/item/IItem";
-import {ILecture, ILectureMessage} from "tim/lecture/lecturetypes";
+import type {IItem} from "tim/item/IItem";
+import type {ILecture, ILectureMessage} from "tim/lecture/lecturetypes";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {IStatisticsParams} from "tim/lecture/question-statistics-dialog.component";
-import {IAnswerQuestionParams} from "tim/lecture/answer-to-question-dialog.component";
+import type {IStatisticsParams} from "tim/lecture/question-statistics-dialog.component";
+import type {IAnswerQuestionParams} from "tim/lecture/answer-to-question-dialog.component";
 import type {LectureWallDialogComponent as LectureWallDialogComponentType} from "tim/lecture/lecture-wall-dialog.component";
-import {QuestionPreviewParams} from "tim/lecture/question-preview-dialog.component";
+import type {QuestionPreviewParams} from "tim/lecture/question-preview-dialog.component";
 
 export async function showLectureDialog(item: IItem | ILecture) {
     const {LectureDialogComponent} = await import("./lecture-dialog.component");

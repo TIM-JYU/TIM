@@ -3,7 +3,7 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {HttpClient} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
 import {documentglobals} from "tim/util/globals";
-import {getActiveDocument} from "../document/activedocument";
+import {getActiveDocument} from "tim/document/activedocument";
 
 @Component({
     selector: "tim-mark-all-as-read",

@@ -7,18 +7,19 @@ import {
     ViewChild,
 } from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
-import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
+import type {SafeResourceUrl} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import * as t from "io-ts";
 import $ from "jquery";
-import {
-    ChangeType,
-    FormModeOption,
+import type {
     ISetAnswerResult,
     ITimComponent,
     ViewCtrl,
 } from "tim/document/viewctrl";
-import {IPluginInfoResponse, ParCompiler} from "tim/editor/parCompiler";
+import {ChangeType, FormModeOption} from "tim/document/viewctrl";
+import type {IPluginInfoResponse} from "tim/editor/parCompiler";
+import {ParCompiler} from "tim/editor/parCompiler";
 import {
     GenericPluginMarkup,
     Info,
@@ -40,22 +41,23 @@ import {
 import {TimDefer} from "tim/util/timdefer";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import deepEqual from "deep-equal";
-import {SimcirConnectorDef, SimcirDeviceInstance} from "../simcir/simcir-all";
+import type {ITemplateParam} from "tim/ui/showTemplateReplaceDialog";
 import {
-    ITemplateParam,
     showTemplateReplaceDialog,
     TemplateParam,
-} from "../../../static/scripts/tim/ui/showTemplateReplaceDialog";
-import {CellInfo} from "./embedded_sagecell";
+} from "tim/ui/showTemplateReplaceDialog";
+import type {
+    SimcirConnectorDef,
+    SimcirDeviceInstance,
+} from "../simcir/simcir-all";
+import type {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
-import {CURSOR, EditorComponent, EditorFile, Mode} from "./editor/editor";
+import type {EditorComponent} from "./editor/editor";
+import {CURSOR, EditorFile, Mode} from "./editor/editor";
 import {CountBoardComponent} from "./editor/countboard";
 import {getInt} from "./util/util";
-import {
-    FileSelectManagerComponent,
-    IFile,
-    IFileSpecification,
-} from "./util/file-select";
+import type {IFile, IFileSpecification} from "./util/file-select";
+import {FileSelectManagerComponent} from "./util/file-select";
 import {OrderedSet, Set} from "./util/set";
 
 // TODO better name?

@@ -1,32 +1,35 @@
-import angular, {IScope} from "angular";
+import type {IScope} from "angular";
+import angular from "angular";
 import $ from "jquery";
 import {Users} from "tim/user/userService";
+import type {IAnnotationBindings} from "tim/velp/annotation.component";
 import {
     AnnotationAddReason,
     AnnotationComponent,
     AnnotationPlacement,
-    IAnnotationBindings,
     updateAnnotationServer,
 } from "tim/velp/annotation.component";
 import {TaskId} from "tim/plugin/taskid";
-import {
+import type {
     DrawCanvasComponent,
-    getDrawingDimensions,
     IDrawingWithID,
     IDrawUpdate,
+} from "tim/plugin/draw-canvas/draw-canvas.components";
+import {
+    getDrawingDimensions,
     isCoordWithinDrawing,
-} from "tim/plugin/drawCanvas";
+} from "tim/plugin/draw-canvas/draw-canvas.components";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ParContext} from "tim/document/structure/parContext";
 import {createParContext} from "tim/document/structure/create";
-import {AnswerBrowserComponent} from "tim/answer/answerbrowser3";
-import {IUser} from "../user/IUser";
-import {IAnswer} from "../answer/IAnswer";
-import {addElementToParagraphMargin} from "../document/parhelpers";
-import {ViewCtrl} from "../document/viewctrl";
-import {IItem} from "../item/IItem";
-import {documentglobals} from "../util/globals";
-import {$compile, $http, $rootScope} from "../util/ngimport";
+import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
+import type {IUser} from "tim/user/IUser";
+import type {IAnswer} from "tim/answer/IAnswer";
+import {addElementToParagraphMargin} from "tim/document/parhelpers";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import type {IItem} from "tim/item/IItem";
+import {documentglobals} from "tim/util/globals";
+import {$compile, $http, $rootScope} from "tim/util/ngimport";
 import {
     angularWait,
     checkIfElement,
@@ -35,18 +38,20 @@ import {
     log,
     to,
     truncate,
-} from "../util/utils";
-import {VelpSelectionController} from "./velpSelection";
-import {
-    Annotation,
+} from "tim/util/utils";
+import type {VelpSelectionController} from "tim/velp/velpSelection";
+import type {
     IAnnotationCoordinate,
     IAnnotationInterval,
-    isFullCoord,
     IVelp,
     IVelpUI,
+} from "tim/velp/velptypes";
+import {
+    Annotation,
+    isFullCoord,
     jsonSerializer,
     NewAnnotation,
-} from "./velptypes";
+} from "tim/velp/velptypes";
 
 /**
  * The controller handles the logic related to adding and removing annotations. It also handles the way how

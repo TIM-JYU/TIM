@@ -1,47 +1,47 @@
-import {
+import type {
     ApplicationRef,
-    Component,
     DoBootstrap,
-    ElementRef,
-    Input,
-    NgModule,
     OnChanges,
     OnDestroy,
     OnInit,
-    QueryList,
     SimpleChanges,
+} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    Input,
+    NgModule,
+    QueryList,
     ViewChild,
     ViewChildren,
 } from "@angular/core";
-import {
-    BrowserModule,
-    DomSanitizer,
-    SafeResourceUrl,
-} from "@angular/platform-browser";
+import type {SafeResourceUrl} from "@angular/platform-browser";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {FormsModule} from "@angular/forms";
+import type {IUnsavedComponent} from "tim/document/viewctrl";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import type {
+    IDrawOptions,
+    IFillAndWidth,
+} from "tim/plugin/draw-canvas/draw-toolbar.component";
 import {
     DrawToolbarModule,
     DrawType,
-    IDrawOptions,
-    IFillAndWidth,
-} from "tim/plugin/drawToolbar";
-import {
+} from "tim/plugin/draw-canvas/draw-toolbar.component";
+import type {
     ILine,
     ILineSegment,
     IPoint,
     IRectangleOrEllipse,
     TuplePoint,
-} from "tim/plugin/imagextypes";
+} from "tim/plugin/imagex/imagextypes";
+import type {MouseOrTouch} from "tim/util/utils";
 import {
     isTouchEvent,
-    MouseOrTouch,
     numOrStringToNumber,
     posToRelative,
     touchEventToTouch,
 } from "tim/util/utils";
-import {FormsModule} from "@angular/forms";
-import {CommonModule} from "@angular/common";
-import {IUnsavedComponent} from "tim/document/viewctrl";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 export type IRectangle = {
     type: "rectangle";
@@ -1609,13 +1609,7 @@ export class DrawCanvasComponent
 
 @NgModule({
     declarations: [DrawCanvasComponent],
-    imports: [
-        BrowserModule,
-        CommonModule,
-        DrawToolbarModule,
-        FormsModule,
-        TimUtilityModule,
-    ],
+    imports: [BrowserModule, DrawToolbarModule, FormsModule, TimUtilityModule],
     exports: [DrawCanvasComponent],
 })
 export class DrawCanvasModule implements DoBootstrap {

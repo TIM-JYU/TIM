@@ -1,4 +1,4 @@
-import {PareditorController} from "tim/editor/pareditor";
+import type {PareditorController} from "tim/editor/pareditor";
 
 let currentEditor: PareditorController | undefined;
 

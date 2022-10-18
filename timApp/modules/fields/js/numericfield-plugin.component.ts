@@ -2,21 +2,14 @@
  * Defines the client-side implementation of numericfield/label plugin.
  */
 import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    NgModule,
-    NgZone,
-} from "@angular/core";
-import {
-    ChangeType,
-    FormModeOption,
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
+import type {
     ISetAnswerResult,
     ITimComponent,
     ViewCtrl,
 } from "tim/document/viewctrl";
+import {ChangeType, FormModeOption} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
@@ -29,12 +22,13 @@ import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
-import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
-import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
-import {pluginMap} from "../../../static/scripts/tim/main";
-import {FieldDataWithStyles, TFieldContent} from "./textfield-plugin.component";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "tim/util/purify.module";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import type {TFieldContent} from "./textfield-plugin.component";
+import {FieldDataWithStyles} from "./textfield-plugin.component";
 
 const REDOUBLE = /[^0-9,.e\-+]+/g;
 
@@ -598,4 +592,8 @@ export class NumericfieldModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("numericfield-runner", NumericfieldPluginComponent);
+registerPlugin(
+    "numericfield-runner",
+    NumericfieldModule,
+    NumericfieldPluginComponent
+);

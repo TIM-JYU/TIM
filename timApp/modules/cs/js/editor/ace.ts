@@ -1,9 +1,10 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "languageMode_", "disabled_"] }] */
 import $ from "jquery";
-import {Ace} from "ace-builds/src-noconflict/ace";
+import type {Ace} from "ace-builds/src-noconflict/ace";
 import {Component, ElementRef, Input, ViewChild} from "@angular/core";
 import {wrapText} from "tim/document/editing/utils";
-import {CURSOR, IEditor} from "./editor";
+import type {IEditor} from "./editor";
+import {CURSOR} from "./editor";
 
 type IAceEditor = Ace.Editor;
 

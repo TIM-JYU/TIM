@@ -2,7 +2,8 @@ import {BrowserModule} from "@angular/platform-browser";
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient} from "@angular/common/http";
-import {of, Subject, Subscription} from "rxjs";
+import type {Subscription} from "rxjs";
+import {of, Subject} from "rxjs";
 import {
     catchError,
     debounceTime,
@@ -11,13 +12,15 @@ import {
     switchMap,
     tap,
 } from "rxjs/operators";
-import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
-import {DialogModule} from "../ui/angulardialog/dialog.module";
-import {toPromise} from "../util/utils";
-import {Users} from "../user/userService";
-import {IDocument, redirectToItem} from "../item/IItem";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {toPromise} from "tim/util/utils";
+import {Users} from "tim/user/userService";
+import type {IDocument} from "tim/item/IItem";
+import {redirectToItem} from "tim/item/IItem";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import type {ListOptions} from "tim/messaging/listOptionTypes";
+import {archivePolicyNames, ArchiveType} from "tim/messaging/listOptionTypes";
 
 enum NameRequirements {
     ERROR = -1,

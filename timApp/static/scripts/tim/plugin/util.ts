@@ -1,14 +1,16 @@
-import {IController, IScope} from "angular";
-import {Type} from "io-ts/lib";
-import {FormModeOption, ISetAnswerResult} from "tim/document/viewctrl";
+import type {Type} from "io-ts/lib";
+import type {ISetAnswerResult} from "tim/document/viewctrl";
+import {FormModeOption} from "tim/document/viewctrl";
 import {isLeft} from "fp-ts/lib/Either";
-import {IAnswer} from "tim/answer/IAnswer";
-import {IUser} from "tim/user/IUser";
+import type {IAnswer} from "tim/answer/IAnswer";
+import type {IUser} from "tim/user/IUser";
 import {createParContext} from "tim/document/structure/create";
-import {Binding} from "../util/utils";
-import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "./attributes";
-import {getErrors} from "./errors";
-import {TaskId} from "./taskid";
+import type {
+    IGenericPluginMarkup,
+    IGenericPluginTopLevelFields,
+} from "tim/plugin/attributes";
+import {getErrors} from "tim/plugin/errors";
+import {TaskId} from "tim/plugin/taskid";
 
 export function getDefaults<
     MarkupType extends IGenericPluginMarkup,
@@ -106,43 +108,10 @@ export class PluginMeta {
     }
 }
 
-interface PluginInit<
-    MarkupType extends IGenericPluginMarkup,
-    A extends IGenericPluginTopLevelFields<MarkupType>,
-    T extends Type<A, unknown>
-> {
-    attrsall: Readonly<A>;
-
-    getAttributeType(): T;
-
-    markupError?: PluginMarkupErrors;
-    readonly json: Binding<string, "@">;
-}
-
-export function baseOnInit<
-    MarkupType extends IGenericPluginMarkup,
-    A extends IGenericPluginTopLevelFields<MarkupType>,
-    T extends Type<A, unknown>
->(self: PluginInit<MarkupType, A, T>) {
-    const parsed = JSON.parse(atob(self.json)) as unknown;
-    const validated = self.getAttributeType().decode(parsed);
-    // These can be uncommented for debugging:
-    // console.log(parsed);
-    // console.log(this);
-    // console.log(validated);
-    if (isLeft(validated)) {
-        self.markupError = getErrors(validated);
-        return undefined;
-    } else {
-        self.attrsall = validated.right;
-        return self.attrsall;
-    }
-}
-
 export type PluginMarkupErrors = Array<{name: string; type: string}>;
 
 /**
- * Functionality that is common to both Angular and old AngularJS plugins.
+ * Plugin base agnostic to the underlying framework.
  */
 export abstract class PluginBaseCommon {
     abstract element: JQuery;
@@ -227,110 +196,6 @@ export abstract class PluginBaseCommon {
 }
 
 /**
- * Base class for plugins.
- *
- * All properties or fields having a one-time binding in template should eventually return a non-undefined value.
- * That's why there are "|| null"s in several places.
- */
-export abstract class PluginBase<
-        MarkupType extends IGenericPluginMarkup,
-        A extends IGenericPluginTopLevelFields<MarkupType>,
-        T extends Type<A>
-    >
-    extends PluginBaseCommon
-    implements IController
-{
-    static $inject = ["$scope", "$element"];
-
-    buttonText() {
-        return this.attrs.button ?? this.attrs.buttonText ?? null;
-    }
-
-    get attrs(): Readonly<MarkupType> {
-        return this.attrsall.markup;
-    }
-
-    get disableUnchanged() {
-        return this.attrs.disableUnchanged;
-    }
-
-    get footer() {
-        return this.attrs.footer ?? null;
-    }
-
-    get header() {
-        return this.attrs.header ?? null;
-    }
-
-    get stem() {
-        return this.attrs.stem ?? null;
-    }
-
-    /**
-     * Returns if this plugin is readonly for the current user.
-     */
-    get readonly(): boolean {
-        return (
-            this.attrsall.access === "readonly" ||
-            (this.attrs.readonly ?? false)
-        );
-    }
-
-    get undoButton() {
-        return this.attrs.undo?.button;
-    }
-
-    get undoTitle() {
-        return this.attrs.undo?.title;
-    }
-
-    get undoConfirmation() {
-        return this.attrs.undo?.confirmation;
-    }
-
-    // Parsed form of json binding or default value if json was not valid.
-    attrsall: Readonly<A>;
-    // Binding that has all the data as a JSON string.
-    readonly json!: Binding<string, "@">;
-
-    // Optional bindings that are used when the plugin is compiled without being attached to document.
-    // In that case, the plugin element does not have the parent where to fetch the type and task id, so they
-    // are provided when compiling.
-    plugintype?: Binding<string, "@?">;
-    taskid?: Binding<string, "@?">;
-
-    markupError?: PluginMarkupErrors;
-    pluginMeta: PluginMeta;
-
-    constructor(protected scope: IScope, public element: JQLite) {
-        super();
-        this.attrsall = getDefaults(
-            this.getAttributeType(),
-            this.getDefaultMarkup()
-        );
-        this.pluginMeta = new PluginMeta(element, this.attrsall.preview);
-    }
-
-    abstract getDefaultMarkup(): Partial<MarkupType>;
-
-    $postLink() {}
-
-    $onInit() {
-        const result = baseOnInit(this);
-        if (result) {
-            this.pluginMeta = new PluginMeta(
-                this.element,
-                result.preview,
-                this.plugintype,
-                this.taskid
-            );
-        }
-    }
-
-    abstract getAttributeType(): T;
-}
-
-/**
  * Shuffles a string array.
  * @param strings Array of strings to be shuffled.
  */
@@ -360,12 +225,6 @@ export function getFormBehavior(
     }
     return attr ? FormModeOption.IsForm : FormModeOption.NoForm;
 }
-
-export const pluginBindings = {
-    json: "@",
-    plugintype: "@?",
-    taskid: "@?",
-};
 
 export function inIframe() {
     try {

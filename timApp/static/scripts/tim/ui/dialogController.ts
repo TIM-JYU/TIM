@@ -1,10 +1,11 @@
-import {IController, IPromise, IScope} from "angular";
+import type {IController, IPromise, IScope} from "angular";
 import {$rootScope} from "tim/util/ngimport";
-import {Binding, Require} from "tim/util/utils";
-import {DraggableController, VisibilityFix} from "tim/ui/draggable";
+import type {Binding, Require} from "tim/util/utils";
+import type {DraggableController} from "tim/ui/draggable";
+import {VisibilityFix} from "tim/ui/draggable";
 import {KEY_ESC} from "tim/util/keycodes";
-import {IModalInstance} from "tim/ui/dialog";
-import {Pos} from "tim/ui/pos";
+import type {IModalInstance} from "tim/ui/dialog";
+import type {Pos} from "tim/ui/pos";
 
 type ModalScope = IScope & {
     $$topModalIndex?: number;

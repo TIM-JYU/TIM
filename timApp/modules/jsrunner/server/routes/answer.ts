@@ -5,29 +5,23 @@ import ivm from "isolated-vm";
 import {isLeft} from "fp-ts/lib/Either";
 
 // import numberLines from "./runscript";
-import {Branded, IntBrand} from "io-ts";
-import {
+import type {Branded, IntBrand} from "io-ts";
+import type {
     AnswerReturn,
     ErrorList,
     IError,
     IGroupData,
     IJsRunnerMarkup,
 } from "../../shared/jsrunnertypes";
-import {
+import type {
     AliasDataT,
-    JsrunnerAnswer,
     PeerReviewDataT,
     UserFieldDataT,
     VelpDataT,
 } from "../servertypes";
-import {
-    GTools,
-    IToolsResult,
-    NewUserData,
-    numberLines,
-    Tools,
-    ToolsBase,
-} from "./tools";
+import {JsrunnerAnswer} from "../servertypes";
+import type {IToolsResult, NewUserData, ToolsBase} from "./tools";
+import {GTools, numberLines, Tools} from "./tools";
 
 console.log("answer");
 const router = express.Router();

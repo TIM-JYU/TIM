@@ -31,65 +31,55 @@
 // TODO: Use Angular's HTTP service instead of AngularJS $http
 
 import * as t from "io-ts";
-import {
+import type {
     AfterViewInit,
     ApplicationRef,
+    DoBootstrap,
+    DoCheck,
+    OnDestroy,
+    OnInit,
+} from "@angular/core";
+import {
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
-    DoBootstrap,
-    DoCheck,
     ElementRef,
     HostListener,
     Input,
     NgModule,
     NgZone,
-    OnDestroy,
-    OnInit,
     QueryList,
     ViewChild,
     ViewChildren,
 } from "@angular/core";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {Subscription} from "rxjs";
+import type {Subscription} from "rxjs";
 import {openEditorSimple} from "tim/editor/pareditorOpen";
 import angular from "angular";
 import {PurifyModule} from "tim/util/purify.module";
 import {DataViewModule} from "tim/plugin/dataview/data-view.module";
-import {
+import type {
     DataModelProvider,
-    DataViewComponent,
     VirtualScrollingOptions,
 } from "tim/plugin/dataview/data-view.component";
+import {DataViewComponent} from "tim/plugin/dataview/data-view.component";
 import {nullable, withDefault} from "tim/plugin/attributes";
-import {
-    handleToolbarKey,
-    hideToolbar,
-    isToolbarEnabled,
-    isToolbarOpen,
-    showTableEditorToolbar,
-} from "tim/plugin/toolbarUtils";
-import {computeHiddenRowsFromFilters} from "tim/plugin/filtering";
-import {createParContext} from "tim/document/structure/create";
 import {showConfirm} from "tim/ui/showConfirmDialog";
-import {
+import type {
     ICtrlWithMenuFunctionEntry,
     IMenuFunctionEntry,
 } from "tim/document/viewutils";
-import {pluginMap} from "tim/main";
-import {onClick, OnClickArg} from "../document/eventhandlers";
-import {
-    ChangeType,
-    FormModeOption,
+import type {OnClickArg} from "tim/document/eventhandlers";
+import {onClick} from "tim/document/eventhandlers";
+import type {
     ISetAnswerResult,
     ITimComponent,
     ViewCtrl,
-} from "../document/viewctrl";
-import {ParCompiler} from "../editor/parCompiler";
+} from "tim/document/viewctrl";
+import {ChangeType, FormModeOption} from "tim/document/viewctrl";
+import {ParCompiler} from "tim/editor/parCompiler";
 import {
     getKeyCode,
     isArrowKey,
@@ -102,8 +92,8 @@ import {
     KEY_RIGHT,
     KEY_TAB,
     KEY_UP,
-} from "../util/keycodes";
-import {$http} from "../util/ngimport";
+} from "tim/util/keycodes";
+import {$http} from "tim/util/ngimport";
 import {
     clone,
     copyToClipboard,
@@ -114,9 +104,22 @@ import {
     StringOrNumber,
     timeout,
     to,
-} from "../util/utils";
-import {TaskId} from "./taskid";
-import {PluginMeta} from "./util";
+} from "tim/util/utils";
+import {TaskId} from "tim/plugin/taskid";
+import {PluginMeta} from "tim/plugin/util";
+import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {computeHiddenRowsFromFilters} from "tim/plugin/timTable/filtering";
+import {
+    handleToolbarKey,
+    hideToolbar,
+    isToolbarEnabled,
+    isToolbarOpen,
+    showTableEditorToolbar,
+} from "tim/plugin/timTable/toolbarUtils";
+import {createParContext} from "tim/document/structure/create";
+import {BrowserModule} from "@angular/platform-browser";
 
 const timDateRegex = /^\d{4}-\d{2}-\d{2}[ T]?\d{2}:\d{2}(:\d{2})?$/;
 
@@ -718,7 +721,7 @@ export enum ClearSort {
             <pre class="error" *ngIf="error" [innerText]="error"></pre>
         </div>
     `,
-    styleUrls: ["./timTable.scss", "./table-common.scss"],
+    styleUrls: ["./tim-table.component.scss", "./table-common.scss"],
 })
 export class TimTableComponent
     implements
@@ -728,7 +731,8 @@ export class TimTableComponent
         DoCheck,
         AfterViewInit,
         DataModelProvider,
-        ICtrlWithMenuFunctionEntry
+        ICtrlWithMenuFunctionEntry,
+        PluginJson
 {
     error: string = "";
     public viewctrl?: ViewCtrl;
@@ -736,6 +740,7 @@ export class TimTableComponent
     private prevCellDataMatrix: ICell[][] = [];
     public columns: IColumn[] = [];
     @Input() public data!: TimTable;
+    @Input() public json!: string;
     private prevData!: TimTable;
     private editRight = false;
     private userdata?: DataEntity = undefined;
@@ -893,6 +898,10 @@ export class TimTableComponent
      * Set listener and initializes tabledatablock
      */
     async ngOnInit() {
+        if (this.json) {
+            this.data = JSON.parse(this.json);
+        }
+
         if (this.data.hide) {
             this.hide = {...this.hide, ...this.data.hide};
         }
@@ -4828,4 +4837,5 @@ export class TimTableComponent
 export class TimTableModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-pluginMap.set("tim-table", TimTableComponent as never);
+
+registerPlugin("tim-table", TimTableModule, TimTableComponent);

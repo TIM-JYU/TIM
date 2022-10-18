@@ -1,5 +1,6 @@
 ﻿import * as t from "io-ts";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {ParCompiler} from "tim/editor/parCompiler";
 import {
     GenericPluginMarkup,
@@ -8,16 +9,16 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {windowAsAny} from "tim/util/utils";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
-import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
-import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {ScriptedInnerHTMLModule} from "../../../static/scripts/tim/util/scripted-inner-html.module";
-import {pluginMap} from "../../../static/scripts/tim/main";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "tim/util/purify.module";
+import {ScriptedInnerHTMLModule} from "tim/util/scripted-inner-html.module";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 const STACK_VARIABLE_PREFIX = "stackapi_";
 
@@ -558,4 +559,4 @@ export class StackModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("stack-runner", StackPluginComponent);
+registerPlugin("stack-runner", StackModule, StackPluginComponent);

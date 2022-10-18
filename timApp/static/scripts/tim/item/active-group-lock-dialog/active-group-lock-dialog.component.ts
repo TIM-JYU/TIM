@@ -1,23 +1,15 @@
-import {
-    Component,
-    EventEmitter,
-    Input,
-    NgModule,
-    OnChanges,
-    OnInit,
-    Output,
-    SimpleChanges,
-} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
+import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
+import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {AngularDialogComponent} from "../../ui/angulardialog/angular-dialog-component.directive";
-import {DialogModule} from "../../ui/angulardialog/dialog.module";
-import {AccessRoleService} from "../access-role.service";
-import {to2, toPromise} from "../../util/utils";
-import {showMessageDialog} from "../../ui/showMessageDialog";
-import {Users} from "../../user/userService";
-import {TimUtilityModule} from "../../ui/tim-utility.module";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {AccessRoleService} from "tim/item/access-role.service";
+import {to2, toPromise} from "tim/util/utils";
+import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {Users} from "tim/user/userService";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {BrowserModule} from "@angular/platform-browser";
 
 const ANONYMOUS_GROUPNAME = "Anonymous users";
 

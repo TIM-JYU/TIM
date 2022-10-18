@@ -1,19 +1,10 @@
-import {
-    Component,
-    EventEmitter,
-    Input,
-    NgModule,
-    OnChanges,
-    OnInit,
-    Output,
-    SimpleChanges,
-} from "@angular/core";
+import type {OnChanges, OnInit, SimpleChanges} from "@angular/core";
+import {Component, EventEmitter, Input, NgModule, Output} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import moment from "moment";
 import {DatetimePopupModule} from "vendor/ngx-bootstrap-datetime-popup/ngx-bootstrap-datetime-popup.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {BrowserModule} from "@angular/platform-browser";
 
 const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
 
@@ -83,7 +74,6 @@ export class DatetimePickerComponent implements OnInit, OnChanges {
     declarations: [DatetimePickerComponent],
     imports: [
         BrowserModule,
-        NoopAnimationsModule,
         DatetimePopupModule,
         FormsModule,
         TimUtilityModule,

@@ -3,37 +3,30 @@
  */
 import * as t from "io-ts";
 import {polyfill} from "mobile-drag-drop";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {DndDropEvent, DndModule, EffectAllowed} from "ngx-drag-drop";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    NgModule,
-    OnInit,
-} from "@angular/core";
+import type {DndDropEvent, EffectAllowed} from "ngx-drag-drop";
+import {DndModule} from "ngx-drag-drop";
+import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
-import {pluginMap} from "tim/main";
-import {ITimComponent} from "../../../static/scripts/tim/document/viewctrl";
+import type {ITimComponent} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
     nullable,
     withDefault,
-} from "../../../static/scripts/tim/plugin/attributes";
-import {
-    parseStyles,
-    shuffleStrings,
-} from "../../../static/scripts/tim/plugin/util";
-import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
-import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
-import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
-import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {DocIdDotName} from "../../../static/scripts/tim/plugin/taskid";
-import {isIOS} from "../../../static/scripts/tim/util/utils";
+} from "tim/plugin/attributes";
+import {parseStyles, shuffleStrings} from "tim/plugin/util";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {PurifyModule} from "tim/util/purify.module";
+import type {DocIdDotName} from "tim/plugin/taskid";
+import {isIOS} from "tim/util/utils";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 const DragMarkup = t.intersection([
     t.partial({
@@ -352,4 +345,5 @@ export class DragComponent
 export class DragModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
-pluginMap.set("drag-runner", DragComponent);
+
+registerPlugin("drag-runner", DragModule, DragComponent);

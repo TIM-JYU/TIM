@@ -1,4 +1,4 @@
-import {Paragraph} from "tim/document/structure/paragraph";
+import type {Paragraph} from "tim/document/structure/paragraph";
 import $ from "jquery";
 import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
 import {Area} from "tim/document/structure/area";

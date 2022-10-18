@@ -3,26 +3,14 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import {$http, $httpParamSerializer} from "tim/util/ngimport";
+import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
 import {
-    clone,
-    defaultErrorMessage,
-    maxContentOrFitContent,
-    to,
-    to2,
-} from "tim/util/utils";
-import {
-    ApplicationRef,
     ChangeDetectorRef,
     Component,
-    DoBootstrap,
     ElementRef,
     NgModule,
-    OnInit,
     ViewChild,
 } from "@angular/core";
-
-import {TimMessageSendModule} from "tim/messaging/tim-message-send.component";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -33,29 +21,39 @@ import {showInputDialog} from "tim/ui/showInputDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {documentglobals} from "tim/util/globals";
 import {PurifyModule} from "tim/util/purify.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {ViewCtrl} from "../document/viewctrl";
-import {widenFields} from "../util/common";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import {widenFields} from "tim/util/common";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
     IncludeUsersOption,
     nullable,
     withDefault,
-} from "./attributes";
-import {
+} from "tim/plugin/attributes";
+import type {
     CellAttrToSave,
     CellToSave,
+    DataEntity,
+    TimTable,
+} from "tim/plugin/timTable/tim-table.component";
+import {
     ClearSort,
     colnumToLetters,
-    DataEntity,
     DataViewSettingsType,
     isPrimitiveCell,
-    TimTable,
     TimTableComponent,
     TimTableModule,
-} from "./timTable";
+} from "tim/plugin/timTable/tim-table.component";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {TimMessageSendModule} from "tim/messaging/tim-message-send.component";
+import {$http, $httpParamSerializer} from "tim/util/ngimport";
+import {
+    clone,
+    defaultErrorMessage,
+    maxContentOrFitContent,
+    to,
+    to2,
+} from "tim/util/utils";
 
 const RunScriptModel = t.type({
     script: nullable(t.string),
@@ -291,7 +289,7 @@ const sortLang = "fi";
             <tim-loading *ngIf="loading"></tim-loading>
         </div>
     `,
-    styleUrls: ["./tableForm.scss"],
+    styleUrls: ["./table-form.component.scss"],
 })
 export class TableFormComponent
     extends AngularPluginBase<
@@ -1551,14 +1549,4 @@ export class TableFormModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                TableFormModule
-            )
-        ),
-        "tableformRunner",
-        TableFormComponent
-    ),
-];
+registerPlugin("tableform-runner", TableFormModule, TableFormComponent);

@@ -1,7 +1,7 @@
 import {Component} from "@angular/core";
-import {OnTabSelect} from "tim/sidebarmenu/menu-tab.directive";
-import {ILecture, ILectureListResponse2} from "tim/lecture/lecturetypes";
-import {ViewCtrl} from "tim/document/viewctrl";
+import type {OnTabSelect} from "tim/sidebarmenu/menu-tab.directive";
+import type {ILecture, ILectureListResponse2} from "tim/lecture/lecturetypes";
+import type {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {LectureController} from "tim/lecture/lectureController";
 import {toPromise} from "tim/util/utils";

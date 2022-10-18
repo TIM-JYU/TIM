@@ -1,5 +1,6 @@
 import {BrowserModule} from "@angular/platform-browser";
-import {ApplicationRef, DoBootstrap, NgModule} from "@angular/core";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HeaderComponent} from "tim/header/header.component";
 import {HTTP_INTERCEPTORS, HttpClientModule} from "@angular/common/http";
@@ -41,7 +42,7 @@ import {GamificationMapComponent} from "tim/gamification/gamification-map.compon
 import {SelfExpireComponent} from "tim/item/self-expire.component";
 import {SearchButtonComponent} from "tim/search/search-button.component";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
-import {RoleInfoComponent} from "./header/role-info.component";
+import {RoleInfoComponent} from "tim/header/role-info.component";
 
 @NgModule({
     declarations: [

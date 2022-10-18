@@ -1,9 +1,8 @@
 import deepEqual from "deep-equal";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {
-    ApplicationRef,
     ChangeDetectorRef,
     Component,
-    DoBootstrap,
     ElementRef,
     NgModule,
     NgZone,
@@ -12,28 +11,28 @@ import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import * as t from "io-ts";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {defaultErrorMessage, to2} from "tim/util/utils";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import type {IPreviewParams} from "tim/document/question/answer-sheet.component";
 import {
     AnswerSheetModule,
-    IPreviewParams,
     makePreview,
-} from "../document/question/answer-sheet.component";
-import {ChangeType, ITimComponent, ViewCtrl} from "../document/viewctrl";
+} from "tim/document/question/answer-sheet.component";
+import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {ChangeType} from "tim/document/viewctrl";
+import type {AnswerTable, IQuestionMarkup} from "tim/lecture/lecturetypes";
+import {AskedJsonJsonCodec} from "tim/lecture/lecturetypes";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {PurifyModule} from "tim/util/purify.module";
+import {showQuestionAskDialog} from "tim/lecture/showLectureDialogs";
+import type {ParContext} from "tim/document/structure/parContext";
 import {
-    AnswerTable,
-    AskedJsonJsonCodec,
-    IQuestionMarkup,
-} from "../lecture/lecturetypes";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {vctrlInstance} from "../document/viewctrlinstance";
-import {PurifyModule} from "../util/purify.module";
-import {showQuestionAskDialog} from "../lecture/showLectureDialogs";
-import {pluginMap} from "../main";
-import {ParContext} from "../document/structure/parContext";
-import {GenericPluginMarkup, getTopLevelFields, nullable} from "./attributes";
-import {AngularPluginBase} from "./angular-plugin-base.directive";
+    GenericPluginMarkup,
+    getTopLevelFields,
+    nullable,
+} from "tim/plugin/attributes";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 
 const PluginMarkupFields = t.intersection([
     GenericPluginMarkup,
@@ -401,14 +400,4 @@ export class QstModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("tim-qst", QstComponent);
-// The question="true" causes to use the "mini" version
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(QstModule)
-        ),
-        "timLectureQst",
-        QstComponent
-    ),
-];
+registerPlugin("tim-qst", QstModule, QstComponent);

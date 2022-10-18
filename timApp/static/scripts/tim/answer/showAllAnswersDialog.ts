@@ -1,5 +1,5 @@
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
-import {IAllAnswersParams} from "tim/answer/all-answers-dialog.component";
+import type {IAllAnswersParams} from "tim/answer/all-answers-dialog.component";
 
 export async function showAllAnswersDialog(p: IAllAnswersParams) {
     const {AllAnswersDialogComponent} = await import(

@@ -5,7 +5,7 @@ import {
     IncludeUsersOption,
     withDefault,
 } from "tim/plugin/attributes";
-import {IToolsResult, NewUserData} from "../server/routes/tools";
+import type {IToolsResult, NewUserData} from "../server/routes/tools";
 
 export {IncludeUsersOption} from "tim/plugin/attributes";
 

@@ -1,4 +1,4 @@
-import {Area} from "tim/document/structure/area";
+import type {Area} from "tim/document/structure/area";
 import {DerefOption} from "tim/document/structure/derefOption";
 import {Paragraph} from "tim/document/structure/paragraph";
 import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";

@@ -1,25 +1,19 @@
 ﻿import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    NgModule,
-    ViewChild,
-} from "@angular/core";
-import {IAnswer} from "tim/answer/IAnswer";
-import {ViewCtrl} from "tim/document/viewctrl";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
+import type {IAnswer} from "tim/answer/IAnswer";
+import type {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
-import {AnswerBrowserComponent} from "tim/answer/answerbrowser3";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {pluginMap} from "../../../static/scripts/tim/main";
-import {Iframesettings} from "./jsframe";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
+import {BrowserModule} from "@angular/platform-browser";
+import type {Iframesettings} from "./jsframe";
 
 const GeogebraMarkup = t.intersection([
     t.partial({
@@ -284,4 +278,5 @@ export class GeogebraComponent extends AngularPluginBase<
 export class GeogebraModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-pluginMap.set("tim-geogebra", GeogebraComponent);
+
+registerPlugin("tim-geogebra", GeogebraModule, GeogebraComponent);

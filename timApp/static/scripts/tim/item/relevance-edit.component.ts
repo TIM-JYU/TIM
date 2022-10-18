@@ -8,8 +8,9 @@
 
 import {Component, Input} from "@angular/core";
 import {to} from "tim/util/utils";
-import {$http} from "../util/ngimport";
-import {IItem, IRelevance} from "./IItem";
+import {$http} from "tim/util/ngimport";
+import type {IRelevance} from "tim/item/IItem";
+import {IItem} from "tim/item/IItem";
 
 export const relevanceSuggestions = [
     {value: -100, name: "-100 = Buried"},

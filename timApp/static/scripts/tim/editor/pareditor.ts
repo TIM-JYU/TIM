@@ -1,4 +1,5 @@
-import angular, {IScope} from "angular";
+import type {IScope} from "angular";
+import angular from "angular";
 import * as t from "io-ts";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
@@ -13,27 +14,26 @@ import {
     toggleFullScreen,
 } from "tim/util/fullscreen";
 import {replaceTemplateValues} from "tim/ui/showTemplateReplaceDialog";
-import {IDocument, ILanguage, ITranslator} from "tim/item/IItem";
+import type {IDocument, ILanguage, ITranslator} from "tim/item/IItem";
 import {
     updateTranslationData,
     updateTranslatorLanguages,
 } from "tim/document/languages";
-import {IExtraData, ITags} from "../document/editing/edittypes";
-import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
-import {getCitePar} from "../document/parhelpers";
-import {ViewCtrl} from "../document/viewctrl";
-import {registerDialogComponentForModule} from "../ui/dialog";
-import {
-    documentglobals,
-    genericglobals,
-    IMeetingMemoSettings,
-} from "../util/globals";
-import {$compile, $http, $injector, $timeout, $upload} from "../util/ngimport";
-import {AceParEditor} from "./AceParEditor";
-import {EditorType, SelectionRange} from "./BaseParEditor";
-import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
-import {RestampDialogClose} from "./restamp-dialog.component";
-import {TextAreaParEditor} from "./TextAreaParEditor";
+import type {IExtraData, ITags} from "tim/document/editing/edittypes";
+import type {IDocSettings, MeetingDateEntry} from "tim/document/IDocSettings";
+import {getCitePar} from "tim/document/parhelpers";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import {registerDialogComponentForModule} from "tim/ui/dialog";
+import type {IMeetingMemoSettings} from "tim/util/globals";
+import {documentglobals, genericglobals} from "tim/util/globals";
+import {$compile, $http, $injector, $timeout, $upload} from "tim/util/ngimport";
+import {AceParEditor} from "tim/editor/AceParEditor";
+import type {SelectionRange} from "tim/editor/BaseParEditor";
+import {EditorType} from "tim/editor/BaseParEditor";
+import type {IPluginInfoResponse} from "tim/editor/parCompiler";
+import {ParCompiler} from "tim/editor/parCompiler";
+import {RestampDialogClose} from "tim/editor/restamp-dialog.component";
+import {TextAreaParEditor} from "tim/editor/TextAreaParEditor";
 
 markAsUsed(rangyinputs);
 

@@ -1,4 +1,5 @@
-import {Component, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component} from "@angular/core";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 import {copyToClipboard, to2} from "tim/util/utils";

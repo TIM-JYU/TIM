@@ -1,6 +1,9 @@
-import {Paragraph} from "tim/document/structure/paragraph";
-import {Area} from "tim/document/structure/area";
-import {DocumentPart, IDocumentPart} from "tim/document/structure/documentPart";
+import type {Paragraph} from "tim/document/structure/paragraph";
+import type {Area} from "tim/document/structure/area";
+import type {
+    DocumentPart,
+    IDocumentPart,
+} from "tim/document/structure/documentPart";
 import {DerefOption} from "tim/document/structure/derefOption";
 
 /**

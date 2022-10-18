@@ -1,4 +1,5 @@
-import {Directive, Type, ViewContainerRef} from "@angular/core";
+import type {Type} from "@angular/core";
+import {Directive, ViewContainerRef} from "@angular/core";
 
 export interface OnTabSelect {
     onSelect: () => void;

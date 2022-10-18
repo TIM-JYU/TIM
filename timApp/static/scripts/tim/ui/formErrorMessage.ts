@@ -1,6 +1,6 @@
-import {IController, IFormController, INgModelController} from "angular";
+import type {IController, IFormController, INgModelController} from "angular";
 import {timApp} from "tim/app";
-import {$timeout} from "../util/ngimport";
+import {$timeout} from "tim/util/ngimport";
 
 class ErrorStateCtrl implements IController {
     static $inject = ["$element"];

@@ -1,19 +1,20 @@
-import {ApplicationRef, DoBootstrap, NgModule} from "@angular/core";
-import {CommonModule} from "@angular/common";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {TabsModule} from "ngx-bootstrap/tabs";
-import {TimUtilityModule} from "../../ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "../../downgrade";
-import {TimMessageSendModule} from "../tim-message-send.component";
-import {TimTableModule} from "../../plugin/timTable";
-import {MessageListAdminComponent} from "./message-list-admin.component";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {TimMessageSendModule} from "tim/messaging/tim-message-send.component";
+import {MessageListAdminComponent} from "tim/messaging/manage/message-list-admin.component";
+import {TimTableModule} from "tim/plugin/timTable/tim-table.component";
+import {BrowserModule} from "@angular/platform-browser";
 
 @NgModule({
     declarations: [MessageListAdminComponent],
     exports: [MessageListAdminComponent],
     imports: [
-        CommonModule,
+        BrowserModule,
         FormsModule,
         TimUtilityModule,
         TimMessageSendModule,

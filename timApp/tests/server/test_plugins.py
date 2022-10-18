@@ -293,7 +293,7 @@ class PluginTest(TimRouteTest):
         )
         self.assertEqual(
             {
-                "html": "<mmcq data-content='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;falseText&quot;:null,&quot;button&quot;:null,&quot;wrongText&quot;:null,&quot;onTry&quot;:null,&quot;header&quot;:null,&quot;stem&quot;:&quot;Answer "
+                "html": "<mmcq json='{&quot;state&quot;:[true,false,true],&quot;question&quot;:{&quot;falseText&quot;:null,&quot;button&quot;:null,&quot;wrongText&quot;:null,&quot;onTry&quot;:null,&quot;header&quot;:null,&quot;stem&quot;:&quot;Answer "
                 "yes or no to the following "
                 "questions.&quot;,&quot;headerText&quot;:null,&quot;choices&quot;:[{&quot;text&quot;:&quot;&lt;span "
                 "class=\\&quot;math "
@@ -316,7 +316,7 @@ class PluginTest(TimRouteTest):
         self.assertEqual(1, len(plugs))
         self.assertEqual(
             [True, False, True],
-            json.loads(plugs[0].find("mmcq").get("data-content"))["state"],
+            json.loads(plugs[0].find("mmcq").get("json"))["state"],
         )
 
         # Testing noanswers parameter: There should be no answers in the document
@@ -327,9 +327,7 @@ class PluginTest(TimRouteTest):
         )
         plugs = tree.cssselect(mmcq_xpath)
         self.assertEqual(1, len(plugs))
-        self.assertIsNone(
-            json.loads(plugs[0].find("mmcq").get("data-content")).get("state")
-        )
+        self.assertIsNone(json.loads(plugs[0].find("mmcq").get("json")).get("state"))
 
         summary = tree.cssselect("div.taskSummary")
         self.assertEqual(0, len(summary))
@@ -406,9 +404,7 @@ class PluginTest(TimRouteTest):
         self.assertEqual(1, len(plugs))
         self.assertEqual(0, len(summary))
         # Anonymous users can't see their answers
-        self.assertIsNone(
-            json.loads(plugs[0].find("mmcq").get("data-content"))["state"]
-        )
+        self.assertIsNone(json.loads(plugs[0].find("mmcq").get("json"))["state"])
 
         self.login_test1()
         self.get(
@@ -1374,20 +1370,6 @@ lazy: true
             },
             ablazy[0].attrib,
         )
-
-    def test_cache_no_browser(self):
-        self.login_test1()
-        d = self.create_doc(
-            initial_par="""
-``` {plugin=graphviz}
-lazy: true
-cache: true
-```
-        """
-        )
-        e = self.get(d.url, as_tree=True)
-        ablazy = e.cssselect("tim-plugin-loader")
-        self.assertFalse(ablazy)
 
     def test_invalid_taskid(self):
         self.login_test1()

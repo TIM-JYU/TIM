@@ -1,7 +1,7 @@
 // from https://stackoverflow.com/a/14837021
-import {IAttributes, IScope} from "angular";
+import type {IAttributes, IScope} from "angular";
 import {timApp} from "tim/app";
-import {$parse, $timeout} from "../util/ngimport";
+import {$parse, $timeout} from "tim/util/ngimport";
 
 // Some browsers (especially Firefox) require to blur elements before you can focus onto others
 // This postfix tag blurs an element when the focus condition is false, thus allowing other elements to

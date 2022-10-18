@@ -1,16 +1,17 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_"] }] */
 import $ from "jquery";
+import type {SimpleChanges} from "@angular/core";
 import {
     ElementRef,
     ViewChild,
     Component,
     Input,
-    SimpleChanges,
     ChangeDetectorRef,
 } from "@angular/core";
 import {wrapText} from "tim/document/editing/utils";
 import {countChars} from "../util/util";
-import {CURSOR, IEditor} from "./editor";
+import type {IEditor} from "./editor";
+import {CURSOR} from "./editor";
 
 @Component({
     selector: "cs-normal-editor",

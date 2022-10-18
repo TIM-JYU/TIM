@@ -3,7 +3,8 @@ import {Component, ChangeDetectorRef, ElementRef} from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
 import {defaultTimeout, toPromise} from "tim/util/utils";
-import {CsController, IRunRequest, IRunResponse} from "./csPlugin";
+import type {IRunRequest, IRunResponse} from "./csPlugin";
+import {CsController} from "./csPlugin";
 
 @Component({
     selector: "cs-git-reg-runner",

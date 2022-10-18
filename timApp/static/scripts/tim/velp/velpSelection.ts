@@ -1,21 +1,16 @@
-import {IController, IFormController} from "angular";
+import type {IController, IFormController} from "angular";
 import * as t from "io-ts";
 import {timApp} from "tim/app";
-import {
-    Binding,
-    clone,
-    markAsUsed,
-    Require,
-    TimStorage,
-    to,
-} from "tim/util/utils";
+import type {Binding, Require} from "tim/util/utils";
+import {clone, markAsUsed, TimStorage, to} from "tim/util/utils";
 import * as velpSummary from "tim/velp/velp-summary.component";
-import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
+import type {VelpWindowController} from "tim/velp/velpWindow";
+import {colorPalette} from "tim/velp/velpWindow";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showConfirm} from "tim/ui/showConfirmDialog";
-import {ViewCtrl} from "../document/viewctrl";
-import {$http} from "../util/ngimport";
-import {
+import type {ViewCtrl} from "tim/document/viewctrl";
+import {$http} from "tim/util/ngimport";
+import type {
     ILabel,
     ILabelUI,
     INewLabel,
@@ -26,7 +21,7 @@ import {
     IVelpGroupCollection,
     IVelpGroupUI,
     VelpGroupSelectionType,
-} from "./velptypes";
+} from "tim/velp/velptypes";
 
 markAsUsed(velpSummary);
 

@@ -1,13 +1,7 @@
 ﻿import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    NgModule,
-    ViewChild,
-} from "@angular/core";
-import {ViewCtrl} from "tim/document/viewctrl";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
+import type {ViewCtrl} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
@@ -22,21 +16,15 @@ import {
     valueDefu,
 } from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {HttpClientModule} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {Iframesettings} from "../../cs/js/jsframe";
-import {
-    getKeyCode,
-    KEY_LEFT,
-    KEY_RIGHT,
-} from "../../../static/scripts/tim/util/keycodes";
-import {pluginMap} from "../../../static/scripts/tim/main";
+import {getKeyCode, KEY_LEFT, KEY_RIGHT} from "tim/util/keycodes";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
+import type {Iframesettings} from "../../cs/js/jsframe";
 import {VideoLinkComponent} from "./video-link.component";
 
 function toSeconds(value: string | number | undefined): number | undefined {
@@ -713,14 +701,4 @@ export class VideoModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("tim-video", VideoComponent);
-// show* plugins don't use plugin loader yet unless they're lazy
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(VideoModule)
-        ),
-        "timVideo",
-        VideoComponent
-    ),
-];
+registerPlugin("tim-video", VideoModule, VideoComponent);

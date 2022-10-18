@@ -1,9 +1,12 @@
 import $ from "jquery";
-import {DocumentPart, IDocumentPart} from "tim/document/structure/documentPart";
-import {DerefOption} from "tim/document/structure/derefOption";
-import {NotRemovableHTMLElement} from "tim/document/structure/notRemovableElement";
-import {Area} from "tim/document/structure/area";
-import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
+import type {
+    DocumentPart,
+    IDocumentPart,
+} from "tim/document/structure/documentPart";
+import type {DerefOption} from "tim/document/structure/derefOption";
+import type {NotRemovableHTMLElement} from "tim/document/structure/notRemovableElement";
+import type {Area} from "tim/document/structure/area";
+import type {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
 
 export function getEditLine(el: HTMLElement) {
     const r = el.querySelector(".editline");

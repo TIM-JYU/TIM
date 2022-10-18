@@ -1,42 +1,36 @@
 /**
  * Defines the client-side implementation of JavaScript runner plugin.
  */
-import * as t from "io-ts";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    Input,
-    NgModule,
-} from "@angular/core";
-import {IJsRunner, RegexOption, ViewCtrl} from "tim/document/viewctrl";
+import type * as t from "io-ts";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, Input, NgModule} from "@angular/core";
+import type {IJsRunner, ViewCtrl} from "tim/document/viewctrl";
+import {RegexOption} from "tim/document/viewctrl";
 import {copyToClipboard} from "tim/util/utils";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "tim/util/purify.module";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
+import type {
     AnswerReturnBrowser,
-    ErrorEntry,
     ErrorList,
     ExportData,
     IError,
-    IncludeUsersOption,
-    JsrunnerAll,
     JsrunnerMarkup,
 } from "../../shared/jsrunnertypes";
-import {AngularPluginBase} from "../../../../static/scripts/tim/plugin/angular-plugin-base.directive";
-import {TimUtilityModule} from "../../../../static/scripts/tim/ui/tim-utility.module";
-import {PurifyModule} from "../../../../static/scripts/tim/util/purify.module";
-import {vctrlInstance} from "../../../../static/scripts/tim/document/viewctrlinstance";
 import {
-    createDowngradedModule,
-    doDowngrade,
-} from "../../../../static/scripts/tim/downgrade";
+    ErrorEntry,
+    IncludeUsersOption,
+    JsrunnerAll,
+} from "../../shared/jsrunnertypes";
 
 @Component({
-    selector: "tim-js-runner",
+    selector: "js-runner",
     template: `
 <div *ngIf="isVisible()" style="display: inline-block" class="jsrunner">
     <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
@@ -360,14 +354,4 @@ export class JsRunnerModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                JsRunnerModule
-            )
-        ),
-        "jsRunner",
-        JsRunnerPluginComponent
-    ),
-];
+registerPlugin("js-runner", JsRunnerModule, JsRunnerPluginComponent);

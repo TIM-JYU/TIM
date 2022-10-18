@@ -79,7 +79,7 @@ pointsRule:
         # self.wait.until(ec.staleness_of(par.find_element(by=By.CSS_SELECTOR, value='*')))
         par = self.find_element("#py > tim-plugin-loader > div")
 
-        # Wait until the height workaround completes (see answerbrowser3.ts)
+        # Wait until the height workaround completes (see answer-browser.component.ts)
         # self.wait.until(expected_conditions.presence_of_element_located((By.XPATH, "//*[@id='py'][@style='opacity: 1;']")))
 
         # TODO: Why is this slightly different from python_before_answer ?

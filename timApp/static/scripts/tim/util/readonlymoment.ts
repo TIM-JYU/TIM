@@ -1,4 +1,4 @@
-import {Moment, MomentInput, unitOfTime} from "moment";
+import type {Moment, MomentInput, unitOfTime} from "moment";
 
 /**
  * Represents an immutable Moment object. Not perfect, but prevents some bugs.

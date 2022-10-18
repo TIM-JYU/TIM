@@ -3,48 +3,51 @@
  */
 
 import * as t from "io-ts";
-import {
+import type {
     AfterViewInit,
     ApplicationRef,
-    Component,
     DoBootstrap,
     ElementRef,
-    NgModule,
     OnDestroy,
     OnInit,
+} from "@angular/core";
+import {
+    Component,
+    NgModule,
     QueryList,
     ViewChild,
     ViewChildren,
 } from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule, HttpHeaders} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {Subject, Subscription} from "rxjs";
+import type {Subscription} from "rxjs";
+import {Subject} from "rxjs";
 import {debounceTime, distinctUntilChanged} from "rxjs/operators";
 import {PurifyModule} from "tim/util/purify.module";
-import {defaultErrorMessage, defaultTimeout} from "../util/utils";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {CsUtilityModule} from "../../../../modules/cs/js/util/module";
-import {
-    FileSelectManagerComponent,
-    IFile,
-    IFileSpecification,
-} from "../../../../modules/cs/js/util/file-select";
-import {
+import {defaultErrorMessage, defaultTimeout} from "tim/util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import type {
     ITimComponent,
     IVelpableComponent,
     ViewCtrl,
-} from "../document/viewctrl";
-import {vctrlInstance} from "../document/viewctrlinstance";
-import {IUser} from "../user/IUser";
-import {pluginMap} from "../main";
-import {AngularPluginBase} from "./angular-plugin-base.directive";
+} from "tim/document/viewctrl";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import type {IUser} from "tim/user/IUser";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
     nullable,
     withDefault,
-} from "./attributes";
+} from "tim/plugin/attributes";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
+import type {
+    IFile,
+    IFileSpecification,
+} from "../../../../../modules/cs/js/util/file-select";
+import {FileSelectManagerComponent} from "../../../../../modules/cs/js/util/file-select";
+import {CsUtilityModule} from "../../../../../modules/cs/js/util/module";
 
 const FileSubmission = t.intersection([
     t.type({
@@ -165,7 +168,7 @@ const PluginFields = t.intersection([
         </div>
         <p footer *ngIf="footer" [textContent]="footer"></p>
     `,
-    styleUrls: ["./reviewcanvas.scss"],
+    styleUrls: ["./review-canvas.component.scss"],
 })
 export class ReviewCanvasComponent
     extends AngularPluginBase<
@@ -578,5 +581,8 @@ export class ReviewCanvasComponent
 export class ReviewCanvasModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-
-pluginMap.set("reviewcanvas-runner", ReviewCanvasComponent);
+registerPlugin(
+    "reviewcanvas-runner",
+    ReviewCanvasModule,
+    ReviewCanvasComponent
+);

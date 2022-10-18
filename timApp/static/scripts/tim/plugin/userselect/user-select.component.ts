@@ -1,29 +1,25 @@
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    NgModule,
-    ViewChild,
-} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
 import * as t from "io-ts";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule, NgForm} from "@angular/forms";
-import {race, Subject, Subscription} from "rxjs";
-import {Observable} from "rxjs/internal/Observable";
+import type {Subscription} from "rxjs";
+import {race, Subject} from "rxjs";
+import type {Observable} from "rxjs/internal/Observable";
 import {
     debounceTime,
     distinctUntilChanged,
     filter,
     first,
 } from "rxjs/operators";
-import {Result} from "@zxing/library";
+import type {Result} from "@zxing/library";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
-import {NoopAnimationsModule} from "@angular/platform-browser/animations";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {AngularPluginBase} from "../angular-plugin-base.directive";
-import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {
+    GenericPluginMarkup,
+    getTopLevelFields,
+    nullable,
+} from "tim/plugin/attributes";
 import {
     getUrlHttpParams,
     isMobileDevice,
@@ -32,19 +28,22 @@ import {
     TimStorage,
     to2,
     toPromise,
-} from "../../util/utils";
-import {TimUtilityModule} from "../../ui/tim-utility.module";
-import {createDowngradedModule, doDowngrade} from "../../downgrade";
-import {CodeScannerComponent} from "./code-scanner.component";
-import {MediaDevicesSupported} from "./util";
-import {
+} from "tim/util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {CodeScannerComponent} from "tim/plugin/userselect/code-scanner.component";
+import {MediaDevicesSupported} from "tim/plugin/userselect/util";
+import type {
     IQueryHandler,
-    PrefetchedQueryHandler,
     SearchResult,
-    ServerQueryHandler,
     UserResult,
-} from "./searchQueryHandlers";
-import {T9KeyboardComponent} from "./t9-keyboard.component";
+} from "tim/plugin/userselect/searchQueryHandlers";
+import {
+    PrefetchedQueryHandler,
+    ServerQueryHandler,
+} from "tim/plugin/userselect/searchQueryHandlers";
+import {T9KeyboardComponent} from "tim/plugin/userselect/t9-keyboard.component";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 const NeedsVerifyReasons = t.type({
     changeGroupBelongs: t.string,
@@ -933,7 +932,6 @@ export class UserSelectComponent extends AngularPluginBase<
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
-        NoopAnimationsModule,
         BsDropdownModule.forRoot(),
     ],
 })
@@ -941,14 +939,4 @@ export class UserSelectModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(
-                UserSelectModule
-            )
-        ),
-        "userSelector",
-        UserSelectComponent
-    ),
-];
+registerPlugin("user-selector", UserSelectModule, UserSelectComponent);

@@ -1,5 +1,5 @@
+import type {AfterViewInit} from "@angular/core";
 import {
-    AfterViewInit,
     Directive,
     EventEmitter,
     HostListener,
@@ -9,10 +9,11 @@ import {
 } from "@angular/core";
 import {DialogFrame} from "tim/ui/angulardialog/dialog-frame.component";
 import {TimDefer} from "tim/util/timdefer";
-import {getViewPortSize, ISize, timeout, TimStorage} from "tim/util/utils";
+import type {ISize} from "tim/util/utils";
+import {getViewPortSize, timeout, TimStorage} from "tim/util/utils";
 import * as t from "io-ts";
-import {Subscription} from "rxjs";
-import {Pos} from "tim/ui/pos";
+import type {Subscription} from "rxjs";
+import type {Pos} from "tim/ui/pos";
 
 export interface IDialogOptions {
     resetSize?: boolean;

@@ -1,5 +1,5 @@
-import {isRootFolder} from "../item/IItem";
-import {documentglobals, genericglobals} from "../util/globals";
+import {isRootFolder} from "tim/item/IItem";
+import {documentglobals, genericglobals} from "tim/util/globals";
 
 export interface IItemLink {
     route: string;

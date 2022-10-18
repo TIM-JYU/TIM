@@ -1,4 +1,4 @@
-import {Moment} from "moment";
+import type {Moment} from "moment";
 
 export interface ListOptions {
     // Keep this updated with ListOptions Python class. That class also provides further information about these

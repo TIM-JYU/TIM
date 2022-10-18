@@ -7,7 +7,6 @@ from enum import Enum
 from typing import Iterable, Generator, Match, Any
 
 import yaml
-from jinja2 import Environment, BaseLoader
 from marshmallow import missing, ValidationError, EXCLUDE
 
 from timApp.answer.answer import Answer
@@ -44,49 +43,6 @@ LAZYSTART = "<!--lazy "
 LAZYEND = " lazy-->"
 NOLAZY = "<!--nolazy-->"
 NEVERLAZY = "NEVERLAZY"
-
-JINJAENV = Environment(loader=BaseLoader)
-
-PLG_RTEMPLATE = JINJAENV.from_string(
-    """
-<tim-plugin-loader type="{{abtype}}"
-{{unlock_info or ''}}
-answer-id="{{aid or ''}}"
-class="{{plgclass}}"
-wrapper="{{wrapper}}"
-id="{{id}}"
-plugin-type="/{{plugin_type}}"
-task-id="{{doc_task_id or ''}}"
-{{'preview="true"' if preview}}>{{cont|safe}}</tim-plugin-loader>
-""".replace(
-        "\n", " "
-    )
-)
-
-
-def render_template_string2(source, **context):
-    """Renders a template from the given template source string
-    with the given context. Template variables will be autoescaped.
-
-    :param source: the source code of the template to be
-                   rendered
-    :param context: the variables that should be available in the
-                    context of the template.
-    """
-    rtemplate = JINJAENV.from_string(source)
-    return rtemplate.render(**context)
-
-
-def render_template_string3(rtemplate, **context):
-    """Renders a template from the given template source string
-    with the given context. Template variables will be autoescaped.
-
-    :param rtemplate: ready made render template
-    :param context: the variables that should be available in the
-                    context of the template.
-    """
-    res = rtemplate.render(**context)
-    return res
 
 
 # Maintains a mapping of plugin types to names of plugins' content field.
@@ -679,9 +635,8 @@ class Plugin:
         if self.options.wraptype != PluginWrap.Nothing:
             abtype = self.get_answerbrowser_type()
             if abtype is None:
-                cont = f"""<{wrapper} id='{html_task_id}' plugin-type='/{self.type}' {style}>{out}</{wrapper}>""".strip()
-            else:
-                cont = out.strip()
+                abtype = "none"
+            cont = out.strip()
             unlock_info = None
             if self.is_timed():
                 self.set_access_end_for_user()
@@ -692,64 +647,23 @@ class Plugin:
                 access-header='{self.known.header or ""}' access-end-text='{self.known.accessEndText or ''}'"""
             elif self.can_be_hidden_by_prerequisite():
                 unlock_info = f"""[lockable-by-prerequisite]='true' [locked-by-prerequisite]='{'true' if self.hidden_by_prerequisite() else 'false'}'"""
-            if abtype and self.options.wraptype == PluginWrap.Full and False:
-                return self.wrap_draggable(
-                    f"""
-<tim-plugin-loader type="{abtype}" wrapper="{wrapper}" id="{html_task_id}" plugin-type="/{self.type}" answer-id="{self.answer.id if self.answer else None or ''}"
-                   class="{self.get_container_class()}"
-                   task-id="{doc_task_id or ''}">""".replace(
-                        "\n", ""
-                    )
-                    + cont
-                    + "</tim-plugin-loader>",
-                    html_task_id or "",
-                )  # 0.001 sec
-            if abtype and self.options.wraptype == PluginWrap.Full:  # and False
-                ret = self.wrap_draggable(
-                    render_template_string3(  # TODO: 0.05 sec
-                        PLG_RTEMPLATE,
-                        abtype=abtype,
-                        plgclass=self.get_container_class(),
-                        doc_task_id=doc_task_id,
-                        cont=cont,
-                        aid=self.answer.id if self.answer else None,
-                        unlock_info=unlock_info,
-                        wrapper=wrapper,
-                        id=html_task_id,
-                        plugin_type=self.type,
-                        preview=self.options.preview,
-                    ),
+            if abtype and self.options.wraptype == PluginWrap.Full:
+                res = self.wrap_draggable(
+                    "<tim-plugin-loader "
+                    f'type="{abtype}" '
+                    f'{unlock_info or ""} '
+                    f'answer-id="{self.answer.id if self.answer else None or ""}" '
+                    f'class="{self.get_container_class()}" '
+                    f'wrapper="{wrapper}" '
+                    f'id="{html_task_id}" '
+                    f'plugin-type="/{self.type}" '
+                    f'task-id="{doc_task_id or ""}" '
+                    f"""{'preview="true"' if self.options.preview else ""}>"""
+                    f"{cont}"
+                    "</tim-plugin-loader>",
                     html_task_id or "",
                 )
-                return ret  # .replace("\n", "") # TODO: for some reason this is important for tables
-            if abtype and self.options.wraptype == PluginWrap.Full:
-                return self.wrap_draggable(
-                    render_template_string2(
-                        # TODO: 0.05 sec with rts3 2.3 sec with rts2, 8.5 sec with rts, 0.0001 sec with f
-                        """
-<tim-plugin-loader type="{{abtype}}"
-                   answer-id="{{aid or ''}}"
-                   wrapper="{{wrapper}}"
-                   id="{{id}}"
-                   plugin-type="/{{plugin_type}}"
-                   class="{{plgclass}}"
-                   task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>""",
-                        abtype=abtype,
-                        answer_count=self.answer_count,
-                        html_task_id=html_task_id,
-                        out=out,
-                        plgclass=self.get_container_class(),
-                        style=style,
-                        wrapper=wrapper,
-                        id=html_task_id,
-                        plugin_type=self.type,
-                        type=self.type,
-                        doc_task_id=doc_task_id,
-                        cont=cont,
-                        aid=self.answer.id if self.answer else None,
-                    ),
-                    html_task_id or "",
-                ).replace("\n", "")
+                return res
             else:
                 return self.wrap_draggable(cont, html_task_id or "")
         return out

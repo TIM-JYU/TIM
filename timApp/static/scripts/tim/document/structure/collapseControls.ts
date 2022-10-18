@@ -1,4 +1,4 @@
-import {AreaStartPar} from "tim/document/structure/area";
+import type {AreaStartPar} from "tim/document/structure/area";
 
 /**
  * Controls for a collapsible {@link Area}.

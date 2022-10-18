@@ -1,11 +1,12 @@
-import {Component, HostBinding, Input, NgModule, OnInit} from "@angular/core";
-import {CommonModule} from "@angular/common";
+import type {OnInit} from "@angular/core";
+import {Component, HostBinding, Input, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {markAsRead} from "tim/messaging/messagingUtils";
 import {FormsModule} from "@angular/forms";
 import {toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {TimMessageData} from "./tim-message-view.component";
+import {TimMessageData} from "tim/messaging/tim-message-view.component";
+import {BrowserModule} from "@angular/platform-browser";
 
 interface ReplyOptions {
     archive: boolean;
@@ -196,6 +197,6 @@ export class TimMessageComponent implements OnInit {
 @NgModule({
     declarations: [TimMessageComponent],
     exports: [TimMessageComponent],
-    imports: [CommonModule, FormsModule, TimUtilityModule],
+    imports: [BrowserModule, FormsModule, TimUtilityModule],
 })
 export class TimMessageModule {}

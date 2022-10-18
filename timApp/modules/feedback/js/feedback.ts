@@ -3,15 +3,14 @@
  *
  */
 import * as t from "io-ts";
-import {
+import type {
     ApplicationRef,
-    Component,
     DoBootstrap,
-    NgModule,
     OnDestroy,
     OnInit,
 } from "@angular/core";
-import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {Component, NgModule} from "@angular/core";
+import type {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
@@ -20,14 +19,14 @@ import {
 } from "tim/plugin/attributes";
 import {documentglobals} from "tim/util/globals";
 import {injectStyle, log} from "tim/util/utils";
-import {EditMode} from "tim/document/popup-menu-dialog.component";
-import {BrowserModule} from "@angular/platform-browser";
+import type {EditMode} from "tim/document/popup-menu-dialog.component";
 import {HttpClientModule} from "@angular/common/http";
-import {AngularPluginBase} from "../../../static/scripts/tim/plugin/angular-plugin-base.directive";
-import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.module";
-import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
-import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
-import {pluginMap} from "../../../static/scripts/tim/main";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "tim/util/purify.module";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 const answerPlaceHolder = "|answer|";
 const correctPlaceHolder = "|correct|";
@@ -1334,4 +1333,4 @@ export class FeedbackModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("feedback-runner", FeedbackPluginComponent);
+registerPlugin("feedback-runner", FeedbackModule, FeedbackPluginComponent);

@@ -38,8 +38,8 @@
  *  Cell's index can be different from its ordinal when filtering or sorting data.
  *  GridAxisManager.visibleItems maps cell's ordinal to its index and GridAxisManager.indexToOrdinal does the reverse.
  */
+import type {AfterViewInit, OnInit} from "@angular/core";
 import {
-    AfterViewInit,
     ChangeDetectionStrategy,
     ChangeDetectorRef,
     Component,
@@ -47,7 +47,6 @@ import {
     EventEmitter,
     Input,
     NgZone,
-    OnInit,
     Output,
     Renderer2,
     ViewChild,
@@ -57,21 +56,23 @@ import {showCopyWidthsDialog} from "tim/plugin/dataview/copy-table-width-dialog.
 import {GridAxisManager} from "tim/plugin/dataview/gridAxisManager";
 import {TableDOMCache} from "tim/plugin/dataview/tableDOMCache";
 import {scrollToViewInsideParent, timeout} from "tim/util/utils";
-import {Changes} from "tim/util/angularchanges";
+import type {Changes} from "tim/util/angularchanges";
+import type {
+    CellIndex,
+    PurifyData,
+    TableArea,
+    Viewport,
+    VisibleItems,
+} from "tim/plugin/dataview/util";
 import {
     applyBasicStyle,
-    CellIndex,
     columnInCache,
     el,
     joinCss,
-    PurifyData,
     px,
     runMultiFrame,
-    TableArea,
-    Viewport,
     viewportsEqual,
-    VisibleItems,
-} from "./util";
+} from "tim/plugin/dataview/util";
 
 /**
  * General interface for an object that provides the data model for DataViewComponent.
@@ -255,7 +256,7 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
             </ng-template>
         </div>
     `,
-    styleUrls: ["./data-view.component.scss", "../table-common.scss"],
+    styleUrls: ["./data-view.component.scss", "../timTable/table-common.scss"],
 })
 export class DataViewComponent implements AfterViewInit, OnInit {
     // region Fields

@@ -1,6 +1,7 @@
 import {toPromise} from "tim/util/utils";
 import {IItem} from "tim/item/IItem";
-import {Component, Input, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component, Input} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 

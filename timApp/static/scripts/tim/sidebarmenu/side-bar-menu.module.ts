@@ -1,5 +1,5 @@
-import {ModuleWithProviders, NgModule} from "@angular/core";
-import {CommonModule} from "@angular/common";
+import type {ModuleWithProviders} from "@angular/core";
+import {NgModule} from "@angular/core";
 import {TabsModule} from "ngx-bootstrap/tabs";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {FormsModule} from "@angular/forms";
@@ -7,17 +7,18 @@ import {CollapseModule} from "ngx-bootstrap/collapse";
 import {SidebarMenuComponent} from "tim/sidebarmenu/sidebar-menu.component";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BookmarksTabComponent} from "./tabs/bookmarks-tab.component";
-import {MenuTabDirective} from "./menu-tab.directive";
-import {TabContainerComponent} from "./tab-container.component";
-import {SettingsTabComponent} from "./tabs/settings-tab.component";
-import {IndexTabComponent} from "./tabs/index-tab.component";
-import {LectureInfoTabComponent} from "./tabs/lecture-info-tab.component";
-import {LoadQuestionsTabComponent} from "./tabs/load-questions-tab.component";
-import {LoggedUsersTabComponent} from "./tabs/logged-users-tab.component";
-import {BookmarksComponent} from "./util/bookmarks.component";
-import {TimeSincePipe} from "./util/time-since.pipe";
-import {ScoreInfoTabComponent} from "./tabs/score-info-tab.component";
+import {BookmarksTabComponent} from "tim/sidebarmenu/tabs/bookmarks-tab.component";
+import {MenuTabDirective} from "tim/sidebarmenu/menu-tab.directive";
+import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
+import {SettingsTabComponent} from "tim/sidebarmenu/tabs/settings-tab.component";
+import {IndexTabComponent} from "tim/sidebarmenu/tabs/index-tab.component";
+import {LectureInfoTabComponent} from "tim/sidebarmenu/tabs/lecture-info-tab.component";
+import {LoadQuestionsTabComponent} from "tim/sidebarmenu/tabs/load-questions-tab.component";
+import {LoggedUsersTabComponent} from "tim/sidebarmenu/tabs/logged-users-tab.component";
+import {BookmarksComponent} from "tim/sidebarmenu/util/bookmarks.component";
+import {TimeSincePipe} from "tim/sidebarmenu/util/time-since.pipe";
+import {ScoreInfoTabComponent} from "tim/sidebarmenu/tabs/score-info-tab.component";
+import {BrowserModule} from "@angular/platform-browser";
 
 @NgModule({
     declarations: [
@@ -35,7 +36,7 @@ import {ScoreInfoTabComponent} from "./tabs/score-info-tab.component";
         ScoreInfoTabComponent,
     ],
     imports: [
-        CommonModule,
+        BrowserModule,
         FormsModule,
         TabsModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
         TooltipModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,

@@ -12,7 +12,8 @@ module.exports = {
     "plugins": [
         "@typescript-eslint",
         "import",
-        "prefer-arrow"
+        "prefer-arrow",
+        "@limegrass/import-alias",
     ],
     "ignorePatterns": [
         "modules/cs/static/mindsim/",
@@ -23,6 +24,7 @@ module.exports = {
         "i18n/"
     ],
     "rules": {
+        "@limegrass/import-alias/import-alias": "error",
         "@typescript-eslint/adjacent-overload-signatures": "error",
         "@typescript-eslint/array-type": "off",
         "@typescript-eslint/ban-types": "error",
@@ -33,6 +35,7 @@ module.exports = {
         "@typescript-eslint/consistent-type-assertions": "error",
         // This is intentionally off. See https://github.com/Microsoft/TypeScript/issues/15300
         "@typescript-eslint/consistent-type-definitions": "off",
+        "@typescript-eslint/consistent-type-imports": "error",
         "@typescript-eslint/explicit-member-accessibility": [
             "off",
             {

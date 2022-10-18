@@ -11,13 +11,13 @@ import {Component, NgModule} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
-import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
-import {DialogModule} from "../ui/angulardialog/dialog.module";
-import {toPromise} from "../util/utils";
-import {TimUtilityModule} from "../ui/tim-utility.module";
-import {ITranslator, ITranslatorUsage} from "../item/IItem";
-import {listTranslators} from "../document/languages";
-import {IUserApiKey} from "./IUser";
+import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {toPromise} from "tim/util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import type {ITranslator, ITranslatorUsage} from "tim/item/IItem";
+import {listTranslators} from "tim/document/languages";
+import type {IUserApiKey} from "tim/user/IUser";
 
 /**
  * User can add translator API keys to be stored in TIM. (code source: add-contact-dialog.component.ts)

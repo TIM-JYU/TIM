@@ -16,7 +16,7 @@ class QuestionTest(BrowserTest):
         data = self.get(d.url_relative, as_tree=True)
         first_id = pars[0].get_id()
         self.assert_plugin_json(
-            data.cssselect(".parContent tim-lecture-qst")[0],
+            data.cssselect(".parContent tim-qst")[0],
             self.create_plugin_json(
                 d,
                 "test1",

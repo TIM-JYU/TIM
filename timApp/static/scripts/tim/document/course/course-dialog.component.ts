@@ -4,21 +4,16 @@
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule, ViewChild} from "@angular/core";
-import {
-    ICourseSettings,
-    IItem,
-    ISubjectList,
-    ITag,
-    TagType,
-} from "tim/item/IItem";
+import type {ICourseSettings, IItem, ISubjectList, ITag} from "tim/item/IItem";
+import {TagType} from "tim/item/IItem";
 import {toPromise} from "tim/util/utils";
 import {FormsModule, NgForm} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import {HttpClient} from "@angular/common/http";
-import {TimUtilityModule} from "../../ui/tim-utility.module";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {BrowserModule} from "@angular/platform-browser";
 
 const groupTagPrefix = "group:";
 

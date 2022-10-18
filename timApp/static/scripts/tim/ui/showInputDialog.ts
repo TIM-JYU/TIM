@@ -3,7 +3,7 @@ import type {
     InputDialogComponent as IDC,
     InputDialogParams,
 } from "tim/ui/input-dialog.component";
-import {IDialogOptions} from "tim/ui/angulardialog/angular-dialog-component.directive";
+import type {IDialogOptions} from "tim/ui/angulardialog/angular-dialog-component.directive";
 
 export async function showInputDialog<T>(
     p: InputDialogParams<T>,

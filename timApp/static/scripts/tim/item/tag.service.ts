@@ -1,7 +1,7 @@
 import {Injectable} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
-import {ITag} from "tim/item/IItem";
+import type {ITag} from "tim/item/IItem";
 
 @Injectable({
     providedIn: "root",

@@ -1,17 +1,15 @@
-import {
-    AfterViewInit,
-    Component,
-    DoCheck,
-    OnInit,
-    ViewChild,
-} from "@angular/core";
-import {TabDirective, TabsetComponent} from "ngx-bootstrap/tabs";
-import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
+import type {AfterViewInit, DoCheck, OnInit} from "@angular/core";
+import {Component, ViewChild} from "@angular/core";
+import type {TabDirective} from "ngx-bootstrap/tabs";
+import {TabsetComponent} from "ngx-bootstrap/tabs";
+import type {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.service";
-import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
+import type {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
 import {isScreenSizeOrLower, TimStorage} from "tim/util/utils";
-import {genericglobals, ISettings} from "tim/util/globals";
-import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
+import type {ISettings} from "tim/util/globals";
+import {genericglobals} from "tim/util/globals";
+import type {IVisibilityVars} from "tim/timRoot";
+import {getVisibilityVars} from "tim/timRoot";
 import * as t from "io-ts";
 
 enum MenuState {

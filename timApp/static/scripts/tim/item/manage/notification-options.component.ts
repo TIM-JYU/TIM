@@ -1,8 +1,9 @@
-import {Component, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component} from "@angular/core";
 import {toPromise} from "tim/util/utils";
 import {Users} from "tim/user/userService";
 import {documentglobals} from "tim/util/globals";
-import {IDocument} from "tim/item/IItem";
+import type {IDocument} from "tim/item/IItem";
 import {HttpClient} from "@angular/common/http";
 
 interface INotificationSettings {

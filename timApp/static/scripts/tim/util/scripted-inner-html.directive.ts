@@ -1,10 +1,5 @@
-import {
-    Directive,
-    ElementRef,
-    Input,
-    OnChanges,
-    SimpleChanges,
-} from "@angular/core";
+import type {OnChanges, SimpleChanges} from "@angular/core";
+import {Directive, ElementRef, Input} from "@angular/core";
 
 /**
  * A directive that allows the user to specify the HTML content of an element.

@@ -1,7 +1,7 @@
-import "./loadJQueryAndMomentGlobals";
+import "tim/loadJQueryAndMomentGlobals";
 import "reflect-metadata";
 
-import {enableProdMode, Type} from "@angular/core";
+import {enableProdMode} from "@angular/core";
 import angular from "angular";
 import bootstrap from "bootstrap";
 import "eonasdan-bootstrap-datetimepicker";
@@ -48,8 +48,8 @@ import {AccessCountdownComponent} from "tim/item/access-countdown.component";
 import {GotoLinkComponent} from "tim/ui/goto-link.component";
 import {SidebarMenuComponent} from "tim/sidebarmenu/sidebar-menu.component";
 import BackspaceDisabler from "backspace-disabler";
-import {DrawToolbarComponent} from "tim/plugin/drawToolbar";
-import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
+import {DrawToolbarComponent} from "tim/plugin/draw-canvas/draw-toolbar.component";
+import {DrawCanvasComponent} from "tim/plugin/draw-canvas/draw-canvas.components";
 import {DirectoryListComponent} from "tim/folder/directory-list.component";
 import {TemplateListComponent} from "tim/document/editing/template-list.component";
 import * as selfExpire from "tim/item/self-expire.component";
@@ -68,13 +68,14 @@ import {
     SESSION_VERIFICATION_NEEDED_CODE,
 } from "tim/util/session-verify.interceptor";
 import {RoleInfoComponent} from "tim/header/role-info.component";
-import {PluginLoaderComponent} from "tim/answer/pluginLoader";
-import {PluginJson} from "tim/plugin/angular-plugin-base.directive";
-import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
-import {genericglobals, isErrorGlobals} from "./util/globals";
-import {ParCompiler} from "./editor/parCompiler";
-
-export const pluginMap = new Map<string, Type<PluginJson>>();
+import {PluginLoaderComponent} from "tim/plugin/plugin-loader.component";
+import {
+    insertLogDivIfEnabled,
+    timLogInit,
+    timLogTime,
+} from "tim/util/timTiming";
+import {genericglobals, isErrorGlobals} from "tim/util/globals";
+import {ParCompiler} from "tim/editor/parCompiler";
 
 BackspaceDisabler.disable();
 

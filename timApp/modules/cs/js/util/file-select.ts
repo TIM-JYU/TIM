@@ -1,4 +1,5 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["files_", "multipleElements_"] }] */
+import type {QueryList} from "@angular/core";
 import {
     ChangeDetectorRef,
     Component,
@@ -6,16 +7,12 @@ import {
     EventEmitter,
     Input,
     Output,
-    QueryList,
     ViewChild,
     ViewChildren,
 } from "@angular/core";
-import {
-    HttpClient,
-    HttpErrorResponse,
-    HttpEventType,
-} from "@angular/common/http";
-import {defaultWuffMessage} from "../../../../static/scripts/tim/util/utils";
+import type {HttpErrorResponse} from "@angular/common/http";
+import {HttpClient, HttpEventType} from "@angular/common/http";
+import {defaultWuffMessage} from "tim/util/utils";
 import {NotificationComponent} from "./notification";
 import {sizeString, timeString} from "./util";
 import {Set} from "./set";

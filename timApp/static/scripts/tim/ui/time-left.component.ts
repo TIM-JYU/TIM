@@ -1,7 +1,8 @@
-import {Component, Input, OnChanges, SimpleChanges} from "@angular/core";
+import type {OnChanges, SimpleChanges} from "@angular/core";
+import {Component, Input} from "@angular/core";
 import {documentglobals} from "tim/util/globals";
-import {ITimeLeftSettings} from "tim/document/IDocSettings";
-import {Moment} from "moment";
+import type {ITimeLeftSettings} from "tim/document/IDocSettings";
+import type {Moment} from "moment";
 import moment from "moment";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 

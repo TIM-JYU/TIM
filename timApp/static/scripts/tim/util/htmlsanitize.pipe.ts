@@ -5,7 +5,8 @@
  *       Use this module only for cases where PurifyModule does not yield desired sanitization.
  */
 
-import {Pipe, PipeTransform} from "@angular/core";
+import type {PipeTransform} from "@angular/core";
+import {Pipe} from "@angular/core";
 import * as sanitizeHtml from "sanitize-html";
 import {DomSanitizer} from "@angular/platform-browser";
 

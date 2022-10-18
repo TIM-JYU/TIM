@@ -3,8 +3,8 @@ import * as t from "io-ts";
 import {isRight} from "fp-ts/Either";
 import {HttpClient} from "@angular/common/http";
 import {documentglobals} from "tim/util/globals";
-import {nullable, withDefault} from "../../plugin/attributes";
-import {MomentFromString, toPromise} from "../../util/utils";
+import {nullable, withDefault} from "tim/plugin/attributes";
+import {MomentFromString, toPromise} from "tim/util/utils";
 
 const Address = t.type({
     name: withDefault(nullable(t.string), ""),

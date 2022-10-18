@@ -1,13 +1,11 @@
-import {Component, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component} from "@angular/core";
 import {genericglobals} from "tim/util/globals";
 import {to2, toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
-import {
-    BookmarkService,
-    IBookmark,
-    IBookmarkGroup,
-} from "tim/bookmark/bookmark.service";
-import {RootCtrl} from "tim/timRoot";
+import type {IBookmark, IBookmarkGroup} from "tim/bookmark/bookmark.service";
+import {BookmarkService} from "tim/bookmark/bookmark.service";
+import type {RootCtrl} from "tim/timRoot";
 import {rootInstance} from "tim/rootinstance";
 import {showBookmarkDialog} from "tim/bookmark/showBookmarkDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";

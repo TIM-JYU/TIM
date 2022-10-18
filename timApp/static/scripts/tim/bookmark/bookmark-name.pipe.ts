@@ -1,4 +1,5 @@
-import {Pipe, PipeTransform} from "@angular/core";
+import type {PipeTransform} from "@angular/core";
+import {Pipe} from "@angular/core";
 
 const COMMON_BOOKMARK_GROUPS: Record<string, string> = {
     "My courses": $localize`My courses`,

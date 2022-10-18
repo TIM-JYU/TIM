@@ -1,21 +1,22 @@
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
-import {BrowserModule} from "@angular/platform-browser";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
+import {Component, NgModule} from "@angular/core";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import * as t from "io-ts";
-import {TimUtilityModule} from "../../ui/tim-utility.module";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {
     GenericPluginMarkup,
     getTopLevelFields,
     nullable,
     withDefault,
-} from "../attributes";
-import {AngularPluginBase} from "../angular-plugin-base.directive";
-import {getViewName, toPromise} from "../../util/utils";
-import {documentglobals} from "../../util/globals";
-import {Users} from "../../user/userService";
-import {showConfirm} from "../../ui/showConfirmDialog";
-import {pluginMap} from "../../main";
+} from "tim/plugin/attributes";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {getViewName, toPromise} from "tim/util/utils";
+import {documentglobals} from "tim/util/globals";
+import {Users} from "tim/user/userService";
+import {showConfirm} from "tim/ui/showConfirmDialog";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 const PluginMarkup = t.intersection([
     GenericPluginMarkup,
@@ -217,4 +218,4 @@ export class GroupJoinModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
-pluginMap.set("group-join", GroupJoinComponent);
+registerPlugin("group-join", GroupJoinModule, GroupJoinComponent);

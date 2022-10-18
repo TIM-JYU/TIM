@@ -1,5 +1,7 @@
-import {Component, OnInit} from "@angular/core";
-import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
+import type {OnInit} from "@angular/core";
+import {Component} from "@angular/core";
+import type {IVisibilityVars} from "tim/timRoot";
+import {getVisibilityVars} from "tim/timRoot";
 import {showLoginDialog} from "tim/user/showLoginDialog";
 import {
     AccessRoleService,
@@ -10,8 +12,8 @@ import {
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showGroupLockDialog} from "tim/item/active-group-lock-dialog/showGroupLockDialog";
 import {to2} from "tim/util/utils";
-import {IUser} from "./IUser";
-import {Users} from "./userService";
+import type {IUser} from "tim/user/IUser";
+import {Users} from "tim/user/userService";
 
 /**
  * Displays the current user name and the number of additional

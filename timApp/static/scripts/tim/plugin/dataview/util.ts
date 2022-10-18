@@ -1,5 +1,5 @@
-import {GridAxisManager} from "tim/plugin/dataview/gridAxisManager";
-import {TableDOMCache} from "tim/plugin/dataview/tableDOMCache";
+import type {GridAxisManager} from "tim/plugin/dataview/gridAxisManager";
+import type {TableDOMCache} from "tim/plugin/dataview/tableDOMCache";
 import {TimDefer} from "tim/util/timdefer";
 
 export interface CellIndex {

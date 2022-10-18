@@ -1,6 +1,7 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["type_", "src_"] }] */
 import {Component, Input} from "@angular/core";
-import {SafeResourceUrl, DomSanitizer} from "@angular/platform-browser";
+import type {SafeResourceUrl} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 
 @Component({
     selector: "cs-upload-result",

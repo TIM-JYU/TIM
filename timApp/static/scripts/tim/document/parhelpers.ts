@@ -1,13 +1,13 @@
 import $ from "jquery";
-import {Paragraph} from "tim/document/structure/paragraph";
+import type {Paragraph} from "tim/document/structure/paragraph";
 import {Area} from "tim/document/structure/area";
-import {ParContext} from "tim/document/structure/parContext";
+import type {ParContext} from "tim/document/structure/parContext";
 import {enumPars} from "tim/document/structure/iteration";
 import {DerefOption} from "tim/document/structure/derefOption";
 import {getParContainerElem} from "tim/document/structure/create";
-import {IItem} from "../item/IItem";
-import {RightNames} from "../user/IRights";
-import {isInViewport} from "../util/utils";
+import type {IItem} from "tim/item/IItem";
+import {RightNames} from "tim/user/IRights";
+import {isInViewport} from "tim/util/utils";
 
 export function getElementByParId(id: string) {
     return $("#" + id);

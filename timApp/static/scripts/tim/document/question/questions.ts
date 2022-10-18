@@ -1,16 +1,17 @@
-import {IScope} from "angular";
+import type {IScope} from "angular";
 import $ from "jquery";
-import {EditPosition, EditType} from "tim/document/editing/edittypes";
+import type {EditPosition} from "tim/document/editing/edittypes";
+import {EditType} from "tim/document/editing/edittypes";
 import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
 import {fetchAndEditQuestion} from "tim/document/question/fetchQuestion";
 import {getNextId} from "tim/document/editing/editing";
-import {ParContext} from "tim/document/structure/parContext";
+import type {ParContext} from "tim/document/structure/parContext";
 import {getMinimalUnbrokenSelection} from "tim/document/editing/unbrokenSelection";
 import {to2} from "tim/util/utils";
 import {documentglobals} from "tim/util/globals";
 import {$timeout} from "tim/util/ngimport";
-import {IQuestionDialogResult} from "tim/document/question/question-edit-dialog.component";
-import {ViewCtrl} from "../viewctrl";
+import type {IQuestionDialogResult} from "tim/document/question/question-edit-dialog.component";
+import type {ViewCtrl} from "tim/document/viewctrl";
 
 export class QuestionHandler {
     public sc: IScope;

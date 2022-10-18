@@ -4,16 +4,19 @@ import {Component, NgModule, NgZone} from "@angular/core";
 import {watchEditMode} from "tim/document/editing/editmode";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {$rootScope} from "tim/util/ngimport";
 import {PurifyModule} from "tim/util/purify.module";
-import {HelpPar} from "tim/document/structure/helpPar";
-import {ParContext} from "tim/document/structure/parContext";
-import {documentglobals} from "../util/globals";
-import {copyToClipboard, toPromise} from "../util/utils";
-import {ViewCtrl} from "./viewctrl";
-import {IMenuFunctionEntry, MenuFunctionList} from "./viewutils";
+import type {HelpPar} from "tim/document/structure/helpPar";
+import type {ParContext} from "tim/document/structure/parContext";
+import {documentglobals} from "tim/util/globals";
+import {copyToClipboard, toPromise} from "tim/util/utils";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import type {
+    IMenuFunctionEntry,
+    MenuFunctionList,
+} from "tim/document/viewutils";
+import {BrowserModule} from "@angular/platform-browser";
 import ClickEvent = JQuery.ClickEvent;
 import TriggeredEvent = JQuery.TriggeredEvent;
 

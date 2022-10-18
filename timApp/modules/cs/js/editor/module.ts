@@ -1,7 +1,7 @@
 import {NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {BrowserModule} from "@angular/platform-browser";
 import {CsUtilityModule} from "../util/module";
 import {CountBoardComponent} from "./countboard";
 import {EditorComponent, JSParsonsEditorComponent} from "./editor";

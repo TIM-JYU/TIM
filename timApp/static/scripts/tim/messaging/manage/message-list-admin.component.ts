@@ -1,22 +1,26 @@
 import {HttpClient} from "@angular/common/http";
-import {Component, Input, OnInit} from "@angular/core";
-import moment, {Moment} from "moment";
-import {to, to2, toPromise} from "../../util/utils";
-import {
-    archivePolicyNames,
-    ArchiveType,
+import type {OnInit} from "@angular/core";
+import {Component, Input} from "@angular/core";
+import type {Moment} from "moment";
+import moment from "moment";
+import {to, to2, toPromise} from "tim/util/utils";
+import type {
     Distribution,
     GroupAndMembers,
     ListOptions,
     MemberInfo,
     MessageVerificationType,
+} from "tim/messaging/listOptionTypes";
+import {
+    archivePolicyNames,
+    ArchiveType,
     ReplyToListChanges,
-} from "../listOptionTypes";
-import {documentglobals} from "../../util/globals";
-import {showInputDialog} from "../../ui/showInputDialog";
-import {InputDialogKind} from "../../ui/input-dialog.kind";
-import {$http} from "../../util/ngimport";
-import {Users} from "../../user/userService";
+} from "tim/messaging/listOptionTypes";
+import {documentglobals} from "tim/util/globals";
+import {showInputDialog} from "tim/ui/showInputDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {$http} from "tim/util/ngimport";
+import {Users} from "tim/user/userService";
 
 @Component({
     selector: "tim-message-list-admin",

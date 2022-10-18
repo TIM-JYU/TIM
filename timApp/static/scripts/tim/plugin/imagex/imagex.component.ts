@@ -1,50 +1,51 @@
 import deepmerge from "deepmerge";
-import * as t from "io-ts";
+import type * as t from "io-ts";
+import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
 import {
-    ApplicationRef,
     ChangeDetectorRef,
     Component,
-    DoBootstrap,
     ElementRef,
     NgModule,
-    OnInit,
 } from "@angular/core";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
-import {
-    DrawToolbarModule,
-    DrawType,
-    IDrawOptions,
-    IDrawVisibleOptions,
-} from "tim/plugin/drawToolbar";
-import {$http, $sce} from "../util/ngimport";
-import {TimDefer} from "../util/timdefer";
+import {$http, $sce} from "tim/util/ngimport";
+import {TimDefer} from "tim/util/timdefer";
+import type {MouseOrTouch} from "tim/util/utils";
 import {
     defaultTimeout,
-    MouseOrTouch,
     posToRelative,
     timeout,
     to,
     touchEventToTouch,
     valueOr,
-} from "../util/utils";
-import {editorChangeValue} from "../editor/editorScope";
-import {
-    ChangeType,
+} from "tim/util/utils";
+import {editorChangeValue} from "tim/editor/editorScope";
+import type {
     ITimComponent,
     IVelpableComponent,
     ViewCtrl,
-} from "../document/viewctrl";
-import {vctrlInstance} from "../document/viewctrlinstance";
-import {pluginMap} from "../main";
+} from "tim/document/viewctrl";
+import {ChangeType} from "tim/document/viewctrl";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import type {
+    IDrawOptions,
+    IDrawVisibleOptions,
+} from "tim/plugin/draw-canvas/draw-toolbar.component";
 import {
+    DrawToolbarModule,
+    DrawType,
+} from "tim/plugin/draw-canvas/draw-toolbar.component";
+import type {DrawItem} from "tim/plugin/draw-canvas/draw-canvas.components";
+import {Drawing} from "tim/plugin/draw-canvas/draw-canvas.components";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import type {
     CommonPropsT,
     DefaultPropsT,
     DragObjectPropsT,
     FixedObjectPropsT,
-    ImageXAll,
     ImageXMarkup,
     IPinPosition,
     IPoint,
@@ -61,15 +62,13 @@ import {
     RequiredNonNull,
     RequireExcept,
     RightAnswerT,
-    SingleSize,
     SizeT,
     TargetPropsT,
     TextboxPropsT,
     TuplePoint,
-    ValidCoord,
-} from "./imagextypes";
-import {AngularPluginBase} from "./angular-plugin-base.directive";
-import {Drawing, DrawItem} from "./drawCanvas";
+} from "tim/plugin/imagex/imagextypes";
+import {ImageXAll, SingleSize, ValidCoord} from "tim/plugin/imagex/imagextypes";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 
 let globalPreviewColor = "#fff";
 
@@ -1323,7 +1322,7 @@ interface IAnswerResponse {
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
         </div>
     `,
-    styleUrls: ["./imagex.scss"],
+    styleUrls: ["./imagex.component.scss"],
 })
 export class ImageXComponent
     extends AngularPluginBase<
@@ -1968,5 +1967,4 @@ export class ImageXComponent
 export class ImagexModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
-
-pluginMap.set("imagex-runner", ImageXComponent);
+registerPlugin("imagex-runner", ImagexModule, ImageXComponent);

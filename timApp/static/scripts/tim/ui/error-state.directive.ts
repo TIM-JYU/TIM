@@ -1,13 +1,8 @@
-import {
-    AfterContentInit,
-    ContentChild,
-    Directive,
-    ElementRef,
-    OnDestroy,
-} from "@angular/core";
+import type {AfterContentInit, OnDestroy} from "@angular/core";
+import {ContentChild, Directive, ElementRef} from "@angular/core";
 import {NgModel} from "@angular/forms";
-import {Subscription} from "rxjs";
-import {InputService} from "./input.service";
+import type {Subscription} from "rxjs";
+import {InputService} from "tim/ui/input.service";
 
 @Directive({
     selector: "[timErrorState]",

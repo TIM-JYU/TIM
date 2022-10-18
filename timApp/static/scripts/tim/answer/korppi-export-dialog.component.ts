@@ -1,10 +1,10 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
-import {IExportOptions} from "tim/answer/userlistController";
+import type {IExportOptions} from "tim/answer/userlistController";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
+import {BrowserModule} from "@angular/platform-browser";
 
 @Component({
     selector: "tim-korppi-export-dialog",

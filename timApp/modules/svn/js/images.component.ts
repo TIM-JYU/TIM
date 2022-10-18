@@ -1,14 +1,13 @@
 ﻿import * as t from "io-ts";
+import type {ApplicationRef, DoBootstrap} from "@angular/core";
 import {
-    ApplicationRef,
     Component,
-    DoBootstrap,
     ElementRef,
     NgModule,
     ViewChild,
     ViewEncapsulation,
 } from "@angular/core";
-import {ViewCtrl} from "tim/document/viewctrl";
+import type {ViewCtrl} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
     Info,
@@ -18,15 +17,13 @@ import {
 
 import {valueDefu} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
-import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {HttpClientModule} from "@angular/common/http";
 import {PurifyModule} from "tim/util/purify.module";
-import {createDowngradedModule, doDowngrade} from "tim/downgrade";
-import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
-import {pluginMap} from "../../../static/scripts/tim/main";
+import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {BrowserModule} from "@angular/platform-browser";
 
 const ShowFileMarkup = t.intersection([
     t.partial({
@@ -313,14 +310,4 @@ export class ImagesModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-pluginMap.set("tim-images", ImagesComponent);
-// show* plugins don't use plugin loader yet unless they're lazy
-export const moduleDefs = [
-    doDowngrade(
-        createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(ImagesModule)
-        ),
-        "timImages",
-        ImagesComponent
-    ),
-];
+registerPlugin("tim-images", ImagesModule, ImagesComponent);

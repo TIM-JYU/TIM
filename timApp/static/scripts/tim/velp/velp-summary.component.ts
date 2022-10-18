@@ -8,16 +8,10 @@
  * @copyright 2016 Timber project members
  */
 
-import {
-    Component,
-    EventEmitter,
-    Input,
-    OnChanges,
-    Output,
-    SimpleChanges,
-} from "@angular/core";
+import type {OnChanges, SimpleChanges} from "@angular/core";
+import {Component, EventEmitter, Input, Output} from "@angular/core";
 import {IUser} from "tim/user/IUser";
-import {Annotation} from "./velptypes";
+import type {Annotation} from "tim/velp/velptypes";
 
 @Component({
     selector: "velp-summary",

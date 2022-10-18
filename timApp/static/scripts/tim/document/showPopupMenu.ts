@@ -3,7 +3,7 @@ import type {
     IPopupParams,
     PopupMenuDialogComponent as PopupMenuDialogComponentType,
 } from "tim/document/popup-menu-dialog.component";
-import {Pos} from "tim/ui/pos";
+import type {Pos} from "tim/ui/pos";
 
 export async function showPopupMenu(p: IPopupParams, pos: Pos) {
     const {PopupMenuDialogComponent} = await import(

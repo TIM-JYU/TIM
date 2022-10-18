@@ -1,11 +1,13 @@
-import {Component, Input, OnInit} from "@angular/core";
-import moment, {Moment} from "moment";
+import type {OnInit} from "@angular/core";
+import {Component, Input} from "@angular/core";
+import type {Moment} from "moment";
+import moment from "moment";
 import {formatString, toPromise} from "tim/util/utils";
 import humanizeDuration from "humanize-duration";
 import {Users} from "tim/user/userService";
 import {HttpClient} from "@angular/common/http";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {IRight} from "tim/item/access-role.service";
+import type {IRight} from "tim/item/access-role.service";
 
 interface IViewAccessStatus {
     can_access: boolean;

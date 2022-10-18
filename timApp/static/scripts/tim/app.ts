@@ -1,20 +1,22 @@
-import angular, {
+import type {
     ICompileProvider,
     IFilterService,
     IHttpProvider,
     IHttpResponseTransformer,
     IModule,
 } from "angular";
+import angular from "angular";
 import aedatetimepicker from "angular-eonasdan-datetimepicker";
 import ngMessages from "angular-messages";
 import ngSanitize from "angular-sanitize";
 import uibootstrap from "angular-ui-bootstrap";
 import humanizeDuration from "humanize-duration";
-import moment, {Moment} from "moment";
+import type {Moment} from "moment";
+import moment from "moment";
 import ngFileUpload from "ng-file-upload";
 import {convertDateStringsToMoments, markAsUsed} from "tim/util/utils";
-import {KEY_ENTER, KEY_S} from "./util/keycodes";
-import {injectProviders, injectServices} from "./util/ngimport";
+import {KEY_ENTER, KEY_S} from "tim/util/keycodes";
+import {injectProviders, injectServices} from "tim/util/ngimport";
 
 moment.updateLocale("en", {
     week: {dow: 1, doy: 4}, // set Monday as the first day of the week

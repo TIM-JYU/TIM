@@ -1,5 +1,10 @@
 import * as t from "io-ts";
-import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
+import {
+    GenericPluginMarkup,
+    Info,
+    nullable,
+    withDefault,
+} from "tim/plugin/attributes";
 
 const Point = t.type({x: t.number, y: t.number});
 

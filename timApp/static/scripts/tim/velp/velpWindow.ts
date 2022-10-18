@@ -1,11 +1,12 @@
-import {IController, IFormController, IScope} from "angular";
+import type {IController, IFormController, IScope} from "angular";
 import {timApp} from "tim/app";
 import {ParCompiler} from "tim/editor/parCompiler";
-import {ViewCtrl} from "tim/document/viewctrl";
-import {$http, $timeout} from "../util/ngimport";
-import {Binding, clone, Require, to} from "../util/utils";
-import {VelpSelectionController} from "./velpSelection";
-import {
+import type {ViewCtrl} from "tim/document/viewctrl";
+import {$http, $timeout} from "tim/util/ngimport";
+import type {Binding, Require} from "tim/util/utils";
+import {clone, to} from "tim/util/utils";
+import type {VelpSelectionController} from "tim/velp/velpSelection";
+import type {
     ILabel,
     ILabelUI,
     INewLabel,
@@ -13,7 +14,7 @@ import {
     IVelpGroup,
     IVelpGroupUI,
     IVelpUI,
-} from "./velptypes";
+} from "tim/velp/velptypes";
 
 /**
  * Created by Seppo Tarvainen on 25.11.2016.

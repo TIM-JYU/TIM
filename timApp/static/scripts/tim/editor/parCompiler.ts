@@ -1,10 +1,11 @@
-import {IScope} from "angular";
+import type {IScope} from "angular";
 import {staticDynamicImport} from "tim/staticDynamicImport";
 import {$compile, $injector, $log, $timeout} from "tim/util/ngimport";
 import {timLogTime} from "tim/util/timTiming";
-import {MathDocument} from "mathjax-full/js/core/MathDocument";
-import {ViewCtrl} from "../document/viewctrl";
-import {injectStyle, ModuleArray, timeout} from "../util/utils";
+import type {MathDocument} from "mathjax-full/js/core/MathDocument";
+import type {ViewCtrl} from "tim/document/viewctrl";
+import {injectStyle, ModuleArray, timeout} from "tim/util/utils";
+import type renderMathInElement from "katex/contrib/auto-render/auto-render";
 
 export interface IPluginInfoResponse {
     js: string[];
@@ -214,7 +215,7 @@ export class ParagraphCompiler {
      * @returns null if KaTeX processed the element successfully. Otherwise, the failed element.
      */
     public processMath(
-        katexFunction: typeof import("katex/contrib/auto-render/auto-render"),
+        katexFunction: typeof renderMathInElement,
         elem: Element,
         tryMathJax: boolean
     ): Element | null {

@@ -6,14 +6,15 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
-import {ITag, TagType} from "../item/IItem";
-import {
+import type {ITag} from "tim/item/IItem";
+import {TagType} from "tim/item/IItem";
+import type {
     IDocSearchResult,
     ITagSearchResult,
     SearchBoxComponent,
-} from "./search-box.component";
+} from "tim/search/search-box.component";
+import {BrowserModule} from "@angular/platform-browser";
 
 export interface ISearchResultDisplay {
     result: IDocSearchResult;

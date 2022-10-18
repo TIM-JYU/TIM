@@ -1,8 +1,8 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BrowserModule} from "@angular/platform-browser";
-import {TimUtilityModule} from "./tim-utility.module";
 
 @Component({
     selector: "tim-message-dialog",
