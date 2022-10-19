@@ -3,7 +3,13 @@
  */
 import * as t from "io-ts";
 import type {ApplicationRef, DoBootstrap} from "@angular/core";
-import {Component, ElementRef, NgModule, NgZone} from "@angular/core";
+import {
+    Component,
+    ElementRef,
+    NgModule,
+    NgZone,
+    ViewChild,
+} from "@angular/core";
 import type {
     ISetAnswerResult,
     ITimComponent,
@@ -84,7 +90,7 @@ const NumericfieldAll = t.intersection([
      <label><span>
       <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
       <span *ngIf="!isPlainText()" [class.noarrows]="!arrows">
-        <input type="number"
+        <input #inputField type="number"
                [style.width.em]="cols"
                step="{{ stepCheck() }}"
                class="form-control"
@@ -128,6 +134,7 @@ export class NumericfieldPluginComponent
     >
     implements ITimComponent
 {
+    @ViewChild("inputField") inputField!: ElementRef<HTMLInputElement>;
     private changes = false;
     private result?: string;
     isRunning = false;
@@ -215,7 +222,6 @@ export class NumericfieldPluginComponent
     }
 
     private updateFieldValue(val: TFieldContent): boolean {
-        this.errormessage = undefined;
         if (typeof val === "number") {
             this.numericvalue = val;
             return true;
@@ -481,6 +487,7 @@ export class NumericfieldPluginComponent
      * @param nosave true/false parameter boolean checker for the need to save
      */
     async doSaveText(nosave: boolean) {
+        const rejected = this.inputField.nativeElement.validity.badInput;
         this.errormessage = undefined;
         this.redAlert = false;
         if (this.markup.validinput) {
@@ -523,13 +530,18 @@ export class NumericfieldPluginComponent
             }
             this.result = data.web.result;
             if (this.result === "saved") {
+                if (rejected) {
+                    this.errormessage = $localize`Content is not a number; saving empty value.`;
+                    this.redAlert = true;
+                } else {
+                    this.redAlert = false;
+                }
                 this.updateFieldValue(data.web.value);
                 this.initialValue = this.numericvalue;
                 this.changes = false;
                 this.saveFailed = false;
                 this.updateListeners(ChangeType.Saved);
                 this.hideSavedText = false;
-                this.redAlert = false;
                 this.saveResponse.saved = true;
             }
             if (this.markup.clearstyles) {
