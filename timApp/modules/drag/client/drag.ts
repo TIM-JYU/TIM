@@ -100,6 +100,7 @@ interface WordObject {
                     [ngStyle]="styles"
                     [tooltip]="error"
                     [isOpen]="error !== undefined"
+                    [ngClass]="{alertFrame: saveFailed}"
                 >
                     <li class="dndPlaceholder" dndPlaceholderRef></li>
                     <li *ngFor="let item of wordObjs; let i = index"

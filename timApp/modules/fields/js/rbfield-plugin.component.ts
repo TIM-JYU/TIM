@@ -67,7 +67,7 @@ const RbfieldAll = t.intersection([
     <p class="stem" *ngIf="stem">{{stem}}</p>
      <span style="width: 100%">
       <span *ngIf="inputstem" class="inputstem" [innerHtml]="inputstem | purify"></span>
-      <span *ngIf="!isPlainText()" [ngClass]="{warnFrame: (isUnSaved() )  }">
+      <span *ngIf="!isPlainText()" [ngClass]="{warnFrame: (isUnSaved() ), alertFrame: saveFailed}">
         <input type="radio"
                *ngIf="!isPlainText()"
                name="{{getName()}}"

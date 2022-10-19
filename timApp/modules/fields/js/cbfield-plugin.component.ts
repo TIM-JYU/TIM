@@ -66,7 +66,7 @@ const CbfieldAll = t.intersection([
     <p class="stem" *ngIf="stem">{{stem}}</p>
      <span style="width: 100%">
       <span *ngIf="inputstem"class="inputstem" [innerHtml]="inputstem | purify"></span>
-      <span  *ngIf="!isPlainText()" [ngClass]="{warnFrame: (isUnSaved() )  }">
+      <span  *ngIf="!isPlainText()" [ngClass]="{warnFrame: (isUnSaved() ), alertFrame: saveFailed}">
         <!-- <span *ngIf="isUnSaved()"  [ngClass]="{warnFrame: (isUnSaved() )  }">&nbsp;</span> -->
         <input type="checkbox"
                *ngIf="!isPlainText()"

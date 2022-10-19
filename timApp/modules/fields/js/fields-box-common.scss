@@ -22,12 +22,6 @@ input:focus.warnFrame, textarea:focus.warnFrame {
     border-right-color: gold !important;
 }
 
-.bottomWarnFrame {
-    border-bottom-style: solid;
-    border-bottom-color: gold;
-    border-bottom-width: thick;
-}
-
 .stem {
     text-align: left;
     height: 6px;
@@ -58,6 +52,16 @@ input:focus.warnFrame, textarea:focus.warnFrame {
 
     &.warnFrame {
         border-right-width: thick;
+    }
+}
+
+.bottomWarnFrame {
+    border-bottom-style: solid;
+    border-bottom-color: gold;
+    border-bottom-width: thick;
+
+    &.alertFrame {
+        border-bottom-color: red;
     }
 }
 
