@@ -21,7 +21,7 @@ export class VariablesComponent implements OnInit, AfterViewInit {
     @Input() code!: string;
     @Input() height?: string | number;
     @Input() jsparams?: Record<string, unknown>;
-    varfunctions?: typeof setData;
+    varsSetData?: typeof setData;
     @ViewChild("variablesDiv") private variablesDiv!: ElementRef<HTMLElement>;
 
     constructor() {
@@ -38,13 +38,13 @@ export class VariablesComponent implements OnInit, AfterViewInit {
     }
 
     async loadVariables() {
-        if (this.varfunctions) {
-            return this.varfunctions;
+        if (this.varsSetData) {
+            return this.varsSetData;
         }
         // https://coryrylan.com/blog/javascript-module-pattern-basics
-        this.varfunctions = (
+        this.varsSetData = (
             await import("../../../../../modules/cs/static/dfa/vars.js")
-        ).default;
+        ).setData;
     }
 
     setSVG(svg: string, svgdiv: HTMLElement, _height: number) {
@@ -74,7 +74,7 @@ export class VariablesComponent implements OnInit, AfterViewInit {
         if (this.height) {
             this.variablesDiv.nativeElement.style.height = this.height + "px";
         }
-        const setData = this.varfunctions!;
+        const setData = this.varsSetData!;
         const data = {
             code: changedObject.code!.currentValue,
             params: params,
