@@ -88,14 +88,22 @@ const DropdownAll = t.intersection([
                 (ngModelChange)="updateSelection()"
                 [ngClass]="{warnFrame: isUnSaved()}"
                 [disabled]="attrsall['preview']"
-                [ngStyle]="styles">
+                [ngStyle]="styles"
+                [tooltip]="connectionErrorMessage"
+                [isOpen]="connectionErrorMessage !== undefined"
+        >
             <option *ngFor="let item of wordList" [value]="item">{{getItemText(item)}}</option>
         </select>
+        <button class="timButton"
+                *ngIf="!hasButton() && saveFailed"
+                (click)="save()">
+            {{buttonText()}}
+        </button>
     </div>
-    <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
+    <div *ngIf="connectionErrorMessage && hasButton()" class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
     <div class="error" *ngIf="error" [innerHtml]="error"></div>
         <button class="timButton"
-            *ngIf="hasButton() || saveFailed"
+            *ngIf="hasButton()"
             [disabled]="(disableUnchanged && !isUnSaved()) || readonly || attrsall['preview']"
             (click)="save()">
         {{buttonText()}}

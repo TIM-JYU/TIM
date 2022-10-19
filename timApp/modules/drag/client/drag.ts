@@ -11,6 +11,7 @@ import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
 import type {ITimComponent} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -97,6 +98,8 @@ interface WordObject {
                     [dndEffectAllowed]="effectAllowed"
                     (dndDrop)="handleDrop($event)"
                     [ngStyle]="styles"
+                    [tooltip]="error"
+                    [isOpen]="error !== undefined"
                 >
                     <li class="dndPlaceholder" dndPlaceholderRef></li>
                     <li *ngFor="let item of wordObjs; let i = index"
@@ -110,14 +113,19 @@ interface WordObject {
                         [ngStyle]="styles"
                     ></li>
                 </ul>
+                <button class="timButton"
+                        *ngIf="!saveButton && saveFailed"
+                        (click)="save()">
+                    {{buttonText()}}
+                </button>
             </div>
             <button class="timButton"
-                    *ngIf="saveButton || saveFailed"
+                    *ngIf="saveButton"
                     (click)="save()">
-                Save
+                {{buttonText()}}
             </button>
         </div>
-        <div *ngIf="error" class="error" style="font-size: 12px" [innerHtml]="error | purify"></div>
+        <div *ngIf="error && saveButton" class="error" style="font-size: 12px" [innerHtml]="error | purify"></div>
         <div *ngIf="footer" class="plgfooter" [textContent]="footer"></div>
     `,
     styleUrls: ["./drag.scss"],
@@ -150,6 +158,10 @@ export class DragComponent
 
     getDefaultMarkup(): Partial<t.TypeOf<typeof DragMarkup>> {
         return {};
+    }
+
+    buttonText() {
+        return super.buttonText() ?? $localize`Save`;
     }
 
     ngOnInit() {
@@ -300,6 +312,7 @@ export class DragComponent
     }
 
     async doSave(nosave: boolean = false) {
+        this.error = undefined;
         const params = {
             input: {
                 nosave: nosave,
@@ -346,6 +359,7 @@ export class DragComponent
         TimUtilityModule,
         PurifyModule,
         FormsModule,
+        TooltipModule.forRoot(),
     ],
 })
 export class DragModule implements DoBootstrap {

@@ -99,6 +99,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                [pattern]="getPattern()"
                [readonly]="readonly"
                [tooltip]="errormessage"
+               [isOpen]="errormessage !== undefined && !hasButton()"
                [disabled]="attrsall['preview']"
                [placeholder]="placeholder"
                [class.warnFrame]="isUnSaved() && !redAlert"
@@ -118,6 +119,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                (ngModelChange)="updateInput()"
                [readonly]="readonly"
                [tooltip]="errormessage"
+               [isOpen]="errormessage !== undefined && !hasButton()"
                [placeholder]="placeholder"
                [disabled]="attrsall['preview']"
                [class.warnFrame]="isUnSaved() && !redAlert"
@@ -125,14 +127,19 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                [ngStyle]="styles"
                [style.width.em]="cols">
                </textarea>
+               <button class="timButton"
+                        *ngIf="!hasButton() && saveFailed"
+                        (click)="saveText()">
+                    {{buttonText()}}
+               </button>
          </span>
          <span *ngIf="isPlainText() && !isDownloadButton" [innerHtml]="userword | purify" class="plaintext" [style.width.em]="cols" style="max-width: 100%"></span>
          <a *ngIf="isDownloadButton" class="timButton" [href]="userWordBlobUrl" [download]="downloadButtonFile">{{downloadButton}}</a>
          </span></label>
     </form>
-    <div *ngIf="errormessage" class="error" style="font-size: 12px" [innerHtml]="errormessage | purify"></div>
+    <div *ngIf="errormessage && hasButton()" class="error" style="font-size: 12px" [innerHtml]="errormessage | purify"></div>
     <button class="timButton"
-            *ngIf="(!isPlainText() && hasButton()) || saveFailed"
+            *ngIf="!isPlainText() && hasButton()"
             [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
             (click)="saveText()">
         {{buttonText()}}

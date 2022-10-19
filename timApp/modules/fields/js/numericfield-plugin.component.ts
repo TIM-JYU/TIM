@@ -94,16 +94,22 @@ const NumericfieldAll = t.intersection([
                (ngModelChange)="updateInput()"
                [readonly]="readonly"
                [tooltip]="errormessage"
+               [isOpen]="errormessage !== undefined && !hasButton()"
                [disabled]="attrsall['preview']"
                placeholder="{{inputplaceholder}}"
                [ngClass]="{warnFrame: (isUnSaved() && !redAlert), alertFrame: redAlert}"
                [ngStyle]="styles">
+               <button class="timButton"
+                        *ngIf="!hasButton() && saveFailed"
+                        (click)="saveText()">
+                    {{buttonText()}}
+               </button>
       </span>
       <span *ngIf="isPlainText()" class="plaintext" [style.width.em]="cols">{{numericvalue}}</span>
      </span></label>
     </div>
     <button class="timButton"
-            *ngIf="(!isPlainText() && hasButton()) || saveFailed"
+            *ngIf="!isPlainText() && hasButton()"
             [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
             (click)="saveText()">
         {{buttonText()}}

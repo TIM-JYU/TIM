@@ -77,13 +77,17 @@ const CbfieldAll = t.intersection([
                [disabled]="readonly || attrsall['preview']"
                [tooltip]="errormessage"
                [isOpen]="errormessage !== undefined"
-               triggers="mouseenter"
                >
+               <button class="timButton"
+                        *ngIf="!hasButton() && saveFailed"
+                        (click)="autoSave()">
+                    {{buttonText()}}
+               </button>
          </span>
          <span *ngIf="isPlainText()" style="">{{userword}}</span>
          </span>
         <button class="timButton"
-            *ngIf="(!isPlainText() && hasButton()) || saveFailed"
+            *ngIf="!isPlainText() && hasButton()"
             [disabled]="(disableUnchanged && !isUnSaved()) || isRunning || readonly || attrsall['preview']"
             (click)="saveText()">
         {{buttonText()}}
