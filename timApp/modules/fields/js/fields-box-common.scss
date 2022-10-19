@@ -55,6 +55,10 @@ input:focus.warnFrame, textarea:focus.warnFrame {
 .alertFrame {
     border-color: red;
     border-width: 2px;
+
+    &.warnFrame {
+        border-right-width: thick;
+    }
 }
 
 input:focus.alertframe {

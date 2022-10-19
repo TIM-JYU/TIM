@@ -94,10 +94,10 @@ const NumericfieldAll = t.intersection([
                (ngModelChange)="updateInput()"
                [readonly]="readonly"
                [tooltip]="errormessage"
-               [isOpen]="errormessage !== undefined && !hasButton()"
+               [isOpen]="errormessage !== undefined"
                [disabled]="attrsall['preview']"
                placeholder="{{inputplaceholder}}"
-               [ngClass]="{warnFrame: (isUnSaved() && !redAlert), alertFrame: redAlert}"
+               [ngClass]="{warnFrame: isUnSaved(), alertFrame: redAlert}"
                [ngStyle]="styles">
                <button class="timButton"
                         *ngIf="!hasButton() && saveFailed"
@@ -215,6 +215,7 @@ export class NumericfieldPluginComponent
     }
 
     private updateFieldValue(val: TFieldContent): boolean {
+        this.errormessage = undefined;
         if (typeof val === "number") {
             this.numericvalue = val;
             return true;
@@ -308,6 +309,7 @@ export class NumericfieldPluginComponent
             this.numericvalue = this.initialValue;
             this.changes = false;
             this.saveFailed = false;
+            this.redAlert = false;
             this.updateListeners(ChangeType.Saved);
         });
     }

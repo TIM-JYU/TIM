@@ -102,7 +102,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                [isOpen]="errormessage !== undefined && !hasButton()"
                [disabled]="attrsall['preview']"
                [placeholder]="placeholder"
-               [class.warnFrame]="isUnSaved() && !redAlert"
+               [class.warnFrame]="isUnSaved()"
                [class.alertFrame]="redAlert"
                [ngStyle]="styles"
                [style.width.em]="cols"
@@ -122,7 +122,7 @@ export type TFieldContent = t.TypeOf<typeof FieldContent>;
                [isOpen]="errormessage !== undefined && !hasButton()"
                [placeholder]="placeholder"
                [disabled]="attrsall['preview']"
-               [class.warnFrame]="isUnSaved() && !redAlert"
+               [class.warnFrame]="isUnSaved()"
                [class.alertFrame]="redAlert"
                [ngStyle]="styles"
                [style.width.em]="cols">
@@ -301,6 +301,7 @@ export class TextfieldPluginComponent
             this.initCode();
             this.styles = {};
             this.errormessage = undefined;
+            this.redAlert = false;
             return undefined;
         });
     }
@@ -310,6 +311,7 @@ export class TextfieldPluginComponent
             this.userword = this.initialValue;
             this.changes = false;
             this.saveFailed = false;
+            this.redAlert = false;
             this.updateListeners(ChangeType.Saved);
         });
     }
@@ -588,6 +590,7 @@ export class TextfieldPluginComponent
                 r.result.error.error ??
                 this.markup.connectionErrorMessage ??
                 defaultErrorMessage;
+            this.redAlert = true;
             this.saveFailed = true;
         }
         return this.saveResponse;
