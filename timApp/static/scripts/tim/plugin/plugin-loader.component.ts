@@ -189,6 +189,10 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         return this.elementRef.nativeElement;
     }
 
+    private async refreshMath() {
+        await ParCompiler.processAllMathDelayed($(this.loaderElement));
+    }
+
     async ngOnInit() {
         this.viewctrl = vctrlInstance;
         if (this.viewctrl && !this.preview) {
@@ -369,6 +373,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         const elementToCompile = $(html)[0];
         this.defaultload = false;
         await this.determineAndSetComponent(elementToCompile);
+        await this.refreshMath();
     }
 
     async determineAndSetComponent(component: HTMLElement) {
