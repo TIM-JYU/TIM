@@ -10,13 +10,13 @@ from flask import current_app
 from requests import Response
 
 from timApp.document.docsettings import DocSettings
-from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.markdown.dumboclient import call_dumbo, DumboOptions
 from timApp.plugin.plugin import Plugin, AUTOMD
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.timtable import timTable
 from timApp.util.logger import log_warning
+from tim_common.timjsonencoder import TimJsonEncoder
 
 CSPLUGIN_DOMAIN = "csplugin"
 DRAGPLUGIN_DOMAIN = "drag"
@@ -82,8 +82,24 @@ def get_plugins() -> dict[str, PluginReg]:
         PluginReg(name="showImages", domain=SVNPLUGIN_DOMAIN, path="/svn/multiimages/"),
         PluginReg(name="showVideo", domain=SVNPLUGIN_DOMAIN, path="/svn/video/"),
         PluginReg(name="showPdf", domain=SVNPLUGIN_DOMAIN, path="/svn/pdf/"),
-        PluginReg(name="mcq", domain=HASKELLPLUGIN_DOMAIN, port=5001),
-        PluginReg(name="mmcq", domain=HASKELLPLUGIN_DOMAIN, port=5002),
+        # PluginReg(name="mcq", domain=HASKELLPLUGIN_DOMAIN, port=5001),
+        # PluginReg(name="mmcq", domain=HASKELLPLUGIN_DOMAIN, port=5002),
+        PluginReg(
+            name="mcq",
+            domain=internal_domain,
+            port=qst_port,
+            path="/qst/mcq/",
+            regexattrs=QSTMDATTRS,
+            automd=True,
+        ),
+        PluginReg(
+            name="mmcq",
+            domain=internal_domain,
+            port=qst_port,
+            path="/qst/mmcq/",
+            regexattrs=QSTMDATTRS,
+            automd=True,
+        ),
         PluginReg(
             name="mcq2",
             domain=internal_domain,
