@@ -252,6 +252,9 @@ def create_new_email_list(list_options: ListInfo, owner: User) -> None:
         # on by default, add pass_extensions value to block attachments.
         mlist_settings["filter_content"] = True
         mlist_settings["pass_extensions"] = ["no_extension"]
+        # Disable the "Should Mailman collapse multipart/alternative to its first part content?" option
+        # because it might break sending HTML email with embedded images.
+        mlist_settings["collapse_alternatives"] = False
 
         # This is to force Mailman generate archivers into its db. It fixes a race condition, where creating a new list
         # without proper engineer interface procedures might make duplicate archiver rows in to db, while Mailman's code
