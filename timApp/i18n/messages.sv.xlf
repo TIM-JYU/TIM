@@ -7232,6 +7232,14 @@
           <context context-type="linenumber">367</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="996022104515543405" datatype="html">
+        <source>Content is not a number; saving empty value.</source>
+        <target state="translated">Innehåll är inget nummer; tomt värde sparas.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/fields/js/numericfield-plugin.component.ts</context>
+          <context context-type="linenumber">533</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
