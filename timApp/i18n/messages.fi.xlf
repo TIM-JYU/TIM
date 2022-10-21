@@ -7350,6 +7350,22 @@
           <context context-type="linenumber">533</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="4150085642751674936" datatype="html">
+        <source>Save teacher's fix</source>
+        <target state="translated">Tallenna opettajan korjaus</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">139</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6627696457152714946" datatype="html">
+        <source>Velps</source>
+        <target state="translated">Velpit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">145</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
