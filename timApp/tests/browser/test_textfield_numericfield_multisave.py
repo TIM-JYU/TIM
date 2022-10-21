@@ -1,3 +1,4 @@
+from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.common.by import By
 
 from timApp.tests.browser.browsertest import BrowserTest
@@ -72,3 +73,41 @@ autosave: false
         self.wait_until_present_and_vis("#t2 input")
         par = self.find_element_avoid_staleness("#pars")
         self.assert_same_screenshot(par, ["textfield/fields_after_answer_switch"])
+
+
+class FieldTest(BrowserTest):
+    def test_field_failed_save(self):
+        # Ensure minimalist textfield shows save button and error messages on save failure
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+#- {plugin=textfield #t1}
+autosave: true
+button: 
+                """,
+        )
+        self.goto_document(d)
+        self.wait_until_present_and_vis("#t1 input")
+        field = self.find_element_and_move_to("#t1 input")
+        field.send_keys("Hello world")
+        self.wait_until_hidden("#t1 button")
+        self.drv.execute_cdp_cmd("Network.setBlockedURLs", {"urls": ["*"]})
+        self.drv.execute_cdp_cmd("Network.enable", {})
+        ActionChains(self.drv).send_keys(Keys.ENTER).perform()
+        # Tooltip triggers on save
+        self.wait_until_present_and_vis("bs-tooltip-container")
+        button = self.find_element_avoid_staleness("#t1 button")
+        # Hover back and forth to remove tooltip
+        self.get_uninteractable_element().click()
+        self.find_element_and_move_to("#t1 input")
+        self.get_uninteractable_element().click()
+        self.wait_until_hidden("bs-tooltip-container")
+        button.click()
+        # Tooltip triggers again, despite the error being the same as before
+        self.wait_until_present_and_vis("bs-tooltip-container")
+        self.drv.execute_cdp_cmd("Network.setBlockedURLs", {"urls": []})
+        self.drv.execute_cdp_cmd("Network.enable", {})
+        button.click()
+        self.wait_until_hidden("#t1 .warnFrame")
+        self.wait_until_hidden("bs-tooltip-container")
