@@ -78,7 +78,7 @@ autosave: false
 
 class FieldSaveTest(BrowserTest):
     def test_field_failed_save(self):
-        # Ensure minimalist fields show save button and error messages on save failure
+        # Ensure minimalist fields show save button and trigger error tooltips on save failures
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(
@@ -112,6 +112,7 @@ copy: target
                 ActionChains(self.drv).send_keys(Keys.ENTER).perform()
             else:
                 field.click()
+            # Tooltip triggers on save
             self.wait_until_present_and_vis(f".plugin{task} bs-tooltip-container")
 
         def check_hover(task: str):
@@ -122,6 +123,7 @@ copy: target
             self.get_uninteractable_element().click()
             self.wait_until_hidden(f"#{task} bs-tooltip-container")
             button.click()
+            # Tooltip triggers again, despite the error being the same as before
             self.wait_until_present_and_vis(f"#{task} bs-tooltip-container")
 
         def answer_successfully(task: str):
