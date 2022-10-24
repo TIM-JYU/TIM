@@ -76,7 +76,7 @@ autosave: false
         self.assert_same_screenshot(par, ["textfield/fields_after_answer_switch"])
 
 
-class FieldTest(BrowserTest):
+class FieldSaveTest(BrowserTest):
     def test_field_failed_save(self):
         # Ensure minimalist fields show save button and error messages on save failure
         self.login_browser_quick_test1()
