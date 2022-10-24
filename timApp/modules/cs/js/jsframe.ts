@@ -25,7 +25,7 @@ import {
     ViewChild,
 } from "@angular/core";
 import type {SafeResourceUrl} from "@angular/platform-browser";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -43,6 +43,7 @@ import {
 } from "tim/util/fullscreen";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
+import {CommonModule} from "@angular/common";
 import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([
@@ -784,7 +785,7 @@ export class JsframeComponent
 @NgModule({
     declarations: [JsframeComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

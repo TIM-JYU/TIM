@@ -1133,6 +1133,10 @@ export class ReviewController {
     }
 
     getAnswerBrowserFromPluginLoader(first: Element) {
+        const abType = first.getAttribute("type");
+        if (abType === "none") {
+            return;
+        }
         const taskId = first.getAttribute("task-id");
         if (!taskId) {
             console.warn("tim-plugin-loader did not have task-id?");

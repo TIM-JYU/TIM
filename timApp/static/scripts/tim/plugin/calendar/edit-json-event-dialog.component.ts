@@ -1,11 +1,11 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule, ViewChild} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {toPromise} from "tim/util/utils";
 import {PurifyModule} from "tim/util/purify.module";
+import {CommonModule} from "@angular/common";
 import {EditorModule} from "../../../../../modules/cs/js/editor/module";
 import {AceEditorComponent} from "../../../../../modules/cs/js/editor/ace";
 
@@ -117,7 +117,7 @@ export class EditJsonEventDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [EditJsonEventDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         DialogModule,
         TimUtilityModule,
         EditorModule,

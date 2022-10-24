@@ -6,7 +6,7 @@ import type {IDocument} from "tim/item/IItem";
 import {toPromise} from "tim/util/utils";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 @Component({
     selector: "tim-user-group-dialog",
@@ -134,7 +134,7 @@ export class UserGroupDialogComponent extends AngularDialogComponent<
         DialogModule,
         FormsModule,
         TimUtilityModule,
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
     ],
     exports: [UserGroupDialogComponent],

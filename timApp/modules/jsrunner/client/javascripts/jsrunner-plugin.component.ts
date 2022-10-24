@@ -15,7 +15,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 import type {
     AnswerReturnBrowser,
     ErrorList,
@@ -342,7 +342,7 @@ export class JsRunnerErrorComponent {
 @NgModule({
     declarations: [JsRunnerPluginComponent, JsRunnerErrorComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         TimUtilityModule,
         FormsModule,

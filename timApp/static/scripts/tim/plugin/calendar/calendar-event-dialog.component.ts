@@ -22,7 +22,7 @@ import {itemglobals} from "tim/util/globals";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import type {TIMCalendarEvent} from "tim/plugin/calendar/calendar.component";
 import {TimCalendarModule} from "tim/plugin/calendar/calendar.component";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 @Component({
     selector: "tim-calendar-event-dialog",
@@ -834,7 +834,7 @@ export class CalendarEventDialogComponent extends AngularDialogComponent<
         DialogModule,
         FormsModule,
         TimUtilityModule,
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         TimCalendarModule,
         TooltipModule.forRoot(),

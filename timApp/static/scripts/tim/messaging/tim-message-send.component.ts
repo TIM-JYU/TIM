@@ -11,7 +11,9 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {isAdmin, Users} from "tim/user/userService";
 import {toPromise} from "tim/util/utils";
+import {CommonModule} from "@angular/common";
 import {BrowserModule} from "@angular/platform-browser";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 
 interface TimMessageOptions {
     archive: boolean;
@@ -405,7 +407,7 @@ export class TimMessageSendComponent {
 @NgModule({
     declarations: [TimMessageSendComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
@@ -420,11 +422,31 @@ export class TimMessageSendModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
+// Needed because doDowngrade doesn't include BrowserModule by default
+@NgModule({
+    declarations: [],
+    imports: [
+        BrowserModule,
+        NoopAnimationsModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        BsDropdownModule.forRoot(),
+        TimepickerModule.forRoot(),
+        TooltipModule.forRoot(),
+        DatetimePickerModule,
+    ],
+    exports: [],
+})
+export class TimMessageSendModuleAngularJS implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef): void {}
+}
+
 export const moduleDefs = [
     doDowngrade(
         createDowngradedModule((extraProviders) =>
             platformBrowserDynamic(extraProviders).bootstrapModule(
-                TimMessageSendModule
+                TimMessageSendModuleAngularJS
             )
         ),
         "timMessageSend",

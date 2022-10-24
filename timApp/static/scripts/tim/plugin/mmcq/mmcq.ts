@@ -12,7 +12,7 @@ import type {IAnswerSaveEvent} from "tim/answer/answer-browser.component";
 import {TaskId} from "tim/plugin/taskid";
 import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 interface MMCQContent<State> {
     state?: State;
@@ -279,7 +279,7 @@ export class MCQ extends MCQBase<number | null> {
 @NgModule({
     declarations: [MCQ, MMCQ],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

@@ -19,7 +19,7 @@ import type {IDiscoveryFeedEntry} from "tim/user/haka-login.component";
 import {HakaLoginComponent, loadIdPs} from "tim/user/haka-login.component";
 import type {ILoginResponse} from "tim/user/userService";
 import {Users} from "tim/user/userService";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 interface INameResponse {
     status: "name";
@@ -577,6 +577,6 @@ export class LoginDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [LoginDialogComponent, HakaLoginComponent],
-    imports: [BrowserModule, DialogModule, FormsModule, TimUtilityModule],
+    imports: [CommonModule, DialogModule, FormsModule, TimUtilityModule],
 })
 export class LoginDialogModule {}

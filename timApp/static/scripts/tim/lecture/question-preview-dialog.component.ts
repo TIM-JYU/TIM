@@ -1,7 +1,6 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
-import {BrowserModule} from "@angular/platform-browser";
 import type {AskParams, IShowAsk} from "tim/lecture/askQuestion";
 import {askQuestion, isReasking} from "tim/lecture/askQuestion";
 import {
@@ -21,6 +20,7 @@ import {
     makePreview,
 } from "tim/document/question/answer-sheet.component";
 import type {IAskedQuestion} from "tim/lecture/lecturetypes";
+import {CommonModule} from "@angular/common";
 
 export type QuestionPreviewParams = AskParams & IShowAsk;
 
@@ -170,6 +170,6 @@ export class QuestionPreviewDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [QuestionPreviewDialogComponent],
-    imports: [BrowserModule, DialogModule, AnswerSheetModule, TimUtilityModule],
+    imports: [CommonModule, DialogModule, AnswerSheetModule, TimUtilityModule],
 })
 export class QuestionPreviewDialogModule {}

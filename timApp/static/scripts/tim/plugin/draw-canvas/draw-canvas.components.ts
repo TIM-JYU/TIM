@@ -16,7 +16,7 @@ import {
     ViewChildren,
 } from "@angular/core";
 import type {SafeResourceUrl} from "@angular/platform-browser";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import type {IUnsavedComponent} from "tim/document/viewctrl";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -42,6 +42,7 @@ import {
     posToRelative,
     touchEventToTouch,
 } from "tim/util/utils";
+import {CommonModule} from "@angular/common";
 
 export type IRectangle = {
     type: "rectangle";
@@ -1609,7 +1610,7 @@ export class DrawCanvasComponent
 
 @NgModule({
     declarations: [DrawCanvasComponent],
-    imports: [BrowserModule, DrawToolbarModule, FormsModule, TimUtilityModule],
+    imports: [CommonModule, DrawToolbarModule, FormsModule, TimUtilityModule],
     exports: [DrawCanvasComponent],
 })
 export class DrawCanvasModule implements DoBootstrap {

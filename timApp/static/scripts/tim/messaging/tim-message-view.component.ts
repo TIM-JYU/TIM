@@ -10,7 +10,7 @@ import {itemglobals, someglobals} from "tim/util/globals";
 import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 @Component({
     selector: "tim-message-view",
@@ -107,6 +107,6 @@ export interface TimMessageData {
 @NgModule({
     declarations: [TimMessageViewComponent],
     exports: [TimMessageViewComponent],
-    imports: [BrowserModule, TimUtilityModule],
+    imports: [CommonModule, TimUtilityModule],
 })
 export class TimMessageViewModule {}

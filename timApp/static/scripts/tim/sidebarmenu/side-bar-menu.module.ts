@@ -18,7 +18,7 @@ import {LoggedUsersTabComponent} from "tim/sidebarmenu/tabs/logged-users-tab.com
 import {BookmarksComponent} from "tim/sidebarmenu/util/bookmarks.component";
 import {TimeSincePipe} from "tim/sidebarmenu/util/time-since.pipe";
 import {ScoreInfoTabComponent} from "tim/sidebarmenu/tabs/score-info-tab.component";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 @NgModule({
     declarations: [
@@ -36,7 +36,7 @@ import {BrowserModule} from "@angular/platform-browser";
         ScoreInfoTabComponent,
     ],
     imports: [
-        BrowserModule,
+        CommonModule,
         FormsModule,
         TabsModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,
         TooltipModule.forRoot() as ModuleWithProviders<Record<string, unknown>>,

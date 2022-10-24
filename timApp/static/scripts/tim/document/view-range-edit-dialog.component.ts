@@ -6,7 +6,6 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import * as t from "io-ts";
 import type {IItem} from "tim/item/IItem";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -19,6 +18,7 @@ import {
     setPieceSize,
     unpartitionDocument,
 } from "tim/document/viewRangeInfo";
+import {CommonModule} from "@angular/common";
 
 @Component({
     selector: "tim-view-range-edit-dialog",
@@ -125,6 +125,6 @@ export class ViewRangeEditDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [ViewRangeEditDialogComponent],
-    imports: [BrowserModule, DialogModule, FormsModule, TimUtilityModule],
+    imports: [CommonModule, DialogModule, FormsModule, TimUtilityModule],
 })
 export class ViewRangeEditDialogModule {}

@@ -6,7 +6,7 @@ import {FormsModule} from "@angular/forms";
 import {toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TimMessageData} from "tim/messaging/tim-message-view.component";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 interface ReplyOptions {
     archive: boolean;
@@ -197,6 +197,6 @@ export class TimMessageComponent implements OnInit {
 @NgModule({
     declarations: [TimMessageComponent],
     exports: [TimMessageComponent],
-    imports: [BrowserModule, FormsModule, TimUtilityModule],
+    imports: [CommonModule, FormsModule, TimUtilityModule],
 })
 export class TimMessageModule {}

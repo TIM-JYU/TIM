@@ -7,7 +7,7 @@ import * as t from "io-ts";
 import {FormsModule} from "@angular/forms";
 import {getUrlParamsJSON, TimStorage, toPromise} from "tim/util/utils";
 import type {IItem} from "tim/item/IItem";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 export interface ITemplate extends IItem {}
 
@@ -286,7 +286,7 @@ export class PrintDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [PrintDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         DialogModule,
         TimUtilityModule,
         HttpClientModule,

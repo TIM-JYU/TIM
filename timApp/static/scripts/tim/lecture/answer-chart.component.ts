@@ -13,7 +13,7 @@ import type {
     IQuestionAnswerPlain,
 } from "tim/lecture/lecturetypes";
 import {IAskedQuestion} from "tim/lecture/lecturetypes";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 /**
  * Created by hajoviin on 13.5.2015.
@@ -526,7 +526,7 @@ export class AnswerChartComponent implements OnChanges {
 
 @NgModule({
     declarations: [AnswerChartComponent],
-    imports: [BrowserModule, NgChartsModule, TimUtilityModule],
+    imports: [CommonModule, NgChartsModule, TimUtilityModule],
     exports: [AnswerChartComponent],
 })
 export class AnswerChartModule {}

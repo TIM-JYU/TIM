@@ -119,7 +119,7 @@ import {
     showTableEditorToolbar,
 } from "tim/plugin/timTable/toolbarUtils";
 import {createParContext} from "tim/document/structure/create";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 const timDateRegex = /^\d{4}-\d{2}-\d{2}[ T]?\d{2}:\d{2}(:\d{2})?$/;
 
@@ -4825,7 +4825,7 @@ export class TimTableComponent
 @NgModule({
     declarations: [TimTableComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

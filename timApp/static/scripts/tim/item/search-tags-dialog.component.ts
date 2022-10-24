@@ -12,7 +12,7 @@ import {TaggedDocumentListComponent} from "tim/item/tagged-document-list.compone
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 import * as t from "io-ts";
 import {TimStorage} from "tim/util/utils";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 @Component({
     selector: "tim-search-tags-dialog",
@@ -91,7 +91,7 @@ export class SearchTagsDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [SearchTagsDialogComponent, TaggedDocumentListComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

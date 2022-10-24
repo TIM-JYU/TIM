@@ -9,7 +9,7 @@ import {
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import * as t from "io-ts";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {defaultErrorMessage, to2} from "tim/util/utils";
@@ -33,6 +33,7 @@ import {
     nullable,
 } from "tim/plugin/attributes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {CommonModule} from "@angular/common";
 
 const PluginMarkupFields = t.intersection([
     GenericPluginMarkup,
@@ -388,7 +389,7 @@ export class QstComponent
 @NgModule({
     declarations: [QstComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

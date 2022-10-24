@@ -18,7 +18,7 @@ import type {
     ILectureFormParams,
     ILectureOptions,
 } from "tim/lecture/lecturetypes";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 /**
  * Lecture creation controller which is used to handle and validate the form data.
@@ -378,7 +378,7 @@ export class LectureDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [LectureDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

@@ -25,7 +25,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -212,7 +212,7 @@ export class PaliComponent
 @NgModule({
     declarations: [PaliComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

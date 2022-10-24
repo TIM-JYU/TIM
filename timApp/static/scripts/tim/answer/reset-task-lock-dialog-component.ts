@@ -3,9 +3,9 @@ import {Component, NgModule} from "@angular/core";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
-import {BrowserModule} from "@angular/platform-browser";
 import {to} from "tim/util/utils";
 import {$http} from "tim/util/ngimport";
+import {CommonModule} from "@angular/common";
 
 export interface IRestTaskLockDialogParams {
     currentUser: string;
@@ -87,6 +87,6 @@ export class ResetTaskLockDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [ResetTaskLockDialogComponent],
-    imports: [BrowserModule, DialogModule, TimUtilityModule, FormsModule],
+    imports: [CommonModule, DialogModule, TimUtilityModule, FormsModule],
 })
 export class ResetTaskLockDialogModule {}

@@ -16,7 +16,7 @@ import {documentglobals} from "tim/util/globals";
 import {Users} from "tim/user/userService";
 import {showConfirm} from "tim/ui/showConfirmDialog";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 const PluginMarkup = t.intersection([
     GenericPluginMarkup,
@@ -212,7 +212,7 @@ export class GroupJoinComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [GroupJoinComponent],
-    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
+    imports: [CommonModule, HttpClientModule, FormsModule, TimUtilityModule],
 })
 export class GroupJoinModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

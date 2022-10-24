@@ -8,7 +8,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import {copyToClipboard, isIOS} from "tim/util/utils";
 import type {PluginJson} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 export enum ParameterType {
     NUMBER,
@@ -1004,7 +1004,7 @@ export class TapePluginContent implements PluginJson {
 @NgModule({
     declarations: [TapePluginContent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

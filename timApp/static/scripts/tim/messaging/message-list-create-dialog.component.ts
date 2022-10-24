@@ -1,4 +1,3 @@
-import {BrowserModule} from "@angular/platform-browser";
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient} from "@angular/common/http";
@@ -21,6 +20,7 @@ import {redirectToItem} from "tim/item/IItem";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import type {ListOptions} from "tim/messaging/listOptionTypes";
 import {archivePolicyNames, ArchiveType} from "tim/messaging/listOptionTypes";
+import {CommonModule} from "@angular/common";
 
 enum NameRequirements {
     ERROR = -1,
@@ -275,6 +275,6 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [MessageListCreateDialogComponent],
-    imports: [BrowserModule, DialogModule, FormsModule, TimUtilityModule],
+    imports: [CommonModule, DialogModule, FormsModule, TimUtilityModule],
 })
 export class MessageListModule {}

@@ -12,7 +12,7 @@ import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import type {AnswerBrowserComponent} from "tim/answer/answer-browser.component";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 import type {Iframesettings} from "./jsframe";
 
 const GeogebraMarkup = t.intersection([
@@ -268,7 +268,7 @@ export class GeogebraComponent extends AngularPluginBase<
 @NgModule({
     declarations: [GeogebraComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

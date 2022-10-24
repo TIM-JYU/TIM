@@ -18,7 +18,7 @@ import {
 } from "tim/plugin/attributes";
 import {getFormBehavior, parseStyles} from "tim/plugin/util";
 import {defaultErrorMessage, valueOr} from "tim/util/utils";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -27,6 +27,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
 import type {TFieldContent} from "./textfield-plugin.component";
 import {FieldDataWithStyles} from "./textfield-plugin.component";
 
@@ -580,7 +581,7 @@ export class NumericfieldPluginComponent
 @NgModule({
     declarations: [NumericfieldPluginComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         TimUtilityModule,
         FormsModule,

@@ -10,7 +10,7 @@ import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import type {IItem} from "tim/item/IItem";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 @Component({
     selector: "tim-relevance-edit-dialog",
@@ -42,7 +42,7 @@ export class RelevanceEditDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [RelevanceEditDialogComponent, RelevanceEditComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         DialogModule,
         FormsModule,
         TypeaheadModule.forRoot(),

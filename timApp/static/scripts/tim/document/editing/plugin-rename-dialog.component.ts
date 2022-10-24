@@ -14,7 +14,7 @@ import type {
     IManageResponse,
     IParResponse,
 } from "tim/document/editing/edittypes";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 export interface IManageRenameParams {
     duplicates: Duplicate[];
@@ -194,7 +194,7 @@ export class PluginRenameDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [PluginRenameDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         DialogModule,
         TimUtilityModule,
         HttpClientModule,

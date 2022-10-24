@@ -7,7 +7,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import {GraphVizComponent} from "tim/plugin/graph-viz/graph-viz.component";
 import {VariablesComponent} from "tim/plugin/variables/variables.component";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 import {CsRunnerComponent} from "./csPlugin";
 import {CsTextComponent} from "./text";
 import {CsConsoleComponent} from "./console";
@@ -44,7 +44,7 @@ import {EditorModule} from "./editor/module";
     ],
     imports: [
         EditorModule,
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

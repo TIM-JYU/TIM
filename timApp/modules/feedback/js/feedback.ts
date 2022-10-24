@@ -26,7 +26,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 const answerPlaceHolder = "|answer|";
 const correctPlaceHolder = "|correct|";
@@ -1327,7 +1327,7 @@ export class FeedbackPluginComponent
 
 @NgModule({
     declarations: [FeedbackPluginComponent],
-    imports: [BrowserModule, HttpClientModule, TimUtilityModule, PurifyModule],
+    imports: [CommonModule, HttpClientModule, TimUtilityModule, PurifyModule],
 })
 export class FeedbackModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

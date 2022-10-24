@@ -18,7 +18,7 @@ import {
 } from "tim/plugin/attributes";
 import {getFormBehavior, parseStyles, shuffleStrings} from "tim/plugin/util";
 import {defaultErrorMessage} from "tim/util/utils";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -27,6 +27,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
 
 const DropdownMarkup = t.intersection([
     t.partial({
@@ -342,7 +343,7 @@ export class DropdownPluginComponent
 @NgModule({
     declarations: [DropdownPluginComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         TimUtilityModule,
         FormsModule,

@@ -41,7 +41,7 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 import type {
     IFile,
     IFileSpecification,
@@ -570,7 +570,7 @@ export class ReviewCanvasComponent
 @NgModule({
     declarations: [ReviewCanvasComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

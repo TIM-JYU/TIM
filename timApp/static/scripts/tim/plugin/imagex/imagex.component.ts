@@ -7,7 +7,7 @@ import {
     ElementRef,
     NgModule,
 } from "@angular/core";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {$http, $sce} from "tim/util/ngimport";
@@ -69,6 +69,7 @@ import type {
 } from "tim/plugin/imagex/imagextypes";
 import {ImageXAll, SingleSize, ValidCoord} from "tim/plugin/imagex/imagextypes";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {CommonModule} from "@angular/common";
 
 let globalPreviewColor = "#fff";
 
@@ -1957,7 +1958,7 @@ export class ImageXComponent
 @NgModule({
     declarations: [ImageXComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         DrawToolbarModule,
         HttpClientModule,
         FormsModule,

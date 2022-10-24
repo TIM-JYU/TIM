@@ -40,10 +40,10 @@ import {QuestionMatrixComponent} from "tim/document/question/question-matrix.com
 import {HttpClient} from "@angular/common/http";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
 import {deleteQuestionWithConfirm} from "tim/document/question/fetchQuestion";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import type {IParResponse} from "tim/document/editing/edittypes";
+import {CommonModule} from "@angular/common";
 
 /**
  * Controller for creating and editing questions
@@ -1162,7 +1162,7 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [QuestionEditDialogComponent, QuestionMatrixComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         TimUtilityModule,
         DialogModule,
         AnswerSheetModule,

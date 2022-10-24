@@ -63,7 +63,7 @@ import type {
     IAnswerWithUsers,
     IModelAnswerSettings,
 } from "tim/answer/IAnswer";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 /*
  * TODO: if forceBrowser and formMode, now does not show the browser after refresh in view-mode.
@@ -1641,7 +1641,7 @@ export class AnswerBrowserComponent
 @NgModule({
     declarations: [AnswerBrowserComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         FormsModule,
         TimUtilityModule,
         DrawCanvasModule,

@@ -11,7 +11,7 @@ import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {toPromise} from "tim/util/utils";
 import type {IItem} from "tim/item/IItem";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 /**
  * @author Matti Leinonen
@@ -189,7 +189,7 @@ export class MergePdfDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [MergePdfDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         DialogModule,
         TimUtilityModule,
         FormsModule,

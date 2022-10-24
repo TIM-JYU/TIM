@@ -10,7 +10,7 @@ import type {
 } from "tim/plugin/timTable/tim-table.component";
 import {setToolbarInstance} from "tim/plugin/timTable/toolbarUtils";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 export interface ITimTableToolbarCallbacks {
     setCell: (value: IToolbarTemplate) => void;
@@ -503,7 +503,7 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
 @NgModule({
     declarations: [TimTableEditorToolbarDialogComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         FormsModule,
         TimUtilityModule,
         DialogModule,

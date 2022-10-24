@@ -19,7 +19,7 @@ import {
 } from "tim/util/colorUtils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TimStorage} from "tim/util/utils";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 export interface IDrawVisibleOptions {
     // Interface to define which options should be visible in the drawing toolbar
@@ -372,7 +372,7 @@ export class DrawToolbarComponent implements AfterViewInit {
 @NgModule({
     declarations: [DrawToolbarComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         FormsModule,
         ButtonsModule.forRoot(),
         TimUtilityModule,

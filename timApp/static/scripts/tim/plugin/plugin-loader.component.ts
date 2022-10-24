@@ -1,22 +1,22 @@
 import moment from "moment";
 import type {
     AfterViewInit,
-    ApplicationRef,
     DoBootstrap,
+    Injector,
     NgModuleRef,
     OnDestroy,
     OnInit,
     Type,
 } from "@angular/core";
 import {
+    ApplicationRef,
     Component,
     ContentChild,
+    createNgModule,
     ElementRef,
-    Injector,
     Input,
     NgModule,
     NgZone,
-    PlatformRef,
     ViewChild,
     ViewContainerRef,
 } from "@angular/core";
@@ -53,24 +53,18 @@ function isElement(n: Node): n is Element {
 
 const loadedModules: Map<string, NgModuleRef<unknown>> = new Map();
 
-async function getModule(
-    moduleType: Type<unknown>,
-    platformRef: PlatformRef,
-    zone: NgZone
-) {
+function getModule(moduleType: Type<unknown>, injector: Injector) {
     if (loadedModules.get(moduleType.name)) {
         return loadedModules.get(moduleType.name);
     }
     // Note: there are multiple ways to bootstrap a module with the components
     // 1. createNgModule - creates a new module with no platform -> mainly for child modules, prevents multiple platform instances
-    //   * Seems to be fast and easy to bootstrap, but doesn't allow referencing e.g. BrowserModule
+    //   * Seems to be fast and easy to bootstrap, but doesn't allow referencing e.g. BrowserModule => this seems to be intended for child modules
     // 2. PlatformRef.bootstrapModule - bootstraps a module as if it's an application module
     //   * Angular allows multiple bootstraps for the same platform
-    //   * Generally doesn't seem to be intended for bootstrapping plugins => needs further testing
-    // For now we'll use bootstrapModule since eventually we'll likely move to use Angular Elements that seem to do the same thing
-    const modRef = await platformRef.bootstrapModule(moduleType, {
-        ngZone: zone,
-    });
+    //   * Seems to break change detection for plugins
+    // For now we'll use createNgModule since eventually we'll likely move to use Angular Elements that seem to do the same thing
+    const modRef = createNgModule(moduleType, injector);
     loadedModules.set(moduleType.name, modRef);
     return modRef;
 }
@@ -178,8 +172,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
         private elementRef: ElementRef<HTMLElement>,
         private http: HttpClient,
         private zone: NgZone,
-        private injector: Injector,
-        private platformRef: PlatformRef,
+        private appRef: ApplicationRef,
         public vcr: ViewContainerRef
     ) {
         timLogTime("timPluginLoader constructor", "answ", 1);
@@ -422,8 +415,7 @@ export class PluginLoaderComponent implements AfterViewInit, OnDestroy, OnInit {
 
         const modRef = await getModule(
             registeredPlugin.module,
-            this.platformRef,
-            this.zone
+            this.appRef.injector
         );
         const componentRef = await viewContainerRef.createComponent<PluginJson>(
             registeredPlugin.component,

@@ -18,7 +18,7 @@ import {
 } from "tim/plugin/attributes";
 import {getFormBehavior, parseStyles} from "tim/plugin/util";
 import {defaultErrorMessage, timeout, valueOr} from "tim/util/utils";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
@@ -27,6 +27,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
+import {CommonModule} from "@angular/common";
 
 const TextfieldMarkup = t.intersection([
     t.partial({
@@ -621,7 +622,7 @@ export class TextfieldPluginComponent
 @NgModule({
     declarations: [TextfieldPluginComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         TimUtilityModule,
         FormsModule,

@@ -26,7 +26,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import type {DocIdDotName} from "tim/plugin/taskid";
 import {isIOS} from "tim/util/utils";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 const DragMarkup = t.intersection([
     t.partial({
@@ -334,7 +334,7 @@ export class DragComponent
     providers: [SessionVerify],
     declarations: [DragComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         DndModule,
         TimUtilityModule,

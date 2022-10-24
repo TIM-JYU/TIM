@@ -28,7 +28,7 @@ import {PluginFrameComponent} from "tim/ui/plugin-frame.component";
 import {LoadingComponent} from "tim/ui/loading.component";
 import {MarkupErrorComponent} from "tim/ui/markup-error.component";
 import {CloseButtonComponent} from "tim/ui/close-button.component";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 @NgModule({
     providers: [SessionVerify],
@@ -85,6 +85,6 @@ import {BrowserModule} from "@angular/platform-browser";
         BookmarkNamePipe,
         SwitchButtonComponent,
     ],
-    imports: [BrowserModule, FormsModule],
+    imports: [CommonModule, FormsModule],
 })
 export class TimUtilityModule {}

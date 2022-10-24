@@ -12,7 +12,7 @@ import {
     ViewChild,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
+import {DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -54,6 +54,7 @@ import {
     to,
     to2,
 } from "tim/util/utils";
+import {CommonModule} from "@angular/common";
 
 const RunScriptModel = t.type({
     script: nullable(t.string),
@@ -1536,7 +1537,7 @@ export class TableFormComponent
 @NgModule({
     declarations: [TableFormComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

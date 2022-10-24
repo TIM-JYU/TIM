@@ -24,7 +24,7 @@ import {
     withDefault,
 } from "tim/plugin/attributes";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 const TimMenuMarkup = t.intersection([
     t.partial({
@@ -507,7 +507,7 @@ export class TimMenuPluginComponent extends AngularPluginBase<
 @NgModule({
     declarations: [TimMenuPluginComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,

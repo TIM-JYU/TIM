@@ -9,7 +9,7 @@ import {to2, toPromise} from "tim/util/utils";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {Users} from "tim/user/userService";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 const ANONYMOUS_GROUPNAME = "Anonymous users";
 
@@ -345,7 +345,7 @@ export class ActiveGroupLockDialogComponent extends AngularDialogComponent<
 @NgModule({
     declarations: [ActiveGroupLockDialogComponent, GroupSelectListComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         DialogModule,
         FormsModule,
         HttpClientModule,

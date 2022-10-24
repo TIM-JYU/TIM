@@ -18,7 +18,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {ScriptedInnerHTMLModule} from "tim/util/scripted-inner-html.module";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
-import {BrowserModule} from "@angular/platform-browser";
+import {CommonModule} from "@angular/common";
 
 const STACK_VARIABLE_PREFIX = "stackapi_";
 
@@ -547,7 +547,7 @@ export class StackPluginComponent
 @NgModule({
     declarations: [StackPluginComponent],
     imports: [
-        BrowserModule,
+        CommonModule,
         HttpClientModule,
         TimUtilityModule,
         PurifyModule,
