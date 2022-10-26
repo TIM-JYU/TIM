@@ -31,6 +31,7 @@ interface IScheduledFunction {
     interval: IInterval;
     owners: IGroup[];
     doc_path: string;
+    enabled: boolean;
 }
 
 @Pipe({name: "timinterval"})
@@ -59,8 +60,8 @@ class OwnerPipe {
             <ng-container body>
                 <h2 i18n>Current functions</h2>
                 <p *ngIf="functions.length === 0" i18n>There are no functions.</p>
-                <ul>
-                    <li *ngFor="let t of functions">
+                <ul class="current-functions">
+                    <li *ngFor="let t of functions" [class.disabled]="!t.enabled">
                         <a href="/view/{{t.doc_path}}#{{t.name}}">{{t.doc_path}}#{{t.name}}</a>,
                         {{t.owners | timownerstr}},
                         <ng-container i18n>expires:</ng-container>
