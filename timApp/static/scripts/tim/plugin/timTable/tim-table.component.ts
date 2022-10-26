@@ -1199,8 +1199,8 @@ export class TimTableComponent
                 if ($(target).parents(".timTableEditor").length > 0) {
                     return;
                 }
-
                 this.activeCell = undefined;
+                this.saveCurrentCell();
                 this.c();
 
                 // Do not hide the toolbar if the user clicks on another TimTable
