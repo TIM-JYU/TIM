@@ -1,4 +1,5 @@
 import datetime as dt
+import logging
 
 import sqlalchemy
 from celery import current_app
