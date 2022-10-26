@@ -1188,6 +1188,10 @@ export class TimTableComponent
             if (!this.eventListenersActive) {
                 return;
             } // No need to look anything when already inactive
+            if (this.currentCell?.editorOpen) {
+                return;
+            }
+
             const target = e.target;
 
             if (target) {
