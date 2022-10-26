@@ -1,6 +1,6 @@
 from dataclasses import field, dataclass
 from datetime import datetime
-from typing import Any, Optional, Generator
+from typing import Any, Generator
 
 from flask import current_app, Response
 from isodate import Duration
@@ -52,6 +52,7 @@ class ScheduledFunctionItem:
     interval: Interval
     owners: list[UserGroup]
     doc_path: str
+    enabled: bool
 
 
 @scheduling.get("functions")
@@ -96,6 +97,7 @@ def get_scheduled_functions(all_users: bool = False) -> Response:
                 interval=Interval(every=t.interval.every, period=t.interval.period),
                 owners=t.block.owners,
                 doc_path=d_map[t.task_id.doc_id].path,
+                enabled=t.enabled,
             )
 
     return json_response(list(gen()), date_conversion=True)
@@ -115,7 +117,9 @@ def add_scheduled_function(
 
     u = get_current_user_object()
     if not u.belongs_to_any_of(
-        UserGroup.get_teachers_group(), UserGroup.get_function_scheduler_group()
+        UserGroup.get_teachers_group(),
+        UserGroup.get_function_scheduler_group(),
+        UserGroup.get_admin_group(),
     ):
         raise AccessDenied()
     p, _ = Plugin.from_task_id(
@@ -138,7 +142,10 @@ def add_scheduled_function(
     task_id_str = p.task_id.doc_task
     existing = PeriodicTask.query.filter_by(name=task_id_str).first()
     if existing:
-        raise RouteException("A scheduled function for this plugin already exists.")
+        raise RouteException(
+            "A scheduled function for this plugin already exists. Remove the existing function first before adding a "
+            "new one."
+        )
     b = Block(type_id=BlockType.ScheduledFunction.value)
     periodic_task = PeriodicTask(
         block=b,

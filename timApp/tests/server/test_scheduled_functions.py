@@ -49,7 +49,8 @@ class ScheduledFunctionTest(TimRouteTest):
                 "interval": duration_isoformat(Duration(seconds=1)),
             },
             expect_status=400,
-            expect_content="A scheduled function for this plugin already exists.",
+            expect_content="A scheduled function for this plugin already exists. Remove the existing function first "
+            "before adding a new one.",
         )
         self.json_delete(f"/scheduling/functions/{pt_id}", {})
         self.json_delete(f"/scheduling/functions/{pt_id}", {}, expect_status=404)

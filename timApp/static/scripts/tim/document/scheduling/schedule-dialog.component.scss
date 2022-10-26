@@ -6,3 +6,9 @@
   row-gap: 10px;
   align-items: center;
 }
+
+
+.current-functions li.disabled {
+  opacity: 0.6;
+  text-decoration: line-through;
+}

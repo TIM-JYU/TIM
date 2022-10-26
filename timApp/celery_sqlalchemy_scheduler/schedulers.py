@@ -1,6 +1,4 @@
-import logging
 import datetime as dt
-from multiprocessing.util import Finalize
 
 import sqlalchemy
 from celery import current_app
@@ -11,9 +9,8 @@ from celery.utils.encoding import safe_str, safe_repr
 from celery.utils.log import get_logger
 from celery.utils.time import maybe_make_aware
 from kombu.utils.json import dumps, loads
+from multiprocessing.util import Finalize
 
-from .session import session_cleanup
-from .session import SessionManager
 from .models import (
     PeriodicTask,
     PeriodicTaskChanged,
@@ -21,6 +18,8 @@ from .models import (
     IntervalSchedule,
     SolarSchedule,
 )
+from .session import SessionManager
+from .session import session_cleanup
 
 # This scheduler must wake up more frequently than the
 # regular of 5 minutes because it needs to take external
@@ -128,9 +127,10 @@ class ModelEntry(ScheduleEntry):
             # 5 second delay for re-enable.
             return schedules.schedstate(False, 5.0)
 
+        now = maybe_make_aware(self._default_now())
+
         # START DATE: only run after the `start_time`, if one exists.
         if self.model.start_time is not None:
-            now = maybe_make_aware(self._default_now())
             start_time = self.model.start_time.replace(tzinfo=self.app.timezone)
             if now < start_time:
                 # The datetime is before the start date - don't run.
@@ -148,6 +148,17 @@ class ModelEntry(ScheduleEntry):
 
             return schedules.schedstate(False, None)  # Don't recheck
 
+        # EXPIRED TASK: Disable expired task once the current time is past the end_time
+        if self.model.expires is not None:
+            expires_time = self.model.expires.replace(tzinfo=self.app.timezone)
+            if now > expires_time:
+                self.model.enabled = False  # Disable the task
+                self.model.no_changes = False  # Mark the model entry as changed
+                save_fields = ("enabled",)  # the additional fields to save
+                self.save(save_fields)
+
+                return schedules.schedstate(False, None)  # Don't recheck
+
         return self.schedule.is_due(self.last_run_at)
 
     def _default_now(self):
@@ -160,8 +171,11 @@ class ModelEntry(ScheduleEntry):
 
     def __next__(self):
         # should be use `self._default_now()` or `self.app.now()` ?
-        self.model.last_run_at = self.app.now()
-        self.model.total_run_count += 1
+        now = self.app.now()
+        # Don't count runs if the task is expired
+        if not self.model.expires or now <= self.model.expires:
+            self.model.last_run_at = self.app.now()
+            self.model.total_run_count += 1
         self.model.no_changes = True
         return self.__class__(self.model, Session=self.Session)
 
