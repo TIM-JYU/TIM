@@ -705,7 +705,7 @@ export enum ClearSort {
             </div>
             <div class="csRunMenuArea" *ngIf="task && !data.hideSaveButton && !isLocked()">
                 <p class="csRunMenu">
-                    <button class="timButton" [disabled]="disableUnchanged && !edited" *ngIf="task && button"
+                    <button class="timButton" [disabled]="disableUnchanged && !edited" *ngIf="(task && hasButton) || saveFailed"
                             (click)="handleClickSave()">{{button}}</button>
                     &nbsp;
                     <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle"
@@ -810,11 +810,13 @@ export class TimTableComponent
     private editInputClass: string = "";
     headersStyle: Record<string, string> | null = null;
     button: string = "Tallenna";
+    hasButton: boolean = true;
     private noNeedFirstClick = false;
     hide: HideValues = {editorPosition: true};
     disableSelect: boolean = true;
     result?: string;
     connectionErrorMessage?: string;
+    saveFailed = false;
 
     /**
      * Stores the last direction that the user moved towards with arrow keys
@@ -923,9 +925,8 @@ export class TimTableComponent
         this.disableSelect = this.data.disableSelect ?? false;
         this.noNeedFirstClick = this.hide.needFirstClick ?? false;
 
-        if (typeof this.data.button !== "undefined") {
-            this.button = this.data.button;
-        }
+        this.hasButton = this.data.button !== "" && this.data.button !== null;
+        this.button = this.data.button ?? this.button;
 
         if (this.data.maxRows) {
             this.maxRows = this.data.maxRows;
@@ -1624,6 +1625,7 @@ export class TimTableComponent
         );
         if (r.ok) {
             this.edited = false;
+            this.saveFailed = false;
             this.updateListeners();
             this.prevCellDataMatrix = clone(this.cellDataMatrix);
             this.prevUserdata = clone(this.userdata);
@@ -1637,6 +1639,7 @@ export class TimTableComponent
             this.error = r.result.data.web.error ?? "";
             // this.result = r.result.data.web.result;
         } else {
+            this.saveFailed = true;
             this.connectionErrorMessage =
                 r.result.data?.error ??
                 this.data.connectionErrorMessage ??
@@ -4631,6 +4634,7 @@ export class TimTableComponent
         this.cellDataMatrix = clone(this.prevCellDataMatrix);
         this.data = clone(this.prevData);
         this.edited = false;
+        this.saveFailed = false;
         this.updateListeners();
         this.reInitialize();
         this.c();

@@ -72,7 +72,7 @@ const PluginFields = t.intersection([
                 <div class="csRunMenu">
                     <button class="timButton"
                             [innerHtml]="button"
-                            *ngIf="button && !isAutosave"
+                            *ngIf="(button && !isAutosave) || saveFailed"
                             [disabled]="isRunning || isInvalid() || (disableUnchanged && !isUnSaved())"
                             (click)="saveText()"></button>
                     <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event)">
@@ -116,6 +116,7 @@ export class QstComponent
     private savedAnswer?: AnswerTable;
     private newAnswer?: AnswerTable;
     private changes = false;
+    saveFailed = false;
 
     constructor(
         el: ElementRef<HTMLElement>,
@@ -330,6 +331,7 @@ export class QstComponent
                 r.result.error.error ??
                 this.attrsall.markup.connectionErrorMessage ??
                 defaultErrorMessage;
+            this.saveFailed = true;
             return {
                 saved: false,
                 message:
@@ -353,6 +355,7 @@ export class QstComponent
             this.preview.showCorrectChoices = true;
         }
         this.savedAnswer = this.newAnswer;
+        this.saveFailed = false;
         this.checkChanges();
         return {saved: true, message: undefined};
     }
@@ -366,6 +369,7 @@ export class QstComponent
             enabled: !this.attrsall.markup.invalid,
         });
         this.checkChanges();
+        this.saveFailed = false;
     }
 
     getAttributeType() {

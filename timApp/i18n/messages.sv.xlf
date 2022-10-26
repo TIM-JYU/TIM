@@ -7232,6 +7232,30 @@
           <context context-type="linenumber">367</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="996022104515543405" datatype="html">
+        <source>Content is not a number; saving empty value.</source>
+        <target state="translated">Innehåll är inget nummer; tomt värde sparas.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">modules/fields/js/numericfield-plugin.component.ts</context>
+          <context context-type="linenumber">533</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4150085642751674936" datatype="html">
+        <source>Save teacher's fix</source>
+        <target state="translated">Spara lärarens fix</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">139</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6627696457152714946" datatype="html">
+        <source>Velps</source>
+        <target state="translated">Velper</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/templates/answerBrowser.html</context>
+          <context context-type="linenumber">145</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>

@@ -1,3 +1,4 @@
+
 :host {
     display: block;
 }
@@ -55,4 +56,10 @@ ul {
 .dndPlaceholder {
     min-width: 3em;
     min-height: calc(1.5em + 2px);
+}
+
+.alertFrame {
+    border-color: red;
+    border-width: 2px;
+    background-color: red;
 }

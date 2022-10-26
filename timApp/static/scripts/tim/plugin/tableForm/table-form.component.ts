@@ -199,7 +199,7 @@ const sortLang = "fi";
 
             <div class="hidden-print">
                 <button class="timButton"
-                        *ngIf="tableCheck() && !autosave && !locked"
+                        *ngIf="(tableCheck() && !autosave && !locked) || saveFailed"
                         (click)="saveText()">
                     {{ buttonText() }}
                 </button>
@@ -352,6 +352,7 @@ export class TableFormComponent
     timTable?: TimTableComponent;
     recipientList = "";
     loading = false;
+    saveFailed = false;
 
     get refreshScripts(): string[] {
         return (
@@ -1449,9 +1450,12 @@ export class TableFormComponent
         if (r.ok) {
             const data = r.result.data;
             this.error = data.web.error;
+            this.saveFailed = false;
             // this.result = "Saved";
         } else {
-            this.error = r.result.data.error ?? defaultErrorMessage;
+            this.saveFailed = true;
+            this.error = r.result.data?.error ?? defaultErrorMessage;
+            return;
         }
         const timtab = this.getTimTable();
         if (!timtab) {

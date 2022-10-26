@@ -119,7 +119,7 @@
                     </span>
                             <span *ngIf="showTeacher()">
                         <label class="checkbox-inline">
-                            <input i18n type="checkbox" [(ngModel)]="isValidAnswer">Valid
+                            <input type="checkbox" [(ngModel)]="isValidAnswer"><ng-container i18n>Valid</ng-container>
                         </label>
                         <button i18n-title title="Save validity"
                                 (click)="saveValidity()"
@@ -136,13 +136,13 @@
                             </div>
                             <span *ngIf="showTeacher()">
                                 <label class="checkbox-inline">
-                                    <input i18n type="checkbox" (ngModelChange)="toggleInput()" [(ngModel)]="saveTeacher">Save teacher's fix
+                                    <input type="checkbox" (ngModelChange)="toggleInput()" [(ngModel)]="saveTeacher"><ng-container i18n>Save teacher's fix</ng-container>
                                 </label>
                             </span>
                             <div class="flex" *ngIf="selectedAnswer">
                             <span *ngIf="showVelpsCheckBox()">
                             <label class="checkbox-inline" >
-                                <input i18n type="checkbox" [(ngModel)]="review" (ngModelChange)="reviewToggled()">Velps
+                                <input type="checkbox" [(ngModel)]="review" (ngModelChange)="reviewToggled()"><ng-container i18n>Velps</ng-container>
                             </label>
                             </span>
                             <div class="input-group input-group-xs" *ngIf="review && reviewerUsers.length > 1">

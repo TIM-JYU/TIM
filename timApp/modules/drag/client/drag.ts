@@ -11,6 +11,7 @@ import type {ApplicationRef, DoBootstrap, OnInit} from "@angular/core";
 import {Component, NgModule} from "@angular/core";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {SessionVerify} from "tim/util/session-verify.interceptor";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
 import type {ITimComponent} from "tim/document/viewctrl";
 import {
     GenericPluginMarkup,
@@ -24,7 +25,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {PurifyModule} from "tim/util/purify.module";
 import type {DocIdDotName} from "tim/plugin/taskid";
-import {isIOS} from "tim/util/utils";
+import {defaultErrorMessage, isIOS} from "tim/util/utils";
 import {registerPlugin} from "tim/plugin/pluginRegistry";
 import {CommonModule} from "@angular/common";
 
@@ -97,6 +98,9 @@ interface WordObject {
                     [dndEffectAllowed]="effectAllowed"
                     (dndDrop)="handleDrop($event)"
                     [ngStyle]="styles"
+                    [tooltip]="error"
+                    [isOpen]="error !== undefined"
+                    [ngClass]="{alertFrame: saveFailed}"
                 >
                     <li class="dndPlaceholder" dndPlaceholderRef></li>
                     <li *ngFor="let item of wordObjs; let i = index"
@@ -110,14 +114,19 @@ interface WordObject {
                         [ngStyle]="styles"
                     ></li>
                 </ul>
+                <button class="timButton"
+                        *ngIf="!saveButton && saveFailed"
+                        (click)="save()">
+                    {{buttonText()}}
+                </button>
             </div>
             <button class="timButton"
                     *ngIf="saveButton"
                     (click)="save()">
-                Save
+                {{buttonText()}}
             </button>
         </div>
-        <div *ngIf="error" [innerHTML]="error | purify"></div>
+        <div *ngIf="error && saveButton" class="error" style="font-size: 12px" [innerHtml]="error | purify"></div>
         <div *ngIf="footer" class="plgfooter" [textContent]="footer"></div>
     `,
     styleUrls: ["./drag.scss"],
@@ -142,6 +151,7 @@ export class DragComponent
     private shuffle?: boolean;
     private vctrl = vctrlInstance;
     styles: Record<string, string> = {};
+    saveFailed = false;
 
     getAttributeType(): typeof DragAll {
         return DragAll;
@@ -149,6 +159,10 @@ export class DragComponent
 
     getDefaultMarkup(): Partial<t.TypeOf<typeof DragMarkup>> {
         return {};
+    }
+
+    buttonText() {
+        return super.buttonText() ?? $localize`Save`;
     }
 
     ngOnInit() {
@@ -299,6 +313,7 @@ export class DragComponent
     }
 
     async doSave(nosave: boolean = false) {
+        this.error = undefined;
         const params = {
             input: {
                 nosave: nosave,
@@ -315,12 +330,17 @@ export class DragComponent
 
         if (r.ok) {
             const data = r.result;
+            this.saveFailed = false;
             this.error = data.web.error;
             if (this.markup.clearstyles) {
                 this.styles = {};
             }
         } else {
-            this.error = r.result.error.error;
+            this.error =
+                r.result.error.error ??
+                this.attrsall.markup.connectionErrorMessage ??
+                defaultErrorMessage;
+            this.saveFailed = true;
         }
         return {saved: r.ok, message: this.error};
     }
@@ -340,6 +360,7 @@ export class DragComponent
         TimUtilityModule,
         PurifyModule,
         FormsModule,
+        TooltipModule.forRoot(),
     ],
 })
 export class DragModule implements DoBootstrap {
