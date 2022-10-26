@@ -115,7 +115,9 @@ def add_scheduled_function(
 
     u = get_current_user_object()
     if not u.belongs_to_any_of(
-        UserGroup.get_teachers_group(), UserGroup.get_function_scheduler_group()
+        UserGroup.get_teachers_group(),
+        UserGroup.get_function_scheduler_group(),
+        UserGroup.get_admin_group(),
     ):
         raise AccessDenied()
     p, _ = Plugin.from_task_id(
