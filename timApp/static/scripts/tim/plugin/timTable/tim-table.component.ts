@@ -4585,7 +4585,7 @@ export class TimTableComponent
         if (userChange && this.data.nonUserSpecific) {
             return false;
         }
-        return this.edited;
+        return this.edited || this.currentCell != undefined;
     }
 
     // save: () => Promise<{saved: boolean, message: (string | undefined)}>;
