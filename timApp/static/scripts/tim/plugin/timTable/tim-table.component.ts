@@ -2317,11 +2317,17 @@ export class TimTableComponent
     }
 
     handleClickCancelSmallEditor() {
+        if (this.currentCell?.editorOpen) {
+            return;
+        }
         this.closeSmallEditor();
         this.c();
     }
 
     async handleClickAcceptSmallEditor() {
+        if (this.currentCell?.editorOpen) {
+            return;
+        }
         await this.saveAndCloseSmallEditor();
         this.c();
     }
