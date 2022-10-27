@@ -32,6 +32,12 @@ export interface IPopupParams {
     vctrl: ViewCtrl;
 }
 
+enum RefStyle {
+    Local,
+    Remote,
+    TaskId,
+}
+
 /**
  * A popup menu component that is used in the document view.
  */
@@ -225,13 +231,13 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
         $rootScope.$evalAsync();
     }
 
-    doCopyReference(text: string, remote: boolean): string {
+    doCopyReference(text: string, style: RefStyle): string {
         const texts = text.split("=");
         if (texts.length > 1) {
             text = texts[1];
         }
         let remotePrefix = "";
-        if (remote) {
+        if (style == RefStyle.Remote) {
             let rrn = "";
             const ac = this.data.vctrl.docSettings.autocounters;
             if (ac) {
@@ -241,6 +247,8 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
                 rrn = this.data.vctrl.reviewCtrl.item.name;
             }
             remotePrefix = rrn + ".";
+        } else if (style == RefStyle.TaskId) {
+            return `${this.data.vctrl.item.id}.${text}`;
         }
         return `%%"${remotePrefix}${text}"|ref%%`;
     }
@@ -248,11 +256,17 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
     copyRemoteReference(
         e: TriggeredEvent<HTMLElement, undefined, unknown, HTMLElement>
     ) {
-        this.doCopyReference(e.target.innerText, true);
+        this.doCopyReference(e.target.innerText, RefStyle.Remote);
     }
 
     copyReference(e: ClickEvent<HTMLElement, undefined, unknown, HTMLElement>) {
-        const s = this.doCopyReference(e.target.innerText, e.ctrlKey);
+        let style = RefStyle.Local;
+        if (e.ctrlKey) {
+            style = RefStyle.Remote;
+        } else if (e.altKey) {
+            style = RefStyle.TaskId;
+        }
+        const s = this.doCopyReference(e.target.innerText, style);
         try {
             copyToClipboard(s);
         } catch (ex) {
