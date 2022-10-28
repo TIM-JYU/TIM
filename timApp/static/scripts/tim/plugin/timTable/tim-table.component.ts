@@ -1170,7 +1170,7 @@ export class TimTableComponent
         return !!this.currentCell;
     }
 
-    private onClick(e: OnClickArg) {
+    private async onClick(e: OnClickArg) {
         if (this.mouseInTable) {
             if (
                 this.isInEditMode() &&
@@ -1204,7 +1204,7 @@ export class TimTableComponent
                     return;
                 }
                 this.activeCell = undefined;
-                this.saveCurrentCell();
+                await this.saveCurrentCell();
                 this.c();
 
                 // Do not hide the toolbar if the user clicks on another TimTable
