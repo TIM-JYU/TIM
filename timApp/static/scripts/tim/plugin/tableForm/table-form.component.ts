@@ -1031,10 +1031,6 @@ export class TableFormComponent
         if (taskId == undefined) {
             return;
         }
-        const timTable = this.getTimTable();
-        if (timTable == null) {
-            return;
-        }
 
         const reportParams = {
             // TODO: support for relevant attrs (realnames, usernames, emails...)
@@ -1053,46 +1049,49 @@ export class TableFormComponent
             reportFilter: this.markup.reportFilter,
         };
         let filterParams;
-        const selUsers = timTable.getCheckedRows(0, false);
-        const users = TableFormComponent.makeUserArray(
-            selUsers,
-            userNameColIndex
-        );
+        const timTable = this.getTimTable();
+        if (timTable != null) {
+            const selUsers = timTable.getCheckedRows(0, false);
+            const users = TableFormComponent.makeUserArray(
+                selUsers,
+                userNameColIndex
+            );
 
-        if (selUsers.length > 0) {
-            filterParams = {userFilter: users};
-        } else {
-            const filterFields: string[] = [];
-            const filterValues: string[] = [];
+            if (selUsers.length > 0) {
+                filterParams = {userFilter: users};
+            } else {
+                const filterFields: string[] = [];
+                const filterValues: string[] = [];
 
-            const xOffset = memberShipEndColIndex + 1;
+                const xOffset = memberShipEndColIndex + 1;
 
-            timTable.filters.forEach((value, index) => {
-                if (!value) {
-                    return;
-                }
-                switch (index) {
-                    case realNameColIndex:
-                        filterFields.push("realname");
-                        break;
-                    case userNameColIndex:
-                        filterFields.push("username");
-                        break;
-                    case emailColIndex:
-                        filterFields.push("email");
-                        break;
-                    case memberShipAddColIndex:
-                        filterFields.push("membership_add");
-                        break;
-                    case memberShipEndColIndex:
-                        filterFields.push("membership_end");
-                        break;
-                    default:
-                        filterFields.push(this.fields[index - xOffset]);
-                }
-                filterValues.push(value);
-            });
-            filterParams = {filterFields, filterValues};
+                timTable.filters.forEach((value, index) => {
+                    if (!value) {
+                        return;
+                    }
+                    switch (index) {
+                        case realNameColIndex:
+                            filterFields.push("realname");
+                            break;
+                        case userNameColIndex:
+                            filterFields.push("username");
+                            break;
+                        case emailColIndex:
+                            filterFields.push("email");
+                            break;
+                        case memberShipAddColIndex:
+                            filterFields.push("membership_add");
+                            break;
+                        case memberShipEndColIndex:
+                            filterFields.push("membership_end");
+                            break;
+                        default:
+                            filterFields.push(this.fields[index - xOffset]);
+                    }
+                    filterValues.push(value);
+                });
+                filterParams = {filterFields, filterValues};
+            }
         }
 
         const win = window.open(
