@@ -564,7 +564,7 @@ export class TableFormComponent
             }
         }
         if (this.markup.showToolbar !== undefined) {
-            this.data.hide.toolbar = this.markup.showToolbar;
+            this.data.hide.toolbar = !this.markup.showToolbar;
         }
 
         this.userfilter = "";
