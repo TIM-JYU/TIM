@@ -380,6 +380,15 @@ class Language:
             args = []
 
         mounts = self.query.jso.get("markup", {}).get("mounts", [])
+        save_run_cmd = None
+        save_test_run_cmd = None
+        ttype = self.ttype
+        if isinstance(ttype, str) and ttype.find("test") >= 0:  # not for tests
+            save_test_run_cmd = self.query.jso.get("markup", {}).get(
+                "saveTestRunCmd", None
+            )
+        else:
+            save_run_cmd = self.query.jso.get("markup", {}).get("saveRunCmd", None)
 
         code, out, err, pwddir = run2_subdir(
             args,
@@ -400,6 +409,8 @@ class Language:
             compile_commandline=self.compile_commandline,
             mounts=mounts,
             extra_mappings=extra_mappings,
+            save_run_cmd=save_run_cmd,
+            save_test_run_cmd=save_test_run_cmd,
         )
         if self.just_compile and not err:
             return code, "", "Compiled " + self.filename, pwddir

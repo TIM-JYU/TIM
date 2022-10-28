@@ -155,6 +155,8 @@ def run2(
     mounts=[],
     extra_mappings=None,
     escape_pipe=False,
+    save_run_cmd=None,
+    save_test_run_cmd=None,
 ):
     """Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed to fullfill the
     run inside docker.
@@ -177,6 +179,9 @@ def run2(
     :param escape_pipe: If True, pipe charracter | is escaped into '|'
     :param mounts: User-defined mounts
     :param extra_mappings: Extra non-user csplugin folder mappings
+    :param escape_pipe: TODO: what
+    :param save_run_cmd: filename to save run_cmd
+    :param save_test_run_cmd: filename to save test_run_cmd
     :return: error code, stdout text, stderr text
 
     """
@@ -198,23 +203,30 @@ def run2(
     # print("cwd=", cwd)
     cmdf = cwd + "/" + urndname + ".sh"  # varsinaisen ajoskriptin nimi
     compf = cwd + "/run/compile.sh"
-    cmnds = " ".join(tquote(arg) for arg in args)  # otetaan args listan jonot yhteen
+    cmnds = " ".join(tquote(arg) for arg in args)
     if not escape_pipe:
         cmnds = cmnds.replace("'|'", "|")
     source = ""
     if savestate and cmnds.endswith(".sh"):  # source works only for shell scripts
         source = "source "
-    # tehdään komentojono jossa suuntaukset
+    run_cmd = "{ " + extra + source + cmnds + "; }"
+    if save_run_cmd:
+        save_run_cmd_file = cwd + "/" + save_run_cmd
+        write_safe(save_run_cmd_file, run_cmd)  # kirjoitetaan ajotiedosto
+        os.chmod(save_run_cmd_file, 0o775)
+    if save_test_run_cmd:
+        save_test_run_cmd_file = cwd + "/" + save_test_run_cmd
+        write_safe(save_test_run_cmd_file, run_cmd)  # kirjoitetaan ajotiedosto
+        os.chmod(save_test_run_cmd_file, 0o775)
     compile_cmnds = None
+    # tehdään komentojono jossa suuntaukset
     if compile_commandline:
         cmnds = (
             "#!/usr/bin/env bash\n"
             + ulimit
-            + "\n{ "
-            + extra
-            + source
-            + cmnds
-            + "; } 1>>"
+            + "\n"
+            + run_cmd
+            + " 1>>"
             + "~/"
             + stdoutf
             + " 2>>"
@@ -270,7 +282,6 @@ def run2(
     )  # koska mountattu eri tavalla, poistetaan tmp alusta
     # print(udir,"\nWait for run")
     compose_proj = os.environ["COMPOSE_PROJECT_NAME"]
-
     # Convert possible Windows path to Linux style, e.g. C:/Users/... -> /C/Users/...
     root_dir = PureWindowsPath(os.environ["TIM_ROOT"])
     if root_dir.drive:
