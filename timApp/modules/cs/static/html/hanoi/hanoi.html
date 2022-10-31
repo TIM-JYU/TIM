@@ -122,9 +122,9 @@ document.writeln("<table cellspacing=0 cellpadding=0 border=0>");
 document.write("<tr>");
 for (j = 0; j < board.length; j++) {
 document.write("<td>");
-document.write("<a href='javascript:clicked("+0+","+j+")'><img src='" + imgdir + "posttop.gif' border=0></a><br>");
+document.write("<a href='javascript:void' onClick='clicked("+0+","+j+")'><img src='" + imgdir + "posttop.gif' border=0></a><br>");
 for (i=0; i< board[0].length; i++) {
-document.write("<a href='javascript:clicked("+i+","+j+")'>");
+document.write("<a href='javascript:void' onClick='clicked("+i+","+j+")'>");
 document.write("<img src='" + imgdir + getName(board[j][i]) + "' name='pos"+ j + i + "' border=0><br>");
 document.write("</a>");
 }
