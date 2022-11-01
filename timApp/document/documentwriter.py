@@ -48,10 +48,13 @@ class DocumentWriter:
             if len(blocks) > 1:
                 atomized = p.copy()
                 atomized["atom"] = "true"
-                num_ticks = 3
+                num_ticks = 2
                 for b in blocks:
                     if b["type"] == "code":
-                        num_ticks = count_chars_from_beginning(b["md"], "`") + 1
+                        nticks = count_chars_from_beginning(b["md"], "`")
+                        if nticks > num_ticks:
+                            num_ticks = nticks
+                num_ticks += 1
                 text += (
                     "`" * num_ticks
                     + " {"

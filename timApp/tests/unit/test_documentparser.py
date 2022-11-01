@@ -87,11 +87,11 @@ var a = 1 + 1;
         expected = [
             {
                 "md": "```\ncode\n\ncode\n```",
-                "attrs": {"plugin": "csPlugin"},
                 "type": "code",
+                "attrs": {"plugin": "csPlugin"},
             },
             {"md": "text1\n\ntext2", "type": "autonormal", "attrs": {}},
-            {"md": "```\ncode2\n```", "attrs": {"plugin": "mmcq"}, "type": "code"},
+            {"md": "```\ncode2\n```", "type": "code", "attrs": {"plugin": "mmcq"}},
             {
                 "md": "# Header 1\n\nheaderpar 1\n\nheaderpar 2",
                 "type": "header",
@@ -105,13 +105,13 @@ var a = 1 + 1;
             },
             {
                 "md": "text 3\n\n\ntext 4",
-                "attrs": {"classes": ["someClass"]},
                 "type": "normal",
+                "attrs": {"classes": ["someClass"]},
             },
             {"md": "# Test1\n\n# Test2\n\n# Test3", "type": "atom", "attrs": {}},
             {"md": "```\ncode\n```", "type": "code", "attrs": {}},
             {"md": "test", "type": "autonormal", "attrs": {}},
-            {"type": "header", "attrs": {"a": "b"}, "md": "# Test"},
+            {"md": "# Test", "type": "header", "attrs": {"a": "b"}},
             {
                 "md": "````\n#- {rd=x rp=y}\n\n``` {rp=x rd=y}\n```\n\n````",
                 "type": "code",
@@ -236,52 +236,27 @@ var a = 1 + 1;
         expected = [
             {
                 "md": "```\ncode\n\ncode\n```",
-                "attrs": {"plugin": "csPlugin"},
                 "type": "code",
+                "attrs": {"plugin": "csPlugin"},
             },
             {"md": "text1\n\ntext2", "type": "autonormal", "attrs": {}},
-            {"md": "```\ncode2\n```", "attrs": {"plugin": "mmcq"}, "type": "code"},
+            {"md": "```\ncode2\n```", "type": "code", "attrs": {"plugin": "mmcq"}},
             {
-                "md": "# Header 1\n\nheaderpar 1\n\nheaderpar 2\n\n```\nnormal code\n```\n\n"
-                "# Header 2\n\nheaderpar 3\n\nheaderpar 4",
+                "md": "# Header 1\n\nheaderpar 1\n\nheaderpar 2\n\n```\nnormal code\n```\n\n# Header 2\n\nheaderpar 3\n\nheaderpar 4",
                 "type": "header",
                 "attrs": {},
             },
             {
                 "md": "text 3\n\n\ntext 4",
-                "attrs": {"classes": ["someClass"]},
                 "type": "normal",
+                "attrs": {"classes": ["someClass"]},
             },
             {"md": "# Test1\n\n# Test2\n\n# Test3", "type": "atom", "attrs": {}},
             {"md": "```\ncode\n```\n\ntest", "type": "code", "attrs": {}},
             {
-                "attrs": {"a": "b"},
-                "md": "# Test\n"
-                "\n"
-                "````\n"
-                "#- {rd=x rp=y}"
-                "\n"
-                "\n"
-                "``` {rp=x rd=y}"
-                "\n"
-                "```\n"
-                "\n"
-                "````\n"
-                "\n"
-                "````\n"
-                "test\n"
-                "````",
+                "md": "# Test\n\n````\n#- {rd=x rp=y}\n\n``` {rp=x rd=y}\n```\n\n````\n\n````\ntest\n````\n\n```cs\nvar a = 1 + 1;\n```\n\n```js\nvar a = 1 + 1;\n```",
                 "type": "header",
-            },
-            {
-                "md": "```cs\nvar a = 1 + 1;\n```",
-                "type": "code",
-                "attrs": {"code_lang": "cs"},
-            },
-            {
-                "md": "```js\nvar a = 1 + 1;\n```",
-                "type": "code",
-                "attrs": {"classes": ["someClass"], "code_lang": "js"},
+                "attrs": {"a": "b"},
             },
         ]
         self.assertListEqual(expected, result)
