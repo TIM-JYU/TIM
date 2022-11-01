@@ -875,3 +875,40 @@ table:
         self.wait_until_hidden("#tabletask .csRunMenu span")
         td = self.find_element_avoid_staleness("#tabletask td")
         self.assertEqual("Hello", td.text)
+
+    def test_focus_callbacks(self):
+        # Ensure toolbar closing callbacks make one and only one autosave
+        self.login_browser_quick_test1()
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+``` {#tableForm plugin="tableForm"}
+showInView: true
+fields:
+ - text1
+groups: []
+showToolbar: false
+```
+``` {plugin="timTable" #tabletask}
+task: true
+autosave: true
+table:
+    countRow: 1
+    countCol: 1
+    rows:
+      - row:
+        - cell: ''
+```
+        """
+        )
+        self.goto_document(d)
+        td = self.find_element_avoid_staleness("#tabletask td")
+        td.click()
+        td.click()
+        ActionChains(self.drv).send_keys("Hello").perform()
+        td = self.find_element_avoid_staleness("#tableForm tbody td:nth-of-type(6)")
+        td.click()
+        self.wait_until_hidden("tim-table-editor-toolbar-dialog")
+        self.wait_until_present_and_vis("answerbrowser .prevAnswer")
+        answers = self.get_task_answers(f"{d.id}.tabletask", self.test_user_1)
+        self.assertEqual(len(answers), 1)

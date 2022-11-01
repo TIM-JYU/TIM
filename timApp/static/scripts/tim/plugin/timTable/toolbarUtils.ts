@@ -90,6 +90,6 @@ export async function showTableEditorToolbar(p: ITimTableEditorToolbarParams) {
 
 export function hideToolbar(closingTable: TimTableComponent) {
     if (instance) {
-        instance.hideThis();
+        instance.hideThis(instance.activeTable != closingTable);
     }
 }

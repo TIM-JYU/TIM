@@ -182,10 +182,12 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
     /**
      * Hides the toolbar and removes the instance.
      */
-    public hideThis() {
+    public hideThis(keepEditorOpen?: boolean) {
         this.close();
         setToolbarInstance(undefined);
-        this.callbacks.closeEditor(false);
+        if (!keepEditorOpen) {
+            this.callbacks.closeEditor(false);
+        }
     }
 
     public hideIfActiveTable(table: TimTableComponent) {

@@ -246,7 +246,7 @@ class TableFormHtmlModel(
 
     def get_browser_json(self) -> dict:
         r = super().get_browser_json()
-        if self.markup.open:
+        if self.markup.open and self.markup.table is not False:
             doc_id = TaskId.parse_doc_id(self.taskID)
             d = get_doc_or_abort(doc_id)
             user = User.get_by_name(self.current_user_id)

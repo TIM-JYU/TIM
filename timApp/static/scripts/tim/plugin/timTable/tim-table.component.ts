@@ -1170,7 +1170,7 @@ export class TimTableComponent
         return !!this.currentCell;
     }
 
-    private onClick(e: OnClickArg) {
+    private async onClick(e: OnClickArg) {
         if (this.mouseInTable) {
             if (
                 this.isInEditMode() &&
@@ -1188,6 +1188,10 @@ export class TimTableComponent
             if (!this.eventListenersActive) {
                 return;
             } // No need to look anything when already inactive
+            if (this.currentCell?.editorOpen) {
+                return;
+            }
+
             const target = e.target;
 
             if (target) {
@@ -1199,8 +1203,8 @@ export class TimTableComponent
                 if ($(target).parents(".timTableEditor").length > 0) {
                     return;
                 }
-
                 this.activeCell = undefined;
+                await this.saveCurrentCell();
                 this.c();
 
                 // Do not hide the toolbar if the user clicks on another TimTable
@@ -2313,11 +2317,17 @@ export class TimTableComponent
     }
 
     handleClickCancelSmallEditor() {
+        if (this.currentCell?.editorOpen) {
+            return;
+        }
         this.closeSmallEditor();
         this.c();
     }
 
     async handleClickAcceptSmallEditor() {
+        if (this.currentCell?.editorOpen) {
+            return;
+        }
         await this.saveAndCloseSmallEditor();
         this.c();
     }
@@ -4581,7 +4591,7 @@ export class TimTableComponent
         if (userChange && this.data.nonUserSpecific) {
             return false;
         }
-        return this.edited;
+        return this.edited || this.currentCell != undefined;
     }
 
     // save: () => Promise<{saved: boolean, message: (string | undefined)}>;
