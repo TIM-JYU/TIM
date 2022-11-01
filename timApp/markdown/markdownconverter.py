@@ -757,7 +757,7 @@ def insert_heading_numbers(
                 heading_format,
                 initial_counts=initial_heading_counts,
             )
-    final_html = etree.tostring(tree)
+    final_html = etree.tostring(tree, encoding="utf-8")
     return final_html
 
 
