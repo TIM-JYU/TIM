@@ -186,7 +186,10 @@ class DocumentParser:
                                 and not options.break_on_normal
                             )
                         )
-                        and not result.get("attrs")
+                        and (
+                            not result.get("attrs")
+                            or "code_lang" in result.get("attrs")
+                        )
                         and len(self._blocks) > 0
                         and not self._blocks[-1].get("attrs", {}).get("plugin")
                         and self._blocks[-1]["type"] != "atom"
