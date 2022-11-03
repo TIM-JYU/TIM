@@ -1,11 +1,14 @@
 import re
+import shelve
 import shutil
 import sys
 import traceback
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from functools import wraps
 from typing import Callable, Any
 
+import filelock
 from flask import request, render_template, session, flash, Flask, redirect
 from markupsafe import Markup
 from marshmallow import ValidationError
@@ -23,10 +26,12 @@ from timApp.markdown.dumboclient import DumboHTMLException
 from timApp.notification.send_email import send_email
 from timApp.plugin.pluginexception import PluginException
 from timApp.sisu.sisu import IncorrectSettings, SisuError
+from timApp.tim_app import app
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
 from timApp.user.settings.style_utils import get_default_scss_gen_dir
 from timApp.user.userutils import NoSuchUserException, DeletedUserException
+from timApp.util.flask.filters import humanize_timedelta
 from timApp.util.flask.requesthelper import (
     JSONException,
     get_request_message,
@@ -81,6 +86,96 @@ def suppress_wuff(
         return wrapped
 
     return decorator
+
+
+@dataclass(slots=True)
+class ErrorMuteInfo:
+    count: int = 0
+    first_mute: datetime | None = None
+    mute_until: datetime | None = None
+
+
+def _get_error_mute_info(
+    error_code: str,
+) -> ErrorMuteInfo:
+    wuff_mute_count = app.config["WUFF_MAX_SAME_COUNT"]
+    if not wuff_mute_count:
+        return ErrorMuteInfo()
+    with filelock.FileLock("/tmp/wuff_mute.db.lock"):
+        with shelve.open("/tmp/wuff_mute.db") as cache:
+            return cache.get(error_code, None) or ErrorMuteInfo()
+
+
+def _set_error_mute_info(error_code: str, info: ErrorMuteInfo) -> None:
+    wuff_mute_count = app.config["WUFF_MAX_SAME_COUNT"]
+    if not wuff_mute_count:
+        return
+    with filelock.FileLock("/tmp/wuff_mute.db.lock"):
+        with shelve.open("/tmp/wuff_mute.db") as cache:
+            cache[error_code] = info
+
+
+def report_error(err_msg: str) -> None:
+    """
+    Log an error and send information about it to the error reporting service.
+    A full stack trace and an error database code is included in the message.
+
+    :param err_msg: Error message to include in the report
+    """
+    log_error(err_msg)
+    _, ex, tb_obj = sys.exc_info()
+    if isinstance(ex, SuppressedError):
+        return
+    tb_str = traceback.format_exc()
+    error_code = get_exception_code(ex, tb_obj)
+    host = app.config["TIM_HOST"]
+    wuff_mute_count = app.config["WUFF_MAX_SAME_COUNT"]
+    wuff_mute_same_interval = timedelta(seconds=app.config["WUFF_MAX_SAME_INTERVAL"])
+    wuff_mute_duration = timedelta(seconds=app.config["WUFF_MAX_SAME_MUTE_DURATION"])
+    will_mute_next = False
+
+    if wuff_mute_count:
+        mute_info = _get_error_mute_info(error_code)
+        now = get_current_time()
+        if mute_info.mute_until:
+            if mute_info.mute_until > now:
+                return
+            mute_info.count = 0
+            mute_info.first_mute = None
+            mute_info.mute_until = None
+        if mute_info.first_mute:
+            if now - mute_info.first_mute < wuff_mute_same_interval:
+                mute_info.count += 1
+            else:
+                mute_info.count = 1
+                mute_info.first_mute = now
+        else:
+            mute_info.count = 1
+            mute_info.first_mute = now
+        if mute_info.count >= wuff_mute_count:
+            mute_info.mute_until = now + wuff_mute_duration
+            will_mute_next = True
+        _set_error_mute_info(error_code, mute_info)
+
+    message = f"""
+Exception happened on {get_current_time()} at {request.url}
+
+Exception database: {host}/view/{ERROR_CODES_FOLDER}/{error_code.lower()}
+
+{err_msg}
+
+{tb_str}
+
+{f"This error will be muted for {humanize_timedelta(wuff_mute_duration)}." if will_mute_next else ""} 
+""".strip()
+    u = get_current_user_object()
+    send_email(
+        rcpt=app.config["ERROR_EMAIL"],
+        subject=f"{host}: Error at {request.path} ({u.name})",
+        mail_from=app.config["WUFF_EMAIL"],
+        reply_to=f'{app.config["ERROR_EMAIL"]},{u.email}',
+        msg=message,
+    )
 
 
 def register_errorhandlers(app: Flask):
@@ -224,39 +319,16 @@ def register_errorhandlers(app: Flask):
 
     @app.errorhandler(500)
     def handle_500(error):
-        # NOTE: Rollback must be the first operation here. Otherwise any db access might fail.
+        # NOTE: Rollback must be the first operation here. Otherwise, any db access might fail.
         db.session.rollback()
         req_msg = get_request_message(500, include_body=True)
-        log_error(req_msg)
+        report_error(req_msg)
         help_email = app.config["HELP_EMAIL"]
-        host = app.config["TIM_HOST"]
         error.description = Markup(
             "Something went wrong with the server, sorry. "
             "TIM developers have been notified about this. "
             "If the problem persists, please send email to "
             f'<a href="mailto:{help_email}">{help_email}</a>.'
-        )
-        _, ex, tb_obj = sys.exc_info()
-        if isinstance(ex, SuppressedError):
-            return error_generic(error.description, 500)
-        tb_str = traceback.format_exc()
-        error_code = get_exception_code(ex, tb_obj)
-        message = f"""
-Exception happened on {get_current_time()} at {request.url}
-
-Exception database: {host}/view/{ERROR_CODES_FOLDER}/{error_code.lower()}
-
-{req_msg}
-
-{tb_str}
-    """.strip()
-        u = get_current_user_object()
-        send_email(
-            rcpt=app.config["ERROR_EMAIL"],
-            subject=f"{host}: Error at {request.path} ({u.name})",
-            mail_from=app.config["WUFF_EMAIL"],
-            reply_to=f'{app.config["ERROR_EMAIL"]},{u.email}',
-            msg=message,
         )
         return error_generic(error.description, 500)
 

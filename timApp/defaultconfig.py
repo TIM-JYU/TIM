@@ -98,6 +98,13 @@ WUFF_EMAIL = "wuff@tim.jyu.fi"
 NOREPLY_EMAIL = "no-reply@tim.jyu.fi"
 GLOBAL_NOTIFICATION_FILE = "/tmp/global_notification.html"
 
+WUFF_MAX_SAME_COUNT = None
+"""How many times the same error can be reported before it is muted. Set to None to disable muting."""
+WUFF_MAX_SAME_INTERVAL = 60 * 5  # 5 minutes
+"""How long the same error can be reported before it is muted. Duration in seconds."""
+WUFF_MAX_SAME_MUTE_DURATION = 60 * 60  # 1 hour
+"""How long the same error is muted after it has been reported too many times. Duration in seconds."""
+
 GIT_LATEST_COMMIT_TIMESTAMP = get_latest_commit_timestamp()
 GIT_BRANCH = get_current_branch()
 
