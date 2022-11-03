@@ -39,7 +39,6 @@ from timApp.document.editing.routes_clipboard import clipboard
 from timApp.document.minutes.routes import minutes_blueprint
 from timApp.document.routes import doc_bp
 from timApp.document.translation.routes import tr_bp
-from timApp.errorhandlers import register_errorhandlers
 from timApp.gamification.generateMap import generateMap
 from timApp.item.distribute_rights import dist_bp
 from timApp.item.manage import manage_page
@@ -83,6 +82,7 @@ from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
 from timApp.user.settings.styles import styles
 from timApp.user.verification.routes import verify
+from timApp.util.error_handlers import register_errorhandlers
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import (
     get_request_message,

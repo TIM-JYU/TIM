@@ -10,9 +10,11 @@ from typing import Callable, Any
 
 import filelock
 from flask import request, render_template, session, flash, Flask, redirect
-from markupsafe import Markup
+from flask.typing import ResponseReturnValue
+from markupsafe import Markup  # type: ignore
 from marshmallow import ValidationError
 from sass import CompileError
+from werkzeug.exceptions import HTTPException
 
 from timApp.answer.answers import TooLargeAnswerException
 from timApp.auth.accesshelper import AccessDenied, ItemLockedException
@@ -103,7 +105,9 @@ def _get_error_mute_info(
         return ErrorMuteInfo()
     with filelock.FileLock("/tmp/wuff_mute.db.lock"):
         with shelve.open("/tmp/wuff_mute.db") as cache:
-            return cache.get(error_code, None) or ErrorMuteInfo()
+            if (res := cache.get(error_code, None)) and isinstance(res, ErrorMuteInfo):
+                return res
+            return ErrorMuteInfo()
 
 
 def _set_error_mute_info(error_code: str, info: ErrorMuteInfo) -> None:
@@ -178,9 +182,13 @@ Exception database: {host}/view/{ERROR_CODES_FOLDER}/{error_code.lower()}
     )
 
 
-def register_errorhandlers(app: Flask):
+class HTTPValidationException(HTTPException):
+    data: dict[str, Any]
+
+
+def register_errorhandlers(app: Flask) -> None:
     @app.errorhandler(CompileError)
-    def handle_sass_compile_error(error):
+    def handle_sass_compile_error(error: CompileError) -> ResponseReturnValue:
         # Generally, compile error is caused by bad style SCSS (e.g. after an update)
         # Right now, fix this by forcing the cache to regenerate and display a message with the error info
         shutil.rmtree(get_default_scss_gen_dir(), ignore_errors=True)
@@ -191,7 +199,7 @@ def register_errorhandlers(app: Flask):
         )
 
     @app.errorhandler(AccessDenied)
-    def handle_access_denied(error: AccessDenied):
+    def handle_access_denied(error: AccessDenied) -> ResponseReturnValue:
         msg = (
             str(error)
             if error.args
@@ -200,7 +208,7 @@ def register_errorhandlers(app: Flask):
         return error_generic(msg, 403)
 
     @app.errorhandler(SessionExpired)
-    def handle_session_expired(error: SessionExpired):
+    def handle_session_expired(error: SessionExpired) -> ResponseReturnValue:
         return error_generic(
             "Your session has expired. Please log in again.",
             490,
@@ -208,43 +216,45 @@ def register_errorhandlers(app: Flask):
         )
 
     @app.errorhandler(NotExist)
-    def handle_access_denied(error):
+    def handle_not_exist(error: NotExist) -> ResponseReturnValue:
         return error_generic(error.description, 404)
 
     @app.errorhandler(PluginException)
-    def handle_plugin_exception(error):
+    def handle_plugin_exception(error: PluginException) -> ResponseReturnValue:
         return error_generic(str(error), 400)
 
     @app.errorhandler(ValidationError)
-    def handle_validation_error(error):
+    def handle_validation_error(error: ValidationError) -> ResponseReturnValue:
         return error_generic(str(error), 400)
 
     @app.errorhandler(IncorrectSettings)
-    def handle_validation_error(error):
+    def handle_incorrect_settings_error(
+        error: IncorrectSettings,
+    ) -> ResponseReturnValue:
         return error_generic(str(error), 400)
 
     @app.errorhandler(SisuError)
-    def handle_validation_error(error):
+    def handle_sisu_validation_error(error: SisuError) -> ResponseReturnValue:
         return error_generic(str(error), 400)
 
     @app.errorhandler(RouteException)
-    def handle_json_exception(error: RouteException):
+    def handle_route_exception(error: RouteException) -> ResponseReturnValue:
         return error_generic(error.description, error.code)
 
     @app.errorhandler(JSONException)
-    def handle_json_exception(error: JSONException):
+    def handle_json_exception(error: JSONException) -> ResponseReturnValue:
         return error_generic(error.description, error.code)
 
     @app.errorhandler(ItemAlreadyExistsException)
-    def handle_already_exists(error: ItemAlreadyExistsException):
+    def handle_already_exists(error: ItemAlreadyExistsException) -> ResponseReturnValue:
         return error_generic(str(error), 403)
 
     @app.errorhandler(DumboHTMLException)
-    def handle_dumbo_html_exception(error: DumboHTMLException):
+    def handle_dumbo_html_exception(error: DumboHTMLException) -> ResponseReturnValue:
         return error_generic(error.description, 400, template="dumbo_html_error.jinja2")
 
     @app.errorhandler(ItemLockedException)
-    def handle_item_locked(error: ItemLockedException):
+    def handle_item_locked(error: ItemLockedException) -> ResponseReturnValue:
         item = DocEntry.find_by_id(error.access.block_id)
         is_folder = False
         if not item:
@@ -269,21 +279,20 @@ def register_errorhandlers(app: Flask):
         )
 
     @app.errorhandler(NoSuchUserException)
-    def handle_user_not_found(error):
+    def handle_user_not_found(error: NoSuchUserException) -> ResponseReturnValue:
+        err = f"Your user id ({error.user_id}) was not found in the database. Clearing session automatically."
         if error.user_id == session["user_id"]:
-            flash(
-                f"Your user id ({error.user_id}) was not found in the database. Clearing session automatically."
-            )
+            flash(err)
             return logout()
-        return error_generic(error.description, 500)
+        return error_generic(err, 500)
 
     @app.errorhandler(DeletedUserException)
-    def handle_user_deleted(error):
+    def handle_user_deleted(error: DeletedUserException) -> ResponseReturnValue:
         clear_session()
         return redirect("/")
 
     @app.errorhandler(TooLargeAnswerException)
-    def handle_too_large_answer(error: TooLargeAnswerException):
+    def handle_too_large_answer(error: TooLargeAnswerException) -> ResponseReturnValue:
         return error_generic(str(error), 400)
 
     ##############
@@ -291,19 +300,19 @@ def register_errorhandlers(app: Flask):
     ##############
 
     @app.errorhandler(400)
-    def handle_400(error):
+    def handle_400(error: HTTPException) -> ResponseReturnValue:
         return error_generic(error.description, 400)
 
     @app.errorhandler(403)
-    def handle_403(error):
+    def handle_403(error: HTTPException) -> ResponseReturnValue:
         return error_generic(error.description, 403)
 
     @app.errorhandler(404)
-    def handle_404(error):
+    def handle_404(error: HTTPException) -> ResponseReturnValue:
         return error_generic(error.description, 404)
 
     @app.errorhandler(413)
-    def handle_413(error):
+    def handle_413(error: HTTPException) -> ResponseReturnValue:
         error.description = (
             "Your file is too large to be uploaded. "
             + f'Maximum size is {app.config["MAX_CONTENT_LENGTH"] / 1024 / 1024} MB.'
@@ -311,14 +320,14 @@ def register_errorhandlers(app: Flask):
         return error_generic(error.description, 413)
 
     @app.errorhandler(422)
-    def handle_422(error):
+    def handle_422(error: HTTPValidationException) -> ResponseReturnValue:
         msgs = error.data.get("messages")
         if msgs:
             error.description = str(msgs)
         return error_generic(error.description, 422)
 
     @app.errorhandler(500)
-    def handle_500(error):
+    def handle_500(error: HTTPException) -> ResponseReturnValue:
         # NOTE: Rollback must be the first operation here. Otherwise, any db access might fail.
         db.session.rollback()
         req_msg = get_request_message(500, include_body=True)
@@ -333,5 +342,5 @@ def register_errorhandlers(app: Flask):
         return error_generic(error.description, 500)
 
     @app.errorhandler(503)
-    def handle_503(error):
+    def handle_503(error: HTTPException) -> ResponseReturnValue:
         return error_generic(error.description, 503)

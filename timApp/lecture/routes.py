@@ -3,7 +3,6 @@ import time
 from dataclasses import dataclass, field
 from datetime import timedelta
 from random import randrange
-from typing import Optional
 
 import dateutil.parser
 from flask import Blueprint, render_template, g
@@ -30,7 +29,6 @@ from timApp.auth.sessioninfo import (
 )
 from timApp.document.docentry import DocEntry
 from timApp.document.randutils import hashfunc
-from timApp.errorhandlers import suppress_wuff
 from timApp.lecture.askedjson import get_asked_json_by_hash, AskedJson
 from timApp.lecture.askedquestion import (
     AskedQuestion,
@@ -58,6 +56,7 @@ from timApp.lecture.useractivity import Useractivity
 from timApp.plugin.qst.qst import get_question_data_from_document
 from timApp.timdb.sqa import db, tim_main_execute
 from timApp.user.user import User
+from timApp.util.error_handlers import suppress_wuff
 from timApp.util.flask.requesthelper import (
     get_option,
     verify_json_params,

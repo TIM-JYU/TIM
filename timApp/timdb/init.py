@@ -24,7 +24,6 @@ from timApp.document.specialnames import (
     PREAMBLE_FOLDER_NAME,
     DEFAULT_PREAMBLE_DOC,
 )
-from timApp.errorhandlers import ERROR_CODES_FOLDER
 from timApp.folder.folder import Folder
 from timApp.item.block import BlockType
 from timApp.messaging.messagelist.messagelist_utils import MESSAGE_LIST_DOC_PREFIX
@@ -43,6 +42,7 @@ from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup, ORG_GROUP_SUFFIX
 from timApp.user.users import create_special_usergroups
 from timApp.user.userutils import grant_default_access
+from timApp.util.error_handlers import ERROR_CODES_FOLDER
 from timApp.util.logger import log_info, enable_loggers, log_error
 from timApp.util.utils import static_tim_doc, get_static_tim_doc_path
 
