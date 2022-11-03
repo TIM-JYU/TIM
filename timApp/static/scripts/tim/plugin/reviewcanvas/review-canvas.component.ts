@@ -260,7 +260,7 @@ export class ReviewCanvasComponent
     }
 
     downloadPDFText() {
-        return this.markup.downloadPDFText ?? $localize`Download images as PDF`;
+        return this.markup.downloadPDFText ?? $localize`Show images as PDF`;
     }
 
     updatePDFDownloadUrl(answerId?: number) {
