@@ -10,7 +10,7 @@
 # (add --push arg to also push the images automatically to Docker Hub)
 
 
-FROM ubuntu:20.04 as base
+FROM ubuntu:22.04 as base
 LABEL maintainer="vesal@jyu.fi"
 
 ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
@@ -26,10 +26,15 @@ ENV LANG=en_US.UTF-8 \
     LC_CTYPE=en_US.UTF-8
 RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive tzdata && bash -c "${APT_CLEANUP}"
 
+# Install gpg and gpg-agent for verifying signatures before installing python
+RUN bash -c "${APT_INSTALL} gpg-agent && ${APT_CLEANUP}"
+
+ENV PYTHON_VERSION="3.10"
+ENV PYTHON_CMD="python${PYTHON_VERSION}"
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
-RUN bash -c "${APT_INSTALL} python3.10 wget dirmngr gpg-agent curl python3.10-distutils && ${APT_CLEANUP}"
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.10 get-pip.py && rm get-pip.py
-RUN python3.10 -m pip install Flask bleach lxml && bash -c "${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} python$PYTHON_VERSION wget dirmngr curl python$PYTHON_VERSION-distutils && ${APT_CLEANUP}"
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && $PYTHON_CMD get-pip.py && rm get-pip.py
+RUN $PYTHON_CMD -m pip install Flask bleach lxml && bash -c "${APT_CLEANUP}"
 
 # Keep above same as SVN Dockerfile for better caching
 
@@ -88,7 +93,7 @@ RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${DOCK
     tar -xzvf docker-${DOCKER_VERSION}.tgz --strip=1 -C /usr/bin docker/docker && \
     rm docker-${DOCKER_VERSION}.tgz && docker --version
 
-RUN python3.10 -m pip install \
+RUN $PYTHON_CMD -m pip install \
 beautifulsoup4 \
 filelock \
 gunicorn \
@@ -103,7 +108,7 @@ python-dateutil \
 typing-inspect \
 webargs \
  && bash -c "${APT_CLEANUP}"
-RUN python3.10 -m pip install requests urllib3 --upgrade && bash -c "${APT_CLEANUP}"
+RUN $PYTHON_CMD -m pip install requests urllib3 --upgrade && bash -c "${APT_CLEANUP}"
 
 # git
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
@@ -141,8 +146,8 @@ RUN bash -c "${APT_INSTALL} \
     libc6 \
     libgcc1 \
     libgssapi-krb5-2 \
-    libicu66 \
-    libssl1.1 \
+    libicu70 \
+    libssl3 \
     libstdc++6 \
     zlib1g \
 && ${APT_CLEANUP}"
@@ -151,8 +156,13 @@ RUN bash -c "${APT_INSTALL} \
 RUN curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel $DOTNET_VERSION_CHANNEL --install-dir /usr/share/dotnet \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
 
-# Set active Python version to 3.10
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 20
+# Set active Python version
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/$PYTHON_CMD 20
+
+# Edit OpenSSL config to enable "legacy" providers
+# OpenSSLv3 seems to disable RIPEMD160: https://github.com/openssl/openssl/issues/16994
+RUN sed -i 's/\[provider_sect\]/\0\nlegacy = legacy_sect/' /usr/lib/ssl/openssl.cnf && \
+    sed -i 's/\[default_sect\]/\0\nactivate = 1\n[legacy_sect]\nactivate = 1/' /usr/lib/ssl/openssl.cnf
 
 RUN useradd -m agent
 ENV HOME /home/agent
@@ -207,30 +217,30 @@ USER root
 # Python packages
 
 # OpenCV
-RUN python3.10 -m pip install sympy opencv-contrib-python-headless && bash -c "${APT_CLEANUP}"
+RUN $PYTHON_CMD -m pip install sympy opencv-contrib-python-headless && bash -c "${APT_CLEANUP}"
 
 # http://www.scipy.org/install.html
 RUN bash -c "${APT_INSTALL} epstool transfig && ${APT_CLEANUP}"
-RUN python3.10 -m pip install numpy scipy matplotlib pandas statsmodels control scikit-learn networkx && bash -c "${APT_CLEANUP}"
+RUN $PYTHON_CMD -m pip install numpy scipy matplotlib pandas statsmodels control scikit-learn networkx && bash -c "${APT_CLEANUP}"
 
 # pyod
-RUN python3.10 -m pip install pyod && bash -c "${APT_CLEANUP}"
+RUN $PYTHON_CMD -m pip install pyod && bash -c "${APT_CLEANUP}"
 
 # pyqula
-RUN python3.10 -m pip install pyqula && bash -c "${APT_CLEANUP}"
+RUN $PYTHON_CMD -m pip install pyqula && bash -c "${APT_CLEANUP}"
 
 # R packages
 RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-base libopenblas-dev gfortran && ${APT_CLEANUP}"
 
 # Scala
-RUN bash -c "${APT_INSTALL} openjdk-16-jre-headless && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} openjdk-17-jre-headless && ${APT_CLEANUP}"
 ENV SCALA_VERSION 2.13.6
 RUN wget -q https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.deb && \
  dpkg -i scala-${SCALA_VERSION}.deb && \
  rm scala-${SCALA_VERSION}.deb
 
 # Octave
-RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic gnuplot pstoedit liboctave-dev fonts-freefont-otf && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal gnuplot pstoedit liboctave-dev fonts-freefont-otf && ${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} make && ${APT_CLEANUP}"
 RUN printf "pkg install -forge io" | octave && \
  printf "pkg install -forge statistics" | octave && \
@@ -246,11 +256,11 @@ RUN strip --remove-section=.note.ABI-tag /lib/x86_64-linux-gnu/libQt5Core.so.5
 # Swift requirements
 RUN bash -c "${APT_INSTALL} libcurl4 libpython3.8 libxml2 && ${APT_CLEANUP}"
 
-# modified from https://github.com/apple/swift-docker/blob/main/5.5/ubuntu/20.04/slim/Dockerfile
+# modified from https://github.com/apple/swift-docker/blob/main/5.7/ubuntu/22.04/slim/Dockerfile
 ARG SWIFT_SIGNING_KEY=A62AE125BBBFBB96A6E042EC925CC1CCED3D1561
-ARG SWIFT_PLATFORM=ubuntu20.04
-ARG SWIFT_BRANCH=swift-5.5-release
-ARG SWIFT_VERSION=swift-5.5-RELEASE
+ARG SWIFT_PLATFORM=ubuntu22.04
+ARG SWIFT_BRANCH=swift-5.7.1-release
+ARG SWIFT_VERSION=swift-5.7.1-RELEASE
 ARG SWIFT_WEBROOT=https://download.swift.org
 
 ENV SWIFT_SIGNING_KEY=$SWIFT_SIGNING_KEY \
@@ -349,19 +359,23 @@ RUN bash -c "${APT_INSTALL} mongodb-mongosh=${MONGOSH_VERSION} && ${APT_CLEANUP}
 RUN mongosh --version
 
 # Install cqlsh from pip
-RUN python3.10 -m pip install cqlsh six --upgrade && bash -c "${APT_CLEANUP}"
+RUN $PYTHON_CMD -m pip install cqlsh six --upgrade && bash -c "${APT_CLEANUP}"
 RUN cqlsh --version
 
 # Install Elixir
-RUN bash -c "${APT_INSTALL} gnupg" && \
-    wget https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb && \
-    dpkg -i erlang-solutions_2.0_all.deb && \
-    rm erlang-solutions_2.0_all.deb && \
-    apt-get update && \
-    bash -c "${APT_INSTALL} esl-erlang elixir && apt-get purge --auto-remove -y gnupg && ${APT_CLEANUP}" && \
+# TODO: Uncomment once esl-erlang is supported on Ubuntu 22.04
+#RUN bash -c "${APT_INSTALL} gnupg" && \
+#    wget https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb && \
+#    dpkg -i erlang-solutions_2.0_all.deb && \
+#    rm erlang-solutions_2.0_all.deb && \
+#    apt-get update && \
+#    bash -c "${APT_INSTALL} esl-erlang elixir && apt-get purge --auto-remove -y gnupg && ${APT_CLEANUP}" && \
+#    elixir --version
+
+RUN bash -c "${APT_INSTALL} erlang elixir && apt-get purge --auto-remove -y gnupg && ${APT_CLEANUP}" && \
     elixir --version
 
-RUN python3.10 -m pip install coverage && bash -c "${APT_CLEANUP}"
+RUN $PYTHON_CMD -m pip install coverage && bash -c "${APT_CLEANUP}"
 
 USER agent
 

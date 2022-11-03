@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \
     APT_CLEANUP="rm -rf /var/lib/apt/lists /dvisvgm-2.4 /usr/share/doc ~/.cache"
@@ -75,8 +75,11 @@ texlive-xetex \
 wget \
 && ${APT_CLEANUP}"
 
+# Install gpg and gpg-agent for verifying signatures
+RUN bash -c "${APT_INSTALL} gpg-agent && ${APT_CLEANUP}"
+
 # Update dvisvgm so that it supports converting PDFs to SVGs
-ENV DVISVGM_VERSION="2.12"
+ENV DVISVGM_VERSION="2.14"
 RUN bash -c "${APT_INSTALL} gcc g++ libgs-dev libkpathsea-dev pkg-config libfreetype6-dev make && ${APT_CLEANUP}"
 RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/${DVISVGM_VERSION}/dvisvgm-${DVISVGM_VERSION}.tar.gz" -qO $FILE && \
  tar -xf $FILE && \
@@ -89,11 +92,11 @@ RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/$
  rm -rf /dvisvgm-$DVISVGM_VERSION
 
 # Install Python, pip and other necessary packages
-
+ENV PYTHON_VERSION="3.11"
 RUN bash -c "add-apt-repository -y ppa:deadsnakes/ppa && ${APT_CLEANUP}"
-RUN bash -c "${APT_INSTALL} python3.10 python3.10-distutils && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} python$PYTHON_VERSION python$PYTHON_VERSION-distutils && ${APT_CLEANUP}"
 
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 20
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python$PYTHON_VERSION 20
 
 # lxml dependencies
 # C-parser for PyYAML
@@ -105,24 +108,22 @@ RUN bash -c "${APT_INSTALL} \
  libffi-dev \
  libmagic1 \
  libmagickwand-dev \
- libvoikko1 \
  libxml2-dev \
  libxmlsec1-dev \
  libxmlsec1-openssl \
  libxslt-dev \
  libyaml-dev \
- python3.10-dev \
- voikko-fi \
+ python$PYTHON_VERSION-dev \
  zlib1g-dev \
  && ${APT_CLEANUP}"
 
-RUN wget -q https://bootstrap.pypa.io/get-pip.py && python3.10 get-pip.py && rm get-pip.py
+RUN wget -q https://bootstrap.pypa.io/get-pip.py && python$PYTHON_VERSION get-pip.py && rm get-pip.py
 
 # Install xmlsec binary which is needed for PySAML2
 RUN bash -c "${APT_INSTALL} xmlsec1 && ${APT_CLEANUP}"
 
-ENV PIP_INSTALL="python3.10 -m pip install"
-RUN bash -c "${PIP_INSTALL} --upgrade poetry==1.2.1 requests && ${APT_CLEANUP}"
+ENV PIP_INSTALL="python$PYTHON_VERSION -m pip install"
+RUN bash -c "${PIP_INSTALL} --upgrade poetry==1.2.2 requests && ${APT_CLEANUP}"
 
 COPY pyproject.toml poetry.lock ./
 RUN bash -c " \
@@ -133,7 +134,7 @@ ${APT_CLEANUP} && \
 rm pyproject.toml poetry.lock"
 
 # Install Pandoc
-RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.14.2/pandoc-2.14.2-1-amd64.deb" -qO $FILE && \
+RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-amd64.deb" -qO $FILE && \
  dpkg -i $FILE && rm $FILE && bash -c "${APT_CLEANUP}"
 
 # Set name and email for git.
@@ -146,7 +147,7 @@ RUN mkdir /service
 RUN useradd -M agent
 RUN chown -R agent /service
 
-RUN bash -c "${APT_INSTALL} curl qpdf gpg-agent poppler-utils && ${APT_CLEANUP} && \
+RUN bash -c "${APT_INSTALL} curl qpdf poppler-utils && ${APT_CLEANUP} && \
     curl --version && qpdf --version"
 
 # On current TIM production server, using latest versions of Node and NPM will cause
@@ -161,9 +162,9 @@ RUN (curl -sL https://deb.nodesource.com/setup_16.x | bash -) && bash -c "${APT_
 RUN npm i npm@6 -g && bash -c "${APT_CLEANUP}"
 
 # Flask-Testing does not let us configure host, so we do it here.
-RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python3.10/dist-packages/flask_testing/utils.py
+RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloader=False/" /usr/local/lib/python$PYTHON_VERSION/dist-packages/flask_testing/utils.py
 # Fix newest Werkzeug incompatibility
-RUN sed -i "s/from werkzeug import cached_property/from werkzeug.utils import cached_property/" /usr/local/lib/python3.10/dist-packages/flask_testing/utils.py
+RUN sed -i "s/from werkzeug import cached_property/from werkzeug.utils import cached_property/" /usr/local/lib/python$PYTHON_VERSION/dist-packages/flask_testing/utils.py
 
 RUN wget -q http://mirrors.ctan.org/support/latexmk/latexmk.pl -O /usr/bin/latexmk
 
