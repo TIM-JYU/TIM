@@ -94,6 +94,7 @@ const PluginMarkupFields = t.intersection([
         inputplaceholder: nullable(t.string),
         inputstem: t.string,
         filename: t.string,
+        pdfLinkText: nullable(t.string),
     }),
     GenericPluginMarkup,
     t.type({
@@ -124,7 +125,7 @@ const PluginFields = t.intersection([
         <tim-plugin-header *ngIf="header" header>
             <span [innerHTML]="header | purify"></span>
         </tim-plugin-header>
-        <a *ngIf="uploadedFiles.length > 0 && !isUnSaved() && downloadPDFUrl" [href]="downloadPDFUrl" target="_blank" i18n>Download images as PDF</a>
+        <a *ngIf="uploadedFiles.length > 0 && !isUnSaved() && downloadPDFUrl" [href]="downloadPDFUrl" target="_blank">{{downloadPDFText()}}</a>
         <p stem *ngIf="stem" [innerHTML]="stem | purify"></p>
         <div *ngIf="!inReviewView()">
             <ng-container body>
@@ -258,7 +259,17 @@ export class ReviewCanvasComponent
         this.updatePDFDownloadUrl();
     }
 
+    downloadPDFText() {
+        return this.markup.pdfLinkText ?? $localize`Show images as PDF`;
+    }
+
     updatePDFDownloadUrl(answerId?: number) {
+        if (
+            this.markup.pdfLinkText === "" ||
+            this.markup.pdfLinkText === null
+        ) {
+            return;
+        }
         const taskId = this.pluginMeta.getTaskId();
         this.downloadPDFUrl = undefined;
         let user: IUser | undefined;

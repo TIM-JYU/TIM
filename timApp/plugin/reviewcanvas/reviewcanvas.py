@@ -43,6 +43,7 @@ class ReviewCanvasStateModel:
 class ReviewCanvasMarkupModel(GenericMarkupModel):
     maxSize: int | Missing = missing
     autosave: bool | Missing = missing
+    pdfLinkText: str | None | Missing = missing
 
 
 @dataclass

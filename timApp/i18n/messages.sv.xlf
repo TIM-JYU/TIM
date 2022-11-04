@@ -7004,14 +7004,6 @@
           <context context-type="linenumber">1568</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3700056939449591480" datatype="html">
-        <source>Download images as PDF</source>
-        <target state="translated">Ladda ner bilder som PDF</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/review-canvas.component.ts</context>
-          <context context-type="linenumber">126</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="2981219928115418649" datatype="html">
         <source>Link</source>
         <target state="translated">Länk</target>
@@ -7254,6 +7246,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/templates/answerBrowser.html</context>
           <context context-type="linenumber">145</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1630347963082522096" datatype="html">
+        <source>Show images as PDF</source>
+        <target state="translated">Visa bilder som PDF</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/reviewcanvas/review-canvas.component.ts</context>
+          <context context-type="linenumber">263</context>
         </context-group>
       </trans-unit>
     </body>
