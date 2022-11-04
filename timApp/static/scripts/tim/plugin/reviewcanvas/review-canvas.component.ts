@@ -265,8 +265,8 @@ export class ReviewCanvasComponent
 
     updatePDFDownloadUrl(answerId?: number) {
         if (
-            this.markup.downloadPDFText != "" &&
-            this.markup.downloadPDFText != null
+            this.markup.downloadPDFText === "" ||
+            this.markup.downloadPDFText === null
         ) {
             return;
         }
