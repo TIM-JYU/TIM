@@ -16,9 +16,10 @@ from flask import (
     flash,
 )
 
-from tim_common.timjsonencoder import TimJsonEncoder
 from timApp.document.viewcontext import ViewContext
+from timApp.tim_app import app
 from timApp.timdb.sqa import db
+from tim_common.timjsonencoder import TimJsonEncoder
 
 
 def is_safe_url(url):
@@ -168,13 +169,15 @@ def csv_response(
 
 
 def error_generic(
-    error: str, code: int, template="error.jinja2", status: str | None = None
+    error: str | None, code: int, template="error.jinja2", status: str | None = None
 ):
+    help_email = app.config["HELP_EMAIL"]
     if "text/html" in request.headers.get("Accept", ""):
         return (
             render_template(
                 template,
-                message=error,
+                message=error
+                or f"An error occurred ({code}). If this persists, please contact support at {help_email}",
                 code=code,
                 status=http.client.responses.get(code, None) or status,
             ),

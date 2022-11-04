@@ -25,7 +25,9 @@ from lxml.html import HtmlElement
 from tim_common.html_sanitize import sanitize_html
 
 
-def get_exception_code(ex: Exception, tb: TracebackType | None = None) -> str:
+def get_exception_code(
+    ex: BaseException | None, tb: TracebackType | None = None
+) -> str:
     """
     Creates a unique code for the exception and the optional traceback.
     The code can be used for short identification of errors.
