@@ -94,7 +94,7 @@ const PluginMarkupFields = t.intersection([
         inputplaceholder: nullable(t.string),
         inputstem: t.string,
         filename: t.string,
-        downloadPDFText: nullable(t.string),
+        pdfLinkText: nullable(t.string),
     }),
     GenericPluginMarkup,
     t.type({
@@ -260,13 +260,13 @@ export class ReviewCanvasComponent
     }
 
     downloadPDFText() {
-        return this.markup.downloadPDFText ?? $localize`Show images as PDF`;
+        return this.markup.pdfLinkText ?? $localize`Show images as PDF`;
     }
 
     updatePDFDownloadUrl(answerId?: number) {
         if (
-            this.markup.downloadPDFText === "" ||
-            this.markup.downloadPDFText === null
+            this.markup.pdfLinkText === "" ||
+            this.markup.pdfLinkText === null
         ) {
             return;
         }
