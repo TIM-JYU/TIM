@@ -57,7 +57,6 @@ PyLaTeX = "^1.4.1"
 pypandoc = "^1.8.1"
 python-dateutil = "^2.8.2"
 python-magic = "^0.4.26"
-python3-saml = "^1.14.0"
 pytz = "^2022.1"
 recommonmark = "^0.7.1"
 responses = "^0.21.0"
@@ -165,6 +164,8 @@ module = [
     "celery.schedules",
     "lxml",
     "lxml.*",
+    "saml2",
+    "saml2.*",
     "sqlalchemy",
     "sqlalchemy.dialects",
     "sqlalchemy.exc",
@@ -193,7 +194,6 @@ module = [
     "timApp.answer.routes",
     "timApp.auth.accesshelper",
     "timApp.auth.auth_models",
-    "timApp.auth.saml",
     "timApp.auth.sessioninfo",
     "timApp.defaultconfig",
     "timApp.document.attributeparser",
