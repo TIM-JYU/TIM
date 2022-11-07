@@ -3439,12 +3439,13 @@ ${fhtml}
         if (r.ok) {
             const data = r.result;
             const element: JQuery = $($.parseHTML(data.texts) as HTMLElement[]);
-            await ParCompiler.processAllMath(element);
             // Remove par class as it's used to identify real paragraphs
             element.removeClass("par");
             // Remove editline as well as it's not valid for preview
             element.children(".editline").remove();
             this.mdHtml = element.wrapAll("<div>").parent().html();
+            // Process math in the preview, since the math may require MathJax
+            await ParCompiler.processAllMathDelayed(this.preview, 0);
         } else {
             const data = r.result;
             alert("Failed to show preview: " + data.error.error);
