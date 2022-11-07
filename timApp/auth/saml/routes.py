@@ -1,4 +1,5 @@
 from dataclasses import field
+from xml.etree.ElementTree import ParseError
 
 import requests
 from flask import make_response, session, request, url_for, redirect
@@ -7,6 +8,7 @@ from saml2.client import Saml2Client
 from saml2.config import Config as Saml2Config
 from saml2.mdstore import MetadataStore
 from saml2.metadata import create_metadata_string
+from saml2.response import AuthnResponse
 from saml2.s_utils import SamlException
 from werkzeug.sansio.response import Response
 
@@ -26,7 +28,7 @@ from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.util.error_handlers import report_error
 from timApp.util.flask.cache import cache
-from timApp.util.flask.requesthelper import RouteException
+from timApp.util.flask.requesthelper import RouteException, is_testing
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_warning
@@ -81,6 +83,19 @@ def sso(
     return redirect(redirect_url)
 
 
+def _get_saml_response(
+    client: Saml2Client, request_id: str, came_from: str
+) -> AuthnResponse:
+    saml_response = request.form.get("SAMLResponse")
+    if not saml_response:
+        raise SamlException("SAML Response is missing")
+    return client.parse_authn_request_response(
+        saml_response,
+        BINDING_HTTP_POST,
+        outstanding={request_id: came_from},
+    )
+
+
 @csrf.exempt
 @saml.post("/acs")
 def acs() -> Response:
@@ -97,17 +112,16 @@ def acs() -> Response:
     client = _get_saml_client()
 
     try:
-        resp = client.parse_authn_request_response(
-            request.form["SAMLResponse"],
-            BINDING_HTTP_POST,
-            outstanding={request_id: came_from},
-        )
-    except SamlException as e:
+        resp = _get_saml_response(client, request_id, came_from)
+    except (SamlException, ParseError, SAMLError) as e:
         report_error(f"Error parsing SAML response: {e}", with_http_body=True)
+        if is_testing():
+            raise RouteException(str(e))
         raise RouteException(
             f"Error parsing SAML response. You can log in using your TIM username and password instead. "
             f"Please contact {app.config['HELP_EMAIL']} if the problem persists."
         )
+
     ava = resp.get_identity()
 
     session.pop("requestID", None)

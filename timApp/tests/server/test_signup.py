@@ -63,61 +63,6 @@ MF+BrXA+3Q==</ds:X509Certificate></ds:X509Data></ds:KeyInfo><xenc:CipherData xml
 """.strip()
 
 
-class SettingsMock:
-    def get_sp_data(self):
-        return {
-            "attributeConsumingService": {
-                "requestedAttributes": [
-                    {
-                        "name": "urn:oid:2.5.4.3",
-                        "isRequired": True,
-                        "friendlyName": "cn",
-                    },
-                    {
-                        "name": "urn:oid:2.16.840.1.113730.3.1.241",
-                        "isRequired": True,
-                        "friendlyName": "displayName",
-                    },
-                    {
-                        "name": "urn:oid:1.3.6.1.4.1.5923.1.1.1.6",
-                        "isRequired": True,
-                        "friendlyName": "eduPersonPrincipalName",
-                    },
-                    {
-                        "name": "urn:oid:1.3.6.1.4.1.5923.1.1.1.11",
-                        "isRequired": True,
-                        "friendlyName": "eduPersonAssurance",
-                    },
-                    {
-                        "name": "urn:oid:2.5.4.42",
-                        "isRequired": True,
-                        "friendlyName": "givenName",
-                    },
-                    {
-                        "name": "urn:oid:0.9.2342.19200300.100.1.3",
-                        "isRequired": True,
-                        "friendlyName": "mail",
-                    },
-                    {
-                        "name": "urn:oid:2.16.840.1.113730.3.1.39",
-                        "isRequired": True,
-                        "friendlyName": "preferredLanguage",
-                    },
-                    {
-                        "name": "urn:oid:2.5.4.4",
-                        "isRequired": True,
-                        "friendlyName": "sn",
-                    },
-                    {
-                        "name": "urn:oid:1.3.6.1.4.1.25178.1.2.14",
-                        "isRequired": False,
-                        "friendlyName": "schacPersonalUniqueCode",
-                    },
-                ],
-            },
-        }
-
-
 LOW_ASSURANCE = "https://refeds.org/assurance/IAP/low"
 MEDIUM_ASSURANCE = "https://refeds.org/assurance/IAP/medium"
 HIGH_ASSURANCE = "https://refeds.org/assurance/IAP/high"
@@ -125,43 +70,27 @@ LOCAL_ENTERPRISE_ASSURANCE = "https://refeds.org/assurance/IAP/local-enterprise"
 
 
 @dataclass
-class OneLoginMock:
+class SamlSSOResponseMock:
     info: UserInfo
     assurance_levels: list[str]
     mock_missing_uniquecode: bool = False
 
-    def process_response(self, request_id):
-        pass
-
-    def get_errors(self):
-        return []
-
-    def is_authenticated(self):
-        return True
-
-    def get_settings(self):
-        return SettingsMock()
-
-    def get_attribute(self, name):
-        values = {
-            "urn:oid:0.9.2342.19200300.100.1.3": [self.info.email],  # mail
-            "urn:oid:1.3.6.1.4.1.5923.1.1.1.6": [
-                self.info.username
-            ],  # eduPersonPrincipalName
-            "urn:oid:1.3.6.1.4.1.5923.1.1.1.11": [
-                self.assurance_levels
-            ],  # eduPersonAssurance
-            "urn:oid:2.16.840.1.113730.3.1.241": [self.info.full_name],  # displayName
-            "urn:oid:2.16.840.1.113730.3.1.39": ["fi"],  # preferredLanguage
-            "urn:oid:2.5.4.3": [self.info.full_name],  # cn
-            "urn:oid:2.5.4.4": [self.info.last_name],  # sn
-            "urn:oid:2.5.4.42": [self.info.given_name],  # givenName
+    def get_identity(self) -> dict:
+        res = {
+            "mail": [self.info.email],
+            "eduPersonPrincipalName": [self.info.username],
+            "eduPersonAssurance": self.assurance_levels,
+            "displayName": [self.info.full_name],
+            "preferredLanguage": ["fi"],
+            "cn": [self.info.full_name],
+            "sn": [self.info.last_name],
+            "givenName": [self.info.given_name],
         }
         if not self.mock_missing_uniquecode:
-            values["urn:oid:1.3.6.1.4.1.25178.1.2.14"] = [
+            res["schacPersonalUniqueCode"] = [
                 uq.to_urn() for uq in self.info.unique_codes
             ]
-        return values.get(name)
+        return res
 
 
 acs_url = "/saml/acs"
@@ -591,7 +520,7 @@ class TestSignUp(TimRouteTest):
             acs_url,
             {},
             expect_status=400,
-            expect_content="entityID not in session",
+            expect_content="No entityID in session.",
         )
         self.get(
             "/saml/sso",
@@ -605,7 +534,7 @@ class TestSignUp(TimRouteTest):
             acs_url,
             data={},
             expect_status=400,
-            expect_content="Error processing SAML response: SAML Response not found, Only supported HTTP_POST Binding",
+            expect_content="SAML Response is missing",
         )
         self.post(
             acs_url,
@@ -613,7 +542,7 @@ class TestSignUp(TimRouteTest):
                 "SAMLResponse": base64.encodebytes(b"x").decode(),
             },
             expect_status=400,
-            expect_content="Error processing SAML response: Start tag expected, '<' not found, line 1, column 1 (<string>, line 1)",
+            expect_content="syntax error: line 1, column 0",
         )
         self.post(
             acs_url,
@@ -621,7 +550,7 @@ class TestSignUp(TimRouteTest):
                 "SAMLResponse": base64.encodebytes(samltestresp.encode()).decode(),
             },
             expect_status=400,
-            expect_contains="Error processing SAML response: No private key available to decrypt the assertion, check settings",
+            expect_contains="Unsolicited response:",
         )
 
     def test_haka_login(self):
@@ -722,6 +651,8 @@ class TestSignUp(TimRouteTest):
             UserInfo(
                 username="xxxx@jyu.fi",
                 full_name="X Test",
+                last_name="X",
+                given_name="Test",
                 email="xxxx@example.com",
                 origin=UserOrigin.Haka,
                 unique_codes=[
@@ -736,6 +667,8 @@ class TestSignUp(TimRouteTest):
             UserInfo(
                 username="xxxx2@jyu.fi",
                 full_name="X Test",
+                last_name="X",
+                given_name="Test",
                 email="xxxx2@example.com",
                 origin=UserOrigin.Haka,
                 unique_codes=[
@@ -765,6 +698,9 @@ class TestSignUp(TimRouteTest):
                 username="sp@jyu.fi",
                 email="somep@example.com",
                 origin=UserOrigin.Haka,
+                full_name="Person Söme",
+                last_name="Person",
+                given_name="Söme",
             )
         )
 
@@ -773,6 +709,8 @@ class TestSignUp(TimRouteTest):
             UserInfo(
                 username="xxxx@jyu.fi",
                 full_name="X Test",
+                last_name="X",
+                given_name="Test",
                 email="xxxx@example.com",
                 origin=UserOrigin.Haka,
                 unique_codes=[
@@ -795,8 +733,8 @@ class TestSignUp(TimRouteTest):
             },
             expect_status=302,
         )
-        with mock.patch("timApp.auth.saml.OneLogin_Saml2_Auth") as m:
-            m.return_value = OneLoginMock(
+        with mock.patch("timApp.auth.saml.routes._get_saml_response") as m:
+            m.return_value = SamlSSOResponseMock(
                 info=info,
                 mock_missing_uniquecode=missing_uniquecode,
                 assurance_levels=assurance_levels or [LOW_ASSURANCE],
