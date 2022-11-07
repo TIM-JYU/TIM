@@ -58,23 +58,34 @@ def get_saml_config(metadata_loader: Callable[[], bytes]) -> Saml2Config:
         except KeyError:
             raise KeyError(f"Could not find CONFIG dict in SAML config file.")
 
-        metadata_file_name = "metadata_new.crt" if try_new_metadata else "metadata.crt"
+        metadata_cert_file_name = (
+            "metadata_new.crt" if try_new_metadata else "metadata.crt"
+        )
+        metadata_cert_file = saml_path / "certs" / metadata_cert_file_name
 
-        config_dict["key_file"] = str(saml_path / "certs" / "sp.key")
-        config_dict["cert_file"] = str(saml_path / "certs" / "sp.crt")
-        # Encryption keypairs seem to be a different option, but e.g., in HAKA the same keys are used for encrypting
-        # requests and decrypting responses
-        config_dict["encryption_keypairs"] = [
-            {
-                "key_file": str(saml_path / "certs" / "sp.key"),
-                "cert_file": str(saml_path / "certs" / "sp.crt"),
-            }
-        ]
+        sp_key = saml_path / "certs" / "sp.key"
+        sp_cert = saml_path / "certs" / "sp.crt"
+
+        if sp_key.exists() and sp_cert.exists():
+            sp_key_str = str(sp_key)
+            sp_cert_str = str(sp_cert)
+            config_dict["key_file"] = sp_key_str
+            config_dict["cert_file"] = sp_cert_str
+            # Encryption keypairs seem to be a different option, but e.g., in HAKA the same keys are used for encrypting
+            # requests and decrypting responses
+            config_dict["encryption_keypairs"] = [
+                {
+                    "key_file": sp_key_str,
+                    "cert_file": sp_cert_str,
+                }
+            ]
         config_dict["metadata"] = {
             "loadex": [
                 {
                     "loader": metadata_loader,
-                    "cert": str(saml_path / "certs" / metadata_file_name),
+                    "cert": str(saml_path / "certs" / metadata_cert_file)
+                    if app.config["SAML_VERIFY_METADATA"]
+                    else None,
                 }
             ]
         }
