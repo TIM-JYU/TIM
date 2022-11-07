@@ -9,7 +9,15 @@ from functools import wraps
 from typing import Callable, Any
 
 import filelock
-from flask import request, render_template, session, flash, Flask, redirect
+from flask import (
+    request,
+    render_template,
+    session,
+    flash,
+    Flask,
+    redirect,
+    has_request_context,
+)
 from flask.typing import ResponseReturnValue
 from markupsafe import Markup  # type: ignore
 from marshmallow import ValidationError
@@ -119,12 +127,13 @@ def _set_error_mute_info(error_code: str, info: ErrorMuteInfo) -> None:
             cache[error_code] = info
 
 
-def report_error(err_msg: str) -> None:
+def report_error(err_msg: str, with_http_body: bool = False) -> None:
     """
     Log an error and send information about it to the error reporting service.
     A full stack trace and an error database code is included in the message.
 
     :param err_msg: Error message to include in the report
+    :param with_http_body: If true, include HTTP body of the active request
     """
     log_error(err_msg)
     _, ex, tb_obj = sys.exc_info()
@@ -160,6 +169,9 @@ def report_error(err_msg: str) -> None:
             mute_info.mute_until = now + wuff_mute_duration
             will_mute_next = True
         _set_error_mute_info(error_code, mute_info)
+
+    if with_http_body and has_request_context():
+        err_msg += f"\n\nHTTP Body:\n{get_request_message(include_body=True)}"
 
     message = f"""
 Exception happened on {get_current_time()} at {request.url}
