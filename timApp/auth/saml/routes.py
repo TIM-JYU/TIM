@@ -235,9 +235,11 @@ def get_idps() -> Response:
         ui_info = next(
             (d for d in ext_elems if d["__class__"].endswith("ui&UIInfo")), None
         )
-        assert isinstance(ui_info, dict)
         if ui_info is None:
             log_warning(f"SAML: Could not find UIInfo for {entity_id}")
+            continue
+        if not isinstance(ui_info, dict):
+            log_warning(f"SAML: UIInfo is not a dict for {entity_id}")
             continue
         # get display names
         display_names = [
