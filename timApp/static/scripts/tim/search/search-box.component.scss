@@ -1,0 +1,16 @@
+.folder-links {
+  padding-top: 0.25em;
+
+  & > a:not(:last-child):after {
+    content: " | ";
+  }
+}
+
+input#min-relevance-selector {
+    -moz-appearance: textfield;
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+}
