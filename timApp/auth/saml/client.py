@@ -38,6 +38,13 @@ MetadataStore.load = _metadatastore_load
 
 
 def get_saml_config(metadata_loader: Callable[[], bytes]) -> Saml2Config:
+    """
+    Get the SAML2 configuration for the client.
+
+    :param metadata_loader: Custom loader that provides the XML metadata.
+    :return: SAML2 configuration
+    """
+
     def _do_get_saml_config(try_new_cert: bool, try_new_metadata: bool) -> Saml2Config:
         saml_path = Path(app.config["SAML_PATH"])
         if try_new_cert:
@@ -118,5 +125,11 @@ def get_saml_config(metadata_loader: Callable[[], bytes]) -> Saml2Config:
 
 
 def get_saml_client(metadata_loader: Callable[[], bytes]) -> Saml2Client:
+    """
+    Get the SAML2 client used to make SAML requests.
+
+    :param metadata_loader: Custom loader that provides the XML metadata.
+    :return: SAML2 client
+    """
     saml2_client = Saml2Client(config=get_saml_config(metadata_loader))
     return saml2_client

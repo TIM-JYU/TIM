@@ -34,6 +34,9 @@ from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_warning
 
 saml = TypedBlueprint("saml", __name__, url_prefix="/saml")
+"""
+Blueprint for SAML routes.
+"""
 
 
 @cache.memoize(timeout=3600 * 24)
@@ -65,6 +68,16 @@ def sso(
     debug: bool = False,
     add_user: bool = field(default=False, metadata={"data_key": "addUser"}),
 ) -> Response:
+    """
+    Perform single sign-on to TIM via the SAML2 protocol.
+    This is the starting point of SAML login once the IdP has been selected.
+
+    :param return_to: What URL to return to after successful login?
+    :param entity_id: IdP entity ID that will provide authentication
+    :param debug: If true, return debug information instead of redirecting to return_to
+    :param add_user: Whether to add the logged-in user to the session instead of replacing it
+    :return: SSO redirect
+    """
     if not logged_in() and add_user:
         raise AccessDenied("You must be logged in before adding users to session.")
 
@@ -99,6 +112,13 @@ def _get_saml_response(
 @csrf.exempt
 @saml.post("/acs")
 def acs() -> Response:
+    """
+    Handle Assertion Consumer Service (ACS) response from IdP.
+    Finalise the SSO process and log the user in.
+    If the user doesn't yet exist in the database, create it.
+
+    :return: Redirect to return_to URL or debug information depending on the information provided during /sso
+    """
     entity_id = session.get("entityID")
     came_from = session.get("cameFrom")
     request_id = session.get("requestID")
@@ -176,6 +196,11 @@ def acs() -> Response:
 
 @saml.get("")
 def get_metadata() -> Response:
+    """
+    Get the SAML2 metadata for this service in XML format.
+
+    :return: SAML2 metadata of this service provider
+    """
     saml_config = _get_saml_config()
     try:
         resp = make_response(create_metadata_string(None, config=saml_config), 200)
@@ -189,6 +214,11 @@ def get_metadata() -> Response:
 
 @saml.get("/feed")
 def get_idps() -> Response:
+    """
+    Get a list of IdPs available for login based on active metadata.
+
+    :return: JSON list of IdPs usable for login.
+    """
     config = _get_saml_config()
     meta: MetadataStore = config.metadata
     idps = meta.with_descriptor("idpsso")
