@@ -223,7 +223,7 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
     searchOwned = false; // Limit search to docs owned by the user.
     searchPaths = false; // Search document paths.
     private ignoreRelevance = false; // Don't limit results by relevance.
-    relevanceThreshold = 1; // Exclude documents with < X relevance.
+    relevanceThreshold = 10; // Exclude documents with < X relevance.
     suggestions = relevanceSuggestions;
 
     // Other attributes:
