@@ -106,7 +106,13 @@ def is_localhost() -> bool:
 
 
 def get_active_host_url() -> str:
-    # check if inside request context
+    """
+    Returns the URL of the currently active host URL.
+    If the call is made while handling a request, the host that was used in the request is returned.
+    Otherwise, the host URL is read from the configuration.
+
+    :return: Active host URL
+    """
     if has_request_context():
         return request.host_url
     return f"{current_app.config['TIM_HOST']}/"
