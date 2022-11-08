@@ -128,6 +128,10 @@ export interface ITagSearchResult {
                                placeholder="Input a folder to search"
                                [typeahead]="folderSuggestions"
                                [typeaheadMinLength]="1">
+                        <div class="small folder-links">
+                            <a [tooltip]="defaultFolderLocation" (click)="folder = defaultFolderLocation" i18n>Default folder</a>
+                            <a [tooltip]="currentFolderLocation" (click)="folder = currentFolderLocation" i18n>Current folder</a>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -149,7 +153,11 @@ export interface ITagSearchResult {
                                [typeaheadItemTemplate]="customItemTemplate"
                                typeaheadOptionField="value"
                                [typeaheadLatinize]="false"
-                               [typeahead]="suggestions">
+                               [typeaheadIsFirstItemActive]="false"
+                               [typeahead]="suggestions"
+                               (keydown.arrowDown)="$event.preventDefault()"
+                               (keydown.arrowUp)=" $event.preventDefault()"
+                        >
                     </div>
                 </div>
 
@@ -185,6 +193,7 @@ export interface ITagSearchResult {
             </div>
         </div>
     `,
+    styleUrls: ["./search-box.component.scss"],
 })
 export class SearchBoxComponent implements OnInit, OnDestroy {
     // Results and variables search results dialog needs to know:
@@ -214,7 +223,7 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
     searchOwned = false; // Limit search to docs owned by the user.
     searchPaths = false; // Search document paths.
     private ignoreRelevance = false; // Don't limit results by relevance.
-    relevanceThreshold = 1; // Exclude documents with < X relevance.
+    relevanceThreshold = 10; // Exclude documents with < X relevance.
     suggestions = relevanceSuggestions;
 
     // Other attributes:
@@ -236,10 +245,15 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
     maxDocResults = 1000;
     private timeWarningLimit = 20; // Gives a warning about long search time if over this.
     private timeout = 120; // Default timeout for search.
+    defaultFolderLocation?: string;
+    currentFolderLocation?: string;
 
     ngOnInit() {
         this.loadLocalStorage();
-        this.defaultFolder();
+
+        this.defaultFolderLocation = this.defaultFolder();
+        this.currentFolderLocation = this.currentFolder();
+        this.folder = this.defaultFolderLocation;
         void this.loadFolderSuggestions();
     }
 
@@ -386,6 +400,17 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
         }
     }
 
+    currentFolder() {
+        if (!this.item) {
+            return "";
+        }
+        if (this.item.isFolder) {
+            return this.item.path;
+        } else {
+            return this.item.location;
+        }
+    }
+
     /**
      * If the component doesn't get a default folder as parameter, decides it here.
      *
@@ -397,38 +422,22 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
      * kurssit/faculty/course -> kurssit/faculty/course
      * somefolder/somesubfolders -> somefolder
      */
-    private defaultFolder() {
-        if (this.folder !== undefined) {
-            return;
-        }
-        if (!this.item) {
-            this.folder = "";
-            return;
-        }
-        if (this.item.isFolder) {
-            this.folder = this.item.path;
-        } else {
-            this.folder = this.item.location;
-        }
-        if (!this.folder) {
-            this.folder = "";
-        }
-        const path = this.folder.split("/");
+    defaultFolder() {
+        const folder = this.currentFolder();
+        const path = folder.split("/");
         if (path[0] === "users" && path.length >= 2) {
-            this.folder = `${path[0]}/${path[1]}`;
-            return;
+            return `${path[0]}/${path[1]}`;
         }
         if (path[0] === "kurssit" && path.length >= 3) {
-            this.folder = `${path[0]}/${path[1]}/${path[2]}`;
-            return;
+            return `${path[0]}/${path[1]}/${path[2]}`;
         }
         if (path[0] === "kurssit" && path.length >= 2) {
-            return;
+            return folder;
         }
         if (path.length > 1) {
-            this.folder = `${path[0]}`;
-            return;
+            return `${path[0]}`;
         }
+        return "";
     }
 
     private getCommonSearchOptions() {

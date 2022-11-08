@@ -7366,6 +7366,22 @@
           <context context-type="linenumber">263</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="9002753919323637354" datatype="html">
+        <source>Default folder</source>
+        <target state="translated">Oletuskansio</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">132,133</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2818612908043032590" datatype="html">
+        <source>Current folder</source>
+        <target state="translated">Nykyinen kansio</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/search/search-box.component.ts</context>
+          <context context-type="linenumber">133,134</context>
+        </context-group>
+      </trans-unit>
     </body>
   </file>
 </xliff>
