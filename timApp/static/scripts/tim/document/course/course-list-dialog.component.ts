@@ -33,7 +33,7 @@ export interface IGroupedCourses {
 @Component({
     selector: "tim-course-list-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header>
                 {{ getTitle() }}
             </ng-container>

@@ -44,10 +44,12 @@ enum RefStyle {
 @Component({
     selector: "tim-popup-menu-dialog",
     template: `
-        <tim-dialog-frame size="xs"
+        <tim-dialog-frame [size]="'xs'"
                           [minimizable]="false"
                           [mightBeAsync]="false"
-                          anchor="absolute">
+                          [anchor]="'absolute'"
+                          [dialogName]="'popUpMenu'"
+                          [dialogOptions]="dialogOptions">
             <ng-container body>
                 <div class="flex cl">
                     <div class="error" *ngIf="vctrl.notification" [innerText]="vctrl.notification"></div>
@@ -135,6 +137,14 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
 
     ngOnInit() {
         this.p = this.data;
+    }
+
+    ngAfterViewInit() {
+        super.ngAfterViewInit();
+        const sz = this.frame.resizable.getSize();
+        const pos = this.frame.getPos();
+        const w = Math.round(sz.width / 2);
+        this.frame.setPos({x: pos.x - w, y: pos.y});
     }
 
     ngDoCheck() {

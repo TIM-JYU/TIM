@@ -16,7 +16,7 @@ import {ContactOrigin} from "tim/user/IUser";
 @Component({
     selector: "tim-add-contact-dialog",
     template: `
-        <tim-dialog-frame [minimizable]="false">
+        <tim-dialog-frame [minimizable]="false" [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header i18n>
                 Add new contact information
             </ng-container>

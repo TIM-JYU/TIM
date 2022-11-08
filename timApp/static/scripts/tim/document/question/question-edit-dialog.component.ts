@@ -114,7 +114,7 @@ function isAskedQuestion(
 @Component({
     selector: "tim-edit-question-dialog",
     template: `
-        <tim-dialog-frame *ngIf="!isAskedQuestion()" [autoHeight]="false" [initialAutoHeight]="true">
+        <tim-dialog-frame *ngIf="!isAskedQuestion()" [autoHeight]="false" [initialAutoHeight]="true" [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header>
                 {{ getTitle() }}
             </ng-container>

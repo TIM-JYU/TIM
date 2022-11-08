@@ -179,7 +179,7 @@ export class GroupSelectListComponent implements OnInit, OnChanges {
 @Component({
     selector: "tim-active-group-lock-dialog",
     template: `
-        <tim-dialog-frame [minimizable]="false" size="lg">
+        <tim-dialog-frame [minimizable]="false" size="lg" [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header>
                 <ng-container i18n>Switch active groups</ng-container>
             </ng-container>

@@ -1,4 +1,5 @@
-import {Component, OnInit} from "@angular/core";
+import type {OnInit} from "@angular/core";
+import {Component} from "@angular/core";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";
 
@@ -24,7 +25,7 @@ async function createDialog() {
 @Component({
     selector: "tim-test-detachable-dialog-with-header",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [align]='"right"' [dialogName]="dialogName" [dialogOptions]="dialogOptions">
             <ng-container header>
                 Test
             </ng-container>
@@ -38,6 +39,11 @@ async function createDialog() {
                     </ng-container>
                     <ng-container body>
                         This is a body!
+                        <ng-container content="content">
+                            <div style="height: 200px; background: pink">
+                                <p>This is a content div</p>
+                            </div>
+                        </ng-container>
                     </ng-container>
                 </tim-dialog-frame>
 

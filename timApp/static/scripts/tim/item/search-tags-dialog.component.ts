@@ -17,7 +17,7 @@ import {CommonModule} from "@angular/common";
 @Component({
     selector: "tim-search-tags-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [dialogOptions]="dialogOptions" [align]="'center'" [dialogName]="dialogName">
             <ng-container header>
                 {{ getTitle() }}
             </ng-container>

@@ -11,7 +11,7 @@ import {CommonModule} from "@angular/common";
 @Component({
     selector: "tim-user-group-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container i18n header>
                 Create group
             </ng-container>

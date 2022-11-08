@@ -16,7 +16,7 @@ export interface IEditJsonEventOptions {
 @Component({
     selector: "tim-edit-json-event-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header i18n>
                 Edit event JSON
             </ng-container>

@@ -20,7 +20,7 @@ const groupTagPrefix = "group:";
 @Component({
     selector: "tim-course-dialog",
     template: `
-        <tim-dialog-frame class="overflow-visible">
+        <tim-dialog-frame class="overflow-visible" [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header>
                 {{ getTitle() }}
             </ng-container>

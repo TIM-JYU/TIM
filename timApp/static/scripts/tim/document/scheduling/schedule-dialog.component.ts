@@ -53,7 +53,7 @@ class OwnerPipe {
 @Component({
     selector: "tim-scheduled-functions-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header i18n>
                 Manage scheduled functions
             </ng-container>

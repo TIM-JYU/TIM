@@ -31,7 +31,7 @@ export type InputDialogParams<T> = {
     template: `
         <div class="modal-bg">
         </div>
-        <tim-dialog-frame [minimizable]="false" [mightBeAsync]=asyncContent>
+        <tim-dialog-frame [minimizable]="false" [mightBeAsync]=asyncContent [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
                 <ng-container header>
                     {{getTitle()}}
                 </ng-container>

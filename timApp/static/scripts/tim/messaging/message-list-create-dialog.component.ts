@@ -49,7 +49,7 @@ const NAME_RULES: Record<AnnotatedNameRequirements, string> = {
 @Component({
     selector: "message-list-creation",
     template: `
-        <tim-dialog-frame class="form-horizontal">
+        <tim-dialog-frame class="form-horizontal" [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header i18n>
                 Create message list
             </ng-container>

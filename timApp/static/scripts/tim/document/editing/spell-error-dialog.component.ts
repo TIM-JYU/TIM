@@ -74,7 +74,7 @@ function computeSourcePosition(
 @Component({
     selector: "tim-spell-error-dialog",
     template: `
-        <tim-dialog-frame class="overflow-visible">
+        <tim-dialog-frame [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header>
                 Sanan {{options.word}} oikeinkirjoitus
             </ng-container>
@@ -140,10 +140,10 @@ export class SpellErrorDialogComponent extends AngularDialogComponent<
     async ngAfterViewInit() {
         super.ngAfterViewInit();
         this.frame.setPos({
-            x: this.data.dialogX - this.xOrigin!,
+            x: this.data.dialogX - this.frame.xOrigin!,
             y: this.data.dialogY,
         });
-        await this.setHeightAutomatic();
+        await this.frame.setHeightAutomatic();
     }
 
     get options() {

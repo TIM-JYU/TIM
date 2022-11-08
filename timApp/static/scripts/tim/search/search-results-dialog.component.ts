@@ -33,7 +33,7 @@ enum SortOption {
 @Component({
     selector: "tim-search-results-dialog",
     template: `
-        <tim-dialog-frame class="search-result-dialog">
+        <tim-dialog-frame class="search-result-dialog" [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header>
                 {{ getTitle() }}
             </ng-container>

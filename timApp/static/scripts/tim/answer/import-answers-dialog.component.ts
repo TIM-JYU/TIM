@@ -26,7 +26,7 @@ interface IImportResults {
 @Component({
     selector: "tim-import-answers-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header i18n>
                 Import answers as JSON
             </ng-container>

@@ -14,7 +14,7 @@ import {CommonModule} from "@angular/common";
 @Component({
     selector: "tim-lecture-wall-dialog",
     template: `
-        <tim-dialog-frame [autoHeight]="false">
+        <tim-dialog-frame [autoHeight]="false" [dialogOptions]="dialogOptions">
             <ng-container header>
                 {{ getTitle() }}
             </ng-container>

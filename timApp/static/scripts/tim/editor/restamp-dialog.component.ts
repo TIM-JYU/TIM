@@ -20,7 +20,7 @@ export enum RestampDialogClose {
 @Component({
     selector: "tim-restamp-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header>
                 {{ getTitle() }}
             </ng-container>

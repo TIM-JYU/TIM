@@ -24,7 +24,7 @@ const QR_CODE_SIZE = 350;
     selector: "tim-session-check-dialog",
     template: `
         <div class="modal-bg"></div>
-        <tim-dialog-frame [minimizable]="false" size="lg">
+        <tim-dialog-frame [minimizable]="false" size="lg" [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header i18n>
                 Session check
             </ng-container>

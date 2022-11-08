@@ -18,7 +18,7 @@ export interface IDiffParams {
 @Component({
     selector: "tim-diff-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header>
                 {{data.title}}
             </ng-container>

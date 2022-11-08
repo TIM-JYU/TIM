@@ -25,7 +25,7 @@ import type {IUserApiKey} from "tim/user/IUser";
 @Component({
     selector: "tim-add-api-key-dialog",
     template: `
-        <tim-dialog-frame [minimizable]="false">
+        <tim-dialog-frame [minimizable]="false" [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header i18n>
                 Add new machine translator API key
             </ng-container>

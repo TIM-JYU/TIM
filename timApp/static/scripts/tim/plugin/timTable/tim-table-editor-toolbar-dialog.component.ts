@@ -38,7 +38,7 @@ const DEFAULT_CELL_BGCOLOR = "#FFFF00";
 @Component({
     selector: "tim-table-editor-toolbar-dialog",
     template: `
-        <tim-dialog-frame class="overflow-visible">
+        <tim-dialog-frame class="overflow-visible" [dialogOptions]="dialogOptions" [dialogName]="dialogName">
             <ng-container header>
                 {{getTitle()}}
             </ng-container>

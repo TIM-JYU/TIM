@@ -27,7 +27,7 @@ import {CommonModule} from "@angular/common";
 @Component({
     selector: "tim-calendar-event-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container i18n header>
                 Edit event
             </ng-container>

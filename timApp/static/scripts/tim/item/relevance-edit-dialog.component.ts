@@ -15,7 +15,7 @@ import {CommonModule} from "@angular/common";
 @Component({
     selector: "tim-relevance-edit-dialog",
     template: `
-        <tim-dialog-frame class="overflow-visible">
+        <tim-dialog-frame class="overflow-visible" [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header>
                 {{ getTitle() }}
             </ng-container>

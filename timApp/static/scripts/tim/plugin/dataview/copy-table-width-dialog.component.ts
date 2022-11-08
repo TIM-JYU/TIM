@@ -11,7 +11,7 @@ export interface ICopyTableWidthsParams {
 @Component({
     selector: "tim-copy-table-width-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header i18n>Copy table widths</ng-container>
             <ng-container body>
                 <ng-container i18n>
