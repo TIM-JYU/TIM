@@ -153,7 +153,11 @@ export interface ITagSearchResult {
                                [typeaheadItemTemplate]="customItemTemplate"
                                typeaheadOptionField="value"
                                [typeaheadLatinize]="false"
-                               [typeahead]="suggestions">
+                               [typeaheadIsFirstItemActive]="false"
+                               [typeahead]="suggestions"
+                               (keydown.arrowDown)="$event.preventDefault()"
+                               (keydown.arrowUp)=" $event.preventDefault()"
+                        >
                     </div>
                 </div>
 
