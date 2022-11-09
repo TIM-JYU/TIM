@@ -137,7 +137,8 @@ type MessageFromFrame =
     | {
           msg: "frameInited" | "frameClosed";
           fullscreen: boolean;
-      };
+      }
+    | {msg: "Inited"};
 
 /**
  * Returns the given data (un)wrapped so that there is exactly one layer of "c".
@@ -482,7 +483,9 @@ export class JsframeComponent
         } else {
             let html = this.markup.srchtml ?? "";
             html = html.replace("</body>", communicationJS + "\n</body>");
-            html = html.replace("// INITDATA", this.initData);
+            if (!this.isDrawio()) {
+                html = html.replace("// INITDATA", this.initData);
+            }
             // const datasrc = btoa(html);
             const type = this.attrsall.markup.type;
             const datasrc = this.b64EncodeUnicode(
@@ -753,6 +756,10 @@ export class JsframeComponent
                     document.body.classList.remove("fullscreen-frame");
                     this.c();
                 }
+            }
+            if (d.msg === "Inited" && this.isDrawio()) {
+                const data = this.getDataFromMarkup();
+                this.setData(data);
             }
         };
         const f = this.getFrame();
