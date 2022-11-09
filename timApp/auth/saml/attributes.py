@@ -1,6 +1,6 @@
 import functools
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, Optional, Type
 
 from timApp.auth.saml.identity_assurance import (
     IdentityAssuranceProofing,
@@ -26,11 +26,14 @@ class SAMLUserAttributes:
     Raw attribute data
     """
 
-    def _get_attribute_safe(self, name: str) -> Optional[_T]:
-        return self.response_attribues.get(name, [None])[0]
+    def _get_attribute_safe(self, name: str, expect_type: Type[_T]) -> Optional[_T]:
+        res = self.response_attribues.get(name, [None])[0]
+        if not isinstance(res, expect_type):
+            return None
+        return res
 
-    def _get_attribute(self, name: str) -> _T:
-        value = self._get_attribute_safe(name)
+    def _get_attribute(self, name: str, expect_type: Type[_T]) -> _T:
+        value = self._get_attribute_safe(name, expect_type)
         if value is None:
             raise RouteException(f"Missing required attribute {name}")
         return value
@@ -43,7 +46,7 @@ class SAMLUserAttributes:
 
         :return: Common name of the user
         """
-        return self._get_attribute("cn")
+        return self._get_attribute("cn", str)
 
     @property
     def email(self) -> str:
@@ -53,7 +56,7 @@ class SAMLUserAttributes:
 
         :return: Email address of the user
         """
-        return self._get_attribute("mail")
+        return self._get_attribute("mail", str)
 
     @property
     def surname(self) -> str:
@@ -62,7 +65,7 @@ class SAMLUserAttributes:
 
         :return: Surname of the user
         """
-        return self._get_attribute("sn")
+        return self._get_attribute("sn", str)
 
     @property
     def given_name(self) -> str:
@@ -72,7 +75,7 @@ class SAMLUserAttributes:
 
         :return: Given name of the user
         """
-        return self._get_attribute("givenName")
+        return self._get_attribute("givenName", str)
 
     @property
     def display_name(self) -> str:
@@ -82,7 +85,7 @@ class SAMLUserAttributes:
 
         :return: Preferred name of a person to be used when displaying entries
         """
-        return self._get_attribute("displayName")
+        return self._get_attribute("displayName", str)
 
     @property
     def edu_person_principal_name(self) -> str:
@@ -93,7 +96,7 @@ class SAMLUserAttributes:
 
         :return: A scoped identifier for a person
         """
-        return self._get_attribute("eduPersonPrincipalName")
+        return self._get_attribute("eduPersonPrincipalName", str)
 
     @property
     def edu_person_assurance(self) -> list[str]:
@@ -118,7 +121,7 @@ class SAMLUserAttributes:
 
         :return: Preferred written or spoken language for a person
         """
-        return self._get_attribute("preferredLanguage")
+        return self._get_attribute("preferredLanguage", str)
 
     @property
     def eppn_parts(self) -> list[str]:

@@ -41,7 +41,7 @@ from tim_common.timjsonencoder import TimJsonEncoder
 from tim_common.utils import Missing
 
 # Fix for Python 3.11: missing is not a valid default value for dataclasses
-missing.__class__.__hash__ = lambda self: hash(None)
+missing.__class__.__hash__ = lambda self: hash(None)  # type: ignore
 
 
 class PluginAnswerWeb(TypedDict, total=False):
