@@ -21,6 +21,7 @@ jobs:
           submodules: true
       - name: Cache Angular build assets
         uses: actions/cache@v3
+        if: "${{ matrix.test_module == 'browser' }}"
         with:
           path: timApp/.angular/cache
           key: ${{ runner.os }}-angular-cache-${{ hashFiles('**/*.ts') }}
@@ -28,6 +29,7 @@ jobs:
             ${{ runner.os }}-angular-cache-
       - name: Cache node modules
         uses: actions/cache@v3
+        if: "${{ matrix.test_module == 'browser' || matrix.test_module == 'server' }}"
         with:
           path: |
             timApp/node_modules
@@ -44,7 +46,9 @@ jobs:
         run: ./tim dc pull --quiet
       - name: Install dependencies
         run: ./tim npmi
+        if: "${{ matrix.test_module == 'browser' || matrix.test_module == 'server' }}"
       - name: Compile JS
+        if: "${{ matrix.test_module == 'browser' }}"
         run: ./tim js
       - name: Run tests
         run: ./tim test --dc-up ${{ matrix.test_module }}

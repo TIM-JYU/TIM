@@ -87,6 +87,7 @@ from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import (
     get_request_message,
     NotExist,
+    is_testing,
 )
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.search import search_routes
@@ -187,6 +188,9 @@ def inject_angular_scripts() -> dict:
         try:
             return get_angularscripts(f"static/scripts/build/index.html")
         except FileNotFoundError:
+            # Don't raise issues for missing JS during testing. JS might not be built to speed up tests.
+            if is_testing():
+                return dict(angularscripts="")
             raise Exception(
                 "TypeScript files have not been built (compiled JavaScript files are missing).\n"
                 'If this is a local development TIM instance, start the "bdw" NPM script (in timApp/package.json) '
