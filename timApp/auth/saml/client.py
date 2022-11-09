@@ -111,7 +111,7 @@ def get_saml_config(metadata_loader: Callable[[], bytes]) -> Saml2Config:
             log_warning(err)
             errors.append(err)
         except SignatureError as e:
-            err = f"SAML (new_cert={new_cert}, new_meta={new_meta}): Could not load SAML config: {e}"
+            err = f"SAML (new_cert={new_cert}, new_meta={new_meta}): Could not validate SAML metadata: {e}"
             log_warning(err)
             errors.append(err)
 
