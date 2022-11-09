@@ -3,6 +3,7 @@ from subprocess import PIPE
 from typing import Optional, Set
 
 from cli.commands.js import js
+from cli.commands.setup import verify_dev_python, verify_poetry
 from cli.commands.up import up
 from cli.config import get_config
 from cli.docker.run import run_compose, get_compose_cmd
@@ -92,6 +93,14 @@ def db() -> None:
 
 def all() -> None:
     """Update Docker images, database, frontend and backend. Causes downtime."""
+    config = get_config()
+
+    if config.profile == "dev":
+        log_info("Updating development Python packages")
+        py = verify_dev_python()
+        poetry = verify_poetry(py)
+        run_cmd([*poetry, "install", "--only=dev"])
+
     _stop_services({"caddy"})
 
     log_info("Updating TIM images")
