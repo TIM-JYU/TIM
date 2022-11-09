@@ -29,6 +29,7 @@ RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive t
 # Install gpg and gpg-agent for verifying signatures before installing python
 RUN bash -c "${APT_INSTALL} gpg-agent && ${APT_CLEANUP}"
 
+# Can't yet use Python 3.11 because numba is not yet compatible with it
 ENV PYTHON_VERSION="3.10"
 ENV PYTHON_CMD="python${PYTHON_VERSION}"
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
@@ -114,15 +115,12 @@ RUN $PYTHON_CMD -m pip install requests urllib3 --upgrade && bash -c "${APT_CLEA
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
 
 # JDK
-RUN wget -q https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz && \
- tar -xf openjdk-17.0.2_linux-x64_bin.tar.gz && \
- rm openjdk-17.0.2_linux-x64_bin.tar.gz
-ENV PATH=$PWD/jdk-17.0.2/bin:$PATH
+ENV JDK_VERSION=19.0.1
+RUN wget -q https://download.java.net/java/GA/jdk${JDK_VERSION}/afdd2e245b014143b62ccb916125e3ce/10/GPL/openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
+ tar -xf openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz && \
+ rm openjdk-${JDK_VERSION}_linux-x64_bin.tar.gz
+ENV PATH=$PWD/jdk-${JDK_VERSION}/bin:$PATH
 RUN java -version
-# RUN bash -c "${APT_INSTALL} uuid-runtime && ${APT_CLEANUP}"
-# RUN uuidgen > /etc/machine-id
-# RUN dbus-uuidgen > /etc/machine-id
-# run echo 3c99bef9df635abd860662e8594b78af >/etc/machine-id
 
 # JavaFX for OpenJDK
 ENV OPENJFX_VERSION=17
@@ -234,7 +232,7 @@ RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-base li
 
 # Scala
 RUN bash -c "${APT_INSTALL} openjdk-17-jre-headless && ${APT_CLEANUP}"
-ENV SCALA_VERSION 2.13.6
+ENV SCALA_VERSION 2.13.10
 RUN wget -q https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.deb && \
  dpkg -i scala-${SCALA_VERSION}.deb && \
  rm scala-${SCALA_VERSION}.deb
@@ -304,7 +302,7 @@ RUN R -e 'install.packages(c("mvtnorm", "fICA", "JADE", "clue", "Rcpp", "RcppArm
 RUN bash -c "${APT_INSTALL} bsdmainutils iputils-ping && ${APT_CLEANUP}"
 
 # Kotlin
-ENV         KOTLIN_VERSION=1.5.31 \
+ENV         KOTLIN_VERSION=1.7.21 \
             KOTLIN_HOME=/usr/local/kotlin
 
 RUN         cd  /tmp && \
@@ -329,7 +327,7 @@ RUN ln -s "/cargo/bin/"* "/usr/bin/"
 RUN bash -c "${APT_INSTALL} fpc && ${APT_CLEANUP}"
 
 # Go
-ENV GOLANG_VERSION=1.17.6
+ENV GOLANG_VERSION=1.19.3
 RUN wget -q https://dl.google.com/go/go${GOLANG_VERSION}.linux-amd64.tar.gz && tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz && rm go${GOLANG_VERSION}.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 
@@ -339,7 +337,7 @@ RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
 RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 
 # Install NUnit runner for .NET
-ENV NUNIT_RUNNER_VERSION=3.14.0
+ENV NUNIT_RUNNER_VERSION=3.15.2
 RUN dotnet tool install --tool-path /dotnet_tools/ NUnit.ConsoleRunner.NetCore --version ${NUNIT_RUNNER_VERSION} && \
     # We need to call NUnit directly with dotnet exec in order to properly declare custom references
     ln -s /dotnet_tools/.store/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/nunit.consolerunner.netcore/${NUNIT_RUNNER_VERSION}/tools/netcoreapp3.1/any/nunit3-console.dll /dotnet_tools/nunit.console.dll
@@ -348,8 +346,8 @@ RUN dotnet tool install --tool-path /dotnet_tools/ NUnit.ConsoleRunner.NetCore -
 RUN bash -c "${APT_INSTALL} ffmpeg && ${APT_CLEANUP}"
 
 # Install mongosh (adapted from https://github.com/rtsp/docker-mongosh/blob/main/Dockerfile)
-ENV MONGODB_VERSION=5.0
-ENV MONGOSH_VERSION=1.1.9
+ENV MONGODB_VERSION=6.0
+ENV MONGOSH_VERSION=1.6.0
 
 RUN curl -fsSL "https://www.mongodb.org/static/pgp/server-${MONGODB_VERSION}.asc" | gpg --dearmor -o /etc/apt/trusted.gpg.d/mongodb-org-${MONGODB_VERSION}.gpg && \
     echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/${MONGODB_VERSION} multiverse" > /etc/apt/sources.list.d/mongodb-org-${MONGODB_VERSION}.list && \
