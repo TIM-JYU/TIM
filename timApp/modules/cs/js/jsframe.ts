@@ -783,7 +783,7 @@ export class JsframeComponent
         }
 
         this.iframeload.resolve();
-        if (this.markup.initListener && !this.attrsall.preview) {
+        if (this.markup.initListener) {
             this.addListener();
         }
     }
