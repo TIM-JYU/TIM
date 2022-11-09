@@ -2,7 +2,7 @@ import re
 import traceback
 from dataclasses import field, dataclass
 from functools import cached_property
-from typing import Optional, Any, Generator
+from typing import Any, Generator
 
 from flask import Blueprint, request, current_app, Response
 from sqlalchemy.exc import IntegrityError
@@ -132,7 +132,7 @@ class SCIMGroupModel(SCIMCommonModel):
 SCIMGroupModelSchema = class_schema(SCIMGroupModel)
 
 
-@dataclass(frozen=True)
+@dataclass
 class SCIMException(Exception):
     code: int
     msg: str

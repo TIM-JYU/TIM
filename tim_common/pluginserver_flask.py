@@ -40,6 +40,9 @@ from tim_common.marshmallow_dataclass import class_schema
 from tim_common.timjsonencoder import TimJsonEncoder
 from tim_common.utils import Missing
 
+# Fix for Python 3.11: missing is not a valid default value for dataclasses
+missing.__class__.__hash__ = lambda self: hash(None)
+
 
 class PluginAnswerWeb(TypedDict, total=False):
     result: str
