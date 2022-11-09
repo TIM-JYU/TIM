@@ -22,7 +22,7 @@ from timApp.answer.routes import answers
 from timApp.auth.access.routes import access
 from timApp.auth.login import login_page
 from timApp.auth.oauth2.oauth2 import init_oauth
-from timApp.auth.saml import saml
+from timApp.auth.saml.routes import saml
 from timApp.auth.session.routes import user_sessions
 from timApp.auth.sessioninfo import (
     get_current_user_object,

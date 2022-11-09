@@ -9,7 +9,7 @@ from typing import TypeVar, Callable, Any
 from urllib.parse import urlparse
 
 import requests
-from flask import Request, current_app, g, Response
+from flask import Request, current_app, g, Response, has_request_context
 from flask import request
 from marshmallow import ValidationError, Schema
 from webargs.flaskparser import use_args
@@ -103,6 +103,19 @@ def is_testing() -> bool:
 
 def is_localhost() -> bool:
     return current_app.config["TIM_HOST"] in ("http://localhost", "http://caddy")
+
+
+def get_active_host_url() -> str:
+    """
+    Returns the URL of the currently active host URL.
+    If the call is made while handling a request, the host that was used in the request is returned.
+    Otherwise, the host URL is read from the configuration.
+
+    :return: Active host URL
+    """
+    if has_request_context():
+        return request.host_url
+    return f"{current_app.config['TIM_HOST']}/"
 
 
 def get_consent_opt() -> Consent | None:
