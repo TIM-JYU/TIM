@@ -224,7 +224,7 @@ function isAskedQuestion(
                 <button class="timButton" (click)="dismiss()">Cancel</button>
             </ng-container>
         </tim-dialog-frame>
-        <tim-dialog-frame *ngIf="isAskedQuestion()">
+        <tim-dialog-frame *ngIf="isAskedQuestion()" [dialogOptions]="dialogOptions" [dialogName]="dialogName" [align]="'center'">
             <ng-container header>
                 {{ getTitle() }}
             </ng-container>

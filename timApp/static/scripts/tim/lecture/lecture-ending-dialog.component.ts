@@ -22,7 +22,7 @@ export interface ILectureEndingDialogResult {
             <ng-container body>
                 <form>
                     <label> Extend by
-                        <select [(ngModel)]="selectedTime">
+                        <select [(ngModel)]="selectedTime" name="extendByMinutes">
                             <option *ngFor="let choice of extendTimes" [value]="choice">{{choice}}</option>
                         </select>
                         minutes
