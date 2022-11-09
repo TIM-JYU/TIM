@@ -128,7 +128,7 @@ class PrintingTest(TimRouteTest):
         # Just check the file size for now.
         pdf_length = len(result)
         self.assertTrue(
-            2809 <= pdf_length <= 2855, msg=f"Unexpected file length: {pdf_length}"
+            2809 <= pdf_length <= 2907, msg=f"Unexpected file length: {pdf_length}"
         )
         self.login_test2()
         self.get(expected_url, expect_status=403)
@@ -185,10 +185,10 @@ not header x
 \section{3. fourth}\label{fourth}}
 
 \begin{longtable}[]{@{}ll@{}}
-\toprule
+\toprule()
 \endhead
 not header & x \\
-\bottomrule
+\bottomrule()
 \end{longtable}
         """.strip(),
             r,
@@ -215,10 +215,10 @@ not header & x \\
 \section{fourth}\label{fourth}}
 
 \begin{longtable}[]{@{}ll@{}}
-\toprule
+\toprule()
 \endhead
 not header & x \\
-\bottomrule
+\bottomrule()
 \end{longtable}
         """
         self.assertEqual(no_numbers.strip(), r)

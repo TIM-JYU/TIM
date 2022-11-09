@@ -14,13 +14,13 @@ the images location according to the set of following rules:
 TODO: BETTER DOCUMENTATION
 
 """
-import imghdr
 import os
 import re
 import tempfile
 import urllib.request
 from subprocess import check_output, STDOUT
 
+import filetype
 from pandocfilters import toJSONFilter, RawInline, Image, Link, Str
 
 from timApp.defaultconfig import FILES_PATH
@@ -233,7 +233,7 @@ def handle_images(key, value, fmt, meta):
                     # open("Output.txt", "a").write("retrieve: " + url + " -> " + img_dl_path + "\n")
                     urllib.request.urlretrieve(url, img_dl_path)
                     if not ext:
-                        img_type = imghdr.what(img_dl_path)
+                        img_type = filetype.guess_extension(img_dl_path)
                         if img_type:
                             img_dl_path_ext = f"{img_dl_path}.{img_type}"
                             # open("Output.txt", "a").write("img_dl_path_ext = " + img_dl_path_ext + "\n")

@@ -1,4 +1,3 @@
-import imghdr
 import io
 import json
 import os
@@ -9,6 +8,7 @@ from pathlib import Path, PurePosixPath
 from urllib.parse import unquote, urlparse
 
 import PIL.ImageOps
+import filetype
 from PIL import Image
 from PIL.Image import registered_extensions
 from flask import Blueprint, request, send_file, Response, url_for
@@ -544,8 +544,8 @@ def upload_and_stamp_attachment(
 
 def upload_image_or_file(d: DocInfo, file):
     content = file.read()
-    imgtype = imghdr.what(None, h=content)
-    type_str = "image" if imgtype else "file"
+    imgtype: str = filetype.guess_mime(content)
+    type_str = "image" if imgtype and imgtype.startswith("image/") else "file"
     f = save_file_and_grant_access(d, content, file, BlockType.from_str(type_str))
     db.session.commit()
     return json_response({type_str: f"{f.id}/{f.filename}"})
@@ -641,11 +641,11 @@ def get_image(image_id: str, image_filename: str) -> Response:
     if image_filename != f.filename:
         raise NotExist("Image not found")
     img_data = f.data
-    imgtype = imghdr.what(None, h=img_data)
+    imgtype = filetype.guess_mime(img_data)
     # Redirect if we can't deduce the image type
-    if not imgtype:
+    if not imgtype or not imgtype.startswith("image/"):
         return safe_redirect(
             url_for("upload.get_file", file_id=image_id, file_filename=image_filename)
         )
     f = io.BytesIO(img_data)
-    return send_file(f, mimetype="image/" + imgtype)
+    return send_file(f, mimetype=imgtype)
